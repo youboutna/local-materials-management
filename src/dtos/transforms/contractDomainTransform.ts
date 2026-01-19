@@ -141,13 +141,12 @@ export interface CreateContractRequestDto extends Omit<ContractDTO, 'id' | 'crea
   }>;
   documentRequirements?: Array<{
     type: string;
-      description: string;
-      required: boolean;
-    }>;
+    description: string;
+    required: boolean;
+  }>;
   terminationClause?: string;
-  governingLaw: string;
-    jurisdiction: string;
-  };
+  governingLaw?: string;
+  jurisdiction?: string;
 }
 
 export interface UpdateContractRequestDto extends Partial<CreateContractRequestDto> {
@@ -361,10 +360,10 @@ export class ContractDomainTransformer implements EntityToDTOMapper<any, Contrac
     const progress = contract.milestones ? 
       contract.milestones.filter(m => m.status === 'completed').length / contract.milestones.length * 100 
       : 0;
-    const onTimeDeliveryRate = contract.milestones ? 
-      contract.milestones.filter(m => m.status === 'completed' && m.actualCompletionDate && new Date(m.actualCompletionDate) <= new Date(m.dueDate)).length / 
-      contract.milestones.filter(m => m.status === 'completed' && m.actualCompletionDate).length / contract.milestones.filter(m => m.status === 'completed').length) * 100
-      : 0;
+    const completedMilestones = contract.milestones ? contract.milestones.filter(m => m.status === 'completed') : [];
+    const completedWithDates = completedMilestones.filter(m => m.actualCompletionDate);
+    const onTimeDeliveryRate = completedWithDates.length > 0 ? 
+      (completedWithDates.filter(m => new Date(m.actualCompletionDate!) <= new Date(m.dueDate)).length / completedWithDates.length) * 100 : 0;
     const costVariance = contract.totalValue - (contract.totalValue * (progress / 100));
     const performanceScore = progress > 0 ? Math.min(100, progress) : 0;
 
@@ -529,6 +528,5 @@ export class ContractDomainTransformer implements EntityToDTOMapper<any, Contrac
       performanceScore: 90, // Simplified
       riskAssessment: this.assessContractRisk(c)
     };
-  }
   }
 }

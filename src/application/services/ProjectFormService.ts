@@ -5,7 +5,7 @@
 import { IProjectFormRepository } from '@/domain/repositories/IProjectFormRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { ProjectFormData, SaveContext } from '@/services/ProjectFormService';
-import { EntityToDTOMapper } from '@/services/EntityToDTOMapper';
+import { EntityToDTOMapper } from '@/dtos/transforms';
 
 export class ProjectFormService {
   private projectFormRepository: IProjectFormRepository;

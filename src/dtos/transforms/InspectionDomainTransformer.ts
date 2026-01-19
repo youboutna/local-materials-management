@@ -19,7 +19,7 @@ export class InspectionDomainTransformer implements EntityToDTOMapper<Inspection
     nextInspectionDate: Date;
   } {
     const complianceScore = inspection.complianceScore || 100;
-    const criticalIssues: inspection.criticalIssues || [];
+    const criticalIssues: string[] = (inspection as any).criticalIssues || [];
     const recommendations: string[] = [];
     
     // Calculate days since last inspection

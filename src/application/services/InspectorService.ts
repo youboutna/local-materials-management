@@ -4,12 +4,10 @@
  */
 
 import { IEmployeeRepository } from '@/domain/repositories/IEmployeeRepository';
+import { Employee } from '@/domain/entities/Employee';
 import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
 import { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
-import { Employee } from '@/domain/entities/Employee';
-import { Supplier } from '@/domain/entities/Supplier';
-import { ProjectStakeholderEntity } from '@/domain/entities/ProjectStakeholder';
-import { AppError, ErrorCode, ErrorLogger } from '@/utils/errorHandling';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export interface Inspector {
   id: string;
@@ -42,7 +40,7 @@ export class InspectorService {
 
       if (options.projectId) {
         // Get project-specific inspectors from stakeholders
-        const stakeholders = await this.projectStakeholderRepository.findByProject(options.projectId);
+        const stakeholders = await this.projectStakeholderRepository.findByProjectId(options.projectId);
         
         for (const stakeholder of stakeholders) {
           if (stakeholder.employeeId) {
@@ -50,7 +48,7 @@ export class InspectorService {
             if (employee && employee.isActive) {
               inspectorsList.push({
                 id: employee.id,
-                name: employee.fullName,
+                name: employee.fullName || '',
                 type: 'employee',
                 position: employee.position || undefined,
                 role: stakeholder.roleDescription || stakeholder.stakeholderType
@@ -72,15 +70,14 @@ export class InspectorService {
       } else {
         // Get all available inspectors
         if (options.includeEmployees !== false) {
-          const employees = await this.employeeRepository.searchEmployees({
-            isActive: true,
-            limit: 100
-          });
+          const employees = options.activeOnly !== false 
+            ? await this.employeeRepository.findActive()
+            : await this.employeeRepository.findAll();
           
-          employees.employees.forEach(emp => {
+          employees.forEach(emp => {
             inspectorsList.push({
               id: emp.id,
-              name: emp.fullName,
+              name: emp.fullName || '',
               type: 'employee',
               position: emp.position || undefined
             });
@@ -88,12 +85,12 @@ export class InspectorService {
         }
 
         if (options.includeSuppliers !== false) {
-          const suppliers = await this.supplierRepository.searchSuppliers({
-            isActive: true,
-            limit: 100
-          });
+          const suppliers = await this.supplierRepository.findAll();
+          const activeSuppliers = options.activeOnly !== false 
+            ? suppliers.filter(s => s.isActive())
+            : suppliers;
           
-          suppliers.suppliers.forEach(sup => {
+          activeSuppliers.forEach(sup => {
             inspectorsList.push({
               id: sup.id,
               name: sup.contacts[0]?.name || sup.name,
@@ -104,20 +101,10 @@ export class InspectorService {
         }
       }
 
-      ErrorLogger.log('info', 'Inspectors retrieved successfully', {
-        projectId: options.projectId,
-        inspectorCount: inspectorsList.length
-      });
-
       return inspectorsList;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to get inspectors';
-      ErrorLogger.log('error', 'InspectorService.getInspectors failed', { 
-        options, 
-        error: errorMessage 
-      });
-      
-      throw new AppError(errorMessage, 'INSPECTOR_GET_ERROR');
+      console.error('InspectorService.getInspectors failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get inspectors');
     }
   }
 
@@ -132,7 +119,7 @@ export class InspectorService {
         
         return {
           id: employee.id,
-          name: employee.fullName,
+          name: employee.fullName || '',
           type: 'employee',
           position: employee.position || undefined
         };
@@ -148,14 +135,8 @@ export class InspectorService {
         };
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to get inspector';
-      ErrorLogger.log('error', 'InspectorService.getInspectorById failed', { 
-        id, 
-        type, 
-        error: errorMessage 
-      });
-      
-      throw new AppError(errorMessage, 'INSPECTOR_GET_ERROR');
+      console.error('InspectorService.getInspectorById failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get inspector');
     }
   }
 }

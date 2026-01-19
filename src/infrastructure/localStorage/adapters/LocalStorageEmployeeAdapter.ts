@@ -16,9 +16,13 @@ const mockEmployees: Employee[] = allUsersData.map((user: MockUser) => ({
   id: user.id,
   full_name: user.fullName || '',
   position: user.primaryRole || '',
-  department: 'General', // Default department
+  department: 'General',
   email: user.email || '',
   phone: user.phone || '',
+  isActive: true,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString()
+} as Employee));
 
 export class LocalStorageEmployeeAdapter implements IEmployeeRepository {
   
