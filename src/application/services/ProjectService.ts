@@ -1,13 +1,12 @@
 /**
  * Project Service - Hexagonal Architecture
- * Business logic layer with use cases and transformer integration
+ * Business logic layer with use cases
  * Clean separation between domain logic and infrastructure
  */
 
-import { Project } from '@/domain/entities';
-import { IProjectRepository, ProjectSummary, ProjectWithRelatedData } from '@/domain/repositories';
+import { Project, ProjectStatus } from '@/domain/entities/Project';
+import { IProjectRepository, ProjectWithRelatedData } from '@/domain/repositories';
 import { ProjectDTO, CreateProjectDTO, UpdateProjectDTO, ProjectSummaryDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
-import { EntityToDTOMapper } from '@/dtos/transforms';
 
 /**
  * Custom error class for project operations
@@ -35,40 +34,59 @@ export class ValidationError extends ProjectServiceError {
 
 /**
  * Project Service - Use Cases Implementation
- * Encapsulates business logic and coordinates between repository and UI
  */
 export class ProjectService {
   constructor(
-    private projectRepository: IProjectRepository,
-    private transformer: EntityToDTOMapper<Project, ProjectDTO>
+    private projectRepository: IProjectRepository
   ) {}
 
-  // ============= CRUD Use Cases =============
+  // Helper method to transform Project to ProjectDTO
+  private toDTO(project: Project): ProjectDTO {
+    return {
+      id: project.id,
+      title: project.title,
+      description: project.description || '',
+      location: project.location || '',
+      status: project.status,
+      progress: project.progress,
+      budget: project.budget,
+      startDate: project.startDate?.toISOString?.() || '',
+      endDate: project.endDate?.toISOString?.() || undefined,
+      teamSize: project.teamSize || 0,
+      thumbnail: project.thumbnail || '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+  }
 
   /**
    * Create a new project with validation
    */
   async createProject(createDTO: CreateProjectDTO): Promise<ProjectDTO> {
     try {
-      // Validation avec le transformer
-      const validation = this.transformer.validate(createDTO);
+      const validation = this.validateProjectData(createDTO);
       
       if (!validation.isValid) {
-        throw new ValidationError(
-          'Project validation failed',
-          validation.fieldErrors || {}
-        );
+        throw new ValidationError('Project validation failed', validation.fieldErrors);
       }
 
-      // Création via repository
-      const project = await this.projectRepository.create(createDTO as Partial<Project>);
-      
-      // Transformation pour l'UI
-      return this.transformer.toDTO(project);
+      const projectData: Partial<Project> = {
+        title: createDTO.title,
+        description: createDTO.description,
+        location: createDTO.location,
+        status: createDTO.status as ProjectStatus,
+        progress: createDTO.progress || 0,
+        budget: createDTO.budget,
+        startDate: createDTO.startDate ? new Date(createDTO.startDate) : null,
+        endDate: createDTO.endDate ? new Date(createDTO.endDate) : null,
+        teamSize: createDTO.teamSize,
+        thumbnail: createDTO.thumbnail
+      };
+
+      const project = await this.projectRepository.create(projectData);
+      return this.toDTO(project);
     } catch (error) {
-      if (error instanceof ValidationError) {
-        throw error;
-      }
+      if (error instanceof ValidationError) throw error;
       throw new ProjectServiceError(
         `Failed to create project: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'CREATE_PROJECT_ERROR',
@@ -82,25 +100,28 @@ export class ProjectService {
    */
   async updateProject(id: string, updateDTO: UpdateProjectDTO): Promise<ProjectDTO> {
     try {
-      // Validation avec le transformer
-      const validation = this.transformer.validate(updateDTO);
+      const validation = this.validateProjectData(updateDTO);
       
       if (!validation.isValid) {
-        throw new ValidationError(
-          'Project validation failed',
-          validation.fieldErrors || {}
-        );
+        throw new ValidationError('Project validation failed', validation.fieldErrors);
       }
 
-      // Mise à jour via repository
-      const project = await this.projectRepository.update(id, updateDTO as Partial<Project>);
-      
-      // Transformation pour l'UI
-      return this.transformer.toDTO(project);
+      const projectData: Partial<Project> = {};
+      if (updateDTO.title !== undefined) (projectData as any).title = updateDTO.title;
+      if (updateDTO.description !== undefined) (projectData as any).description = updateDTO.description;
+      if (updateDTO.location !== undefined) (projectData as any).location = updateDTO.location;
+      if (updateDTO.status !== undefined) (projectData as any).status = updateDTO.status;
+      if (updateDTO.progress !== undefined) (projectData as any).progress = updateDTO.progress;
+      if (updateDTO.budget !== undefined) (projectData as any).budget = updateDTO.budget;
+      if (updateDTO.startDate !== undefined) (projectData as any).startDate = new Date(updateDTO.startDate);
+      if (updateDTO.endDate !== undefined) (projectData as any).endDate = new Date(updateDTO.endDate);
+      if (updateDTO.teamSize !== undefined) (projectData as any).teamSize = updateDTO.teamSize;
+      if (updateDTO.thumbnail !== undefined) (projectData as any).thumbnail = updateDTO.thumbnail;
+
+      const project = await this.projectRepository.update(id, projectData);
+      return this.toDTO(project);
     } catch (error) {
-      if (error instanceof ValidationError) {
-        throw error;
-      }
+      if (error instanceof ValidationError) throw error;
       throw new ProjectServiceError(
         `Failed to update project: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'UPDATE_PROJECT_ERROR',
@@ -115,12 +136,8 @@ export class ProjectService {
   async getProjectById(id: string): Promise<ProjectDTO | null> {
     try {
       const project = await this.projectRepository.findById(id);
-      
-      if (!project) {
-        return null;
-      }
-
-      return this.transformer.toDTO(project);
+      if (!project) return null;
+      return this.toDTO(project);
     } catch (error) {
       throw new ProjectServiceError(
         `Failed to get project: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -136,8 +153,7 @@ export class ProjectService {
   async getAllProjects(): Promise<ProjectDTO[]> {
     try {
       const projects = await this.projectRepository.findAll();
-      
-      return projects.map(project => this.transformer.toDTO(project));
+      return projects.map(project => this.toDTO(project));
     } catch (error) {
       throw new ProjectServiceError(
         `Failed to get all projects: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -162,16 +178,13 @@ export class ProjectService {
     }
   }
 
-  // ============= Business Logic Use Cases =============
-
   /**
    * Get active projects only
    */
   async getActiveProjects(): Promise<ProjectDTO[]> {
     try {
-      const projects = await this.projectRepository.findByStatus('en cours');
-      
-      return projects.map(project => this.transformer.toDTO(project));
+      const projects = await this.projectRepository.findActiveProjects();
+      return projects.map(project => this.toDTO(project));
     } catch (error) {
       throw new ProjectServiceError(
         `Failed to get active projects: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -186,9 +199,9 @@ export class ProjectService {
    */
   async getProjectsByStatus(status: string): Promise<ProjectDTO[]> {
     try {
-      const projects = await this.projectRepository.findByStatus(status);
-      
-      return projects.map(project => this.transformer.toDTO(project));
+      const allProjects = await this.projectRepository.findAll();
+      const projects = allProjects.filter(p => p.status === status);
+      return projects.map(project => this.toDTO(project));
     } catch (error) {
       throw new ProjectServiceError(
         `Failed to get projects by status: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -203,21 +216,28 @@ export class ProjectService {
    */
   async getProjectSummary(id: string): Promise<ProjectSummaryDTO | null> {
     try {
-      const summary = await this.projectRepository.getProjectSummary(id);
-      
-      if (!summary) {
-        return null;
-      }
+      const summary = await this.projectRepository.findSummary(id);
+      if (!summary) return null;
 
-      const projectDTO = this.transformer.toDTO(summary.project);
-      
       return {
-        ...projectDTO,
+        id: summary.id,
+        title: summary.title,
+        status: summary.status as ProjectStatus,
+        progress: summary.progress,
+        phasesCount: summary.phasesCount,
         tasksCount: summary.tasksCount,
         inspectionsCount: summary.inspectionsCount,
         paymentsCount: summary.paymentsCount,
-        risksCount: summary.risksCount,
-        lastActivity: summary.lastActivity
+        risksCount: 0,
+        lastActivity: undefined,
+        createdAt: '',
+        updatedAt: '',
+        description: '',
+        location: '',
+        budget: 0,
+        startDate: '',
+        teamSize: 0,
+        thumbnail: ''
       };
     } catch (error) {
       throw new ProjectServiceError(
@@ -234,20 +254,18 @@ export class ProjectService {
   async getProjectWithDetails(id: string): Promise<ProjectDetailDTO | null> {
     try {
       const projectWithRelated = await this.projectRepository.findWithRelatedData(id);
-      
-      if (!projectWithRelated) {
-        return null;
-      }
+      if (!projectWithRelated || !projectWithRelated.project) return null;
 
-      const projectDTO = this.transformer.toDTO(projectWithRelated.project);
+      const projectDTO = this.toDTO(projectWithRelated.project);
       
       return {
         ...projectDTO,
         tasks: projectWithRelated.tasks || [],
         inspections: projectWithRelated.inspections || [],
-        payments: projectWithRelated.payments || [],
         risks: projectWithRelated.risks || [],
-        phases: [] // À implémenter avec les phases
+        plannedPhases: projectWithRelated.phases || [],
+        resources: [],
+        expenses: []
       };
     } catch (error) {
       throw new ProjectServiceError(
@@ -269,45 +287,38 @@ export class ProjectService {
     offset?: number;
   }): Promise<{ projects: ProjectDTO[]; total: number }> {
     try {
-      // Pour l'instant, utilisation de findAll
-      // À améliorer avec des requêtes filtrées dans le repository
       const projects = await this.projectRepository.findAll();
-      
       let filteredProjects = projects;
 
-      // Filtrage par statut
       if (criteria.status) {
         filteredProjects = filteredProjects.filter(p => p.status === criteria.status);
       }
 
-      // Filtrage par recherche textuelle
       if (criteria.searchQuery) {
         const query = criteria.searchQuery.toLowerCase();
         filteredProjects = filteredProjects.filter(p => 
           p.title.toLowerCase().includes(query) ||
           p.description?.toLowerCase().includes(query) ||
-          p.location.toLowerCase().includes(query)
+          (p.location && p.location.toLowerCase().includes(query))
         );
       }
 
-      // Filtrage par plage de dates
-      if (criteria.dateRange) {
+      if (criteria.dateRange?.start && criteria.dateRange?.end) {
         filteredProjects = filteredProjects.filter(p => {
+          if (!p.startDate) return false;
           const startDate = new Date(p.startDate);
-          const filterStart = new Date(criteria.dateRange.start);
-          const filterEnd = new Date(criteria.dateRange.end);
-          return startDate >= filterStart && startDate <= filterEnd;
+          return startDate >= new Date(criteria.dateRange!.start) && 
+                 startDate <= new Date(criteria.dateRange!.end);
         });
       }
 
-      // Pagination
       const total = filteredProjects.length;
       const offset = criteria.offset || 0;
       const limit = criteria.limit || 20;
       const paginatedProjects = filteredProjects.slice(offset, offset + limit);
 
       return {
-        projects: paginatedProjects.map(project => this.transformer.toDTO(project)),
+        projects: paginatedProjects.map(project => this.toDTO(project)),
         total
       };
     } catch (error) {
@@ -332,15 +343,13 @@ export class ProjectService {
     try {
       const allProjects = await this.projectRepository.findAll();
       
-      const stats = {
+      return {
         total: allProjects.length,
         active: allProjects.filter(p => p.status === 'en cours').length,
         completed: allProjects.filter(p => p.status === 'terminé').length,
         onHold: allProjects.filter(p => p.status === 'suspendu').length,
         cancelled: allProjects.filter(p => p.status === 'annulé').length
       };
-
-      return stats;
     } catch (error) {
       throw new ProjectServiceError(
         `Failed to get project statistics: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -350,11 +359,6 @@ export class ProjectService {
     }
   }
 
-  // ============= Utility Methods =============
-
-  /**
-   * Validate project data before operations
-   */
   private validateProjectData(data: Partial<CreateProjectDTO | UpdateProjectDTO>): {
     isValid: boolean;
     errors: string[];
@@ -363,40 +367,21 @@ export class ProjectService {
     const errors: string[] = [];
     const fieldErrors: Record<string, string[]> = {};
 
-    if (!data.title || data.title.trim() === '') {
+    if ('title' in data && (!data.title || data.title.trim() === '')) {
       errors.push('Project title is required');
       fieldErrors.title = ['Project title is required'];
     }
 
-    if (!data.description || data.description.trim() === '') {
-      errors.push('Project description is required');
-      fieldErrors.description = ['Project description is required'];
-    }
-
-    if (!data.location || data.location.trim() === '') {
-      errors.push('Project location is required');
-      fieldErrors.location = ['Project location is required'];
-    }
-
-    if (data.budget !== undefined && data.budget <= 0) {
+    if ('budget' in data && data.budget !== undefined && data.budget <= 0) {
       errors.push('Budget must be greater than 0');
       fieldErrors.budget = ['Budget must be greater than 0'];
     }
 
-    if (data.progress !== undefined && (data.progress < 0 || data.progress > 100)) {
+    if ('progress' in data && data.progress !== undefined && (data.progress < 0 || data.progress > 100)) {
       errors.push('Progress must be between 0 and 100');
       fieldErrors.progress = ['Progress must be between 0 and 100'];
     }
 
-    if (data.teamSize !== undefined && data.teamSize <= 0) {
-      errors.push('Team size must be greater than 0');
-      fieldErrors.teamSize = ['Team size must be greater than 0'];
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors,
-      fieldErrors
-    };
+    return { isValid: errors.length === 0, errors, fieldErrors };
   }
 }

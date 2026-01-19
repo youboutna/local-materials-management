@@ -5,7 +5,6 @@
 import { IProjectFormRepository } from '@/domain/repositories/IProjectFormRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { ProjectFormData, SaveContext } from '@/services/ProjectFormService';
-import { EntityToDTOMapper } from '@/dtos/transforms';
 
 export class ProjectFormService {
   private projectFormRepository: IProjectFormRepository;
@@ -14,7 +13,6 @@ export class ProjectFormService {
     this.projectFormRepository = RepositoryFactory.getProjectFormRepository();
   }
 
-  // Utility: Format date for input fields
   formatDateForInput = (dateString: any): string => {
     if (!dateString) return "";
     try {
@@ -26,7 +24,6 @@ export class ProjectFormService {
     }
   };
 
-  // Utility: Map status from database
   mapStatusFromDB = (status: string): string => {
     const mapping: Record<string, string> = {
       'en attente': 'planning',
@@ -38,23 +35,47 @@ export class ProjectFormService {
     return mapping[status] || status || 'planning';
   };
 
-  // Delegate to EntityToDTOMapper for consistent mapping
   mapFieldsFromDB(dbData: any): ProjectFormData {
-    return EntityToDTOMapper.projectEntityToFormData(dbData) as ProjectFormData;
+    return {
+      title: dbData.title || '',
+      description: dbData.description || '',
+      location: dbData.location || '',
+      status: this.mapStatusFromDB(dbData.status),
+      progress: dbData.progress || 0,
+      budget: dbData.budget || 0,
+      start_date: this.formatDateForInput(dbData.start_date),
+      end_date: this.formatDateForInput(dbData.end_date),
+      team_size: dbData.team_size || 0,
+    } as ProjectFormData;
   }
 
   mapFieldsToDB(formData: ProjectFormData, step?: number): any {
-    return EntityToDTOMapper.formDataToProjectEntity(formData, step);
+    return {
+      title: formData.title,
+      description: formData.description,
+      location: formData.location,
+      status: formData.status,
+      progress: formData.progress,
+      budget: formData.budget,
+      start_date: (formData as any).start_date || (formData as any).startDate,
+      end_date: (formData as any).end_date || (formData as any).endDate,
+      team_size: (formData as any).team_size || (formData as any).teamSize,
+      current_step: step
+    };
   }
 
-  // Validate step data using unified mapper
   validateStepData(formData: ProjectFormData, step: number): { valid: boolean; errors: string[] } {
-    return EntityToDTOMapper.validateStepData(formData, step);
+    const errors: string[] = [];
+
+    if (step === 1) {
+      if (!formData.title || formData.title.trim() === '') {
+        errors.push('Le titre du projet est requis');
+      }
+    }
+
+    return { valid: errors.length === 0, errors };
   }
 
-  /**
-   * Save partial project data at a specific step
-   */
   async saveStepData(
     projectId: string | null,
     formData: ProjectFormData,
@@ -63,9 +84,6 @@ export class ProjectFormService {
     return await this.projectFormRepository.saveStepData(projectId, formData, step);
   }
 
-  /**
-   * Save related data for specific steps
-   */
   async saveStepRelatedData(
     projectId: string,
     step: number,
@@ -79,37 +97,22 @@ export class ProjectFormService {
     return await this.projectFormRepository.saveStepRelatedData(projectId, step, data);
   }
 
-  /**
-   * Load project data
-   */
   async loadProjectData(projectId: string): Promise<ProjectFormData | null> {
     return await this.projectFormRepository.loadProjectData(projectId);
   }
 
-  /**
-   * Load related data (stakeholders, phases, materials)
-   */
   async loadRelatedData(projectId: string): Promise<Partial<ProjectFormData>> {
     return await this.projectFormRepository.loadRelatedData(projectId);
   }
 
-  /**
-   * Load base data for dropdowns and selectors
-   */
   async loadBaseData(): Promise<any> {
     return await this.projectFormRepository.loadBaseData();
   }
 
-  /**
-   * Validate step data
-   */
   validateStep(stepId: number, formData: ProjectFormData): boolean {
     return this.projectFormRepository.validateStep(stepId, formData);
   }
 
-  /**
-   * Process form data before saving
-   */
   processFormDataForSave(formData: ProjectFormData, context: SaveContext): any {
     return {
       ...formData,
