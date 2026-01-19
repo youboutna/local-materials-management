@@ -9,8 +9,6 @@ import { toast } from "sonner";
 import { RepositoryFactory } from "@/repositories/RepositoryFactory";
 import { SupplierService } from "@/application/services/SupplierService";
 import { SupplierDomainTransformer, CreateSupplierRequestDto, UpdateSupplierRequestDto } from "@/dtos/transforms";
-import { useNavigate } from 'react-router-dom';
-import { useLanguage } from '@/contexts/LanguageContext';
 
 // Types pour les hooks
 export interface UseSuppliersHexResult {
@@ -24,7 +22,6 @@ export interface UseSuppliersHexResult {
   isCreating: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
-  // Enhanced UI features
   getSupplierReliability: (supplier: any) => number;
   getSupplierPerformance: (supplier: any) => 'excellent' | 'good' | 'average' | 'poor';
   getSupplierRiskLevel: (supplier: any) => 'low' | 'medium' | 'high';
@@ -36,19 +33,13 @@ export interface UseSuppliersHexResult {
 
 /**
  * Hook principal pour la gestion des fournisseurs
- * Architecture hexagonale complète avec mocks centralisés
  */
 export function useSuppliersHex(): UseSuppliersHexResult {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  const { t } = useLanguage();
   
-  // [Factory] → [Adapter] → [Service] → [Transformers] → [Entities]
-  // Utilisation de l'architecture existante
   const supplierRepository = RepositoryFactory.getSupplierRepository();
   const supplierService = new SupplierService(supplierRepository, SupplierDomainTransformer);
 
-  // Query pour la liste des fournisseurs
   const {
     data: suppliers = [],
     isLoading,
@@ -58,152 +49,137 @@ export function useSuppliersHex(): UseSuppliersHexResult {
     queryKey: ['suppliers'],
     queryFn: async (): Promise<any[]> => {
       try {
-        // Flux hexagonal complet - géré automatiquement par RepositoryFactory
-        // [Factory] → [Adapter] → [Service] → [Transformers] → [Persistence]
-        const suppliers = await supplierService.getAllSuppliers();
-          });
-        }
-        
-        // Production: Flux hexagonal complet
-        // [Factory] → [Adapter] → [Service] → [Transformers] → [Persistence]
-        const suppliers = await supplierService.getActiveSuppliers();
-        
-        // [Transformers]: Entities → DTOs
-        // Utilisation du Transformer existant : SupplierMapper
-        return SupplierMapper.toResponseDtoArray(suppliers);
-      } catch (error) {
-        console.error('Error fetching suppliers:', error);
-        throw new Error(error instanceof Error ? error.message : 'Failed to fetch suppliers');
+        const allSuppliers = await supplierService.getAllSuppliers();
+        return allSuppliers || [];
+      } catch (err) {
+        console.error('Error fetching suppliers:', err);
+        throw new Error(err instanceof Error ? err.message : 'Failed to fetch suppliers');
       }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Mutation pour créer un fournisseur
   const createSupplierMutation = useMutation({
-    mutationFn: async (supplierData: CreateSupplierRequestDto): Promise<SupplierResponseDto> => {
-      try {
-        // Flux hexagonal complet - géré automatiquement par RepositoryFactory
-        const supplierEntity = SupplierMapper.toDomainFromCreateDto(supplierData);
-        const supplierEntity = SupplierMapper.toDomainFromCreateDto(createDto);
-        const createdSupplier = await supplierService.createSupplier(supplierEntity);
-        
-        // [Transformers]: Entity → DTO
-        return SupplierMapper.toResponseDto(createdSupplier);
-      } catch (error) {
-        console.error('Error creating supplier:', error);
-        throw new Error(error instanceof Error ? error.message : 'Failed to create supplier');
-      }
+    mutationFn: async (supplierData: CreateSupplierRequestDto) => {
+      const createdSupplier = await supplierService.createSupplier(supplierData as any);
+      return createdSupplier;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
       toast.success("Fournisseur créé avec succès");
     },
-    onError: (error: Error) => {
-      toast.error(error.message);
+    onError: (err: Error) => {
+      toast.error(err.message);
     }
   });
 
-  // Mutation pour mettre à jour un fournisseur
   const updateSupplierMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: UpdateSupplierRequestDto }): Promise<SupplierResponseDto> => {
-      try {
-        // Flux hexagonal complet - géré automatiquement par RepositoryFactory
-        const updateData = SupplierMapper.toUpdateData(data);
-        const updatedSupplier = await supplierService.updateSupplier(id, updateData);
-        
-        return SupplierMapper.toResponseDto(updatedSupplier);
-      } catch (error) {
-        console.error('Error updating supplier:', error);
-        throw new Error(error instanceof Error ? error.message : 'Failed to update supplier');
-      }
-    },
-          // Utilisation du Transformer existant : SupplierMapper
-          const updateDto = new UpdateSupplierRequestDto(
-            updates.name,
-            updates.contactEmail,
-            updates.contactPhone,
-            updates.address,
-            updates.nif,
-            updates.category || 'general',
-            updates.isActive ? 'active' : 'inactive',
-            updates.rating,
-            [],
-            updates.isActive ?? true
-          );
-          
-          const supplierEntity = SupplierMapper.toUpdateData(updateDto);
-          const updatedSupplier = { ...supplierEntity, id };
-          
-          return SupplierMapper.toResponseDto(updatedSupplier as any);
-        }
-        
-        // Production: Flux hexagonal complet
-        // [DTO] → [Entity] → [Service] → [Repository] → [Persistence]
-        // Utilisation du Transformer existant : SupplierMapper
-        const updateDto = new UpdateSupplierRequestDto(
-          updates.name,
-          updates.contactEmail,
-          updates.contactPhone,
-          updates.address,
-          updates.nif,
-          updates.category || 'general',
-          updates.isActive ? 'active' : 'inactive',
-          updates.rating,
-          [],
-          updates.isActive ?? true
-        );
-        
-        const supplierEntity = SupplierMapper.toUpdateData(updateDto);
-        const updatedSupplier = await supplierService.updateSupplier(id, supplierEntity);
-        
-        // [Transformers]: Entity → DTO
-        return SupplierMapper.toResponseDto(updatedSupplier);
-      } catch (error) {
-        console.error('Error updating supplier:', error);
-        throw new Error(error instanceof Error ? error.message : 'Failed to update supplier');
-      }
+    mutationFn: async ({ id, data }: { id: string; data: UpdateSupplierRequestDto }) => {
+      const updatedSupplier = await supplierService.updateSupplier(id, data as any);
+      return updatedSupplier;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
       toast.success("Fournisseur mis à jour avec succès");
     },
-    onError: (error: Error) => {
-      toast.error(error.message);
+    onError: (err: Error) => {
+      toast.error(err.message);
     }
   });
 
-  // Mutation pour supprimer un fournisseur
   const deleteSupplierMutation = useMutation({
-    mutationFn: async (id: string): Promise<void> => {
-      try {
-        // Flux hexagonal complet - géré automatiquement par RepositoryFactory
-        await supplierService.deleteSupplier(id);
-      } catch (error) {
-        console.error('Error deleting supplier:', error);
-        throw new Error(error instanceof Error ? error.message : 'Failed to delete supplier');
-      }
+    mutationFn: async (id: string) => {
+      await supplierService.deleteSupplier(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
       toast.success("Fournisseur supprimé avec succès");
     },
-    onError: (error: Error) => {
-      toast.error(error.message);
+    onError: (err: Error) => {
+      toast.error(err.message);
     }
   });
+
+  // Enhanced UI functions
+  const getSupplierReliability = (supplier: any): number => {
+    const onTimeDeliveryRate = supplier?.onTimeDeliveryRate || 0.8;
+    const qualityScore = supplier?.qualityScore || 0.7;
+    const responseTime = supplier?.responseTime || 24;
+    
+    const responseScore = Math.max(0, 100 - responseTime);
+    return Math.round((onTimeDeliveryRate * 40 + qualityScore * 40 + responseScore * 0.2));
+  };
+
+  const getSupplierPerformance = (supplier: any): 'excellent' | 'good' | 'average' | 'poor' => {
+    const reliability = getSupplierReliability(supplier);
+    if (reliability >= 90) return 'excellent';
+    if (reliability >= 75) return 'good';
+    if (reliability >= 50) return 'average';
+    return 'poor';
+  };
+
+  const getSupplierRiskLevel = (supplier: any): 'low' | 'medium' | 'high' => {
+    const reliability = getSupplierReliability(supplier);
+    const isActive = supplier?.is_active ?? true;
+    
+    if (!isActive) return 'high';
+    if (reliability >= 80) return 'low';
+    if (reliability >= 50) return 'medium';
+    return 'high';
+  };
+
+  const getSupplierDeliveryTime = (supplier: any): number => {
+    return supplier?.averageDeliveryDays || 7;
+  };
+
+  const getSupplierAnalytics = () => {
+    const totalSuppliers = suppliers.length;
+    const activeSuppliers = suppliers.filter((s: any) => s.is_active !== false).length;
+    const averageReliability = suppliers.length > 0
+      ? suppliers.reduce((sum: number, s: any) => sum + getSupplierReliability(s), 0) / suppliers.length
+      : 0;
+
+    return {
+      totalSuppliers,
+      activeSuppliers,
+      inactiveSuppliers: totalSuppliers - activeSuppliers,
+      averageReliability: Math.round(averageReliability),
+      riskDistribution: {
+        low: suppliers.filter((s: any) => getSupplierRiskLevel(s) === 'low').length,
+        medium: suppliers.filter((s: any) => getSupplierRiskLevel(s) === 'medium').length,
+        high: suppliers.filter((s: any) => getSupplierRiskLevel(s) === 'high').length,
+      }
+    };
+  };
 
   return {
     suppliers,
     isLoading,
     error,
     refetch,
-    createSupplier: createSupplierMutation.mutateAsync,
-    updateSupplier: updateSupplierMutation.mutateAsync,
-    deleteSupplier: deleteSupplierMutation.mutateAsync,
+    createSupplier: createSupplierMutation.mutate,
+    updateSupplier: updateSupplierMutation.mutate,
+    deleteSupplier: deleteSupplierMutation.mutate,
     isCreating: createSupplierMutation.isPending,
     isUpdating: updateSupplierMutation.isPending,
-    isDeleting: deleteSupplierMutation.isPending
+    isDeleting: deleteSupplierMutation.isPending,
+    getSupplierReliability,
+    getSupplierPerformance,
+    getSupplierRiskLevel,
+    getSupplierDeliveryTime,
+    getSupplierAnalytics,
+    validateSupplierWithReferential: async (supplier: any, referentialType: string) => {
+      return { isValid: true, errors: [], warnings: [] };
+    },
+    generateSupplierReport: (supplier: any) => {
+      return {
+        supplier,
+        reliability: getSupplierReliability(supplier),
+        performance: getSupplierPerformance(supplier),
+        riskLevel: getSupplierRiskLevel(supplier),
+        generatedAt: new Date().toISOString()
+      };
+    }
   };
 }
 
@@ -211,67 +187,27 @@ export function useSuppliersHex(): UseSuppliersHexResult {
  * Hook pour les fournisseurs par spécialisation
  */
 export function useSuppliersBySpecialization(specialization: string) {
-  // [Factory] → [Adapter] → [Service] → [Transformers] → [Entities]
-  // Utilisation de l'architecture existante
   const supplierRepository = RepositoryFactory.getSupplierRepository();
-  const supplierService = new SupplierService(supplierRepository);
+  const supplierService = new SupplierService(supplierRepository, SupplierDomainTransformer);
   
   return useQuery({
     queryKey: ['suppliers', 'specialization', specialization],
-    queryFn: async (): Promise<SupplierResponseDto[]> => {
+    queryFn: async () => {
       try {
-        if (DEV_MODE) {
-          // Mode développement: filtrer les données centralisées
-          const filteredSuppliers = allSuppliersData.filter((s: MockSupplier) => 
-            s.specialization.includes(specialization)
-          );
-          
-          // [Mock Data] → [DTOs] : Flux correct pour testing
-          // Utilisation du Transformer existant : SupplierMapper
-          return filteredSuppliers.map((supplier: MockSupplier) => {
-            // Créer une entité Supplier à partir du mock
-            const supplierEntity = SupplierMapper.toDomain({
-              id: supplier.id,
-              name: supplier.name,
-              email: supplier.contactEmail,
-              phone: supplier.contactPhone,
-              address: supplier.address,
-              nif: '', // MockSupplier n'a pas de nif, utiliser valeur par défaut
-              category: 'materials' as SupplierCategory, // MockSupplier n'a pas de category, utiliser valeur par défaut
-              status: supplier.isActive ? 'active' : 'inactive',
-              rating: supplier.rating,
-              contacts: [],
-              is_verified: true,
-              verified_at: supplier.createdAt,
-              workspace_id: 'workspace-1',
-              created_at: supplier.createdAt,
-              updated_at: supplier.updatedAt
-            });
-            
-            return SupplierMapper.toResponseDto(supplierEntity);
-          });
-        }
-        
-        // Production: Flux hexagonal complet
-        // [Factory] → [Adapter] → [Service] → [Transformers] → [Persistence]
-        const suppliers = await supplierService.searchSuppliers({ 
+        const result = await supplierService.searchSuppliers({ 
           searchTerm: specialization,
           isActive: true,
           limit: 50
         });
-        
-        // [Transformers]: Entities → DTOs
-        // Utilisation du Transformer existant : SupplierMapper
-        return SupplierMapper.toResponseDtoArray(suppliers.suppliers);
-      } catch (error) {
-        console.error('Error fetching suppliers by specialization:', error);
-        throw new Error(error instanceof Error ? error.message : 'Failed to fetch suppliers by specialization');
+        return result?.suppliers || [];
+      } catch (err) {
+        console.error('Error fetching suppliers by specialization:', err);
+        throw new Error(err instanceof Error ? err.message : 'Failed to fetch suppliers by specialization');
       }
     },
     enabled: !!specialization,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }
 
-// Export par défaut pour compatibilité
 export const useSupplierHex = useSuppliersHex;
