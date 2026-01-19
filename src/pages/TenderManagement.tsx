@@ -27,8 +27,8 @@ import {
 } from "@/components/ui/dialog";
 import { WorkflowPhase, WorkflowStage } from "@/types/workflow";
 import { useQuery } from "@tanstack/react-query";
-import { TenderService } from "@/services/TenderService";
-import { SubmissionSecretService } from "@/services/SubmissionSecretService";
+import { TenderService } from "@/application/services/TenderService";
+import { SubmissionSecretService } from "@/application/services/SubmissionSecretService";
 import { useToast } from "@/hooks/use-toast";
 import { AppLayout } from "@/components/layout";
 

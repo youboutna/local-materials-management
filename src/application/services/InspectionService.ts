@@ -2,7 +2,7 @@
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { Inspection, InspectionStatus } from '@/domain/entities/Inspection';
 import { AppError, ErrorLogger } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { RepositoryFactory } from '@/application/services/RepositoryFactory';
 
 export class InspectionService {
   private repository: IInspectionRepository;
@@ -29,6 +29,126 @@ export class InspectionService {
   async getInspectionById(id: string): Promise<Inspection | null> {
     try {
       return await this.repository.findById(id);
+    } catch (error) {
+      ErrorLogger.log(error as Error, 'InspectionService.getInspectionById');
+      throw error;
+    }
+  }
+
+  /**
+   * Get inspections by project ID
+   */
+  async getInspectionsByProject(projectId: string): Promise<Inspection[]> {
+    try {
+      return await this.repository.findByProjectId(projectId);
+    } catch (error) {
+      ErrorLogger.log(error as Error, 'InspectionService.getInspectionsByProject');
+      throw error;
+    }
+  }
+
+  /**
+   * Create inspection
+   */
+  async createInspection(data: Omit<Inspection, 'id'>): Promise<Inspection> {
+    try {
+      return await this.repository.create(data);
+    } catch (error) {
+      ErrorLogger.log(error as Error, 'InspectionService.createInspection');
+      throw error;
+    }
+  }
+
+  /**
+   * Update inspection
+   */
+  async updateInspection(id: string, updates: Partial<Inspection>): Promise<Inspection> {
+    try {
+      return await this.repository.update(id, updates);
+    } catch (error) {
+      ErrorLogger.log(error as Error, 'InspectionService.updateInspection');
+      throw error;
+    }
+  }
+
+  /**
+   * Delete inspection
+   */
+  async deleteInspection(id: string): Promise<void> {
+    try {
+      await this.repository.delete(id);
+    } catch (error) {
+      ErrorLogger.log(error as Error, 'InspectionService.deleteInspection');
+      throw error;
+    }
+  }
+
+  // ============= Legacy Methods for Backward Compatibility =============
+
+  /**
+   * Get inspections by project ID (Legacy method)
+   */
+  static async getInspectionsByProject(projectId: string): Promise<Inspection[]> {
+    try {
+      // Import the legacy service for backward compatibility
+      const { InspectionService: LegacyInspectionService } = await import('@/services/InspectionService');
+      return await LegacyInspectionService.getInspectionsByProject(projectId);
+    } catch (error) {
+      ErrorLogger.log(error as Error, 'InspectionService.getInspectionsByProject');
+      throw error;
+    }
+  }
+
+  /**
+   * Create inspection (Legacy method)
+   */
+  static async createInspection(data: any): Promise<any> {
+    try {
+      // Import the legacy service for backward compatibility
+      const { InspectionService: LegacyInspectionService } = await import('@/services/InspectionService');
+      return await LegacyInspectionService.createInspection(data);
+    } catch (error) {
+      ErrorLogger.log(error as Error, 'InspectionService.createInspection');
+      throw error;
+    }
+  }
+
+  /**
+   * Update inspection (Legacy method)
+   */
+  static async updateInspection(id: string, data: any): Promise<any> {
+    try {
+      // Import the legacy service for backward compatibility
+      const { InspectionService: LegacyInspectionService } = await import('@/services/InspectionService');
+      return await LegacyInspectionService.updateInspection(id, data);
+    } catch (error) {
+      ErrorLogger.log(error as Error, 'InspectionService.updateInspection');
+      throw error;
+    }
+  }
+
+  /**
+   * Delete inspection (Legacy method)
+   */
+  static async deleteInspection(id: string): Promise<void> {
+    try {
+      // Import the legacy service for backward compatibility
+      const { InspectionService: LegacyInspectionService } = await import('@/services/InspectionService');
+      await LegacyInspectionService.deleteInspection(id);
+    } catch (error) {
+      ErrorLogger.log(error as Error, 'InspectionService.deleteInspection');
+      throw error;
+    }
+  }
+
+  /**
+   * Get inspection by ID (Legacy method)
+   */
+  static async getInspectionById(id: string): Promise<any> {
+    try {
+      // Import the legacy service for backward compatibility
+      const { InspectionService: LegacyInspectionService } = await import('@/services/InspectionService');
+      return await LegacyInspectionService.getInspectionById(id);
     } catch (error) {
       ErrorLogger.log(error as Error, 'InspectionService.getInspectionById');
       throw error;

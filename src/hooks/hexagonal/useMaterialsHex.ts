@@ -6,7 +6,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { RepositoryFactory } from "@/repositories/RepositoryFactory";
+import { RepositoryFactory } from '@/application/services/RepositoryFactory';
 import { MaterialService } from "@/application/services/MaterialService";
 import { MaterialDomainTransformer, CreateMaterialRequestDto, UpdateMaterialRequestDto } from "@/dtos/transforms";
 import { useNavigate } from 'react-router-dom';

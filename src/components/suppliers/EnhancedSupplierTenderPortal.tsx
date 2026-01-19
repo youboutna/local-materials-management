@@ -12,7 +12,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { supabase } from '@/integrations/supabase/client';
-import { TenderService } from '@/services/TenderService';
+import { TenderService } from '@/application/services/TenderService';
 import { TenderSubmissionService, UploadedDocument } from '@/services/TenderSubmissionService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {

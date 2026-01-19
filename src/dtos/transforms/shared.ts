@@ -778,3 +778,342 @@ export interface ProjectListItemDTO extends BaseEntityDTO {
     longitude: number;
   };
 }
+
+// Phase DTOs
+export interface PhaseStepDTO {
+  id: string;
+  name: string;
+  description: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'approved' | 'rejected' | 'requires_changes';
+  progress: number;
+  order_index: number;
+  tasks: PhaseTaskDTO[];
+}
+
+export interface PhaseTaskDTO {
+  id: string;
+  name: string;
+  description: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'delayed';
+  progress: number;
+  order_index: number;
+  assigned_to: string[];
+  requires_inspection: boolean;
+  requires_engineer_approval: boolean;
+}
+
+export interface PhaseDTO extends BaseEntityDTO {
+  id: string;
+  project_id: string;
+  phase_name: string;
+  description: string;
+  construction_phase: string | null;
+  construction_stage: string | null;
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'approved' | 'rejected' | 'requires_changes';
+  progress: number;
+  estimated_cost: number;
+  actual_cost: number;
+  estimated_duration_days: number;
+  start_date: string;
+  end_date: string;
+  order_index: number;
+  steps: PhaseStepDTO[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreatePhaseRequestDto {
+  project_id: string;
+  phase_name: string;
+  description?: string;
+  construction_phase?: string;
+  construction_stage?: string;
+  status?: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'approved' | 'rejected' | 'requires_changes';
+  progress?: number;
+  estimated_cost?: number;
+  estimated_duration_days?: number;
+  start_date?: string;
+  end_date?: string;
+  order_index?: number;
+  steps?: PhaseStepDTO[];
+}
+
+export interface UpdatePhaseRequestDto {
+  phase_name?: string;
+  description?: string;
+  construction_phase?: string;
+  construction_stage?: string;
+  status?: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'approved' | 'rejected' | 'requires_changes';
+  progress?: number;
+  estimated_cost?: number;
+  actual_cost?: number;
+  estimated_duration_days?: number;
+  start_date?: string;
+  end_date?: string;
+  order_index?: number;
+  steps?: PhaseStepDTO[];
+}
+
+// Workspace DTOs
+export interface WorkspaceDTO {
+  id: string;
+  name: string;
+  location: string;
+  status: string;
+  contact_manager?: string;
+  contact_phone?: string;
+  facilities?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateWorkspaceRequestDto {
+  name: string;
+  location: string;
+  status?: string;
+  contact_manager?: string;
+  contact_phone?: string;
+  facilities?: Record<string, any>;
+}
+
+export interface UpdateWorkspaceRequestDto {
+  name?: string;
+  location?: string;
+  status?: string;
+  contact_manager?: string;
+  contact_phone?: string;
+  facilities?: Record<string, any>;
+}
+
+// Project Alert DTOs
+export interface ProjectAlertDTO {
+  id: string;
+  project_id: string;
+  title: string;
+  description?: string;
+  type: string;
+  severity: string;
+  source?: string;
+  escalation_level?: number;
+  acknowledged?: boolean;
+  acknowledged_at?: string;
+  acknowledged_by?: string;
+  resolved?: boolean;
+  resolved_at?: string;
+  resolved_by?: string;
+  assigned_actions?: string[];
+  action_proofs?: Record<string, any>;
+  metadata?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateProjectAlertRequestDto {
+  project_id: string;
+  title: string;
+  description?: string;
+  type: string;
+  severity: string;
+  source?: string;
+  escalation_level?: number;
+  assigned_actions?: string[];
+  metadata?: Record<string, any>;
+}
+
+export interface UpdateProjectAlertRequestDto {
+  title?: string;
+  description?: string;
+  type?: string;
+  severity?: string;
+  source?: string;
+  escalation_level?: number;
+  acknowledged?: boolean;
+  resolved?: boolean;
+  assigned_actions?: string[];
+  action_proofs?: Record<string, any>;
+  metadata?: Record<string, any>;
+}
+
+// Action DTOs
+export interface ActionDTO {
+  id: string;
+  action_type: string;
+  message: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateActionRequestDto {
+  action_type: string;
+  message: string;
+}
+
+export interface UpdateActionRequestDto {
+  action_type?: string;
+  message?: string;
+}
+
+// Task Assignment DTOs
+export interface TaskAssignmentDTO {
+  id: string;
+  title: string;
+  description?: string;
+  project_id?: string;
+  assigned_to?: string;
+  assigned_by?: string;
+  assignee_type?: "supplier" | "employee" | "user";
+  assignee_name?: string;
+  assignee_email?: string;
+  due_date?: string;
+  priority: "low" | "medium" | "high" | "urgent";
+  status: "pending" | "in_progress" | "completed" | "cancelled";
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateTaskAssignmentRequestDto {
+  title: string;
+  description?: string;
+  project_id?: string;
+  assigned_to?: string;
+  assignee_type?: "supplier" | "employee" | "user";
+  assignee_name?: string;
+  assignee_email?: string;
+  due_date?: string;
+  priority?: "low" | "medium" | "high" | "urgent";
+  status?: "pending" | "in_progress" | "completed" | "cancelled";
+  notes?: string;
+}
+
+export interface UpdateTaskAssignmentRequestDto {
+  title?: string;
+  description?: string;
+  project_id?: string;
+  assigned_to?: string;
+  assignee_type?: "supplier" | "employee" | "user";
+  assignee_name?: string;
+  assignee_email?: string;
+  due_date?: string;
+  priority?: "low" | "medium" | "high" | "urgent";
+  status?: "pending" | "in_progress" | "completed" | "cancelled";
+  notes?: string;
+}
+
+export interface TaskAssignmentFilters {
+  searchTerm?: string;
+  status?: string;
+  priority?: string;
+  assignee?: string;
+  project_id?: string;
+}
+
+// Performance Monitoring DTOs
+export interface DatabaseMetricsDTO {
+  connections: number;
+  maxConnections: number;
+  queryTime: number;
+  slowQueries: number;
+}
+
+export interface PerformanceMetricsDTO {
+  database: DatabaseMetricsDTO;
+  timestamp: number;
+}
+
+// Tender Estimate DTOs
+export interface TenderEstimateDTO {
+  id: string;
+  tender_id: string;
+  project_id?: string | null;
+  estimate_type: string;
+  total_materials_cost?: number | null;
+  total_labor_cost?: number | null;
+  total_equipment_cost?: number | null;
+  subtotal?: number | null;
+  tax_rate?: number | null;
+  tax_amount?: number | null;
+  total_with_tax?: number | null;
+  overhead_percentage?: number | null;
+  overhead_amount?: number | null;
+  profit_margin_percentage?: number | null;
+  profit_margin_amount?: number | null;
+  final_total?: number | null;
+  currency?: string | null;
+  status?: string | null;
+  created_at: string;
+  updated_at: string;
+  submitted_by?: string | null;
+}
+
+export interface TenderEstimateItemDTO {
+  id: string;
+  estimate_id: string;
+  material_id?: string | null;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  description?: string | null;
+  item_type?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TenderEstimateCreateDTO {
+  tender_id: string;
+  project_id?: string;
+  estimate_type: string;
+  total_materials_cost?: number;
+  total_labor_cost?: number;
+  total_equipment_cost?: number;
+  subtotal?: number;
+  tax_rate?: number;
+  tax_amount?: number;
+  total_with_tax?: number;
+  overhead_percentage?: number;
+  overhead_amount?: number;
+  profit_margin_percentage?: number;
+  profit_margin_amount?: number;
+  final_total?: number;
+  currency?: string;
+  status?: string;
+}
+
+export interface TenderEstimateItemCreateDTO {
+  estimate_id: string;
+  material_id?: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  description?: string;
+  item_type?: string;
+}
+
+export interface UpdateTenderEstimateRequestDto {
+  tender_id?: string;
+  project_id?: string;
+  estimate_type?: string;
+  total_materials_cost?: number;
+  total_labor_cost?: number;
+  total_equipment_cost?: number;
+  subtotal?: number;
+  tax_rate?: number;
+  tax_amount?: number;
+  total_with_tax?: number;
+  overhead_percentage?: number;
+  overhead_amount?: number;
+  profit_margin_percentage?: number;
+  profit_margin_amount?: number;
+  final_total?: number;
+  currency?: string;
+  status?: string;
+}
+
+export interface UpdateTenderEstimateItemRequestDto {
+  material_id?: string;
+  quantity?: number;
+  unit_price?: number;
+  total_price?: number;
+  description?: string;
+  item_type?: string;
+}

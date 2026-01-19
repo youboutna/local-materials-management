@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import UnifiedInsuranceManager from '@/components/insurance/UnifiedInsuranceManager';
 import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
 import { useProjectManager } from '@/hooks/useProjectManager';
-import { actionLabels } from '@/services/ProjectManagerService';
+import { actionLabels } from '@/application/services/ProjectManagerService';
 import { EscalationRoles, ProjectData } from '@/types/project';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

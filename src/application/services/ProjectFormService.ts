@@ -2,9 +2,27 @@
  * Project Form Application Service
  * Orchestrates project form operations using hexagonal architecture
  */
+
 import { IProjectFormRepository } from '@/domain/repositories/IProjectFormRepository';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { ProjectFormData, SaveContext } from '@/services/ProjectFormService';
+import { RepositoryFactory } from '@/application/services/RepositoryFactory';
+
+// Define ProjectFormData interface for this service
+interface ProjectFormData {
+  title: string;
+  description: string;
+  location: string;
+  status: string;
+  progress: number;
+  budget: number;
+  start_date: string;
+  end_date: string;
+  team_size: number;
+}
+
+interface SaveContext {
+  currentStep: number;
+  totalSteps: number;
+}
 
 export class ProjectFormService {
   private projectFormRepository: IProjectFormRepository;

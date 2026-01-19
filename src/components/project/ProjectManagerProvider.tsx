@@ -3,8 +3,8 @@ import React, { useState, useCallback, ReactNode } from "react";
 
 import {
   ProjectManager,
-} from "@/services/projectManagerWithActions"
-import { ProjectManagerState,ProjectManagerContext } from "@/services/ProjectManagerContext";
+} from "@/application/services/projectManagerWithActions"
+import { ProjectManagerState,ProjectManagerContext } from "@/application/services/ProjectManagerContext";
 import { EscalationRoles, ActionLabels, ProjectData } from "@/types/project";
 
 export const ProjectManagerProvider: React.FC<{

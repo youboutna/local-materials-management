@@ -6,9 +6,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
-import { ProjectService } from "@/services/ProjectService";
-import { ProjectStakeholderService } from "@/services/ProjectStakeholderService";
-import { PhaseService } from "@/services/phaseService";
+import { ProjectService } from '@/application/services/ProjectService';
+import { ProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
+import { PhaseService } from '@/application/services/PhaseService';
 import { useProjectMaterialsHex, SelectedMaterial } from "./useProjectMaterialsHex";
 
 const projectService = new ProjectService();

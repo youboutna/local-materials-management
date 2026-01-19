@@ -5,7 +5,8 @@
 
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { NotificationService } from "@/services/NotificationService";
+import { NotificationService } from '@/application/services/NotificationService';
+import { TaskAssignmentService } from '@/application/services/TaskAssignmentService';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,7 @@ import {
   Filter,
   Bell,
 } from "lucide-react";
+import { TaskAssignmentDTO } from '@/dtos/transforms/shared';
 import type { Database } from "@/integrations/supabase/types";
 import { useLanguage } from "@/contexts/LanguageContext";
 import UserSelector from '@/components/selectors/UserSelector';
@@ -38,12 +40,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePagination } from '@/hooks/usePagination';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { 
-  useTaskAssignments, 
-  useProjectsForTaskAssignments, 
+  useTaskAssignmentsHex, 
+  useProjectsHex, 
   useAssigneeDetails 
 } from '@/hooks/hexagonal';
 
-type TaskAssignment = Database["public"]["Tables"]["task_assignments"]["Row"];
 type Project = { id: string; title: string };
 
 const TaskAssignmentsComponent = () => {
@@ -72,14 +73,13 @@ const TaskAssignmentsComponent = () => {
   const { user } = useAuth();
 
   // Use hexagonal hooks
-  const { data: tasks, isLoading } = useTaskAssignments({
-    searchTerm: searchTerm || undefined,
-    status: filterStatus !== 'all' ? filterStatus : undefined,
-    priority: filterPriority !== 'all' ? filterPriority : undefined,
-    assignee: filterAssignee !== 'all' ? filterAssignee : undefined
+  const { tasks, isLoading } = useTaskAssignmentsHex({
+    assignedTo: filterAssignee !== 'all' ? filterAssignee : undefined,
+    status: filterStatus !== 'all' ? filterStatus : undefined
   });
 
-  const { data: projects } = useProjectsForTaskAssignments();
+  const projectsHook = useProjectsHex();
+  const projects = projectsHook.projects || [];
 
   // Fetch assignee details when assigned_to changes
   const { data: assigneeDetails } = useAssigneeDetails(formData.assigned_to || null);
@@ -112,67 +112,22 @@ const TaskAssignmentsComponent = () => {
 
   const createMutation = useMutation({
     mutationFn: async (taskData: typeof formData) => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const insertData: any = {
+      const taskService = new TaskAssignmentService();
+      const taskDTO = {
         title: taskData.title,
         description: taskData.description,
-        project_id: taskData.project_id || null,
-        assignee_type: taskData.assignee_type || null,
-        assignee_name: taskData.assignee_name || null,
-        assignee_email: taskData.assignee_email || null,
-        assigned_to: taskData.assigned_to || null,
-        assigned_by: user?.id || null,
-        due_date: taskData.due_date || null,
-        priority: taskData.priority,
-        status: taskData.status,
-        notes: taskData.notes || null,
+        project_id: taskData.project_id || undefined,
+        assignee_type: taskData.assignee_type || undefined,
+        assignee_name: taskData.assignee_name || undefined,
+        assignee_email: taskData.assignee_email || undefined,
+        assigned_to: taskData.assigned_to || undefined,
+        due_date: taskData.due_date || undefined,
+        priority: taskData.priority as "low" | "medium" | "high" | "urgent",
+        status: taskData.status as "pending" | "in_progress" | "completed" | "cancelled",
+        notes: taskData.notes || undefined,
       };
       
-      const { data, error } = await supabase
-        .from("task_assignments")
-        .insert(insertData)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      // Send notification to assigned user/supplier
-      if (data && taskData.assigned_to) {
-        try {
-          await NotificationService.createNotification({
-            recipient_id: taskData.assigned_to,
-            title: '📋 Nouvelle tâche assignée',
-            message: `Une nouvelle tâche "${taskData.title}" vous a été assignée${taskData.priority === 'high' ? ' (Priorité élevée)' : ''}.`,
-            type: 'task_assignment',
-            related_id: data.id,
-            metadata: {
-              task_id: data.id,
-              project_id: taskData.project_id,
-              priority: taskData.priority,
-              due_date: taskData.due_date,
-              assignee_type: taskData.assignee_type,
-            }
-          });
-
-          if (taskData.assignee_type === 'supplier' && taskData.assignee_email) {
-            await NotificationService.createSupplierNotification({
-              supplier_id: taskData.assigned_to,
-              notification_type: 'task_assignment',
-              email: taskData.assignee_email,
-              metadata: {
-                task_id: data.id,
-                title: taskData.title,
-                priority: taskData.priority,
-                due_date: taskData.due_date,
-              }
-            });
-          }
-        } catch (notifError) {
-          console.error('Error sending notification:', notifError);
-        }
-      }
-      
-      return data;
+      return await taskService.createTaskAssignment(taskDTO, user?.id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["task_assignments"] });
@@ -193,42 +148,22 @@ const TaskAssignmentsComponent = () => {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: typeof formData }) => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const updateData: any = {
+      const taskService = new TaskAssignmentService();
+      const taskDTO = {
         title: data.title,
         description: data.description,
-        project_id: data.project_id || null,
-        assignee_type: data.assignee_type || null,
-        assignee_name: data.assignee_name || null,
-        assignee_email: data.assignee_email || null,
-        assigned_to: data.assigned_to || null,
-        due_date: data.due_date || null,
-        priority: data.priority,
-        status: data.status,
-        notes: data.notes || null,
+        project_id: data.project_id || undefined,
+        assignee_type: data.assignee_type || undefined,
+        assignee_name: data.assignee_name || undefined,
+        assignee_email: data.assignee_email || undefined,
+        assigned_to: data.assigned_to || undefined,
+        due_date: data.due_date || undefined,
+        priority: data.priority as "low" | "medium" | "high" | "urgent",
+        status: data.status as "pending" | "in_progress" | "completed" | "cancelled",
+        notes: data.notes || undefined,
       };
 
-      const { error } = await supabase
-        .from("task_assignments")
-        .update(updateData)
-        .eq("id", id as any);
-      
-      if (error) throw error;
-
-      if (data.status === 'completed' && data.assigned_to) {
-        try {
-          await NotificationService.createNotification({
-            recipient_id: data.assigned_to,
-            title: '✅ Tâche terminée',
-            message: `La tâche "${data.title}" a été marquée comme terminée.`,
-            type: 'task_update',
-            related_id: id,
-            metadata: { task_id: id, status: 'completed' }
-          });
-        } catch (notifError) {
-          console.error('Error sending notification:', notifError);
-        }
-      }
+      return await taskService.updateTaskAssignment(id, taskDTO);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["task_assignments"] });
@@ -246,12 +181,8 @@ const TaskAssignmentsComponent = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { error } = await supabase
-        .from("task_assignments")
-        .delete()
-        .eq("id", id as any);
-      if (error) throw error;
+      const taskService = new TaskAssignmentService();
+      await taskService.deleteTaskAssignment(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["task_assignments"] });
@@ -293,7 +224,8 @@ const TaskAssignmentsComponent = () => {
     }
   };
 
-  const handleEdit = (task: TaskAssignment) => {
+  const handleEdit = (task: any) => {
+    const taskDTO = task as TaskAssignmentDTO;
     setFormData({
       title: task.title || "",
       description: task.description || "",
@@ -346,7 +278,8 @@ const TaskAssignmentsComponent = () => {
     return project?.title || projectId;
   };
 
-  const getAssigneeName = (task: TaskAssignment) => {
+  const getAssigneeName = (task: any) => {
+    const taskDTO = task as TaskAssignmentDTO;
     if (task.assignee_name) {
       return `${task.assignee_name}${task.assignee_type ? ` (${task.assignee_type})` : ''}`;
     }

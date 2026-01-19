@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { PhaseService, PhaseData } from '@/services/phaseService';
+import { PhaseService, PhaseData } from "@/application/services/PhaseService";
 import { supabase } from '@/integrations/supabase/client';
 import PhaseTasks from '@/components/project/PhaseTasks';
 import PhaseMaterials from '@/components/project/PhaseMaterials';

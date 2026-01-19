@@ -8,8 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { usePagination } from "@/hooks/usePagination";
 import { useBankGuaranteeForProjectHex, useAuthUserHex } from "@/hooks/hexagonal";
-import { createBankGuaranteeAction } from "@/services/bankGuaranteeActionService";
-import { BankGuaranteeService, detectProjectDelays, triggerBankGuaranteeNotification } from "@/services/BankGuaranteeService";
+import { BankGuaranteeActionService } from '@/application/services/BankGuaranteeActionService';
+import { BankGuaranteeService } from '@/application/services/BankGuaranteeService';
 import {
   AlertTriangle,
   Clock,

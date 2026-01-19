@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
-import { ProjectService } from "@/services/ProjectService";
+import { ProjectService } from '@/application/services/ProjectService';
 import { ProjectFormDTO } from "@/types/dto";
 import { ImportOptions, ImportResult } from "@/types/project";
 import {

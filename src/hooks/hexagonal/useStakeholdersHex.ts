@@ -3,8 +3,8 @@
  * Provides stakeholders and team members management via services
  */
 import { useQuery } from '@tanstack/react-query';
-import { EmployeeService } from '@/services/EmployeeService';
-import { SupplierService } from '@/services/SupplierService';
+import { EmployeeService } from '@/application/services/EmployeeService';
+import { SupplierService } from '@/application/services/SupplierService';
 
 export function useStakeholdersHex() {
   const { 

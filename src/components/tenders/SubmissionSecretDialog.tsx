@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { SubmissionSecretService } from '@/services/SubmissionSecretService';
+import { SubmissionSecretService } from '@/application/services/SubmissionSecretService';
 import { 
   Key, 
   Copy, 

@@ -1,10 +1,10 @@
 import ProjectCreationWorkflow from "@/components/project/ProjectCreationWorkflow";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useProjects } from "@/hooks/projects/useProjects";
+import { useProjectsHex } from "@/hooks/hexagonal";
 import { toast } from "@/hooks/use-toast";
-import { PhaseService } from "@/services/phaseService";
-import { ProjectStakeholderService } from "@/services/ProjectStakeholderService";
+import { PhaseService } from '@/application/services/PhaseService';
+import { ProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { useState } from "react";

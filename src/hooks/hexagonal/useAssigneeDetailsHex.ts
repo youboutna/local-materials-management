@@ -4,7 +4,7 @@
  */
 import { useQuery } from '@tanstack/react-query';
 import { EmployeeService } from '@/services/EmployeeService';
-import { SupplierService } from '@/services/SupplierService';
+import { SupplierService } from '@/application/services/SupplierService';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface AssigneeDetails {

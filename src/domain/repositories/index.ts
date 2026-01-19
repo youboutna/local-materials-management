@@ -1,8 +1,9 @@
 /**
  * Domain Repositories Index
- * Export all repository interfaces
+ * Export all repository interfaces and implementations
  */
 
+// Repository Interfaces
 export * from './IProjectRepository';
 export * from './IPhaseRepository';
 export * from './IHierarchyRepository';
@@ -25,3 +26,10 @@ export * from './IReportingRepository';
 export * from './IUserRepository';
 export * from './IProjectStakeholderRepository';
 export * from './IParsedInvoiceRepository';
+
+// Repository Implementations (migrated from services)
+export * from './BankGuaranteeRepository';
+export * from './InsuranceRepository';
+export * from './MaterialRepository';
+export * from './TenderRepository';
+export * from './SupplierPaymentRepository';

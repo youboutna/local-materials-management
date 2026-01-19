@@ -15,7 +15,7 @@ import {
   EyeOff
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { SubmissionSecretService } from '@/services/SubmissionSecretService';
+import { SubmissionSecretService } from '@/application/services/SubmissionSecretService';
 
 interface SubmissionSecretDisplayProps {
   submissionId: string;

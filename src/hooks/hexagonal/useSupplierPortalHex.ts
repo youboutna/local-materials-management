@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { TenderService } from '@/services/TenderService';
+import { TenderService } from '@/application/services/TenderService';
 import { TenderSubmissionService, UploadedDocument } from '@/services/TenderSubmissionService';
 
 interface SharedDocument {

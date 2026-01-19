@@ -68,14 +68,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { usePagination } from "@/hooks/usePagination";
 import { usePaymentStatsHex, useAuthUserHex } from "@/hooks/hexagonal";
-import {
-  validatePaymentEligibility,
-  attemptPayment,
-  getPaymentBlockHistory,
-  PaymentValidationResult,
-} from "@/services/paymentBlockingService";
-import { BankGuaranteeService } from "@/services/BankGuaranteeService";
-import { createPaymentControlAction } from "@/services/paymentControlActionService";
+import { PaymentBlockingService } from '@/application/services/PaymentBlockingService';
+import { BankGuaranteeService } from '@/application/services/BankGuaranteeService';
 import ProjectSelector from "@/components/selectors/ProjectSelector";
 import SupplierSelector from "@/components/suppliers/SupplierSelector";
 import UserSelector from "@/components/selectors/UserSelector";

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { InspectionService } from '@/services/InspectionService';
+import { InspectionService } from '@/application/services/InspectionService';
 import { InspectionDTO } from '@/types/inspection.dto';
 import { useToast } from '@/hooks/use-toast';
 

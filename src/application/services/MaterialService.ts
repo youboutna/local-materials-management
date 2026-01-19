@@ -2,7 +2,7 @@
 import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
 import { Material, MaterialCategory } from '@/domain/entities/Material';
 import { AppError, ErrorLogger } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { RepositoryFactory } from '@/application/services/RepositoryFactory';
 
 export class MaterialService {
   private repository: IMaterialRepository;

@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { formatMetric } from '@/utils/monitoringCalculations';
 import { httpMetricsCollector } from '@/utils/httpMetricsCollector';
-import { PerformanceMonitoringService } from '@/services/PerformanceMonitoringService';
+import { PerformanceMonitoringService } from '@/application/services/PerformanceMonitoringService';
 
 interface PerformanceData {
   database: {

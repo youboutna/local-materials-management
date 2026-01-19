@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { ProjectData } from '@/types/project';
-import { ProjectService } from '@/services/ProjectService';
+import { ProjectService } from '@/application/services/ProjectService';
 import { ProjectFormDTO } from '@/types/dto';
 
 // Use injectable service instead of direct Supabase dependency

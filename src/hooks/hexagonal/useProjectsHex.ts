@@ -5,15 +5,16 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/repositories/RepositoryFactory';
+import { RepositoryFactory } from '@/application/services/RepositoryFactory';
 import { ProjectService } from '@/application/services/ProjectService';
-import { ProjectDomainTransformer, ProjectResponseDto, CreateProjectRequestDto, UpdateProjectRequestDto } from '@/dtos/transforms/projectDomainTransform';
+import { ProjectDomainTransformer } from '@/dtos/transforms';
+import { ProjectDTO, CreateProjectRequestDto, UpdateProjectRequestDto } from '@/dtos/transforms/shared';
 import { Project, ProjectStatus } from '@/domain/entities/Project';
 import { toast } from 'sonner';
 
 // Types pour les hooks
 export interface UseProjectsHexResult {
-  projects: ProjectResponseDto[];
+  projects: ProjectDTO[];
   isLoading: boolean;
   error: any;
   refetch: () => void;
@@ -26,7 +27,7 @@ export interface UseProjectsHexResult {
 }
 
 export interface UseProjectHexResult {
-  project: ProjectResponseDto | null;
+  project: ProjectDTO | null;
   isLoading: boolean;
   error: any;
   refetch: () => void;
@@ -47,7 +48,7 @@ export function useProjects(): UseProjectsHexResult {
     refetch
   } = useQuery({
     queryKey: ['projects'],
-    queryFn: async (): Promise<ProjectResponseDto[]> => {
+    queryFn: async (): Promise<ProjectDTO[]> => {
       try {
         // Flux hexagonal complet - géré automatiquement par RepositoryFactory
         // [Factory] → [Adapter] → [Service] → [Transformers] → [Persistence]
@@ -55,7 +56,7 @@ export function useProjects(): UseProjectsHexResult {
         
         // [Transformers]: DTOs → ResponseDTOs
         // Utilisation du Transformer unifié : ProjectDomainTransformer
-        return projectTransformer.fromDtosToAdapter(projects);
+        return projects;
       } catch (error) {
         console.error('Error fetching projects:', error);
         throw new Error(error instanceof Error ? error.message : 'Failed to fetch projects');
@@ -65,14 +66,14 @@ export function useProjects(): UseProjectsHexResult {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data: CreateProjectRequestDto): Promise<ProjectResponseDto> => {
+    mutationFn: async (data: CreateProjectRequestDto): Promise<ProjectDTO> => {
       try {
         // Flux hexagonal complet - géré automatiquement par RepositoryFactory
         // [Factory] → [Adapter] → [Service] → [Transformers] → [Persistence]
-        const projectDTO = projectTransformer.toRequestDto(data);
-        const project = await projectService.createProject(projectDTO);
+        const projectEntity = ProjectDomainTransformer.fromCreateDtoToEntity(data);
+        const project = await projectService.createProject(projectEntity);
         
-        return projectTransformer.toResponseDto(project);
+        return ProjectDomainTransformer.toDTO(project);
       } catch (error) {
         console.error('Error creating project:', error);
         throw new Error(error instanceof Error ? error.message : 'Failed to create project');
@@ -89,14 +90,14 @@ export function useProjects(): UseProjectsHexResult {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: UpdateProjectRequestDto }): Promise<ProjectResponseDto> => {
+    mutationFn: async ({ id, data }: { id: string; data: UpdateProjectDTO }): Promise<ProjectDTO> => {
       try {
         // Flux hexagonal complet - géré automatiquement par RepositoryFactory
         // [Factory] → [Adapter] → [Service] → [Transformers] → [Persistence]
-        const updateDTO = projectTransformer.toUpdateDto(data);
-        const project = await projectService.updateProject(id, updateDTO as any);
+        const updateEntity = ProjectDomainTransformer.fromUpdateDtoToEntity(data);
+        const project = await projectService.updateProject(id, updateEntity);
         
-        return projectTransformer.toResponseDto(project);
+        return ProjectDomainTransformer.toDTO(project);
       } catch (error) {
         console.error('Error updating project:', error);
         throw new Error(error instanceof Error ? error.message : 'Failed to update project');
@@ -155,7 +156,7 @@ export function useProjectById(id: string) {
 
   return useQuery({
     queryKey: ['projects', 'id', id],
-    queryFn: async (): Promise<ProjectResponseDto | null> => {
+    queryFn: async (): Promise<ProjectDTO | null> => {
       try {
         // Flux hexagonal complet - géré automatiquement par RepositoryFactory
         // [Factory] → [Adapter] → [Service] → [Transformers] → [Persistence]
@@ -163,7 +164,7 @@ export function useProjectById(id: string) {
         
         // [Transformers]: DTO → ResponseDTO
         // Utilisation du Transformer unifié : ProjectDomainTransformer
-        return project ? projectTransformer.toResponseDto(project) : null;
+        return project;
       } catch (error) {
         console.error('Error fetching project by ID:', error);
         throw new Error(error instanceof Error ? error.message : 'Failed to fetch project');
@@ -182,7 +183,7 @@ export function useProjectsByStatus(status: string) {
 
   return useQuery({
     queryKey: ['projects', 'status', status],
-    queryFn: async (): Promise<ProjectResponseDto[]> => {
+    queryFn: async (): Promise<ProjectDTO[]> => {
       try {
         // Flux hexagonal complet - géré automatiquement par RepositoryFactory
         // [Factory] → [Adapter] → [Service] → [Transformers] → [Persistence]
@@ -190,7 +191,7 @@ export function useProjectsByStatus(status: string) {
         
         // [Transformers]: DTOs → ResponseDTOs
         // Utilisation du Transformer unifié : ProjectDomainTransformer
-        return projectTransformer.fromDtosToAdapter(projects);
+        return projects;
       } catch (error) {
         console.error('Error fetching projects by status:', error);
         throw new Error(error instanceof Error ? error.message : 'Failed to fetch projects by status');

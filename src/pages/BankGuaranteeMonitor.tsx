@@ -3,7 +3,7 @@ import BankGuaranteeMonitor from '@/components/alerts/BankGuaranteeMonitor';
 import EnhancedBankGuaranteeCrud from '@/components/alerts/EnhancedBankGuaranteeCrud';
 import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
 import { useProjectManager } from '@/hooks/useProjectManager';
-import { actionLabels } from '@/services/ProjectManagerService';
+import { actionLabels } from '@/application/services/ProjectManagerService';
 import { EscalationRoles, ProjectData } from '@/types/project';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
