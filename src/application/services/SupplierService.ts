@@ -5,7 +5,7 @@
 
 import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
 import { Supplier } from '@/domain/entities/Supplier';
-import { AppError, ErrorLogger } from '@/utils/errorHandling';
+import { AppError, ErrorCode, ErrorLogger } from '@/utils/errorHandling';
 
 export interface SearchSuppliersOptions {
   searchTerm?: string;
@@ -26,23 +26,29 @@ export class SupplierService {
    */
   async searchSuppliers(options: SearchSuppliersOptions = {}): Promise<SearchSuppliersResult> {
     try {
-      const result = await this.supplierRepository.searchSuppliers(options);
+      let suppliers: Supplier[];
       
-      ErrorLogger.log('info', 'Suppliers searched successfully', {
-        searchTerm: options.searchTerm,
-        isActive: options.isActive,
-        resultCount: result.suppliers.length
-      });
+      if (options.searchTerm) {
+        suppliers = await this.supplierRepository.search(options.searchTerm);
+      } else if (options.isActive) {
+        suppliers = await this.supplierRepository.findActive();
+      } else {
+        suppliers = await this.supplierRepository.findAll();
+      }
 
-      return result;
+      // Apply limit if specified
+      if (options.limit && suppliers.length > options.limit) {
+        suppliers = suppliers.slice(0, options.limit);
+      }
+
+      return {
+        suppliers,
+        total: suppliers.length
+      };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to search suppliers';
-      ErrorLogger.log('error', 'SupplierService.searchSuppliers failed', { 
-        options, 
-        error: errorMessage 
-      });
-      
-      throw new AppError(errorMessage, 'SUPPLIER_SEARCH_ERROR');
+      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
+      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage);
     }
   }
 
@@ -54,19 +60,15 @@ export class SupplierService {
       const supplier = await this.supplierRepository.findById(id);
       
       if (!supplier) {
-        ErrorLogger.log('warning', 'Supplier not found', { supplierId: id });
+        console.warn('Supplier not found:', id);
         return null;
       }
 
       return supplier;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to get supplier';
-      ErrorLogger.log('error', 'SupplierService.getSupplierById failed', { 
-        supplierId: id, 
-        error: errorMessage 
-      });
-      
-      throw new AppError(errorMessage, 'SUPPLIER_GET_ERROR');
+      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
+      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage);
     }
   }
 
@@ -75,19 +77,11 @@ export class SupplierService {
    */
   async getActiveSuppliers(): Promise<Supplier[]> {
     try {
-      const result = await this.supplierRepository.searchSuppliers({ 
-        isActive: true,
-        limit: 100 
-      });
-      
-      return result.suppliers;
+      return await this.supplierRepository.findActive();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to get active suppliers';
-      ErrorLogger.log('error', 'SupplierService.getActiveSuppliers failed', { 
-        error: errorMessage 
-      });
-      
-      throw new AppError(errorMessage, 'ACTIVE_SUPPLIERS_ERROR');
+      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
+      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage);
     }
   }
 
@@ -96,22 +90,20 @@ export class SupplierService {
    */
   async createSupplier(supplierData: Omit<Supplier, 'id'>): Promise<Supplier> {
     try {
-      const supplier = await this.supplierRepository.create(supplierData);
+      const supplier: Supplier = {
+        id: crypto.randomUUID(),
+        ...supplierData
+      };
       
-      ErrorLogger.log('info', 'Supplier created successfully', {
-        supplierId: supplier.id,
-        supplierName: supplier.name
-      });
+      await this.supplierRepository.save(supplier);
+      
+      console.log('Supplier created successfully:', supplier.id);
 
       return supplier;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create supplier';
-      ErrorLogger.log('error', 'SupplierService.createSupplier failed', { 
-        supplierData, 
-        error: errorMessage 
-      });
-      
-      throw new AppError(errorMessage, 'SUPPLIER_CREATE_ERROR');
+      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
+      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage);
     }
   }
 
@@ -120,23 +112,20 @@ export class SupplierService {
    */
   async updateSupplier(id: string, supplierData: Partial<Supplier>): Promise<Supplier> {
     try {
-      const supplier = await this.supplierRepository.update(id, supplierData);
+      const existing = await this.supplierRepository.findById(id);
+      if (!existing) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Supplier not found');
+      }
       
-      ErrorLogger.log('info', 'Supplier updated successfully', {
-        supplierId: id,
-        updatedFields: Object.keys(supplierData)
-      });
+      await this.supplierRepository.update(id, supplierData);
+      
+      console.log('Supplier updated successfully:', id);
 
-      return supplier;
+      return { ...existing, ...supplierData } as Supplier;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update supplier';
-      ErrorLogger.log('error', 'SupplierService.updateSupplier failed', { 
-        supplierId: id, 
-        supplierData, 
-        error: errorMessage 
-      });
-      
-      throw new AppError(errorMessage, 'SUPPLIER_UPDATE_ERROR');
+      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
+      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage);
     }
   }
 
@@ -147,17 +136,11 @@ export class SupplierService {
     try {
       await this.supplierRepository.delete(id);
       
-      ErrorLogger.log('info', 'Supplier deleted successfully', {
-        supplierId: id
-      });
+      console.log('Supplier deleted successfully:', id);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete supplier';
-      ErrorLogger.log('error', 'SupplierService.deleteSupplier failed', { 
-        supplierId: id, 
-        error: errorMessage 
-      });
-      
-      throw new AppError(errorMessage, 'SUPPLIER_DELETE_ERROR');
+      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
+      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage);
     }
   }
 }

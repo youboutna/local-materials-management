@@ -43,11 +43,11 @@ export class TenderService {
         id: item.id,
         title: item.fileName || `Appel d'offres ${index + 1}`,
         reference: `AO-${options.projectId}-${index + 1}`,
-        project_id: options.projectId,
+        project_id: options.projectId as string,
         status: 'active'
       }));
 
-      ErrorLogger.log('info', 'Project tenders retrieved successfully', {
+      console.log('Project tenders retrieved successfully:', {
         projectId: options.projectId,
         tenderCount: tenderOptions.length
       });
@@ -55,7 +55,7 @@ export class TenderService {
       return tenderOptions.slice(0, options.limit || 10);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to get project tenders';
-      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage, { options }), 'TenderService.getProjectTenders failed');
+      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage, { options }));
       throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage, { options });
     }
   }
@@ -68,7 +68,7 @@ export class TenderService {
       const tender = await this.tenderRepository.findById(id);
       
       if (!tender) {
-        ErrorLogger.log('warning', 'Tender not found', { tenderId: id });
+        console.warn('Tender not found:', id);
         return null;
       }
 
@@ -86,14 +86,15 @@ export class TenderService {
     try {
       const tenders = await this.tenderRepository.findAll();
       
-      ErrorLogger.log('info', 'All tenders retrieved successfully', {
+      console.log('All tenders retrieved successfully:', {
         tenderCount: tenders.length
       });
 
       return tenders;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to get all tenders';
-      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage), 'TenderService.getAllTenders failed');
+      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
+      return [];
     }
   }
 }
