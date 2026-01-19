@@ -50,19 +50,20 @@ export interface StakeholderResponseDto extends StakeholderDTO {
       factors: string[];
       recommendations: string[];
     };
-  communicationHistory?: Array<{
-    id: string;
-    type: string;
-    date: string;
-    subject: string;
-    status: string;
-  }>;
-  performanceMetrics?: {
+    communicationHistory?: Array<{
+      id: string;
+      type: string;
+      date: string;
+      subject: string;
+      status: string;
+    }>;
+    performanceMetrics?: {
       taskCompletionRate: number;
       qualityScore: number;
       deadlineAdherence: number;
       collaborationScore: number;
     };
+  };
 }
 
 export interface CreateStakeholderRequestDto extends Omit<StakeholderDTO, 'id' | 'createdAt' | 'updatedAt'> {

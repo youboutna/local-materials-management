@@ -218,7 +218,8 @@ export class LocalStorageRepositoryFactory {
     return this.loadDataAdapter;
   }
 
-  architectural pattern
+  /**
+   * Get reporting repository instance
    */
   static getReportingRepository(): LocalStorageReportingAdapter {
     if (!this.reportingRepository) {

@@ -377,7 +377,16 @@ export class ProjectDomainTransformer implements EntityToDTOMapper<Project, Proj
     }
 
     // Team size validation
-    if (dto.teamSize !== undefined && dto.teamSize <= 0) {
+    if (dto.teamSize !== undefined && dto.teamSize < 0) {
+      errors.push('Team size cannot be negative');
+      fieldErrors.teamSize = ['Team size cannot be negative'];
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      fieldErrors
+    };
   }
 
   static calculateProjectProgress(project: ProjectDTO): number {

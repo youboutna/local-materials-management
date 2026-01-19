@@ -3,8 +3,8 @@
  * Central export point for all Data Transfer Objects
  */
 
-export { DocumentDTO } from './DocumentDTO';
-export { ProjectDTO } from './ProjectDTO';
-export { SupplierDTO } from './SupplierDTO';
-export { TenderDTO } from './TenderDTO';
+export type { DocumentDTO } from './DocumentDTO';
+export type { ProjectDTO } from './ProjectDTO';
+export type { SupplierDTO } from './SupplierDTO';
+export type { TenderDTO } from './TenderDTO';
 export * from './AuthDTO';

@@ -5,7 +5,7 @@
 
 import { IEmployeeRepository } from '@/domain/repositories/IEmployeeRepository';
 import { Employee } from '@/domain/entities/Employee';
-import { AppError, ErrorLogger } from '@/utils/errorHandling';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export interface SearchEmployeesOptions {
   searchTerm?: string;
@@ -25,124 +25,60 @@ export class EmployeeService {
 
   async searchEmployees(options: SearchEmployeesOptions = {}): Promise<SearchEmployeesResult> {
     try {
-      const result = await this.employeeRepository.searchEmployees(options);
+      let employees: Employee[];
       
-      ErrorLogger.log('info', 'Employees searched successfully', {
-        searchTerm: options.searchTerm,
-        departmentFilter: options.departmentFilter,
-        resultCount: result.employees.length
-      });
+      if (options.isActive === true) {
+        employees = await this.employeeRepository.findActive();
+      } else if (options.searchTerm) {
+        employees = await this.employeeRepository.search(options.searchTerm);
+      } else {
+        employees = await this.employeeRepository.findAll();
+      }
 
-      return result;
+      if (options.limit) {
+        employees = employees.slice(0, options.limit);
+      }
+
+      return { employees, total: employees.length };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to search employees';
-      ErrorLogger.log('error', 'EmployeeService.searchEmployees failed', { 
-        options, 
-        error: errorMessage 
-      });
-      
-      throw new AppError(errorMessage, 'EMPLOYEE_SEARCH_ERROR');
+      console.error('EmployeeService.searchEmployees failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to search employees');
     }
   }
 
   async getEmployeeById(id: string): Promise<Employee | null> {
     try {
-      const employee = await this.employeeRepository.findById(id);
-      
-      if (!employee) {
-        ErrorLogger.log('warning', 'Employee not found', { employeeId: id });
-        return null;
-      }
-
-      return employee;
+      return await this.employeeRepository.findById(id);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to get employee';
-      ErrorLogger.log('error', 'EmployeeService.getEmployeeById failed', { 
-        employeeId: id, 
-        error: errorMessage 
-      });
-      
-      throw new AppError(errorMessage, 'EMPLOYEE_GET_ERROR');
+      console.error('EmployeeService.getEmployeeById failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get employee');
     }
   }
 
   async getActiveEmployees(): Promise<Employee[]> {
     try {
-      const result = await this.employeeRepository.searchEmployees({ 
-        isActive: true,
-        limit: 100 
-      });
-      
-      return result.employees;
+      return await this.employeeRepository.findActive();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to get active employees';
-      ErrorLogger.log('error', 'EmployeeService.getActiveEmployees failed', { 
-        error: errorMessage 
-      });
-      
-      throw new AppError(errorMessage, 'ACTIVE_EMPLOYEES_ERROR');
+      console.error('EmployeeService.getActiveEmployees failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get active employees');
     }
   }
 
-  async createEmployee(employeeData: Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>): Promise<Employee> {
+  async getInspectors(): Promise<Employee[]> {
     try {
-      const newEmployee = new Employee(
-        crypto.randomUUID(),
-        employeeData.department || null,
-        employeeData.position || null,
-        employeeData.salary || null,
-        employeeData.hireDate || null,
-        employeeData.managerId || null,
-        employeeData.fullName || '',
-        employeeData.email || '',
-        employeeData.phone || null,
-        employeeData.address || null,
-        employeeData.skills || [],
-        employeeData.isActive !== undefined ? employeeData.isActive : true
-      );
-
-      await this.employeeRepository.save(newEmployee);
-      ErrorLogger.log('info', 'Employee created successfully', { 
-        employeeId: newEmployee.id 
-      });
-
-      return newEmployee;
+      return await this.employeeRepository.findInspectors();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create employee';
-      ErrorLogger.log('error', 'EmployeeService.createEmployee failed', { 
-        employeeData, 
-        error: errorMessage 
-      });
-      
-      throw new AppError(errorMessage, 'EMPLOYEE_CREATE_ERROR');
+      console.error('EmployeeService.getInspectors failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get inspectors');
     }
   }
 
-  async updateEmployee(id: string, updates: Partial<Employee>): Promise<Employee> {
+  async getProjectManagers(): Promise<Employee[]> {
     try {
-      const existingEmployee = await this.employeeRepository.findById(id);
-      if (!existingEmployee) {
-        throw new AppError('Employee not found', 'EMPLOYEE_NOT_FOUND_ERROR');
-      }
-
-      const updatedEmployee = { ...existingEmployee, ...updates } as Employee;
-      const result = await this.employeeRepository.save(updatedEmployee);
-      
-      ErrorLogger.log('info', 'Employee updated successfully', { 
-        employeeId: id,
-        updates: Object.keys(updates)
-      });
-
-      return result;
+      return await this.employeeRepository.findProjectManagers();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update employee';
-      ErrorLogger.log('error', 'EmployeeService.updateEmployee failed', { 
-        id, 
-        updates, 
-        error: errorMessage 
-      });
-      
-      throw new AppError(errorMessage, 'EMPLOYEE_UPDATE_ERROR');
+      console.error('EmployeeService.getProjectManagers failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get project managers');
     }
   }
 }
