@@ -1,53 +1,127 @@
 /**
  * Payment Domain Transformer with BTP Calculations and Business Logic
  * Implements hexagonal architecture principles with enriched calculations
- * Flow: UI => Supabase/API => Database | Database => Supabase/API => UI
  */
 
 import { Payment } from '@/domain/entities/Payment';
-import { PaymentDTO, PaymentDetailDTO, PaymentSummaryDTO, PaymentListItemDTO, CreatePaymentRequestDto, UpdatePaymentRequestDto } from '@/dtos/transforms/shared';
 import { PaymentStatus } from '@/types/payment';
-import { EntityToDTOMapper, ValidationResult } from '@/dtos/transforms/shared';
 
-export class PaymentDomainTransformer implements EntityToDTOMapper<Payment, PaymentDTO> {
+export interface PaymentEfficiencyResult {
+  paymentRate: number;
+  onTimePaymentRate: string;
+  daysOverdue: number;
+  averagePaymentDelay: number;
+}
+
+export interface PaymentRiskResult {
+  riskLevel: 'low' | 'medium' | 'high';
+  riskFactors: string[];
+  recommendations: string[];
+  financialHealth: string;
+}
+
+export interface CashFlowMetricsResult {
+  totalPaid: number;
+  totalDue: number;
+  cashFlowVariance: number;
+  averagePaymentDelay: number;
+  paymentEfficiency: PaymentEfficiencyResult;
+}
+
+export interface PaymentDTO {
+  id: string;
+  amount: number;
+  paymentDate: Date | string;
+  paymentMethod: string;
+  status: PaymentStatus;
+  progressAtPayment: number;
+  transactionId: string;
+  contractorName: string;
+  contractorContact: string;
+  bankName?: string;
+  accountNumber?: string;
+  checkNumber?: string;
+  mobileNumber?: string;
+  receiverName?: string;
+  mobileOperator?: string;
+  created_at?: Date | string;
+  updated_at?: Date | string;
+  risk?: PaymentRiskResult;
+  efficiency?: PaymentEfficiencyResult;
+  daysOverdue?: number;
+  financialHealth?: string;
+  projectId?: string;
+  invoiceId?: string;
+}
+
+export interface CreatePaymentRequestDto {
+  amount: number;
+  paymentDate?: string;
+  paymentMethod: string;
+  progressAtPayment?: number;
+  transactionId: string;
+  contractorName: string;
+  contractorContact: string;
+  bankName?: string;
+  accountNumber?: string;
+  checkNumber?: string;
+  mobileNumber?: string;
+  receiverName?: string;
+  mobileOperator?: string;
+}
+
+export interface UpdatePaymentRequestDto {
+  amount?: number;
+  paymentDate?: string;
+  progressAtPayment?: number;
+  transactionId?: string;
+  contractorName?: string;
+  contractorContact?: string;
+  bankName?: string;
+  accountNumber?: string;
+  checkNumber?: string;
+  mobileNumber?: string;
+  receiverName?: string;
+  mobileOperator?: string;
+}
+
+export class PaymentDomainTransformer {
   /**
    * Calculate payment efficiency and compliance metrics
    */
-  static calculatePaymentEfficiency(payment: Payment): {
-    const totalPaid = payment.totalPaid || 0;
-    const totalDue = payment.totalDue || 0;
+  static calculatePaymentEfficiency(payment: any): PaymentEfficiencyResult {
+    const totalPaid = payment?.totalPaid || 0;
+    const totalDue = payment?.totalDue || 0;
     const paymentRate = totalDue > 0 ? (totalPaid / totalDue) : 1;
     
     return {
       paymentRate,
       onTimePaymentRate: paymentRate >= 0.95 ? 'excellent' : paymentRate >= 0.85 ? 'good' : paymentRate >= 0.75 ? 'acceptable' : 'poor',
-      daysOverdue: payment.daysOverdue || 0,
-      averagePaymentDelay: payment.averagePaymentDelay || 0
+      daysOverdue: payment?.daysOverdue || 0,
+      averagePaymentDelay: payment?.averagePaymentDelay || 0
     };
   }
 
   /**
    * Calculate payment risk assessment
    */
-  static calculatePaymentRisk(payment: Payment): {
-    const riskLevel: 'low' | 'medium' | 'high';
+  static calculatePaymentRisk(payment: any): PaymentRiskResult {
+    let riskLevel: 'low' | 'medium' | 'high' = 'low';
     const riskFactors: string[] = [];
     const recommendations: string[] = [];
     
-    // Risk factors
-    if (payment.daysOverdue && payment.daysOverdue > 30) {
+    if (payment?.daysOverdue && payment.daysOverdue > 30) {
       riskFactors.push('Severe payment delay');
       riskLevel = 'high';
       recommendations.push('Immediate payment collection required');
-    } else if (payment.daysOverdue && payment.daysOverdue > 15) {
+    } else if (payment?.daysOverdue && payment.daysOverdue > 15) {
       riskFactors.push('Payment delay detected');
       riskLevel = 'medium';
       recommendations.push('Review payment schedule');
     }
     
-    // Calculate financial health
-    const financialHealth = payment.status === 'paid' ? 'healthy' : 
-                       payment.status === 'partial' ? 'warning' : 'critical';
+    const financialHealth = payment?.status === 'paid' ? 'healthy' : 
+                       payment?.status === 'partial' ? 'warning' : 'critical';
     
     return {
       riskLevel,
@@ -60,17 +134,19 @@ export class PaymentDomainTransformer implements EntityToDTOMapper<Payment, Paym
   /**
    * Calculate payment cash flow metrics
    */
-  static calculateCashFlowMetrics(payments: Payment[]): {
-    const totalPaid = payments.reduce((sum, p) => sum + (p.totalPaid || 0), 0);
-    const totalDue = payments.reduce((sum, p) => sum + (p.totalDue || 0), 0);
-    const averagePaymentDelay = payments.reduce((sum, p) => sum + (p.averagePaymentDelay || 0), 0) / payments.length;
-    const cashFlowVariance = totalPaid - (totalDue * 0.9); // 90% of expected
+  static calculateCashFlowMetrics(payments: any[]): CashFlowMetricsResult {
+    const totalPaid = payments.reduce((sum, p) => sum + (p?.totalPaid || 0), 0);
+    const totalDue = payments.reduce((sum, p) => sum + (p?.totalDue || 0), 0);
+    const avgDelay = payments.length > 0 
+      ? payments.reduce((sum, p) => sum + (p?.averagePaymentDelay || 0), 0) / payments.length 
+      : 0;
+    const cashFlowVariance = totalPaid - (totalDue * 0.9);
     
     return {
       totalPaid,
       totalDue,
       cashFlowVariance,
-      averagePaymentDelay,
+      averagePaymentDelay: avgDelay,
       paymentEfficiency: this.calculatePaymentEfficiency(payments[payments.length - 1] || {})
     };
   }
@@ -78,212 +154,111 @@ export class PaymentDomainTransformer implements EntityToDTOMapper<Payment, Paym
   /**
    * Transform Payment entity to PaymentDTO
    */
-  static toResponseDto(payment: Payment): PaymentDTO {
+  static toResponseDto(payment: any): PaymentDTO {
     const risk = this.calculatePaymentRisk(payment);
     const efficiency = this.calculatePaymentEfficiency(payment);
     
     return {
       id: payment.id,
       amount: payment.amount,
-      paymentDate: payment.paymentDate,
-      paymentMethod: payment.paymentMethod,
+      paymentDate: payment.paymentDate || payment.payment_date,
+      paymentMethod: payment.paymentMethod || payment.payment_method,
       status: payment.status as PaymentStatus,
-      progressAtPayment: payment.progressAtPayment,
-      transactionId: payment.transactionId,
-      contractorName: payment.contractorName,
-      contractorContact: payment.contractorContact,
-      bankName: payment.bankName,
-      accountNumber: payment.accountNumber,
-      checkNumber: payment.checkNumber,
-      mobileNumber: payment.mobileNumber,
-      receiverName: payment.receiverName,
-      mobileOperator: payment.mobileOperator,
-      secretCode: payment.secretCode,
-      secretExpiresAt: payment.secretExpiresAt,
-      isSecretActive: payment.isSecretActive || false,
-      secretAccessCount: payment.secretAccessCount || 0,
-      maxSecretAccess: payment.maxSecretAccess || 0,
+      progressAtPayment: payment.progressAtPayment || payment.progress_at_payment || 0,
+      transactionId: payment.transactionId || payment.transaction_id,
+      contractorName: payment.contractorName || payment.contractor_name,
+      contractorContact: payment.contractorContact || payment.contractor_contact,
+      bankName: payment.bankName || payment.bank_name,
+      accountNumber: payment.accountNumber || payment.account_number,
+      checkNumber: payment.checkNumber || payment.check_number,
+      mobileNumber: payment.mobileNumber || payment.mobile_number,
+      receiverName: payment.receiverName || payment.receiver_name,
+      mobileOperator: payment.mobileOperator || payment.mobile_operator,
       created_at: payment.created_at,
       updated_at: payment.updated_at,
-      
-      // Enriched fields
       risk,
       efficiency,
       daysOverdue: payment.daysOverdue || 0,
-      averagePaymentDelay: payment.averagePaymentDelay || 0,
-      
-      // BTP specific fields
-      totalPaid: payment.totalPaid || 0,
-      totalDue: payment.totalDue || 0,
-      costVariance: payment.costVariance || 0,
-      
-      // Financial health
       financialHealth: payment.status === 'paid' ? 'healthy' : 
                        payment.status === 'partial' ? 'warning' : 'critical',
-      
-      // Project metadata
-      projectId: payment.projectId || '',
-      invoiceId: payment.invoiceId || '',
-      
-      // Compliance tracking
-      complianceScore: payment.complianceScore || 0,
-      lastComplianceCheck: payment.lastComplianceCheck || null,
-      
-      // Workflow metadata
-      paymentWorkflowConfig: payment.paymentWorkflowConfig || null,
-      paymentFrequency: payment.paymentFrequency || 'monthly',
-      initialAdvance: payment.initialAdvance || 0,
-      retentionPercentage: payment.retentionPercentage || 5,
-      advancePercentage: payment.advancePercentage || 20,
-      
-      // Meta
-      priority: payment.priority || 'medium',
-      projectType: payment.projectType || 'construction',
-      sector: payment.sector || '',
-      permitNumber: payment.permitNumber || '',
-      
-      // Timestamps
-      createdAt: payment.created_at,
-      updatedAt: payment.updated_at
+      projectId: payment.projectId || payment.project_id,
+      invoiceId: payment.invoiceId || payment.invoice_id
     };
   }
 
   /**
-   * Transform CreatePaymentRequestDto to Payment entity
+   * Transform array to response DTOs
    */
-  static fromCreateDtoToEntity(dto: CreatePaymentRequestDto): Payment {
-    return Payment.create({
+  static toResponseDtoArray(payments: any[]): PaymentDTO[] {
+    return (payments || []).map(p => this.toResponseDto(p));
+  }
+
+  /**
+   * Transform CreatePaymentRequestDto to entity data
+   */
+  static fromCreateDtoToEntity(dto: CreatePaymentRequestDto): any {
+    return {
       id: crypto.randomUUID(),
       amount: dto.amount,
-      paymentDate: dto.paymentDate ? new Date(dto.paymentDate) : new Date(),
-      paymentMethod: dto.paymentMethod,
-      progressAtPayment: dto.progressAtPayment || 0,
-      transactionId: dto.transactionId,
-      contractorName: dto.contractorName,
-      contractorContact: dto.contractorContact,
-      bankName: dto.bankName,
-      accountNumber: dto.accountNumber,
-      checkNumber: dto.checkNumber,
-      mobileNumber: dto.mobileNumber,
-      receiverName: dto.receiverName,
-      mobileOperator: dto.mobileOperator,
-      secretCode: dto.secretCode,
-      secretExpiresAt: dto.secretExpiresAt,
-      isSecretActive: dto.isSecretActive || false,
-      secretAccessCount: dto.secretAccessCount || 0,
-      maxSecretAccess: dto.maxSecretAccess || 0,
-      created_at: new Date(),
-      updated_at: new Date()
-    });
-  }
-
-  /**
-   * Transform UpdatePaymentRequestDto to partial Payment entity
-   */
-  static fromUpdateDtoToEntity(dto: UpdatePaymentRequestDto): Partial<Payment> {
-    return {
-      amount: dto.amount,
-      paymentDate: dto.paymentDate ? new Date(dto.paymentDate) : undefined,
-      progressAtPayment: dto.progressAtPayment,
-      transactionId: dto.transactionId,
-      contractorName: dto.contractorName,
-      contractorContact: dto.contractorContact,
-      bankName: dto.bankName,
-      accountNumber: dto.accountNumber,
-      checkNumber: dto.checkNumber,
-      mobileNumber: dto.mobileNumber,
-      receiverName: dto.receiverName,
-      mobileOperator: dto.mobileOperator,
-      secretCode: dto.secretCode,
-      secretExpiresAt: dto.secretExpiresAt,
-      isSecretActive: dto.isSecretActive,
-      secretAccessCount: dto.secretAccessCount,
-      maxSecretAccess: dto.maxSecretAccess,
-      updated_at: new Date()
+      payment_date: dto.paymentDate ? new Date(dto.paymentDate).toISOString() : new Date().toISOString(),
+      payment_method: dto.paymentMethod,
+      progress_at_payment: dto.progressAtPayment || 0,
+      transaction_id: dto.transactionId,
+      contractor_name: dto.contractorName,
+      contractor_contact: dto.contractorContact,
+      bank_name: dto.bankName,
+      account_number: dto.accountNumber,
+      check_number: dto.checkNumber,
+      mobile_number: dto.mobileNumber,
+      receiver_name: dto.receiverName,
+      mobile_operator: dto.mobileOperator,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
   }
 
   /**
-   * Transform Payment entity to PaymentSummaryDTO
+   * Transform UpdatePaymentRequestDto to partial entity data
    */
-  static toSummaryDto(payment: Payment): PaymentSummaryDTO {
-    const cashFlow = this.calculateCashFlowMetrics([payment]);
+  static fromUpdateDtoToEntity(dto: UpdatePaymentRequestDto): any {
+    const result: any = {
+      updated_at: new Date().toISOString()
+    };
     
-    return {
-      id: payment.id,
-      amount: payment.amount,
-      paymentDate: payment.paymentDate,
-      status: payment.status as PaymentStatus,
-      totalPaid: payment.totalPaid || 0,
-      totalDue: payment.totalDue || 0,
-      cashFlowVariance: cashFlow.cashFlowVariance,
-      averagePaymentDelay: cashFlow.averagePaymentDelay,
-      paymentEfficiency: cashFlow.paymentEfficiency,
-      
-      // Financial health
-      financialHealth: payment.status === 'paid' ? 'healthy' : 
-                       payment.status === 'partial' ? 'warning' : 'critical',
-      
-      // Compliance tracking
-      complianceScore: payment.complianceScore || 0,
-      lastComplianceCheck: payment.lastComplianceCheck,
-      
-      // Project metadata
-      projectId: payment.projectId,
-      invoiceId: payment.invoiceId,
-      
-      // Workflow metadata
-      paymentWorkflowConfig: payment.paymentWorkflowConfig,
-      paymentFrequency: payment.paymentFrequency,
-      initialAdvance: payment.initialAdvance,
-      retentionPercentage: payment.retentionPercentage,
-      advancePercentage: payment.advancePercentage,
-      
-      // Meta
-      priority: payment.priority,
-      projectType: payment.projectType,
-      sector: payment.sector,
-      permitNumber: payment.permitNumber,
-      
-      // Timestamps
-      createdAt: payment.created_at,
-      updatedAt: payment.updated_at
-    };
+    if (dto.amount !== undefined) result.amount = dto.amount;
+    if (dto.paymentDate) result.payment_date = new Date(dto.paymentDate).toISOString();
+    if (dto.progressAtPayment !== undefined) result.progress_at_payment = dto.progressAtPayment;
+    if (dto.transactionId) result.transaction_id = dto.transactionId;
+    if (dto.contractorName) result.contractor_name = dto.contractorName;
+    if (dto.contractorContact) result.contractor_contact = dto.contractorContact;
+    if (dto.bankName) result.bank_name = dto.bankName;
+    if (dto.accountNumber) result.account_number = dto.accountNumber;
+    if (dto.checkNumber) result.check_number = dto.checkNumber;
+    if (dto.mobileNumber) result.mobile_number = dto.mobileNumber;
+    if (dto.receiverName) result.receiver_name = dto.receiverName;
+    if (dto.mobileOperator) result.mobile_operator = dto.mobileOperator;
+    
+    return result;
   }
 
   /**
    * Validate payment data for business rules
    */
-  static validatePaymentData(payment: Partial<Payment>): { isValid: boolean; errors: string[] } {
+  static validatePaymentData(payment: any): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
     
-    // Validate required fields
     if (!payment.amount || payment.amount <= 0) {
       errors.push('Payment amount must be greater than 0');
     }
     
-    if (!payment.paymentDate) {
+    if (!payment.paymentDate && !payment.payment_date) {
       errors.push('Payment date is required');
     }
     
-    if (!payment.receiverName || payment.receiverName.trim() === '') {
-      errors.push('Receiver name is required');
-    }
-    
-    // Validate payment method
     const validMethods = ['cash', 'bank_transfer', 'check', 'credit_card', 'mobile_money'];
-    if (payment.paymentMethod && !validMethods.includes(payment.paymentMethod)) {
-      errors.push(`Invalid payment method: ${payment.paymentMethod}`);
-    }
-    
-    // Validate contractor information
-    if (payment.amount > 10000 && (!payment.contractorName || payment.contractorName.trim() === '')) {
-      errors.push('Contractor information required for payments over 10,000');
-    }
-    
-    // Validate BTP specific fields
-    if (payment.totalDue !== undefined && payment.totalDue < 0) {
-      errors.push('Total due cannot be negative');
+    const method = payment.paymentMethod || payment.payment_method;
+    if (method && !validMethods.includes(method)) {
+      errors.push(`Invalid payment method: ${method}`);
     }
     
     return {
