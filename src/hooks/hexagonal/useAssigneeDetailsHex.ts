@@ -80,3 +80,6 @@ export function useAssigneeDetailsHex(assigneeId: string) {
 }
 
 export default useAssigneeDetailsHex;
+
+// Export pour compatibilité ascendante
+export const useAssigneeDetails = useAssigneeDetailsHex;

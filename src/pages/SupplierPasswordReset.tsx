@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -38,16 +38,12 @@ const SupplierPasswordReset = () => {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('supplier_notifications')
-        .select('*')
-        .eq('reset_token', token)
-        .eq('notification_type', 'password_reset')
-        .is('used_at', null)
-        .gt('expires_at', new Date().toISOString())
-        .single();
+      const authRepository = RepositoryFactory.getAuthRepository();
+      const data = await authRepository.invokeRPC('validate_supplier_reset_token', {
+        reset_token: token
+      });
 
-      if (error || !data) {
+      if (!data || data.length === 0) {
         toast({
           title: t('common.error'),
           description: "Ce lien de réinitialisation a expiré ou a déjà été utilisé.",
@@ -105,18 +101,17 @@ const SupplierPasswordReset = () => {
 
     try {
       // Get the notification to find the supplier email
-      const { data: notification, error: notificationError } = await supabase
-        .from('supplier_notifications')
-        .select('email, supplier_id')
-        .eq('reset_token', token)
-        .single();
+      const authRepository = RepositoryFactory.getAuthRepository();
+      const notification = await authRepository.invokeRPC('get_supplier_notification_by_token', {
+        reset_token: token
+      });
 
-      if (notificationError || !notification) {
+      if (!notification) {
         throw new Error('Token invalide');
       }
 
       // Create/update auth user for the supplier
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const authData = await authRepository.signUp({
         email: notification.email,
         password: password,
         options: {
@@ -124,26 +119,19 @@ const SupplierPasswordReset = () => {
         }
       });
 
-      if (authError && authError.message !== 'User already registered') {
-        throw authError;
-      }
-
       // Update the supplier record with the user_id
       if (authData.user && notification.supplier_id) {
-        await supabase
-          .from('suppliers')
-          .update({ 
-            user_id: authData.user.id,
-            default_password_reset_required: false
-          })
-          .eq('id', notification.supplier_id);
+        const supplierRepository = RepositoryFactory.getSupplierRepository();
+        await supplierRepository.update(notification.supplier_id, { 
+          user_id: authData.user.id,
+          default_password_reset_required: false
+        });
       }
 
       // Mark the token as used
-      await supabase
-        .from('supplier_notifications')
-        .update({ used_at: new Date().toISOString() })
-        .eq('reset_token', token);
+      await authRepository.invokeRPC('mark_supplier_token_used', {
+        reset_token: token
+      });
 
       toast({
         title: t('common.success'),

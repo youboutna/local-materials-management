@@ -9,30 +9,6 @@ import { PhaseMetrics } from '@/domain/repositories';
 import { GetPhaseDetailsUseCase } from '@/application/use-cases/project';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
-const phaseRepository = RepositoryFactory.getPhaseRepository();
-const getPhaseDetailsUseCase = new GetPhaseDetailsUseCase(phaseRepository);
-
-export interface UsePhaseHexResult {
-  phase: Phase | null;
-  metrics: PhaseMetrics;
-  loading: boolean;
-  error: string | null;
-  refetch: () => Promise<void>;
-  updateProgress: (progress: number) => Promise<boolean>;
-  updateStepStatus: (stepId: string, status: string) => Promise<boolean>;
-}
-
-export interface UsePhasesHexResult {
-  phases: Phase[];
-  loading: boolean;
-  error: string | null;
-  refetch: () => Promise<void>;
-  createPhase: (data: CreatePhaseData) => Promise<Phase | null>;
-  deletePhase: (phaseId: string) => Promise<boolean>;
-  isCreating: boolean;
-  isDeleting: boolean;
-}
-
 export interface CreatePhaseData {
   phase_name: string;
   description: string;
@@ -65,7 +41,20 @@ const defaultMetrics: PhaseMetrics = {
 /**
  * Hook for single phase with details and metrics
  */
-export function usePhaseHex(phaseId: string | undefined): UsePhaseHexResult {
+export interface UsePhaseHexResult {
+  phase: Phase | null;
+  metrics: PhaseMetrics;
+  loading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+  updateProgress?: (progress: number) => Promise<boolean>;
+  updateStepStatus?: (stepId: string, status: string) => Promise<boolean>;
+}
+
+export function usePhaseHex(phaseId?: string): UsePhaseHexResult {
+  const phaseRepository = RepositoryFactory.getPhaseRepository();
+  const getPhaseDetailsUseCase = new GetPhaseDetailsUseCase(phaseRepository);
+  
   const [phase, setPhase] = useState<Phase | null>(null);
   const [metrics, setMetrics] = useState<PhaseMetrics>(defaultMetrics);
   const [loading, setLoading] = useState(true);
@@ -98,7 +87,7 @@ export function usePhaseHex(phaseId: string | undefined): UsePhaseHexResult {
 
   useEffect(() => {
     fetchPhase();
-  }, [fetchPhase]);
+  }, []); // Empty dependency array - only run once on mount
 
   const updateProgress = useCallback(async (progress: number): Promise<boolean> => {
     if (!phaseId) return false;
@@ -111,7 +100,7 @@ export function usePhaseHex(phaseId: string | undefined): UsePhaseHexResult {
       console.error('Failed to update progress:', err);
       return false;
     }
-  }, [phaseId, fetchPhase]);
+  }, [phaseId, fetchPhase, phaseRepository]);
 
   const updateStepStatus = useCallback(async (stepId: string, status: string): Promise<boolean> => {
     if (!phaseId) return false;
@@ -124,7 +113,7 @@ export function usePhaseHex(phaseId: string | undefined): UsePhaseHexResult {
       console.error('Failed to update step status:', err);
       return false;
     }
-  }, [phaseId, fetchPhase]);
+  }, [phaseId, fetchPhase, phaseRepository]);
 
   return {
     phase,
@@ -140,7 +129,21 @@ export function usePhaseHex(phaseId: string | undefined): UsePhaseHexResult {
 /**
  * Hook for phases list by project with CRUD operations
  */
+export interface UsePhasesHexResult {
+  phases: Phase[];
+  loading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+  createPhase: (data: CreatePhaseData) => Promise<Phase | null>;
+  deletePhase: (phaseId: string) => Promise<boolean>;
+  isCreating: boolean;
+  isDeleting: boolean;
+}
+
 export function usePhasesHex(projectId: string | undefined): UsePhasesHexResult {
+  // Initialize repositories and use cases inside hook
+  const phaseRepository = RepositoryFactory.getPhaseRepository();
+  const getPhaseDetailsUseCase = new GetPhaseDetailsUseCase(phaseRepository);
   const [phases, setPhases] = useState<Phase[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -164,11 +167,11 @@ export function usePhasesHex(projectId: string | undefined): UsePhasesHexResult 
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  }, [projectId, phaseRepository]);
 
   useEffect(() => {
     fetchPhases();
-  }, [fetchPhases]);
+  }, []); // Empty dependency array - only run once on mount
 
   const createPhase = useCallback(async (data: CreatePhaseData): Promise<Phase | null> => {
     if (!projectId) return null;
@@ -196,7 +199,7 @@ export function usePhasesHex(projectId: string | undefined): UsePhasesHexResult 
     } finally {
       setIsCreating(false);
     }
-  }, [projectId, fetchPhases]);
+  }, [projectId, fetchPhases, phaseRepository]);
 
   const deletePhase = useCallback(async (phaseId: string): Promise<boolean> => {
     setIsDeleting(true);
@@ -211,7 +214,7 @@ export function usePhasesHex(projectId: string | undefined): UsePhasesHexResult 
     } finally {
       setIsDeleting(false);
     }
-  }, [fetchPhases]);
+  }, [fetchPhases, phaseRepository]);
 
   return {
     phases,

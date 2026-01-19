@@ -5,21 +5,24 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Calendar, Users, Eye } from 'lucide-react';
+import { MapPin, Calendar, Users, Eye, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
 import { ProjectData } from '@/types/project';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import StatusBadge from './StatusBadge';
+import { useProjectsFull } from '@/hooks/hexagonal/useProjectsFull';
 
 interface ProjectCardProps {
   project: ProjectData;
   index?: number;
+  showAnalytics?: boolean;
 }
 
-const ProjectCard: React.FC<ProjectCardProps> = ({ project, index = 0 }) => {
+const ProjectCard: React.FC<ProjectCardProps> = ({ project, index = 0, showAnalytics = false }) => {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { getProjectHealth, getProjectProgress, getProjectRisk, getProjectAnalytics } = useProjectsFull();
 
   const handleViewDetails = () => {
     navigate(`/projects/${project.id}`);
@@ -38,6 +41,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index = 0 }) => {
     }).format(amount);
   };
 
+  const projectHealth = getProjectHealth(project);
+  const projectProgress = getProjectProgress(project);
+  const projectRisk = getProjectRisk(project);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -50,7 +57,26 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index = 0 }) => {
             <CardTitle className="text-lg font-serif text-adrar-800 line-clamp-2 flex-1 mr-3">
               {project.title}
             </CardTitle>
-            <StatusBadge status={project.status} />
+            <div className="flex items-center gap-2">
+              <StatusBadge status={project.status} />
+              {showAnalytics && (
+                <div className="flex items-center gap-1">
+                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    projectHealth === 'healthy' ? 'bg-green-100 text-green-800' :
+                    projectHealth === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {projectHealth === 'healthy' && <CheckCircle className="w-3 h-3" />}
+                    {projectHealth === 'warning' && <AlertTriangle className="w-3 h-3" />}
+                    {projectHealth === 'critical' && <AlertTriangle className="w-3 h-3" />}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3 text-blue-500" />
+                    <span className="text-xs text-gray-500">{projectProgress}%</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           
           <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">

@@ -3,29 +3,50 @@
  * Ces hooks encapsulent l'architecture hexagonale pour une utilisation facile dans les composants React
  */
 
+// Export types from centralized types file
+export type {
+  UseSuppliersHexResult,
+  UseUsersHexResult,
+  UseTaskAssignmentsHexResult,
+  UseDocumentsHexResult,
+  UseProjectsHexResult,
+  UseMaterialsHexResult,
+  UseInspectionsHexResult,
+  UseAuthHexResult,
+  SupplierResponseDto,
+  UserResponseDto,
+  TaskAssignmentResponseDto,
+  DocumentResponseDto,
+  ProjectResponseDto,
+  MaterialResponseDto,
+  InspectionResponseDto,
+  AuthResponseDto,
+  PaginatedResult,
+  QueryResult,
+  MutationResult,
+  ApiError
+} from '@/types/hooks';
+
 // Projects
 export { useProjectsHex, useProjectHex } from './useProjectsHex';
-export type { UseProjectsHexResult, UseProjectHexResult } from './useProjectsHex';
+
+// Suppliers
+export { useSuppliersHex, useSuppliersBySpecialization, useSupplierHex } from './useSuppliersHex';
 
 // Materials
 export { useMaterialsHex, useMaterialHex } from './useMaterialsHex';
-export type { UseMaterialsHexResult, UseMaterialHexResult } from './useMaterialsHex';
-
-// Suppliers
-export { useSuppliersHex, useSupplierHex } from './useSuppliersHex';
-export type { UseSuppliersHexResult, UseSupplierHexResult, SupplierFormData } from './useSuppliersHex';
 
 // Documents
-export { useDocumentsHex, useProjectDocumentsHex } from './useDocumentsHex';
-export type { UseDocumentsHexResult, UseProjectDocumentsHexResult } from './useDocumentsHex';
+export { useDocumentsHex, useDocumentCreate, useDocumentUpdate, useDocumentDelete } from './useDocumentsHex';
 
-// Tenders
-export { useTendersHex, useTenderHex } from './useTendersHex';
-export type { UseTendersHexResult, UseTenderHexResult } from './useTendersHex';
+// Inspections
+export { useInspectionHex, useInspectionsHex } from './useInspectionsHex';
 
-// Dashboard
-export { useDashboardHex } from './useDashboardHex';
-export type { UseDashboardHexResult, DashboardStats } from './useDashboardHex';
+// Users
+export { useUsersHex, useUserCreate, useUserUpdate, useUserToggleStatus } from './useUsersHex';
+
+// Task Assignments
+export { useTaskAssignmentsHex } from './useTaskAssignmentsHex';
 
 // Phases
 export { usePhaseHex, usePhasesHex } from './usePhasesHex';
@@ -54,23 +75,9 @@ export type { UsePaymentWorkflowHexResult } from './usePaymentWorkflowHex';
 
 // Employees - Phase 5
 export { useEmployeesHex, useEmployeeHex } from './useEmployeesHex';
-export type { Employee } from './useEmployeesHex';
 
 // Tasks - Phase 5
 export { useTasksHex, useTaskHex } from './useTasksHex';
-export type { Task } from './useTasksHex';
-
-// Task Assignments
-export { useTaskAssignmentsHex, useTaskAssignmentHex } from './useTaskAssignmentsHex';
-export type { TaskAssignment } from './useTaskAssignmentsHex';
-
-// Users
-export { useUsersHex, useUserHex } from './useUsersHex';
-export type { User } from './useUsersHex';
-
-// Inspections - Phase 5
-export { useInspectionsHex, useInspectionHex } from './useInspectionsHex';
-export type { Inspection } from './useInspectionsHex';
 
 // Alerts - combines multiple sources
 export { useAlertsHex } from './useAlertsHex';
@@ -89,7 +96,7 @@ export { useStakeholdersHex } from './useStakeholdersHex';
 export { usePaymentStatsHex } from './usePaymentStatsHex';
 export { useProjectPhasesHex } from './useProjectPhasesHex';
 export { useAuthUserHex } from './useAuthUserHex';
-export { useAssigneeDetailsHex } from './useAssigneeDetailsHex';
+export { useAssigneeDetailsHex, useAssigneeDetails } from './useAssigneeDetailsHex';
 export { useBankGuaranteeForProjectHex } from './useBankGuaranteeForProjectHex';
 
 // Payment Validation
@@ -218,23 +225,6 @@ export type {
 } from './useTendersHex';
 
 // Task Assignments (TaskAssignments component)
-export { 
-  useTaskAssignments, 
-  useProjectsForTaskAssignments, 
-  useAssigneeDetails, 
-  useCreateTaskAssignment, 
-  useUpdateTaskAssignment, 
-  useDeleteTaskAssignment 
-} from './useTasksHex';
-export type { TaskAssignmentFilters, TaskAssignmentFormData } from './useTasksHex';
-
-// Suppliers Management (SuppliersManagement component)
-export { 
-  useSuppliersList, 
-  useCreateSupplier, 
-  useUpdateSupplier, 
-  useDeleteSupplier 
-} from './useSuppliersManagementHex';
 export type { SupplierFormData as SupplierMgmtFormData } from './useSuppliersManagementHex';
 
 // Bank Guarantees CRUD
@@ -248,7 +238,7 @@ export type { BankGuaranteeFormData, BankGuaranteeRow } from './useBankGuarantee
 
 // Inspections CRUD
 export {
-  useInspectionsList as useInspectionsListCrud,
+  useInspectionsList as useInspectionsCrud,
   useCreateInspection,
   useUpdateInspection,
   useDeleteInspection
@@ -376,7 +366,7 @@ export { useUploadTenderDocumentHex } from './useTenderDocumentUploadHex';
 export type { TenderDocumentUploadData, TenderCategory, TenderSubcategory } from './useTenderDocumentUploadHex';
 
 // Auth (Login/Register/Logout)
-export { useLoginHex, useRegisterHex, useLogoutHex } from './useAuthHex';
+export { useAuthHex, useLoginHex, useRegisterHex, useLogoutHex } from './useAuthHex';
 export type { LoginData, RegisterData } from './useAuthHex';
 
 // Contact Form
@@ -386,15 +376,6 @@ export type { ContactFormData } from './useContactFormHex';
 // Dashboard Access Control
 export { useDashboardAccessHex, useCheckAuthHex } from './useDashboardAccessHex';
 export type { DashboardAccess } from './useDashboardAccessHex';
-
-// Supplier Dashboard
-export {
-  useSupplierAuthHex,
-  useSupplierProfileHex,
-  useSupplierNotificationsHex,
-  useSupplierPaymentsHex,
-  useSupplierDocumentsHex
-} from './useSupplierDashboardHex';
 
 // Users Admin
 export { useUserProfilesHex, useToggleUserStatusHex } from './useUsersAdminHex';

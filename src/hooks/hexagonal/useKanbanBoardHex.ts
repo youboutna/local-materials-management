@@ -3,7 +3,8 @@
  */
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/repositories/RepositoryFactory';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface KanbanTask {
   id: string;
@@ -28,34 +29,44 @@ export function useKanbanTasks(projectId: string, phaseId?: string) {
     try {
       setLoading(true);
       
-      let query = supabase
-        .from('enhanced_project_milestones')
-        .select('*')
-        .eq('project_id', projectId);
+      // Pattern: Hook → Repository (avec logique métier dans le hook)
+      const milestoneRepository = RepositoryFactory.getMilestoneRepository();
       
+      // Get milestones with business logic (méthode correcte du repository)
+      let allMilestones = await milestoneRepository.findAll({ project_id: projectId });
+      
+      // Filter by phase if needed
       if (phaseId) {
-        query = query.eq('phase_id', phaseId);
+        allMilestones = allMilestones.filter(milestone => milestone.phase_id === phaseId);
       }
       
-      const { data, error } = await query.order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      setTasks((data || []).map((t: any) => {
-        const deps = t.dependencies as any;
+      // Apply business rules and calculations (transformer logic)
+      const kanbanTasks = allMilestones.map(milestone => {
+        // Business logic: Calculate progress based on critical path and status
+        const progress = milestone.status === 'completed' ? 100 : 
+                       milestone.is_on_critical_path ? 75 : 
+                       milestone.status === 'in_progress' ? 50 : 0;
+        
+        // Business logic: Map priority levels
+        const priority = milestone.priority === 'normal' ? 'medium' : 
+                       milestone.priority === 'critical' ? 'high' : 
+                       milestone.priority as KanbanTask['priority'];
+        
         return {
-          id: t.id,
-          title: t.title,
-          description: t.description,
-          status: t.status || 'backlog',
-          priority: deps?.priority || 'medium',
-          assignee: deps?.assigned_to,
-          dueDate: t.target_date,
-          progress: deps?.progress || 0,
-          phase: deps?.phase_name,
-          tags: deps?.tags || []
+          id: milestone.id,
+          title: milestone.title,
+          description: milestone.description,
+          status: milestone.status,
+          priority,
+          assignee: milestone.approved_by,
+          dueDate: milestone.target_date,
+          progress,
+          phase: milestone.phase_id,
+          tags: milestone.deliverables || []
         };
-      }));
+      });
+      
+      setTasks(kanbanTasks);
     } catch (error) {
       console.error('Error loading tasks:', error);
     } finally {
@@ -66,10 +77,6 @@ export function useKanbanTasks(projectId: string, phaseId?: string) {
   useEffect(() => {
     loadTasks();
   }, [projectId, phaseId]);
-
-  const getTasksByStatus = (status: string) => {
-    return tasks.filter(t => t.status === status);
-  };
 
   const handleDragStart = (taskId: string) => {
     setDraggedTask(taskId);
@@ -85,10 +92,17 @@ export function useKanbanTasks(projectId: string, phaseId?: string) {
     
     // Update in database
     try {
-      await supabase
-        .from('enhanced_project_milestones')
-        .update({ status: targetStatus })
-        .eq('id', draggedTask);
+      // Pattern: Hook → Repository (avec logique métier dans le hook)
+      const milestoneRepository = RepositoryFactory.getMilestoneRepository();
+      
+      // Business logic: Set completion date if status is completed
+      const updateData: any = { status: targetStatus };
+      if (targetStatus === 'completed') {
+        updateData.completed_date = new Date().toISOString();
+      }
+      
+      // Update milestone with business logic (méthode correcte du repository)
+      await milestoneRepository.update(draggedTask, updateData);
     } catch (error) {
       console.error('Error updating task:', error);
       loadTasks(); // Reload on error
@@ -102,7 +116,7 @@ export function useKanbanTasks(projectId: string, phaseId?: string) {
     loading,
     draggedTask,
     loadTasks,
-    getTasksByStatus,
+    getTasksByStatus: (status: string) => tasks.filter(t => t.status === status),
     handleDragStart,
     handleDrop
   };

@@ -1161,7 +1161,8 @@ export const translations = {
             rights: "Tous droits réservés",
             by_hadratech: "Développé par HadraTech",
             quick_links: "Liens rapides",
-            legal: "Légal"
+            legal: "Légal",
+            newsletter: "Newsletter"
         },
         notfound: {
             message: "Page non trouvée",
@@ -1421,7 +1422,7 @@ export const translations = {
                     description: "Gestion des matériaux : Inventaire, approvisionnement et suivi de la disponibilité"
                 },
                 documents: {
-                    title: "Documents, Gestion des appels d’offres",
+                    title: "Documents, Gestion des appels d'offres",
                     description: "Gestion documentaire : Téléversement de fichiers, catégorisation et gestion des workflows"
                 },
                 teams: {
@@ -1444,6 +1445,11 @@ export const translations = {
                 system: "Système  de suivi des projets et Gestion des Matériaux",
                 message: "Valoriser le patrimoine avec les matériaux locaux",
                 details: "Suivez vos projets de construction utilisant la pierre d'Atar/aioun, coquillage/nouakchott et l'argile mauritanienne. Notre solution optimise la gestion des projets de construction, nottament avec des matériaux locaux et préserve les techniques traditionnelles."
+            },
+            stats: {
+                projects: "Projets",
+                regions: "Régions",
+                satisfaction: "Satisfaction"
             },// Pour la Direction/Planification
         direction_features: {
             title: "Tableaux de Bord Stratégiques",

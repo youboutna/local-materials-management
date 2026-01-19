@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Building2, Search, Calendar, FileText } from 'lucide-react';
+import { Building2, Search, Calendar, FileText, Loader2, MapPin, DollarSign } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useProjectsSelector, useProjectTenders, type ProjectOption } from '@/hooks/hexagonal/useSelectorsHex';
+import { cn } from '@/lib/utils';
 
 interface EnhancedProjectSelectorProps {
   value?: string;
@@ -18,6 +20,10 @@ interface EnhancedProjectSelectorProps {
   showTenderReference?: boolean;
   onTenderReferenceChange?: (reference: string) => void;
   tenderReference?: string;
+  className?: string;
+  error?: string;
+  helpText?: string;
+  showProjectDetails?: boolean;
 }
 
 const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
@@ -30,73 +36,169 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
   secureMode = false,
   showTenderReference = false,
   onTenderReferenceChange,
-  tenderReference = ''
+  tenderReference = '',
+  className,
+  error,
+  helpText,
+  showProjectDetails = true
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  const { data: projects, isLoading } = useProjectsSelector({
+  const { data: projects = [], isLoading, error: projectsError } = useProjectsSelector({
     searchTerm: debouncedSearchTerm,
     secureMode
   });
 
-  const { data: tenders } = useProjectTenders(showTenderReference ? value : undefined);
+  const { data: tenders = [], isLoading: tendersLoading } = useProjectTenders(
+    showTenderReference && value ? value : undefined,
+    { enabled: !!value && showTenderReference }
+  );
 
-  const selectedProject = projects?.find(p => p.id === value);
+  const selectedProject = useMemo(() => 
+    projects?.find(p => p.id === value), 
+    [projects, value]
+  );
 
-  const getStatusColor = (status: string | null | undefined) => {
-    switch (status) {
-      case 'Completed': return 'bg-green-100 text-green-800';
-      case 'InProgress': return 'bg-blue-100 text-blue-800';
-      case 'Planning': return 'bg-yellow-100 text-yellow-800';
-      case 'OnHold': return 'bg-gray-100 text-gray-800';
-      case 'Cancelled': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+  // Réinitialiser la recherche quand le select est fermé
+  useEffect(() => {
+    if (!isOpen && searchTerm) {
+      setSearchTerm('');
+    }
+  }, [isOpen, searchTerm]);
+
+  const getStatusConfig = (status: string | null | undefined) => {
+    switch (status?.toLowerCase()) {
+      case 'completed':
+      case 'terminé':
+        return { color: 'bg-green-100 text-green-800 border-green-200', label: 'Terminé' };
+      case 'inprogress':
+      case 'en cours':
+        return { color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'En cours' };
+      case 'planning':
+      case 'planification':
+        return { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', label: 'Planification' };
+      case 'onhold':
+      case 'en attente':
+        return { color: 'bg-gray-100 text-gray-800 border-gray-200', label: 'En attente' };
+      case 'cancelled':
+      case 'annulé':
+        return { color: 'bg-red-100 text-red-800 border-red-200', label: 'Annulé' };
+      default:
+        return { color: 'bg-gray-100 text-gray-800 border-gray-200', label: status || 'Non spécifié' };
     }
   };
 
   const formatDate = (dateString: string | null | undefined) => {
-    if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('fr-FR');
+    if (!dateString) return 'Non spécifié';
+    try {
+      return new Date(dateString).toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch {
+      return 'Date invalide';
+    }
+  };
+
+  const formatCurrency = (amount: number | null | undefined) => {
+    if (!amount) return 'Non spécifié';
+    return new Intl.NumberFormat('fr-MR', {
+      style: 'currency',
+      currency: 'MRU',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  const handleClear = () => {
+    onChange(undefined, undefined);
+    onTenderReferenceChange?.('');
   };
 
   return (
-    <div className="space-y-4">
+    <div className={cn("space-y-4", className)}>
       <div className="space-y-2">
-        <Label>{label} {required && <span className="text-red-500">*</span>}</Label>
-        
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-medium">
+            {label} {required && <span className="text-red-500">*</span>}
+          </Label>
+          {value && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleClear}
+              className="h-6 px-2 text-xs"
+            >
+              Effacer
+            </Button>
+          )}
+        </div>
+
+        {/* Champ de recherche */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Rechercher par titre ou référence..."
+            placeholder="Rechercher par titre, référence..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
+            disabled={disabled}
           />
         </div>
 
-        {isLoading ? (
-          <div className="text-center py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
+        {/* Messages d'erreur/loading */}
+        {projectsError && (
+          <div className="text-sm text-red-500 bg-red-50 p-2 rounded">
+            Erreur lors du chargement des projets
           </div>
-        ) : (
-          <Select 
-            value={value || ''} 
-            onValueChange={(projectId) => {
-              const project = projects?.find(p => p.id === projectId);
-              onChange(projectId || undefined, project);
-            }}
-            disabled={disabled}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={placeholder} />
-            </SelectTrigger>
-            <SelectContent className="max-h-60">
-              {projects?.map((project) => (
-                <SelectItem key={project.id} value={project.id}>
-                  <div className="flex items-center justify-between w-full min-w-0">
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        )}
+
+        {/* Sélecteur de projet */}
+        <Select
+          value={value || ''}
+          onValueChange={(projectId) => {
+            const project = projects?.find(p => p.id === projectId);
+            onChange(projectId || undefined, project);
+          }}
+          disabled={disabled || isLoading}
+          onOpenChange={setIsOpen}
+        >
+          <SelectTrigger className={cn(
+            "w-full",
+            error && "border-red-500 focus:ring-red-500"
+          )}>
+            <SelectValue placeholder={placeholder}>
+              {selectedProject && (
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                  <span className="truncate">{selectedProject.title}</span>
+                </div>
+              )}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent className="max-h-60">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <span className="text-sm text-muted-foreground">Chargement...</span>
+              </div>
+            ) : projects.length === 0 ? (
+              <div className="py-4 text-center text-sm text-muted-foreground">
+                Aucun projet trouvé
+              </div>
+            ) : (
+              projects.map((project) => {
+                const statusConfig = getStatusConfig(project.status);
+                return (
+                  <SelectItem key={project.id} value={project.id} className="py-2">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div className="mt-0.5">
+                        <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      </div>
                       <div className="min-w-0 flex-1">
                         <div className="font-medium truncate">{project.title}</div>
                         {project.project_reference && (
@@ -104,87 +206,138 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
                             Réf: {project.project_reference}
                           </div>
                         )}
-                        {!secureMode && project.location && (
-                          <div className="text-xs text-muted-foreground truncate">{project.location}</div>
+                        {!secureMode && (
+                          <div className="flex items-center gap-2 mt-1">
+                            {project.status && (
+                              <Badge 
+                                variant="outline" 
+                                className={cn("text-xs", statusConfig.color)}
+                              >
+                                {statusConfig.label}
+                              </Badge>
+                            )}
+                            {project.budget && (
+                              <span className="text-xs text-muted-foreground">
+                                {formatCurrency(project.budget)}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
-                    {!secureMode && (
-                      <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                        {project.status && (
-                          <Badge variant="outline" className={`text-xs ${getStatusColor(project.status)}`}>
-                            {project.status}
-                          </Badge>
-                        )}
-                        {project.budget && (
-                          <span className="text-xs text-muted-foreground">
-                            {project.budget.toLocaleString()} MRU
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                  </SelectItem>
+                );
+              })
+            )}
+          </SelectContent>
+        </Select>
+
+        {error && (
+          <p className="text-sm text-red-500">{error}</p>
+        )}
+        {helpText && !error && (
+          <p className="text-sm text-muted-foreground">{helpText}</p>
         )}
 
-        {selectedProject && (
-          <div className="p-3 bg-muted rounded-lg text-sm space-y-1">
-            <div className="flex justify-between items-center">
-              <span className="font-medium">Projet sélectionné:</span>
+        {/* Détails du projet sélectionné */}
+        {showProjectDetails && selectedProject && (
+          <div className="p-3 bg-muted/50 rounded-lg border space-y-3">
+            <div className="flex justify-between items-start">
+              <div>
+                <h4 className="font-medium text-sm">Projet sélectionné</h4>
+                <p className="font-semibold">{selectedProject.title}</p>
+              </div>
               {!secureMode && selectedProject.status && (
-                <Badge variant="outline" className={getStatusColor(selectedProject.status)}>
-                  {selectedProject.status}
+                <Badge variant="outline" className={getStatusConfig(selectedProject.status).color}>
+                  {getStatusConfig(selectedProject.status).label}
                 </Badge>
               )}
             </div>
-            <div className="font-medium">{selectedProject.title}</div>
-            {selectedProject.project_reference && (
-              <div className="text-muted-foreground">📋 Réf: {selectedProject.project_reference}</div>
-            )}
-            {!secureMode && selectedProject.location && (
-              <div className="text-muted-foreground">📍 {selectedProject.location}</div>
-            )}
-            {!secureMode && (selectedProject.start_date || selectedProject.end_date) && (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Calendar className="h-3 w-3" />
-                {formatDate(selectedProject.start_date)} - {formatDate(selectedProject.end_date)}
-              </div>
-            )}
-            {!secureMode && selectedProject.budget && (
-              <div className="font-medium text-primary">
-                Budget: {selectedProject.budget.toLocaleString()} MRU
-              </div>
-            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+              {selectedProject.project_reference && (
+                <div className="flex items-center gap-2">
+                  <FileText className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-muted-foreground">Référence:</span>
+                  <span className="font-medium">{selectedProject.project_reference}</span>
+                </div>
+              )}
+
+              {!secureMode && selectedProject.location && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-muted-foreground">Localisation:</span>
+                  <span className="font-medium">{selectedProject.location}</span>
+                </div>
+              )}
+
+              {!secureMode && (selectedProject.start_date || selectedProject.end_date) && (
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-muted-foreground">Période:</span>
+                  <span className="font-medium">
+                    {formatDate(selectedProject.start_date)} - {formatDate(selectedProject.end_date)}
+                  </span>
+                </div>
+              )}
+
+              {!secureMode && selectedProject.budget && (
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-muted-foreground">Budget:</span>
+                  <span className="font-medium">{formatCurrency(selectedProject.budget)}</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
 
+      {/* Section référence d'appel d'offres */}
       {showTenderReference && (
-        <div className="space-y-2">
-          <Label>Référence d'appel d'offres (optionnel)</Label>
+        <div className="space-y-2 pt-2 border-t">
+          <Label className="text-sm font-medium">
+            Référence d'appel d'offres
+            <span className="text-muted-foreground font-normal ml-1">(optionnel)</span>
+          </Label>
           
-          <Input
-            placeholder="Saisir la référence d'appel d'offres"
-            value={tenderReference}
-            onChange={(e) => onTenderReferenceChange?.(e.target.value)}
-          />
+          <div className="relative">
+            <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Saisir la référence d'appel d'offres"
+              value={tenderReference}
+              onChange={(e) => onTenderReferenceChange?.(e.target.value)}
+              className="pl-10"
+            />
+          </div>
           
-          {tenders && tenders.length > 0 && (
+          {/* Suggestions d'appels d'offres */}
+          {tendersLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Chargement des appels d'offres...
+            </div>
+          ) : tenders && tenders.length > 0 && (
             <div className="mt-2">
               <p className="text-xs text-muted-foreground mb-2">Appels d'offres associés:</p>
               <div className="space-y-1">
                 {tenders.map((tender) => (
-                  <div key={tender.id} 
-                       className="text-xs p-2 bg-muted rounded cursor-pointer hover:bg-muted/80"
-                       onClick={() => onTenderReferenceChange?.(tender.reference)}>
+                  <button
+                    key={tender.id}
+                    type="button"
+                    className="w-full text-left text-xs p-2 bg-muted rounded hover:bg-muted/80 transition-colors"
+                    onClick={() => onTenderReferenceChange?.(tender.reference)}
+                  >
                     <div className="flex items-center gap-2">
                       <FileText className="h-3 w-3 text-muted-foreground" />
-                      <span>{tender.reference}</span>
+                      <span className="truncate">{tender.reference}</span>
+                      {tender.title && (
+                        <span className="text-muted-foreground truncate ml-auto">
+                          {tender.title}
+                        </span>
+                      )}
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>

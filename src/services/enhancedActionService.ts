@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import { createBankGuaranteeAction } from './bankGuaranteeActionService';
 import { createInspectionAction } from './inspectionActionService';
 import { createInsuranceAction } from './insuranceActionService';
@@ -145,32 +145,28 @@ export class EnhancedActionService {
     limit: number = 50
   ): Promise<any[]> {
     try {
-      let query = supabase
-        .from('notifications')
-        .select('*')
-        .in('type', [
+      const notificationRepository = RepositoryFactory.getNotificationRepository();
+      let notifications = await notificationRepository.findAll({
+        type: [
           'bank_guarantee_action',
           'inspection_action', 
           'insurance_action',
           'payment_action',
           'project_action'
-        ]);
+        ]
+      });
 
+      // Apply filters
       if (entityId) {
-        query = query.eq('related_id', entityId);
+        notifications = notifications.filter(n => n.related_id === entityId);
       }
-
       if (projectId) {
-        query = query.eq('metadata->projectId', projectId);
+        notifications = notifications.filter(n => 
+          n.metadata && n.metadata.projectId === projectId
+        );
       }
-
-      const { data, error } = await query
-        .order('created_at', { ascending: false })
-        .limit(limit);
-
-      if (error) throw error;
-
-      return data || [];
+      
+      return notifications.slice(0, limit);
     } catch (error) {
       console.error('Error fetching action history:', error);
       return [];
@@ -189,28 +185,24 @@ export class EnhancedActionService {
     averageResponseTime: number;
   }> {
     try {
-      let query = supabase
-        .from('notifications')
-        .select('*')
-        .gte('created_at', startDate.toISOString())
-        .lte('created_at', endDate.toISOString())
-        .in('type', [
+      const notificationRepository = RepositoryFactory.getNotificationRepository();
+      let notifications = await notificationRepository.findAll({
+        created_at_gte: startDate.toISOString(),
+        created_at_lte: endDate.toISOString(),
+        type: [
           'bank_guarantee_action',
           'inspection_action',
           'insurance_action', 
           'payment_action',
           'project_action'
-        ]);
+        ]
+      });
 
       if (entityType) {
-        query = query.eq('type', `${entityType}_action`);
+        notifications = notifications.filter(n => n.type === `${entityType}_action`);
       }
 
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      const actions = data || [];
+      const actions = notifications;
 
       const actionsByType = actions.reduce((acc, action) => {
         acc[action.type] = (acc[action.type] || 0) + 1;
@@ -263,24 +255,19 @@ export class EnhancedActionService {
   ): Promise<ActionExecutionResult> {
     try {
       // Store the recurring action pattern
-      const { data: schedule, error } = await supabase
-        .from('notifications')
-        .insert({
-          recipient_id: 'system',
-          title: `Scheduled Action: ${actionRequest.title}`,
-          message: `Recurring ${actionRequest.actionType} for ${actionRequest.entityType}`,
-          type: 'scheduled_action',
-          related_id: actionRequest.entityId,
-          metadata: {
-            actionRequest: JSON.stringify(actionRequest),
-            recurringPattern: JSON.stringify(recurringPattern),
-            nextExecution: new Date().toISOString()
-          } as any
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+      const notificationRepository = RepositoryFactory.getNotificationRepository();
+      const schedule = await notificationRepository.create({
+        recipient_id: 'system',
+        title: `Scheduled Action: ${actionRequest.title}`,
+        message: `Recurring ${actionRequest.actionType} for ${actionRequest.entityType}`,
+        type: 'scheduled_action',
+        related_id: actionRequest.entityId,
+        metadata: {
+          actionRequest: JSON.stringify(actionRequest),
+          recurringPattern: JSON.stringify(recurringPattern),
+          nextExecution: new Date().toISOString()
+        }
+      } as any);
 
       return {
         success: true,
@@ -300,18 +287,13 @@ export class EnhancedActionService {
 
   static async cancelAction(actionId: string): Promise<boolean> {
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ 
-          metadata: { 
-            ...{}, 
-            status: 'cancelled',
-            cancelledAt: new Date().toISOString()
-          }
-        })
-        .eq('id', actionId);
-
-      if (error) throw error;
+      const notificationRepository = RepositoryFactory.getNotificationRepository();
+      await notificationRepository.update(actionId, { 
+        metadata: { 
+          status: 'cancelled',
+          cancelledAt: new Date().toISOString()
+        }
+      });
       return true;
 
     } catch (error) {
@@ -326,13 +308,12 @@ export class EnhancedActionService {
   ): Promise<ActionExecutionResult> {
     try {
       // Get the original action
-      const { data: originalAction, error: fetchError } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('id', actionId)
-        .single();
-
-      if (fetchError) throw fetchError;
+      const notificationRepository = RepositoryFactory.getNotificationRepository();
+      const originalAction = await notificationRepository.findById(actionId);
+      
+      if (!originalAction) {
+        throw new Error('Action not found');
+      }
 
       // Get escalation targets
       const metadata = originalAction.metadata as any;
@@ -341,46 +322,41 @@ export class EnhancedActionService {
         throw new Error('Project ID not found in action metadata');
       }
 
-      const { data: targets } = await supabase
-        .rpc('get_escalation_targets', { 
-          project_id_param: projectId, 
-          escalation_level_param: newEscalationLevel 
-        });
+      const authRepository = RepositoryFactory.getAuthRepository();
+      const targets = await authRepository.invokeRPC('get_escalation_targets', { 
+        project_id_param: projectId, 
+        escalation_level_param: newEscalationLevel 
+      });
 
       let notificationsSent = 0;
 
       // Send escalated notifications
       for (const target of (targets || [])) {
-        await supabase
-          .from('notifications')
-          .insert({
-            recipient_id: target.employee_id,
-            title: `[ESCALÉ] ${originalAction.title}`,
-            message: `Action escalée au niveau ${newEscalationLevel}: ${originalAction.message}`,
-            type: `${originalAction.type}_escalation`,
-            related_id: originalAction.related_id,
-            metadata: {
-              ...(originalAction.metadata as any),
-              escalatedFrom: actionId,
-              escalationLevel: newEscalationLevel,
-              escalatedAt: new Date().toISOString()
-            } as any
-          });
+        await notificationRepository.create({
+          recipient_id: target.employee_id,
+          title: `[ESCALÉ] ${originalAction.title}`,
+          message: `Action escalée au niveau ${newEscalationLevel}: ${originalAction.message}`,
+          type: `${originalAction.type}_escalation`,
+          related_id: originalAction.related_id,
+          metadata: {
+            ...(originalAction.metadata as any),
+            escalatedFrom: actionId,
+            escalationLevel: newEscalationLevel,
+            escalatedAt: new Date().toISOString()
+          } as any
+        });
         notificationsSent++;
       }
 
       // Update original action
-      await supabase
-        .from('notifications')
-        .update({ 
-          metadata: { 
-            ...(originalAction.metadata as any), 
-            escalated: true,
-            escalationLevel: newEscalationLevel,
-            escalatedAt: new Date().toISOString()
-          } as any
-        })
-        .eq('id', actionId);
+      await notificationRepository.update(actionId, { 
+        metadata: { 
+          ...(originalAction.metadata as any), 
+          escalated: true,
+          escalationLevel: newEscalationLevel,
+          escalatedAt: new Date().toISOString()
+        } as any
+      });
 
       return {
         success: true,

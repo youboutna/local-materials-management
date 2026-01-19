@@ -29,23 +29,23 @@ import { useLanguage } from "@/contexts/LanguageContext";
 const Projects: React.FC = () => {
   const { t } = useLanguage();
   // Use hexagonal architecture hook
-  const { projects: hexProjects, loading: isLoading, error, deleteProject } = useProjectsHex();
+  const { projects: hexProjects, isLoading, error, deleteProject } = useProjectsHex();
   
   // Map domain entities to ProjectData for compatibility
   const projects: ProjectData[] = React.useMemo(() => 
     hexProjects.map(p => ({
-      id: p.id,
-      title: p.title,
+      id: p.id || '',
+      title: p.title || '',
       description: p.description || '',
       location: p.location || '',
-      status: p.status as ProjectData['status'],
-      progress: p.progress,
-      budget: p.budget,
+      status: (p.status as ProjectData['status']) || 'en attente',
+      progress: p.progress || 0,
+      budget: p.budget || 0,
       startDate: p.startDate ? new Date(p.startDate).toISOString() : new Date().toISOString(),
       endDate: p.endDate ? new Date(p.endDate).toISOString() : new Date().toISOString(),
-      thumbnail: p.thumbnail,
+      thumbnail: p.thumbnail || undefined,
       teamSize: p.teamSize || 0,
-      coordinates: p.coordinates,
+      coordinates: p.coordinates || undefined,
     }))
   , [hexProjects]);
   
@@ -72,7 +72,8 @@ const Projects: React.FC = () => {
     availableRegions,
     performSearch,
   } = useProjectsFilter(projects || []);
-  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
+  // Supprimer la dépendance circulaire - utiliser searchQuery directement au lieu de localSearchQuery
+  // const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
 
   // Pagination for projects
   const {
@@ -202,7 +203,8 @@ const Projects: React.FC = () => {
     }
   };
   const handleSearchChange = (query: string) => {
-    setLocalSearchQuery(query);
+    // Supprimer setLocalSearchQuery pour éviter la dépendance circulaire
+    // setLocalSearchQuery(query);
     setSearchQuery(query); // This will trigger the debounced search
   };
   if (isLoading) {
@@ -305,7 +307,7 @@ const Projects: React.FC = () => {
             )}
 
             <ProjectFilters
-              searchQuery={localSearchQuery}
+              searchQuery={searchQuery}
               onSearchChange={handleSearchChange}
               onSearchSubmit={performSearch}
               statusFilter={statusFilter}

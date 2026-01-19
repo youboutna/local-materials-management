@@ -117,7 +117,7 @@ export const useCurrentUserRoles = () => {
 
   const hasAnyRole = (roleNames: string[]) => {
     const roles = (userRoles as string[]) || [];
-    if (roles.length === 0) return false;
+    if (roles.length === 0 || !Array.isArray(roles)) return false;
     const wanted = roleNames.map((r) => String(r).toLowerCase());
     return wanted.some((role) => roles.includes(role));
   };

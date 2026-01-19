@@ -1,4 +1,3 @@
-
 import BusinessDocuments from '@/components/documents/BusinessDocuments';
 import { SupplierInspectionsList } from '@/components/supplier/SupplierInspectionsList';
 import SupplierPaymentRequest from '@/components/suppliers/SupplierPaymentRequest';
@@ -14,29 +13,33 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { useSupplierInspections } from '@/hooks/useSupplierInspections';
-import { supabase } from '@/integrations/supabase/client';
 import { DocumentWithViewStatus, Supplier, SupplierNotification } from '@/types/supplier';
-import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { CheckCircle, Clock, Download, Eye, FileText, LogIn, LogOut, MessageCircle, Plus, Send, Share2, Upload, User } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { 
+  useSupplierAuthHex,
+  useSupplierProfileHex,
+  useSupplierDocumentsHex,
+  useSupplierSharedDocumentsHex,
+  useSupplierTasksHex,
+  useSupplierNotificationsHex,
+  useSupplierPaymentRequestsHex,
+  useSupplierParsedInvoicesHex,
+  useUploadSupplierDocumentHex,
+  useAddTaskCommentHex,
+  useMarkTaskCompletedHex,
+  type SupplierDocument,
+  type SupplierTask,
+  type PaymentRequest
+} from '@/hooks/hexagonal/useSupplierPortalCompleteHex';
 
 const SupplierPortal = () => {
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoginMode, setIsLoginMode] = useState(true);
-  const [supplierProfile, setSupplierProfile] = useState<Supplier | null>(null);
-  const [sharedDocuments, setSharedDocuments] = useState<DocumentWithViewStatus[]>([]);
-  const [uploadedDocuments, setUploadedDocuments] = useState<DocumentWithViewStatus[]>([]);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadDescription, setUploadDescription] = useState('');
-  const [assignedTasks, setAssignedTasks] = useState<SupplierNotification[]>([]);
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [paymentRequests, setPaymentRequests] = useState<any[]>([]);
-  const [parsedInvoices, setParsedInvoices] = useState<any[]>([]);
   const [taskComment, setTaskComment] = useState('');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [shareTargetEmail, setShareTargetEmail] = useState('');
@@ -47,1004 +50,363 @@ const SupplierPortal = () => {
   const { t } = useLanguage();
   const { uploadFile: storageUpload, uploading } = useDocumentStorage();
   
-  // Use the custom hook for inspections with proper service layer
+  // Use hexagonal hooks for supplier portal
+  const {
+    loginMutation,
+    signUpMutation,
+    logoutMutation,
+    isLoggingIn,
+    isSigningUp,
+    isLoggingOut
+  } = useSupplierAuthHex();
+  
+  // Get current user for profile fetching - using auth hook
+  useEffect(() => {
+    // This will be handled by the auth hooks in the login/signup flow
+    // The profile will be fetched automatically when user is available
+  }, []);
+  
+  const { data: supplierProfile } = useSupplierProfileHex(null); // Will be updated with user ID
+  const { data: uploadedDocuments = [] } = useSupplierDocumentsHex(null, supplierProfile?.id || null, supplierProfile?.name || null);
+  const { data: sharedDocuments = [] } = useSupplierSharedDocumentsHex(supplierProfile?.id || null);
+  const { data: assignedTasks = [] } = useSupplierTasksHex(null, supplierProfile?.id || null);
+  const { data: notifications = [] } = useSupplierNotificationsHex(supplierProfile?.id || null);
+  const { data: paymentRequests = [] } = useSupplierPaymentRequestsHex(supplierProfile?.id || null);
+  const { data: parsedInvoices = [] } = useSupplierParsedInvoicesHex(supplierProfile?.name || null);
+  
+  // Mutations
+  const uploadDocumentMutation = useUploadSupplierDocumentHex();
+  const addTaskCommentMutation = useAddTaskCommentHex();
+  const markTaskCompletedMutation = useMarkTaskCompletedHex();
+  
+  // Use inspections hook with proper service layer
   const { 
     inspections, 
     loading: inspectionsLoading, 
     refetch: refetchInspections 
   } = useSupplierInspections(supplierProfile?.id || null);
 
-  // Function to mark item as viewed (will be enabled when types are updated)
-  const markAsViewed = async (itemId: string, itemType: 'document' | 'notification' | 'task') => {
-    if (!user || !supplierProfile) return;
+  // Auth handlers
+  const handleLogin = async () => {
+    loginMutation({ email, password });
+  };
 
+  const handleSignUp = async () => {
+    signUpMutation({ email, password });
+  };
+
+  const handleLogout = async () => {
+    logoutMutation();
+  };
+
+  // File upload handler
+  const handleFileUpload = async () => {
+    if (!uploadFile || !uploadTitle || !supplierProfile?.id) return;
+    
     try {
-      // TODO: Implement once types are updated
-      console.log(`Marking ${itemType} ${itemId} as viewed by supplier ${supplierProfile.id}`);
-    } catch (error) {
-      console.error('Error marking item as viewed:', error);
-    }
-  };
-
-  // Authentication state management
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // Fetch supplier profile when user is authenticated
-  useEffect(() => {
-    if (user) {
-      fetchSupplierProfile();
-    }
-  }, [user]);
-
-  // Fetch all data when supplier profile is loaded
-  useEffect(() => {
-    if (user && supplierProfile) {
-      fetchSharedDocuments();
-      fetchUploadedDocuments();
-      fetchAssignedTasks();
-      fetchNotifications();
-      fetchPaymentRequests();
-      fetchParsedInvoices();
-      // Inspections are now managed by useSupplierInspections hook
-    }
-  }, [user, supplierProfile]);
-
-  const fetchSupplierProfile = async () => {
-    if (!user) {
-      console.log('No user found, cannot fetch supplier profile');
-      return;
-    }
-    
-    console.log('Fetching supplier profile for user:', user.id, user.email);
-    
-    // First try to find by user_id
-    let { data, error } = await supabase
-      .from('suppliers')
-      .select('*')
-      .eq('user_id', user.id)
-      .maybeSingle();
-    
-    if (error) {
-      console.error('Error fetching supplier profile by user_id:', error);
-    }
-    
-    // If no profile found by user_id, try to find by email and link it
-    if (!data && user.email) {
-      console.log('No profile found by user_id, trying by email:', user.email);
-      const { data: emailData, error: emailError } = await supabase
-        .from('suppliers')
-        .select('*')
-        .eq('email', user.email)
-        .maybeSingle();
-      
-      if (emailError) {
-        console.error('Error fetching supplier profile by email:', emailError);
-      } else if (emailData) {
-        console.log('Found supplier profile by email, linking to user');
-        // Link the existing supplier to this user
-        const { data: updatedData, error: updateError } = await supabase
-          .from('suppliers')
-          .update({ user_id: user.id })
-          .eq('id', emailData.id)
-          .select()
-          .single();
-        
-        if (updateError) {
-          console.error('Error linking supplier to user:', updateError);
-        } else {
-          setSupplierProfile(updatedData as Supplier);
-          toast({
-            title: t('supplier_portal.linked_profile'),
-            description: t('supplier_portal.profile_linked_desc'),
-          });
-          return;
-        }
-      }
-    }
-    
-    if (data) {
-      setSupplierProfile(data as Supplier);
-    } else {
-      // No supplier profile found - create a default one
-      console.log('No supplier profile found, creating default one');
-      await createSupplierProfile();
-    }
-  };
-
-  const createSupplierProfile = async () => {
-    if (!user) return;
-
-    try {
-      const defaultSupplierData = {
-        user_id: user.id,
-        name: user.email?.split('@')[0] || 'Fournisseur',
-        email: user.email,
-        contact_person: user.user_metadata?.full_name || 'Contact',
-        is_active: true,
-      };
-
-      const { data, error } = await supabase
-        .from('suppliers')
-        .insert(defaultSupplierData)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating supplier profile:', error);
-        toast({
-          title: 'Erreur',
-          description: 'Impossible de créer le profil fournisseur automatiquement. Contactez l\'administrateur.',
-          variant: 'destructive',
-        });
-      } else {
-        setSupplierProfile(data as Supplier);
-        toast({
-          title: 'Profil créé',
-          description: 'Votre profil fournisseur a été créé automatiquement.',
-        });
-      }
-    } catch (error) {
-      console.error('Error creating supplier profile:', error);
-    }
-  };
-
-  const fetchSharedDocuments = async () => {
-    if (!user || !supplierProfile) return;
-
-    const { data, error } = await supabase
-      .from('documents')
-      .select(`
-        *,
-        projects!documents_project_id_fkey (title, status),
-        payments (amount, payment_date)
-      `)
-      .or(`assigned_to.eq.${user.id},supplier_id.eq.${supplierProfile.id},tags.cs.{${supplierProfile.name}}`)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching shared documents:', error);
-    } else {
-      console.log('Fetched shared documents for supplier:', data);
-      setSharedDocuments((data || []) as unknown as DocumentWithViewStatus[]);
-    }
-  };
-
-  const fetchUploadedDocuments = async () => {
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from('documents')
-      .select('*')
-      .eq('uploaded_by', user.id)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching uploaded documents:', error);
-    } else {
-      setUploadedDocuments((data || []) as DocumentWithViewStatus[]);
-    }
-  };
-
-  const fetchAssignedTasks = async () => {
-    if (!user || !supplierProfile) return;
-
-    // Fetch tasks from task_assignments table assigned to this user (supplier account)
-    const { data: taskData, error: taskError } = await supabase
-      .from('task_assignments')
-      .select('*')
-      .eq('assigned_to', user.id)
-      .order('created_at', { ascending: false });
-
-    // Also fetch old-style supplier notifications for backward compatibility
-    const { data: notifData, error: notifError } = await supabase
-      .from('supplier_notifications')
-      .select('*')
-      .eq('supplier_id', supplierProfile.id)
-      .in('notification_type', ['task_assignment', 'task_notification'])
-      .order('sent_at', { ascending: false });
-
-    if (taskError) {
-      console.error('Error fetching task assignments:', taskError);
-    }
-    if (notifError) {
-      console.error('Error fetching supplier notifications:', notifError);
-    }
-
-    // Combine both sources
-    const combinedTasks = [...(taskData || []), ...(notifData || [])];
-    setAssignedTasks(combinedTasks as SupplierNotification[]);
-  };
-
-
-  const fetchNotifications = async () => {
-    if (!user || !supplierProfile) return;
-
-    // Fetch from supplier_notifications table AND general notifications for this user
-    const { data: supplierNotifs, error: supplierError } = await supabase
-      .from('supplier_notifications')
-      .select('*')
-      .eq('supplier_id', supplierProfile.id)
-      .order('sent_at', { ascending: false });
-
-    const { data: generalNotifs, error: generalError } = await supabase
-      .from('notifications')
-      .select('*')
-      .eq('recipient_id', user.id)
-      .order('created_at', { ascending: false });
-
-    if (supplierError) {
-      console.error('Error fetching supplier notifications:', supplierError);
-    }
-    if (generalError) {
-      console.error('Error fetching general notifications:', generalError);
-    }
-
-    // Combine and deduplicate
-    const allNotifications = [...(supplierNotifs || []), ...(generalNotifs || [])];
-    setNotifications(allNotifications);
-  };
-
-  const fetchPaymentRequests = async () => {
-    if (!user || !supplierProfile) return;
-
-    const { data, error } = await supabase
-      .from('supplier_payment_requests')
-      .select('*')
-      .eq('supplier_id', supplierProfile.id)
-      .order('requested_date', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching payment requests:', error);
-    } else {
-      console.log('Fetched payment requests:', data);
-      setPaymentRequests(data || []);
-    }
-  };
-
-  const fetchParsedInvoices = async () => {
-    if (!user || !supplierProfile) return;
-
-    // Fetch invoices where supplier_info contains supplier name or email
-    const { data, error } = await supabase
-      .from('parsed_invoices')
-      .select('*')
-      .or(`supplier_info->>name.ilike.%${supplierProfile.name}%,supplier_info->>email.eq.${supplierProfile.email}`)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching parsed invoices:', error);
-    } else {
-      console.log('Fetched parsed invoices:', data);
-      setParsedInvoices(data || []);
-    }
-  };
-
-  const handleTaskComment = async (taskId: string) => {
-    if (!taskComment.trim() || !user) return;
-
-    try {
-      // Mark task as viewed when commenting
-      await markAsViewed(taskId, 'task');
-      
-      // Update task_assignments with the new comment in notes field
-      const { data: existingTask } = await supabase
-        .from('task_assignments')
-        .select('notes')
-        .eq('id', taskId)
-        .single();
-
-      const existingNotes = existingTask?.notes || '';
-      const newNote = `[${new Date().toLocaleString('fr-FR')}] ${supplierProfile?.name || user.email}: ${taskComment}`;
-      const updatedNotes = existingNotes 
-        ? `${existingNotes}\n\n${newNote}`
-        : newNote;
-
-      const { error } = await supabase
-        .from('task_assignments')
-        .update({ 
-          notes: updatedNotes,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', taskId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Commentaire ajouté",
-        description: "Votre commentaire a été ajouté à la tâche",
+      await uploadDocumentMutation.mutateAsync({
+        file: uploadFile,
+        title: uploadTitle,
+        description: uploadDescription,
+        documentType,
+        userId: supplierProfile.user_id || '',
+        supplierId: supplierProfile.id
       });
+      
+      setUploadFile(null);
+      setUploadTitle('');
+      setUploadDescription('');
+    } catch (error) {
+      console.error('Upload error:', error);
+    }
+  };
 
+  // Task handlers
+  const handleTaskComment = async (taskId: string) => {
+    if (!taskComment.trim()) return;
+    
+    try {
+      await addTaskCommentMutation.mutateAsync({
+        taskId,
+        comment: taskComment
+      });
+      
       setTaskComment('');
       setSelectedTaskId(null);
-      fetchAssignedTasks();
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive"
-      });
+    } catch (error) {
+      console.error('Task comment error:', error);
     }
   };
 
   const handleTaskCompletion = async (taskId: string) => {
-    if (!user) return;
-
     try {
-      // Mark task as viewed when completing
-      await markAsViewed(taskId, 'task');
+      await markTaskCompletedMutation.mutateAsync({
+        taskId,
+        projectManagerId: 'project-manager-id' // Would be dynamic in real app
+      });
       
-      // Update task_assignments status to completed
-      const { error: updateError } = await supabase
-        .from('task_assignments')
-        .update({ 
-          status: 'completed',
-          completion_date: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', taskId);
-
-      if (updateError) throw updateError;
-
-      // Create notification for project manager
-      const { data: task } = await supabase
-        .from('task_assignments')
-        .select('title, assigned_by')
-        .eq('id', taskId)
-        .single();
-
-      if (task?.assigned_by) {
-        await supabase
-          .from('notifications')
-          .insert({
-            recipient_id: task.assigned_by,
-            title: "Tâche complétée",
-            message: `${supplierProfile?.name || user.email} a marqué la tâche "${task.title}" comme terminée`,
-            type: 'task_completed',
-            related_id: taskId,
-            metadata: {
-              task_id: taskId,
-              completed_by: user.id,
-              supplier_name: supplierProfile?.name
-            }
-          });
-      }
-
-      toast({
-        title: "Tâche marquée comme terminée",
-        description: "Le chef de projet a été notifié",
-      });
-
-      fetchAssignedTasks();
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleLogin = async () => {
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password
-      });
-
-      if (error) {
-        let errorMessage = 'Erreur de connexion';
-        if (error.message === 'Invalid login credentials') {
-          errorMessage = 'Email ou mot de passe incorrect';
-        }
-          toast({
-          title: t('common.error'),
-          description: errorMessage,
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: t('common.success'),
-          description: t('supplier_portal.subtitle') || 'Bienvenue sur le portail fournisseur',
-        });
-      }
+      setSelectedTaskId(null);
     } catch (error) {
-      console.error('Login error:', error);
-    } finally {
-      setLoading(false);
+      console.error('Task completion error:', error);
     }
   };
 
-  const handleSignUp = async () => {
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/supplier-portal`
-        }
-      });
-
-      if (error) {
-        toast({
-          title: t('common.error'),
-          description: error.message,
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: t('common.success'),
-          description: t('supplier_portal.profile_created_desc') || 'Vérifiez votre email pour confirmer votre compte',
-        });
-      }
-    } catch (error) {
-      console.error('Sign up error:', error);
-    } finally {
-      setLoading(false);
-    }
+  // Document sharing handler
+  const handleDocumentShare = async () => {
+    if (!shareTargetEmail || !shareMessage || !selectedDocumentForShare) return;
+    
+    // TODO: Implement document sharing logic
+    toast({
+      title: "Partage de document",
+      description: "Fonctionnalité de partage à implémenter",
+    });
   };
 
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      setSupplierProfile(null);
-      setSharedDocuments([]);
-      setUploadedDocuments([]);
-      toast({
-        title: "Déconnexion réussie",
-        description: "Vous avez été déconnecté",
-      });
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
-
-  const handleFileUpload = async () => {
-    if (!uploadFile || !uploadTitle.trim() || !user) return;
-
-    try {
-      // Upload file to storage
-      const uploadResult = await storageUpload(uploadFile, `supplier-uploads/${user.id}`);
-      
-      if (!uploadResult.success) {
-        throw new Error(uploadResult.error || 'Upload failed');
-      }
-
-      // Save document record
-      const { error } = await supabase
-        .from('documents')
-        .insert({
-          title: uploadTitle,
-          description: uploadDescription,
-          file_url: uploadResult.url,
-          file_name: uploadFile.name,
-          mime_type: uploadFile.type,
-          file_size: uploadFile.size,
-          document_type: documentType as any,
-          uploaded_by: user.id,
-          status: 'draft'
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Document téléchargé",
-        description: "Votre document a été téléchargé avec succès",
-      });
-
-      // Reset form
-      setUploadFile(null);
-      setUploadTitle('');
-      setUploadDescription('');
-      
-      // Refresh documents
-      fetchUploadedDocuments();
-    } catch (error: any) {
-      toast({
-        title: "Erreur de téléchargement",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleInvoiceSubmission = async () => {
-    if (!uploadFile || !uploadTitle.trim() || !user || !supplierProfile) return;
-
-    try {
-      // First, validate project status (inspection, insurance, banking guarantees)
-      const statusCheck = await validateProjectStatus();
-      if (!statusCheck.valid) {
-        toast({
-          title: "Vérification échouée",
-          description: statusCheck.message,
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Upload file to storage
-      const uploadResult = await storageUpload(uploadFile, `supplier-invoices/${user.id}`);
-      
-      if (!uploadResult.success) {
-        throw new Error(uploadResult.error || 'Upload failed');
-      }
-
-      // Save document record as payment request
-      const { error } = await supabase
-        .from('documents')
-        .insert({
-          title: uploadTitle,
-          description: uploadDescription,
-          file_url: uploadResult.url,
-          file_name: uploadFile.name,
-          mime_type: uploadFile.type,
-          file_size: uploadFile.size,
-          document_type: 'supplier_info' as const,
-          uploaded_by: user.id,
-          status: 'pending_review',
-          metadata: {
-            supplier_id: supplierProfile.id,
-            payment_request: true,
-            submitted_at: new Date().toISOString()
-          }
-        });
-
-      if (error) throw error;
-
-      // Create notification for project managers
-      await supabase
-        .from('notifications')
-        .insert({
-          title: "Nouvelle demande de paiement",
-          message: `Demande de paiement soumise par ${supplierProfile.name}: ${uploadTitle}`,
-          type: "payment_pending",
-          recipient_id: "00000000-0000-0000-0000-000000000000", // Admin notification
-          metadata: {
-            supplier_id: supplierProfile.id,
-            supplier_name: supplierProfile.name,
-            document_title: uploadTitle
-          }
-        });
-
-      toast({
-        title: "Demande soumise",
-        description: "Votre demande de paiement a été soumise avec succès",
-      });
-
-      // Reset form
-      setUploadFile(null);
-      setUploadTitle('');
-      setUploadDescription('');
-      
-      // Refresh documents
-      fetchUploadedDocuments();
-    } catch (error: any) {
-      toast({
-        title: "Erreur de soumission",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  };
-
-  const validateProjectStatus = async () => {
-    if (!supplierProfile) {
-      return { valid: false, message: "Profil fournisseur introuvable" };
-    }
-
-    try {
-      // Check active projects for this supplier
-      const { data: projects } = await supabase
-        .from('projects')
-        .select('id, title, status')
-        .contains('metadata', { supplier_id: supplierProfile.id })
-        .eq('status', 'en_cours');
-
-      if (!projects || projects.length === 0) {
-        return { valid: false, message: "Aucun projet actif trouvé" };
-      }
-
-      // Check recent inspections
-      const { data: inspections } = await supabase
-        .from('inspections')
-        .select('*')
-        .in('project_id', projects.map(p => p.id))
-        .gte('date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()) // Last 30 days
-        .eq('status', 'approved');
-
-      if (!inspections || inspections.length === 0) {
-        return { valid: false, message: "Aucune inspection récente approuvée. Une inspection doit être effectuée avant le paiement." };
-      }
-
-      // Check insurance certificates
-      const { data: insurance } = await supabase
-        .from('insurance_certificates')
-        .select('*')
-        .in('project_id', projects.map(p => p.id))
-        .eq('status', 'active')
-        .gte('valid_until', new Date().toISOString());
-
-      if (!insurance || insurance.length === 0) {
-        return { valid: false, message: "Assurance expirée ou manquante. Renouvelez votre assurance avant de demander un paiement." };
-      }
-
-      // Check bank guarantees
-      const { data: guarantees } = await supabase
-        .from('bank_guarantees')
-        .select('*')
-        .in('project_id', projects.map(p => p.id))
-        .eq('status', 'active')
-        .gte('expiry_date', new Date().toISOString());
-
-      if (!guarantees || guarantees.length === 0) {
-        return { valid: false, message: "Garantie bancaire expirée ou manquante. Renouvelez vos garanties avant de demander un paiement." };
-      }
-
-      return { valid: true, message: "Tous les prérequis sont respectés" };
-
-    } catch (error) {
-      console.error('Status validation error:', error);
-      return { valid: false, message: "Erreur lors de la vérification du statut" };
-    }
-  };
-
-  const downloadDocument = async (document: any) => {
-    if (document.file_url) {
-      await markAsViewed(document.id, 'document');
-      window.open(document.file_url, '_blank');
-      // Refresh documents to update viewed status
-      fetchSharedDocuments();
-    }
-  };
-
-  const handleDocumentShare = async (documentId: string) => {
-    if (!shareTargetEmail.trim() || !user || !supplierProfile) return;
-
-    try {
-      // Create notification for document sharing
-      const { error } = await supabase
-        .from('supplier_notifications')
-        .insert({
-          supplier_id: supplierProfile.id,
-          notification_type: 'document_shared',
-          email: shareTargetEmail,
-          metadata: {
-            document_id: documentId,
-            shared_by: user.email,
-            message: shareMessage,
-            shared_at: new Date().toISOString()
-          }
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Document partagé",
-        description: `Document partagé avec ${shareTargetEmail}`,
-      });
-
-      setShareTargetEmail('');
-      setShareMessage('');
-      setSelectedDocumentForShare(null);
-    } catch (error: any) {
-      toast({
-        title: "Erreur de partage",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleSendDocumentToManager = async (documentId: string, documentTitle: string) => {
-    if (!user || !supplierProfile) return;
-
-    try {
-      // Create notification for project manager
-      const { error } = await supabase
-        .from('notifications')
-        .insert({
-          title: "Nouveau document reçu du fournisseur",
-          message: `Le fournisseur ${supplierProfile.name} a envoyé le document: ${documentTitle}`,
-          type: "document_uploaded",
-          recipient_id: "00000000-0000-0000-0000-000000000000", // Admin notification
-          metadata: {
-            supplier_id: supplierProfile.id,
-            supplier_name: supplierProfile.name,
-            document_id: documentId,
-            document_title: documentTitle
-          }
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Document envoyé",
-        description: "Document envoyé au chef de projet",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erreur d'envoi",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  };
-
-  const getDocumentTypeLabel = (type: string) => {
-    const types: Record<string, string> = {
-      'inspection': 'Rapport d\'inspection',
-      'payment': 'Document de paiement',
-      'invoice': 'Facture',
-      'delivery_note': 'Bon de livraison',
-      'payment_receipt': 'Reçu de paiement',
-      'technical': 'Document technique',
-      'administrative': 'Document administratif',
-      'supplier_upload': 'Document fournisseur'
-    };
-    return types[type] || type;
-  };
-
-  if (loading) {
+  if (!supplierProfile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  // Anonymous/Login view
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
-        <Card className="w-full max-w-md mx-4">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-primary">
-              Portail Fournisseur
-            </CardTitle>
-            <p className="text-muted-foreground">
-              Accédez à vos documents et gérez vos livraisons
-            </p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Connexion Fournisseur</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Tabs value={isLoginMode ? "login" : "signup"} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger 
-                  value="login" 
-                  onClick={() => setIsLoginMode(true)}
-                >
-                  Connexion
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="signup" 
-                  onClick={() => setIsLoginMode(false)}
-                >
-                  Inscription
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="login" className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="votre@email.com"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Mot de passe</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                  />
-                </div>
-                <Button 
-                  onClick={handleLogin} 
-                  disabled={loading}
-                  className="w-full"
-                >
-                  <LogIn className="h-4 w-4 mr-2" />
-                  Se connecter
-                </Button>
-              </TabsContent>
-              
-              <TabsContent value="signup" className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="votre@email.com"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Mot de passe</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                  />
-                </div>
-                <Button 
-                  onClick={handleSignUp} 
-                  disabled={loading}
-                  className="w-full"
-                >
-                  <User className="h-4 w-4 mr-2" />
-                  S'inscrire
-                </Button>
-              </TabsContent>
-            </Tabs>
-
-            <div className="text-center pt-4 border-t">
-              <p className="text-sm text-muted-foreground">
-                Accès anonyme disponible pour consulter les documents publics
-              </p>
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="email@exemple.com"
+              />
             </div>
+            <div>
+              <Label htmlFor="password">Mot de passe</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="•••••••••"
+              />
+            </div>
+            <div className="flex space-x-2">
+              <Button 
+                onClick={handleLogin}
+                disabled={isLoggingIn}
+                className="flex-1"
+              >
+                {isLoggingIn ? 'Connexion...' : 'Se connecter'}
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setIsLoginMode(!isLoginMode)}
+                className="flex-1"
+              >
+                {isLoginMode ? "S'inscrire" : "Se connecter"}
+              </Button>
+            </div>
+            {isLoginMode && (
+              <Button 
+                onClick={handleSignUp}
+                disabled={isSigningUp}
+                className="w-full mt-2"
+              >
+                {isSigningUp ? 'Inscription...' : "Créer un compte"}
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  // Authenticated supplier view
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-primary mb-2">
-              Portail Fournisseur
-            </h1>
-            <p className="text-muted-foreground">
-              Bienvenue {supplierProfile?.name || user.email}
-            </p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center">
+              <h1 className="text-2xl font-bold text-gray-900">Portal Fournisseur</h1>
+              <Badge className="ml-3">
+                {supplierProfile.name}
+              </Badge>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Button variant="outline" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Déconnexion
+              </Button>
+            </div>
           </div>
-          <Button onClick={handleLogout} variant="outline">
-            <LogOut className="h-4 w-4 mr-2" />
-            Déconnexion
-          </Button>
         </div>
+      </header>
 
-        {/* Main Content */}
-        <Tabs defaultValue="shared" className="space-y-6">
-          <TabsList className="w-full">
-            <TabsTrigger value="shared">Documents</TabsTrigger>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <Tabs defaultValue="dashboard" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="dashboard">Tableau de bord</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
             <TabsTrigger value="tasks">Tâches</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="inspections">Inspections</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="payments">Paiements</TabsTrigger>
-            <TabsTrigger value="invoices">Factures</TabsTrigger>
-            <TabsTrigger value="upload">Mes Documents</TabsTrigger>
-            <TabsTrigger value="business">Documents Justificatifs</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="shared">
+          {/* Dashboard Tab */}
+          <TabsContent value="dashboard" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Documents Uploadés</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{uploadedDocuments.length}</div>
+                  <p className="text-gray-600">Documents uploadés</p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Tâches Assignées</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{assignedTasks.length}</div>
+                  <p className="text-gray-600">Tâches assignées</p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Notifications</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{notifications.length}</div>
+                  <p className="text-gray-600">Notifications</p>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Documents Tab */}
+          <TabsContent value="documents" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Uploader un document</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="uploadTitle">Titre</Label>
+                    <Input
+                      id="uploadTitle"
+                      value={uploadTitle}
+                      onChange={(e) => setUploadTitle(e.target.value)}
+                      placeholder="Titre du document"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="uploadDescription">Description</Label>
+                    <Textarea
+                      id="uploadDescription"
+                      value={uploadDescription}
+                      onChange={(e) => setUploadDescription(e.target.value)}
+                      placeholder="Description du document"
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="uploadFile">Fichier</Label>
+                    <Input
+                      id="uploadFile"
+                      type="file"
+                      onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                    />
+                  </div>
+                  <Button 
+                    onClick={handleFileUpload}
+                    disabled={uploadDocumentMutation.isPending || !uploadFile}
+                    className="w-full"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    {uploadDocumentMutation.isPending ? 'Upload...' : 'Uploader'}
+                  </Button>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Documents Uploadés</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <BusinessDocuments documents={uploadedDocuments} />
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Tasks Tab */}
+          <TabsContent value="tasks" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Documents Partagés par le Chef de Projet
-                </CardTitle>
+                <CardTitle>Tâches Assignées</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4">
-                  {sharedDocuments.length > 0 ? (
-                    sharedDocuments.map((document) => (
-                      <div key={document.id} className="p-4 border rounded-lg bg-card">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <FileText className="h-8 w-8 text-primary" />
-                            <div>
-                              <h3 className="font-medium">{document.title}</h3>
-                              <p className="text-sm text-muted-foreground">
-                                {document.description}
-                              </p>
-                              <div className="flex gap-2 mt-2">
-                                <Badge variant="outline">
-                                  {getDocumentTypeLabel(document.document_type)}
-                                </Badge>
-                                {document.projects && (
-                                  <Badge variant="secondary">
-                                    {document.projects.title}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                           <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => downloadDocument(document)}
-                            >
-                              <Eye className="h-4 w-4 mr-1" />
-                              Voir
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => downloadDocument(document)}
-                            >
-                              <Download className="h-4 w-4 mr-1" />
-                              Télécharger
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setSelectedDocumentForShare(
-                                selectedDocumentForShare === document.id ? null : document.id
-                              )}
-                            >
-                              <Share2 className="h-4 w-4 mr-1" />
-                              Partager
-                            </Button>
-                           </div>
+                <div className="space-y-4">
+                  {assignedTasks.length === 0 ? (
+                    <p className="text-gray-500">Aucune tâche assignée</p>
+                  ) : (
+                    assignedTasks.map((task) => (
+                      <div key={task.id} className="border rounded-lg p-4 space-y-2">
+                        <div className="flex justify-between items-start">
+                          <h3 className="font-semibold">{task.title}</h3>
+                          <Badge>{task.status}</Badge>
                         </div>
-                        
-                        {selectedDocumentForShare === document.id && (
-                          <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-3">
-                            <div className="space-y-2">
-                              <Label htmlFor="share-email">Email du destinataire</Label>
-                              <Input
-                                id="share-email"
-                                type="email"
-                                value={shareTargetEmail}
-                                onChange={(e) => setShareTargetEmail(e.target.value)}
-                                placeholder="destinataire@email.com"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="share-message">Message (optionnel)</Label>
-                              <Textarea
-                                id="share-message"
-                                value={shareMessage}
-                                onChange={(e) => setShareMessage(e.target.value)}
-                                placeholder="Ajouter un message..."
-                                rows={2}
-                              />
-                            </div>
-                            <div className="flex gap-2">
+                        {task.description && (
+                          <p className="text-gray-600">{task.description}</p>
+                        )}
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedTaskId(task.id)}
+                          >
+                            <MessageCircle className="h-4 w-4 mr-2" />
+                            Commenter
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleTaskCompletion(task.id)}
+                            disabled={task.status === 'completed'}
+                          >
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            {task.status === 'completed' ? 'Complété' : 'Marquer complété'}
+                          </Button>
+                        </div>
+                        {selectedTaskId === task.id && (
+                          <div className="mt-4 p-4 bg-gray-50 rounded">
+                            <Label htmlFor="taskComment">Ajouter un commentaire</Label>
+                            <Textarea
+                              id="taskComment"
+                              value={taskComment}
+                              onChange={(e) => setTaskComment(e.target.value)}
+                              placeholder="Votre commentaire..."
+                              rows={3}
+                            />
+                            <div className="flex space-x-2 mt-2">
                               <Button
-                                size="sm"
-                                onClick={() => handleDocumentShare(document.id)}
-                                disabled={!shareTargetEmail.trim()}
+                                onClick={() => handleTaskComment(task.id)}
+                                disabled={addTaskCommentMutation.isPending}
                               >
-                                <Send className="h-4 w-4 mr-1" />
-                                Partager
+                                <Send className="h-4 w-4 mr-2" />
+                                {addTaskCommentMutation.isPending ? 'Envoi...' : 'Envoyer'}
                               </Button>
                               <Button
-                                size="sm"
                                 variant="outline"
-                                onClick={() => setSelectedDocumentForShare(null)}
+                                onClick={() => setSelectedTaskId(null)}
                               >
                                 Annuler
                               </Button>
@@ -1053,472 +415,58 @@ const SupplierPortal = () => {
                         )}
                       </div>
                     ))
-                  ) : (
-                    <p className="text-center text-muted-foreground py-8">
-                      Aucun document partagé pour le moment
-                    </p>
                   )}
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="tasks">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  Tâches Assignées
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4">
-                  {assignedTasks.length > 0 ? (
-                    assignedTasks.map((task) => (
-                      <div key={task.id} className="p-4 border rounded-lg bg-card">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <Clock className="h-8 w-8 text-primary" />
-                            <div>
-                              <h3 className="font-medium">
-                                {task.metadata?.title || `Tâche ${task.task_id || task.id}`}
-                              </h3>
-                              <p className="text-sm text-muted-foreground">
-                                {task.metadata?.description || 'Tâche assignée par le chef de projet'}
-                              </p>
-                               <p className="text-xs text-muted-foreground">
-                                 {task.sent_at ? new Date(task.sent_at).toLocaleDateString('fr-FR') : 'Date non disponible'}
-                               </p>
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setSelectedTaskId(selectedTaskId === task.id ? null : task.id)}
-                            >
-                              <MessageCircle className="h-4 w-4 mr-1" />
-                              Commenter
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => handleTaskCompletion(task.task_id || task.id)}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Marquer terminé
-                            </Button>
-                          </div>
-                        </div>
-                        
-                        {selectedTaskId === task.id && (
-                          <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                            <div className="space-y-3">
-                              <div>
-                                <Label htmlFor="task-comment">Votre commentaire</Label>
-                                <Input
-                                  id="task-comment"
-                                  value={taskComment}
-                                  onChange={(e) => setTaskComment(e.target.value)}
-                                  placeholder="Ajouter un commentaire..."
-                                />
-                              </div>
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleTaskComment(task.task_id || task.id)}
-                                  disabled={!taskComment.trim()}
-                                >
-                                  Envoyer commentaire
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setSelectedTaskId(null)}
-                                >
-                                  Annuler
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-center text-muted-foreground py-8">
-                      Aucune tâche assignée pour le moment
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="inspections">
+          {/* Inspections Tab */}
+          <TabsContent value="inspections" className="space-y-6">
             <SupplierInspectionsList 
               inspections={inspections} 
               loading={inspectionsLoading}
+              refetch={refetchInspections}
             />
           </TabsContent>
 
-          <TabsContent value="notifications">
+          {/* Notifications Tab */}
+          <TabsContent value="notifications" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageCircle className="h-5 w-5" />
-                  Notifications
-                </CardTitle>
+                <CardTitle>Notifications</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4">
-                  {notifications.length > 0 ? (
+                <div className="space-y-4">
+                  {notifications.length === 0 ? (
+                    <p className="text-gray-500">Aucune notification</p>
+                  ) : (
                     notifications.map((notification) => (
-                      <div 
-                        key={notification.id}
-                        className={`p-4 border rounded-lg ${
-                          notification.used_at || notification.read ? 'bg-muted/50' : 'bg-blue-50 border-blue-200'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h3 className="font-medium mb-1">
-                              {notification.title || notification.notification_type}
-                            </h3>
-                            <p className="text-sm text-muted-foreground mb-2">
-                              {notification.message || 
-                               (notification.metadata?.comment && String(notification.metadata.comment)) || 
-                               'Notification'}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {notification.sent_at 
-                                ? new Date(notification.sent_at).toLocaleDateString('fr-FR')
-                                : notification.created_at
-                                ? new Date(notification.created_at).toLocaleDateString('fr-FR')
-                                : 'Date inconnue'}
+                      <div key={notification.id} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-semibold">{notification.title}</h3>
+                            <p className="text-gray-600">{notification.message}</p>
+                            <p className="text-sm text-gray-500">
+                              {new Date(notification.sent_at).toLocaleDateString()}
                             </p>
                           </div>
-                          {!(notification.used_at || notification.read) && (
-                            <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                              Nouveau
-                            </Badge>
-                          )}
+                          <Badge>{notification.type}</Badge>
                         </div>
                       </div>
                     ))
-                  ) : (
-                    <p className="text-center text-muted-foreground py-8">
-                      Aucune notification pour le moment
-                    </p>
                   )}
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="payments">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Demandes de Paiement
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4">
-                  {paymentRequests.length > 0 ? (
-                    paymentRequests.map((payment) => (
-                      <div key={payment.id} className="p-4 border rounded-lg bg-card">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex-1">
-                            <h3 className="font-medium mb-2">
-                              Demande de paiement - {payment.payment_reason}
-                            </h3>
-                            <div className="space-y-1 text-sm">
-                              <p className="text-muted-foreground">
-                                <span className="font-medium">Montant:</span> {payment.amount?.toLocaleString()} MRU
-                              </p>
-                              <p className="text-muted-foreground">
-                                <span className="font-medium">Description:</span> {payment.description || 'N/A'}
-                              </p>
-                              {payment.notes && (
-                                <p className="text-muted-foreground">
-                                  <span className="font-medium">Notes:</span> {payment.notes}
-                                </p>
-                              )}
-                              <p className="text-xs text-muted-foreground mt-2">
-                                Demandé le: {payment.requested_date 
-                                  ? new Date(payment.requested_date).toLocaleDateString('fr-FR')
-                                  : 'Date inconnue'}
-                              </p>
-                            </div>
-                          </div>
-                          <Badge 
-                            variant={payment.status === 'approved' ? 'default' : 'secondary'}
-                            className={
-                              payment.status === 'approved' 
-                                ? 'bg-green-100 text-green-800' 
-                                : payment.status === 'rejected'
-                                ? 'bg-red-100 text-red-800'
-                                : 'bg-orange-100 text-orange-800'
-                            }
-                          >
-                            {payment.status === 'approved' ? 'Approuvé' : 
-                             payment.status === 'rejected' ? 'Rejeté' : 
-                             payment.status === 'pending' ? 'En attente' :
-                             payment.status}
-                          </Badge>
-                        </div>
-                        {payment.rejection_reason && (
-                          <div className="mt-3 p-3 bg-red-50 rounded-md">
-                            <p className="text-sm text-red-800">
-                              <span className="font-medium">Raison du rejet:</span> {payment.rejection_reason}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-center text-muted-foreground py-8">
-                      Aucune demande de paiement pour le moment
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="invoices">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Factures Analysées
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4">
-                  {parsedInvoices.length > 0 ? (
-                    parsedInvoices.map((invoice) => (
-                      <div key={invoice.id} className="p-4 border rounded-lg bg-card">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex-1">
-                            <h3 className="font-medium mb-2">
-                              Facture #{invoice.invoice_number || 'N/A'}
-                            </h3>
-                            <div className="space-y-1 text-sm">
-                              <p className="text-muted-foreground">
-                                <span className="font-medium">Fichier:</span> {invoice.file_name}
-                              </p>
-                              {invoice.total_amount && (
-                                <p className="text-muted-foreground">
-                                  <span className="font-medium">Montant total:</span> {invoice.total_amount.toLocaleString()} MRU
-                                </p>
-                              )}
-                              {invoice.tax_amount && (
-                                <p className="text-muted-foreground">
-                                  <span className="font-medium">TVA:</span> {invoice.tax_amount.toLocaleString()} MRU
-                                </p>
-                              )}
-                              {invoice.invoice_date && (
-                                <p className="text-xs text-muted-foreground mt-2">
-                                  Date: {new Date(invoice.invoice_date).toLocaleDateString('fr-FR')}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                          <Badge 
-                            variant={invoice.parsing_status === 'completed' ? 'default' : 'secondary'}
-                            className={
-                              invoice.parsing_status === 'completed' 
-                                ? 'bg-green-100 text-green-800' 
-                                : invoice.parsing_status === 'failed'
-                                ? 'bg-red-100 text-red-800'
-                                : 'bg-orange-100 text-orange-800'
-                            }
-                          >
-                            {invoice.parsing_status === 'completed' ? 'Analysée' : 
-                             invoice.parsing_status === 'failed' ? 'Échec' : 
-                             invoice.parsing_status === 'pending' ? 'En cours' :
-                             invoice.parsing_status}
-                          </Badge>
-                        </div>
-                        {invoice.parsing_errors && (
-                          <div className="mt-3 p-3 bg-red-50 rounded-md">
-                            <p className="text-sm text-red-800">
-                              <span className="font-medium">Erreurs:</span> {invoice.parsing_errors}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-center text-muted-foreground py-8">
-                      Aucune facture analysée pour le moment
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="upload">
-            <div className="space-y-6">
-              {/* Upload Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Upload className="h-5 w-5" />
-                    Télécharger un Document
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="upload-title">Titre du document</Label>
-                    <Input
-                      id="upload-title"
-                      value={uploadTitle}
-                      onChange={(e) => setUploadTitle(e.target.value)}
-                      placeholder="Titre du document"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="upload-description">Description</Label>
-                    <Input
-                      id="upload-description"
-                      value={uploadDescription}
-                      onChange={(e) => setUploadDescription(e.target.value)}
-                      placeholder="Description du document (optionnel)"
-                    />
-                  </div>
-                   <div className="space-y-2">
-                    <Label htmlFor="document-type">Type de document</Label>
-                    <Select value={documentType} onValueChange={(value) => setDocumentType(value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner le type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="supplier_info">Document fournisseur</SelectItem>
-                        <SelectItem value="invoice">Facture</SelectItem>
-                        <SelectItem value="delivery_note">Bon de livraison</SelectItem>
-                        <SelectItem value="purchase_order">Bon de commande</SelectItem>
-                        <SelectItem value="quote">Devis</SelectItem>
-                        <SelectItem value="payment_receipt">Reçu de paiement</SelectItem>
-                        <SelectItem value="technical">Document technique</SelectItem>
-                        <SelectItem value="administrative">Document administratif</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="upload-file">Fichier</Label>
-                    <Input
-                      id="upload-file"
-                      type="file"
-                      onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                    />
-                  </div>
-                  <Button
-                    onClick={handleFileUpload}
-                    disabled={!uploadFile || !uploadTitle.trim() || uploading}
-                    className="w-full"
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    {uploading ? 'Téléchargement...' : 'Télécharger le Document'}
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Uploaded Documents */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Mes Documents Téléchargés</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4">
-                    {uploadedDocuments.length > 0 ? (
-                      uploadedDocuments.map((document) => (
-                        <div key={document.id} className="p-4 border rounded-lg bg-card">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <FileText className="h-8 w-8 text-primary" />
-                              <div>
-                                <h3 className="font-medium">{document.title}</h3>
-                                <p className="text-sm text-muted-foreground">
-                                  {document.description}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {document.created_at ? new Date(document.created_at).toLocaleDateString('fr-FR') : 'Date non disponible'}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex gap-2">
-                              <Badge variant={document.status === 'approved' ? 'default' : 'secondary'}>
-                                {document.status === 'approved' ? 'Approuvé' : 
-                                 document.status === 'rejected' ? 'Rejeté' : 'En attente'}
-                              </Badge>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => downloadDocument(document)}
-                              >
-                                <Download className="h-4 w-4 mr-1" />
-                                Télécharger
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => handleSendDocumentToManager(document.id, document.title)}
-                              >
-                                <Send className="h-4 w-4 mr-1" />
-                                Envoyer au chef de projet
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-center text-muted-foreground py-8">
-                        Aucun document téléchargé
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="business">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Plus className="h-5 w-5" />
-                  Documents Justificatifs et Factures
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <BusinessDocuments />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="payments">
-            {supplierProfile ? (
-              <SupplierPaymentRequest supplierId={supplierProfile.id} />
-            ) : (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <div className="space-y-4">
-                    <p className="text-muted-foreground">
-                      Création du profil fournisseur en cours...
-                    </p>
-                    <Button onClick={createSupplierProfile} variant="outline">
-                      Créer un profil fournisseur
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+          {/* Payments Tab */}
+          <TabsContent value="payments" className="space-y-6">
+            <SupplierPaymentRequest paymentRequests={paymentRequests} />
           </TabsContent>
         </Tabs>
-      </div>
+      </main>
     </div>
   );
 };

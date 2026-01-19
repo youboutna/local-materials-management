@@ -1,143 +1,121 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { RepositoryFactory } from '@/repositories/RepositoryFactory';
+import { UserService } from '@/application/services/UserService';
+import { UserMapper, UserResponseDto, CreateUserRequestDto, UpdateUserRequestDto } from '@/infrastructure/transformers/UserMapper';
+import { toast } from 'sonner';
+
+// Types pour les hooks
+export interface UseUsersHexResult {
+  users: UserResponseDto[];
+  isLoading: boolean;
+  error: any;
+  refetch: () => void;
+  createUser: (data: CreateUserRequestDto) => void;
+  updateUser: ({ id, data }: { id: string; data: UpdateUserRequestDto }) => void;
+  deleteUser: (id: string) => void;
+  isCreating: boolean;
+  isUpdating: boolean;
+  isDeleting: boolean;
+}
+
 /**
- * Hexagonal Hook for Users Management
- * Encapsulates all user-related operations with clean architecture
+ * Hook principal pour la gestion des utilisateurs
+ * Architecture hexagonale complète avec mocks centralisés
  */
-
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-
-export interface User {
-  id: string;
-  fullName: string | null;
-  phone: string | null;
-  nationalId: string | null;
-  avatarUrl: string | null;
-  email: string | null;
-  roles: string[];
-  primaryRole: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface UpdateUserInput {
-  fullName?: string;
-  phone?: string;
-  nationalId?: string;
-  avatarUrl?: string;
-}
-
-export function useUsersHex() {
+export function useUsersHex(): UseUsersHexResult {
   const queryClient = useQueryClient();
+  
+  // [Factory] → [Adapter] → [Service] → [Transformers] → [Entities]
+  // Utilisation de l'architecture existante
+  const userRepository = RepositoryFactory.getUserRepository();
+  const userService = new UserService(userRepository);
 
-  const { data: users = [], isLoading, error, refetch } = useQuery({
-    queryKey: ["users-hex"],
-    queryFn: async () => {
-      // Fetch profiles
-      const { data: profilesData, error: profilesError } = await supabase
-        .from("profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (profilesError) throw profilesError;
-
-      if (!profilesData) return [];
-
-      // Fetch roles for each user
-      const usersWithRoles = await Promise.all(
-        profilesData.map(async (profile) => {
-          const { data: rolesData } = await supabase
-            .from("user_roles")
-            .select("role_name")
-            .eq("user_id", profile.id);
-
-          const roles = rolesData?.map((r) => r.role_name) || [];
-          const primaryRole = roles[0] || "viewer";
-
-          return {
-            id: profile.id,
-            fullName: profile.full_name,
-            phone: profile.phone,
-            nationalId: profile.national_id,
-            avatarUrl: profile.avatar_url,
-            email: null, // Email is in auth.users, not accessible via client
-            roles,
-            primaryRole,
-            isActive: true, // Default to true, can be updated via admin
-            createdAt: profile.created_at || "",
-            updatedAt: profile.updated_at || "",
-          } as User;
-        })
-      );
-
-      return usersWithRoles;
+  // Query pour la liste des utilisateurs
+  const {
+    data: users = [],
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['users'],
+    queryFn: async (): Promise<UserResponseDto[]> => {
+      try {
+        // Flux hexagonal complet - géré automatiquement par RepositoryFactory
+        // [Factory] → [Adapter] → [Service] → [Transformers] → [Persistence]
+        const users = await userService.getAllUsers();
+        
+        // [Transformers]: Entities → DTOs
+        // Utilisation du Transformer existant : UserMapper
+        return UserMapper.toResponseDtoArray(users);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        throw new Error(error instanceof Error ? error.message : 'Failed to fetch users');
+      }
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (userData: CreateUserRequestDto): Promise<UserResponseDto> => {
+      try {
+        // Flux hexagonal complet - géré automatiquement par RepositoryFactory
+        const userEntity = UserMapper.toDomainFromCreateDto(userData);
+        const createdUser = await userService.createUser(userEntity);
+        
+        return UserMapper.toResponseDto(createdUser);
+      } catch (error) {
+        console.error('Error creating user:', error);
+        throw new Error(error instanceof Error ? error.message : 'Failed to create user');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success("Utilisateur créé avec succès");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    }
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, ...input }: UpdateUserInput & { id: string }) => {
-      const updateData: Record<string, unknown> = {};
-
-      if (input.fullName !== undefined) updateData.full_name = input.fullName;
-      if (input.phone !== undefined) updateData.phone = input.phone;
-      if (input.nationalId !== undefined) updateData.national_id = input.nationalId;
-      if (input.avatarUrl !== undefined) updateData.avatar_url = input.avatarUrl;
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .update(updateData)
-        .eq("id", id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+    mutationFn: async ({ id, updates }: { id: string; updates: UpdateUserRequestDto }): Promise<UserResponseDto> => {
+      try {
+        // Flux hexagonal complet - géré automatiquement par RepositoryFactory
+        const updateData = UserMapper.toUpdateData(updates);
+        const updatedUser = await userService.updateUser(id, updateData);
+        
+        return UserMapper.toResponseDto(updatedUser);
+      } catch (error) {
+        console.error('Error updating user:', error);
+        throw new Error(error instanceof Error ? error.message : 'Failed to update user');
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users-hex"] });
-      toast.success("Utilisateur mis à jour");
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success("Utilisateur mis à jour avec succès");
     },
     onError: (error: Error) => {
-      toast.error(`Erreur: ${error.message}`);
-    },
+      toast.error(error.message);
+    }
   });
 
-  const assignRoleMutation = useMutation({
-    mutationFn: async ({ userId, roleName }: { userId: string; roleName: string }) => {
-      const { error } = await supabase.rpc("assign_user_role", {
-        target_user_id: userId,
-        role_name: roleName,
-      });
-
-      if (error) throw error;
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string): Promise<void> => {
+      try {
+        // Flux hexagonal complet - géré automatiquement par RepositoryFactory
+        await userService.deleteUser(id);
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        throw new Error(error instanceof Error ? error.message : 'Failed to delete user');
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users-hex"] });
-      toast.success("Rôle assigné avec succès");
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success("Utilisateur supprimé avec succès");
     },
     onError: (error: Error) => {
-      toast.error(`Erreur: ${error.message}`);
-    },
-  });
-
-  const removeRoleMutation = useMutation({
-    mutationFn: async ({ userId, roleName }: { userId: string; roleName: string }) => {
-      const { error } = await supabase
-        .from("user_roles")
-        .delete()
-        .eq("user_id", userId)
-        .eq("role_name", roleName);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users-hex"] });
-      toast.success("Rôle retiré avec succès");
-    },
-    onError: (error: Error) => {
-      toast.error(`Erreur: ${error.message}`);
-    },
+      toast.error(error.message);
+    }
   });
 
   return {
@@ -145,51 +123,11 @@ export function useUsersHex() {
     isLoading,
     error,
     refetch,
-    updateUser: updateMutation.mutateAsync,
-    assignRole: assignRoleMutation.mutateAsync,
-    removeRole: removeRoleMutation.mutateAsync,
+    createUser: (data: CreateUserRequestDto) => createMutation.mutate(data),
+    updateUser: ({ id, data }: { id: string; data: UpdateUserRequestDto }) => updateMutation.mutate({ id, updates: data }),
+    deleteUser: (id: string) => deleteMutation.mutate(id),
+    isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
-    isAssigningRole: assignRoleMutation.isPending,
+    isDeleting: deleteMutation.isPending,
   };
-}
-
-export function useUserHex(id: string | undefined) {
-  const { data: user, isLoading, error } = useQuery({
-    queryKey: ["user-hex", id],
-    queryFn: async () => {
-      if (!id) return null;
-
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (profileError) throw profileError;
-
-      const { data: rolesData } = await supabase
-        .from("user_roles")
-        .select("role_name")
-        .eq("user_id", id);
-
-      const roles = rolesData?.map((r) => r.role_name) || [];
-
-      return {
-        id: profile.id,
-        fullName: profile.full_name,
-        phone: profile.phone,
-        nationalId: profile.national_id,
-        avatarUrl: profile.avatar_url,
-        email: null,
-        roles,
-        primaryRole: roles[0] || "viewer",
-        isActive: true,
-        createdAt: profile.created_at || "",
-        updatedAt: profile.updated_at || "",
-      } as User;
-    },
-    enabled: !!id,
-  });
-
-  return { user, isLoading, error };
 }

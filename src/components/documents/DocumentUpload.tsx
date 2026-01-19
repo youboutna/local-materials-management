@@ -10,8 +10,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
-import { supabase } from '@/integrations/supabase/client';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useDocumentsHex, useDocumentCreate } from '@/hooks/hexagonal';
+import { useProjectsHex } from '@/hooks/hexagonal';
 import { FileText, Loader2, Upload } from 'lucide-react';
 import { useState } from 'react';
 
@@ -32,17 +32,9 @@ const DocumentUpload = () => {
   const { uploadFile, uploading } = useDocumentStorage();
   const { user } = useAuth();
 
-  const { data: projects } = useQuery({
-    queryKey: ['projects'],
-    queryFn: async (): Promise<Project[]> => {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, title')
-        .order('title');
-      if (error) throw error;
-      return (data as unknown as Project[]) || [];
-    },
-  });
+  const { projects } = useProjectsHex();
+
+  const { createDocument } = useDocumentCreate();
 
   const uploadMutation = useMutation({
     mutationFn: async (uploadData: typeof formData & { file?: File }) => {
@@ -77,43 +69,28 @@ const DocumentUpload = () => {
             fileSize = uploadResult.size || uploadData.file.size;
             mimeType = uploadData.file.type;
           }
-        } catch (error) {
-          if (DEV_MODE) {
-            console.warn('Dev mode: File upload error, proceeding without file:', error);
-            uploadedFileName = uploadData.file.name;
-            fileSize = uploadData.file.size;
-            mimeType = uploadData.file.type;
-          } else {
-            throw error;
-          }
+        } catch (uploadError) {
+          console.error('File upload error:', uploadError);
+          throw new Error('File upload failed');
         }
       }
 
-      // Create document record with uploaded_by field
-      const documentInsert = {
+      // Create document record with hexagonal architecture
+      const documentData = {
         title: uploadData.title,
         description: uploadData.description,
-        document_type: uploadData.document_type,
-        project_id: uploadData.project_id || null,
+        documentType: uploadData.document_type,
+        projectId: uploadData.project_id || null,
         status: uploadData.status,
-        file_url: fileUrl,
-        file_name: uploadedFileName,
-        file_size: fileSize,
-        mime_type: mimeType,
-        uploaded_by: user.id
+        fileUrl: fileUrl,
+        fileName: uploadedFileName,
+        fileSize: fileSize,
+        mimeType: mimeType,
+        uploadedBy: user.id
       };
 
-      const { data, error } = await supabase
-        .from('documents')
-        .insert(documentInsert as any)
-        .select()
-        .single();
-
-      if (error) {
-        throw new Error(`Database error: ${error.message}`);
-      }
-
-      return data;
+      const result = await createDocument.mutateAsync(documentData);
+      return result;
     },
       onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });

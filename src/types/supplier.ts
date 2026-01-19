@@ -1,6 +1,64 @@
 export interface Supplier {
   id: string;
   name: string;
+  contactEmail: string;
+  contactPhone: string;
+  address: string;
+  specialization: string[];
+  rating: number;
+  isActive: boolean;
+  contractStart: string;
+  contractEnd: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSupplierInput {
+  name: string;
+  contactEmail: string;
+  contactPhone: string;
+  address: string;
+  specialization: string[];
+  rating: number;
+  contractStart: string;
+  contractEnd: string;
+}
+
+export interface UpdateSupplierInput {
+  name?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  address?: string;
+  specialization?: string[];
+  rating?: number;
+  isActive?: boolean;
+  contractStart?: string;
+  contractEnd?: string;
+}
+
+export interface UseSuppliersHexResult {
+  suppliers: Supplier[];
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => void;
+  createSupplier: (data: CreateSupplierInput) => void;
+  updateSupplier: (id: string, data: UpdateSupplierInput) => void;
+  deleteSupplier: (id: string) => void;
+  isCreating: boolean;
+  isUpdating: boolean;
+  isDeleting: boolean;
+}
+
+export interface UseSupplierHexResult {
+  supplier: Supplier | null;
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => void;
+}
+
+export interface SupplierLegacy {
+  id: string;
+  name: string;
   contact_person?: string | null;
   email?: string | null;
   phone?: string | null;

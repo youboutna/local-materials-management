@@ -1,161 +1,595 @@
 /**
- * Hook hexagonal pour les matériaux
- * Encapsule les use cases de l'architecture hexagonale
+ * Materials Hook - Enhanced with MaterialDomainTransformer Integration
+ * Uses MaterialDomainTransformer with advanced calculations and analytics
+ * Following hexagonal architecture principles with UI-specific enhancements
  */
-import { useState, useEffect, useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { 
-  GetMaterialsListUseCase,
-  GetMaterialByIdUseCase,
-  CreateMaterialUseCase,
-  type CreateMaterialInput
-} from '@/application/use-cases';
-import { Material } from '@/domain/entities/Material';
 
-// Singleton instances des use cases
-const materialRepository = RepositoryFactory.getMaterialRepository();
-const getMaterialsListUseCase = new GetMaterialsListUseCase(materialRepository);
-const getMaterialByIdUseCase = new GetMaterialByIdUseCase(materialRepository);
-const createMaterialUseCase = new CreateMaterialUseCase(materialRepository);
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { RepositoryFactory } from "@/repositories/RepositoryFactory";
+import { MaterialService } from "@/application/services/MaterialService";
+import { MaterialDomainTransformer, CreateMaterialRequestDto, UpdateMaterialRequestDto } from "@/dtos/transforms";
+import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
-export interface Workspace {
-  id: string;
-  name: string;
-  location: string | null;
-  status: string | null;
-}
+// Types compatibles avec le service
+type ServiceCreateMaterialDTO = Omit<CreateMaterialRequestDto, 'category'> & { category?: any };
+type ServiceUpdateMaterialDTO = Omit<UpdateMaterialRequestDto, 'category'> & { category?: any };
 
+// Enhanced types for UI components
 export interface UseMaterialsHexResult {
-  materials: Material[];
-  loading: boolean;
-  error: Error | null;
-  workspaces: Workspace[];
-  refetch: () => Promise<void>;
-  createMaterial: (data: CreateMaterialInput) => Promise<Material | null>;
-  updateMaterial: ReturnType<typeof useMutation<any, Error, { id: string; data: any }>>;
+  materials: any[];
+  isLoading: boolean;
+  error: any;
+  refetch: () => void;
+  createMaterial: (data: CreateMaterialRequestDto) => void;
+  updateMaterial: ({ id, data }: { id: string; data: UpdateMaterialRequestDto }) => void;
+  deleteMaterial: (id: string) => void;
+  isCreating: boolean;
+  isUpdating: boolean;
+  isDeleting: boolean;
+  // Enhanced UI features
+  getMaterialStockStatus: (material: any) => 'optimal' | 'low' | 'critical' | 'out_of_stock';
+  getMaterialCostEfficiency: (material: any) => number;
+  getMaterialQualityScore: (material: any) => number;
+  getMaterialReorderLevel: (material: any) => number;
+  getMaterialAnalytics: () => any;
+  validateMaterialWithReferential: (material: any, referentialType: string) => Promise<any>;
+  generateMaterialReport: (material: any) => any;
 }
 
+/**
+ * Enhanced hook for materials management with UI-specific features
+ */
 export function useMaterialsHex(): UseMaterialsHexResult {
-  const [materials, setMaterials] = useState<Material[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const { t } = useLanguage();
+  
+  // Initialize services with transformers
+  const materialRepository = RepositoryFactory.getMaterialRepository();
+  const materialService = new MaterialService(materialRepository, MaterialDomainTransformer);
+  const materialTransformer = MaterialDomainTransformer;
 
-  // Fetch workspaces
-  const { data: workspaces = [] } = useQuery<Workspace[]>({
-    queryKey: ['workspaces'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('workspaces').select('id, name, location, status');
-      if (error) throw error;
-      return data || [];
+  // Query for materials list
+  const {
+    data: materials = [],
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['materials'],
+    queryFn: async (): Promise<any[]> => {
+      try {
+        const materialData = await materialService.getAllMaterials();
+        return materialData.map(entity => materialTransformer.fromEntityToDTO(entity));
+      } catch (err) {
+        console.error('Error fetching materials:', err);
+        throw err;
+      }
     },
+    retry: 3,
+    retryDelay: 1000,
+    enabled: true
   });
 
-  const fetchMaterials = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await getMaterialsListUseCase.execute();
-      if (result.success) {
-        setMaterials(result.materials);
-      } else {
-        throw new Error(result.error || 'Failed to fetch materials');
+  // Create material mutation
+  const createMaterialMutation = useMutation({
+    mutationFn: async (materialData: CreateMaterialRequestDto) => {
+      try {
+        // Convert to service-compatible format
+        const serviceData: ServiceCreateMaterialDTO = { ...materialData };
+        const createdMaterial = await materialService.createMaterial(serviceData as any);
+        return createdMaterial;
+      } catch (error) {
+        console.error('Error creating material:', error);
+        throw error;
       }
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch materials'));
-    } finally {
-      setLoading(false);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+      toast.success(`Le matériel "${data.name}" a été créé avec succès.`);
+      navigate('/materials');
+    },
+    onError: (error) => {
+      console.error('Error creating material:', error);
+      toast.error("Impossible de créer le matériel. Veuillez réessayer.");
     }
-  }, []);
-
-  useEffect(() => {
-    fetchMaterials();
-  }, [fetchMaterials]);
-
-  const createMaterialFn = useCallback(async (data: CreateMaterialInput): Promise<Material | null> => {
-    const result = await createMaterialUseCase.execute(data);
-    if (result.success && result.material) {
-      await fetchMaterials();
-      return result.material;
-    }
-    throw new Error(result.error || 'Failed to create material');
-  }, [fetchMaterials]);
+  });
 
   // Update material mutation
-  const updateMaterial = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      const { data: result, error } = await supabase
-        .from('materials')
-        .update({ ...data, updated_at: new Date().toISOString() })
-        .eq('id', id)
-        .select()
-        .single();
-      if (error) throw error;
-      return result;
+  const updateMaterialMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: UpdateMaterialRequestDto }) => {
+      try {
+        // Convert to service-compatible format
+        const serviceData: ServiceUpdateMaterialDTO = { ...data };
+        const updatedMaterial = await materialService.updateMaterial(id, serviceData as any);
+        return updatedMaterial;
+      } catch (error) {
+        console.error('Error updating material:', error);
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+      toast.success(`Le matériel "${data.name}" a été mis à jour avec succès.`);
+    },
+    onError: (error) => {
+      console.error('Error updating material:', error);
+      toast.error("Impossible de mettre à jour le matériel. Veuillez réessayer.");
+    }
+  });
+
+  // Delete material mutation
+  const deleteMaterialMutation = useMutation({
+    mutationFn: async (id: string) => {
+      try {
+        await materialService.deleteMaterial(id);
+        return { success: true, id };
+      } catch (error) {
+        console.error('Error deleting material:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['materials'] });
-      queryClient.invalidateQueries({ queryKey: ['material'] });
-      fetchMaterials();
+      toast.success("Le matériel a été supprimé avec succès.");
     },
+    onError: (error) => {
+      console.error('Error deleting material:', error);
+      toast.error("Impossible de supprimer le matériel.");
+    }
+  });
+
+  // Enhanced UI functions
+  const getMaterialStockStatus = (material: any): 'optimal' | 'low' | 'critical' | 'out_of_stock' => {
+    const currentStock = material.currentStock || 0;
+    const minStock = material.minStock || 0;
+    
+    if (currentStock === 0) return 'out_of_stock';
+    if (currentStock <= minStock) return 'critical';
+    if (currentStock <= minStock * 1.5) return 'low';
+    return 'optimal';
+  };
+
+  const getMaterialCostEfficiency = (material: any): number => {
+    const unitCost = material.unitCost || 0;
+    const expectedCost = material.expectedCost || unitCost;
+    const actualCost = material.actualCost || unitCost;
+    
+    if (expectedCost === 0) return 100;
+    return Math.round((expectedCost / actualCost) * 100);
+  };
+
+  const getMaterialQualityScore = (material: any): number => {
+    // Calcul basé sur le taux de défauts et la fiabilité du fournisseur
+    const defectRate = material.defectRate || 0;
+    const supplierReliability = material.supplierReliability || 100;
+    
+    // Score de qualité : 100 - (taux de défauts * 10) - (100 - supplierReliability))
+    const qualityScore = Math.max(0, Math.min(100, 100 - (defectRate * 10) - (100 - supplierReliability)));
+    return Math.round(qualityScore);
+  };
+
+  const getMaterialReorderLevel = (material: any): number => {
+    const currentStock = material.currentStock || 0;
+    const minStock = material.minStock || 0;
+    const dailyUsage = material.dailyUsage || 1;
+    
+    // Jours jusqu'au réapprovisionnement
+    if (currentStock <= minStock) return 0;
+    return Math.round((currentStock - minStock) / dailyUsage);
+  };
+
+  const getMaterialStockLevel = (material: any): 'optimal' | 'low' | 'critical' | 'out_of_stock' => {
+    const currentStock = material.currentStock || 0;
+    const minStock = material.minStock || 0;
+    
+    if (currentStock === 0) return 'out_of_stock';
+    if (currentStock <= minStock) return 'critical';
+    if (currentStock <= minStock * 1.5) return 'low';
+    return 'optimal';
+  };
+
+  const getMaterialAnalytics = () => {
+    const totalMaterials = materials.length;
+    const stockStatus = materials.reduce((acc, material) => {
+      const stock = material.currentStock || 0;
+      const minStock = material.minStock || 0;
+      
+      if (stock === 0) acc.outOfStock++;
+      else if (stock <= minStock) acc.critical++;
+      else acc.optimal++;
+      
+      return acc;
+    }, { optimal: 0, low: 0, critical: 0, outOfStock: 0 });
+    
+    const totalValue = materials.reduce((sum, material) => sum + (material.value || 0), 0);
+    const averageCostEfficiency = materials.length > 0 
+      ? materials.reduce((sum, m) => sum + (m.costEfficiency || 0), 0) / materials.length 
+      : 0;
+    
+    return {
+      totalMaterials,
+      stockStatus: {
+        optimal: stockStatus.optimal,
+        low: stockStatus.low,
+        critical: stockStatus.critical,
+        outOfStock: stockStatus.outOfStock
+      },
+      totalValue,
+      averageCostEfficiency: Math.round(averageCostEfficiency)
+    };
+  };
+
+  // Validation functions for different referential types
+  const validateQualityReferential = (material: any) => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    
+    // Validate quality standards
+    if (!material.qualityStandards) {
+      warnings.push('Quality standards not specified');
+    }
+    
+    // Validate quality certifications
+    if (!material.qualityCertifications && material.value > 10000) {
+      warnings.push('Quality certifications recommended for materials over 10,000');
+    }
+    
+    // Validate quality testing
+    if (!material.qualityTests && material.value > 5000) {
+      warnings.push('Quality testing recommended for materials over 5,000');
+    }
+    
+    // Validate quality specifications
+    if (!material.qualitySpecifications) {
+      warnings.push('Quality specifications not specified');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+      compliance: 'quality'
+    };
+  };
+
+  const validateSafetyReferential = (material: any) => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    
+    // Validate safety data sheet
+    if (!material.safetyDataSheet) {
+      errors.push('Safety data sheet is required');
+    }
+    
+    // Validate safety certifications
+    if (!material.safetyCertifications && material.hazardous) {
+      errors.push('Safety certifications required for hazardous materials');
+    }
+    
+    // Validate handling procedures
+    if (!material.handlingProcedures && material.requiresSpecialHandling) {
+      warnings.push('Handling procedures not specified for special handling materials');
+    }
+    
+    // Validate storage requirements
+    if (!material.storageRequirements && material.requiresSpecialStorage) {
+      warnings.push('Storage requirements not specified for special storage materials');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+      compliance: 'safety'
+    };
+  };
+
+  const validateEnvironmentalReferential = (material: any) => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    
+    // Validate environmental impact assessment
+    if (!material.environmentalImpact) {
+      warnings.push('Environmental impact assessment not specified');
+    }
+    
+    // Validate environmental compliance
+    if (!material.environmentalCompliance && material.value > 25000) {
+      warnings.push('Environmental compliance documentation recommended for materials over 25,000');
+    }
+    
+    // Validate disposal requirements
+    if (!material.disposalRequirements && material.hazardous) {
+      errors.push('Disposal requirements required for hazardous materials');
+    }
+    
+    // Validate recycling information
+    if (!material.recyclingInformation && material.recyclable) {
+      warnings.push('Recycling information not specified for recyclable materials');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+      compliance: 'environmental'
+    };
+  };
+
+  const validateRegulatoryReferential = (material: any) => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    
+    // Validate regulatory compliance
+    if (!material.regulatoryCompliance) {
+      warnings.push('Regulatory compliance not specified');
+    }
+    
+    // Validate import/export documentation
+    if (!material.importExportDocumentation && material.value > 15000) {
+      warnings.push('Import/export documentation recommended for materials over 15,000');
+    }
+    
+    // Validate customs requirements
+    if (!material.customsRequirements && material.international) {
+      warnings.push('Customs requirements not specified for international materials');
+    }
+    
+    // Validate regulatory certifications
+    if (!material.regulatoryCertifications && material.value > 20000) {
+      warnings.push('Regulatory certifications recommended for materials over 20,000');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+      compliance: 'regulatory'
+    };
+  };
+
+  // Generate material recommendations based on analysis
+  const generateMaterialRecommendations = (material: any, reorderLevel: string, stockLevel: string) => {
+    const recommendations: string[] = [];
+    
+    // Stock level-based recommendations
+    if (stockLevel === 'critical') {
+      recommendations.push('Urgent reorder required - critical stock level');
+      recommendations.push('Consider alternative suppliers if available');
+      recommendations.push('Review reorder point and safety stock levels');
+    } else if (stockLevel === 'low') {
+      recommendations.push('Reorder recommended - low stock level');
+      recommendations.push('Review reorder point and safety stock levels');
+    }
+    
+    // Reorder level-based recommendations
+    if (reorderLevel === 'urgent') {
+      recommendations.push('Immediate reorder required');
+    } else if (reorderLevel === 'high') {
+      recommendations.push('Reorder within 3 days');
+    } else if (reorderLevel === 'medium') {
+      recommendations.push('Reorder within 7 days');
+    }
+    
+    // Material-specific recommendations
+    if (material.hazardous) {
+      recommendations.push('Handle with appropriate safety measures');
+      recommendations.push('Ensure proper storage and disposal procedures');
+    }
+    
+    if (material.perishable && material.expiryDate) {
+      recommendations.push('Check expiry date before use');
+      recommendations.push('Implement FIFO rotation system');
+    }
+    
+    if (material.value > 100000) {
+      recommendations.push('High-value material requires additional verification');
+      recommendations.push('Consider insurance coverage');
+    }
+    
+    return recommendations;
+  };
+
+  return {
+    materials,
+    isLoading,
+    error,
+    refetch,
+    createMaterial: createMaterialMutation.mutate,
+    updateMaterial: updateMaterialMutation.mutate,
+    deleteMaterial: deleteMaterialMutation.mutate,
+    isCreating: createMaterialMutation.isPending,
+    isUpdating: updateMaterialMutation.isPending,
+    isDeleting: deleteMaterialMutation.isPending,
+    getMaterialStockStatus,
+    getMaterialCostEfficiency,
+    getMaterialQualityScore,
+    getMaterialReorderLevel,
+    getMaterialAnalytics,
+    validateMaterialWithReferential: async (material: any, referentialType: string) => {
+      try {
+        // Validation selon le type de référentiel
+        switch (referentialType) {
+          case 'quality':
+            return validateQualityReferential(material);
+          case 'safety':
+            return validateSafetyReferential(material);
+          case 'environmental':
+            return validateEnvironmentalReferential(material);
+          case 'regulatory':
+            return validateRegulatoryReferential(material);
+          default:
+            return { isValid: true, errors: [], warnings: ['Unknown referential type'] };
+        }
+      } catch (error) {
+        console.error('Referential validation error:', error);
+        return { isValid: false, errors: ['Validation failed'], warnings: [] };
+      }
+    },
+    generateMaterialReport: (material: any) => {
+      try {
+        const analytics = getMaterialAnalytics();
+        const reorderLevel = getMaterialReorderLevel(material);
+        const stockLevel = getMaterialStockLevel(material);
+        
+        return {
+          material: {
+            ...material,
+            reorderLevel,
+            stockLevel,
+            qualityScore: material.qualityScore || 0,
+            safetyRating: material.safetyRating || 'unknown'
+          },
+          generatedAt: new Date().toISOString(),
+          reportType: 'Material Analysis Report',
+          summary: {
+            totalMaterials: analytics.totalMaterials,
+            lowStockItems: analytics.lowStockItems,
+            outOfStockItems: analytics.outOfStockItems,
+            averageQualityScore: analytics.averageQualityScore
+          },
+          recommendations: generateMaterialRecommendations(material, reorderLevel, stockLevel),
+          compliance: {
+            isValid: true,
+            lastValidated: new Date().toISOString(),
+            validatedBy: 'MaterialSystem'
+          }
+        };
+      } catch (error) {
+        console.error('Report generation error:', error);
+        return { 
+          material, 
+          generatedAt: new Date().toISOString(),
+          error: 'Report generation failed',
+          status: 'error'
+        };
+      }
+    }
+  };
+}
+
+  const createMutation = useMutation({
+    mutationFn: async (materialData: CreateMaterialRequestDto): Promise<MaterialResponseDto> => {
+      try {
+        // Flux hexagonal complet - géré automatiquement par RepositoryFactory
+        const materialDTO = materialTransformer.toRequestDto(materialData);
+        const materialEntity = await materialService.createMaterial(materialDTO);
+        return materialTransformer.fromDomainToResponseDto(materialEntity);
+      } catch (error) {
+        console.error('Error creating material:', error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+      toast.success('Matériel créé avec succès');
+    },
+    onError: (error: any) => {
+      console.error('Create material error:', error);
+      toast.error('Erreur lors de la création du matériel');
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: UpdateMaterialRequestDto }): Promise<MaterialResponseDto> => {
+      try {
+        // Flux hexagonal complet - géré automatiquement par RepositoryFactory
+        const materialDTO = materialTransformer.toUpdateDto(data);
+        const materialEntity = await materialService.updateMaterial(id, materialDTO);
+        return materialTransformer.fromDomainToResponseDto(materialEntity);
+      } catch (error) {
+        console.error('Error updating material:', error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+      toast.success('Matériel mis à jour avec succès');
+    },
+    onError: (error: any) => {
+      console.error('Update material error:', error);
+      toast.error('Erreur lors de la mise à jour du matériel');
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string): Promise<void> => {
+      try {
+        await materialService.deleteMaterial(id);
+        return { success: true, id };
+      } catch (error) {
+        console.error('Error deleting material:', error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+      toast.success('Matériel supprimé avec succès');
+    },
+    onError: (error: any) => {
+      console.error('Delete material error:', error);
+      toast.error('Erreur lors de la suppression du matériel');
+    }
   });
 
   return {
     materials,
-    loading,
-    error,
-    workspaces,
-    refetch: fetchMaterials,
-    createMaterial: createMaterialFn,
-    updateMaterial,
-  };
-}
-
-export interface UseMaterialHexResult {
-  material: Material | null;
-  isLoading: boolean;
-  error: Error | null;
-  refetch: () => Promise<void>;
-}
-
-export function useMaterialHex(materialId: string | undefined): UseMaterialHexResult {
-  const [material, setMaterial] = useState<Material | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  const fetchMaterial = useCallback(async () => {
-    if (!materialId) {
-      setMaterial(null);
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setError(null);
-      const result = await getMaterialByIdUseCase.execute(materialId);
-      if (result.success) {
-        setMaterial(result.material);
-      } else {
-        throw new Error(result.error || 'Failed to fetch material');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch material'));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [materialId]);
-
-  useEffect(() => {
-    fetchMaterial();
-  }, [fetchMaterial]);
-
-  return {
-    material,
     isLoading,
     error,
-    refetch: fetchMaterial,
+    refetch,
+    createMaterial: createMutation.mutate,
+    updateMaterial: updateMutation.mutate,
+    deleteMaterial: deleteMutation.mutate,
+    isCreating: createMutation.isPending,
+    isUpdating: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending
   };
+}
+
+export function useMaterialsByCategory(category: string) {
+  const materialService = new MaterialService(
+    RepositoryFactory.getMaterialRepository()
+  );
+
+  return useQuery({
+    queryKey: ['materials', 'category', category],
+    queryFn: async () => {
+      return await materialService.getMaterialsByCategory(category as any);
+    },
+    enabled: !!category,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+export function useMaterialById(id: string) {
+  const materialService = new MaterialService(
+    RepositoryFactory.getMaterialRepository()
+  );
+
+  return useQuery({
+    queryKey: ['materials', 'id', id],
+    queryFn: async () => {
+      const material = await materialService.getMaterialById(id);
+      return material;
+    },
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+export function useLowStockMaterials() {
+  const materialService = new MaterialService(
+    RepositoryFactory.getMaterialRepository()
+  );
+
+  return useQuery({
+    queryKey: ['materials', 'low-stock'],
+    queryFn: async () => {
+      return await materialService.getLowStockMaterials();
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 }

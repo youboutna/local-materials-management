@@ -10,19 +10,25 @@ import {
 } from '@/application/use-cases';
 import { Tender } from '@/domain/entities/Tender';
 
-// Singleton instances des use cases
-const tenderRepository = RepositoryFactory.getTenderRepository();
-const getTendersListUseCase = new GetTendersListUseCase(tenderRepository);
-const getTenderByIdUseCase = new GetTenderByIdUseCase(tenderRepository);
-
-export interface UseTendersHexResult {
+export interface UseTenderHexResult {
   tenders: Tender[];
   loading: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
 }
 
-export function useTendersHex(): UseTendersHexResult {
+export interface UseTenderByIdHexResult {
+  tender: Tender | null;
+  loading: boolean;
+  error: Error | null;
+  refetch: () => Promise<void>;
+}
+
+export function useTendersHex(): UseTenderHexResult {
+  // Initialize repositories and use cases inside hook
+  const tenderRepository = RepositoryFactory.getTenderRepository();
+  const getTendersListUseCase = new GetTendersListUseCase(tenderRepository);
+  const getTenderByIdUseCase = new GetTenderByIdUseCase(tenderRepository);
   const [tenders, setTenders] = useState<Tender[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -46,7 +52,7 @@ export function useTendersHex(): UseTendersHexResult {
 
   useEffect(() => {
     fetchTenders();
-  }, [fetchTenders]);
+  }, []); // Empty dependency array - only run once on mount
 
   return {
     tenders,
@@ -56,14 +62,10 @@ export function useTendersHex(): UseTendersHexResult {
   };
 }
 
-export interface UseTenderHexResult {
-  tender: Tender | null;
-  loading: boolean;
-  error: Error | null;
-  refetch: () => Promise<void>;
-}
-
-export function useTenderHex(tenderId: string | undefined): UseTenderHexResult {
+export function useTenderHex(tenderId: string | undefined): UseTenderByIdHexResult {
+  // Initialize repositories and use cases inside hook
+  const tenderRepository = RepositoryFactory.getTenderRepository();
+  const getTenderByIdUseCase = new GetTenderByIdUseCase(tenderRepository);
   const [tender, setTender] = useState<Tender | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -93,7 +95,7 @@ export function useTenderHex(tenderId: string | undefined): UseTenderHexResult {
 
   useEffect(() => {
     fetchTender();
-  }, [fetchTender]);
+  }, []); // Empty dependency array - only run once on mount
 
   return {
     tender,

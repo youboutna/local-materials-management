@@ -4,7 +4,9 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/repositories/RepositoryFactory';
+import { TaskService } from '@/application/services/TaskService';
+import { EntityToDTOMapper } from '@/dtos/transforms';
 
 export interface ProjectTaskFormData {
   title: string;
@@ -45,15 +47,12 @@ export function useProjectPhasesForTasks(projectId: string) {
   return useQuery({
     queryKey: ['project-phases-for-tasks', projectId],
     queryFn: async (): Promise<ProjectPhase[]> => {
-      const { data, error } = await supabase
-        .from('project_phases')
-        .select('id, phase_name, status')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-      return data || [];
+      const taskRepository = RepositoryFactory.getTaskRepository();
+      const taskService = new TaskService(taskRepository, TaskDomainTransformer);
+      const phases = await taskService.getProjectPhases(projectId);
+      return phases;
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes
     enabled: !!projectId
   });
 }
@@ -63,15 +62,12 @@ export function useProjectTasks(projectId: string) {
   return useQuery({
     queryKey: ['project-tasks', projectId],
     queryFn: async (): Promise<ProjectTask[]> => {
-      const { data, error } = await supabase
-        .from('task_assignments')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
+      const taskRepository = RepositoryFactory.getTaskRepository();
+      const taskService = new TaskService(taskRepository, TaskDomainTransformer);
+      const tasks = await taskService.getProjectTasks(projectId);
+      return tasks;
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes
     enabled: !!projectId
   });
 }
@@ -82,27 +78,10 @@ export function useCreateProjectTask(projectId: string) {
 
   return useMutation({
     mutationFn: async (taskData: ProjectTaskFormData) => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const taskRepository = RepositoryFactory.getTaskRepository();
+      const taskService = new TaskService(taskRepository, TaskDomainTransformer);
+      const { data: { user } } = await taskService.createTask(taskData);
       if (!user) throw new Error('User not authenticated');
-
-      const { data, error } = await supabase
-        .from('task_assignments')
-        .insert({
-          title: taskData.title,
-          description: taskData.description,
-          project_id: projectId,
-          phase_id: taskData.phase_id || null,
-          assigned_to: taskData.assigned_to || null,
-          assigned_by: user.id,
-          due_date: taskData.due_date || null,
-          priority: taskData.priority,
-          status: taskData.status,
-          notes: taskData.notes
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
       return data;
     },
     onSuccess: () => {
@@ -117,12 +96,10 @@ export function useUpdateProjectTask(projectId: string) {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<ProjectTaskFormData> }) => {
-      const { error } = await supabase
-        .from('task_assignments')
-        .update(data)
-        .eq('id', id);
-
-      if (error) throw error;
+      const taskRepository = RepositoryFactory.getTaskRepository();
+      const taskService = new TaskService(taskRepository, TaskDomainTransformer);
+      const updatedTask = await taskService.updateTask(id, data);
+      return updatedTask;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project-tasks', projectId] });
@@ -136,12 +113,10 @@ export function useDeleteProjectTask(projectId: string) {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('task_assignments')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      const taskRepository = RepositoryFactory.getTaskRepository();
+      const taskService = new TaskService(taskRepository, TaskDomainTransformer);
+      const deletedTask = await taskService.deleteTask(id);
+      return deletedTask;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project-tasks', projectId] });

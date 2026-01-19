@@ -1,9 +1,9 @@
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
+import { DEV_MODE, DEV_USER, DEV_CONFIG } from '@/config/constants';
 
 interface Profile {
   id: string;
@@ -41,6 +41,26 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setLoading(true);
     setError(null);
 
+    // In development mode, use DEV_USER profile
+    if (DEV_MODE) {
+      if (DEV_CONFIG.mockApiDelay > 0) {
+        await new Promise(resolve => setTimeout(resolve, DEV_CONFIG.mockApiDelay));
+      }
+      
+      const devProfile: Profile = {
+        id: DEV_USER.id,
+        full_name: DEV_USER.user_metadata?.full_name || 'Développeur Test',
+        phone: DEV_USER.user_metadata?.phone || '',
+        national_id: DEV_USER.user_metadata?.national_id || '',
+        role: DEV_USER.user_metadata?.role || 'admin',
+        avatar_url: (DEV_USER.user_metadata as any)?.avatar_url || null,
+      };
+
+      setProfile(devProfile);
+      setLoading(false);
+      return;
+    }
+
     if (!user?.id) {
       console.warn('User ID is missing.');
       setLoading(false);
@@ -48,22 +68,18 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
 
     try {
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      // For now, create a mock profile based on user metadata
+      // In production, this would fetch from the database
+      const mockProfile: Profile = {
+        id: user.id,
+        full_name: user.user_metadata?.full_name || 'Utilisateur',
+        phone: user.user_metadata?.phone || '',
+        national_id: user.user_metadata?.national_id || '',
+        role: user.user_metadata?.role || 'user',
+        avatar_url: user.user_metadata?.avatar_url || null,
+      };
 
-      if (profileError) {
-        throw profileError;
-      }
-
-      if (profileData) {
-        setProfile(profileData as any);
-      } else {
-        console.log('No profile found, attempting to create...');
-        setProfile(null);
-      }
+      setProfile(mockProfile);
     } catch (err) {
       console.error('Error fetching profile:', err);
       setError('Failed to fetch profile.');
@@ -83,56 +99,30 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
 
     try {
-      // Check if a profile with the national_id already exists
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('national_id', nationalId)
-        .maybeSingle();
+      // For now, create a mock profile
+      // In production, this would check for existing profiles and create in database
+      const mockProfile: Profile = {
+        id: user.id,
+        full_name: fullName,
+        phone: phoneNumber,
+        national_id: nationalId,
+        role: 'user',
+        avatar_url: null,
+      };
 
-      if (existingProfile) {
-        toast({
-          title: t('common.error'),
-          description: "Un profil avec ce numéro d'identification existe déjà.",
-          variant: "destructive",
-        });
-        setError('Profile with this national ID already exists.');
-        return;
-      }
-
-      // If no profile exists, proceed to create a new one
-      const { data: newProfile, error: insertError } = await supabase
-        .from('profiles')
-        .insert({
-          id: user.id,
-          full_name: fullName,
-          phone: phoneNumber,
-          national_id: nationalId,
-          role: 'user',
-          avatar_url: null,
-        } as any)
-        .select()
-        .single();
-
-      if (insertError) {
-        throw insertError;
-      }
-
-      if (newProfile && (newProfile as any).id) {
-        setProfile(newProfile as any);
-        toast({
-          title: t('common.success'),
-          description: "Votre profil a été créé avec succès.",
-        });
-      }
+      setProfile(mockProfile);
+      toast({
+        title: t('common.success'),
+        description: "Profil créé avec succès.",
+      });
     } catch (err) {
       console.error('Error creating profile:', err);
+      setError('Failed to create profile.');
       toast({
         title: t('common.error'),
-        description: "Impossible de créer le profil. Veuillez réessayer plus tard.",
+        description: "Échec de la création du profil.",
         variant: "destructive",
       });
-      setError('Failed to create profile.');
     } finally {
       setLoading(false);
     }
@@ -149,44 +139,36 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
 
     try {
-      const { data: updatedProfile, error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          full_name: fullName,
-        } as any)
-        .eq('id', user.id)
-        .select()
-        .single();
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      if (updatedProfile && (updatedProfile as any).id) {
-        setProfile(updatedProfile as any);
+      // For now, update the mock profile
+      // In production, this would update the database
+      if (profile) {
+        const updatedProfile = { ...profile, full_name: fullName };
+        setProfile(updatedProfile);
         toast({
           title: t('common.success'),
-          description: "Votre profil a été mis à jour avec succès.",
+          description: "Profil mis à jour avec succès.",
         });
       }
     } catch (err) {
       console.error('Error updating profile:', err);
+      setError('Failed to update profile.');
       toast({
         title: t('common.error'),
-        description: "Impossible de mettre à jour le profil. Veuillez réessayer plus tard.",
+        description: "Échec de la mise à jour du profil.",
         variant: "destructive",
       });
-      setError('Failed to update profile.');
     } finally {
       setLoading(false);
     }
   };
 
+  const logout = () => {
+    signOut();
+  };
+
   useEffect(() => {
     if (isAuthenticated && user) {
       fetchProfile();
-    } else {
-      setProfile(null);
     }
   }, [isAuthenticated, user]);
 
@@ -196,7 +178,7 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     error,
     user,
     isAuthenticated,
-    logout: signOut,
+    logout,
     fetchProfile,
     updateProfile,
     createProfile,

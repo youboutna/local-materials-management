@@ -57,39 +57,53 @@ const Auth = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    loginMutation.mutate(
-      { email, password },
-      {
-        onSuccess: () => {
-          const from = (location.state as any)?.from?.pathname || "/dashboard";
-          navigate(from);
-        },
-      }
-    );
+    try {
+      await loginMutation.login(
+        { email, password },
+        {
+          onSuccess: () => {
+            // Redirection immédiate sans attendre
+            const from = (location.state as any)?.from?.pathname || "/dashboard";
+            navigate(from, { replace: true }); // replace: true évite l'historique
+          },
+        }
+      );
+    } catch (error) {
+      console.error('Login error:', error);
+    }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    registerMutation.mutate(
-      {
-        email,
-        password,
-        fullName,
-        phone,
-        nationalId,
-      },
-      {
-        onSuccess: (data) => {
-          if (data.user && data.user.email_confirmed_at) {
-            navigate("/dashboard");
-          }
+    try {
+      await registerMutation.register(
+        {
+          email,
+          password,
+          fullName,
+          phone,
+          nationalId,
+          role: 'user' as any,
         },
-      }
-    );
+        {
+          onSuccess: (data: any) => {
+            // Redirection immédiate si l'email est confirmé
+            if (data && data.email_confirmed_at) {
+              navigate("/dashboard", { replace: true });
+            } else {
+              // Redirection vers la page de confirmation
+              navigate("/auth/confirm-email", { replace: true });
+            }
+          },
+        }
+      );
+    } catch (error) {
+      console.error('Register error:', error);
+    }
   };
 
-  const loading = loginMutation.isPending || registerMutation.isPending;
+  const loading = loginMutation.isLoggingIn || registerMutation.isRegistering;
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-adrar-50 to-terracotta-50">

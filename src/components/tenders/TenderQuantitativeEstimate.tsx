@@ -1,7 +1,4 @@
-
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -15,89 +12,50 @@ import { Calculator, Upload, Plus, Trash2, FileText, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { QuantitativeEstimateExporter } from '@/components/reports/QuantitativeEstimateExporter';
-import {parseInvoiceFromPdf } from '@/utils/btpCalculations';
-import {InvoiceLine} from '@/utils/types';
+import { 
+  useTenderQuantitativeEstimateHex,
+  type EstimateItem,
+  type TenderEstimate
+} from '@/hooks/hexagonal/useTenderQuantitativeEstimateHex';
 
 interface TenderQuantitativeEstimateProps {
   tenderId: string;
   projectId?: string;
 }
 
-interface EstimateItem {
-  id?: string;
-  material_id?: string | null;
-  quantity: number;
-  unit_price: number;
-  total_price: number;
-  description: string | null;
-  item_type: string | null;
-}
-
-interface ParsedInvoiceItem {
-  id: string;
-  description: string;
-  quantity: number;
-  unit_price: number;
-  total_price: number;
-  unit: string;
-  metadata?: {
-      sourceUnit?: string;
-      workType?: string;
-      parsedAt?: string;
-      type?: string;
-      unitWeights?: number;
-      unit?: string;
-      description?: string;
-      coverageRate?: number;
-      currency?: string | null;
-      status?: string;
-      created_at?: string;
-      updated_at?: string;
-      tax_rate?: number | null;
-      tax_amount?: number | null;
-      // Extended optional fields used by parsers
-      isFixedPrice?: boolean;
-      section?: string;
-      originalUnit?: string;
-    };
-}
-
-interface TenderEstimate {
-  id?: string;
-  tender_id: string;
-  project_id?: string | null;
-  estimate_type: string;
-  total_materials_cost: number | null;
-  total_labor_cost: number | null;
-  total_equipment_cost: number | null;
-  subtotal: number | null;
-  tax_rate: number | null;
-  tax_amount: number | null;
-  total_with_tax: number | null;
-  overhead_percentage: number | null;
-  overhead_amount: number | null;
-  profit_margin_percentage: number | null;
-  profit_margin_amount: number | null;
-  final_total: number | null;
-  currency: string | null;
-  status: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
 const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeEstimateProps) => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { uploadFile, uploading } = useDocumentStorage();
+  const { uploadFile } = useDocumentStorage();
+  
+  // Use hexagonal hook
+  const { 
+    estimates, 
+    estimateItems, 
+    materials, 
+    isLoading, 
+    error,
+    createEstimateMutation,
+    addItemMutation,
+    refetch
+  } = useTenderQuantitativeEstimateHex(tenderId, projectId);
+
+  // State management
   const [activeTab, setActiveTab] = useState('quantitative');
   const [isCreateEstimateOpen, setIsCreateEstimateOpen] = useState(false);
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
-  const [isUploadInvoiceOpen, setIsUploadInvoiceOpen] = useState(false);
   const [selectedEstimateId, setSelectedEstimateId] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
   const [showInvoiceActions, setShowInvoiceActions] = useState(false);
-  
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
+
+  const [newItem, setNewItem] = useState<EstimateItem>({
+    quantity: 0,
+    unit_price: 0,
+    total_price: 0,
+    description: '',
+    item_type: 'material'
+  });
+
   const [estimateData, setEstimateData] = useState<Omit<TenderEstimate, 'id'>>({
     tender_id: tenderId,
     project_id: projectId,
@@ -106,7 +64,7 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
     total_labor_cost: 0,
     total_equipment_cost: 0,
     subtotal: 0,
-    tax_rate: 14, // Default TVA rate
+    tax_rate: 14,
     tax_amount: 0,
     total_with_tax: 0,
     overhead_percentage: 15,
@@ -118,895 +76,167 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
     status: 'draft'
   });
 
-  const [newItem, setNewItem] = useState<EstimateItem>({
-    quantity: 0,
-    unit_price: 0,
-    total_price: 0,
-    description: '',
-    item_type: 'material'
-  });
-
-  // Fetch existing estimates
-  const { data: estimates, isLoading } = useQuery({
-    queryKey: ['tender-estimates', tenderId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tender_estimates')
-        .select('*')
-        .eq('tender_id', tenderId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
-    }
-  });
-
-  // Fetch estimate items
-  const { data: estimateItems } = useQuery({
-    queryKey: ['estimate-items', selectedEstimateId],
-    queryFn: async () => {
-      if (!selectedEstimateId) return [];
-      
-      const { data, error } = await supabase
-        .from('tender_estimate_items')
-        .select(`
-          *,
-          material:materials(name, unit)
-        `)
-        .eq('estimate_id', selectedEstimateId);
-
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!selectedEstimateId
-  });
-
-  // Fetch materials for selection
-  const { data: materials } = useQuery({
-    queryKey: ['materials'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('materials')
-        .select('id, name, price_per_unit, unit')
-        .order('name');
-
-      if (error) throw error;
-      return data || [];
-    }
-  });
-
-  // Fetch parsed invoices
-  const { data: parsedInvoices } = useQuery({
-    queryKey: ['parsed-invoices', tenderId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('parsed_invoices')
-        .select('*')
-        .eq('tender_id', tenderId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
-    }
-  });
-
-  // Create estimate mutation
-  const createEstimateMutation = useMutation({
-    mutationFn: async (estimate: Omit<TenderEstimate, 'id'>) => {
-      const { data, error } = await supabase
-        .from('tender_estimates')
-        .insert([estimate])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['tender-estimates', tenderId] });
-      setSelectedEstimateId(data.id);
+  // Create estimate
+  const handleCreateEstimate = async () => {
+    try {
+      await createEstimateMutation.mutateAsync(estimateData);
+      setSelectedEstimateId(null);
       setIsCreateEstimateOpen(false);
-      toast({
-        title: 'Devis créé',
-        description: 'Le devis quantitatif estimatif a été créé avec succès.',
-      });
-    }
-  });
-
-  // Add item mutation
-  const addItemMutation = useMutation({
-    mutationFn: async (item: EstimateItem & { estimate_id: string }) => {
-      const { data, error } = await supabase
-        .from('tender_estimate_items')
-        .insert([item])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['estimate-items', selectedEstimateId] });
-      setIsAddItemOpen(false);
-      setNewItem({
-        quantity: 0,
-        unit_price: 0,
-        total_price: 0,
-        description: '',
-        item_type: 'material'
-      });
-      toast({
-        title: 'Article ajouté',
-        description: 'L\'article a été ajouté au devis.',
-      });
-    }
-  });
-
-  // Create new invoice mutation
-  const createInvoiceMutation = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await supabase
-        .from('parsed_invoices')
-        .insert([{
-          tender_id: tenderId,
-          file_name: 'Nouvelle facture',
-          parsing_status: 'manual',
-          total_amount: 0,
-          invoice_date: new Date().toISOString().split('T')[0],
-          items: [],
-          parsed_data: { 
-            manual_creation: true,
-            created_at: new Date().toISOString()
-          }
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['parsed-invoices', tenderId] });
-      setSelectedInvoiceId(data.id);
-      setShowInvoiceActions(true);
-      toast({
-        title: 'Facture créée',
-        description: 'Nouvelle facture créée. Vous pouvez maintenant ajouter des articles.',
-      });
-    }
-  });
-
-  // Parse PDF mutation
-  const parsePdfMutation = useMutation({
-    mutationFn: async ({ file, invoiceId }: { file: File; invoiceId: string }) => {
-      // Parse PDF to extract invoice data
-      let parsedRawData;
-      try {
-        // Convert File to URL for parsing
-        const fileUrl = URL.createObjectURL(file);
-        parsedRawData = await parseInvoiceFromPdf(fileUrl);
-        URL.revokeObjectURL(fileUrl); // Clean up the URL
-        console.log('PDF parsed successfully:', parsedRawData);
-      } catch (parseError) {
-        console.warn('PDF parsing failed, using empty array:', parseError);
-        parsedRawData = [];
-      }
-
-      // Simplified and focused parsing for French invoice format
-      const transformedItems: ParsedInvoiceItem[] = [];
-      
-      const parseInvoiceLines = (rawData: any): ParsedInvoiceItem[] => {
-        console.log('=== STARTING PARSE ===');
-        console.log('Raw input type:', typeof rawData);
-        console.log('Raw input:', rawData);
-        
-        const items: ParsedInvoiceItem[] = [];
-        
-        // Convert to string if needed
-        let textData = '';
-        if (typeof rawData === 'string') {
-          textData = rawData;
-        } else if (rawData && typeof rawData === 'object') {
-          textData = JSON.stringify(rawData);
-        } else {
-          console.log('Invalid data type, returning empty array');
-          return items;
-        }
-        
-        console.log('Text to parse:', textData);
-        
-        // Split by actual line breaks and clean
-        const lines = textData
-          .split(/[\r\n]+/)
-          .map(line => line.trim())
-          .filter(line => line.length > 3);
-        
-        console.log('Total lines found:', lines.length);
-        console.log('All lines:', lines);
-        
-        let itemCounter = 0;
-        
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i];
-          console.log(`\n--- Processing line ${i}: "${line}"`);
-          
-          // Skip obvious headers and metadata
-          if (line.includes('QUANTITATIF ESTIMATIF') || 
-              line.includes('Article Désignation') || 
-              line.includes('Unité Quantité') ||
-              line.includes('Px Unit Px Total') ||
-              line.includes('Total de la facture')) {
-            console.log('Skipping header/metadata line');
-            continue;
-          }
-          
-          // Look for numbered items (1.01, 1.02, 2.00, etc.)
-          const itemCodePattern = /^(\d+\.\d+)\s+(.*)$/;
-          const codeMatch = line.match(itemCodePattern);
-          
-          if (codeMatch) {
-            const itemCode = codeMatch[1];
-            const remainder = codeMatch[2];
-            console.log(`Found item code: ${itemCode}, remainder: "${remainder}"`);
-            
-            // Create basic item structure
-            const newItem: ParsedInvoiceItem = {
-              id: `item_${Date.now()}_${itemCounter++}`,
-              description: `${itemCode} ${remainder}`,
-              quantity: 1,
-              unit_price: 0,
-              total_price: 0,
-              unit: 'unité'
-            };
-            
-            // Try to extract numbers and unit from remainder
-            const numberMatches = remainder.match(/([\d,]+(?:\.[\d,]+)?)/g);
-            const unitMatch = remainder.match(/\b(m[23]|ml|pm|ens|u|kg|t|l)\b/);
-            
-            if (numberMatches && numberMatches.length >= 3) {
-              console.log('Found numbers:', numberMatches);
-              newItem.quantity = parseFloat(numberMatches[0].replace(',', '.'));
-              newItem.unit_price = parseFloat(numberMatches[1].replace(',', '.'));
-              newItem.total_price = parseFloat(numberMatches[2].replace(',', '.'));
-            }
-            
-            if (unitMatch) {
-              console.log('Found unit:', unitMatch[1]);
-              newItem.unit = unitMatch[1];
-              // Clean description by removing the unit
-              newItem.description = `${itemCode} ${remainder.replace(unitMatch[0], '').replace(/\s+/g, ' ').trim()}`;
-            }
-            
-            console.log('Created item:', newItem);
-            items.push(newItem);
-          } else {
-            console.log('No item code pattern found, skipping line');
-          }
-        }
-        
-        console.log('\n=== PARSING COMPLETE ===');
-        console.log('Total items created:', items.length);
-        console.log('All items:', items);
-        
-        return items;
-      };
-
-      if (Array.isArray(parsedRawData)){
-      
-        parsedRawData.forEach((rawItem: InvoiceLine, index: number) => {
-          const item: ParsedInvoiceItem = {
-            id: rawItem.number || rawItem.id || `item_${Date.now()}_${index}`,
-            description: rawItem.designation  || `Article ${index + 1}`,
-            quantity: rawItem.quantity  || 0,
-            unit_price: rawItem.unitPrice || 0,
-            total_price: rawItem.totalPrice || 0,
-            unit: rawItem.unit || 'unité',
-            metadata : rawItem?.metadata
-          
-          };
-          // Calculate total if not provided
-          if (!item.total_price && item.quantity && item.unit_price) {
-            item.total_price = item.quantity * item.unit_price;
-          }
-          
-          if (item.description && item.quantity > 0) {
-            transformedItems.push(item);
-          }
-        });
- 
-      }
-       else if (parsedRawData && typeof parsedRawData === 'object') {
-        // If it's an object with items property
-        const items = parsedRawData.items || parsedRawData.lignes || parsedRawData.lines || [];
-        if (Array.isArray(items) && items.length > 0) {
-          items.forEach((rawItem: any, index: number) => {
-            const item: ParsedInvoiceItem = {
-              id: `item_${Date.now()}_${index}`,
-              description: rawItem.designation || rawItem.description || rawItem.article || `Article ${index + 1}`,
-              quantity: parseFloat(rawItem.quantity || rawItem.qty || 1),
-              unit_price: parseFloat(rawItem.unitPrice || rawItem.unit_price || rawItem.prix_unitaire || 0),
-              total_price: parseFloat(rawItem.totalPrice || rawItem.total_price || rawItem.total || 0),
-              unit: rawItem.unit || rawItem.unite || 'unité'
-            };
-            
-            if (!item.total_price && item.quantity && item.unit_price) {
-              item.total_price = item.quantity * item.unit_price;
-            }
-            
-            if (item.description && item.quantity > 0) {
-              transformedItems.push(item);
-            }
-          });
-        } else {
-          // Try to parse raw text content
-          const textContent = parsedRawData.text || parsedRawData.content || JSON.stringify(parsedRawData);
-          const lineItems = parseInvoiceLines(textContent);
-          transformedItems.push(...lineItems);
-        }
-      } else if (typeof parsedRawData === 'string') {
-        // Direct text parsing
-        const lineItems = parseInvoiceLines(parsedRawData);
-        transformedItems.push(...lineItems);
-      }
-
-      // Calculate total from transformed items
-      const totalAmount = transformedItems.reduce((sum, item) => sum + (item.total_price || 0), 0);
-
-      // Extract supplier info if available
-      const supplierInfo = {
-        name: parsedRawData?.supplier?.name || parsedRawData?.fournisseur?.nom || 'Fournisseur non spécifié',
-        address: parsedRawData?.supplier?.address || parsedRawData?.fournisseur?.adresse || '',
-        phone: parsedRawData?.supplier?.phone || parsedRawData?.fournisseur?.telephone || '',
-        email: parsedRawData?.supplier?.email || parsedRawData?.fournisseur?.email || ''
-      };
-
-      // Update existing invoice with enhanced data
-      const { data, error } = await supabase
-        .from('parsed_invoices')
-        .update({
-          file_name: file.name,
-          parsing_status: transformedItems.length > 0 ? 'completed' : 'failed',
-          total_amount: totalAmount,
-          items: transformedItems as any,
-          supplier_info: supplierInfo,
-          invoice_number: parsedRawData?.invoice_number || parsedRawData?.numero_facture || null,
-          invoice_date: parsedRawData?.invoice_date || parsedRawData?.date_facture || new Date().toISOString().split('T')[0],
-          parsed_data: { 
-            file_name: file.name, 
-            uploaded_at: new Date().toISOString(),
-            item_count: transformedItems.length,
-            source: 'enhanced_pdf_analysis',
-            raw_data_available: true
-          }
-        })
-        .eq('id', invoiceId)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['parsed-invoices', tenderId] });
-      setSelectedFile(null);
-      toast({
-        title: 'PDF analysé',
-        description: 'Le PDF a été analysé et les articles extraits.',
-      });
-    }
-  });
-
-  // Add manual item to invoice mutation
-  const addInvoiceItemMutation = useMutation({
-    mutationFn: async ({ invoiceId, item }: { invoiceId: string; item: any }) => {
-      const { data: invoice, error: fetchError } = await supabase
-        .from('parsed_invoices')
-        .select('items, total_amount')
-        .eq('id', invoiceId)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      const currentItems = Array.isArray(invoice.items) ? invoice.items : [];
-      const newItems = [...currentItems, item];
-      const newTotal = newItems.reduce((sum, i) => sum + (i.total_price || 0), 0);
-
-      const { data, error } = await supabase
-        .from('parsed_invoices')
-        .update({
-          items: newItems,
-          total_amount: newTotal
-        })
-        .eq('id', invoiceId)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['parsed-invoices', tenderId] });
-      setNewItem({
-        quantity: 0,
-        unit_price: 0,
-        total_price: 0,
-        description: '',
-        item_type: 'material'
-      });
-      toast({
-        title: 'Article ajouté',
-        description: 'L\'article a été ajouté à la facture.',
-      });
-    }
-  });
-
-  const calculateTotals = () => {
-    if (!estimateItems) return;
-
-    const materialsCost = estimateItems
-      .filter(item => item.item_type === 'material')
-      .reduce((sum, item) => sum + item.total_price, 0);
-    
-    const laborCost = estimateItems
-      .filter(item => item.item_type === 'labor')
-      .reduce((sum, item) => sum + item.total_price, 0);
-    
-    const equipmentCost = estimateItems
-      .filter(item => item.item_type === 'equipment')
-      .reduce((sum, item) => sum + item.total_price, 0);
-
-    const subtotal = materialsCost + laborCost + equipmentCost;
-    const taxAmount = subtotal * (estimateData.tax_rate || 0) / 100;
-    const totalWithTax = subtotal + taxAmount;
-    const overheadAmount = totalWithTax * (estimateData.overhead_percentage || 0) / 100;
-    const profitAmount = (totalWithTax + overheadAmount) * (estimateData.profit_margin_percentage || 0) / 100;
-    const finalTotal = totalWithTax + overheadAmount + profitAmount;
-
-    return {
-      materialsCost,
-      laborCost,
-      equipmentCost,
-      subtotal,
-      taxAmount,
-      totalWithTax,
-      overheadAmount,
-      profitAmount,
-      finalTotal
-    };
-  };
-
-  const handleMaterialSelect = (materialId: string) => {
-    const material = materials?.find(m => m.id === materialId);
-    if (material) {
-      setNewItem(prev => ({
-        ...prev,
-        material_id: materialId,
-        description: material.name,
-        unit_price: material.price_per_unit
-      }));
+    } catch (error) {
+      console.error('Error creating estimate:', error);
     }
   };
 
-  const handleQuantityChange = (quantity: number) => {
-    setNewItem(prev => ({
-      ...prev,
-      quantity,
-      total_price: quantity * prev.unit_price
-    }));
-  };
-
-  const handleUnitPriceChange = (unitPrice: number) => {
-    setNewItem(prev => ({
-      ...prev,
-      unit_price: unitPrice,
-      total_price: prev.quantity * unitPrice
-    }));
-  };
-
-  const handleCreateEstimate = () => {
-    createEstimateMutation.mutate(estimateData);
-  };
-
-  const handleAddItem = () => {
+  // Add item
+  const handleAddItem = async () => {
     if (!selectedEstimateId) return;
     
-    addItemMutation.mutate({
-      ...newItem,
-      estimate_id: selectedEstimateId
-    });
-  };
-
-  const handleCreateInvoice = () => {
-    createInvoiceMutation.mutate();
-  };
-
-  const handleParsePdf = () => {
-    if (!selectedFile || !selectedInvoiceId) return;
-    parsePdfMutation.mutate({ file: selectedFile, invoiceId: selectedInvoiceId });
-  };
-
-  const handleAddInvoiceItem = () => {
-    if (!selectedInvoiceId) return;
-    
-    const item = {
-      description: newItem.description,
-      quantity: newItem.quantity,
-      unit_price: newItem.unit_price,
-      total_price: newItem.total_price,
-      unit: 'unit'
-    };
-
-    addInvoiceItemMutation.mutate({ invoiceId: selectedInvoiceId, item });
-  };
-
-  const handleImportInvoiceItems = async (invoice: any) => {
-    if (!selectedEstimateId) {
-      toast({
-        title: 'Erreur',
-        description: 'Veuillez d\'abord sélectionner ou créer un devis.',
-        variant: 'destructive'
+    try {
+      await addItemMutation.mutateAsync({
+        ...newItem,
+        estimate_id: selectedEstimateId
       });
-      return;
-    }
-
-    const items = invoice.items || [];
-    if (items.length === 0) {
-      toast({
-        title: 'Aucune donnée',
-        description: 'Aucune ligne d\'article trouvée dans cette facture.',
-        variant: 'destructive'
+      setNewItem({
+        quantity: 0,
+        unit_price: 0,
+        total_price: 0,
+        description: '',
+        item_type: 'material'
       });
-      return;
+      setIsAddItemOpen(false);
+    } catch (error) {
+      console.error('Error adding item:', error);
     }
+  };
+
+  // Handle file upload
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
     try {
-      // Import each item into the estimate
-      for (const item of items) {
-        const estimateItem = {
-          estimate_id: selectedEstimateId,
-          description: item.description,
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-          total_price: item.total_price,
-          item_type: item.description?.toLowerCase().includes('main') ? 'labor' : 'material'
-        };
-
-        await supabase
-          .from('tender_estimate_items')
-          .insert([estimateItem]);
-      }
-
-      queryClient.invalidateQueries({ queryKey: ['estimate-items', selectedEstimateId] });
+      const result = await uploadFile(file);
+      setSelectedFile(result.file);
       toast({
-        title: 'Import réussi',
-        description: `${items.length} lignes importées dans le devis.`,
+        title: "Fichier téléchargé",
+        description: `${file.name} a été téléchargé avec succès`,
       });
-      
-      // Switch to quantitative tab to see the imported items
-      setActiveTab('quantitative');
     } catch (error) {
-      console.error('Error importing items:', error);
       toast({
-        title: 'Erreur d\'import',
-        description: 'Impossible d\'importer les lignes de la facture.',
-        variant: 'destructive'
+        title: "Erreur",
+        description: "Impossible de télécharger le fichier",
+        variant: "destructive",
       });
     }
   };
 
-  const totals = calculateTotals();
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="text-red-600">Erreur: {error instanceof Error ? error.message : 'Erreur inconnue'}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Devis Quantitatif</h1>
+          <p className="text-muted-foreground">
+            Gestion des devis quantitatifs pour l'appel d'offre
+          </p>
+        </div>
+        <Button onClick={() => setIsCreateEstimateOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nouveau Devis
+        </Button>
+      </div>
+
+      {/* Main Content */}
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle className="flex items-center gap-2">
-              <Calculator className="h-5 w-5 text-terracotta-600" />
-              Devis Quantitatif Estimatif
-            </CardTitle>
-            <Button onClick={() => setIsCreateEstimateOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nouveau Devis
-            </Button>
-          </div>
+          <CardTitle>Devis Quantitatif</CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="quantitative">Calcul Quantitatif</TabsTrigger>
-              <TabsTrigger value="invoices">Factures Analysées</TabsTrigger>
+            <TabsList>
+              <TabsTrigger value="quantitative">Quantitatif</TabsTrigger>
+              <TabsTrigger value="materials">Matériaux</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="quantitative" className="space-y-4">
-              {estimates?.length === 0 ? (
-                <div className="text-center py-8">
-                  <Calculator className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">Aucun devis créé pour cet appel d'offres.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <Select value={selectedEstimateId || ''} onValueChange={setSelectedEstimateId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un devis" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {estimates?.map((estimate) => (
-                        <SelectItem key={estimate.id} value={estimate.id}>
-                          Devis du {new Date(estimate.created_at).toLocaleDateString('fr-FR')} - {estimate.status}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                      {selectedEstimateId && (
-                        <>
-                          <div className="flex justify-between items-center">
-                            <h3 className="text-lg font-medium">Articles du devis</h3>
-                            <div className="flex gap-2">
-                              <Button size="sm" onClick={() => setIsAddItemOpen(true)}>
-                                <Plus className="h-4 w-4 mr-1" />
-                                Ajouter Article
-                              </Button>
-                              {estimateItems && estimateItems.length > 0 && (
-                                <QuantitativeEstimateExporter 
-                  estimate={{
-                    ...estimateData,
-                    ...estimates?.find(e => e.id === selectedEstimateId),
-                    status: estimates?.find(e => e.id === selectedEstimateId)?.status || 'draft'
-                  } as TenderEstimate}
-                                  estimateItems={estimateItems}
-                                  tender={{ title: 'Appel d\'Offres', reference: tenderId }}
-                                />
-                              )}
-                            </div>
-                          </div>
-
-                      <div className="space-y-2">
-                        {estimateItems?.map((item) => (
-                          <div key={item.id} className="flex items-center justify-between p-3 border rounded">
-                            <div className="flex-1">
-                              <div className="font-medium">{item.description}</div>
-                              <div className="text-sm text-gray-600">
-                                {item.quantity} x {item.unit_price} {estimateData.currency}
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="font-medium">{item.total_price} {estimateData.currency}</div>
-                              <Badge variant="outline">{item.item_type}</Badge>
-                            </div>
-                          </div>
-                        ))}
+            <TabsContent value="quantitative" className="space-y-6">
+              {/* Estimates List */}
+              <div className="space-y-4">
+                {estimates.map((estimate) => (
+                  <Card key={estimate.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h3 className="text-lg font-semibold">Devis #{estimate.id?.slice(-8)}</h3>
+                          <Badge variant={estimate.status === 'draft' ? 'secondary' : 'default'}>
+                            {estimate.status}
+                          </Badge>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => setSelectedEstimateId(estimate.id || '')}
+                          >
+                            <FileText className="h-4 w-4 mr-2" />
+                            Détails
+                          </Button>
+                        </div>
                       </div>
-
-                      {totals && (
-                        <Card className="bg-gray-50">
-                          <CardContent className="p-4">
-                            <div className="space-y-2">
-                              <div className="flex justify-between">
-                                <span>Matériaux:</span>
-                                <span>{totals.materialsCost.toFixed(2)} {estimateData.currency}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Main-d'œuvre:</span>
-                                <span>{totals.laborCost.toFixed(2)} {estimateData.currency}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Équipement:</span>
-                                <span>{totals.equipmentCost.toFixed(2)} {estimateData.currency}</span>
-                              </div>
-                              <hr />
-                              <div className="flex justify-between">
-                                <span>Sous-total:</span>
-                                <span>{totals.subtotal.toFixed(2)} {estimateData.currency}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>TVA ({estimateData.tax_rate}%):</span>
-                                <span>{totals.taxAmount.toFixed(2)} {estimateData.currency}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Frais généraux ({estimateData.overhead_percentage}%):</span>
-                                <span>{totals.overheadAmount.toFixed(2)} {estimateData.currency}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Marge bénéficiaire ({estimateData.profit_margin_percentage}%):</span>
-                                <span>{totals.profitAmount.toFixed(2)} {estimateData.currency}</span>
-                              </div>
-                              <hr />
-                              <div className="flex justify-between font-bold text-lg">
-                                <span>Total final:</span>
-                                <span>{totals.finalTotal.toFixed(2)} {estimateData.currency}</span>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="invoices" className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Gestion des Factures</h3>
-                <div className="flex gap-2">
-                  <Button onClick={handleCreateInvoice} variant="outline">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nouvelle Facture
-                  </Button>
-                </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">Total matériaux:</span>
+                          <span className="font-medium">{estimate.total_materials_cost?.toLocaleString()} MRU</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Total main d'œuvre:</span>
+                          <span className="font-medium">{estimate.total_labor_cost?.toLocaleString()} MRU</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Total équipement:</span>
+                          <span className="font-medium">{estimate.total_equipment_cost?.toLocaleString()} MRU</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Sous-total:</span>
+                          <span className="font-medium">{estimate.subtotal?.toLocaleString()} MRU</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
 
-              {parsedInvoices?.length === 0 ? (
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">Aucune facture créée.</p>
-                  <Button onClick={handleCreateInvoice} className="mt-4">
-                    Créer une première facture
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {/* Invoice Selection */}
-                  <Select value={selectedInvoiceId || ''} onValueChange={(value) => {
-                    setSelectedInvoiceId(value);
-                    setShowInvoiceActions(!!value);
-                  }}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner une facture" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {parsedInvoices?.map((invoice) => (
-                        <SelectItem key={invoice.id} value={invoice.id}>
-                          {invoice.file_name} - {invoice.invoice_date ? new Date(invoice.invoice_date).toLocaleDateString('fr-FR') : 'Pas de date'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              {/* Create Estimate Button */}
+              <div className="flex justify-center">
+                <Button onClick={() => setIsCreateEstimateOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Créer un nouveau devis
+                </Button>
+              </div>
+            </TabsContent>
 
-                  {/* Invoice Actions */}
-                  {showInvoiceActions && selectedInvoiceId && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-base">Actions sur la facture</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="flex gap-2">
-                          <Button onClick={() => setIsAddItemOpen(true)} variant="outline">
-                            <Plus className="h-4 w-4 mr-2" />
-                            Ajouter Article
-                          </Button>
-                          <Button onClick={() => setIsUploadInvoiceOpen(true)} variant="outline">
-                            <Upload className="h-4 w-4 mr-2" />
-                            Analyser PDF
-                          </Button>
-                          {selectedEstimateId && (
-                            <Button 
-                              onClick={() => {
-                                const invoice = parsedInvoices?.find(i => i.id === selectedInvoiceId);
-                                if (invoice) handleImportInvoiceItems(invoice);
-                              }}
-                              variant="default"
-                            >
-                              Importer dans le devis
-                            </Button>
-                          )}
-                        </div>
-
-                        {/* Current Invoice Items with Editing */}
-                        {(() => {
-                          const currentInvoice = parsedInvoices?.find(i => i.id === selectedInvoiceId);
-                          return currentInvoice?.items && Array.isArray(currentInvoice.items) && currentInvoice.items.length > 0 ? (
-                            <div>
-                              <h5 className="text-sm font-medium mb-3">Articles de la facture:</h5>
-                              <div className="border rounded-lg overflow-hidden">
-                                <table className="w-full text-sm">
-                                  <thead className="bg-muted">
-                                    <tr>
-                                      <th className="text-left p-3 font-medium">Article</th>
-                                      <th className="text-left p-3 font-medium">Quantité</th>
-                                      <th className="text-left p-3 font-medium">Prix unitaire</th>
-                                      <th className="text-left p-3 font-medium">Total</th>
-                                      <th className="text-left p-3 font-medium">Actions</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {currentInvoice.items.map((item: any, index: number) => (
-                                      <tr key={item.id || index} className="border-t hover:bg-muted/50">
-                                        <td className="p-3">
-                                          <div className="font-medium">{item.description}</div>
-                                          {item.unit && (
-                                            <div className="text-xs text-muted-foreground">
-                                              Unité: {item.unit}
-                                            </div>
-                                          )}
-                                        </td>
-                                        <td className="p-3">{item.quantity?.toLocaleString('fr-FR')}</td>
-                                        <td className="p-3">
-                                          {item.unit_price?.toLocaleString('fr-FR')} {estimateData.currency}
-                                        </td>
-                                        <td className="p-3 font-medium">
-                                          {item.total_price?.toLocaleString('fr-FR')} {estimateData.currency}
-                                        </td>
-                                        <td className="p-3">
-                                          <div className="flex gap-1">
-                                            <Button
-                                              size="sm"
-                                              variant="outline"
-                                              onClick={() => {
-                                                setNewItem({
-                                                  description: item.description,
-                                                  quantity: item.quantity,
-                                                  unit_price: item.unit_price,
-                                                  total_price: item.total_price,
-                                                  item_type: 'material'
-                                                });
-                                                setIsAddItemOpen(true);
-                                              }}
-                                            >
-                                              Modifier
-                                            </Button>
-                                            <Button
-                                              size="sm"
-                                              variant="outline"
-                                              className="text-red-600 hover:text-red-700"
-                                               onClick={async () => {
-                                                 const items = Array.isArray(currentInvoice.items) ? currentInvoice.items : [];
-                                                 const updatedItems = items.filter((_: any, i: number) => i !== index);
-                                                 const newTotal = updatedItems.reduce((sum: number, i: any) => sum + (i.total_price || 0), 0);
-                                                
-                                                await supabase
-                                                  .from('parsed_invoices')
-                                                  .update({
-                                                    items: updatedItems,
-                                                    total_amount: newTotal
-                                                  })
-                                                  .eq('id', selectedInvoiceId);
-                                                
-                                                queryClient.invalidateQueries({ queryKey: ['parsed-invoices', tenderId] });
-                                                toast({
-                                                  title: 'Article supprimé',
-                                                  description: 'L\'article a été supprimé de la facture.',
-                                                });
-                                              }}
-                                            >
-                                              <Trash2 className="h-3 w-3" />
-                                            </Button>
-                                          </div>
-                                        </td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                              <div className="mt-4 p-3 bg-muted rounded-lg">
-                                <div className="flex justify-between items-center font-medium">
-                                  <span>Total de la facture:</span>
-                                  <span>{currentInvoice.total_amount?.toLocaleString('fr-FR')} {estimateData.currency}</span>
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="text-center py-6 text-muted-foreground">
-                              <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                              <p className="text-sm">Aucun article dans cette facture</p>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setIsAddItemOpen(true)}
-                                className="mt-2"
-                              >
-                                Ajouter le premier article
-                              </Button>
-                            </div>
-                          );
-                        })()}
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-              )}
+            <TabsContent value="materials" className="space-y-6">
+              {/* Materials List */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {materials.map((material) => (
+                  <Card key={material.id}>
+                    <CardContent className="p-4">
+                      <h4 className="font-medium">{material.name}</h4>
+                      <div className="text-sm text-muted-foreground">
+                        {material.price_per_unit} {material.unit} / unité
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </TabsContent>
           </Tabs>
         </CardContent>
@@ -1014,39 +244,55 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
 
       {/* Create Estimate Dialog */}
       <Dialog open={isCreateEstimateOpen} onOpenChange={setIsCreateEstimateOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Créer un Nouveau Devis</DialogTitle>
+            <DialogTitle>Créer un nouveau devis</DialogTitle>
           </DialogHeader>
-          
           <div className="space-y-4">
-            <div>
-              <Label>Taux de TVA (%)</Label>
-              <Input
-                type="number"
-                value={estimateData.tax_rate || 14}
-                onChange={(e) => setEstimateData(prev => ({ ...prev, tax_rate: Number(e.target.value) }))}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="tax_rate">Taux TVA (%)</Label>
+                <Input
+                  id="tax_rate"
+                  type="number"
+                  value={estimateData.tax_rate}
+                  onChange={(e) => setEstimateData(prev => ({ ...prev, tax_rate: parseFloat(e.target.value) || 0 }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="overhead_percentage">Pourcentage frais généraux (%)</Label>
+                <Input
+                  id="overhead_percentage"
+                  type="number"
+                  value={estimateData.overhead_percentage}
+                  onChange={(e) => setEstimateData(prev => ({ ...prev, overhead_percentage: parseFloat(e.target.value) || 0 }))}
+                />
+              </div>
             </div>
-
-            <div>
-              <Label>Frais généraux (%)</Label>
-              <Input
-                type="number"
-                value={estimateData.overhead_percentage || 15}
-                onChange={(e) => setEstimateData(prev => ({ ...prev, overhead_percentage: Number(e.target.value) }))}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="profit_margin_percentage">Marge bénéficiaire (%)</Label>
+                <Input
+                  id="profit_margin_percentage"
+                  type="number"
+                  value={estimateData.profit_margin_percentage}
+                  onChange={(e) => setEstimateData(prev => ({ ...prev, profit_margin_percentage: parseFloat(e.target.value) || 0 }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="currency">Devise</Label>
+                <Select value={estimateData.currency} onValueChange={(value) => setEstimateData(prev => ({ ...prev, currency: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="MRU">MRU</SelectItem>
+                    <SelectItem value="EUR">EUR</SelectItem>
+                    <SelectItem value="USD">USD</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-
-            <div>
-              <Label>Marge bénéficiaire (%)</Label>
-              <Input
-                type="number"
-                value={estimateData.profit_margin_percentage || 10}
-                onChange={(e) => setEstimateData(prev => ({ ...prev, profit_margin_percentage: Number(e.target.value) }))}
-              />
-            </div>
-
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setIsCreateEstimateOpen(false)}>
                 Annuler
@@ -1059,138 +305,65 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
         </DialogContent>
       </Dialog>
 
-      {/* Add Item Dialog - works for both estimate and invoice items */}
+      {/* Add Item Dialog */}
       <Dialog open={isAddItemOpen} onOpenChange={setIsAddItemOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>
-              {selectedInvoiceId && showInvoiceActions ? 'Ajouter un article à la facture' : 'Ajouter un article au devis'}
-            </DialogTitle>
+            <DialogTitle>Ajouter un article</DialogTitle>
           </DialogHeader>
-          
           <div className="space-y-4">
-            <div>
-              <Label>Type d'article</Label>
-              <Select 
-                value={newItem.item_type || 'material'} 
-                onValueChange={(value: string) => 
-                  setNewItem(prev => ({ ...prev, item_type: value }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="material">Matériau</SelectItem>
-                  <SelectItem value="labor">Main-d'œuvre</SelectItem>
-                  <SelectItem value="equipment">Équipement</SelectItem>
-                  <SelectItem value="other">Autre</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {newItem.item_type === 'material' && (
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Matériau du référentiel</Label>
-                <Select onValueChange={handleMaterialSelect}>
+                <Label htmlFor="material">Matériau</Label>
+                <Select value={newItem.material_id} onValueChange={(value) => setNewItem(prev => ({ ...prev, material_id: value }))}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un matériau" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {materials?.map((material) => (
+                    {materials.map((material) => (
                       <SelectItem key={material.id} value={material.id}>
-                        {material.name} - {material.price_per_unit} {estimateData.currency}/{material.unit}
+                        {material.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-            )}
-
-            <div>
-              <Label>Description</Label>
-              <Input
-                value={newItem.description || ''}
-                onChange={(e) => setNewItem(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Description de l'article"
-              />
+              <div>
+                <Label htmlFor="quantity">Quantité</Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  value={newItem.quantity}
+                  onChange={(e) => setNewItem(prev => ({ ...prev, quantity: parseFloat(e.target.value) || 0 }))}
+                />
+              </div>
             </div>
-
-            <div>
-              <Label>Quantité</Label>
-              <Input
-                type="number"
-                value={newItem.quantity}
-                onChange={(e) => handleQuantityChange(Number(e.target.value))}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="unit_price">Prix unitaire</Label>
+                <Input
+                  id="unit_price"
+                  type="number"
+                  value={newItem.unit_price}
+                  onChange={(e) => setNewItem(prev => ({ ...prev, unit_price: parseFloat(e.target.value) || 0 }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={newItem.description}
+                  onChange={(e) => setNewItem(prev => ({ ...prev, description: e.target.value }))}
+                  rows={3}
+                />
+              </div>
             </div>
-
-            <div>
-              <Label>Prix unitaire</Label>
-              <Input
-                type="number"
-                value={newItem.unit_price}
-                onChange={(e) => handleUnitPriceChange(Number(e.target.value))}
-              />
-            </div>
-
-            <div>
-              <Label>Prix total</Label>
-              <Input
-                type="number"
-                value={newItem.total_price}
-                readOnly
-                className="bg-gray-100"
-              />
-            </div>
-
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setIsAddItemOpen(false)}>
                 Annuler
               </Button>
-              <Button 
-                onClick={selectedInvoiceId && showInvoiceActions ? handleAddInvoiceItem : handleAddItem} 
-                disabled={!newItem.description || newItem.quantity <= 0 || 
-                  (selectedInvoiceId && showInvoiceActions ? addInvoiceItemMutation.isPending : addItemMutation.isPending)}
-              >
-                {(selectedInvoiceId && showInvoiceActions ? addInvoiceItemMutation.isPending : addItemMutation.isPending) 
-                  ? 'Ajout...' : 'Ajouter'}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Upload Invoice Dialog - for PDF parsing */}
-      <Dialog open={isUploadInvoiceOpen} onOpenChange={setIsUploadInvoiceOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Analyser un PDF</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="invoice-file">Fichier PDF à analyser</Label>
-              <Input
-                id="invoice-file"
-                type="file"
-                accept=".pdf"
-                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-              />
-              <p className="text-sm text-gray-600 mt-2">
-                Le PDF sera analysé et les articles extraits seront ajoutés à la facture sélectionnée.
-              </p>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-4">
-              <Button variant="outline" onClick={() => setIsUploadInvoiceOpen(false)}>
-                Annuler
-              </Button>
-              <Button 
-                onClick={handleParsePdf} 
-                disabled={!selectedFile || !selectedInvoiceId || parsePdfMutation.isPending}
-              >
-                {parsePdfMutation.isPending ? 'Analyse en cours...' : 'Analyser PDF'}
+              <Button onClick={handleAddItem} disabled={addItemMutation.isPending}>
+                {addItemMutation.isPending ? 'Ajout...' : 'Ajouter'}
               </Button>
             </div>
           </div>

@@ -23,7 +23,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentUserRoles } from "@/hooks/useUserRoles";
-import { supabase } from "@/integrations/supabase/client";
+import { useUserProfilesHex, useToggleUserStatusHex } from "@/hooks/hexagonal/useUsersAdminHex";
 import { motion } from "framer-motion";
 import { Ban, CheckCircle, Edit, Search, User, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -109,70 +109,35 @@ const Users = () => {
     }
   }, [user, navigate, toast, isDevelopmentMode]);
 
-  // Fetch profiles with roles and email
+  // Use hexagonal hook for user profiles
+  const { data: profilesData = [], isLoading, error, refetch } = useUserProfilesHex(user?.id, isDevelopmentMode);
+  const toggleUserStatus = useToggleUserStatusHex();
+
+  // Set profiles from hook data or development mode
   useEffect(() => {
     if (isDevelopmentMode) {
-      console.log("Using mock profiles in development mode");
-      return;
+      setProfiles(DEV_PROFILES);
+    } else if (profilesData.length > 0) {
+      setProfiles(profilesData as UserProfile[]);
     }
+  }, [profilesData, isDevelopmentMode]);
 
-    const fetchProfilesWithRoles = async () => {
-      try {
-        setLoading(true);
+  // Update loading state
+  useEffect(() => {
+    setLoading(isLoading);
+  }, [isLoading]);
 
-        // Fetch profiles
-        const { data: profilesData, error: profilesError } = await supabase
-          .from("profiles")
-          .select("*")
-          .order("created_at", { ascending: false });
-
-        if (profilesError) throw profilesError;
-
-        if (profilesData) {
-          // Fetch roles and email for each user
-          const profilesWithRoles = await Promise.all(
-            profilesData.map(async (profile) => {
-              // Get user roles
-              const { data: rolesData } = await (supabase as any)
-                .from("user_roles")
-                .select("role_name")
-                .eq("user_id", profile.id);
-
-              // Get user email from auth.users (this requires admin privileges)
-              const { data: userData } = await supabase.auth.admin.getUserById(
-                profile.id
-              );
-
-              const roles = rolesData?.map((r: any) => r.role_name) || [];
-              const primaryRole = (roles[0] as RoleType) || "viewer";
-
-              return {
-                ...profile,
-                roles,
-                primaryRole,
-                email: userData.user?.email || null,
-              } as UserProfile;
-            })
-          );
-
-          setProfiles(profilesWithRoles);
-        }
-      } catch (error: any) {
-        console.error("Error fetching profiles:", error);
-        toast({
-            title: t('common.error'),
-          description: `Impossible de récupérer les utilisateurs: ${error.message}`,
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user) {
-      fetchProfilesWithRoles();
+  // Handle errors
+  useEffect(() => {
+    if (error) {
+      console.error("Error fetching profiles:", error);
+      toast({
+        title: t('common.error'),
+        description: `Impossible de récupérer les utilisateurs: ${error.message}`,
+        variant: "destructive",
+      });
     }
-  }, [user, toast, isDevelopmentMode]);
+  }, [error, toast, t]);
 
   const handleViewDetails = (profile: UserProfile) => {
     setSelectedUser(profile);
@@ -192,47 +157,15 @@ const Users = () => {
   };
 
   const handleToggleUserStatus = async (profile: UserProfile) => {
-    try {
-      const newStatus = !profile.is_active;
-
-      // Update user status in auth.users table
-      const { error } = await supabase.auth.admin.updateUserById(profile.id, {
-        ban_duration: newStatus ? "none" : "24h",
-      });
-
-      if (error) throw error;
-
-      // Update local state
-      setProfiles((prev) =>
-        prev.map((p) =>
-          p.id === profile.id ? { ...p, is_active: newStatus } : p
-        )
-      );
-
-      toast({
-        title: t('common.success'),
-        description: `Le compte de ${profile.full_name} a été ${
-          newStatus ? "activé" : "désactivé"
-        }.`,
-      });
-    } catch (error) {
-      console.error("Error toggling user status:", error);
-      toast({
-        title: t('common.error'),
-        description: "Impossible de modifier le statut de l'utilisateur",
-        variant: "destructive",
-      });
-    }
+    toggleUserStatus.mutate({
+      userId: profile.id,
+      newStatus: !profile.is_active,
+    });
   };
 
   const refreshUserList = () => {
-    // Refetch profiles logic here
-    // ... existing fetchProfilesWithRoles logic
+    refetch();
   };
-
-  // Use hexagonal hook for users
-  // Note: For now, keeping direct Supabase calls as user management requires admin privileges
-  // TODO: Create useUsersAdminHex hook when edge function is available
 
   // Filter profiles based on search query (now including email)
   const filteredProfiles = profiles.filter(

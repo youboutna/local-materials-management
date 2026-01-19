@@ -4,7 +4,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { RepositoryFactory } from "@/repositories/RepositoryFactory";
 import { toast } from "@/hooks/use-toast";
 
 export interface ProjectMaterial {
@@ -27,31 +27,15 @@ export interface SelectedMaterial {
 }
 
 async function fetchProjectMaterials(projectId: string): Promise<ProjectMaterial[]> {
-  const { data, error } = await supabase
-    .from("project_materials")
-    .select(`
-      id,
-      project_id,
-      material_id,
-      quantity,
-      materials:material_id (
-        id,
-        name,
-        category,
-        unit,
-        price_per_unit
-      )
-    `)
-    .eq("project_id", projectId);
+  const materialRepository = RepositoryFactory.getMaterialRepository();
+  const materials = await materialRepository.findByProjectId(projectId);
 
-  if (error) throw error;
-  
-  return (data || []).map((item: any) => ({
+  return materials.map((item: any) => ({
     id: item.id,
     project_id: item.project_id,
     material_id: item.material_id,
     quantity: item.quantity,
-    material: item.materials,
+    material: item.material,
   }));
 }
 
@@ -59,11 +43,10 @@ async function updateProjectMaterials(
   projectId: string, 
   materials: SelectedMaterial[]
 ): Promise<void> {
+  const materialRepository = RepositoryFactory.getMaterialRepository();
+  
   // Delete existing materials
-  await supabase
-    .from("project_materials")
-    .delete()
-    .eq("project_id", projectId);
+  await materialRepository.deleteByProjectId(projectId);
 
   // Insert new materials
   if (materials.length > 0) {
@@ -73,11 +56,7 @@ async function updateProjectMaterials(
       quantity: material.quantity,
     }));
 
-    const { error } = await supabase
-      .from("project_materials")
-      .insert(materialsToInsert);
-
-    if (error) throw error;
+    await materialRepository.createMany(materialsToInsert);
   }
 }
 

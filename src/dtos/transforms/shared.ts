@@ -1,0 +1,780 @@
+/**
+ * Shared Types for Domain Transformers
+ * Common interfaces and types used across all transformers
+ * Following hexagonal architecture principles
+ */
+
+export interface BaseEntityDTO {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  fieldErrors?: Record<string, string[]>;
+}
+
+export interface EntityToDTOMapper<Entity, DTO> {
+  toDTO(entity: Entity): DTO;
+  fromDTO(dto: DTO): Entity;
+  fromEntityToDTO(entity: Entity): DTO;
+  fromDtosToAdapter(dtos: DTO[]): DTO[];
+  toResponseDto(entity: Entity): DTO;
+  toRequestDto(dto: any): DTO;
+  toUpdateDto(dto: any): Partial<DTO>;
+  validate(dto: DTO): ValidationResult;
+}
+
+export interface AnalyticsMetrics {
+  total: number;
+  active: number;
+  completed: number;
+  pending: number;
+  cancelled: number;
+  utilizationRate: number;
+  averageValue: number;
+}
+
+export interface RiskAssessment {
+  level: 'low' | 'medium' | 'high';
+  factors: string[];
+  recommendations: string[];
+}
+
+export interface PerformanceMetrics {
+  score: number;
+  efficiency: number;
+  quality: number;
+  timeliness: number;
+  costEffectiveness: number;
+}
+
+export interface ComplianceStatus {
+  isCompliant: boolean;
+  lastAuditDate?: string;
+  issues: Array<{
+    type: string;
+    description: string;
+    severity: 'low' | 'medium' | 'high';
+    status: 'open' | 'resolved';
+  }>;
+}
+
+export interface PaginationParams {
+  page: number;
+  limit: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface SearchParams {
+  query?: string;
+  filters?: Record<string, any>;
+  dateRange?: {
+    start: string;
+    end: string;
+  };
+  status?: string[];
+}
+
+export interface ExportParams {
+  format: 'csv' | 'excel' | 'pdf';
+  includeHeaders?: boolean;
+  dateRange?: {
+    start: string;
+    end: string;
+  };
+  filters?: Record<string, any>;
+}
+
+// Enhanced DTOs for BTP calculations and business logic
+export interface MaterialDTO extends BaseEntityDTO {
+  name: string;
+  description: string;
+  category: string;
+  unit: string;
+  currentStock: number;
+  minStock: number;
+  maxStock: number;
+  unitCost: number;
+  stockMetrics: {
+    currentStock: number;
+    minStock: number;
+    maxStock: number;
+    stockStatus: 'optimal' | 'low' | 'critical' | 'out_of_stock';
+    reorderPoint: number;
+    stockTurnover: number;
+    daysUntilReorder: number;
+  };
+  costAnalysis: {
+    unitCost: number;
+    totalValue: number;
+    costPerUnit: number;
+    costVariance: number;
+    efficiency: number;
+  };
+  qualityMetrics: {
+    qualityScore: number;
+    defectRate: number;
+    supplierReliability: number;
+    recommendations: string[];
+  };
+  specifications: string;
+  dimensions: {
+    length: number;
+    width: number;
+    height: number;
+    thickness: number;
+  };
+  weight: number;
+  density: number;
+  supplierId: string;
+  supplierName: string;
+  leadTime: number;
+  qualityCertificate: string;
+  complianceStandards: string[];
+  dailyUsage: number;
+  monthlyUsage: number;
+  lastUsed: string;
+  expectedCost: number;
+  actualCost: number;
+  costVariance: number;
+  storageLocation: string;
+  storageConditions: string;
+}
+
+export interface CreateMaterialRequestDto {
+  name: string;
+  description: string;
+  category: string;
+  unit: string;
+  currentStock?: number;
+  minStock?: number;
+  maxStock?: number;
+  unitCost?: number;
+  specifications?: string;
+  dimensions?: {
+    length: number;
+    width: number;
+    height: number;
+    thickness: number;
+  };
+  weight?: number;
+  density?: number;
+  supplierId?: string;
+  supplierName?: string;
+  leadTime?: number;
+  qualityCertificate?: string;
+  complianceStandards?: string[];
+  dailyUsage?: number;
+  monthlyUsage?: number;
+  expectedCost?: number;
+  storageLocation?: string;
+  storageConditions?: string;
+}
+
+export interface UpdateMaterialRequestDto {
+  name?: string;
+  description?: string;
+  category?: string;
+  unit?: string;
+  currentStock?: number;
+  minStock?: number;
+  maxStock?: number;
+  unitCost?: number;
+  specifications?: string;
+  dimensions?: {
+    length: number;
+    width: number;
+    height: number;
+    thickness: number;
+  };
+  weight?: number;
+  density?: number;
+  supplierId?: string;
+  supplierName?: string;
+  leadTime?: number;
+  qualityCertificate?: string;
+  complianceStandards?: string[];
+  dailyUsage?: number;
+  monthlyUsage?: number;
+  expectedCost?: number;
+  actualCost?: number;
+  costVariance?: number;
+  storageLocation?: string;
+  storageConditions?: string;
+}
+
+export interface MaterialDetailDTO extends MaterialDTO {
+  // Additional detailed fields for material detail view
+  usageHistory: Array<{
+    date: string;
+    quantity: number;
+    project: string;
+    cost: number;
+  }>;
+  qualityReports: Array<{
+    date: string;
+    score: number;
+    issues: string[];
+    inspector: string;
+  }>;
+  supplierInfo: {
+    name: string;
+    contact: string;
+    rating: number;
+    certifications: string[];
+  };
+}
+
+export interface MaterialSummaryDTO extends MaterialDTO {
+  // Summary fields for list view
+  usageRate: number;
+  lastUpdated: string;
+  criticalLevel: 'low' | 'medium' | 'high';
+}
+
+export interface MaterialListItemDTO extends BaseEntityDTO {
+  name: string;
+  category: string;
+  unit: string;
+  currentStock: number;
+  unitCost: number;
+  stockStatus: 'optimal' | 'low' | 'critical' | 'out_of_stock';
+  reorderPoint: number;
+  daysUntilReorder: number;
+}
+
+export interface InspectionDTO extends BaseEntityDTO {
+  projectId: string;
+  inspector: string;
+  date: string;
+  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled' | 'approved' | 'rejected' | 'requires_changes' | 'pending';
+  progress: number;
+  comments: string;
+  phaseId: string;
+  complianceMetrics: {
+    complianceScore: number;
+    criticalIssues: string[];
+    recommendations: string[];
+    nextInspectionDate: Date;
+  };
+  qualityMetrics: {
+    qualityScore: number;
+    defectRate: number;
+    inspectorPerformance: number;
+    recommendations: string[];
+  };
+  riskAssessment: {
+    riskLevel: 'low' | 'medium' | 'high';
+    riskFactors: string[];
+    recommendations: string[];
+  };
+  progressAtInspection: number;
+  documents: string[];
+  issues: string[];
+  siteConditions: string;
+  weatherConditions: string;
+  temperature: number;
+  humidity: number;
+}
+
+export interface CreateInspectionRequestDto {
+  projectId: string;
+  inspector: string;
+  date?: string;
+  comments?: string;
+  phaseId?: string;
+  documents?: string[];
+  issues?: string[];
+  siteConditions?: string;
+  weatherConditions?: string;
+  temperature?: number;
+  humidity?: number;
+}
+
+export interface UpdateInspectionRequestDto {
+  inspector?: string;
+  date?: string;
+  status?: 'scheduled' | 'in_progress' | 'completed' | 'cancelled' | 'approved' | 'rejected' | 'requires_changes' | 'pending';
+  progress?: number;
+  comments?: string;
+  phaseId?: string;
+  documents?: string[];
+  issues?: string[];
+  siteConditions?: string;
+  weatherConditions?: string;
+  temperature?: number;
+  humidity?: number;
+}
+
+export interface InspectionDetailDTO extends InspectionDTO {
+  // Additional detailed fields for inspection detail view
+  inspectionPlan: Array<{
+    step: string;
+    description: string;
+    status: 'pending' | 'in_progress' | 'completed';
+    assignedTo: string;
+    dueDate: string;
+    completedAt?: string;
+  }>;
+  findings: Array<{
+    type: string;
+    severity: 'low' | 'medium' | 'high';
+    description: string;
+    status: 'open' | 'resolved';
+    reportedBy: string;
+    reportedAt: string;
+    resolvedAt?: string;
+  }>;
+  photos: string[];
+  videos: string[];
+  recommendations: string[];
+}
+
+export interface InspectionSummaryDTO extends InspectionDTO {
+  // Summary fields for list view
+  daysSinceLastInspection: number;
+  totalFindings: number;
+  criticalFindings: number;
+  complianceScore: number;
+  inspectorPerformance: number;
+}
+
+export interface InspectionListItemDTO extends BaseEntityDTO {
+  projectId: string;
+  inspector: string;
+  date: string;
+  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled' | 'approved' | 'rejected' | 'requires_changes' | 'pending';
+  progress: number;
+  phaseId: string;
+  complianceScore: number;
+  daysSinceLastInspection: number;
+  criticalFindings: number;
+}
+
+export interface PaymentDTO extends BaseEntityDTO {
+  amount: number;
+  paymentDate: string;
+  paymentMethod: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
+  progressAtPayment: number;
+  transactionId: string;
+  contractorName: string;
+  contractorContact: string;
+  bankName: string;
+  accountNumber: string;
+  checkNumber: string;
+  mobileNumber: string;
+  receiverName: string;
+  mobileOperator: string;
+  secretCode: string;
+  secretExpiresAt: string;
+  isSecretActive: boolean;
+  secretAccessCount: number;
+  maxSecretAccess: number;
+  risk: {
+    riskLevel: 'low' | 'medium' | 'high';
+    riskFactors: string[];
+    recommendations: string[];
+    financialHealth: 'healthy' | 'warning' | 'critical';
+  };
+  efficiency: {
+    paymentRate: number;
+    onTimePaymentRate: 'excellent' | 'good' | 'acceptable' | 'poor';
+    daysOverdue: number;
+    averagePaymentDelay: number;
+  };
+  daysOverdue: number;
+  averagePaymentDelay: number;
+  totalPaid: number;
+  totalDue: number;
+  costVariance: number;
+  financialHealth: 'healthy' | 'warning' | 'critical';
+  projectId: string;
+  invoiceId: string;
+  complianceScore: number;
+  lastComplianceCheck: string;
+  paymentWorkflowConfig: any;
+  paymentFrequency: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+  initialAdvance: number;
+  retentionPercentage: number;
+  advancePercentage: number;
+  priority: 'low' | 'medium' | 'high';
+  projectType: string;
+  sector: string;
+  permitNumber: string;
+}
+
+export interface CreatePaymentRequestDto {
+  amount: number;
+  paymentDate?: string;
+  paymentMethod: string;
+  progressAtPayment?: number;
+  transactionId?: string;
+  contractorName?: string;
+  contractorContact?: string;
+  bankName?: string;
+  accountNumber?: string;
+  checkNumber?: string;
+  mobileNumber?: string;
+  receiverName?: string;
+  mobileOperator?: string;
+  secretCode?: string;
+  secretExpiresAt?: string;
+  isSecretActive?: boolean;
+  secretAccessCount?: number;
+  maxSecretAccess?: number;
+  projectId?: string;
+  invoiceId?: string;
+}
+
+export interface UpdatePaymentRequestDto {
+  amount?: number;
+  paymentDate?: string;
+  status?: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
+  progressAtPayment?: number;
+  transactionId?: string;
+  contractorName?: string;
+  contractorContact?: string;
+  bankName?: string;
+  accountNumber?: string;
+  checkNumber?: string;
+  mobileNumber?: string;
+  receiverName?: string;
+  mobileOperator?: string;
+  secretCode?: string;
+  secretExpiresAt?: string;
+  isSecretActive?: boolean;
+  secretAccessCount?: number;
+  maxSecretAccess?: number;
+  projectId?: string;
+  invoiceId?: string;
+}
+
+export interface PaymentDetailDTO extends PaymentDTO {
+  // Additional detailed fields for payment detail view
+  paymentHistory: Array<{
+    date: string;
+    amount: number;
+    status: string;
+    method: string;
+    processor: string;
+    reference: string;
+  }>;
+  complianceChecks: Array<{
+    date: string;
+    status: 'passed' | 'failed' | 'pending';
+    checker: string;
+    notes: string;
+  }>;
+  relatedDocuments: string[];
+  approvalWorkflow: Array<{
+    step: string;
+    status: 'pending' | 'approved' | 'rejected';
+    approver: string;
+    date: string;
+    comments: string;
+  }>;
+}
+
+export interface PaymentSummaryDTO extends PaymentDTO {
+  // Summary fields for list view
+  daysOverdue: number;
+  averagePaymentDelay: number;
+  cashFlowVariance: number;
+  paymentEfficiency: {
+    paymentRate: number;
+    onTimePaymentRate: 'excellent' | 'good' | 'acceptable' | 'poor';
+    daysOverdue: number;
+    averagePaymentDelay: number;
+  };
+  financialHealth: 'healthy' | 'warning' | 'critical';
+  complianceScore: number;
+  lastComplianceCheck: string;
+}
+
+export interface PaymentListItemDTO extends BaseEntityDTO {
+  amount: number;
+  paymentDate: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
+  progressAtPayment: number;
+  contractorName: string;
+  daysOverdue: number;
+  averagePaymentDelay: number;
+  financialHealth: 'healthy' | 'warning' | 'critical';
+}
+
+export interface ProjectDTO extends BaseEntityDTO {
+  title: string;
+  description: string;
+  location: string;
+  status: 'planning' | 'en cours' | 'terminé' | 'suspendu' | 'annulé';
+  progress: number;
+  budget: number;
+  startDate: string;
+  endDate: string;
+  thumbnail: string;
+  teamSize: number;
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+  health: 'healthy' | 'warning' | 'critical';
+  progressMetrics: {
+    estimatedCompletionDate: Date;
+    progressRate: number;
+    efficiency: number;
+  };
+  evmMetrics: {
+    plannedValue: number;
+    earnedValue: number;
+    scheduleVariance: number;
+    costVariance: number;
+    schedulePerformanceIndex: number;
+    costPerformanceIndex: number;
+  };
+  riskAssessment: {
+    riskLevel: 'low' | 'medium' | 'high';
+    riskFactors: string[];
+    recommendations: string[];
+  };
+  estimatedCost: number;
+  actualCost: number;
+  costVariance: number;
+  productivityIndex: number;
+  geographicZone: string;
+  terrainType: string;
+  environmentalConstraints: string;
+  financingSource: string;
+  marketType: string;
+  selectionMode: string;
+  launchDate: string;
+  attributionDate: string;
+  projectReference: string;
+  mainContractor: string;
+  allowsInitialPayment: boolean;
+  initialPaymentPercentage: number;
+  currentPhase: string;
+  currentStage: string;
+}
+
+export interface CreateProjectRequestDto {
+  title: string;
+  description: string;
+  location: string;
+  budget?: number;
+  startDate?: string;
+  endDate?: string;
+  thumbnail?: string;
+  teamSize?: number;
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
+  estimatedCost?: number;
+  geographicZone?: string;
+  terrainType?: string;
+  environmentalConstraints?: string;
+  financingSource?: string;
+  marketType?: string;
+  selectionMode?: string;
+  launchDate?: string;
+  attributionDate?: string;
+  projectReference?: string;
+  mainContractor?: string;
+  allowsInitialPayment?: boolean;
+  initialPaymentPercentage?: number;
+  currentPhase?: string;
+  currentStage?: string;
+}
+
+export interface UpdateProjectRequestDto {
+  title?: string;
+  description?: string;
+  location?: string;
+  status?: 'planning' | 'en cours' | 'terminé' | 'suspendu' | 'annulé';
+  progress?: number;
+  budget?: number;
+  endDate?: string;
+  thumbnail?: string;
+  teamSize?: number;
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
+  estimatedCost?: number;
+  geographicZone?: string;
+  terrainType?: string;
+  environmentalConstraints?: string;
+  financingSource?: string;
+  marketType?: string;
+  selectionMode?: string;
+  launchDate?: string;
+  attributionDate?: string;
+  projectReference?: string;
+  mainContractor?: string;
+  allowsInitialPayment?: boolean;
+  initialPaymentPercentage?: number;
+  currentPhase?: string;
+  currentStage?: string;
+}
+
+export interface ProjectDetailDTO extends ProjectDTO {
+  // Additional detailed fields for project detail view
+  risks: Array<{
+    id: string;
+    title: string;
+    description: string;
+    probability: number;
+    impact: number;
+    mitigationPlan: string;
+    status: 'identified' | 'monitored' | 'mitigated' | 'resolved';
+    relatedTasks: string[];
+  }>;
+  tasks: Array<{
+    id: string;
+    name: string;
+    description: string;
+    status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
+    progress: number;
+    startDate: string;
+    endDate: string;
+    estimatedDuration: number;
+    actualDuration?: number;
+    costEstimate: number;
+    actualCost?: number;
+    weight: number;
+    estimatedDurationDays: number;
+    optimisticEstimate?: number;
+    pessimisticEstimate?: number;
+    criticalPath: boolean;
+    ganttColor: string;
+    assignedTo: string[];
+    dependencies: string[];
+  }>;
+  inspections: Array<{
+    id: string;
+    projectId: string;
+    inspector: string;
+    date: string;
+    status: string;
+    progress: number;
+    comments: string;
+    phaseId: string;
+    documents: string[];
+    issues: string[];
+    created_at: string;
+    updated_at: string;
+    projects: any;
+  }>;
+  payments: Array<{
+    id: string;
+    amount: number;
+    paymentDate: string;
+    status: string;
+    progressAtPayment: number;
+    transactionId: string;
+    contractorName: string;
+    contractorContact: string;
+    bankName: string;
+    accountNumber: string;
+    checkNumber: string;
+    mobileNumber: string;
+    receiverName: string;
+    mobileOperator: string;
+    secretCode: string;
+    secretExpiresAt: string;
+    isSecretActive: boolean;
+    secretAccessCount: number;
+    maxSecretAccess: number;
+    created_at: string;
+    updated_at: string;
+  }>;
+  phases: Array<{
+    id: string;
+    project_id: string;
+    phase_name: string;
+    construction_phase: string;
+    construction_stage: string;
+    description: string;
+    status: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'approved' | 'rejected' | 'requires_changes' | 'pending';
+    progress: number;
+    estimated_cost: number;
+    actual_cost: number;
+    estimated_duration_days: number;
+    actual_duration_days: number;
+    start_date: string;
+    end_date: string;
+    actual_start_date: string;
+    actual_end_date: string;
+    order_index: number;
+    dependencies: string[];
+    steps: Array<{
+      id: string;
+      name: string;
+      description: string;
+      status: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'approved' | 'rejected' | 'requires_changes' | 'pending';
+      progress: number;
+      estimated_duration_days: number;
+      actual_duration_days: number;
+      start_date: string;
+      end_date: string;
+      order_index: number;
+      tasks: Array<{
+        id: string;
+        name: string;
+        description: string;
+        status: 'pending' | 'in_progress' | 'completed' | 'delayed';
+        progress: number;
+        estimated_duration_days: number;
+        actual_duration_days: number;
+        start_date: string;
+        end_date: string;
+        order_index: number;
+        assigned_to: string[];
+        dependencies: string[];
+        weight: number;
+      }>;
+    }>;
+    created_at: string;
+    updated_at: string;
+  }>;
+}
+
+export interface ProjectSummaryDTO extends ProjectDTO {
+  // Summary fields for list view
+  totalTasks: number;
+  completedTasks: number;
+  totalRisks: number;
+  totalInspections: number;
+  totalPayments: number;
+  totalPhases: number;
+  lastActivity: string;
+}
+
+export interface ProjectListItemDTO extends BaseEntityDTO {
+  title: string;
+  location: string;
+  status: 'planning' | 'en cours' | 'terminé' | 'suspendu' | 'annulé';
+  progress: number;
+  budget: number;
+  startDate: string;
+  endDate: string;
+  thumbnail: string;
+  teamSize: number;
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+}

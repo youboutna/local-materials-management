@@ -1,6 +1,31 @@
+/**
+ * Hexagonal Architecture Selectors Hooks
+ * Uses services instead of direct Supabase calls
+ * Follows hexagonal architecture principles
+ */
+
 import { useQuery } from '@tanstack/react-query';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { InspectorService } from '@/application/services/InspectorServiceSimple';
+import { TenderService } from '@/application/services/TenderServiceSimple';
+import { SupplierService } from '@/application/services/SupplierService';
+import { UserService } from '@/application/services/UserService';
+import { ProjectService } from '@/application/services/ProjectService';
+import { MaterialService } from '@/application/services/MaterialService';
+import { EmployeeService } from '@/application/services/EmployeeService';
+import { Material } from '@/domain/entities/Material';
+import { Supplier } from '@/domain/entities/Supplier';
+import { Employee } from '@/domain/entities/Employee';
 import { supabase } from '@/integrations/supabase/client';
 
+// Configuration commune pour éviter les appels en continu
+const COMMON_QUERY_OPTIONS = {
+  staleTime: 5 * 60 * 1000, // 5 minutes
+  cacheTime: 10 * 60 * 1000, // 10 minutes
+  refetchOnWindowFocus: false,
+  refetchOnMount: false,
+  refetchOnReconnect: false,
+};
 // ============= Types =============
 export interface UserProfile {
   id: string;
@@ -8,6 +33,10 @@ export interface UserProfile {
   phone?: string | null;
   national_id?: string | null;
   role?: string | null;
+  email?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  is_active?: boolean;
 }
 
 export interface ProjectOption {
@@ -75,151 +104,124 @@ export interface TenderOption {
 export function useUsersSelector(options?: {
   searchTerm?: string;
   roleFilter?: string[];
+  enabled?: boolean;
 }) {
   return useQuery({
     queryKey: ['users-selector', options?.searchTerm, options?.roleFilter],
     queryFn: async (): Promise<UserProfile[]> => {
-      let profileQuery = supabase
-        .from('profiles')
-        .select('id, full_name, phone, national_id, role')
-        .order('full_name', { ascending: true });
-
-      if (options?.searchTerm) {
-        profileQuery = profileQuery.or(
-          `full_name.ilike.%${options.searchTerm}%,phone.ilike.%${options.searchTerm}%,national_id.ilike.%${options.searchTerm}%`
-        );
-      }
-
-      if (options?.roleFilter?.length) {
-        profileQuery = profileQuery.in('role', options.roleFilter as any);
-      }
-
-      const { data: profileData, error: profileError } = await profileQuery.limit(30);
-      if (profileError) throw profileError;
-
-      let supplierQuery = supabase
-        .from('suppliers')
-        .select('id, name, email, user_id')
-        .eq('is_active', true)
-        .order('name', { ascending: true });
-
-      if (options?.searchTerm) {
-        supplierQuery = supplierQuery.or(
-          `name.ilike.%${options.searchTerm}%,email.ilike.%${options.searchTerm}%`
-        );
-      }
-
-      const { data: supplierData } = await supplierQuery.limit(20);
-
-      const users: UserProfile[] = profileData?.map(p => ({
-        id: p.id,
-        full_name: p.full_name,
-        phone: p.phone,
-        national_id: p.national_id,
-        role: p.role
-      })) || [];
-
-      supplierData?.forEach(supplier => {
-        if (!users.some(u => u.id === supplier.user_id)) {
-          users.push({
-            id: supplier.id,
-            full_name: supplier.name || 'Fournisseur',
-            phone: supplier.email || undefined,
-            role: 'supplier'
-          });
-        }
+      const userService = new UserService(
+        RepositoryFactory.getUserRepository()
+      );
+      
+      const result = await userService.searchUsers({
+        searchTerm: options?.searchTerm,
+        roleFilter: options?.roleFilter,
+        limit: 50
       });
-
-      return users;
-    }
+      
+      return result.users;
+    },
+    enabled: options?.enabled !== false,
+    ...COMMON_QUERY_OPTIONS,
   });
 }
 
 export function useProjectsSelector(options?: {
   searchTerm?: string;
   secureMode?: boolean;
+  enabled?: boolean;
 }) {
   return useQuery({
     queryKey: ['projects-selector', options?.searchTerm, options?.secureMode],
     queryFn: async (): Promise<ProjectOption[]> => {
-      if (options?.secureMode) {
-        const { data, error } = await supabase
-          .rpc('search_projects_autocomplete', { search_term: options?.searchTerm || '' });
-        if (error) throw error;
-        return data || [];
-      }
-
-      let query = supabase
-        .from('projects')
-        .select('id, title, location, status, budget, start_date, end_date, project_reference')
-        .order('title');
-
-      if (options?.searchTerm) {
-        query = query.or(
-          `title.ilike.%${options.searchTerm}%,location.ilike.%${options.searchTerm}%,project_reference.ilike.%${options.searchTerm}%`
-        );
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data || [];
-    }
+      const projectService = new ProjectService(
+        RepositoryFactory.getProjectRepository(),
+        // TODO: Add transformer when needed
+        null as any
+      );
+      
+      const result = await projectService.searchProjects({
+        searchQuery: options?.searchTerm,
+        limit: 50
+      });
+      
+      return result.projects;
+    },
+    enabled: options?.enabled !== false,
+    ...COMMON_QUERY_OPTIONS,
   });
 }
 
-export function useSuppliersSelector(searchTerm?: string) {
+export function useSuppliersSelector(searchTerm?: string, enabled?: boolean) {
   return useQuery({
     queryKey: ['suppliers-selector', searchTerm],
     queryFn: async (): Promise<SupplierOption[]> => {
-      let query = supabase
-        .from('suppliers')
-        .select('*')
-        .eq('is_active', true)
-        .order('name');
-
-      if (searchTerm) {
-        query = query.ilike('name', `%${searchTerm}%`);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data || [];
-    }
+      const supplierService = new SupplierService(
+        RepositoryFactory.getSupplierRepository()
+      );
+      
+      const result = await supplierService.searchSuppliers({
+        searchTerm,
+        isActive: true,
+        limit: 50
+      });
+      
+      // Map Supplier entities to SupplierOption interface
+      return result.suppliers.map(supplier => ({
+        id: supplier.id,
+        name: supplier.name,
+        contact_person: supplier.contacts[0]?.name || null,
+        phone: supplier.phone,
+        email: supplier.email,
+        category: supplier.category,
+        rating: supplier.rating?.overall || null,
+        is_active: supplier.isActive()
+      }));
+    },
+    enabled: enabled !== false,
+    ...COMMON_QUERY_OPTIONS,
   });
 }
 
 export function useMaterialsSelector(options?: {
   searchTerm?: string;
   category?: string;
+  enabled?: boolean;
 }) {
   return useQuery({
     queryKey: ['materials-selector', options?.searchTerm, options?.category],
     queryFn: async (): Promise<MaterialOption[]> => {
-      let query = supabase
-        .from('materials')
-        .select('id, name, description, category, unit, price_per_unit, available_quantity, origin_location')
-        .order('name');
-
-      const { data, error } = await query;
-      if (error) throw error;
+      const materialService = new MaterialService(
+        RepositoryFactory.getMaterialRepository()
+      );
       
-      let filtered = data || [];
+      let materials: Material[] = [];
       
       if (options?.searchTerm) {
-        const term = options.searchTerm.toLowerCase();
-        filtered = filtered.filter(m => 
-          m.name?.toLowerCase().includes(term) ||
-          m.description?.toLowerCase().includes(term) ||
-          m.category?.toLowerCase().includes(term)
-        );
+        materials = await materialService.searchMaterials(options.searchTerm);
+      } else {
+        materials = await materialService.getAllMaterials();
       }
       
+      // Apply category filter if specified
       if (options?.category && options.category !== 'all') {
-        filtered = filtered.filter(m => m.category === options.category);
+        materials = materials.filter(m => m.category === options.category);
       }
       
-      return filtered;
-    }
+      // Map Material entities to MaterialOption interface
+      return materials.map(material => ({
+        id: material.id,
+        name: material.name,
+        description: material.description,
+        category: material.category,
+        unit: material.unit,
+        price_per_unit: material.pricePerUnit,
+        available_quantity: material.availableQuantity,
+        origin_location: material.coordinates ? `${material.coordinates.latitude}, ${material.coordinates.longitude}` : null
+      }));
+    },
+    enabled: options?.enabled !== false,
+    ...COMMON_QUERY_OPTIONS,
   });
 }
 
@@ -227,38 +229,37 @@ export function useEmployeesSelector(options?: {
   searchTerm?: string;
   departmentFilter?: string[];
   positionFilter?: string[];
+  enabled?: boolean;
 }) {
   return useQuery({
     queryKey: ['employees-selector', options?.searchTerm, options?.departmentFilter, options?.positionFilter],
     queryFn: async (): Promise<EmployeeOption[]> => {
-      let query = supabase
-        .from('employees')
-        .select('id, full_name, position, department, email, phone, employee_id, is_active')
-        .eq('is_active', true)
-        .order('full_name', { ascending: true });
-
-      if (options?.searchTerm) {
-        query = query.or(
-          `full_name.ilike.%${options.searchTerm}%,position.ilike.%${options.searchTerm}%,department.ilike.%${options.searchTerm}%,employee_id.ilike.%${options.searchTerm}%`
-        );
-      }
-
-      if (options?.departmentFilter?.length) {
-        query = query.in('department', options.departmentFilter);
-      }
-
-      if (options?.positionFilter?.length) {
-        query = query.in('position', options.positionFilter);
-      }
-
-      const { data, error } = await query.limit(50);
-      if (error) {
-        console.error('Error fetching employees:', error);
-        return [];
-      }
-
-      return data || [];
-    }
+      const employeeService = new EmployeeService(
+        RepositoryFactory.getEmployeeRepository()
+      );
+      
+      const result = await employeeService.searchEmployees({
+        searchTerm: options?.searchTerm,
+        departmentFilter: options?.departmentFilter,
+        positionFilter: options?.positionFilter,
+        isActive: true,
+        limit: 50
+      });
+      
+      // Map Employee entities to EmployeeOption interface
+      return result.employees.map(employee => ({
+        id: employee.id,
+        full_name: employee.fullName,
+        position: employee.position,
+        department: employee.department,
+        email: employee.email,
+        phone: employee.phone,
+        employee_id: employee.employeeId,
+        is_active: employee.isActive
+      }));
+    },
+    enabled: options?.enabled !== false,
+    ...COMMON_QUERY_OPTIONS,
   });
 }
 
@@ -266,92 +267,14 @@ export function useInspectorsSelector(projectId?: string) {
   return useQuery({
     queryKey: ['inspectors-selector', projectId],
     queryFn: async (): Promise<Inspector[]> => {
-      const inspectorsList: Inspector[] = [];
-
-      if (projectId) {
-        const { data: stakeholders, error } = await supabase
-          .from('project_stakeholders')
-          .select(`
-            id,
-            stakeholder_type,
-            stakeholder_entity_type,
-            role_description,
-            employee_id,
-            supplier_id,
-            employees:employee_id (
-              id,
-              full_name,
-              position,
-              department
-            ),
-            suppliers:supplier_id (
-              id,
-              name,
-              contact_person,
-              category
-            )
-          `)
-          .eq('project_id', projectId);
-
-        if (error) throw error;
-
-        stakeholders?.forEach((stakeholder: any) => {
-          if (stakeholder.employee_id && stakeholder.employees) {
-            inspectorsList.push({
-              id: stakeholder.employees.id,
-              name: stakeholder.employees.full_name,
-              type: 'employee',
-              position: stakeholder.employees.position,
-              role: stakeholder.role_description || stakeholder.stakeholder_type
-            });
-          } else if (stakeholder.supplier_id && stakeholder.suppliers) {
-            inspectorsList.push({
-              id: stakeholder.suppliers.id,
-              name: stakeholder.suppliers.contact_person || stakeholder.suppliers.name,
-              type: 'supplier',
-              position: `Bureau d'études - ${stakeholder.suppliers.name}`,
-              role: stakeholder.role_description || stakeholder.stakeholder_type
-            });
-          }
-        });
-      } else {
-        const { data: employees, error: empError } = await supabase
-          .from('employees')
-          .select('id, full_name, position, department')
-          .eq('is_active', true)
-          .order('full_name');
-
-        if (empError) throw empError;
-
-        const { data: suppliers, error: suppError } = await supabase
-          .from('suppliers')
-          .select('id, name, contact_person, category')
-          .eq('is_active', true)
-          .order('name');
-
-        if (suppError) throw suppError;
-
-        employees?.forEach(emp => {
-          inspectorsList.push({
-            id: emp.id,
-            name: emp.full_name,
-            type: 'employee',
-            position: emp.position || undefined
-          });
-        });
-
-        suppliers?.forEach(sup => {
-          inspectorsList.push({
-            id: sup.id,
-            name: sup.contact_person || sup.name,
-            type: 'supplier',
-            position: `Bureau d'études - ${sup.name}`
-          });
-        });
-      }
-
-      return inspectorsList;
-    }
+      const inspectorService = new InspectorService(
+        RepositoryFactory.getEmployeeRepository(),
+        RepositoryFactory.getSupplierRepository()
+      );
+      
+      return await inspectorService.getInspectors();
+    },
+    ...COMMON_QUERY_OPTIONS,
   });
 }
 
@@ -361,25 +284,13 @@ export function useProjectTenders(projectId?: string) {
     queryFn: async (): Promise<TenderOption[]> => {
       if (!projectId) return [];
       
-      const { data, error } = await supabase
-        .from('parsed_invoices')
-        .select('id, file_name, tender_id')
-        .eq('tender_id', projectId)
-        .limit(10);
+      const tenderService = new TenderService(
+        RepositoryFactory.getTenderRepository()
+      );
       
-      if (error) {
-        console.warn('No tender documents found:', error);
-        return [];
-      }
-      
-      return (data || []).map((item, index) => ({
-        id: item.id,
-        title: item.file_name || `Appel d'offres ${index + 1}`,
-        reference: `AO-${item.tender_id}-${index + 1}`,
-        project_id: projectId,
-        status: 'active'
-      }));
+      return await tenderService.getProjectTenders(projectId);
     },
-    enabled: !!projectId
+    enabled: !!projectId,
+    ...COMMON_QUERY_OPTIONS,
   });
 }

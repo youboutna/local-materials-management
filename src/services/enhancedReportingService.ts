@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectData } from '@/types/project';
 import { ReportCalculations } from '@/utils/reportCalculations';
@@ -14,6 +15,8 @@ import {
 } from '@/types/reportTypes';
 
 export class EnhancedReportingService {
+  private reportingRepository = RepositoryFactory.getReportingRepository();
+
   /**
    * Generate complete project report with all enhanced calculations
    */
@@ -24,22 +27,33 @@ export class EnhancedReportingService {
     resourceUtilization: any;
     healthScore: any;
   }> {
+    const instance = new EnhancedReportingService();
+    return instance.generateCompleteProjectReportInstance(project);
+  }
+
+  private async generateCompleteProjectReportInstance(project: ProjectData): Promise<{
+    reportDTO: ProjectReportDTO;
+    reportData: ReportData;
+    costCalculation: CostCalculation;
+    resourceUtilization: any;
+    healthScore: any;
+  }> {
     try {
-      // Fetch all required data in parallel
+      // Fetch all required data in parallel using repository
       const [
         reportDTO,
         realCosts,
         phases,
         inspections
       ] = await Promise.all([
-        this.transformProjectForReport(project),
-        ProjectDataCalculations.calculateRealProjectCosts(project.id),
-        supabase.from('project_phases').select('*').eq('project_id', project.id),
-        supabase.from('inspections').select('*').eq('project_id', project.id)
+        this.reportingRepository.transformProjectForReport(project),
+        this.reportingRepository.calculateRealProjectCosts(project.id),
+        this.reportingRepository.getProjectPhases(project.id),
+        this.reportingRepository.getProjectInspections(project.id)
       ]);
 
-      const phasesData = phases.data || [];
-      const inspectionsData = inspections.data || [];
+      const phasesData = phases || [];
+      const inspectionsData = inspections || [];
       
       // Calculate resource utilization for the first phase if available
       const resourceUtilization = phasesData.length > 0 
@@ -63,7 +77,7 @@ export class EnhancedReportingService {
       );
 
       // Calculate quality score from inspections
-      const qualityScore = this.calculateQualityFromInspections(inspectionsData);
+      const qualityScore = EnhancedReportingService.calculateQualityFromInspections(inspectionsData);
 
       // Calculate overall health score
       const budgetUtilization = project.budget > 0 ? (realCosts.totalSpent / project.budget) * 100 : 0;

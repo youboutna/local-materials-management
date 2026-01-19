@@ -48,12 +48,12 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
 
   const handleConfirmSelection = () => {
     if (!selectedPhase) return;
-
+    
     if (selectionMode === 'phase') {
-      // Add all stages of the selected phase
+      // Add all stages of selected phase
       const phaseStages = PROCUREMENT_STAGES[selectedPhase];
       phaseStages.forEach((stage) => {
-        const alreadyExists = existingSteps.some(s => s.phase === selectedPhase && s.stage.value === stage.value);
+        const alreadyExists = (existingSteps || []).some(s => s.phase === selectedPhase && s.stage.value === stage.value);
         if (!alreadyExists) {
           onSelectStep(selectedPhase, stage, []);
         }
@@ -61,13 +61,13 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
     } else {
       // Single stage selection
       if (selectedStage) {
-        const alreadyExists = existingSteps.some(s => s.phase === selectedPhase && s.stage.value === selectedStage.value);
+        const alreadyExists = (existingSteps || []).some(s => s.phase === selectedPhase && s.stage.value === selectedStage.value);
         if (!alreadyExists) {
           onSelectStep(selectedPhase, selectedStage, selectedDocuments);
         }
       }
     }
-
+    
     // Reset and close
     setSelectedPhase(null);
     setSelectedStage(null);
@@ -77,7 +77,7 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
   };
 
   const isStepAlreadyAdded = (phase: ProcurementPhase, stageValue: ProcurementStage) => {
-    return existingSteps.some(step => 
+    return (existingSteps || []).some(step => 
       step.phase === phase && step.stage.value === stageValue
     );
   };

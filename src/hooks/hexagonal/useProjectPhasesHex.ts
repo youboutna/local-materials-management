@@ -4,7 +4,7 @@
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export interface ProjectPhase {
   id: string;
@@ -81,18 +81,11 @@ export function useProjectPhasesHex(projectId?: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project-phases-hex', projectId] });
       queryClient.invalidateQueries({ queryKey: ['project-detail', projectId] });
-      toast({
-        title: 'Succès',
-        description: 'Phases créées avec succès',
-      });
+      toast.success('Phases créées avec succès');
     },
     onError: (error) => {
       console.error('Error creating phases:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de créer les phases',
-        variant: 'destructive',
-      });
+      toast.error('Impossible de créer les phases');
     },
   });
 

@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Calculator, Plus, Trash2, Save, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import { calculateQuantity } from '@/types/quantityTakeoff';
 
 interface Material {
@@ -81,13 +81,9 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
 
   const fetchMaterials = async () => {
     try {
-      const { data, error } = await supabase
-        .from('materials')
-        .select('id, name, unit, category, price_per_unit')
-        .order('name');
-
-      if (error) throw error;
-      setMaterials(data || []);
+      const materialRepository = RepositoryFactory.getMaterialRepository();
+      const materials = await materialRepository.findAll();
+      setMaterials(materials);
     } catch (error) {
       console.error('Error fetching materials:', error);
       toast({
@@ -100,14 +96,10 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
 
   const fetchExistingCalculations = async () => {
     try {
-      const { data, error } = await supabase
-        .from('quantity_takeoffs')
-        .select('*')
-        .eq('project_id', projectId);
-
-      if (error) throw error;
+      const materialRepository = RepositoryFactory.getMaterialRepository();
+      const calculations = await materialRepository.findAll({ project_id: projectId });
       
-      const formattedCalculations: QuantityCalculation[] = (data || []).map(item => ({
+      const formattedCalculations: QuantityCalculation[] = calculations.map(item => ({
         id: item.id,
         materialId: item.material_id,
         elementType: item.element_type,
@@ -165,10 +157,8 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
     setLoading(true);
     try {
       // First, delete existing calculations for this project
-      await supabase
-        .from('quantity_takeoffs')
-        .delete()
-        .eq('project_id', projectId);
+      const quantityTakeoffRepository = RepositoryFactory.getQuantityTakeoffRepository();
+      await quantityTakeoffRepository.deleteByProjectId(projectId);
 
       // Then insert the new calculations
       const calculationsToSave = calculations.map(calc => ({
@@ -183,11 +173,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
         note: calc.note || null
       }));
 
-      const { error } = await supabase
-        .from('quantity_takeoffs')
-        .insert(calculationsToSave);
-
-      if (error) throw error;
+      await quantityTakeoffRepository.createMany(calculationsToSave);
 
       toast({
         title: "Métrés sauvegardés",
@@ -211,28 +197,15 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
   const generateAutomaticCalculations = async () => {
     try {
       // Get project materials
-      const { data: projectMaterials, error } = await supabase
-        .from('project_materials')
-        .select(`
-          id,
-          quantity,
-          material:materials(
-            id,
-            name,
-            unit,
-            category
-          )
-        `)
-        .eq('project_id', projectId);
-
-      if (error) throw error;
+      const materialRepository = RepositoryFactory.getMaterialRepository();
+      const projectMaterials = await materialRepository.findAll({ project_id: projectId });
 
       // Generate automatic calculations based on material categories and quantities
-      const autoCalculations: QuantityCalculation[] = (projectMaterials || []).map(pm => {
-        const material = pm.material;
+      const autoCalculations: QuantityCalculation[] = projectMaterials.map(pm => {
+        const material = pm;
         let elementType = 'Autre';
         let unit: 'm³' | 'm²' | 'm' | 'unité' = 'unité';
-        let length = pm.quantity;
+        let length = pm.availableQuantity || 0;
         let width, height;
 
         // Determine element type and dimensions based on material category

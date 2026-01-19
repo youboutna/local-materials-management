@@ -4,17 +4,25 @@
  */
 
 // Core adapters
-export { SupabaseHierarchyAdapter } from './SupabaseHierarchyAdapter';
+export { SupabaseMaterialAdapter } from './SupabaseMaterialAdapter';
 export { SupabaseProjectAdapter } from './SupabaseProjectAdapter';
 export { SupabasePhaseAdapter } from './SupabasePhaseAdapter';
-
-// Domain adapters
 export { SupabaseInspectionAdapter } from './SupabaseInspectionAdapter';
 export { SupabasePaymentAdapter } from './SupabasePaymentAdapter';
 export { SupabaseTaskAdapter } from './SupabaseTaskAdapter';
-export { SupabaseMaterialAdapter } from './SupabaseMaterialAdapter';
 export { SupabaseEmployeeAdapter } from './SupabaseEmployeeAdapter';
 export { SupabaseRiskAdapter } from './SupabaseRiskAdapter';
 export { SupabaseTenderAdapter } from './SupabaseTenderAdapter';
 export { SupabaseSupplierAdapter } from './SupabaseSupplierAdapter';
 export { SupabaseDocumentAdapter } from './SupabaseDocumentAdapter';
+export { SupabaseQuantityTakeoffAdapter } from './SupabaseQuantityTakeoffAdapter';
+export { SupabaseInspectionExecutionAdapter } from './SupabaseInspectionExecutionAdapter';
+export { SupabaseInspectionPaymentValidationAdapter } from './SupabaseInspectionPaymentValidationAdapter';
+export { SupabaseLoadDataAdapter } from './SupabaseLoadDataAdapter';
+export { SupabaseReportingAdapter } from './SupabaseReportingAdapter';
+export { SupabaseReportDataTransformerAdapter } from './SupabaseReportDataTransformerAdapter';
+export { SupabaseProjectFormAdapter } from './SupabaseProjectFormAdapter';
+export { SupabaseHierarchyAdapter } from './SupabaseHierarchyAdapter';
+
+// New adapters for hexagonal architecture
+export { SupabaseUserAdapter } from './SupabaseUserAdapter';

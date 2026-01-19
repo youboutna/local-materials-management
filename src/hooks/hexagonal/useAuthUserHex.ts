@@ -1,40 +1,23 @@
 /**
- * Hexagonal Hook: useAuthUserHex
- * Provides current authenticated user info via services
+ * Hexagonal Hook: useAuthUserHex - Uses AuthContext Provider
+ * Gets user data from AuthContext instead of direct Supabase calls
  */
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { User } from '@supabase/supabase-js';
-
-async function fetchCurrentUser(): Promise<User | null> {
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error) {
-    console.error('Error fetching user:', error);
-    return null;
-  }
-  return user;
-}
+import { useAuth } from '@/contexts/AuthContext';
 
 export function useAuthUserHex() {
-  const {
-    data: user,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ['auth-user-hex'],
-    queryFn: fetchCurrentUser,
-    staleTime: 60_000,
-    retry: 1,
-  });
+  // Use the existing useAuth hook from AuthContext
+  const authContext = useAuth();
 
   return {
-    user,
-    userId: user?.id ?? null,
-    isAuthenticated: !!user,
-    isLoading,
-    error,
-    refetch,
+    user: authContext.user,
+    userId: authContext.user?.id,
+    isAuthenticated: !!authContext.user,
+    isLoading: authContext.loading,
+    error: null, // AuthContext handles errors internally
+    refetch: () => {
+      // AuthContext doesn't expose refetch - session updates automatically
+      return Promise.resolve();
+    },
   };
 }
 

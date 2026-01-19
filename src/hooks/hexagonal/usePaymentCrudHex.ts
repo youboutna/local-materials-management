@@ -194,6 +194,42 @@ export function usePaymentCrud() {
     if (error) throw error;
   };
 
+  const uploadReceipt = async (file: File): Promise<string> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `receipt_${Date.now()}.${fileExt}`;
+    const filePath = `payments/${fileName}`;
+
+    const { data, error } = await supabase.storage
+      .from('documents')
+      .upload(filePath, file);
+
+    if (error) throw error;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('documents')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  };
+
+  const uploadInvoice = async (file: File): Promise<string> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `invoice_${Date.now()}.${fileExt}`;
+    const filePath = `payments/${fileName}`;
+
+    const { data, error } = await supabase.storage
+      .from('documents')
+      .upload(filePath, file);
+
+    if (error) throw error;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('documents')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  };
+
   return {
     payments,
     loading,
@@ -201,6 +237,8 @@ export function usePaymentCrud() {
     validatePayment,
     createPayment,
     updatePayment,
-    deletePayment
+    deletePayment,
+    uploadReceipt,
+    uploadInvoice
   };
 }

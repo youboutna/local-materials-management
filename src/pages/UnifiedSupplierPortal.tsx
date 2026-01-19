@@ -44,33 +44,39 @@ import {
   CreditCard,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useDocumentStorage } from "@/hooks/useDocumentStorage";
-import { User as SupabaseUser, Session } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Supplier,
   SupplierNotification,
   DocumentWithViewStatus,
 } from "@/types/supplier";
 import { useQuery } from "@tanstack/react-query";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import SupplierPaymentRequest from "@/components/suppliers/SupplierPaymentRequest";
 import EnhancedSupplierTenderPortal from "@/components/suppliers/EnhancedSupplierTenderPortal";
 import { SupplierInspectionsList } from "@/components/supplier/SupplierInspectionsList";
 import { useSupplierInspections } from "@/hooks/useSupplierInspections";
+import {
+  useSupplierPortalAuthHex,
+  useFetchSupplierProfileHex,
+  useSupplierLoginHex,
+  useSupplierSignUpHex,
+  useSupplierLogoutHex,
+  useSupplierPortalNotificationsHex,
+  useSupplierPortalPaymentRequestsHex,
+  useSupplierPortalDocumentsHex,
+  useUploadSupplierDocumentHex,
+  useAddSupplierTaskCommentHex,
+  useMarkTaskCompletedHex
+} from "@/hooks/hexagonal/useUnifiedSupplierPortalHex";
 // Payment initiation data is now handled through notifications tab
 
 const UnifiedSupplierPortal = () => {
   const { t } = useLanguage();
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoginMode, setIsLoginMode] = useState(true);
-  const [supplierProfile, setSupplierProfile] = useState<Supplier | null>(null);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadTitle, setUploadTitle] = useState("");
   const [uploadDescription, setUploadDescription] = useState("");
@@ -90,217 +96,20 @@ const UnifiedSupplierPortal = () => {
   const { toast } = useToast();
   const { uploadFile: storageUpload, uploading } = useDocumentStorage();
 
-  // Authentication state management
-  useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // Fetch supplier profile when user is authenticated
-  useEffect(() => {
-    if (user) {
-      fetchSupplierProfile();
-    }
-  }, [user]);
-
-  const fetchSupplierProfile = async () => {
-    if (!user) return;
-
-    // First try to find by user_id
-    let { data, error } = await supabase
-      .from("suppliers")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    // If no profile found by user_id, try to find by email and link it
-    if (!data && user.email) {
-      const { data: emailData, error: emailError } = await supabase
-        .from("suppliers")
-        .select("*")
-        .eq("email", user.email)
-        .maybeSingle();
-
-      if (emailData) {
-        // Link the existing supplier to this user
-        const { data: updatedData, error: updateError } = await supabase
-          .from("suppliers")
-          .update({ user_id: user.id })
-          .eq("id", emailData.id)
-          .select()
-          .single();
-
-        if (!updateError) {
-          setSupplierProfile(updatedData as Supplier);
-          toast({
-            title: "Profil lié",
-            description: "Votre profil fournisseur a été lié à votre compte.",
-          });
-          return;
-        }
-      }
-    }
-
-    if (data) {
-      setSupplierProfile(data as Supplier);
-    } else {
-      throw new Error(
-        "User must be authenticated and autorized to supplier portal"
-      );
-      //await createSupplierProfile();
-    }
-  };
-
-  const createSupplierProfile = async () => {
-    if (!user) return;
-
-    try {
-      const defaultSupplierData = {
-        user_id: user.id,
-        name: user.email?.split("@")[0] || "Fournisseur",
-        email: user.email,
-        contact_person: user.user_metadata?.full_name || "Contact",
-        is_active: true,
-      };
-
-      const { data, error } = await supabase
-        .from("suppliers")
-        .insert(defaultSupplierData)
-        .select()
-        .single();
-
-      if (!error) {
-        setSupplierProfile(data as Supplier);
-        toast({
-          title: "Profil créé",
-          description: "Votre profil fournisseur a été créé automatiquement.",
-        });
-      }
-    } catch (error) {
-      console.error("Error creating supplier profile:", error);
-    }
-  };
-
-  // Fetch notifications
-  const { data: notifications = [] } = useQuery({
-    queryKey: ["supplier-notifications", supplierProfile?.id],
-    enabled: !!supplierProfile?.id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("supplier_notifications")
-        .select("*")
-        .eq("supplier_id", supplierProfile!.id)
-        .order("sent_at", { ascending: false })
-        .limit(50);
-
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  // Fetch payment requests
-  const { data: paymentRequests = [], refetch: refetchPaymentRequests } =
-    useQuery({
-      queryKey: ["supplier-payment-requests", supplierProfile?.id],
-      enabled: !!supplierProfile?.id,
-      queryFn: async () => {
-        if (!supplierProfile?.id) return [];
-
-        console.log(
-          "Fetching payment requests for supplier:",
-          supplierProfile.id
-        );
-
-        // First try to get from supplier_payment_requests table
-        const { data: directRequests, error: directError } = await supabase
-          .from("supplier_payment_requests")
-          .select("*")
-          .eq("supplier_id", supplierProfile.id)
-          .order("requested_date", { ascending: false });
-
-        if (directError) {
-          console.error("Error fetching direct payment requests:", directError);
-        } else {
-          console.log("Direct payment requests:", directRequests);
-        }
-
-        // Also get from notifications table (for historical requests)
-        const { data: notificationRequests, error: notificationError } =
-          await supabase
-            .from("notifications")
-            .select("*")
-            .eq("recipient_id", supplierProfile.id)
-            .eq("type", "supplier_payment_request")
-            .order("created_at", { ascending: false });
-
-        if (notificationError) {
-          console.error(
-            "Error fetching notification payment requests:",
-            notificationError
-          );
-        } else {
-          console.log("Notification payment requests:", notificationRequests);
-        }
-
-        // Combine both sources and transform notification data
-        const combined = [
-          ...(directRequests || []),
-          ...(notificationRequests || []).map((notif) => ({
-            id: notif.id,
-            supplier_id: supplierProfile.id,
-            amount: (notif.metadata as any)?.amount || 0,
-            description: (notif.metadata as any)?.description || notif.message,
-            payment_reason:
-              (notif.metadata as any)?.payment_reason || "Non spécifié",
-            status: (notif.metadata as any)?.status || "pending",
-            requested_date: notif.created_at,
-            supporting_documents:
-              (notif.metadata as any)?.supporting_documents || [],
-            notes: (notif.metadata as any)?.notes,
-            project_id: (notif.metadata as any)?.project_id,
-            created_at: notif.created_at,
-            updated_at: notif.updated_at,
-          })),
-        ];
-
-        console.log("Combined payment requests:", combined);
-        return combined;
-      },
-    });
-
-  // Fetch documents
-  const { data: documents = [] } = useQuery({
-    queryKey: ["supplier-documents", user?.id, supplierProfile?.id],
-    enabled: !!user?.id && !!supplierProfile?.id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("documents")
-        .select(
-          `
-          *,
-          projects!documents_project_id_fkey (title, status)
-        `
-        )
-        .or(`assigned_to.eq.${user!.id},tags.cs.{${supplierProfile!.name}}`)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return data || [];
-    },
-  });
+  // Use hexagonal hooks
+  const { user, session, loading } = useSupplierPortalAuthHex();
+  const { data: supplierProfile } = useFetchSupplierProfileHex(user);
+  const { data: notifications = [] } = useSupplierPortalNotificationsHex(supplierProfile?.id);
+  const { data: paymentRequests = [], refetch: refetchPaymentRequests } = useSupplierPortalPaymentRequestsHex(supplierProfile?.id);
+  const { data: documents = [] } = useSupplierPortalDocumentsHex(user?.id, supplierProfile?.id, supplierProfile?.name);
+  
+  // Mutations
+  const loginMutation = useSupplierLoginHex();
+  const signUpMutation = useSupplierSignUpHex();
+  const logoutMutation = useSupplierLogoutHex();
+  const uploadDocumentMutation = useUploadSupplierDocumentHex();
+  const addTaskCommentMutation = useAddSupplierTaskCommentHex();
+  const markTaskCompletedMutation = useMarkTaskCompletedHex();
 
   // Fetch parsed invoices
   const { data: parsedInvoices = [] } = useQuery({
@@ -326,179 +135,68 @@ const UnifiedSupplierPortal = () => {
   } = useSupplierInspections(supplierProfile?.id || null);
 
   const handleLogin = async () => {
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
-
-      if (error) {
-        let errorMessage = "Erreur de connexion";
-        if (error.message === "Invalid login credentials") {
-          errorMessage = "Email ou mot de passe incorrect";
-        }
-        toast({
-          title: "Erreur",
-          description: errorMessage,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Connexion réussie",
-          description: "Bienvenue sur le portail fournisseur",
-        });
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-    } finally {
-      setLoading(false);
-    }
+    loginMutation.mutate({ email, password });
   };
 
   const handleSignUp = async () => {
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/supplier-portal`,
-        },
-      });
-
-      if (error) {
-        toast({
-          title: "Erreur d'inscription",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Inscription réussie",
-          description: "Vérifiez votre email pour confirmer votre compte",
-        });
-      }
-    } catch (error) {
-      console.error("Sign up error:", error);
-    } finally {
-      setLoading(false);
-    }
+    signUpMutation.mutate({ email, password });
   };
 
   const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      setSupplierProfile(null);
-      toast({
-        title: "Déconnexion réussie",
-        description: "Vous avez été déconnecté",
-      });
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
+    logoutMutation.mutate();
   };
 
   const handleFileUpload = async () => {
     if (!uploadFile || !uploadTitle.trim() || !user) return;
 
-    try {
-      const uploadResult = await storageUpload(
-        uploadFile,
-        `supplier-uploads/${user.id}`
-      );
+    const uploadResult = await storageUpload(
+      uploadFile,
+      `supplier-uploads/${user.id}`
+    );
 
-      if (!uploadResult.success) {
-        throw new Error(uploadResult.error || "Upload failed");
-      }
-
-      const { error } = await supabase.from("documents").insert({
-        title: uploadTitle,
-        description: uploadDescription,
-        file_url: uploadResult.url,
-        file_name: uploadFile.name,
-        mime_type: uploadFile.type,
-        file_size: uploadFile.size,
-        document_type: documentType as any,
-        uploaded_by: user.id,
-        status: "draft",
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Document téléchargé",
-        description: "Votre document a été téléchargé avec succès",
-      });
-
-      // Reset form
-      setUploadFile(null);
-      setUploadTitle("");
-      setUploadDescription("");
-    } catch (error: any) {
-      toast({
-        title: "Erreur de téléchargement",
-        description: error.message,
-        variant: "destructive",
-      });
+    if (!uploadResult.success) {
+      return;
     }
+
+    uploadDocumentMutation.mutate({
+      userId: user.id,
+      title: uploadTitle,
+      description: uploadDescription,
+      fileUrl: uploadResult.url,
+      fileName: uploadFile.name,
+      mimeType: uploadFile.type,
+      fileSize: uploadFile.size,
+      documentType: documentType,
+    });
+
+    // Reset form
+    setUploadFile(null);
+    setUploadTitle("");
+    setUploadDescription("");
   };
 
   const handleTaskComment = async (taskId: string) => {
-    if (!taskComment.trim() || !user) return;
+    if (!taskComment.trim() || !user || !supplierProfile?.id) return;
 
-    try {
-      const { error } = await supabase.from("supplier_notifications").insert({
-        supplier_id: supplierProfile?.id,
-        task_id: taskId,
-        notification_type: "task_comment",
-        email: user.email || "",
-        metadata: { comment: taskComment, from_supplier: true },
-      });
+    addTaskCommentMutation.mutate({
+      supplierId: supplierProfile.id,
+      taskId,
+      email: user.email || "",
+      comment: taskComment,
+    });
 
-      if (error) throw error;
-
-      toast({
-        title: "Commentaire ajouté",
-        description: "Votre commentaire a été envoyé",
-      });
-
-      setTaskComment("");
-      setSelectedTaskId(null);
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    setTaskComment("");
+    setSelectedTaskId(null);
   };
 
   const handleTaskCompletion = async (taskId: string) => {
-    if (!user) return;
+    if (!user || !supplierProfile?.id) return;
 
-    try {
-      const { error } = await supabase.from("supplier_notifications").insert({
-        supplier_id: supplierProfile?.id,
-        task_id: taskId,
-        notification_type: "task_completed",
-        email: user.email || "",
-        metadata: { status: "completed", from_supplier: true },
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Tâche marquée comme terminée",
-        description: "Le chef de projet a été notifié",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    markTaskCompletedMutation.mutate({
+      supplierId: supplierProfile.id,
+      taskId,
+      email: user.email || "",
+    });
   };
 
   const filteredDocuments = documents.filter((doc) => {

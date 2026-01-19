@@ -12,12 +12,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Send, FileText, Upload, Eye, Clock, CheckCircle, AlertTriangle, DollarSign, Receipt } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { PaymentRequestService, PaymentRequest, CreatePaymentRequestData } from '@/application/services/PaymentRequestService';
+import { AuthService } from '@/application/services/AuthService';
+import { DocumentService, CreateDocumentRequestDto } from '@/application/services/DocumentService';
 import { NotificationService } from '@/services/NotificationService';
+import { useProjectsHex } from '@/hooks/hexagonal/useProjectsHex';
+import { useAuth } from '@/hooks/hexagonal/useAuthHex';
 import EnhancedProjectSelector from '@/components/selectors/EnhancedProjectSelector';
 import { ProgressInvoiceForm } from '@/components/invoices/ProgressInvoiceForm';
 
-interface PaymentRequest {
+interface LocalPaymentRequest {
   id: string;
   supplier_id: string;
   project_id?: string;
@@ -28,8 +32,8 @@ interface PaymentRequest {
   status: 'pending' | 'approved' | 'rejected' | 'processed';
   requested_date: string;
   notes?: string;
-  approved_by?: string;
-  approved_at?: string;
+  created_at?: string;
+  updated_at?: string;
   rejection_reason?: string;
 }
 
@@ -64,12 +68,15 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
   onPrefillUsed 
 }) => {
   const [paymentRequests, setPaymentRequests] = useState<PaymentRequest[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [uploadedDocuments, setUploadedDocuments] = useState<string[]>([]);
   const [initiationId, setInitiationId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Use hexagonal hooks
+  const { projects, isLoading: projectsLoading } = useProjectsHex();
+  const { user } = useAuth();
 
   // Form fields
   const [projectId, setProjectId] = useState('');
@@ -78,6 +85,11 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
   const [description, setDescription] = useState('');
   const [paymentReason, setPaymentReason] = useState('');
   const [notes, setNotes] = useState('');
+
+  // Services
+  const paymentRequestService = new PaymentRequestService();
+  const authService = new AuthService();
+  const documentService = new DocumentService();
 
   // Handle prefill data from payment initiation
   useEffect(() => {
@@ -93,58 +105,14 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
 
   useEffect(() => {
     fetchPaymentRequests();
-    fetchProjects();
   }, [supplierId]);
 
   const fetchPaymentRequests = async () => {
     try {
-      // First try to get from supplier_payment_requests table
-      const { data: directRequests, error: directError } = await supabase
-        .from('supplier_payment_requests')
-        .select('*')
-        .eq('supplier_id', supplierId)
-        .order('requested_date', { ascending: false });
-
-      if (directError) {
-        console.error('Error fetching direct payment requests:', directError);
-      }
-
-      // Also get from notifications table for any legacy requests
-      const { data: notificationData, error: notificationError } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('recipient_id', supplierId)
-        .eq('type', 'supplier_payment_request')
-        .order('created_at', { ascending: false });
-
-      if (notificationError) {
-        console.error('Error fetching notification payment requests:', notificationError);
-      }
-      
-      // Transform notifications to payment requests format for legacy support
-      const transformedNotifications = (notificationData || []).map((notification: any) => ({
-        id: notification.id,
-        supplier_id: supplierId,
-        project_id: notification.metadata?.project_id || null,
-        amount: notification.metadata?.amount || 0,
-        description: notification.metadata?.description || '',
-        payment_reason: notification.metadata?.payment_reason || '',
-        supporting_documents: notification.metadata?.supporting_documents || [],
-        status: notification.metadata?.status || 'pending',
-        requested_date: notification.created_at,
-        notes: notification.metadata?.notes || '',
-      }));
-
-      // Combine both sources, prioritizing direct requests
-      const allRequests = [
-        ...(directRequests || []),
-        ...transformedNotifications.filter(notif => 
-          !(directRequests || []).some(direct => direct.id === notif.id)
-        )
-      ];
-      
-      setPaymentRequests(allRequests);
-      console.log('Fetched payment requests:', allRequests);
+      // Use PaymentRequestService instead of direct Supabase calls
+      const requests = await paymentRequestService.getPaymentRequestsBySupplier(supplierId);
+      setPaymentRequests(requests);
+      console.log('Fetched payment requests:', requests);
     } catch (error) {
       console.error('Error fetching payment requests:', error);
       toast({
@@ -155,41 +123,24 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
     }
   };
 
-  const fetchProjects = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, title, status')
-        .eq('status', 'en_cours');
-
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error) {
-      console.error('Error fetching projects:', error);
-    }
-  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     try {
-      // Simple file upload to storage
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `payment_requests/${fileName}`;
+      // Use DocumentService instead of direct Supabase calls
+      const documentData: CreateDocumentRequestDto = {
+        title: file.name,
+        file: file,
+        type: 'supporting_document' as any,
+        projectId: projectId || undefined,
+        description: 'Document support pour demande de paiement',
+      };
 
-      const { error } = await supabase.storage
-        .from('documents')
-        .upload(filePath, file);
-
-      if (error) throw error;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('documents')
-        .getPublicUrl(filePath);
-
-      setUploadedDocuments(prev => [...prev, publicUrl]);
+      const uploadedDocument = await documentService.uploadDocument(documentData, user?.id || 'anonymous');
+      
+      setUploadedDocuments(prev => [...prev, uploadedDocument.url || '']);
       toast({
         title: 'Document téléchargé',
         description: 'Le document a été ajouté à votre demande',
@@ -205,36 +156,22 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
   };
 
   const validatePaymentRequest = async (projectId: string): Promise<ValidationResult> => {
-    // Check guarantees, insurance, and inspections
-    const [guarantees, insurance, inspections] = await Promise.all([
-      supabase
-        .from('bank_guarantees')
-        .select('*')
-        .eq('project_id', projectId)
-        .eq('status', 'active')
-        .gte('expiry_date', new Date().toISOString().split('T')[0]),
-      
-      supabase
-        .from('insurance_certificates')
-        .select('*')
-        .eq('project_id', projectId)
-        .eq('status', 'active')
-        .gte('valid_until', new Date().toISOString().split('T')[0]),
-      
-      supabase
-        .from('inspections')
-        .select('*')
-        .eq('project_id', projectId)
-        .eq('status', 'validé')
-        .order('date', { ascending: false })
-        .limit(1)
-    ]);
-
-    return {
-      hasValidGuarantee: guarantees.data ? guarantees.data.length > 0 : false,
-      hasValidInsurance: insurance.data ? insurance.data.length > 0 : false,
-      hasRecentInspection: inspections.data ? inspections.data.length > 0 : false,
-    };
+    try {
+      // Use PaymentRequestService for validation instead of direct Supabase calls
+      const validation = await paymentRequestService.validateProjectRequirements(projectId);
+      return {
+        hasValidGuarantee: validation.hasValidGuarantee,
+        hasValidInsurance: validation.hasValidInsurance,
+        hasRecentInspection: validation.hasRecentInspection,
+      };
+    } catch (error) {
+      console.error('Error validating payment request:', error);
+      return {
+        hasValidGuarantee: false,
+        hasValidInsurance: false,
+        hasRecentInspection: false,
+      };
+    }
   };
 
 
@@ -248,8 +185,8 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
       return;
     }
 
-    // Check authentication
-    const { data: { session } } = await supabase.auth.getSession();
+    // Check authentication using AuthService
+    const session = await authService.getSession();
     if (!session) {
       toast({
         title: 'Erreur',
@@ -267,77 +204,44 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
         validationResult = await validatePaymentRequest(projectId);
       }
 
-      // Create payment request using the database function
-      const { data: paymentRequestData, error: requestError } = await supabase
-        .rpc('create_supplier_payment_request', {
-          supplier_id_param: supplierId,
-          amount_param: parseFloat(amount),
-          description_param: description,
-          payment_reason_param: paymentReason,
-          project_id_param: projectId || undefined,
-          supporting_documents_param: uploadedDocuments,
-          notes_param: notes || undefined
-        });
+      // Create payment request using PaymentRequestService
+      const paymentRequestData: CreatePaymentRequestData = {
+        supplierId,
+        amount: parseFloat(amount),
+        description,
+        paymentReason,
+        projectId: projectId || undefined,
+        supportingDocuments: uploadedDocuments,
+        notes: notes || undefined,
+      };
 
-      if (requestError) {
-        console.error('Error creating payment request:', requestError);
-        throw requestError;
-      }
+      const createdRequest = await paymentRequestService.createPaymentRequest(paymentRequestData);
+      console.log('Payment request created successfully:', createdRequest);
 
-      console.log('Payment request created successfully:', paymentRequestData);
+      // Create notification for managers using NotificationService
+      const notificationData = {
+        recipientId: supplierId,
+        title: 'Demande de paiement créée',
+        message: `Demande de paiement de ${parseFloat(amount).toLocaleString()} MRU créée`,
+        type: 'supplier_payment_request',
+        relatedId: createdRequest.id,
+        metadata: {
+          supplier_id: supplierId,
+          project_id: projectId,
+          amount: parseFloat(amount),
+          payment_reason: paymentReason,
+          description,
+          supporting_documents: uploadedDocuments,
+          notes,
+          status: 'pending',
+          has_valid_guarantee: validationResult?.hasValidGuarantee || false,
+          has_valid_insurance: validationResult?.hasValidInsurance || false,
+          has_recent_inspection: validationResult?.hasRecentInspection || false,
+          can_auto_approve: (validationResult?.hasValidGuarantee && validationResult?.hasValidInsurance && validationResult?.hasRecentInspection) || false
+        }
+      };
 
-      // Also create a notification for the supplier
-      const { error: notificationError } = await supabase
-        .from('notifications')
-        .insert({
-          recipient_id: supplierId,
-          title: 'Demande de paiement créée',
-          message: `Demande de paiement de ${parseFloat(amount).toLocaleString()} MRU créée`,
-          type: 'supplier_payment_request',
-          related_id: paymentRequestData[0]?.id,
-          metadata: {
-            supplier_id: supplierId,
-            project_id: projectId,
-            amount: parseFloat(amount),
-            payment_reason: paymentReason,
-            description,
-            supporting_documents: uploadedDocuments,
-            notes,
-            status: 'pending',
-          }
-        });
-
-      if (notificationError) {
-        console.error('Error creating notification:', notificationError);
-      }
-
-      // Get directors and managers for notifications
-      const { data: managersData } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .in('role_name', ['director', 'manager']);
-
-      // Send notifications to directors and managers
-      if (managersData && managersData.length > 0) {
-        const notifications = managersData.map(manager => ({
-          recipient_id: manager.user_id,
-          title: 'Nouvelle demande de paiement fournisseur',
-          message: `Une demande de paiement de ${parseFloat(amount).toLocaleString()} MRU a été soumise par un fournisseur`,
-          type: 'supplier_payment_request',
-          related_id: paymentRequestData[0]?.id,
-          metadata: {
-            supplier_id: supplierId,
-            project_id: projectId,
-            amount: parseFloat(amount),
-            has_valid_guarantee: validationResult?.hasValidGuarantee || false,
-            has_valid_insurance: validationResult?.hasValidInsurance || false,
-            has_recent_inspection: validationResult?.hasRecentInspection || false,
-            can_auto_approve: (validationResult?.hasValidGuarantee && validationResult?.hasValidInsurance && validationResult?.hasRecentInspection) || false
-          },
-        }));
-
-        await NotificationService.createBatchNotifications(notifications);
-      }
+      await NotificationService.createNotification(notificationData);
 
       toast({
         title: 'Demande envoyée',

@@ -1,105 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bell, DollarSign, FileText, Package, TrendingUp } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { Bell, DollarSign, FileText, TrendingUp } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { 
+  useSupplierAuthHex,
+  useSupplierProfileHex,
+  useSupplierNotificationsHex,
+  useSupplierPaymentsHex,
+  useSupplierDocumentsHex
+} from "@/hooks/hexagonal/useSupplierDashboardHex";
 
 const SupplierDashboard = () => {
   const { t } = useLanguage();
-  const [userId, setUserId] = useState<string | null>(null);
-  const [supplier, setSupplier] = useState<any>(null);
-
-  useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserId(session?.user?.id ?? null);
-    });
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUserId(session?.user?.id ?? null);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    const loadSupplier = async () => {
-      if (!userId) {
-        setSupplier(null);
-        return;
-      }
-      const { data, error } = await supabase
-        .from("suppliers")
-        .select("*")
-        .eq("user_id", userId)
-        .maybeSingle();
-      if (!error) setSupplier(data);
-    };
-    loadSupplier();
-  }, [userId]);
-
-  // Fetch notifications for supplier
-  const { data: notifications = [] } = useQuery({
-    queryKey: ["supplier-notifications", supplier?.id],
-    enabled: !!supplier?.id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("supplier_notifications")
-        .select("*")
-        .eq("supplier_id", supplier.id)
-        .order("sent_at", { ascending: false })
-        .limit(20);
-
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  // Fetch payment progress
-  const { data: payments = [] } = useQuery({
-    queryKey: ["supplier-payments", supplier?.id],
-    enabled: !!supplier?.id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("supplier_payments")
-        .select("*")
-        .eq("supplier_id", supplier.id)
-        .order("due_date", { ascending: false })
-        .limit(50);
-
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  // Fetch documents assigned to this supplier user
-  const { data: documents = [] } = useQuery({
-    queryKey: ["supplier-documents", userId, supplier?.name],
-    enabled: !!userId || !!supplier?.name,
-    queryFn: async () => {
-      // If no identifiers, return empty
-      if (!userId && !supplier?.name) return [] as any[];
-      const orFilter =
-        userId && supplier?.name
-          ? `assigned_to.eq.${userId},tags.cs.{${supplier.name}}`
-          : userId
-          ? `assigned_to.eq.${userId}`
-          : `tags.cs.{${supplier!.name}}`;
-      const { data, error } = await supabase
-        .from("documents")
-        .select("*")
-        .or(orFilter)
-        .order("created_at", { ascending: false })
-        .limit(20);
-
-      if (error) throw error;
-      return data || [];
-    },
-  });
+  const { userId } = useSupplierAuthHex();
+  const { data: supplier } = useSupplierProfileHex(userId);
+  const { data: notifications = [] } = useSupplierNotificationsHex(supplier?.id);
+  const { data: payments = [] } = useSupplierPaymentsHex(supplier?.id);
+  const { data: documents = [] } = useSupplierDocumentsHex(userId, supplier?.name);
 
   const totalPayments = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
   const pendingPayments = payments.filter((p) => p.status === "pending").length;

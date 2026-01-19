@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useUsersHex, useUserCreate, useUserUpdate, useUserToggleStatus } from '@/hooks/hexagonal';
 import { useRoleManagement } from '@/hooks/useUserRoles';
 import RoleBadge, { RoleType } from '@/components/RoleBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -41,6 +41,9 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
   const { toast } = useToast();
   const { assignRole, removeRole } = useRoleManagement();
   const { t } = useLanguage();
+  const { createUser } = useUserCreate();
+  const { updateUser } = useUserUpdate();
+  const { toggleUserStatus } = useUserToggleStatus();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     full_name: user?.full_name || '',
@@ -50,7 +53,6 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
     password: '',
     new_password: '',
     confirm_password: '',
-    newPassword: '',
     confirmPassword: '',
     is_active: user?.is_active ?? true
   });
@@ -72,45 +74,20 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
           return;
         }
 
-        // Create user with email and password
-        const { data, error } = await supabase.auth.signUp({
+        // Create user with hexagonal architecture
+        const userData = {
+          fullName: formData.full_name,
           email: formData.email,
-          password: formData.password,
-          options: {
-            data: {
-              full_name: formData.full_name,
-              phone: formData.phone,
-              national_id: formData.national_id
-            }
-          }
-        });
+          phone: formData.phone,
+          nationalId: formData.national_id,
+          isActive: formData.is_active
+        };
 
-        if (error) throw error;
-
-        if (data.user) {
-          // Update profile
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .upsert({
-              id: data.user.id,
-              full_name: formData.full_name,
-              phone: formData.phone,
-              national_id: formData.national_id
-            });
-
-          if (profileError) {
-            console.warn('Profile update warning:', profileError);
-          }
-
-          // Assign role
-          try {
-            await assignRole.mutateAsync({
-              userId: data.user.id,
-              roleName: selectedRole
-            });
-          } catch (roleError) {
-            console.warn('Role assignment warning:', roleError);
-          }
+        const result = await createUser.mutateAsync(userData);
+        
+        // Assign role if needed
+        if (selectedRole && selectedRole !== 'viewer') {
+          await assignRole.mutateAsync({ userId: result.id, role: selectedRole });
         }
 
         toast({

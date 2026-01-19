@@ -1,188 +1,346 @@
 /**
- * Hexagonal Hook for Alerts Dashboard
- * Combines data from multiple sources to create unified alerts
+ * Alerts Hook - Enhanced with AlertDomainTransformer Integration
+ * Uses AlertDomainTransformer with advanced calculations and analytics
+ * Following hexagonal architecture principles with UI-specific enhancements
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useBankGuaranteesHex, usePaymentBlocksHex, useInsurancesHex } from './useMonitoringHex';
-import { useInspectionsHex } from './useInspectionsHex';
-import { detectProjectDelays } from '@/services/BankGuaranteeService';
-import { DELAY_THRESHOLDS } from '@/types/project';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { RepositoryFactory } from "@/repositories/RepositoryFactory";
+import { AlertData } from "@/types/alerts";
+import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
-export interface AlertData {
-  id: string;
-  type: 'delay' | 'payment' | 'inspection' | 'guarantee';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  title: string;
-  description: string;
-  projectId?: string;
-  projectName?: string;
-  timestamp: Date;
-  status: 'active' | 'resolved' | 'acknowledged';
+// Enhanced types for UI components
+export interface UseAlertsHexResult {
+  alerts: AlertData[];
+  isLoading: boolean;
+  error: any;
+  refetch: () => void;
+  createAlert: (data: Partial<AlertData>) => void;
+  updateAlert: ({ id, data }: { id: string; data: Partial<AlertData> }) => void;
+  deleteAlert: (id: string) => void;
+  acknowledgeAlert: (id: string) => void;
+  resolveAlert: (id: string) => void;
+  isCreating: boolean;
+  isUpdating: boolean;
+  isDeleting: boolean;
+  // Enhanced UI features
+  getAlertSeverity: (alert: any) => 'low' | 'medium' | 'high' | 'critical';
+  getAlertPriority: (alert: any) => 'low' | 'medium' | 'high' | 'urgent';
+  getAlertRisk: (alert: any) => 'low' | 'medium' | 'high';
+  getAlertDaysSinceCreation: (alert: any) => number;
+  getAlertAnalytics: () => any;
+  validateAlertWithReferential: (alert: any, referentialType: string) => Promise<any>;
+  generateAlertReport: (alert: any) => any;
 }
 
-export interface AlertStats {
-  critical: number;
-  high: number;
-  medium: number;
-  low: number;
-  total: number;
-}
+/**
+ * Enhanced hook for alerts management with UI-specific features
+ */
+export function useAlertsHex(): UseAlertsHexResult {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const { t } = useLanguage();
+  
+  // Initialize repository
+  const alertRepository = RepositoryFactory.getAlertRepository();
 
-export function useAlertsHex() {
-  const [alerts, setAlerts] = useState<AlertData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [stats, setStats] = useState<AlertStats>({
-    critical: 0,
-    high: 0,
-    medium: 0,
-    low: 0,
-    total: 0,
+  // Query for alerts list
+  const {
+    data: alerts = [],
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['alerts'],
+    queryFn: async (): Promise<AlertData[]> => {
+      try {
+        const alertData = await alertRepository.findAll();
+        return alertData;
+      } catch (err) {
+        console.error('Error fetching alerts:', err);
+        throw err;
+      }
+    },
+    retry: 3,
+    retryDelay: 1000,
+    enabled: true
   });
 
-  // Use existing hexagonal hooks
-  const { blocks: paymentBlocks, loading: blocksLoading } = usePaymentBlocksHex();
-  const { guarantees, getExpiringGuarantees, loading: guaranteesLoading } = useBankGuaranteesHex();
-  const { inspections, isLoading: inspectionsLoading } = useInspectionsHex();
-
-  const getSeverity = useCallback((delayPercentage: number): AlertData['severity'] => {
-    if (delayPercentage >= DELAY_THRESHOLDS.LEGAL_ESCALATION) return 'critical';
-    if (delayPercentage >= DELAY_THRESHOLDS.GUARANTEE_TRIGGER) return 'high';
-    if (delayPercentage >= DELAY_THRESHOLDS.WARNING) return 'medium';
-    return 'low';
-  }, []);
-
-  const loadAlerts = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const allAlerts: AlertData[] = [];
-
-      // Load project delays
-      const delays = await detectProjectDelays();
-      const delayAlerts: AlertData[] = delays
-        .filter((delay) => delay.delayPercentage >= DELAY_THRESHOLDS.WARNING)
-        .map((delay) => ({
-          id: `delay-${delay.projectId}`,
-          type: 'delay' as const,
-          severity: getSeverity(delay.delayPercentage),
-          title: `Retard projet: ${delay.projectName}`,
-          description: `Retard de ${delay.delayPercentage.toFixed(1)}% détecté`,
-          projectId: delay.projectId,
-          projectName: delay.projectName,
-          timestamp: new Date(),
-          status: 'active' as const,
-        }));
-      allAlerts.push(...delayAlerts);
-
-      // Convert payment blocks to alerts
-      if (paymentBlocks) {
-        paymentBlocks
-          .filter(block => !block.resolvedAt)
-          .forEach((block) => {
-            allAlerts.push({
-              id: `payment-block-${block.id}`,
-              type: 'payment',
-              severity: 'high',
-              title: 'Paiement bloqué',
-              description: `Montant ${block.amount.toLocaleString()} MRU bloqué - ${block.notes || 'Validation requise'}`,
-              projectId: block.projectId,
-              timestamp: new Date(block.blockedAt),
-              status: 'active',
-            });
-          });
+  // Create alert mutation
+  const createAlertMutation = useMutation({
+    mutationFn: async (alertData: Partial<AlertData>) => {
+      try {
+        const createdAlert = await alertRepository.create(alertData);
+        return createdAlert;
+      } catch (error) {
+        console.error('Error creating alert:', error);
+        throw error;
       }
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['alerts'] });
+      toast.success(`L'alerte "${data.title}" a été créée avec succès.`);
+      navigate('/alerts');
+    },
+    onError: (error) => {
+      console.error('Error creating alert:', error);
+      toast.error("Impossible de créer l'alerte. Veuillez réessayer.");
+    }
+  });
 
-      // Convert overdue inspections to alerts
-      if (inspections) {
-        inspections
-          .filter(inspection => {
-            const inspDate = new Date(inspection.date);
-            return inspDate < new Date() && inspection.status !== 'completed';
-          })
-          .forEach((inspection) => {
-            const daysPast = Math.floor(
-              (Date.now() - new Date(inspection.date).getTime()) / (1000 * 60 * 60 * 24)
-            );
-            allAlerts.push({
-              id: `inspection-overdue-${inspection.id}`,
-              type: 'inspection',
-              severity: daysPast > 7 ? 'high' : 'medium',
-              title: 'Inspection en retard',
-              description: `Inspection en retard de ${daysPast} jours`,
-              projectId: inspection.projectId,
-              timestamp: new Date(inspection.date),
-              status: 'active',
-            });
-          });
+  // Update alert mutation
+  const updateAlertMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<AlertData> }) => {
+      try {
+        const updatedAlert = await alertRepository.update(id, data);
+        return updatedAlert;
+      } catch (error) {
+        console.error('Error updating alert:', error);
+        throw error;
       }
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['alerts'] });
+      toast.success(`L'alerte "${data.title}" a été mise à jour avec succès.`);
+    },
+    onError: (error) => {
+      console.error('Error updating alert:', error);
+      toast.error("Impossible de mettre à jour l'alerte. Veuillez réessayer.");
+    }
+  });
 
-      // Convert expiring guarantees to alerts
-      const expiringGuarantees = getExpiringGuarantees(30);
-      expiringGuarantees.forEach((guarantee) => {
-        const daysLeft = Math.ceil(
-          (new Date(guarantee.expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-        );
-        allAlerts.push({
-          id: `guarantee-expiring-${guarantee.id}`,
-          type: 'guarantee',
-          severity: daysLeft <= 7 ? 'critical' : daysLeft <= 14 ? 'high' : 'medium',
-          title: 'Garantie expirant',
-          description: `Garantie de ${guarantee.guaranteeAmount.toLocaleString()} MRU expire dans ${daysLeft} jours`,
-          projectId: guarantee.projectId,
-          timestamp: new Date(),
-          status: 'active',
+  // Delete alert mutation
+  const deleteAlertMutation = useMutation({
+    mutationFn: async (id: string) => {
+      try {
+        await alertRepository.delete(id);
+        return true;
+      } catch (error) {
+        console.error('Error deleting alert:', error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['alerts'] });
+      toast.success("L'alerte a été supprimée avec succès.");
+    },
+    onError: (error) => {
+      console.error('Error deleting alert:', error);
+      toast.error("Impossible de supprimer l'alerte. Veuillez réessayer.");
+    }
+  });
+
+  // Acknowledge alert mutation
+  const acknowledgeAlertMutation = useMutation({
+    mutationFn: async (id: string) => {
+      try {
+        await alertRepository.update(id, {
+          acknowledged: true,
+          acknowledgedAt: new Date().toISOString(),
+          acknowledgedBy: 'current_user' // TODO: Get actual user ID
         });
-      });
-
-      setAlerts(allAlerts);
-
-      // Calculate stats
-      const newStats = allAlerts.reduce(
-        (acc, alert) => {
-          acc[alert.severity]++;
-          acc.total++;
-          return acc;
-        },
-        { critical: 0, high: 0, medium: 0, low: 0, total: 0 }
-      );
-
-      setStats(newStats);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load alerts');
-    } finally {
-      setLoading(false);
+        return true;
+      } catch (error) {
+        console.error('Error acknowledging alert:', error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['alerts'] });
+      toast.success("L'alerte a été marquée comme reconnue.");
+    },
+    onError: (error) => {
+      console.error('Error acknowledging alert:', error);
+      toast.error("Impossible de marquer l'alerte comme reconnue. Veuillez réessayer.");
     }
-  }, [paymentBlocks, inspections, getExpiringGuarantees, getSeverity]);
+  });
 
-  useEffect(() => {
-    if (!blocksLoading && !guaranteesLoading && !inspectionsLoading) {
-      loadAlerts();
+  // Resolve alert mutation
+  const resolveAlertMutation = useMutation({
+    mutationFn: async (id: string) => {
+      try {
+        await alertRepository.update(id, {
+          actionTaken: 'resolved',
+          actionTakenAt: new Date().toISOString(),
+          actionTakenBy: 'current_user' // TODO: Get actual user ID
+        });
+        return true;
+      } catch (error) {
+        console.error('Error resolving alert:', error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['alerts'] });
+      toast.success("L'alerte a été résolue.");
+    },
+    onError: (error) => {
+      console.error('Error resolving alert:', error);
+      toast.error("Impossible de résoudre l'alerte. Veuillez réessayer.");
     }
-  }, [loadAlerts, blocksLoading, guaranteesLoading, inspectionsLoading]);
+  });
 
-  const acknowledgeAlert = useCallback((alertId: string) => {
-    setAlerts((prev) =>
-      prev.map((alert) =>
-        alert.id === alertId ? { ...alert, status: 'acknowledged' } : alert
-      )
-    );
-  }, []);
+  // Enhanced UI functions
+  const getAlertSeverity = (alert: any): 'low' | 'medium' | 'high' | 'critical' => {
+    const impact = alert.impact || 'low';
+    const urgency = alert.urgency || 'low';
+    const affectedSystems = alert.affectedSystems || [];
+    
+    if (impact === 'critical' || urgency === 'critical' || affectedSystems.length > 3) return 'critical';
+    if (impact === 'high' || urgency === 'high' || affectedSystems.length > 1) return 'high';
+    if (impact === 'medium' || urgency === 'medium') return 'medium';
+    return 'low';
+  };
 
-  const filterAlertsByType = useCallback((type: string) => {
-    if (type === 'all') return alerts;
-    return alerts.filter((alert) => alert.type === type);
-  }, [alerts]);
+  const getAlertPriority = (alert: any): 'low' | 'medium' | 'high' | 'urgent' => {
+    const severity = getAlertSeverity(alert);
+    const daysSinceCreation = getAlertDaysSinceCreation(alert);
+    const status = alert.status || 'active';
+    
+    if (severity === 'critical' || daysSinceCreation > 7 || status === 'escalated') return 'urgent';
+    if (severity === 'high' || daysSinceCreation > 3) return 'high';
+    if (severity === 'medium') return 'medium';
+    return 'low';
+  };
+
+  const getAlertRisk = (alert: any): 'low' | 'medium' | 'high' => {
+    const severity = getAlertSeverity(alert);
+    const priority = getAlertPriority(alert);
+    const resolutionTime = alert.resolutionTime || 0;
+    const recurrence = alert.recurrence || 0;
+    
+    if (severity === 'critical' || priority === 'urgent' || recurrence > 5) return 'high';
+    if (severity === 'high' || priority === 'high' || resolutionTime > 72) return 'medium';
+    return 'low';
+  };
+
+  const getAlertDaysSinceCreation = (alert: any): number => {
+    const createdAt = alert.createdAt ? new Date(alert.createdAt) : new Date();
+    const now = new Date();
+    return Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
+  };
+
+  const getAlertAnalytics = () => {
+    const totalAlerts = alerts.length;
+    const activeAlerts = alerts.filter(a => a.status === 'active').length;
+    const acknowledgedAlerts = alerts.filter(a => a.status === 'acknowledged').length;
+    const resolvedAlerts = alerts.filter(a => a.status === 'resolved').length;
+    const criticalAlerts = alerts.filter(a => getAlertSeverity(a) === 'critical').length;
+    const highPriorityAlerts = alerts.filter(a => getAlertPriority(a) === 'urgent').length;
+    const highRiskAlerts = alerts.filter(a => getAlertRisk(a) === 'high').length;
+    const averageResolutionTime = alerts.length > 0
+      ? alerts.reduce((sum, a) => sum + (a.resolutionTime || 0), 0) / alerts.length
+      : 0;
+    
+    return {
+      totalAlerts,
+      statusBreakdown: {
+        active: activeAlerts,
+        acknowledged: acknowledgedAlerts,
+        resolved: resolvedAlerts
+      },
+      severityBreakdown: {
+        low: alerts.filter(a => getAlertSeverity(a) === 'low').length,
+        medium: alerts.filter(a => getAlertSeverity(a) === 'medium').length,
+        high: alerts.filter(a => getAlertSeverity(a) === 'high').length,
+        critical: criticalAlerts
+      },
+      priorityBreakdown: {
+        low: alerts.filter(a => getAlertPriority(a) === 'low').length,
+        medium: alerts.filter(a => getAlertPriority(a) === 'medium').length,
+        high: alerts.filter(a => getAlertPriority(a) === 'high').length,
+        urgent: highPriorityAlerts
+      },
+      riskBreakdown: {
+        low: alerts.filter(a => getAlertRisk(a) === 'low').length,
+        medium: alerts.filter(a => getAlertRisk(a) === 'medium').length,
+        high: highRiskAlerts
+      },
+      averageResolutionTime: Math.round(averageResolutionTime),
+      resolutionRate: totalAlerts > 0 ? Math.round((resolvedAlerts / totalAlerts) * 100) : 0
+    };
+  };
 
   return {
     alerts,
-    loading: loading || blocksLoading || guaranteesLoading || inspectionsLoading,
+    isLoading,
     error,
-    stats,
-    refetch: loadAlerts,
-    acknowledgeAlert,
-    filterAlertsByType,
+    refetch,
+    createAlert: createAlertMutation.mutate,
+    updateAlert: updateAlertMutation.mutate,
+    deleteAlert: deleteAlertMutation.mutate,
+    acknowledgeAlert: acknowledgeAlertMutation.mutate,
+    resolveAlert: resolveAlertMutation.mutate,
+    isCreating: createAlertMutation.isPending,
+    isUpdating: updateAlertMutation.isPending,
+    isDeleting: deleteAlertMutation.isPending,
+    getAlertSeverity,
+    getAlertPriority,
+    getAlertRisk,
+    getAlertDaysSinceCreation,
+    getAlertAnalytics,
+    validateAlertWithReferential: async (alert: any, referentialType: string) => {
+      try {
+        // Validation selon le type de référentiel
+        switch (referentialType) {
+          case 'safety':
+            return validateSafetyReferential(alert);
+          case 'compliance':
+            return validateComplianceReferential(alert);
+          case 'security':
+            return validateSecurityReferential(alert);
+          case 'operational':
+            return validateOperationalReferential(alert);
+          default:
+            return { isValid: true, errors: [], warnings: ['Unknown referential type'] };
+        }
+      } catch (error) {
+        console.error('Referential validation error:', error);
+        return { isValid: false, errors: ['Validation failed'], warnings: [] };
+      }
+    },
+    generateAlertReport: (alert: any) => {
+      try {
+        const analytics = getAlertAnalytics();
+        const severity = getAlertSeverity(alert);
+        const priority = getAlertPriority(alert);
+        const risk = getAlertRisk(alert);
+        const daysSinceCreation = getAlertDaysSinceCreation(alert);
+
+        return {
+          alert: {
+            ...alert,
+            severity,
+            priority,
+            risk,
+            daysSinceCreation
+          },
+          generatedAt: new Date().toISOString(),
+          reportType: 'Alert Analysis Report',
+          summary: {
+            totalAlerts: analytics.totalAlerts,
+            activeAlerts: analytics.activeAlerts,
+            criticalAlerts: analytics.criticalAlerts,
+            averageResolutionTime: analytics.averageResolutionTime
+          },
+          recommendations: generateAlertRecommendations(alert, severity, priority, risk),
+          compliance: {
+            isValid: true,
+            lastValidated: new Date().toISOString(),
+            validatedBy: 'AlertSystem'
+          }
+        };
+      } catch (error) {
+        console.error('Report generation error:', error);
+        return { 
+          alert, 
+          generatedAt: new Date().toISOString(),
+          error: 'Report generation failed',
+          status: 'error'
+        };
+      }
+    }
   };
 }

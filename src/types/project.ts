@@ -13,7 +13,8 @@ export type ProjectStatus =
   | "pré-qualification"
   | "en conception"
   | "en construction"
-  | "en clôture";
+  | "en clôture"
+  | "en retard";
 
 // New construction phase types
 export type ConstructionPhase =

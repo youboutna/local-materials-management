@@ -63,6 +63,7 @@ import SupplierSubmissionDashboard from "./components/suppliers/SupplierSubmissi
 import WorkflowTest from "./pages/WorkflowTest";
 import MergedNavbar from "./components/MergedNavbar";
 import PhaseDetailsPage from "./components/project/PhaseDetailsPage";
+import { DEV_MODE } from "./config/constants";
 
 // Force rebuild - updated 2026-01-07
 const queryClient = new QueryClient({
@@ -77,6 +78,12 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  // En mode développement, ajouter automatiquement les rôles requis
+  if (DEV_MODE) {
+    // Rôles requis: admin, director, project_manager
+    console.log('🚀 Mode Développement - Rôles requis activés: admin, director, project_manager');
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary>
@@ -136,7 +143,13 @@ function App() {
                       <Route
                         path="/dashboard"
                         element={
-                          <RoleBasedRoute allowedRoles={["admin", "director"]}>
+                          <RoleBasedRoute
+                            allowedRoles={
+                              DEV_MODE 
+                                ? ["admin", "director", "project_manager"] // Rôles requis en mode dev
+                                : ["admin", "director"]
+                            }
+                          >
                             <Dashboard />
                           </RoleBasedRoute>
                         }
@@ -144,7 +157,13 @@ function App() {
                       <Route
                         path="/enhanced-dashboard"
                         element={
-                          <RoleBasedRoute allowedRoles={["admin", "director"]}>
+                          <RoleBasedRoute
+                            allowedRoles={
+                              DEV_MODE 
+                                ? ["admin", "director", "project_manager"] // Rôles requis en mode dev
+                                : ["admin", "director"]
+                            }
+                          >
                             <EnhancedDashboard />
                           </RoleBasedRoute>
                         }
@@ -154,12 +173,11 @@ function App() {
                         path="/projects"
                         element={
                           <RoleBasedRoute
-                            allowedRoles={[
-                              "admin",
-                              "director",
-                              "project_manager",
-                              "manager",
-                            ]}
+                            allowedRoles={
+                              DEV_MODE 
+                                ? ["admin", "director", "project_manager"] // Rôles requis en mode dev
+                                : ["admin", "director", "project_manager", "manager"]
+                            }
                           >
                             <Projects />
                           </RoleBasedRoute>
@@ -169,12 +187,11 @@ function App() {
                         path="/projects/create"
                         element={
                           <RoleBasedRoute
-                            allowedRoles={[
-                              "admin",
-                              "director",
-                              "project_manager",
-                              "manager",
-                            ]}
+                            allowedRoles={
+                              DEV_MODE 
+                                ? ["admin", "director", "project_manager"] // Rôles requis en mode dev
+                                : ["admin", "director", "project_manager", "manager"]
+                            }
                           >
                             <ProjectCreate />
                           </RoleBasedRoute>
@@ -184,12 +201,11 @@ function App() {
                         path="/projects/:id"
                         element={
                           <RoleBasedRoute
-                            allowedRoles={[
-                              "admin",
-                              "director",
-                              "project_manager",
-                              "manager",
-                            ]}
+                            allowedRoles={
+                              DEV_MODE 
+                                ? ["admin", "director", "project_manager"] // Rôles requis en mode dev
+                                : ["admin", "director", "project_manager", "manager"]
+                            }
                           >
                             <ProjectDetail />
                           </RoleBasedRoute>
@@ -199,12 +215,11 @@ function App() {
                         path="/projects/:id/edit"
                         element={
                           <RoleBasedRoute
-                            allowedRoles={[
-                              "admin",
-                              "director",
-                              "project_manager",
-                              "manager",
-                            ]}
+                            allowedRoles={
+                              DEV_MODE 
+                                ? ["admin", "director", "project_manager"] // Rôles requis en mode dev
+                                : ["admin", "director", "project_manager", "manager"]
+                            }
                           >
                             <ProjectEdit />
                           </RoleBasedRoute>

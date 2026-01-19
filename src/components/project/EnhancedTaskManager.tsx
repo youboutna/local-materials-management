@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +15,16 @@ import {
   Plus, Edit, Trash2, Calendar, User, AlertCircle, CheckCircle, Clock, Filter, 
   Target, DollarSign, TrendingUp, Link, ArrowRight, Layers
 } from 'lucide-react';
+import { 
+  useProjectPhasesForTasks,
+  useProjectTasks,
+  useCreateProjectTask,
+  useUpdateProjectTask,
+  useDeleteProjectTask,
+  type ProjectTaskFormData,
+  type ProjectTask,
+  type ProjectPhase
+} from '@/hooks/hexagonal/useEnhancedTasksHex';
 
 interface EnhancedTaskManagerProps {
   projectId: string;
@@ -140,21 +149,8 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   
   const queryClient = useQueryClient();
 
-  // Use provided tasks or fetch from database
-  const { data: fetchedTasks, isLoading } = useQuery({
-    queryKey: ['enhanced-task-assignments', projectId],
-    queryFn: async (): Promise<TaskAssignmentExtended[]> => {
-      const { data, error } = await supabase
-        .from('task_assignments')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!projectId && !propTasks,
-  });
+  // Use provided tasks or fetch from database using hexagonal hook
+  const { data: fetchedTasks, isLoading } = useProjectTasks(projectId);
 
   // Use props or fallback to fetched data
   const currentTasks = propTasks || fetchedTasks || [];
@@ -174,30 +170,8 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
     enabled: !!currentTasks && currentTasks.length > 0,
   });
 
-  // Fetch project phases (required for task creation)
-  const { data: phases = [] } = useQuery({
-    queryKey: ['project-phases', projectId],
-    queryFn: async (): Promise<ProjectPhase[]> => {
-      console.log('🔍 Fetching phases for project:', projectId);
-      const { data, error } = await supabase
-        .from('project_phases')
-        .select('id, phase_name, status, construction_phase, description, start_date, end_date')
-        .eq('project_id', projectId)
-        .order('start_date', { ascending: true });
-      
-      if (error) {
-        console.error('❌ Error fetching phases:', error);
-        throw error;
-      }
-      
-      console.log('✅ Phases fetched:', data);
-      return data?.map(phase => ({
-        ...phase,
-        construction_phase: phase.construction_phase || undefined
-      })) || [];
-    },
-    enabled: !!projectId && !propPhases,
-  });
+  // Fetch project phases using hexagonal hook
+  const { data: phases = [] } = useProjectPhasesForTasks(projectId);
 
   // Use props or fallback to fetched data
   const currentPhases = propPhases || phases || [];

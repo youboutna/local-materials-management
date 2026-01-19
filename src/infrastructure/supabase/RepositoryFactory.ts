@@ -16,7 +16,15 @@ import {
   IRiskRepository,
   ITenderRepository,
   ISupplierRepository,
-  IDocumentRepository
+  IDocumentRepository,
+  IQuantityTakeoffRepository,
+  IInspectionExecutionRepository,
+  IInspectionPaymentValidationRepository,
+  ILoadDataRepository,
+  IReportingRepository,
+  IReportDataTransformerRepository,
+  IProjectFormRepository,
+  IUserRepository
 } from '@/domain/repositories';
 
 import {
@@ -31,7 +39,15 @@ import {
   SupabaseRiskAdapter,
   SupabaseTenderAdapter,
   SupabaseSupplierAdapter,
-  SupabaseDocumentAdapter
+  SupabaseDocumentAdapter,
+  SupabaseQuantityTakeoffAdapter,
+  SupabaseInspectionExecutionAdapter,
+  SupabaseInspectionPaymentValidationAdapter,
+  SupabaseLoadDataAdapter,
+  SupabaseReportingAdapter,
+  SupabaseReportDataTransformerAdapter,
+  SupabaseProjectFormAdapter,
+  SupabaseUserAdapter
 } from './adapters';
 
 /**
@@ -50,6 +66,14 @@ let riskRepository: IRiskRepository | null = null;
 let tenderRepository: ITenderRepository | null = null;
 let supplierRepository: ISupplierRepository | null = null;
 let documentRepository: IDocumentRepository | null = null;
+let quantityTakeoffRepository: IQuantityTakeoffRepository | null = null;
+let inspectionExecutionRepository: IInspectionExecutionRepository | null = null;
+let inspectionPaymentValidationRepository: IInspectionPaymentValidationRepository | null = null;
+let reportDataTransformerRepository: IReportDataTransformerRepository | null = null;
+let loadDataRepository: ILoadDataRepository | null = null;
+let reportingRepository: IReportingRepository | null = null;
+let projectFormRepository: IProjectFormRepository | null = null;
+let userRepository: IUserRepository | null = null;
 
 /**
  * Repository Factory
@@ -177,6 +201,86 @@ export class RepositoryFactory {
   }
 
   /**
+   * Get Quantity Takeoff Repository instance
+   */
+  static getQuantityTakeoffRepository(): IQuantityTakeoffRepository {
+    if (!quantityTakeoffRepository) {
+      quantityTakeoffRepository = new SupabaseQuantityTakeoffAdapter();
+    }
+    return quantityTakeoffRepository;
+  }
+
+  /**
+   * Get Inspection Execution Repository instance
+   */
+  static getInspectionExecutionRepository(): IInspectionExecutionRepository {
+    if (!inspectionExecutionRepository) {
+      inspectionExecutionRepository = new SupabaseInspectionExecutionAdapter();
+    }
+    return inspectionExecutionRepository;
+  }
+
+  /**
+   * Get Inspection Payment Validation Repository instance
+   */
+  static getInspectionPaymentValidationRepository(): IInspectionPaymentValidationRepository {
+    if (!inspectionPaymentValidationRepository) {
+      inspectionPaymentValidationRepository = new SupabaseInspectionPaymentValidationAdapter();
+    }
+    return inspectionPaymentValidationRepository;
+  }
+
+  /**
+   * Get Load Data Repository instance
+   */
+  static getLoadDataRepository(): ILoadDataRepository {
+    if (!loadDataRepository) {
+      loadDataRepository = new SupabaseLoadDataAdapter();
+    }
+    return loadDataRepository;
+  }
+
+  /**
+   * Get Reporting Repository instance
+   */
+  static getReportingRepository(): IReportingRepository {
+    if (!reportingRepository) {
+      reportingRepository = new SupabaseReportingAdapter();
+    }
+    return reportingRepository;
+  }
+
+  /**
+   * Get Report Data Transformer Repository instance
+   */
+  static getReportDataTransformerRepository(): IReportDataTransformerRepository {
+    if (!reportDataTransformerRepository) {
+      reportDataTransformerRepository = new SupabaseReportDataTransformerAdapter();
+    }
+    return reportDataTransformerRepository;
+  }
+
+  /**
+   * Get Project Form Repository instance
+   */
+  static getProjectFormRepository(): IProjectFormRepository {
+    if (!projectFormRepository) {
+      projectFormRepository = new SupabaseProjectFormAdapter();
+    }
+    return projectFormRepository;
+  }
+
+  /**
+   * Get User Repository instance
+   */
+  static getUserRepository(): IUserRepository {
+    if (!userRepository) {
+      userRepository = new SupabaseUserAdapter();
+    }
+    return userRepository;
+  }
+
+  /**
    * Reset all repository instances
    * Useful for testing or when switching environments
    */
@@ -193,21 +297,13 @@ export class RepositoryFactory {
     tenderRepository = null;
     supplierRepository = null;
     documentRepository = null;
+    quantityTakeoffRepository = null;
+    inspectionExecutionRepository = null;
+    inspectionPaymentValidationRepository = null;
+    loadDataRepository = null;
+    reportingRepository = null;
+    reportDataTransformerRepository = null;
+    projectFormRepository = null;
+    userRepository = null;
   }
 }
-
-/**
- * Export convenience functions for direct access
- */
-export const getProjectRepository = () => RepositoryFactory.getProjectRepository();
-export const getPhaseRepository = () => RepositoryFactory.getPhaseRepository();
-export const getHierarchyRepository = () => RepositoryFactory.getHierarchyRepository();
-export const getInspectionRepository = () => RepositoryFactory.getInspectionRepository();
-export const getPaymentRepository = () => RepositoryFactory.getPaymentRepository();
-export const getTaskRepository = () => RepositoryFactory.getTaskRepository();
-export const getMaterialRepository = () => RepositoryFactory.getMaterialRepository();
-export const getEmployeeRepository = () => RepositoryFactory.getEmployeeRepository();
-export const getRiskRepository = () => RepositoryFactory.getRiskRepository();
-export const getTenderRepository = () => RepositoryFactory.getTenderRepository();
-export const getSupplierRepository = () => RepositoryFactory.getSupplierRepository();
-export const getDocumentRepository = () => RepositoryFactory.getDocumentRepository();

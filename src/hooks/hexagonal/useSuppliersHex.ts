@@ -1,187 +1,277 @@
 /**
- * Hook hexagonal pour les fournisseurs
- * Encapsule les use cases de l'architecture hexagonale avec CRUD complet
+ * Hexagonal Hook for Suppliers Management
+ * Implements complete hexagonal architecture flow:
+ * [UI] → [Hook] → [Factory] → [Adapter] → [Service] → [Transformers] → [Entities] → [Persistence]
  */
-import { useState, useEffect, useCallback } from 'react';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { 
-  GetSuppliersListUseCase,
-  GetSupplierByIdUseCase,
-  CreateSupplierUseCase,
-  type CreateSupplierInput
-} from '@/application/use-cases';
-import { Supplier } from '@/domain/entities/Supplier';
-import { supabase } from '@/integrations/supabase/client';
 
-// Singleton instances des use cases
-const supplierRepository = RepositoryFactory.getSupplierRepository();
-const getSuppliersListUseCase = new GetSuppliersListUseCase(supplierRepository);
-const getSupplierByIdUseCase = new GetSupplierByIdUseCase(supplierRepository);
-const createSupplierUseCase = new CreateSupplierUseCase(supplierRepository);
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { RepositoryFactory } from "@/repositories/RepositoryFactory";
+import { SupplierService } from "@/application/services/SupplierService";
+import { SupplierDomainTransformer, CreateSupplierRequestDto, UpdateSupplierRequestDto } from "@/dtos/transforms";
+import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
-export interface SupplierFormData {
-  name: string;
-  contact_person?: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  category?: string;
-  rating?: number;
-  nif?: string;
-  commerce_register_ref?: string;
-}
-
+// Types pour les hooks
 export interface UseSuppliersHexResult {
-  suppliers: Supplier[];
-  loading: boolean;
-  error: Error | null;
-  refetch: () => Promise<void>;
-  createSupplier: (data: CreateSupplierInput) => Promise<Supplier | null>;
-  updateSupplier: (id: string, data: Partial<SupplierFormData>) => Promise<boolean>;
-  deleteSupplier: (id: string) => Promise<boolean>;
+  suppliers: any[];
+  isLoading: boolean;
+  error: any;
+  refetch: () => void;
+  createSupplier: (data: CreateSupplierRequestDto) => void;
+  updateSupplier: ({ id, data }: { id: string; data: UpdateSupplierRequestDto }) => void;
+  deleteSupplier: (id: string) => void;
   isCreating: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
+  // Enhanced UI features
+  getSupplierReliability: (supplier: any) => number;
+  getSupplierPerformance: (supplier: any) => 'excellent' | 'good' | 'average' | 'poor';
+  getSupplierRiskLevel: (supplier: any) => 'low' | 'medium' | 'high';
+  getSupplierDeliveryTime: (supplier: any) => number;
+  getSupplierAnalytics: () => any;
+  validateSupplierWithReferential: (supplier: any, referentialType: string) => Promise<any>;
+  generateSupplierReport: (supplier: any) => any;
 }
 
+/**
+ * Hook principal pour la gestion des fournisseurs
+ * Architecture hexagonale complète avec mocks centralisés
+ */
 export function useSuppliersHex(): UseSuppliersHexResult {
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const { t } = useLanguage();
+  
+  // [Factory] → [Adapter] → [Service] → [Transformers] → [Entities]
+  // Utilisation de l'architecture existante
+  const supplierRepository = RepositoryFactory.getSupplierRepository();
+  const supplierService = new SupplierService(supplierRepository, SupplierDomainTransformer);
 
-  const fetchSuppliers = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await getSuppliersListUseCase.execute();
-      if (result.success) {
-        setSuppliers(result.suppliers);
-      } else {
-        throw new Error(result.error || 'Failed to fetch suppliers');
+  // Query pour la liste des fournisseurs
+  const {
+    data: suppliers = [],
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['suppliers'],
+    queryFn: async (): Promise<any[]> => {
+      try {
+        // Flux hexagonal complet - géré automatiquement par RepositoryFactory
+        // [Factory] → [Adapter] → [Service] → [Transformers] → [Persistence]
+        const suppliers = await supplierService.getAllSuppliers();
+          });
+        }
+        
+        // Production: Flux hexagonal complet
+        // [Factory] → [Adapter] → [Service] → [Transformers] → [Persistence]
+        const suppliers = await supplierService.getActiveSuppliers();
+        
+        // [Transformers]: Entities → DTOs
+        // Utilisation du Transformer existant : SupplierMapper
+        return SupplierMapper.toResponseDtoArray(suppliers);
+      } catch (error) {
+        console.error('Error fetching suppliers:', error);
+        throw new Error(error instanceof Error ? error.message : 'Failed to fetch suppliers');
       }
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch suppliers'));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
-  useEffect(() => {
-    fetchSuppliers();
-  }, [fetchSuppliers]);
-
-  const createSupplier = useCallback(async (data: CreateSupplierInput): Promise<Supplier | null> => {
-    setIsCreating(true);
-    try {
-      const result = await createSupplierUseCase.execute(data);
-      if (result.success && result.supplier) {
-        await fetchSuppliers();
-        return result.supplier;
+  // Mutation pour créer un fournisseur
+  const createSupplierMutation = useMutation({
+    mutationFn: async (supplierData: CreateSupplierRequestDto): Promise<SupplierResponseDto> => {
+      try {
+        // Flux hexagonal complet - géré automatiquement par RepositoryFactory
+        const supplierEntity = SupplierMapper.toDomainFromCreateDto(supplierData);
+        const supplierEntity = SupplierMapper.toDomainFromCreateDto(createDto);
+        const createdSupplier = await supplierService.createSupplier(supplierEntity);
+        
+        // [Transformers]: Entity → DTO
+        return SupplierMapper.toResponseDto(createdSupplier);
+      } catch (error) {
+        console.error('Error creating supplier:', error);
+        throw new Error(error instanceof Error ? error.message : 'Failed to create supplier');
       }
-      throw new Error(result.error || 'Failed to create supplier');
-    } finally {
-      setIsCreating(false);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+      toast.success("Fournisseur créé avec succès");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
     }
-  }, [fetchSuppliers]);
+  });
 
-  const updateSupplier = useCallback(async (id: string, data: Partial<SupplierFormData>): Promise<boolean> => {
-    setIsUpdating(true);
-    try {
-      const { error } = await supabase
-        .from('suppliers')
-        .update(data as any)
-        .eq('id', id as any);
-      
-      if (error) throw error;
-      await fetchSuppliers();
-      return true;
-    } catch (err) {
-      console.error('Failed to update supplier:', err);
-      return false;
-    } finally {
-      setIsUpdating(false);
+  // Mutation pour mettre à jour un fournisseur
+  const updateSupplierMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: UpdateSupplierRequestDto }): Promise<SupplierResponseDto> => {
+      try {
+        // Flux hexagonal complet - géré automatiquement par RepositoryFactory
+        const updateData = SupplierMapper.toUpdateData(data);
+        const updatedSupplier = await supplierService.updateSupplier(id, updateData);
+        
+        return SupplierMapper.toResponseDto(updatedSupplier);
+      } catch (error) {
+        console.error('Error updating supplier:', error);
+        throw new Error(error instanceof Error ? error.message : 'Failed to update supplier');
+      }
+    },
+          // Utilisation du Transformer existant : SupplierMapper
+          const updateDto = new UpdateSupplierRequestDto(
+            updates.name,
+            updates.contactEmail,
+            updates.contactPhone,
+            updates.address,
+            updates.nif,
+            updates.category || 'general',
+            updates.isActive ? 'active' : 'inactive',
+            updates.rating,
+            [],
+            updates.isActive ?? true
+          );
+          
+          const supplierEntity = SupplierMapper.toUpdateData(updateDto);
+          const updatedSupplier = { ...supplierEntity, id };
+          
+          return SupplierMapper.toResponseDto(updatedSupplier as any);
+        }
+        
+        // Production: Flux hexagonal complet
+        // [DTO] → [Entity] → [Service] → [Repository] → [Persistence]
+        // Utilisation du Transformer existant : SupplierMapper
+        const updateDto = new UpdateSupplierRequestDto(
+          updates.name,
+          updates.contactEmail,
+          updates.contactPhone,
+          updates.address,
+          updates.nif,
+          updates.category || 'general',
+          updates.isActive ? 'active' : 'inactive',
+          updates.rating,
+          [],
+          updates.isActive ?? true
+        );
+        
+        const supplierEntity = SupplierMapper.toUpdateData(updateDto);
+        const updatedSupplier = await supplierService.updateSupplier(id, supplierEntity);
+        
+        // [Transformers]: Entity → DTO
+        return SupplierMapper.toResponseDto(updatedSupplier);
+      } catch (error) {
+        console.error('Error updating supplier:', error);
+        throw new Error(error instanceof Error ? error.message : 'Failed to update supplier');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+      toast.success("Fournisseur mis à jour avec succès");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
     }
-  }, [fetchSuppliers]);
+  });
 
-  const deleteSupplier = useCallback(async (id: string): Promise<boolean> => {
-    setIsDeleting(true);
-    try {
-      const { error } = await supabase
-        .from('suppliers')
-        .delete()
-        .eq('id', id as any);
-      
-      if (error) throw error;
-      await fetchSuppliers();
-      return true;
-    } catch (err) {
-      console.error('Failed to delete supplier:', err);
-      return false;
-    } finally {
-      setIsDeleting(false);
+  // Mutation pour supprimer un fournisseur
+  const deleteSupplierMutation = useMutation({
+    mutationFn: async (id: string): Promise<void> => {
+      try {
+        // Flux hexagonal complet - géré automatiquement par RepositoryFactory
+        await supplierService.deleteSupplier(id);
+      } catch (error) {
+        console.error('Error deleting supplier:', error);
+        throw new Error(error instanceof Error ? error.message : 'Failed to delete supplier');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+      toast.success("Fournisseur supprimé avec succès");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
     }
-  }, [fetchSuppliers]);
+  });
 
   return {
     suppliers,
-    loading,
+    isLoading,
     error,
-    refetch: fetchSuppliers,
-    createSupplier,
-    updateSupplier,
-    deleteSupplier,
-    isCreating,
-    isUpdating,
-    isDeleting,
+    refetch,
+    createSupplier: createSupplierMutation.mutateAsync,
+    updateSupplier: updateSupplierMutation.mutateAsync,
+    deleteSupplier: deleteSupplierMutation.mutateAsync,
+    isCreating: createSupplierMutation.isPending,
+    isUpdating: updateSupplierMutation.isPending,
+    isDeleting: deleteSupplierMutation.isPending
   };
 }
 
-export interface UseSupplierHexResult {
-  supplier: Supplier | null;
-  loading: boolean;
-  error: Error | null;
-  refetch: () => Promise<void>;
-}
-
-export function useSupplierHex(supplierId: string | undefined): UseSupplierHexResult {
-  const [supplier, setSupplier] = useState<Supplier | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  const fetchSupplier = useCallback(async () => {
-    if (!supplierId) {
-      setSupplier(null);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await getSupplierByIdUseCase.execute(supplierId);
-      if (result.success) {
-        setSupplier(result.supplier);
-      } else {
-        throw new Error(result.error || 'Failed to fetch supplier');
+/**
+ * Hook pour les fournisseurs par spécialisation
+ */
+export function useSuppliersBySpecialization(specialization: string) {
+  // [Factory] → [Adapter] → [Service] → [Transformers] → [Entities]
+  // Utilisation de l'architecture existante
+  const supplierRepository = RepositoryFactory.getSupplierRepository();
+  const supplierService = new SupplierService(supplierRepository);
+  
+  return useQuery({
+    queryKey: ['suppliers', 'specialization', specialization],
+    queryFn: async (): Promise<SupplierResponseDto[]> => {
+      try {
+        if (DEV_MODE) {
+          // Mode développement: filtrer les données centralisées
+          const filteredSuppliers = allSuppliersData.filter((s: MockSupplier) => 
+            s.specialization.includes(specialization)
+          );
+          
+          // [Mock Data] → [DTOs] : Flux correct pour testing
+          // Utilisation du Transformer existant : SupplierMapper
+          return filteredSuppliers.map((supplier: MockSupplier) => {
+            // Créer une entité Supplier à partir du mock
+            const supplierEntity = SupplierMapper.toDomain({
+              id: supplier.id,
+              name: supplier.name,
+              email: supplier.contactEmail,
+              phone: supplier.contactPhone,
+              address: supplier.address,
+              nif: '', // MockSupplier n'a pas de nif, utiliser valeur par défaut
+              category: 'materials' as SupplierCategory, // MockSupplier n'a pas de category, utiliser valeur par défaut
+              status: supplier.isActive ? 'active' : 'inactive',
+              rating: supplier.rating,
+              contacts: [],
+              is_verified: true,
+              verified_at: supplier.createdAt,
+              workspace_id: 'workspace-1',
+              created_at: supplier.createdAt,
+              updated_at: supplier.updatedAt
+            });
+            
+            return SupplierMapper.toResponseDto(supplierEntity);
+          });
+        }
+        
+        // Production: Flux hexagonal complet
+        // [Factory] → [Adapter] → [Service] → [Transformers] → [Persistence]
+        const suppliers = await supplierService.searchSuppliers({ 
+          searchTerm: specialization,
+          isActive: true,
+          limit: 50
+        });
+        
+        // [Transformers]: Entities → DTOs
+        // Utilisation du Transformer existant : SupplierMapper
+        return SupplierMapper.toResponseDtoArray(suppliers.suppliers);
+      } catch (error) {
+        console.error('Error fetching suppliers by specialization:', error);
+        throw new Error(error instanceof Error ? error.message : 'Failed to fetch suppliers by specialization');
       }
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch supplier'));
-    } finally {
-      setLoading(false);
-    }
-  }, [supplierId]);
-
-  useEffect(() => {
-    fetchSupplier();
-  }, [fetchSupplier]);
-
-  return {
-    supplier,
-    loading,
-    error,
-    refetch: fetchSupplier,
-  };
+    },
+    enabled: !!specialization,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 }
+
+// Export par défaut pour compatibilité
+export const useSupplierHex = useSuppliersHex;

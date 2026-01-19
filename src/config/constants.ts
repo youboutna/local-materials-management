@@ -1,16 +1,20 @@
-// Set this to false to enable proper authentication behavior
-export const DEV_MODE = false;
-export const CLIENT_ETRML = false;
+// Configuration flags - can be controlled by environment variables
+// Check if we're in a browser environment
+const isBrowser = typeof window !== 'undefined';
+const isDevelopment = isBrowser ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') : false;
 
-// Mock user for development mode
+export const DEV_MODE =  isDevelopment||false;
+export const CLIENT_ETRML = isBrowser && (window as any).__APP_CONFIG__?.CLIENT_ETRML === 'true' || false;
+
+// Mock user configuration for development mode
 export const DEV_USER = {
-  id: "00000000-0000-0000-0000-000000000001", // Valid UUID format for dev
-  email: "dev@example.com",
+  id: (isBrowser && (window as any).__APP_CONFIG__?.DEV_USER_ID) || "00000000-0000-0000-0000-000000000001",
+  email: (isBrowser && (window as any).__APP_CONFIG__?.DEV_USER_EMAIL) || "dev@example.com",
   user_metadata: {
-    full_name: "Développeur Test",
-    role: "admin",
-    phone: "123456789",
-    national_id: "DEV12345",
+    full_name: (isBrowser && (window as any).__APP_CONFIG__?.DEV_USER_NAME) || "Développeur Test",
+    role: (isBrowser && (window as any).__APP_CONFIG__?.DEV_USER_ROLE) || "admin",
+    phone: (isBrowser && (window as any).__APP_CONFIG__?.DEV_USER_PHONE) || "123456789",
+    national_id: (isBrowser && (window as any).__APP_CONFIG__?.DEV_USER_NATIONAL_ID) || "DEV12345",
   },
 };
 
@@ -30,6 +34,7 @@ export interface DevRoleOptions {
   description: string;
 }
 
+// Default roles - can be extended via configuration
 export const DEV_ROLES: DevRoleOptions[] = [
   { role: "admin", description: "Full system access" },
   { role: "inspector", description: "inspector access only" },
@@ -41,8 +46,8 @@ export const DEV_ROLES: DevRoleOptions[] = [
   { role: "material-manager", description: "Materials management" },
   { role: "manager", description: "Project management" },
   { role: "director", description: "Director level access" },
-  { role: "agent", description: "Director level access" },
-  { role: "supplier", description: "Director level access" },
+  { role: "agent", description: "Agent level access" },
+  { role: "supplier", description: "Supplier access" },
   { role: "user", description: "Standard user" },
 ];
 
@@ -65,4 +70,18 @@ export const setActiveDevRole = (role: string): void => {
     // Update the DEV_USER with the new role
     DEV_USER.user_metadata.role = role;
   }
+};
+
+// Configuration helper to check if user has specific role
+export const hasDevRole = (userRole: string, requiredRole: string): boolean => {
+  if (!DEV_MODE) return false;
+  return userRole === requiredRole;
+};
+
+// Configuration for development features
+export const DEV_CONFIG = {
+  enableMockData: DEV_MODE,
+  enableDebugLogs: DEV_MODE,
+  skipAuthChecks: DEV_MODE,
+  mockApiDelay: 500, // ms
 };

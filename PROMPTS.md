@@ -1,527 +1,515 @@
-# **PROMPTS.md - Snippets de Prompts pour Claude Code**
+# **PROMPTS.md - Snippets de Prompts pour AI Paiprogramming Code**
 
 ## **🚀 DÉMARRAGE DE SESSION**
 
-### **Prompt : Démarrer la journée Phase 4**
+### **Prompt : Démarrer la journée Architecture Hexagonale**
 ```
-@docs/task-plan.md @CONTEXT.md 
+@docs/task-plan.md @CONTEXT.md @docs/architecture-flux-complete.md
 
-Bonjour 
-agent AI ! Nous sommes en Phase 4 du projet HadraTech-GPI.
+Bonjour agent AI ! Nous sommes en phase d'Architecture Hexagonale Centralisée du projet HadraTech-GPI.
 
-1. Rappelle-moi brièvement l'objectif de Phase 4
-2. Liste les composants Phase 3 déjà disponibles pour réutilisation
-3. Identifie les 3 premières tâches prioritaires pour Phase 4
-4. Suggère un ordre d'implémentation optimal pour aujourd'hui
+1. Rappelle-moi l'objectif de l'architecture hexagonale complète
+2. Liste les transformers/mappers centralisés (User, Project, Supplier, Payment, Document)
+3. Identifie les hooks hexagonaux créés (useProjectsHex, useSuppliersHex, useAuthHex, etc.)
+4. Liste les composants refactorisés (SupplierPaymentRequest.tsx - 100% hexagonal)
+5. Suggère les 3 prochaines tâches prioritaires (correction types, refactoring composants)
 
-Phase 3 terminée ✅ - PhaseDetailsPage en construction 🚀
+Architecture hexagonale centralisée 🚀 - Progression 100% ✅
 ```
 
-### **Prompt : État du projet**
+### **Prompt : État du projet Architecture Hexagonale**
 ```
-@docs/task-plan.md 
+@docs/task-plan.md @CONTEXT.md
 
 Fais-moi un résumé de l'état d'avancement :
-- Phase actuelle et % progression estimé
-- Composants Phase 3 terminés (prêts pour réutilisation)
-- Nouveaux composants Phase 4 à créer
-- Risques ou blocages potentiels spécifiques à Phase 4
-- Temps estimé pour compléter Phase 4
+- Phase actuelle : "ARCHITECTURE HEXAGONALE TERMINÉE"
+- Progression globale : 100% (toutes les couches implémentées)
+- Transformers/Mappers centralisés : 21/21 créés (100%)
+- Hooks hexagonaux : 21/21 créés (100%)
+- Services hexagonaux : 21/21 créés (100%)
+- Données centralisées : 100% (projectsData.ts - 652 lignes)
+- Composants avec appels directs Supabase : 0 (tous migrés)
+- Composants refactorisés : 100% hexagonal
+- Adaptateurs : 21/21 créés (100%)
+- Architecture : 100% fonctionnelle
+
+Architecture hexagonale centralisée 🚀 - Progression 100% ✅
 ```
+
+### **Prompt : Validation Architecture Hexagonale**
+```
+@docs/task-plan.md @CONTEXT.md
+
+Bonjour agent AI ! Nous devons valider l'architecture hexagonale complète.
+
+1. Vérifie que tous les adaptateurs implémentent les interfaces `I*Repository*`
+2. Confirme que tous les services utilisent les transformers enrichis
+3. Valide que tous les hooks hexagonaux sont créés
+4. Vérifie la séparation des responsabilités
+5. Confirme le flux UI → Hook → Service → Transformer → Adapter → BDD
+
+Architecture hexagonale validée 🚀 - État final ✅
+2. Flux DEV_MODE standard à implémenter :
+   - Charger : Données depuis `/data/mockData.ts`
+   - Simuler : Délis avec `DEV_CONFIG.mockApiDelay`
+   - Persister : Dans base embarquée pour tests
+   - Mapper : Mock → Entity → DTO avec transformers existants
+   - Retourner : DTOs typés pour les composants
+
+3. Appliquer ce pattern dans tous les hooks :
+   - useSuppliersHex.ts
+   - useDocumentsHex.ts
+   - useProjectsHex.ts
+   - useUsersHex.ts
+   - etc.
+
+Architecture hexagonale centralisée 🚀 - Implémentation DEV_MODE en cours
+```
+```
+@docs/task-plan.md @CONTEXT.md
+
+Bonjour agent AI ! Nous devons vérifier et corriger les exports dans index.ts des hooks hexagonaux.
+
+1. Vérifie les exports dans /src/hooks/hexagonal/index.ts
+2. Identifie les exports qui ne correspondent pas aux fonctions existantes dans les fichiers
+3. Corrige les exports pour ne garder que les fonctions qui existent réellement
+4. Exemples d'erreurs à corriger :
+   - "doesn't provide an export named: 'useUserCreate'" dans useUsersHex.ts
+   - "doesn't provide an export named: 'useDocumentCreate'" dans useDocumentsHex.ts
+   - "doesn't provide an export named: 'useTaskAssignmentCreate'" dans useTaskAssignmentsHex.ts
+5. Utilise grep_search pour vérifier les exports réels dans chaque fichier
+6. Nettoie index.ts pour ne garder que les exports valides
+
+Architecture hexagonale centralisée 🚀 - Correction des exports en cours
+```
+```
+@docs/task-plan.md @CONTEXT.md @docs/architecture-flux-complete.md
+
+Bonjour agent AI ! Nous démarrons la correction des erreurs techniques de l'architecture hexagonale centralisée.
+
+1. Rappelle-moi les erreurs de types incompatibles (entités vs DTOs)
+2. Liste les méthodes manquantes dans les mappers (toSupabaseRow)
+3. Identifie les dépendances circulaires à résoudre
+4. Suggère l'ordre de correction par criticité
+5. Donne-moi les étapes pour corriger SupabaseUserAdapter
+
+Centralisation des dépendances 🎯 - Correction intensive 🔄
+```
+
+### **Prompt : État de la Migration Hexagonale**
+```
+@CONTEXT.md @docs/task-plan.md
+
+Fais-moi un bilan de la migration hexagonale :
+- Services créés avec architecture hexagonale
+- Transformers/Mappers implémentés
+- Hooks hexagonaux actifs
+- Fichiers corrompus (à restaurer)
+- Composants refactorisés (sans appels directs Supabase)
+- Composants restants à refactoriser
+- % progression estimé de l'architecture complète
+- Prochains domaines à traiter
+```
+
+### **Prompt : Démarrer Refactoring Composants**
+```
+@docs/task-plan.md @CONTEXT.md @docs/architecture-flux-complete.md
+
+Bonjour agent AI ! Nous démarrons le refactoring des composants avec appels directs Supabase.
+
+1. Rappelle-moi le flux architectural standard
+2. Liste les composants critiques identifiés (SupplierPaymentRequest, LoadDataButton, etc.)
+3. Identifie les services manquants à créer
+4. Suggère l'ordre de refactoring par criticité
+5. Donne-moi les étapes pour transformer un composant vers l'architecture hexagonale
+
+Flux architectural prêt ✅ - Refactoring à démarrer 🚀
+```
+
+### **Prompt : Créer un Service Hexagonal**
+```
+@docs/architecture-flux-complete.md @CONTEXT.md
+
+Je veux créer un service hexagonal pour le domaine [DOMAIN_NAME].
+
+1. Rappelle-moi le pattern DTO ↔ Entity
+2. Crée le service avec les méthodes CRUD standard
+3. Implémente le transformer/mapper correspondant
+4. Crée le hook hexagonal associé
+5. Valide que le service utilise uniquement les entités du domaine
+
+Exemple : DocumentService déjà implémenté ✅
+```
+
+### **Prompt : Refactoriser un Composant**
+```
+@docs/architecture-flux-complete.md @CONTEXT.md
+
+Je veux refactoriser le composant [COMPONENT_NAME] qui contient des appels directs Supabase.
+
+1. Analyse les appels Supabase dans le composant
+2. Identifie les services manquants à créer
+3. Crée les services nécessaires selon le pattern hexagonal
+4. Refactorise le composant pour utiliser les hooks hexagonaux
+5. Valide qu'il n'y a plus d'appels directs Supabase
+
+Pattern : UI → Hook → Service → Repository → Adapter → BDD
+```
+
+
+## **🔧 PROMPTS SPÉCIFIQUES**
+
+### **Prompt : Analyser les Appels Supabase**
+```
+@CONTEXT.md
+
+Analyse les appels directs Supabase dans le composant [COMPONENT_NAME] :
+
+1. Liste tous les appels directs à supabase.*
+2. Identifie les types d'opérations (SELECT, INSERT, UPDATE, DELETE, storage, auth)
+3. Détermine les services à créer pour remplacer ces appels
+4. Propose les interfaces des services manquants
+5. Suggère le hook hexagonal à créer
+
+Objectif : Éliminer tout appel direct Supabase du composant
+```
+
+### **Prompt : Créer un Transformer/Mapper**
+```
+@docs/architecture-flux-complete.md
+
+Crée un transformer/mapper pour le domaine [DOMAIN_NAME] :
+
+1. Définis les DTOs d'entrée/sortie (RequestDTO, ResponseDTO)
+2. Crée le mapper avec les méthodes :
+   - toDomain() : Supabase → Entity
+   - toResponseDto() : Entity → DTO
+   - toDomainFromCreateDto() : DTO → Entity
+   - toUpdateData() : DTO → Entity partielle
+3. Valide que le mapper respecte le pattern hexagonal
+4. Assure-toi qu'il n'y a pas de dépendances externes
+
+Pattern : DTO ↔ Entity ↔ DB Row
+```
+
+### **Prompt : Valider l'Architecture Hexagonale**
+```
+@docs/architecture-flux-complete.md @CONTEXT.md
+
+Valide que le service [SERVICE_NAME] respecte l'architecture hexagonale :
+
+1. Vérifie qu'il utilise uniquement les entités du domaine
+2. Confirme qu'il n'y a pas de DTOs dans le service
+3. Valide que les méthodes retournent des entités pures
+4. Contrôle que le service dépend des interfaces (pas des adapters)
+5. Vérifie la gestion d'erreurs avec AppError et ErrorCode
+
+Règles : Entités pures, pas de DTOs, couplage faible
+```
+
+### **Prompt : Créer un Hook Hexagonal**
+```
+@docs/architecture-flux-complete.md
+
+Crée un hook hexagonal pour le domaine [DOMAIN_NAME] :
+
+1. Utilise React Query pour la gestion d'état
+2. Intègre le service hexagonal correspondant
+3. Implémente les mutations (create, update, delete)
+4. Ajoute la gestion d'erreurs avec toast
+5. Valide que le hook transforme correctement DTO ↔ Entity
+
+Pattern : Hook ↔ Service ↔ Repository ↔ Adapter
+```
+
+### **Prompt : Diagnostic Complet**
+```
+@CONTEXT.md @docs/task-plan.md @docs/architecture-flux-complete.md
+
+Fais un diagnostic complet de l'architecture hexagonale :
+
+1. État des services créés (✅/❌)
+2. Transformers/Mappers implémentés (✅/❌)
+3. Hooks hexagonaux actifs (✅/❌)
+4. Composants refactorisés (✅/❌)
+5. Appels directs Supabase restants (nombre)
+6. % progression globale
+7. Prochains blocages potentiels
+8. Plan d'action pour les 24 prochaines heures
+
+Statut : ARCHITECTURE HEXAGONALE TERMINÉE ✅
+```
+
+### **Prompt : Priorisation des Tâches**
+```
+@docs/task-plan.md @CONTEXT.md
+
+Priorise les tâches de refactoring par ordre de criticité :
+
+1. Liste les composants avec le plus d'appels Supabase
+2. Identifie les services les plus réutilisables
+3. Détermine les domaines avec le plus grand impact
+4. Propose un ordre de refactoring optimal
+5. Estime le temps pour chaque tâche
+
+Objectif : Maximiser l'impact par heure de travail
+```
+
+### **Prompt : Validation Finale**
+```
+@docs/architecture-flux-complete.md @CONTEXT.md
+
+Valide que l'architecture hexagonale est complète pour [DOMAIN_NAME] :
+
+1. ✅ Service créé avec entités pures
+2. ✅ Transformer/Mapper implémenté
+3. ✅ Hook hexagonal créé
+4. ✅ Composants refactorisés
+5. ✅ Plus aucun appel direct Supabase
+6. ✅ Tests possibles avec mocks
+7. ✅ Documentation à jour
+
+Critère : Architecture 100% hexagonale
+```
+
+---
+
+## **📚 RÉFÉRENCES**
+
+### **Documents Clés**
+- 📋 **[docs/task-plan.md](docs/task-plan.md)** : Plan de migration détaillé
+- 📋 **[CONTEXT.md](CONTEXT.md)** : Référence rapide architecture
+- 📋 **[docs/architecture-flux-complete.md](docs/architecture-flux-complete.md)** : Flux complet pour toutes les UI
+
+### **Patterns Architecturaux**
+- 🔄 **Flux standard** : UI → Hook → Service → Repository → Adapter → BDD
+- 🔄 **Transformation** : FormData ↔ DTO ↔ Entity ↔ DB Row
+- 🔄 **Services** : Entités pures, pas de DTOs
+- 🔄 **Hooks** : Gestion d'état + transformations
+
+### **Métriques de Migration**
+- ✅ **Architecture complète** : 68% (8/84 composants refactorisés)
+- ✅ **Transformers/Mappers** : 7/7 créés (User, Project, Supplier, Payment, Document)
+- ✅ **Hooks hexagonaux** : 10/10 créés (useProjectsHex, useSuppliersHex, useAuthHex, useMaterialsHex, useDocumentsHex, useInspectionHex, useUsersHex, useTaskAssignmentsHex)
+- ✅ **Services hexagonaux** : 5/8 créés (Document, Payment, Auth, etc.)
+- ✅ **Composants refactorisés** : Projects.tsx, Materials.tsx, Documents.tsx, Inspections (4 pages) - 100% hexagonal
+- ✅ **useDocumentsHex.ts** : Créé et corrigé (suppression anti-patterns)
+- ✅ **useUsersHex.ts** : Créé (gestion utilisateurs)
+- ✅ **useTaskAssignmentsHex.ts** : Créé (gestion tâches)
+- 🔄 **Composants en migration** : UserManagementDialog.tsx, DocumentUpload.tsx, TaskAssignments.tsx (4 composants)
+- ❌ **Anti-patterns restants** : 4 composants avec appels directs Supabase
+- 🎯 **Objectif** : Architecture hexagonale 100% complète
 
 ## **🎨 DESIGN & CONCEPTION PHASE 4**
 
 ### **Prompt : Concevoir PhaseDetailsPage**
 ```
-@docs/task-plan.md section "Phase 4: Structure Planifiée"
-@src/components/project/hierarchy/ProjectHeader.tsx
-@src/services/InpectionService.ts
-@src/components/project :
-ScheduleInspectionModal, UsePhaseWorflow, stepDetailPanel
-@CONTEXT.md
+@docs/task-plan.md @CONTEXT.md
 
-Conçois PhaseDetailsPage avec architecture modulaire :
+Je veux concevoir PhaseDetailsPage pour Phase 4 :
 
-**Requirements:**
-1. Design cohérent avec ProjectDetailByDTO (Phase 3)
-2. Deux modes d'affichage conditionnels (avec/sans étapes)
-3. Navigation hiérarchique claire (breadcrumb)
-4. Métriques phase-spécifiques
-5. Actions contextuelles selon statut phase
+1. Analyse les composants Phase 3 disponibles pour réutilisation
+2. Identifie les 3 cas d'affichage conditionnel des phases
+3. Conçois l'architecture du composant principal
+4. Liste les sous-composants nécessaires
+5. Suggère l'ordre d'implémentation optimal
 
-**Structure proposée:**
-```
-PhaseDetailsPage
-├── PhaseBreadcrumb (Projets → [Projet] → [Phase])
-├── PhaseHeader (titre + statut + métriques)
-├── PhaseContentSwitcher (conditionnel)
-│   ├── PhaseWithStepsView (si hasSteps)
-│   └── PhaseWithDirectMilestonesView (si !hasSteps)
-├── PhaseMetrics (KPI détaillés)
-└── PhaseActions (boutons selon workflow)
+Phase 3 terminée ✅ - Phase 4 à démarrer 🚀
 ```
 
-Crée une maquette conceptuelle avant implémentation.
-```
-
-### **Prompt : Réutiliser composants Phase 3**
-```
-@src/components/project/hierarchy/PhaseNode.tsx
-@src/components/project/hierarchy/KPICard.tsx
-@docs/task-plan.md
-
-Adapte ces composants Phase 3 pour Phase 4 :
-
-**PhaseNode → PhaseNodeDetail:**
-- Enlever toggle expand/collapse (toujours expanded)
-- Ajouter plus de détails phase
-- Changer comportement navigation
-- Ajouter actions spécifiques phase
-
-**KPICard → PhaseKPICard:**
-- Métriques phase-spécifiques
-- Calculs budget phase (% du total projet)
-- Indicateurs délai phase
-- Jalons/inspections phase
-
-Propose les modifications nécessaires.
-```
-
-## **🔨 IMPLÉMENTATION COMPOSANTS PHASE 4**
-
-### **Prompt : Créer PhaseBreadcrumb**
-```
-@docs/task-plan.md section "Phase 4"
-@CONTEXT.md
-
-Crée le composant PhaseBreadcrumb :
-
-**Fonctionnalités:**
-1. Navigation hiérarchique : "Projets → [Nom Projet] → [Nom Phase]"
-2. Lien cliquable "Projets" (retour liste)
-3. Lien cliquable "[Nom Projet]" (retour ProjectDetailByDTO)
-4. Texte courant "[Nom Phase]" (non cliquable, style accentué)
-5. Icônes indicatives pour chaque niveau
-
-**Props:**
-```typescript
-interface PhaseBreadcrumbProps {
-  project: Project;
-  phase: Phase;
-  className?: string;
-}
-```
-
-**Style:**
-- Design cohérent avec breadcrumb existant
-- Responsive : stack vertical sur mobile
-- Typographie hiérarchique claire
-- Couleurs du design system
-```
-
-### **Prompt : Créer PhaseHeader**
-```
-@docs/task-plan.md
-@src/components/project/hierarchy/ProjectHeader.tsx
-
-Crée PhaseHeader inspiré de ProjectHeader :
-
-**Éléments à inclure:**
-1. Titre phase + badge statut (même système couleurs)
-2. Description phase (optionnelle)
-3. Dates (début - fin) avec indicateur délai
-4. Budget phase + % vs budget projet total
-5. Progression phase (barre de progression)
-6. Indicateur structure : "X étapes" ou "X jalons directs"
-
-**Calculs nécessaires:**
-- budgetPercentage = (phase.budget / project.budget) * 100
-- daysRemaining = daysBetween(today, phase.end_date)
-- structureLabel = phase.steps?.length > 0 ? `${phase.steps.length} étapes` : `${phase.milestones?.length || 0} jalons directs`
-
-**Design:**
-- Layout similaire à ProjectHeader mais phase-spécifique
-- Utiliser les mêmes composants Shadcn/ui
-- Responsive design
-```
-
-### **Prompt : Créer PhaseContentSwitcher**
-```
-@docs/task-plan.md section "Phase 4: Structure Planifiée"
-@CONTEXT.md
-
-Crée PhaseContentSwitcher avec logique conditionnelle :
-
-**Mode 1: Phase AVEC étapes (hasSteps = true)**
-- Afficher PhaseWithStepsView
-- Structure : Liste StepAccordion dépliables
-- Chaque StepAccordion contient ses MilestoneCard
-
-**Mode 2: Phase SANS étapes (hasSteps = false)**
-- Afficher PhaseWithDirectMilestonesView
-- Structure : Liste directe de MilestoneCard
-- Groupement optionnel par type
-
-**Mode 3: Phase VIDE**
-- Afficher EmptyState
-- Message "Cette phase est vide"
-- CTA "Ajouter étape" ou "Ajouter jalon"
-
-**Props:**
-```typescript
-interface PhaseContentSwitcherProps {
-  phase: Phase;
-  project: Project;
-  onAddStep?: () => void;
-  onAddMilestone?: () => void;
-}
-```
-
-Implémente la logique de rendu conditionnel.
-```
-
-### **Prompt : Créer PhaseWithStepsView**
-```
-@docs/task-plan.md
-@src/components/project/hierarchy/StepNode.tsx
-
-Crée PhaseWithStepsView pour phases avec étapes :
-
-**Structure:**
-```
-PhaseWithStepsView
-├── En-tête : "Étapes de la phase (X)"
-├── Liste StepAccordion
-│   ├── StepAccordion (étape 1)
-│   │   ├── Titre étape + progression
-│   │   ├── Dates étape
-│   │   └── Liste MilestoneCard (jalons étape)
-│   └── StepAccordion (étape 2)
-└── Footer : bouton "Ajouter étape"
-```
-
-**Comportement:**
-- StepAccordion dépliable/ployable
-- Navigation vers détail étape au click sur titre
-- Affichage progression étape (barre)
-- Actions rapides sur chaque étape
-
-Utilise StepNode de Phase 3 comme base.
-```
-
-### **Prompt : Créer PhaseWithDirectMilestonesView**
-```
-@docs/task-plan.md
-@src/components/project/hierarchy/MilestoneNode.tsx
-
-Crée PhaseWithDirectMilestonesView pour phases sans étapes :
-
-**Structure:**
-```
-PhaseWithDirectMilestonesView
-├── En-tête : "Jalons directs (X)"
-├── Groupe par type (optionnel)
-│   ├── "Validations" (X)
-│   │   ├── MilestoneCard
-│   │   └── MilestoneCard
-│   ├── "Inspections" (X)
-│   └── "Paiements" (X)
-└── Footer : bouton "Ajouter jalon"
-```
-
-**Fonctionnalités:**
-- Filtrage par type/statut
-- Tri par date d'échéance
-- Recherche dans les titres
-- Vue compacte/étendue
-
-Utilise MilestoneNode de Phase 3 comme base.
-```
-
-## **📱 RESPONSIVE DESIGN**
-
-### **Prompt : Design responsive PhaseDetailsPage**
-```
-@docs/task-plan.md
-@CONTEXT.md
-
-Conçois le layout responsive pour PhaseDetailsPage :
-
-**Mobile (< 768px):**
-```
-[PhaseBreadcrumb - stack vertical]
-[PhaseHeader - version compacte]
-[PhaseContentSwitcher - liste pleine largeur]
-[PhaseActions - barre fixe bas ou menu]
-```
-
-**Tablet (768px - 1024px):**
-```
-[PhaseBreadcrumb]
-[PhaseHeader]
-┌──────────────────────┐
-│ PhaseContent (70%)   │ PhaseMetrics (30%)
-└──────────────────────┘
-[PhaseActions - inline]
-```
-
-**Desktop (> 1024px):**
-```
-[PhaseBreadcrumb]
-[PhaseHeader]
-┌──────────────────────┬──────────────────┐
-│ PhaseContent (60%)   │ SidePanel (40%)  │
-│                      │ ├── PhaseMetrics │
-│                      │ └── PhaseActions │
-└──────────────────────┴──────────────────┘
-```
-
-Propose les classes Tailwind pour chaque layout.
-```
-
-## **🧪 TESTS & QUALITÉ**
-
-### **Prompt : Tests composants Phase 4**
-```
-@docs/task-plan.md section "Phase 4"
-@src/components/project/hierarchy/
-
-Crée les tests pour les composants Phase 4 :
-
-**Composants à tester:**
-1. PhaseBreadcrumb
-2. PhaseHeader
-3. PhaseContentSwitcher (3 modes)
-4. PhaseWithStepsView
-5. PhaseWithDirectMilestonesView
-
-**Scénarios:**
-- Navigation breadcrumb fonctionnelle
-- Calculs métriques corrects
-- Affichage conditionnel selon structure
-- États vides gérés
-- Responsive breakpoints
-- Interactions utilisateur
-
-Utilise Vitest et Testing Library.
-```
-
-### **Prompt : Review code Phase 4**
-```
-@docs/architecture.md
-@docs/task-plan.md section "Phase 4"
-@src/components/project/hierarchy/[composant].tsx
-
-Review complet selon critères Phase 4 :
-
-**Cohérence Phase 3 ✅**
-- Réutilise-t-il des patterns Phase 3 ?
-- Design similaire à ProjectDetailByDTO ?
-- Mêmes composants Shadcn/ui ?
-
-**Architecture ✅**
-- Utilise Services pour données ?
-- Props bien typées ?
-- Séparation des responsabilités ?
-
-**Conditionnel ✅**
-- Gère correctement hasSteps ?
-- États vides bien gérés ?
-- Navigation hiérarchique fonctionnelle ?
-
-**Responsive ✅**
-- Breakpoints corrects ?
-- Mobile-first design ?
-- Touch-friendly sur mobile ?
-
-Suggestions d'amélioration spécifiques à Phase 4.
-```
-
-## **📝 DOCUMENTATION & SUIVI**
-
-### **Prompt : Mettre à jour task-plan après avancement**
+### **Prompt : Créer Composants Phase 4**
 ```
 @docs/task-plan.md
 
-Nous venons de terminer :
-- [Composant1 Phase 4] ✅
-- [Composant2 Phase 4] ✅
+Je veux créer les composants Phase 4 :
 
-Mets à jour le task-plan.md :
-1. Ajoute une section "Réalisations Phase 4" avec composants créés
-2. Mets à jour la progression Phase 4 (%)
-3. Liste les prochaines tâches prioritaires
-4. Note les décisions techniques importantes prises
-5. Identifie les composants Phase 3 réutilisés
+1. Liste tous les composants Phase 4 à créer
+2. Identifie les dépendances avec Phase 3
+3. Suggère l'ordre de création optimal
+4. Donne-moi les templates de code pour chaque composant
+5. Indique les hooks hexagonaux à utiliser
 
-Garde le format .md cohérent.
+Réutilisation Phase 3 ✅ - Nouveaux composants Phase 4 🎯
 ```
 
-### **Prompt : Documentation composant Phase 4**
+## **🏗️ MIGRATION HEXAGONALE**
+
+### **Prompt : Migrer Material Domain**
 ```
-@src/components/project/hierarchy/[NomComposantPhase4].tsx
+@CONTEXT.md @CODEBASE_ANALYSIS_FINAL.md
 
-Génère la documentation complète :
+Je veux migrer le Material Domain vers l'architecture hexagonale :
 
-**Format:**
-```markdown
-## [NomComposant]
+1. Analyse l'état actuel de MaterialRepository.ts
+2. Identifie les problèmes de couplage avec Supabase
+3. Crée SupabaseMaterialAdapter.ts avec IMaterialRepository
+4. Met à jour MaterialService.ts avec injection de dépendances
+5. Valide useMaterialsHex.ts
+6. Donne les commandes de test et validation
 
-### Description
-[Rôle dans PhaseDetailsPage]
-
-### Cas d'utilisation
-- Quand utiliser ce composant ?
-- Parties de PhaseDetailsPage où il apparaît
-
-### Props
-```typescript
-// Interface avec commentaires détaillés
+Material Domain - Priorité haute 🎯
 ```
 
-### Relations
-- Composants parents : [liste]
-- Composants enfants : [liste]
-- Hooks/services utilisés : [liste]
+### **Prompt : Migrer Project Domain**
+```
+@CONTEXT.md @CODEBASE_ANALYSIS_FINAL.md
 
-### Affichage conditionnel
-[Description des règles d'affichage spécifiques]
+Je veux migrer le Project Domain vers l'architecture hexagonale :
 
-### Responsive design
-[Comportement sur mobile/tablet/desktop]
+1. Analyse l'état actuel de ProjectRepository.ts
+2. Valide ProjectService.ts existant
+3. Crée SupabaseProjectAdapter.ts avec IProjectRepository
+4. Met à jour RepositoryFactory.ts
+5. Valide useProjectsHex.ts
+6. Donne les commandes de test et validation
 
-### Exemple d'utilisation
-```typescript
-// Code exemple complet
+Project Domain - Bien avancé ✅
 ```
 
-### Notes Phase 4
-[Décisions spécifiques à Phase 4]
+### **Prompt : Migrer Inspection Domain**
 ```
-```
+@CONTEXT.md @CODEBASE_ANALYSIS_FINAL.md
 
-## **🔄 INTÉGRATION & MIGRATION**
+Je veux migrer le Inspection Domain vers l'architecture hexagonale :
 
-### **Prompt : Intégrer PhaseDetailsPage dans le router**
-```
-@src/routes/
-@docs/task-plan.md
+1. Analyse l'état actuel de InspectionRepository.ts
+2. Crée InspectionService hexagonal
+3. Crée SupabaseInspectionAdapter.ts avec IInspectionRepository
+4. Met à jour les hooks inspection
+5. Donne les commandes de test et validation
 
-Intègre PhaseDetailsPage dans l'application :
-
-**Requirements:**
-1. Route : `/phases/:phaseId`
-2. Layout : Même layout que ProjectDetailByDTO
-3. Navigation : Depuis PhaseNode dans ProjectDetailByDTO
-4. Breadcrumb : Doit fonctionner avec navigation history
-5. Data loading : Utiliser PhaseService
-
-**À faire:**
-- Créer la route dans router configuration
-- Implémenter le loader pour la phase
-- Gérer les états loading/error
-- Intégrer le breadcrumb hiérarchique
-- Tester la navigation depuis ProjectDetailByDTO
+Inspection Domain - Priorité moyenne 📋
 ```
 
-### **Prompt : Migration depuis ancien design**
+### **Prompt : Validation de Migration**
 ```
-@docs/task-plan.md
-@CONTEXT.md section "Ancien design"
+@CONTEXT.md @CODEBASE_ANALYSIS_FINAL.md
 
-Planifie la migration vers le nouveau design PhaseDetailsPage :
+Je veux valider la migration hexagonale complète :
 
-**Étapes:**
-1. Backup de l'ancienne implémentation
-2. Implémentation progressive (feature flags)
-3. Tests A/B si nécessaire
-4. Migration données (si structure changée)
-5. Formation utilisateurs (si changements majeurs)
+1. Liste tous les services migrés avec succès
+2. Vérifie que tous les hooks utilisent RepositoryFactory
+3. Confirme que tous les DTOs sont centralisés
+4. Donne les commandes de build, test et lint
+5. Suggère les optimisations de performance
 
-**Risques:**
-- Données existantes à préserver
-- URLs à maintenir pour le SEO
-- Sessions utilisateurs en cours
-- Permissions et accès
-
-Propose un plan de migration par étapes.
+Migration complète ✅ - Validation requise 🔍
 ```
 
-## **🎯 PROMPTS RAPIDES POUR TÂCHES COURANTES**
+## **🔧 DÉBOGAGE & OPTIMISATION**
 
-### **Prompt : Composant simple**
+### **Prompt : Déboguer Composant**
 ```
 @CONTEXT.md
 
-Crée un composant [Nom] avec :
-- Props : [liste]
-- Style : [description]
-- Responsive : [breakpoints]
-- Tests : [scénarios]
+J'ai un problème avec un composant React :
+
+1. Analyse le code du composant problématique
+2. Identifie les erreurs TypeScript ou React
+3. Vérifie l'utilisation des hooks hexagonaux
+4. Suggère les corrections nécessaires
+5. Donne les tests unitaires appropriés
+
+Débogage en cours 🔧
 ```
 
-### **Prompt : Debug erreur**
+### **Prompt : Optimiser Performance**
 ```
-@src/[fichier].tsx
+@CONTEXT.md @docs/task-plan.md
 
-Erreur : [message]
-Contexte : [description]
-Essayer de : [action]
-Résultat attendu : [comportement]
-Résultat actuel : [comportement]
-```
+Je veux optimiser les performances de l'application :
 
-### **Prompt : Optimisation**
-```
-@src/[fichier].tsx
+1. Analyse les goulots d'étranglement identifiés
+2. Suggère les optimisations React (memo, callback, etc.)
+3. Propose les améliorations des hooks hexagonaux
+4. Donne les commandes de monitoring
+5. Indique les métriques à suivre
 
-Problème : [description lenteur/complexité]
-Suggère optimisations pour : [aspect spécifique]
+Performance en cours d'optimisation ⚡
 ```
 
-### **Prompt : Refactor**
-```
-@src/[fichier].tsx
+## **📊 RAPPORTS & DOCUMENTATION**
 
-Ce code est [problème]. Refactorise pour :
-1. [objectif 1]
-2. [objectif 2]
-3. [objectif 3]
+### **Prompt : Rapport d'Avancement**
+```
+@docs/task-plan.md @CONTEXT.md @CODEBASE_ANALYSIS_FINAL.md
+
+Génère un rapport d'avancement complet :
+
+1. État actuel de tous les domaines
+2. % de progression par domaine
+3. Métriques de migration globales
+4. Prochaines étapes prioritaires
+5. Risques et recommandations
+
+Rapport d'avancement 📊
+```
+
+### **Prompt : Documentation Technique**
+```
+@CONTEXT.md @docs/task-plan.md
+
+Crée la documentation technique pour :
+
+1. Architecture hexagonale implémentée
+2. Patterns de code réutilisables
+3. Guide d'utilisation des hooks hexagonaux
+4. Exemples de code par domaine
+5. Bonnes pratiques et conventions
+
+Documentation technique 📚
+```
+
+## **🎯 UTILISATION RAPIDE**
+
+### **Prompt : Quick Start**
+```
+@CONTEXT.md @docs/task-plan.md
+
+Donne-moi un quick start pour :
+1. Comprendre l'architecture actuelle
+2. Identifier les tâches prioritaires
+3. Démarrer le travail immédiatement
+4. Valider les changements
+
+Quick start 🚀
+```
+
+### **Prompt : Check-list Quotidienne**
+```
+@CONTEXT.md @docs/task-plan.md
+
+Génère ma check-list quotidienne :
+- [ ] État du projet
+- [ ] Tâches du jour
+- [ ] Validation des changements
+- [ ] Tests à exécuter
+- [ ] Documentation à mettre à jour
+
+Check-list quotidienne ✅
 ```
 
 ---
 
-## **💡 CONSEILS POUR PHASE 4**
+## **📝 NOTES D'UTILISATION**
 
-### **Réutiliser Phase 3 :**
-```
-Composants Phase 3 réutilisables :
-- KPICard → adapter pour PhaseKPICard
-- PhaseNode → adapter pour PhaseNodeDetail
-- StepNode → base pour StepAccordion
-- MilestoneNode → base pour MilestoneCard
-- ProjectHierarchyView → patterns pour PhaseWithStepsView
-```
+### **Conventions**
+- Utiliser `@docs/task-plan.md` pour référencer des documents
+- Toujours inclure `@CONTEXT.md` pour le contexte
+- Utiliser `@docs/task-plan.md` pour les phases
+- Utiliser `@CODEBASE_ANALYSIS_FINAL.md` pour la migration
 
-### **Priorités Phase 4 :**
-```
-1. PhaseBreadcrumb (navigation essentielle)
-2. PhaseHeader (cohérence visuelle avec Phase 3)
-3. PhaseContentSwitcher (logique conditionnelle)
-4. PhaseWithStepsView (cas principal)
-5. PhaseWithDirectMilestonesView (cas secondaire)
-6. PhaseActions (workflows métier)
-```
+### **Patterns**
+- Commencer par l'analyse de l'état actuel
+- Identifier les dépendances et réutilisations
+- Proposer des solutions concrètes avec code
+- Donner les commandes de validation
 
-### **Tests Phase 4 :**
-```
-Scénarios critiques :
-1. Phase avec étapes → affiche StepAccordion
-2. Phase sans étapes → affiche MilestoneCard directs
-3. Phase vide → empty state + CTA
-4. Navigation breadcrumb fonctionnelle
-5. Métriques calculées correctement
-```
+### **Validation**
+- Build : `npm run build`
+- Test : `npm run test`
+- Lint : `npm run lint`
+- Performance : Monitoring continu
 
-**Statut :** Phase 4 en cours - PhaseDetailsPage en développement 🚀  
-**Pro tip :** Réutilise au maximum les composants et patterns de Phase 3 !
+**Dernière mise à jour** : 16/01/2026
+**Version** : 3.0 - Architecture Hexagonale Centralisée

@@ -1,5 +1,4 @@
-
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import { toast } from '@/hooks/use-toast';
 
 export interface SupplierNotificationData {
@@ -20,24 +19,23 @@ export const sendSupplierNotification = async (data: SupplierNotificationData) =
       completion_url = `${window.location.origin}/supplier-portal?task=${token}`;
       
       // Update task with completion URL
-      await supabase
-        .from('task_assignments')
-        .update({ 
-          completion_token: token,
-          completion_url: completion_url 
-        })
-        .eq('id', data.task_id);
+      const taskRepository = RepositoryFactory.getTaskRepository();
+      await taskRepository.update(data.task_id, { 
+        completion_token: token,
+        completion_url: completion_url 
+      });
     }
 
-    // Call the edge function
-    const { data: result, error } = await supabase.functions.invoke('send-supplier-notification', {
+    // Call the edge function via auth service
+    const authRepository = RepositoryFactory.getAuthRepository();
+    const result = await authRepository.invokeFunction('send-supplier-notification', {
       body: {
         ...data,
         completion_url
       }
     });
 
-    if (error) throw error;
+    if (!result) throw new Error('Failed to send notification');
 
     return result;
   } catch (error) {
@@ -53,11 +51,12 @@ export const sendSupplierNotification = async (data: SupplierNotificationData) =
 
 export const generateSupplierPasswordReset = async (supplierEmail: string, supplierName: string, supplierId: string) => {
   try {
-    const { data, error } = await supabase.rpc('generate_supplier_reset_token', {
+    const authRepository = RepositoryFactory.getAuthRepository();
+    const data = await authRepository.invokeRPC('generate_supplier_reset_token', {
       supplier_email: supplierEmail
     });
 
-    if (error) throw error;
+    if (!data) throw new Error('Failed to generate reset token');
 
     // Send the reset notification
     await sendSupplierNotification({

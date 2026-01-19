@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,42 +17,13 @@ import UserSelector from '@/components/selectors/UserSelector';
 import DocumentViewer from '@/components/documents/DocumentViewer';
 import DocumentSection from '@/components/common/DocumentSection';
 import { format } from 'date-fns';
-
-interface Inspection {
-  id: string;
-  project_id: string;
-  inspector: string;
-  inspection_date: string;
-  status: string;
-  progress_at_inspection: number;
-  comments?: string;
-  phase_id?: string;
-  supporting_documents?: string[];
-  inspection_type?: string;
-  defects_found?: number;
-  recommendations?: string;
-  next_inspection_date?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-interface InspectionFormData {
-  project_id: string;
-  inspector: string;
-  inspection_date: string;
-  status: string;
-  progress_at_inspection: number;
-  comments: string;
-  phase_id: string;
-  supporting_documents: string[];
-  inspection_type: string;
-  defects_found: number;
-  recommendations: string;
-  next_inspection_date: string;
-}
+import {
+  useEnhancedInspectionCrudHex,
+  type Inspection,
+  type InspectionFormData
+} from '@/hooks/hexagonal/useEnhancedInspectionCrudHex';
 
 const EnhancedInspectionCrud = () => {
-  const [inspections, setInspections] = useState<Inspection[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isViewMode, setIsViewMode] = useState(false);
@@ -75,6 +45,16 @@ const EnhancedInspectionCrud = () => {
     next_inspection_date: ''
   });
 
+  // Use hexagonal hook
+  const {
+    inspections,
+    isLoading,
+    error,
+    createInspection,
+    updateInspection,
+    deleteInspection
+  } = useEnhancedInspectionCrudHex();
+
   const inspectionStatuses = [
     { value: 'scheduled', label: 'Programmée', color: 'bg-blue-100 text-blue-800', icon: Clock },
     { value: 'in_progress', label: 'En cours', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
@@ -91,51 +71,6 @@ const EnhancedInspectionCrud = () => {
     { value: 'final', label: 'Réception Finale' },
     { value: 'compliance', label: 'Conformité Réglementaire' }
   ];
-
-  useEffect(() => {
-    loadInspections();
-  }, []);
-
-  const loadInspections = async () => {
-    try {
-      console.log('Loading inspections...');
-      
-      const { data, error } = await supabase
-        .from('inspections')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
-      
-      console.log('Raw inspections data:', data);
-      
-      const transformedInspections: Inspection[] = (data || []).map(inspection => ({
-        ...inspection,
-        inspection_date: inspection.date || '',
-        comments: inspection.comments || undefined,
-        phase_id: inspection.phase_id || undefined
-      }));
-      
-      console.log('Transformed inspections:', transformedInspections);
-      setInspections(transformedInspections);
-      
-      toast({
-        title: 'Succès',
-        description: `${transformedInspections.length} inspection(s) chargée(s)`,
-      });
-      
-    } catch (error: any) {
-      console.error('Error loading inspections:', error);
-      toast({
-        title: 'Erreur',
-        description: `Impossible de charger les inspections: ${error?.message || 'Erreur inconnue'}`,
-        variant: 'destructive'
-      });
-    }
-  };
 
   const resetForm = () => {
     setFormData({
@@ -217,85 +152,24 @@ const EnhancedInspectionCrud = () => {
 
     try {
       if (isEditing && selectedInspection) {
-        // Update in Supabase
-        const { error } = await supabase
-          .from('inspections')
-          .update({
-            project_id: formData.project_id,
-            inspector: formData.inspector,
-            date: formData.inspection_date,
-            status: formData.status,
-            progress_at_inspection: formData.progress_at_inspection,
-            comments: formData.comments,
-            phase_id: formData.phase_id || null,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', selectedInspection.id);
-
-        if (error) throw error;
-
-        await loadInspections();
-        toast({
-          title: "Succès",
-          description: "Inspection mise à jour avec succès",
-        });
+        await updateInspection(selectedInspection.id, formData);
       } else {
-        // Insert in Supabase
-        const { error } = await supabase
-          .from('inspections')
-          .insert({
-            project_id: formData.project_id,
-            inspector: formData.inspector,
-            date: formData.inspection_date,
-            status: formData.status,
-            progress_at_inspection: formData.progress_at_inspection,
-            comments: formData.comments,
-            phase_id: formData.phase_id || null
-          });
-
-        if (error) throw error;
-
-        await loadInspections();
-        toast({
-          title: "Succès",
-          description: "Inspection créée avec succès",
-        });
+        await createInspection(formData);
       }
       
       setIsFormOpen(false);
       resetForm();
     } catch (error) {
       console.error('Error saving inspection:', error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la sauvegarde",
-        variant: "destructive",
-      });
     }
   };
 
   const handleDelete = async (inspectionId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette inspection ?')) {
       try {
-        const { error } = await supabase
-          .from('inspections')
-          .delete()
-          .eq('id', inspectionId);
-
-        if (error) throw error;
-
-        await loadInspections();
-        toast({
-          title: "Succès",
-          description: "Inspection supprimée avec succès",
-        });
+        await deleteInspection(inspectionId);
       } catch (error) {
         console.error('Error deleting inspection:', error);
-        toast({
-          title: "Erreur",
-          description: "Erreur lors de la suppression",
-          variant: "destructive",
-        });
       }
     }
   };
@@ -311,6 +185,14 @@ const EnhancedInspectionCrud = () => {
   const handleDocumentSelect = (documents: any[]) => {
     setUploadedDocuments(documents);
   };
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="text-red-600">Erreur: {error instanceof Error ? error.message : 'Erreur inconnue'}</div>
+      </div>
+    );
+  }
 
   return (
     <Card>
@@ -347,24 +229,18 @@ const EnhancedInspectionCrud = () => {
                 
                 <div>
                   <Label>Inspecteur *</Label>
-                  <SupplierSelector
-                    value={{
-                      name: formData.inspector,
-                      contact: '',
-                      leadTime: 0
-                    }}
-                    onChange={(supplier) => {
-                      setFormData(prev => ({
-                        ...prev,
-                        inspector: supplier.name
-                      }));
-                    }}
+                  <UserSelector
+                    value={formData.inspector}
+                    onChange={(value) => setFormData(prev => ({ ...prev, inspector: value }))}
                     disabled={isViewMode}
+                    placeholder="Sélectionner un inspecteur"
                   />
                 </div>
-                
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="inspection_date">Date d'Inspection *</Label>
+                  <Label htmlFor="inspection_date">Date d'inspection *</Label>
                   <Input
                     id="inspection_date"
                     type="date"
@@ -373,26 +249,6 @@ const EnhancedInspectionCrud = () => {
                     disabled={isViewMode}
                     required
                   />
-                </div>
-                
-                <div>
-                  <Label htmlFor="inspection_type">Type d'Inspection</Label>
-                  <Select 
-                    value={formData.inspection_type} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, inspection_type: value }))}
-                    disabled={isViewMode}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner le type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {inspectionTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
                 
                 <div>
@@ -408,15 +264,20 @@ const EnhancedInspectionCrud = () => {
                     <SelectContent>
                       {inspectionStatuses.map((status) => (
                         <SelectItem key={status.value} value={status.value}>
-                          {status.label}
+                          <div className="flex items-center gap-2">
+                            <status.icon className="h-4 w-4" />
+                            {status.label}
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="progress_at_inspection">Progrès (%)</Label>
+                  <Label htmlFor="progress_at_inspection">Progression (%)</Label>
                   <Input
                     id="progress_at_inspection"
                     type="number"
@@ -429,7 +290,7 @@ const EnhancedInspectionCrud = () => {
                 </div>
                 
                 <div>
-                  <Label htmlFor="defects_found">Défauts Trouvés</Label>
+                  <Label htmlFor="defects_found">Défauts trouvés</Label>
                   <Input
                     id="defects_found"
                     type="number"
@@ -439,9 +300,31 @@ const EnhancedInspectionCrud = () => {
                     disabled={isViewMode}
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="inspection_type">Type d'inspection</Label>
+                  <Select 
+                    value={formData.inspection_type} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, inspection_type: value }))}
+                    disabled={isViewMode}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {inspectionTypes.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 
                 <div>
-                  <Label htmlFor="next_inspection_date">Prochaine Inspection</Label>
+                  <Label htmlFor="next_inspection_date">Prochaine inspection</Label>
                   <Input
                     id="next_inspection_date"
                     type="date"
@@ -451,55 +334,40 @@ const EnhancedInspectionCrud = () => {
                   />
                 </div>
               </div>
-              
-              <div>
-                <Label>Documents Justificatifs</Label>
-                <DocumentSelector
-                  onChange={(documentId, document) => {
-                    if (document) {
-                      setUploadedDocuments(prev => [...prev, document]);
-                    }
-                  }}
-                  documentType="inspection_report"
-                  disabled={isViewMode}
-                />
-              </div>
-              
+
               <div>
                 <Label htmlFor="comments">Commentaires</Label>
                 <Textarea
                   id="comments"
                   value={formData.comments}
                   onChange={(e) => setFormData(prev => ({ ...prev, comments: e.target.value }))}
-                  disabled={isViewMode}
                   rows={3}
+                  disabled={isViewMode}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="recommendations">Recommandations</Label>
                 <Textarea
                   id="recommendations"
                   value={formData.recommendations}
                   onChange={(e) => setFormData(prev => ({ ...prev, recommendations: e.target.value }))}
-                  disabled={isViewMode}
                   rows={3}
+                  disabled={isViewMode}
                 />
               </div>
-              
-              {/* Document Visualization Section for View Mode */}
-              {isViewMode && selectedInspection && (
-                <div className="mt-6 pt-6 border-t">
-                  <DocumentSection 
-                    relatedId={selectedInspection.id} 
-                    relatedType="inspection"
-                    title="Documents d'Inspection"
-                  />
-                </div>
-              )}
-              
+
+              <div>
+                <Label>Documents de support</Label>
+                <DocumentSelector
+                  onDocumentsChange={handleDocumentSelect}
+                  selectedDocuments={uploadedDocuments}
+                  disabled={isViewMode}
+                />
+              </div>
+
               {!isViewMode && (
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-2 pt-4">
                   <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>
                     Annuler
                   </Button>
@@ -512,12 +380,10 @@ const EnhancedInspectionCrud = () => {
           </DialogContent>
         </Dialog>
       </CardHeader>
-      
+
       <CardContent>
-        {inspections.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Aucune inspection trouvée
-          </div>
+        {isLoading ? (
+          <div className="text-center py-8">Chargement des inspections...</div>
         ) : (
           <Table>
             <TableHeader>
@@ -525,53 +391,43 @@ const EnhancedInspectionCrud = () => {
                 <TableHead>Projet</TableHead>
                 <TableHead>Inspecteur</TableHead>
                 <TableHead>Date</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Progrès</TableHead>
                 <TableHead>Statut</TableHead>
+                <TableHead>Progression</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Défauts</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {inspections.map((inspection) => {
                 const statusConfig = getStatusConfig(inspection.status);
-                const StatusIcon = statusConfig.icon;
-                
                 return (
                   <TableRow key={inspection.id}>
-                    <TableCell className="font-medium">{inspection.project_id}</TableCell>
+                    <TableCell>{inspection.project_id}</TableCell>
                     <TableCell>{inspection.inspector}</TableCell>
-                    <TableCell>{format(new Date(inspection.inspection_date), 'dd/MM/yyyy')}</TableCell>
                     <TableCell>
-                      {inspectionTypes.find(t => t.value === inspection.inspection_type)?.label || 'Routine'}
+                      {inspection.inspection_date && format(new Date(inspection.inspection_date), 'dd/MM/yyyy')}
                     </TableCell>
-                    <TableCell>{inspection.progress_at_inspection}%</TableCell>
                     <TableCell>
                       <Badge className={statusConfig.color}>
-                        <StatusIcon className="w-3 h-3 mr-1" />
+                        <statusConfig.icon className="h-3 w-3 mr-1" />
                         {statusConfig.label}
                       </Badge>
                     </TableCell>
+                    <TableCell>{inspection.progress_at_inspection}%</TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openViewForm(inspection)}
-                        >
+                      {inspectionTypes.find(t => t.value === inspection.inspection_type)?.label || inspection.inspection_type}
+                    </TableCell>
+                    <TableCell>{inspection.defects_found || 0}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" onClick={() => openViewForm(inspection)}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openEditForm(inspection)}
-                        >
+                        <Button size="sm" variant="outline" onClick={() => openEditForm(inspection)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(inspection.id)}
-                        >
+                        <Button size="sm" variant="outline" onClick={() => handleDelete(inspection.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

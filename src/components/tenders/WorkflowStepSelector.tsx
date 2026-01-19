@@ -38,7 +38,7 @@ const WorkflowStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps }: 
   };
 
   const isStageAlreadyAdded = (phaseCode: string, stageCode: string) => {
-    return existingSteps.some(step => step.phaseCode === phaseCode && step.stageCode === stageCode);
+    return (existingSteps || []).some(step => step.phaseCode === phaseCode && step.stageCode === stageCode);
   };
 
   return (

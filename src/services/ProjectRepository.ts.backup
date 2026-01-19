@@ -1,6 +1,13 @@
 // Repository pattern for database operations (CRUD + ACID)
 import { supabase } from '@/integrations/supabase/client';
-import { ProjectEntity, ProjectPhaseEntity, ProjectRiskEntity, TaskAssignmentEntity, InspectionEntity, PaymentEntity } from '@/types/entities';
+import { 
+  Project, 
+  Phase, 
+  Risk, 
+  Task, 
+  Inspection, 
+  Payment 
+} from '@/domain/entities';
 
 export class ProjectRepository {
   // ============= Project CRUD =============

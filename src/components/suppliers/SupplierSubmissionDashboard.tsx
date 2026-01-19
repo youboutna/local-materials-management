@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import type { ExtendedSupabaseClient } from '@/types/supabase-helpers';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -23,47 +21,17 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useSuppliersHex } from '@/hooks/hexagonal/useSuppliersHex';
+import { 
+  useCurrentAuthUser,
+  useSupplierSubmissions,
+  useSubmissionDocumentsList,
+  useSubmissionActivityLogs,
+  type Submission,
+  type SubmissionDocument,
+  type ActivityLog
+} from '@/hooks/hexagonal/useSupplierSubmissionsHex';
 
-interface Submission {
-  id: string;
-  tender_id: string;
-  supplier_name: string;
-  supplier_email: string;
-  submission_date: string;
-  status: 'submitted' | 'under_review' | 'approved' | 'rejected';
-  secret_code?: string;
-  created_at: string;
-  updated_at: string;
-  tender?: {
-    title: string;
-    deadline_date?: string;
-  };
-}
-
-interface SubmissionDocument {
-  id: string;
-  submission_id: string;
-  document_id: string;
-  category: string;
-  subcategory: string;
-  created_at: string;
-  document?: {
-    title: string;
-    file_name: string;
-    file_size: number;
-    mime_type: string;
-    file_url: string;
-    metadata?: any;
-  };
-}
-
-interface ActivityLog {
-  id: string;
-  submission_id: string;
-  action: string;
-  details: string;
-  created_at: string;
-}
 
 const SupplierSubmissionDashboard = () => {
   const { toast } = useToast();
@@ -71,139 +39,64 @@ const SupplierSubmissionDashboard = () => {
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [realtimeSubmissions, setRealtimeSubmissions] = useState<Submission[]>([]);
 
-  // Get current user
-  const { data: currentUser } = useQuery({
-    queryKey: ['current-user'],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      return user;
-    }
-  });
-
-  // Fetch user's submissions
-  const { data: submissions, refetch } = useQuery({
-    queryKey: ['supplier-submissions', currentUser?.id],
-    queryFn: async () => {
-      if (!currentUser?.id) return [];
-
-      const { data, error } = await supabase
-        .from('tender_submissions')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      // Fetch tender titles separately
-      const enrichedData = await Promise.all((data || []).map(async (submission: any) => {
-        const { data: tender } = await supabase
-          .from('tenders')
-          .select('title, deadline_date')
-          .eq('id', submission.tender_id)
-          .single();
-        
-        return {
-          ...submission,
-          tender: tender || undefined
-        };
-      }));
-
-      return enrichedData as Submission[];
-    },
-    enabled: !!currentUser?.id
-  });
+  // Get current user and submissions
+  const { data: currentUser } = useCurrentAuthUser();
+  const { data: submissions, refetch } = useSupplierSubmissions(currentUser?.id);
 
   // Fetch documents for selected submission
-  const { data: submissionDocuments } = useQuery({
-    queryKey: ['submission-documents', selectedSubmission?.id],
-    queryFn: async () => {
-      if (!selectedSubmission?.id) return [];
-
-      const { data, error } = await supabase
-        .from('tender_submission_documents')
-        .select(`
-          *,
-          document:documents(*)
-        `)
-        .eq('submission_id', selectedSubmission.id);
-
-      if (error) throw error;
-      return data as SubmissionDocument[];
-    },
-    enabled: !!selectedSubmission?.id
-  });
+  const { data: submissionDocuments } = useSubmissionDocumentsList(selectedSubmission?.id);
 
   // Fetch activity logs for selected submission
-  const { data: activityLogs } = useQuery({
-    queryKey: ['submission-activity', selectedSubmission?.id],
-    queryFn: async () => {
-      if (!selectedSubmission?.id) return [];
+  const { data: activityLogs } = useSubmissionActivityLogs(selectedSubmission?.id);
 
-      // Direct query with type suppression
-      const { data, error } = await (supabase as ExtendedSupabaseClient)
-        .from('submission_activity_logs')
-        .select('*')
-        .eq('submission_id', selectedSubmission.id)
-        .order('created_at', { ascending: false })
-        .limit(50);
+  // Setup real-time updates - TODO: Create hexagonal hook for realtime subscriptions
+  // useEffect(() => {
+  //   if (!currentUser?.id) return;
 
-      if (error) {
-        console.error('Error fetching activity logs:', error);
-        return [];
-      }
-      return (data || []) as ActivityLog[];
-    },
-    enabled: !!selectedSubmission?.id
-  });
+  //   console.log('Setting up realtime subscription for user:', currentUser.id);
 
-  // Setup real-time updates
-  useEffect(() => {
-    if (!currentUser?.id) return;
-
-    console.log('Setting up realtime subscription for user:', currentUser.id);
-
-    const channel = supabase
-      .channel('submission-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'tender_submissions',
-          filter: `user_id=eq.${currentUser.id}`
-        },
-        (payload) => {
-          console.log('Realtime update received:', payload);
+  //   const channel = supabase
+  //     .channel('submission-updates')
+  //     .on(
+  //       'postgres_changes',
+  //       {
+  //         event: '*',
+  //         schema: 'public',
+  //         table: 'tender_submissions',
+  //         filter: `user_id=eq.${currentUser.id}`
+  //       },
+  //       (payload) => {
+  //         console.log('Realtime update received:', payload);
           
-          if (payload.eventType === 'INSERT') {
-            toast({
-              title: "Nouvelle soumission",
-              description: "Votre soumission a été enregistrée avec succès.",
-            });
-          } else if (payload.eventType === 'UPDATE') {
-            const newStatus = (payload.new as any).status;
-            const oldStatus = (payload.old as any)?.status;
+  //         if (payload.eventType === 'INSERT') {
+  //           toast({
+  //             title: "Nouvelle soumission",
+  //             description: "Votre soumission a été enregistrée avec succès.",
+  //           });
+  //         } else if (payload.eventType === 'UPDATE') {
+  //           const newStatus = (payload.new as any).status;
+  //           const oldStatus = (payload.old as any)?.status;
             
-            if (newStatus !== oldStatus) {
-              toast({
-                title: "Mise à jour du statut",
-                description: `Le statut de votre soumission a changé: ${getStatusLabel(newStatus)}`,
-              });
-            }
-          }
+  //           if (newStatus !== oldStatus) {
+  //             toast({
+  //               title: "Mise à jour du statut",
+  //               description: `Le statut de votre soumission a changé: ${getStatusLabel(newStatus)}`,
+  //             });
+  //           }
+  //         }
 
-          refetch();
-        }
-      )
-      .subscribe((status) => {
-        console.log('Subscription status:', status);
-      });
+  //         refetch();
+  //       }
+  //     )
+  //     .subscribe((status) => {
+  //       console.log('Subscription status:', status);
+  //     });
 
-    return () => {
-      console.log('Cleaning up realtime subscription');
-      supabase.removeChannel(channel);
-    };
-  }, [currentUser?.id, refetch, toast]);
+  //   return () => {
+  //     console.log('Cleaning up realtime subscription');
+  //     supabase.removeChannel(channel);
+  //   };
+  // }, [currentUser?.id, refetch, toast]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {

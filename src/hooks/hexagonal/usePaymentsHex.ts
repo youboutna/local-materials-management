@@ -1,139 +1,468 @@
 /**
- * Hexagonal hooks for Payments module
- * Centralizes all payment-related Supabase operations
+ * Payments Hook - Enhanced with PaymentDomainTransformer Integration
+ * Uses PaymentDomainTransformer with advanced calculations and analytics
+ * Following hexagonal architecture principles with UI-specific enhancements
  */
 
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { isBefore, differenceInDays, parseISO } from 'date-fns';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { RepositoryFactory } from "@/repositories/RepositoryFactory";
+import { PaymentRequestService } from "@/application/services/PaymentRequestService";
+import { PaymentDomainTransformer, CreatePaymentRequestDto, UpdatePaymentRequestDto } from "@/dtos/transforms";
+import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
-// Types
-export interface PaymentMilestone {
-  id: string;
-  title: string;
-  amount: number;
-  dueDate: string;
-  status: 'pending' | 'approved' | 'paid' | 'overdue' | 'blocked';
-  progressRequired: number;
-  currentProgress: number;
-  phaseId?: string;
-  phaseName?: string;
-  penaltyRate?: number;
-  penaltyAccrued?: number;
+// Types compatibles avec le service
+type ServiceCreatePaymentDTO = Omit<CreatePaymentRequestDto, 'status'> & { status?: any };
+type ServiceUpdatePaymentDTO = Omit<UpdatePaymentRequestDto, 'status'> & { status?: any };
+
+// Enhanced types for UI components
+export interface UsePaymentsHexResult {
+  payments: any[];
+  isLoading: boolean;
+  error: any;
+  refetch: () => void;
+  createPayment: (data: CreatePaymentRequestDto) => void;
+  updatePayment: ({ id, data }: { id: string; data: UpdatePaymentRequestDto }) => void;
+  deletePayment: (id: string) => void;
+  isCreating: boolean;
+  isUpdating: boolean;
+  isDeleting: boolean;
+  // Enhanced UI features
+  getPaymentRisk: (payment: any) => 'low' | 'medium' | 'high';
+  getPaymentEfficiency: (payment: any) => number;
+  getPaymentFinancialHealth: (payment: any) => 'healthy' | 'warning' | 'critical';
+  getPaymentDaysOverdue: (payment: any) => number;
+  getPaymentAnalytics: () => any;
+  validatePaymentWithReferential: (payment: any, referentialType: string) => Promise<any>;
+  generatePaymentReport: (payment: any) => any;
 }
 
-export interface PaymentScheduleData {
-  payments: PaymentMilestone[];
-  totalAmount: number;
-  paidAmount: number;
-  overdueAmount: number;
-  totalPenalties: number;
-}
+/**
+ * Enhanced hook for payments management with UI-specific features
+ */
+export function usePaymentsHex(): UsePaymentsHexResult {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const { t } = useLanguage();
+  
+  // Initialize services with transformers
+  const paymentRepository = RepositoryFactory.getPaymentRepository();
+  const paymentRequestService = new PaymentRequestService(paymentRepository);
 
-// Hook: Fetch payment schedule timeline
-export function usePaymentSchedule(projectId: string, projectBudget: number = 0) {
-  return useQuery({
-    queryKey: ['payment-schedule', projectId],
-    queryFn: async (): Promise<PaymentScheduleData> => {
-      // Fetch payment milestones from enhanced_project_milestones
-      const { data: milestonesData, error: mError } = await supabase
-        .from('enhanced_project_milestones')
-        .select(`
-          *,
-          project_phases (id, phase_name, progress)
-        `)
-        .eq('project_id', projectId)
-        .order('target_date', { ascending: true });
-
-      if (mError) throw mError;
-
-      // Fetch existing payments
-      const { data: paymentsData } = await supabase
-        .from('payments')
-        .select('*')
-        .eq('project_id', projectId);
-
-      const paymentMap = new Map((paymentsData || []).map((p: any) => [p.milestone_id, p]));
-
-      // Filter milestones that are payment triggers
-      const paymentMilestones: PaymentMilestone[] = (milestonesData || [])
-        .filter((m: any) => {
-          const deps = m.dependencies as any;
-          return deps?.type === 'payment' || deps?.is_payment_trigger;
-        })
-        .map((m: any) => {
-          const deps = m.dependencies as any;
-          const existingPayment = paymentMap.get(m.id);
-          const today = new Date();
-          const dueDate = parseISO(m.target_date);
-          const daysOverdue = Math.max(0, differenceInDays(today, dueDate));
-
-          let status: PaymentMilestone['status'] = 'pending';
-          if (existingPayment?.status === 'paid') status = 'paid';
-          else if (existingPayment?.status === 'approved') status = 'approved';
-          else if (isBefore(dueDate, today)) status = 'overdue';
-          else if (existingPayment?.status === 'blocked') status = 'blocked';
-
-          // Calculate penalty (0.1% per day of delay, typical construction)
-          const penaltyRate = deps?.penalty_rate || 0.001;
-          const penaltyAccrued =
-            status === 'overdue'
-              ? (deps?.payment_amount || 0) * penaltyRate * daysOverdue
-              : 0;
-
-          return {
-            id: m.id,
-            title: m.title,
-            amount: deps?.payment_amount || projectBudget * (m.weight || 0.1),
-            dueDate: m.target_date,
-            status,
-            progressRequired: deps?.progress_required || (m.weight || 0.1) * 100,
-            currentProgress: m.project_phases?.progress || 0,
-            phaseId: m.phase_id,
-            phaseName: m.project_phases?.phase_name,
-            penaltyRate,
-            penaltyAccrued
-          };
-        });
-
-      const totalAmount = paymentMilestones.reduce((sum, p) => sum + p.amount, 0);
-      const paidAmount = paymentMilestones
-        .filter((p) => p.status === 'paid')
-        .reduce((sum, p) => sum + p.amount, 0);
-      const overdueAmount = paymentMilestones
-        .filter((p) => p.status === 'overdue')
-        .reduce((sum, p) => sum + p.amount, 0);
-      const totalPenalties = paymentMilestones.reduce(
-        (sum, p) => sum + (p.penaltyAccrued || 0),
-        0
-      );
-
-      return {
-        payments: paymentMilestones,
-        totalAmount,
-        paidAmount,
-        overdueAmount,
-        totalPenalties
-      };
+  // Query for payments list
+  const {
+    data: payments = [],
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['payments'],
+    queryFn: async (): Promise<any[]> => {
+      try {
+        const paymentData = await paymentRequestService.getAllPaymentRequests();
+        return paymentData;
+      } catch (err) {
+        console.error('Error fetching payments:', err);
+        throw err;
+      }
     },
-    enabled: !!projectId
+    retry: 3,
+    retryDelay: 1000,
+    enabled: true
   });
-}
 
-// Hook: Fetch hierarchy for escalation
-export function useEscalationTargets(projectId: string, escalationLevel?: string) {
-  return useQuery({
-    queryKey: ['escalation-targets', projectId, escalationLevel],
-    queryFn: async () => {
-      if (!escalationLevel) return [];
-      const { data, error } = await supabase.rpc('get_escalation_targets', {
-        project_id_param: projectId,
-        escalation_level_param: escalationLevel
-      });
-
-      if (error) throw error;
-      return data || [];
+  // Create payment mutation
+  const createPaymentMutation = useMutation({
+    mutationFn: async (paymentData: CreatePaymentRequestDto) => {
+      try {
+        // Convert to service-compatible format
+        const serviceData: ServiceCreatePaymentDTO = { ...paymentData };
+        const createdPayment = await paymentRequestService.createPaymentRequest(serviceData as any);
+        return createdPayment;
+      } catch (error) {
+        console.error('Error creating payment:', error);
+        throw error;
+      }
     },
-    enabled: !!projectId && !!escalationLevel
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+      toast.success(`Le paiement "${data.id}" a été créé avec succès.`);
+      navigate('/payments');
+    },
+    onError: (error) => {
+      console.error('Error creating payment:', error);
+      toast.error("Impossible de créer le paiement. Veuillez réessayer.");
+    }
   });
+
+  // Update payment mutation
+  const updatePaymentMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: UpdatePaymentRequestDto }) => {
+      try {
+        // Convert to service-compatible format
+        const serviceData: ServiceUpdatePaymentDTO = { ...data };
+        const updatedPayment = await paymentRequestService.updatePaymentRequest(id, serviceData as any);
+        return updatedPayment;
+      } catch (error) {
+        console.error('Error updating payment:', error);
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+      toast.success(`Le paiement "${data.id}" a été mis à jour avec succès.`);
+    },
+    onError: (error) => {
+      console.error('Error updating payment:', error);
+      toast.error("Impossible de mettre à jour le paiement. Veuillez réessayer.");
+    }
+  });
+
+  // Delete payment mutation
+  const deletePaymentMutation = useMutation({
+    mutationFn: async (id: string) => {
+      try {
+        await paymentRequestService.deletePaymentRequest(id);
+        return true;
+      } catch (error) {
+        console.error('Error deleting payment:', error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+      toast.success("Le paiement a été supprimé avec succès.");
+    },
+    onError: (error) => {
+      console.error('Error deleting payment:', error);
+      toast.error("Impossible de supprimer le paiement.");
+    }
+  });
+
+  // Enhanced UI functions
+  const getPaymentRisk = (payment: any): 'low' | 'medium' | 'high' => {
+    const daysOverdue = getPaymentDaysOverdue(payment);
+    const amount = payment.amount || 0;
+    const status = payment.status || 'pending';
+    
+    if (daysOverdue > 30 || amount > 100000 || status === 'overdue') return 'high';
+    if (daysOverdue > 7 || amount > 50000 || status === 'delayed') return 'medium';
+    return 'low';
+  };
+
+  const getPaymentEfficiency = (payment: any): number => {
+    const paidOnTime = payment.paidOnTime || false;
+    const processingDays = payment.processingDays || 0;
+    const amount = payment.amount || 0;
+    const expectedDays = payment.expectedDays || 5;
+    
+    // Score based on timeliness and processing efficiency
+    const timelinessScore = paidOnTime ? 100 : Math.max(0, 100 - processingDays * 5);
+    const efficiencyScore = expectedDays > 0 ? Math.max(0, 100 - (processingDays / expectedDays) * 50) : 100;
+    const amountScore = amount > 0 ? Math.min(100, 100000 / amount * 10) : 100;
+    
+    return Math.round((timelinessScore * 0.5 + efficiencyScore * 0.3 + amountScore * 0.2));
+  };
+
+  const getPaymentFinancialHealth = (payment: any): 'healthy' | 'warning' | 'critical' => {
+    const efficiency = getPaymentEfficiency(payment);
+    const risk = getPaymentRisk(payment);
+    const daysOverdue = getPaymentDaysOverdue(payment);
+    const cashFlowImpact = payment.cashFlowImpact || 0;
+    
+    if (efficiency >= 80 && risk === 'low' && daysOverdue <= 0 && cashFlowImpact >= 0) return 'healthy';
+    if (efficiency >= 60 && risk !== 'high' && daysOverdue <= 7) return 'warning';
+    return 'critical';
+  };
+
+  const getPaymentDaysOverdue = (payment: any): number => {
+    const dueDate = payment.dueDate ? new Date(payment.dueDate) : null;
+    const paidDate = payment.paidDate ? new Date(payment.paidDate) : null;
+    const now = new Date();
+    
+    if (!dueDate) return 0;
+    if (paidDate && paidDate <= dueDate) return 0; // Paid on time
+    
+    const referenceDate = paidDate || now;
+    return Math.floor((referenceDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+  };
+
+  const getPaymentAnalytics = () => {
+    const totalPayments = payments.length;
+    const paidPayments = payments.filter(p => p.status === 'paid').length;
+    const pendingPayments = payments.filter(p => p.status === 'pending').length;
+    const overduePayments = payments.filter(p => getPaymentDaysOverdue(p) > 0).length;
+    const highRiskPayments = payments.filter(p => getPaymentRisk(p) === 'high').length;
+    const totalAmount = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+    const averageEfficiency = payments.length > 0 
+      ? payments.reduce((sum, p) => sum + getPaymentEfficiency(p), 0) / payments.length 
+      : 0;
+    const healthyPayments = payments.filter(p => getPaymentFinancialHealth(p) === 'healthy').length;
+    
+    return {
+      totalPayments,
+      statusBreakdown: {
+        paid: paidPayments,
+        pending: pendingPayments,
+        overdue: overduePayments
+      },
+      riskBreakdown: {
+        low: payments.filter(p => getPaymentRisk(p) === 'low').length,
+        medium: payments.filter(p => getPaymentRisk(p) === 'medium').length,
+        high: highRiskPayments
+      },
+      healthBreakdown: {
+        healthy: healthyPayments,
+        warning: payments.filter(p => getPaymentFinancialHealth(p) === 'warning').length,
+        critical: payments.filter(p => getPaymentFinancialHealth(p) === 'critical').length
+      },
+      totalAmount,
+      averageEfficiency: Math.round(averageEfficiency),
+      paymentRate: totalPayments > 0 ? Math.round((paidPayments / totalPayments) * 100) : 0
+    };
+  };
+
+  // Validation functions for different referential types
+  const validateFinancialReferential = (payment: any) => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    
+    // Validate amount
+    if (!payment.amount || payment.amount <= 0) {
+      errors.push('Payment amount must be greater than 0');
+    }
+    
+    // Validate currency
+    if (!payment.currency) {
+      warnings.push('Currency not specified');
+    }
+    
+    // Validate due date
+    if (!payment.dueDate) {
+      errors.push('Due date is required');
+    } else {
+      const dueDate = new Date(payment.dueDate);
+      const today = new Date();
+      if (dueDate < today) {
+        warnings.push('Payment is overdue');
+      }
+    }
+    
+    // Validate financial thresholds
+    if (payment.amount > 1000000) {
+      warnings.push('High-value payment requires additional approval');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+      compliance: 'financial'
+    };
+  };
+
+  const validateRegulatoryReferential = (payment: any) => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    
+    // Validate regulatory compliance
+    if (!payment.complianceCode) {
+      errors.push('Compliance code is required');
+    }
+    
+    // Validate tax information
+    if (!payment.taxId && payment.amount > 10000) {
+      warnings.push('Tax ID recommended for payments over 10,000');
+    }
+    
+    // Validate regulatory documentation
+    if (!payment.documentation || payment.documentation.length === 0) {
+      warnings.push('Supporting documentation recommended');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+      compliance: 'regulatory'
+    };
+  };
+
+  const validateContractualReferential = (payment: any) => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    
+    // Validate contract reference
+    if (!payment.contractId) {
+      errors.push('Contract reference is required');
+    }
+    
+    // Validate milestone compliance
+    if (!payment.milestoneId && payment.amount > 50000) {
+      warnings.push('Milestone reference recommended for payments over 50,000');
+    }
+    
+    // Validate approval workflow
+    if (!payment.approvedBy && payment.amount > 25000) {
+      errors.push('Manager approval required for payments over 25,000');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+      compliance: 'contractual'
+    };
+  };
+
+  const validateQualityReferential = (payment: any) => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    
+    // Validate quality standards
+    if (!payment.qualityStandard) {
+      warnings.push('Quality standard not specified');
+    }
+    
+    // Validate inspection requirements
+    if (!payment.inspectionRequired && payment.amount > 75000) {
+      warnings.push('Quality inspection recommended for high-value payments');
+    }
+    
+    // Validate supplier certification
+    if (!payment.supplierCertified && payment.amount > 100000) {
+      warnings.push('Supplier certification recommended for major payments');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+      compliance: 'quality'
+    };
+  };
+
+  // Generate payment recommendations based on analysis
+  const generatePaymentRecommendations = (payment: any, risk: string, health: string) => {
+    const recommendations: string[] = [];
+    
+    // Risk-based recommendations
+    if (risk === 'high') {
+      recommendations.push('Immediate attention required - high-risk payment detected');
+      recommendations.push('Consider escalating to management for review');
+      recommendations.push('Implement additional verification procedures');
+    } else if (risk === 'medium') {
+      recommendations.push('Monitor payment closely for timely processing');
+      recommendations.push('Ensure all documentation is complete');
+    }
+    
+    // Health-based recommendations
+    if (health === 'critical') {
+      recommendations.push('Payment requires immediate intervention');
+      recommendations.push('Review payment terms and conditions');
+      recommendations.push('Consider restructuring payment schedule');
+    } else if (health === 'warning') {
+      recommendations.push('Monitor payment progress and efficiency');
+      recommendations.push('Review payment processing timeline');
+    }
+    
+    // Efficiency-based recommendations
+    const efficiency = getPaymentEfficiency(payment);
+    if (efficiency < 60) {
+      recommendations.push('Improve payment processing efficiency');
+      recommendations.push('Review current payment workflow');
+    }
+    
+    // Days overdue recommendations
+    const daysOverdue = getPaymentDaysOverdue(payment);
+    if (daysOverdue > 0) {
+      recommendations.push(`Payment is ${daysOverdue} days overdue - follow up required`);
+      if (daysOverdue > 30) {
+        recommendations.push('Consider penalty assessment per contract terms');
+      }
+    }
+    
+    return recommendations;
+  };
+
+  return {
+    payments,
+    isLoading,
+    error,
+    refetch,
+    createPayment: createPaymentMutation.mutate,
+    updatePayment: updatePaymentMutation.mutate,
+    deletePayment: deletePaymentMutation.mutate,
+    isCreating: createPaymentMutation.isPending,
+    isUpdating: updatePaymentMutation.isPending,
+    isDeleting: deletePaymentMutation.isPending,
+    getPaymentRisk,
+    getPaymentEfficiency,
+    getPaymentFinancialHealth,
+    getPaymentDaysOverdue,
+    getPaymentAnalytics,
+    validatePaymentWithReferential: async (payment: any, referentialType: string) => {
+      try {
+        // Validation selon le type de référentiel
+        switch (referentialType) {
+          case 'financial':
+            return validateFinancialReferential(payment);
+          case 'regulatory':
+            return validateRegulatoryReferential(payment);
+          case 'contractual':
+            return validateContractualReferential(payment);
+          case 'quality':
+            return validateQualityReferential(payment);
+          default:
+            return { isValid: true, errors: [], warnings: ['Unknown referential type'] };
+        }
+      } catch (error) {
+        console.error('Referential validation error:', error);
+        return { isValid: false, errors: ['Validation failed'], warnings: [] };
+      }
+    },
+    generatePaymentReport: (payment: any) => {
+      try {
+        const analytics = getPaymentAnalytics();
+        const risk = getPaymentRisk(payment);
+        const health = getPaymentFinancialHealth(payment);
+        const efficiency = getPaymentEfficiency(payment);
+        
+        return {
+          payment: {
+            ...payment,
+            risk,
+            health,
+            efficiency,
+            daysOverdue: getPaymentDaysOverdue(payment)
+          },
+          generatedAt: new Date().toISOString(),
+          reportType: 'Payment Analysis Report',
+          summary: {
+            totalPayments: analytics.totalPayments,
+            paymentRate: analytics.paymentRate,
+            averageEfficiency: analytics.averageEfficiency,
+            totalAmount: analytics.totalAmount
+          },
+          recommendations: generatePaymentRecommendations(payment, risk, health),
+          compliance: {
+            isValid: true,
+            lastValidated: new Date().toISOString(),
+            validatedBy: 'PaymentSystem'
+          }
+        };
+      } catch (error) {
+        console.error('Report generation error:', error);
+        return { 
+          payment, 
+          generatedAt: new Date().toISOString(),
+          error: 'Report generation failed',
+          status: 'error'
+        };
+      }
+    }
+  };
 }
+
+export default usePaymentsHex;
