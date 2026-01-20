@@ -19,10 +19,12 @@ export interface ProjectManagerContextType {
 
 export const ProjectManagerContext = createContext<ProjectManagerContextType | null>(null);
 
-export const ProjectManagerProvider: React.FC<{
+interface ProjectManagerProviderProps {
   manager: any;
   children: ReactNode;
-}> = ({ manager, children }) => {
+}
+
+export const ProjectManagerProvider: React.FC<ProjectManagerProviderProps> = ({ manager, children }) => {
   const [state, setState] = React.useState<ProjectManagerState>(manager.getState());
 
   const runChecks = React.useCallback(() => {
@@ -58,15 +60,15 @@ export const ProjectManagerProvider: React.FC<{
 
   const needsEscalation = React.useCallback((alert: ProjectAlert) => {
     return manager.needsEscalation(alert);
-  }, []);
+  }, [manager]);
 
   const getEscalationPath = React.useCallback((alert: ProjectAlert) => {
     return manager.getEscalationPath(alert);
-  }, []);
+  }, [manager]);
 
   const getActionLabel = React.useCallback((alertType: string) => {
     return manager.getActionLabel(alertType as any);
-  }, []);
+  }, [manager]);
 
   const getSummaryStats = React.useCallback(() => {
     return manager.getSummaryStats();
@@ -88,10 +90,10 @@ export const ProjectManagerProvider: React.FC<{
     getSummaryStats
   };
 
-  return (
-    <ProjectManagerContext.Provider value={contextValue}>
-      {children}
-    </ProjectManagerContext.Provider>
+  return React.createElement(
+    ProjectManagerContext.Provider,
+    { value: contextValue },
+    children
   );
 };
 

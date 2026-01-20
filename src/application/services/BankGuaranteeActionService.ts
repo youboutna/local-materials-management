@@ -1,4 +1,7 @@
-import { supabase } from '@/integrations/supabase/client';
+/**
+ * BankGuaranteeActionService - Placeholder service for bank guarantee actions
+ * Uses in-memory storage since the tables don't exist yet
+ */
 
 export interface BankGuaranteeAction {
   id: string;
@@ -29,428 +32,250 @@ export interface BankGuaranteeActionTemplate {
   is_active: boolean;
 }
 
+// In-memory storage
+const actionsStore: Map<string, BankGuaranteeAction> = new Map();
+const templatesStore: Map<string, BankGuaranteeActionTemplate> = new Map();
+
 export class BankGuaranteeActionService {
   
   /**
    * Create a new bank guarantee action
-   * @param actionData The action data
-   * @returns The created action
    */
   static async createBankGuaranteeAction(actionData: Omit<BankGuaranteeAction, 'id' | 'created_at' | 'updated_at'>): Promise<BankGuaranteeAction> {
     try {
-      const { data, error } = await supabase
-        .from('bank_guarantee_actions')
-        .insert({
-          ...actionData,
-          status: actionData.status || 'pending',
-          documents: actionData.documents || []
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      return data;
-    } catch (error) {
-      console.error('Error creating bank guarantee action:', error);
-      throw new Error(`Failed to create bank guarantee action: ${error.message}`);
+      const id = `action-${Date.now()}`;
+      const now = new Date().toISOString();
+      const action: BankGuaranteeAction = {
+        ...actionData,
+        id,
+        status: actionData.status || 'pending',
+        documents: actionData.documents || [],
+        created_at: now,
+        updated_at: now
+      };
+      actionsStore.set(id, action);
+      return action;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to create bank guarantee action: ${message}`);
     }
   }
 
   /**
-   * Get all actions for a bank guarantee
-   * @param guaranteeId The guarantee ID
-   * @returns Array of actions
+   * Get all actions for a guarantee
    */
-  static async getBankGuaranteeActions(guaranteeId: string): Promise<BankGuaranteeAction[]> {
+  static async getActionsByGuaranteeId(guaranteeId: string): Promise<BankGuaranteeAction[]> {
     try {
-      const { data, error } = await supabase
-        .from('bank_guarantee_actions')
-        .select('*')
-        .eq('guarantee_id', guaranteeId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching bank guarantee actions:', error);
-      throw new Error(`Failed to fetch bank guarantee actions: ${error.message}`);
+      return Array.from(actionsStore.values())
+        .filter(a => a.guarantee_id === guaranteeId)
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to fetch guarantee actions: ${message}`);
     }
   }
 
   /**
-   * Update a bank guarantee action
-   * @param actionId The action ID
-   * @param updates The updates to apply
-   * @returns The updated action
+   * Update an action
    */
-  static async updateBankGuaranteeAction(actionId: string, updates: Partial<BankGuaranteeAction>): Promise<BankGuaranteeAction> {
+  static async updateAction(id: string, updates: Partial<BankGuaranteeAction>): Promise<BankGuaranteeAction> {
     try {
-      const { data, error } = await supabase
-        .from('bank_guarantee_actions')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', actionId)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      return data;
-    } catch (error) {
-      console.error('Error updating bank guarantee action:', error);
-      throw new Error(`Failed to update bank guarantee action: ${error.message}`);
+      const existing = actionsStore.get(id);
+      if (!existing) throw new Error('Action not found');
+      
+      const updated: BankGuaranteeAction = {
+        ...existing,
+        ...updates,
+        updated_at: new Date().toISOString()
+      };
+      actionsStore.set(id, updated);
+      return updated;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to update action: ${message}`);
     }
   }
 
   /**
-   * Delete a bank guarantee action
-   * @param actionId The action ID
+   * Delete an action
    */
-  static async deleteBankGuaranteeAction(actionId: string): Promise<void> {
+  static async deleteAction(id: string): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('bank_guarantee_actions')
-        .delete()
-        .eq('id', actionId);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error deleting bank guarantee action:', error);
-      throw new Error(`Failed to delete bank guarantee action: ${error.message}`);
+      actionsStore.delete(id);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to delete action: ${message}`);
     }
   }
 
   /**
    * Get action by ID
-   * @param actionId The action ID
-   * @returns The action or null
    */
-  static async getActionById(actionId: string): Promise<BankGuaranteeAction | null> {
+  static async getActionById(id: string): Promise<BankGuaranteeAction | null> {
     try {
-      const { data, error } = await supabase
-        .from('bank_guarantee_actions')
-        .select('*')
-        .eq('id', actionId)
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') return null;
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error fetching action:', error);
-      throw new Error(`Failed to fetch action: ${error.message}`);
+      return actionsStore.get(id) || null;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to fetch action: ${message}`);
     }
   }
 
   /**
-   * Get pending actions for a user
-   * @param userId The user ID
-   * @returns Array of pending actions
+   * Get actions by status
    */
-  static async getPendingActionsForUser(userId: string): Promise<BankGuaranteeAction[]> {
+  static async getActionsByStatus(status: BankGuaranteeAction['status']): Promise<BankGuaranteeAction[]> {
     try {
-      const { data, error } = await supabase
-        .from('bank_guarantee_actions')
-        .select('*')
-        .eq('assigned_to', userId)
-        .eq('status', 'pending')
-        .order('due_date', { ascending: true, nullsFirst: false });
-
-      if (error) throw error;
-
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching pending actions for user:', error);
-      throw new Error(`Failed to fetch pending actions for user: ${error.message}`);
+      return Array.from(actionsStore.values())
+        .filter(a => a.status === status);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to fetch actions by status: ${message}`);
     }
   }
 
   /**
-   * Get overdue actions
-   * @returns Array of overdue actions
+   * Get actions assigned to user
    */
-  static async getOverdueActions(): Promise<BankGuaranteeAction[]> {
+  static async getActionsByAssignee(userId: string): Promise<BankGuaranteeAction[]> {
     try {
-      const { data, error } = await supabase
-        .from('bank_guarantee_actions')
-        .select('*')
-        .eq('status', 'pending')
-        .lt('due_date', new Date().toISOString())
-        .order('due_date', { ascending: true });
-
-      if (error) throw error;
-
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching overdue actions:', error);
-      throw new Error(`Failed to fetch overdue actions: ${error.message}`);
+      return Array.from(actionsStore.values())
+        .filter(a => a.assigned_to === userId);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to fetch assigned actions: ${message}`);
     }
   }
 
   /**
-   * Complete a bank guarantee action
-   * @param actionId The action ID
-   * @param notes Completion notes
-   * @returns The updated action
+   * Complete an action
    */
-  static async completeAction(actionId: string, notes?: string): Promise<BankGuaranteeAction> {
+  static async completeAction(id: string, notes?: string): Promise<BankGuaranteeAction> {
     try {
-      return await this.updateBankGuaranteeAction(actionId, {
+      const existing = actionsStore.get(id);
+      if (!existing) throw new Error('Action not found');
+      
+      const updated: BankGuaranteeAction = {
+        ...existing,
         status: 'completed',
         completed_at: new Date().toISOString(),
-        notes
-      });
-    } catch (error) {
-      console.error('Error completing action:', error);
-      throw new Error(`Failed to complete action: ${error.message}`);
+        notes: notes || existing.notes,
+        updated_at: new Date().toISOString()
+      };
+      actionsStore.set(id, updated);
+      return updated;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to complete action: ${message}`);
     }
   }
 
   /**
-   * Cancel a bank guarantee action
-   * @param actionId The action ID
-   * @param reason Cancellation reason
-   * @returns The updated action
+   * Cancel an action
    */
-  static async cancelAction(actionId: string, reason?: string): Promise<BankGuaranteeAction> {
+  static async cancelAction(id: string, reason?: string): Promise<BankGuaranteeAction> {
     try {
-      return await this.updateBankGuaranteeAction(actionId, {
+      const existing = actionsStore.get(id);
+      if (!existing) throw new Error('Action not found');
+      
+      const updated: BankGuaranteeAction = {
+        ...existing,
         status: 'cancelled',
-        notes: reason
-      });
-    } catch (error) {
-      console.error('Error cancelling action:', error);
-      throw new Error(`Failed to cancel action: ${error.message}`);
+        notes: reason || existing.notes,
+        updated_at: new Date().toISOString()
+      };
+      actionsStore.set(id, updated);
+      return updated;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to cancel action: ${message}`);
     }
   }
 
   /**
    * Create action from template
-   * @param guaranteeId The guarantee ID
-   * @param templateId The template ID
-   * @param variables Variables to substitute in templates
-   * @param createdBy User creating the action
-   * @param assignedTo User assigned to the action
-   * @returns The created action
    */
   static async createFromTemplate(
-    guaranteeId: string,
-    templateId: string,
-    variables: Record<string, any>,
+    templateId: string, 
+    guaranteeId: string, 
     createdBy: string,
     assignedTo?: string
   ): Promise<BankGuaranteeAction> {
     try {
-      // Get the template
-      const { data: template, error: templateError } = await supabase
-        .from('bank_guarantee_action_templates')
-        .select('*')
-        .eq('id', templateId)
-        .eq('is_active', true)
-        .single();
-
-      if (templateError || !template) {
-        throw new Error('Template not found or inactive');
-      }
-
-      // Substitute variables in templates
-      const title = this.substituteVariables(template.title_template, variables);
-      const description = this.substituteVariables(template.description_template, variables);
-
-      // Calculate due date
+      const template = templatesStore.get(templateId);
+      if (!template) throw new Error('Template not found');
+      
       const dueDate = new Date();
       dueDate.setDate(dueDate.getDate() + template.default_due_days);
-
-      // Create action
-      return await this.createBankGuaranteeAction({
+      
+      return this.createBankGuaranteeAction({
         guarantee_id: guaranteeId,
         action_type: template.action_type,
-        title,
-        description,
+        title: template.title_template,
+        description: template.description_template,
+        status: 'pending',
         priority: template.priority,
         assigned_to: assignedTo,
         created_by: createdBy,
         due_date: dueDate.toISOString(),
-        documents: template.required_documents || []
+        documents: []
       });
-    } catch (error) {
-      console.error('Error creating action from template:', error);
-      throw new Error(`Failed to create action from template: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to create action from template: ${message}`);
     }
   }
 
   /**
-   * Get action statistics
-   * @returns Statistics object
+   * Get action statistics for a guarantee
    */
-  static async getActionStats(): Promise<{
+  static async getGuaranteeActionStats(guaranteeId: string): Promise<{
     total: number;
     pending: number;
     in_progress: number;
     completed: number;
-    cancelled: number;
-    failed: number;
     overdue: number;
-    by_type: Record<BankGuaranteeAction['action_type'], number>;
-    by_priority: Record<BankGuaranteeAction['priority'], number>;
+    by_type: Record<string, number>;
+    by_priority: Record<string, number>;
   }> {
     try {
-      const { data, error } = await supabase
-        .from('bank_guarantee_actions')
-        .select('action_type, priority, status, due_date');
-
-      if (error) throw error;
-
-      const stats = {
-        total: data?.length || 0,
-        pending: 0,
-        in_progress: 0,
-        completed: 0,
-        cancelled: 0,
-        failed: 0,
-        overdue: 0,
-        by_type: {
-          notification: 0,
-          claim: 0,
-          renewal: 0,
-          cancellation: 0,
-          extension: 0,
-          modification: 0
-        },
-        by_priority: {
-          low: 0,
-          medium: 0,
-          high: 0,
-          urgent: 0
-        }
-      };
-
-      if (data) {
-        const now = new Date();
-        
-        for (const action of data) {
-          // Count by status
-          switch (action.status) {
-            case 'pending':
-              stats.pending++;
-              break;
-            case 'in_progress':
-              stats.in_progress++;
-              break;
-            case 'completed':
-              stats.completed++;
-              break;
-            case 'cancelled':
-              stats.cancelled++;
-              break;
-            case 'failed':
-              stats.failed++;
-              break;
-          }
-
-          // Count overdue pending actions
-          if (action.status === 'pending' && action.due_date && new Date(action.due_date) < now) {
-            stats.overdue++;
-          }
-
-          // Count by type
-          stats.by_type[action.action_type]++;
-
-          // Count by priority
-          stats.by_priority[action.priority]++;
-        }
-      }
-
-      return stats;
-    } catch (error) {
-      console.error('Error fetching action stats:', error);
-      throw new Error(`Failed to fetch action stats: ${error.message}`);
-    }
-  }
-
-  /**
-   * Get action templates
-   * @returns Array of action templates
-   */
-  static async getActionTemplates(): Promise<BankGuaranteeActionTemplate[]> {
-    try {
-      const { data, error } = await supabase
-        .from('bank_guarantee_action_templates')
-        .select('*')
-        .eq('is_active', true)
-        .order('action_type', { ascending: true });
-
-      if (error) throw error;
-
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching action templates:', error);
-      throw new Error(`Failed to fetch action templates: ${error.message}`);
-    }
-  }
-
-  /**
-   * Substitute variables in a template string
-   * @param template The template string
-   * @param variables The variables object
-   * @returns The substituted string
-   */
-  private static substituteVariables(template: string, variables: Record<string, any>): string {
-    let result = template;
-    
-    for (const [key, value] of Object.entries(variables)) {
-      const placeholder = `{{${key}}}`;
-      result = result.replace(new RegExp(placeholder, 'g'), String(value));
-    }
-    
-    return result;
-  }
-
-  /**
-   * Assign action to user
-   * @param actionId The action ID
-   * @param userId The user ID
-   * @returns The updated action
-   */
-  static async assignAction(actionId: string, userId: string): Promise<BankGuaranteeAction> {
-    try {
-      return await this.updateBankGuaranteeAction(actionId, {
-        assigned_to: userId
-      });
-    } catch (error) {
-      console.error('Error assigning action:', error);
-      throw new Error(`Failed to assign action: ${error.message}`);
-    }
-  }
-
-  /**
-   * Add document to action
-   * @param actionId The action ID
-   * @param documentId The document ID
-   * @returns The updated action
-   */
-  static async addDocument(actionId: string, documentId: string): Promise<BankGuaranteeAction> {
-    try {
-      const action = await this.getActionById(actionId);
-      if (!action) {
-        throw new Error('Action not found');
-      }
-
-      const updatedDocuments = [...(action.documents || []), documentId];
+      const actions = await this.getActionsByGuaranteeId(guaranteeId);
+      const now = new Date();
       
-      return await this.updateBankGuaranteeAction(actionId, {
-        documents: updatedDocuments
-      });
-    } catch (error) {
-      console.error('Error adding document to action:', error);
-      throw new Error(`Failed to add document to action: ${error.message}`);
+      return {
+        total: actions.length,
+        pending: actions.filter(a => a.status === 'pending').length,
+        in_progress: actions.filter(a => a.status === 'in_progress').length,
+        completed: actions.filter(a => a.status === 'completed').length,
+        overdue: actions.filter(a => 
+          a.status !== 'completed' && 
+          a.due_date && 
+          new Date(a.due_date) < now
+        ).length,
+        by_type: actions.reduce((acc, a) => {
+          acc[a.action_type] = (acc[a.action_type] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>),
+        by_priority: actions.reduce((acc, a) => {
+          acc[a.priority] = (acc[a.priority] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>)
+      };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to get action stats: ${message}`);
+    }
+  }
+
+  /**
+   * Get all templates
+   */
+  static async getTemplates(): Promise<BankGuaranteeActionTemplate[]> {
+    try {
+      return Array.from(templatesStore.values())
+        .filter(t => t.is_active);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to fetch templates: ${message}`);
     }
   }
 }

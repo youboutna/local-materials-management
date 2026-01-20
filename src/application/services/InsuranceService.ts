@@ -252,7 +252,7 @@ export class InsuranceService {
     return await service.uploadInsuranceDocument(file, certificateId);
   }
 
-  static validateData(data: Partial<CreateInsuranceData>): {
+  static validateData(data: Partial<CreateInsuranceData>): { isValid: boolean; errors: string[] } {
     const service = new InsuranceService();
     return service.validateInsuranceData(data);
   }
