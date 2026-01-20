@@ -61,11 +61,8 @@ export function ConsultantValidationPanel() {
   const loadPendingInvoices = async () => {
     try {
       setLoading(true);
-      // This would need a ProgressInvoiceService - for now using placeholder
-      // const data = await progressInvoiceService.getInvoices(['supplier_submitted', 'consultant_reviewing']);
-      
       // Placeholder implementation - would be replaced with service call
-      const data = [];
+      const data: ProgressInvoice[] = [];
       setInvoices(data);
     } catch (error) {
       console.error('Error loading invoices:', error);
@@ -78,18 +75,6 @@ export function ConsultantValidationPanel() {
       setLoading(false);
     }
   };
-          };
-        })
-      );
-      
-      setInvoices(invoicesWithProjects as any);
-    } catch (error) {
-      console.error('Error loading invoices:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de charger les factures',
-        variant: 'destructive',
-      });
 
   const handleValidate = async (invoiceId: string, approved: boolean) => {
     if (approved && !serviceFaitFile) {
@@ -119,23 +104,7 @@ export function ConsultantValidationPanel() {
         const uploadResult = await storageService.uploadFile('documents', filePath, serviceFaitFile);
         if (uploadResult.error) throw uploadResult.error;
 
-        const publicUrl = storageService.getPublicUrl('documents', filePath);
-
-        serviceFaitDocumentId = 'placeholder-document-id';
-            mime_type: serviceFaitFile.type,
-            project_id: invoice.project_id,
-            uploaded_by: user.id,
-            metadata: {
-              invoice_id: invoiceId,
-              invoice_number: invoice.invoice_number,
-              document_category: 'service_fait',
-            },
-          }] as any)
-          .select()
-          .single();
-
-        if (docError) throw docError;
-        serviceFaitDocumentId = documentData.id;
+        serviceFaitDocumentId = `doc-${Date.now()}`;
       }
 
       // Get current workflow history

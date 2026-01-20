@@ -21,3 +21,41 @@ export interface IInsuranceRepository {
 }
 
 export class InsuranceRepository implements IInsuranceRepository {
+  private adapter = RepositoryFactory.getInsuranceRepository();
+
+  async getActiveCertificates(): Promise<InsuranceCertificateEntity[]> {
+    return this.adapter.getActiveCertificates();
+  }
+
+  async getByProjectId(projectId: string): Promise<InsuranceCertificateEntity[]> {
+    return this.adapter.getByProjectId(projectId);
+  }
+
+  async getById(id: string): Promise<InsuranceCertificateEntity | null> {
+    return this.adapter.getById(id);
+  }
+
+  async create(certificate: Omit<InsuranceCertificateEntity, 'id' | 'created_at' | 'updated_at'>): Promise<InsuranceCertificateEntity> {
+    return this.adapter.create(certificate);
+  }
+
+  async update(id: string, updates: Partial<InsuranceCertificateEntity>): Promise<InsuranceCertificateEntity> {
+    return this.adapter.update(id, updates);
+  }
+
+  async delete(id: string): Promise<void> {
+    return this.adapter.delete(id);
+  }
+
+  async getExpiringSoon(daysThreshold: number): Promise<InsuranceCertificateEntity[]> {
+    return this.adapter.getExpiringSoon(daysThreshold);
+  }
+
+  async getByContractorId(contractorId: string): Promise<InsuranceCertificateEntity[]> {
+    return this.adapter.getByContractorId(contractorId);
+  }
+
+  async search(filters: any): Promise<InsuranceCertificateEntity[]> {
+    return this.adapter.search(filters);
+  }
+}
