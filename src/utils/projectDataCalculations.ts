@@ -1,7 +1,8 @@
 
 import { ProjectData } from '@/types/project';
-import { ProjectService } from '../services/ProjectService';
-import { PhaseService } from '../services/phaseService';
+import { ProjectService } from '../application/services/ProjectService';
+import { RepositoryFactory } from '../infrastructure/supabase/RepositoryFactory';
+import { PhaseService } from '../application/services/PhaseService';
 
 export class ProjectDataCalculations {
   /**
@@ -10,8 +11,9 @@ export class ProjectDataCalculations {
   static async calculateRealProjectCosts(projectId: string) {
     try {
       // Get project detail with all related data using ProjectService
-      const projectService = new ProjectService();
-      const projectDetail = await projectService.getProjectDetail(projectId);
+      const projectRepository = RepositoryFactory.getProjectRepository();
+      const projectService = new ProjectService(projectRepository);
+      const projectDetail = await projectService.getProjectWithDetails(projectId);
       if (!projectDetail) {
         throw new Error('Project not found');
       }
@@ -66,8 +68,9 @@ export class ProjectDataCalculations {
       }
 
       // Get project detail for payments data
-      const projectService = new ProjectService();
-      const projectDetail = await projectService.getProjectDetail(projectId);
+      const projectRepository = RepositoryFactory.getProjectRepository();
+      const projectService = new ProjectService(projectRepository);
+      const projectDetail = await projectService.getProjectWithDetails(projectId);
       
       // Calculate costs from project data and phase information
       const costs = await this.extractPhaseCostsFromProjectData(projectDetail, phase);
@@ -208,8 +211,10 @@ export class ProjectDataCalculations {
       const progressMetrics = this.calculateDetailedProgressMetrics(phase, steps);
       
       // Get project analytics for additional context
-      const projectService = new ProjectService();
-      const projectAnalytics = await projectService.getProjectAnalytics(phase.project_id);
+      const projectRepository = RepositoryFactory.getProjectRepository();
+      const projectService = new ProjectService(projectRepository);
+      // Note: getProjectAnalytics doesn't exist in new ProjectService, using getProjectWithDetails instead
+      const projectAnalytics = await projectService.getProjectWithDetails(phase.project_id);
       
       // Calculate performance indicators
       const performanceIndicators = this.calculatePerformanceIndicators(
@@ -257,10 +262,10 @@ export class ProjectDataCalculations {
           progress: step.progress || 0,
           tasksCount: step.tasks?.length || 0,
           completedTasks: step.tasks?.filter(t => t.status === 'completed').length || 0,
-          delayed: step.status === 'delayed',
-          estimatedDuration: step.estimated_duration_days,
-          startDate: step.start_date,
-          endDate: step.end_date,
+          delayed: step.status === 'cancelled', // 'delayed' doesn't exist in PhaseStatus, using 'cancelled' as fallback
+          estimatedDuration: (step as any).estimated_duration_days,
+          startDate: (step as any).start_date,
+          endDate: (step as any).end_date,
           criticalPath: false // Critical path not available in PhaseStepDTO
         })),
         

@@ -31,4 +31,11 @@ export interface IMaterialRepository {
     lowStockCount: number;
     outOfStockCount: number;
   }>;
+  
+  // Project materials methods
+  getProjectMaterials(projectId: string): Promise<any[]>;
+  addMaterialToProject(projectId: string, materialId: string, quantity: number): Promise<void>;
+  removeMaterialFromProject(projectId: string, materialId: string): Promise<void>;
+  updateProjectMaterialQuantity(projectId: string, materialId: string, quantity: number): Promise<void>;
+  deleteByProjectId(projectId: string): Promise<void>;
 }

@@ -45,6 +45,57 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
     return this.mapToEntity(data);
   }
 
+  async getProjectMaterials(projectId: string): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('project_materials')
+      .select('*')
+      .eq('project_id', projectId);
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  async addMaterialToProject(projectId: string, materialId: string, quantity: number): Promise<void> {
+    const { error } = await supabase
+      .from('project_materials')
+      .insert({
+        project_id: projectId,
+        material_id: materialId,
+        quantity: quantity
+      });
+
+    if (error) throw error;
+  }
+
+  async removeMaterialFromProject(projectId: string, materialId: string): Promise<void> {
+    const { error } = await supabase
+      .from('project_materials')
+      .delete()
+      .eq('project_id', projectId)
+      .eq('material_id', materialId);
+
+    if (error) throw error;
+  }
+
+  async updateProjectMaterialQuantity(projectId: string, materialId: string, quantity: number): Promise<void> {
+    const { error } = await supabase
+      .from('project_materials')
+      .update({ quantity })
+      .eq('project_id', projectId)
+      .eq('material_id', materialId);
+
+    if (error) throw error;
+  }
+
+  async deleteByProjectId(projectId: string): Promise<void> {
+    const { error } = await supabase
+      .from('project_materials')
+      .delete()
+      .eq('project_id', projectId);
+
+    if (error) throw error;
+  }
+
   async findAll(): Promise<Material[]> {
     const { data, error } = await supabase
       .from('materials')

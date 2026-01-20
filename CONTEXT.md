@@ -59,7 +59,9 @@ if (DEV_MODE) {
 8. **Persistence Layer** : Types Supabase dans `/src/integrations/supabase/types.ts`
 - **Flux architectural** UI → Hook → Service → Repository → Adapter → BDD
 - **Données centralisées** dans `/data/*` (projectsData.ts - 652 lignes)
-- **329 appels directs Supabase** dans 84 composants (en cours de refactoring)
+- **47 appels directs Supabase** dans 24 composants (plan de migration défini)
+- **19 hooks hexagonaux** avec appels directs à corriger
+- **Architecture hexagonale** : 90% complète, migration finale en cours
 - **Erreurs de types** : ProjectStatus incompatibles (en cours de correction)
 
 ### Flux Architectural Standard
@@ -70,16 +72,16 @@ if (DEV_MODE) {
 ```
 
 ### Prochaines Étapes
-- **Phase 1** : Refactoring composants critiques (SupplierPaymentRequest, LoadDataButton)
-- **Phase 2** : Création hooks hexagonaux manquants (1-2 jours)
-- **Phase 3** : Élimination appels directs Supabase (3-5 jours)
+- **Phase 1** : Migration AuthService et StorageService (1 jour)
+- **Phase 2** : Correction hooks hexagonaux (2 jours) 
+- **Phase 3** : Refactoring composants TSX (3 jours)
 - **Phase 4** : Validation complète architecture (1 jour)
 
 ### Métriques de Migration
 | Métrique | Avant | Après |
 |----------|-------|-------|
 | **Services avec couplage fort** | ~15 | 0 
-| **Appels directs Supabase** | ~50 | 329 (identifiés) |
+| **Appels directs Supabase** | ~50 | 47 (identifiés) |
 | **DTOs centralisés** | 100% | 100% ✅ |
 | **Hooks hexagonaux** | 69 | 72+ ✅ |
 | **Interfaces domain** | 15 | 15 ✅ |

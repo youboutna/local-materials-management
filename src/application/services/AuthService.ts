@@ -5,80 +5,33 @@
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-
-export interface AuthUser {
-  id: string;
-  email?: string;
-  full_name?: string;
-  role?: string;
-  phone?: string;
-  national_id?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-export interface RegisterData {
-  email: string;
-  password: string;
-  full_name?: string;
-  phone?: string;
-  national_id?: string;
-  role?: string;
-}
-
-interface SupabaseUser {
-  id: string;
-  email?: string;
-  full_name?: string;
-  role?: string;
-  phone?: string;
-  national_id?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-interface SupabaseSession {
-  access_token: string;
-  refresh_token: string;
-  expires_at: string;
-  user: SupabaseUser;
-}
-
-export interface AuthSession {
-  user: AuthUser | null;
-  session: SupabaseSession | null;
-}
+import { 
+  IAuthRepository, 
+  AuthUser, 
+  AuthSession, 
+  LoginCredentials, 
+  RegisterData 
+} from '@/domain/repositories/IAuthRepository';
 
 export class AuthService {
+  constructor(private authRepository: IAuthRepository) {}
+
   /**
    * Get current session
    */
-  async getCurrentSession(): Promise<AuthSession> {
+  async getCurrentSession(): Promise<{ user: AuthUser | null; session: AuthSession | null }> {
     try {
-      const result = await this.getSupabaseSession();
-      const session = result.data.session;
+      const result = await this.authRepository.getCurrentSession();
       
-      if (!session) {
+      if (result.error) {
+        throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get current session');
+      }
+
+      if (!result.session) {
         return { user: null, session: null };
       }
 
-      const user: AuthUser = {
-        id: session.user.id,
-        email: session.user.email,
-        full_name: session.user.full_name,
-        role: session.user.role,
-        phone: session.user.phone,
-        national_id: session.user.national_id,
-        created_at: session.user.created_at,
-        updated_at: session.user.updated_at
-      };
-
-      return { user, session };
+      return { user: result.session.user, session: result.session };
     } catch (error) {
       console.error('AuthService.getCurrentSession failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get current session');
@@ -86,33 +39,39 @@ export class AuthService {
   }
 
   /**
+   * Get current user
+   */
+  async getCurrentUser(): Promise<AuthUser | null> {
+    try {
+      const result = await this.authRepository.getCurrentUser();
+      
+      if (result.error) {
+        throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get current user');
+      }
+
+      return result.user;
+    } catch (error) {
+      console.error('AuthService.getCurrentUser failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get current user');
+    }
+  }
+
+  /**
    * Login user
    */
-  async login(credentials: LoginCredentials): Promise<AuthSession> {
+  async login(credentials: LoginCredentials): Promise<{ user: AuthUser | null; session: AuthSession | null }> {
     try {
-      const { data, error } = await this.signInWithSupabase(credentials);
+      const result = await this.authRepository.signIn(credentials);
       
-      if (error) {
+      if (result.error) {
         throw new AppError(ErrorCode.UNAUTHORIZED, 'Invalid credentials');
       }
 
-      const session = data.session;
-      if (!session) {
+      if (!result.session) {
         return { user: null, session: null };
       }
 
-      const user: AuthUser = {
-        id: session.user.id,
-        email: session.user.email,
-        full_name: session.user.full_name,
-        role: session.user.role,
-        phone: session.user.phone,
-        national_id: session.user.national_id,
-        created_at: session.user.created_at,
-        updated_at: session.user.updated_at
-      };
-
-      return { user, session };
+      return { user: result.session.user, session: result.session };
     } catch (error) {
       console.error('AuthService.login failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Login failed');
@@ -124,27 +83,13 @@ export class AuthService {
    */
   async register(data: RegisterData): Promise<AuthUser | null> {
     try {
-      const { data: signUpData, error } = await this.signUpWithSupabase(data);
+      const result = await this.authRepository.signUp(data);
       
-      if (error) {
+      if (result.error) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Registration failed');
       }
 
-      const user = signUpData.user;
-      if (!user) {
-        return null;
-      }
-
-      return {
-        id: user.id,
-        email: user.email,
-        full_name: user.full_name,
-        role: user.role,
-        phone: user.phone,
-        national_id: user.national_id,
-        created_at: user.created_at,
-        updated_at: user.updated_at
-      };
+      return result.user;
     } catch (error) {
       console.error('AuthService.register failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Registration failed');
@@ -156,9 +101,9 @@ export class AuthService {
    */
   async logout(): Promise<void> {
     try {
-      const { error } = await this.signOutWithSupabase();
+      const result = await this.authRepository.signOut();
       
-      if (error) {
+      if (result.error) {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to logout');
       }
     } catch (error) {
@@ -172,9 +117,9 @@ export class AuthService {
    */
   async resetPassword(email: string): Promise<void> {
     try {
-      const { error } = await this.resetPasswordWithSupabase(email);
+      const result = await this.authRepository.resetPassword(email);
       
-      if (error) {
+      if (result.error) {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to reset password');
       }
     } catch (error) {
@@ -188,46 +133,14 @@ export class AuthService {
    */
   async updatePassword(newPassword: string): Promise<void> {
     try {
-      const { error } = await this.updatePasswordWithSupabase(newPassword);
+      const result = await this.authRepository.updatePassword(newPassword);
       
-      if (error) {
+      if (result.error) {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update password');
       }
     } catch (error) {
       console.error('AuthService.updatePassword failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update password');
     }
-  }
-
-  // Private methods that would interact with Supabase adapters
-  private async getSupabaseSession(): Promise<{ data: { session: SupabaseSession | null }, error: Error | null }> {
-    // This would call the auth repository
-    // For now, using placeholder
-    return { data: { session: null }, error: null };
-  }
-
-  private async signInWithSupabase(_credentials: LoginCredentials): Promise<{ data: { session: SupabaseSession | null }, error: Error | null }> {
-    // This would call the auth repository
-    return { data: { session: null }, error: null };
-  }
-
-  private async signUpWithSupabase(_data: RegisterData): Promise<{ data: { user: SupabaseUser | null }, error: Error | null }> {
-    // This would call the auth repository
-    return { data: { user: null }, error: null };
-  }
-
-  private async signOutWithSupabase(): Promise<{ error: Error | null }> {
-    // This would call the auth repository
-    return { error: null };
-  }
-
-  private async resetPasswordWithSupabase(_email: string): Promise<{ error: Error | null }> {
-    // This would call the auth repository
-    return { error: null };
-  }
-
-  private async updatePasswordWithSupabase(_newPassword: string): Promise<{ error: Error | null }> {
-    // This would call the auth repository
-    return { error: null };
   }
 }

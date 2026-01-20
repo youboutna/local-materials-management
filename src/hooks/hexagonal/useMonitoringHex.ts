@@ -4,7 +4,11 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { BankGuaranteeService } from '@/application/services/BankGuaranteeService';
+import { PaymentBlockingService } from '@/application/services/PaymentBlockingService';
+import { InsuranceService } from '@/application/services/InsuranceService';
+import { NotificationService } from '@/application/services/NotificationService';
 
 // Types for monitoring entities
 export interface BankGuarantee {
@@ -68,23 +72,16 @@ export function useBankGuaranteesHex(projectId?: string) {
   const [guarantees, setGuarantees] = useState<BankGuarantee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const bankGuaranteeService = new BankGuaranteeService(RepositoryFactory.getBankGuaranteeRepository());
 
   const fetchGuarantees = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      let query = supabase.from('bank_guarantees').select('*');
+      const data = await bankGuaranteeService.getBankGuarantees(projectId);
       
-      if (projectId) {
-        query = query.eq('project_id', projectId);
-      }
-
-      const { data, error: queryError } = await query.order('created_at', { ascending: false });
-
-      if (queryError) throw queryError;
-
-      setGuarantees((data || []).map(g => ({
+      setGuarantees(data.map(g => ({
         id: g.id,
         projectId: g.project_id,
         contractorId: g.contractor_id,
@@ -102,7 +99,7 @@ export function useBankGuaranteesHex(projectId?: string) {
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  }, [projectId, bankGuaranteeService]);
 
   useEffect(() => {
     fetchGuarantees();
@@ -138,23 +135,16 @@ export function usePaymentBlocksHex(projectId?: string) {
   const [blocks, setBlocks] = useState<PaymentBlock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const paymentBlockingService = new PaymentBlockingService(RepositoryFactory.getPaymentRepository());
 
   const fetchBlocks = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      let query = supabase.from('payment_blocks').select('*');
+      const data = await paymentBlockingService.getPaymentBlocks(projectId);
       
-      if (projectId) {
-        query = query.eq('project_id', projectId);
-      }
-
-      const { data, error: queryError } = await query.order('blocked_at', { ascending: false });
-
-      if (queryError) throw queryError;
-
-      setBlocks((data || []).map(b => ({
+      setBlocks(data.map(b => ({
         id: b.id,
         projectId: b.project_id,
         contractorId: b.contractor_id,
@@ -171,7 +161,7 @@ export function usePaymentBlocksHex(projectId?: string) {
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  }, [projectId, paymentBlockingService]);
 
   useEffect(() => {
     fetchBlocks();
@@ -179,22 +169,14 @@ export function usePaymentBlocksHex(projectId?: string) {
 
   const resolveBlock = useCallback(async (blockId: string, resolvedBy: string): Promise<boolean> => {
     try {
-      const { error } = await supabase
-        .from('payment_blocks')
-        .update({ 
-          resolved_at: new Date().toISOString(),
-          resolved_by: resolvedBy
-        })
-        .eq('id', blockId);
-
-      if (error) throw error;
+      await paymentBlockingService.resolvePaymentBlock(blockId, resolvedBy);
       await fetchBlocks();
       return true;
     } catch (err) {
       console.error('Failed to resolve block:', err);
       return false;
     }
-  }, [fetchBlocks]);
+  }, [fetchBlocks, paymentBlockingService]);
 
   return {
     blocks,
@@ -222,26 +204,20 @@ export function useInsurancesHex(projectId?: string) {
     setError(null);
 
     try {
-      let query = supabase.from('insurance_certificates').select('*');
-      
-      if (projectId) {
-        query = query.eq('project_id', projectId);
-      }
+      // Use InsuranceService - placeholder implementation
+      const insuranceService = new InsuranceService();
+      const insuranceData = await insuranceService.getInsuranceCertificates(projectId);
 
-      const { data, error: queryError } = await query.order('created_at', { ascending: false });
-
-      if (queryError) throw queryError;
-
-      setInsurances((data || []).map(i => ({
+      setInsurances(insuranceData.map(i => ({
         id: i.id,
         projectId: i.project_id,
         contractorId: i.contractor_id,
-        contractorName: i.contractor_name,
-        insuranceCompany: i.insurance_company,
+        contractorName: i.provider, // Using provider as contractorName
+        insuranceCompany: i.provider,
         policyNumber: i.policy_number,
-        coverageType: i.coverage_type,
+        coverageType: i.insurance_type,
         coverageAmount: i.coverage_amount,
-        validFrom: i.valid_from,
+        validFrom: i.start_date,
         validUntil: i.valid_until,
         status: i.status,
         createdAt: i.created_at,
@@ -294,33 +270,30 @@ export function useNotificationsHex(recipientId?: string, types?: string[]) {
     setError(null);
 
     try {
-      let query = supabase.from('notifications').select('*');
+      // Use NotificationService through hexagonal architecture
+      const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
+      const notificationsData = await notificationService.getUserNotifications(
+        recipientId || '', 
+        100
+      );
       
-      if (recipientId) {
-        query = query.eq('recipient_id', recipientId);
-      }
-      
+      // Filter by types if specified
+      let filteredData = notificationsData;
       if (types && types.length > 0) {
-        query = query.in('type', types);
+        filteredData = notificationsData.filter(n => types.includes(n.type));
       }
 
-      const { data, error: queryError } = await query
-        .order('created_at', { ascending: false })
-        .limit(100);
-
-      if (queryError) throw queryError;
-
-      setNotifications((data || []).map(n => ({
+      setNotifications(filteredData.map(n => ({
         id: n.id,
         recipientId: n.recipient_id,
         title: n.title,
         message: n.message,
         type: n.type,
         read: n.read,
-        relatedId: n.related_id,
-        metadata: n.metadata as Record<string, any>,
-        createdAt: n.created_at,
-        updatedAt: n.updated_at,
+        relatedId: null, // Not available in NotificationData interface
+        metadata: null, // Not available in NotificationData interface
+        createdAt: n.created_at || '',
+        updatedAt: n.updated_at || '',
       })));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load notifications');
@@ -335,12 +308,9 @@ export function useNotificationsHex(recipientId?: string, types?: string[]) {
 
   const markAsRead = useCallback(async (notificationId: string): Promise<boolean> => {
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', notificationId);
-
-      if (error) throw error;
+      // Use NotificationService through hexagonal architecture
+      const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
+      await notificationService.markAsRead(notificationId);
       
       setNotifications(prev => 
         prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
@@ -356,13 +326,11 @@ export function useNotificationsHex(recipientId?: string, types?: string[]) {
     if (!recipientId) return false;
     
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('recipient_id', recipientId)
-        .eq('read', false);
-
-      if (error) throw error;
+      // Use NotificationService through hexagonal architecture
+      const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
+      // Mark all notifications for recipient as read
+      const unreadNotifications = notifications.filter(n => !n.read && n.recipientId === recipientId);
+      await Promise.all(unreadNotifications.map(n => notificationService.markAsRead(n.id)));
       
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       return true;
@@ -370,7 +338,7 @@ export function useNotificationsHex(recipientId?: string, types?: string[]) {
       console.error('Failed to mark all as read:', err);
       return false;
     }
-  }, [recipientId]);
+  }, [recipientId, notifications]);
 
   return {
     notifications,

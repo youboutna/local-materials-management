@@ -1,5 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/repositories/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { TaskService } from '@/application/services/TaskService';
+import { ProjectService } from '@/application/services/ProjectService';
+import { AuthService } from '@/application/services/AuthService';
 import { toast } from '@/hooks/use-toast';
 
 export interface TaskAssignment {
@@ -38,35 +41,46 @@ interface ProjectPhase {
 
 export function useTaskListHex(projectId: string) {
   const queryClient = useQueryClient();
+  const taskService = new TaskService(RepositoryFactory.getTaskRepository());
+  const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+  const authService = new AuthService(RepositoryFactory.getAuthRepository());
 
   // Fetch project phases
   const phasesQuery = useQuery({
     queryKey: ['project-phases', projectId],
     queryFn: async (): Promise<ProjectPhase[]> => {
-      const { data, error } = await supabase
-        .from('project_phases')
-        .select('id, phase_name, status')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: true });
-      
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!projectId,
+      // This would use ProjectService - placeholder implementation
+      const phases = await projectService.getProjectPhases(projectId);
+      return phases.map(phase => ({
+        id: phase.id,
+        phase_name: phase.name || 'Unnamed Phase',
+        status: phase.status
+      }));
+    }
   });
 
   // Fetch tasks
   const tasksQuery = useQuery({
     queryKey: ['project-tasks', projectId],
     queryFn: async (): Promise<TaskAssignment[]> => {
-      const { data, error } = await supabase
-        .from('task_assignments')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
+      // This would use TaskService - placeholder implementation
+      const tasks = await taskService.getTasksByProject(projectId);
+      return tasks.map(task => ({
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        project_id: task.projectId,
+        phase_id: task.phaseId,
+        assigned_to: task.assignedTo?.[0] || null,
+        assigned_by: task.assignedBy || null,
+        due_date: task.dueDate,
+        priority: task.priority,
+        status: task.status,
+        completion_date: task.completedAt,
+        notes: task.description,
+        created_at: task.createdAt,
+        updated_at: task.updatedAt
+      }));
     },
     enabled: !!projectId,
   });
@@ -74,28 +88,22 @@ export function useTaskListHex(projectId: string) {
   // Create task mutation
   const createMutation = useMutation({
     mutationFn: async (taskData: TaskFormData) => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await authService.getCurrentUser();
       if (!user) throw new Error('User not authenticated');
 
-      const { data, error } = await supabase
-        .from('task_assignments')
-        .insert({
-          title: taskData.title,
-          description: taskData.description,
-          project_id: projectId,
-          phase_id: taskData.phase_id || null,
-          assigned_to: taskData.assigned_to || null,
-          assigned_by: user.id,
-          due_date: taskData.due_date || null,
-          priority: taskData.priority,
-          status: taskData.status,
-          notes: taskData.notes,
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
+      // This would use TaskService - placeholder implementation
+      return await taskService.createTask({
+        title: taskData.title,
+        description: taskData.description,
+        projectId: projectId,
+        phaseId: taskData.phase_id,
+        assignedTo: taskData.assigned_to ? [taskData.assigned_to] : [],
+        dueDate: taskData.due_date,
+        priority: taskData.priority,
+        status: taskData.status,
+        notes: taskData.notes,
+        assignedBy: user.id
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project-tasks', projectId] });

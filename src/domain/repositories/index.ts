@@ -26,6 +26,10 @@ export * from './IReportingRepository';
 export * from './IUserRepository';
 export * from './IProjectStakeholderRepository';
 export * from './IParsedInvoiceRepository';
+export * from './InsuranceRepository';
+export type { IAuthRepository } from './IAuthRepository';
+export type { IStorageRepository } from './IStorageRepository';
+export type { INotificationRepository } from './INotificationRepository';
 
 // Repository Implementations (migrated from services)
 export * from './BankGuaranteeRepository';

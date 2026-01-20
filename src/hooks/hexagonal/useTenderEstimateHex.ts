@@ -3,7 +3,8 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { TenderService } from '@/application/services/TenderService';
 
 // Types
 export interface TenderEstimate {
@@ -108,39 +109,13 @@ export function useParsedInvoicesHex(tenderId: string) {
   });
 }
 
-export function useCreateTenderEstimateHex(tenderId: string) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (estimate: Omit<TenderEstimate, 'id'>) => {
-      const { data, error } = await supabase
-        .from('tender_estimates')
-        .insert([estimate])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tender-estimates', tenderId] });
-    }
-  });
-}
-
 export function useAddEstimateItemHex(estimateId: string | null) {
   const queryClient = useQueryClient();
+  const tenderService = new TenderService(RepositoryFactory.getTenderRepository());
 
   return useMutation({
     mutationFn: async (item: EstimateItem & { estimate_id: string }) => {
-      const { data, error } = await supabase
-        .from('tender_estimate_items')
-        .insert([item])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      return await tenderService.addEstimateItem(item);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['estimate-items', estimateId] });
@@ -150,28 +125,11 @@ export function useAddEstimateItemHex(estimateId: string | null) {
 
 export function useCreateInvoiceHex(tenderId: string) {
   const queryClient = useQueryClient();
+  const tenderService = new TenderService(RepositoryFactory.getTenderRepository());
 
   return useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase
-        .from('parsed_invoices')
-        .insert([{
-          tender_id: tenderId,
-          file_name: 'Nouvelle facture',
-          parsing_status: 'manual',
-          total_amount: 0,
-          invoice_date: new Date().toISOString().split('T')[0],
-          items: [],
-          parsed_data: {
-            manual_creation: true,
-            created_at: new Date().toISOString()
-          }
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      return await tenderService.createInvoice(tenderId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['parsed-invoices', tenderId] });

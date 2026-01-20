@@ -6,7 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { PhaseService } from '@/application/services/PhaseService';
+import { PhaseDTO } from '@/dtos/transforms/shared';
 import PhaseMaterials from '@/components/project/PhaseMaterials';
 import PhaseEmployees from '@/components/project/PhaseEmployees';
 import PhaseDocuments from '@/components/project/PhaseDocuments';
@@ -32,13 +33,17 @@ const ProjectPhasesDetail: React.FC = () => {
       if (!id) return;
       try {
         setLoading(true);
-        const { data, error } = await supabase
-          .from('project_phases')
-          .select('id, phase_name')
-          .eq('project_id', id)
-          .order('start_date', { ascending: true });
-        if (error) throw error;
-        const options = (data || []).map(p => ({ id: p.id, name: p.phase_name || 'Phase sans nom' }));
+        
+        // ✅ Utilisation de PhaseService hexagonal
+        const phaseService = new PhaseService();
+        const phasesData = await phaseService.getPhasesByProject(id);
+        
+        // Transformation en options pour le select
+        const options = phasesData.map(p => ({ 
+          id: p.id, 
+          name: p.phase_name || 'Phase sans nom' 
+        }));
+        
         setPhases(options);
         
         // Check for phase query parameter
@@ -47,7 +52,11 @@ const ProjectPhasesDetail: React.FC = () => {
         setSelectedPhaseId(phaseParam || options[0]?.id);
       } catch (err) {
         console.error(err);
-        toast({ title: 'Erreur', description: "Impossible de charger les phases", variant: 'destructive' });
+        toast({ 
+          title: 'Erreur', 
+          description: "Impossible de charger les phases via PhaseService", 
+          variant: 'destructive' 
+        });
       } finally {
         setLoading(false);
       }

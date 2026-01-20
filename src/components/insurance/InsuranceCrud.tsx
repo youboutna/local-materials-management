@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Eye, Shield, AlertTriangle, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { InsuranceService } from '@/application/services/InsuranceService';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 
@@ -18,35 +18,30 @@ interface InsuranceCertificate {
   id: string;
   project_id: string;
   contractor_id: string;
-  contractor_name: string;
-  insurance_company: string;
+  insurance_type: string;
+  provider: string;
   policy_number: string;
   coverage_amount: number;
-  coverage_type: string;
-  valid_from: string;
+  start_date: string;
   valid_until: string;
-  certificate_url?: string;
-  status: string;
-  last_verified?: string;
-  verified_by?: string;
+  status: 'active' | 'expired' | 'pending';
+  documents: string[];
+  created_at: string;
+  updated_at: string;
   notes?: string;
-  created_at?: string;
-  updated_at?: string;
 }
 
 interface InsuranceFormData {
   project_id: string;
   contractor_id: string;
-  contractor_name: string;
-  insurance_company: string;
+  insurance_type: string;
+  provider: string;
   policy_number: string;
   coverage_amount: number;
-  coverage_type: string;
-  valid_from: string;
+  start_date: string;
   valid_until: string;
-  certificate_url: string;
-  status: string;
-  notes: string;
+  status: 'active' | 'expired' | 'pending';
+  notes?: string;
 }
 
 const InsuranceCrud: React.FC = () => {
@@ -155,87 +150,51 @@ const InsuranceCrud: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.project_id || !formData.contractor_id || !formData.insurance_company || !formData.policy_number) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez remplir tous les champs obligatoires",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
+      const insuranceService = new InsuranceService();
+      
       if (isEditing && selectedCertificate) {
-        // Update insurance certificate in database
-        const { error } = await supabase
-          .from('insurance_certificates')
-          .update({
-            project_id: formData.project_id,
-            contractor_id: formData.contractor_id,
-            contractor_name: formData.contractor_name,
-            insurance_company: formData.insurance_company,
-            policy_number: formData.policy_number,
-            coverage_type: formData.coverage_type,
-            coverage_amount: formData.coverage_amount,
-            valid_from: formData.valid_from,
-            valid_until: formData.valid_until,
-            status: formData.status,
-            notes: formData.notes,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', selectedCertificate.id);
-
-        if (error) throw error;
-
-        // Update local state
-        const updatedCertificate = { 
-          ...selectedCertificate, 
-          ...formData,
-          updated_at: new Date().toISOString()
-        };
-        setCertificates(prev => prev.map(c => c.id === selectedCertificate.id ? updatedCertificate : c));
-        
-        toast({
-          title: "Succès",
-          description: "Certificat d'assurance mis à jour avec succès",
+        // Update insurance certificate using InsuranceService
+        await insuranceService.updateInsuranceCertificate(selectedCertificate.id, {
+          project_id: formData.project_id,
+          contractor_id: formData.contractor_id,
+          insurance_type: formData.coverage_type,
+          provider: formData.insurance_company,
+          policy_number: formData.policy_number,
+          coverage_amount: formData.coverage_amount,
+          start_date: formData.valid_from,
+          valid_until: formData.valid_until,
+          status: formData.status,
+          notes: formData.notes
         });
       } else {
-        // Create new insurance certificate in database
-        const { data, error } = await supabase
-          .from('insurance_certificates')
-          .insert({
-            project_id: formData.project_id,
-            contractor_id: formData.contractor_id,
-            contractor_name: formData.contractor_name,
-            insurance_company: formData.insurance_company,
-            policy_number: formData.policy_number,
-            coverage_type: formData.coverage_type,
-            coverage_amount: formData.coverage_amount,
-            valid_from: formData.valid_from,
-            valid_until: formData.valid_until,
-            status: formData.status || 'active',
-            notes: formData.notes
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
-
-        // Add to local state
-        setCertificates(prev => [...prev, data as any]);
-        
-        toast({
-          title: "Succès",
-          description: "Certificat d'assurance créé avec succès",
+        // Create new insurance certificate using InsuranceService
+        await insuranceService.createInsuranceCertificate({
+          project_id: formData.project_id,
+          contractor_id: formData.contractor_id,
+          insurance_type: formData.coverage_type,
+          provider: formData.insurance_company,
+          policy_number: formData.policy_number,
+          coverage_amount: formData.coverage_amount,
+          start_date: formData.valid_from,
+          valid_until: formData.valid_until,
+          status: formData.status,
+          notes: formData.notes
         });
       }
       
       setIsFormOpen(false);
       resetForm();
+      
+      toast({
+        title: isEditing ? "Certificat d'assurance mis à jour" : "Certificat d'assurance créé avec succès",
+        description: `Le certificat d'assurance a été ${isEditing ? 'mis à jour' : 'créé'} avec succès`,
+      });
     } catch (error) {
+      console.error('Error submitting form:', error);
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue",
+        description: error.message,
         variant: "destructive",
       });
     }
@@ -244,10 +203,23 @@ const InsuranceCrud: React.FC = () => {
   const handleDelete = async (certificateId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce certificat d\'assurance ?')) {
       setCertificates(prev => prev.filter(c => c.id !== certificateId));
-      toast({
-        title: "Succès",
-        description: "Certificat d'assurance supprimé avec succès",
-      });
+      
+      try {
+        const insuranceService = new InsuranceService();
+        await insuranceService.deleteInsuranceCertificate(certificateId);
+        
+        toast({
+          title: "Succès",
+          description: "Certificat d'assurance supprimé avec succès",
+        });
+      } catch (error) {
+        console.error('Error deleting certificate:', error);
+        toast({
+          title: "Erreur",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     }
   };
 

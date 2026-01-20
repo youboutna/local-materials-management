@@ -3,9 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Download, ExternalLink } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import DocumentViewer from '@/components/documents/DocumentViewer';
 import { toast } from '@/hooks/use-toast';
+import { DocumentService } from '@/application/services/DocumentService';
 
 interface DocumentSectionProps {
   relatedId: string;
@@ -47,34 +47,26 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
     
     setLoading(true);
     try {
-      let query = supabase
-        .from('documents')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      // Filter based on related type
+      let documents = [];
+      
+      // Filter based on related type using DocumentService
       switch (relatedType) {
         case 'project':
-          query = query.eq('project_id', relatedId);
+          documents = await DocumentService.getProjectDocuments(relatedId);
           break;
         case 'inspection':
-          query = query.eq('inspection_id', relatedId);
+          documents = await DocumentService.getInspectionDocuments(relatedId);
           break;
         case 'payment':
-          // Filter documents by payment_id
-          query = query.eq('payment_id', relatedId);
+          documents = await DocumentService.getPaymentDocuments(relatedId);
           break;
         case 'bank_guarantee':
           // Get project_id from bank_guarantee and filter documents
           try {
-            const { data: guaranteeData } = await supabase
-              .from('bank_guarantees')
-              .select('project_id')
-              .eq('id', relatedId)
-              .single();
+            const guaranteeData = await DocumentService.getBankGuaranteeProject(relatedId);
             
             if (guaranteeData && guaranteeData.project_id) {
-              query = query.eq('project_id', guaranteeData.project_id).contains('tags', ['bank_guarantee']);
+              documents = await DocumentService.getProjectDocumentsByTags(guaranteeData.project_id, ['bank_guarantee']);
             } else {
               setDocuments([]);
               return;
@@ -88,14 +80,10 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
         case 'insurance':
           // Get project_id from insurance_certificates and filter documents
           try {
-            const { data: insuranceData } = await supabase
-              .from('insurance_certificates')
-              .select('project_id')
-              .eq('id', relatedId)
-              .single();
+            const insuranceData = await DocumentService.getInsuranceProject(relatedId);
             
             if (insuranceData && insuranceData.project_id) {
-              query = query.eq('project_id', insuranceData.project_id).contains('tags', ['insurance']);
+              documents = await DocumentService.getProjectDocumentsByTags(insuranceData.project_id, ['insurance']);
             } else {
               setDocuments([]);
               return;
@@ -108,17 +96,10 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
           break;
         default:
           // For other types, try to match by project_id
-          query = query.eq('project_id', relatedId);
+          documents = await DocumentService.getProjectDocuments(relatedId);
       }
 
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Error loading documents:', error);
-        throw error;
-      }
-
-      setDocuments((data || []).map(doc => ({
+      setDocuments(documents.map((doc: any) => ({
         ...doc,
         description: doc.description || undefined,
         mime_type: doc.mime_type || undefined,

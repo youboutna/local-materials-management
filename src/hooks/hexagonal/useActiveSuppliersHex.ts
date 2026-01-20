@@ -1,10 +1,10 @@
 /**
  * Hexagonal hook for fetching active suppliers (for task assignment)
- * Centralizes active supplier queries
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { SupplierService } from '@/application/services/SupplierService';
 
 export interface ActiveSupplier {
   id: string;
@@ -15,17 +15,18 @@ export interface ActiveSupplier {
 
 // Hook: Fetch active suppliers for task assignment
 export function useActiveSuppliersHex() {
+  const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
+  
   return useQuery({
     queryKey: ['active-suppliers'],
     queryFn: async (): Promise<ActiveSupplier[]> => {
-      const { data, error } = await supabase
-        .from('suppliers')
-        .select('id, name, contact_person, type')
-        .eq('is_active', true)
-        .order('name', { ascending: true });
-      
-      if (error) throw error;
-      return data || [];
+      const result = await supplierService.searchSuppliers({ isActive: true });
+      return result.suppliers.map(supplier => ({
+        id: supplier.id,
+        name: supplier.name,
+        contact_person: supplier.contacts[0]?.name,
+        type: supplier.category || undefined
+      }));
     },
   });
 }

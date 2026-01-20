@@ -3,7 +3,7 @@
  * Business logic for phase management using repositories and transformers
  */
 
-import { RepositoryFactory } from './RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import { Phase } from '@/domain/entities/Phase';
 import { PhaseDTO, CreatePhaseRequestDto, UpdatePhaseRequestDto } from '@/dtos/transforms/shared';
@@ -66,9 +66,9 @@ export class PhaseService {
    * Create a new phase
    */
   async createPhase(data: CreatePhaseRequestDto): Promise<PhaseDTO> {
-    const entity = this.phaseTransformer.fromCreateDtoToEntity(data) as Partial<Phase>;
+    const entity = PhaseDomainTransformer.fromCreateDtoToEntity(data) as Partial<Phase>;
     const createdEntity = await this.phaseRepository.create(entity);
-    return this.phaseTransformer.toDTO(createdEntity);
+    return PhaseDomainTransformer.toDTO(createdEntity);
   }
 
   /**
@@ -76,7 +76,7 @@ export class PhaseService {
    */
   async getPhaseById(id: string): Promise<PhaseDTO | null> {
     const entity = await this.phaseRepository.findById(id);
-    return entity ? this.phaseTransformer.toDTO(entity) : null;
+    return entity ? PhaseDomainTransformer.toDTO(entity) : null;
   }
 
   /**
@@ -84,16 +84,16 @@ export class PhaseService {
    */
   async getPhasesByProject(projectId: string): Promise<PhaseDTO[]> {
     const entities = await this.phaseRepository.findByProjectId(projectId);
-    return entities.map(entity => this.phaseTransformer.toDTO(entity));
+    return entities.map(entity => PhaseDomainTransformer.toDTO(entity));
   }
 
   /**
    * Update a phase
    */
   async updatePhase(id: string, data: UpdatePhaseRequestDto): Promise<PhaseDTO> {
-    const updates = this.phaseTransformer.fromUpdateDtoToEntity(data);
+    const updates = PhaseDomainTransformer.fromUpdateDtoToEntity(data);
     const updatedEntity = await this.phaseRepository.update(id, updates);
-    return this.phaseTransformer.toDTO(updatedEntity);
+    return PhaseDomainTransformer.toDTO(updatedEntity);
   }
 
   /**
@@ -183,7 +183,23 @@ export class PhaseService {
    */
   async getPhaseWithSteps(id: string): Promise<PhaseDTO | null> {
     const entity = await this.phaseRepository.findWithSteps(id);
-    return entity ? this.phaseTransformer.toDTO(entity) : null;
+    return entity ? PhaseDomainTransformer.toDTO(entity) : null;
+  }
+
+  /**
+   * Get phases DTO by project (static method for backward compatibility)
+   */
+  static async getPhasesDTOByProject(projectId: string): Promise<PhaseDTO[]> {
+    const service = new PhaseService();
+    return service.getPhasesByProject(projectId);
+  }
+
+  /**
+   * Get phase DTO by ID (static method for backward compatibility)
+   */
+  static async getPhaseDTOById(id: string): Promise<PhaseDTO | null> {
+    const service = new PhaseService();
+    return service.getPhaseById(id);
   }
 
   /**
@@ -247,7 +263,7 @@ export class PhaseService {
    */
   async updateTaskStatus(phaseId: string, stepId: string, taskId: string, status: string, progress: number): Promise<PhaseDTO> {
     const updatedPhase = await this.phaseRepository.updateTaskStatus(phaseId, stepId, taskId, status, progress);
-    return this.phaseTransformer.toDTO(updatedPhase);
+    return PhaseDomainTransformer.toDTO(updatedPhase);
   }
 
   /**
@@ -255,6 +271,34 @@ export class PhaseService {
    */
   async getPhaseMetrics(id: string): Promise<any> {
     return await this.phaseRepository.getMetrics(id);
+  }
+
+  /**
+   * Update task status (static method for backward compatibility)
+   */
+  static async updateTaskStatus(phaseId: string, stepId: string, taskId: string, status: string, progress: number): Promise<PhaseDTO> {
+    const service = new PhaseService();
+    return service.updateTaskStatus(phaseId, stepId, taskId, status, progress);
+  }
+
+  /**
+   * Update phase from DTO (static method for backward compatibility)
+   */
+  static async updatePhaseFromDTO(phaseId: string, updates: Partial<PhaseDTO>): Promise<PhaseDTO> {
+    const service = new PhaseService();
+    // Convert DTO to entity format for update
+    const updateData: UpdatePhaseRequestDto = {
+      phase_name: updates.phase_name || '',
+      description: updates.description,
+      status: updates.status as any,
+      progress: updates.progress,
+      estimated_cost: updates.estimated_cost,
+      actual_cost: updates.actual_cost,
+      estimated_duration_days: updates.estimated_duration_days,
+      start_date: updates.start_date,
+      end_date: updates.end_date
+    };
+    return service.updatePhase(phaseId, updateData);
   }
 
   /**

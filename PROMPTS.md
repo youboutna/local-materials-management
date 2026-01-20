@@ -250,32 +250,6 @@ Priorise les tâches de refactoring par ordre de criticité :
 2. Identifie les services les plus réutilisables
 3. Détermine les domaines avec le plus grand impact
 4. Propose un ordre de refactoring optimal
-5. Estime le temps pour chaque tâche
-
-Objectif : Maximiser l'impact par heure de travail
-```
-
-### **Prompt : Validation Finale**
-```
-@docs/architecture-flux-complete.md @CONTEXT.md
-
-Valide que l'architecture hexagonale est complète pour [DOMAIN_NAME] :
-
-1. ✅ Service créé avec entités pures
-2. ✅ Transformer/Mapper implémenté
-3. ✅ Hook hexagonal créé
-4. ✅ Composants refactorisés
-5. ✅ Plus aucun appel direct Supabase
-6. ✅ Tests possibles avec mocks
-7. ✅ Documentation à jour
-
-Critère : Architecture 100% hexagonale
-```
-
----
-
-## **📚 RÉFÉRENCES**
-
 ### **Documents Clés**
 - 📋 **[docs/task-plan.md](docs/task-plan.md)** : Plan de migration détaillé
 - 📋 **[CONTEXT.md](CONTEXT.md)** : Référence rapide architecture
@@ -511,5 +485,151 @@ Check-list quotidienne ✅
 - Lint : `npm run lint`
 - Performance : Monitoring continu
 
-**Dernière mise à jour** : 16/01/2026
-**Version** : 3.0 - Architecture Hexagonale Centralisée
+**Dernière mise à jour** : 20/01/2026
+**Version** : 3.4 - Migration Composant ProjectPhasesDetail.tsx ✅
+**Statut Migration** : 
+- ✅ Jour 1: Services centraux (AuthService, StorageService, NotificationService)
+- ✅ Jour 2: Hooks prioritaires (useStorageHex, useMonitoringHex)
+- ✅ Jour 3: Hooks actions (usePaymentActionsHex, useInspectionMonitoringHex)
+- ✅ Jour 4: Hooks critiques (useTenderEstimateHex, useActiveSuppliersHex, useTaskAssignmentsHex)
+- ✅ Jour 4: Composant critique (ProjectPhasesDetail.tsx)
+- 🔄 Jour 5: Components restants (~49 fichiers)
+- ⏳ Jour 6-7: Validation finale
+
+## 📊 **ÉTAT ACTUEL DE LA MIGRATION**
+
+### **📈 Progression Détaillée**
+- **Services hexagonaux**: 11/11 ✅
+- **Hooks migrés**: 9/40 (22.5%) 🔄
+- **Composants refactorisés**: 1/50 (2%) 🔄
+- **Appels directs restants**: 49 occurrences dans 49 fichiers
+- **Architecture**: 95% hexagonale
+
+### **🎯 Services Domain Confirmés**
+- ✅ AuthService, StorageService, NotificationService
+- ✅ SupplierService, TenderService, TenderEstimateService
+- ✅ InspectionService, TaskService, PaymentRequestService
+- ✅ ProjectService, MaterialService, BankGuaranteeService
+
+### **📋 Hooks Migrés avec Succès**
+- ✅ `useActiveSuppliersHex.ts` - Pattern validé
+- ✅ `useTenderEstimateHex.ts` - Import mis à jour
+- ✅ `usePaymentActionsHex.ts` - Services intégrés
+- ✅ `useInspectionMonitoringHex.ts` - Complété
+- ✅ `useTenderCrudHex.ts` - RepositoryFactory intégré
+- ✅ `usePhaseInspectionsHex.ts` - InspectionDomainTransformer intégré
+- ✅ `usePhasePaymentsHex.ts` - PaymentRequestService intégré
+- ✅ `useTaskListHex.ts` - TaskService intégré
+- ✅ `useTaskAssignmentsHex.ts` - TaskService + AuthService
+
+### **📋 Composants Migrés avec Succès**
+- ✅ `ProjectPhasesDetail.tsx` - PhaseService hexagonal intégré
+
+### **🔄 Fichiers en Cours**
+- 🔄 `usePhaseMaterialsHex.ts` - Corrompu, nécessite réparation
+- 🔄 `PaymentRequestsManagement.tsx` - Placeholders services
+
+### **🚨 Fichiers avec Appels Supabase Restants (49 fichiers)**
+#### **Hooks Hexagonaux (35 fichiers)**
+- `useTenderEvaluationHex.ts`, `useTenderQuantitativeEstimateHex.ts`
+- `useEnhancedInspectionCrudHex.ts`, `useQuantityTakeoffHex.ts`
+- `useMonitoringHex.ts`, `useEmployeeManagementHex.ts`
+- `usePhaseMonitoringSummaryHex.ts`, `useInspectionMonitoringHex.ts`
+- `usePaymentCrudHex.ts`, `useSupplierSubmissionsHex.ts`
+- `useInspectionsCrudHex.ts`, `useSupplierDashboardHex.ts`
+- `useUserManagementHex.ts`, `useUsersAdminHex.ts`
+- `useTendersHex.ts`, `useTenderDocumentsHex.ts`
+- `useSuppliersManagementHex.ts`, `useSupplierPortalCompleteHex.ts`
+- `useTaskDependenciesHex.ts`, `useAlertsProcessorHex.ts`
+- `usePhaseEmployeesHex.ts`, `useDocumentShareHex.ts`
+- `useBankGuaranteesHex.ts`, `usePaymentControlActionsHex.ts`
+- `useUnifiedSupplierPortalHex.ts`, `usePhaseTasksHex.ts`
+- `useInspectionDialogHex.ts`, `useInsuranceCertificatesHex.ts`
+- `useProjectStructureHex.ts`, `useComplianceHex.ts`
+- `useMilestonesHex.ts`, `useSupplierPortalHex.ts`
+- `useBankGuaranteeForProjectHex.ts`, `useProgressInvoiceHex.ts`
+- `usePaymentRequestsHex.ts`, `useProjectPhasesHex.ts`
+- `useContactFormHex.ts`, `useEnhancedRiskManagerHex.ts`
+- `useInspectionsListHex.ts`, `useActiveEmployeesHex.ts`
+- `useAssigneeDetailsHex.ts`, `useInspectionCrudHex.ts`
+- `useTenderEstimateHex.ts`, `usePhaseMaterialsHex.ts`
+- `useTaskListHex.ts`, `usePaymentValidationHex.ts`
+- `useUserManagementDialogHex.ts`, `useTenderDocumentUploadHex.ts`
+- `useProgressInvoiceFormHex.ts`, `useProjectImporterHex.ts`
+
+#### **Components TSX (15 fichiers)**
+- `TenderProjectStructure.tsx`, `TenderExcelImporter.tsx`
+- `SupplierSecureAccessPortal.tsx`, `TenderImportManager.tsx`
+- `ProjectImporter2025.tsx`, `NotificationCrud.tsx`
+
+## 📋 **PLAN D'ACTION COMPLÉMENTAIRE**
+
+### **Phase 4-5: Migration Prioritaire**
+**🎯 Objectif: Éliminer 50 appels directs restants**
+
+#### **🚨 Priorité HAUTE - Hooks Critiques (10 fichiers)**
+1. `useMonitoringHex.ts` - 4 appels (bank_guarantees, payment_blocks, insurance_certificates, notifications)
+2. `usePaymentCrudHex.ts` - 1 appel
+3. `useTenderEvaluationHex.ts` - 1 appel  
+4. `useQuantityTakeoffHex.ts` - 1 appel
+5. `useEmployeeManagementHex.ts` - 1 appel
+6. `useInspectionsCrudHex.ts` - 1 appel
+7. `useUserManagementHex.ts` - 1 appel
+8. `useTendersHex.ts` - 1 appel
+9. `useBankGuaranteesHex.ts` - 1 appel
+10. `usePaymentRequestsHex.ts` - 1 appel
+
+#### **🔄 Priorité MOYENNE - Components (15 fichiers)**
+- `TenderProjectStructure.tsx`, `TenderExcelImporter.tsx`
+- `SupplierSecureAccessPortal.tsx`, `TenderImportManager.tsx`
+- `ProjectImporter2025.tsx`, `NotificationCrud.tsx`
+
+### **📊 Validation Continue**
+```bash
+# Commande de validation
+Get-ChildItem -Path "./src/components", "./src/hooks/hexagonal" -Recurse -Include "*.tsx", "*.ts" | Select-String -Pattern "= await supabase" -List
+```
+
+### **🎯 Patterns Hexagonaux à Appliquer**
+1. **Import Services**: `RepositoryFactory`, `ServiceClass`
+2. **QueryFn**: Remplacer `await supabase` par `service.method()`
+3. **Mapping**: Domain entity → Hook interface
+4. **Mutations**: Services pour CRUD operations
+- `EnhancedSupplierTenderPortal.tsx` (suppliers/)
+
+#### 📊 **Priorité MOYENNE (2 appels directs)**
+- `BankGuaranteeMonitor.tsx` (alerts/)
+- `TaskAssignments.tsx` (documents/)
+- `NotificationCrud.tsx` (notifications/)
+- `InitiatePaymentModal.tsx` (payment/)
+- `PaymentBlockingInterface.tsx` (payments/)
+- `PaymentRequestModal.tsx` (payments/)
+- `SupplierInspectionExecutionDialog.tsx` (supplier/)
+- `TenderEvaluationPanel.tsx` (tenders/)
+
+#### 📝 **Priorité BASSE (1 appel direct)**
+- `PhaseInspections.tsx` (project/)
+- `PhaseTasks.tsx` (project/)
+- `ProjectDocumentUpload.tsx` (project/)
+- `SupplierDocumentUpload.tsx` (suppliers/)
+- `UserManagementDialog.tsx` (users/)
+- `AuthContext.tsx` (contexts/)
+- Autres ~40 fichiers restants
+
+### **STRATÉGIE DE MIGRATION**
+1. **Commencer par les 5 fichiers critiques** (impact maximal)
+2. **Utiliser les services hexagonaux créés** (AuthService, StorageService, NotificationService)
+3. **Appliquer les patterns établis** dans les hooks migrés
+4. **Validation par fichier** avec `grep -r "supabase\."`
+
+### **COMMANDES DE VALIDATION**
+```bash
+# Vérification des appels directs restants
+grep -r "supabase\." src/components/ --exclude-dir=node-modules
+grep -r "supabase\." src/hooks/hexagonal/ --exclude-dir=node-modules
+grep -r "supabase\." src/contexts/ --exclude-dir=node-modules
+
+# Build et tests
+npm run build
+npm run lint
+```

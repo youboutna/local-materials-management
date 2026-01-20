@@ -1,4 +1,7 @@
-import { supabase } from '@/integrations/supabase/client';
+import { InsuranceService } from '@/application/services/InsuranceService';
+import { BankGuaranteeService } from '@/application/services/BankGuaranteeService';
+import { ProjectService } from '@/application/services/ProjectService';
+import { DocumentService } from '@/application/services/DocumentService';
 
 export interface PaymentValidationResult {
   canProceed: boolean;
@@ -47,14 +50,14 @@ export const calculatePaymentEligibility = async (
     projectOnTime: false
   };
 
-  // Check insurance certificates
-  const { data: insurance } = await supabase
-    .from('insurance_certificates')
-    .select('*')
-    .eq('project_id', projectId)
-    .eq('contractor_id', contractorId)
-    .eq('status', 'active')
-    .gte('valid_until', new Date().toISOString());
+  // Check insurance certificates using InsuranceService
+  const insuranceService = new InsuranceService();
+  const insurance = await insuranceService.getInsuranceCertificates(projectId)
+    .then(certificates => certificates.filter(cert => 
+      cert.contractor_id === contractorId && 
+      cert.status === 'active' && 
+      new Date(cert.valid_until) >= new Date()
+    ));
 
   if (!insurance || insurance.length === 0) {
     blockingReasons.push({
@@ -67,14 +70,14 @@ export const calculatePaymentEligibility = async (
     validationChecks.insuranceValid = true;
   }
 
-  // Check bank guarantees
-  const { data: guarantee } = await supabase
-    .from('bank_guarantees')
-    .select('*')
-    .eq('project_id', projectId)
-    .eq('contractor_id', contractorId)
-    .eq('status', 'active')
-    .gte('expiry_date', new Date().toISOString());
+  // Check bank guarantees using BankGuaranteeService
+  const bankGuaranteeService = new BankGuaranteeService();
+  const guarantee = await bankGuaranteeService.getBankGuarantees(projectId)
+    .then(guarantees => guarantees.filter(g => 
+      g.contractor_id === contractorId && 
+      g.status === 'active' && 
+      new Date(g.expiry_date) >= new Date()
+    ));
 
   if (!guarantee || guarantee.length === 0) {
     blockingReasons.push({
@@ -87,12 +90,9 @@ export const calculatePaymentEligibility = async (
     validationChecks.guaranteeValid = true;
   }
 
-  // Check project progress vs payment
-  const { data: project } = await supabase
-    .from('projects')
-    .select('progress, start_date, end_date')
-    .eq('id', projectId)
-    .single();
+  // Check project progress vs payment using ProjectService
+  const projectService = new ProjectService();
+  const project = await projectService.getProjectWithDetails(projectId);
 
   if (project) {
     const maxAllowedPayment = (project.progress || 0) + 10; // 10% tolerance
@@ -108,15 +108,15 @@ export const calculatePaymentEligibility = async (
     }
 
     // Check project timeline
-    if (project.end_date) {
-      const endDate = new Date(project.end_date);
+    if (project.endDate) {
+      const endDate = new Date(project.endDate);
       const today = new Date();
       if (today > endDate) {
         blockingReasons.push({
           reason: 'project_delay',
           description: 'Le projet est en retard par rapport à la date prévue',
           severity: 'warning',
-          metadata: { endDate: project.end_date, currentDate: today.toISOString() }
+          metadata: { endDate: project.endDate, currentDate: today.toISOString() }
         });
       } else {
         validationChecks.projectOnTime = true;
@@ -124,13 +124,13 @@ export const calculatePaymentEligibility = async (
     }
   }
 
-  // Check required documents
-  const { data: documents } = await supabase
-    .from('documents')
-    .select('*')
-    .eq('project_id', projectId)
-    .in('document_type', ['contract'])
-    .eq('status', 'approved');
+  // Check required documents using DocumentService
+  const documentService = new DocumentService();
+  const documents = await documentService.getProjectDocuments(projectId)
+    .then(docs => docs.filter(doc => 
+      ['contract'].includes(doc.document_type) && 
+      doc.status === 'approved'
+    ));
 
   const requiredDocTypes = ['contract'];
   const availableDocTypes = documents?.map(d => d.document_type as string) || [];

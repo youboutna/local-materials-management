@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { NotificationService } from '@/services/NotificationService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { StorageService } from '@/application/services/StorageService';
+import { NotificationService } from '@/application/services/NotificationService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +15,6 @@ import { useToast } from '@/hooks/use-toast';
 import { FileText, Upload, Send, Plus, Search } from 'lucide-react';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
-import { sendSupplierNotification } from '@/services/supplierNotificationService';
 
 interface Document {
   id: string;

@@ -4,7 +4,9 @@
  */
 
 import { useMutation } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { AuthService } from '@/application/services/AuthService';
+import { NotificationService } from '@/application/services/NotificationService';
 import { toast } from '@/hooks/use-toast';
 
 interface ActionMetadata {
@@ -20,6 +22,9 @@ interface ActionMetadata {
 }
 
 export function usePaymentActionsHex() {
+  const authService = new AuthService(RepositoryFactory.getAuthRepository());
+  const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
+
   // Create notification mutation
   const createNotificationMutation = useMutation({
     mutationFn: async ({ recipientId, title, message, type, relatedId, metadata }: {
@@ -30,42 +35,21 @@ export function usePaymentActionsHex() {
       relatedId: string;
       metadata?: any;
     }) => {
-      const { error } = await supabase
-        .from('notifications')
-        .insert({
-          recipient_id: recipientId,
-          title,
-          message,
-          type,
-          related_id: relatedId,
-          metadata
-        });
-      if (error) throw error;
+      await notificationService.notifyUser(recipientId, title, message, type as any);
     }
   });
 
   // Task assignment mutation
   const taskAssignmentMutation = useMutation({
     mutationFn: async ({ values, metadata }: { values: any; metadata: ActionMetadata }) => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await authService.getCurrentUser();
       
-      const { error } = await supabase
-        .from('notifications')
-        .insert({
-          recipient_id: values.assigneeId,
-          title: values.title,
-          message: values.message,
-          type: 'task_assignment',
-          related_id: metadata.paymentId,
-          metadata: {
-            ...metadata,
-            actionType: 'task_assignment',
-            dueDate: values.dueDate,
-            assignedBy: user?.id || 'system'
-          }
-        });
-      
-      if (error) throw error;
+      await notificationService.notifyUser(
+        values.assigneeId,
+        values.title,
+        values.message,
+        'info'
+      );
     },
     onSuccess: () => {
       toast({ title: 'Succès', description: 'Tâche assignée' });
@@ -78,15 +62,10 @@ export function usePaymentActionsHex() {
   // SMS notification via edge function
   const sendSmsMutation = useMutation({
     mutationFn: async ({ values, metadata }: { values: any; metadata: ActionMetadata }) => {
-      const { error } = await supabase.functions.invoke('send-sms-notification', {
-        body: {
-          recipients: values.recipientIds,
-          message: values.message,
-          priority: values.priority,
-          relatedTo: { type: 'payment', id: metadata.paymentId }
-        }
+      await notificationService.sendSMS({
+        to: values.recipientIds,
+        message: values.message
       });
-      if (error) throw error;
     },
     onSuccess: () => {
       toast({ title: 'Succès', description: 'SMS envoyé' });
@@ -99,15 +78,11 @@ export function usePaymentActionsHex() {
   // Schedule call via edge function
   const scheduleCallMutation = useMutation({
     mutationFn: async ({ values, metadata }: { values: any; metadata: ActionMetadata }) => {
-      const { error } = await supabase.functions.invoke('schedule-call', {
-        body: {
-          recipients: values.recipientIds,
-          message: values.message,
-          scheduledFor: values.dueDate,
-          relatedTo: { type: 'payment', id: metadata.paymentId }
-        }
+      await notificationService.scheduleCall({
+        to: values.recipientIds[0],
+        message: values.message,
+        scheduled_at: values.dueDate
       });
-      if (error) throw error;
     },
     onSuccess: () => {
       toast({ title: 'Succès', description: 'Appel programmé' });
@@ -120,16 +95,11 @@ export function usePaymentActionsHex() {
   // Email notification via edge function
   const sendEmailMutation = useMutation({
     mutationFn: async ({ values, metadata }: { values: any; metadata: ActionMetadata }) => {
-      const { error } = await supabase.functions.invoke('send-email-notification', {
-        body: {
-          recipients: values.recipientIds,
-          subject: values.title,
-          message: values.message,
-          priority: values.priority,
-          relatedTo: { type: 'payment', id: metadata.paymentId }
-        }
+      await notificationService.sendEmail({
+        to: values.recipientIds,
+        subject: values.title,
+        body: values.message
       });
-      if (error) throw error;
     },
     onSuccess: () => {
       toast({ title: 'Succès', description: 'Email envoyé' });

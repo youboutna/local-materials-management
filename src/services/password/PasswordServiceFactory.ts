@@ -1,5 +1,5 @@
 
-import { IPasswordService } from '@/interfaces/IPasswordService';
+import { IPasswordService } from '@/application/services/IPasswordService';
 import { SupabasePasswordService } from './SupabasePasswordService';
 
 export class PasswordServiceFactory {

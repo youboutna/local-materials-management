@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { WorkflowOrchestrator, WorkflowEvent, getWorkflowOrchestrator } from '@/services/WorkflowOrchestrator';
+import { getWorkflowOrchestrator, WorkflowOrchestrator, WorkflowEvent } from '@/application/services/WorkflowOrchestrator';
 
 interface WorkflowState {
   isProcessing: boolean;
@@ -122,7 +122,7 @@ export function useWorkflowOrchestrator(projectId: string | undefined): UseWorkf
     if (!orchestrator) return;
 
     try {
-      const status = await orchestrator.getWorkflowStatus(phaseId);
+      const status = orchestrator.getWorkflowStatus();
       
       setState(prev => ({
         ...prev,

@@ -4,7 +4,7 @@
  * Provides dependency injection and adapter instantiation
  */
 
-import { 
+import {
   IProjectRepository, 
   IPhaseRepository, 
   IHierarchyRepository,
@@ -24,7 +24,14 @@ import {
   IReportingRepository,
   IReportDataTransformerRepository,
   IProjectFormRepository,
-  IUserRepository
+  IUserRepository,
+  IPVGeneratorRepository,
+  IBankGuaranteeRepository,
+  IInspectionSchedulingRepository,
+  IInsuranceRepository,
+  IAuthRepository,
+  IStorageRepository,
+  INotificationRepository
 } from '@/domain/repositories';
 
 import {
@@ -47,7 +54,15 @@ import {
   SupabaseReportingAdapter,
   SupabaseReportDataTransformerAdapter,
   SupabaseProjectFormAdapter,
-  SupabaseUserAdapter
+  SupabaseUserAdapter,
+  PVGeneratorAdapter,
+  BankGuaranteeAdapter,
+  InspectionSchedulingAdapter,
+  InspectionPermissionAdapter,
+  SupabaseAuthAdapter,
+  SupabaseStorageAdapter,
+  SupabaseNotificationAdapter,
+  SupabaseInsuranceAdapter
 } from './adapters';
 
 /**
@@ -57,6 +72,7 @@ import {
 let projectRepository: IProjectRepository | null = null;
 let phaseRepository: IPhaseRepository | null = null;
 let hierarchyRepository: IHierarchyRepository | null = null;
+let inspectionSchedulingRepository: IInspectionSchedulingRepository | null = null;
 let inspectionRepository: IInspectionRepository | null = null;
 let paymentRepository: IPaymentRepository | null = null;
 let taskRepository: ITaskRepository | null = null;
@@ -74,6 +90,12 @@ let loadDataRepository: ILoadDataRepository | null = null;
 let reportingRepository: IReportingRepository | null = null;
 let projectFormRepository: IProjectFormRepository | null = null;
 let userRepository: IUserRepository | null = null;
+let pvGeneratorRepository: IPVGeneratorRepository | null = null;
+let bankGuaranteeRepository: IBankGuaranteeRepository | null = null;
+let insuranceRepository: IInsuranceRepository | null = null;
+let authRepository: IAuthRepository | null = null;
+let storageRepository: IStorageRepository | null = null;
+let notificationRepository: INotificationRepository | null = null;
 
 /**
  * Repository Factory
@@ -101,33 +123,13 @@ export class RepositoryFactory {
   }
 
   /**
-   * Get Hierarchy Repository instance
+   * Get Inspection Scheduling Repository instance
    */
-  static getHierarchyRepository(): IHierarchyRepository {
-    if (!hierarchyRepository) {
-      hierarchyRepository = new SupabaseHierarchyAdapter();
+  static getInspectionSchedulingRepository(): IInspectionSchedulingRepository {
+    if (!inspectionSchedulingRepository) {
+      inspectionSchedulingRepository = new InspectionSchedulingAdapter();
     }
-    return hierarchyRepository;
-  }
-
-  /**
-   * Get Inspection Repository instance
-   */
-  static getInspectionRepository(): IInspectionRepository {
-    if (!inspectionRepository) {
-      inspectionRepository = new SupabaseInspectionAdapter();
-    }
-    return inspectionRepository;
-  }
-
-  /**
-   * Get Payment Repository instance
-   */
-  static getPaymentRepository(): IPaymentRepository {
-    if (!paymentRepository) {
-      paymentRepository = new SupabasePaymentAdapter();
-    }
-    return paymentRepository;
+    return inspectionSchedulingRepository;
   }
 
   /**
@@ -141,103 +143,23 @@ export class RepositoryFactory {
   }
 
   /**
-   * Get Material Repository instance
+   * Get Inspection Repository instance
    */
-  static getMaterialRepository(): IMaterialRepository {
-    if (!materialRepository) {
-      materialRepository = new SupabaseMaterialAdapter();
+  static getInspectionRepository(): IInspectionRepository {
+    if (!inspectionRepository) {
+      inspectionRepository = new SupabaseInspectionAdapter();
     }
-    return materialRepository;
+    return inspectionRepository;
   }
 
   /**
-   * Get Employee Repository instance
+   * Get Insurance Repository instance
    */
-  static getEmployeeRepository(): IEmployeeRepository {
-    if (!employeeRepository) {
-      employeeRepository = new SupabaseEmployeeAdapter();
+  static getInsuranceRepository(): IInsuranceRepository {
+    if (!insuranceRepository) {
+      insuranceRepository = new SupabaseInsuranceAdapter();
     }
-    return employeeRepository;
-  }
-
-  /**
-   * Get Risk Repository instance
-   */
-  static getRiskRepository(): IRiskRepository {
-    if (!riskRepository) {
-      riskRepository = new SupabaseRiskAdapter();
-    }
-    return riskRepository;
-  }
-
-  /**
-   * Get Tender Repository instance
-   */
-  static getTenderRepository(): ITenderRepository {
-    if (!tenderRepository) {
-      tenderRepository = new SupabaseTenderAdapter();
-    }
-    return tenderRepository;
-  }
-
-  /**
-   * Get Supplier Repository instance
-   */
-  static getSupplierRepository(): ISupplierRepository {
-    if (!supplierRepository) {
-      supplierRepository = new SupabaseSupplierAdapter();
-    }
-    return supplierRepository;
-  }
-
-  /**
-   * Get Document Repository instance
-   */
-  static getDocumentRepository(): IDocumentRepository {
-    if (!documentRepository) {
-      documentRepository = new SupabaseDocumentAdapter();
-    }
-    return documentRepository;
-  }
-
-  /**
-   * Get Quantity Takeoff Repository instance
-   */
-  static getQuantityTakeoffRepository(): IQuantityTakeoffRepository {
-    if (!quantityTakeoffRepository) {
-      quantityTakeoffRepository = new SupabaseQuantityTakeoffAdapter();
-    }
-    return quantityTakeoffRepository;
-  }
-
-  /**
-   * Get Inspection Execution Repository instance
-   */
-  static getInspectionExecutionRepository(): IInspectionExecutionRepository {
-    if (!inspectionExecutionRepository) {
-      inspectionExecutionRepository = new SupabaseInspectionExecutionAdapter();
-    }
-    return inspectionExecutionRepository;
-  }
-
-  /**
-   * Get Inspection Payment Validation Repository instance
-   */
-  static getInspectionPaymentValidationRepository(): IInspectionPaymentValidationRepository {
-    if (!inspectionPaymentValidationRepository) {
-      inspectionPaymentValidationRepository = new SupabaseInspectionPaymentValidationAdapter();
-    }
-    return inspectionPaymentValidationRepository;
-  }
-
-  /**
-   * Get Load Data Repository instance
-   */
-  static getLoadDataRepository(): ILoadDataRepository {
-    if (!loadDataRepository) {
-      loadDataRepository = new SupabaseLoadDataAdapter();
-    }
-    return loadDataRepository;
+    return insuranceRepository;
   }
 
   /**
@@ -281,29 +203,32 @@ export class RepositoryFactory {
   }
 
   /**
-   * Reset all repository instances
-   * Useful for testing or when switching environments
+   * Get Auth Repository instance
    */
-  static resetAll(): void {
-    projectRepository = null;
-    phaseRepository = null;
-    hierarchyRepository = null;
-    inspectionRepository = null;
-    paymentRepository = null;
-    taskRepository = null;
-    materialRepository = null;
-    employeeRepository = null;
-    riskRepository = null;
-    tenderRepository = null;
-    supplierRepository = null;
-    documentRepository = null;
-    quantityTakeoffRepository = null;
-    inspectionExecutionRepository = null;
-    inspectionPaymentValidationRepository = null;
-    loadDataRepository = null;
-    reportingRepository = null;
-    reportDataTransformerRepository = null;
-    projectFormRepository = null;
-    userRepository = null;
+  static getAuthRepository(): IAuthRepository {
+    if (!authRepository) {
+      authRepository = new SupabaseAuthAdapter();
+    }
+    return authRepository;
+  }
+
+  /**
+   * Get Storage Repository instance
+   */
+  static getStorageRepository(): IStorageRepository {
+    if (!storageRepository) {
+      storageRepository = new SupabaseStorageAdapter();
+    }
+    return storageRepository;
+  }
+
+  /**
+   * Get Notification Repository instance
+   */
+  static getNotificationRepository(): INotificationRepository {
+    if (!notificationRepository) {
+      notificationRepository = new SupabaseNotificationAdapter();
+    }
+    return notificationRepository;
   }
 }

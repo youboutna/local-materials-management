@@ -26,3 +26,7 @@ export { SupabaseHierarchyAdapter } from './SupabaseHierarchyAdapter';
 
 // New adapters for hexagonal architecture
 export { SupabaseUserAdapter } from './SupabaseUserAdapter';
+export { SupabaseAuthAdapter } from './SupabaseAuthAdapter';
+export { SupabaseStorageAdapter } from './SupabaseStorageAdapter';
+export { SupabaseNotificationAdapter } from './SupabaseNotificationAdapter';
+export { SupabaseInsuranceAdapter } from './SupabaseInsuranceAdapter';

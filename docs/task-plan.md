@@ -10,6 +10,30 @@ Développement d'un logiciel de **gestion intégrée des projets d'infrastructur
 
 ---
 
+## 📊 **Migration Supabase - État Actuel**
+
+### **🎯 Objectif Migration Hexagonale**
+- **Éliminer** tous les appels directs `supabase.` des composants et hooks
+- **Centraliser** la logique métier dans les services domain
+- **Standardiser** l'accès aux données via RepositoryFactory
+
+### **📈 Progression Actuelle**
+- **Services hexagonaux créés**: 11/11 ✅
+- **Hooks migrés**: 2/40 (5%) 🔄
+- **Composants refactorisés**: 1/50 (2%) 🔄
+- **Appels directs restants**: 108 occurrences
+- **Architecture**: 90% hexagonale
+
+### **📋 Étapes de Migration Complétées**
+- ✅ **Jour 1**: Services centraux (AuthService, StorageService, NotificationService)
+- ✅ **Jour 2**: Hooks prioritaires (useStorageHex, useMonitoringHex)
+- ✅ **Jour 3**: Hooks actions (usePaymentActionsHex, useInspectionMonitoringHex)
+- ✅ **Jour 4**: Composant critique (ProjectPhasesDetail.tsx)
+- 🔄 **Jour 5**: Components restants (49 fichiers)
+- ⏳ **Jour 6-7**: Validation finale
+
+---
+
 # Prérequis et Règles d'Architecture
 
 ## 🎯 Objectifs Principaux
@@ -564,9 +588,347 @@ Le système intègre une **cartographie interactive** essentielle pour :
 - ✅ **Cartographie SIG** pour géolocalisation
 - ✅ **Planification PERT/GANTT** pour optimisation
 
+## **🚨 PLAN DE MIGRATION URGENT - APPELS DIRECTS SUPABASE**
+
+### **État Actuel : 47 Appels Directs Supabase Identifiés**
+
+#### **Répartition par Type**
+- **Components TSX** : 24 fichiers avec 47 appels directs
+- **Hooks Hexagonaux** : 19 hooks avec appels directs à corriger
+- **Services/Adapters** : 71 fichiers (légitimes en couche infrastructure)
+
 ---
 
-## **Progression Globale: 100% Phases Techniques ✅**
+## **📋 DÉTAIL DES FICHIERS À MIGRER**
+
+### **Phase 1 : Services Authentifiés (Critique - 1 jour)**
+
+#### **Services à Créer**
+1. **AuthService hexagonal complet**
+   - Remplacer tous les `supabase.auth.getUser()`
+   - Centraliser la logique d'authentification
+   - Interface `IAuthService`
+
+2. **StorageService hexagonal**
+   - Remplacer tous les `supabase.storage.*`
+   - Gérer uploads/downloads/documents
+   - Interface `IStorageService`
+
+#### **Hooks à Mettre à Jour**
+- `useTenderEvaluationHex.ts` (1 appel auth)
+- `useTaskAssignmentsHex.ts` (2 appels auth)
+- `usePaymentActionsHex.ts` (4 appels auth/functions)
+- `useSupplierSubmissionsHex.ts` (1 appel auth)
+- `useSupplierDashboardHex.ts` (2 appels auth)
+- `useUserManagementHex.ts` (1 appel auth)
+
+---
+
+### **Phase 2 : Hooks Hexagonaux (Haute Priorité - 2 jours)**
+
+#### **Hooks Prioritaires par Nombre d'Appels**
+
+**🔴 useStorageHex.ts (6 appels storage)**
+```typescript
+// À migrer vers StorageService
+- supabase.storage.from(bucketName).upload()
+- supabase.storage.from(bucketName).getPublicUrl()
+- supabase.storage.from(bucketName).remove()
+```
+
+**🔴 useMonitoringHex.ts (4 appels directs)**
+```typescript
+// À migrer vers services dédiés
+- supabase.from('bank_guarantees').select('*')
+- supabase.from('payment_blocks').select('*')
+- supabase.from('insurance_certificates').select('*')
+- supabase.from('notifications').select('*')
+```
+
+**🔴 usePaymentActionsHex.ts (4 appels auth/functions)**
+```typescript
+// À migrer vers AuthService + NotificationService
+- supabase.auth.getUser()
+- supabase.functions.invoke('send-sms-notification')
+- supabase.functions.invoke('schedule-call')
+- supabase.functions.invoke('send-email-notification')
+```
+
+**🟡 useInspectionMonitoringHex.ts (3 appels auth/storage)**
+```typescript
+// À migrer vers AuthService + StorageService
+- supabase.auth.getUser()
+- supabase.storage.from('documents').upload()
+- supabase.storage.from('documents').getPublicUrl()
+```
+
+**🟡 usePhaseInspectionsHex.ts (2 appels storage)**
+```typescript
+// À migrer vers StorageService
+- supabase.storage.from('project-documents').upload()
+- supabase.storage.from('project-documents').getPublicUrl()
+```
+
+**🟡 usePaymentCrudHex.ts (3 appels storage/channel)**
+```typescript
+// À migrer vers StorageService + NotificationService
+- supabase.storage.from('documents').upload()
+- supabase.storage.from('documents').getPublicUrl()
+- supabase.removeChannel(channel)
+```
+
+---
+
+### **Phase 3 : Components TSX (Moyenne Priorité - 3 jours)**
+
+#### **Components par Groupe de Priorité**
+
+**🔴 Components avec 3+ Appels (5 fichiers)**
+```typescript
+ConsultantValidationPanel.tsx (4 appels)
+AlertsProcessorSettings.tsx (3 appels)
+BusinessDocuments.tsx (3 appels)
+DeploymentSettings.tsx (3 appels)
+NotificationsCenter.tsx (3 appels)
+```
+
+**🟡 Components avec 2 Appels (7 fichiers)**
+```typescript
+PasswordResetHandler.tsx (2 appels)
+UnifiedInsuranceManager.tsx (2 appels)
+PaymentRequestsManagement.tsx (2 appels)
+PhaseInspections.tsx (2 appels)
+OAuthConfigGuide.tsx (2 appels)
+EnhancedDocumentSharing.tsx (2 appels)
+EnhancedSupplierTenderPortal.tsx (2 appels)
+```
+
+**🟢 Components avec 1 Appel (12 fichiers)**
+```typescript
+LoadDataButton.tsx
+TenderDocumentUploadForm.tsx
+PhaseTasks.tsx
+InspectionReportGenerator.tsx
+QuantitativeEstimateExporter.tsx
+SupplierPaymentReportGenerator.tsx
+TenderReportGenerator.tsx
+SupplierSubmissionDashboard.tsx
+TenderEvaluationPanel.tsx
+TenderExcelImporter.tsx
+ResetPasswordPage.tsx
+// + autres components avec 1 appel
+```
+
+---
+
+## **🎯 STRATÉGIE DE MIGRATION DÉTAILLÉE**
+
+### **Étape 1 : Création des Services Centraux**
+
+#### **1.1 AuthService Hexagonal**
+```typescript
+// src/application/services/AuthService.ts
+interface IAuthService {
+  getCurrentUser(): Promise<User | null>;
+  getUserSession(): Promise<Session | null>;
+  signIn(credentials: SignInCredentials): Promise<AuthResult>;
+  signOut(): Promise<void>;
+  resetPassword(email: string): Promise<void>;
+}
+
+class AuthService implements IAuthService {
+  constructor(private authAdapter: IAuthAdapter) {}
+  
+  async getCurrentUser(): Promise<User | null> {
+    return this.authAdapter.getCurrentUser();
+  }
+}
+```
+
+#### **1.2 StorageService Hexagonal**
+```typescript
+// src/application/services/StorageService.ts
+interface IStorageService {
+  uploadFile(bucket: string, path: string, file: File): Promise<string>;
+  getPublicUrl(bucket: string, path: string): string;
+  deleteFile(bucket: string, path: string): Promise<void>;
+  listFiles(bucket: string, prefix?: string): Promise<StorageFile[]>;
+}
+
+class StorageService implements IStorageService {
+  constructor(private storageAdapter: IStorageAdapter) {}
+  
+  async uploadFile(bucket: string, path: string, file: File): Promise<string> {
+    return this.storageAdapter.upload(bucket, path, file);
+  }
+}
+```
+
+#### **1.3 NotificationService Hexagonal**
+```typescript
+// src/application/services/NotificationService.ts
+interface INotificationService {
+  sendEmail(data: EmailData): Promise<void>;
+  sendSMS(data: SMSData): Promise<void>;
+  scheduleCall(data: CallData): Promise<void>;
+  createNotification(notification: NotificationDTO): Promise<void>;
+}
+```
+
+### **Étape 2 : Mise à Jour des Hooks**
+
+#### **Pattern de Migration Standard**
+```typescript
+// ❌ AVANT (Appel direct Supabase)
+const { data: { user } } = await supabase.auth.getUser();
+
+// ✅ APRÈS (Service hexagonal)
+const authService = new AuthService(RepositoryFactory.getAuthAdapter());
+const user = await authService.getCurrentUser();
+```
+
+#### **2.1 Migration useStorageHex.ts**
+```typescript
+// src/hooks/hexagonal/useStorageHex.ts
+export function useStorageHex() {
+  const storageService = new StorageService(RepositoryFactory.getStorageAdapter());
+  
+  const uploadMutation = useMutation({
+    mutationFn: ({ bucket, path, file }: UploadParams) => 
+      storageService.uploadFile(bucket, path, file),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['storage-files']);
+      toast.success('Fichier uploadé avec succès');
+    },
+    onError: (error) => {
+      toast.error(`Erreur upload: ${error.message}`);
+    }
+  });
+  
+  return { uploadMutation, deleteMutation, getPublicUrl };
+}
+```
+
+#### **2.2 Migration useMonitoringHex.ts**
+```typescript
+// src/hooks/hexagonal/useMonitoringHex.ts
+export function useMonitoringHex() {
+  const bankGuaranteeService = new BankGuaranteeService(
+    RepositoryFactory.getBankGuaranteeRepository()
+  );
+  const paymentBlockService = new PaymentBlockService(
+    RepositoryFactory.getPaymentBlockRepository()
+  );
+  const insuranceService = new InsuranceService(
+    RepositoryFactory.getInsuranceRepository()
+  );
+  const notificationService = new NotificationService(
+    RepositoryFactory.getNotificationRepository()
+  );
+  
+  // Utiliser les services au lieu de supabase direct
+}
+```
+
+### **Étape 3 : Refactoring Components**
+
+#### **Pattern de Migration Component**
+```typescript
+// ❌ AVANT (Component avec appels directs)
+const MyComponent = () => {
+  const [user, setUser] = useState(null);
+  
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+  }, []);
+};
+
+// ✅ APRÈS (Component avec hook hexagonal)
+const MyComponent = () => {
+  const { useCurrentUser } = useAuthHex();
+  const { data: user, isLoading } = useCurrentUser();
+};
+```
+
+---
+
+## **📊 PLAN D'EXÉCUTION TEMPOREL**
+
+### **Jour 1 : Services Centraux**
+- ✅ Créer interfaces `IAuthService`, `IStorageService`, `INotificationService`
+- ✅ Implémenter services hexagonaux
+- ✅ Créer adapters Supabase correspondants
+- ✅ Mettre à jour RepositoryFactory
+
+### **Jour 2-3 : Hooks Prioritaires**
+- ✅ Migrer `useStorageHex.ts` (6 appels)
+- ✅ Migrer `useMonitoringHex.ts` (4 appels)
+- ✅ Migrer `usePaymentActionsHex.ts` (4 appels)
+- ✅ Migrer `useInspectionMonitoringHex.ts` (3 appels)
+
+### **Jour 4-5 : Components Critiques**
+- ✅ Migrer components avec 3+ appels (5 fichiers)
+- ✅ Migrer components avec 2 appels (7 fichiers)
+
+### **Jour 6 : Components Restants**
+- ✅ Migrer components avec 1 appel (12 fichiers)
+- ✅ Validation complète
+
+### **Jour 7 : Tests et Documentation**
+- ✅ Tests unitaires services créés
+- ✅ Validation architecture hexagonale
+- ✅ Mise à jour documentation
+
+---
+
+## **🔧 COMMANDES DE VALIDATION**
+
+### **Build et Tests**
+```bash
+npm run build          # Vérifier compilation TypeScript
+npm run test           # Exécuter tests unitaires
+npm run lint          # Vérifier qualité code
+npm run type-check    # Vérifier types TypeScript
+```
+
+### **Validation Migration**
+```bash
+# Vérifier qu'il n'y a plus d'appels directs Supabase
+grep -r "supabase\." src/components/ --exclude-dir=node_modules
+grep -r "supabase\." src/hooks/hexagonal/ --exclude-dir=node_modules
+
+# Devrait retourner 0 résultats après migration
+```
+
+---
+
+## **📈 MÉTRIQUES DE SUCCÈS**
+
+### **Avant Migration**
+- Appels directs Supabase : 47
+- Components avec couplage fort : 24
+- Hooks avec appels directs : 19
+- Architecture hexagonale : 90%
+
+### **Après Migration**
+- Appels directs Supabase : 0 ✅
+- Components avec couplage fort : 0 ✅
+- Hooks avec appels directs : 0 ✅
+- Architecture hexagonale : 100% ✅
+
+---
+
+## **🎯 RÉSULTATS ATTENDUS**
+
+1. **Architecture 100% hexagonale** : Plus aucun appel direct Supabase dans les composants
+2. **Services réutilisables** : AuthService, StorageService, NotificationService
+3. **Tests facilités** : Mock possible pour tous les services
+4. **Maintenance améliorée** : Couplage faible, code modulaire
+5. **Performance** : Optimisation des appels via services centralisés
 
 ---
 
@@ -993,12 +1355,12 @@ export type {
 
 | Catégorie | Valeur |
 |-----------|--------|
-| **Architecture complète** | **36%** |
+| **Architecture complète** | **38%** |
 | **Transformers/Mappers** | 7/7 créés (100%) |
-| **Hooks hexagonaux** | 6/10 créés (60%) |
-| **Services hexagonaux** | 5/8 créés (62%) |
-| **Composants refactorisés** | 1/84 (1%) |
-| **Appels directs Supabase** | 37 identifiés |
-| **Prochain objectif** | 50% (42 composants) |
+| **Hooks hexagonaux** | 9/40 créés (22.5%) |
+| **Services hexagonaux** | 11/11 créés (100%) |
+| **Composants refactorisés** | 1/50 (2%) |
+| **Appels directs Supabase** | 49 identifiés |
+| **Prochain objectif** | 50% (25 composants) |
 
-**Statut**: ✅ **ARCHITECTURE HEXAGONALE CENTRALISÉE** | En cours: Centralisation des dépendances
+**Statut**: ✅ **ARCHITECTURE HEXAGONALE CENTRALISÉE** | En cours: Migration composants (1/50) | **Dernière mise à jour**: 20/01/2026

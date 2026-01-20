@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { IPasswordService, IPasswordResetRequest, IPasswordUpdateRequest } from '@/interfaces/IPasswordService';
+import { IPasswordService, IPasswordResetRequest, IPasswordUpdateRequest } from '@/application/services/IPasswordService';
 
 export class SupabasePasswordService implements IPasswordService {
   async requestPasswordReset(request: IPasswordResetRequest): Promise<{ success: boolean; error?: string }> {

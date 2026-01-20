@@ -2,7 +2,7 @@
 import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
 import { Material, MaterialCategory } from '@/domain/entities/Material';
 import { AppError, ErrorLogger } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/application/services/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export class MaterialService {
   private repository: IMaterialRepository;
@@ -232,5 +232,23 @@ export class MaterialService {
       ErrorLogger.log(error as Error, 'MaterialService.getStockSummary');
       throw error;
     }
+  }
+
+  /**
+   * Static methods for backward compatibility
+   */
+  static async getProjectMaterials(projectId: string): Promise<any[]> {
+    const service = new MaterialService();
+    return await service.getProjectMaterials(projectId);
+  }
+
+  static async addMaterialToProject(projectId: string, materialId: string, quantity: number): Promise<void> {
+    const service = new MaterialService();
+    return await service.addMaterialToProject(projectId, materialId, quantity);
+  }
+
+  static async removeMaterialFromProject(projectId: string, materialId: string): Promise<void> {
+    const service = new MaterialService();
+    return await service.removeMaterialFromProject(projectId, materialId);
   }
 }

@@ -1,11 +1,12 @@
 /**
  * useProjectMaterialsHex - Hook hexagonal pour la gestion des matériaux projet
- * Élimine les appels Supabase directs dans les composants
+ * Utilise MaterialService au lieu des appels Supabase directs
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { RepositoryFactory } from "@/repositories/RepositoryFactory";
 import { toast } from "@/hooks/use-toast";
+import { MaterialService } from "@/application/services/MaterialService";
+import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
 
 export interface ProjectMaterial {
   id?: string;
@@ -27,41 +28,48 @@ export interface SelectedMaterial {
 }
 
 async function fetchProjectMaterials(projectId: string): Promise<ProjectMaterial[]> {
-  const materialRepository = RepositoryFactory.getMaterialRepository();
-  const materials = await materialRepository.findByProjectId(projectId);
-
-  return materials.map((item: any) => ({
-    id: item.id,
-    project_id: item.project_id,
-    material_id: item.material_id,
-    quantity: item.quantity,
-    material: item.material,
-  }));
+  try {
+    const materials = await MaterialService.getProjectMaterials(projectId);
+    return materials.map((item: any) => ({
+      id: item.id,
+      project_id: item.project_id,
+      material_id: item.material_id,
+      quantity: item.quantity,
+      material: {
+        id: item.material?.id || '',
+        name: item.material?.name || '',
+        category: item.material?.category || '',
+        unit: item.material?.unit || '',
+        price_per_unit: item.material?.price_per_unit || 0,
+      }
+    }));
+  } catch (error) {
+    console.error('Error fetching project materials:', error);
+    throw error;
+  }
 }
 
 async function updateProjectMaterials(
   projectId: string, 
   materials: SelectedMaterial[]
 ): Promise<void> {
-  const materialRepository = RepositoryFactory.getMaterialRepository();
-  
-  // Delete existing materials
-  await materialRepository.deleteByProjectId(projectId);
-
-  // Insert new materials
-  if (materials.length > 0) {
-    const materialsToInsert = materials.map((material) => ({
-      project_id: projectId,
-      material_id: material.materialId,
-      quantity: material.quantity,
-    }));
-
-    await materialRepository.createMany(materialsToInsert);
+  try {
+    // Supprimer tous les matériaux existants du projet
+    await MaterialService.removeMaterialFromProject(projectId, "all");
+    
+    // Ajouter les nouveaux matériaux
+    for (const material of materials) {
+      await MaterialService.addMaterialToProject(projectId, material.materialId, material.quantity);
+    }
+  } catch (error) {
+    console.error('Error updating project materials:', error);
+    throw error;
   }
 }
 
-export function useProjectMaterialsHex(projectId?: string) {
+export const useProjectMaterialsHex = (projectId?: string) => {
   const queryClient = useQueryClient();
+  const materialService = new MaterialService();
 
   const { data: materials = [], isLoading, error, refetch } = useQuery({
     queryKey: ["project-materials", projectId],
@@ -91,14 +99,8 @@ export function useProjectMaterialsHex(projectId?: string) {
 
   const addMaterialMutation = useMutation({
     mutationFn: async (material: SelectedMaterial) => {
-      const { error } = await supabase
-        .from("project_materials")
-        .insert({
-          project_id: projectId!,
-          material_id: material.materialId,
-          quantity: material.quantity,
-        });
-      if (error) throw error;
+      const materialService = new MaterialService();
+      await materialService.addMaterialToProject(projectId!, material.materialId, material.quantity);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["project-materials", projectId] });
@@ -114,12 +116,8 @@ export function useProjectMaterialsHex(projectId?: string) {
 
   const removeMaterialMutation = useMutation({
     mutationFn: async (materialId: string) => {
-      const { error } = await supabase
-        .from("project_materials")
-        .delete()
-        .eq("project_id", projectId!)
-        .eq("material_id", materialId);
-      if (error) throw error;
+      const materialService = new MaterialService();
+      await materialService.removeMaterialFromProject(projectId!, materialId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["project-materials", projectId] });

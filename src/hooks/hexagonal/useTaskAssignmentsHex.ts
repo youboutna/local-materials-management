@@ -4,8 +4,9 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from '@/integrations/supabase/client';
-import { RepositoryFactory } from "@/repositories/RepositoryFactory";
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { TaskService } from '@/application/services/TaskService';
+import { AuthService } from '@/application/services/AuthService';
 import { toast } from "sonner";
 
 export interface TaskAssignment {
@@ -45,63 +46,51 @@ export function useTaskAssignmentsHex(filters?: {
   status?: string;
 }) {
   const queryClient = useQueryClient();
+  const taskService = new TaskService(RepositoryFactory.getTaskRepository());
+  const authService = new AuthService(RepositoryFactory.getAuthRepository());
 
   const { data: tasks = [], isLoading, error, refetch } = useQuery({
     queryKey: ["task-assignments-hex", filters],
     queryFn: async () => {
-      const taskRepository = RepositoryFactory.getTaskRepository();
-      const allTasks = await taskRepository.findAll();
+      // Use TaskService - placeholder implementation
+      const allTasks = await taskService.getTasksByFilters(filters);
       
-      // Apply filters
-      let filteredTasks = allTasks;
-      if (filters?.projectId) {
-        filteredTasks = filteredTasks.filter(task => task.projectId === filters.projectId);
-      }
-      if (filters?.assignedTo) {
-        filteredTasks = filteredTasks.filter(task => task.assignedTo === filters.assignedTo);
-      }
-      if (filters?.status) {
-        filteredTasks = filteredTasks.filter(task => task.status === filters.status);
-      }
-      
-      return filteredTasks;
-        (row): TaskAssignment => ({
-          id: row.id,
-          title: row.title,
-          description: row.description,
-          assignedTo: row.assigned_to,
-          assignedBy: row.assigned_by,
-          priority: (row.priority || "medium") as TaskAssignment["priority"],
-          status: (row.status || "pending") as TaskAssignment["status"],
-          dueDate: row.due_date,
-          completionDate: row.completion_date,
-          notes: row.notes,
-          projectId: row.project_id,
-          createdAt: row.created_at || "",
-          updatedAt: row.updated_at || "",
-        })
+      return allTasks.map(task => ({
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        assignedTo: task.assignedTo?.[0] || null,
+        assignedBy: task.assignedBy || null,
+        priority: task.priority as TaskAssignment["priority"],
+        status: task.status as TaskAssignment["status"],
+        dueDate: task.dueDate,
+        completionDate: task.completedAt,
+        notes: task.description,
+        projectId: task.projectId,
+        createdAt: task.createdAt,
+        updatedAt: task.updatedAt
+      }));
     }
   });
 
   const createMutation = useMutation({
     mutationFn: async (input: CreateTaskAssignmentInput) => {
       try {
-        const { data: userData } = await supabase.auth.getUser();
+        const user = await authService.getCurrentUser();
         
-        const { data, error } = await taskAssignmentRepository.create({
-        title: input.title,
-        description: input.description,
-        assigned_to: input.assignedTo,
-        assigned_by: userData.user?.id || "",
-        priority: input.priority || "medium",
-        status: input.status || "pending",
-        due_date: input.dueDate,
-        project_id: input.projectId,
-        notes: input.notes,
-      });
+        // Use TaskService - placeholder implementation
+        return await taskService.createTask({
+          title: input.title,
+          description: input.description,
+          assignedTo: input.assignedTo ? [input.assignedTo] : [],
+          assignedBy: user?.id || "",
+          priority: input.priority || "medium",
+          status: input.status || "pending",
+          dueDate: input.dueDate,
+          projectId: input.projectId,
+          notes: input.notes,
+        });
         
-        if (error) throw error;
-        return data;
       } catch (error) {
         throw error;
       }
@@ -120,30 +109,21 @@ export function useTaskAssignmentsHex(filters?: {
       id,
       ...input
     }: UpdateTaskAssignmentInput & { id: string }) => {
-      const updateData: Record<string, unknown> = {
-        updated_at: new Date().toISOString(),
+      // Use TaskService - placeholder implementation
+      const updateData = {
+        updatedAt: new Date().toISOString(),
+        title: input.title,
+        description: input.description,
+        assignedTo: input.assignedTo ? [input.assignedTo] : [],
+        priority: input.priority,
+        status: input.status,
+        dueDate: input.dueDate,
+        projectId: input.projectId,
+        notes: input.notes,
+        completedAt: input.completionDate
       };
 
-      if (input.title !== undefined) updateData.title = input.title;
-      if (input.description !== undefined) updateData.description = input.description;
-      if (input.assignedTo !== undefined) updateData.assigned_to = input.assignedTo;
-      if (input.priority !== undefined) updateData.priority = input.priority;
-      if (input.status !== undefined) updateData.status = input.status;
-      if (input.dueDate !== undefined) updateData.due_date = input.dueDate;
-      if (input.projectId !== undefined) updateData.project_id = input.projectId;
-      if (input.notes !== undefined) updateData.notes = input.notes;
-      if (input.completionDate !== undefined)
-        updateData.completion_date = input.completionDate;
-
-      const { data, error } = await supabase
-        .from("task_assignments")
-        .update(updateData)
-        .eq("id", id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      return await taskService.updateTask(id, updateData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["task-assignments-hex"] });
@@ -156,11 +136,8 @@ export function useTaskAssignmentsHex(filters?: {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("task_assignments")
-        .delete()
-        .eq("id", id);
-      if (error) throw error;
+      // Use TaskService - placeholder implementation
+      return await taskService.deleteTask(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["task-assignments-hex"] });
@@ -283,32 +260,31 @@ export function useTaskAssignmentsHex(filters?: {
 
 export function useTaskAssignmentHex(id: string | undefined) {
   const queryClient = useQueryClient();
+  const taskService = new TaskService(RepositoryFactory.getTaskRepository());
 
   const { data: task, isLoading, error, refetch } = useQuery({
     queryKey: ["task-assignment-hex", id],
     queryFn: async () => {
       if (!id) return null;
-      const { data, error } = await supabase
-        .from("task_assignments")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (error) throw error;
+      
+      // Use TaskService - placeholder implementation
+      const taskData = await taskService.getTaskById(id);
+      if (!taskData) return null;
+      
       return {
-        id: data.id,
-        title: data.title,
-        description: data.description,
-        assignedTo: data.assigned_to,
-        assignedBy: data.assigned_by,
-        priority: data.priority as TaskAssignment["priority"],
-        status: data.status as TaskAssignment["status"],
-        dueDate: data.due_date,
-        completionDate: data.completion_date,
-        notes: data.notes,
-        projectId: data.project_id,
-        createdAt: data.created_at,
-        updatedAt: data.updated_at,
+        id: taskData.id,
+        title: taskData.title,
+        description: taskData.description,
+        assignedTo: taskData.assignedTo?.[0] || null,
+        assignedBy: taskData.assignedBy || null,
+        priority: taskData.priority as TaskAssignment["priority"],
+        status: taskData.status as TaskAssignment["status"],
+        dueDate: taskData.dueDate,
+        completionDate: taskData.completedAt,
+        notes: taskData.description,
+        projectId: taskData.projectId,
+        createdAt: taskData.createdAt,
+        updatedAt: taskData.updatedAt,
       } as TaskAssignment;
     },
     enabled: !!id,
@@ -317,25 +293,19 @@ export function useTaskAssignmentHex(id: string | undefined) {
   const updateTask = async (input: UpdateTaskAssignmentInput) => {
     if (!id) return;
     
-    const updateData: Record<string, unknown> = {
-      updated_at: new Date().toISOString(),
+    // Use TaskService - placeholder implementation
+    const updateData = {
+      updatedAt: new Date().toISOString(),
+      title: input.title,
+      description: input.description,
+      priority: input.priority,
+      status: input.status,
+      dueDate: input.dueDate,
+      notes: input.notes,
+      completedAt: input.completionDate
     };
 
-    if (input.title !== undefined) updateData.title = input.title;
-    if (input.description !== undefined) updateData.description = input.description;
-    if (input.priority !== undefined) updateData.priority = input.priority;
-    if (input.status !== undefined) updateData.status = input.status;
-    if (input.dueDate !== undefined) updateData.due_date = input.dueDate;
-    if (input.notes !== undefined) updateData.notes = input.notes;
-    if (input.completionDate !== undefined)
-      updateData.completion_date = input.completionDate;
-
-    const { error } = await supabase
-      .from("task_assignments")
-      .update(updateData)
-      .eq("id", id);
-
-    if (error) throw error;
+    await taskService.updateTask(id, updateData);
     
     queryClient.invalidateQueries({ queryKey: ["task-assignment-hex", id] });
     queryClient.invalidateQueries({ queryKey: ["task-assignments-hex"] });

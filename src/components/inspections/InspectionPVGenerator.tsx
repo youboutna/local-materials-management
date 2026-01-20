@@ -11,8 +11,8 @@ import {
   FileText, Download, Send, CheckCircle, AlertTriangle, Eye, Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { PVGeneratorService } from '@/services/PVGeneratorService';
-import { InspectionExecutionService } from '@/services/InspectionExecutionService';
+import { PVGeneratorService } from '@/application/services/PVGeneratorService';
+import { InspectionExecutionService } from '@/application/services/InspectionExecutionService';
 import { GeneratedPV, PVType, InspectionExecutionData } from '@/types/inspection-execution';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';

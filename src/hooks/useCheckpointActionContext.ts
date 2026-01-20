@@ -9,7 +9,7 @@ import {
   InspectionActionContext,
   ProjectActionContext,
   PhaseSummary
-} from '@/services/CheckpointActionContextService';
+} from '@/application/services/CheckpointActionContextService';
 import { MilestoneSummaryDTO } from '@/types/milestone-dto';
 
 /**

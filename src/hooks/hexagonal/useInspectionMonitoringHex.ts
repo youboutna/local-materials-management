@@ -4,7 +4,10 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { AuthService } from '@/application/services/AuthService';
+import { InspectionService } from '@/application/services/InspectionService';
+import { StorageService } from '@/application/services/StorageService';
 import { toast } from '@/hooks/use-toast';
 
 export interface MonitoringInspection {
@@ -49,22 +52,15 @@ export function useInspectionMonitoringHex(options?: {
   inspectorName?: string;
 }) {
   const queryClient = useQueryClient();
+  const authService = new AuthService(RepositoryFactory.getAuthRepository());
+  const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
+  const storageService = new StorageService(RepositoryFactory.getStorageRepository());
 
   // Fetch inspections with optional filtering
   const inspectionsQuery = useQuery({
     queryKey: ['inspection-monitoring', options?.inspectorName],
     queryFn: async () => {
-      let query = supabase
-        .from('inspections')
-        .select('*')
-        .order('date', { ascending: false });
-
-      if (options?.filterByInspector && options?.inspectorName) {
-        query = query.eq('inspector', options.inspectorName);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
+      const data = await inspectionService.getInspections(options?.inspectorName);
       return data as MonitoringInspection[];
     }
   });
@@ -73,10 +69,8 @@ export function useInspectionMonitoringHex(options?: {
   const projectsQuery = useQuery({
     queryKey: ['monitoring-projects'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, title, project_reference');
-      if (error) throw error;
+      // This would need a ProjectService - for now using direct call as placeholder
+      const data = await inspectionService.getProjects();
       return data as MonitoringProject[];
     }
   });
@@ -85,16 +79,11 @@ export function useInspectionMonitoringHex(options?: {
   const userQuery = useQuery({
     queryKey: ['current-user-inspector'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await authService.getCurrentUser();
       if (!user) return null;
 
       // Try employees
-      const { data: employee } = await supabase
-        .from('employees')
-        .select('full_name')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
+      const employee = await inspectionService.getEmployeeByUserId(user.id);
       if (employee) return { type: 'employee', name: employee.full_name };
 
       // Try suppliers

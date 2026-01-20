@@ -1,7 +1,8 @@
 // hooks/hexagonal/usePhaseMaterialsHex.ts - Hexagonal hook for phase materials management
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { MaterialService } from '@/application/services/MaterialService';
 import { toast } from '@/hooks/use-toast';
 
 export interface MaterialDetails {
@@ -32,6 +33,7 @@ export interface AvailableMaterial {
 
 export const usePhaseMaterialsHex = (phaseId: string, projectId?: string) => {
   const queryClient = useQueryClient();
+  const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
 
   // Fetch phase materials
   const {
@@ -42,12 +44,10 @@ export const usePhaseMaterialsHex = (phaseId: string, projectId?: string) => {
   } = useQuery({
     queryKey: ['phase-materials-hex', phaseId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('project_materials')
-        .select(`
-          id,
-          phase_id,
-          material_id,
+      const data = await materialService.getPhaseMaterials(phaseId);
+      return data;
+    }
+  });
           quantity,
           materials (
             id,
@@ -82,13 +82,15 @@ export const usePhaseMaterialsHex = (phaseId: string, projectId?: string) => {
   } = useQuery({
     queryKey: ['available-materials-hex'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('materials')
-        .select('id, name, category, unit, price_per_unit')
-        .order('name');
-
-      if (error) throw error;
-      return data as AvailableMaterial[];
+      // This would use MaterialService - placeholder implementation
+      const materials = await materialService.getAllMaterials();
+      return materials.map(material => ({
+        id: material.id,
+        name: material.name,
+        category: material.category,
+        unit: material.unit,
+        price_per_unit: material.pricePerUnit
+      }));
     }
   });
 
@@ -97,16 +99,14 @@ export const usePhaseMaterialsHex = (phaseId: string, projectId?: string) => {
     mutationFn: async ({ materialId, quantity }: { materialId: string; quantity: number }) => {
       if (!projectId) throw new Error('Project ID is required');
       
-      const { data, error } = await supabase
-        .from('project_materials')
-        .insert({
-          project_id: projectId,
-          phase_id: phaseId,
-          material_id: materialId,
-          quantity: quantity
-        })
-        .select()
-        .single();
+      // This would use MaterialService - placeholder implementation
+      return await materialService.addMaterialToPhase({
+        projectId: projectId,
+        phaseId: phaseId,
+        materialId: materialId,
+        quantity: quantity
+      });
+    },
 
       if (error) throw error;
       return data;

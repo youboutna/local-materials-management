@@ -4,7 +4,8 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { StorageService } from '@/application/services/StorageService';
 import { toast } from '@/hooks/use-toast';
 
 interface UploadResult {
@@ -16,6 +17,7 @@ interface UploadResult {
 
 export function useStorageHex(bucketName: string = 'documents') {
   const queryClient = useQueryClient();
+  const storageService = new StorageService(RepositoryFactory.getStorageRepository());
 
   // Upload file mutation
   const uploadMutation = useMutation({
@@ -23,15 +25,9 @@ export function useStorageHex(bucketName: string = 'documents') {
       const fileName = `${Date.now()}-${file.name}`;
       const filePath = `${folder}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from(bucketName)
-        .upload(filePath, file);
+      const result = await storageService.uploadFile(bucketName, filePath, file);
 
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(filePath);
+      const publicUrl = storageService.getPublicUrl(bucketName, filePath);
 
       return {
         name: file.name,
@@ -56,15 +52,9 @@ export function useStorageHex(bucketName: string = 'documents') {
           const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${file.name}`;
           const filePath = `${folder}/${fileName}`;
 
-          const { error: uploadError } = await supabase.storage
-            .from(bucketName)
-            .upload(filePath, file);
+          const result = await storageService.uploadFile(bucketName, filePath, file);
 
-          if (uploadError) throw uploadError;
-
-          const { data: { publicUrl } } = supabase.storage
-            .from(bucketName)
-            .getPublicUrl(filePath);
+          const publicUrl = storageService.getPublicUrl(bucketName, filePath);
 
           return {
             name: file.name,
@@ -89,11 +79,7 @@ export function useStorageHex(bucketName: string = 'documents') {
   // Delete file mutation
   const deleteMutation = useMutation({
     mutationFn: async (filePath: string) => {
-      const { error } = await supabase.storage
-        .from(bucketName)
-        .remove([filePath]);
-
-      if (error) throw error;
+      await storageService.deleteFile(bucketName, filePath);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['storage', bucketName] });
@@ -106,10 +92,7 @@ export function useStorageHex(bucketName: string = 'documents') {
 
   // Get public URL
   const getPublicUrl = (filePath: string): string => {
-    const { data: { publicUrl } } = supabase.storage
-      .from(bucketName)
-      .getPublicUrl(filePath);
-    return publicUrl;
+    return storageService.getPublicUrl(bucketName, filePath);
   };
 
   return {
