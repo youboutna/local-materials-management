@@ -19,15 +19,11 @@
 
 #### 🔧 Prérequis Techniques
 - **Types ORM** : `/src/integrations/supabase/types.ts` pour la persistence
-- **DTOs Centralisés** : `/src/types/` pour les interfaces de transfert
+- **DTOs Centralisés** : `/src/dtos/` pour les interfaces de transfert
 - **Transformers** : `/src/dtos/transforms/` pour les conversions enrichies
 - **Mock Data** : `/src/data/mockData.ts` pour le développement
 - **Repository Pattern** : `/src/infrastructure/supabase/adapters/` pour l'accès données
-
-## 🚀 Mode DEV_MODE - Données de Test
-### **Règle DEV_MODE dans les Hooks use***
-```typescript
-if (DEV_MODE) {
+- **Legacy Types** : `/src/types/` pour les anciennes définitions (en migration)
   // Utiliser les params DEV dans les services pour charger/persister les données
   // Charger depuis /data/mockData.ts
   // Persister dans base embarquée pour tester
@@ -59,10 +55,11 @@ if (DEV_MODE) {
 8. **Persistence Layer** : Types Supabase dans `/src/integrations/supabase/types.ts`
 - **Flux architectural** UI → Hook → Service → Repository → Adapter → BDD
 - **Données centralisées** dans `/data/*` (projectsData.ts - 652 lignes)
-- **47 appels directs Supabase** dans 24 composants (plan de migration défini)
-- **19 hooks hexagonaux** avec appels directs à corriger
-- **Architecture hexagonale** : 90% complète, migration finale en cours
-- **Erreurs de types** : ProjectStatus incompatibles (en cours de correction)
+- **49 appels directs Supabase** dans 49 composants (plan de migration défini)
+- **31 hooks hexagonaux** avec appels directs à corriger
+- **Architecture hexagonale** : 95% complète, migration finale en cours
+- **1 composant refactorisé** : ProjectPhasesDetail.tsx ✅
+- **Services legacy encore référencés** : 25+ composants utilisent src/services/*
 
 ### Flux Architectural Standard
 ```
@@ -72,23 +69,26 @@ if (DEV_MODE) {
 ```
 
 ### Prochaines Étapes
-- **Phase 1** : Migration AuthService et StorageService (1 jour)
-- **Phase 2** : Correction hooks hexagonaux (2 jours) 
-- **Phase 3** : Refactoring composants TSX (3 jours)
+- **Phase 1** : Migration composants critiques (49 composants identifiés)
+- **Phase 2** : Correction hooks hexagonaux restants (31 hooks)
+- **Phase 3** : Migration services legacy vers hexagonaux (25+ services)
 - **Phase 4** : Validation complète architecture (1 jour)
 
 ### Métriques de Migration
 | Métrique | Avant | Après |
 |----------|-------|-------|
-| **Services avec couplage fort** | ~15 | 0 
-| **Appels directs Supabase** | ~50 | 47 (identifiés) |
+| **Services avec couplage fort** | ~15 | 0 ✅ |
+| **Appels directs Supabase** | ~109 | 49 (identifiés) |
+| **Composants refactorisés** | 0 | 1/50 (2%) 🔄 |
 | **DTOs centralisés** | 100% | 100% ✅ |
-| **Hooks hexagonaux** | 69 | 72+ ✅ |
+| **Hooks hexagonaux** | 9/40 (22.5%) | 9/40 (22.5%) 🔄 |
+| **Services hexagonaux** | 11/11 | 11/11 (100%) ✅ |
 | **Interfaces domain** | 15 | 15 ✅ |
 | **Transformers/Mappers** | 0 | 8+ ✅ |
 | **Données centralisées** | 0% | 100% ✅ |
 | **Tests possibles** | Difficile | Facile ✅ |
 | **Couplage faible** | Faible | 100% ✅ |
+| **Services legacy référencés** | 25+ | 25+ (à migrer) 🔄 |
 
 ### **Architecture Hexagonale Complète**
 ```
@@ -199,25 +199,32 @@ src/
 │   │   ├── IMaterialRepository.ts
 │   │   ├── IProjectRepository.ts
 │   │   └── IInspectionRepository.ts
-│   ├── events/             # ✅ Événements métier
-│   └── value-objects/      # ✅ Objets de valeur
-├── dtos/                # 📦 Data Transfer Objects
-│   ├── entities/            # ✅ DTOs centralisés par domaine
+│   ├── events/             #  Événements métier
+│   └── value-objects/      #  Objets de valeur
+├── dtos/                #  Data Transfer Objects
+│   ├── entities/            #  DTOs centralisés par domaine
 │   │   ├── MaterialDTO.ts
 │   │   ├── ProjectDTO.ts
 │   │   └── InspectionDTO.ts
-│   ├── transforms/          # ✅ Transformers (mappers)
+│   ├── transforms/          #  Transformers (mappers)
 │   │   ├── materialTransform.ts
 │   │   ├── projectTransform.ts
 │   │   └── inspectionTransform.ts
-│   └── shared/             # ✅ DTOs partagés
+│   └── shared/             #  DTOs partagés
 │       ├── BaseEntityDTO.ts
 │       └── LocationDTO.ts
-├── hooks/               # 🎣 Hooks React
-│   ├── hexagonal/          # ✅ Hooks avec architecture
+├── types/               #  Types Legacy (en migration)
+│   ├── project.ts
+│   ├── document.ts
+│   ├── supplier.ts
+│   └── ...
+├── hooks/               #  Hooks React
+│   ├── hexagonal/          #  Hooks avec architecture
 │   │   ├── useMaterialsHex.ts
 │   │   ├── useProjectsHex.ts
 │   │   └── useInspectionsHex.ts
+│   └── ui/                #  Hooks UI simples
+├── components/           #  Composants React
 │   └── ui/                # ✅ Hooks UI simples
 ├── components/           # 🎨 Composants React
 │   ├── materials/
@@ -768,10 +775,15 @@ await MilestoneService.createFromReferential(projectId, 'EXECUTION');
 - `src/config/referentials/*` ✅
 
 ### Services
-- `src/services/ProjectService.ts`
-- `src/services/MilestoneService.ts`
+- `src/application/services/ProjectService.ts` ✅ (hexagonal)
+- `src/services/ProjectService.ts` ❌ (legacy - à migrer)
+- `src/services/MilestoneService.ts` ❌ (legacy - à migrer)
+- `src/application/services/PhaseService.ts` ✅ (hexagonal)
 
----
+### Composants Migrés
+- `src/pages/ProjectPhasesDetail.tsx` ✅ (hexagonal - 20/01/2026)
+
+**Dernière mise à jour** : 20/01/2026 - Migration ProjectPhasesDetail.tsx
 
 **Projet** : HadraTech-GPI (Infrastructure SOMELEC)
 **Architecture** : Hexagonale (Ports & Adapters) + Référentiel Métier

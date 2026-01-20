@@ -63,10 +63,11 @@ Développement d'un logiciel de **gestion intégrée des projets d'infrastructur
 
 ### 🔧 Prérequis Techniques
 - **Types ORM** : `/src/integrations/supabase/types.ts` pour la persistence
-- **DTOs Centralisés** : `/src/types/` pour les interfaces de transfert
+- **DTOs Centralisés** : `/src/dtos/` pour les interfaces de transfert
 - **Transformers** : `/src/dtos/transforms/` pour les conversions enrichies
 - **Mock Data** : `/src/data/mockData.ts` pour le développement
 - **Repository Pattern** : `/src/infrastructure/supabase/adapters/` pour l'accès données
+- **Legacy Types** : `/src/types/` pour les anciennes définitions (en migration)
 
 ## 🚀 Mode DEV_MODE - Données de Test
 ### **Règle DEV_MODE dans les Hooks use***
@@ -1300,18 +1301,19 @@ grep -r "supabase\." src/hooks/hexagonal/ --exclude-dir=node_modules
 
 ---
 
-### **Reste à Faire 📋** (92 fichiers)
+### **Reste à Faire 📋** (91 fichiers)
 
 | Répertoire | Fichiers | Priorité | Hook Recommandé |
 |------------|----------|----------|-----------------|
 | **suppliers/** | SupplierSubmissionDashboard, +5 | 🔴 Haute | `useSuppliersHex` |
-| **project/** | ProjectStakeholders, ProjectDocuments, +8 | 🔴 Haute | `useProjectDetailsHex` |
+| **project/** | ProjectStakeholders, ProjectDocuments, +7 | 🔴 Haute | `useProjectDetailsHex` |
 | **tenders/** | TenderDocumentUploadForm, TenderExcelImporter, +6 | 🟡 Moyenne | `useTenderHex` |
 | **documents/** | DocumentUploader, DocumentList, +4 | 🟡 Moyenne | `useDocumentsHex` |
 | **inspections/** | InspectionExecutionForm, InspectionForm, +3 | 🟡 Moyenne | `useInspectionHex` ✅ |
 | **payments/** | PaymentRequestModal | 🟡 Moyenne | `usePaymentActionsHex` ✅ |
 | **admin/** | EscalationThresholdsSettings | 🟢 Basse | Nouveau hook |
 | **reports/** | InspectionReportGenerator | 🟢 Basse | Edge functions |
+| **pages/** | ProjectPhasesDetail.tsx | ✅ **MIGRÉ** | `PhaseService` ✅ |
 
 ---
 
@@ -1345,9 +1347,10 @@ export type {
 
 ### **Prochaines Actions**
 1. ~~Phase A selectors/~~ ✅ **TERMINÉ**
-2. Phase A suppliers/ (5 fichiers restants)
-3. Phase A project/ (8 fichiers)
-4. Phase B tenders/ + documents/
+2. ~~Phase A suppliers/~~ (5 fichiers restants)
+3. ~~Phase A project/~~ (7 fichiers restants)
+4. **Phase B pages/** - ProjectPhasesDetail.tsx ✅ **MIGRÉ**
+5. Phase B composants restants (90 fichiers)
 
 ---
 
