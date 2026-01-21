@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from "@/hooks/use-toast";
-import { useAlertsHex, AlertData } from "@/hooks/hexagonal";
+import { useAlertsHex } from "@/hooks/hexagonal";
+import { AlertData } from "@/types/alerts";
 import {
   AlertTriangle,
   Bell,
@@ -20,7 +21,7 @@ const AlertsDashboard: React.FC = () => {
   const { t } = useLanguage();
   const { 
     alerts, 
-    loading, 
+    isLoading, 
     stats, 
     acknowledgeAlert, 
     filterAlertsByType 
@@ -44,12 +45,18 @@ const AlertsDashboard: React.FC = () => {
   const getSeverityIcon = (type: string) => {
     switch (type) {
       case "delay":
+      case "project_delay":
         return Clock;
       case "payment":
+      case "payment_blocked":
+      case "financial_risk":
         return DollarSign;
       case "inspection":
+      case "inspection_issue":
+      case "inspection_overdue":
         return TrendingDown;
       case "guarantee":
+      case "bank_guarantee":
         return Shield;
       default:
         return AlertTriangle;
@@ -64,7 +71,15 @@ const AlertsDashboard: React.FC = () => {
     });
   };
 
-  if (loading) {
+  const formatTimestamp = (timestamp: string) => {
+    try {
+      return new Date(timestamp).toLocaleTimeString();
+    } catch {
+      return '';
+    }
+  };
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -155,32 +170,29 @@ const AlertsDashboard: React.FC = () => {
                   </CardContent>
                 </Card>
               ) : (
-                filterAlertsByType(type).map((alert) => {
+                filterAlertsByType(type).map((alert: AlertData) => {
                   const IconComponent = getSeverityIcon(alert.type);
+                  const isAcknowledged = alert.acknowledged;
                   return (
                     <Alert
                       key={alert.id}
-                      className={`${
-                        alert.status === "acknowledged" ? "opacity-60" : ""
-                      }`}
+                      className={`${isAcknowledged ? "opacity-60" : ""}`}
                     >
                       <IconComponent className="h-4 w-4" />
                       <AlertTitle className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           {alert.title}
                           <Badge
-                            className={`${getSeverityColor(
-                              alert.severity
-                            )} text-white`}
+                            className={`${getSeverityColor(alert.severity)} text-white`}
                           >
                             {alert.severity}
                           </Badge>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">
-                            {alert.timestamp.toLocaleTimeString()}
+                            {formatTimestamp(alert.timestamp)}
                           </span>
-                          {alert.status === "active" && (
+                          {!isAcknowledged && (
                             <Button
                               size="sm"
                               variant="outline"
@@ -192,10 +204,10 @@ const AlertsDashboard: React.FC = () => {
                         </div>
                       </AlertTitle>
                       <AlertDescription>
-                        {alert.description}
-                        {alert.projectName && (
+                        {alert.message}
+                        {alert.projectTitle && (
                           <div className="mt-1 text-sm">
-                            <strong>Projet:</strong> {alert.projectName}
+                            <strong>Projet:</strong> {alert.projectTitle}
                           </div>
                         )}
                       </AlertDescription>

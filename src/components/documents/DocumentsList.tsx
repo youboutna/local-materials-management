@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileText, Search, Download, Eye, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useDocumentsList } from '@/hooks/hexagonal/useDocumentsHex';
+import { useDocumentsList } from '@/hooks/hexagonal';
 import type { Database } from '@/integrations/supabase/types';
 
 type Document = Database['public']['Tables']['documents']['Row'];
@@ -51,7 +51,7 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
     return types[type] || type;
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | null) => {
     switch (status) {
       case 'draft': return 'bg-gray-100 text-gray-800';
       case 'pending_review': return 'bg-yellow-100 text-yellow-800';
@@ -60,13 +60,13 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
     }
   };
 
-  const getStatusLabel = (status: string) => {
+  const getStatusLabel = (status: string | null) => {
     const statuses: Record<string, string> = {
       'draft': 'Brouillon',
       'pending_review': 'En attente de révision',
       'approved': 'Approuvé'
     };
-    return statuses[status] || status;
+    return statuses[status || 'draft'] || status || 'Brouillon';
   };
 
   const formatFileSize = (bytes: number | null) => {
@@ -217,8 +217,8 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
                     </p>
                   </div>
                 </div>
-                <Badge className={getStatusColor(doc.status || 'draft')}>
-                  {getStatusLabel(doc.status || 'draft')}
+                <Badge className={getStatusColor(doc.status)}>
+                  {getStatusLabel(doc.status)}
                 </Badge>
               </div>
             </CardHeader>

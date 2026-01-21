@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,10 +9,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
-import { useDocumentsHex, useDocumentCreate } from '@/hooks/hexagonal';
-import { useProjectsHex } from '@/hooks/hexagonal';
+import { useDocumentCreate, useProjectsHex } from '@/hooks/hexagonal';
 import { FileText, Loader2, Upload } from 'lucide-react';
 import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 type Project = { id: string; title: string };
 
@@ -92,7 +91,7 @@ const DocumentUpload = () => {
       const result = await createDocument.mutateAsync(documentData);
       return result;
     },
-      onSuccess: () => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       toast({
         title: t('common.success'),
@@ -133,7 +132,7 @@ const DocumentUpload = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-      if (!formData.title || !formData.document_type) {
+    if (!formData.title || !formData.document_type) {
       toast({
         title: t('common.error'),
         description: "Veuillez remplir tous les champs obligatoires.",
@@ -252,8 +251,8 @@ const DocumentUpload = () => {
             </div>
           </div>
 
-          <Button type="submit" disabled={uploading} className="w-full">
-            {uploading ? (
+          <Button type="submit" disabled={uploading || uploadMutation.isPending} className="w-full">
+            {uploading || uploadMutation.isPending ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 Téléchargement en cours...
