@@ -47,18 +47,18 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
     
     setLoading(true);
     try {
-      let documents = [];
+      let loadedDocuments: any[] = [];
       
       // Filter based on related type using DocumentService
       switch (relatedType) {
         case 'project':
-          documents = await DocumentService.getProjectDocuments(relatedId);
+          loadedDocuments = await DocumentService.getProjectDocuments(relatedId);
           break;
         case 'inspection':
-          documents = await DocumentService.getInspectionDocuments(relatedId);
+          loadedDocuments = await DocumentService.getInspectionDocuments(relatedId);
           break;
         case 'payment':
-          documents = await DocumentService.getPaymentDocuments(relatedId);
+          loadedDocuments = await DocumentService.getPaymentDocuments(relatedId);
           break;
         case 'bank_guarantee':
           // Get project_id from bank_guarantee and filter documents
@@ -66,7 +66,7 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
             const guaranteeData = await DocumentService.getBankGuaranteeProject(relatedId);
             
             if (guaranteeData && guaranteeData.project_id) {
-              documents = await DocumentService.getProjectDocumentsByTags(guaranteeData.project_id, ['bank_guarantee']);
+              loadedDocuments = await DocumentService.getProjectDocumentsByTags(guaranteeData.project_id, ['bank_guarantee']);
             } else {
               setDocuments([]);
               return;
@@ -83,7 +83,7 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
             const insuranceData = await DocumentService.getInsuranceProject(relatedId);
             
             if (insuranceData && insuranceData.project_id) {
-              documents = await DocumentService.getProjectDocumentsByTags(insuranceData.project_id, ['insurance']);
+              loadedDocuments = await DocumentService.getProjectDocumentsByTags(insuranceData.project_id, ['insurance']);
             } else {
               setDocuments([]);
               return;
@@ -96,10 +96,10 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
           break;
         default:
           // For other types, try to match by project_id
-          documents = await DocumentService.getProjectDocuments(relatedId);
+          loadedDocuments = await DocumentService.getProjectDocuments(relatedId);
       }
 
-      setDocuments(documents.map((doc: any) => ({
+      setDocuments(loadedDocuments.map((doc: any) => ({
         ...doc,
         description: doc.description || undefined,
         mime_type: doc.mime_type || undefined,

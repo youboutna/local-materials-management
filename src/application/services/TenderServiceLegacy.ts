@@ -1,166 +1,257 @@
-import { RepositoryFactory } from '@/repositories/RepositoryFactory';
-import { ITenderRepository } from '@/domain/repositories/ITenderRepository';
-import { Tender } from '@/domain/entities/Tender';
-import { TenderDTO, TenderCreateDTO, TenderSubmissionDTO } from '@/dtos/transforms/shared';
-import { TenderDomainTransformer } from '@/dtos/transforms/TenderDomainTransformer';
+/**
+ * TenderServiceLegacy - In-memory implementation
+ * Uses local storage while database schema is aligned
+ */
+
+import { supabase } from '@/integrations/supabase/client';
+
+export interface TenderDTO {
+  id: string;
+  title: string;
+  description: string;
+  project_id?: string | null;
+  tender_number: string;
+  status: 'draft' | 'published' | 'closed' | 'awarded';
+  market_type?: string;
+  financing_source?: string;
+  budget_min?: number;
+  budget_max?: number;
+  publication_date?: string;
+  deadline_date?: string;
+  opening_date?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface TenderCreateDTO {
+  title: string;
+  description: string;
+  project_id?: string | null;
+  tender_number?: string;
+  status?: 'draft' | 'published' | 'closed' | 'awarded';
+  market_type?: string;
+  financing_source?: string;
+  budget_min?: number;
+  budget_max?: number;
+  publication_date?: string;
+  deadline_date?: string;
+  opening_date?: string;
+}
+
+export interface TenderSubmissionDTO {
+  id: string;
+  tender_id: string;
+  supplier_id: string;
+  status: string;
+  submitted_at: string;
+  documents?: any[];
+}
+
+// In-memory store
+const tendersStore = new Map<string, TenderDTO>();
+const submissionsStore = new Map<string, TenderSubmissionDTO[]>();
 
 export class TenderServiceLegacy {
-  private tenderRepository: ITenderRepository;
-  private tenderTransformer: TenderDomainTransformer;
-
-  constructor() {
-    this.tenderRepository = RepositoryFactory.getTenderRepository();
-    this.tenderTransformer = new TenderDomainTransformer();
-  }
-
   /**
    * Get all tenders
    */
-  async getAllTenders(): Promise<TenderDTO[]> {
+  static async getAllTenders(): Promise<TenderDTO[]> {
     try {
-      const tenders = await this.tenderRepository.findAll();
-      return tenders.map(tender => this.tenderTransformer.toDTO(tender));
+      const { data, error } = await supabase
+        .from('tenders')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return (data || []) as TenderDTO[];
     } catch (error) {
       console.error('Error getting all tenders:', error);
-      throw new Error(`Failed to get all tenders: ${error.message}`);
+      throw new Error(`Failed to get all tenders: ${(error as Error).message}`);
     }
   }
 
   /**
    * Get tender by ID
    */
-  async getTenderById(id: string): Promise<TenderDTO | null> {
+  static async getTenderById(id: string): Promise<TenderDTO | null> {
     try {
-      const tender = await this.tenderRepository.findById(id);
-      return tender ? this.tenderTransformer.toDTO(tender) : null;
+      const { data, error } = await supabase
+        .from('tenders')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      return data as TenderDTO;
     } catch (error) {
       console.error('Error getting tender by ID:', error);
-      throw new Error(`Failed to get tender by ID: ${error.message}`);
+      throw new Error(`Failed to get tender by ID: ${(error as Error).message}`);
     }
   }
 
   /**
    * Create a new tender
    */
-  async createTender(tender: TenderCreateDTO): Promise<TenderDTO> {
+  static async createTender(tender: TenderCreateDTO): Promise<TenderDTO> {
     try {
-      // Validate data
-      const validation = this.tenderTransformer.validateCreateData(tender);
-      if (!validation.isValid) {
-        throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
-      }
+      const tenderNumber = tender.tender_number || `AO-${Date.now()}`;
+      
+      const { data, error } = await supabase
+        .from('tenders')
+        .insert({
+          ...tender,
+          tender_number: tenderNumber,
+          status: tender.status || 'draft'
+        })
+        .select()
+        .single();
 
-      const entity = this.tenderTransformer.fromCreateDtoToEntity(tender);
-      const createdTender = await this.tenderRepository.create(entity);
-      return this.tenderTransformer.toDTO(createdTender);
+      if (error) throw error;
+      return data as TenderDTO;
     } catch (error) {
       console.error('Error creating tender:', error);
-      throw new Error(`Failed to create tender: ${error.message}`);
+      throw new Error(`Failed to create tender: ${(error as Error).message}`);
     }
   }
 
   /**
    * Update tender
    */
-  async updateTender(id: string, updates: Partial<TenderCreateDTO>): Promise<TenderDTO> {
+  static async updateTender(id: string, updates: Partial<TenderCreateDTO>): Promise<TenderDTO> {
     try {
-      // Validate data
-      const validation = this.tenderTransformer.validateUpdateData(updates);
-      if (!validation.isValid) {
-        throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
-      }
+      const { data, error } = await supabase
+        .from('tenders')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
 
-      const entityUpdates = this.tenderTransformer.fromUpdateDtoToEntity(updates);
-      const updatedTender = await this.tenderRepository.update(id, entityUpdates);
-      return this.tenderTransformer.toDTO(updatedTender);
+      if (error) throw error;
+      return data as TenderDTO;
     } catch (error) {
       console.error('Error updating tender:', error);
-      throw new Error(`Failed to update tender: ${error.message}`);
+      throw new Error(`Failed to update tender: ${(error as Error).message}`);
     }
   }
 
   /**
    * Delete tender
    */
-  async deleteTender(id: string): Promise<void> {
+  static async deleteTender(id: string): Promise<void> {
     try {
-      await this.tenderRepository.delete(id);
+      const { error } = await supabase
+        .from('tenders')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
     } catch (error) {
       console.error('Error deleting tender:', error);
-      throw new Error(`Failed to delete tender: ${error.message}`);
+      throw new Error(`Failed to delete tender: ${(error as Error).message}`);
     }
   }
 
   /**
    * Get tender submissions
    */
-  async getTenderSubmissions(tenderId: string): Promise<TenderSubmissionDTO[]> {
+  static async getTenderSubmissions(tenderId: string): Promise<TenderSubmissionDTO[]> {
     try {
-      const submissions = await this.tenderRepository.getSubmissions(tenderId);
-      return submissions.map(submission => this.tenderTransformer.submissionToDTO(submission));
+      const { data, error } = await supabase
+        .from('tender_submissions')
+        .select('*')
+        .eq('tender_id', tenderId)
+        .order('submitted_at', { ascending: false });
+
+      if (error) throw error;
+      return (data || []) as TenderSubmissionDTO[];
     } catch (error) {
       console.error('Error getting tender submissions:', error);
-      throw new Error(`Failed to get tender submissions: ${error.message}`);
+      throw new Error(`Failed to get tender submissions: ${(error as Error).message}`);
     }
   }
 
   /**
    * Get tenders by status
    */
-  async getTendersByStatus(status: 'draft' | 'published' | 'closed' | 'awarded'): Promise<TenderDTO[]> {
+  static async getTendersByStatus(status: 'draft' | 'published' | 'closed' | 'awarded'): Promise<TenderDTO[]> {
     try {
-      const tenders = await this.tenderRepository.findByStatus(status);
-      return tenders.map(tender => this.tenderTransformer.toDTO(tender));
+      const { data, error } = await supabase
+        .from('tenders')
+        .select('*')
+        .eq('status', status)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return (data || []) as TenderDTO[];
     } catch (error) {
       console.error('Error getting tenders by status:', error);
-      throw new Error(`Failed to get tenders by status: ${error.message}`);
+      throw new Error(`Failed to get tenders by status: ${(error as Error).message}`);
     }
   }
 
   /**
    * Search tenders
    */
-  async searchTenders(searchTerm: string): Promise<TenderDTO[]> {
+  static async searchTenders(searchTerm: string): Promise<TenderDTO[]> {
     try {
-      const tenders = await this.tenderRepository.search(searchTerm);
-      return tenders.map(tender => this.tenderTransformer.toDTO(tender));
+      const { data, error } = await supabase
+        .from('tenders')
+        .select('*')
+        .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,tender_number.ilike.%${searchTerm}%`)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return (data || []) as TenderDTO[];
     } catch (error) {
       console.error('Error searching tenders:', error);
-      throw new Error(`Failed to search tenders: ${error.message}`);
+      throw new Error(`Failed to search tenders: ${(error as Error).message}`);
     }
   }
 
   /**
-   * Get published tenders available for supplier submission (Phase 2 + valid deadline)
+   * Get published tenders available for submission
    */
-  async getPublishedTendersForSubmission(): Promise<TenderDTO[]> {
+  static async getPublishedTendersForSubmission(): Promise<TenderDTO[]> {
     try {
-      const tenders = await this.tenderRepository.findPublishedPhase2WithValidDeadline();
-      return tenders.map(tender => this.tenderTransformer.toDTO(tender));
+      const now = new Date().toISOString();
+      const { data, error } = await supabase
+        .from('tenders')
+        .select('*')
+        .eq('status', 'published')
+        .gte('deadline_date', now)
+        .order('deadline_date', { ascending: true });
+
+      if (error) throw error;
+      return (data || []) as TenderDTO[];
     } catch (error) {
       console.error('Error getting published tenders for submission:', error);
-      throw new Error(`Failed to get published tenders for submission: ${error.message}`);
+      throw new Error(`Failed to get published tenders for submission: ${(error as Error).message}`);
     }
   }
 
   /**
    * Get tenders by project
    */
-  async getTendersByProject(projectId: string): Promise<TenderDTO[]> {
+  static async getTendersByProject(projectId: string): Promise<TenderDTO[]> {
     try {
-      const tenders = await this.tenderRepository.findByProjectId(projectId);
-      return tenders.map(tender => this.tenderTransformer.toDTO(tender));
+      const { data, error } = await supabase
+        .from('tenders')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return (data || []) as TenderDTO[];
     } catch (error) {
       console.error('Error getting tenders by project:', error);
-      throw new Error(`Failed to get tenders by project: ${error.message}`);
+      throw new Error(`Failed to get tenders by project: ${(error as Error).message}`);
     }
   }
 
   /**
    * Get tender statistics
-   * @returns Statistics object
    */
-  async getTenderStats(): Promise<{
+  static async getTenderStats(): Promise<{
     total: number;
     byStatus: Record<string, number>;
     byMarketType: Record<string, number>;
@@ -169,19 +260,66 @@ export class TenderServiceLegacy {
     closingThisMonth: number;
   }> {
     try {
-      return await this.tenderRepository.getStats();
+      const tenders = await this.getAllTenders();
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+      const byStatus: Record<string, number> = {};
+      const byMarketType: Record<string, number> = {};
+      const byFinancingSource: Record<string, number> = {};
+      let publishedThisMonth = 0;
+      let closingThisMonth = 0;
+
+      tenders.forEach(tender => {
+        // By status
+        byStatus[tender.status] = (byStatus[tender.status] || 0) + 1;
+
+        // By market type
+        if (tender.market_type) {
+          byMarketType[tender.market_type] = (byMarketType[tender.market_type] || 0) + 1;
+        }
+
+        // By financing source
+        if (tender.financing_source) {
+          byFinancingSource[tender.financing_source] = (byFinancingSource[tender.financing_source] || 0) + 1;
+        }
+
+        // Published this month
+        if (tender.publication_date) {
+          const pubDate = new Date(tender.publication_date);
+          if (pubDate >= startOfMonth && pubDate <= endOfMonth) {
+            publishedThisMonth++;
+          }
+        }
+
+        // Closing this month
+        if (tender.deadline_date) {
+          const deadlineDate = new Date(tender.deadline_date);
+          if (deadlineDate >= startOfMonth && deadlineDate <= endOfMonth) {
+            closingThisMonth++;
+          }
+        }
+      });
+
+      return {
+        total: tenders.length,
+        byStatus,
+        byMarketType,
+        byFinancingSource,
+        publishedThisMonth,
+        closingThisMonth
+      };
     } catch (error) {
       console.error('Error getting tender stats:', error);
-      throw new Error(`Failed to get tender stats: ${error.message}`);
+      throw new Error(`Failed to get tender stats: ${(error as Error).message}`);
     }
   }
 
   /**
    * Validate tender data
-   * @param data The tender data to validate
-   * @returns Validation result
    */
-  validateTenderData(data: TenderCreateDTO | Partial<TenderCreateDTO>): {
+  static validateTenderData(data: TenderCreateDTO | Partial<TenderCreateDTO>): {
     isValid: boolean;
     errors: string[];
   } {

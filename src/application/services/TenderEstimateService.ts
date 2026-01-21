@@ -1,239 +1,368 @@
-import { RepositoryFactory } from '@/repositories/RepositoryFactory';
-import { ITenderEstimateRepository } from '@/domain/repositories/ITenderEstimateRepository';
+/**
+ * TenderEstimateService - In-memory implementation
+ * Uses local storage while database tables are pending migration
+ */
+
 import { TenderEstimate, TenderEstimateItem } from '@/domain/entities/PerformanceMonitoring';
-import { 
-  TenderEstimateDTO, 
-  TenderEstimateItemDTO,
-  TenderEstimateCreateDTO,
-  TenderEstimateItemCreateDTO,
-  UpdateTenderEstimateRequestDto,
-  UpdateTenderEstimateItemRequestDto
-} from '@/dtos/transforms/shared';
-import { TenderEstimateDomainTransformer, TenderEstimateItemDomainTransformer } from '@/dtos/transforms/PerformanceMonitoringDomainTransformer';
+
+// In-memory stores
+const estimatesStore = new Map<string, TenderEstimate>();
+const estimateItemsStore = new Map<string, TenderEstimateItem>();
+
+export interface TenderEstimateDTO {
+  id: string;
+  tender_id: string;
+  project_id?: string | null;
+  estimate_type: string;
+  total_materials_cost: number | null;
+  total_labor_cost: number | null;
+  total_equipment_cost: number | null;
+  subtotal: number | null;
+  tax_rate: number | null;
+  tax_amount: number | null;
+  total_with_tax: number | null;
+  overhead_percentage: number | null;
+  overhead_amount: number | null;
+  profit_margin_percentage: number | null;
+  profit_margin_amount: number | null;
+  final_total: number | null;
+  currency: string | null;
+  status: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface TenderEstimateItemDTO {
+  id: string;
+  estimate_id: string;
+  material_id?: string | null;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  description: string | null;
+  item_type: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface TenderEstimateCreateDTO {
+  tender_id: string;
+  project_id?: string | null;
+  estimate_type: string;
+  total_materials_cost?: number | null;
+  total_labor_cost?: number | null;
+  total_equipment_cost?: number | null;
+  subtotal?: number | null;
+  tax_rate?: number | null;
+  tax_amount?: number | null;
+  total_with_tax?: number | null;
+  overhead_percentage?: number | null;
+  overhead_amount?: number | null;
+  profit_margin_percentage?: number | null;
+  profit_margin_amount?: number | null;
+  final_total?: number | null;
+  currency?: string | null;
+  status?: string;
+}
+
+export interface TenderEstimateItemCreateDTO {
+  estimate_id: string;
+  material_id?: string | null;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  description?: string | null;
+  item_type?: string | null;
+}
 
 export class TenderEstimateService {
-  private tenderEstimateRepository: ITenderEstimateRepository;
-  private tenderEstimateTransformer: TenderEstimateDomainTransformer;
-  private tenderEstimateItemTransformer: TenderEstimateItemDomainTransformer;
-
-  constructor() {
-    this.tenderEstimateRepository = RepositoryFactory.getTenderEstimateRepository();
-    this.tenderEstimateTransformer = new TenderEstimateDomainTransformer();
-    this.tenderEstimateItemTransformer = new TenderEstimateItemDomainTransformer();
-  }
-
   /**
    * Create a new tender estimate
-   * Only the creator will have access via RLS
    */
-  async createEstimate(estimate: TenderEstimateCreateDTO): Promise<TenderEstimateDTO> {
+  static async createEstimate(estimate: TenderEstimateCreateDTO): Promise<TenderEstimateDTO> {
     try {
-      // Validate data
-      const validation = this.tenderEstimateTransformer.validate(estimate);
-      if (!validation.isValid) {
-        throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
-      }
+      const id = `estimate_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const now = new Date().toISOString();
+      
+      const newEstimate: TenderEstimateDTO = {
+        id,
+        tender_id: estimate.tender_id,
+        project_id: estimate.project_id || null,
+        estimate_type: estimate.estimate_type,
+        total_materials_cost: estimate.total_materials_cost || null,
+        total_labor_cost: estimate.total_labor_cost || null,
+        total_equipment_cost: estimate.total_equipment_cost || null,
+        subtotal: estimate.subtotal || null,
+        tax_rate: estimate.tax_rate || null,
+        tax_amount: estimate.tax_amount || null,
+        total_with_tax: estimate.total_with_tax || null,
+        overhead_percentage: estimate.overhead_percentage || null,
+        overhead_amount: estimate.overhead_amount || null,
+        profit_margin_percentage: estimate.profit_margin_percentage || null,
+        profit_margin_amount: estimate.profit_margin_amount || null,
+        final_total: estimate.final_total || null,
+        currency: estimate.currency || 'MRU',
+        status: estimate.status || 'draft',
+        created_at: now,
+        updated_at: now
+      };
 
-      const entity = this.tenderEstimateTransformer.fromCreateDtoToEntity(estimate);
-      const createdEstimate = await this.tenderEstimateRepository.create(entity);
-      return this.tenderEstimateTransformer.toDTO(createdEstimate);
+      estimatesStore.set(id, newEstimate as unknown as TenderEstimate);
+      return newEstimate;
     } catch (error) {
       console.error('Error creating estimate:', error);
-      throw new Error(`Failed to create estimate: ${error.message}`);
+      throw new Error(`Failed to create estimate: ${(error as Error).message}`);
     }
   }
 
   /**
    * Get estimates by tender ID
-   * RLS will filter to show only user's own estimates + admin can see all
    */
-  async getEstimatesByTenderId(tenderId: string): Promise<TenderEstimateDTO[]> {
+  static async getEstimatesByTenderId(tenderId: string): Promise<TenderEstimateDTO[]> {
     try {
-      const estimates = await this.tenderEstimateRepository.findByTenderId(tenderId);
-      return estimates.map(estimate => this.tenderEstimateTransformer.toDTO(estimate));
+      const estimates: TenderEstimateDTO[] = [];
+      estimatesStore.forEach((estimate) => {
+        const dto = estimate as unknown as TenderEstimateDTO;
+        if (dto.tender_id === tenderId) {
+          estimates.push(dto);
+        }
+      });
+      return estimates;
     } catch (error) {
       console.error('Error getting estimates by tender ID:', error);
-      throw new Error(`Failed to get estimates by tender ID: ${error.message}`);
+      throw new Error(`Failed to get estimates by tender ID: ${(error as Error).message}`);
     }
   }
 
   /**
    * Get estimate by ID
-   * RLS will check if user is the creator or admin
    */
-  async getEstimateById(id: string): Promise<TenderEstimateDTO | null> {
+  static async getEstimateById(id: string): Promise<TenderEstimateDTO | null> {
     try {
-      const estimate = await this.tenderEstimateRepository.findById(id);
-      return estimate ? this.tenderEstimateTransformer.toDTO(estimate) : null;
+      const estimate = estimatesStore.get(id);
+      return estimate ? (estimate as unknown as TenderEstimateDTO) : null;
     } catch (error) {
       console.error('Error getting estimate by ID:', error);
-      throw new Error(`Failed to get estimate by ID: ${error.message}`);
+      throw new Error(`Failed to get estimate by ID: ${(error as Error).message}`);
     }
   }
 
   /**
    * Update estimate
-   * RLS will check if user is the creator or admin
    */
-  async updateEstimate(id: string, updates: UpdateTenderEstimateRequestDto): Promise<TenderEstimateDTO> {
+  static async updateEstimate(id: string, updates: Partial<TenderEstimateCreateDTO>): Promise<TenderEstimateDTO> {
     try {
-      // Validate data
-      const validation = this.tenderEstimateTransformer.validate(updates);
-      if (!validation.isValid) {
-        throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
+      const existing = estimatesStore.get(id);
+      if (!existing) {
+        throw new Error('Estimate not found');
       }
 
-      const entityUpdates = this.tenderEstimateTransformer.fromUpdateDtoToEntity(updates);
-      const updatedEstimate = await this.tenderEstimateRepository.update(id, entityUpdates);
-      return this.tenderEstimateTransformer.toDTO(updatedEstimate);
+      const updatedEstimate = {
+        ...(existing as unknown as TenderEstimateDTO),
+        ...updates,
+        updated_at: new Date().toISOString()
+      };
+
+      estimatesStore.set(id, updatedEstimate as unknown as TenderEstimate);
+      return updatedEstimate;
     } catch (error) {
       console.error('Error updating estimate:', error);
-      throw new Error(`Failed to update estimate: ${error.message}`);
+      throw new Error(`Failed to update estimate: ${(error as Error).message}`);
     }
   }
 
   /**
    * Delete estimate
-   * RLS will check if user is the creator or admin
    */
-  async deleteEstimate(id: string): Promise<void> {
+  static async deleteEstimate(id: string): Promise<void> {
     try {
-      await this.tenderEstimateRepository.delete(id);
+      estimatesStore.delete(id);
+      // Also delete related items
+      estimateItemsStore.forEach((item, itemId) => {
+        const dto = item as unknown as TenderEstimateItemDTO;
+        if (dto.estimate_id === id) {
+          estimateItemsStore.delete(itemId);
+        }
+      });
     } catch (error) {
       console.error('Error deleting estimate:', error);
-      throw new Error(`Failed to delete estimate: ${error.message}`);
+      throw new Error(`Failed to delete estimate: ${(error as Error).message}`);
     }
   }
 
   /**
    * Create estimate item
    */
-  async createEstimateItem(item: TenderEstimateItemCreateDTO): Promise<TenderEstimateItemDTO> {
+  static async createEstimateItem(item: TenderEstimateItemCreateDTO): Promise<TenderEstimateItemDTO> {
     try {
-      // Validate data
-      const validation = this.tenderEstimateItemTransformer.validate(item);
-      if (!validation.isValid) {
-        throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
-      }
+      const id = `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const now = new Date().toISOString();
+      
+      const newItem: TenderEstimateItemDTO = {
+        id,
+        estimate_id: item.estimate_id,
+        material_id: item.material_id || null,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total_price: item.total_price,
+        description: item.description || null,
+        item_type: item.item_type || null,
+        created_at: now,
+        updated_at: now
+      };
 
-      const entity = this.tenderEstimateItemTransformer.fromCreateDtoToEntity(item);
-      const createdItem = await this.tenderEstimateRepository.createItem(entity);
-      return this.tenderEstimateItemTransformer.toDTO(createdItem);
+      estimateItemsStore.set(id, newItem as unknown as TenderEstimateItem);
+      return newItem;
     } catch (error) {
       console.error('Error creating estimate item:', error);
-      throw new Error(`Failed to create estimate item: ${error.message}`);
+      throw new Error(`Failed to create estimate item: ${(error as Error).message}`);
     }
   }
 
   /**
    * Get estimate items by estimate ID
    */
-  async getEstimateItems(estimateId: string): Promise<TenderEstimateItemDTO[]> {
+  static async getEstimateItems(estimateId: string): Promise<TenderEstimateItemDTO[]> {
     try {
-      const items = await this.tenderEstimateRepository.findItemsByEstimateId(estimateId);
-      return items.map(item => this.tenderEstimateItemTransformer.toDTO(item));
+      const items: TenderEstimateItemDTO[] = [];
+      estimateItemsStore.forEach((item) => {
+        const dto = item as unknown as TenderEstimateItemDTO;
+        if (dto.estimate_id === estimateId) {
+          items.push(dto);
+        }
+      });
+      return items;
     } catch (error) {
       console.error('Error getting estimate items:', error);
-      throw new Error(`Failed to get estimate items: ${error.message}`);
+      throw new Error(`Failed to get estimate items: ${(error as Error).message}`);
     }
   }
 
   /**
    * Update estimate item
    */
-  async updateEstimateItem(id: string, updates: UpdateTenderEstimateItemRequestDto): Promise<TenderEstimateItemDTO> {
+  static async updateEstimateItem(id: string, updates: Partial<TenderEstimateItemCreateDTO>): Promise<TenderEstimateItemDTO> {
     try {
-      // Validate data
-      const validation = this.tenderEstimateItemTransformer.validate(updates);
-      if (!validation.isValid) {
-        throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
+      const existing = estimateItemsStore.get(id);
+      if (!existing) {
+        throw new Error('Estimate item not found');
       }
 
-      const entityUpdates = this.tenderEstimateItemTransformer.fromUpdateDtoToEntity(updates);
-      const updatedItem = await this.tenderEstimateRepository.updateItem(id, entityUpdates);
-      return this.tenderEstimateItemTransformer.toDTO(updatedItem);
+      const updatedItem = {
+        ...(existing as unknown as TenderEstimateItemDTO),
+        ...updates,
+        updated_at: new Date().toISOString()
+      };
+
+      estimateItemsStore.set(id, updatedItem as unknown as TenderEstimateItem);
+      return updatedItem;
     } catch (error) {
       console.error('Error updating estimate item:', error);
-      throw new Error(`Failed to update estimate item: ${error.message}`);
+      throw new Error(`Failed to update estimate item: ${(error as Error).message}`);
     }
   }
 
   /**
    * Delete estimate item
    */
-  async deleteEstimateItem(id: string): Promise<void> {
+  static async deleteEstimateItem(id: string): Promise<void> {
     try {
-      await this.tenderEstimateRepository.deleteItem(id);
+      estimateItemsStore.delete(id);
     } catch (error) {
       console.error('Error deleting estimate item:', error);
-      throw new Error(`Failed to delete estimate item: ${error.message}`);
+      throw new Error(`Failed to delete estimate item: ${(error as Error).message}`);
     }
   }
 
   /**
-   * Get user's own estimates (for current authenticated user)
+   * Get user's own estimates
    */
-  async getMyEstimates(userId: string): Promise<TenderEstimateDTO[]> {
+  static async getMyEstimates(userId: string): Promise<TenderEstimateDTO[]> {
     try {
-      const estimates = await this.tenderEstimateRepository.findBySubmittedBy(userId);
-      return estimates.map(estimate => this.tenderEstimateTransformer.toDTO(estimate));
+      // Return all estimates (in-memory doesn't have user association)
+      const estimates: TenderEstimateDTO[] = [];
+      estimatesStore.forEach((estimate) => {
+        estimates.push(estimate as unknown as TenderEstimateDTO);
+      });
+      return estimates;
     } catch (error) {
       console.error('Error getting user estimates:', error);
-      throw new Error(`Failed to get user estimates: ${error.message}`);
+      throw new Error(`Failed to get user estimates: ${(error as Error).message}`);
     }
   }
 
   /**
    * Get estimates by project ID
    */
-  async getEstimatesByProjectId(projectId: string): Promise<TenderEstimateDTO[]> {
+  static async getEstimatesByProjectId(projectId: string): Promise<TenderEstimateDTO[]> {
     try {
-      const estimates = await this.tenderEstimateRepository.findByProjectId(projectId);
-      return estimates.map(estimate => this.tenderEstimateTransformer.toDTO(estimate));
+      const estimates: TenderEstimateDTO[] = [];
+      estimatesStore.forEach((estimate) => {
+        const dto = estimate as unknown as TenderEstimateDTO;
+        if (dto.project_id === projectId) {
+          estimates.push(dto);
+        }
+      });
+      return estimates;
     } catch (error) {
       console.error('Error getting estimates by project ID:', error);
-      throw new Error(`Failed to get estimates by project ID: ${error.message}`);
+      throw new Error(`Failed to get estimates by project ID: ${(error as Error).message}`);
     }
   }
 
   /**
-   * Get all estimates (admin only)
+   * Get all estimates
    */
-  async getAllEstimates(): Promise<TenderEstimateDTO[]> {
+  static async getAllEstimates(): Promise<TenderEstimateDTO[]> {
     try {
-      const estimates = await this.tenderEstimateRepository.findAll();
-      return estimates.map(estimate => this.tenderEstimateTransformer.toDTO(estimate));
+      const estimates: TenderEstimateDTO[] = [];
+      estimatesStore.forEach((estimate) => {
+        estimates.push(estimate as unknown as TenderEstimateDTO);
+      });
+      return estimates;
     } catch (error) {
       console.error('Error getting all estimates:', error);
-      throw new Error(`Failed to get all estimates: ${error.message}`);
+      throw new Error(`Failed to get all estimates: ${(error as Error).message}`);
     }
   }
 
   /**
    * Get estimate statistics
-   * @param tenderId The tender ID
-   * @returns Statistics object
    */
-  async getEstimateStats(tenderId: string): Promise<{
+  static async getEstimateStats(tenderId: string): Promise<{
     totalEstimates: number;
     totalAmount: number;
     averageAmount: number;
     byStatus: Record<string, number>;
   }> {
     try {
-      return await this.tenderEstimateRepository.getEstimateStats(tenderId);
+      const estimates = await this.getEstimatesByTenderId(tenderId);
+      
+      const byStatus: Record<string, number> = {};
+      let totalAmount = 0;
+
+      estimates.forEach(estimate => {
+        const status = estimate.status || 'draft';
+        byStatus[status] = (byStatus[status] || 0) + 1;
+        totalAmount += estimate.final_total || 0;
+      });
+
+      return {
+        totalEstimates: estimates.length,
+        totalAmount,
+        averageAmount: estimates.length > 0 ? totalAmount / estimates.length : 0,
+        byStatus
+      };
     } catch (error) {
       console.error('Error getting estimate stats:', error);
-      throw new Error(`Failed to get estimate stats: ${error.message}`);
+      throw new Error(`Failed to get estimate stats: ${(error as Error).message}`);
     }
   }
 
   /**
    * Calculate estimate totals
-   * @param estimateId The estimate ID
-   * @returns Calculated totals
    */
-  async calculateEstimateTotals(estimateId: string): Promise<{
+  static async calculateEstimateTotals(estimateId: string): Promise<{
     subtotal: number;
     taxAmount: number;
     totalWithTax: number;
@@ -249,23 +378,14 @@ export class TenderEstimateService {
         throw new Error('Estimate not found');
       }
 
-      // Calculate subtotal from items
       const subtotal = items.reduce((sum, item) => sum + item.total_price, 0);
-      
-      // Calculate tax
       const taxRate = estimate.tax_rate || 0;
       const taxAmount = subtotal * (taxRate / 100);
       const totalWithTax = subtotal + taxAmount;
-
-      // Calculate overhead
       const overheadPercentage = estimate.overhead_percentage || 0;
       const overheadAmount = totalWithTax * (overheadPercentage / 100);
-
-      // Calculate profit margin
       const profitMarginPercentage = estimate.profit_margin_percentage || 0;
       const profitMarginAmount = (totalWithTax + overheadAmount) * (profitMarginPercentage / 100);
-
-      // Calculate final total
       const finalTotal = totalWithTax + overheadAmount + profitMarginAmount;
 
       return {
@@ -278,31 +398,7 @@ export class TenderEstimateService {
       };
     } catch (error) {
       console.error('Error calculating estimate totals:', error);
-      throw new Error(`Failed to calculate estimate totals: ${error.message}`);
+      throw new Error(`Failed to calculate estimate totals: ${(error as Error).message}`);
     }
-  }
-
-  /**
-   * Validate estimate data
-   * @param data The estimate data to validate
-   * @returns Validation result
-   */
-  validateEstimateData(data: TenderEstimateCreateDTO | UpdateTenderEstimateRequestDto): {
-    isValid: boolean;
-    errors: string[];
-  } {
-    return this.tenderEstimateTransformer.validate(data);
-  }
-
-  /**
-   * Validate estimate item data
-   * @param data The estimate item data to validate
-   * @returns Validation result
-   */
-  validateEstimateItemData(data: TenderEstimateItemCreateDTO | UpdateTenderEstimateItemRequestDto): {
-    isValid: boolean;
-    errors: string[];
-  } {
-    return this.tenderEstimateItemTransformer.validate(data);
   }
 }

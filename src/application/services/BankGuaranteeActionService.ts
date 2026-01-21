@@ -37,6 +37,27 @@ const actionsStore: Map<string, BankGuaranteeAction> = new Map();
 const templatesStore: Map<string, BankGuaranteeActionTemplate> = new Map();
 
 export class BankGuaranteeActionService {
+  /**
+   * Create action (simplified interface)
+   */
+  static async createAction(data: {
+    guarantee_id: string;
+    action_type: string;
+    description: string;
+    performed_by: string;
+    metadata?: any;
+  }): Promise<BankGuaranteeAction> {
+    return this.createBankGuaranteeAction({
+      guarantee_id: data.guarantee_id,
+      action_type: data.action_type as BankGuaranteeAction['action_type'],
+      title: data.action_type,
+      description: data.description,
+      status: 'pending',
+      priority: 'medium',
+      created_by: data.performed_by,
+      documents: []
+    });
+  }
   
   /**
    * Create a new bank guarantee action

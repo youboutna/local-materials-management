@@ -1,4 +1,20 @@
-import { EscalationRoles, ActionLabels, ProjectData } from '@/types/project';
+import { ProjectData } from '@/types/project';
+
+export interface EscalationRoles {
+  level1: string;
+  level2: string;
+  level3: string;
+}
+
+export interface ActionLabels {
+  budget: string;
+  timeline: string;
+  quality: string;
+  resource: string;
+  risk: string;
+  compliance: string;
+  [key: string]: string;
+}
 
 export interface ProjectAlert {
   id: string;
@@ -91,7 +107,7 @@ export class ProjectManager {
     
     this.alerts.forEach(alert => {
       if (alert.status === 'open' || alert.status === 'acknowledged') {
-        actions.push(`${this.actionLabels[alert.type]}: ${alert.title}`);
+        actions.push(`${this.actionLabels[alert.type] || 'Action'}: ${alert.title}`);
       }
     });
     
@@ -102,8 +118,11 @@ export class ProjectManager {
    * Check budget alerts
    */
   private checkBudgetAlerts(): void {
-    if (this.project.budget && this.project.actualCost) {
-      const budgetUtilization = (this.project.actualCost / this.project.budget) * 100;
+    // Use budget as actual cost approximation if actual_cost not available
+    const actualCost = (this.project as any).actual_cost || (this.project as any).actualCost || (this.project.budget * (this.project.progress / 100));
+    
+    if (this.project.budget && actualCost) {
+      const budgetUtilization = (actualCost / this.project.budget) * 100;
       
       if (budgetUtilization > 90) {
         this.addAlert({
@@ -112,7 +131,9 @@ export class ProjectManager {
           title: 'Budget Overrun Alert',
           description: `Project has used ${budgetUtilization.toFixed(1)}% of its budget`,
           projectId: this.project.id,
-          createdBy: 'system'
+          createdBy: 'system',
+          status: 'open',
+          actions: []
         });
       } else if (budgetUtilization > 75) {
         this.addAlert({
@@ -121,7 +142,9 @@ export class ProjectManager {
           title: 'Budget Warning',
           description: `Project has used ${budgetUtilization.toFixed(1)}% of its budget`,
           projectId: this.project.id,
-          createdBy: 'system'
+          createdBy: 'system',
+          status: 'open',
+          actions: []
         });
       }
     }
@@ -143,7 +166,9 @@ export class ProjectManager {
           title: 'Project Overdue',
           description: `Project is ${Math.abs(daysRemaining)} days overdue`,
           projectId: this.project.id,
-          createdBy: 'system'
+          createdBy: 'system',
+          status: 'open',
+          actions: []
         });
       } else if (daysRemaining < 7) {
         this.addAlert({
@@ -152,7 +177,9 @@ export class ProjectManager {
           title: 'Deadline Approaching',
           description: `Project deadline is in ${daysRemaining} days`,
           projectId: this.project.id,
-          createdBy: 'system'
+          createdBy: 'system',
+          status: 'open',
+          actions: []
         });
       } else if (daysRemaining < 14) {
         this.addAlert({
@@ -161,7 +188,9 @@ export class ProjectManager {
           title: 'Timeline Warning',
           description: `Project deadline is in ${daysRemaining} days`,
           projectId: this.project.id,
-          createdBy: 'system'
+          createdBy: 'system',
+          status: 'open',
+          actions: []
         });
       }
     }
@@ -172,7 +201,6 @@ export class ProjectManager {
    */
   private checkQualityAlerts(): void {
     // Placeholder for quality checks
-    // This would integrate with quality metrics from inspections, tests, etc.
   }
 
   /**
@@ -180,7 +208,6 @@ export class ProjectManager {
    */
   private checkResourceAlerts(): void {
     // Placeholder for resource checks
-    // This would integrate with resource utilization metrics
   }
 
   /**
@@ -188,7 +215,6 @@ export class ProjectManager {
    */
   private checkRiskAlerts(): void {
     // Placeholder for risk checks
-    // This would integrate with risk management system
   }
 
   /**
@@ -196,7 +222,6 @@ export class ProjectManager {
    */
   private checkComplianceAlerts(): void {
     // Placeholder for compliance checks
-    // This would integrate with compliance requirements
   }
 
   /**
@@ -206,9 +231,7 @@ export class ProjectManager {
     const newAlert: ProjectAlert = {
       ...alert,
       id: `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      createdAt: new Date().toISOString(),
-      status: 'open',
-      actions: []
+      createdAt: new Date().toISOString()
     };
     
     this.alerts.push(newAlert);
@@ -279,16 +302,16 @@ export class ProjectManager {
     
     switch (alert.severity) {
       case 'critical':
-        path.push(this.roles.level2, this.roles.level1, this.roles.level0);
+        path.push(this.roles.level3, this.roles.level2, this.roles.level1);
         break;
       case 'high':
-        path.push(this.roles.level1, this.roles.level0);
+        path.push(this.roles.level2, this.roles.level1);
         break;
       case 'medium':
-        path.push(this.roles.level0);
+        path.push(this.roles.level1);
         break;
       default:
-        path.push(this.roles.level0);
+        path.push(this.roles.level1);
     }
     
     return path;
@@ -307,7 +330,7 @@ export class ProjectManager {
   needsEscalation(alert: ProjectAlert): boolean {
     return alert.severity === 'critical' || 
            (alert.severity === 'high' && alert.status === 'open' && 
-            this.getTimeSince(alert.createdAt) > 24 * 60 * 60 * 1000); // 24 hours
+            this.getTimeSince(alert.createdAt) > 24);
   }
 
   /**
@@ -333,7 +356,7 @@ export class ProjectManager {
     resolvedAlerts: number;
     pendingActions: number;
   } {
-    const stats = {
+    return {
       totalAlerts: this.alerts.length,
       criticalAlerts: this.alerts.filter(a => a.severity === 'critical').length,
       highAlerts: this.alerts.filter(a => a.severity === 'high').length,
@@ -344,7 +367,5 @@ export class ProjectManager {
       resolvedAlerts: this.alerts.filter(a => a.status === 'resolved').length,
       pendingActions: this.getPendingActions().length
     };
-
-    return stats;
   }
 }

@@ -10,6 +10,7 @@ export interface BankGuarantee {
   guarantee_type: string;
   guarantee_amount: number;
   issuing_bank: string;
+  bank_name: string;
   guarantee_number: string;
   issue_date: string;
   expiry_date: string;
@@ -34,6 +35,13 @@ export interface BankGuaranteeAction {
 const guaranteesStore: Map<string, BankGuarantee> = new Map();
 
 export class BankGuaranteeService {
+  /**
+   * Static method to get guarantees by project ID
+   */
+  static async getByProjectId(projectId: string): Promise<BankGuarantee[]> {
+    const allGuarantees = Array.from(guaranteesStore.values());
+    return allGuarantees.filter(g => g.project_id === projectId);
+  }
   /**
    * Create a new bank guarantee
    */
