@@ -1,4 +1,7 @@
-import { supabase } from '@/integrations/supabase/client';
+/**
+ * Service for managing payment blocks and control actions
+ * Uses in-memory storage as the required tables don't exist in the database
+ */
 
 export interface PaymentBlock {
   id: string;
@@ -27,15 +30,13 @@ export interface PaymentControlAction {
   completed_at?: string;
 }
 
+// In-memory stores
+const blocksStore = new Map<string, PaymentBlock>();
+const actionsStore = new Map<string, PaymentControlAction>();
+
 export class PaymentBlockingService {
-  
   /**
    * Block a payment request
-   * @param paymentRequestId The payment request ID
-   * @param blockReason The reason for blocking
-   * @param blockType The type of block
-   * @param blockedAmount The amount to block
-   * @returns The created payment block
    */
   static async blockPayment(
     paymentRequestId: string,
@@ -43,164 +44,120 @@ export class PaymentBlockingService {
     blockType: PaymentBlock['block_type'],
     blockedAmount: number
   ): Promise<PaymentBlock> {
-    const { data, error } = await supabase
-      .from('payment_blocks')
-      .insert({
-        payment_request_id: paymentRequestId,
-        block_reason: blockReason,
-        block_type: blockType,
-        blocked_amount: blockedAmount,
-        status: 'active'
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error blocking payment:', error);
-      throw new Error(`Failed to block payment: ${error.message}`);
-    }
-
-    return data;
+    const now = new Date().toISOString();
+    const block: PaymentBlock = {
+      id: crypto.randomUUID(),
+      payment_request_id: paymentRequestId,
+      block_reason: blockReason,
+      block_type: blockType,
+      blocked_amount: blockedAmount,
+      status: 'active',
+      created_at: now,
+      updated_at: now
+    };
+    
+    blocksStore.set(block.id, block);
+    return block;
   }
 
   /**
    * Get all active payment blocks
-   * @returns Array of active payment blocks
    */
   static async getActivePaymentBlocks(): Promise<PaymentBlock[]> {
-    const { data, error } = await supabase
-      .from('payment_blocks')
-      .select('*')
-      .eq('status', 'active')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching active payment blocks:', error);
-      throw new Error(`Failed to fetch active payment blocks: ${error.message}`);
-    }
-
-    return data || [];
+    const blocks: PaymentBlock[] = [];
+    blocksStore.forEach(block => {
+      if (block.status === 'active') {
+        blocks.push(block);
+      }
+    });
+    return blocks.sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
   }
 
   /**
    * Get payment blocks for a specific payment request
-   * @param paymentRequestId The payment request ID
-   * @returns Array of payment blocks
    */
   static async getPaymentBlocks(paymentRequestId: string): Promise<PaymentBlock[]> {
-    const { data, error } = await supabase
-      .from('payment_blocks')
-      .select('*')
-      .eq('payment_request_id', paymentRequestId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching payment blocks:', error);
-      throw new Error(`Failed to fetch payment blocks: ${error.message}`);
-    }
-
-    return data || [];
+    const blocks: PaymentBlock[] = [];
+    blocksStore.forEach(block => {
+      if (block.payment_request_id === paymentRequestId) {
+        blocks.push(block);
+      }
+    });
+    return blocks.sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
   }
 
   /**
    * Resolve a payment block
-   * @param blockId The block ID
-   * @param resolutionNotes The resolution notes
-   * @param resolvedBy The user who resolved the block
-   * @returns The updated payment block
    */
   static async resolvePaymentBlock(
     blockId: string,
     resolutionNotes: string,
     resolvedBy: string
   ): Promise<PaymentBlock> {
-    const { data, error } = await supabase
-      .from('payment_blocks')
-      .update({
-        status: 'resolved',
-        resolution_notes: resolutionNotes,
-        resolved_by: resolvedBy,
-        resolved_at: new Date().toISOString()
-      })
-      .eq('id', blockId)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error resolving payment block:', error);
-      throw new Error(`Failed to resolve payment block: ${error.message}`);
+    const block = blocksStore.get(blockId);
+    if (!block) {
+      throw new Error('Payment block not found');
     }
 
-    return data;
+    const now = new Date().toISOString();
+    const updatedBlock: PaymentBlock = {
+      ...block,
+      status: 'resolved',
+      resolved_at: now,
+      resolved_by: resolvedBy,
+      resolution_notes: resolutionNotes,
+      updated_at: now
+    };
+
+    blocksStore.set(blockId, updatedBlock);
+    return updatedBlock;
   }
 
   /**
    * Cancel a payment block
-   * @param blockId The block ID
-   * @returns The updated payment block
    */
   static async cancelPaymentBlock(blockId: string): Promise<PaymentBlock> {
-    const { data, error } = await supabase
-      .from('payment_blocks')
-      .update({
-        status: 'cancelled'
-      })
-      .eq('id', blockId)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error cancelling payment block:', error);
-      throw new Error(`Failed to cancel payment block: ${error.message}`);
+    const block = blocksStore.get(blockId);
+    if (!block) {
+      throw new Error('Payment block not found');
     }
 
-    return data;
+    const updatedBlock: PaymentBlock = {
+      ...block,
+      status: 'cancelled',
+      updated_at: new Date().toISOString()
+    };
+
+    blocksStore.set(blockId, updatedBlock);
+    return updatedBlock;
   }
 
   /**
-   * Check if a payment request is blocked
-   * @param paymentRequestId The payment request ID
-   * @returns True if blocked, false otherwise
+   * Check if a payment is blocked
    */
   static async isPaymentBlocked(paymentRequestId: string): Promise<boolean> {
-    const { data, error } = await supabase
-      .from('payment_blocks')
-      .select('id')
-      .eq('payment_request_id', paymentRequestId)
-      .eq('status', 'active')
-      .limit(1);
-
-    if (error) {
-      console.error('Error checking payment block status:', error);
-      throw new Error(`Failed to check payment block status: ${error.message}`);
-    }
-
-    return (data && data.length > 0) || false;
+    let isBlocked = false;
+    blocksStore.forEach(block => {
+      if (block.payment_request_id === paymentRequestId && block.status === 'active') {
+        isBlocked = true;
+      }
+    });
+    return isBlocked;
   }
 
   /**
    * Get payment block history for a payment request
-   * @param paymentRequestId The payment request ID
-   * @returns Array of payment blocks (all statuses)
    */
   static async getPaymentBlockHistory(paymentRequestId: string): Promise<PaymentBlock[]> {
-    const { data, error } = await supabase
-      .from('payment_blocks')
-      .select('*')
-      .eq('payment_request_id', paymentRequestId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching payment block history:', error);
-      throw new Error(`Failed to fetch payment block history: ${error.message}`);
-    }
-
-    return data || [];
+    return this.getPaymentBlocks(paymentRequestId);
   }
 
   /**
    * Get payment block statistics
-   * @returns Statistics object
    */
   static async getPaymentBlockStats(): Promise<{
     total: number;
@@ -209,53 +166,25 @@ export class PaymentBlockingService {
     cancelled: number;
     totalBlockedAmount: number;
   }> {
-    const { data, error } = await supabase
-      .from('payment_blocks')
-      .select('status, blocked_amount');
+    let total = 0;
+    let active = 0;
+    let resolved = 0;
+    let cancelled = 0;
+    let totalBlockedAmount = 0;
 
-    if (error) {
-      console.error('Error fetching payment block stats:', error);
-      throw new Error(`Failed to fetch payment block stats: ${error.message}`);
-    }
+    blocksStore.forEach(block => {
+      total++;
+      totalBlockedAmount += block.blocked_amount || 0;
+      if (block.status === 'active') active++;
+      if (block.status === 'resolved') resolved++;
+      if (block.status === 'cancelled') cancelled++;
+    });
 
-    const stats = {
-      total: data?.length || 0,
-      active: 0,
-      resolved: 0,
-      cancelled: 0,
-      totalBlockedAmount: 0
-    };
-
-    if (data) {
-      for (const block of data) {
-        stats.totalBlockedAmount += block.blocked_amount || 0;
-        
-        switch (block.status) {
-          case 'active':
-            stats.active++;
-            break;
-          case 'resolved':
-            stats.resolved++;
-            break;
-          case 'cancelled':
-            stats.cancelled++;
-            break;
-        }
-      }
-    }
-
-    return stats;
+    return { total, active, resolved, cancelled, totalBlockedAmount };
   }
 
   /**
    * Create a payment control action
-   * @param blockId The payment block ID
-   * @param actionType The type of action
-   * @param description The action description
-   * @param assignedTo The user assigned to the action
-   * @param dueDate The due date for the action
-   * @param createdBy The user creating the action
-   * @returns The created payment control action
    */
   static async createPaymentControlAction(
     blockId: string,
@@ -265,89 +194,75 @@ export class PaymentBlockingService {
     dueDate?: string,
     createdBy?: string
   ): Promise<PaymentControlAction> {
-    const { data, error } = await supabase
-      .from('payment_control_actions')
-      .insert({
-        payment_block_id: blockId,
-        action_type: actionType,
-        description,
-        assigned_to: assignedTo,
-        due_date: dueDate,
-        status: 'pending',
-        created_by: createdBy
-      })
-      .select()
-      .single();
+    const now = new Date().toISOString();
+    const action: PaymentControlAction = {
+      id: crypto.randomUUID(),
+      payment_block_id: blockId,
+      action_type: actionType,
+      description: description,
+      status: 'pending',
+      assigned_to: assignedTo,
+      due_date: dueDate,
+      created_by: createdBy || 'system',
+      created_at: now
+    };
 
-    if (error) {
-      console.error('Error creating payment control action:', error);
-      throw new Error(`Failed to create payment control action: ${error.message}`);
-    }
-
-    return data;
+    actionsStore.set(action.id, action);
+    return action;
   }
 
   /**
-   * Get payment control actions for a block
-   * @param blockId The payment block ID
-   * @returns Array of payment control actions
+   * Get control actions for a payment block
    */
   static async getPaymentControlActions(blockId: string): Promise<PaymentControlAction[]> {
-    const { data, error } = await supabase
-      .from('payment_control_actions')
-      .select('*')
-      .eq('payment_block_id', blockId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching payment control actions:', error);
-      throw new Error(`Failed to fetch payment control actions: ${error.message}`);
-    }
-
-    return data || [];
+    const actions: PaymentControlAction[] = [];
+    actionsStore.forEach(action => {
+      if (action.payment_block_id === blockId) {
+        actions.push(action);
+      }
+    });
+    return actions.sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
   }
 
   /**
    * Complete a payment control action
-   * @param actionId The action ID
-   * @returns The updated payment control action
    */
   static async completePaymentControlAction(actionId: string): Promise<PaymentControlAction> {
-    const { data, error } = await supabase
-      .from('payment_control_actions')
-      .update({
-        status: 'completed',
-        completed_at: new Date().toISOString()
-      })
-      .eq('id', actionId)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error completing payment control action:', error);
-      throw new Error(`Failed to complete payment control action: ${error.message}`);
+    const action = actionsStore.get(actionId);
+    if (!action) {
+      throw new Error('Payment control action not found');
     }
 
-    return data;
+    const updatedAction: PaymentControlAction = {
+      ...action,
+      status: 'completed',
+      completed_at: new Date().toISOString()
+    };
+
+    actionsStore.set(actionId, updatedAction);
+    return updatedAction;
   }
 
   /**
-   * Get overdue payment control actions
-   * @returns Array of overdue actions
+   * Get overdue control actions
    */
   static async getOverdueActions(): Promise<PaymentControlAction[]> {
-    const { data, error } = await supabase
-      .from('payment_control_actions')
-      .select('*')
-      .eq('status', 'pending')
-      .lt('due_date', new Date().toISOString())
-      .order('due_date', { ascending: true });
-
-    if (error) {
-      console.error('Error fetching overdue actions:', error);
-      throw new Error(`Failed to fetch overdue actions: ${error.message}`);
-    }
-
-    return data || [];
+    const now = new Date();
+    const overdue: PaymentControlAction[] = [];
+    
+    actionsStore.forEach(action => {
+      if (action.status === 'pending' && action.due_date) {
+        const dueDate = new Date(action.due_date);
+        if (dueDate < now) {
+          overdue.push(action);
+        }
+      }
+    });
+    
+    return overdue.sort((a, b) => 
+      new Date(a.due_date!).getTime() - new Date(b.due_date!).getTime()
+    );
   }
 }

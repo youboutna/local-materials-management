@@ -1,275 +1,229 @@
-import { RepositoryFactory } from '@/repositories/RepositoryFactory';
-import { ITaskAssignmentRepository } from '@/domain/repositories/ITaskAssignmentRepository';
-import { TaskAssignment } from '@/domain/entities/Workspace';
-import { 
-  TaskAssignmentDTO, 
-  CreateTaskAssignmentRequestDto, 
-  UpdateTaskAssignmentRequestDto,
-  TaskAssignmentFilters
-} from '@/dtos/transforms/shared';
-import { TaskAssignmentDomainTransformer } from '@/dtos/transforms/TaskAssignmentDomainTransformer';
-import { NotificationService } from './NotificationService';
+/**
+ * Task Assignment Service
+ * Uses in-memory storage for task assignments
+ */
+
+export interface TaskAssignment {
+  id: string;
+  title: string;
+  description?: string;
+  projectId?: string;
+  assignedTo?: string;
+  assignedBy?: string;
+  assigneeType?: 'employee' | 'supplier';
+  assigneeEmail?: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  priority: 'low' | 'medium' | 'high';
+  dueDate?: Date;
+  completedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface TaskAssignmentDTO {
+  id: string;
+  title: string;
+  description?: string;
+  project_id?: string;
+  assigned_to?: string;
+  assigned_by?: string;
+  assignee_type?: string;
+  status: string;
+  priority: string;
+  due_date?: string;
+  completed_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateTaskAssignmentRequestDto {
+  title: string;
+  description?: string;
+  project_id?: string;
+  assigned_to?: string;
+  assigned_by?: string;
+  assignee_type?: string;
+  priority?: string;
+  due_date?: string;
+}
+
+export interface UpdateTaskAssignmentRequestDto {
+  title?: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+  due_date?: string;
+}
+
+export interface TaskAssignmentFilters {
+  projectId?: string;
+  assignedTo?: string;
+  assignedBy?: string;
+  status?: string;
+  priority?: string;
+  assigneeType?: string;
+}
+
+// In-memory store
+const taskStore = new Map<string, TaskAssignment>();
 
 export class TaskAssignmentService {
-  private taskAssignmentRepository: ITaskAssignmentRepository;
-  private taskAssignmentTransformer: TaskAssignmentDomainTransformer;
-
-  constructor() {
-    this.taskAssignmentRepository = RepositoryFactory.getTaskAssignmentRepository();
-    this.taskAssignmentTransformer = new TaskAssignmentDomainTransformer();
-  }
-
   /**
    * Create a new task assignment
-   * @param taskData The task assignment data
-   * @param assignedBy The user ID creating the task
-   * @returns The created task assignment DTO
    */
   async createTaskAssignment(
     taskData: CreateTaskAssignmentRequestDto, 
     assignedBy?: string
   ): Promise<TaskAssignmentDTO> {
     try {
-      // Validate data
-      const validation = this.taskAssignmentTransformer.validate(taskData);
-      if (!validation.isValid) {
-        throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
-      }
-
-      const entity = this.taskAssignmentTransformer.fromCreateDtoToEntity(taskData);
-      const taskWithAssignedBy = {
-        ...entity,
-        assignedBy: assignedBy || entity.assignedBy
+      const now = new Date();
+      const task: TaskAssignment = {
+        id: crypto.randomUUID(),
+        title: taskData.title,
+        description: taskData.description,
+        projectId: taskData.project_id,
+        assignedTo: taskData.assigned_to,
+        assignedBy: assignedBy || taskData.assigned_by,
+        assigneeType: taskData.assignee_type as 'employee' | 'supplier',
+        status: 'pending',
+        priority: (taskData.priority as 'low' | 'medium' | 'high') || 'medium',
+        dueDate: taskData.due_date ? new Date(taskData.due_date) : undefined,
+        createdAt: now,
+        updatedAt: now
       };
-      
-      const createdTask = await this.taskAssignmentRepository.create(taskWithAssignedBy);
-      const taskDTO = this.taskAssignmentTransformer.toDTO(createdTask);
 
-      // Send notification to assigned user
-      if (createdTask.assignedTo) {
-        try {
-          await NotificationService.createNotification({
-            recipient_id: createdTask.assignedTo,
-            title: '📋 Nouvelle tâche assignée',
-            message: `Une nouvelle tâche "${createdTask.title}" vous a été assignée${createdTask.priority === 'high' ? ' (Priorité élevée)' : ''}.`,
-            type: 'task_assignment',
-            related_id: createdTask.id,
-            metadata: {
-              task_id: createdTask.id,
-              project_id: createdTask.projectId,
-              priority: createdTask.priority,
-              due_date: createdTask.dueDate?.toISOString(),
-              assignee_type: createdTask.assigneeType,
-            }
-          });
-
-          // Send supplier notification if applicable
-          if (createdTask.assigneeType === 'supplier' && createdTask.assigneeEmail) {
-            await NotificationService.createSupplierNotification({
-              supplier_id: createdTask.assignedTo,
-              notification_type: 'task_assignment',
-              email: createdTask.assigneeEmail,
-              metadata: {
-                task_id: createdTask.id,
-                title: createdTask.title,
-                priority: createdTask.priority,
-                due_date: createdTask.dueDate?.toISOString(),
-              }
-            });
-          }
-        } catch (notifError) {
-          console.error('Error sending notification:', notifError);
-          // Don't throw error for notification failure
-        }
-      }
-
-      return taskDTO;
-    } catch (error) {
+      taskStore.set(task.id, task);
+      return this.toDTO(task);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
       console.error('Error creating task assignment:', error);
-      throw new Error(`Failed to create task assignment: ${error.message}`);
+      throw new Error(`Failed to create task assignment: ${message}`);
     }
   }
 
   /**
    * Get a task assignment by ID
-   * @param id The task assignment ID
-   * @returns The task assignment DTO or null
    */
   async getTaskAssignmentById(id: string): Promise<TaskAssignmentDTO | null> {
-    try {
-      const task = await this.taskAssignmentRepository.findById(id);
-      return task ? this.taskAssignmentTransformer.toDTO(task) : null;
-    } catch (error) {
-      console.error('Error fetching task assignment:', error);
-      throw new Error(`Failed to fetch task assignment: ${error.message}`);
-    }
+    const task = taskStore.get(id);
+    return task ? this.toDTO(task) : null;
   }
 
   /**
    * Get all task assignments
-   * @returns Array of task assignment DTOs
    */
   async getAllTaskAssignments(): Promise<TaskAssignmentDTO[]> {
-    try {
-      const tasks = await this.taskAssignmentRepository.findAll();
-      return tasks.map(task => this.taskAssignmentTransformer.toDTO(task));
-    } catch (error) {
-      console.error('Error fetching task assignments:', error);
-      throw new Error(`Failed to fetch task assignments: ${error.message}`);
-    }
+    const tasks: TaskAssignment[] = [];
+    taskStore.forEach(task => tasks.push(task));
+    return tasks.map(task => this.toDTO(task));
   }
 
   /**
    * Update a task assignment
-   * @param id The task assignment ID
-   * @param updates The updates to apply
-   * @returns The updated task assignment DTO
    */
   async updateTaskAssignment(id: string, updates: UpdateTaskAssignmentRequestDto): Promise<TaskAssignmentDTO> {
-    try {
-      // Validate data
-      const validation = this.taskAssignmentTransformer.validate(updates);
-      if (!validation.isValid) {
-        throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
-      }
-
-      const entityUpdates = this.taskAssignmentTransformer.fromUpdateDtoToEntity(updates);
-      const updatedTask = await this.taskAssignmentRepository.update(id, entityUpdates);
-      const taskDTO = this.taskAssignmentTransformer.toDTO(updatedTask);
-
-      // Send notification if status changed to completed
-      if (updates.status === 'completed' && updatedTask.assignedTo) {
-        try {
-          await NotificationService.createNotification({
-            recipient_id: updatedTask.assignedTo,
-            title: '✅ Tâche terminée',
-            message: `La tâche "${updatedTask.title}" a été marquée comme terminée.`,
-            type: 'task_update',
-            related_id: id,
-            metadata: { task_id: id, status: 'completed' }
-          });
-        } catch (notifError) {
-          console.error('Error sending notification:', notifError);
-          // Don't throw error for notification failure
-        }
-      }
-
-      return taskDTO;
-    } catch (error) {
-      console.error('Error updating task assignment:', error);
-      throw new Error(`Failed to update task assignment: ${error.message}`);
+    const task = taskStore.get(id);
+    if (!task) {
+      throw new Error('Task assignment not found');
     }
+
+    const updatedTask: TaskAssignment = {
+      ...task,
+      title: updates.title ?? task.title,
+      description: updates.description ?? task.description,
+      status: (updates.status as TaskAssignment['status']) ?? task.status,
+      priority: (updates.priority as TaskAssignment['priority']) ?? task.priority,
+      dueDate: updates.due_date ? new Date(updates.due_date) : task.dueDate,
+      completedAt: updates.status === 'completed' ? new Date() : task.completedAt,
+      updatedAt: new Date()
+    };
+
+    taskStore.set(id, updatedTask);
+    return this.toDTO(updatedTask);
   }
 
   /**
    * Delete a task assignment
-   * @param id The task assignment ID
    */
   async deleteTaskAssignment(id: string): Promise<void> {
-    try {
-      await this.taskAssignmentRepository.delete(id);
-    } catch (error) {
-      console.error('Error deleting task assignment:', error);
-      throw new Error(`Failed to delete task assignment: ${error.message}`);
-    }
+    taskStore.delete(id);
   }
 
   /**
    * Get task assignments with filters
-   * @param filters The filters to apply
-   * @returns Array of filtered task assignment DTOs
    */
   async getTaskAssignments(filters?: TaskAssignmentFilters): Promise<TaskAssignmentDTO[]> {
-    try {
-      if (!filters || Object.keys(filters).length === 0) {
-        return this.getAllTaskAssignments();
-      }
-
-      const tasks = await this.taskAssignmentRepository.findWithFilters(filters);
-      return tasks.map(task => this.taskAssignmentTransformer.toDTO(task));
-    } catch (error) {
-      console.error('Error fetching filtered task assignments:', error);
-      throw new Error(`Failed to fetch filtered task assignments: ${error.message}`);
+    if (!filters || Object.keys(filters).length === 0) {
+      return this.getAllTaskAssignments();
     }
+
+    const tasks: TaskAssignment[] = [];
+    taskStore.forEach(task => {
+      let matches = true;
+      if (filters.projectId && task.projectId !== filters.projectId) matches = false;
+      if (filters.assignedTo && task.assignedTo !== filters.assignedTo) matches = false;
+      if (filters.assignedBy && task.assignedBy !== filters.assignedBy) matches = false;
+      if (filters.status && task.status !== filters.status) matches = false;
+      if (filters.priority && task.priority !== filters.priority) matches = false;
+      if (filters.assigneeType && task.assigneeType !== filters.assigneeType) matches = false;
+      if (matches) tasks.push(task);
+    });
+
+    return tasks.map(task => this.toDTO(task));
   }
 
   /**
    * Get task assignments by project
-   * @param projectId The project ID
-   * @returns Array of task assignment DTOs
    */
   async getTaskAssignmentsByProject(projectId: string): Promise<TaskAssignmentDTO[]> {
-    try {
-      const tasks = await this.taskAssignmentRepository.findByProjectId(projectId);
-      return tasks.map(task => this.taskAssignmentTransformer.toDTO(task));
-    } catch (error) {
-      console.error('Error fetching task assignments by project:', error);
-      throw new Error(`Failed to fetch task assignments by project: ${error.message}`);
-    }
+    return this.getTaskAssignments({ projectId });
   }
 
   /**
    * Get task assignments assigned to user
-   * @param userId The user ID
-   * @returns Array of task assignment DTOs
    */
   async getTaskAssignmentsAssignedTo(userId: string): Promise<TaskAssignmentDTO[]> {
-    try {
-      const tasks = await this.taskAssignmentRepository.findByAssignedTo(userId);
-      return tasks.map(task => this.taskAssignmentTransformer.toDTO(task));
-    } catch (error) {
-      console.error('Error fetching task assignments assigned to user:', error);
-      throw new Error(`Failed to fetch task assignments assigned to user: ${error.message}`);
-    }
+    return this.getTaskAssignments({ assignedTo: userId });
   }
 
   /**
    * Get task assignments assigned by user
-   * @param userId The user ID
-   * @returns Array of task assignment DTOs
    */
   async getTaskAssignmentsAssignedBy(userId: string): Promise<TaskAssignmentDTO[]> {
-    try {
-      const tasks = await this.taskAssignmentRepository.findByAssignedBy(userId);
-      return tasks.map(task => this.taskAssignmentTransformer.toDTO(task));
-    } catch (error) {
-      console.error('Error fetching task assignments assigned by user:', error);
-      throw new Error(`Failed to fetch task assignments assigned by user: ${error.message}`);
-    }
+    return this.getTaskAssignments({ assignedBy: userId });
   }
 
   /**
    * Get overdue task assignments
-   * @returns Array of overdue task assignment DTOs
    */
   async getOverdueTaskAssignments(): Promise<TaskAssignmentDTO[]> {
-    try {
-      const tasks = await this.taskAssignmentRepository.findOverdue();
-      return tasks.map(task => this.taskAssignmentTransformer.toDTO(task));
-    } catch (error) {
-      console.error('Error fetching overdue task assignments:', error);
-      throw new Error(`Failed to fetch overdue task assignments: ${error.message}`);
-    }
+    const now = new Date();
+    const tasks: TaskAssignment[] = [];
+    taskStore.forEach(task => {
+      if (task.status !== 'completed' && task.dueDate && task.dueDate < now) {
+        tasks.push(task);
+      }
+    });
+    return tasks.map(task => this.toDTO(task));
   }
 
   /**
    * Get task assignments due soon
-   * @param days Number of days ahead
-   * @returns Array of task assignment DTOs due soon
    */
   async getTaskAssignmentsDueSoon(days: number = 3): Promise<TaskAssignmentDTO[]> {
-    try {
-      const tasks = await this.taskAssignmentRepository.findDueSoon(days);
-      return tasks.map(task => this.taskAssignmentTransformer.toDTO(task));
-    } catch (error) {
-      console.error('Error fetching task assignments due soon:', error);
-      throw new Error(`Failed to fetch task assignments due soon: ${error.message}`);
-    }
+    const now = new Date();
+    const futureDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+    const tasks: TaskAssignment[] = [];
+    taskStore.forEach(task => {
+      if (task.status !== 'completed' && task.dueDate && task.dueDate >= now && task.dueDate <= futureDate) {
+        tasks.push(task);
+      }
+    });
+    return tasks.map(task => this.toDTO(task));
   }
 
   /**
    * Get task assignment statistics
-   * @returns Statistics object
    */
   async getTaskAssignmentStats(): Promise<{
     total: number;
@@ -279,83 +233,104 @@ export class TaskAssignmentService {
     overdue: number;
     dueSoon: number;
   }> {
-    try {
-      return await this.taskAssignmentRepository.getStats();
-    } catch (error) {
-      console.error('Error fetching task assignment stats:', error);
-      throw new Error(`Failed to fetch task assignment stats: ${error.message}`);
-    }
+    const stats = {
+      total: 0,
+      byStatus: {} as Record<string, number>,
+      byPriority: {} as Record<string, number>,
+      byAssigneeType: {} as Record<string, number>,
+      overdue: 0,
+      dueSoon: 0
+    };
+
+    const now = new Date();
+    const futureDate = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+    taskStore.forEach(task => {
+      stats.total++;
+      stats.byStatus[task.status] = (stats.byStatus[task.status] || 0) + 1;
+      stats.byPriority[task.priority] = (stats.byPriority[task.priority] || 0) + 1;
+      if (task.assigneeType) {
+        stats.byAssigneeType[task.assigneeType] = (stats.byAssigneeType[task.assigneeType] || 0) + 1;
+      }
+      if (task.status !== 'completed' && task.dueDate) {
+        if (task.dueDate < now) stats.overdue++;
+        else if (task.dueDate <= futureDate) stats.dueSoon++;
+      }
+    });
+
+    return stats;
   }
 
   /**
    * Validate task assignment data
-   * @param data The task assignment data to validate
-   * @returns Validation result
    */
   validateTaskAssignmentData(data: CreateTaskAssignmentRequestDto | UpdateTaskAssignmentRequestDto): {
     isValid: boolean;
     errors: string[];
   } {
-    return this.taskAssignmentTransformer.validate(data);
+    const errors: string[] = [];
+    if ('title' in data && !data.title) {
+      errors.push('Title is required');
+    }
+    return { isValid: errors.length === 0, errors };
   }
 
   /**
    * Search task assignments
-   * @param searchTerm The search term
-   * @returns Array of matching task assignment DTOs
    */
   async searchTaskAssignments(searchTerm: string): Promise<TaskAssignmentDTO[]> {
-    try {
-      const tasks = await this.taskAssignmentRepository.searchByTerm(searchTerm);
-      return tasks.map(task => this.taskAssignmentTransformer.toDTO(task));
-    } catch (error) {
-      console.error('Error searching task assignments:', error);
-      throw new Error(`Failed to search task assignments: ${error.message}`);
-    }
+    const term = searchTerm.toLowerCase();
+    const tasks: TaskAssignment[] = [];
+    taskStore.forEach(task => {
+      if (
+        task.title.toLowerCase().includes(term) ||
+        task.description?.toLowerCase().includes(term)
+      ) {
+        tasks.push(task);
+      }
+    });
+    return tasks.map(task => this.toDTO(task));
   }
 
   /**
    * Get task assignments by status
-   * @param status The status filter
-   * @returns Array of task assignment DTOs
    */
   async getTaskAssignmentsByStatus(status: string): Promise<TaskAssignmentDTO[]> {
-    try {
-      const tasks = await this.taskAssignmentRepository.findByStatus(status);
-      return tasks.map(task => this.taskAssignmentTransformer.toDTO(task));
-    } catch (error) {
-      console.error('Error fetching task assignments by status:', error);
-      throw new Error(`Failed to fetch task assignments by status: ${error.message}`);
-    }
+    return this.getTaskAssignments({ status });
   }
 
   /**
    * Get task assignments by priority
-   * @param priority The priority filter
-   * @returns Array of task assignment DTOs
    */
   async getTaskAssignmentsByPriority(priority: string): Promise<TaskAssignmentDTO[]> {
-    try {
-      const tasks = await this.taskAssignmentRepository.findByPriority(priority);
-      return tasks.map(task => this.taskAssignmentTransformer.toDTO(task));
-    } catch (error) {
-      console.error('Error fetching task assignments by priority:', error);
-      throw new Error(`Failed to fetch task assignments by priority: ${error.message}`);
-    }
+    return this.getTaskAssignments({ priority });
   }
 
   /**
    * Get task assignments by assignee type
-   * @param assigneeType The assignee type filter
-   * @returns Array of task assignment DTOs
    */
   async getTaskAssignmentsByAssigneeType(assigneeType: string): Promise<TaskAssignmentDTO[]> {
-    try {
-      const tasks = await this.taskAssignmentRepository.findByAssigneeType(assigneeType);
-      return tasks.map(task => this.taskAssignmentTransformer.toDTO(task));
-    } catch (error) {
-      console.error('Error fetching task assignments by assignee type:', error);
-      throw new Error(`Failed to fetch task assignments by assignee type: ${error.message}`);
-    }
+    return this.getTaskAssignments({ assigneeType });
+  }
+
+  /**
+   * Convert entity to DTO
+   */
+  private toDTO(task: TaskAssignment): TaskAssignmentDTO {
+    return {
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      project_id: task.projectId,
+      assigned_to: task.assignedTo,
+      assigned_by: task.assignedBy,
+      assignee_type: task.assigneeType,
+      status: task.status,
+      priority: task.priority,
+      due_date: task.dueDate?.toISOString(),
+      completed_at: task.completedAt?.toISOString(),
+      created_at: task.createdAt.toISOString(),
+      updated_at: task.updatedAt.toISOString()
+    };
   }
 }

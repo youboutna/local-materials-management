@@ -70,10 +70,10 @@ export class MilestoneService {
     return {
       ...milestoneData,
       id: data.id,
-      deliverables: [],
-      dependencies: [],
-      created_at: data.created_at,
-      updated_at: data.updated_at
+      deliverables: milestoneData.deliverables || [],
+      dependencies: milestoneData.dependencies || [],
+      created_at: data.created_at ?? new Date().toISOString(),
+      updated_at: data.updated_at ?? new Date().toISOString()
     };
   }
 
@@ -92,13 +92,13 @@ export class MilestoneService {
       project_id: data.project_id,
       title: data.title,
       target_date: data.target_date,
-      status: data.status as Milestone['status'],
+      status: (data.status as Milestone['status']) || 'pending',
       progress: data.weight || 0,
       priority: 'medium',
       deliverables: [],
       dependencies: [],
-      created_at: data.created_at,
-      updated_at: data.updated_at
+      created_at: data.created_at ?? new Date().toISOString(),
+      updated_at: data.updated_at ?? new Date().toISOString()
     };
   }
 
@@ -115,13 +115,13 @@ export class MilestoneService {
       project_id: data.project_id,
       title: data.title,
       target_date: data.target_date,
-      status: data.status as Milestone['status'],
+      status: (data.status as Milestone['status']) || 'pending',
       progress: data.weight || 0,
       priority: 'medium',
       deliverables: [],
       dependencies: [],
-      created_at: data.created_at,
-      updated_at: data.updated_at
+      created_at: data.created_at ?? new Date().toISOString(),
+      updated_at: data.updated_at ?? new Date().toISOString()
     };
   }
 
