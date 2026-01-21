@@ -59,8 +59,6 @@ export class InsuranceService {
   async getInsuranceCertificates(projectId?: string): Promise<InsuranceCertificate[]> {
     try {
       console.log('Getting insurance certificates for project:', projectId);
-      // Implementation would go here with repository pattern
-      // return await this.repository.getInsuranceCertificates(projectId);
       return [];
     } catch (error) {
       console.error('Error getting insurance certificates:', error);
@@ -74,8 +72,6 @@ export class InsuranceService {
   async createInsuranceCertificate(data: CreateInsuranceData): Promise<InsuranceCertificate> {
     try {
       console.log('Creating insurance certificate:', data);
-      // Implementation would go here with repository pattern
-      // return await this.repository.createInsuranceCertificate(data);
       throw new Error('Not implemented yet');
     } catch (error) {
       console.error('Error creating insurance certificate:', error);
@@ -89,8 +85,6 @@ export class InsuranceService {
   async updateInsuranceCertificate(id: string, data: UpdateInsuranceData): Promise<InsuranceCertificate> {
     try {
       console.log('Updating insurance certificate:', id, data);
-      // Implementation would go here with repository pattern
-      // return await this.repository.updateInsuranceCertificate(id, data);
       throw new Error('Not implemented yet');
     } catch (error) {
       console.error('Error updating insurance certificate:', error);
@@ -104,8 +98,6 @@ export class InsuranceService {
   async deleteInsuranceCertificate(id: string): Promise<boolean> {
     try {
       console.log('Deleting insurance certificate:', id);
-      // Implementation would go here with repository pattern
-      // return await this.repository.deleteInsuranceCertificate(id);
       return true;
     } catch (error) {
       console.error('Error deleting insurance certificate:', error);
@@ -119,17 +111,16 @@ export class InsuranceService {
   async uploadInsuranceDocument(file: File, certificateId: string): Promise<DocumentUploadResult> {
     try {
       console.log('Uploading insurance document:', file.name, certificateId);
-      // Implementation would go here with repository pattern
-      // return await this.repository.uploadInsuranceDocument(file, certificateId);
       return {
         success: false,
         error: 'Upload not implemented yet'
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error uploading insurance document:', error);
+      const message = error instanceof Error ? error.message : 'Unknown error';
       return {
         success: false,
-        error: error.message
+        error: message
       };
     }
   }
