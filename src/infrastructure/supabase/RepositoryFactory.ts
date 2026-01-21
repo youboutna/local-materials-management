@@ -31,7 +31,8 @@ import {
   IInsuranceRepository,
   IAuthRepository,
   IStorageRepository,
-  INotificationRepository
+  INotificationRepository,
+  IParsedInvoiceRepository
 } from '@/domain/repositories';
 
 import {
@@ -62,7 +63,8 @@ import {
   SupabaseAuthAdapter,
   SupabaseStorageAdapter,
   SupabaseNotificationAdapter,
-  SupabaseInsuranceAdapter
+  SupabaseInsuranceAdapter,
+  SupabaseParsedInvoiceAdapter
 } from './adapters';
 
 /**
@@ -96,6 +98,7 @@ let insuranceRepository: IInsuranceRepository | null = null;
 let authRepository: IAuthRepository | null = null;
 let storageRepository: IStorageRepository | null = null;
 let notificationRepository: INotificationRepository | null = null;
+let parsedInvoiceRepository: IParsedInvoiceRepository | null = null;
 
 /**
  * Repository Factory
@@ -153,6 +156,26 @@ export class RepositoryFactory {
   }
 
   /**
+   * Get Bank Guarantee Repository instance
+   */
+  static getBankGuaranteeRepository(): IBankGuaranteeRepository {
+    if (!bankGuaranteeRepository) {
+      bankGuaranteeRepository = new BankGuaranteeAdapter();
+    }
+    return bankGuaranteeRepository;
+  }
+
+  /**
+   * Get PV Generator Repository instance
+   */
+  static getPVGeneratorRepository(): IPVGeneratorRepository {
+    if (!pvGeneratorRepository) {
+      pvGeneratorRepository = new PVGeneratorAdapter();
+    }
+    return pvGeneratorRepository;
+  }
+
+  /**
    * Get Insurance Repository instance
    */
   static getInsuranceRepository(): IInsuranceRepository {
@@ -193,6 +216,26 @@ export class RepositoryFactory {
   }
 
   /**
+   * Get Tender Repository instance
+   */
+  static getTenderRepository(): ITenderRepository {
+    if (!tenderRepository) {
+      tenderRepository = new SupabaseTenderAdapter();
+    }
+    return tenderRepository;
+  }
+
+  /**
+   * Get Supplier Repository instance
+   */
+  static getSupplierRepository(): ISupplierRepository {
+    if (!supplierRepository) {
+      supplierRepository = new SupabaseSupplierAdapter();
+    }
+    return supplierRepository;
+  }
+
+  /**
    * Get User Repository instance
    */
   static getUserRepository(): IUserRepository {
@@ -220,6 +263,16 @@ export class RepositoryFactory {
       storageRepository = new SupabaseStorageAdapter();
     }
     return storageRepository;
+  }
+
+  /**
+   * Get Parsed Invoice Repository instance
+   */
+  static getParsedInvoiceRepository(): IParsedInvoiceRepository {
+    if (!parsedInvoiceRepository) {
+      parsedInvoiceRepository = new SupabaseParsedInvoiceAdapter();
+    }
+    return parsedInvoiceRepository;
   }
 
   /**

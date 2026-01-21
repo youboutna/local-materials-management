@@ -44,7 +44,8 @@ export class Document {
     public readonly assignedTo: string | null,
     public readonly uploadedBy: string | null,
     public readonly createdAt: string,
-    public readonly updatedAt: string
+    public readonly updatedAt: string,
+    public readonly metadata: Record<string, unknown> | null = null
   ) {}
 
   // Business logic
@@ -106,6 +107,7 @@ export class Document {
     fileSize?: number;
     mimeType?: string;
     uploadedBy?: string;
+    metadata?: Record<string, unknown> | null;
   }): Document {
     return new Document(
       params.id,
@@ -129,7 +131,8 @@ export class Document {
       null,
       params.uploadedBy || null,
       new Date().toISOString(),
-      new Date().toISOString()
+      new Date().toISOString(),
+      params.metadata ?? null
     );
   }
 }

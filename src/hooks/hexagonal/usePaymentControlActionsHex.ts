@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { z } from 'zod';
+import { PaymentControlActionsService } from '@/application/services/PaymentControlActionsService';
+import type { ActionFormData, ActionMetadata } from '@/application/services/PaymentControlActionsService';
 
 export const actionFormSchema = z.object({
   actionType: z.enum(['task_assignment', 'hierarchy_notification', 'sms', 'call', 'email', 'mail']),
@@ -50,45 +51,28 @@ export interface ActionMetadata {
   notificationChannels?: string[];
 }
 
-export const usePaymentControlActionsHex = () => {
+export const usePaymentControlActionsHex = (props: PaymentControlActionsProps) => {
   const queryClient = useQueryClient();
+  const paymentControlService = PaymentControlActionsService.create();
 
   // Task assignment mutation
   const taskAssignmentMutation = useMutation({
     mutationFn: async ({ values, metadata }: { values: ActionFormData; metadata: ActionMetadata }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      const { error } = await supabase
-        .from('notifications')
-        .insert({
-          recipient_id: values.assigneeId,
-          title: values.title,
-          message: values.message,
-          type: 'task_assignment',
-          related_id: metadata.paymentId,
-          metadata: {
-            ...metadata,
-            actionType: 'task_assignment',
-            dueDate: values.dueDate,
-            priority: values.priority,
-            assignedBy: user?.id
-          }
-        });
-
-      if (error) throw error;
+      await paymentControlService.createTaskAssignment(values, metadata);
       return { success: true };
     },
     onSuccess: () => {
       toast({
-        title: "Succès",
-        description: "Tâche assignée avec succès",
+        title: 'Tâche assignée',
+        description: 'La tâche a été assignée avec succès',
       });
+      queryClient.invalidateQueries({ queryKey: ['payment-actions', props.paymentId] });
     },
     onError: (error) => {
       toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
+        title: 'Erreur d\'assignation',
+        description: 'Impossible d\'assigner la tâche',
+        variant: 'destructive',
       });
     }
   });
@@ -96,43 +80,21 @@ export const usePaymentControlActionsHex = () => {
   // Hierarchy notification mutation
   const hierarchyNotificationMutation = useMutation({
     mutationFn: async ({ values, metadata }: { values: ActionFormData; metadata: ActionMetadata }) => {
-      const { data: hierarchy } = await supabase
-        .rpc('get_escalation_targets', { 
-          project_id_param: metadata.projectId, 
-          escalation_level_param: values.escalationLevel 
-        });
-
-      // Send notifications to hierarchy
-      for (const member of (hierarchy || [])) {
-        await supabase
-          .from('notifications')
-          .insert({
-            recipient_id: member.employee_id,
-            title: values.title,
-            message: values.message,
-            type: 'hierarchy_notification',
-            related_id: metadata.paymentId,
-            metadata: {
-              ...metadata,
-              escalationLevel: values.escalationLevel,
-              hierarchyPosition: member.position_title
-            }
-          });
-      }
-
-      return { success: true, hierarchy };
+      await paymentControlService.createHierarchyNotification(values, metadata);
+      return { success: true };
     },
     onSuccess: () => {
       toast({
-        title: "Succès",
-        description: "Notification hiérarchique envoyée avec succès",
+        title: 'Notification hiérarchique envoyée',
+        description: 'La notification a été envoyée à la hiérarchie',
       });
+      queryClient.invalidateQueries({ queryKey: ['payment-actions', props.paymentId] });
     },
     onError: (error) => {
       toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
+        title: 'Erreur de notification',
+        description: 'Impossible d\'envoyer la notification hiérarchique',
+        variant: 'destructive',
       });
     }
   });
@@ -140,33 +102,21 @@ export const usePaymentControlActionsHex = () => {
   // SMS notification mutation
   const smsNotificationMutation = useMutation({
     mutationFn: async ({ values, metadata }: { values: ActionFormData; metadata: ActionMetadata }) => {
-      const { error } = await supabase.functions.invoke('send-sms-notification', {
-        body: {
-          recipients: values.recipientIds,
-          message: values.message,
-          priority: values.priority,
-          metadata: {
-            ...metadata,
-            paymentId: metadata.paymentId,
-            actionType: 'sms'
-          }
-        }
-      });
-
-      if (error) throw error;
+      await paymentControlService.sendSMSNotification(values, metadata);
       return { success: true };
     },
     onSuccess: () => {
       toast({
-        title: "Succès",
-        description: "SMS envoyé avec succès",
+        title: 'SMS envoyé',
+        description: 'La notification SMS a été envoyée',
       });
+      queryClient.invalidateQueries({ queryKey: ['payment-actions', props.paymentId] });
     },
     onError: (error) => {
       toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
+        title: 'Erreur SMS',
+        description: 'Impossible d\'envoyer le SMS',
+        variant: 'destructive',
       });
     }
   });
@@ -174,34 +124,21 @@ export const usePaymentControlActionsHex = () => {
   // Call action mutation
   const callActionMutation = useMutation({
     mutationFn: async ({ values, metadata }: { values: ActionFormData; metadata: ActionMetadata }) => {
-      const { error } = await supabase.functions.invoke('schedule-call', {
-        body: {
-          recipients: values.recipientIds,
-          subject: values.title,
-          notes: values.message,
-          priority: values.priority,
-          metadata: {
-            ...metadata,
-            paymentId: metadata.paymentId,
-            actionType: 'call'
-          }
-        }
-      });
-
-      if (error) throw error;
+      await paymentControlService.scheduleCall(values, metadata);
       return { success: true };
     },
     onSuccess: () => {
       toast({
-        title: "Succès",
-        description: "Appel programmé avec succès",
+        title: 'Appel programmé',
+        description: 'L\'appel a été programmé avec succès',
       });
+      queryClient.invalidateQueries({ queryKey: ['payment-actions', props.paymentId] });
     },
     onError: (error) => {
       toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
+        title: 'Erreur d\'appel',
+        description: 'Impossible de programmer l\'appel',
+        variant: 'destructive',
       });
     }
   });
@@ -209,35 +146,21 @@ export const usePaymentControlActionsHex = () => {
   // Email action mutation
   const emailActionMutation = useMutation({
     mutationFn: async ({ values, metadata }: { values: ActionFormData; metadata: ActionMetadata }) => {
-      const { error } = await supabase.functions.invoke('send-email-notification', {
-        body: {
-          recipients: values.recipientIds,
-          subject: values.title,
-          message: values.message,
-          priority: values.priority,
-          notificationChannels: values.notificationChannels,
-          metadata: {
-            ...metadata,
-            paymentId: metadata.paymentId,
-            actionType: 'email'
-          }
-        }
-      });
-
-      if (error) throw error;
+      await paymentControlService.sendEmailNotification(values, metadata);
       return { success: true };
     },
     onSuccess: () => {
       toast({
-        title: "Succès",
-        description: "Email envoyé avec succès",
+        title: 'Email envoyé',
+        description: 'L\'email a été envoyé avec succès',
       });
+      queryClient.invalidateQueries({ queryKey: ['payment-actions', props.paymentId] });
     },
     onError: (error) => {
       toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
+        title: 'Erreur email',
+        description: 'Impossible d\'envoyer l\'email',
+        variant: 'destructive',
       });
     }
   });
@@ -245,76 +168,96 @@ export const usePaymentControlActionsHex = () => {
   // Mail action mutation
   const mailActionMutation = useMutation({
     mutationFn: async ({ values, metadata }: { values: ActionFormData; metadata: ActionMetadata }) => {
-      const { error } = await supabase
-        .from('notifications')
-        .insert({
-          recipient_id: values.recipientIds[0], // First recipient for mail
-          title: values.title,
-          message: values.message,
-          type: 'postal_mail',
-          related_id: metadata.paymentId,
-          metadata: {
-            ...metadata,
-            actionType: 'mail',
-            allRecipients: values.recipientIds,
-            requiresPhysicalDelivery: true
-          }
-        });
-
-      if (error) throw error;
+      await paymentControlService.createMailAction(values, metadata);
       return { success: true };
     },
     onSuccess: () => {
       toast({
-        title: "Succès",
-        description: "Courrier postal créé avec succès",
+        title: 'Courrier envoyé',
+        description: 'Le courrier a été envoyé avec succès',
       });
+      queryClient.invalidateQueries({ queryKey: ['payment-actions', props.paymentId] });
     },
     onError: (error) => {
       toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
+        title: 'Erreur courrier',
+        description: 'Impossible d\'envoyer le courrier',
+        variant: 'destructive',
       });
     }
   });
 
-  // Execute action based on type
-  const executeAction = async (values: ActionFormData, metadata: ActionMetadata) => {
-    switch (values.actionType) {
+  // Get action type handler
+  const getActionHandler = (actionType: string) => {
+    switch (actionType) {
       case 'task_assignment':
-        return await taskAssignmentMutation.mutateAsync({ values, metadata });
+        return taskAssignmentMutation;
       case 'hierarchy_notification':
-        return await hierarchyNotificationMutation.mutateAsync({ values, metadata });
+        return hierarchyNotificationMutation;
       case 'sms':
-        return await smsNotificationMutation.mutateAsync({ values, metadata });
+        return smsNotificationMutation;
       case 'call':
-        return await callActionMutation.mutateAsync({ values, metadata });
+        return callActionMutation;
       case 'email':
-        return await emailActionMutation.mutateAsync({ values, metadata });
+        return emailActionMutation;
       case 'mail':
-        return await mailActionMutation.mutateAsync({ values, metadata });
+        return mailActionMutation;
       default:
-        throw new Error(`Action type not supported: ${values.actionType}`);
+        throw new Error(`Action type not supported: ${actionType}`);
     }
   };
 
+  // Execute action based on type
+  const executeAction = (values: ActionFormData) => {
+    const metadata: ActionMetadata = {
+      paymentId: props.paymentId,
+      projectId: props.projectId,
+      contractorId: props.contractorId,
+      amount: props.amount,
+      blockingReasons: props.blockingReasons,
+      actionType: values.actionType,
+      priority: values.priority,
+      escalationLevel: values.escalationLevel,
+      dueDate: values.dueDate,
+      documentReferences: values.documentReferences,
+      followUpRequired: values.followUpRequired,
+      notificationChannels: values.notificationChannels
+    };
+
+    const handler = getActionHandler(values.actionType);
+    return handler.mutateAsync({ values, metadata });
+  };
+
   return {
+    // Mutations
     taskAssignmentMutation,
     hierarchyNotificationMutation,
     smsNotificationMutation,
     callActionMutation,
     emailActionMutation,
     mailActionMutation,
+
+    // Utilities
     executeAction,
-    isLoading: taskAssignmentMutation.isPending || 
-              hierarchyNotificationMutation.isPending || 
-              smsNotificationMutation.isPending || 
-              callActionMutation.isPending || 
-              emailActionMutation.isPending || 
-              mailActionMutation.isPending,
-    refetch: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    getActionHandler,
+
+    // Loading states
+    isLoading: 
+      taskAssignmentMutation.isPending ||
+      hierarchyNotificationMutation.isPending ||
+      smsNotificationMutation.isPending ||
+      callActionMutation.isPending ||
+      emailActionMutation.isPending ||
+      mailActionMutation.isPending,
+
+    // Error states
+    errors: {
+      taskAssignment: taskAssignmentMutation.error,
+      hierarchyNotification: hierarchyNotificationMutation.error,
+      sms: smsNotificationMutation.error,
+      call: callActionMutation.error,
+      email: emailActionMutation.error,
+      mail: mailActionMutation.error
     }
   };
 };

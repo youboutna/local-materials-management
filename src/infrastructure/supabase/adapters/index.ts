@@ -30,3 +30,9 @@ export { SupabaseAuthAdapter } from './SupabaseAuthAdapter';
 export { SupabaseStorageAdapter } from './SupabaseStorageAdapter';
 export { SupabaseNotificationAdapter } from './SupabaseNotificationAdapter';
 export { SupabaseInsuranceAdapter } from './SupabaseInsuranceAdapter';
+
+// Additional adapters
+export { PVGeneratorAdapter } from './PVGeneratorAdapter';
+export { BankGuaranteeAdapter } from './BankGuaranteeAdapter';
+export { InspectionSchedulingAdapter } from './InspectionSchedulingAdapter';
+export { SupabaseParsedInvoiceAdapter } from './SupabaseParsedInvoiceAdapter';

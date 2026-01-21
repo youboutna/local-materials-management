@@ -4,7 +4,9 @@
  */
 
 export interface InspectionScheduleData {
-  inspectionId: string;
+  inspectionId?: string;
+  projectId?: string;
+  phaseId?: string;
   scheduledDate: string;
   scheduledTime: string;
   estimatedDuration: number;
@@ -28,6 +30,7 @@ export interface AssignableInspector {
   email: string;
   role: string;
   specializations: string[];
+  type: 'employee' | 'supplier';
   availability: {
     startDate: string;
     endDate: string;

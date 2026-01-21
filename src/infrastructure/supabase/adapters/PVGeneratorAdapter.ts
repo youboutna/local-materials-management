@@ -61,3 +61,26 @@ export class PVGeneratorAdapter implements IPVGeneratorRepository {
     return data?.content || null;
   }
 }
+
+  async getInspectionPVs(inspectionId: string): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('inspection_pvs')
+      .select('*')
+      .eq('inspection_id', inspectionId)
+      .order('generated_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  async getPVContent(pvId: string): Promise<string | null> {
+    const { data, error } = await supabase
+      .from('inspection_pvs')
+      .select('content')
+      .eq('id', pvId)
+      .single();
+
+    if (error) throw error;
+    return data?.content || null;
+  }
+}

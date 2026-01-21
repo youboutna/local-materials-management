@@ -2,34 +2,109 @@
 
 ## Architecture Hexagonale - Prérequis Fondamentaux
 
-### 🎯 Flux Architectural Complet (Obligatoire)
+### **Types, DTOs et Transformers - Gestion Centralisée**
+
+#### **Prérequis Techniques - Centralisation Obligatoire**
 ```typescript
-[UI: FormData] → [Hook: use*Hex] → [Factory] → [Adapter] → [Service] → [Transformers] → [Entities] → [Persistence]
+// RÈGLE FONDAMENTALE : Pas de dépendances cycliques
+UI Layer → Hook Layer → DTO Layer → Service Layer → Entity Layer → Repository Layer → Adapter Layer → BDD
 ```
 
-#### 📋 Couches Architecturales
-1. **UI Layer** : Composants React avec FormData
-2. **Hook Layer** : Hooks hexagonaux (use*Hex) avec React Query
-3. **Factory Layer** : RepositoryFactory pour l'injection de dépendances
-4. **Adapter Layer** : Adaptateurs (Supabase, etc.)
-5. **Service Layer** : Services métier avec logique business
-6. **Transformers Layer** : Mappers/Transformers pour DTOs ↔ Entities
-7. **Entities Layer** : Entités de domaine pures
-8. **Persistence Layer** : Types ORM / Supabase types.ts
+#### **Structure des Types - Centralisée**
+```
+src/
+├── domain/entities/           # Entités de domaine pures (NO UI TYPES)
+│   ├── Supplier.ts           # Entité métier pure
+│   ├── Project.ts            # Entité métier pure
+│   └── InsuranceCertificate.ts
+├── dtos/                     # DTOs Centralisés (OBLIGATOIRE)
+│   ├── entities/             # DTOs par domaine
+│   │   ├── SupplierDTO.ts    # DTO pour UI/Services
+│   │   ├── ProjectDTO.ts     # DTO pour UI/Services
+│   │   └── InsuranceCertificateDTO.ts
+│   ├── transforms/           # Transformers (Mapper Centralisé)
+│   │   ├── supplierTransform.ts    # Entity ↔ DTO
+│   │   ├── projectTransform.ts     # Entity ↔ DTO
+│   │   └── insuranceTransform.ts   # Entity ↔ DTO
+│   └── shared/               # DTOs partagés
+│       ├── BaseDTO.ts        # DTO de base
+│       └── PaginationDTO.ts  # DTO pagination
+├── types/                    # Types Legacy (en migration)
+│   ├── supplier.ts           # Types anciens (à migrer)
+│   └── project.ts           # Types anciens (à migrer)
+└── hooks/hexagonal/          # Hooks (utilise DTOs SEULEMENT)
+    ├── useSupplierHex.ts     # Utilise SupplierDTO
+    └── useProjectHex.ts     # Utilise ProjectDTO
+```
 
-#### 🔧 Prérequis Techniques
-- **Types ORM** : `/src/integrations/supabase/types.ts` pour la persistence
-- **DTOs Centralisés** : `/src/dtos/` pour les interfaces de transfert
-- **Transformers** : `/src/dtos/transforms/` pour les conversions enrichies
-- **Mock Data** : `/src/data/mockData.ts` pour le développement
-- **Repository Pattern** : `/src/infrastructure/supabase/adapters/` pour l'accès données
-- **Legacy Types** : `/src/types/` pour les anciennes définitions (en migration)
-  // Utiliser les params DEV dans les services pour charger/persister les données
-  // Charger depuis /data/mockData.ts
-  // Persister dans base embarquée pour tester
-  // Simuler les délais avec DEV_CONFIG.mockApiDelay
+#### **Règles Anti-Dépendances Cycliques**
+1. **Domain Layer** : Entités pures, PAS de types UI
+2. **DTO Layer** : Centralisé, PAS de dépendances vers UI
+3. **Service Layer** : Utilise Entités et DTOs, PAS de types UI
+4. **Hook Layer** : Utilise DTOs SEULEMENT, PAS d'entités directes
+5. **UI Layer** : Utilise DTOs, PAS d'accès direct aux entités
+
+#### **Flux de Transformation Standard**
+```typescript
+// CORRECT : Flux centralisé sans dépendances cycliques
+UI FormData → Hook (DTO) → Service (Entity) → Repository (Adapter) → BDD
+
+// INTERDIT : Dépendances cycliques
+UI → Entity → UI (crée un cycle)
+Service → UI Type → Service (crée un cycle)
+Hook → Entity → Hook (crée un cycle)
+```
+
+#### **Mapping Centralisé - Transformers**
+```typescript
+// Transformers centralisés dans /src/dtos/transforms/
+export const supplierTransform = {
+  // Entity → DTO (pour UI/Hooks)
+  toDTO: (entity: Supplier): SupplierDTO => ({
+    id: entity.id,
+    name: entity.name,
+    email: entity.email,
+    // Mapping des propriétés
+  }),
+  
+  // DTO → Entity (pour Services)
+  toEntity: (dto: SupplierDTO): Supplier => ({
+    id: dto.id,
+    name: dto.name,
+    email: dto.email,
+    // Mapping des propriétés
+  })
+};
+```
+
+#### **Types UI - Création Centralisée**
+```typescript
+// Types UI créés dans /src/dtos/entities/
+export interface SupplierFormData {
+  name: string;
+  email: string;
+  category: string;
+}
+
+// Hooks utilisent SEULEMENT les DTOs
+export function useSupplierHex() {
+  return useQuery({
+    queryKey: ['suppliers'],
+    queryFn: async (): Promise<SupplierDTO[]> => {
+      // Utilise Service qui retourne des DTOs
+      const service = SupplierService.create();
+      return await service.getSuppliers();
+    }
+  });
 }
 ```
+
+#### **Prérequis pour Nouveaux Types**
+1. **Créer DTO** dans `/src/dtos/entities/[Domaine]DTO.ts`
+2. **Créer Transformer** dans `/src/dtos/transforms/[domaine]Transform.ts`
+3. **Utiliser DTO** dans Hooks (PAS d'entités directes)
+4. **Mapper Entity ↔ DTO** dans Services avec transformers
+5. **Éviter les cycles** : UI → DTO → Service → Entity → Repository → BDD
 
 ### **Flux DEV_MODE Standard**
 1. **Charger** : Données depuis `/data/mockData.ts`

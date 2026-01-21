@@ -15,3 +15,11 @@ export * from './SupplierDTO';
 export * from './PaymentDTO';
 export * from './TaskDTO';
 export * from './EmployeeDTO';
+
+// DTOs nouvellement migrés (critiques pour décomptes)
+export * from './AutomaticDecompteDTO';
+export * from './VerificationItemDTO';
+export * from './CheckpointDTO';
+export * from './CheckpointVerificationResultDTO';
+export * from './MilestoneDTO';
+export * from './MauritaniaBusinessRulesDTO';

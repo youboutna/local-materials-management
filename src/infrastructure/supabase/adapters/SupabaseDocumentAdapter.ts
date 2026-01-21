@@ -1,4 +1,4 @@
-// Supabase Adapter for Document Repository - Fixed for DB schema
+l// Supabase Adapter for Document Repository - Fixed for DB schema
 import { supabase } from '@/integrations/supabase/client';
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
 import { Document, DocumentType, DocumentStatus } from '@/domain/entities/Document';
@@ -20,7 +20,8 @@ export class SupabaseDocumentAdapter implements IDocumentRepository {
       data.file_name || null, data.file_url || null, data.file_size || null, data.mime_type || null,
       data.tags || [], data.is_internal_only ?? false, data.is_shared_with_suppliers ?? false,
       data.deadline_date || null, data.assigned_to || null, data.uploaded_by || null,
-      data.created_at, data.updated_at
+      data.created_at, data.updated_at,
+      data.metadata || null
     );
   }
 
@@ -45,7 +46,8 @@ export class SupabaseDocumentAdapter implements IDocumentRepository {
       file_name: document.fileName, file_size: document.fileSize, mime_type: document.mimeType,
       project_id: document.projectId, phase_id: document.phaseId, inspection_id: document.inspectionId,
       payment_id: document.paymentId, supplier_id: document.supplierId, uploaded_by: document.uploadedBy,
-      tags: document.tags, is_internal_only: document.isInternalOnly, is_shared_with_suppliers: document.isSharedWithSuppliers
+      tags: document.tags, is_internal_only: document.isInternalOnly, is_shared_with_suppliers: document.isSharedWithSuppliers,
+      metadata: document.metadata
     }]);
     if (error) throw new Error(`Failed to save document: ${error.message}`);
   }
@@ -53,8 +55,10 @@ export class SupabaseDocumentAdapter implements IDocumentRepository {
   async update(id: string, data: Partial<Document>): Promise<void> {
     const updateData: Record<string, any> = {};
     if (data.title !== undefined) updateData.title = data.title;
+    if (data.description !== undefined) updateData.description = data.description;
     if (data.status !== undefined) updateData.status = data.status === 'approved' ? 'validated' : data.status === 'pending_review' ? 'pending' : data.status;
     if (data.tags !== undefined) updateData.tags = data.tags;
+    if (data.metadata !== undefined) updateData.metadata = data.metadata;
     const { error } = await supabase.from('documents').update(updateData).eq('id', id);
     if (error) throw new Error(`Failed to update document: ${error.message}`);
   }

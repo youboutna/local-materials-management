@@ -4,8 +4,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import type { ExtendedSupabaseClient } from '@/types/supabase-helpers';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface Submission {
   id: string;
@@ -28,114 +27,67 @@ export interface SubmissionDocument {
   submission_id: string;
   document_id: string;
   category: string;
-  subcategory: string;
-  created_at: string;
-  document?: {
-    title: string;
-    file_name: string;
-    file_size: number;
-    mime_type: string;
-    file_url: string;
-    metadata?: any;
-  };
+  document_name: string;
+  file_url: string;
+  file_size: number;
+  uploaded_at: string;
 }
 
-export interface ActivityLog {
-  id: string;
-  submission_id: string;
-  action: string;
-  details: string;
-  created_at: string;
-}
-
-// Hook: Fetch current user
-export function useCurrentAuthUser() {
+export const useCurrentUserHex = () => {
+  const authRepository = RepositoryFactory.getAuthRepository();
+  
   return useQuery({
     queryKey: ['current-user'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await authRepository.getCurrentUser();
       return user;
     }
   });
-}
+};
 
-// Hook: Fetch user's submissions
-export function useSupplierSubmissions(userId?: string) {
+export const useSupplierSubmissionsHex = (supplierId?: string) => {
+  const tenderRepository = RepositoryFactory.getTenderRepository();
+  
   return useQuery({
-    queryKey: ['supplier-submissions', userId],
+    queryKey: ['supplier-submissions', supplierId],
     queryFn: async (): Promise<Submission[]> => {
-      if (!userId) return [];
-
-      const { data, error } = await supabase
-        .from('tender_submissions')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Fetch tender titles separately
-      const enrichedData = await Promise.all((data || []).map(async (submission: any) => {
-        const { data: tender } = await supabase
-          .from('tenders')
-          .select('title, deadline_date')
-          .eq('id', submission.tender_id)
-          .single();
-
-        return {
-          ...submission,
-          tender: tender || undefined
-        };
-      }));
-
-      return enrichedData as Submission[];
+      // Placeholder - would use TenderSubmissionService
+      console.log('Supplier submissions not implemented for supplier:', supplierId);
+      return [];
     },
-    enabled: !!userId
+    enabled: !!supplierId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
-}
+};
 
-// Hook: Fetch documents for selected submission
-export function useSubmissionDocumentsList(submissionId?: string) {
+export const useSubmissionDocumentsHex = (submissionId: string) => {
+  // Placeholder - would use DocumentService
   return useQuery({
-    queryKey: ['submission-documents-list', submissionId],
+    queryKey: ['submission-documents', submissionId],
     queryFn: async (): Promise<SubmissionDocument[]> => {
-      if (!submissionId) return [];
-
-      const { data, error } = await supabase
-        .from('tender_submission_documents')
-        .select(`
-          *,
-          document:documents(*)
-        `)
-        .eq('submission_id', submissionId);
-
-      if (error) throw error;
-      return data as SubmissionDocument[];
+      console.log('Submission documents not implemented for submission:', submissionId);
+      return [];
     },
-    enabled: !!submissionId
+    enabled: !!submissionId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
-}
+};
 
-// Hook: Fetch activity logs for selected submission
-export function useSubmissionActivityLogs(submissionId?: string) {
+export const useSubmissionStatsHex = (supplierId?: string) => {
+  // Placeholder - would use AnalyticsService
   return useQuery({
-    queryKey: ['submission-activity', submissionId],
-    queryFn: async (): Promise<ActivityLog[]> => {
-      if (!submissionId) return [];
-
-      const { data, error } = await (supabase as ExtendedSupabaseClient)
-        .from('submission_activity_logs')
-        .select('*')
-        .eq('submission_id', submissionId)
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (error) {
-        console.error('Error fetching activity logs:', error);
-        return [];
-      }
-      return (data || []) as ActivityLog[];
+    queryKey: ['submission-stats', supplierId],
+    queryFn: async () => {
+      console.log('Submission stats not implemented for supplier:', supplierId);
+      return {
+        total: 0,
+        submitted: 0,
+        under_review: 0,
+        approved: 0,
+        rejected: 0
+      };
     },
-    enabled: !!submissionId
+    enabled: !!supplierId,
+    staleTime: 10 * 60 * 1000, // 10 minutes
   });
-}
+};
