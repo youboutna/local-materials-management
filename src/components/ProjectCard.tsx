@@ -11,7 +11,6 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import StatusBadge from './StatusBadge';
-import { useProjectsFull } from '@/hooks/hexagonal/useProjectsFull';
 
 interface ProjectCardProps {
   project: ProjectData;
@@ -19,10 +18,34 @@ interface ProjectCardProps {
   showAnalytics?: boolean;
 }
 
+// Helper functions for project analytics
+const getProjectHealth = (project: ProjectData): 'healthy' | 'warning' | 'critical' => {
+  const budgetUsed = project.budget > 0 ? (project.progress / 100) * project.budget : 0;
+  const budgetRatio = project.budget > 0 ? budgetUsed / project.budget : 0;
+  
+  const now = new Date();
+  const endDate = project.endDate ? new Date(project.endDate) : null;
+  const startDate = project.startDate ? new Date(project.startDate) : null;
+  
+  let timelineProgress = 0;
+  if (startDate && endDate) {
+    const totalDuration = endDate.getTime() - startDate.getTime();
+    const elapsed = now.getTime() - startDate.getTime();
+    timelineProgress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+  }
+  
+  const progressDiff = project.progress - timelineProgress;
+  
+  if (progressDiff < -20 || budgetRatio > 0.95) return 'critical';
+  if (progressDiff < -10 || budgetRatio > 0.85) return 'warning';
+  return 'healthy';
+};
+
+const getProjectProgress = (project: ProjectData): number => project.progress || 0;
+
 const ProjectCard: React.FC<ProjectCardProps> = ({ project, index = 0, showAnalytics = false }) => {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { getProjectHealth, getProjectProgress, getProjectRisk, getProjectAnalytics } = useProjectsFull();
 
   const handleViewDetails = () => {
     navigate(`/projects/${project.id}`);
@@ -43,7 +66,6 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index = 0, showAnaly
 
   const projectHealth = getProjectHealth(project);
   const projectProgress = getProjectProgress(project);
-  const projectRisk = getProjectRisk(project);
 
   return (
     <motion.div
