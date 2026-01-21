@@ -37,7 +37,25 @@ export { useSuppliersHex, useSuppliersBySpecialization, useSupplierHex } from '.
 export { useMaterialsHex, useMaterialHex } from './useMaterialsHex';
 
 // Documents
-export { useDocumentsHex, useDocumentCreate, useDocumentUpdate, useDocumentDelete } from './useDocumentsHex';
+export { 
+  useDocumentsHex, 
+  useDocumentCreate, 
+  useDocumentUpdate, 
+  useDocumentDelete, 
+  useDocumentsList,
+  useDocumentsByProject,
+  useDocumentById,
+  useTenderDocuments,
+  useWorkflowStepDocuments
+} from './useDocumentsHex';
+
+// Suppliers Management CRUD
+export {
+  useSuppliersList,
+  useCreateSupplier,
+  useUpdateSupplier,
+  useDeleteSupplier
+} from './useSuppliersManagementHex';
 
 // Inspections
 export { useInspectionHex, useInspectionsHex } from './useInspectionsHex';

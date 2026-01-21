@@ -82,7 +82,8 @@ const TaskAssignmentsComponent = () => {
   const projects = projectsHook.projects || [];
 
   // Fetch assignee details when assigned_to changes
-  const { data: assigneeDetails } = useAssigneeDetails(formData.assigned_to || null);
+  const assigneeResult = useAssigneeDetails(formData.assigned_to || '');
+  const assigneeDetails = assigneeResult?.details;
 
   useEffect(() => {
     if (assigneeDetails) {

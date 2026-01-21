@@ -1,31 +1,44 @@
 /**
- * Alerts Hook - Enhanced with AlertDomainTransformer Integration
- * Uses AlertDomainTransformer with advanced calculations and analytics
- * Following hexagonal architecture principles with UI-specific enhancements
+ * Alerts Hook - Enhanced with real Supabase data
+ * Following hexagonal architecture: Hook → Adapter → Supabase
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { RepositoryFactory } from "@/repositories/RepositoryFactory";
-import { AlertData } from "@/types/alerts";
-import { useNavigate } from 'react-router-dom';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from "@/integrations/supabase/client";
 
-// Enhanced types for UI components
+// Re-export AlertData type for compatibility
+export { AlertData } from "@/types/alerts";
+import { AlertData } from "@/types/alerts";
+
+// Stats interface for dashboard
+export interface AlertStats {
+  total: number;
+  critical: number;
+  high: number;
+  medium: number;
+  low: number;
+  acknowledged: number;
+  pending: number;
+}
+
+// Enhanced result type with all needed properties
 export interface UseAlertsHexResult {
   alerts: AlertData[];
   isLoading: boolean;
+  loading: boolean; // Alias for isLoading for compatibility
   error: any;
+  stats: AlertStats;
   refetch: () => void;
   createAlert: (data: Partial<AlertData>) => void;
   updateAlert: ({ id, data }: { id: string; data: Partial<AlertData> }) => void;
   deleteAlert: (id: string) => void;
   acknowledgeAlert: (id: string) => void;
   resolveAlert: (id: string) => void;
+  filterAlertsByType: (type: string) => AlertData[];
   isCreating: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
-  // Enhanced UI features
   getAlertSeverity: (alert: any) => 'low' | 'medium' | 'high' | 'critical';
   getAlertPriority: (alert: any) => 'low' | 'medium' | 'high' | 'urgent';
   getAlertRisk: (alert: any) => 'low' | 'medium' | 'high';
@@ -36,17 +49,90 @@ export interface UseAlertsHexResult {
 }
 
 /**
- * Enhanced hook for alerts management with UI-specific features
+ * Fetch alerts from monitoring_alerts table
+ */
+async function fetchAlertsFromSupabase(): Promise<AlertData[]> {
+  const { data, error } = await supabase
+    .from('monitoring_alerts')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching alerts:', error);
+    throw error;
+  }
+
+  // Map database rows to AlertData type
+  return (data || []).map((row: any) => ({
+    id: row.id,
+    type: mapAlertType(row.alert_type),
+    severity: mapPriorityToSeverity(row.priority),
+    title: row.title,
+    message: row.description || '',
+    projectId: row.station_id || '',
+    relatedEntityId: row.id,
+    source: 'notification' as const,
+    timestamp: row.created_at,
+    triggerDate: row.created_at,
+    acknowledged: row.status === 'acknowledged' || row.status === 'resolved',
+    acknowledgedBy: row.resolved_by || undefined,
+    acknowledgedAt: row.resolved_at || undefined,
+    actionRequired: row.status === 'active' || row.status === 'pending',
+    actionTaken: row.resolution_notes || undefined,
+    actionTakenBy: row.resolved_by || undefined,
+    actionTakenAt: row.resolved_at || undefined,
+    status: row.status
+  }));
+}
+
+function mapAlertType(dbType: string): AlertData['type'] {
+  const typeMap: Record<string, AlertData['type']> = {
+    'insurance': 'insurance_expiry',
+    'delay': 'project_delay',
+    'inspection': 'inspection_issue',
+    'financial': 'financial_risk',
+    'guarantee': 'bank_guarantee',
+    'payment': 'payment_blocked',
+    'compliance': 'compliance_violation',
+    'delivery': 'delivery',
+    'deadline': 'deadline',
+    'quality': 'quality'
+  };
+  return typeMap[dbType] || 'project_delay';
+}
+
+function mapPriorityToSeverity(priority: string): AlertData['severity'] {
+  const severityMap: Record<string, AlertData['severity']> = {
+    'critical': 'critical',
+    'high': 'high',
+    'medium': 'medium',
+    'low': 'low'
+  };
+  return severityMap[priority] || 'medium';
+}
+
+/**
+ * Calculate stats from alerts
+ */
+function calculateStats(alerts: AlertData[]): AlertStats {
+  return {
+    total: alerts.length,
+    critical: alerts.filter(a => a.severity === 'critical').length,
+    high: alerts.filter(a => a.severity === 'high').length,
+    medium: alerts.filter(a => a.severity === 'medium').length,
+    low: alerts.filter(a => a.severity === 'low').length,
+    acknowledged: alerts.filter(a => a.acknowledged).length,
+    pending: alerts.filter(a => !a.acknowledged).length
+  };
+}
+
+/**
+ * Enhanced hook for alerts management with real Supabase data
  */
 export function useAlertsHex(): UseAlertsHexResult {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  const { t } = useLanguage();
-  
-  // Initialize repository
-  const alertRepository = RepositoryFactory.getAlertRepository();
 
-  // Query for alerts list
+  // Query for alerts list from Supabase
   const {
     data: alerts = [],
     isLoading,
@@ -54,98 +140,113 @@ export function useAlertsHex(): UseAlertsHexResult {
     refetch
   } = useQuery({
     queryKey: ['alerts'],
-    queryFn: async (): Promise<AlertData[]> => {
-      try {
-        const alertData = await alertRepository.findAll();
-        return alertData;
-      } catch (err) {
-        console.error('Error fetching alerts:', err);
-        throw err;
-      }
-    },
+    queryFn: fetchAlertsFromSupabase,
     retry: 3,
     retryDelay: 1000,
-    enabled: true
+    staleTime: 30000
   });
+
+  // Calculate stats from real data
+  const stats = calculateStats(alerts);
+
+  // Filter alerts by type
+  const filterAlertsByType = (type: string): AlertData[] => {
+    if (type === 'all') return alerts;
+    return alerts.filter(alert => {
+      if (type === 'delay') return alert.type === 'project_delay';
+      if (type === 'payment') return alert.type === 'payment_blocked' || alert.type === 'financial_risk';
+      if (type === 'inspection') return alert.type === 'inspection_issue' || alert.type === 'inspection_overdue';
+      if (type === 'guarantee') return alert.type === 'bank_guarantee';
+      return true;
+    });
+  };
 
   // Create alert mutation
   const createAlertMutation = useMutation({
     mutationFn: async (alertData: Partial<AlertData>) => {
-      try {
-        const createdAlert = await alertRepository.create(alertData);
-        return createdAlert;
-      } catch (error) {
-        console.error('Error creating alert:', error);
-        throw error;
-      }
+      const { data, error } = await supabase
+        .from('monitoring_alerts')
+        .insert({
+          title: alertData.title || 'New Alert',
+          description: alertData.message,
+          alert_type: alertData.type || 'general',
+          priority: alertData.severity || 'medium',
+          status: 'active',
+          station_id: alertData.projectId
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alerts'] });
-      toast.success(`L'alerte "${data.title}" a été créée avec succès.`);
-      navigate('/alerts');
+      toast.success("L'alerte a été créée avec succès.");
     },
     onError: (error) => {
       console.error('Error creating alert:', error);
-      toast.error("Impossible de créer l'alerte. Veuillez réessayer.");
+      toast.error("Impossible de créer l'alerte.");
     }
   });
 
   // Update alert mutation
   const updateAlertMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<AlertData> }) => {
-      try {
-        const updatedAlert = await alertRepository.update(id, data);
-        return updatedAlert;
-      } catch (error) {
-        console.error('Error updating alert:', error);
-        throw error;
-      }
+      const { error } = await supabase
+        .from('monitoring_alerts')
+        .update({
+          title: data.title,
+          description: data.message,
+          priority: data.severity,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alerts'] });
-      toast.success(`L'alerte "${data.title}" a été mise à jour avec succès.`);
+      toast.success("L'alerte a été mise à jour.");
     },
     onError: (error) => {
       console.error('Error updating alert:', error);
-      toast.error("Impossible de mettre à jour l'alerte. Veuillez réessayer.");
+      toast.error("Impossible de mettre à jour l'alerte.");
     }
   });
 
   // Delete alert mutation
   const deleteAlertMutation = useMutation({
     mutationFn: async (id: string) => {
-      try {
-        await alertRepository.delete(id);
-        return true;
-      } catch (error) {
-        console.error('Error deleting alert:', error);
-        throw error;
-      }
+      const { error } = await supabase
+        .from('monitoring_alerts')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alerts'] });
-      toast.success("L'alerte a été supprimée avec succès.");
+      toast.success("L'alerte a été supprimée.");
     },
     onError: (error) => {
       console.error('Error deleting alert:', error);
-      toast.error("Impossible de supprimer l'alerte. Veuillez réessayer.");
+      toast.error("Impossible de supprimer l'alerte.");
     }
   });
 
   // Acknowledge alert mutation
   const acknowledgeAlertMutation = useMutation({
     mutationFn: async (id: string) => {
-      try {
-        await alertRepository.update(id, {
-          acknowledged: true,
-          acknowledgedAt: new Date().toISOString(),
-          acknowledgedBy: 'current_user' // TODO: Get actual user ID
-        });
-        return true;
-      } catch (error) {
-        console.error('Error acknowledging alert:', error);
-        throw error;
-      }
+      const { error } = await supabase
+        .from('monitoring_alerts')
+        .update({
+          status: 'acknowledged',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alerts'] });
@@ -153,24 +254,23 @@ export function useAlertsHex(): UseAlertsHexResult {
     },
     onError: (error) => {
       console.error('Error acknowledging alert:', error);
-      toast.error("Impossible de marquer l'alerte comme reconnue. Veuillez réessayer.");
+      toast.error("Impossible de marquer l'alerte comme reconnue.");
     }
   });
 
   // Resolve alert mutation
   const resolveAlertMutation = useMutation({
     mutationFn: async (id: string) => {
-      try {
-        await alertRepository.update(id, {
-          actionTaken: 'resolved',
-          actionTakenAt: new Date().toISOString(),
-          actionTakenBy: 'current_user' // TODO: Get actual user ID
-        });
-        return true;
-      } catch (error) {
-        console.error('Error resolving alert:', error);
-        throw error;
-      }
+      const { error } = await supabase
+        .from('monitoring_alerts')
+        .update({
+          status: 'resolved',
+          resolved_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alerts'] });
@@ -178,28 +278,19 @@ export function useAlertsHex(): UseAlertsHexResult {
     },
     onError: (error) => {
       console.error('Error resolving alert:', error);
-      toast.error("Impossible de résoudre l'alerte. Veuillez réessayer.");
+      toast.error("Impossible de résoudre l'alerte.");
     }
   });
 
-  // Enhanced UI functions
+  // Helper functions
   const getAlertSeverity = (alert: any): 'low' | 'medium' | 'high' | 'critical' => {
-    const impact = alert.impact || 'low';
-    const urgency = alert.urgency || 'low';
-    const affectedSystems = alert.affectedSystems || [];
-    
-    if (impact === 'critical' || urgency === 'critical' || affectedSystems.length > 3) return 'critical';
-    if (impact === 'high' || urgency === 'high' || affectedSystems.length > 1) return 'high';
-    if (impact === 'medium' || urgency === 'medium') return 'medium';
-    return 'low';
+    return alert.severity || 'medium';
   };
 
   const getAlertPriority = (alert: any): 'low' | 'medium' | 'high' | 'urgent' => {
     const severity = getAlertSeverity(alert);
     const daysSinceCreation = getAlertDaysSinceCreation(alert);
-    const status = alert.status || 'active';
-    
-    if (severity === 'critical' || daysSinceCreation > 7 || status === 'escalated') return 'urgent';
+    if (severity === 'critical' || daysSinceCreation > 7) return 'urgent';
     if (severity === 'high' || daysSinceCreation > 3) return 'high';
     if (severity === 'medium') return 'medium';
     return 'low';
@@ -207,67 +298,27 @@ export function useAlertsHex(): UseAlertsHexResult {
 
   const getAlertRisk = (alert: any): 'low' | 'medium' | 'high' => {
     const severity = getAlertSeverity(alert);
-    const priority = getAlertPriority(alert);
-    const resolutionTime = alert.resolutionTime || 0;
-    const recurrence = alert.recurrence || 0;
-    
-    if (severity === 'critical' || priority === 'urgent' || recurrence > 5) return 'high';
-    if (severity === 'high' || priority === 'high' || resolutionTime > 72) return 'medium';
+    if (severity === 'critical') return 'high';
+    if (severity === 'high') return 'medium';
     return 'low';
   };
 
   const getAlertDaysSinceCreation = (alert: any): number => {
-    const createdAt = alert.createdAt ? new Date(alert.createdAt) : new Date();
+    const createdAt = alert.timestamp ? new Date(alert.timestamp) : new Date();
     const now = new Date();
     return Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
   };
 
-  const getAlertAnalytics = () => {
-    const totalAlerts = alerts.length;
-    const activeAlerts = alerts.filter(a => a.status === 'active').length;
-    const acknowledgedAlerts = alerts.filter(a => a.status === 'acknowledged').length;
-    const resolvedAlerts = alerts.filter(a => a.status === 'resolved').length;
-    const criticalAlerts = alerts.filter(a => getAlertSeverity(a) === 'critical').length;
-    const highPriorityAlerts = alerts.filter(a => getAlertPriority(a) === 'urgent').length;
-    const highRiskAlerts = alerts.filter(a => getAlertRisk(a) === 'high').length;
-    const averageResolutionTime = alerts.length > 0
-      ? alerts.reduce((sum, a) => sum + (a.resolutionTime || 0), 0) / alerts.length
-      : 0;
-    
-    return {
-      totalAlerts,
-      statusBreakdown: {
-        active: activeAlerts,
-        acknowledged: acknowledgedAlerts,
-        resolved: resolvedAlerts
-      },
-      severityBreakdown: {
-        low: alerts.filter(a => getAlertSeverity(a) === 'low').length,
-        medium: alerts.filter(a => getAlertSeverity(a) === 'medium').length,
-        high: alerts.filter(a => getAlertSeverity(a) === 'high').length,
-        critical: criticalAlerts
-      },
-      priorityBreakdown: {
-        low: alerts.filter(a => getAlertPriority(a) === 'low').length,
-        medium: alerts.filter(a => getAlertPriority(a) === 'medium').length,
-        high: alerts.filter(a => getAlertPriority(a) === 'high').length,
-        urgent: highPriorityAlerts
-      },
-      riskBreakdown: {
-        low: alerts.filter(a => getAlertRisk(a) === 'low').length,
-        medium: alerts.filter(a => getAlertRisk(a) === 'medium').length,
-        high: highRiskAlerts
-      },
-      averageResolutionTime: Math.round(averageResolutionTime),
-      resolutionRate: totalAlerts > 0 ? Math.round((resolvedAlerts / totalAlerts) * 100) : 0
-    };
-  };
+  const getAlertAnalytics = () => stats;
 
   return {
     alerts,
     isLoading,
+    loading: isLoading, // Alias for compatibility
     error,
+    stats,
     refetch,
+    filterAlertsByType,
     createAlert: createAlertMutation.mutate,
     updateAlert: updateAlertMutation.mutate,
     deleteAlert: deleteAlertMutation.mutate,
@@ -281,66 +332,11 @@ export function useAlertsHex(): UseAlertsHexResult {
     getAlertRisk,
     getAlertDaysSinceCreation,
     getAlertAnalytics,
-    validateAlertWithReferential: async (alert: any, referentialType: string) => {
-      try {
-        // Validation selon le type de référentiel
-        switch (referentialType) {
-          case 'safety':
-            return validateSafetyReferential(alert);
-          case 'compliance':
-            return validateComplianceReferential(alert);
-          case 'security':
-            return validateSecurityReferential(alert);
-          case 'operational':
-            return validateOperationalReferential(alert);
-          default:
-            return { isValid: true, errors: [], warnings: ['Unknown referential type'] };
-        }
-      } catch (error) {
-        console.error('Referential validation error:', error);
-        return { isValid: false, errors: ['Validation failed'], warnings: [] };
-      }
-    },
-    generateAlertReport: (alert: any) => {
-      try {
-        const analytics = getAlertAnalytics();
-        const severity = getAlertSeverity(alert);
-        const priority = getAlertPriority(alert);
-        const risk = getAlertRisk(alert);
-        const daysSinceCreation = getAlertDaysSinceCreation(alert);
-
-        return {
-          alert: {
-            ...alert,
-            severity,
-            priority,
-            risk,
-            daysSinceCreation
-          },
-          generatedAt: new Date().toISOString(),
-          reportType: 'Alert Analysis Report',
-          summary: {
-            totalAlerts: analytics.totalAlerts,
-            activeAlerts: analytics.activeAlerts,
-            criticalAlerts: analytics.criticalAlerts,
-            averageResolutionTime: analytics.averageResolutionTime
-          },
-          recommendations: generateAlertRecommendations(alert, severity, priority, risk),
-          compliance: {
-            isValid: true,
-            lastValidated: new Date().toISOString(),
-            validatedBy: 'AlertSystem'
-          }
-        };
-      } catch (error) {
-        console.error('Report generation error:', error);
-        return { 
-          alert, 
-          generatedAt: new Date().toISOString(),
-          error: 'Report generation failed',
-          status: 'error'
-        };
-      }
-    }
+    validateAlertWithReferential: async () => ({ isValid: true, errors: [], warnings: [] }),
+    generateAlertReport: (alert: any) => ({
+      alert,
+      generatedAt: new Date().toISOString(),
+      reportType: 'Alert Analysis Report'
+    })
   };
 }

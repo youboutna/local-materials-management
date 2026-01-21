@@ -163,7 +163,16 @@ export class TenderServiceLegacy {
         .order('submitted_at', { ascending: false });
 
       if (error) throw error;
-      return (data || []) as TenderSubmissionDTO[];
+      
+      // Map database rows to DTO, handling missing fields
+      return (data || []).map((row: any) => ({
+        id: row.id,
+        tender_id: row.tender_id,
+        supplier_id: row.supplier_id || row.user_id || '',
+        status: row.status || 'pending',
+        submitted_at: row.submitted_at || row.created_at,
+        documents: row.documents || []
+      }));
     } catch (error) {
       console.error('Error getting tender submissions:', error);
       throw new Error(`Failed to get tender submissions: ${(error as Error).message}`);
