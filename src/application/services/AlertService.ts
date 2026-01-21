@@ -4,7 +4,41 @@
  */
 
 import { ProjectAlert } from '@/domain/entities/Workspace';
-import { ProjectAlertDTO, CreateProjectAlertRequestDto, UpdateProjectAlertRequestDto } from '@/dtos/transforms/shared';
+
+// Simplified DTO interfaces
+interface ProjectAlertDTO {
+  id: string;
+  project_id: string;
+  type: string;
+  severity: string;
+  title: string;
+  description?: string;
+  created_at: string;
+  updated_at?: string;
+  acknowledged?: boolean;
+  acknowledged_at?: string;
+  acknowledged_by?: string;
+  resolved?: boolean;
+  resolved_at?: string;
+  resolved_by?: string;
+}
+
+interface CreateProjectAlertRequestDto {
+  project_id: string;
+  type: string;
+  severity: string;
+  title: string;
+  description?: string;
+}
+
+interface UpdateProjectAlertRequestDto {
+  type?: string;
+  severity?: string;
+  title?: string;
+  description?: string;
+  acknowledged?: boolean;
+  resolved?: boolean;
+}
 
 // In-memory storage for alerts (placeholder)
 const alertsStore: Map<string, ProjectAlert> = new Map();
@@ -19,11 +53,10 @@ export class AlertService {
       const alert: ProjectAlert = {
         id,
         projectId: alertData.project_id,
-        type: alertData.type as any,
-        severity: alertData.severity as any,
+        type: alertData.type,
+        severity: alertData.severity,
         title: alertData.title,
-        message: alertData.message,
-        status: 'active',
+        description: alertData.description,
         createdAt: new Date(),
         updatedAt: new Date(),
         acknowledged: false,
@@ -70,7 +103,7 @@ export class AlertService {
   async getActiveAlerts(): Promise<ProjectAlertDTO[]> {
     try {
       const alerts = Array.from(alertsStore.values())
-        .filter(a => a.status === 'active');
+        .filter(a => !a.resolved);
       return alerts.map(a => this.toDTO(a));
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error';
@@ -137,7 +170,7 @@ export class AlertService {
   /**
    * Resolve an alert
    */
-  async resolveAlert(id: string, userId: string, resolution?: string): Promise<ProjectAlertDTO> {
+  async resolveAlert(id: string, userId: string): Promise<ProjectAlertDTO> {
     try {
       const existing = alertsStore.get(id);
       if (!existing) throw new Error('Alert not found');
@@ -147,8 +180,6 @@ export class AlertService {
         resolved: true,
         resolvedAt: new Date(),
         resolvedBy: userId,
-        status: 'resolved',
-        resolution,
         updatedAt: new Date()
       };
       alertsStore.set(id, updated);
@@ -206,21 +237,19 @@ export class AlertService {
   private toDTO(alert: ProjectAlert): ProjectAlertDTO {
     return {
       id: alert.id,
-      projectId: alert.projectId,
+      project_id: alert.projectId,
       type: alert.type,
       severity: alert.severity,
       title: alert.title,
-      message: alert.message,
-      status: alert.status,
-      createdAt: alert.createdAt.toISOString(),
-      updatedAt: alert.updatedAt?.toISOString(),
+      description: alert.description,
+      created_at: alert.createdAt.toISOString(),
+      updated_at: alert.updatedAt?.toISOString(),
       acknowledged: alert.acknowledged,
-      acknowledgedAt: alert.acknowledgedAt?.toISOString(),
-      acknowledgedBy: alert.acknowledgedBy,
+      acknowledged_at: alert.acknowledgedAt?.toISOString(),
+      acknowledged_by: alert.acknowledgedBy,
       resolved: alert.resolved,
-      resolvedAt: alert.resolvedAt?.toISOString(),
-      resolvedBy: alert.resolvedBy,
-      resolution: alert.resolution
+      resolved_at: alert.resolvedAt?.toISOString(),
+      resolved_by: alert.resolvedBy
     };
   }
 

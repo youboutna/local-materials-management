@@ -2,7 +2,7 @@
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { Inspection, InspectionStatus } from '@/domain/entities/Inspection';
 import { AppError, ErrorLogger } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/application/services/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export class InspectionService {
   private repository: IInspectionRepository;
@@ -50,9 +50,19 @@ export class InspectionService {
   /**
    * Create inspection
    */
-  async createInspection(data: Omit<Inspection, 'id'>): Promise<Inspection> {
+  async createInspection(data: Partial<Inspection>): Promise<Inspection> {
     try {
-      return await this.repository.create(data);
+      const newInspection = Inspection.create({
+        id: crypto.randomUUID(),
+        projectId: data.projectId || '',
+        phaseId: data.phaseId || undefined,
+        stepId: data.stepId || undefined,
+        inspector: data.inspector || '',
+        date: data.date || new Date().toISOString(),
+        comments: data.comments || undefined
+      });
+      await this.repository.save(newInspection);
+      return newInspection;
     } catch (error) {
       ErrorLogger.log(error as Error, 'InspectionService.createInspection');
       throw error;
@@ -64,7 +74,12 @@ export class InspectionService {
    */
   async updateInspection(id: string, updates: Partial<Inspection>): Promise<Inspection> {
     try {
-      return await this.repository.update(id, updates);
+      const existing = await this.repository.findById(id);
+      if (!existing) {
+        throw new AppError('NOT_FOUND' as any, 'Inspection not found');
+      }
+      await this.repository.update(id, updates);
+      return { ...existing, ...updates } as Inspection;
     } catch (error) {
       ErrorLogger.log(error as Error, 'InspectionService.updateInspection');
       throw error;
@@ -79,90 +94,6 @@ export class InspectionService {
       await this.repository.delete(id);
     } catch (error) {
       ErrorLogger.log(error as Error, 'InspectionService.deleteInspection');
-      throw error;
-    }
-  }
-
-  // ============= Legacy Methods for Backward Compatibility =============
-
-  /**
-   * Get inspections by project ID (Legacy method)
-   */
-  static async getInspectionsByProject(projectId: string): Promise<Inspection[]> {
-    try {
-      // Import the legacy service for backward compatibility
-      const { InspectionService: LegacyInspectionService } = await import('@/services/InspectionService');
-      return await LegacyInspectionService.getInspectionsByProject(projectId);
-    } catch (error) {
-      ErrorLogger.log(error as Error, 'InspectionService.getInspectionsByProject');
-      throw error;
-    }
-  }
-
-  /**
-   * Create inspection (Legacy method)
-   */
-  static async createInspection(data: any): Promise<any> {
-    try {
-      // Import the legacy service for backward compatibility
-      const { InspectionService: LegacyInspectionService } = await import('@/services/InspectionService');
-      return await LegacyInspectionService.createInspection(data);
-    } catch (error) {
-      ErrorLogger.log(error as Error, 'InspectionService.createInspection');
-      throw error;
-    }
-  }
-
-  /**
-   * Update inspection (Legacy method)
-   */
-  static async updateInspection(id: string, data: any): Promise<any> {
-    try {
-      // Import the legacy service for backward compatibility
-      const { InspectionService: LegacyInspectionService } = await import('@/services/InspectionService');
-      return await LegacyInspectionService.updateInspection(id, data);
-    } catch (error) {
-      ErrorLogger.log(error as Error, 'InspectionService.updateInspection');
-      throw error;
-    }
-  }
-
-  /**
-   * Delete inspection (Legacy method)
-   */
-  static async deleteInspection(id: string): Promise<void> {
-    try {
-      // Import the legacy service for backward compatibility
-      const { InspectionService: LegacyInspectionService } = await import('@/services/InspectionService');
-      await LegacyInspectionService.deleteInspection(id);
-    } catch (error) {
-      ErrorLogger.log(error as Error, 'InspectionService.deleteInspection');
-      throw error;
-    }
-  }
-
-  /**
-   * Get inspection by ID (Legacy method)
-   */
-  static async getInspectionById(id: string): Promise<any> {
-    try {
-      // Import the legacy service for backward compatibility
-      const { InspectionService: LegacyInspectionService } = await import('@/services/InspectionService');
-      return await LegacyInspectionService.getInspectionById(id);
-    } catch (error) {
-      ErrorLogger.log(error as Error, 'InspectionService.getInspectionById');
-      throw error;
-    }
-  }
-
-  /**
-   * Get inspections by project
-   */
-  async getInspectionsByProject(projectId: string): Promise<Inspection[]> {
-    try {
-      return await this.repository.findByProjectId(projectId);
-    } catch (error) {
-      ErrorLogger.log(error as Error, 'InspectionService.getInspectionsByProject');
       throw error;
     }
   }
@@ -252,70 +183,6 @@ export class InspectionService {
   }
 
   /**
-   * Create new inspection
-   */
-  async createInspection(inspection: Omit<Inspection, 'id' | 'createdAt' | 'updatedAt'>): Promise<Inspection> {
-    try {
-      const newInspection = new Inspection(
-        crypto.randomUUID(),
-        inspection.projectId,
-        inspection.phaseId,
-        inspection.stepId,
-        inspection.inspector,
-        inspection.date,
-        inspection.status,
-        inspection.progressAtInspection,
-        inspection.comments,
-        inspection.documents,
-        new Date().toISOString(),
-        new Date().toISOString()
-      );
-
-      await this.repository.save(newInspection);
-      return newInspection;
-    } catch (error) {
-      ErrorLogger.log(error as Error, 'InspectionService.createInspection');
-      throw error;
-    }
-  }
-
-  /**
-   * Update inspection
-   */
-  async updateInspection(id: string, updates: Partial<Inspection>): Promise<Inspection> {
-    try {
-      const existingInspection = await this.repository.findById(id);
-      if (!existingInspection) {
-        throw new AppError('NOT_FOUND' as any, 'Inspection not found');
-      }
-
-      await this.repository.update(id, updates);
-      const updatedInspection = { ...existingInspection, ...updates } as Inspection;
-      return updatedInspection;
-    } catch (error) {
-      ErrorLogger.log(error as Error, 'InspectionService.updateInspection');
-      throw error;
-    }
-  }
-
-  /**
-   * Delete inspection
-   */
-  async deleteInspection(id: string): Promise<void> {
-    try {
-      const existingInspection = await this.repository.findById(id);
-      if (!existingInspection) {
-        throw new AppError('NOT_FOUND' as any, 'Inspection not found');
-      }
-
-      await this.repository.delete(id);
-    } catch (error) {
-      ErrorLogger.log(error as Error, 'InspectionService.deleteInspection');
-      throw error;
-    }
-  }
-
-  /**
    * Complete inspection
    */
   async completeInspection(id: string, progress: number, comments?: string): Promise<Inspection> {
@@ -333,8 +200,7 @@ export class InspectionService {
       };
 
       await this.repository.update(id, updates);
-      const completedInspection = { ...existingInspection, ...updates } as Inspection;
-      return completedInspection;
+      return { ...existingInspection, ...updates } as Inspection;
     } catch (error) {
       ErrorLogger.log(error as Error, 'InspectionService.completeInspection');
       throw error;
@@ -358,8 +224,7 @@ export class InspectionService {
       };
 
       await this.repository.update(id, updates);
-      const cancelledInspection = { ...existingInspection, ...updates } as Inspection;
-      return cancelledInspection;
+      return { ...existingInspection, ...updates } as Inspection;
     } catch (error) {
       ErrorLogger.log(error as Error, 'InspectionService.cancelInspection');
       throw error;
@@ -388,5 +253,31 @@ export class InspectionService {
       ErrorLogger.log(error as Error, 'InspectionService.getAverageCompletionTime');
       throw error;
     }
+  }
+
+  // Static methods for backward compatibility
+  static async getInspectionsByProject(projectId: string): Promise<Inspection[]> {
+    const service = new InspectionService();
+    return service.getInspectionsByProject(projectId);
+  }
+
+  static async createInspection(data: any): Promise<Inspection> {
+    const service = new InspectionService();
+    return service.createInspection(data);
+  }
+
+  static async updateInspection(id: string, data: any): Promise<Inspection> {
+    const service = new InspectionService();
+    return service.updateInspection(id, data);
+  }
+
+  static async deleteInspection(id: string): Promise<void> {
+    const service = new InspectionService();
+    return service.deleteInspection(id);
+  }
+
+  static async getInspectionById(id: string): Promise<Inspection | null> {
+    const service = new InspectionService();
+    return service.getInspectionById(id);
   }
 }

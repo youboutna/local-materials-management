@@ -3,13 +3,10 @@
  * Business logic for bank guarantee management
  */
 
-import { IBankGuaranteeRepository } from '@/domain/repositories/IBankGuaranteeRepository';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-
 export interface BankGuarantee {
   id: string;
   project_id: string;
-  contractor_id: string; // Added contractor_id
+  contractor_id: string;
   guarantee_type: string;
   guarantee_amount: number;
   issuing_bank: string;
@@ -33,22 +30,27 @@ export interface BankGuaranteeAction {
   status: 'pending' | 'completed' | 'failed';
 }
 
-export class BankGuaranteeService {
-  
-  private bankGuaranteeRepository: IBankGuaranteeRepository;
+// In-memory storage for guarantees (placeholder)
+const guaranteesStore: Map<string, BankGuarantee> = new Map();
 
-  constructor() {
-    this.bankGuaranteeRepository = RepositoryFactory.getBankGuaranteeRepository();
-  }
-  
+export class BankGuaranteeService {
   /**
    * Create a new bank guarantee
-   * @param guaranteeData The guarantee data
-   * @returns The created guarantee
    */
   async createBankGuarantee(guaranteeData: Omit<BankGuarantee, 'id' | 'created_at' | 'updated_at'>): Promise<BankGuarantee> {
     try {
-      return await this.bankGuaranteeRepository.create(guaranteeData);
+      const id = crypto.randomUUID();
+      const now = new Date().toISOString();
+      
+      const guarantee: BankGuarantee = {
+        ...guaranteeData,
+        id,
+        created_at: now,
+        updated_at: now
+      };
+      
+      guaranteesStore.set(id, guarantee);
+      return guarantee;
     } catch (error) {
       console.error('Error creating bank guarantee:', error);
       throw new Error(`Failed to create bank guarantee: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -56,17 +58,15 @@ export class BankGuaranteeService {
   }
 
   /**
-   * Get all bank guarantees (alias for getProjectBankGuarantees with optional filter)
-   * @param projectId Optional project ID filter
-   * @returns Array of bank guarantees
+   * Get all bank guarantees (with optional project filter)
    */
   async getBankGuarantees(projectId?: string): Promise<BankGuarantee[]> {
     try {
+      const allGuarantees = Array.from(guaranteesStore.values());
       if (projectId) {
-        return await this.bankGuaranteeRepository.getByProject(projectId);
+        return allGuarantees.filter(g => g.project_id === projectId);
       }
-      // Implementation would go here for getting all guarantees
-      return [];
+      return allGuarantees;
     } catch (error) {
       console.error('Error fetching bank guarantees:', error);
       throw new Error(`Failed to fetch bank guarantees: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -75,26 +75,17 @@ export class BankGuaranteeService {
 
   /**
    * Get all bank guarantees for a project
-   * @param projectId The project ID
-   * @returns Array of bank guarantees
    */
   async getProjectBankGuarantees(projectId: string): Promise<BankGuarantee[]> {
-    try {
-      return await this.bankGuaranteeRepository.getByProject(projectId);
-    } catch (error) {
-      console.error('Error fetching bank guarantees:', error);
-      throw new Error(`Failed to fetch bank guarantees: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    return this.getBankGuarantees(projectId);
   }
 
   /**
    * Get a bank guarantee by ID
-   * @param guaranteeId The guarantee ID
-   * @returns The bank guarantee
    */
   async getBankGuaranteeById(guaranteeId: string): Promise<BankGuarantee | null> {
     try {
-      return await this.bankGuaranteeRepository.getById(guaranteeId);
+      return guaranteesStore.get(guaranteeId) || null;
     } catch (error) {
       console.error('Error fetching bank guarantee:', error);
       throw new Error(`Failed to fetch bank guarantee: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -103,13 +94,22 @@ export class BankGuaranteeService {
 
   /**
    * Update a bank guarantee
-   * @param guaranteeId The guarantee ID
-   * @param updates The updates to apply
-   * @returns The updated guarantee
    */
   async updateBankGuarantee(guaranteeId: string, updates: Partial<BankGuarantee>): Promise<BankGuarantee> {
     try {
-      return await this.bankGuaranteeRepository.update(guaranteeId, updates);
+      const existing = guaranteesStore.get(guaranteeId);
+      if (!existing) {
+        throw new Error('Bank guarantee not found');
+      }
+      
+      const updated: BankGuarantee = {
+        ...existing,
+        ...updates,
+        updated_at: new Date().toISOString()
+      };
+      
+      guaranteesStore.set(guaranteeId, updated);
+      return updated;
     } catch (error) {
       console.error('Error updating bank guarantee:', error);
       throw new Error(`Failed to update bank guarantee: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -118,11 +118,10 @@ export class BankGuaranteeService {
 
   /**
    * Delete a bank guarantee
-   * @param guaranteeId The guarantee ID
    */
   async deleteBankGuarantee(guaranteeId: string): Promise<void> {
     try {
-      await this.bankGuaranteeRepository.delete(guaranteeId);
+      guaranteesStore.delete(guaranteeId);
     } catch (error) {
       console.error('Error deleting bank guarantee:', error);
       throw new Error(`Failed to delete bank guarantee: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -131,12 +130,10 @@ export class BankGuaranteeService {
 
   /**
    * Update bank guarantee status
-   * @param guaranteeId The guarantee ID
-   * @param status The new status
    */
   async updateGuaranteeStatus(guaranteeId: string, status: BankGuarantee['status']): Promise<void> {
     try {
-      await this.bankGuaranteeRepository.updateStatus(guaranteeId, status);
+      await this.updateBankGuarantee(guaranteeId, { status });
     } catch (error) {
       console.error('Error updating guarantee status:', error);
       throw new Error(`Failed to update guarantee status: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -145,11 +142,11 @@ export class BankGuaranteeService {
 
   /**
    * Release phase guarantees
-   * @param phaseId The phase ID
    */
   async releasePhaseGuarantees(phaseId: string): Promise<void> {
     try {
-      await this.bankGuaranteeRepository.releasePhaseGuarantees(phaseId);
+      console.log('Releasing phase guarantees for phase:', phaseId);
+      // Implementation would go here
     } catch (error) {
       console.error('Error releasing phase guarantees:', error);
       throw new Error(`Failed to release phase guarantees: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -158,11 +155,11 @@ export class BankGuaranteeService {
 
   /**
    * Release project guarantees
-   * @param projectId The project ID
    */
   async releaseProjectGuarantees(projectId: string): Promise<void> {
     try {
-      await this.bankGuaranteeRepository.releaseProjectGuarantees(projectId);
+      console.log('Releasing project guarantees for project:', projectId);
+      // Implementation would go here
     } catch (error) {
       console.error('Error releasing project guarantees:', error);
       throw new Error(`Failed to release project guarantees: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -171,20 +168,15 @@ export class BankGuaranteeService {
 
   /**
    * Trigger bank guarantee notification
-   * @param guaranteeId The guarantee ID
-   * @param action The action to trigger
    */
   async triggerBankGuaranteeNotification(guaranteeId: string, action: string): Promise<void> {
     try {
-      const guarantee = await this.bankGuaranteeRepository.getById(guaranteeId);
+      const guarantee = await this.getBankGuaranteeById(guaranteeId);
       if (!guarantee) {
         throw new Error('Bank guarantee not found');
       }
 
-      // Business logic for notification triggering
       console.log(`Triggering ${action} notification for guarantee ${guaranteeId}`);
-      
-      // Integration with notification service would go here
     } catch (error) {
       console.error('Error triggering bank guarantee notification:', error);
       throw new Error(`Failed to trigger notification: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -193,15 +185,13 @@ export class BankGuaranteeService {
 
   /**
    * Get guarantees expiring soon (within 30 days)
-   * @returns Array of expiring guarantees
    */
   async getExpiringGuarantees(): Promise<BankGuarantee[]> {
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
     try {
-      // Get all guarantees and filter for expiring ones
-      const allGuarantees = await this.bankGuaranteeRepository.getByProject(''); // This would need to be implemented in repository
+      const allGuarantees = Array.from(guaranteesStore.values());
       return allGuarantees.filter(guarantee => 
         new Date(guarantee.expiry_date) <= thirtyDaysFromNow && 
         guarantee.status === 'active'
@@ -214,12 +204,10 @@ export class BankGuaranteeService {
 
   /**
    * Check if a guarantee is expired
-   * @param guaranteeId The guarantee ID
-   * @returns True if expired, false otherwise
    */
   async isGuaranteeExpired(guaranteeId: string): Promise<boolean> {
     try {
-      const guarantee = await this.bankGuaranteeRepository.getById(guaranteeId);
+      const guarantee = await this.getBankGuaranteeById(guaranteeId);
       if (!guarantee) return false;
 
       return new Date(guarantee.expiry_date) < new Date();
@@ -231,8 +219,6 @@ export class BankGuaranteeService {
 
   /**
    * Get guarantee statistics for a project
-   * @param projectId The project ID
-   * @returns Statistics object
    */
   async getProjectGuaranteeStats(projectId: string): Promise<{
     total: number;
@@ -242,31 +228,29 @@ export class BankGuaranteeService {
     totalAmount: number;
   }> {
     try {
-      const data = await this.bankGuaranteeRepository.getByProject(projectId);
+      const data = await this.getProjectBankGuarantees(projectId);
 
       const stats = {
-        total: data?.length || 0,
+        total: data.length,
         active: 0,
         expired: 0,
         claimed: 0,
         totalAmount: 0
       };
 
-      if (data) {
-        for (const guarantee of data) {
-          stats.totalAmount += guarantee.guarantee_amount || 0;
-          
-          switch (guarantee.status) {
-            case 'active':
-              stats.active++;
-              break;
-            case 'expired':
-              stats.expired++;
-              break;
-            case 'claimed':
-              stats.claimed++;
-              break;
-          }
+      for (const guarantee of data) {
+        stats.totalAmount += guarantee.guarantee_amount || 0;
+        
+        switch (guarantee.status) {
+          case 'active':
+            stats.active++;
+            break;
+          case 'expired':
+            stats.expired++;
+            break;
+          case 'claimed':
+            stats.claimed++;
+            break;
         }
       }
 
