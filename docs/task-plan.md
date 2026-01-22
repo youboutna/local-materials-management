@@ -604,6 +604,11 @@ grep -r "supabase\." src/application/services/ --exclude-dir=node-modules | wc -
 - **IMPLÉMENTATION COMPLÈTE** : Créer tous les adapters/services avant de supprimer les références Supabase
 - **VÉRIFICATION TABLES** : Confirmer l'existence des tables Supabase dans types.ts avant utilisation
 - **DONNÉES RÉELLES** : Toujours utiliser les vraies données de la base de données
+- **SERVICES LEGACY (DEPRECATED)** : `src/services/*` est déprécié. Toujours chercher l'équivalent dans `src/application/services/*` et faire les changements dans `src/application/services/*`.
+- **TYPES UI + TRANSFORMATIONS** : les types/DTO nécessaires à l'UI et aux transformations sont dans `src/dtos/*`.
+- **TYPES LEGACY (MIGRATION UNIQUEMENT)** : `src/types/*` est déprécié, à utiliser seulement pour récupérer des types résiduels pendant la migration.
+- **RÉFÉRENCE SCHÉMA SUPABASE** : `src/integrations/supabase/types.ts` est côté infrastructure (Supabase). À lire comme source de vérité DB pour enrichir/aligner `src/domain/*` et `src/dtos/*`.
+- **USE-CASES (DEPRECATED)** : `src/application/use-cases/**` est **déprécié**. Les hooks hexagonaux doivent utiliser directement les services hexagonaux dans `src/application/services/*` via `RepositoryFactory`. PAS de création de nouveaux use-cases.
 - **SUPPRESSION RÉFÉRENCES** : Ne supprimer les appels directs Supabase qu'après validation des adapters complets
 - **MODÈLES DE DONNÉES** : Les .from('*') sont basés sur les modèles de src/domain/entities/* et src/integrations/supabase/types.ts
 - **VALIDATION TYPES** : Respecter les types définis dans les entités de domaine et les types Supabase

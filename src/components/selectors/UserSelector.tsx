@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Users, Search, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { useUsersSelector, UserProfile } from '@/hooks/hexagonal/useSelectorsHex';
+import { useUsersSelector, UserProfile } from '@/hooks/hexagonal'
 
 interface UserSelectorProps {
   value?: string;
@@ -22,7 +22,7 @@ const UserSelector: React.FC<UserSelectorProps> = ({
   label = "Utilisateur",
   disabled = false,
   required = false,
-  placeholder = "Sélectionner un utilisateur",
+  placeholder = "SÃ©lectionner un utilisateur",
   roleFilter
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -111,7 +111,7 @@ const UserSelector: React.FC<UserSelectorProps> = ({
                 <SelectItem value="no-users" disabled>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Users className="h-4 w-4" />
-                    <span>Aucun utilisateur trouvé</span>
+                    <span>Aucun utilisateur trouvÃ©</span>
                   </div>
                 </SelectItem>
               )}

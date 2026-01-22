@@ -15,6 +15,8 @@ export * from './SupplierDTO';
 export * from './PaymentDTO';
 export * from './TaskDTO';
 export * from './EmployeeDTO';
+export * from './AlertDTO';
+export * from './AuthDTO';
 
 // DTOs nouvellement migrés (critiques pour décomptes)
 export * from './AutomaticDecompteDTO';

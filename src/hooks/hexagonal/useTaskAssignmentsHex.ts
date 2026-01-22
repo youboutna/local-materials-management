@@ -315,7 +315,3 @@ export function useTaskAssignmentHex(id: string | undefined) {
 
   return { task, isLoading, error, refetch, updateTask };
 }
-
-// Export pour compatibilité ascendante
-export const useTaskAssignments = useTaskAssignmentsHex;
-export const useProjectsForTaskAssignments = useTaskAssignmentsHex;

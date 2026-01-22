@@ -7,6 +7,9 @@ import { toast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { SupplierPortalService } from '@/application/services/SupplierPortalService';
+import { PaymentRequestService } from '@/application/services/PaymentRequestService';
+import { StorageService } from '@/application/services/StorageService';
+import { DocumentService } from '@/application/services/DocumentService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface Supplier {
@@ -297,13 +300,16 @@ export const useSupplierTasksHex = (supplierId: string) => {
   });
 };
 
-export const useSupplierPaymentRequestsHex = (supplierId: string) => {
-  // Placeholder - would use PaymentRequestService
+export const useSupplierPortalPaymentRequestsHex = (supplierId: string) => {
+  // Use real PaymentRequestService with proper constructor
+  const paymentRequestService = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
+  
   return useQuery({
     queryKey: ['supplier-payment-requests', supplierId],
     queryFn: async () => {
-      console.log('Payment requests not implemented for supplier:', supplierId);
-      return [];
+      const allRequests = await paymentRequestService.getAllPaymentRequests();
+      // Filter by supplier_id
+      return allRequests.filter(request => request.supplier_id === supplierId);
     },
     enabled: !!supplierId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -324,7 +330,9 @@ export const useSupplierInvoicesHex = (supplierName: string) => {
 };
 
 export const useUploadDocumentHex = () => {
-  const supplierService = SupplierPortalService.create();
+  const supplierService = new SupplierPortalService(RepositoryFactory.getSupplierRepository());
+  const storageService = new StorageService(RepositoryFactory.getStorageRepository());
+  const documentService = new DocumentService();
   const queryClient = useQueryClient();
   
   return useMutation({
@@ -334,19 +342,21 @@ export const useUploadDocumentHex = () => {
       title: string;
       description: string;
     }) => {
-      // Create file URL (in real implementation, would use StorageService)
-      const fileUrl = `https://example.com/files/${file.name}`;
+      // Use real StorageService for file upload
+      const bucket = 'supplier-documents';
+      const path = `${userId}/${file.name}`;
+      const uploadResult = await storageService.uploadFile(bucket, path, file);
       
-      await supplierService.uploadDocument({
-        title,
+      // Upload document using SupplierPortalService
+      await supplierService.uploadDocument(userId, file, title);
+      
+      // Update document with additional metadata using DocumentService
+      await documentService.updateDocument(uploadResult.path, {
         description,
-        fileUrl,
-        fileSize: file.size,
-        documentType: file.type,
-        supplierId: userId
+        status: 'uploaded'
       });
       
-      return { success: true, id: `doc-${Date.now()}` };
+      return { success: true, id: uploadResult.path };
     },
     onSuccess: () => {
       toast({
@@ -362,5 +372,24 @@ export const useUploadDocumentHex = () => {
         variant: 'destructive',
       });
     }
+  });
+};
+
+// Supplier Portal Documents
+export const useSupplierPortalDocumentsHex = (supplierId: string) => {
+  const documentService = new DocumentService();
+  
+  return useQuery({
+    queryKey: ['supplier-portal-documents', supplierId],
+    queryFn: async () => {
+      // Get all documents and filter by supplier metadata
+      const allDocuments = await documentService.getProjectDocuments(supplierId);
+      // Filter documents that belong to this supplier
+      return allDocuments.filter(doc => 
+        doc.fileUrl?.includes(`supplier-documents/${supplierId}`)
+      );
+    },
+    enabled: !!supplierId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

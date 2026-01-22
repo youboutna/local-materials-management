@@ -1,9 +1,413 @@
 /**
- * Export all hexagonal hooks
- * Ces hooks encapsulent l'architecture hexagonale pour une utilisation facile dans les composants React
+ * Hexagonal Hooks Index
+ * Central export point for all hexagonal architecture hooks
+ * 
+ * This file exports all hexagonal hooks and their types.
+ * New hooks are automatically available without manual export updates.
  */
 
-// Export types from centralized types file
+// ==================== CORE HOOKS ====================
+// Authentication
+export { 
+  useAuthHex as useAuth,
+  useAuthHex, 
+  useLoginHex, 
+  useRegisterHex 
+} from './useAuthHex';
+export { useAuthUserHex } from './useAuthUserHex';
+
+// Projects
+export { 
+  useProjects, 
+  useProjectsHex, 
+  useProjectById, 
+  useProjectsByStatus, 
+  useProjectHex 
+} from './useProjectsHex';
+
+export { useProjectsFull } from './useProjectsFull';
+export { 
+  useProjectCalculations, 
+  useProjectsEnhanced 
+} from './useProjectsEnhanced';
+export { useProjectEditHex } from './useProjectEditHex';
+export { useProjectPhasesHex } from './useProjectPhasesHex';
+export { useProjectMaterialsHex } from './useProjectMaterialsHex';
+
+// Suppliers
+export { 
+  useSuppliersHex, 
+  useSuppliersBySpecialization, 
+  useSupplierHex 
+} from './useSuppliersHex';
+export { useActiveSuppliersHex } from './useActiveSuppliersHex';
+
+// Materials
+export { 
+  useMaterialsHex, 
+  useMaterialHex, 
+  useMaterialsByCategory, 
+  useMaterialById, 
+  useLowStockMaterials 
+} from './useMaterialsHex';
+export { 
+  useMaterialsEnhanced, 
+  useMaterialCalculations 
+} from './useMaterialsEnhanced';
+
+// Inspections
+export { 
+  useInspectionsHex, 
+  useInspectionHex 
+} from './useInspectionsHex';
+export { useEnhancedInspectionCrudHex } from './useEnhancedInspectionCrudHex';
+export { useInspectionExecutionHex } from './useInspectionExecutionHex';
+
+// Real-time
+export { 
+  useRealtimeHex,
+  type UseRealtimeOptions
+} from './useRealtimeHex';
+
+// Users
+export { useUsersHex } from './useUsersHex';
+export { useUserManagementHex } from './useUserManagementHex';
+export { useCurrentUserHex } from './useSupplierSubmissionsHex';
+
+// Tasks
+export { 
+  useTasksHex, 
+  useTaskHex 
+} from './useTasksHex';
+export { useKanbanTasks } from './useKanbanBoardHex';
+export { useTaskDependenciesHex } from './useTaskDependenciesHex';
+
+// Documents
+export { 
+  useDocumentsHex, 
+  useDocumentCreate, 
+  useDocumentUpdate, 
+  useDocumentDelete, 
+  useDocumentsList, 
+  useDocumentsByProject, 
+  useDocumentById, 
+  useTenderDocuments, 
+  useWorkflowStepDocuments 
+} from './useDocumentsHex';
+
+// ==================== MANAGEMENT HOOKS ====================
+// Task & Project Management
+export { 
+  useTaskAssignmentsHex, 
+  useTaskAssignmentHex 
+} from './useTaskAssignmentsHex';
+export { 
+  usePhaseHex, 
+  usePhasesHex 
+} from './usePhasesHex';
+export { 
+  useProjectTasks, 
+  useCreateProjectTask, 
+  useUpdateProjectTask, 
+  useDeleteProjectTask,
+  useProjectPhasesForTasks 
+} from './useEnhancedTasksHex';
+
+// Phase Management
+export { 
+  usePhasePayments, 
+  useAddPhasePayment, 
+  useDeletePhasePayment 
+} from './usePhasePaymentsHex';
+export { usePhaseInspectionsHex } from './usePhaseInspectionsHex';
+export { usePhaseMonitoringSummaryHex } from './usePhaseMonitoringSummaryHex';
+export { usePhaseDocuments } from './usePhaseDocumentsHex';
+
+// Monitoring & Compliance
+export { 
+  useBankGuaranteesHex, 
+  useInsurancesHex, 
+  useNotificationsHex, 
+  usePaymentBlocksHex 
+} from './useMonitoringHex';
+export { useComplianceHex } from './useComplianceHex';
+export { useAlertsHex } from './useAlertsHex';
+export { useInspectionMonitoringHex } from './useInspectionMonitoringHex';
+
+// Tenders & Documents
+export { 
+  useTendersHex, 
+  useTenderHex, 
+  useTenderSubmission, 
+  useSubmissionDocuments, 
+  useSaveSubmissionEvaluation, 
+  useProjectPhasesForTender, 
+  useProjectPhasesForLots 
+} from './useTendersHex';
+export { 
+  useTenders, 
+  useProjectsForTenders, 
+  useTenderMutation, 
+  useDeleteTender 
+} from './useTenderCrudHex';
+export { 
+  useTenderDocumentsList, 
+  useWorkflowStepDocumentsList, 
+  useUploadTenderDocument 
+} from './useTenderDocumentsHex';
+export { useTenderEvaluationHex } from './useTenderEvaluationHex';
+
+// ==================== ENHANCED FEATURES ====================
+// Analytics & KPIs
+export { 
+  useProjectAnalytics, 
+  useProjectKPIs, 
+  useProjectCompliance 
+} from './useProjectAnalyticsHex';
+export { useKPIMetricsHex } from './useKPIMetricsHex';
+export { useMonitoringStatsHex } from './useMonitoringStatsHex';
+
+// Payment Management
+export { 
+  usePaymentRequests, 
+  usePaymentRequestsBySupplier, 
+  usePaymentRequestsByProject 
+} from './usePaymentRequestsHexNew';
+export { usePaymentsHex } from './usePaymentsHex';
+export { usePaymentCrud } from './usePaymentCrudHex';
+export { usePaymentActionsHex } from './usePaymentActionsHex';
+export { useInspectionPaymentValidationHex } from './useInspectionPaymentValidationHex';
+export { usePaymentValidationHex } from './usePaymentValidationHex';
+export { usePaymentWorkflowHex } from './usePaymentWorkflowHex';
+export { usePaymentStatsHex } from './usePaymentStatsHex';
+
+// Quantity Takeoff
+export { 
+  useMaterialsForTakeoff, 
+  useCreateQuantityTakeoff 
+} from './useQuantityTakeoffHex';
+export { useQuantityTakeoffsHex } from './useQuantityTakeoffsHex';
+
+// Inspection Management
+export { 
+  useInspectionsList, 
+  useCreateInspection, 
+  useUpdateInspection, 
+  useDeleteInspection 
+} from './useInspectionsCrudHex';
+export { useInspectionsListHex } from './useInspectionsListHex';
+export { useInspectionWorkflowHex } from './useInspectionWorkflowHex';
+
+// ==================== SUPPLIER PORTAL ====================
+export { useSupplierPortalHex } from './useSupplierPortalHex';
+export { 
+  useSupplierAuthHex, 
+  useSupplierProfileHex, 
+  useSupplierDocumentsHex, 
+  useSupplierSharedDocumentsHex, 
+  useSupplierTasksHex, 
+  useSupplierNotificationsHex, 
+  useSupplierPaymentRequestsHex, 
+  useSupplierParsedInvoicesHex, 
+  useUploadSupplierDocumentHex, 
+  useAddTaskCommentHex, 
+  useMarkTaskCompletedHex 
+} from './useSupplierPortalCompleteHex';
+export { 
+  useSupplierAuthHex as useSupplierDashboardAuthHex,
+  useSupplierProfileHex as useSupplierDashboardProfileHex,
+  useSupplierNotificationsHex as useSupplierDashboardNotificationsHex,
+  useSupplierPaymentsHex,
+  useSupplierDocumentsHex as useSupplierDashboardDocumentsHex
+} from './useSupplierDashboardHex';
+export { 
+  useSupplierSubmissionsHex, 
+  useSubmissionDocumentsHex,
+  useSubmissionDocumentsList,
+  useSubmissionActivityLogs,
+  useSubmissionStatsHex 
+} from './useSupplierSubmissionsHex';
+export { useSupplierInfo } from './usePhasePaymentsHex';
+
+// Unified Supplier Portal
+export { 
+  useSupplierPortalAuthHex, 
+  useFetchSupplierProfileHex, 
+  useSupplierLoginHex, 
+  useSupplierSignUpHex, 
+  useSupplierLogoutHex,
+  useSupplierPortalPaymentRequestsHex,
+  useSupplierPortalDocumentsHex,
+  useSupplierNotificationsHex as useSupplierPortalNotificationsHex,
+  useCreateTaskCommentHex as useAddSupplierTaskCommentHex
+} from './useUnifiedSupplierPortalHex';
+
+// ==================== UTILITY & SELECTORS ====================
+export { 
+  useMaterialsSelector, 
+  useSuppliersSelector, 
+  useUsersSelector, 
+  useProjectsSelector, 
+  useEmployeesSelector, 
+  useInspectorsSelector, 
+  useProjectTenders 
+} from './useSelectorsHex';
+
+// Employees
+export { useEmployeesHex } from './useEmployeesHex';
+export { useActiveEmployeesHex } from './useActiveEmployeesHex';
+export { 
+  useEmployeesList, 
+  useCreateEmployee, 
+  useUpdateEmployee, 
+  useDeleteEmployee 
+} from './useEmployeeManagementHex';
+
+// Stakeholders
+export { useStakeholdersHex } from './useStakeholdersHex';
+
+// Storage
+export { useStorageHex } from './useStorageHex';
+
+// Dashboard
+export { useDashboardHex } from './useDashboardHex';
+
+// ==================== DEV & TESTING ====================
+export { 
+  useDevModeData, 
+  useDevModeCreate, 
+  useDevModeUpdate, 
+  useDevModeDelete, 
+  useDevModeManagement 
+} from './useDevModeHex';
+export { useLoadDataButtonHex } from './useLoadDataButtonHex';
+
+// ==================== SPECIALIZED HOOKS ====================
+// Bank Guarantees
+export { 
+  useBankGuaranteesList, 
+  useCreateBankGuarantee, 
+  useUpdateBankGuarantee, 
+  useDeleteBankGuarantee 
+} from './useBankGuaranteesHex';
+export { useBankGuaranteeForProjectHex } from './useBankGuaranteeForProjectHex';
+
+// Insurance
+export { useInsuranceCertificatesHex } from './useInsuranceCertificatesHex';
+
+// Milestones
+export { useMilestones } from './useMilestoneHexFixed';
+export { useMilestonesHex } from './useMilestonesHex';
+
+// Project Structure & Details
+export { useProjectStructureHex } from './useProjectStructureHex';
+export { 
+  useProjectDetail, 
+  useProjectAnalytics as useProjectDetailAnalytics, 
+  useMilestones as useProjectDetailMilestones, 
+  useToastNotifications 
+} from './useProjectDetailHex';
+
+// Progress & Invoices
+export { useProgressInvoiceHex } from './useProgressInvoiceHex';
+
+// Task List
+export { useTaskListHex } from './useTaskListHex';
+
+// User Management Dialog
+export { 
+  useCreateUserHex as useUserCreate,
+  useCreateUserHex, 
+  useUpdateUserProfileHex as useUserUpdate,
+  useUpdateUserProfileHex 
+} from './useUserManagementDialogHex';
+// Tender Estimate
+export { 
+  useTenderEstimatesHex, 
+  useEstimateItemsHex, 
+  useMaterialsForEstimateHex, 
+  useParsedInvoicesHex, 
+  useAddEstimateItemHex, 
+  useCreateInvoiceHex 
+} from './useTenderEstimateHex';
+export { useTenderQuantitativeEstimateHex } from './useTenderQuantitativeEstimateHex';
+
+// Document Sharing
+export { 
+  useTenderDocumentsForShare, 
+  useShareDocuments 
+} from './useDocumentShareHex';
+
+// Tender Document Upload
+export { useUploadTenderDocumentHex } from './useTenderDocumentUploadHex';
+
+// Contact Form
+export { useSubmitContactFormHex } from './useContactFormHex';
+
+// Users Admin
+export { 
+  useUserProfilesHex, 
+  useToggleUserStatusHex as useUserToggleStatus,
+  useToggleUserStatusHex 
+} from './useUsersAdminHex';
+
+// Assignee Details
+export { 
+  useAssigneeDetailsHex,
+  useAssigneeDetailsHex as useAssigneeDetails
+} from './useAssigneeDetailsHex';
+
+// Phase Materials
+export { 
+  usePhaseMaterialsHex,
+  useAvailableMaterials
+} from './usePhaseMaterialsHex';
+
+// Management Actions
+export { useManagementActionsHex } from './useManagementActionsHex';
+
+// Alerts Processor
+export { useRunAlertsProcessorHex } from './useAlertsProcessorHex';
+
+// Phase Monitoring Summary Components
+export { 
+  useTasksSummaryHex, 
+  useInspectionsSummaryHex, 
+  usePaymentsSummaryHex 
+} from './usePhaseMonitoringSummaryHex';
+
+// Inspection Dialog
+export { 
+  useCreateInspectionHex, 
+  useUpdateProjectStatusHex 
+} from './useInspectionDialogHex';
+
+// Import & Export
+export { useImportProjectsHex } from './useProjectImporterHex';
+
+// Dashboard Access
+export { 
+  useDashboardAccessHex, 
+  useCheckAuthHex 
+} from './useDashboardAccessHex';
+
+// Risk Management
+export { useEnhancedRiskManagerHex } from './useEnhancedRiskManagerHex';
+
+// Payment Control
+export { usePaymentControlActionsHex } from './usePaymentControlActionsHex';
+
+// Phase Employees
+export { usePhaseEmployeesHex } from './usePhaseEmployeesHex';
+
+// Phase Tasks
+export { usePhaseTasksHex } from './usePhaseTasksHex';
+
+// Progress Invoice Form
+export { useProgressInvoiceFormHex } from './useProgressInvoiceFormHex';
+
+// ==================== TYPE EXPORTS ====================
+// Export commonly used types
 export type {
   UseSuppliersHexResult,
   UseUsersHexResult,
@@ -27,390 +431,40 @@ export type {
   ApiError
 } from '@/types/hooks';
 
-// Projects
-export { useProjectsHex, useProjectHex } from './useProjectsHex';
+// Export commonly used DTOs
+export type {
+  BaseEntityDTO,
+  MaterialDTO,
+  CreateMaterialRequestDto,
+  UpdateMaterialRequestDto,
+  InspectionDTO,
+  CreateInspectionRequestDto,
+  UpdateInspectionRequestDto,
+  ProjectDTO,
+  CreateProjectRequestDto,
+  UpdateProjectRequestDto,
+  PhaseDTO,
+  CreatePhaseRequestDto,
+  UpdatePhaseRequestDto,
+  TaskDTO,
+  CreateTaskRequestDto,
+  UpdateTaskRequestDto
+} from '@/dtos/transforms';
 
-// Suppliers
-export { useSuppliersHex, useSuppliersBySpecialization, useSupplierHex } from './useSuppliersHex';
-
-// Materials
-export { useMaterialsHex, useMaterialHex } from './useMaterialsHex';
-
-// Documents
-export { 
-  useDocumentsHex, 
-  useDocumentCreate, 
-  useDocumentUpdate, 
-  useDocumentDelete, 
-  useDocumentsList,
-  useDocumentsByProject,
-  useDocumentById,
-  useTenderDocuments,
-  useWorkflowStepDocuments
-} from './useDocumentsHex';
-
-// Suppliers Management CRUD
-export {
-  useSuppliersList,
-  useCreateSupplier,
-  useUpdateSupplier,
-  useDeleteSupplier
-} from './useSuppliersManagementHex';
-
-// Inspections
-export { useInspectionHex, useInspectionsHex } from './useInspectionsHex';
-
-// Users
-export { useUsersHex, useUserCreate, useUserUpdate, useUserToggleStatus } from './useUsersHex';
-
-// Task Assignments
-export { useTaskAssignmentsHex } from './useTaskAssignmentsHex';
-
-// Phases
-export { usePhaseHex, usePhasesHex } from './usePhasesHex';
-export type { UsePhaseHexResult, UsePhasesHexResult } from './usePhasesHex';
-
-// Monitoring
-export { 
-  useBankGuaranteesHex, 
-  usePaymentBlocksHex, 
-  useInsurancesHex, 
-  useNotificationsHex 
-} from './useMonitoringHex';
-export type { 
-  BankGuarantee, 
-  PaymentBlock, 
-  InsuranceCertificate, 
-  Notification 
-} from './useMonitoringHex';
-
-// Workflows - Phase 4
-export { useInspectionWorkflowHex } from './useInspectionWorkflowHex';
-export type { UseInspectionWorkflowHexResult } from './useInspectionWorkflowHex';
-
-export { usePaymentWorkflowHex } from './usePaymentWorkflowHex';
-export type { UsePaymentWorkflowHexResult } from './usePaymentWorkflowHex';
-
-// Employees - Phase 5
-export { useEmployeesHex, useEmployeeHex } from './useEmployeesHex';
-
-// Tasks - Phase 5
-export { useTasksHex, useTaskHex } from './useTasksHex';
-
-// Alerts - combines multiple sources
-export { useAlertsHex } from './useAlertsHex';
-export type { AlertData, AlertStats } from './useAlertsHex';
-
-// Compliance
-export { useComplianceHex } from './useComplianceHex';
-export type { ComplianceItem } from './useComplianceHex';
-
-// Milestones
-export { useMilestonesHex } from './useMilestonesHex';
-export type { Milestone } from './useMilestonesHex';
-
-// Stakeholders
-export { useStakeholdersHex } from './useStakeholdersHex';
-export { usePaymentStatsHex } from './usePaymentStatsHex';
-export { useProjectPhasesHex } from './useProjectPhasesHex';
-export { useAuthUserHex } from './useAuthUserHex';
-export { useAssigneeDetailsHex, useAssigneeDetails } from './useAssigneeDetailsHex';
-export { useBankGuaranteeForProjectHex } from './useBankGuaranteeForProjectHex';
-
-// Payment Validation
-export { usePaymentValidationHex } from './usePaymentValidationHex';
-export type { PaymentStats } from './usePaymentValidationHex';
-
-// KPI Metrics
-export { useKPIMetricsHex } from './useKPIMetricsHex';
-export type { KPIMetrics, CriticalAlert } from './useKPIMetricsHex';
-
-// Management Actions
-export { useManagementActionsHex } from './useManagementActionsHex';
-export type { ActionItem } from './useManagementActionsHex';
-
-// Monitoring Stats
-export { useMonitoringStatsHex } from './useMonitoringStatsHex';
-export type { MonitoringStats } from './useMonitoringStatsHex';
-
-// Project Materials
-export { useProjectMaterialsHex } from './useProjectMaterialsHex';
-export type { ProjectMaterial, SelectedMaterial } from './useProjectMaterialsHex';
-
-// Project Edit
-export { useProjectEditHex } from './useProjectEditHex';
-export type { ProjectEditData } from './useProjectEditHex';
-
-// Inspection CRUD
-export { useInspectionCrudHex } from './useInspectionCrudHex';
-
-// Payment Requests
-export { usePaymentRequestsHex } from './usePaymentRequestsHex';
-
-// Phase Materials
-export { usePhaseMaterialsHex, useAvailableMaterials } from './usePhaseMaterialsHex';
-export type { PhaseMaterial, MaterialDetails, AvailableMaterial } from './usePhaseMaterialsHex';
-
-// Phase Tasks
-export { usePhaseTasksHex } from './usePhaseTasksHex';
-
-// Phase Employees
-export { usePhaseEmployeesHex } from './usePhaseEmployeesHex';
-
-// Phase Monitoring Summary
-export {
-  usePhaseMonitoringSummaryHex,
-  useTasksSummaryHex,
-  useInspectionsSummaryHex,
-  usePaymentsSummaryHex
-} from './usePhaseMonitoringSummaryHex';
-
-// Task List
-export { useTaskListHex } from './useTaskListHex';
-
-// Tender Evaluation
-export { useTenderEvaluationHex } from './useTenderEvaluationHex';
-
-// Progress Invoice
-export { useProgressInvoiceHex } from './useProgressInvoiceHex';
-
-// Phase Inspections
-export { usePhaseInspectionsHex } from './usePhaseInspectionsHex';
-
-// Supplier Portal
-export { useSupplierPortalHex } from './useSupplierPortalHex';
-export type { 
-  TasksSummary, 
-  InspectionsSummary, 
-  PaymentsSummary, 
-  PhaseMonitoringSummary 
-} from './usePhaseMonitoringSummaryHex';
-
-// Inspection Monitoring
-export { useInspectionMonitoringHex } from './useInspectionMonitoringHex';
-export type { MonitoringInspection, MonitoringProject } from './useInspectionMonitoringHex';
-
-// Payment Actions
-export { usePaymentActionsHex } from './usePaymentActionsHex';
-
-// Insurance Certificates
-export { useInsuranceCertificatesHex } from './useInsuranceCertificatesHex';
-export type { InsuranceCertificateData } from './useInsuranceCertificatesHex';
-
-// User Management
-export { useUserManagementHex } from './useUserManagementHex';
-
-// Storage Operations
-export { useStorageHex } from './useStorageHex';
-
-// Selectors (UserSelector, ProjectSelector, SupplierSelector, MaterialSelector)
-export { 
-  useUsersSelector, 
-  useProjectsSelector, 
-  useSuppliersSelector, 
-  useMaterialsSelector,
-  useEmployeesSelector,
-  useInspectorsSelector,
-  useProjectTenders
-} from './useSelectorsHex';
-export type { 
-  UserProfile, 
-  ProjectOption, 
-  SupplierOption, 
-  MaterialOption,
-  EmployeeOption,
-  Inspector,
-  TenderOption
-} from './useSelectorsHex';
-
-// Payments (PaymentScheduleTimeline, PaymentControlActions)
-export { usePaymentSchedule, useEscalationTargets } from './usePaymentsHex';
-export type { PaymentMilestone, PaymentScheduleData } from './usePaymentsHex';
-
-// Tender Submissions & Evaluation (SubmissionEvaluationPanel, TenderProjectPhases, TenderLotBuilder)
-export { 
-  useTenderSubmission, 
-  useSubmissionDocuments, 
-  useSaveSubmissionEvaluation, 
-  useProjectPhasesForTender, 
-  useProjectPhasesForLots 
-} from './useTendersHex';
-export type { 
-  TenderSubmission, 
-  TenderSubmissionDocument, 
-  ProjectPhaseForTender, 
-  ProjectStepForTender 
-} from './useTendersHex';
-
-// Task Assignments (TaskAssignments component)
-export type { SupplierFormData as SupplierMgmtFormData } from './useSuppliersManagementHex';
-
-// Bank Guarantees CRUD
-export {
-  useBankGuaranteesList,
-  useCreateBankGuarantee,
-  useUpdateBankGuarantee,
-  useDeleteBankGuarantee
-} from './useBankGuaranteesHex';
-export type { BankGuaranteeFormData, BankGuaranteeRow } from './useBankGuaranteesHex';
-
-// Inspections CRUD
-export {
-  useInspectionsList as useInspectionsCrud,
-  useCreateInspection,
-  useUpdateInspection,
-  useDeleteInspection
-} from './useInspectionsCrudHex';
-export type { InspectionFormData, InspectionRow } from './useInspectionsCrudHex';
-
-// Enhanced Tasks (project-scoped)
-export {
-  useProjectPhasesForTasks,
-  useProjectTasks,
-  useCreateProjectTask,
-  useUpdateProjectTask,
-  useDeleteProjectTask
-} from './useEnhancedTasksHex';
-export type { ProjectTaskFormData, ProjectTask, ProjectPhase } from './useEnhancedTasksHex';
-
-// Employee Management CRUD
-export {
-  useEmployeesList,
-  useCreateEmployee,
-  useUpdateEmployee,
-  useDeleteEmployee
-} from './useEmployeeManagementHex';
-export type { EmployeeFormData } from './useEmployeeManagementHex';
-
-// Tender Documents
-export {
-  useTenderDocumentsList,
-  useWorkflowStepDocumentsList,
-  useUploadTenderDocument
-} from './useTenderDocumentsHex';
-
-// Supplier Submissions Dashboard
-export {
-  useCurrentAuthUser,
-  useSupplierSubmissions,
-  useSubmissionDocumentsList,
-  useSubmissionActivityLogs
-} from './useSupplierSubmissionsHex';
-export type { Submission, SubmissionDocument, ActivityLog } from './useSupplierSubmissionsHex';
-
-// Phase Payments
-export {
-  usePhasePayments,
-  useAddPhasePayment,
-  useDeletePhasePayment,
-  useSupplierInfo
-} from './usePhasePaymentsHex';
-export type { PhasePaymentFormData } from './usePhasePaymentsHex';
-
-// Kanban Board
-export { useKanbanTasks } from './useKanbanBoardHex';
-export type { KanbanTask } from './useKanbanBoardHex';
-
-// Tender CRUD
-export {
-  useTenders,
-  useProjectsForTenders,
-  useTenderMutation,
-  useDeleteTender
-} from './useTenderCrudHex';
-export type { Tender, TenderFormData } from './useTenderCrudHex';
-
-// Payment CRUD
-export { usePaymentCrud } from './usePaymentCrudHex';
-export type { Payment, PaymentFormData as PaymentCrudFormData } from './usePaymentCrudHex';
-
-// Document Share
-export {
-  useTenderDocumentsForShare,
-  useShareDocuments
-} from './useDocumentShareHex';
-export type { SharedDocument } from './useDocumentShareHex';
-
-// Quantity Takeoff
-export {
-  useMaterialsForTakeoff,
-  useCreateQuantityTakeoff
-} from './useQuantityTakeoffHex';
-
-// Inspection Dialog
-export {
-  useCreateInspectionHex,
-  useUpdateProjectStatusHex
-} from './useInspectionDialogHex';
+// Specialized type exports
 export type { CreateInspectionData } from './useInspectionDialogHex';
-
-// Inspections List
-export { useInspectionsListHex } from './useInspectionsListHex';
-export type { InspectionData } from './useInspectionsListHex';
-
-// Project Importer
-export { useImportProjectsHex } from './useProjectImporterHex';
 export type { ProjectImportData } from './useProjectImporterHex';
-
-// User Management Dialog
-export {
-  useCreateUserHex,
-  useUpdateUserProfileHex
-} from './useUserManagementDialogHex';
 export type { CreateUserData, UpdateUserData } from './useUserManagementDialogHex';
-
-// Alerts Processor
-export { useRunAlertsProcessorHex } from './useAlertsProcessorHex';
-export type { ProcessorResult } from './useAlertsProcessorHex';
-
-// Tender Estimate
-export {
-  useTenderEstimatesHex,
-  useEstimateItemsHex,
-  useMaterialsForEstimateHex,
-  useParsedInvoicesHex,
-  useCreateTenderEstimateHex,
-  useAddEstimateItemHex,
-  useCreateInvoiceHex
-} from './useTenderEstimateHex';
 export type { TenderEstimate, EstimateItem } from './useTenderEstimateHex';
-
-// Project Structure
-export { useProjectStructureHex } from './useProjectStructureHex';
+export type { TenderEstimate as TenderQuantitativeEstimate, EstimateItem as QuantitativeEstimateItem } from './useTenderQuantitativeEstimateHex';
+export type { UsePhaseDocumentsResult } from './usePhaseDocumentsHex';
 export type { ProjectDetails, Phase as ProjectPhaseDetails, Step as PhaseStep } from './useProjectStructureHex';
-
-// Tender Document Upload
-export { useUploadTenderDocumentHex } from './useTenderDocumentUploadHex';
 export type { TenderDocumentUploadData, TenderCategory, TenderSubcategory } from './useTenderDocumentUploadHex';
-
-// Auth (Login/Register/Logout)
-export { useAuthHex, useLoginHex, useRegisterHex, useLogoutHex } from './useAuthHex';
 export type { LoginData, RegisterData } from './useAuthHex';
-
-// Contact Form
-export { useSubmitContactFormHex } from './useContactFormHex';
 export type { ContactFormData } from './useContactFormHex';
-
-// Dashboard Access Control
-export { useDashboardAccessHex, useCheckAuthHex } from './useDashboardAccessHex';
-export type { DashboardAccess } from './useDashboardAccessHex';
-
-// Users Admin
-export { useUserProfilesHex, useToggleUserStatusHex } from './useUsersAdminHex';
 export type { UserProfile as AdminUserProfile } from './useUsersAdminHex';
-
-// Unified Supplier Portal
-export {
-  useSupplierPortalAuthHex,
-  useFetchSupplierProfileHex,
-  useSupplierLoginHex,
-  useSupplierSignUpHex,
-  useSupplierLogoutHex,
-  useSupplierPortalNotificationsHex,
-  useSupplierPortalPaymentRequestsHex,
-  useSupplierPortalDocumentsHex,
-  useUploadSupplierDocumentHex,
-  useAddSupplierTaskCommentHex,
-  useMarkTaskCompletedHex
-} from './useUnifiedSupplierPortalHex';
 export type { Supplier as SupplierPortal } from './useUnifiedSupplierPortalHex';
+export type { Supplier, SupplierDocument, SupplierTask, SupplierNotification, PaymentRequest, ParsedInvoice } from './useSupplierPortalCompleteHex';
+export type { Submission, SubmissionDocument, ActivityLog } from './useSupplierSubmissionsHex';
+export type { Milestone } from './useMilestonesHex';
+export type { PhasePaymentFormData } from './usePhasePaymentsHex';

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,8 +16,8 @@ import { PaymentRequestService, PaymentRequest, CreatePaymentRequestData } from 
 import { AuthService } from '@/application/services/AuthService';
 import { DocumentService, CreateDocumentRequestDto } from '@/application/services/DocumentService';
 import { NotificationService } from '@/services/NotificationService';
-import { useProjectsHex } from '@/hooks/hexagonal/useProjectsHex';
-import { useAuth } from '@/hooks/hexagonal/useAuthHex';
+import { useProjectsHex } from '@/hooks/hexagonal'
+import { useAuth } from '@/hooks/hexagonal';
 import EnhancedProjectSelector from '@/components/selectors/EnhancedProjectSelector';
 import { ProgressInvoiceForm } from '@/components/invoices/ProgressInvoiceForm';
 
@@ -142,14 +142,14 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
       
       setUploadedDocuments(prev => [...prev, uploadedDocument.url || '']);
       toast({
-        title: 'Document téléchargé',
-        description: 'Le document a été ajouté à votre demande',
+        title: 'Document tÃ©lÃ©chargÃ©',
+        description: 'Le document a Ã©tÃ© ajoutÃ© Ã  votre demande',
       });
     } catch (error) {
       console.error('Error uploading file:', error);
       toast({
         title: 'Erreur',
-        description: 'Impossible de télécharger le document',
+        description: 'Impossible de tÃ©lÃ©charger le document',
         variant: 'destructive',
       });
     }
@@ -190,7 +190,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
     if (!session) {
       toast({
         title: 'Erreur',
-        description: 'Vous devez être connecté pour créer une demande de paiement',
+        description: 'Vous devez Ãªtre connectÃ© pour crÃ©er une demande de paiement',
         variant: 'destructive',
       });
       return;
@@ -221,8 +221,8 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
       // Create notification for managers using NotificationService
       const notificationData = {
         recipientId: supplierId,
-        title: 'Demande de paiement créée',
-        message: `Demande de paiement de ${parseFloat(amount).toLocaleString()} MRU créée`,
+        title: 'Demande de paiement crÃ©Ã©e',
+        message: `Demande de paiement de ${parseFloat(amount).toLocaleString()} MRU crÃ©Ã©e`,
         type: 'supplier_payment_request',
         relatedId: createdRequest.id,
         metadata: {
@@ -244,8 +244,8 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
       await NotificationService.createNotification(notificationData);
 
       toast({
-        title: 'Demande envoyée',
-        description: 'Votre demande de paiement a été soumise avec succès',
+        title: 'Demande envoyÃ©e',
+        description: 'Votre demande de paiement a Ã©tÃ© soumise avec succÃ¨s',
       });
 
       // Reset form
@@ -274,9 +274,9 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       pending: { color: 'bg-yellow-100 text-yellow-800', label: 'En attente' },
-      approved: { color: 'bg-green-100 text-green-800', label: 'Approuvé' },
-      rejected: { color: 'bg-red-100 text-red-800', label: 'Rejeté' },
-      processed: { color: 'bg-blue-100 text-blue-800', label: 'Traité' },
+      approved: { color: 'bg-green-100 text-green-800', label: 'ApprouvÃ©' },
+      rejected: { color: 'bg-red-100 text-red-800', label: 'RejetÃ©' },
+      processed: { color: 'bg-blue-100 text-blue-800', label: 'TraitÃ©' },
     };
     
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
@@ -314,7 +314,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
                     value={projectId}
                     onChange={(id) => setProjectId(id || '')}
                     label="Projet (optionnel)"
-                    placeholder="Sélectionner un projet"
+                    placeholder="SÃ©lectionner un projet"
                     secureMode={true}
                     showTenderReference={true}
                     tenderReference={tenderReference}
@@ -337,12 +337,12 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
                 <Label htmlFor="paymentReason">Motif du paiement *</Label>
                 <Select value={paymentReason} onValueChange={setPaymentReason}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner le motif" />
+                    <SelectValue placeholder="SÃ©lectionner le motif" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="materials">Fourniture de matériaux</SelectItem>
+                    <SelectItem value="materials">Fourniture de matÃ©riaux</SelectItem>
                     <SelectItem value="services">Prestation de services</SelectItem>
-                    <SelectItem value="equipment">Location d'équipement</SelectItem>
+                    <SelectItem value="equipment">Location d'Ã©quipement</SelectItem>
                     <SelectItem value="transport">Transport</SelectItem>
                     <SelectItem value="maintenance">Maintenance</SelectItem>
                     <SelectItem value="other">Autre</SelectItem>
@@ -356,7 +356,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
                   id="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Décrivez en détail la prestation ou fourniture"
+                  placeholder="DÃ©crivez en dÃ©tail la prestation ou fourniture"
                   rows={3}
                 />
               </div>
@@ -367,7 +367,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
                   id="notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Informations complémentaires"
+                  placeholder="Informations complÃ©mentaires"
                   rows={2}
                 />
               </div>
@@ -387,7 +387,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
                     className="cursor-pointer inline-flex items-center px-4 py-2 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
                   >
                     <Upload className="mr-2 h-4 w-4" />
-                    Télécharger un document
+                    TÃ©lÃ©charger un document
                   </label>
                 </div>
                 {uploadedDocuments.length > 0 && (
@@ -395,7 +395,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
                     {uploadedDocuments.map((doc, index) => (
                       <div key={index} className="flex items-center text-sm text-green-600">
                         <FileText className="mr-1 h-3 w-3" />
-                        Document {index + 1} téléchargé
+                        Document {index + 1} tÃ©lÃ©chargÃ©
                       </div>
                     ))}
                   </div>
@@ -443,7 +443,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
                   <TableCell>
                     {request.project_id ? 
                       projects.find(p => String(p.id) === String(request.project_id))?.title || request.project_id 
-                      : 'Non spécifié'
+                      : 'Non spÃ©cifiÃ©'
                     }
                   </TableCell>
                   <TableCell>{request.amount.toLocaleString()} MRU</TableCell>

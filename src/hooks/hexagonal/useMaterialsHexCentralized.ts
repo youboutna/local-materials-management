@@ -126,6 +126,3 @@ export function useLowStockMaterials() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
-
-// Export pour compatibilité ascendante
-export const useMaterialsHex = useMaterials;

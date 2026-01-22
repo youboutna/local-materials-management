@@ -23,7 +23,7 @@ import {
   ArrowLeft,
   Users
 } from 'lucide-react';
-import { InspectionService } from '@/services/InspectionService';
+import { InspectionService } from '@/application/services/InspectionService';
 
 type PaymentType = 'contractor' | 'mission_fees' | 'engineer_fees';
 

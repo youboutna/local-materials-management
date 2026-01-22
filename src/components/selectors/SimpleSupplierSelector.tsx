@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Building2, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { useSuppliersSelector } from '@/hooks/hexagonal/useSelectorsHex';
+import { useSuppliersSelector } from '@/hooks/hexagonal'
 
 interface SimpleSupplierSelectorProps {
   value?: string;
@@ -17,7 +17,7 @@ interface SimpleSupplierSelectorProps {
 const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
   value,
   onChange,
-  placeholder = "Sélectionner un fournisseur",
+  placeholder = "SÃ©lectionner un fournisseur",
   disabled = false,
   label
 }) => {
@@ -33,7 +33,7 @@ const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
         key={i}
         className={`text-xs ${i < rating ? 'text-yellow-400' : 'text-gray-300'}`}
       >
-        ★
+        â˜…
       </span>
     ));
   };
@@ -107,7 +107,7 @@ const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
             ))}
             {(!suppliers || suppliers.filter(s => s.id && s.id.trim() !== '').length === 0) && (
               <div className="p-2 text-sm text-muted-foreground text-center">
-                Aucun fournisseur trouvé
+                Aucun fournisseur trouvÃ©
               </div>
             )}
           </SelectContent>
@@ -116,7 +116,7 @@ const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
 
       {selectedSupplier && (
         <div className="text-xs text-muted-foreground">
-          Sélectionné: {selectedSupplier.name}
+          SÃ©lectionnÃ©: {selectedSupplier.name}
           {selectedSupplier.contact_person && ` - Contact: ${selectedSupplier.contact_person}`}
         </div>
       )}

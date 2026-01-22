@@ -1,4 +1,4 @@
-import { ActionsDropdown } from '@/components/actions/ActionsDropdown';
+﻿import { ActionsDropdown } from '@/components/actions/ActionsDropdown';
 import DocumentSection from '@/components/common/DocumentSection';
 import DocumentSelector from '@/components/selectors/DocumentSelector';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
@@ -33,7 +33,7 @@ import {
   usePaymentCrud,
   type Payment,
   type PaymentFormData
-} from '@/hooks/hexagonal/usePaymentCrudHex';
+} from '@/hooks/hexagonal'
 
 interface PaymentCrudProps {
   projectId?: string;
@@ -174,7 +174,7 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
     if (!formData.project_id || !formData.contractor_id) {
       toast({
         title: "Erreur",
-        description: "Veuillez sélectionner un projet et un contractant",
+        description: "Veuillez sÃ©lectionner un projet et un contractant",
         variant: "destructive",
       });
       return false;
@@ -184,7 +184,7 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
     if (!isValid) {
       toast({
         title: "Erreur",
-        description: "Ce paiement est bloqué. Veuillez résoudre les blocages avant de continuer.",
+        description: "Ce paiement est bloquÃ©. Veuillez rÃ©soudre les blocages avant de continuer.",
         variant: "destructive",
       });
       return false;
@@ -227,14 +227,14 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
       if (isEditing && selectedPayment) {
         await updatePayment(selectedPayment.id, paymentData);
         toast({
-          title: "Succès",
-          description: "Paiement mis à jour avec succès",
+          title: "SuccÃ¨s",
+          description: "Paiement mis Ã  jour avec succÃ¨s",
         });
       } else {
         await createPayment(paymentData);
         toast({
-          title: "Succès",
-          description: "Paiement créé avec succès",
+          title: "SuccÃ¨s",
+          description: "Paiement crÃ©Ã© avec succÃ¨s",
         });
       }
 
@@ -253,12 +253,12 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
   };
 
   const handleDelete = async (payment: Payment) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce paiement ?')) {
+    if (confirm('ÃŠtes-vous sÃ»r de vouloir supprimer ce paiement ?')) {
       try {
         await deletePayment(payment.id);
         toast({
-          title: "Succès",
-          description: "Paiement supprimé avec succès",
+          title: "SuccÃ¨s",
+          description: "Paiement supprimÃ© avec succÃ¨s",
         });
       } catch (error) {
         console.error('Error deleting payment:', error);
@@ -307,9 +307,9 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
       case 'bank_transfer':
         return 'Virement bancaire';
       case 'cash':
-        return 'Espèces';
+        return 'EspÃ¨ces';
       case 'check':
-        return 'Chèque';
+        return 'ChÃ¨que';
       case 'mobile_payment':
         return 'Paiement mobile';
       default:
@@ -433,7 +433,7 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                 </div>
                 
                 <div>
-                  <Label htmlFor="payment_method">Méthode de paiement *</Label>
+                  <Label htmlFor="payment_method">MÃ©thode de paiement *</Label>
                   <Select 
                     value={formData.payment_method} 
                     onValueChange={(value) => setFormData(prev => ({ ...prev, payment_method: value }))}
@@ -443,8 +443,8 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="bank_transfer">Virement bancaire</SelectItem>
-                      <SelectItem value="cash">Espèces</SelectItem>
-                      <SelectItem value="check">Chèque</SelectItem>
+                      <SelectItem value="cash">EspÃ¨ces</SelectItem>
+                      <SelectItem value="check">ChÃ¨que</SelectItem>
                       <SelectItem value="mobile_payment">Paiement mobile</SelectItem>
                     </SelectContent>
                   </Select>
@@ -463,7 +463,7 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="account_number">Numéro de compte</Label>
+                    <Label htmlFor="account_number">NumÃ©ro de compte</Label>
                     <Input
                       id="account_number"
                       value={formData.account_number}
@@ -475,7 +475,7 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
 
               {formData.payment_method === 'check' && (
                 <div>
-                  <Label htmlFor="check_number">Numéro de chèque</Label>
+                  <Label htmlFor="check_number">NumÃ©ro de chÃ¨que</Label>
                   <Input
                     id="check_number"
                     value={formData.check_number}
@@ -487,7 +487,7 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
               {formData.payment_method === 'mobile_payment' && (
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <Label htmlFor="mobile_number">Numéro mobile</Label>
+                    <Label htmlFor="mobile_number">NumÃ©ro mobile</Label>
                     <Input
                       id="mobile_number"
                       value={formData.mobile_number}
@@ -495,7 +495,7 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="mobile_operator">Opérateur mobile</Label>
+                    <Label htmlFor="mobile_operator">OpÃ©rateur mobile</Label>
                     <Select 
                       value={formData.mobile_operator} 
                       onValueChange={(value) => setFormData(prev => ({ ...prev, mobile_operator: value }))}
@@ -511,7 +511,7 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="receiver_name">Nom du bénéficiaire</Label>
+                    <Label htmlFor="receiver_name">Nom du bÃ©nÃ©ficiaire</Label>
                     <Input
                       id="receiver_name"
                       value={formData.receiver_name}
@@ -523,7 +523,7 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="receipt">Reçu de paiement</Label>
+                  <Label htmlFor="receipt">ReÃ§u de paiement</Label>
                   <Input
                     id="receipt"
                     type="file"
@@ -531,7 +531,7 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                     onChange={handleReceiptUpload}
                   />
                   {receiptFile && (
-                    <p className="text-sm text-gray-600 mt-1">Fichier sélectionné: {receiptFile.name}</p>
+                    <p className="text-sm text-gray-600 mt-1">Fichier sÃ©lectionnÃ©: {receiptFile.name}</p>
                   )}
                 </div>
                 
@@ -544,7 +544,7 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                     onChange={handleInvoiceUpload}
                   />
                   {invoiceFile && (
-                    <p className="text-sm text-gray-600 mt-1">Fichier sélectionné: {invoiceFile.name}</p>
+                    <p className="text-sm text-gray-600 mt-1">Fichier sÃ©lectionnÃ©: {invoiceFile.name}</p>
                   )}
                 </div>
               </div>
@@ -591,7 +591,7 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                 <TableHead>Contractant</TableHead>
                 <TableHead>Montant</TableHead>
                 <TableHead>Date</TableHead>
-                <TableHead>Méthode</TableHead>
+                <TableHead>MÃ©thode</TableHead>
                 <TableHead>Progression</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -607,7 +607,7 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {payment.amount?.toLocaleString()} €
+                    {payment.amount?.toLocaleString()} â‚¬
                   </TableCell>
                   <TableCell>
                     {payment.payment_date && new Date(payment.payment_date).toLocaleDateString()}

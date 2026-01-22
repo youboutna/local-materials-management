@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Users, Search, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { useEmployeesSelector, type EmployeeOption } from '@/hooks/hexagonal/useSelectorsHex';
+import { useEmployeesSelector, type EmployeeOption } from '@/hooks/hexagonal'
 
 interface EmployeeSelectorProps {
   value?: string;
@@ -20,10 +20,10 @@ interface EmployeeSelectorProps {
 const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
   value,
   onChange,
-  label = "Employé",
+  label = "EmployÃ©",
   disabled = false,
   required = false,
-  placeholder = "Sélectionner un employé",
+  placeholder = "SÃ©lectionner un employÃ©",
   departmentFilter,
   positionFilter
 }) => {
@@ -72,7 +72,7 @@ const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Rechercher un employé..."
+            placeholder="Rechercher un employÃ©..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -111,7 +111,7 @@ const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
                         {employee.full_name}
                       </div>
                       <div className="text-xs text-muted-foreground truncate">
-                        {employee.position && `${employee.position} • `}
+                        {employee.position && `${employee.position} â€¢ `}
                         ID: {employee.employee_id}
                       </div>
                       {employee.email && (
@@ -130,7 +130,7 @@ const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
                 <SelectItem value="no-employees" disabled>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Users className="h-4 w-4" />
-                    <span>Aucun employé trouvé</span>
+                    <span>Aucun employÃ© trouvÃ©</span>
                   </div>
                 </SelectItem>
               )}
@@ -140,8 +140,8 @@ const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
         
         {selectedEmployee && (
           <div className="text-xs text-muted-foreground">
-            {selectedEmployee.position && `${selectedEmployee.position} • `}
-            {selectedEmployee.department && `${selectedEmployee.department} • `}
+            {selectedEmployee.position && `${selectedEmployee.position} â€¢ `}
+            {selectedEmployee.department && `${selectedEmployee.department} â€¢ `}
             ID: {selectedEmployee.employee_id}
           </div>
         )}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,7 +30,7 @@ import {
   type Tender,
   type Project,
   type TenderFormData
-} from '@/hooks/hexagonal/useTenderCrudHex';
+} from '@/hooks/hexagonal'
 
 interface TenderCrudProps {
   onTenderSelect?: (tender: Tender) => void;
@@ -204,7 +204,7 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
 
   // Handle delete
   const handleDelete = async (tenderId: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cet appel d\'offres ?')) {
+    if (confirm('ÃŠtes-vous sÃ»r de vouloir supprimer cet appel d\'offres ?')) {
       try {
         await deleteTenderMutation.mutateAsync(tenderId);
       } catch (error) {
@@ -280,7 +280,7 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
                 
                 {tender.estimated_value && (
                   <div className="text-sm font-medium">
-                    Valeur estimée: {tender.estimated_value.toLocaleString()} €
+                    Valeur estimÃ©e: {tender.estimated_value.toLocaleString()} â‚¬
                   </div>
                 )}
               </div>
@@ -310,13 +310,13 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
               </div>
               
               <div>
-                <Label htmlFor="project_id">Projet associé</Label>
+                <Label htmlFor="project_id">Projet associÃ©</Label>
                 <Select 
                   value={formData.project_id} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, project_id: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un projet" />
+                    <SelectValue placeholder="SÃ©lectionner un projet" />
                   </SelectTrigger>
                   <SelectContent>
                     {projects.map((project) => (
@@ -364,41 +364,41 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
 
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="selection_mode">Mode de sélection</Label>
+                <Label htmlFor="selection_mode">Mode de sÃ©lection</Label>
                 <Select 
                   value={formData.selection_mode} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, selection_mode: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Mode de sélection" />
+                    <SelectValue placeholder="Mode de sÃ©lection" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="open">Ouvert</SelectItem>
                     <SelectItem value="restricted">Restreint</SelectItem>
-                    <SelectItem value="negotiated">Négocié</SelectItem>
+                    <SelectItem value="negotiated">NÃ©gociÃ©</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               
               <div>
-                <Label htmlFor="market_type">Type de marché</Label>
+                <Label htmlFor="market_type">Type de marchÃ©</Label>
                 <Select 
                   value={formData.market_type} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, market_type: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Type de marché" />
+                    <SelectValue placeholder="Type de marchÃ©" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="public">Public</SelectItem>
-                    <SelectItem value="private">Privé</SelectItem>
+                    <SelectItem value="private">PrivÃ©</SelectItem>
                     <SelectItem value="mixed">Mixte</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               
               <div>
-                <Label htmlFor="estimated_value">Valeur estimée (€)</Label>
+                <Label htmlFor="estimated_value">Valeur estimÃ©e (â‚¬)</Label>
                 <Input
                   id="estimated_value"
                   type="number"
@@ -417,8 +417,8 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
                 className="w-full"
               >
                 {selectedProcurementSteps.length > 0 
-                  ? `${selectedProcurementSteps.length} étape(s) sélectionnée(s)`
-                  : 'Sélectionner les étapes du workflow'
+                  ? `${selectedProcurementSteps.length} Ã©tape(s) sÃ©lectionnÃ©e(s)`
+                  : 'SÃ©lectionner les Ã©tapes du workflow'
                 }
               </Button>
             </div>

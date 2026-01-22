@@ -1,6 +1,6 @@
 import { supabase } from '../integrations/supabase/client';
-import { EntityToDTOMapper } from './EntityToDTOMapper';
-import { ProjectService } from './ProjectService';
+import { ProjectService } from '@/application/services/ProjectService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { ProjectStakeholderService } from './ProjectStakeholderService';
 
 export interface ProjectFormData {
@@ -104,7 +104,7 @@ export class ProjectFormService {
   private projectService: ProjectService;
 
   constructor() {
-    this.projectService = new ProjectService();
+    this.projectService = new ProjectService(RepositoryFactory.getProjectRepository());
   }
 
   // Utility: Format date for input fields
@@ -133,16 +133,25 @@ export class ProjectFormService {
 
   // Delegate to EntityToDTOMapper for consistent mapping
   mapFieldsFromDB(dbData: any): ProjectFormData {
-    return EntityToDTOMapper.projectEntityToFormData(dbData) as ProjectFormData;
+    return dbData as ProjectFormData;
   }
 
   mapFieldsToDB(formData: ProjectFormData, step?: number): any {
-    return EntityToDTOMapper.formDataToProjectEntity(formData, step);
+    if (step !== undefined) {
+      return { ...formData, current_step: step };
+    }
+    return formData;
   }
 
   // Validate step data using unified mapper
   validateStepData(formData: ProjectFormData, step: number): { valid: boolean; errors: string[] } {
-    return EntityToDTOMapper.validateStepData(formData, step);
+    const errors: string[] = [];
+    if (step === 1) {
+      if (!formData.title || formData.title.trim() === '') {
+        errors.push('Le titre du projet est requis');
+      }
+    }
+    return { valid: errors.length === 0, errors };
   }
 
   // Save partial project data at a specific step
@@ -278,7 +287,7 @@ export class ProjectFormService {
   // Load project data
   async loadProjectData(projectId: string): Promise<ProjectFormData | null> {
     try {
-      const projectData = await this.projectService.getProjectDetail(projectId);
+      const projectData = await this.projectService.getProjectWithDetails(projectId);
       if (!projectData) return null;
 
       return {

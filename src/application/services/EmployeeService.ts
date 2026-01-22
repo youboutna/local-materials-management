@@ -81,4 +81,13 @@ export class EmployeeService {
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get project managers');
     }
   }
+
+  async getAllEmployees(): Promise<Employee[]> {
+    try {
+      return await this.employeeRepository.findAll();
+    } catch (error) {
+      console.error('EmployeeService.getAllEmployees failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get all employees');
+    }
+  }
 }

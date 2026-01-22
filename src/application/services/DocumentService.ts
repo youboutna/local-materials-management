@@ -5,6 +5,9 @@
  */
 
 import { Document, DocumentType } from '@/domain/entities/Document';
+import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { DocumentDomainTransformer } from '@/dtos/transforms/DocumentDomainTransformer';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 // Simple DTOs
@@ -15,6 +18,7 @@ export interface DocumentResponseDto {
   projectId?: string;
   fileUrl?: string;
   status?: string;
+  expiryDate?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -34,6 +38,38 @@ export interface UpdateDocumentRequestDto {
 }
 
 export class DocumentService {
+  private documentRepository: IDocumentRepository;
+
+  constructor(
+    documentRepository?: IDocumentRepository,
+    private documentTransformer?: any
+  ) {
+    this.documentRepository = documentRepository || RepositoryFactory.getDocumentRepository();
+  }
+
+  /**
+   * Get all documents
+   */
+  async getAllDocuments(): Promise<DocumentResponseDto[]> {
+    try {
+      const documents = await this.documentRepository.findAll();
+      return documents.map(doc => ({
+        id: doc.id,
+        title: doc.title,
+        type: doc.documentType,
+        projectId: doc.projectId || undefined,
+        fileUrl: doc.fileUrl || undefined,
+        status: doc.status,
+        expiryDate: doc.deadlineDate || undefined,
+        createdAt: doc.createdAt,
+        updatedAt: doc.updatedAt
+      }));
+    } catch (error) {
+      console.error('Error getting all documents:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get all documents');
+    }
+  }
+
   /**
    * Get project documents - placeholder implementation
    */

@@ -5,7 +5,15 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { InsuranceCertificatesService, InsuranceCertificateData } from '@/application/services/InsuranceCertificatesService';
+import { InsuranceCertificatesService } from '@/application/services/InsuranceCertificatesService';
+import { 
+  InsuranceCertificateDTO, 
+  InsuranceCertificateCreateData,
+  InsuranceCertificateUpdateData 
+} from '@/dtos/entities/InsuranceCertificateDTO';
+
+// Export the type for external use
+export type { InsuranceCertificateDTO as InsuranceCertificateData } from '@/dtos/entities/InsuranceCertificateDTO';
 
 export function useInsuranceCertificatesHex(projectId?: string) {
   const queryClient = useQueryClient();
@@ -21,7 +29,7 @@ export function useInsuranceCertificatesHex(projectId?: string) {
 
   // Create certificate
   const createMutation = useMutation({
-    mutationFn: async (data: InsuranceCertificateData) => {
+    mutationFn: async (data: InsuranceCertificateCreateData) => {
       return await insuranceService.createCertificate(data);
     },
     onSuccess: () => {
@@ -42,7 +50,7 @@ export function useInsuranceCertificatesHex(projectId?: string) {
 
   // Update certificate
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<InsuranceCertificateData> }) => {
+    mutationFn: async ({ id, data }: { id: string; data: Partial<InsuranceCertificateUpdateData> }) => {
       await insuranceService.updateCertificate(id, data);
       return { success: true };
     },

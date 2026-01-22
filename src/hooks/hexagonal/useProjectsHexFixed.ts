@@ -88,9 +88,6 @@ export function useProjects() {
   };
 }
 
-// Export pour compatibilité ascendante
-export const useProjectsHex = useProjects;
-
 export function useProjectById(id: string) {
   const projectService = new ProjectService(
     RepositoryFactory.getProjectRepository()

@@ -4,6 +4,7 @@
  */
 
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { NotificationService } from '@/application/services/NotificationService';
 
 export interface InsuranceCertificate {
   id: string;
@@ -52,6 +53,158 @@ export class InsuranceService {
   constructor() {
     this.repository = RepositoryFactory.getInsuranceRepository();
   }
+
+  // ============= Static Methods for Legacy Compatibility =============
+
+  /**
+   * Detect expiring insurance certificates
+   */
+  static async detectExpiringInsurance(): Promise<any[]> {
+    try {
+      console.log('Detecting expiring insurance certificates...');
+      const service = new InsuranceService();
+      return await service.repository.detectExpiringInsurance();
+    } catch (error) {
+      console.error('Error detecting expiring insurance:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Send insurance expiry alerts to stakeholders
+   */
+  static async sendInsuranceExpiryAlerts(alerts: any[]): Promise<{ success: boolean; notificationsSent: number; alertsProcessed: number }> {
+    try {
+      console.log(`Sending ${alerts.length} insurance expiry alerts...`);
+
+      if (alerts.length === 0) {
+        console.log('No insurance alerts to send');
+        return { success: true, notificationsSent: 0, alertsProcessed: 0 };
+      }
+
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Get all admin users to notify
+      const { data: adminUsers, error: adminError } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .in('role_name', ['admin', 'director', 'manager']);
+
+      if (adminError) {
+        console.error('Error fetching admin users:', adminError);
+        throw adminError;
+      }
+
+      const recipients = adminUsers?.map(u => u.user_id) || [];
+      let notificationsSent = 0;
+
+      // Send notifications to all admins for each alert
+      for (const alert of alerts) {
+        const alertTitle = alert.alertLevel === 'expired'
+          ? 'URGENT: Assurance Expirée'
+          : 'Alerte: Assurance Proche de l\'Expiration';
+
+        for (const recipientId of recipients) {
+          const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
+          await notificationService.createNotification({
+            recipient_id: recipientId,
+            title: alertTitle,
+            message: `Assurance ${alert.coverage_type} pour ${alert.contractor_name} expire le ${alert.expiryDate}.`,
+            type: alert.alertLevel === 'expired' ? 'error' : 'warning',
+            read: false
+          });
+          notificationsSent++;
+        }
+      }
+
+      return {
+        success: true,
+        notificationsSent,
+        alertsProcessed: alerts.length
+      };
+
+    } catch (error) {
+      console.error('Error sending insurance expiry alerts:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create insurance certificate
+   */
+  static async createInsuranceCertificate(certificate: any): Promise<string> {
+    try {
+      console.log('Creating insurance certificate:', certificate);
+
+      const service = new InsuranceService();
+      const createdCertificate = await service.repository.create(certificate);
+
+      // Notify relevant stakeholders about new certificate
+      const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
+      await notificationService.createNotification({
+        recipient_id: '00000000-0000-0000-0000-000000000000',
+        title: "Nouvelle attestation d'assurance enregistrée",
+        message: `Attestation ${certificate.coverage_type} pour ${certificate.contractor_name} ajoutée au projet.`,
+        type: 'success',
+        read: false
+      });
+
+      return createdCertificate.id;
+    } catch (error) {
+      console.error('Error creating insurance certificate:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Validate insurance coverage for a project
+   */
+  static async validateInsuranceCoverage(projectId: string): Promise<boolean> {
+    try {
+      console.log('Validating insurance coverage for project:', projectId);
+
+      const service = new InsuranceService();
+      const certificates = await service.repository.getByProjectId(projectId);
+
+      // Check if project has all required insurance types
+      const requiredTypes = ['responsabilite_civile', 'decennale'];
+      const activeCertificates = certificates.filter((cert: any) => cert.status === 'active');
+      const coverageTypes = activeCertificates.map((cert: any) => cert.coverage_type);
+
+      return requiredTypes.every(type => coverageTypes.includes(type));
+    } catch (error) {
+      console.error('Error validating insurance coverage:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get insurance certificates for a project
+   */
+  static async getByProjectId(projectId: string) {
+    try {
+      const service = new InsuranceService();
+      return await service.repository.getByProjectId(projectId);
+    } catch (error) {
+      console.error('Error getting insurance certificates:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update insurance certificate
+   */
+  static async update(id: string, updates: any) {
+    try {
+      const service = new InsuranceService();
+      return await service.repository.update(id, updates);
+    } catch (error) {
+      console.error('Error updating insurance certificate:', error);
+      throw error;
+    }
+  }
+
+  // ============= Instance Methods =============
 
   /**
    * Get insurance certificates for a project
@@ -264,3 +417,20 @@ export class InsuranceService {
     return await service.getInsuranceStatistics(projectId);
   }
 }
+
+// Legacy exports for backward compatibility
+export const detectExpiringInsurance = () => InsuranceService.detectExpiringInsurance();
+export const sendInsuranceExpiryAlerts = (alerts: any[]) =>
+  InsuranceService.sendInsuranceExpiryAlerts(alerts);
+export const createInsuranceCertificate = (cert: any) =>
+  InsuranceService.createInsuranceCertificate(cert);
+export const validateInsuranceCoverage = (projectId: string) =>
+  InsuranceService.validateInsuranceCoverage(projectId);
+
+// Export types and constants
+export const INSURANCE_ALERT_THRESHOLDS = {
+  EXPIRED: 0,
+  CRITICAL: 7,
+  WARNING: 30,
+  INFO: 60
+};

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,16 +21,16 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { useSuppliersHex } from '@/hooks/hexagonal/useSuppliersHex';
+import { useSuppliersHex } from '@/hooks/hexagonal'
 import { 
-  useCurrentAuthUser,
-  useSupplierSubmissions,
-  useSubmissionDocumentsList,
-  useSubmissionActivityLogs,
+  useCurrentUserHex,
+  useSupplierSubmissionsHex as useSupplierSubmissions,
+  useSubmissionDocumentsHex as useSubmissionDocumentsList,
+  useRealtimeHex,
   type Submission,
   type SubmissionDocument,
-  type ActivityLog
-} from '@/hooks/hexagonal/useSupplierSubmissionsHex';
+  type UseRealtimeOptions
+} from '@/hooks/hexagonal'
 
 
 const SupplierSubmissionDashboard = () => {
@@ -40,63 +40,34 @@ const SupplierSubmissionDashboard = () => {
   const [realtimeSubmissions, setRealtimeSubmissions] = useState<Submission[]>([]);
 
   // Get current user and submissions
-  const { data: currentUser } = useCurrentAuthUser();
-  const { data: submissions, refetch } = useSupplierSubmissions(currentUser?.id);
+  const { data: currentUser } = useCurrentUserHex();
+  const { data: submissions, refetch } = useSupplierSubmissions(currentUser?.user?.id);
 
   // Fetch documents for selected submission
   const { data: submissionDocuments } = useSubmissionDocumentsList(selectedSubmission?.id);
 
-  // Fetch activity logs for selected submission
-  const { data: activityLogs } = useSubmissionActivityLogs(selectedSubmission?.id);
+  // Setup real-time updates using hexagonal architecture
+  const realtimeOptions: UseRealtimeOptions = {
+    userId: currentUser?.user?.id,
+    onSubmissionInsert: (payload) => {
+      console.log('New submission received:', payload);
+      refetch();
+    },
+    onSubmissionUpdate: (payload) => {
+      console.log('Submission updated:', payload);
+      refetch();
+    },
+    onDocumentChange: (payload) => {
+      console.log('Document changed:', payload);
+      // Refetch documents if the selected submission is affected
+      if (selectedSubmission && payload.new?.submission_id === selectedSubmission.id) {
+        // Trigger document refetch by updating state
+        setSelectedSubmission({ ...selectedSubmission });
+      }
+    }
+  };
 
-  // Setup real-time updates - TODO: Create hexagonal hook for realtime subscriptions
-  // useEffect(() => {
-  //   if (!currentUser?.id) return;
-
-  //   console.log('Setting up realtime subscription for user:', currentUser.id);
-
-  //   const channel = supabase
-  //     .channel('submission-updates')
-  //     .on(
-  //       'postgres_changes',
-  //       {
-  //         event: '*',
-  //         schema: 'public',
-  //         table: 'tender_submissions',
-  //         filter: `user_id=eq.${currentUser.id}`
-  //       },
-  //       (payload) => {
-  //         console.log('Realtime update received:', payload);
-          
-  //         if (payload.eventType === 'INSERT') {
-  //           toast({
-  //             title: "Nouvelle soumission",
-  //             description: "Votre soumission a été enregistrée avec succès.",
-  //           });
-  //         } else if (payload.eventType === 'UPDATE') {
-  //           const newStatus = (payload.new as any).status;
-  //           const oldStatus = (payload.old as any)?.status;
-            
-  //           if (newStatus !== oldStatus) {
-  //             toast({
-  //               title: "Mise à jour du statut",
-  //               description: `Le statut de votre soumission a changé: ${getStatusLabel(newStatus)}`,
-  //             });
-  //           }
-  //         }
-
-  //         refetch();
-  //       }
-  //     )
-  //     .subscribe((status) => {
-  //       console.log('Subscription status:', status);
-  //     });
-
-  //   return () => {
-  //     console.log('Cleaning up realtime subscription');
-  //     supabase.removeChannel(channel);
-  //   };
-  // }, [currentUser?.id, refetch, toast]);
+  useRealtimeHex(realtimeOptions);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -127,11 +98,11 @@ const SupplierSubmissionDashboard = () => {
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'approved':
-        return 'Approuvée';
+        return 'ApprouvÃ©e';
       case 'rejected':
-        return 'Rejetée';
+        return 'RejetÃ©e';
       case 'under_review':
-        return 'En cours d\'évaluation';
+        return 'En cours d\'Ã©valuation';
       case 'submitted':
         return 'Soumise';
       default:
@@ -173,7 +144,7 @@ const SupplierSubmissionDashboard = () => {
     } catch (error) {
       toast({
         title: "Erreur",
-        description: "Impossible de télécharger le document",
+        description: "Impossible de tÃ©lÃ©charger le document",
         variant: "destructive"
       });
     }
@@ -198,7 +169,7 @@ const SupplierSubmissionDashboard = () => {
               Tableau de Bord des Soumissions
             </h1>
             <p className="text-muted-foreground mt-1">
-              Suivez l'état de vos soumissions en temps réel
+              Suivez l'Ã©tat de vos soumissions en temps rÃ©el
             </p>
           </div>
           <Badge variant="outline" className="px-3 py-1 gap-1">
@@ -237,7 +208,7 @@ const SupplierSubmissionDashboard = () => {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">En évaluation</p>
+                  <p className="text-sm text-muted-foreground">En Ã©valuation</p>
                   <p className="text-2xl font-bold">{stats.under_review}</p>
                 </div>
                 <Clock className="h-8 w-8 text-blue-500" />
@@ -249,7 +220,7 @@ const SupplierSubmissionDashboard = () => {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Approuvées</p>
+                  <p className="text-sm text-muted-foreground">ApprouvÃ©es</p>
                   <p className="text-2xl font-bold">{stats.approved}</p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-green-500" />
@@ -261,7 +232,7 @@ const SupplierSubmissionDashboard = () => {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Rejetées</p>
+                  <p className="text-sm text-muted-foreground">RejetÃ©es</p>
                   <p className="text-2xl font-bold">{stats.rejected}</p>
                 </div>
                 <XCircle className="h-8 w-8 text-red-500" />
@@ -286,8 +257,8 @@ const SupplierSubmissionDashboard = () => {
                   <TabsTrigger value="all">Toutes</TabsTrigger>
                   <TabsTrigger value="submitted">Soumises</TabsTrigger>
                   <TabsTrigger value="under_review">En cours</TabsTrigger>
-                  <TabsTrigger value="approved">Approuvées</TabsTrigger>
-                  <TabsTrigger value="rejected">Rejetées</TabsTrigger>
+                  <TabsTrigger value="approved">ApprouvÃ©es</TabsTrigger>
+                  <TabsTrigger value="rejected">RejetÃ©es</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value={activeTab} className="mt-4">
@@ -329,7 +300,7 @@ const SupplierSubmissionDashboard = () => {
                       {filterSubmissions(activeTab).length === 0 && (
                         <div className="text-center py-12 text-muted-foreground">
                           <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                          <p>Aucune soumission trouvée</p>
+                          <p>Aucune soumission trouvÃ©e</p>
                         </div>
                       )}
                     </div>
@@ -344,7 +315,7 @@ const SupplierSubmissionDashboard = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Eye className="h-5 w-5" />
-                Détails
+                DÃ©tails
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -409,7 +380,7 @@ const SupplierSubmissionDashboard = () => {
                                   onClick={() => doc.document?.file_url && handleDownloadDocument(doc.document.file_url, doc.document.file_name)}
                                 >
                                   <Download className="h-3 w-3 mr-1" />
-                                  Télécharger
+                                  TÃ©lÃ©charger
                                 </Button>
                               </div>
                             </div>
@@ -418,10 +389,10 @@ const SupplierSubmissionDashboard = () => {
                       </div>
                     </div>
 
-                    {/* Activity Log */}
-                    {activityLogs && activityLogs.length > 0 && (
+                    {/* Activity Log - TODO: Implement when useSubmissionActivityLogsHex is available */}
+                    {/* {activityLogs && activityLogs.length > 0 && (
                       <div>
-                        <h4 className="font-medium mb-3">Historique d'activité</h4>
+                        <h4 className="font-medium mb-3">Historique d'activitÃ©</h4>
                         <div className="space-y-2">
                           {activityLogs.map((log) => (
                             <div key={log.id} className="border-l-2 border-primary/20 pl-3 py-2">
@@ -434,13 +405,13 @@ const SupplierSubmissionDashboard = () => {
                           ))}
                         </div>
                       </div>
-                    )}
+                    )} */}
                   </div>
                 </ScrollArea>
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
                   <Eye className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Sélectionnez une soumission pour voir les détails</p>
+                  <p>SÃ©lectionnez une soumission pour voir les dÃ©tails</p>
                 </div>
               )}
             </CardContent>

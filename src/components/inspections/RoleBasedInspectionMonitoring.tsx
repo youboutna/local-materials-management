@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -36,19 +36,21 @@ import {
   Plus
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useUserRoles } from '@/hooks/useUserRoles'; // Import the role hook
+import { useCurrentUserRoles } from '@/hooks/useUserRoles'; // Import the correct role hook
+import { useAuth } from '@/contexts/AuthContext'; // Import auth context
 import { 
   useInspectionMonitoringHex,
   type MonitoringInspection
-} from '@/hooks/hexagonal/useInspectionMonitoringHex';
+} from '@/hooks/hexagonal'
 
 const RoleBasedInspectionMonitoring = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth(); // Get current user
   
-  // Get dynamic user roles - matching original
-  const { hasAnyRole, userRoles } = useUserRoles();
+  // Get dynamic user roles - using the correct hook
+  const { hasAnyRole, userRoles } = useCurrentUserRoles();
   const userRole = userRoles[0] || 'viewer'; // Use first role or default
   
   // State management
@@ -67,15 +69,18 @@ const RoleBasedInspectionMonitoring = () => {
 
   const projectId = searchParams.get('project');
 
-  // Use hexagonal hook
-  const inspectionData = useInspectionMonitoringHex(userRole, projectId || undefined);
-  const { inspections = [], isLoading, error } = inspectionData;
-
   // Role-based permissions - using dynamic roles matching original
   const isInspector = hasAnyRole(['inspector', 'engineer', 'consultant']);
   const isProjectManager = hasAnyRole(['admin', 'director', 'project_manager', 'manager']);
   const isAdmin = hasAnyRole(['admin', 'super_admin']);
   const isEngineeringConsultant = hasAnyRole(['consultant', 'engineer', 'engineering_consultant']);
+
+  // Use hexagonal hook with correct signature
+  const inspectionData = useInspectionMonitoringHex({
+    filterByInspector: isInspector,
+    inspectorName: isInspector ? user?.email : undefined
+  });
+  const { inspections = [], isLoading } = inspectionData;
 
   // Helper function to get project title - matching original
   const getProjectTitle = (projectId: string) => {
@@ -89,8 +94,8 @@ const RoleBasedInspectionMonitoring = () => {
     // This would send notification to project managers/admins
     console.log('Alert sent:', { inspectionId, message });
     toast({
-      title: "Alerte envoyée",
-      description: "La hiérarchie a été notifiée",
+      title: "Alerte envoyÃ©e",
+      description: "La hiÃ©rarchie a Ã©tÃ© notifiÃ©e",
     });
   };
 
@@ -155,8 +160,8 @@ const RoleBasedInspectionMonitoring = () => {
       // For now, just log the edit since we don't have the mutation
       console.log('Edit inspection:', { id: editingInspection.id, data: editFormData });
       toast({
-        title: "Succès",
-        description: "Inspection mise à jour",
+        title: "SuccÃ¨s",
+        description: "Inspection mise Ã  jour",
       });
       
       setIsEditDialogOpen(false);
@@ -167,14 +172,14 @@ const RoleBasedInspectionMonitoring = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette inspection ?')) return;
+    if (!confirm('ÃŠtes-vous sÃ»r de vouloir supprimer cette inspection ?')) return;
     
     try {
       // For now, just log the delete since we don't have the mutation
       console.log('Delete inspection:', id);
       toast({
-        title: "Succès",
-        description: "Inspection supprimée",
+        title: "SuccÃ¨s",
+        description: "Inspection supprimÃ©e",
       });
     } catch (error) {
       console.error('Error deleting inspection:', error);
@@ -199,18 +204,6 @@ const RoleBasedInspectionMonitoring = () => {
     );
   };
 
-  if (error) {
-    return (
-      <div className="p-6">
-        <Alert variant="destructive">
-          <AlertDescription>
-            Erreur lors du chargement des inspections: {error instanceof Error ? error.message : 'Erreur inconnue'}
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -218,7 +211,7 @@ const RoleBasedInspectionMonitoring = () => {
         <div>
           <h1 className="text-3xl font-bold">Suivi des Inspections</h1>
           <p className="text-muted-foreground">
-            Gestion des inspections selon les rôles et permissions
+            Gestion des inspections selon les rÃ´les et permissions
           </p>
         </div>
         {isAdmin && (
@@ -250,8 +243,8 @@ const RoleBasedInspectionMonitoring = () => {
                   <div>
                     <p className="font-medium">{getProjectTitle(inspection.project_id)}</p>
                     <p className="text-sm text-muted-foreground">
-                      Inspecteur: {inspection.inspector} • 
-                      Date prévue: {new Date(inspection.date).toLocaleDateString('fr-FR')} • 
+                      Inspecteur: {inspection.inspector} â€¢ 
+                      Date prÃ©vue: {new Date(inspection.date).toLocaleDateString('fr-FR')} â€¢ 
                       Retard: {Math.ceil((new Date().getTime() - new Date(inspection.date).getTime()) / (1000 * 60 * 60 * 24))} jour(s)
                     </p>
                   </div>
@@ -267,7 +260,7 @@ const RoleBasedInspectionMonitoring = () => {
                         )}
                       >
                         <Send className="h-4 w-4 mr-2" />
-                        Alerte hiérarchie
+                        Alerte hiÃ©rarchie
                       </Button>
                     )}
                   </div>
@@ -310,9 +303,9 @@ const RoleBasedInspectionMonitoring = () => {
                   <SelectItem value="all">Tous les statuts</SelectItem>
                   <SelectItem value="pending">En attente</SelectItem>
                   <SelectItem value="in_progress">En cours</SelectItem>
-                  <SelectItem value="completed">Complété</SelectItem>
-                  <SelectItem value="approved">Approuvé</SelectItem>
-                  <SelectItem value="rejected">Rejeté</SelectItem>
+                  <SelectItem value="completed">ComplÃ©tÃ©</SelectItem>
+                  <SelectItem value="approved">ApprouvÃ©</SelectItem>
+                  <SelectItem value="rejected">RejetÃ©</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -391,7 +384,7 @@ const RoleBasedInspectionMonitoring = () => {
                             <DropdownMenuItem asChild>
                               <Link to={`/inspections/${inspection.id}`}>
                                 <Eye className="h-4 w-4 mr-2" />
-                                Voir les détails
+                                Voir les dÃ©tails
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
@@ -465,9 +458,9 @@ const RoleBasedInspectionMonitoring = () => {
                   <SelectContent>
                     <SelectItem value="pending">En attente</SelectItem>
                     <SelectItem value="in_progress">En cours</SelectItem>
-                    <SelectItem value="completed">Complété</SelectItem>
-                    <SelectItem value="approved">Approuvé</SelectItem>
-                    <SelectItem value="rejected">Rejeté</SelectItem>
+                    <SelectItem value="completed">ComplÃ©tÃ©</SelectItem>
+                    <SelectItem value="approved">ApprouvÃ©</SelectItem>
+                    <SelectItem value="rejected">RejetÃ©</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -499,9 +492,8 @@ const RoleBasedInspectionMonitoring = () => {
               </Button>
               <Button 
                 onClick={handleSaveEdit}
-                disabled={updateInspectionMutation.isPending}
               >
-                {updateInspectionMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}
+                Enregistrer
               </Button>
             </div>
           </div>

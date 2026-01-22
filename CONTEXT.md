@@ -44,6 +44,11 @@ src/
 4. **Hook Layer** : Utilise DTOs SEULEMENT, PAS d'entités directes
 5. **UI Layer** : Utilise DTOs, PAS d'accès direct aux entités
 
+#### **Chemins Dépréciés (NE PAS UTILISER)**
+- `src/services/*` : **DEPRECATED** → utiliser `src/application/services/*`
+- `src/types/*` : **DEPRECATED** (migration uniquement) → utiliser `src/dtos/*`
+- `src/application/use-cases/*` : **DEPRECATED** → utiliser directement les services hexagonaux via `RepositoryFactory`
+
 #### **Flux de Transformation Standard**
 ```typescript
 // CORRECT : Flux centralisé sans dépendances cycliques
@@ -247,14 +252,6 @@ src/
 │   │   ├── MaterialService.ts
 │   │   ├── ProjectService.ts
 │   │   └── InspectionService.ts
-│   └── use-cases/            # ✅ Cas d'usage spécifiques
-│       ├── material/
-│       │   ├── CreateMaterialUseCase.ts
-│       │   ├── UpdateStockUseCase.ts
-│       │   └── GetLowStockMaterialsUseCase.ts
-│       └── project/
-│           ├── CreateProjectUseCase.ts
-│           └── GetProjectSummaryUseCase.ts
 ├── infrastructure/        # 🔧 Implémentations Techniques
 │   ├── supabase/            # ✅ Adapters Supabase
 │   │   ├── adapters/

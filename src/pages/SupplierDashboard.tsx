@@ -1,16 +1,16 @@
-import React from "react";
+﻿import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bell, DollarSign, FileText, TrendingUp } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { 
-  useSupplierAuthHex,
+  useSupplierDashboardAuthHex as useSupplierAuthHex,
   useSupplierProfileHex,
   useSupplierNotificationsHex,
   useSupplierPaymentsHex,
   useSupplierDocumentsHex
-} from "@/hooks/hexagonal/useSupplierDashboardHex";
+} from '@/hooks/hexagonal'
 
 const SupplierDashboard = () => {
   const { t } = useLanguage();
@@ -201,7 +201,7 @@ const SupplierDashboard = () => {
                             <div>
                               <h3 className="font-medium text-gray-900">
                                 {t("supplier_dashboard.payments.payment")} #
-                                {payment.reference_number || "—"}
+                                {payment.reference_number || "â€”"}
                               </h3>
                               <p className="text-sm text-gray-600">
                                 {t("supplier_dashboard.payments.amount")}:{" "}

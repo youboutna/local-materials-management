@@ -15,7 +15,8 @@ import {
   Search
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { ProjectService } from '@/services/ProjectService';
+import { ProjectService } from '@/application/services/ProjectService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useEffect } from 'react';
 import * as XLSX from 'xlsx';
@@ -29,7 +30,7 @@ const ProjectExporter = () => {
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const { toast } = useToast();
   const { t } = useLanguage();
-  const projectService = new ProjectService();
+  const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
 
   useEffect(() => {
     const loadProjects = async () => {
@@ -84,7 +85,7 @@ const ProjectExporter = () => {
     const detailedProjects = await Promise.all(
       projectsToExport.map(async (project) => {
         try {
-          const detail = await projectService.getProjectDetail(project.id);
+          const detail = await projectService.getProjectWithDetails(project.id);
           return {
             // Basic info
             id: detail?.id || project.id,

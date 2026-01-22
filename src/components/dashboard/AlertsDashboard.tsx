@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from "@/hooks/use-toast";
 import { useAlertsHex } from "@/hooks/hexagonal";
-import { AlertData } from "@/types/alerts";
+import { AlertData } from "@/dtos/entities";
 import {
   AlertTriangle,
   Bell,

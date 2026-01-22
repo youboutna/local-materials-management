@@ -3,10 +3,9 @@
  * Encapsulates phase operations using hexagonal architecture
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import { Phase, PhaseStep } from '@/domain/entities';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Phase, PhaseStep, PhaseStatus } from '@/domain/entities';
 import { PhaseMetrics } from '@/domain/repositories';
-import { GetPhaseDetailsUseCase } from '@/application/use-cases/project';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface CreatePhaseData {
@@ -52,8 +51,10 @@ export interface UsePhaseHexResult {
 }
 
 export function usePhaseHex(phaseId?: string): UsePhaseHexResult {
-  const phaseRepository = RepositoryFactory.getPhaseRepository();
-  const getPhaseDetailsUseCase = new GetPhaseDetailsUseCase(phaseRepository);
+  const phaseRepository = useMemo(
+    () => RepositoryFactory.getPhaseRepository(),
+    []
+  );
   
   const [phase, setPhase] = useState<Phase | null>(null);
   const [metrics, setMetrics] = useState<PhaseMetrics>(defaultMetrics);
@@ -70,24 +71,21 @@ export function usePhaseHex(phaseId?: string): UsePhaseHexResult {
     setError(null);
 
     try {
-      const result = await getPhaseDetailsUseCase.execute(phaseId);
+      const phaseData = await phaseRepository.findWithSteps(phaseId);
+      const metricsData = await phaseRepository.getMetrics(phaseId);
       
-      if (result.success && result.phase) {
-        setPhase(result.phase);
-        setMetrics(result.metrics);
-      } else {
-        setError(result.error || 'Failed to load phase');
-      }
+      setPhase(phaseData);
+      setMetrics(metricsData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load phase');
     } finally {
       setLoading(false);
     }
-  }, [phaseId]);
+  }, [phaseId, phaseRepository]);
 
   useEffect(() => {
     fetchPhase();
-  }, []); // Empty dependency array - only run once on mount
+  }, [fetchPhase]);
 
   const updateProgress = useCallback(async (progress: number): Promise<boolean> => {
     if (!phaseId) return false;
@@ -106,7 +104,7 @@ export function usePhaseHex(phaseId?: string): UsePhaseHexResult {
     if (!phaseId) return false;
     
     try {
-      await phaseRepository.updateStep(phaseId, stepId, { status: status as any });
+      await phaseRepository.updateStep(phaseId, stepId, { status: status as PhaseStatus });
       await fetchPhase();
       return true;
     } catch (err) {
@@ -141,9 +139,11 @@ export interface UsePhasesHexResult {
 }
 
 export function usePhasesHex(projectId: string | undefined): UsePhasesHexResult {
-  // Initialize repositories and use cases inside hook
-  const phaseRepository = RepositoryFactory.getPhaseRepository();
-  const getPhaseDetailsUseCase = new GetPhaseDetailsUseCase(phaseRepository);
+  // Initialize repository inside hook
+  const phaseRepository = useMemo(
+    () => RepositoryFactory.getPhaseRepository(),
+    []
+  );
   const [phases, setPhases] = useState<Phase[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -171,7 +171,7 @@ export function usePhasesHex(projectId: string | undefined): UsePhasesHexResult 
 
   useEffect(() => {
     fetchPhases();
-  }, []); // Empty dependency array - only run once on mount
+  }, [fetchPhases]);
 
   const createPhase = useCallback(async (data: CreatePhaseData): Promise<Phase | null> => {
     if (!projectId) return null;

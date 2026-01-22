@@ -2,7 +2,14 @@
  * Project Form Repository Interface
  * Defines the contract for project form operations
  */
-import { ProjectFormData, SaveContext } from '@/services/ProjectFormService';
+import { ProjectFormData } from '@/application/services/ProjectFormService';
+
+export interface SaveContext {
+  step: number;
+  timestamp: string;
+  isValid: boolean;
+  errors?: string[];
+}
 
 export interface IProjectFormRepository {
   /**

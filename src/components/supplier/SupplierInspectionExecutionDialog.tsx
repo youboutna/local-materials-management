@@ -13,9 +13,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { DocumentService } from '@/services/DocumentService';
+import { DocumentService } from '@/application/services/DocumentService';
 import { StorageFactory } from '@/services/storage/StorageFactory';
-import { InspectionService } from '@/services/InspectionService';
+import { InspectionService } from '@/application/services/InspectionService';
 import { generatePVPDF } from '@/lib/pvGenerator';
 import { InspectionDTO } from '@/types/inspection.dto';
 import { Upload, FileText, X, CheckCircle } from 'lucide-react';
@@ -47,6 +47,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
   const [paymentDescription, setPaymentDescription] = useState('');
   const { toast } = useToast();
   const { createNotification } = useNotifications();
+  const documentService = new DocumentService();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -89,20 +90,13 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
 
         // Create document record via DocumentService
         try {
-          const docRecord = await DocumentService.createDocument({
+          const docRecord = await documentService.createDocument({
             title: `Service fait - ${file.name}`,
             description: comments || undefined,
-            document_type: 'inspection',
-            file_name: file.name,
-            mime_type: file.type,
-            file_size: file.size,
-            project_id: inspection.project_id,
-            status: 'active',
-            inspection_id: inspection.id,
-            supplier_id: supplierId,
-            uploaded_by: supplierId,
-            file_url: publicUrl,
-          } as any);
+            type: 'report',
+            projectId: inspection.project_id,
+            fileUrl: publicUrl,
+          });
           // attach returned document id/url for notifications
           if (docRecord) {
             uploadedDocs.push({
@@ -145,20 +139,13 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
           if (pvUpload.success) {
             const pvUrl = pvUpload.url || '';
             try {
-              const pvDocRecord = await DocumentService.createDocument({
+              const pvDocRecord = await documentService.createDocument({
                 title: `PV - Inspection ${new Date(inspection.date).toLocaleDateString('fr-FR')}`,
                 description: `Procès-verbal généré lors de la validation de l'inspection`,
-                document_type: 'pv_inspection',
-                file_name: pvResult.fileName,
-                mime_type: 'application/pdf',
-                file_size: pvResult.arrayBuffer ? pvResult.arrayBuffer.byteLength : 0,
-                project_id: inspection.project_id,
-                status: 'active',
-                inspection_id: inspection.id,
-                supplier_id: supplierId,
-                uploaded_by: supplierId,
-                file_url: pvUrl,
-              } as any);
+                type: 'pv',
+                projectId: inspection.project_id,
+                fileUrl: pvUrl,
+              });
 
               if (pvDocRecord) {
                 uploadedDocs.push({

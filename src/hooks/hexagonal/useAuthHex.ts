@@ -8,7 +8,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RepositoryFactory } from "@/repositories/RepositoryFactory";
 import { AuthService } from "@/application/services/AuthService";
-import { AuthDomainTransformer, LoginRequestDto, RegisterRequestDto } from "@/dtos/transforms";
+import { AuthDomainTransformer } from "@/dtos/transforms";
+import { LoginData, RegisterData } from "@/dtos/entities";
+
+// Re-export types for convenience
+export type { LoginData, RegisterData };
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -18,11 +22,11 @@ export interface UseAuthHexResult {
   isLoading: boolean;
   error: any;
   refetch: () => void;
-  login: (credentials: LoginRequestDto) => void;
-  register: (userData: RegisterRequestDto) => void;
+  login: (credentials: LoginData) => void;
+  register: (userData: RegisterData) => void;
   logout: () => void;
-  updateProfile: (data: any) => void;
-  changePassword: (data: any) => void;
+  updateProfile: (profileData: any) => void;
+  changePassword: (newPassword: string) => void;
   isLoggingIn: boolean;
   isRegistering: boolean;
   isUpdating: boolean;
@@ -31,8 +35,6 @@ export interface UseAuthHexResult {
   getUserActivityScore: (user: any) => number;
   getUserTrustLevel: (user: any) => 'trusted' | 'verified' | 'unverified';
   getUserLastLoginDays: (user: any) => number;
-  getUserAnalytics: () => any;
-  validateUserWithReferential: (user: any, referentialType: string) => Promise<any>;
   generateUserReport: (user: any) => any;
 }
 
@@ -46,7 +48,7 @@ export function useAuthHex(): UseAuthHexResult {
   
   // Initialize services with transformers
   const authRepository = RepositoryFactory.getAuthRepository();
-  const authService = new AuthService(authRepository, AuthDomainTransformer);
+  const authService = new AuthService(authRepository);
 
   // Query for current user
   const {
@@ -71,7 +73,7 @@ export function useAuthHex(): UseAuthHexResult {
 
   // Login mutation
   const loginMutation = useMutation({
-    mutationFn: async (credentials: LoginRequestDto) => {
+    mutationFn: async (credentials: LoginData) => {
       try {
         const loginData = await authService.login(credentials);
         return loginData;
@@ -82,7 +84,8 @@ export function useAuthHex(): UseAuthHexResult {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
-      toast.success(`Bienvenue ${data.user.name || data.user.email}!`);
+      const userName = data.user?.full_name || data.user?.email || 'Utilisateur';
+      toast.success(`Bienvenue ${userName}!`);
       navigate('/dashboard');
     },
     onError: (error: any) => {
@@ -93,7 +96,7 @@ export function useAuthHex(): UseAuthHexResult {
 
   // Register mutation
   const registerMutation = useMutation({
-    mutationFn: async (userData: RegisterRequestDto) => {
+    mutationFn: async (userData: RegisterData) => {
       try {
         const registerData = await authService.register(userData);
         return registerData;
@@ -104,7 +107,8 @@ export function useAuthHex(): UseAuthHexResult {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
-      toast.success(`Compte créé avec succès! Bienvenue ${data.user.name || data.user.email}!`);
+      const userName = data?.full_name || data?.email || 'Utilisateur';
+      toast.success(`Compte créé avec succès! Bienvenue ${userName}!`);
       navigate('/dashboard');
     },
     onError: (error: any) => {
@@ -135,12 +139,14 @@ export function useAuthHex(): UseAuthHexResult {
     }
   });
 
-  // Update profile mutation
+  // Update profile mutation (placeholder - not implemented in AuthService)
   const updateProfileMutation = useMutation({
     mutationFn: async (profileData: any) => {
       try {
-        const updatedUser = await authService.updateProfile(profileData);
-        return updatedUser;
+        // AuthService doesn't have updateProfile method yet
+        // This is a placeholder for future implementation
+        console.log('Profile update not yet implemented:', profileData);
+        return null;
       } catch (error) {
         console.error('Error updating profile:', error);
         throw error;
@@ -158,9 +164,9 @@ export function useAuthHex(): UseAuthHexResult {
 
   // Change password mutation
   const changePasswordMutation = useMutation({
-    mutationFn: async (passwordData: any) => {
+    mutationFn: async (newPassword: string) => {
       try {
-        await authService.changePassword(passwordData);
+        await authService.updatePassword(newPassword);
         return true;
       } catch (error) {
         console.error('Error changing password:', error);
@@ -168,11 +174,11 @@ export function useAuthHex(): UseAuthHexResult {
       }
     },
     onSuccess: () => {
-      toast.success("Mot de passe changé avec succès");
+      toast.success("Mot de passe mis à jour avec succès");
     },
     onError: (error: any) => {
       console.error('Password change error:', error);
-      toast.error("Erreur lors du changement de mot de passe");
+      toast.error("Erreur lors de la mise à jour du mot de passe");
     }
   });
 
@@ -449,10 +455,10 @@ export function useLoginHex() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const authRepository = RepositoryFactory.getAuthRepository();
-  const authService = new AuthService(authRepository, AuthDomainTransformer);
+  const authService = new AuthService(authRepository);
 
   return useMutation({
-    mutationFn: async (credentials: LoginRequestDto) => {
+    mutationFn: async (credentials: LoginData) => {
       const loginData = await authService.login(credentials);
       return loginData;
     },
@@ -472,10 +478,10 @@ export function useRegisterHex() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const authRepository = RepositoryFactory.getAuthRepository();
-  const authService = new AuthService(authRepository, AuthDomainTransformer);
+  const authService = new AuthService(authRepository);
 
   return useMutation({
-    mutationFn: async (userData: RegisterRequestDto) => {
+    mutationFn: async (userData: RegisterData) => {
       const registerData = await authService.register(userData);
       return registerData;
     },

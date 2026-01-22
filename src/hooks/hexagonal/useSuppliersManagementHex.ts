@@ -17,6 +17,8 @@ export interface SupplierFormData {
   address: string;
   category: string;
   rating: number;
+  nif?: string;
+  commerce_register_ref?: string;
 }
 
 // Hook: Fetch all suppliers

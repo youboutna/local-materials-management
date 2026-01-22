@@ -8,8 +8,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 // Re-export AlertData type for compatibility
-export { AlertData } from "@/types/alerts";
-import { AlertData } from "@/types/alerts";
+export type { AlertData } from "@/dtos/entities";
+import { AlertData } from "@/dtos/entities";
 
 // Stats interface for dashboard
 export interface AlertStats {

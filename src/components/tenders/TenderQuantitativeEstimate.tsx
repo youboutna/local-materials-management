@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -16,7 +16,7 @@ import {
   useTenderQuantitativeEstimateHex,
   type EstimateItem,
   type TenderEstimate
-} from '@/hooks/hexagonal/useTenderQuantitativeEstimateHex';
+} from '@/hooks/hexagonal'
 
 interface TenderQuantitativeEstimateProps {
   tenderId: string;
@@ -118,13 +118,13 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
       const result = await uploadFile(file);
       setSelectedFile(result.file);
       toast({
-        title: "Fichier téléchargé",
-        description: `${file.name} a été téléchargé avec succès`,
+        title: "Fichier tÃ©lÃ©chargÃ©",
+        description: `${file.name} a Ã©tÃ© tÃ©lÃ©chargÃ© avec succÃ¨s`,
       });
     } catch (error) {
       toast({
         title: "Erreur",
-        description: "Impossible de télécharger le fichier",
+        description: "Impossible de tÃ©lÃ©charger le fichier",
         variant: "destructive",
       });
     }
@@ -163,7 +163,7 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList>
               <TabsTrigger value="quantitative">Quantitatif</TabsTrigger>
-              <TabsTrigger value="materials">Matériaux</TabsTrigger>
+              <TabsTrigger value="materials">MatÃ©riaux</TabsTrigger>
             </TabsList>
 
             <TabsContent value="quantitative" className="space-y-6">
@@ -186,22 +186,22 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
                             onClick={() => setSelectedEstimateId(estimate.id || '')}
                           >
                             <FileText className="h-4 w-4 mr-2" />
-                            Détails
+                            DÃ©tails
                           </Button>
                         </div>
                       </div>
                       
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <span className="text-muted-foreground">Total matériaux:</span>
+                          <span className="text-muted-foreground">Total matÃ©riaux:</span>
                           <span className="font-medium">{estimate.total_materials_cost?.toLocaleString()} MRU</span>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">Total main d'œuvre:</span>
+                          <span className="text-muted-foreground">Total main d'Å“uvre:</span>
                           <span className="font-medium">{estimate.total_labor_cost?.toLocaleString()} MRU</span>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">Total équipement:</span>
+                          <span className="text-muted-foreground">Total Ã©quipement:</span>
                           <span className="font-medium">{estimate.total_equipment_cost?.toLocaleString()} MRU</span>
                         </div>
                         <div>
@@ -218,7 +218,7 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
               <div className="flex justify-center">
                 <Button onClick={() => setIsCreateEstimateOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Créer un nouveau devis
+                  CrÃ©er un nouveau devis
                 </Button>
               </div>
             </TabsContent>
@@ -231,7 +231,7 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
                     <CardContent className="p-4">
                       <h4 className="font-medium">{material.name}</h4>
                       <div className="text-sm text-muted-foreground">
-                        {material.price_per_unit} {material.unit} / unité
+                        {material.price_per_unit} {material.unit} / unitÃ©
                       </div>
                     </CardContent>
                   </Card>
@@ -246,7 +246,7 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
       <Dialog open={isCreateEstimateOpen} onOpenChange={setIsCreateEstimateOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Créer un nouveau devis</DialogTitle>
+            <DialogTitle>CrÃ©er un nouveau devis</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -260,7 +260,7 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
                 />
               </div>
               <div>
-                <Label htmlFor="overhead_percentage">Pourcentage frais généraux (%)</Label>
+                <Label htmlFor="overhead_percentage">Pourcentage frais gÃ©nÃ©raux (%)</Label>
                 <Input
                   id="overhead_percentage"
                   type="number"
@@ -271,7 +271,7 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="profit_margin_percentage">Marge bénéficiaire (%)</Label>
+                <Label htmlFor="profit_margin_percentage">Marge bÃ©nÃ©ficiaire (%)</Label>
                 <Input
                   id="profit_margin_percentage"
                   type="number"
@@ -298,7 +298,7 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
                 Annuler
               </Button>
               <Button onClick={handleCreateEstimate} disabled={createEstimateMutation.isPending}>
-                {createEstimateMutation.isPending ? 'Création...' : 'Créer'}
+                {createEstimateMutation.isPending ? 'CrÃ©ation...' : 'CrÃ©er'}
               </Button>
             </div>
           </div>
@@ -314,7 +314,7 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="material">Matériau</Label>
+                <Label htmlFor="material">MatÃ©riau</Label>
                 <Select value={newItem.material_id} onValueChange={(value) => setNewItem(prev => ({ ...prev, material_id: value }))}>
                   <SelectTrigger>
                     <SelectValue />
@@ -329,7 +329,7 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
                 </Select>
               </div>
               <div>
-                <Label htmlFor="quantity">Quantité</Label>
+                <Label htmlFor="quantity">QuantitÃ©</Label>
                 <Input
                   id="quantity"
                   type="number"

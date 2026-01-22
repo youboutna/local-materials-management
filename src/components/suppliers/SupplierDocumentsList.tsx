@@ -1,13 +1,11 @@
-import { Card, CardContent } from '@/components/ui/card';
+﻿import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, Download, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useSupplierDocuments } from '@/hooks/hexagonal/useDocumentsHex';
+import { useSupplierDocumentsHex } from '@/hooks/hexagonal'
 import type { Supplier } from '@/types/supplier';
-import type { Database } from '@/integrations/supabase/types';
-
-type DocumentRow = Database['public']['Tables']['documents']['Row'];
+import type { SupplierDocument } from '@/hooks/hexagonal';
 
 interface SupplierDocumentsListProps {
   supplier: Supplier;
@@ -15,7 +13,7 @@ interface SupplierDocumentsListProps {
 
 const SupplierDocumentsList = ({ supplier }: SupplierDocumentsListProps) => {
   const { toast } = useToast();
-  const { data: documents, isLoading } = useSupplierDocuments(supplier.id);
+  const { data: documents, isLoading } = useSupplierDocumentsHex(supplier.id);
 
   const getDocumentTypeLabel = (type: string) => {
     const types: Record<string, string> = {
@@ -34,7 +32,7 @@ const SupplierDocumentsList = ({ supplier }: SupplierDocumentsListProps) => {
     return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
   };
 
-  const handleDownload = async (doc: DocumentRow) => {
+  const handleDownload = async (doc: SupplierDocument) => {
     if (!doc.file_url) {
       toast({
         title: "Erreur",
@@ -59,7 +57,7 @@ const SupplierDocumentsList = ({ supplier }: SupplierDocumentsListProps) => {
     } catch (error) {
       toast({
         title: "Erreur",
-        description: "Impossible de télécharger le fichier.",
+        description: "Impossible de tÃ©lÃ©charger le fichier.",
         variant: "destructive"
       });
     }
@@ -78,7 +76,7 @@ const SupplierDocumentsList = ({ supplier }: SupplierDocumentsListProps) => {
       <Card>
         <CardContent className="text-center py-6">
           <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Aucun document téléversé</p>
+          <p className="text-sm text-muted-foreground">Aucun document tÃ©lÃ©versÃ©</p>
         </CardContent>
       </Card>
     );

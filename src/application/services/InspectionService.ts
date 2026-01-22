@@ -4,6 +4,26 @@ import { Inspection, InspectionStatus } from '@/domain/entities/Inspection';
 import { AppError, ErrorLogger } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
+// Types for inspection execution
+export interface InspectionDocument {
+  id: string;
+  type: string;
+  name: string;
+  url?: string;
+  uploadedAt?: string;
+  inspectionId: string;
+}
+
+export interface InspectionExecutionData {
+  id: string;
+  status: string;
+  progressAtInspection?: number;
+  comments?: string;
+  documents: InspectionDocument[];
+  completedAt?: string;
+  completedBy?: string;
+}
+
 export class InspectionService {
   private repository: IInspectionRepository;
 
@@ -252,6 +272,82 @@ export class InspectionService {
     } catch (error) {
       ErrorLogger.log(error as Error, 'InspectionService.getAverageCompletionTime');
       throw error;
+    }
+  }
+
+  /**
+   * Upload documents for inspection
+   */
+  async uploadDocuments(inspectionId: string, files: File[]): Promise<InspectionDocument[]> {
+    try {
+      const uploadedDocuments: InspectionDocument[] = [];
+      
+      for (const file of files) {
+        // Simulate document upload - in real implementation, this would use StorageService
+        const document: InspectionDocument = {
+          id: `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          type: file.type || 'unknown',
+          name: file.name,
+          inspectionId,
+          uploadedAt: new Date().toISOString()
+        };
+        
+        uploadedDocuments.push(document);
+      }
+      
+      return uploadedDocuments;
+    } catch (error) {
+      ErrorLogger.log(error as Error, 'InspectionService.uploadDocuments');
+      throw new Error('Failed to upload documents');
+    }
+  }
+
+  /**
+   * Get inspection with execution data
+   */
+  async getInspectionExecutionData(inspectionId: string): Promise<InspectionExecutionData | null> {
+    try {
+      const inspection = await this.repository.findById(inspectionId);
+      
+      if (!inspection) {
+        return null;
+      }
+
+      return {
+        id: inspection.id,
+        status: inspection.status,
+        progressAtInspection: inspection.progressAtInspection,
+        comments: inspection.comments,
+        documents: inspection.documents || [],
+        completedAt: inspection.updatedAt
+      };
+    } catch (error) {
+      ErrorLogger.log(error as Error, 'InspectionService.getInspectionExecutionData');
+      throw new Error('Failed to get inspection execution data');
+    }
+  }
+
+  /**
+   * Update inspection with execution data
+   */
+  async updateInspectionExecution(data: InspectionExecutionData): Promise<InspectionExecutionData> {
+    try {
+      const updatedInspection = await this.updateInspection(data.id, {
+        status: data.status,
+        progressAtInspection: data.progressAtInspection,
+        comments: data.comments,
+        documents: data.documents,
+        completedAt: data.completedAt,
+        updatedAt: new Date().toISOString()
+      });
+      
+      return {
+        ...updatedInspection,
+        documents: data.documents
+      };
+    } catch (error) {
+      ErrorLogger.log(error as Error, 'InspectionService.updateInspectionExecution');
+      throw new Error('Failed to update inspection execution');
     }
   }
 

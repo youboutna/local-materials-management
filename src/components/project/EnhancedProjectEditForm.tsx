@@ -37,6 +37,7 @@ import LocationStep from "./steps/LocationStep";
 import RiskAnalysisStep from "./steps/RiskAnalysisStep";
 import ComplianceStep from "./steps/ComplianceStep";
 import ConstructionPhaseManager from "./ConstructionPhaseManager";
+import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
 
 interface EnhancedProjectEditFormProps {
   initialData?: any;
@@ -82,11 +83,11 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
 
     setIsLoading(true);
     try {
-      const { ProjectService } = await import("@/services/ProjectService");
-      const projectService = new ProjectService();
+      const { ProjectService } = await import("@/application/services/ProjectService");
+      const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
 
       // Load complete project details
-      const projectDetail = await projectService.getProjectDetail(projectId);
+      const projectDetail = await projectService.getProjectWithDetails(projectId);
 
       if (projectDetail) {
         // Load stakeholders from database

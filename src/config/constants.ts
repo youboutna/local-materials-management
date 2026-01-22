@@ -3,7 +3,7 @@
 const isBrowser = typeof window !== 'undefined';
 const isDevelopment = isBrowser ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') : false;
 
-export const DEV_MODE =  isDevelopment||false;
+export const DEV_MODE =  false;
 export const CLIENT_ETRML = isBrowser && (window as any).__APP_CONFIG__?.CLIENT_ETRML === 'true' || false;
 
 // Mock user configuration for development mode

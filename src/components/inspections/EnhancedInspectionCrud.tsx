@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,7 +21,7 @@ import {
   useEnhancedInspectionCrudHex,
   type Inspection,
   type InspectionFormData
-} from '@/hooks/hexagonal/useEnhancedInspectionCrudHex';
+} from '@/hooks/hexagonal'
 
 const EnhancedInspectionCrud = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -56,20 +56,20 @@ const EnhancedInspectionCrud = () => {
   } = useEnhancedInspectionCrudHex();
 
   const inspectionStatuses = [
-    { value: 'scheduled', label: 'Programmée', color: 'bg-blue-100 text-blue-800', icon: Clock },
+    { value: 'scheduled', label: 'ProgrammÃ©e', color: 'bg-blue-100 text-blue-800', icon: Clock },
     { value: 'in_progress', label: 'En cours', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-    { value: 'completed', label: 'Terminée', color: 'bg-green-100 text-green-800', icon: CheckCircle },
-    { value: 'failed', label: 'Échec', color: 'bg-red-100 text-red-800', icon: AlertCircle },
-    { value: 'postponed', label: 'Reportée', color: 'bg-gray-100 text-gray-800', icon: Clock }
+    { value: 'completed', label: 'TerminÃ©e', color: 'bg-green-100 text-green-800', icon: CheckCircle },
+    { value: 'failed', label: 'Ã‰chec', color: 'bg-red-100 text-red-800', icon: AlertCircle },
+    { value: 'postponed', label: 'ReportÃ©e', color: 'bg-gray-100 text-gray-800', icon: Clock }
   ];
 
   const inspectionTypes = [
     { value: 'routine', label: 'Inspection Routine' },
-    { value: 'quality', label: 'Contrôle Qualité' },
-    { value: 'safety', label: 'Sécurité' },
+    { value: 'quality', label: 'ContrÃ´le QualitÃ©' },
+    { value: 'safety', label: 'SÃ©curitÃ©' },
     { value: 'environmental', label: 'Environnementale' },
-    { value: 'final', label: 'Réception Finale' },
-    { value: 'compliance', label: 'Conformité Réglementaire' }
+    { value: 'final', label: 'RÃ©ception Finale' },
+    { value: 'compliance', label: 'ConformitÃ© RÃ©glementaire' }
   ];
 
   const resetForm = () => {
@@ -165,7 +165,7 @@ const EnhancedInspectionCrud = () => {
   };
 
   const handleDelete = async (inspectionId: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette inspection ?')) {
+    if (confirm('ÃŠtes-vous sÃ»r de vouloir supprimer cette inspection ?')) {
       try {
         await deleteInspection(inspectionId);
       } catch (error) {
@@ -211,7 +211,7 @@ const EnhancedInspectionCrud = () => {
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {isViewMode ? 'Détails de l\'Inspection' : 
+                {isViewMode ? 'DÃ©tails de l\'Inspection' : 
                  isEditing ? 'Modifier l\'Inspection' : 'Nouvelle Inspection'}
               </DialogTitle>
             </DialogHeader>
@@ -233,7 +233,7 @@ const EnhancedInspectionCrud = () => {
                     value={formData.inspector}
                     onChange={(value) => setFormData(prev => ({ ...prev, inspector: value }))}
                     disabled={isViewMode}
-                    placeholder="Sélectionner un inspecteur"
+                    placeholder="SÃ©lectionner un inspecteur"
                   />
                 </div>
               </div>
@@ -290,7 +290,7 @@ const EnhancedInspectionCrud = () => {
                 </div>
                 
                 <div>
-                  <Label htmlFor="defects_found">Défauts trouvés</Label>
+                  <Label htmlFor="defects_found">DÃ©fauts trouvÃ©s</Label>
                   <Input
                     id="defects_found"
                     type="number"
@@ -372,7 +372,7 @@ const EnhancedInspectionCrud = () => {
                     Annuler
                   </Button>
                   <Button type="submit">
-                    {isEditing ? 'Mettre à jour' : 'Créer'}
+                    {isEditing ? 'Mettre Ã  jour' : 'CrÃ©er'}
                   </Button>
                 </div>
               )}
@@ -394,7 +394,7 @@ const EnhancedInspectionCrud = () => {
                 <TableHead>Statut</TableHead>
                 <TableHead>Progression</TableHead>
                 <TableHead>Type</TableHead>
-                <TableHead>Défauts</TableHead>
+                <TableHead>DÃ©fauts</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>

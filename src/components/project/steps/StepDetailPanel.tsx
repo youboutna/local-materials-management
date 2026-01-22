@@ -28,17 +28,16 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Use Cases
-import { 
-  GetInspectionsByPhaseUseCase,
-  GetPaymentsByPhaseUseCase 
-} from '@/application/use-cases';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { InspectionService } from '@/application/services/InspectionService';
 
 // Components
 import EnhancedScheduleInspectionModal from '@/components/inspections/EnhancedScheduleInspectionModal';
 import PaymentRequestModal from '@/components/payments/PaymentRequestModal';
 
 // Types
+type StepDetailTab = 'overview' | 'inspections' | 'documents' | 'payments';
+
 interface StepDetailPanelProps {
   step: {
     id: string;
@@ -49,11 +48,11 @@ interface StepDetailPanelProps {
     order_index?: number;
     start_date?: string;
     end_date?: string;
-    tasks?: any[];
-    milestones?: any[];
-    documents?: any[];
-    inspections?: any[];
-    payments?: any[];
+    tasks?: unknown[];
+    milestones?: unknown[];
+    documents?: unknown[];
+    inspections?: unknown[];
+    payments?: unknown[];
   };
   phaseId: string;
   projectId: string;
@@ -71,7 +70,10 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'inspections' | 'documents' | 'payments'>('overview');
+  const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
+  const paymentRepository = RepositoryFactory.getPaymentRepository();
+
+  const [activeTab, setActiveTab] = useState<StepDetailTab>('overview');
   const [inspectionModal, setInspectionModal] = useState<{
     open: boolean;
     mode: 'request' | 'schedule';
@@ -82,8 +84,14 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
   const { data: inspectionsData } = useQuery({
     queryKey: ['step-inspections', phaseId],
     queryFn: async () => {
-      const useCase = new GetInspectionsByPhaseUseCase();
-      return useCase.execute(phaseId);
+      const inspections = await inspectionService.getInspectionsByPhase(phaseId);
+
+      const approvedCount = inspections.filter((i) => i.status === 'approved').length;
+      return {
+        inspections,
+        totalCount: inspections.length,
+        approvedCount,
+      };
     },
     enabled: !!phaseId
   });
@@ -92,8 +100,16 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
   const { data: paymentsData } = useQuery({
     queryKey: ['step-payments', phaseId],
     queryFn: async () => {
-      const useCase = new GetPaymentsByPhaseUseCase();
-      return useCase.execute(phaseId);
+      const payments = await paymentRepository.findByPhaseId(phaseId);
+      const totalPaid = payments
+        .filter((p) => p.status === 'paid')
+        .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+      return {
+        payments,
+        paymentCount: payments.length,
+        totalPaid,
+      };
     },
     enabled: !!phaseId
   });
@@ -217,7 +233,7 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
       </Card>
 
       {/* Tabs de navigation */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as StepDetailTab)}>
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview" className="gap-1">
             <Eye className="h-4 w-4" />

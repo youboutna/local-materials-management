@@ -7,7 +7,7 @@ import { toast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { DEV_MODE } from '@/config/constants';
-import { PhaseService, PhaseData } from '@/services/phaseService';
+import { PhaseService, PhaseData } from '@/application/services/PhaseService';
 import ConstructionPhaseManager from './ConstructionPhaseManager';
 
 interface ProjectPhasesProps {

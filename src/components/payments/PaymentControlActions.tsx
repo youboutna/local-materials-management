@@ -1,4 +1,4 @@
-import UserSelector from '@/components/selectors/UserSelector';
+﻿import UserSelector from '@/components/selectors/UserSelector';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,7 +32,7 @@ import {
   type ActionFormData,
   type PaymentControlActionsProps,
   type ActionMetadata
-} from '@/hooks/hexagonal/usePaymentControlActionsHex';
+} from '@/hooks/hexagonal'
 
 const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
   paymentId,
@@ -63,10 +63,10 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
   });
 
   const actionTypes = [
-    { value: 'task_assignment', label: 'Assignation de tâche', icon: Briefcase },
-    { value: 'hierarchy_notification', label: 'Notification hiérarchique', icon: Users },
+    { value: 'task_assignment', label: 'Assignation de tÃ¢che', icon: Briefcase },
+    { value: 'hierarchy_notification', label: 'Notification hiÃ©rarchique', icon: Users },
     { value: 'sms', label: 'SMS', icon: MessageSquare },
-    { value: 'call', label: 'Appel téléphonique', icon: Phone },
+    { value: 'call', label: 'Appel tÃ©lÃ©phonique', icon: Phone },
     { value: 'email', label: 'Email', icon: Mail },
     { value: 'mail', label: 'Courrier postal', icon: Send }
   ];
@@ -74,12 +74,12 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
   const priorityLevels = [
     { value: 'low', label: 'Faible', color: 'bg-green-100 text-green-800' },
     { value: 'medium', label: 'Moyen', color: 'bg-blue-100 text-blue-800' },
-    { value: 'high', label: 'Élevé', color: 'bg-orange-100 text-orange-800' },
+    { value: 'high', label: 'Ã‰levÃ©', color: 'bg-orange-100 text-orange-800' },
     { value: 'urgent', label: 'Urgent', color: 'bg-red-100 text-red-800' }
   ];
 
   const escalationLevels = [
-    { value: 'team', label: 'Équipe (Collègues)' },
+    { value: 'team', label: 'Ã‰quipe (CollÃ¨gues)' },
     { value: 'supervisor', label: 'Superviseur' },
     { value: 'manager', label: 'Manager' },
     { value: 'director', label: 'Directeur' }
@@ -89,7 +89,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
     { value: 'email', label: 'Email' },
     { value: 'sms', label: 'SMS' },
     { value: 'push', label: 'Notification push' },
-    { value: 'system', label: 'Notification système' }
+    { value: 'system', label: 'Notification systÃ¨me' }
   ];
 
   const onSubmitAction = async (values: ActionFormData) => {
@@ -126,7 +126,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
 
       toast({
         title: t('common.success'),
-        description: `${actionTypes.find(t => t.value === values.actionType)?.label} envoyée avec succès`
+        description: `${actionTypes.find(t => t.value === values.actionType)?.label} envoyÃ©e avec succÃ¨s`
       });
 
       form.reset();
@@ -136,7 +136,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
       console.error('Error executing action:', error);
       toast({
         title: t('common.error'),
-        description: "Erreur lors de l'exécution de l'action",
+        description: "Erreur lors de l'exÃ©cution de l'action",
         variant: "destructive"
       });
     }
@@ -158,12 +158,12 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
             name="assigneeId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Assigné à</FormLabel>
+                <FormLabel>AssignÃ© Ã </FormLabel>
                 <FormControl>
                   <UserSelector
                     value={field.value}
                     onChange={field.onChange}
-                    placeholder="Sélectionner un utilisateur"
+                    placeholder="SÃ©lectionner un utilisateur"
                   />
                 </FormControl>
                 <FormMessage />
@@ -183,7 +183,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un niveau" />
+                      <SelectValue placeholder="SÃ©lectionner un niveau" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -210,7 +210,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Shield className="h-5 w-5" />
-          Actions de Contrôle de Paiement
+          Actions de ContrÃ´le de Paiement
         </CardTitle>
         <CardDescription>
           Actions disponibles pour le paiement de {amount.toLocaleString()} MRU
@@ -253,7 +253,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
                     {actionTypes.find(t => t.value === form.watch('actionType'))?.label}
                   </DialogTitle>
                   <DialogDescription>
-                    Configurer et envoyer l'action de contrôle de paiement
+                    Configurer et envoyer l'action de contrÃ´le de paiement
                   </DialogDescription>
                 </DialogHeader>
 
@@ -279,7 +279,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
                         name="priority"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Priorité</FormLabel>
+                            <FormLabel>PrioritÃ©</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
                                 <SelectTrigger>
@@ -312,7 +312,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
                           <FormLabel>Message</FormLabel>
                           <FormControl>
                             <Textarea 
-                              placeholder="Description détaillée de l'action" 
+                              placeholder="Description dÃ©taillÃ©e de l'action" 
                               rows={4}
                               {...field} 
                             />
@@ -332,7 +332,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
                             <UserSelector
                               value={field.value}
                               onChange={field.onChange}
-                              placeholder="Sélectionner les destinataires"
+                              placeholder="SÃ©lectionner les destinataires"
                               multiple
                             />
                           </FormControl>

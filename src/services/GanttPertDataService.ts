@@ -7,7 +7,7 @@
  */
 
 import { ProjectDetailDTO } from '@/types/dto';
-import { getMilestoneService, UnifiedMilestoneService } from './UnifiedMilestoneService';
+import { getMilestoneService, UnifiedMilestoneService } from '@/application/services/UnifiedMilestoneService';
 import { GanttChartData, PERTAnalysis, PERTActivity } from '@/types/project';
 
 export interface GanttPhaseData {

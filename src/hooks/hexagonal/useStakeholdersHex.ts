@@ -5,8 +5,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { EmployeeService } from '@/application/services/EmployeeService';
 import { SupplierService } from '@/application/services/SupplierService';
+import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 
 export function useStakeholdersHex() {
+  const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
+  const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
+  
   const { 
     data: employees = [], 
     isLoading: employeesLoading,
@@ -14,7 +18,7 @@ export function useStakeholdersHex() {
   } = useQuery({
     queryKey: ['employees-active-hex'],
     queryFn: async () => {
-      return await EmployeeService.getAllEmployees();
+      return await employeeService.getActiveEmployees();
     },
     staleTime: 60_000,
   });
@@ -26,7 +30,7 @@ export function useStakeholdersHex() {
   } = useQuery({
     queryKey: ['suppliers-active-hex'],
     queryFn: async () => {
-      return await SupplierService.getAllSuppliers();
+      return await supplierService.getActiveSuppliers();
     },
     staleTime: 60_000,
   });

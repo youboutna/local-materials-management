@@ -3,7 +3,7 @@
  * MIGRATED TO HEXAGONAL ARCHITECTURE
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { NotificationService } from '@/application/services/NotificationService';
 import { TaskAssignmentService } from '@/application/services/TaskAssignmentService';
@@ -86,6 +86,7 @@ const TaskAssignmentsComponent = () => {
   const assigneeDetails = assigneeResult?.details;
 
   useEffect(() => {
+    // Only update form when we have assignee details
     if (assigneeDetails) {
       setFormData(prev => ({
         ...prev,
@@ -93,15 +94,8 @@ const TaskAssignmentsComponent = () => {
         assignee_name: assigneeDetails.name,
         assignee_email: assigneeDetails.email,
       }));
-    } else if (!formData.assigned_to) {
-      setFormData(prev => ({
-        ...prev,
-        assignee_type: "",
-        assignee_name: "",
-        assignee_email: "",
-      }));
     }
-  }, [assigneeDetails, formData.assigned_to]);
+  }, [assigneeDetails]);
 
   // Get unique assignees from tasks for filter
   const uniqueAssignees = tasks?.reduce((acc, task) => {

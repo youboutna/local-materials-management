@@ -143,4 +143,20 @@ export class MilestoneService {
       average_progress: 0
     };
   }
+
+  static async getMilestoneProgress(projectId: string): Promise<number> {
+    try {
+      const milestones = await this.getProjectMilestones(projectId);
+      
+      if (milestones.length === 0) return 0;
+      
+      const totalProgress = milestones.reduce((sum, milestone) => sum + milestone.progress, 0);
+      const averageProgress = totalProgress / milestones.length;
+      
+      return Math.round(averageProgress);
+    } catch (error) {
+      console.error('Error calculating milestone progress:', error);
+      return 0;
+    }
+  }
 }

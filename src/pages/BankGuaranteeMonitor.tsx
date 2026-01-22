@@ -80,7 +80,7 @@ const BankGuaranteeMonitorPage = () => {
   const [projectHierarchy, setProjectHierarchy] = useState<any[]>([]);
   
   // Use hexagonal hook for projects
-  const { projects, loading: projectsLoading } = useProjectsHex();
+  const { projects, isLoading: projectsLoading } = useProjectsHex();
   
   // Use hexagonal hook for bank guarantees stats
   const { stats: guaranteeStats } = useBankGuaranteesHex();
@@ -89,18 +89,19 @@ const BankGuaranteeMonitorPage = () => {
     // Select first active project when projects are loaded
     if (projects.length > 0 && !selectedProject) {
       const activeProject = projects.find(p => p.status === 'en cours') || projects[0];
-      const projectData = {
+      const projectData: ProjectData = {
         id: activeProject.id,
         title: activeProject.title,
+        description: activeProject.description || '',
+        location: activeProject.location || '',
         status: activeProject.status,
         progress: activeProject.progress,
         budget: activeProject.budget,
-        startDate: activeProject.startDate?.toISOString() || new Date().toISOString(),
-        endDate: activeProject.endDate?.toISOString(),
+        startDate: activeProject.startDate || new Date().toISOString(),
+        endDate: activeProject.endDate || new Date().toISOString(),
         teamSize: 0,
-        description: activeProject.description,
-        location: activeProject.location,
-      } as unknown as ProjectData;
+        thumbnail: undefined,
+      };
       
       setSelectedProject(projectData);
       
@@ -121,8 +122,7 @@ const BankGuaranteeMonitorPage = () => {
       return {
         level1: 'employee',
         level2: 'supervisor', 
-        level3: 'manager',
-        level4: 'director'
+        level3: 'manager'
       };
     }
 
@@ -132,14 +132,23 @@ const BankGuaranteeMonitorPage = () => {
     const roles: EscalationRoles = {
       level1: 'employee',
       level2: 'supervisor',
-      level3: 'manager', 
-      level4: 'director'
+      level3: 'manager'
     };
 
     // Map actual hierarchy positions to escalation levels
     if (levels.length >= 1) {
       const highestLevel = sortedHierarchy.filter(h => h.level === levels[0]);
-      roles.level4 = highestLevel[0]?.position_title || 'director';
+      roles.level3 = highestLevel[0]?.position_title || 'manager';
+    }
+    
+    if (levels.length >= 2) {
+      const midLevel = sortedHierarchy.filter(h => h.level === levels[1]);
+      roles.level2 = midLevel[0]?.position_title || 'supervisor';
+    }
+    
+    if (levels.length >= 3) {
+      const lowestLevel = sortedHierarchy.filter(h => h.level === levels[2]);
+      roles.level1 = lowestLevel[0]?.position_title || 'employee';
     }
     
     if (levels.length >= 2) {

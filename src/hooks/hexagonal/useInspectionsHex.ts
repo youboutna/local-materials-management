@@ -6,21 +6,58 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { RepositoryFactory } from '@/application/services/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { InspectionService } from "@/application/services/InspectionService";
-import { InspectionDomainTransformer, CreateInspectionRequestDto, UpdateInspectionRequestDto } from "@/dtos/transforms";
+import { CreateInspectionRequestDto, UpdateInspectionRequestDto } from "@/dtos/transforms";
+import type { Inspection } from '@/domain/entities/Inspection';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 // Types compatibles avec le service
-type ServiceCreateInspectionDTO = Omit<CreateInspectionRequestDto, 'status'> & { status?: any };
-type ServiceUpdateInspectionDTO = Omit<UpdateInspectionRequestDto, 'status'> & { status?: any };
+type ServiceCreateInspectionDTO = Omit<CreateInspectionRequestDto, 'status'> & { status?: unknown };
+type ServiceUpdateInspectionDTO = Omit<UpdateInspectionRequestDto, 'status'> & { status?: unknown };
+
+type InspectionUI = {
+  complianceScore?: number;
+  criticalIssues?: unknown[];
+  documents?: unknown[];
+  qualityScore?: number;
+  defectRate?: number;
+  lastInspectionDate?: string;
+  status?: string;
+  type?: string;
+  requiresSafetyEquipment?: boolean;
+  requiresPermits?: boolean;
+  highRiskArea?: boolean;
+  criticalInspection?: boolean;
+  regulatedActivity?: boolean;
+  highValueInspection?: boolean;
+  environmentalSensitiveArea?: boolean;
+  generatesWaste?: boolean;
+  potentialPollution?: boolean;
+  safetyProtocols?: unknown;
+  safetyEquipment?: unknown;
+  inspectorSafetyTraining?: unknown;
+  hazardAssessment?: unknown;
+  qualityStandards?: unknown;
+  qualityMetrics?: unknown;
+  qualityControlProcedures?: unknown;
+  qualityAssurance?: unknown;
+  regulatoryCompliance?: unknown;
+  permits?: unknown;
+  regulatoryApprovals?: unknown;
+  complianceDocumentation?: unknown;
+  environmentalImpact?: unknown;
+  environmentalCompliance?: unknown;
+  wasteManagement?: unknown;
+  pollutionControl?: unknown;
+};
 
 // Enhanced types for UI components
 export interface UseInspectionsHexResult {
-  inspections: any[];
+  inspections: unknown[];
   isLoading: boolean;
-  error: any;
+  error: unknown;
   refetch: () => void;
   createInspection: (data: CreateInspectionRequestDto) => void;
   updateInspection: ({ id, data }: { id: string; data: UpdateInspectionRequestDto }) => void;
@@ -29,13 +66,20 @@ export interface UseInspectionsHexResult {
   isUpdating: boolean;
   isDeleting: boolean;
   // Enhanced UI features
-  getInspectionComplianceScore: (inspection: any) => number;
-  getInspectionQualityMetrics: (inspection: any) => { qualityScore: number; defectRate: number };
-  getInspectionRiskLevel: (inspection: any) => 'low' | 'medium' | 'high';
-  getInspectionDaysSinceLast: (inspection: any) => number;
-  getInspectionAnalytics: () => any;
-  validateInspectionWithReferential: (inspection: any, referentialType: string) => Promise<any>;
-  generateInspectionReport: (inspection: any) => any;
+  getInspectionComplianceScore: (inspection: InspectionUI) => number;
+  getInspectionQualityMetrics: (inspection: InspectionUI) => { qualityScore: number; defectRate: number };
+  getInspectionRiskLevel: (inspection: InspectionUI) => 'low' | 'medium' | 'high';
+  getInspectionDaysSinceLast: (inspection: InspectionUI) => number;
+  getInspectionAnalytics: () => {
+    totalInspections: number;
+    statusBreakdown: { completed: number; pending: number; failed: number };
+    averageComplianceScore: number;
+    riskBreakdown: { high: number; medium: number; low: number };
+    compliantInspections: number;
+    highRiskInspections: number;
+  };
+  validateInspectionWithReferential: (inspection: InspectionUI, referentialType: string) => Promise<{ isValid: boolean; errors: string[]; warnings: string[]; compliance?: string }>;
+  generateInspectionReport: (inspection: InspectionUI) => unknown;
 }
 
 /**
@@ -44,12 +88,9 @@ export interface UseInspectionsHexResult {
 export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  useLanguage();
   
-  // TODO: Implement InspectionRepository in RepositoryFactory
-  // For now, using a mock implementation
-  const inspectionRepository = {} as any; // RepositoryFactory.getInspectionRepository();
-  const inspectionService = new InspectionService(inspectionRepository, InspectionDomainTransformer);
+  const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
 
   // Query for inspections list
   const {
@@ -59,10 +100,12 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
     refetch
   } = useQuery({
     queryKey: ['inspections', projectId],
-    queryFn: async (): Promise<any[]> => {
+    queryFn: async (): Promise<unknown[]> => {
       try {
-        // Mock data for now
-        return [];
+        if (projectId) {
+          return await inspectionService.getInspectionsByProject(projectId);
+        }
+        return await inspectionService.getAllInspections();
       } catch (err) {
         console.error('Error fetching inspections:', err);
         throw err;
@@ -79,7 +122,15 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
       try {
         // Convert to service-compatible format
         const serviceData: ServiceCreateInspectionDTO = { ...inspectionData };
-        const createdInspection = await inspectionService.createInspection(serviceData as any);
+        const partial: Partial<Inspection> = {
+          projectId: serviceData.projectId,
+          inspector: serviceData.inspector,
+          date: serviceData.date,
+          comments: serviceData.comments,
+          phaseId: serviceData.phaseId,
+          stepId: (serviceData as unknown as { stepId?: string }).stepId,
+        };
+        const createdInspection = await inspectionService.createInspection(partial);
         return createdInspection;
       } catch (error) {
         console.error('Error creating inspection:', error);
@@ -91,7 +142,7 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
       toast.success(`L'inspection "${data.inspector}" a été créée avec succès.`);
       navigate('/inspections');
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
       console.error('Error creating inspection:', error);
       toast.error("Impossible de créer l'inspection. Veuillez réessayer.");
     }
@@ -103,7 +154,16 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
       try {
         // Convert to service-compatible format
         const serviceData: ServiceUpdateInspectionDTO = { ...data };
-        const updatedInspection = await inspectionService.updateInspection(id, serviceData as any);
+        const partial: Partial<Inspection> = {
+          inspector: serviceData.inspector,
+          date: serviceData.date,
+          comments: serviceData.comments,
+          phaseId: serviceData.phaseId,
+          stepId: (serviceData as unknown as { stepId?: string }).stepId,
+          progressAtInspection: (serviceData as unknown as { progressAtInspection?: number }).progressAtInspection,
+          status: (serviceData as unknown as { status?: Inspection['status'] }).status,
+        };
+        const updatedInspection = await inspectionService.updateInspection(id, partial);
         return updatedInspection;
       } catch (error) {
         console.error('Error updating inspection:', error);
@@ -114,7 +174,7 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
       queryClient.invalidateQueries({ queryKey: ['inspections'] });
       toast.success(`L'inspection "${data.inspector}" a été mise à jour avec succès.`);
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
       console.error('Error updating inspection:', error);
       toast.error("Impossible de mettre à jour l'inspection. Veuillez réessayer.");
     }
@@ -135,14 +195,14 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
       queryClient.invalidateQueries({ queryKey: ['inspections'] });
       toast.success("L'inspection a été supprimée avec succès.");
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
       console.error('Error deleting inspection:', error);
       toast.error("Impossible de supprimer l'inspection.");
     }
   });
 
   // Enhanced UI functions
-  const getInspectionComplianceScore = (inspection: any): number => {
+  const getInspectionComplianceScore = (inspection: InspectionUI): number => {
     // Calcul basé sur la conformité, les documents et les problèmes
     const complianceScore = inspection.complianceScore || 100;
     const criticalIssues = inspection.criticalIssues || [];
@@ -156,7 +216,7 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
     return Math.max(0, Math.min(100, complianceScore - scoreReduction + documentBonus));
   };
 
-  const getInspectionQualityMetrics = (inspection: any): { qualityScore: number; defectRate: number } => {
+  const getInspectionQualityMetrics = (inspection: InspectionUI): { qualityScore: number; defectRate: number } => {
     const qualityScore = inspection.qualityScore || 100;
     const defectRate = inspection.defectRate || 0;
     
@@ -166,7 +226,7 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
     };
   };
 
-  const getInspectionRiskLevel = (inspection: any): 'low' | 'medium' | 'high' => {
+  const getInspectionRiskLevel = (inspection: InspectionUI): 'low' | 'medium' | 'high' => {
     const complianceScore = getInspectionComplianceScore(inspection);
     const quality = getInspectionQualityMetrics(inspection);
     const daysSinceLast = getInspectionDaysSinceLast(inspection);
@@ -176,7 +236,7 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
     return 'low';
   };
 
-  const getInspectionDaysSinceLast = (inspection: any): number => {
+  const getInspectionDaysSinceLast = (inspection: InspectionUI): number => {
     const lastInspectionDate = inspection.lastInspectionDate ? new Date(inspection.lastInspectionDate) : null;
     const now = new Date();
     
@@ -186,8 +246,8 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
 
   const getInspectionAnalytics = () => {
     const totalInspections = inspections.length;
-    const statusBreakdown = inspections.reduce((acc, inspection) => {
-      const status = inspection.status || 'pending';
+    const statusBreakdown = inspections.reduce<{ completed: number; pending: number; failed: number }>((acc, inspection) => {
+      const status = (inspection as InspectionUI | undefined)?.status || 'pending';
       if (status === 'completed') acc.completed++;
       else if (status === 'pending') acc.pending++;
       else if (status === 'failed') acc.failed++;
@@ -195,11 +255,11 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
     }, { completed: 0, pending: 0, failed: 0 });
     
     const averageComplianceScore = inspections.length > 0 
-      ? inspections.reduce((sum, i) => sum + getInspectionComplianceScore(i), 0) / inspections.length 
+      ? inspections.reduce<number>((sum, i) => sum + getInspectionComplianceScore(i as InspectionUI), 0) / inspections.length 
       : 0;
     
-    const riskBreakdown = inspections.reduce((acc, inspection) => {
-      const risk = getInspectionRiskLevel(inspection);
+    const riskBreakdown = inspections.reduce<{ high: number; medium: number; low: number }>((acc, inspection) => {
+      const risk = getInspectionRiskLevel(inspection as InspectionUI);
       if (risk === 'high') acc.high++;
       else if (risk === 'medium') acc.medium++;
       else acc.low++;
@@ -217,7 +277,7 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
   };
 
   // Validation functions for different referential types
-  const validateSafetyReferential = (inspection: any) => {
+  const validateSafetyReferential = (inspection: InspectionUI) => {
     const errors: string[] = [];
     const warnings: string[] = [];
     
@@ -249,7 +309,7 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
     };
   };
 
-  const validateQualityReferential = (inspection: any) => {
+  const validateQualityReferential = (inspection: InspectionUI) => {
     const errors: string[] = [];
     const warnings: string[] = [];
     
@@ -281,7 +341,7 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
     };
   };
 
-  const validateRegulatoryReferential = (inspection: any) => {
+  const validateRegulatoryReferential = (inspection: InspectionUI) => {
     const errors: string[] = [];
     const warnings: string[] = [];
     
@@ -313,7 +373,7 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
     };
   };
 
-  const validateEnvironmentalReferential = (inspection: any) => {
+  const validateEnvironmentalReferential = (inspection: InspectionUI) => {
     const errors: string[] = [];
     const warnings: string[] = [];
     
@@ -346,7 +406,7 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
   };
 
   // Generate inspection recommendations based on analysis
-  const generateInspectionRecommendations = (inspection: any, complianceScore: number, riskLevel: string) => {
+  const generateInspectionRecommendations = (inspection: InspectionUI, complianceScore: number, riskLevel: string) => {
     const recommendations: string[] = [];
     
     // Compliance-based recommendations
@@ -409,7 +469,7 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
     getInspectionRiskLevel,
     getInspectionDaysSinceLast,
     getInspectionAnalytics,
-    validateInspectionWithReferential: async (inspection: any, referentialType: string) => {
+    validateInspectionWithReferential: async (inspection: InspectionUI, referentialType: string) => {
       try {
         // Validation selon le type de référentiel
         switch (referentialType) {
@@ -429,7 +489,7 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
         return { isValid: false, errors: ['Validation failed'], warnings: [] };
       }
     },
-    generateInspectionReport: (inspection: any) => {
+    generateInspectionReport: (inspection: InspectionUI) => {
       try {
         const analytics = getInspectionAnalytics();
         const complianceScore = getInspectionComplianceScore(inspection);
@@ -472,85 +532,5 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
   };
 };
 
-  // Update inspection mutation
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: UpdateInspectionDTO }): Promise<InspectionDTO | null> => {
-      const result = await InspectionService.updateInspection(id, data);
-      if (!result) throw new Error('Failed to update inspection');
-      return result;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['inspections'] });
-      toast({
-        title: "Succès",
-        description: "Inspection mise à jour avec succès",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
-
-  // Delete inspection mutation
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string): Promise<boolean> => {
-      const result = await InspectionService.deleteInspection(id);
-      if (!result) throw new Error('Failed to delete inspection');
-      return result;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['inspections'] });
-      toast({
-        title: "Succès",
-        description: "Inspection supprimée avec succès",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
-
-  // Get inspection by ID
-  const getInspectionById = async (id: string): Promise<InspectionDTO | null> => {
-    return await InspectionService.getInspectionById(id);
-  };
-
-  // Create inspection function (for backward compatibility)
-  const createInspection = async (data: CreateInspectionDTO) => {
-    return await createMutation.mutateAsync(data);
-  };
-
-  // Update inspection function (for backward compatibility)
-  const updateInspection = async (id: string, data: UpdateInspectionDTO) => {
-    return await updateMutation.mutateAsync({ id, data });
-  };
-
-  // Delete inspection function (for backward compatibility)
-  const deleteInspection = async (id: string) => {
-    return await deleteMutation.mutateAsync(id);
-  };
-
-  return {
-    inspections,
-    isLoading,
-    error,
-    refetch,
-    createMutation,
-    updateMutation,
-    deleteMutation,
-    createInspection,
-    updateInspection,
-    deleteInspection,
-    getInspectionById
-  };
-
-// Export pour compatibilité ascendante
+// Export alias for useInspectionHex
 export const useInspectionHex = useInspectionsHex;

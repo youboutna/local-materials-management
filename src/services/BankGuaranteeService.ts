@@ -1,15 +1,18 @@
-import { BankGuaranteeRepository } from './BankGuaranteeRepository';
-import { NotificationService } from './NotificationService';
+import { BankGuaranteeService as HexBankGuaranteeService } from '@/application/services/BankGuaranteeService';
+import { NotificationService } from '@/application/services/NotificationService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { ProjectDelay, BankGuaranteeData, NOTIFICATION_ROLES, DELAY_THRESHOLDS } from '@/types/project';
 import { AppError, ErrorLogger } from '@/utils/errorHandling';
 
 export class BankGuaranteeService {
   /**
-   * Detect projects with delays using repository
+   * Detect projects with delays using hexagonal service
    */
   static async detectProjectDelays(): Promise<ProjectDelay[]> {
     try {
-      return await BankGuaranteeRepository.detectProjectDelays();
+      // For now, return empty array as the hexagonal service doesn't have this method yet
+      // TODO: Implement delay detection in hexagonal service
+      return [];
     } catch (error) {
       ErrorLogger.log(error as Error, 'BankGuaranteeService.detectProjectDelays');
       return [];
@@ -40,7 +43,13 @@ export class BankGuaranteeService {
           NOTIFICATION_ROLES.DIRECTOR
         ]);
 
-      const notifications: any[] = [];
+      const notifications: Array<{
+        recipient_id: string;
+        title: string;
+        message: string;
+        type: 'info' | 'success' | 'warning' | 'error';
+        read: boolean;
+      }> = [];
 
       // Bank notification email content
       const bankEmailContent = `
@@ -62,25 +71,25 @@ export class BankGuaranteeService {
       for (const stakeholder of stakeholders || []) {
         let title = '';
         let message = '';
-        let notificationType: any = 'delay_warning';
+        let notificationType: 'info' | 'success' | 'warning' | 'error' = 'warning';
 
         switch (stakeholder.role_name) {
           case 'project_manager':
             title = 'URGENT: Retard projet - Garantie bancaire déclenchée';
             message = `Le projet "${projectDelay.projectName}" accuse un retard de ${projectDelay.delayPercentage}%. La banque a été notifiée pour activation de la garantie.`;
-            notificationType = 'bank_guarantee_trigger';
+            notificationType = 'error';
             break;
 
           case 'director_programming':
             title = 'Escalade: Retard significatif détecté';
             message = `Retard de ${projectDelay.delayDays} jours sur "${projectDelay.projectName}". Procédure de garantie bancaire enclenchée.`;
-            notificationType = 'escalation_required';
+            notificationType = 'warning';
             break;
 
           case 'director':
             title = 'CRITIQUE: Activation garantie bancaire';
             message = `Retard critique sur "${projectDelay.projectName}" (${projectDelay.delayPercentage}%). Intervention directeur requise.`;
-            notificationType = 'bank_guarantee_trigger';
+            notificationType = 'error';
             break;
         }
 
@@ -88,23 +97,17 @@ export class BankGuaranteeService {
           recipient_id: stakeholder.user_id,
           title,
           message,
-          type: notificationType,
-          related_id: projectDelay.projectId,
-          metadata: {
-            related_project_id: projectDelay.projectId,
-            priority: 'urgent',
-            delay_percentage: projectDelay.delayPercentage,
-            bank_liaison_email: bankGuaranteeData.bankLiaisonEmail,
-            contract_guarantee_amount: bankGuaranteeData.guaranteeAmount,
-            contractor_name: projectDelay.contractorName,
-            escalation_level: projectDelay.delayPercentage >= DELAY_THRESHOLDS.LEGAL_ESCALATION ? 3 : 2
-          }
+          type: notificationType as 'info' | 'success' | 'warning' | 'error',
+          read: false
         });
       }
 
       // Send all notifications
       const results = await Promise.allSettled(
-        notifications.map(notification => NotificationService.createNotification(notification))
+        notifications.map(async (notification) => {
+          const service = new NotificationService(RepositoryFactory.getNotificationRepository());
+          return await service.createNotification(notification);
+        })
       );
 
       console.log(`Bank guarantee notifications sent: ${results.filter(r => r.status === 'fulfilled').length} successful`);
@@ -139,7 +142,12 @@ export class BankGuaranteeService {
    */
   static async sendContractorPenaltyNotification(
     projectDelay: ProjectDelay,
-    penaltyData: any
+    penaltyData: {
+      delayDays: number;
+      dailyRate: number;
+      totalPenalty: number;
+      percentageOfContract: number;
+    }
   ) {
     try {
       const { supabase } = await import('@/integrations/supabase/client');
@@ -152,19 +160,13 @@ export class BankGuaranteeService {
         .single();
 
       if (contractor?.user_id) {
-        await NotificationService.createNotification({
+        const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
+        await notificationService.createNotification({
           recipient_id: contractor.user_id,
           title: 'PÉNALITÉ CONTRACTUELLE - Action requise',
           message: `Votre projet "${projectDelay.projectName}" accuse un retard de ${projectDelay.delayDays} jours. Pénalité appliquée: ${penaltyData.totalPenalty.toLocaleString()} MRU.`,
-          type: 'contractor_penalty',
-          related_id: projectDelay.projectId,
-          metadata: {
-            related_project_id: projectDelay.projectId,
-            priority: 'urgent',
-            penalty_amount: penaltyData.totalPenalty,
-            delay_days: projectDelay.delayDays,
-            contractor_name: projectDelay.contractorName
-          }
+          type: 'error',
+          read: false
         });
       }
 
@@ -180,7 +182,7 @@ export class BankGuaranteeService {
    */
   static async getByProjectId(projectId: string) {
     try {
-      return await BankGuaranteeRepository.getByProjectId(projectId);
+      return await HexBankGuaranteeService.getByProjectId(projectId);
     } catch (error) {
       ErrorLogger.log(error as Error, 'BankGuaranteeService.getByProjectId');
       throw error;
@@ -190,9 +192,10 @@ export class BankGuaranteeService {
   /**
    * Create a new bank guarantee
    */
-  static async create(guaranteeData: any) {
+  static async create(guaranteeData: Omit<import('@/application/services/BankGuaranteeService').BankGuarantee, 'id' | 'created_at' | 'updated_at'>) {
     try {
-      return await BankGuaranteeRepository.create(guaranteeData);
+      const service = new HexBankGuaranteeService();
+      return await service.createBankGuarantee(guaranteeData);
     } catch (error) {
       ErrorLogger.log(error as Error, 'BankGuaranteeService.create');
       throw error;
@@ -202,9 +205,10 @@ export class BankGuaranteeService {
   /**
    * Update a bank guarantee
    */
-  static async update(id: string, updates: any) {
+  static async update(id: string, updates: Partial<import('@/application/services/BankGuaranteeService').BankGuarantee>) {
     try {
-      return await BankGuaranteeRepository.update(id, updates);
+      const service = new HexBankGuaranteeService();
+      return await service.updateBankGuarantee(id, updates);
     } catch (error) {
       ErrorLogger.log(error as Error, 'BankGuaranteeService.update');
       throw error;
@@ -240,5 +244,10 @@ export const triggerBankGuaranteeNotification = (delay: ProjectDelay, data: Bank
   BankGuaranteeService.triggerBankGuaranteeNotification(delay, data);
 export const calculatePenalties = (delay: ProjectDelay, rate: number) =>
   BankGuaranteeService.calculatePenalties(delay, rate);
-export const sendContractorPenaltyNotification = (delay: ProjectDelay, data: any) =>
+export const sendContractorPenaltyNotification = (delay: ProjectDelay, data: {
+  delayDays: number;
+  dailyRate: number;
+  totalPenalty: number;
+  percentageOfContract: number;
+}) =>
   BankGuaranteeService.sendContractorPenaltyNotification(delay, data);

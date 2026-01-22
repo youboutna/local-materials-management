@@ -3,8 +3,9 @@
  * Fetches assignee details (employees, suppliers, profiles) via services
  */
 import { useQuery } from '@tanstack/react-query';
-import { EmployeeService } from '@/services/EmployeeService';
+import { EmployeeService } from '@/application/services/EmployeeService';
 import { SupplierService } from '@/application/services/SupplierService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface AssigneeDetails {
@@ -18,25 +19,29 @@ async function fetchAssigneeDetails(assigneeId: string): Promise<AssigneeDetails
     return { type: '', name: '', email: '' };
   }
 
+  const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
+  const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
+
   // Try employees first
-  const employees = await EmployeeService.getAllEmployees();
-  const employee = employees.find(e => e.id === assigneeId);
+  const employeesResult = await employeeService.searchEmployees({});
+  const employee = employeesResult.employees.find((e) => e.id === assigneeId);
   if (employee) {
     return {
       type: 'employee',
-      name: employee.full_name,
+      name: employee.fullName,
       email: employee.email || '',
     };
   }
 
   // Try suppliers
-  const suppliers = await SupplierService.getAllSuppliers();
-  const supplier = suppliers.find(s => s.id === assigneeId);
+  const suppliersResult = await supplierService.searchSuppliers({});
+  const supplier = suppliersResult.suppliers.find((s) => s.id === assigneeId);
   if (supplier) {
+    const primaryContact = supplier.getPrimaryContact();
     return {
       type: 'supplier',
-      name: supplier.contact_person || supplier.name,
-      email: supplier.email || '',
+      name: primaryContact?.name || supplier.name,
+      email: primaryContact?.email || supplier.email || '',
     };
   }
 
@@ -81,5 +86,5 @@ export function useAssigneeDetailsHex(assigneeId: string) {
 
 export default useAssigneeDetailsHex;
 
-// Export pour compatibilité ascendante
+// Export alias for useAssigneeDetails
 export const useAssigneeDetails = useAssigneeDetailsHex;

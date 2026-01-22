@@ -1,31 +1,20 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { QuantityTakeoffWithDetails } from '@/types/quantityTakeoff';
-import { 
-  GetQuantityTakeoffsUseCase,
-  DeleteQuantityTakeoffUseCase,
-  GetTotalQuantityByUnitUseCase,
-  GetTotalValueUseCase
-} from '@/application/use-cases/quantityTakeoff/QuantityTakeoffUseCases';
+import { QuantityTakeoffService, QuantityTakeoffWithDetails } from '@/application/services/QuantityTakeoffService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export function useQuantityTakeoffsHex(projectId: string) {
   const queryClient = useQueryClient();
 
-  // Singleton instances des use cases
-  const getQuantityTakeoffsUseCase = new GetQuantityTakeoffsUseCase();
-  const deleteQuantityTakeoffUseCase = new DeleteQuantityTakeoffUseCase();
-  const getTotalQuantityByUnitUseCase = new GetTotalQuantityByUnitUseCase();
-  const getTotalValueUseCase = new GetTotalValueUseCase();
+  // Quantity takeoff service instance
+  const quantityTakeoffService = new QuantityTakeoffService(RepositoryFactory.getQuantityTakeoffRepository());
 
   // Fetch quantity takeoffs
   const { data: quantityTakeoffs, isLoading } = useQuery({
     queryKey: ['quantity-takeoffs', projectId],
     queryFn: async () => {
-      const result = await getQuantityTakeoffsUseCase.execute(projectId);
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to fetch quantity takeoffs');
-      }
-      return result.quantityTakeoffs;
+      const result = await quantityTakeoffService.getQuantityTakeoffsByProject(projectId);
+      return result;
     },
     enabled: !!projectId,
   });
@@ -33,10 +22,7 @@ export function useQuantityTakeoffsHex(projectId: string) {
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const result = await deleteQuantityTakeoffUseCase.execute(id);
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to delete quantity takeoff');
-      }
+      await quantityTakeoffService.deleteQuantityTakeoff(id);
       return id;
     },
     onSuccess: () => {
@@ -56,11 +42,11 @@ export function useQuantityTakeoffsHex(projectId: string) {
     },
   });
 
-  // Helper functions using use cases
-  const getTotalQuantityByUnit = (unit: string): number => {
+  // Helper functions using service
+  const getTotalQuantityByUnit = async (unit: string): Promise<number> => {
     if (!quantityTakeoffs) return 0;
     return quantityTakeoffs
-      ?.filter(qt => qt.material?.unit === unit)
+      .filter(qt => qt.material?.unit === unit)
       .reduce((sum, qt) => sum + qt.quantity, 0) || 0;
   };
 
@@ -72,11 +58,32 @@ export function useQuantityTakeoffsHex(projectId: string) {
     }, 0) || 0;
   };
 
+  // Service-based helper functions
+  const getTotalQuantityByUnitFromService = async (unit: string): Promise<number> => {
+    try {
+      return await quantityTakeoffService.getTotalQuantityByUnit(projectId, unit);
+    } catch (error) {
+      console.error('Error getting total quantity by unit:', error);
+      return 0;
+    }
+  };
+
+  const getTotalValueFromService = async (): Promise<number> => {
+    try {
+      return await quantityTakeoffService.getTotalValue(projectId);
+    } catch (error) {
+      console.error('Error getting total value:', error);
+      return 0;
+    }
+  };
+
   return {
     quantityTakeoffs,
     isLoading,
     deleteMutation,
     getTotalQuantityByUnit,
-    getTotalValue
+    getTotalValue,
+    getTotalQuantityByUnitFromService,
+    getTotalValueFromService
   };
 }

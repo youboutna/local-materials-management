@@ -32,6 +32,8 @@ export interface SupplierDocument {
   document_type: string;
   uploaded_by: string;
   created_at: string;
+  description?: string;
+  file_size?: number;
   metadata?: any;
 }
 

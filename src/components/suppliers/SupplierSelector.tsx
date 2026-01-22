@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Building2, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { useSuppliersSelector } from '@/hooks/hexagonal/useSelectorsHex';
+import { useSuppliersSelector } from '@/hooks/hexagonal'
 
 interface SupplierSelectorProps {
   value?: {
@@ -74,7 +74,7 @@ const SupplierSelector: React.FC<SupplierSelectorProps> = ({
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
-      <span key={i} className={`text-xs ${i < rating ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
+      <span key={i} className={`text-xs ${i < rating ? 'text-yellow-400' : 'text-gray-300'}`}>â˜…</span>
     ));
   };
 
@@ -103,7 +103,7 @@ const SupplierSelector: React.FC<SupplierSelectorProps> = ({
           onValueChange={handleSupplierSelect}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Sélectionner un fournisseur" />
+            <SelectValue placeholder="SÃ©lectionner un fournisseur" />
           </SelectTrigger>
           <SelectContent>
             {suppliers?.map((supplier) => (
@@ -156,11 +156,11 @@ const SupplierSelector: React.FC<SupplierSelectorProps> = ({
               id="supplierContact"
               value={customSupplier.contact}
               onChange={(e) => handleCustomSupplierChange('contact', e.target.value)}
-              placeholder="Téléphone ou email"
+              placeholder="TÃ©lÃ©phone ou email"
             />
           </div>
           <div>
-            <Label htmlFor="leadTime">Délai de livraison (jours)</Label>
+            <Label htmlFor="leadTime">DÃ©lai de livraison (jours)</Label>
             <Input
               id="leadTime"
               type="number"

@@ -63,13 +63,14 @@ import {
   useSupplierLoginHex,
   useSupplierSignUpHex,
   useSupplierLogoutHex,
+  useUploadSupplierDocumentHex,
+  useMarkTaskCompletedHex,
   useSupplierPortalNotificationsHex,
   useSupplierPortalPaymentRequestsHex,
   useSupplierPortalDocumentsHex,
-  useUploadSupplierDocumentHex,
   useAddSupplierTaskCommentHex,
-  useMarkTaskCompletedHex
-} from "@/hooks/hexagonal/useUnifiedSupplierPortalHex";
+
+} from "@/hooks/hexagonal";
 // Payment initiation data is now handled through notifications tab
 
 const UnifiedSupplierPortal = () => {

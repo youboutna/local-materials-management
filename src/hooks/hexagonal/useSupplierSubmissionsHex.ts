@@ -27,10 +27,25 @@ export interface SubmissionDocument {
   submission_id: string;
   document_id: string;
   category: string;
-  document_name: string;
-  file_url: string;
-  file_size: number;
+  subcategory: string;
+  document: {
+    id: string;
+    title: string;
+    file_name: string;
+    file_url: string;
+    file_size: number;
+    metadata?: Record<string, unknown>;
+  };
   uploaded_at: string;
+}
+
+export interface ActivityLog {
+  id: string;
+  submission_id: string;
+  action: string;
+  details: string;
+  created_at: string;
+  user_id?: string;
 }
 
 export const useCurrentUserHex = () => {
@@ -60,7 +75,7 @@ export const useSupplierSubmissionsHex = (supplierId?: string) => {
   });
 };
 
-export const useSubmissionDocumentsHex = (submissionId: string) => {
+export const useSubmissionDocumentsHex = (submissionId?: string) => {
   // Placeholder - would use DocumentService
   return useQuery({
     queryKey: ['submission-documents', submissionId],
@@ -89,5 +104,23 @@ export const useSubmissionStatsHex = (supplierId?: string) => {
     },
     enabled: !!supplierId,
     staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+};
+
+export const useSubmissionDocumentsList = (submissionId?: string) => {
+  // Alias for useSubmissionDocumentsHex to match component import
+  return useSubmissionDocumentsHex(submissionId);
+};
+
+export const useSubmissionActivityLogs = (submissionId?: string) => {
+  // Placeholder - would use ActivityLogService
+  return useQuery({
+    queryKey: ['submission-activity-logs', submissionId],
+    queryFn: async (): Promise<ActivityLog[]> => {
+      console.log('Activity logs not implemented for submission:', submissionId);
+      return [];
+    },
+    enabled: !!submissionId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

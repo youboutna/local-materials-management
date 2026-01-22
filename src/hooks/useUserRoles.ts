@@ -199,7 +199,16 @@ export const useRoleManagement = () => {
     }
   });
 
+  // Helper function to check if user has any of the specified roles
+  const hasAnyRole = (requiredRoles: string[]) => {
+    if (!userRoles || userRoles.length === 0) return false;
+    const userRoleNames = userRoles.map(role => role.role_name);
+    return requiredRoles.some(role => userRoleNames.includes(role));
+  };
+
   return {
+    userRoles: userRoles || [],
+    hasAnyRole,
     assignRole,
     removeRole
   };

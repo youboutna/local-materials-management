@@ -1,4 +1,4 @@
-import BusinessDocuments from '@/components/documents/BusinessDocuments';
+﻿import BusinessDocuments from '@/components/documents/BusinessDocuments';
 import { SupplierInspectionsList } from '@/components/supplier/SupplierInspectionsList';
 import SupplierPaymentRequest from '@/components/suppliers/SupplierPaymentRequest';
 import { Badge } from '@/components/ui/badge';
@@ -31,7 +31,7 @@ import {
   type SupplierDocument,
   type SupplierTask,
   type PaymentRequest
-} from '@/hooks/hexagonal/useSupplierPortalCompleteHex';
+} from '@/hooks/hexagonal'
 
 const SupplierPortal = () => {
   const [email, setEmail] = useState('');
@@ -158,7 +158,7 @@ const SupplierPortal = () => {
     // TODO: Implement document sharing logic
     toast({
       title: "Partage de document",
-      description: "Fonctionnalité de partage à implémenter",
+      description: "FonctionnalitÃ© de partage Ã  implÃ©menter",
     });
   };
 
@@ -187,7 +187,7 @@ const SupplierPortal = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="•••••••••"
+                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
               />
             </div>
             <div className="flex space-x-2">
@@ -212,7 +212,7 @@ const SupplierPortal = () => {
                 disabled={isSigningUp}
                 className="w-full mt-2"
               >
-                {isSigningUp ? 'Inscription...' : "Créer un compte"}
+                {isSigningUp ? 'Inscription...' : "CrÃ©er un compte"}
               </Button>
             )}
           </CardContent>
@@ -236,7 +236,7 @@ const SupplierPortal = () => {
             <div className="flex items-center space-x-4">
               <Button variant="outline" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
-                Déconnexion
+                DÃ©connexion
               </Button>
             </div>
           </div>
@@ -249,7 +249,7 @@ const SupplierPortal = () => {
           <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="dashboard">Tableau de bord</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
-            <TabsTrigger value="tasks">Tâches</TabsTrigger>
+            <TabsTrigger value="tasks">TÃ¢ches</TabsTrigger>
             <TabsTrigger value="inspections">Inspections</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="payments">Paiements</TabsTrigger>
@@ -260,21 +260,21 @@ const SupplierPortal = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Documents Uploadés</CardTitle>
+                  <CardTitle>Documents UploadÃ©s</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{uploadedDocuments.length}</div>
-                  <p className="text-gray-600">Documents uploadés</p>
+                  <p className="text-gray-600">Documents uploadÃ©s</p>
                 </CardContent>
               </Card>
               
               <Card>
                 <CardHeader>
-                  <CardTitle>Tâches Assignées</CardTitle>
+                  <CardTitle>TÃ¢ches AssignÃ©es</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{assignedTasks.length}</div>
-                  <p className="text-gray-600">Tâches assignées</p>
+                  <p className="text-gray-600">TÃ¢ches assignÃ©es</p>
                 </CardContent>
               </Card>
               
@@ -338,7 +338,7 @@ const SupplierPortal = () => {
               
               <Card>
                 <CardHeader>
-                  <CardTitle>Documents Uploadés</CardTitle>
+                  <CardTitle>Documents UploadÃ©s</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <BusinessDocuments documents={uploadedDocuments} />
@@ -351,12 +351,12 @@ const SupplierPortal = () => {
           <TabsContent value="tasks" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Tâches Assignées</CardTitle>
+                <CardTitle>TÃ¢ches AssignÃ©es</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {assignedTasks.length === 0 ? (
-                    <p className="text-gray-500">Aucune tâche assignée</p>
+                    <p className="text-gray-500">Aucune tÃ¢che assignÃ©e</p>
                   ) : (
                     assignedTasks.map((task) => (
                       <div key={task.id} className="border rounded-lg p-4 space-y-2">
@@ -383,7 +383,7 @@ const SupplierPortal = () => {
                             disabled={task.status === 'completed'}
                           >
                             <CheckCircle className="h-4 w-4 mr-2" />
-                            {task.status === 'completed' ? 'Complété' : 'Marquer complété'}
+                            {task.status === 'completed' ? 'ComplÃ©tÃ©' : 'Marquer complÃ©tÃ©'}
                           </Button>
                         </div>
                         {selectedTaskId === task.id && (

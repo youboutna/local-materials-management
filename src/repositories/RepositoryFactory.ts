@@ -9,7 +9,34 @@ import { RepositoryFactory as InfraRepositoryFactory } from '@/infrastructure/su
 // Wrapper principal qui délègue au nouveau RepositoryFactory
 export const RepositoryFactory = {
   // Délégation de toutes les méthodes du nouveau RepositoryFactory
-  ...InfraRepositoryFactory,
+  getProjectRepository: InfraRepositoryFactory.getProjectRepository,
+  getPhaseRepository: InfraRepositoryFactory.getPhaseRepository,
+  getHierarchyRepository: InfraRepositoryFactory.getHierarchyRepository,
+  getInspectionSchedulingRepository: InfraRepositoryFactory.getInspectionSchedulingRepository,
+  getInspectionRepository: InfraRepositoryFactory.getInspectionRepository,
+  getPaymentRepository: InfraRepositoryFactory.getPaymentRepository,
+  getTaskRepository: InfraRepositoryFactory.getTaskRepository,
+  getMaterialRepository: InfraRepositoryFactory.getMaterialRepository,
+  getEmployeeRepository: InfraRepositoryFactory.getEmployeeRepository,
+  getRiskRepository: InfraRepositoryFactory.getRiskRepository,
+  getTenderRepository: InfraRepositoryFactory.getTenderRepository,
+  getSupplierRepository: InfraRepositoryFactory.getSupplierRepository,
+  getDocumentRepository: InfraRepositoryFactory.getDocumentRepository,
+  getQuantityTakeoffRepository: InfraRepositoryFactory.getQuantityTakeoffRepository,
+  getInspectionExecutionRepository: InfraRepositoryFactory.getInspectionExecutionRepository,
+  getInspectionPaymentValidationRepository: InfraRepositoryFactory.getInspectionPaymentValidationRepository,
+  getLoadDataRepository: InfraRepositoryFactory.getLoadDataRepository,
+  getBankGuaranteeRepository: InfraRepositoryFactory.getBankGuaranteeRepository,
+  getPVGeneratorRepository: InfraRepositoryFactory.getPVGeneratorRepository,
+  getInsuranceRepository: InfraRepositoryFactory.getInsuranceRepository,
+  getReportingRepository: InfraRepositoryFactory.getReportingRepository,
+  getReportDataTransformerRepository: InfraRepositoryFactory.getReportDataTransformerRepository,
+  getProjectFormRepository: InfraRepositoryFactory.getProjectFormRepository,
+  getUserRepository: InfraRepositoryFactory.getUserRepository,
+  getAuthRepository: InfraRepositoryFactory.getAuthRepository,
+  getStorageRepository: InfraRepositoryFactory.getStorageRepository,
+  getParsedInvoiceRepository: InfraRepositoryFactory.getParsedInvoiceRepository,
+  getNotificationRepository: InfraRepositoryFactory.getNotificationRepository,
   
   // Ajout des méthodes manquantes avec des implémentations temporaires
   getPerformanceMonitoringRepository: () => {

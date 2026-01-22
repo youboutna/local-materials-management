@@ -822,6 +822,15 @@ Check-list quotidienne ✅
 - Utiliser `@docs/task-plan.md` pour les phases
 - Utiliser `@CODEBASE_ANALYSIS_FINAL.md` pour la migration
 
+### **Règles de Migration (IMPORTANT)**
+- `src/services/*` est **déprécié** : éviter d'ajouter/modifier de la logique dans ce dossier.
+- Toujours chercher le même service dans `src/application/services/*` (même nom ou équivalent).
+- Toute correction/évolution fonctionnelle doit être faite dans `src/application/services/*` et consommée via `RepositoryFactory`.
+- **Types UI + transformations** : les types/DTO nécessaires à l'UI et aux transformations sont dans `src/dtos/*`.
+- **Types legacy (migration uniquement)** : `src/types/*` est **déprécié**, à utiliser seulement pour récupérer des types résiduels pendant la migration.
+- **Référence schéma Supabase** : `src/integrations/supabase/types.ts` est côté infrastructure (Supabase). À lire comme source de vérité DB pour enrichir/aligner `src/domain/*` et `src/dtos/*`.
+- **Use-cases (DEPRECATED)** : `src/application/use-cases/**` est **déprécié**. Les hooks hexagonaux doivent utiliser directement les services hexagonaux dans `src/application/services/*` via `RepositoryFactory`. PAS de création de nouveaux use-cases.
+
 ### **Patterns**
 - Commencer par l'analyse de l'état actuel
 - Identifier les dépendances et réutilisations

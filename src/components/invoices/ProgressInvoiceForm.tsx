@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -17,14 +17,14 @@ import {
   useProgressInvoiceFormHex,
   type InvoiceFormData,
   type WorkflowRequirements
-} from '@/hooks/hexagonal/useProgressInvoiceFormHex';
+} from '@/hooks/hexagonal'
 
 const invoiceSchema = z.object({
   project_id: z.string().min(1, 'Le projet est requis'),
   inspection_id: z.string().optional(),
-  progress_percentage: z.number().min(0).max(100, 'Le taux d\'avancement doit être entre 0 et 100'),
-  invoice_amount: z.number().positive('Le montant doit être positif'),
-  work_description: z.string().min(10, 'Description requise (min 10 caractères)'),
+  progress_percentage: z.number().min(0).max(100, 'Le taux d\'avancement doit Ãªtre entre 0 et 100'),
+  invoice_amount: z.number().positive('Le montant doit Ãªtre positif'),
+  work_description: z.string().min(10, 'Description requise (min 10 caractÃ¨res)'),
   quantities_executed: z.any().optional(),
   lot_details: z.any().optional(),
 });
@@ -96,7 +96,7 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
   if (isLoading && selectedProjectId) {
     return (
       <div className="text-center py-8">
-        Chargement des données du projet...
+        Chargement des donnÃ©es du projet...
       </div>
     );
   }
@@ -116,13 +116,13 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
                   <div>Type de projet: <strong>{projectData.project_type || 'infrastructure'}</strong></div>
                   <div>Source de financement: <strong>{projectData.funding_source || 'N/A'}</strong></div>
                   {workflowRequirements.requiresConsultant && (
-                    <div className="text-orange-600">✓ Validation ingénieur conseil requise</div>
+                    <div className="text-orange-600">âœ“ Validation ingÃ©nieur conseil requise</div>
                   )}
                   {workflowRequirements.requiresMinistry && (
-                    <div className="text-orange-600">✓ Approbation ministère requise</div>
+                    <div className="text-orange-600">âœ“ Approbation ministÃ¨re requise</div>
                   )}
                   {workflowRequirements.requiresDonor && (
-                    <div className="text-orange-600">✓ Approbation bailleur de fonds requise</div>
+                    <div className="text-orange-600">âœ“ Approbation bailleur de fonds requise</div>
                   )}
                 </div>
               </AlertDescription>
@@ -134,7 +134,7 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
             <EnhancedProjectSelector
               value={selectedProjectId}
               onChange={(value) => setValue('project_id', value)}
-              placeholder="Sélectionner un projet"
+              placeholder="SÃ©lectionner un projet"
             />
             {errors.project_id && (
               <p className="text-sm text-red-600 mt-1">{errors.project_id.message}</p>
@@ -150,7 +150,7 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
                   onValueChange={(value) => setValue('inspection_id', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner une inspection" />
+                    <SelectValue placeholder="SÃ©lectionner une inspection" />
                   </SelectTrigger>
                   <SelectContent>
                     {inspections.map((inspection) => (
@@ -178,7 +178,7 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
                 )}
                 {previousProgress > 0 && (
                   <p className="text-sm text-gray-600 mt-1">
-                    Progression précédente: {previousProgress}%
+                    Progression prÃ©cÃ©dente: {previousProgress}%
                   </p>
                 )}
               </div>
@@ -252,7 +252,7 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
                   Annuler
                 </Button>
                 <Button type="submit" disabled={loading}>
-                  {loading ? 'Création...' : 'Créer la facture'}
+                  {loading ? 'CrÃ©ation...' : 'CrÃ©er la facture'}
                 </Button>
               </div>
             </>

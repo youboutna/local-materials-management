@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Building2, Search, Calendar } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { useProjectsSelector, ProjectOption } from '@/hooks/hexagonal/useSelectorsHex';
+import { useProjectsSelector, ProjectOption } from '@/hooks/hexagonal'
 
 interface ProjectSelectorProps {
   value?: string;
@@ -19,7 +19,7 @@ interface ProjectSelectorProps {
 const ProjectSelector: React.FC<ProjectSelectorProps> = ({
   value,
   onChange,
-  placeholder = "Sélectionner un projet",
+  placeholder = "SÃ©lectionner un projet",
   label = "Projet",
   required = false,
   disabled = false,
@@ -85,7 +85,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
                     <div className="min-w-0 flex-1">
                       <div className="font-medium truncate">{project.title}</div>
                       {project.project_reference && (
-                        <div className="text-xs text-gray-500 truncate">Réf: {project.project_reference}</div>
+                        <div className="text-xs text-gray-500 truncate">RÃ©f: {project.project_reference}</div>
                       )}
                       {!secureMode && project.location && (
                         <div className="text-xs text-gray-500 truncate">{project.location}</div>
@@ -116,7 +116,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
       {selectedProject && (
         <div className="p-3 bg-gray-50 rounded-lg text-sm space-y-1">
           <div className="flex justify-between items-center">
-            <span className="font-medium">Projet sélectionné:</span>
+            <span className="font-medium">Projet sÃ©lectionnÃ©:</span>
             {!secureMode && selectedProject.status && (
               <Badge variant="outline" className={getStatusColor(selectedProject.status)}>
                 {selectedProject.status}
@@ -125,10 +125,10 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
           </div>
           <div>{selectedProject.title}</div>
           {selectedProject.project_reference && (
-            <div className="text-gray-600">📋 Réf: {selectedProject.project_reference}</div>
+            <div className="text-gray-600">ðŸ“‹ RÃ©f: {selectedProject.project_reference}</div>
           )}
           {!secureMode && selectedProject.location && (
-            <div className="text-gray-600">📍 {selectedProject.location}</div>
+            <div className="text-gray-600">ðŸ“ {selectedProject.location}</div>
           )}
           {!secureMode && (selectedProject.start_date || selectedProject.end_date) && (
             <div className="flex items-center gap-2 text-gray-600">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +18,7 @@ import {
   type ProjectPhase,
   type Employee,
   type Supplier
-} from '@/hooks/hexagonal/useEnhancedRiskManagerHex';
+} from '@/hooks/hexagonal'
 
 interface EnhancedRiskManagerProps {
   projectId: string;
@@ -172,7 +172,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
 
   // Handle delete
   const handleDelete = async (id: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce risque ?')) {
+    if (window.confirm('ÃŠtes-vous sÃ»r de vouloir supprimer ce risque ?')) {
       try {
         await deleteRiskMutation.mutateAsync(id);
       } catch (error) {
@@ -249,7 +249,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
                       Score: {risk.risk_score || 0}
                     </Badge>
                     <Badge variant="outline">
-                      {risk.status_new || 'Identifié'}
+                      {risk.status_new || 'IdentifiÃ©'}
                     </Badge>
                   </div>
                 </div>
@@ -265,7 +265,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-muted-foreground">Probabilité:</span>
+                  <span className="text-muted-foreground">ProbabilitÃ©:</span>
                   <span className="ml-2">{risk.probability_numeric}/5</span>
                 </div>
                 <div>
@@ -275,12 +275,12 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
                 <div>
                   <span className="text-muted-foreground">Responsable:</span>
                   <span className="ml-2">
-                    {employees.find(emp => emp.id === risk.owner_id)?.full_name || 'Non assigné'}
+                    {employees.find(emp => emp.id === risk.owner_id)?.full_name || 'Non assignÃ©'}
                   </span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Date limite:</span>
-                  <span className="ml-2">{risk.due_date || 'Non définie'}</span>
+                  <span className="ml-2">{risk.due_date || 'Non dÃ©finie'}</span>
                 </div>
               </div>
 
@@ -300,7 +300,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {editingId ? 'Modifier le risque' : 'Créer un nouveau risque'}
+              {editingId ? 'Modifier le risque' : 'CrÃ©er un nouveau risque'}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -324,17 +324,17 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
                 />
               </div>
               <div>
-                <Label htmlFor="probability_numeric">Probabilité (1-5)</Label>
+                <Label htmlFor="probability_numeric">ProbabilitÃ© (1-5)</Label>
                 <Select value={formData.probability_numeric} onValueChange={(value) => setFormData(prev => ({ ...prev, probability_numeric: value }))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">1 - Très faible</SelectItem>
+                    <SelectItem value="1">1 - TrÃ¨s faible</SelectItem>
                     <SelectItem value="2">2 - Faible</SelectItem>
                     <SelectItem value="3">3 - Moyenne</SelectItem>
-                    <SelectItem value="4">4 - Élevée</SelectItem>
-                    <SelectItem value="5">5 - Très élevée</SelectItem>
+                    <SelectItem value="4">4 - Ã‰levÃ©e</SelectItem>
+                    <SelectItem value="5">5 - TrÃ¨s Ã©levÃ©e</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -345,11 +345,11 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">1 - Très faible</SelectItem>
+                    <SelectItem value="1">1 - TrÃ¨s faible</SelectItem>
                     <SelectItem value="2">2 - Faible</SelectItem>
                     <SelectItem value="3">3 - Moyen</SelectItem>
-                    <SelectItem value="4">4 - Élevé</SelectItem>
-                    <SelectItem value="5">5 - Très élevé</SelectItem>
+                    <SelectItem value="4">4 - Ã‰levÃ©</SelectItem>
+                    <SelectItem value="5">5 - TrÃ¨s Ã©levÃ©</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -399,10 +399,10 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="identified">Identifié</SelectItem>
-                    <SelectItem value="mitigated">Mitigé</SelectItem>
-                    <SelectItem value="accepted">Accepté</SelectItem>
-                    <SelectItem value="closed">Clôturé</SelectItem>
+                    <SelectItem value="identified">IdentifiÃ©</SelectItem>
+                    <SelectItem value="mitigated">MitigÃ©</SelectItem>
+                    <SelectItem value="accepted">AcceptÃ©</SelectItem>
+                    <SelectItem value="closed">ClÃ´turÃ©</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -421,7 +421,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
                 Annuler
               </Button>
               <Button type="submit" disabled={createRiskMutation.isPending || updateRiskMutation.isPending}>
-                {editingId ? 'Mettre à jour' : 'Créer'}
+                {editingId ? 'Mettre Ã  jour' : 'CrÃ©er'}
               </Button>
             </div>
           </form>

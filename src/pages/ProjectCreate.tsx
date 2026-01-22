@@ -23,7 +23,7 @@ const ProjectCreate = () => {
   const [selectedMaterials, setSelectedMaterials] = useState<
     SelectedMaterial[]
   >([]);
-  const { createProject } = useProjects();
+  const { createProject } = useProjectsHex();
 
   // Status mapping from form values to database values
   const statusMapping = {

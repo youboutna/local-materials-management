@@ -50,6 +50,7 @@ export interface InsuranceCertificateUpdateData {
   valid_until?: string;
   status?: 'active' | 'expired' | 'expiring_soon' | 'missing';
   notes?: string;
+  certificate_url?: string;
   updated_by?: string;
 }
 

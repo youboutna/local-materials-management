@@ -1,5 +1,4 @@
 import { TenderRepository } from './TenderRepository';
-import { EntityToDTOMapper } from './EntityToDTOMapper';
 import { SubmissionSecretService } from './SubmissionSecretService';
 import { sendTenderSubmissionNotification } from './tenderSubmissionNotificationService';
 import { supabase } from '@/integrations/supabase/client';

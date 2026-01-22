@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { useSuppliersHex, type SupplierFormData } from '@/hooks/hexagonal';
+import { useSuppliersHex } from '@/hooks/hexagonal';
+import type { SupplierFormData } from '@/hooks/hexagonal/useSuppliersManagementHex';
 import { generateSupplierPasswordReset, sendSupplierNotification } from '@/services/supplierNotificationService';
 import { Building2, Edit, FileText, Mail, Plus, Send, Share2, Star, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
@@ -19,6 +20,7 @@ import type { Database } from '@/integrations/supabase/types';
 import { AppLayout } from '@/components/layout';
 
 type SupplierRow = Database["public"]["Tables"]["suppliers"]["Row"];
+type SupplierCategory = 'materials' | 'services' | 'equipment' | 'subcontractor' | 'consultant' | 'other';
 
 const Suppliers = () => {
   const [isCreating, setIsCreating] = useState(false);
@@ -73,7 +75,7 @@ const Suppliers = () => {
     e.preventDefault();
     try {
       if (editingId) {
-        const success = await updateSupplier(editingId, formData);
+        const success = await updateSupplier({ id: editingId, data: formData });
         if (success) {
           toast({ title: t('common.success'), description: "Fournisseur mis à jour avec succès." });
           resetForm();
@@ -81,11 +83,14 @@ const Suppliers = () => {
       } else {
         await createSupplier({
           name: formData.name,
-          email: formData.email || undefined,
-          phone: formData.phone || undefined,
-          address: formData.address || undefined,
-          nif: formData.nif || undefined,
-          category: (formData.category || 'materials') as any,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          category: formData.category,
+          rating: formData.rating,
+          contact_person: formData.contact_person,
+          nif: formData.nif,
+          commerce_register_ref: formData.commerce_register_ref,
         });
         toast({ title: t('common.success'), description: "Fournisseur créé avec succès." });
         resetForm();
@@ -101,10 +106,8 @@ const Suppliers = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const success = await deleteSupplier(id);
-      if (success) {
-        toast({ title: t('common.success'), description: "Fournisseur supprimé avec succès." });
-      }
+      await deleteSupplier(id);
+      toast({ title: t('common.success'), description: "Fournisseur supprimé avec succès." });
     } catch (error) {
       toast({
         title: t('common.error'),
@@ -114,7 +117,7 @@ const Suppliers = () => {
     }
   };
 
-  const handleEdit = (supplier: any) => {
+  const handleEdit = (supplier: SupplierRow) => {
     setFormData({
       name: supplier.name || "",
       contact_person: supplier.contactPerson || supplier.contact_person || "",
@@ -131,7 +134,7 @@ const Suppliers = () => {
   };
 
   const handleNotifySupplier = async (
-    supplier: any,
+    supplier: SupplierRow,
     taskTitle: string,
     taskId?: string
   ) => {
@@ -159,7 +162,7 @@ const Suppliers = () => {
     }
   };
 
-  const handlePasswordReset = async (supplier: any) => {
+  const handlePasswordReset = async (supplier: SupplierRow) => {
     if (!supplier.email) {
       toast({
         title: "Erreur",
@@ -180,13 +183,13 @@ const Suppliers = () => {
     }
   };
 
-  const handleOpenEnhancedDocumentSharing = (supplier: any) => {
-    setSelectedSupplier(supplier as any);
+  const handleOpenEnhancedDocumentSharing = (supplier: SupplierRow) => {
+    setSelectedSupplier(supplier);
     setEnhancedDocumentSharingOpen(true);
   };
 
-  const handleOpenDocuments = (supplier: any) => {
-    setSelectedSupplier(supplier as any);
+  const handleOpenDocuments = (supplier: SupplierRow) => {
+    setSelectedSupplier(supplier);
     setDocumentsOpen(true);
   };
 
@@ -436,7 +439,7 @@ const Suppliers = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => {
-                        setSelectedSupplier(supplier as any);
+                        setSelectedSupplier(supplier);
                         setNotificationOpen(true);
                       }}
                     >

@@ -1,5 +1,6 @@
 // application/services/ProjectManagerService.ts
-import { Alert, EVMData, ProjectData, EscalationRoles, ActionLabels, GanttChartData, PERTAnalysis } from "@/types/project";
+import { Alert, EVMData, ProjectData, EscalationRoles, GanttChartData, PERTAnalysis } from "@/types/project";
+import { ActionLabels } from "@/application/services/projectManagerWithActions";
 import {
   ProjectManager,
 } from "../../services/projectManagerWithActions";

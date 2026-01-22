@@ -1,35 +1,34 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { 
-  UploadDocumentsUseCase,
-  UpdateInspectionUseCase,
-  GetInspectionUseCase
-} from '@/application/use-cases/inspection/InspectionExecutionUseCases';
-import { InspectionDocument } from '@/domain/repositories/IInspectionExecutionRepository';
+import { InspectionService, InspectionDocument, InspectionExecutionData } from '@/application/services/InspectionService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
-interface InspectionExecutionData {
+interface InspectionExecutionParams {
   inspectionId: string;
   status: string;
   progress?: number;
-  documents?: File[];
-  syncResult?: any;
+  comments?: string;
 }
 
 export function useInspectionExecutionHex() {
   const queryClient = useQueryClient();
 
-  // Singleton instances des use cases
-  const uploadDocumentsUseCase = new UploadDocumentsUseCase();
-  const updateInspectionUseCase = new UpdateInspectionUseCase();
-  const getInspectionUseCase = new GetInspectionUseCase();
+  // Inspection service instance
+  const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
 
   const uploadDocumentsMutation = useMutation({
     mutationFn: async ({ inspectionId, documents }: { inspectionId: string; documents: File[] }) => {
-      const result = await uploadDocumentsUseCase.execute(inspectionId, documents);
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to upload documents');
-      }
-      return result.documents;
+      const result = await inspectionService.uploadDocuments(inspectionId, documents);
+      return result;
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Succès',
+        description: 'Documents téléchargés avec succès'
+      });
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['inspections'] });
     },
     onError: (error) => {
       toast({
@@ -41,16 +40,17 @@ export function useInspectionExecutionHex() {
   });
 
   const updateInspectionMutation = useMutation({
-    mutationFn: async ({ inspectionId, status, progress, comments }: { 
-      inspectionId: string; 
-      status: string; 
-      progress?: number; 
-      comments?: string 
-    }) => {
-      const result = await updateInspectionUseCase.execute(inspectionId, status, progress, comments);
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to update inspection');
-      }
+    mutationFn: async ({ inspectionId, status, progress, comments }: InspectionExecutionParams) => {
+      const executionData: InspectionExecutionData = {
+        id: inspectionId,
+        status,
+        progressAtInspection: progress,
+        comments,
+        documents: [],
+        completedAt: status === 'completed' ? new Date().toISOString() : undefined
+      };
+      
+      const result = await inspectionService.updateInspectionExecution(executionData);
       return result;
     },
     onSuccess: () => {
@@ -71,14 +71,62 @@ export function useInspectionExecutionHex() {
     }
   });
 
-  const getInspectionById = async (inspectionId: string) => {
-    const result = await getInspectionUseCase.execute(inspectionId);
-    return result.success ? result.inspection : null;
+  const completeInspectionMutation = useMutation({
+    mutationFn: async ({ inspectionId, progress, comments }: { inspectionId: string; progress: number; comments?: string }) => {
+      const result = await inspectionService.completeInspection(inspectionId, progress, comments);
+      return result;
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Succès',
+        description: 'Inspection complétée avec succès'
+      });
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['inspections'] });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de compléter l\'inspection',
+        variant: 'destructive'
+      });
+    }
+  });
+
+  const cancelInspectionMutation = useMutation({
+    mutationFn: async ({ inspectionId, reason }: { inspectionId: string; reason?: string }) => {
+      const result = await inspectionService.cancelInspection(inspectionId, reason);
+      return result;
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Succès',
+        description: 'Inspection annulée avec succès'
+      });
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['inspections'] });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible d\'annuler l\'inspection',
+        variant: 'destructive'
+      });
+    }
+  });
+
+  const getInspectionById = async (inspectionId: string): Promise<InspectionExecutionData | null> => {
+    const result = await inspectionService.getInspectionExecutionData(inspectionId);
+    return result;
   };
 
   return {
     uploadDocumentsMutation,
     updateInspectionMutation,
+    completeInspectionMutation,
+    cancelInspectionMutation,
     getInspectionById
   };
 }

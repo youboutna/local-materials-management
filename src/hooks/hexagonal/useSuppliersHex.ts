@@ -208,6 +208,7 @@ export function useSuppliersBySpecialization(specialization: string) {
     enabled: !!specialization,
     staleTime: 5 * 60 * 1000,
   });
-}
+};
 
+// Export alias for useSupplierHex
 export const useSupplierHex = useSuppliersHex;

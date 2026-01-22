@@ -3,24 +3,24 @@
  * avec la base de données lorsque des modifications sont effectuées
  */
 import { useCallback } from 'react';
-import { ProjectService } from '@/services/ProjectService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { toast } from 'sonner';
 
 export const useProjectProgressSync = (projectId?: string) => {
-  const projectService = new ProjectService();
+  const projectRepository = RepositoryFactory.getProjectRepository();
 
   const syncProgress = useCallback(async () => {
     if (!projectId) return;
 
     try {
-      const updatedProgress = await projectService.synchronizeProjectProgress(projectId);
+      const updatedProgress = await projectRepository.synchronizeProgress(projectId);
       console.log(`Progress synchronized for project ${projectId}: ${updatedProgress}%`);
       return updatedProgress;
     } catch (error) {
       console.error('Failed to synchronize project progress:', error);
       toast.error('Erreur lors de la synchronisation de la progression');
     }
-  }, [projectId]);
+  }, [projectId, projectRepository]);
 
   return { syncProgress };
 };

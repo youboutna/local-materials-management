@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
@@ -6,7 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Check, ChevronsUpDown, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { useInspectorsSelector, type Inspector } from '@/hooks/hexagonal/useSelectorsHex';
+import { useInspectorsSelector, type Inspector } from '@/hooks/hexagonal'
 
 interface InspectorSelectorProps {
   projectId?: string;
@@ -22,7 +22,7 @@ export function InspectorSelector({
   value,
   onValueChange,
   label = "Inspecteur",
-  placeholder = "Sélectionner un inspecteur",
+  placeholder = "SÃ©lectionner un inspecteur",
   className
 }: InspectorSelectorProps) {
   const [open, setOpen] = useState(false);
@@ -47,7 +47,7 @@ export function InspectorSelector({
                 <User className="h-4 w-4" />
                 <span>{selectedInspector.name}</span>
                 {selectedInspector.type === 'supplier' && (
-                  <Badge variant="secondary" className="text-xs">Bureau d'études</Badge>
+                  <Badge variant="secondary" className="text-xs">Bureau d'Ã©tudes</Badge>
                 )}
               </div>
             ) : (
@@ -61,9 +61,9 @@ export function InspectorSelector({
             <CommandInput placeholder="Rechercher un inspecteur..." />
             <CommandList>
               <CommandEmpty>
-                {isLoading ? "Chargement..." : "Aucun inspecteur trouvé"}
+                {isLoading ? "Chargement..." : "Aucun inspecteur trouvÃ©"}
               </CommandEmpty>
-              <CommandGroup heading="Employés">
+              <CommandGroup heading="EmployÃ©s">
                 {inspectors
                   .filter(i => i.type === 'employee')
                   .map((inspector) => (
@@ -87,13 +87,13 @@ export function InspectorSelector({
                           <span className="text-xs text-muted-foreground">{inspector.position}</span>
                         )}
                         {inspector.role && (
-                          <span className="text-xs text-muted-foreground">Rôle: {inspector.role}</span>
+                          <span className="text-xs text-muted-foreground">RÃ´le: {inspector.role}</span>
                         )}
                       </div>
                     </CommandItem>
                   ))}
               </CommandGroup>
-              <CommandGroup heading="Bureaux d'études">
+              <CommandGroup heading="Bureaux d'Ã©tudes">
                 {inspectors
                   .filter(i => i.type === 'supplier')
                   .map((inspector) => (
@@ -117,7 +117,7 @@ export function InspectorSelector({
                           <span className="text-xs text-muted-foreground">{inspector.position}</span>
                         )}
                         {inspector.role && (
-                          <span className="text-xs text-muted-foreground">Rôle: {inspector.role}</span>
+                          <span className="text-xs text-muted-foreground">RÃ´le: {inspector.role}</span>
                         )}
                       </div>
                     </CommandItem>

@@ -13,7 +13,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Plus, ClipboardCheck, Trash2, Calendar, User, ExternalLink, Upload, Pencil, Play } from 'lucide-react';
 import { PaginationControls } from '@/components/ui/pagination-controls';
-import { ProjectService } from '@/services/ProjectService';
 import { useProjectProgressSync } from '@/hooks/useProjectProgressSync';
 import { InspectorSelector } from '@/components/selectors/InspectorSelector';
 
@@ -49,7 +48,6 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
   const { syncProgress } = useProjectProgressSync(projectId);
-  const projectService = new ProjectService();
 
   const { data: inspections, isLoading } = useQuery({
     queryKey: ['phase-inspections', phaseId],

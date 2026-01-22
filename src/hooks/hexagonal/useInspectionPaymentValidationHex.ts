@@ -1,99 +1,121 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { 
-  GetInspectionWithPaymentRequestUseCase,
-  GetProjectWithStakeholdersUseCase,
-  UpdateInspectionStatusUseCase,
-  GetContractorInfoUseCase,
-  GetEngineerInfoUseCase
-} from '@/application/use-cases/inspection/InspectionPaymentValidationUseCases';
-import { InspectionDetails, ProjectDetails } from '@/domain/repositories/IInspectionPaymentValidationRepository';
+import { InspectionService } from '@/application/services/InspectionService';
+import { PaymentRequestService } from '@/application/services/PaymentRequestService';
+import { ProjectService } from '@/application/services/ProjectService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { InspectionStatus } from '@/domain/entities/Inspection';
 
 export function useInspectionPaymentValidationHex(inspectionId: string) {
   const queryClient = useQueryClient();
 
-  // Singleton instances des use cases
-  const getInspectionWithPaymentRequestUseCase = new GetInspectionWithPaymentRequestUseCase();
-  const getProjectWithStakeholdersUseCase = new GetProjectWithStakeholdersUseCase();
-  const updateInspectionStatusUseCase = new UpdateInspectionStatusUseCase();
-  const getContractorInfoUseCase = new GetContractorInfoUseCase();
-  const getEngineerInfoUseCase = new GetEngineerInfoUseCase();
+  // Services instances with proper repository arguments
+  const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
+  const paymentRequestService = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
+  const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
 
   // Fetch inspection details with payment request
-  const { data: inspection, isLoading: inspectionLoading } = useQuery<InspectionDetails | null>({
+  const { data: inspection, isLoading: inspectionLoading } = useQuery({
     queryKey: ['inspection', inspectionId],
     queryFn: async () => {
-      const result = await getInspectionWithPaymentRequestUseCase.execute(inspectionId);
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to fetch inspection');
+      const result = await inspectionService.getInspectionById(inspectionId);
+      if (!result) {
+        throw new Error('Inspection not found');
       }
-      return result.inspection;
+      return result;
     },
     enabled: !!inspectionId,
   });
 
-  // Fetch project details with external stakeholders (contractors)
-  const { data: project } = useQuery({
-    queryKey: ['project-summary', inspection?.project_id],
+  // Fetch project details with stakeholders
+  const { data: project, isLoading: projectLoading } = useQuery({
+    queryKey: ['project', inspection?.projectId],
     queryFn: async () => {
-      if (!inspection?.project_id) return null;
-      const result = await getProjectWithStakeholdersUseCase.execute(inspection.project_id);
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to fetch project');
+      if (!inspection?.projectId) return null;
+      const result = await projectService.getProjectById(inspection.projectId);
+      if (!result) {
+        throw new Error('Project not found');
       }
-      return result.project;
+      return result;
     },
-    enabled: !!inspection?.project_id,
+    enabled: !!inspection?.projectId,
   });
 
-  // Update inspection status mutation
-  const updateInspectionMutation = useMutation({
-    mutationFn: async (data: { status: string; comments: string }) => {
-      if (!inspectionId) throw new Error('Inspection ID missing');
+  // Fetch payment requests for inspection
+  const { data: paymentRequests, isLoading: paymentLoading } = useQuery({
+    queryKey: ['payment-requests', inspectionId],
+    queryFn: async () => {
+      if (!inspection?.projectId) return [];
+      const result = await paymentRequestService.getPaymentRequestsByProject(inspection.projectId);
+      // Filter payment requests related to this inspection (using description or notes)
+      return result.filter(payment => 
+        payment.description?.includes(inspectionId) || 
+        payment.notes?.includes(inspectionId)
+      );
+    },
+    enabled: !!inspection?.projectId,
+  });
 
-      const result = await updateInspectionStatusUseCase.execute(inspectionId, data.status, data.comments);
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to update inspection');
-      }
-        
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['inspection', inspectionId] });
+  // Update inspection status
+  const updateInspectionStatusMutation = useMutation({
+    mutationFn: async ({ status, notes }: { status: InspectionStatus; notes?: string }) => {
+      if (!inspectionId) throw new Error('Inspection ID is required');
       
-      return result;
+      // Update inspection status using the service
+      const updatedInspection = await inspectionService.updateInspection(inspectionId, {
+        status,
+        comments: notes || '',
+        updatedAt: new Date().toISOString()
+      });
+      return updatedInspection;
     },
     onSuccess: () => {
       toast({
-        title: 'Succès',
-        description: 'Statut de l\'inspection mis à jour avec succès',
+        title: 'Statut mis à jour',
+        description: 'Le statut de l\'inspection a été mis à jour avec succès',
       });
+      queryClient.invalidateQueries({ queryKey: ['inspection', inspectionId] });
     },
     onError: (error) => {
       toast({
-        title: 'Erreur',
+        title: 'Erreur de mise à jour',
         description: 'Impossible de mettre à jour le statut de l\'inspection',
         variant: 'destructive',
       });
     },
   });
 
-  // Get contractor info from project stakeholders
-  const getContractorInfo = async (projectId: string) => {
-    const result = await getContractorInfoUseCase.execute(projectId);
-    return result.success ? result.contractor : null;
+  // Get contractor info
+  const getContractorInfo = async (contractorId: string) => {
+    try {
+      // Use supplier repository to get contractor info
+      const supplierRepository = RepositoryFactory.getSupplierRepository();
+      return await supplierRepository.findById(contractorId);
+    } catch (error) {
+      console.error('Failed to get contractor info:', error);
+      return null;
+    }
   };
 
-  // Get engineer info from project stakeholders
-  const getEngineerInfo = async (projectId: string) => {
-    const result = await getEngineerInfoUseCase.execute(projectId);
-    return result.success ? result.engineer : null;
+  // Get engineer info
+  const getEngineerInfo = async (engineerId: string) => {
+    try {
+      // Use user repository to get engineer info
+      const userRepository = RepositoryFactory.getUserRepository();
+      return await userRepository.findById(engineerId);
+    } catch (error) {
+      console.error('Failed to get engineer info:', error);
+      return null;
+    }
   };
 
   return {
     inspection,
     project,
-    isLoading: inspectionLoading,
-    updateInspectionMutation,
+    paymentRequests,
+    isLoading: inspectionLoading || projectLoading || paymentLoading,
+    updateInspectionStatus: updateInspectionStatusMutation.mutate,
     getContractorInfo,
-    getEngineerInfo
+    getEngineerInfo,
   };
 }

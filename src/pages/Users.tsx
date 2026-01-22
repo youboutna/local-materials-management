@@ -1,4 +1,4 @@
-import RoleBadge, { RoleType } from "@/components/RoleBadge";
+﻿import RoleBadge, { RoleType } from "@/components/RoleBadge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentUserRoles } from "@/hooks/useUserRoles";
-import { useUserProfilesHex, useToggleUserStatusHex } from "@/hooks/hexagonal/useUsersAdminHex";
+import { useUserProfilesHex, useToggleUserStatusHex } from '@/hooks/hexagonal'
 import { motion } from "framer-motion";
 import { Ban, CheckCircle, Edit, Search, User, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -49,7 +49,7 @@ type UserProfile = {
 const DEV_PROFILES: UserProfile[] = [
   {
     id: "dev-user-id",
-    full_name: "Développeur Test",
+    full_name: "DÃ©veloppeur Test",
     phone: "123456789",
     national_id: "DEV12345",
     avatar_url: null,
@@ -103,7 +103,7 @@ const Users = () => {
       navigate("/auth?mode=login");
       toast({
         title: t('common.error'),
-        description: "Veuillez vous connecter pour accéder à cette page.",
+        description: "Veuillez vous connecter pour accÃ©der Ã  cette page.",
         variant: "destructive",
       });
     }
@@ -133,7 +133,7 @@ const Users = () => {
       console.error("Error fetching profiles:", error);
       toast({
         title: t('common.error'),
-        description: `Impossible de récupérer les utilisateurs: ${error.message}`,
+        description: `Impossible de rÃ©cupÃ©rer les utilisateurs: ${error.message}`,
         variant: "destructive",
       });
     }
@@ -204,7 +204,7 @@ const Users = () => {
     >
       {isDevelopmentMode && (
         <div className="fixed top-20 right-4 z-50 bg-amber-100 text-amber-800 px-4 py-2 rounded-md shadow-md text-sm">
-          🛠️ {t("dev_mode.active") || "Mode développement actif"}
+          ðŸ› ï¸ {t("dev_mode.active") || "Mode dÃ©veloppement actif"}
         </div>
       )}
 
@@ -250,13 +250,13 @@ const Users = () => {
                     {t("auth.email") || "Email"}
                   </TableHead>
                   <TableHead className="hidden md:table-cell">
-                    {t("users.table.phone") || "Téléphone"}
+                    {t("users.table.phone") || "TÃ©lÃ©phone"}
                   </TableHead>
                   <TableHead className="hidden md:table-cell">
                     {t("users.table.national_id") || "ID National"}
                   </TableHead>
                   <TableHead className="hidden md:table-cell">
-                    {t("users.table.role") || "Rôle principal"}
+                    {t("users.table.role") || "RÃ´le principal"}
                   </TableHead>
                   <TableHead className="hidden md:table-cell">
                     {t("users.table.status") || "Statut"}
@@ -283,8 +283,8 @@ const Users = () => {
                     >
                       {searchQuery
                         ? t("users.no_results") ||
-                          "Aucun utilisateur ne correspond à la recherche"
-                        : t("users.none_found") || "Aucun utilisateur trouvé"}
+                          "Aucun utilisateur ne correspond Ã  la recherche"
+                        : t("users.none_found") || "Aucun utilisateur trouvÃ©"}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -343,7 +343,7 @@ const Users = () => {
                         >
                           {profile.is_active !== false
                             ? t("users.active") || "Actif"
-                            : t("users.inactive") || "Désactivé"}
+                            : t("users.inactive") || "DÃ©sactivÃ©"}
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
@@ -417,7 +417,7 @@ const Users = () => {
         <SheetContent className="w-[90%] sm:max-w-lg">
           <SheetHeader>
             <SheetTitle className="text-lg font-serif">
-              {t("users.details_title") || "Détails de l'utilisateur"}
+              {t("users.details_title") || "DÃ©tails de l'utilisateur"}
             </SheetTitle>
           </SheetHeader>
 
@@ -462,7 +462,7 @@ const Users = () => {
 
                 <div>
                   <label className="text-muted-foreground text-sm">
-                    {t("users.phone") || "Téléphone"}
+                    {t("users.phone") || "TÃ©lÃ©phone"}
                   </label>
                   <p className="font-medium">{selectedUser.phone || "-"}</p>
                 </div>

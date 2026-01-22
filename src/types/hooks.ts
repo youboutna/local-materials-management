@@ -110,6 +110,7 @@ export interface DocumentResponseDto {
   uploadedBy: string;
   createdAt: string;
   updatedAt: string;
+  expiryDate?: string | null;
 }
 
 export interface UseDocumentsHexResult {

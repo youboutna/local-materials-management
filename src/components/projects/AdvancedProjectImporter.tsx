@@ -20,7 +20,8 @@ import {
   Calendar
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { ProjectService } from '@/services/ProjectService';
+import { ProjectService } from '@/application/services/ProjectService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { ProjectFormDTO } from '@/types/dto';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ImportResult } from '@/types/project';
@@ -41,7 +42,7 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
-  const projectService = new ProjectService();
+  const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';

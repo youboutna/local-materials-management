@@ -6,7 +6,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { RepositoryFactory } from '@/application/services/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { MaterialService } from "@/application/services/MaterialService";
 import { MaterialDomainTransformer, CreateMaterialRequestDto, UpdateMaterialRequestDto } from "@/dtos/transforms";
 import { useNavigate } from 'react-router-dom';
@@ -514,4 +514,75 @@ export function useLowStockMaterials() {
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+}
+
+/**
+ * Hook for single material operations
+ */
+export function useMaterialHex(id: string) {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const { t } = useLanguage();
+  
+  const materialService = new MaterialService(
+    RepositoryFactory.getMaterialRepository()
+  );
+
+  // Query for single material
+  const {
+    data: material,
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['materials', id],
+    queryFn: async () => {
+      const result = await materialService.getMaterialById(id);
+      return result;
+    },
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Update mutation
+  const updateMutation = useMutation({
+    mutationFn: async (data: UpdateMaterialRequestDto) => {
+      return await materialService.updateMaterial(id, data);
+    },
+    onSuccess: () => {
+      toast.success(t('material.updated'));
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+    },
+    onError: (error: any) => {
+      toast.error(t('material.updateError'));
+      console.error('Error updating material:', error);
+    }
+  });
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      return await materialService.deleteMaterial(id);
+    },
+    onSuccess: () => {
+      toast.success(t('material.deleted'));
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+      navigate('/materials');
+    },
+    onError: (error: any) => {
+      toast.error(t('material.deleteError'));
+      console.error('Error deleting material:', error);
+    }
+  });
+
+  return {
+    material,
+    isLoading,
+    error,
+    refetch,
+    updateMaterial: updateMutation.mutate,
+    deleteMaterial: deleteMutation.mutate,
+    isUpdating: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending
+  };
 }

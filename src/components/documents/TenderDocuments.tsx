@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Upload, Eye, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 import { TenderDocumentCategory, TENDER_DOCUMENT_LABELS, TENDER_CATEGORY_LABELS } from '@/types/tender';
 import { toast } from '@/hooks/use-toast';
-import { useTenderDocuments, useWorkflowStepDocuments } from '@/hooks/hexagonal/useDocumentsHex';
+import { useTenderDocuments, useWorkflowStepDocuments } from '@/hooks/hexagonal'
 
 interface TenderDocumentsProps {
   projectId: string;
@@ -59,11 +59,11 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'approved':
-        return 'Approuvé';
+        return 'ApprouvÃ©';
       case 'rejected':
-        return 'Rejeté';
+        return 'RejetÃ©';
       case 'requires_revision':
-        return 'Révision requise';
+        return 'RÃ©vision requise';
       case 'submitted':
         return 'Soumis';
       default:
@@ -81,7 +81,7 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
     } else {
       toast({
         title: "Document non disponible",
-        description: "Aucun fichier n'est associé à ce document d'appel d'offres.",
+        description: "Aucun fichier n'est associÃ© Ã  ce document d'appel d'offres.",
         variant: "destructive"
       });
     }
@@ -109,7 +109,7 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
             <TabsList className="tabs-list-responsive tabs-list-3">
               <TabsTrigger value="administrative">Administratifs</TabsTrigger>
               <TabsTrigger value="technical">Techniques</TabsTrigger>
-              <TabsTrigger value="financial">Financières</TabsTrigger>
+              <TabsTrigger value="financial">FinanciÃ¨res</TabsTrigger>
             </TabsList>
 
             {(['administrative', 'technical', 'financial'] as TenderDocumentCategory[]).map((category) => (
@@ -136,7 +136,7 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
                             {tenderDoc.subcategory === 'workflow_step' ? (
                               <p className="text-xs text-gray-500 flex items-center">
                                 <FileText className="h-3 w-3 mr-1" />
-                                Étape {(tenderDoc as any).step_info?.step_number}: {(tenderDoc as any).step_info?.step_title}
+                                Ã‰tape {(tenderDoc as any).step_info?.step_number}: {(tenderDoc as any).step_info?.step_title}
                               </p>
                             ) : (
                               tenderDoc.document?.title && (
@@ -187,7 +187,7 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
                           ) : (
                             <Button size="sm" variant="outline">
                               <Upload className="h-4 w-4 mr-1" />
-                              Télécharger
+                              TÃ©lÃ©charger
                             </Button>
                           )}
                         </div>
@@ -199,7 +199,7 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
                 {filterDocumentsByCategory(category).length === 0 && (
                   <div className="text-center py-8 text-gray-500">
                     <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p>Aucun document {TENDER_CATEGORY_LABELS[category].toLowerCase()} trouvé pour ce projet.</p>
+                    <p>Aucun document {TENDER_CATEGORY_LABELS[category].toLowerCase()} trouvÃ© pour ce projet.</p>
                   </div>
                 )}
               </TabsContent>

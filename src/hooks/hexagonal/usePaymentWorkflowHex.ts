@@ -4,19 +4,25 @@
  */
 
 import { useState, useCallback } from 'react';
-import { 
-  CreatePaymentRequestUseCase, 
-  PaymentRequestInput,
-  ValidatePaymentUseCase,
-  ValidatePaymentInput,
-  GetPaymentsByPhaseUseCase
-} from '@/application/use-cases/payment';
 import { useToast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { PaymentRequestService } from '@/application/services/PaymentRequestService';
 
-// Singleton instances
-const createPaymentUseCase = new CreatePaymentRequestUseCase();
-const validatePaymentUseCase = new ValidatePaymentUseCase();
-const getPaymentsByPhaseUseCase = new GetPaymentsByPhaseUseCase();
+export interface PaymentRequestInput {
+  supplier_id: string;
+  project_id?: string;
+  amount: number;
+  description: string;
+  payment_reason: string;
+  supporting_documents?: string[];
+  notes?: string;
+}
+
+export interface ValidatePaymentInput {
+  paymentId: string;
+  status: 'pending' | 'approved' | 'rejected' | 'processed';
+  notes?: string;
+}
 
 export interface UsePaymentWorkflowHexResult {
   // Actions
@@ -33,55 +39,49 @@ export function usePaymentWorkflowHex(): UsePaymentWorkflowHexResult {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
+  const paymentRequestService = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
+
   const createRequest = useCallback(async (input: PaymentRequestInput) => {
     setLoading(true);
     setError(null);
     
     try {
-      const result = await createPaymentUseCase.execute(input);
-      
-      if (result.success) {
+      const validationErrors: string[] = [];
+      if (!input.supplier_id) validationErrors.push('supplier_id est requis');
+      if (!Number.isFinite(input.amount) || input.amount <= 0) validationErrors.push('amount doit être > 0');
+      if (validationErrors.length > 0) {
+        const message = 'Erreur de validation';
+        setError(message);
+        toast({
+          title: message,
+          description: validationErrors.join(', '),
+          variant: 'destructive',
+        });
+        return { success: false, errors: validationErrors };
+      }
+
+      const created = await paymentRequestService.createPaymentRequest({
+        supplier_id: input.supplier_id,
+        project_id: input.project_id,
+        amount: input.amount,
+        description: input.description,
+        payment_reason: input.payment_reason,
+        supporting_documents: input.supporting_documents,
+        notes: input.notes,
+      });
+
+      if (created?.id) {
         toast({
           title: "Demande créée",
-          description: result.message,
+          description: 'La demande de paiement a été créée.',
         });
-        return { success: true, paymentId: result.paymentId };
+        return { success: true, paymentId: created.id };
       } else {
-        setError(result.message);
+        const message = 'Création impossible';
+        setError(message);
         toast({
           title: "Erreur de validation",
-          description: result.validationErrors?.join(', ') || result.message,
-          variant: "destructive",
-        });
-        return { success: false, errors: result.validationErrors };
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erreur inconnue';
-      setError(message);
-      return { success: false };
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
-
-  const validatePayment = useCallback(async (input: ValidatePaymentInput) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const result = await validatePaymentUseCase.execute(input);
-      
-      if (result.success) {
-        toast({
-          title: "Validation effectuée",
-          description: result.message,
-        });
-        return { success: true, nextStep: result.nextStep };
-      } else {
-        setError(result.message);
-        toast({
-          title: "Erreur",
-          description: result.message,
+          description: message,
           variant: "destructive",
         });
         return { success: false };
@@ -93,7 +93,31 @@ export function usePaymentWorkflowHex(): UsePaymentWorkflowHexResult {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [paymentRequestService, toast]);
+
+  const validatePayment = useCallback(async (input: ValidatePaymentInput) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      await paymentRequestService.updatePaymentRequest(input.paymentId, {
+        status: input.status,
+        notes: input.notes,
+      });
+
+        toast({
+          title: "Validation effectuée",
+          description: 'Le statut de paiement a été mis à jour.',
+        });
+        return { success: true };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erreur inconnue';
+      setError(message);
+      return { success: false };
+    } finally {
+      setLoading(false);
+    }
+  }, [paymentRequestService, toast]);
 
   return {
     createRequest,

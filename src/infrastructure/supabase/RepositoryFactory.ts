@@ -59,7 +59,6 @@ import {
   PVGeneratorAdapter,
   BankGuaranteeAdapter,
   InspectionSchedulingAdapter,
-  InspectionPermissionAdapter,
   SupabaseAuthAdapter,
   SupabaseStorageAdapter,
   SupabaseNotificationAdapter,
@@ -125,6 +124,13 @@ export class RepositoryFactory {
     return phaseRepository;
   }
 
+  static getHierarchyRepository(): IHierarchyRepository {
+    if (!hierarchyRepository) {
+      hierarchyRepository = new SupabaseHierarchyAdapter();
+    }
+    return hierarchyRepository;
+  }
+
   /**
    * Get Inspection Scheduling Repository instance
    */
@@ -145,6 +151,27 @@ export class RepositoryFactory {
     return taskRepository;
   }
 
+  static getMaterialRepository(): IMaterialRepository {
+    if (!materialRepository) {
+      materialRepository = new SupabaseMaterialAdapter();
+    }
+    return materialRepository;
+  }
+
+  static getEmployeeRepository(): IEmployeeRepository {
+    if (!employeeRepository) {
+      employeeRepository = new SupabaseEmployeeAdapter();
+    }
+    return employeeRepository;
+  }
+
+  static getRiskRepository(): IRiskRepository {
+    if (!riskRepository) {
+      riskRepository = new SupabaseRiskAdapter();
+    }
+    return riskRepository;
+  }
+
   /**
    * Get Inspection Repository instance
    */
@@ -153,6 +180,48 @@ export class RepositoryFactory {
       inspectionRepository = new SupabaseInspectionAdapter();
     }
     return inspectionRepository;
+  }
+
+  static getPaymentRepository(): IPaymentRepository {
+    if (!paymentRepository) {
+      paymentRepository = new SupabasePaymentAdapter();
+    }
+    return paymentRepository;
+  }
+
+  static getDocumentRepository(): IDocumentRepository {
+    if (!documentRepository) {
+      documentRepository = new SupabaseDocumentAdapter();
+    }
+    return documentRepository;
+  }
+
+  static getQuantityTakeoffRepository(): IQuantityTakeoffRepository {
+    if (!quantityTakeoffRepository) {
+      quantityTakeoffRepository = new SupabaseQuantityTakeoffAdapter();
+    }
+    return quantityTakeoffRepository;
+  }
+
+  static getInspectionExecutionRepository(): IInspectionExecutionRepository {
+    if (!inspectionExecutionRepository) {
+      inspectionExecutionRepository = new SupabaseInspectionExecutionAdapter();
+    }
+    return inspectionExecutionRepository;
+  }
+
+  static getInspectionPaymentValidationRepository(): IInspectionPaymentValidationRepository {
+    if (!inspectionPaymentValidationRepository) {
+      inspectionPaymentValidationRepository = new SupabaseInspectionPaymentValidationAdapter();
+    }
+    return inspectionPaymentValidationRepository;
+  }
+
+  static getLoadDataRepository(): ILoadDataRepository {
+    if (!loadDataRepository) {
+      loadDataRepository = new SupabaseLoadDataAdapter();
+    }
+    return loadDataRepository;
   }
 
   /**

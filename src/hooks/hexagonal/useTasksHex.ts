@@ -7,9 +7,96 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RepositoryFactory } from "@/repositories/RepositoryFactory";
-import { TaskDomainTransformer, CreateTaskRequestDto, UpdateTaskRequestDto } from "@/dtos/transforms";
+import { CreateTaskRequestDto, UpdateTaskRequestDto } from "@/dtos/transforms";
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+
+// Validation functions for referential checks
+const validateQualityReferential = (task: any) => {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  
+  // Quality validation logic
+  if (!task.title || task.title.length < 3) {
+    errors.push('Task title must be at least 3 characters');
+  }
+  
+  if (task.priority === 'critical' && !task.description) {
+    warnings.push('Critical tasks should have descriptions');
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings
+  };
+};
+
+const validateSafetyReferential = (task: any) => {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  
+  // Safety validation logic
+  if (task.priority === 'critical' && !task.assigned_to?.length) {
+    errors.push('Critical safety tasks must be assigned');
+  }
+  
+  if (task.due_date && new Date(task.due_date) < new Date()) {
+    warnings.push('Task due date is in the past');
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings
+  };
+};
+
+const validateTimelineReferential = (task: any) => {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  
+  // Timeline validation logic
+  if (task.start_date && task.end_date) {
+    const start = new Date(task.start_date);
+    const end = new Date(task.end_date);
+    
+    if (start > end) {
+      errors.push('Start date must be before end date');
+    }
+    
+    const duration = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    if (duration > 365) {
+      warnings.push('Task duration exceeds 1 year');
+    }
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings
+  };
+};
+
+const validateResourceReferential = (task: any) => {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  
+  // Resource validation logic
+  if (!task.assigned_to?.length) {
+    warnings.push('Task has no assigned resources');
+  }
+  
+  if (task.weight && (task.weight < 0 || task.weight > 100)) {
+    errors.push('Task weight must be between 0 and 100');
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings
+  };
+};
 
 // Types compatibles avec le service
 type ServiceCreateTaskDTO = Omit<CreateTaskRequestDto, 'status'> & { status?: any };
@@ -294,7 +381,7 @@ export function useTasksHex(projectId?: string): UseTasksHexResult {
       }
     }
   };
-}
+};
 
-// Export pour compatibilité ascendante
+// Export alias for useTaskHex
 export const useTaskHex = useTasksHex;

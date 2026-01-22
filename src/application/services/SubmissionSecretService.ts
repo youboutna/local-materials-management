@@ -7,10 +7,15 @@ export interface SubmissionSecret {
   id: string;
   submission_id: string;
   secret_code: string;
-  expires_at: string;
-  is_active: boolean;
-  access_count: number;
-  max_access: number;
+  secret_expires_at?: string; // Match component expectation
+  expires_at: string; // Internal use
+  is_secret_active: boolean; // Match component expectation
+  is_active: boolean; // Internal use
+  secret_access_count: number; // Match component expectation
+  access_count: number; // Internal use
+  max_secret_access: number; // Match component expectation
+  max_access: number; // Internal use
+  secret_created_at?: string; // Match component expectation
   created_at: string;
   updated_at: string;
 }
@@ -19,6 +24,9 @@ export interface SubmissionSecret {
 const secretsStore = new Map<string, SubmissionSecret>();
 
 export class SubmissionSecretService {
+  static validateSecret(secretCode: string) {
+    throw new Error("Method not implemented.");
+  }
   /**
    * Generate a secret code for a submission
    */
@@ -36,9 +44,14 @@ export class SubmissionSecretService {
       submission_id: submissionId,
       secret_code: secretCode,
       expires_at: expirationDate,
+      secret_expires_at: expirationDate, // Match component expectation
       is_active: true,
+      is_secret_active: true, // Match component expectation
       access_count: 0,
+      secret_access_count: 0, // Match component expectation
       max_access: maxAccess,
+      max_secret_access: maxAccess, // Match component expectation
+      secret_created_at: now, // Match component expectation
       created_at: now,
       updated_at: now
     };
@@ -97,12 +110,21 @@ export class SubmissionSecretService {
   }
 
   /**
+   * Get submission by ID (returns the latest secret for the submission)
+   */
+  static async getSubmissionById(submissionId: string): Promise<SubmissionSecret | null> {
+    const secrets = await this.getSubmissionSecrets(submissionId);
+    return secrets.length > 0 ? secrets[0] : null;
+  }
+
+  /**
    * Deactivate a submission secret
    */
   static async deactivateSecret(secretId: string): Promise<void> {
     const secret = secretsStore.get(secretId);
     if (secret) {
       secret.is_active = false;
+      secret.is_secret_active = false; // Keep in sync
       secret.updated_at = new Date().toISOString();
       secretsStore.set(secretId, secret);
     }
@@ -122,6 +144,7 @@ export class SubmissionSecretService {
     const secret = secretsStore.get(secretId);
     if (secret) {
       secret.access_count += 1;
+      secret.secret_access_count = secret.access_count; // Keep in sync
       secret.updated_at = new Date().toISOString();
       secretsStore.set(secretId, secret);
     }
@@ -174,5 +197,45 @@ export class SubmissionSecretService {
     });
 
     return count;
+  }
+
+  /**
+   * Regenerate secret for a submission
+   */
+  static async regenerateSecret(submissionId: string): Promise<SubmissionSecret> {
+    // Deactivate existing secrets for this submission
+    const existingSecrets = await this.getSubmissionSecrets(submissionId);
+    for (const secret of existingSecrets) {
+      await this.deactivateSecret(secret.id);
+    }
+
+    // Generate new secret
+    return await this.generateSubmissionSecret(submissionId);
+  }
+
+  /**
+   * Check if secret is still valid (client-side check)
+   */
+  static isSecretValid(submission: SubmissionSecret): {
+    valid: boolean;
+    reason?: string;
+  } {
+    if (!submission.is_secret_active) {
+      return { valid: false, reason: 'Code désactivé' };
+    }
+
+    if (submission.secret_expires_at) {
+      const expiryDate = new Date(submission.secret_expires_at);
+      if (expiryDate < new Date()) {
+        return { valid: false, reason: 'Code expiré' };
+      }
+    }
+
+    if (submission.max_secret_access && 
+        submission.secret_access_count >= submission.max_secret_access) {
+      return { valid: false, reason: 'Limite d\'accès atteinte' };
+    }
+
+    return { valid: true };
   }
 }

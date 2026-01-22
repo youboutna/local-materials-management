@@ -4,7 +4,8 @@ import { usePhaseWorkflow } from '@/hooks/usePhaseWorkflow';
 import { useCreateProjectPayment } from '@/hooks/useProjectPayments';
 import { generatePVPDF } from '@/lib/pvGenerator';
 import { StorageFactory } from '@/services/storage/StorageFactory';
-import { DocumentService, DocumentCreateDTO } from '@/services/DocumentService';
+import { DocumentService, CreateDocumentRequestDto } from '@/application/services/DocumentService';
+import { DocumentType } from '@/domain/entities/Document';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -131,19 +132,14 @@ const PhaseWorkflowContainer: React.FC<PhaseWorkflowContainerProps> = ({
         if (uploadRes.success) {
           const publicUrl = uploadRes.url || '';
           try {
-            const docRecord = await DocumentService.createDocument({
+            const documentService = new DocumentService();
+            const docRecord = await documentService.createDocument({
               title: `PV - ${rawPhaseData.phase_name}`,
+              type: DocumentType.pv,
+              projectId: projectId,
               description: `Procès-verbal généré pour la phase ${rawPhaseData.phase_name}`,
-              document_type: 'pv_phase',
-              file_name: pvResult.fileName,
-              mime_type: 'application/pdf',
-              file_size: pvResult.arrayBuffer ? pvResult.arrayBuffer.byteLength : 0,
-              project_id: projectId,
-              phase_id: phaseId,
-              status: 'active',
-              uploaded_by: 'system',
-              file_url: publicUrl,
-            } as unknown as DocumentCreateDTO);
+              fileUrl: publicUrl,
+            } as CreateDocumentRequestDto);
 
             const { data: projectData } = await supabase
               .from('projects')

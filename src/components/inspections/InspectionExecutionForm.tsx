@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -15,7 +15,7 @@ import {
   SYNC_THRESHOLDS 
 } from '@/application/services/InspectionApprovalSyncService';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useInspectionExecutionHex } from '@/hooks/hexagonal/useInspectionExecutionHex';
+import { useInspectionExecutionHex } from '@/hooks/hexagonal'
 
 interface InspectionExecutionFormProps {
   inspection: {
@@ -66,7 +66,7 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
         comments
       });
       
-      // Si le statut est "approved", déclencher la synchronisation complète
+      // Si le statut est "approved", dÃ©clencher la synchronisation complÃ¨te
       if (newStatus === 'approved') {
         setIsSyncing(true);
         const syncService = getInspectionApprovalSyncService();
@@ -88,7 +88,7 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
       console.error('Error in handleSubmit:', error);
       toast({
         title: 'Erreur',
-        description: 'Une erreur est survenue lors de l\'exécution de l\'inspection',
+        description: 'Une erreur est survenue lors de l\'exÃ©cution de l\'inspection',
         variant: 'destructive',
       });
     } finally {
@@ -102,7 +102,7 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
       <CardContent className="p-6">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Exécution d'Inspection</h3>
+            <h3 className="text-lg font-semibold">ExÃ©cution d'Inspection</h3>
             <Badge variant="outline">
               Projet: {projectTitle}
             </Badge>
@@ -121,8 +121,8 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
                 <SelectContent>
                   <SelectItem value="pending">En attente</SelectItem>
                   <SelectItem value="in_progress">En cours</SelectItem>
-                  <SelectItem value="completed">Terminé</SelectItem>
-                  <SelectItem value="approved">Approuvé</SelectItem>
+                  <SelectItem value="completed">TerminÃ©</SelectItem>
+                  <SelectItem value="approved">ApprouvÃ©</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -157,7 +157,7 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
               <div className="text-center">
                 <Upload className="mx-auto h-12 w-12 text-gray-400" />
                 <p className="mt-2 text-sm text-gray-600">
-                  Glissez-déposez les fichiers ici ou cliquez pour sélectionner
+                  Glissez-dÃ©posez les fichiers ici ou cliquez pour sÃ©lectionner
                 </p>
                 <input
                   type="file"
@@ -175,7 +175,7 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
               <AlertDescription>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>Synchronisation réussie: {syncResult.message}</span>
+                  <span>Synchronisation rÃ©ussie: {syncResult.message}</span>
                 </div>
               </AlertDescription>
             </Alert>
@@ -190,7 +190,7 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
               {isUploading ? (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Téléchargement...
+                  TÃ©lÃ©chargement...
                 </>
               ) : isSyncing ? (
                 <>
@@ -200,7 +200,7 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
               ) : (
                 <>
                   <Shield className="mr-2 h-4 w-4" />
-                  Exécuter l'Inspection
+                  ExÃ©cuter l'Inspection
                 </>
               )}
             </Button>

@@ -1,6 +1,7 @@
+import { useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { ExecuteDataLoadingUseCase } from '@/application/use-cases/loadData/LoadDataUseCases';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { LoadDataResult } from '@/domain/repositories/ILoadDataRepository';
 
 interface UseLoadDataButtonHexResult {
@@ -11,12 +12,14 @@ interface UseLoadDataButtonHexResult {
 export function useLoadDataButtonHex(): UseLoadDataButtonHexResult {
   const queryClient = useQueryClient();
 
-  // Singleton instance du use case
-  const executeDataLoadingUseCase = new ExecuteDataLoadingUseCase();
+  const loadDataRepository = useMemo(
+    () => RepositoryFactory.getLoadDataRepository(),
+    []
+  );
 
   const loadDataMutation = useMutation({
     mutationFn: async (): Promise<LoadDataResult> => {
-      const result = await executeDataLoadingUseCase.execute();
+      const result = await loadDataRepository.executeDataLoading();
       if (!result.success) {
         throw new Error(result.message || 'Failed to load data');
       }

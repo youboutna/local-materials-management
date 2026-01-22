@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +7,7 @@ import { toast } from '@/hooks/use-toast';
 import { QuantityTakeoffWithDetails } from '@/types/quantityTakeoff';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { usePagination } from '@/hooks/usePagination';
-import { useQuantityTakeoffsHex } from '@/hooks/hexagonal/useQuantityTakeoffsHex';
+import { useQuantityTakeoffsHex } from '@/hooks/hexagonal'
 
 interface QuantityTakeoffsListProps {
   projectId: string;
@@ -55,7 +55,7 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calculator className="h-5 w-5" />
-          Liste des Métrés
+          Liste des MÃ©trÃ©s
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -66,7 +66,7 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
                 <div>
                   <h4 className="font-semibold text-lg">{takeoff.material?.name}</h4>
                   <p className="text-sm text-gray-600">
-                    {takeoff.quantity} {takeoff.material?.unit} à {takeoff.material?.price_per_unit} MRU/unité
+                    {takeoff.quantity} {takeoff.material?.unit} Ã  {takeoff.material?.price_per_unit} MRU/unitÃ©
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -93,7 +93,7 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
           {paginatedTakeoffs.length === 0 && (
             <div className="text-center py-8">
               <Calculator className="mx-auto h-12 w-12 text-gray-400" />
-              <p className="text-gray-600 mt-2">Aucun métré trouvé pour ce projet</p>
+              <p className="text-gray-600 mt-2">Aucun mÃ©trÃ© trouvÃ© pour ce projet</p>
             </div>
           )}
         </div>
@@ -101,9 +101,9 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
         <div className="mt-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <h5 className="font-medium">Total par unité</h5>
+              <h5 className="font-medium">Total par unitÃ©</h5>
               <div className="space-y-2">
-                {['m', 'm²', 'm³', 'kg', 't', 'ml'].map((unit) => (
+                {['m', 'mÂ²', 'mÂ³', 'kg', 't', 'ml'].map((unit) => (
                   <div key={unit} className="flex justify-between">
                     <span className="text-sm">{unit}:</span>
                     <span className="font-medium">{getTotalQuantityByUnit(unit)}</span>

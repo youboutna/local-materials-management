@@ -47,7 +47,7 @@ const Dashboard: React.FC = () => {
   
   // Use hexagonal hook for access control
   const { hasAccess, userRoles, loading, allowedRoles } = useDashboardAccessHex(user?.id);
-  
+
   // Map domain entities to projects for compatibility with ProjectData
   const projects = useMemo(() => 
     hexProjects.map(p => ({
@@ -65,23 +65,41 @@ const Dashboard: React.FC = () => {
     }))
   , [hexProjects]);
 
-  // Use stats from hexagonal dashboard hook
-  const stats = useMemo(() => ({
-    activeProjects: dashboardStats.activeProjects,
-    totalBudget: dashboardStats.totalBudget,
-    teamMembers: dashboardStats.teamMembers,
-    materials: dashboardStats.materials,
-    statusDistribution: dashboardStats.statusDistribution,
-    locationDistribution: dashboardStats.locationDistribution,
-  }), [dashboardStats]);
+  // Use stats from hexagonal dashboard hook with safe defaults
+  const stats = useMemo(() => {
+    console.log('Dashboard stats memo running, dashboardStats:', dashboardStats);
+    
+    // Return safe defaults if dashboardStats is null or loading
+    if (!dashboardStats) {
+      console.log('Dashboard stats is null, returning defaults');
+      return {
+        activeProjects: 0,
+        totalBudget: 0,
+        teamMembers: 0,
+        materials: 0,
+        statusDistribution: [],
+        locationDistribution: [],
+      };
+    }
+    
+    console.log('Dashboard stats found, returning actual data');
+    return {
+      activeProjects: dashboardStats.activeProjects || 0,
+      totalBudget: dashboardStats.totalBudget || 0,
+      teamMembers: dashboardStats.totalEmployees || 0,
+      materials: dashboardStats.totalMaterials || 0,
+      statusDistribution: dashboardStats.statusDistribution || [],
+      locationDistribution: [], // This needs to be implemented in DashboardService
+    };
+  }, [dashboardStats]);
 
-  if (loading) {
+  if (loading || statsLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">
-            {t("dashboard.checking_permissions")}
+            {loading ? t("dashboard.checking_permissions") : t("dashboard.loading_stats")}
           </p>
         </div>
       </div>
@@ -370,7 +388,7 @@ const Dashboard: React.FC = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {stats.locationDistribution.length > 0 ? (
+                      {stats.locationDistribution && stats.locationDistribution.length > 0 ? (
                         <ProjectDistributionChart
                           data={stats.locationDistribution}
                         />

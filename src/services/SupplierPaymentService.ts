@@ -1,5 +1,5 @@
 // Service for Supplier Payment Requests
-import { SupplierPaymentRepository } from './SupplierPaymentRepository';
+import { SupplierPaymentRepository } from '@/domain/repositories/SupplierPaymentRepository';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export interface CreatePaymentRequestDTO {

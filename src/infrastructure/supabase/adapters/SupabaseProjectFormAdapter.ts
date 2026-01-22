@@ -5,7 +5,7 @@
  */
 import { supabase } from '@/integrations/supabase/client';
 import { IProjectFormRepository } from '@/domain/repositories/IProjectFormRepository';
-import { ProjectFormData, SaveContext } from '@/services/ProjectFormService';
+import { ProjectFormData } from '@/application/services/ProjectFormService';
 import { Project } from '@/domain/entities';
 import { SupabaseProjectAdapter } from './SupabaseProjectAdapter';
 

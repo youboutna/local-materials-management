@@ -1,13 +1,13 @@
-/**
- * Hook Refactorisé pour ProjectDetailByDTO
- * Utilise l'architecture hexagonale complète
- * Élimine tous les appels directs aux services
+﻿/**
+ * Hook RefactorisÃ© pour ProjectDetailByDTO
+ * Utilise l'architecture hexagonale complÃ¨te
+ * Ã‰limine tous les appels directs aux services
  */
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useProjectsHex } from '@/hooks/hexagonal/useProjectsHex';
-import { useProjectPhasesHex } from '@/hooks/hexagonal/useProjectsHex';
+import { useProjectsHex } from '@/hooks/hexagonal'
+import { useProjectPhasesHex } from '@/hooks/hexagonal';
 
 // Types pour le composant
 interface ProjectDetailByDTOProps {
@@ -38,7 +38,7 @@ export function useProjectDetail(projectId: string | null) {
 }
 
 export function useProjectAnalytics(projectId: string | null, projectDetail: any) {
-  // Simulation pour l'instant - à remplacer par le vrai hook
+  // Simulation pour l'instant - Ã  remplacer par le vrai hook
   return {
     analytics: null,
     kpiMetrics: null,
@@ -50,7 +50,7 @@ export function useProjectAnalytics(projectId: string | null, projectDetail: any
 }
 
 export function useMilestones(projectId: string | null) {
-  // Simulation pour l'instant - à remplacer par le vrai hook
+  // Simulation pour l'instant - Ã  remplacer par le vrai hook
   return {
     milestoneProgress: null,
     isLoading: false,

@@ -130,6 +130,19 @@ export class SupplierService {
   }
 
   /**
+   * Get all suppliers
+   */
+  async getAllSuppliers(): Promise<Supplier[]> {
+    try {
+      return await this.supplierRepository.findAll();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get all suppliers';
+      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
+      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage);
+    }
+  }
+
+  /**
    * Delete supplier
    */
   async deleteSupplier(id: string): Promise<void> {

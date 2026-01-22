@@ -22,6 +22,9 @@ export interface SearchTendersOptions {
 }
 
 export class TenderService {
+  static getTenderSubmissions(id: string): any {
+    throw new Error("Method not implemented.");
+  }
   constructor(
     private tenderRepository: ITenderRepository,
     private parsedInvoiceRepository: IParsedInvoiceRepository

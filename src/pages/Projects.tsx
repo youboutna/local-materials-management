@@ -45,7 +45,9 @@ const Projects: React.FC = () => {
       endDate: p.endDate ? new Date(p.endDate).toISOString() : new Date().toISOString(),
       thumbnail: p.thumbnail || undefined,
       teamSize: p.teamSize || 0,
-      coordinates: p.coordinates || undefined,
+      coordinates: p.coordinates?.latitude && p.coordinates?.longitude 
+        ? { latitude: p.coordinates.latitude, longitude: p.coordinates.longitude }
+        : undefined,
     }))
   , [hexProjects]);
   

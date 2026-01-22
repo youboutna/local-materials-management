@@ -50,7 +50,7 @@ export class PaymentRequestService {
   async getAllPaymentRequests(): Promise<PaymentRequest[]> {
     try {
       const payments = await this.paymentRepository.findAll();
-      return payments.map(this.mapToPaymentRequest);
+      return payments.map(payment => this.mapToPaymentRequest(payment));
     } catch (error) {
       console.error('PaymentRequestService.getAllPaymentRequests failed:', error);
       throw error;
@@ -63,7 +63,7 @@ export class PaymentRequestService {
   async getPaymentRequestsByProject(projectId: string): Promise<PaymentRequest[]> {
     try {
       const payments = await this.paymentRepository.findByProjectId(projectId);
-      return payments.map(this.mapToPaymentRequest);
+      return payments.map(payment => this.mapToPaymentRequest(payment));
     } catch (error) {
       console.error('PaymentRequestService.getPaymentRequestsByProject failed:', error);
       throw error;
@@ -173,7 +173,7 @@ export class PaymentRequestService {
     try {
       const paymentStatus = this.mapStatus(status as any);
       const payments = await this.paymentRepository.findByStatus(paymentStatus);
-      return payments.map(this.mapToPaymentRequest);
+      return payments.map(payment => this.mapToPaymentRequest(payment));
     } catch (error) {
       console.error('PaymentRequestService.getPaymentRequestsByStatus failed:', error);
       throw error;

@@ -58,16 +58,8 @@ const Auth = () => {
     e.preventDefault();
     
     try {
-      await loginMutation.login(
-        { email, password },
-        {
-          onSuccess: () => {
-            // Redirection immédiate sans attendre
-            const from = (location.state as any)?.from?.pathname || "/dashboard";
-            navigate(from, { replace: true }); // replace: true évite l'historique
-          },
-        }
-      );
+      await loginMutation.mutateAsync({ email, password });
+      // Navigation is handled in the mutation's onSuccess callback
     } catch (error) {
       console.error('Login error:', error);
     }
@@ -77,33 +69,20 @@ const Auth = () => {
     e.preventDefault();
     
     try {
-      await registerMutation.register(
-        {
-          email,
-          password,
-          fullName,
-          phone,
-          nationalId,
-          role: 'user' as any,
-        },
-        {
-          onSuccess: (data: any) => {
-            // Redirection immédiate si l'email est confirmé
-            if (data && data.email_confirmed_at) {
-              navigate("/dashboard", { replace: true });
-            } else {
-              // Redirection vers la page de confirmation
-              navigate("/auth/confirm-email", { replace: true });
-            }
-          },
-        }
-      );
+      await registerMutation.mutateAsync({
+        email,
+        password,
+        full_name: fullName,
+        phone,
+        national_id: nationalId,
+      });
+      // Navigation is handled in the mutation's onSuccess callback
     } catch (error) {
       console.error('Register error:', error);
     }
   };
 
-  const loading = loginMutation.isLoggingIn || registerMutation.isRegistering;
+  const loading = loginMutation.isPending || registerMutation.isPending;
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-adrar-50 to-terracotta-50">

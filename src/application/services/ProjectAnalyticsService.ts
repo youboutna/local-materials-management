@@ -3,11 +3,14 @@
  * Uses existing tables and mock data where tables don't exist
  */
 
+import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
+
 export interface ProjectAnalytics {
   project_id: string;
   total_budget: number;
   actual_cost: number;
   budget_variance: number;
+  remaining_budget: number;
   progress_percentage: number;
   milestone_completion: number;
   risk_score: number;
@@ -18,6 +21,7 @@ export interface ProjectAnalytics {
   schedule_performance: number;
   stakeholder_satisfaction: number;
   last_updated: string;
+  cpi: number;
 }
 
 export interface ProjectMetrics {
@@ -73,6 +77,7 @@ export class ProjectAnalyticsService {
         total_budget: 1000000,
         actual_cost: 450000,
         budget_variance: 550000,
+        remaining_budget: 550000,
         progress_percentage: 45,
         milestone_completion: 40,
         risk_score: 35,
@@ -82,7 +87,8 @@ export class ProjectAnalyticsService {
         cost_efficiency: 45,
         schedule_performance: 80,
         stakeholder_satisfaction: 90,
-        last_updated: new Date().toISOString()
+        last_updated: new Date().toISOString(),
+        cpi: 1.1
       };
 
       analyticsCache.set(projectId, analytics);
@@ -319,5 +325,55 @@ export class ProjectAnalyticsService {
       }
     }
     return false;
+  }
+
+  /**
+   * Get project compliance data
+   */
+  static async getComplianceData(projectDetail: ProjectDetailDTO): Promise<{
+    compliance_score: number;
+    regulatory_compliance: number;
+    safety_compliance: number;
+    quality_compliance: number;
+    documentation_compliance: number;
+    last_audit_date: string;
+    next_audit_date: string;
+    compliance_issues: Array<{
+      category: string;
+      severity: 'low' | 'medium' | 'high';
+      description: string;
+      due_date: string;
+    }>;
+  }> {
+    try {
+      // Return mock compliance data
+      return {
+        compliance_score: 87,
+        regulatory_compliance: 92,
+        safety_compliance: 85,
+        quality_compliance: 90,
+        documentation_compliance: 82,
+        last_audit_date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days ago
+        next_audit_date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(), // 60 days from now
+        compliance_issues: [
+          {
+            category: 'Documentation',
+            severity: 'medium',
+            description: 'Missing safety inspection reports for phase 2',
+            due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+          },
+          {
+            category: 'Quality',
+            severity: 'low',
+            description: 'Minor deviations in material specifications',
+            due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+          }
+        ]
+      };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error fetching compliance data:', error);
+      throw new Error(`Failed to fetch compliance data: ${message}`);
+    }
   }
 }

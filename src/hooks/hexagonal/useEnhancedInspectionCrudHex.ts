@@ -106,17 +106,14 @@ export const useEnhancedInspectionCrudHex = (projectId?: string) => {
     return await InspectionService.getInspectionById(id);
   };
 
-  // Create inspection function (for backward compatibility)
   const createInspection = async (data: CreateInspectionDTO) => {
     return await createInspectionMutation.mutateAsync(data);
   };
 
-  // Update inspection function (for backward compatibility)
   const updateInspection = async (id: string, data: UpdateInspectionDTO) => {
     return await updateInspectionMutation.mutateAsync({ id, data });
   };
 
-  // Delete inspection function (for backward compatibility)
   const deleteInspection = async (id: string) => {
     return await deleteInspectionMutation.mutateAsync(id);
   };

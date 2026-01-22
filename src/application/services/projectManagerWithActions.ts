@@ -1,20 +1,4 @@
-import { ProjectData } from '@/types/project';
-
-export interface EscalationRoles {
-  level1: string;
-  level2: string;
-  level3: string;
-}
-
-export interface ActionLabels {
-  budget: string;
-  timeline: string;
-  quality: string;
-  resource: string;
-  risk: string;
-  compliance: string;
-  [key: string]: string;
-}
+import { ProjectData, EscalationRoles, ActionLabels } from '@/types/project';
 
 export interface ProjectAlert {
   id: string;
@@ -40,6 +24,10 @@ export interface ProjectManagerState {
   criticalAlerts: number;
   resolvedAlerts: number;
   pendingActions: string[];
+  progress: number;
+  evmData?: any;
+  ganttData?: any;
+  pertData?: any;
 }
 
 export class ProjectManager {
@@ -59,7 +47,11 @@ export class ProjectManager {
       totalAlerts: 0,
       criticalAlerts: 0,
       resolvedAlerts: 0,
-      pendingActions: []
+      pendingActions: [],
+      progress: 0,
+      evmData: undefined,
+      ganttData: undefined,
+      pertData: undefined
     };
   }
 
@@ -79,6 +71,12 @@ export class ProjectManager {
     this.state.criticalAlerts = this.alerts.filter(alert => alert.severity === 'critical').length;
     this.state.resolvedAlerts = this.alerts.filter(alert => alert.status === 'resolved').length;
     this.state.pendingActions = this.getPendingActions();
+    
+    // Add additional properties that the provider expects
+    this.state.progress = this.project.progress || 0;
+    this.state.evmData = this.calculateEVMData();
+    this.state.ganttData = this.calculateGanttData();
+    this.state.pertData = this.calculatePertData();
     
     return this.state;
   }
@@ -366,6 +364,46 @@ export class ProjectManager {
       acknowledgedAlerts: this.alerts.filter(a => a.status === 'acknowledged').length,
       resolvedAlerts: this.alerts.filter(a => a.status === 'resolved').length,
       pendingActions: this.getPendingActions().length
+    };
+  }
+
+  /**
+   * Calculate Earned Value Management (EVM) data
+   */
+  private calculateEVMData(): any {
+    // Placeholder for EVM calculations
+    return {
+      plannedValue: this.project.budget * (this.project.progress / 100) || 0,
+      earnedValue: this.project.budget * (this.project.progress / 100) || 0,
+      actualCost: (this.project as any).actual_cost || (this.project.budget * (this.project.progress / 100)) || 0,
+      scheduleVariance: 0,
+      costVariance: 0,
+      schedulePerformanceIndex: 1,
+      costPerformanceIndex: 1
+    };
+  }
+
+  /**
+   * Calculate Gantt chart data
+   */
+  private calculateGanttData(): any {
+    // Placeholder for Gantt data
+    return {
+      tasks: [],
+      milestones: [],
+      dependencies: []
+    };
+  }
+
+  /**
+   * Calculate PERT chart data
+   */
+  private calculatePertData(): any {
+    // Placeholder for PERT data
+    return {
+      activities: [],
+      criticalPath: [],
+      expectedDuration: 0
     };
   }
 }

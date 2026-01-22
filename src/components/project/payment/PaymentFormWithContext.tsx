@@ -24,7 +24,7 @@ import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import { useCreateProjectPayment } from '@/hooks/useProjectPayments';
-import { NotificationService } from '@/services/NotificationService';
+import { NotificationService } from '@/application/services/NotificationService';
 
 interface PaymentFormWithContextProps {
   projectId: string;

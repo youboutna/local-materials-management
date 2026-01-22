@@ -1,4 +1,4 @@
-l// Supabase Adapter for Document Repository - Fixed for DB schema
+// Supabase Adapter for Document Repository - Fixed for DB schema
 import { supabase } from '@/integrations/supabase/client';
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
 import { Document, DocumentType, DocumentStatus } from '@/domain/entities/Document';
@@ -40,15 +40,15 @@ export class SupabaseDocumentAdapter implements IDocumentRepository {
   async save(document: Document): Promise<void> {
     const dbType = document.documentType === 'pv' ? 'inspection_report' : document.documentType === 'photo' ? 'location_photo' : 'project_report';
     const dbStatus = document.status === 'approved' ? 'validated' : document.status === 'pending_review' ? 'pending' : document.status;
-    const { error } = await supabase.from('documents').insert([{
+    const { error } = await supabase.from('documents').insert({
       id: document.id, title: document.title, description: document.description,
       document_type: dbType as any, status: dbStatus as any, file_url: document.fileUrl,
       file_name: document.fileName, file_size: document.fileSize, mime_type: document.mimeType,
       project_id: document.projectId, phase_id: document.phaseId, inspection_id: document.inspectionId,
       payment_id: document.paymentId, supplier_id: document.supplierId, uploaded_by: document.uploadedBy,
       tags: document.tags, is_internal_only: document.isInternalOnly, is_shared_with_suppliers: document.isSharedWithSuppliers,
-      metadata: document.metadata
-    }]);
+      metadata: document.metadata as any
+    });
     if (error) throw new Error(`Failed to save document: ${error.message}`);
   }
 
