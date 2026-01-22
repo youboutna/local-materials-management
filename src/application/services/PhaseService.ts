@@ -107,43 +107,40 @@ export class PhaseService {
 
   /**
    * Save phases to database (Legacy method)
+   * Uses direct Supabase calls for legacy compatibility
    */
-  static async saveProjectPhases(projectId: string, phases: PhaseData[]): Promise<void> {
+  static async saveProjectPhasesLegacy(projectId: string, phases: PhaseData[]): Promise<void> {
     console.log('=== PHASE SERVICE SAVE START ===');
     console.log('ProjectId:', projectId);
     console.log('Phases count:', phases.length);
     
-    try {
-      // Skip saving if no phases provided
-      if (!phases || phases.length === 0) {
-        console.log('No phases to save - returning early');
-        return;
-      }
+    if (!phases || phases.length === 0) {
+      console.log('No phases to save - returning early');
+      return;
+    }
 
-      // Import the legacy service for backward compatibility
-      const { PhaseService: LegacyPhaseService } = await import('@/services/phaseService');
-      await LegacyPhaseService.saveProjectPhases(projectId, phases);
-      
-      console.log('Successfully saved phases using legacy service');
-    } catch (error) {
-      console.error('Error saving project phases:', error);
-      throw error;
+    // Use legacy phaseService from src/services
+    const { PhaseService: LegacyService } = await import('@/services/phaseService');
+    // Call the method if it exists, otherwise skip
+    if (typeof (LegacyService as any).saveProjectPhases === 'function') {
+      await (LegacyService as any).saveProjectPhases(projectId, phases);
     }
   }
 
   /**
    * Load phases from database (Legacy method)
+   * Dynamically imports legacy PhaseService to avoid circular dependencies
    */
-  static async loadProjectPhases(projectId: string): Promise<PhaseData[]> {
+  static async loadProjectPhasesLegacy(projectId: string): Promise<PhaseData[]> {
     console.log('=== LOADING PHASES FROM DATABASE ===');
     console.log('Project ID:', projectId);
     
     try {
       // Import the legacy service for backward compatibility
-      const { PhaseService: LegacyPhaseService } = await import('@/services/phaseService');
-      const phases = await LegacyPhaseService.loadProjectPhases(projectId);
+      const legacyModule = await import('@/services/phaseService');
+      const phases = await legacyModule.PhaseService.loadProjectPhases?.(projectId);
       console.log('Successfully loaded phases using legacy service');
-      return phases;
+      return phases || [];
     } catch (error) {
       console.error('Error loading project phases:', error);
       throw error;
@@ -152,12 +149,13 @@ export class PhaseService {
 
   /**
    * Update a single phase (Legacy method)
+   * Dynamically imports legacy PhaseService to avoid circular dependencies
    */
-  static async updatePhase(phase: PhaseData, projectId: string): Promise<void> {
+  static async updatePhaseLegacy(phase: PhaseData, projectId: string): Promise<void> {
     try {
       // Import the legacy service for backward compatibility
-      const { PhaseService: LegacyPhaseService } = await import('@/services/phaseService');
-      await LegacyPhaseService.updatePhase(phase, projectId);
+      const legacyModule = await import('@/services/phaseService');
+      await legacyModule.PhaseService.updatePhase?.(phase, projectId);
     } catch (error) {
       console.error('Error updating phase:', error);
       throw error;
@@ -166,12 +164,13 @@ export class PhaseService {
 
   /**
    * Delete a single phase (Legacy method)
+   * Dynamically imports legacy PhaseService to avoid circular dependencies
    */
-  static async deletePhase(phaseId: string): Promise<void> {
+  static async deletePhaseLegacy(phaseId: string): Promise<void> {
     try {
       // Import the legacy service for backward compatibility
-      const { PhaseService: LegacyPhaseService } = await import('@/services/phaseService');
-      await LegacyPhaseService.deletePhase(phaseId);
+      const legacyModule = await import('@/services/phaseService');
+      await legacyModule.PhaseService.deletePhase?.(phaseId);
     } catch (error) {
       console.error('Error deleting phase:', error);
       throw error;

@@ -15,7 +15,7 @@ import {
   MilestoneProgressDTO,
   MilestoneSummaryDTO
 } from '@/types/milestone-dto';
-import { addDays, differenceInDays, format, isBefore, parseISO } from 'date-fns';
+import { addDays, differenceInDays, format, parseISO } from 'date-fns';
 
 export class UnifiedMilestoneService {
   private milestoneService: MilestoneService;
@@ -116,7 +116,6 @@ export class UnifiedMilestoneService {
     const milestone = await MilestoneService.getMilestoneById(id);
     if (!milestone) throw new Error('Milestone not found');
 
-    const isCompleted = milestone.status === 'completed';
     const updated = await MilestoneService.completeMilestone(id);
     
     return {
@@ -177,8 +176,6 @@ export class UnifiedMilestoneService {
 
   async deleteTemplateMilestones(phaseId: string): Promise<void> {
     // Get all milestones for this phase and delete them
-    const projectMilestones = await MilestoneService.getProjectMilestones('');
-    // Note: This would need a more sophisticated implementation in real usage
     console.log(`Template milestones deletion for phase ${phaseId} - not fully implemented`);
   }
 
@@ -195,31 +192,66 @@ export class UnifiedMilestoneService {
 
     const today = new Date();
     const completed = milestones.filter(m => m.status === 'completed');
+    const pending = milestones.filter(m => m.status === 'pending');
+    const delayed = milestones.filter(m => m.status === 'delayed');
     
     // Simplified implementation - would need more sophisticated logic for real metrics
     const totalWeight = milestones.reduce((sum, m) => sum + (m.weight || 0.1), 0);
     const completedWeight = completed.reduce((sum, m) => sum + (m.weight || 0.1), 0);
     
-    return {
-      total: milestones.length,
-      completed: completed.length,
-      pending: milestones.filter(m => m.status === 'pending').length,
-      delayed: milestones.filter(m => m.status === 'delayed').length,
-      progress_percentage: totalWeight > 0 ? (completedWeight / totalWeight) * 100 : 0,
-      on_schedule: completed.length === milestones.filter(m => {
+    // Get upcoming and overdue milestones
+    const upcomingMilestones = pending
+      .filter(m => {
         const targetDate = new Date(m.target_date);
-        return m.status === 'completed' || targetDate >= today;
-      }).length,
-      critical_path: milestones.filter(m => m.priority === 'critical').length,
-      spi: 1.0, // Simplified - would need proper calculation
-      cpi: 1.0, // Simplified - would need proper calculation
-      evm: {
-        planned_value: 0,
-        earned_value: 0,
-        actual_cost: 0,
-        schedule_variance: 0,
-        cost_variance: 0
-      }
+        const daysUntil = differenceInDays(targetDate, today);
+        return daysUntil >= 0 && daysUntil <= 14;
+      })
+      .map(m => ({
+        id: m.id,
+        title: m.title,
+        target_date: m.target_date,
+        status: m.status,
+        type: m.type,
+        priority: m.priority,
+        weight: m.weight
+      }));
+
+    const overdueMilestones = pending
+      .filter(m => {
+        const targetDate = new Date(m.target_date);
+        return targetDate < today;
+      })
+      .map(m => ({
+        id: m.id,
+        title: m.title,
+        target_date: m.target_date,
+        status: m.status,
+        type: m.type,
+        priority: m.priority,
+        weight: m.weight
+      }));
+
+    const nextMilestone = pending.length > 0 ? {
+      id: pending[0].id,
+      title: pending[0].title,
+      target_date: pending[0].target_date,
+      status: pending[0].status,
+      type: pending[0].type,
+      priority: pending[0].priority,
+      weight: pending[0].weight
+    } : undefined;
+
+    return {
+      total_milestones: milestones.length,
+      completed_milestones: completed.length,
+      delayed_milestones: delayed.length,
+      weighted_progress: totalWeight > 0 ? (completedWeight / totalWeight) * 100 : 0,
+      schedule_performance_index: 1.0, // Simplified - would need proper calculation
+      critical_path_status: delayed.length > 0 ? 'at_risk' : 'on_track',
+      critical_path_float_days: 0,
+      next_milestone: nextMilestone,
+      overdue_milestones: overdueMilestones,
+      upcoming_milestones: upcomingMilestones
     };
   }
 
@@ -233,22 +265,16 @@ export class UnifiedMilestoneService {
     
     return {
       project_id: projectId,
-      critical_milestones: criticalMilestones.map(m => ({
-        milestone_id: m.id,
-        title: m.title,
-        target_date: m.target_date,
-        earliest_start: m.target_date,
-        latest_finish: m.target_date,
-        slack_days: 0,
-        is_critical: true
-      })),
-      total_duration: criticalMilestones.length > 0 ? 
+      critical_path_milestones: criticalMilestones.map(m => m.id),
+      total_duration_days: criticalMilestones.length > 0 ? 
         differenceInDays(
           new Date(criticalMilestones[criticalMilestones.length - 1].target_date),
           new Date(criticalMilestones[0].target_date)
         ) : 0,
-      critical_path_length: criticalMilestones.length,
-      bottlenecks: []
+      estimated_end_date: criticalMilestones.length > 0 
+        ? criticalMilestones[criticalMilestones.length - 1].target_date 
+        : new Date().toISOString(),
+      near_critical_paths: []
     };
   }
 
@@ -259,19 +285,19 @@ export class UnifiedMilestoneService {
     const progress = await this.getMilestoneProgress(projectId);
     const criticalPath = await this.getCriticalPath(projectId);
     
+    const nextPending = milestones.find(m => m.status === 'pending');
+    
     return {
-      project_id: projectId,
-      total_milestones: milestones.length,
-      completed_milestones: progress.completed,
-      pending_milestones: progress.pending,
-      delayed_milestones: progress.delayed,
-      overall_progress: progress.progress_percentage,
-      next_milestone: milestones.find(m => m.status === 'pending'),
-      critical_path: criticalPath.critical_milestones.length,
-      health_score: progress.progress_percentage >= 80 ? 'excellent' : 
-                    progress.progress_percentage >= 60 ? 'good' :
-                    progress.progress_percentage >= 40 ? 'fair' : 'poor',
-      last_updated: new Date().toISOString()
+      id: projectId,
+      title: `Project ${projectId} Summary`,
+      target_date: nextPending?.target_date || new Date().toISOString(),
+      status: progress.delayed_milestones > 0 ? 'delayed' : 'pending',
+      type: 'checkpoint',
+      priority: 'normal',
+      weight: 1,
+      is_critical: criticalPath.critical_path_milestones.length > 0,
+      float_days: 0,
+      percent_complete: progress.weighted_progress
     };
   }
 }
