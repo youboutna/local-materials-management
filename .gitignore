@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+src/hooks/hexagonal/index.ts.backup.20260122-205058
+src/hooks/hexagonal/index.ts.backup.20260122-203754
+src/hooks/hexagonal/index.ts.backup
+complete-export-fix.ps1
+export-monitor.ps1
+unified-export-manager.ps1
