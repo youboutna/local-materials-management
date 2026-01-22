@@ -1,4 +1,15 @@
-import { ProjectData, EscalationRoles, ActionLabels } from '@/types/project';
+import { ProjectData, EscalationRoles } from '@/types/project';
+
+// Define ActionLabels locally to avoid circular import
+export type ActionLabels = {
+  budget: string;
+  timeline: string;
+  quality: string;
+  resource: string;
+  risk: string;
+  compliance: string;
+  [key: string]: string;
+};
 
 export interface ProjectAlert {
   id: string;

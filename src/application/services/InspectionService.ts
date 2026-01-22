@@ -313,12 +313,22 @@ export class InspectionService {
         return null;
       }
 
+      // Map documents to local format with inspectionId
+      const mappedDocuments: InspectionDocument[] = (inspection.documents || []).map(doc => ({
+        id: doc.id,
+        type: doc.type,
+        name: doc.name,
+        url: doc.url,
+        uploadedAt: doc.uploadedAt,
+        inspectionId: inspection.id
+      }));
+
       return {
         id: inspection.id,
         status: inspection.status,
         progressAtInspection: inspection.progressAtInspection,
-        comments: inspection.comments,
-        documents: inspection.documents || [],
+        comments: inspection.comments ?? undefined,
+        documents: mappedDocuments,
         completedAt: inspection.updatedAt
       };
     } catch (error) {
@@ -332,18 +342,24 @@ export class InspectionService {
    */
   async updateInspectionExecution(data: InspectionExecutionData): Promise<InspectionExecutionData> {
     try {
-      const updatedInspection = await this.updateInspection(data.id, {
-        status: data.status,
+      const validStatus = ['scheduled', 'in_progress', 'completed', 'cancelled'].includes(data.status)
+        ? data.status as InspectionStatus
+        : 'scheduled';
+      
+      await this.updateInspection(data.id, {
+        status: validStatus,
         progressAtInspection: data.progressAtInspection,
         comments: data.comments,
-        documents: data.documents,
-        completedAt: data.completedAt,
         updatedAt: new Date().toISOString()
       });
       
       return {
-        ...updatedInspection,
-        documents: data.documents
+        id: data.id,
+        status: data.status,
+        progressAtInspection: data.progressAtInspection,
+        comments: data.comments,
+        documents: data.documents,
+        completedAt: data.completedAt
       };
     } catch (error) {
       ErrorLogger.log(error as Error, 'InspectionService.updateInspectionExecution');

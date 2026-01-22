@@ -46,30 +46,21 @@ export class PaymentControlActionsService {
 
   async createTaskAssignment(values: ActionFormData, metadata: ActionMetadata): Promise<void> {
     try {
-      const user = await this.authRepository.getCurrentUser();
+      const authResult = await this.authRepository.getCurrentUser();
+      const userId = authResult?.user?.id || 'system';
       
-      // Create task assignment notification
-      await this.notificationRepository.create({
-        recipientIds: values.recipientIds,
-        title: values.title,
-        message: values.message,
-        type: 'task_assignment',
-        priority: values.priority,
-        dueDate: values.dueDate,
-        assigneeId: values.assigneeId,
-        escalationLevel: values.escalationLevel,
-        documentReferences: values.documentReferences,
-        followUpRequired: values.followUpRequired,
-        notificationChannels: values.notificationChannels,
-        metadata: {
-          paymentId: metadata.paymentId,
-          projectId: metadata.projectId,
-          contractorId: metadata.contractorId,
-          amount: metadata.amount,
-          blockingReasons: metadata.blockingReasons,
-          createdBy: user?.id || 'system'
-        }
-      });
+      // Create task assignment notification for each recipient
+      for (const recipientId of values.recipientIds) {
+        await this.notificationRepository.createNotification({
+          recipient_id: recipientId,
+          title: values.title,
+          message: values.message,
+          type: 'info',
+          read: false
+        });
+      }
+      
+      console.log('Task assignment created:', { values, metadata, createdBy: userId });
     } catch (error) {
       console.error('Error creating task assignment:', error);
       throw error;
@@ -85,20 +76,16 @@ export class PaymentControlActionsService {
         metadata
       });
       
-      // In real implementation, would call SMS service
-      await this.notificationRepository.create({
-        recipientIds: values.recipientIds,
-        title: values.title,
-        message: values.message,
-        type: 'sms',
-        priority: values.priority,
-        metadata: {
-          paymentId: metadata.paymentId,
-          projectId: metadata.projectId,
-          contractorId: metadata.contractorId,
-          amount: metadata.amount
-        }
-      });
+      // Create notification records for tracking
+      for (const recipientId of values.recipientIds) {
+        await this.notificationRepository.createNotification({
+          recipient_id: recipientId,
+          title: values.title,
+          message: values.message,
+          type: 'info',
+          read: false
+        });
+      }
     } catch (error) {
       console.error('Error sending SMS notification:', error);
       throw error;
@@ -116,20 +103,15 @@ export class PaymentControlActionsService {
         metadata
       });
       
-      await this.notificationRepository.create({
-        recipientIds: values.recipientIds,
-        title: values.title,
-        message: values.message,
-        type: 'call',
-        priority: values.priority,
-        dueDate: values.dueDate,
-        metadata: {
-          paymentId: metadata.paymentId,
-          projectId: metadata.projectId,
-          contractorId: metadata.contractorId,
-          amount: metadata.amount
-        }
-      });
+      for (const recipientId of values.recipientIds) {
+        await this.notificationRepository.createNotification({
+          recipient_id: recipientId,
+          title: `Appel programmé: ${values.title}`,
+          message: values.message,
+          type: 'info',
+          read: false
+        });
+      }
     } catch (error) {
       console.error('Error scheduling call:', error);
       throw error;
@@ -147,20 +129,15 @@ export class PaymentControlActionsService {
         metadata
       });
       
-      await this.notificationRepository.create({
-        recipientIds: values.recipientIds,
-        title: values.title,
-        message: values.message,
-        type: 'email',
-        priority: values.priority,
-        dueDate: values.dueDate,
-        metadata: {
-          paymentId: metadata.paymentId,
-          projectId: metadata.projectId,
-          contractorId: metadata.contractorId,
-          amount: metadata.amount
-        }
-      });
+      for (const recipientId of values.recipientIds) {
+        await this.notificationRepository.createNotification({
+          recipient_id: recipientId,
+          title: values.title,
+          message: values.message,
+          type: 'info',
+          read: false
+        });
+      }
     } catch (error) {
       console.error('Error sending email notification:', error);
       throw error;
@@ -169,27 +146,21 @@ export class PaymentControlActionsService {
 
   async createHierarchyNotification(values: ActionFormData, metadata: ActionMetadata): Promise<void> {
     try {
-      const user = await this.authRepository.getCurrentUser();
+      const authResult = await this.authRepository.getCurrentUser();
+      const userId = authResult?.user?.id || 'system';
       
       // Hierarchy notification logic
-      await this.notificationRepository.create({
-        recipientIds: values.recipientIds,
-        title: values.title,
-        message: values.message,
-        type: 'hierarchy_notification',
-        priority: values.priority,
-        escalationLevel: values.escalationLevel,
-        dueDate: values.dueDate,
-        followUpRequired: values.followUpRequired,
-        metadata: {
-          paymentId: metadata.paymentId,
-          projectId: metadata.projectId,
-          contractorId: metadata.contractorId,
-          amount: metadata.amount,
-          blockingReasons: metadata.blockingReasons,
-          createdBy: user?.id || 'system'
-        }
-      });
+      for (const recipientId of values.recipientIds) {
+        await this.notificationRepository.createNotification({
+          recipient_id: recipientId,
+          title: values.title,
+          message: values.message,
+          type: 'warning',
+          read: false
+        });
+      }
+      
+      console.log('Hierarchy notification created:', { values, metadata, createdBy: userId });
     } catch (error) {
       console.error('Error creating hierarchy notification:', error);
       throw error;
@@ -207,20 +178,15 @@ export class PaymentControlActionsService {
         metadata
       });
       
-      await this.notificationRepository.create({
-        recipientIds: values.recipientIds,
-        title: values.title,
-        message: values.message,
-        type: 'mail',
-        priority: values.priority,
-        dueDate: values.dueDate,
-        metadata: {
-          paymentId: metadata.paymentId,
-          projectId: metadata.projectId,
-          contractorId: metadata.contractorId,
-          amount: metadata.amount
-        }
-      });
+      for (const recipientId of values.recipientIds) {
+        await this.notificationRepository.createNotification({
+          recipient_id: recipientId,
+          title: `Courrier: ${values.title}`,
+          message: values.message,
+          type: 'info',
+          read: false
+        });
+      }
     } catch (error) {
       console.error('Error creating mail action:', error);
       throw error;

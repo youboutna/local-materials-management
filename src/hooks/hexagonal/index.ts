@@ -468,3 +468,61 @@ export type { Supplier, SupplierDocument, SupplierTask, SupplierNotification, Pa
 export type { Submission, SubmissionDocument, ActivityLog } from './useSupplierSubmissionsHex';
 export type { Milestone } from './useMilestonesHex';
 export type { PhasePaymentFormData } from './usePhasePaymentsHex';
+
+// Additional type exports for components - aligned with useBankGuaranteesHex
+export type { MaterialDTO as MaterialOption } from '@/dtos/transforms';
+
+// Re-export types from useBankGuaranteesHex to ensure consistency
+export type { 
+  BankGuaranteeFormData, 
+  BankGuaranteeRow 
+} from './useBankGuaranteesHex';
+
+// Alert types for dashboard
+export interface CriticalAlert {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  createdAt: string;
+  projectId?: string;
+  status: string;
+}
+
+// Action item for management actions
+export interface ActionItem {
+  id: string;
+  title: string;
+  description?: string;
+  type: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: string;
+  dueDate?: string;
+  assignedTo?: string;
+  projectId?: string;
+  createdAt: string;
+}
+
+// Employee form data
+export interface EmployeeFormData {
+  employee_id: string;
+  full_name: string;
+  email?: string;
+  phone?: string;
+  department?: string;
+  position?: string;
+  hire_date?: string;
+  is_active?: boolean;
+  skills?: string[];
+  salary?: number;
+}
+
+// Supplier management types
+export { 
+  useSuppliersList, 
+  useCreateSupplier, 
+  useUpdateSupplier, 
+  useDeleteSupplier,
+  type SupplierMgmtFormData
+} from './useSuppliersCrudHex';

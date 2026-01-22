@@ -46,8 +46,8 @@ export class InsuranceCertificatesService {
       // Use transformer to convert form data to entity
       const entityData = insuranceTransform.formDataToEntity(data, userId);
       
-      // Create certificate using repository
-      const certificate = await this.insuranceRepository.save(entityData);
+      // Create certificate using repository's create method
+      const certificate = await this.insuranceRepository.create(entityData);
 
       // Convert entity back to DTO using transformer
       return insuranceTransform.toDTO(certificate);
@@ -89,10 +89,14 @@ export class InsuranceCertificatesService {
       const fileName = `${Date.now()}-${file.name}`;
       const filePath = `insurance/${certificateId}/${fileName}`;
 
-      // Upload file using storage repository
-      const fileUrl = await this.storageRepository.uploadFile(filePath, file);
+      // Upload file using storage repository with bucket
+      const { result, error } = await this.storageRepository.uploadFile('documents', filePath, file);
       
-      return fileUrl;
+      if (error || !result) {
+        throw error || new Error('Upload failed');
+      }
+      
+      return result.publicUrl;
     } catch (error) {
       console.error('Error uploading certificate file:', error);
       throw error;
@@ -102,7 +106,7 @@ export class InsuranceCertificatesService {
   async getCertificateUrl(certificateId: string, fileName: string): Promise<string> {
     try {
       const filePath = `insurance/${certificateId}/${fileName}`;
-      return await this.storageRepository.getFileUrl(filePath);
+      return this.storageRepository.getPublicUrl('documents', filePath);
     } catch (error) {
       console.error('Error getting certificate URL:', error);
       throw error;
@@ -112,8 +116,8 @@ export class InsuranceCertificatesService {
   async validateCertificate(certificateId: string): Promise<void> {
     try {
       await this.insuranceRepository.update(certificateId, {
-        status: 'validated',
-        updatedAt: new Date().toISOString()
+        status: 'active',
+        updated_at: new Date().toISOString()
       });
     } catch (error) {
       console.error('Error validating certificate:', error);
@@ -125,7 +129,7 @@ export class InsuranceCertificatesService {
     try {
       await this.insuranceRepository.update(certificateId, {
         status: 'expired',
-        updatedAt: new Date().toISOString()
+        updated_at: new Date().toISOString()
       });
     } catch (error) {
       console.error('Error expiring certificate:', error);

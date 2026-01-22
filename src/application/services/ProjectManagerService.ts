@@ -1,6 +1,5 @@
 // application/services/ProjectManagerService.ts
-import { Alert, EVMData, ProjectData, EscalationRoles, GanttChartData, PERTAnalysis } from "@/types/project";
-import { ActionLabels } from "@/application/services/projectManagerWithActions";
+import { Alert, EVMData, ProjectData, EscalationRoles, GanttChartData, PERTAnalysis, ActionLabels } from "@/types/project";
 import {
   ProjectManager,
 } from "../../services/projectManagerWithActions";
@@ -12,6 +11,8 @@ export interface ProjectManagerState {
   ganttData: GanttChartData;
   pertData: PERTAnalysis;
 }
+
+// Use the ActionLabels type from @/types/project directly
 export const actionLabels: ActionLabels = {
   task_assignment: 'Assigner une tâche',
   hierarchy_notification: 'Notifier la hiérarchie',

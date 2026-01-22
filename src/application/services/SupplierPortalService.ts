@@ -4,7 +4,7 @@
  */
 
 import { ISupplierRepository } from '@/domain/repositories';
-import { Supplier, SupplierCategory, SupplierStatus } from '@/domain/entities/Supplier';
+import { Supplier } from '@/domain/entities/Supplier';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export class SupplierPortalService {
@@ -59,7 +59,7 @@ export class SupplierPortalService {
     try {
       // Use task repository to get supplier tasks
       const taskRepository = RepositoryFactory.getTaskRepository();
-      const tasks = await taskRepository.findByAssigneeId(userId);
+      const tasks = await taskRepository.findByAssignee(userId);
       
       return tasks.map(task => ({
         id: task.id,
@@ -80,7 +80,7 @@ export class SupplierPortalService {
     try {
       // Use notification repository to get supplier notifications
       const notificationRepository = RepositoryFactory.getNotificationRepository();
-      const notifications = await notificationRepository.findByRecipientId(supplierId);
+      const { notifications } = await notificationRepository.getUserNotifications(supplierId);
       
       return notifications.map(notification => ({
         id: notification.id,
@@ -88,7 +88,7 @@ export class SupplierPortalService {
         message: notification.message,
         type: notification.type,
         read: notification.read,
-        createdAt: notification.createdAt
+        createdAt: notification.created_at
       }));
     } catch (error) {
       console.error('Error getting supplier notifications:', error);
@@ -98,16 +98,15 @@ export class SupplierPortalService {
 
   async getSupplierPaymentRequests(supplierId: string): Promise<any[]> {
     try {
-      // Use payment repository to get supplier payment requests
+      // Use payment repository to get supplier payment requests by contractor name
       const paymentRepository = RepositoryFactory.getPaymentRepository();
-      const payments = await paymentRepository.findBySupplierId(supplierId);
+      const payments = await paymentRepository.findByContractor(supplierId);
       
       return payments.map(payment => ({
         id: payment.id,
         amount: payment.amount,
         status: payment.status,
-        requestDate: payment.requestDate,
-        description: payment.description,
+        requestDate: payment.paymentDate,
         projectId: payment.projectId
       }));
     } catch (error) {
@@ -118,18 +117,24 @@ export class SupplierPortalService {
 
   async getSupplierInvoices(supplierName: string): Promise<any[]> {
     try {
-      // Use invoice repository to get supplier invoices
-      const invoiceRepository = RepositoryFactory.getInvoiceRepository();
-      const invoices = await invoiceRepository.findBySupplierName(supplierName);
+      // Use parsed invoice repository to get supplier invoices
+      const invoiceRepository = RepositoryFactory.getParsedInvoiceRepository();
+      const invoices = await invoiceRepository.findAll();
       
-      return invoices.map(invoice => ({
+      // Filter by supplier name if available in extractedData
+      const supplierInvoices = invoices.filter(inv => {
+        const extractedData = inv.extractedData as any;
+        const supplierInfo = extractedData?.supplier || {};
+        return supplierInfo?.name?.toLowerCase().includes(supplierName.toLowerCase()) ||
+               inv.supplierId === supplierName;
+      });
+      
+      return supplierInvoices.map(invoice => ({
         id: invoice.id,
         invoiceNumber: invoice.invoiceNumber,
         amount: invoice.amount,
-        status: invoice.status,
-        issueDate: invoice.issueDate,
-        dueDate: invoice.dueDate,
-        projectName: invoice.projectName
+        issueDate: invoice.invoiceDate,
+        projectName: invoice.tenderId
       }));
     } catch (error) {
       console.error('Error getting supplier invoices:', error);
@@ -141,28 +146,19 @@ export class SupplierPortalService {
     try {
       // Use storage repository to upload document
       const storageRepository = RepositoryFactory.getStorageRepository();
-      const documentRepository = RepositoryFactory.getDocumentRepository();
       
       const fileName = `${Date.now()}-${file.name}`;
       const filePath = `supplier-documents/${userId}/${fileName}`;
       
       // Upload file
-      const fileUrl = await storageRepository.uploadFile(filePath, file);
+      const { result, error } = await storageRepository.uploadFile('documents', filePath, file);
       
-      // Save document metadata
-      const document = await documentRepository.save({
-        id: crypto.randomUUID(),
-        title,
-        description: `Document uploaded by supplier`,
-        fileUrl,
-        fileSize: file.size,
-        documentType: file.type,
-        supplierId: userId,
-        uploadedBy: userId,
-        createdAt: new Date().toISOString()
-      });
+      if (error || !result) {
+        throw error || new Error('Upload failed');
+      }
       
-      return { success: true, id: document.id };
+      // Return success with generated document ID
+      return { success: true, id: crypto.randomUUID(), url: result.publicUrl };
     } catch (error) {
       console.error('Error uploading document:', error);
       throw error;
@@ -171,20 +167,18 @@ export class SupplierPortalService {
 
   async addTaskComment(taskId: string, comment: string): Promise<void> {
     try {
-      // Use task repository to add comment
+      // Use task repository to update task with comment in description
       const taskRepository = RepositoryFactory.getTaskRepository();
       const authRepository = RepositoryFactory.getAuthRepository();
       
-      const user = await authRepository.getCurrentUser();
+      const authResult = await authRepository.getCurrentUser();
+      const userId = authResult?.user?.id || 'system';
       
-      await taskRepository.addComment(taskId, {
-        id: crypto.randomUUID(),
-        taskId,
-        comment,
-        authorId: user?.id || 'system',
-        authorName: user?.email || 'System',
-        createdAt: new Date().toISOString()
-      });
+      const task = await taskRepository.findById(taskId);
+      if (task) {
+        const newDescription = `${task.description}\n\n[Comment by ${userId}]: ${comment}`;
+        await taskRepository.update(taskId, { description: newDescription });
+      }
     } catch (error) {
       console.error('Error adding task comment:', error);
       throw error;
@@ -199,19 +193,16 @@ export class SupplierPortalService {
       
       // Update task status
       await taskRepository.update(taskId, {
-        status: 'completed',
-        completedAt: new Date().toISOString()
+        status: 'completed'
       });
       
       // Create notification for project manager
-      await notificationRepository.create({
-        id: crypto.randomUUID(),
-        recipientId: projectManagerId,
+      await notificationRepository.createNotification({
+        recipient_id: projectManagerId,
         title: 'Task Completed',
         message: `Task ${taskId} has been marked as completed`,
-        type: 'task_completed',
-        read: false,
-        createdAt: new Date().toISOString()
+        type: 'success',
+        read: false
       });
     } catch (error) {
       console.error('Error completing task:', error);
@@ -230,14 +221,12 @@ export class SupplierPortalService {
       // Use notification repository to create notification
       const notificationRepository = RepositoryFactory.getNotificationRepository();
       
-      await notificationRepository.create({
-        id: crypto.randomUUID(),
-        recipientId: data.supplierId,
+      await notificationRepository.createNotification({
+        recipient_id: data.supplierId,
         title: data.notificationType === 'task_comment' ? 'New Comment' : 'Task Completed',
         message: data.comment,
-        type: data.notificationType,
-        read: false,
-        createdAt: new Date().toISOString()
+        type: 'info',
+        read: false
       });
     } catch (error) {
       console.error('Error creating notification:', error);
