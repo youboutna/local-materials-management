@@ -17,7 +17,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Calendar, Clock, User, FileText, Bell, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { 
   InspectionSchedulingService, 
   InspectionScheduleData, 
@@ -84,7 +83,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
       userId: (userContext as any).userId || 'default-user',
       projectId,
       phaseId: phaseId || undefined,
-      inspectionType: inspectionType
+      inspectionType: typeof inspectionType === 'string' ? inspectionType : inspectionType?.id || ''
     };
   }, [userContext, projectId, phaseId, inspectionType]);
 
@@ -117,10 +116,11 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
   // Update duration when inspection type changes
   useEffect(() => {
     if (inspectionType) {
-      const config = InspectionSchedulingService.getInspectionTypeConfig(inspectionType);
-      if (config) {
-        setEstimatedDuration(config.duration_hours);
-        setRequiredDocuments(config.required_documents);
+      // Use the inspection type object directly
+      const config = typeof inspectionType === 'string' ? null : inspectionType;
+      if (config && 'estimatedDuration' in config) {
+        setEstimatedDuration(config.estimatedDuration);
+        setRequiredDocuments(config.requiresDocuments ? ['pv_service_fait', 'photos'] : []);
       }
     }
   }, [inspectionType]);
@@ -128,7 +128,8 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
   // Auto-select default inspector when inspectors are loaded
   useEffect(() => {
     if (inspectors.length > 0 && !selectedInspectorId) {
-      const defaultInspector = inspectors.find(i => i.isDefault);
+      // For now, select the first inspector as there's no isDefault property
+      const defaultInspector = inspectors[0];
       if (defaultInspector) {
         setSelectedInspectorId(defaultInspector.id);
       }
@@ -145,14 +146,11 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
 
       const result = await InspectionSchedulingService.checkInspectorAvailability(
         selectedInspectorId,
-        scheduledDate,
-        estimatedDuration
+        scheduledDate
       );
 
-      if (!result.available && result.conflicting_inspections) {
-        setAvailabilityWarning(
-          `Inspecteur occupé: ${result.conflicting_inspections.map(c => c.project_name).join(', ')}`
-        );
+      if (!result) {
+        setAvailabilityWarning('Inspecteur non disponible à cette date');
       } else {
         setAvailabilityWarning(null);
       }
@@ -201,31 +199,24 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
 
     try {
       const scheduleData: InspectionScheduleData = {
-        project_id: projectId,
-        phase_id: phaseId,
-        inspection_type: inspectionType,
-        scheduled_date: `${scheduledDate}T${scheduledTime}:00.000Z`,
-        scheduled_time: scheduledTime,
-        estimated_duration_hours: estimatedDuration,
-        inspector_id: selectedInspectorId,
-        inspector_name: selectedInspector?.name || 'Inspecteur',
-        backup_inspector_id: backupInspectorId || null,
-        required_documents: requiredDocuments,
-        validation_criteria: validationCriteria,
-        priority: permissions?.canSetHighPriority ? priority : 'medium',
-        notify_contractor: notifyContractor,
-        reminders,
-        comments,
+        inspectionId: crypto.randomUUID(),
+        scheduledDate: `${scheduledDate}T${scheduledTime}:00.000Z`,
+        scheduledTime: scheduledTime,
+        estimatedDuration: estimatedDuration,
+        inspectorId: selectedInspectorId,
+        backupInspectorId: backupInspectorId || undefined,
+        requiredDocuments: requiredDocuments,
+        notes: comments,
       };
 
       const result = await InspectionSchedulingService.scheduleInspection(scheduleData);
 
-      if (result.success) {
+      if (result) {
         toast.success('Inspection programmée avec succès');
         onOpenChange(false);
         onSuccess?.();
       } else {
-        toast.error(result.error || 'Erreur lors de la programmation');
+        toast.error('Erreur lors de la programmation');
       }
     } catch (error) {
       console.error('Error scheduling inspection:', error);
@@ -282,8 +273,8 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
                     <SelectValue placeholder="Sélectionner le type..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {INSPECTION_TYPES.map(type => (
-                      <SelectItem key={type.code} value={type.code}>
+                    {Object.values(INSPECTION_TYPES).map(type => (
+                      <SelectItem key={type.id} value={type.id}>
                         {type.name}
                       </SelectItem>
                     ))}
@@ -364,14 +355,10 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
                   <SelectContent>
                     {inspectors.map(inspector => (
                       <SelectItem key={inspector.id} value={inspector.id}>
-                        <div className="flex items-center gap-2">
-                          <span>{inspector.name}</span>
-                          {inspector.isEngineeringConsultant && (
-                            <Badge variant="outline" className="text-xs">Ing. Conseil</Badge>
-                          )}
-                          {inspector.isTechnicalManager && (
-                            <Badge variant="outline" className="text-xs">Resp. Tech.</Badge>
-                          )}
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">{inspector.name}</p>
+                          </div>
                         </div>
                       </SelectItem>
                     ))}

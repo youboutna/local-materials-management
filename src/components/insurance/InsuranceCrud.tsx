@@ -10,39 +10,9 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Eye, Shield, AlertTriangle, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { InsuranceService } from '@/application/services/InsuranceService';
+import { InsuranceService, InsuranceCertificate, CreateInsuranceData, UpdateInsuranceData } from '@/application/services/InsuranceService';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
-
-interface InsuranceCertificate {
-  id: string;
-  project_id: string;
-  contractor_id: string;
-  insurance_type: string;
-  provider: string;
-  policy_number: string;
-  coverage_amount: number;
-  start_date: string;
-  valid_until: string;
-  status: 'active' | 'expired' | 'pending';
-  documents: string[];
-  created_at: string;
-  updated_at: string;
-  notes?: string;
-}
-
-interface InsuranceFormData {
-  project_id: string;
-  contractor_id: string;
-  insurance_type: string;
-  provider: string;
-  policy_number: string;
-  coverage_amount: number;
-  start_date: string;
-  valid_until: string;
-  status: 'active' | 'expired' | 'pending';
-  notes?: string;
-}
 
 const InsuranceCrud: React.FC = () => {
   const [certificates, setCertificates] = useState<InsuranceCertificate[]>([]);
@@ -52,18 +22,17 @@ const InsuranceCrud: React.FC = () => {
   const [isViewMode, setIsViewMode] = useState(false);
   const { toast } = useToast();
 
-  const [formData, setFormData] = useState<InsuranceFormData>({
+  const [formData, setFormData] = useState<CreateInsuranceData>({
     project_id: '',
     contractor_id: '',
-    contractor_name: '',
-    insurance_company: '',
+    insurance_type: '',
+    provider: '',
     policy_number: '',
     coverage_amount: 0,
-    coverage_type: 'responsabilite_civile',
-    valid_from: '',
+    start_date: '',
     valid_until: '',
-    certificate_url: '',
     status: 'active',
+    documents: [],
     notes: ''
   });
 
@@ -86,15 +55,14 @@ const InsuranceCrud: React.FC = () => {
     setFormData({
       project_id: '',
       contractor_id: '',
-      contractor_name: '',
-      insurance_company: '',
+      insurance_type: '',
+      provider: '',
       policy_number: '',
       coverage_amount: 0,
-      coverage_type: 'responsabilite_civile',
-      valid_from: '',
+      start_date: '',
       valid_until: '',
-      certificate_url: '',
       status: 'active',
+      documents: [],
       notes: ''
     });
   };
@@ -110,15 +78,14 @@ const InsuranceCrud: React.FC = () => {
     setFormData({
       project_id: certificate.project_id,
       contractor_id: certificate.contractor_id,
-      contractor_name: certificate.contractor_name,
-      insurance_company: certificate.insurance_company,
+      insurance_type: certificate.insurance_type,
+      provider: certificate.provider,
       policy_number: certificate.policy_number,
       coverage_amount: certificate.coverage_amount,
-      coverage_type: certificate.coverage_type,
-      valid_from: certificate.valid_from,
+      start_date: certificate.start_date,
       valid_until: certificate.valid_until,
-      certificate_url: certificate.certificate_url || '',
       status: certificate.status,
+      documents: certificate.documents,
       notes: certificate.notes || ''
     });
     setSelectedCertificate(certificate);
@@ -355,7 +322,7 @@ const InsuranceCrud: React.FC = () => {
                   <Label htmlFor="status">Statut</Label>
                   <Select 
                     value={formData.status} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as 'active' | 'expired' | 'pending' }))}
                     disabled={isViewMode}
                   >
                     <SelectTrigger>
@@ -374,12 +341,12 @@ const InsuranceCrud: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="valid_from">Date de début *</Label>
+                  <Label htmlFor="start_date">Date de début *</Label>
                   <Input
-                    id="valid_from"
+                    id="start_date"
                     type="date"
-                    value={formData.valid_from}
-                    onChange={(e) => setFormData(prev => ({ ...prev, valid_from: e.target.value }))}
+                    value={formData.start_date}
+                    onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
                     required
                     disabled={isViewMode}
                   />

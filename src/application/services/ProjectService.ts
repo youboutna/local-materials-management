@@ -359,6 +359,44 @@ export class ProjectService {
     }
   }
 
+  /**
+   * Get project with stakeholders for payment validation
+   */
+  async getProjectWithStakeholders(id: string): Promise<ProjectDTO | null> {
+    try {
+      const project = await this.projectRepository.findById(id);
+      if (!project) return null;
+      
+      // For now, return basic project data
+      // In a real implementation, this would include stakeholders data
+      return this.toDTO(project);
+    } catch (error) {
+      throw new ProjectServiceError(
+        `Failed to get project with stakeholders: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'GET_PROJECT_STAKEHOLDERS_ERROR',
+        error
+      );
+    }
+  }
+
+  /**
+   * Get employee user ID for payment notifications
+   */
+  async getEmployeeUserId(employeeId: string): Promise<{ user_id: string | null } | null> {
+    try {
+      // This would typically use an EmployeeService or repository
+      // For now, return a placeholder implementation
+      // In a real implementation, this would query the employees table
+      return { user_id: null };
+    } catch (error) {
+      throw new ProjectServiceError(
+        `Failed to get employee user ID: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'GET_EMPLOYEE_USER_ID_ERROR',
+        error
+      );
+    }
+  }
+
   private validateProjectData(data: Partial<CreateProjectDTO | UpdateProjectDTO>): {
     isValid: boolean;
     errors: string[];

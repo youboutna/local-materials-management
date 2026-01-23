@@ -57,6 +57,7 @@ const RoleBasedInspectionMonitoring = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingInspection, setEditingInspection] = useState<MonitoringInspection | null>(null);
   const [editFormData, setEditFormData] = useState({
@@ -121,12 +122,11 @@ const RoleBasedInspectionMonitoring = () => {
   }, [inspections, searchTerm, statusFilter]);
 
   const paginatedInspections = useMemo(() => {
-    const itemsPerPage = 10;
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredInspections.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredInspections, currentPage]);
+  }, [filteredInspections, currentPage, itemsPerPage]);
 
-  const totalPages = Math.ceil(filteredInspections.length / 10);
+  const totalPages = Math.ceil(filteredInspections.length / itemsPerPage);
 
   // Handle edit from URL param
   useEffect(() => {
@@ -411,7 +411,10 @@ const RoleBasedInspectionMonitoring = () => {
                   <PaginationControls
                     currentPage={currentPage}
                     totalPages={totalPages}
+                    totalItems={inspections.length}
+                    itemsPerPage={itemsPerPage}
                     onPageChange={setCurrentPage}
+                    onItemsPerPageChange={setItemsPerPage}
                   />
                 </div>
               )}

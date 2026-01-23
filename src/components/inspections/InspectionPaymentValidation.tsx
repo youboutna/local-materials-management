@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { NotificationService } from '@/services/NotificationService';
+import { NotificationService } from '@/application/services/NotificationService';
+import { ProjectService } from '@/application/services/ProjectService';
+import { InspectionService } from '@/application/services/InspectionService';
+import { SupplierPaymentService } from '@/application/services/SupplierPaymentService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import { InspectionDTO } from '@/types/inspection.dto';
+import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
+import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+import { InspectionDomainTransformer } from '@/dtos/transforms/InspectionDomainTransformer';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { 
   CheckCircle, 
@@ -23,7 +27,6 @@ import {
   ArrowLeft,
   Users
 } from 'lucide-react';
-import { InspectionService } from '@/application/services/InspectionService';
 
 type PaymentType = 'contractor' | 'mission_fees' | 'engineer_fees';
 
@@ -60,58 +63,57 @@ const InspectionPaymentValidation: React.FC = () => {
       // Get inspection
       const inspectionData = await InspectionService.getInspectionById(inspectionId);
       
+      if (!inspectionData) {
+        console.warn(`[InspectionPaymentValidation] Inspection not found: ${inspectionId}`);
+        return null;
+      }
+      
       // Check if inspection is approved (terminé)
-      if (inspectionData?.status !== 'approved') {
+      if (inspectionData.status !== 'approved') {
+        console.warn(`[InspectionPaymentValidation] Inspection not approved. Status: ${inspectionData.status}, ID: ${inspectionId}`);
         return null;
       }
       
       // Check if there's a pending payment request linked to this inspection
-      const { data: paymentRequest } = await supabase
-        .from('supplier_payment_requests')
-        .select('*')
-        .eq('inspection_id', inspectionId)
-        .eq('status', 'pending')
-        .single();
+      const paymentRequest = await SupplierPaymentService.getPendingPaymentRequestByInspectionId(inspectionId);
       
       // Only return inspection if it has a pending payment request
       if (!paymentRequest) {
+        console.warn(`[InspectionPaymentValidation] No pending payment request found for inspection: ${inspectionId}`);
         return null;
       }
       
-      return inspectionData;
+      console.log(`[InspectionPaymentValidation] Validation successful for inspection: ${inspectionId}, payment request: ${paymentRequest.id}`);
+      
+      // Transform Inspection entity to InspectionDTO
+      return InspectionDomainTransformer.toResponseDto(inspectionData);
     },
     enabled: !!inspectionId,
   });
 
   // Fetch project details with external stakeholders (contractors)
-  const { data: project } = useQuery({
+  const { data: project } = useQuery<ProjectDTO | null>({
     queryKey: ['project-summary', projectId],
     queryFn: async () => {
-      if (!projectId) return null;
-      const { data, error } = await supabase
-        .from('projects')
-        .select(`
-          *,
-          project_stakeholders(
-            stakeholder_type,
-            stakeholder_entity_type,
-            supplier_id,
-            employee_id,
-            suppliers(
-              id,
-              name,
-              contact_person,
-              phone,
-              email,
-              user_id
-            )
-          )
-        `)
-        .eq('id', projectId)
-        .single();
-
-      if (error) throw error;
-      return data;
+      if (!projectId) {
+        console.warn('[InspectionPaymentValidation] No projectId provided');
+        return null;
+      }
+      
+      try {
+        const projectData = await ProjectService.getProjectWithStakeholders(projectId);
+        
+        if (!projectData) {
+          console.warn(`[InspectionPaymentValidation] Project not found: ${projectId}`);
+          return null;
+        }
+        
+        console.log(`[InspectionPaymentValidation] Project loaded successfully: ${projectId}`);
+        return projectData;
+      } catch (error) {
+        console.error(`[InspectionPaymentValidation] Error loading project ${projectId}:`, error);
+        return null;
+      }
     },
     enabled: !!projectId,
   });
@@ -119,22 +121,35 @@ const InspectionPaymentValidation: React.FC = () => {
   // Update inspection mutation
   const updateInspectionMutation = useMutation({
     mutationFn: async (data: { status: string; comments: string; payment_status?: PaymentStatus; payment_type: PaymentType }) => {
-      if (!inspectionId) throw new Error('Inspection ID missing');
+      if (!inspectionId) {
+        console.error('[InspectionPaymentValidation] Inspection ID missing for update');
+        throw new Error('Inspection ID missing');
+      }
 
-      const { error } = await supabase
-        .from('inspections')
-        .update({
+      console.log(`[InspectionPaymentValidation] Updating inspection ${inspectionId}:`, {
+        status: data.status,
+        payment_type: data.payment_type,
+        payment_status: data.payment_status
+      });
+
+      try {
+        // Update inspection using hexagonal service
+        await InspectionService.updateInspectionPaymentValidation(inspectionId, {
           status: data.status,
           comments: data.comments,
           payment_type: data.payment_type,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', inspectionId);
+          payment_status: data.payment_status
+        });
 
-      if (error) throw error;
+        console.log(`[InspectionPaymentValidation] Inspection updated successfully: ${inspectionId}`);
+      } catch (error) {
+        console.error(`[InspectionPaymentValidation] Error updating inspection ${inspectionId}:`, error);
+        throw error;
+      }
 
       // Determine beneficiary based on payment type
       let beneficiaryUserId: string | null = null;
+      console.log(`[InspectionPaymentValidation] Determining beneficiary for payment type: ${data.payment_type}`);
 
       if (data.payment_type === 'contractor') {
         // Find external contractor (partie prenante externe - supplier)
@@ -142,6 +157,7 @@ const InspectionPaymentValidation: React.FC = () => {
           (s: any) => s.stakeholder_entity_type === 'supplier' && s.supplier_id && s.suppliers
         );
         beneficiaryUserId = contractor?.suppliers?.user_id || null;
+        console.log(`[InspectionPaymentValidation] Contractor beneficiary found: ${beneficiaryUserId ? 'YES' : 'NO'}`);
       } else if (data.payment_type === 'mission_fees' || data.payment_type === 'engineer_fees') {
         // Find engineering consultant (ingénieur conseil)
         const engineer = project?.project_stakeholders?.find(
@@ -149,18 +165,21 @@ const InspectionPaymentValidation: React.FC = () => {
         );
         
         if (engineer?.employee_id) {
-          // Get employee user_id
-          const { data: employeeData } = await supabase
-            .from('employees')
-            .select('user_id')
-            .eq('id', engineer.employee_id)
-            .single();
+          console.log(`[InspectionPaymentValidation] Found engineer employee ID: ${engineer.employee_id}`);
+          // Get employee user_id via service
+          const employeeData = await ProjectService.getEmployeeUserId(engineer.employee_id);
           beneficiaryUserId = employeeData?.user_id || null;
+          console.log(`[InspectionPaymentValidation] Engineer beneficiary found: ${beneficiaryUserId ? 'YES' : 'NO'}`);
+        } else {
+          console.warn('[InspectionPaymentValidation] No engineer found in project stakeholders');
         }
+      } else {
+        console.warn(`[InspectionPaymentValidation] Unknown payment type: ${data.payment_type}`);
       }
 
       // Create notification for beneficiary
       if (beneficiaryUserId && project) {
+        console.log(`[InspectionPaymentValidation] Creating notification for beneficiary: ${beneficiaryUserId}`);
         const paymentTypeLabels = {
           contractor: 'entreprise contractante',
           mission_fees: 'frais de mission',
@@ -182,9 +201,14 @@ const InspectionPaymentValidation: React.FC = () => {
             rejection_notes: data.comments,
           },
         });
+        
+        console.log(`[InspectionPaymentValidation] Notification created successfully for user: ${beneficiaryUserId}`);
+      } else {
+        console.warn('[InspectionPaymentValidation] No beneficiary found or project missing, skipping notification');
       }
     },
     onSuccess: () => {
+      console.log(`[InspectionPaymentValidation] Mutation successful, invalidating queries`);
       queryClient.invalidateQueries({ queryKey: ['inspection', inspectionId] });
       queryClient.invalidateQueries({ queryKey: ['project-detail', projectId] });
       toast({
@@ -193,7 +217,7 @@ const InspectionPaymentValidation: React.FC = () => {
       });
     },
     onError: (error) => {
-      console.error('Error updating inspection:', error);
+      console.error('[InspectionPaymentValidation] Mutation error:', error);
       toast({
         title: 'Erreur',
         description: 'Impossible de mettre à jour l\'inspection.',

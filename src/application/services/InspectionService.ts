@@ -392,4 +392,23 @@ export class InspectionService {
     const service = new InspectionService();
     return service.getInspectionById(id);
   }
+
+  /**
+   * Update inspection payment validation
+   */
+  static async updateInspectionPaymentValidation(id: string, data: {
+    status: string;
+    comments: string;
+    payment_type: string;
+    payment_status?: string;
+  }): Promise<Inspection> {
+    const service = new InspectionService();
+    return service.updateInspection(id, {
+      status: data.status as InspectionStatus,
+      comments: data.comments,
+      // Add payment-related fields if they exist in the entity
+      ...(data.payment_type && { payment_type: data.payment_type }),
+      ...(data.payment_status && { payment_status: data.payment_status }),
+    });
+  }
 }

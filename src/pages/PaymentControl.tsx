@@ -334,8 +334,15 @@ const PaymentControlPage = () => {
   const [projectHierarchy, setProjectHierarchy] = useState<any[]>([]);
   
   // Use hexagonal hooks
-  const { projects, loading: projectsLoading } = useProjectsHex();
+  const { projects, isLoading: projectsLoading } = useProjectsHex();
   const { stats: paymentStats } = usePaymentBlocksHex();
+
+  // Helper function to safely convert date to ISO string
+  const toISOStringSafe = (date: string | Date | undefined | null): string => {
+    if (!date) return new Date().toISOString();
+    if (typeof date === 'string') return date;
+    return date.toISOString();
+  };
 
   useEffect(() => {
     // Select first active project when projects are loaded
@@ -347,8 +354,8 @@ const PaymentControlPage = () => {
         status: activeProject.status,
         progress: activeProject.progress,
         budget: activeProject.budget,
-        startDate: activeProject.startDate?.toISOString() || new Date().toISOString(),
-        endDate: activeProject.endDate?.toISOString(),
+        startDate: toISOStringSafe(activeProject.startDate),
+        endDate: toISOStringSafe(activeProject.endDate),
         teamSize: 0,
         description: activeProject.description,
         location: activeProject.location,

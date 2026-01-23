@@ -85,6 +85,13 @@ const BankGuaranteeMonitorPage = () => {
   // Use hexagonal hook for bank guarantees stats
   const { stats: guaranteeStats } = useBankGuaranteesHex();
 
+  // Helper function to safely convert date to ISO string
+  const toISOStringSafe = (date: string | Date | undefined | null): string => {
+    if (!date) return new Date().toISOString();
+    if (typeof date === 'string') return date;
+    return date.toISOString();
+  };
+
   useEffect(() => {
     // Select first active project when projects are loaded
     if (projects.length > 0 && !selectedProject) {
@@ -97,8 +104,8 @@ const BankGuaranteeMonitorPage = () => {
         status: activeProject.status,
         progress: activeProject.progress,
         budget: activeProject.budget,
-        startDate: activeProject.startDate || new Date().toISOString(),
-        endDate: activeProject.endDate || new Date().toISOString(),
+        startDate: toISOStringSafe(activeProject.startDate),
+        endDate: toISOStringSafe(activeProject.endDate),
         teamSize: 0,
         thumbnail: undefined,
       };
