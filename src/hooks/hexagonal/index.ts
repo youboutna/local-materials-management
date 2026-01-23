@@ -99,7 +99,8 @@ export {
 // Task & Project Management
 export { 
   useTaskAssignmentsHex, 
-  useTaskAssignmentHex 
+  useTaskAssignmentHex,
+  type TaskAssignment
 } from './useTaskAssignmentsHex';
 export { 
   usePhaseHex, 
@@ -132,7 +133,7 @@ export {
 } from './useMonitoringHex';
 export { useComplianceHex } from './useComplianceHex';
 export { useAlertsHex } from './useAlertsHex';
-export { useInspectionMonitoringHex } from './useInspectionMonitoringHex';
+export { useInspectionMonitoringHex, type MonitoringInspection } from './useInspectionMonitoringHex';
 
 // Tenders & Documents
 export { 
@@ -191,12 +192,18 @@ export { useQuantityTakeoffsHex } from './useQuantityTakeoffsHex';
 // Inspection Management
 export { 
   useInspectionsList, 
+  useInspectionsList as useInspectionsListCrud,
   useCreateInspection, 
   useUpdateInspection, 
-  useDeleteInspection 
+  useDeleteInspection,
+  type InspectionFormData,
+  type InspectionRow
 } from './useInspectionsCrudHex';
 export { useInspectionsListHex } from './useInspectionsListHex';
 export { useInspectionWorkflowHex } from './useInspectionWorkflowHex';
+
+// Re-export Inspection types for components
+export type { InspectionRow as Inspection } from './useInspectionsCrudHex';
 
 // ==================== SUPPLIER PORTAL ====================
 export { useSupplierPortalHex } from './useSupplierPortalHex';

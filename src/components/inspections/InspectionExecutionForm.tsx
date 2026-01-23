@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -9,13 +9,13 @@ import { Upload, CheckCircle, AlertTriangle, FileText, Shield, Banknote, Refresh
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { 
-  getInspectionApprovalSyncService, 
+  InspectionApprovalSyncService, 
   InspectionApprovalContext,
   SyncResult,
   SYNC_THRESHOLDS 
 } from '@/application/services/InspectionApprovalSyncService';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useInspectionExecutionHex } from '@/hooks/hexagonal'
+import { useInspectionExecutionHex } from '@/hooks/hexagonal';
 
 interface InspectionExecutionFormProps {
   inspection: {
@@ -66,31 +66,33 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
         comments
       });
       
-      // Si le statut est "approved", dÃ©clencher la synchronisation complÃ¨te
+      // Si le statut est "approved", déclencher la synchronisation complète
       if (newStatus === 'approved') {
         setIsSyncing(true);
-        const syncService = getInspectionApprovalSyncService();
+        const syncService = new InspectionApprovalSyncService();
+        const validationDocs = (result as any)?.documents || [];
         const context: InspectionApprovalContext = {
           inspectionId: inspection.id,
           projectId: inspection.project_id,
           phaseId: inspection.phase_id,
           status: newStatus,
-          progress: parseInt(newProgress),
-          documents: result.uploadedDocs
+          progressAtInspection: parseInt(newProgress),
+          inspector: inspection.inspector,
+          validationDocuments: validationDocs.map((doc: any) => ({
+            name: doc.name,
+            url: doc.url || '',
+            uploadedAt: new Date().toISOString()
+          }))
         };
         
-        const syncResult = await syncService.syncInspectionApproval(context);
-        setSyncResult(syncResult);
+        const newSyncResult = await syncService.synchronizeOnApproval(context);
+        setSyncResult(newSyncResult);
       }
       
-      onUpdate(inspection.id, newStatus, parseInt(newProgress), documents, syncResult);
+      onUpdate(inspection.id, newStatus, parseInt(newProgress), documents, syncResult || undefined);
     } catch (error) {
       console.error('Error in handleSubmit:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Une erreur est survenue lors de l\'exÃ©cution de l\'inspection',
-        variant: 'destructive',
-      });
+      toast.error('Une erreur est survenue lors de l\'exécution de l\'inspection');
     } finally {
       setIsUploading(false);
       setIsSyncing(false);
@@ -100,40 +102,41 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
   return (
     <Card>
       <CardContent className="p-6">
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">ExÃ©cution d'Inspection</h3>
-            <Badge variant="outline">
-              Projet: {projectTitle}
-            </Badge>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Projet</Label>
+              <p className="text-sm font-medium">{projectTitle}</p>
+            </div>
+            <div>
+              <Label>Inspecteur</Label>
+              <p className="text-sm font-medium">{inspection.inspector}</p>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="status">Statut</Label>
-              <Select 
-                value={newStatus} 
-                onValueChange={(value) => setNewStatus(value)}
-              >
+              <Select value={newStatus} onValueChange={setNewStatus}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">En attente</SelectItem>
+                  <SelectItem value="scheduled">Programmée</SelectItem>
                   <SelectItem value="in_progress">En cours</SelectItem>
-                  <SelectItem value="completed">TerminÃ©</SelectItem>
-                  <SelectItem value="approved">ApprouvÃ©</SelectItem>
+                  <SelectItem value="completed">Terminée</SelectItem>
+                  <SelectItem value="approved">Approuvée</SelectItem>
+                  <SelectItem value="rejected">Rejetée</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
             <div>
               <Label htmlFor="progress">Progression (%)</Label>
               <Input
                 id="progress"
                 type="number"
-                min="0"
-                max="100"
+                min={0}
+                max={100}
                 value={newProgress}
                 onChange={(e) => setNewProgress(e.target.value)}
               />
@@ -147,65 +150,71 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
               value={comments}
               onChange={(e) => setComments(e.target.value)}
               rows={3}
-              placeholder="Ajouter des commentaires sur l'inspection..."
             />
           </div>
 
           <div>
-            <Label>Documents justificatifs</Label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
-              <div className="text-center">
-                <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                <p className="mt-2 text-sm text-gray-600">
-                  Glissez-dÃ©posez les fichiers ici ou cliquez pour sÃ©lectionner
-                </p>
-                <input
-                  type="file"
-                  multiple
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={(e) => setDocuments(Array.from(e.target.files || []))}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                />
+            <Label>Documents</Label>
+            <Input
+              type="file"
+              multiple
+              onChange={(e) => setDocuments(Array.from(e.target.files || []))}
+            />
+            {documents.length > 0 && (
+              <div className="mt-2 space-y-1">
+                {documents.map((doc, i) => (
+                  <Badge key={i} variant="secondary" className="mr-2">
+                    <FileText className="h-3 w-3 mr-1" />
+                    {doc.name}
+                  </Badge>
+                ))}
               </div>
-            </div>
+            )}
           </div>
 
           {syncResult && (
-            <Alert className="mt-4">
+            <Alert variant={syncResult.success ? 'default' : 'destructive'}>
               <AlertDescription>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>Synchronisation rÃ©ussie: {syncResult.message}</span>
-                </div>
+                {syncResult.success ? (
+                  <div className="space-y-1">
+                    <p className="font-medium flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      Synchronisation réussie
+                    </p>
+                    {syncResult.actions.map((action, i) => (
+                      <p key={i} className="text-sm text-muted-foreground">{action}</p>
+                    ))}
+                  </div>
+                ) : (
+                  <div>
+                    <p className="font-medium">Erreurs lors de la synchronisation:</p>
+                    {syncResult.errors.map((err, i) => (
+                      <p key={i} className="text-sm">{err}</p>
+                    ))}
+                  </div>
+                )}
               </AlertDescription>
             </Alert>
           )}
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button 
-              type="submit" 
-              onClick={handleSubmit}
-              disabled={isUploading || isSyncing}
-            >
+          <div className="flex justify-end gap-2">
+            <Button type="submit" disabled={isUploading || isSyncing}>
               {isUploading ? (
                 <>
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  TÃ©lÃ©chargement...
+                  <Upload className="h-4 w-4 mr-2 animate-spin" />
+                  Envoi en cours...
                 </>
               ) : isSyncing ? (
                 <>
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                   Synchronisation...
                 </>
               ) : (
-                <>
-                  <Shield className="mr-2 h-4 w-4" />
-                  ExÃ©cuter l'Inspection
-                </>
+                'Mettre à jour'
               )}
             </Button>
           </div>
-        </div>
+        </form>
       </CardContent>
     </Card>
   );

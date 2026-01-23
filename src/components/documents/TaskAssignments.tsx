@@ -42,7 +42,8 @@ import { PaginationControls } from '@/components/ui/pagination-controls';
 import { 
   useTaskAssignmentsHex, 
   useProjectsHex, 
-  useAssigneeDetails 
+  useAssigneeDetails,
+  type TaskAssignment
 } from '@/hooks/hexagonal';
 
 type Project = { id: string; title: string };
@@ -531,7 +532,7 @@ const TaskAssignmentsComponent = () => {
 
       {/* Tasks List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {paginatedTasks.map((task) => (
+        {(paginatedTasks as TaskAssignment[]).map((task) => (
           <Card key={task.id} className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-2">
               <div className="flex items-start justify-between gap-2">
@@ -575,16 +576,16 @@ const TaskAssignmentsComponent = () => {
                   <User className="h-3.5 w-3.5" />
                   <span className="truncate">{getAssigneeName(task)}</span>
                 </div>
-                {task.due_date && (
+                {task.dueDate && (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Calendar className="h-3.5 w-3.5" />
-                    <span>{new Date(task.due_date).toLocaleDateString('fr-FR')}</span>
+                    <span>{new Date(task.dueDate).toLocaleDateString('fr-FR')}</span>
                   </div>
                 )}
-                {task.project_id && (
+                {task.projectId && (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <ClipboardList className="h-3.5 w-3.5" />
-                    <span className="truncate">{getProjectTitle(task.project_id)}</span>
+                    <span className="truncate">{getProjectTitle(task.projectId)}</span>
                   </div>
                 )}
               </div>
