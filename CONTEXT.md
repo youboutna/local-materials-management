@@ -44,10 +44,15 @@ src/
 4. **Hook Layer** : Utilise DTOs SEULEMENT, PAS d'entités directes
 5. **UI Layer** : Utilise DTOs, PAS d'accès direct aux entités
 
-#### **Chemins Dépréciés (NE PAS UTILISER)**
-- `src/services/*` : **DEPRECATED** → utiliser `src/application/services/*`
-- `src/types/*` : **DEPRECATED** (migration uniquement) → utiliser `src/dtos/*`
+#### **Chemins Protégés (NE PAS MODIFIER - Référence Migration)**
+- `src/services/*` : **RÉFÉRENCE LEGACY** → logiques et comportements pour migration uniquement
+- `src/types/*` : **RÉFÉRENCE LEGACY** → types pour migration uniquement
 - `src/application/use-cases/*` : **DEPRECATED** → utiliser directement les services hexagonaux via `RepositoryFactory`
+
+#### **Chemins Actifs (À UTILISER)**
+- `src/application/services/*` : Services hexagonaux actifs
+- `src/dtos/*` : DTOs centralisés  
+- `src/hooks/hexagonal/*` : Hooks hexagonaux
 
 #### **Flux de Transformation Standard**
 ```typescript

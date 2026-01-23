@@ -7,8 +7,12 @@ export interface ActionItem {
   id: string;
   title: string;
   description: string;
+  type: 'task' | 'approval' | 'review' | 'decision' | 'alert';
+  priority: 'critical' | 'high' | 'medium' | 'low';
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
   urgency: 'low' | 'medium' | 'high' | 'critical';
   category: 'task' | 'approval' | 'review' | 'decision';
+  createdAt: string;
   assignedTo?: string;
   dueDate?: Date;
   projectId?: string;
@@ -67,8 +71,12 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
         id: `inspection-payment-${inspection.id}`,
         title: 'Validation paiement inspection',
         description: `Inspection à ${inspection.progress_at_inspection}% - ${inspection.inspector}`,
+        type: 'approval',
+        priority: inspection.status === 'in_progress' ? 'high' : 'medium',
+        status: 'pending',
         urgency: inspection.status === 'in_progress' ? 'high' : 'medium',
         category: 'approval',
+        createdAt: new Date().toISOString(),
         projectId: (inspection.projects as any)?.id,
         projectName: (inspection.projects as any)?.title,
         inspectionId: inspection.id,
@@ -84,8 +92,12 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
         id: `payment-request-${request.id}`,
         title: 'Demande de paiement fournisseur',
         description: `Montant: ${request.amount.toLocaleString()} MRU - ${(request.suppliers as any)?.name}`,
+        type: 'approval',
+        priority: request.amount > 100000 ? 'high' : 'medium',
+        status: 'pending',
         urgency: request.amount > 100000 ? 'critical' : 'high',
         category: 'approval',
+        createdAt: new Date().toISOString(),
         projectId: (request.projects as any)?.id,
         projectName: (request.projects as any)?.title,
         paymentId: request.id,
@@ -102,8 +114,12 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
         id: `inspection-${inspection.id}`,
         title: 'Inspection en retard',
         description: `${daysPast} jours de retard - Inspecteur: ${inspection.inspector}`,
+        type: 'task',
+        priority: daysPast > 7 ? 'high' : 'medium',
+        status: 'pending',
         urgency: daysPast > 7 ? 'high' : 'medium',
         category: 'task',
+        createdAt: new Date().toISOString(),
         projectId: (inspection.projects as any)?.id,
         projectName: (inspection.projects as any)?.title,
         dueDate: new Date(inspection.date)
@@ -118,8 +134,12 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
         id: `budget-${project.id}`,
         title: 'Revue budgétaire',
         description: `Projet à ${project.progress}% - Vérification budget requise`,
+        type: 'review',
+        priority: 'medium',
+        status: 'pending',
         urgency: 'medium',
         category: 'review',
+        createdAt: new Date().toISOString(),
         projectId: project.id,
         projectName: project.title,
         dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
@@ -134,8 +154,12 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
         id: `team-${project.id}`,
         title: 'Affectation équipe',
         description: 'Nouveau projet démarrant bientôt',
+        type: 'decision',
+        priority: 'medium',
+        status: 'pending',
         urgency: 'medium',
         category: 'decision',
+        createdAt: new Date().toISOString(),
         projectId: project.id,
         projectName: project.title,
         dueDate: new Date(project.start_date)
