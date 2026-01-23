@@ -1,5 +1,95 @@
 # CONTEXT.md - Référence Rapide HadraTech-GPI
 
+---
+
+## **🔍 OUTILS D'ANALYSE DYNAMIQUE**
+
+### **Script PowerShell d'analyse (à exécuter en temps réel)**
+```powershell
+# Script d'analyse complète
+Write-Host "🔍 ANALYSE COMPLÈTE DE LA MIGRATION HEXAGONALE" -ForegroundColor Green
+Write-Host "=" * 60
+
+# Analyser les composants
+$components = Get-ChildItem -Path "./src/components" -Recurse -Include "*.tsx"
+$componentsWithSupabase = $components | Select-String -Pattern "supabase\." | Group-Object Path | Select-Object Count, Name
+
+$totalComponents = $components.Count
+$componentsWithCalls = $componentsWithSupabase.Count
+$componentsMigrated = $totalComponents - $componentsWithCalls
+$componentsPercentage = if ($totalComponents -gt 0) { [math]::Round(($componentsMigrated / $totalComponents) * 100, 2) } else { 0 }
+
+# Analyser les hooks
+$hooks = Get-ChildItem -Path "./src/hooks/hexagonal" -Recurse -Include "*.ts"
+$hooksWithSupabase = $hooks | Select-String -Pattern "supabase\." | Group-Object Path | Select-Object Count, Name
+
+$totalHooks = $hooks.Count
+$hooksWithCalls = $hooksWithSupabase.Count
+$hooksMigrated = $totalHooks - $hooksWithCalls
+$hooksPercentage = if ($totalHooks -gt 0) { [math]::Round(($hooksMigrated / $totalHooks) * 100, 2) } else { 0 }
+
+# Totaux
+$totalFiles = $totalComponents + $totalHooks
+$totalWithCalls = $componentsWithCalls + $hooksWithCalls
+$totalMigrated = $componentsMigrated + $hooksMigrated
+$globalPercentage = if ($totalFiles -gt 0) { [math]::Round(($totalMigrated / $totalFiles) * 100, 2) } else { 0 }
+
+# Affichage des résultats
+Write-Host "`n📊 RÉSULTATS DE L'ANALYSE :" -ForegroundColor Yellow
+Write-Host "-" * 40
+Write-Host "📁 COMPOSANTS (.tsx) :" -ForegroundColor Cyan
+Write-Host "  Total: $totalComponents fichiers"
+Write-Host "  Migrés: $componentsMigrated ($componentsPercentage%)"
+Write-Host "  Restants: $componentsWithCalls"
+Write-Host "`n📁 HOOKS HEXAGONAUX (.ts) :" -ForegroundColor Cyan
+Write-Host "  Total: $totalHooks fichiers"
+Write-Host "  Migrés: $hooksMigrated ($hooksPercentage%)"
+Write-Host "  Restants: $hooksWithCalls"
+Write-Host "`n🌍 GLOBAL :" -ForegroundColor Green
+Write-Host "  Total: $totalFiles fichiers"
+Write-Host "  Migrés: $totalMigrated ($globalPercentage%)"
+Write-Host "  Restants: $totalWithCalls"
+
+# Estimation temps
+$estimatedHours = [math]::Round($totalWithCalls * 0.5, 1)
+$estimatedDays = [math]::Round($estimatedHours / 8, 1)
+
+Write-Host "`n⏱️ ESTIMATION TEMPS RESTANT :" -ForegroundColor Magenta
+Write-Host "  Heures: $estimatedHours heures"
+Write-Host "  Jours: $estimatedDays jours (à 8h/jour)"
+
+# Top 10 des fichiers critiques
+Write-Host "`n🔴 TOP 10 FICHIERS LES PLUS CRITIQUES :" -ForegroundColor Red
+
+$allFilesWithCalls = @()
+$allFilesWithCalls += $componentsWithSupabase | ForEach-Object {
+    [PSCustomObject]@{
+        Fichier = $_.Name.Replace((Get-Location).Path + "\", "")
+        Appels = $_.Count
+        Type = "Component"
+    }
+}
+$allFilesWithCalls += $hooksWithSupabase | ForEach-Object {
+    [PSCustomObject]@{
+        Fichier = $_.Name.Replace((Get-Location).Path + "\", "")
+        Appels = $_.Count
+        Type = "Hook"
+    }
+}
+
+$allFilesWithCalls | Sort-Object Appels -Descending | Select-Object -First 10 | Format-Table
+```
+
+### **Utilisation**
+```powershell
+# Exécuter le script pour obtenir les résultats actuels
+./analyze-migration.ps1
+
+# Les résultats changent à chaque exécution selon l'état du code
+```
+
+---
+
 ## Architecture Hexagonale - Prérequis Fondamentaux
 
 ### **Types, DTOs et Transformers - Gestion Centralisée**
@@ -140,7 +230,7 @@ export function useSupplierHex() {
 8. **Persistence Layer** : Types Supabase dans `/src/integrations/supabase/types.ts`
 - **Flux architectural** UI → Hook → Service → Repository → Adapter → BDD
 - **Données centralisées** dans `/data/*` (projectsData.ts - 652 lignes)
-- **49 appels directs Supabase** dans 49 composants (plan de migration défini)
+- **39 appels directs Supabase** dans 39 composants (plan de migration défini)
 - **31 hooks hexagonaux** avec appels directs à corriger
 - **Architecture hexagonale** : 95% complète, migration finale en cours
 - **1 composant refactorisé** : ProjectPhasesDetail.tsx ✅
@@ -163,11 +253,11 @@ export function useSupplierHex() {
 | Métrique | Avant | Après |
 |----------|-------|-------|
 | **Services avec couplage fort** | ~15 | 0 ✅ |
-| **Appels directs Supabase** | ~109 | 49 (identifiés) |
+| **Appels directs Supabase** | ~1025 | 39 (identifiés) |
 | **Composants refactorisés** | 0 | 1/50 (2%) 🔄 |
 | **DTOs centralisés** | 100% | 100% ✅ |
-| **Hooks hexagonaux** | 9/40 (22.5%) | 9/40 (22.5%) 🔄 |
-| **Services hexagonaux** | 11/11 | 11/11 (100%) ✅ |
+| **Hooks hexagonaux** | 9/40 (22.5%) | 21/40 (52%) 🔄 |
+| **Services hexagonaux** | 11/11 | 31/31 (100%) ✅ |
 | **Interfaces domain** | 15 | 15 ✅ |
 | **Transformers/Mappers** | 0 | 8+ ✅ |
 | **Données centralisées** | 0% | 100% ✅ |
@@ -252,7 +342,7 @@ src/
 
 ---
 src/
-├── application/           # ⚡ Logique Métier (Services, Use Cases)
+├── application/         #⚡Logique Métier (Services, Use Cases)
 │   ├── services/              # ✅ Services métier (Use Cases)
 │   │   ├── MaterialService.ts
 │   │   ├── ProjectService.ts
@@ -429,10 +519,9 @@ Le référentiel SOMELEC (exemple dans `src/config/referentials/*`) définit la 
 interface ProjectReferential {
   code: 'SOMELEC_INFRA';
   phases: ReferentialPhase[];  // 4 phases standard
-  requiresEngineeringConsultant: true;
-  requiresDonorApproval: true;
-  requiresMinistryApproval: true;
-  paymentWorkflow: 'standard' | 'simplified' | 'custom';
+  requiresEngineeringConsultant: boolean;
+  requiresDonorApproval: boolean;
+  financing_source: string; // BM, BAD, BID, AFD...
 }
 ```
 
@@ -860,9 +949,106 @@ await MilestoneService.createFromReferential(projectId, 'EXECUTION');
 ### Composants Migrés
 - `src/pages/ProjectPhasesDetail.tsx` ✅ (hexagonal - 20/01/2026)
 
-**Dernière mise à jour** : 20/01/2026 - Migration ProjectPhasesDetail.tsx
+**Dernière mise à jour** : 23/01/2026 - Correction duplicate function implementation dans Project.ts
 
 **Projet** : HadraTech-GPI (Infrastructure SOMELEC)
 **Architecture** : Hexagonale (Ports & Adapters) + Référentiel Métier
 **Phase** : Phase 3 ✅ → Phase 4 📍
 **Rôle AGENT AI** : Architecte AI (explorer → analyser → concevoir)
+
+### **État Actuel au *var*/*var*/*var***
+- **Architecture hexagonale** : *var*% terminée ✅
+- **Services créés** : *var*/*var* (100%) ✅
+- **Hooks migrés** : *var*/*var* (*var%*) 🔄
+- **Composants migrés** : *var*/*var* (*var%*) 🔄
+- **Appels directs restants** : *var* dans *var* fichiers 🔄
+- **Dernière correction** : Duplicate function implementation dans Project.ts (clone → copy) ✅
+- **Prochaines étapes** : Finaliser migration des *var* appels directs restants
+- **Temps estimé** : *var* jours (*var* heures)
+
+---
+
+## **🔍 OUTILS D'ANALYSE DYNAMIQUE**
+
+### **Script PowerShell d'analyse (à exécuter en temps réel)**
+```powershell
+# Script d'analyse complète
+Write-Host "🔍 ANALYSE COMPLÈTE DE LA MIGRATION HEXAGONALE" -ForegroundColor Green
+Write-Host "=" * 60
+
+# Analyser les composants
+$components = Get-ChildItem -Path "./src/components" -Recurse -Include "*.tsx"
+$componentsWithSupabase = $components | Select-String -Pattern "supabase\." | Group-Object Path | Select-Object Count, Name
+
+$totalComponents = $components.Count
+$componentsWithCalls = $componentsWithSupabase.Count
+$componentsMigrated = $totalComponents - $componentsWithCalls
+$componentsPercentage = if ($totalComponents -gt 0) { [math]::Round(($componentsMigrated / $totalComponents) * 100, 2) } else { 0 }
+
+# Analyser les hooks
+$hooks = Get-ChildItem -Path "./src/hooks/hexagonal" -Recurse -Include "*.ts"
+$hooksWithSupabase = $hooks | Select-String -Pattern "supabase\." | Group-Object Path | Select-Object Count, Name
+
+$totalHooks = $hooks.Count
+$hooksWithCalls = $hooksWithSupabase.Count
+$hooksMigrated = $totalHooks - $hooksWithCalls
+$hooksPercentage = if ($totalHooks -gt 0) { [math]::Round(($hooksMigrated / $totalHooks) * 100, 2) } else { 0 }
+
+# Totaux
+$totalFiles = $totalComponents + $totalHooks
+$totalWithCalls = $componentsWithCalls + $hooksWithCalls
+$totalMigrated = $componentsMigrated + $hooksMigrated
+$globalPercentage = if ($totalFiles -gt 0) { [math]::Round(($totalMigrated / $totalFiles) * 100, 2) } else { 0 }
+
+# Affichage des résultats
+Write-Host "`n📊 RÉSULTATS DE L'ANALYSE :" -ForegroundColor Yellow
+Write-Host "-" * 40
+Write-Host "📁 COMPOSANTS (.tsx) :" -ForegroundColor Cyan
+Write-Host "  Total: $totalComponents fichiers"
+Write-Host "  Migrés: $componentsMigrated ($componentsPercentage%)"
+Write-Host "  Restants: $componentsWithCalls"
+Write-Host "`n📁 HOOKS HEXAGONAUX (.ts) :" -ForegroundColor Cyan
+Write-Host "  Total: $totalHooks fichiers"
+Write-Host "  Migrés: $hooksMigrated ($hooksPercentage%)"
+Write-Host "  Restants: $hooksWithCalls"
+Write-Host "`n🌍 GLOBAL :" -ForegroundColor Green
+Write-Host "  Total: $totalFiles fichiers"
+Write-Host "  Migrés: $totalMigrated ($globalPercentage%)"
+Write-Host "  Restants: $totalWithCalls"
+
+# Estimation temps
+$estimatedHours = [math]::Round($totalWithCalls * 0.5, 1)
+$estimatedDays = [math]::Round($estimatedHours / 8, 1)
+
+Write-Host "`n⏱️ ESTIMATION TEMPS RESTANT :" -ForegroundColor Magenta
+Write-Host "  Heures: $estimatedHours heures"
+Write-Host "  Jours: $estimatedDays jours (à 8h/jour)"
+
+# Top 10 des fichiers critiques
+Write-Host "`n🔴 TOP 10 FICHIERS LES PLUS CRITIQUES :" -ForegroundColor Red
+
+$allFilesWithCalls = @()
+$allFilesWithCalls += $componentsWithSupabase | ForEach-Object {
+    [PSCustomObject]@{
+        Fichier = $_.Name.Replace((Get-Location).Path + "\", "")
+        Appels = $_.Count
+        Type = "Component"
+    }
+}
+$allFilesWithCalls += $hooksWithSupabase | ForEach-Object {
+    [PSCustomObject]@{
+        Fichier = $_.Name.Replace((Get-Location).Path + "\", "")
+        Appels = $_.Count
+        Type = "Hook"
+    }
+}
+
+$allFilesWithCalls | Sort-Object Appels -Descending | Select-Object -First 10 | Format-Table
+```
+
+### **Utilisation**
+```powershell
+# Exécuter le script pour obtenir les résultats actuels
+./analyze-migration.ps1
+
+# Les résultats changent à chaque exécution selon l'état du code

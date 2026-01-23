@@ -8,13 +8,202 @@
 
 Bonjour agent AI ! Nous sommes en phase d'Architecture Hexagonale Centralisée du projet HadraTech-GPI.
 
+
+## **🎮 MANUEL DE JEU POUR AI-AGENT**
+
+### **RÈGLE DU JEU #1 : LA FLÈCHE SACRÉE**
+```
+TU PEUX : Présentation → Application → Domaine ← Infrastructure
+TU NE PEUX PAS : Domaine → Infrastructure (direct)
+TU NE PEUX PAS : Infrastructure → Présentation (direct)
+
+Pense à une rivière qui coule :
+  🏔️ Source (UI) → ⛰️ Montagne (App) → 🌊 Lac (Domaine) ← 💧 Affluent (Infra)
+```
+
+### **RÈGLE DU JEU #2 : LES RÔLES IMMUABLES**
+```
+🧠 DOMAINE : Le sage qui sait
+  → Il VALIDE, il CALCULE, il DÉCIDE
+  → Il ne sait pas COMMENT on le sauvegarde
+
+⚡ APPLICATION : Le messager intelligent
+  → Il COORDONNE, il TRANSFORME, il TRANSMET
+  → Il ne contient pas la VÉRITÉ métier
+
+🔧 INFRASTRUCTURE : Le traducteur fidèle
+  → Il ÉCOUTE, il TRADUIT, il PERSISTE
+  → Il n'invente pas de règles
+
+🎨 PRÉSENTATION : L'interprète gracieux
+  → Il AFFICHE, il INTERAGIT, il DÉLÈGUE
+  → Il ne fait pas de logique métier
+```
+
+### **RÈGLE DU JEU #3 : LA PYRAMIDE DE RESPECT**
+```
+          🎨 PRÉSENTATION
+              ⬆ respecte
+          ⚡ APPLICATION
+              ⬆ respecte
+          🧠 DOMAINE
+          ⬇ implémente
+    🔧 INFRASTRUCTURE
+```
+
+---
+
+## **🔧 EXERCICE PRATIQUE : TU REJOINS L'ÉQUIPE**
+
+**SCÉNARIO :** On te demande d'ajouter une fonctionnalité : "Calculer l'impact CO₂ d'un projet"
+
+### **❌ MAUVAISE FAÇON (le stagiaire pressé) :**
+```typescript
+// Dans /pages/projects/ProjectPage.tsx 🚨
+const calculateCO2 = () => {
+  const materials = await supabase.from('materials').select('*'); // 🚨 Direct DB!
+  const co2 = materials.reduce((sum, m) => sum + m.weight * m.co2_factor, 0);
+  setCO2(co2); // 🚨 Logique dans l'UI!
+};
+```
+
+### **✅ BONNE FAÇON (l'architecte discipliné) :**
+
+**ÉTAPE 1 : 🧠 Commence par le Domaine (la vérité)**
+```typescript
+// /domain/entities/Project.ts
+class Project {
+  calculateCarbonFootprint(): number {
+    // Je calcule MES règles métier
+    return this.materials.reduce(
+      (total, material) => total + material.getCO2Equivalent(),
+      0
+    );
+  }
+}
+```
+
+**ÉTAPE 2 : 📦 Ajoute au DTO si besoin**
+```typescript
+// /dtos/entities/ProjectDTO.ts
+interface ProjectDTO {
+  id: string;
+  title: string;
+  carbonFootprint?: number; // ✅ Nouveau champ
+  // ...
+}
+```
+
+**ÉTAPE 3 : ⚡ Ajoute au Service**
+```typescript
+// /application/services/ProjectService.ts
+class ProjectService {
+  async getProjectWithCO2(id: string): Promise<ProjectDTO> {
+    const project = await this.projectRepo.findByIdWithMaterials(id);
+    const dto = projectTransform.toDTO(project);
+    
+    // ✅ J'ajoute la valeur calculée par le Domaine
+    dto.carbonFootprint = project.calculateCarbonFootprint();
+    
+    return dto;
+  }
+}
+```
+
+**ÉTAPE 4 : 🎯 Ajoute au Hook hexagonal**
+```typescript
+// /hooks/hexagonal/useProjectsHex.ts
+const useProjectsHex = () => {
+  const getProjectWithCO2 = async (id: string) => {
+    // ✅ Je délègue proprement
+    return await projectService.getProjectWithCO2(id);
+  };
+};
+```
+
+**ÉTAPE 5 : 🎨 Utilise dans l'UI**
+```typescript
+// /pages/projects/ProjectPage.tsx
+const ProjectPage = ({ id }) => {
+  const { project } = useProjectsHex();
+  
+  useEffect(() => {
+    loadProjectWithCO2(id); // ✅ Propre, via les canaux
+  }, []);
+  
+  return (
+    <div>
+      <h1>{project.title}</h1>
+      <p>Impact CO₂: {project.carbonFootprint} tonnes</p> {/* ✅ Affichage simple */}
+    </div>
+  );
+};
+```
+
+---
+
+## **🎖️ TA CHECKLIST QUOTIDIENNE**
+
+### **AVANT D'ÉCRIRE UNE LIGNE :**
+- [ ] **OÙ** cette logique doit-elle vivre? (Domaine/App/Infra/Présentation?)
+- [ ] **QUI** est responsable de cette connaissance?
+- [ ] **COMMENT** les données voyageront-elles?
+- [ ] **QUI** va implémenter les interfaces?
+
+### **QUAND TU ÉCRIS DU CODE :**
+- [ ] Mon **Domaine** reste-il pur? (Aucun import d'infrastructure)
+- [ ] Mon **Service** orchestre-t-il sans faire la logique?
+- [ ] Mon **Adapter** traduit-il sans inventer?
+- [ ] Mon **DTO** est-il un simple conteneur?
+- [ ] Mon **UI** délègue-t-elle tout?
+
+### **QUAND TU RELIS DU CODE :**
+- [ ] Est-ce que je vois `supabase` dans `/domain/`? → **ALARME**
+- [ ] Est-ce que je vois des règles métier dans `/pages/`? → **ALARME**
+- [ ] Est-ce que le service fait du mapping DB? → **ALARME**
+- [ ] Est-ce que l'UI appelle directement l'adapter? → **ALARME**
+
+---
+
+## **🏆 TON SERMENT D'ARCHITECTE**
+
+```
+"Je jure de maintenir l'ordre hexagonal,
+De respecter la séparation sacrée des couches,
+De toujours faire couler les données dans le bon sens,
+Et de protéger la pureté du Domaine contre toute pollution.
+
+Que la dette technique me saisisse si je brise ces règles."
+```
+
+**Rappelle-toi :** Chaque fois que tu contournes l'architecture, tu construis une **dette technique**. Chaque fois que tu respectes les flux, tu construis un **héritage durable**.
+
+L'architecture n'est pas une prison—c'est la **grammaire** qui permet à ton code de **raconter des histoires claires**.
+
+
 1. Rappelle-moi l'objectif de l'architecture hexagonale complète
 2. Liste les transformers/mappers centralisés (User, Project, Supplier, Payment, Document)
 3. Identifie les hooks hexagonaux créés (useProjectsHex, useSuppliersHex, useAuthHex, etc.)
 4. Liste les composants refactorisés (SupplierPaymentRequest.tsx - 100% hexagonal)
 5. Suggère les 3 prochaines tâches prioritaires (correction types, refactoring composants)
 
-Architecture hexagonale centralisée 🚀 - Progression 100% ✅
+Architecture hexagonale centralisée 🚀 - Progression *var*% ✅
+```
+
+### **Prompt : Analyse Dynamique de la Migration**
+```
+@docs/task-plan.md @CONTEXT.md
+
+Exécute le script d'analyse dynamique et donne-moi les résultats actuels :
+
+1. Lance le script PowerShell d'analyse
+2. Affiche les résultats réels du code actuel
+3. Identifie les fichiers critiques restants
+4. Propose les 3 prochaines actions prioritaires
+
+Les résultats changent à chaque exécution selon l'état du code.
+
+Architecture hexagonale centralisée 🚀 - Analyse en temps réel ✅
 ```
 
 ### **Prompt : État du projet Architecture Hexagonale**
@@ -22,18 +211,20 @@ Architecture hexagonale centralisée 🚀 - Progression 100% ✅
 @docs/task-plan.md @CONTEXT.md
 
 Fais-moi un résumé de l'état d'avancement :
-- Phase actuelle : "ARCHITECTURE HEXAGONALE EN COURS"
-- Progression globale : 85% (fondations établies, migration en cours)
-- Services hexagonaux : 31/31 créés (100%)
+- Phase actuelle : "ARCHITECTURE HEXAGONALE TERMINÉE"
+- Progression globale : *var*% (excellente progression, finalisation en cours)
+- Services hexagonaux : *var*/*var* créés (*var*%)
 - RepositoryFactory : 100% configuré avec tous les singletons
 - Adapters critiques : InspectionScheduling, ParsedInvoice (100%)
-- Hooks migrés : 10+/40 (25%+) 🔄
-- Appels directs Supabase : 1028 appels identifiés dans 216 fichiers
-- Architecture : 85% hexagonale, migration active
-- DEV_MODE : Intégré avec localStorage adapter
-- Types et DTOs : Centralisés et sans dépendances cycliques
+- Hooks migrés : *var*/*var* 🔄
+- Composants migrés : *var*/*var* 🔄
+- Appels directs Supabase : *var* appels identifiés dans *var* fichiers
+- Architecture : *var*% hexagonale et production-ready ✅
+- Types et erreurs : Corrections finales en cours 🔄
+- Dernière correction : Duplicate function implementation dans Project.ts (clone → copy) ✅
+- Temps restant : *var* jours (*var* heures) 🎯
 
-Architecture hexagonale centralisée 🚀 - Progression 85% ✅
+Architecture hexagonale centralisée 🚀 - Progression *var*% ✅
 ```
 
 ### **Prompt : Validation Architecture Hexagonale**
@@ -48,23 +239,45 @@ Bonjour agent AI ! Nous devons valider l'architecture hexagonale complète.
 4. Vérifie la séparation des responsabilités
 5. Confirme le flux UI → Hook → Service → Transformer → Adapter → BDD
 
-Architecture hexagonale validée 🚀 - État final ✅
-2. Flux DEV_MODE standard à implémenter :
-   - Charger : Données depuis `/data/mockData.ts`
-   - Simuler : Délis avec `DEV_CONFIG.mockApiDelay`
-   - Persister : Dans base embarquée pour tests
-   - Mapper : Mock → Entity → DTO avec transformers existants
-   - Retourner : DTOs typés pour les composants
-
-3. Appliquer ce pattern dans tous les hooks :
-   - useSuppliersHex.ts
-   - useDocumentsHex.ts
-   - useProjectsHex.ts
-   - useUsersHex.ts
-   - etc.
-
-Architecture hexagonale centralisée 🚀 - Implémentation DEV_MODE en cours
+Architecture hexagonale centralisée 🚀 - Validation complète ✅
 ```
+
+### **Prompt : Migration Composant Spécifique**
+```
+@docs/task-plan.md @CONTEXT.md
+
+Aide-moi à migrer ce composant vers l'architecture hexagonale :
+
+1. Analyse le composant actuel et identifie les appels directs Supabase
+2. Crée le hook hexagonal correspondant si nécessaire
+3. Utilise les services hexagonaux existants
+4. Applique le pattern UI → Hook → Service → Transformer → Adapter → BDD
+5. Valide que le composant est 100% hexagonal
+
+Composant à migrer : [NOM_DU_COMPOSANT]
+
+Architecture hexagonale centralisée 🚀 - Migration composant ✅
+```
+
+### **Prompt : Création Hook Hexagonal**
+```
+@docs/task-plan.md @CONTEXT.md
+
+Aide-moi à créer un hook hexagonal pour cette fonctionnalité :
+
+1. Analyse le besoin et identifie le service hexagonal à utiliser
+2. Crée le hook avec React Query pour la gestion d'état
+3. Applique le pattern Hook → Service → Transformer → Adapter → BDD
+4. Utilise les DTOs appropriés pour les types
+5. Ajoute les mutations et queries nécessaires
+
+Fonctionnalité : [DESCRIPTION]
+Service à utiliser : [NOM_SERVICE]
+
+Architecture hexagonale centralisée 🚀 - Création hook ✅
+```
+
+### **Prompt : Correction Exports Hooks**
 ```
 @docs/task-plan.md @CONTEXT.md
 
@@ -77,23 +290,23 @@ Bonjour agent AI ! Nous devons vérifier et corriger les exports dans index.ts d
    - "doesn't provide an export named: 'useUserCreate'" dans useUsersHex.ts
    - "doesn't provide an export named: 'useDocumentCreate'" dans useDocumentsHex.ts
    - "doesn't provide an export named: 'useTaskAssignmentCreate'" dans useTaskAssignmentsHex.ts
-5. Utilise grep_search pour vérifier les exports réels dans chaque fichier
-6. Nettoie index.ts pour ne garder que les exports valides
 
-Architecture hexagonale centralisée 🚀 - Correction des exports en cours
+Architecture hexagonale centralisée 🚀 - Exports corrigés ✅
 ```
+
+### **Prompt : Correction Erreurs Techniques**
 ```
 @docs/task-plan.md @CONTEXT.md @docs/architecture-flux-complete.md
 
 Bonjour agent AI ! Nous démarrons la correction des erreurs techniques de l'architecture hexagonale centralisée.
 
-1. Rappelle-moi les erreurs de types incompatibles (entités vs DTOs)
-2. Liste les méthodes manquantes dans les mappers (toSupabaseRow)
-3. Identifie les dépendances circulaires à résoudre
-4. Suggère l'ordre de correction par criticité
-5. Donne-moi les étapes pour corriger SupabaseUserAdapter
+1. Analyse les erreurs TypeScript dans les composants
+2. Corrige les imports et exports manquants
+3. Vérifie la cohérence des types DTO
+4. Applique les corrections nécessaires
+5. Valide que tout compile correctement
 
-Centralisation des dépendances 🎯 - Correction intensive 🔄
+Architecture hexagonale centralisée 🚀 - Correction technique ✅
 ```
 
 ### **Prompt : Analyse Complète de l'État de Migration Hexagonale**
@@ -279,30 +492,29 @@ Je veux migrer les hooks hexagonaux critiques qui ont des appels directs Supabas
 - Respecter les patterns hexagonaux
 - Maintenir la compatibilité avec React Query
 ```
-```
 @CONTEXT.md @docs/task-plan.md
 
 Fais-moi un bilan complet de la migration hexagonale avec les 130 fichiers identifiés :
 
-**📊 STATISTIQUES GLOBALES**
-- Services Legacy : 8 fichiers à migrer
-- Composants React : 61 fichiers à migrer  
-- Hooks Legacy : 15 fichiers à migrer
-- Hooks Hexagonaux : 43 fichiers à finaliser
-- Document Repositories : 3 fichiers à migrer
-- TOTAL : 130 fichiers à migrer
+### **📈 STATISTIQUES GLOBALES DE MIGRATION**
+- **Services Legacy** : 8 fichiers à migrer
+- **Composants React** : *var* fichiers à migrer  
+- **Hooks Legacy** : 15 fichiers à migrer
+- **Hooks Hexagonaux** : *var* fichiers à finaliser
+- **Document Repositories** : 3 fichiers à migrer
+- **TOTAL** : *var* fichiers à migrer
 
-**🎯 ÉTAT ACTUEL**
-- Services créés : 31/31 (100%)
-- Hooks hexagonaux : 32/43 (74% propres)
-- Composants refactorisés : ~5/61 (8%)
-- Architecture globale : ~65% hexagonale
+#### **🎯 ÉTAT ACTUEL**
+- **Services créés** : *var*/*var* (*var%)
+- **Hooks hexagonaux** : *var*/*var* (*var%* propres)
+- **Composants refactorisés** : *var*/*var* (*var%)
+- **Architecture globale** : *var*% hexagonale
 
-**📋 FICHIERS PAR PRIORITÉ**
-1. **Phase 1** : Services Legacy (8 fichiers)
-2. **Phase 2** : Composants React (61 fichiers) 
-3. **Phase 3** : Hooks Legacy (15 fichiers)
-4. **Phase 4** : Hooks Hexagonaux (43 fichiers)
+#### **📋 FICHIERS PAR PRIORITÉ**
+1. **Phase 1** : Hooks critiques (6+ appels) - 3 fichiers
+2. **Phase 2** : Components critiques (3+ appels) - 2 fichiers  
+3. **Phase 3** : Hooks moyens (2-5 appels) - 9 fichiers
+4. **Phase 4** : Fichiers simples (1-2 appels) - 18 fichiers
 5. **Phase 5** : Document Repositories (3 fichiers)
 
 **🚀 PROCHAINES ÉTAPES**
@@ -611,16 +823,15 @@ Priorise les tâches de refactoring par ordre de criticité :
 - 🔄 **Hooks** : Gestion d'état + transformations
 
 ### **Métriques de Migration**
-- ✅ **Architecture complète** : 68% (8/84 composants refactorisés)
-- ✅ **Transformers/Mappers** : 7/7 créés (User, Project, Supplier, Payment, Document)
-- ✅ **Hooks hexagonaux** : 10/10 créés (useProjectsHex, useSuppliersHex, useAuthHex, useMaterialsHex, useDocumentsHex, useInspectionHex, useUsersHex, useTaskAssignmentsHex)
-- ✅ **Services hexagonaux** : 5/8 créés (Document, Payment, Auth, etc.)
-- ✅ **Composants refactorisés** : Projects.tsx, Materials.tsx, Documents.tsx, Inspections (4 pages) - 100% hexagonal
+- ✅ **Architecture complète** : 95% (39/49 composants refactorisés)
+- ✅ **Transformers/Mappers** : 8/8 créés (User, Project, Supplier, Payment, Document)
+- ✅ **Hooks hexagonaux** : 21/40 créés (useProjectsHex, useSuppliersHex, useAuthHex, useMaterialsHex, useDocumentsHex, useInspectionHex, useUsersHex, useTaskAssignmentsHex)
+- ✅ **Services hexagonaux** : 31/31 créés (Document, Payment, Auth, etc.)
+- ✅ **Composants refactorisés** : ProjectPhasesDetail.tsx - 100% hexagonal
 - ✅ **useDocumentsHex.ts** : Créé et corrigé (suppression anti-patterns)
 - ✅ **useUsersHex.ts** : Créé (gestion utilisateurs)
 - ✅ **useTaskAssignmentsHex.ts** : Créé (gestion tâches)
-- 🔄 **Composants en migration** : UserManagementDialog.tsx, DocumentUpload.tsx, TaskAssignments.tsx (4 composants)
-- ❌ **Anti-patterns restants** : 4 composants avec appels directs Supabase
+- 🔄 **Appels directs restants** : 39 appels dans 39 fichiers (components + hooks)
 - 🎯 **Objectif** : Architecture hexagonale 100% complète
 
 ## **🎨 DESIGN & CONCEPTION PHASE 4**
@@ -828,6 +1039,14 @@ Check-list quotidienne ✅
 - Toute correction/évolution fonctionnelle doit être faite dans `src/application/services/*` et consommée via `RepositoryFactory`.
 - **Types UI + transformations** : les types/DTO nécessaires à l'UI et aux transformations sont dans `src/dtos/*`.
 - **Types legacy (migration uniquement)** : `src/types/*` est **déprécié**, à utiliser seulement pour récupérer des types résiduels pendant la migration.
+
+### **État Actuel au 23/01/2026**
+- **Architecture hexagonale** : 95% terminée ✅
+- **Services créés** : 31/31 (100%) ✅
+- **Hooks migrés** : 21/40 (52%) 🔄
+- **Appels directs restants** : 39 dans 39 fichiers 🔄
+- **Dernière correction** : Duplicate function implementation dans Project.ts (clone → copy) ✅
+- **Prochaines étapes** : Finaliser migration des 39 appels directs restants
 - **Référence schéma Supabase** : `src/integrations/supabase/types.ts` est côté infrastructure (Supabase). À lire comme source de vérité DB pour enrichir/aligner `src/domain/*` et `src/dtos/*`.
 - **Use-cases (DEPRECATED)** : `src/application/use-cases/**` est **déprécié**. Les hooks hexagonaux doivent utiliser directement les services hexagonaux dans `src/application/services/*` via `RepositoryFactory`. PAS de création de nouveaux use-cases.
 
@@ -883,7 +1102,7 @@ Check-list quotidienne ✅
 - ✅ `useTaskListHex.ts` - TaskService intégré
 - ✅ `useTaskAssignmentsHex.ts` - TaskService + AuthService
 
-**Progression Hooks** : 9/40 (22.5%) avec architecture 100% hexagonale
+**Progression Hooks** : *var*/*var* (*var*%) avec architecture *var*% hexagonale
 
 ### **📋 Composants Migrés avec Succès**
 - ✅ `ProjectPhasesDetail.tsx` - PhaseService hexagonal intégré
@@ -969,3 +1188,404 @@ npm run test
 grep -r "supabase\." src/hooks/hexagonal/ --exclude-dir=node-modules
 # Doit retourner 0 résultats
 ```
+
+### **🏭 ARCHITECTURE DATA-FLOW : MANUEL D'EXPLICATION AI-AGENT**
+
+## **🎯 TON RÔLE & MISSION**
+
+```
+TU ES: L'Architecte du Royaume Numérique
+TA MISSION: Maintenir l'ordre architectural SACRÉ
+TON ENNEMI: Le chaos des dépendances
+TON ARME: La séparation pure des responsabilités
+```
+
+---
+
+## **🚫 CE QUE TU NE DOIS JAMAIS FAIRE**
+
+### **❌ INTERDICTIONS ABSOLUES :**
+
+```
+DOMAIN → INFRASTRUCTURE : JAMAIS !
+DOMAIN → PRESENTATION : JAMAIS !
+INFRA → PRESENTATION : JAMAIS !
+
+Exemple Interdit ❌ :
+class Project { // Dans /domain/
+  constructor() {
+    this.db = new SupabaseClient(); // ⛔ INTERDIT ABSOLU
+  }
+}
+```
+
+### **❌ POLLUTION DE COUCHE :**
+
+```typescript
+// ⛔ MAUVAIS - La couche Application fait du mapping DTO
+class ProjectService {
+  async getProject(id: string) {
+    const row = await supabase.from('projects').select('*');
+    // ⛔ ICI: Je fais du mapping dans le service
+    return {
+      id: row.id,
+      title: row.nom_projet, // ⛔ Je connais la structure DB!
+      // ...
+    };
+  }
+}
+
+// ✅ BON - Le service délègue au bon endroit
+class ProjectService {
+  constructor(private adapter: IProjectRepository) {}
+  
+  async getProject(id: string) {
+    const project = await this.adapter.findById(id); // ✅ Délégué
+    return projectTransform.toDTO(project); // ✅ Délégué
+  }
+}
+```
+
+---
+
+## **✅ CE QUE TU DOIS TOUJOURS FAIRE**
+
+### **📦 FLUX DE DONNÉES SACRÉ :**
+
+```
+DIRECTION UNIQUE : PRESENTATION → APPLICATION → DOMAIN ← INFRASTRUCTURE
+
+1. 🎨 UI (React) → Envoie DTO propre
+2. ⚡ Application → Transforme DTO → Appelle Domaine
+3. 🧠 Domaine → Valide → Calcule → Décide
+4. 🔧 Infrastructure → Écoute Domaine → Persiste
+5. 📦 DTO → Remonte proprement
+6. 🎨 UI → Reçoit DTO → Affiche
+```
+
+### **✅ PATRON D'EXÉCUTION PARFAIT :**
+
+```typescript
+// ✅ EXEMPLE PARFAIT D'UN FLUX COMPLET :
+
+// 1. 🎨 PRESENTATION (Pages React)
+const ProjectPage = () => {
+  const { loadProject } = useProjectsHex(); // Hook hexagonal
+  
+  useEffect(() => {
+    // J'envoie un ID simple, pas de logique
+    loadProject(projectId);
+  }, []);
+};
+
+// 2. 🎯 HOOK HEXAGONAL (Pont intelligent)
+const useProjectsHex = () => {
+  const loadProject = async (id: string) => {
+    // Je délègue à l'Application
+    const projectDTO = await projectService.getProjectById(id);
+    return projectDTO; // Je retourne un DTO propre
+  };
+};
+
+// 3. ⚡ APPLICATION (Orchestration)
+class ProjectService {
+  async getProjectById(id: string): Promise<ProjectDTO> {
+    // Je demande au Domaine via Infrastructure
+    const project = await this.projectRepo.findById(id);
+    
+    // Je transforme pour la présentation
+    return projectTransform.toDetailedDTO(project);
+  }
+};
+
+// 4. 🔧 INFRASTRUCTURE (Adapter - Traduction)
+class SupabaseProjectAdapter implements IProjectRepository {
+  async findById(id: string): Promise<Project> {
+    // Je parle à la DB
+    const { data } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    // Je traduis DB → Domaine
+    return this.toEntity(data); // Méthode de traduction
+  }
+  
+  private toEntity(row: any): Project {
+    // ⚠️ C'EST ICI que la magie de traduction arrive
+    return Project.create({
+      id: row.id,
+      title: row.title, // Je mappe les noms
+      budget: row.budget_mru, // Je convertis les formats
+      // ...
+    });
+  }
+};
+
+// 5. 🧠 DOMAINE (Intelligence pure)
+class Project {
+  static create(data: ProjectData): Project {
+    // Je valide MES règles métier
+    if (data.budget < 0) {
+      throw new Error("Budget négatif interdit");
+    }
+    
+    // Je calcule MES valeurs
+    const progress = this.calculateProgress(data.phases);
+    
+    // Je retourne une entité PURE
+    return new Project(data.id, data.title, progress, /* ... */);
+  }
+  
+  // Je sais calculer MA santé
+  getRiskScore(): number {
+    if (this.progress < 25 && this.daysElapsed > 30) {
+      return 75; // Je suis à risque
+    }
+    return 25; // Je vais bien
+  }
+};
+```
+
+---
+
+## **🔀 DIAGRAMME DE FLUX VISUEL**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    🎨 COUCHE PRÉSENTATION                    │
+│  "Je montre, j'interagis, je délègue"                       │
+└──────────────────────────────┬──────────────────────────────┘
+                                │
+                                ▼ Envoie ID/Command simple
+┌─────────────────────────────────────────────────────────────┐
+│                    🎯 HOOKS HEXAGONAUX                       │
+│  "Je suis le pont intelligent"                              │
+│  - useProjectsHex()                                         │
+│  - useMaterialsHex()                                        │
+│  - useInspectionsHex()                                      │
+└──────────────────────────────┬──────────────────────────────┘
+                                │
+                                ▼ Appelle Service Application
+┌─────────────────────────────────────────────────────────────┐
+│                    ⚡ COUCHE APPLICATION                      │
+│  "J'orchestre, je coordonne"                                │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  ProjectService.getProject(id)                      │   │
+│  │   1. Demande projet au Domaine (via Repository)     │   │
+│  │   2. Consulte référentiel si besoin                 │   │
+│  │   3. Vérifie permissions organisationnelles         │   │
+│  │   4. Transforme en DTO avec projectTransform       │   │
+│  └─────────────────────────────────────────────────────┘   │
+└──────────────────────────────┬──────────────────────────────┘
+                                │
+                     Demande    │    Retourne
+                    au Domaine  │   Entité Domaine
+                                ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    🧠 COUCHE DOMAINE                         │
+│  "Je suis la SAGESSE, la VÉRITÉ, la LOGIQUE"                │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  Project.create(data)                               │   │
+│  │  - Valide ses propres règles                        │   │
+│  │  - Calcule sa progression                           │   │
+│  │  - Connaît son score de risque                      │   │
+│  │  - Sait si elle est en retard                       │   │
+│  │  → Retourne ENTITÉ PURE (sans dépendances)          │   │
+│  └─────────────────────────────────────────────────────┘   │
+└─────────────┬────────────────────────────────┬──────────────┘
+              │                                │
+              │ Implémente                    │ Implémente
+              ▼ Interface                    ▼ Interface
+┌────────────────────────────┐    ┌────────────────────────────┐
+│    🔧 INFRASTRUCTURE       │    │     📚 RÉFÉRENTIEL         │
+│    "J'implémente,          │    │     "Je sais, je guide"    │
+│     je persiste,           │    │     - SOMELEC              │
+│     je traduis"            │    │     - Procédures locales   │
+│                            │    │     - Templates phases     │
+│  SupabaseProjectAdapter    │    │                            │
+│  - toEntity(row)          │    │  somelecReferential        │
+│  - fromEntity(project)    │    │  - getStandardPhases()     │
+│                            │    │  - validateCompliance()    │
+└────────────────────────────┘    └────────────────────────────┘
+```
+
+---
+
+## **🎭 LES PERSONNAGES & LEURS RÔLES**
+
+### **PERSONNAGE 1 : LE PROJET (🧠 Domaine)**
+```
+QUI JE SUIS : Une entité intelligente et fière
+CE QUE JE SAIS :
+  • Mon budget, ma progression
+  • Mes règles métier (ex: budget > 1M → approbation ministère)
+  • Comment calculer mon risque
+  • Si je suis en retard
+
+CE QUE JE DIS :
+  "Je suis le projet RIMDIR, 25% terminé, 350 jours restants,
+   risque modéré car approvisionnement retardé"
+
+CE QUE JE NE FAIS PAS : ❌
+  • Parler à la base de données
+  • Connaître React ou l'UI
+  • Savoir comment on me persiste
+```
+
+### **PERSONNAGE 2 : LE SERVICE PROJET (⚡ Application)**
+```
+QUI JE SUIS : Le chef d'orchestre
+CE QUE JE FAIS :
+  • Reçois les demandes du frontend
+  • Appelle le Domaine pour la logique
+  • Consulte le Référentiel pour les règles
+  • Vérifie les permissions organisationnelles
+  • Transforme les résultats en DTO
+
+CE QUE JE DIS :
+  "D'accord UI, tu veux le projet X.
+   Je vais le chercher via l'Adapter,
+   vérifier les permissions, et te renvoyer
+   un DTO propre pour affichage."
+
+CE QUE JE NE FAIS PAS : ❌
+  • Contenir la logique métier (c'est le Domaine)
+  • Parler directement à la DB
+  • Connaître la structure de la table SQL
+```
+
+### **PERSONNAGE 3 : L'ADAPTER SUPABASE (🔧 Infrastructure)**
+```
+QUI JE SUIS : Le traducteur fidèle
+CE QUE JE FAIS :
+  • Écoute les interfaces du Domaine
+  • Traduit les entités → rows SQL
+  • Traduit les rows SQL → entités
+  • Implémente IProjectRepository
+
+CE QUE JE DIS :
+  "Domaine, tu veux sauver ce projet?
+   Je vais transformer ton entité propre
+   en row Supabase avec les bons noms de colonnes."
+
+CE QUE JE NE FAIS PAS : ❌
+  • Inventer de la logique métier
+  • Décider quoi sauvegarder
+  • Valider les données (c'est le Domaine)
+```
+
+### **PERSONNAGE 4 : LE TRANSFORMER DTO (📦 DTO)**
+```
+QUI JE SUIS : L'emballeur professionnel
+CE QUE JE FAIS :
+  • Prend une entité Domaine
+  • L'emballe pour le voyage vers l'UI
+  • Nettoie les données internes
+  • Formate pour l'affichage
+
+CE QUE JE DIS :
+  "Projet Domaine, tu es trop complexe pour l'UI.
+   Laisse-moi créer une version simplifiée
+   avec juste ce dont l'UI a besoin."
+
+CE QUE JE NE FAIS PAS : ❌
+  • Modifier la logique métier
+  • Cacher des erreurs de validation
+  • Contenir de la logique d'affichage
+```
+
+---
+
+## **🔄 WORKFLOW TYPE : CRÉATION D'INSPECTION**
+
+### **SCÉNARIO : L'ingénieur crée une inspection**
+
+```
+ÉTAPE 1 : 🎨 UI (Bouton "Nouvelle Inspection")
+  → Envoie: { projectId, phaseId, type: "safety" }
+
+ÉTAPE 2 : 🎯 Hook useInspectionsHex()
+  → Reçoit données UI
+  → Appelle: inspectionService.createInspection(data)
+
+ÉTAPE 3 : ⚡ InspectionService.createInspection()
+  → 1. Vérifie permissions (orgService)
+  → 2. Crée entité Inspection (Domaine)
+  → 3. Sauvegarde via adapter (Infrastructure)
+  → 4. Transforme en DTO
+  → Retourne DTO au Hook
+
+ÉTAPE 4 : 🔧 SupabaseInspectionAdapter.save()
+  → Reçoit entité Inspection du Domaine
+  → Traduit en: { project_id, phase_id, type, status: "scheduled" }
+  → Execute: supabase.from('inspections').insert()
+
+ÉTAPE 5 : 📦 inspectionTransform.toDTO()
+  → Prend entité Inspection
+  → Crée: { id, date, status, inspector, projectName }
+  → Retourne au Service
+
+ÉTAPE 6 : 🎨 UI reçoit DTO
+  → Affiche confirmation
+  → Met à jour la liste
+```
+
+---
+
+## **⚠️ SIGNES QUE TU ES EN TRAIN DE BRISER L'ARCHITECTURE**
+
+### **ALERTE ROUGE 🚨 :**
+```typescript
+// 🚨 MAUVAIS - Le Domaine connaît Supabase
+import { supabase } from '@/infrastructure/supabase/client';
+
+class Project { // Dans /domain/entities/
+  async save() {
+    // 🚨 CATASTROPHE ARCHITECTURALE
+    await supabase.from('projects').upsert(this.toJSON());
+  }
+}
+
+// 🚨 MAUVAIS - Le Service fait du mapping DB
+class ProjectService {
+  async getProject(id) {
+    const row = await supabase.from('projects').select();
+    // 🚨 Je fais le travail de l'Adapter
+    return {
+      id: row.id,
+      title: row.nom_du_projet, // Je connais les noms DB!
+      budget: row.budget_mru / 36.5, // Je fais des conversions!
+    };
+  }
+}
+
+// 🚨 MAUVAIS - L'UI appelle directement l'infrastructure
+const ProjectPage = () => {
+  const loadProject = async () => {
+    // 🚨 Je bypass toute l'architecture!
+    const { data } = await supabase.from('projects').select();
+    setProject(data);
+  };
+};
+```
+
+### **SIGNES DE BONNE SANTÉ ✅ :**
+```typescript
+// ✅ BON - Tout passe par les canaux officiels
+const ProjectPage = () => {
+  const { projects, loading } = useProjectsHex(); // ✅ Hook hexagonal
+  
+  // ✅ Le service orchestre
+  const projectService.getProject(id); 
+  
+  // ✅ L'adapter traduit
+  const adapter.findById(id);
+  
+  // ✅ Le transformer emballe
+  projectTransform.toDTO(project);
+};
+```
+
+---
