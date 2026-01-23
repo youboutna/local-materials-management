@@ -72,7 +72,7 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
   };
 
   const filterDocumentsByCategory = (category: TenderDocumentCategory) => {
-    return allDocuments?.filter((doc: any) => doc.category === category || doc.document_type === category) || [];
+    return allDocuments?.filter((doc: any) => doc.category === category || doc.document_type === category || (doc as any).subcategory === category) || [];
   };
 
   const handleViewDocument = (tenderDoc: any) => {
@@ -121,37 +121,21 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {filterDocumentsByCategory(category).map((tenderDoc) => (
+                {filterDocumentsByCategory(category).map((tenderDoc: any) => (
                     <Card key={tenderDoc.id} className="hover:shadow-md transition-shadow">
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <h4 className="font-medium text-sm mb-1">
-                              {tenderDoc.subcategory === 'workflow_step' ? (
-                                tenderDoc.document?.title || 'Document workflow'
-                              ) : (
-                                TENDER_DOCUMENT_LABELS[tenderDoc.subcategory]
-                              )}
+                              {tenderDoc.title || tenderDoc.file_name || 'Document'}
                             </h4>
-                            {tenderDoc.subcategory === 'workflow_step' ? (
-                              <p className="text-xs text-gray-500 flex items-center">
-                                <FileText className="h-3 w-3 mr-1" />
-                                Ã‰tape {(tenderDoc as any).step_info?.step_number}: {(tenderDoc as any).step_info?.step_title}
+                            {tenderDoc.description && (
+                              <p className="text-xs text-gray-600 mb-2">
+                                {tenderDoc.description}
                               </p>
-                            ) : (
-                              tenderDoc.document?.title && (
-                                <p className="text-xs text-gray-600 mb-2">
-                                  {tenderDoc.document.title}
-                                </p>
-                              )
                             )}
                           </div>
                           <div className="flex items-center gap-2">
-                            {tenderDoc.is_required && (
-                              <Badge variant="outline" className="text-xs">
-                                Requis
-                              </Badge>
-                            )}
                             <Badge className={getStatusColor(tenderDoc.status || 'pending')}>
                               <div className="flex items-center gap-1">
                                 {getStatusIcon(tenderDoc.status || 'pending')}
@@ -162,20 +146,20 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
                         </div>
                       </CardHeader>
                       <CardContent className="pt-0">
-                        {tenderDoc.document?.file_name && (
+                        {tenderDoc.file_name && (
                           <div className="text-xs text-gray-500 mb-3">
-                            Fichier: {tenderDoc.document.file_name}
+                            Fichier: {tenderDoc.file_name}
                           </div>
                         )}
                         
-                        {tenderDoc.reviewer_notes && (
+                        {tenderDoc.description && (
                           <div className="text-xs text-gray-600 mb-3 p-2 bg-gray-50 rounded">
-                            <strong>Notes:</strong> {tenderDoc.reviewer_notes}
+                            <strong>Notes:</strong> {tenderDoc.description}
                           </div>
                         )}
 
                         <div className="flex justify-end space-x-2">
-                          {tenderDoc.document ? (
+                          {tenderDoc.file_url ? (
                             <Button
                               size="sm"
                               variant="outline"
@@ -187,7 +171,7 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
                           ) : (
                             <Button size="sm" variant="outline">
                               <Upload className="h-4 w-4 mr-1" />
-                              TÃ©lÃ©charger
+                              Télécharger
                             </Button>
                           )}
                         </div>
