@@ -189,7 +189,7 @@ const SuppliersManagement = () => {
                 <div>
                   <label className="text-sm font-medium">Note (1-5)</label>
                   <Select
-                    value={formData.rating.toString()}
+                    value={(formData.rating ?? 0).toString()}
                     onValueChange={(value) => setFormData({ ...formData, rating: parseInt(value) })}
                   >
                     <SelectTrigger>

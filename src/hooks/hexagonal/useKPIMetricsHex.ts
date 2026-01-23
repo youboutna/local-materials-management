@@ -13,7 +13,11 @@ export interface CriticalAlert {
   type: 'payment' | 'milestone' | 'delay' | 'inspection' | 'guarantee';
   title: string;
   description: string;
+  message: string;
   severity: 'critical' | 'warning' | 'info';
+  priority: 'critical' | 'high' | 'medium' | 'low';
+  status: 'active' | 'resolved' | 'acknowledged';
+  createdAt: string;
   daysUntil?: number;
   entityId?: string;
   entityType?: string;

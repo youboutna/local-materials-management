@@ -478,31 +478,11 @@ export type {
   BankGuaranteeRow 
 } from './useBankGuaranteesHex';
 
-// Alert types for dashboard
-export interface CriticalAlert {
-  id: string;
-  type: string;
-  title: string;
-  message: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  createdAt: string;
-  projectId?: string;
-  status: string;
-}
+// Alert types for dashboard - re-export from hooks
+export type { CriticalAlert } from './useKPIMetricsHex';
 
-// Action item for management actions
-export interface ActionItem {
-  id: string;
-  title: string;
-  description?: string;
-  type: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: string;
-  dueDate?: string;
-  assignedTo?: string;
-  projectId?: string;
-  createdAt: string;
-}
+// Action item for management actions - re-export from hooks
+export type { ActionItem } from './useManagementActionsHex';
 
 // Employee form data
 export interface EmployeeFormData {

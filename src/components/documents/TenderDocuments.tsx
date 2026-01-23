@@ -72,7 +72,7 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
   };
 
   const filterDocumentsByCategory = (category: TenderDocumentCategory) => {
-    return allDocuments?.filter(doc => doc.category === category) || [];
+    return allDocuments?.filter((doc: any) => doc.category === category || doc.document_type === category) || [];
   };
 
   const handleViewDocument = (tenderDoc: any) => {

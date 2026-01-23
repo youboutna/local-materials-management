@@ -6,9 +6,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface SupplierMgmtFormData {
-  company_name: string;
+  name: string;
+  company_name?: string;
+  contact_person?: string;
   category: string;
-  status: string;
+  status?: string;
   email?: string;
   phone?: string;
   address?: string;
@@ -36,9 +38,10 @@ export function useCreateSupplier() {
   return useMutation({
     mutationFn: async (data: SupplierMgmtFormData) => {
       const { error } = await supabase.from('suppliers').insert({
-        company_name: data.company_name,
+        company_name: data.name || data.company_name || '',
+        contact_person: data.contact_person,
         category: data.category,
-        status: data.status,
+        status: data.status || 'active',
         email: data.email,
         phone: data.phone,
         address: data.address,
@@ -57,7 +60,8 @@ export function useUpdateSupplier() {
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: SupplierMgmtFormData }) => {
       const { error } = await supabase.from('suppliers').update({
-        company_name: data.company_name,
+        company_name: data.name || data.company_name,
+        contact_person: data.contact_person,
         category: data.category,
         status: data.status,
         email: data.email,

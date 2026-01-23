@@ -98,12 +98,12 @@ const TaskAssignmentsComponent = () => {
   }, [assigneeDetails]);
 
   // Get unique assignees from tasks for filter
-  const uniqueAssignees = tasks?.reduce((acc, task) => {
+  const uniqueAssignees = (tasks as any[])?.reduce((acc: Record<string, string>, task: any) => {
     if (task.assigned_to && task.assignee_name) {
       acc[task.assigned_to] = task.assignee_name;
     }
     return acc;
-  }, {} as Record<string, string>);
+  }, {} as Record<string, string>) || {};
 
   const createMutation = useMutation({
     mutationFn: async (taskData: typeof formData) => {
