@@ -1,107 +1,298 @@
 // Domain Entity: Employee
 // Pure business logic without infrastructure concerns
+// Following hexagonal architecture with objects and collections
 
-export type EmployeeRole = 
-  | 'admin'
-  | 'director'
-  | 'project_manager'
-  | 'technical_manager'
-  | 'engineering_consultant'
-  | 'supervisor'
-  | 'inspector'
-  | 'finance_manager'
-  | 'legal'
-  | 'worker'
-  | 'supplier';
+import { Certification } from './Certification';
+import { UserRole } from './UserRole';
+import { User } from './User';
+import { Project } from './Project';
+import { Permission, Department, EmployeeData } from '../types';
 
-export type Department = 
-  | 'management'
-  | 'engineering'
-  | 'construction'
-  | 'finance'
-  | 'legal'
-  | 'hr'
-  | 'logistics'
-  | 'quality';
-
-export interface Certification {
-  name: string;
-  issuedBy: string;
-  issuedDate: string;
-  expiryDate?: string;
-}
+// Re-export for backward compatibility
+export type { Permission, Department, EmployeeData };
 
 export class Employee {
+  // Private fields for encapsulation
+  private _id: string;
+  private _employeeId: string;
+  private _fullName: string;
+  private _email: string | null;
+  private _phone: string | null;
+  private _position: string | null;
+  private _department: Department | null;
+  private _role: UserRole;
+  private _hireDate: string | null;
+  private _salary: number | null;
+  private _isActive: boolean;
+  private _user: User | null;
+  private _manager: Employee | null;
+  private _superior: Employee | null;
+  private _directReports: Employee[];
+  private _managedProjects: Project[];
+  private _teamMembers: Employee[];
+  private _skills: string[];
+  private _certifications: Certification[];
+  private _createdAt: string;
+  private _updatedAt: string;
+
   constructor(
-    public readonly id: string,
-    public readonly employeeId: string,
-    public readonly fullName: string,
-    public readonly email: string | null,
-    public readonly phone: string | null,
-    public readonly position: string | null,
-    public readonly department: Department | null,
-    public readonly role: EmployeeRole,
-    public readonly hireDate: string | null,
-    public readonly salary: number | null,
-    public readonly isActive: boolean,
-    public readonly userId: string | null,
-    public readonly managerId: string | null,
-    public readonly superiorId: string | null,
-    public readonly skills: string[],
-    public readonly certifications: Certification[],
-    public readonly createdAt: string,
-    public readonly updatedAt: string
-  ) {}
-
-  // Business logic
-  canApproveProjects(): boolean {
-    return ['admin', 'director', 'project_manager'].includes(this.role);
+    id: string,
+    employeeId: string,
+    fullName: string,
+    email: string | null,
+    phone: string | null,
+    position: string | null,
+    department: Department | null,
+    role: UserRole,
+    hireDate: string | null,
+    salary: number | null,
+    isActive: boolean,
+    user: User | null,
+    manager: Employee | null,
+    superior: Employee | null,
+    directReports: Employee[],
+    managedProjects: Project[],
+    teamMembers: Employee[],
+    skills: string[],
+    certifications: Certification[],
+    createdAt: string,
+    updatedAt: string
+  ) {
+    // Validate and assign private fields
+    this._id = this.validateId(id);
+    this._employeeId = this.validateEmployeeId(employeeId);
+    this._fullName = this.validateFullName(fullName);
+    this._email = email;
+    this._phone = phone;
+    this._position = position;
+    this._department = department;
+    this._role = role;
+    this._hireDate = hireDate;
+    this._salary = this.validateSalary(salary);
+    this._isActive = isActive;
+    this._user = user;
+    this._manager = manager;
+    this._superior = superior;
+    this._directReports = directReports || [];
+    this._managedProjects = managedProjects || [];
+    this._teamMembers = teamMembers || [];
+    this._skills = skills || [];
+    this._certifications = certifications || [];
+    this._createdAt = createdAt;
+    this._updatedAt = updatedAt;
   }
 
-  canApprovePayments(): boolean {
-    return ['admin', 'director', 'finance_manager'].includes(this.role);
+  // ============= Getters =============
+  get id(): string { return this._id; }
+  get employeeId(): string { return this._employeeId; }
+  get fullName(): string { return this._fullName; }
+  get email(): string | null { return this._email; }
+  get phone(): string | null { return this._phone; }
+  get position(): string | null { return this._position; }
+  get department(): Department | null { return this._department; }
+  get role(): UserRole { return this._role; }
+  get hireDate(): string | null { return this._hireDate; }
+  get salary(): number | null { return this._salary; }
+  get isActive(): boolean { return this._isActive; }
+  get user(): User | null { return this._user; }
+  get manager(): Employee | null { return this._manager; }
+  get superior(): Employee | null { return this._superior; }
+  get directReports(): Employee[] { return this._directReports; }
+  get managedProjects(): Project[] { return this._managedProjects; }
+  get teamMembers(): Employee[] { return this._teamMembers; }
+  get skills(): string[] { return this._skills; }
+  get certifications(): Certification[] { return this._certifications; }
+  get createdAt(): string { return this._createdAt; }
+  get updatedAt(): string { return this._updatedAt; }
+
+  // ============= Getters with Business Logic =============
+  get displayName(): string {
+    return this._fullName || this._email || this._employeeId;
   }
 
-  canScheduleInspections(): boolean {
-    return ['admin', 'project_manager', 'technical_manager', 'engineering_consultant'].includes(this.role);
+  getManagerName(): string | null {
+    return this._manager?.fullName || null;
   }
 
-  canExecuteInspections(): boolean {
-    return ['admin', 'inspector', 'technical_manager', 'engineering_consultant', 'supervisor'].includes(this.role);
+  getSuperiorName(): string | null {
+    return this._superior?.fullName || null;
   }
 
-  canManageTeam(): boolean {
-    return ['admin', 'director', 'project_manager', 'technical_manager'].includes(this.role);
+  getUserEmail(): string | null {
+    return this._user?.email || null;
   }
 
-  isManager(): boolean {
-    return ['admin', 'director', 'project_manager', 'technical_manager'].includes(this.role);
+  getDirectReportsCount(): number {
+    return this._directReports.length;
   }
 
-  hasValidCertifications(): boolean {
-    const now = new Date();
-    return this.certifications.every(cert => {
-      if (!cert.expiryDate) return true;
-      return new Date(cert.expiryDate) > now;
-    });
+  getManagedProjectsCount(): number {
+    return this._managedProjects.length;
+  }
+
+  getTeamSize(): number {
+    return this._teamMembers.length;
+  }
+
+  getProgressPercentage(): number {
+    // Calculate progress based on completed certifications and skills
+    const totalSkills = this._skills.length;
+    const completedCertifications = this._certifications.filter(cert => !cert.isExpired()).length;
+    return totalSkills > 0 ? (completedCertifications / totalSkills) * 100 : 0;
+  }
+
+  getActiveProjects(): Project[] {
+    return this._managedProjects.filter(p => p.isActive());
   }
 
   getExpiringCertifications(daysAhead: number = 30): Certification[] {
-    const now = new Date();
-    const futureDate = new Date(now.getTime() + daysAhead * 24 * 60 * 60 * 1000);
-    
-    return this.certifications.filter(cert => {
-      if (!cert.expiryDate) return false;
-      const expiryDate = new Date(cert.expiryDate);
-      return expiryDate > now && expiryDate <= futureDate;
-    });
+    return this._certifications.filter(cert => cert.isExpiringSoon(daysAhead));
   }
 
-  getDisplayName(): string {
-    return this.fullName || this.email || this.employeeId;
+  getCertificationsByStatus(): {
+    valid: Certification[];
+    expiring: Certification[];
+    expired: Certification[];
+  } {
+    return this._certifications.reduce(
+      (acc, cert) => {
+        const status = cert.getStatus();
+        acc[status].push(cert);
+        return acc;
+      },
+      { valid: [], expiring: [], expired: [] } as {
+        valid: Certification[];
+        expiring: Certification[];
+        expired: Certification[];
+      }
+    );
   }
 
-  // Factory method
+  // ============= Setters with Validation =============
+  set fullName(value: string) { 
+    this._fullName = this.validateFullName(value); 
+    this._updatedAt = new Date().toISOString();
+  }
+  
+  set email(value: string | null) { 
+    this._email = value ? this.validateEmail(value) : null; 
+    this._updatedAt = new Date().toISOString();
+  }
+  
+  set phone(value: string | null) { 
+    this._phone = value ? this.validatePhone(value) : null; 
+    this._updatedAt = new Date().toISOString();
+  }
+  
+  set position(value: string | null) { 
+    this._position = value; 
+    this._updatedAt = new Date().toISOString();
+  }
+  
+  set department(value: Department | null) { 
+    this._department = value; 
+    this._updatedAt = new Date().toISOString();
+  }
+  
+  set salary(value: number | null) { 
+    this._salary = this.validateSalary(value); 
+    this._updatedAt = new Date().toISOString();
+  }
+  
+  set isActive(value: boolean) { 
+    this._isActive = value; 
+    this._updatedAt = new Date().toISOString();
+  }
+
+  // ============= Business Logic Methods =============
+  hasPermission(permission: Permission): boolean {
+    return this._role.hasPermission(permission);
+  }
+
+  canApproveProjects(): boolean {
+    return this.hasPermission('approve_projects');
+  }
+
+  canApprovePayments(): boolean {
+    return this.hasPermission('approve_payments');
+  }
+
+  canScheduleInspections(): boolean {
+    return this.hasPermission('schedule_inspections');
+  }
+
+  canExecuteInspections(): boolean {
+    return this.hasPermission('execute_inspections');
+  }
+
+  canManageTeam(): boolean {
+    return this.hasPermission('manage_team');
+  }
+
+  canManageUsers(): boolean {
+    return this.hasPermission('manage_users');
+  }
+
+  canManageSystem(): boolean {
+    return this.hasPermission('manage_system');
+  }
+
+  isManager(): boolean {
+    return this.canManageTeam();
+  }
+
+  isSeniorTo(employee: Employee): boolean {
+    return this._role.isSeniorTo(employee.role);
+  }
+
+  isJuniorTo(employee: Employee): boolean {
+    return this._role.isJuniorTo(employee.role);
+  }
+
+  isSameLevel(employee: Employee): boolean {
+    return this._role.isSameLevel(employee.role);
+  }
+
+  hasValidCertifications(): boolean {
+    return this._certifications.every(cert => !cert.isExpired());
+  }
+
+  // ============= Immutability Methods =============
+  withRole(newRole: UserRole): Employee {
+    return new Employee(
+      this._id,
+      this._employeeId,
+      this._fullName,
+      this._email,
+      this._phone,
+      this._position,
+      this._department,
+      newRole,
+      this._hireDate,
+      this._salary,
+      this._isActive,
+      this._user,
+      this._manager,
+      this._superior,
+      this._directReports,
+      this._managedProjects,
+      this._teamMembers,
+      this._skills,
+      this._certifications,
+      this._createdAt,
+      new Date().toISOString()
+    );
+  }
+
+  withAdditionalPermission(permission: Permission): Employee {
+    return this.withRole(this._role.withPermission(permission));
+  }
+
+  withoutPermission(permission: Permission): Employee {
+    return this.withRole(this._role.withoutPermission(permission));
+  }
+
+  // ============= Factory Methods =============
   static create(params: {
     id: string;
     employeeId: string;
@@ -110,9 +301,20 @@ export class Employee {
     phone?: string;
     position?: string;
     department?: Department;
-    role?: EmployeeRole;
+    role?: string;
     hireDate?: string;
   }): Employee {
+    // Create dynamic role instance
+    const roleInstance = params.role 
+      ? UserRole.create({
+          id: params.role,
+          name: params.role,
+          displayName: Employee.getRoleDisplayName(params.role),
+          level: Employee.getRoleLevel(params.role),
+          permissions: Employee.getRolePermissions(params.role)
+        })
+      : UserRole.worker(); // Default role
+
     return new Employee(
       params.id,
       params.employeeId,
@@ -121,17 +323,152 @@ export class Employee {
       params.phone || null,
       params.position || null,
       params.department || null,
-      params.role || 'worker',
+      roleInstance,
       params.hireDate || null,
       null,
       true,
-      null,
-      null,
-      null,
-      [],
-      [],
+      null,           // user
+      null,           // manager
+      null,           // superior
+      [],             // directReports
+      [],             // managedProjects
+      [],             // teamMembers
+      [],             // skills
+      [],             // certifications
       new Date().toISOString(),
       new Date().toISOString()
     );
+  }
+
+  // ============= Data Transformation Methods =============
+  static fromData(data: EmployeeData): Employee {
+    return Employee.create({
+      id: data.id,
+      employeeId: data.employee_id,
+      fullName: data.full_name,
+      email: data.email || undefined,
+      phone: data.phone || undefined,
+      position: data.position || undefined,
+      department: data.department as Department || undefined
+    });
+  }
+
+  toData(): EmployeeData {
+    return {
+      id: this._id,
+      full_name: this._fullName,
+      position: this._position,
+      department: this._department,
+      email: this._email,
+      phone: this._phone,
+      employee_id: this._employeeId,
+      is_active: this._isActive,
+      created_at: this._createdAt,
+      updated_at: this._updatedAt
+    };
+  }
+
+  // ============= Validation Methods =============
+  private validateId(id: string): string {
+    if (!id || id.trim().length === 0) {
+      throw new Error('Employee ID is required');
+    }
+    return id.trim();
+  }
+
+  private validateEmployeeId(employeeId: string): string {
+    if (!employeeId || employeeId.trim().length === 0) {
+      throw new Error('Employee ID is required');
+    }
+    return employeeId.trim();
+  }
+
+  private validateFullName(fullName: string): string {
+    if (!fullName || fullName.trim().length === 0) {
+      throw new Error('Full name is required');
+    }
+    if (fullName.length > 100) {
+      throw new Error('Full name must be less than 100 characters');
+    }
+    return fullName.trim();
+  }
+
+  private validateEmail(email: string): string {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      throw new Error('Invalid email format');
+    }
+    return email.trim();
+  }
+
+  private validatePhone(phone: string): string {
+    const phoneRegex = /^\+?[0-9\s\-()]+$/;
+    if (!phoneRegex.test(phone)) {
+      throw new Error('Invalid phone format');
+    }
+    return phone.replace(/\s/g, '');
+  }
+
+  private validateSalary(salary: number | null): number | null {
+    if (salary === null) return null;
+    if (salary < 0) {
+      throw new Error('Salary must be positive');
+    }
+    if (salary > 1000000) {
+      throw new Error('Salary seems too high');
+    }
+    return salary;
+  }
+
+  // ============= Helper Methods =============
+  private static getRoleDisplayName(role: string): string {
+    const displayNames: Record<string, string> = {
+      admin: 'Administrateur',
+      director: 'Directeur',
+      project_manager: 'Chef de projet',
+      technical_manager: 'Manager technique',
+      engineering_consultant: 'Ingénieur consultant',
+      supervisor: 'Superviseur',
+      inspector: 'Inspecteur',
+      finance_manager: 'Manager financier',
+      legal: 'Juriste',
+      worker: 'Employé',
+      supplier: 'Fournisseur'
+    };
+    return displayNames[role] || role;
+  }
+
+  private static getRoleLevel(role: string): number {
+    const levels: Record<string, number> = {
+      admin: 10,
+      director: 9,
+      project_manager: 8,
+      technical_manager: 7,
+      engineering_consultant: 6,
+      supervisor: 5,
+      inspector: 5,
+      finance_manager: 7,
+      legal: 6,
+      worker: 3,
+      supplier: 2
+    };
+    return levels[role] || 1;
+  }
+
+  private static getRolePermissions(role: string): Permission[] {
+    const permissions: Record<string, Permission[]> = {
+      admin: ['approve_projects', 'approve_payments', 'schedule_inspections', 'execute_inspections', 'manage_team', 'manage_users', 'manage_system'],
+      director: ['approve_projects', 'approve_payments', 'schedule_inspections', 'manage_team', 'manage_users'],
+      project_manager: ['approve_projects', 'schedule_inspections', 'execute_inspections', 'manage_team'],
+      technical_manager: ['schedule_inspections', 'execute_inspections', 'manage_team'],
+      engineering_consultant: ['schedule_inspections', 'execute_inspections'],
+      supervisor: ['execute_inspections', 'manage_team'],
+      inspector: ['execute_inspections'],
+      finance_manager: ['approve_payments'],
+      legal: [],
+      worker: [],
+      supplier: []
+    };
+    return permissions[role] || [];
   }
 }

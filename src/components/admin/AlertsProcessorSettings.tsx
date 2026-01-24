@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { supabase } from '@/integrations/supabase/client';
+import { useNotifications } from '@/hooks/useNotifications';
 import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, Play, Pause, Clock, Settings, Activity } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProcessorConfig {
   enabled: boolean;
@@ -27,19 +28,20 @@ interface ProcessingLog {
   };
 }
 
-const AlertsProcessorSettings = () => {
+const AlertsProcessorSettings: React.FC = () => {
+  const { toast } = useToast();
   const [config, setConfig] = useState<ProcessorConfig>({
-    enabled: false,
-    batchSize: 10,
-    intervalMinutes: 60,
-    maxRetries: 3
+    enabled: true,
+    batchSize: 50,
+    intervalMinutes: 30,
+    maxRetries: 3,
   });
   
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setSaving] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [logs, setLogs] = useState<ProcessingLog[]>([]);
-  const { toast } = useToast();
+  
 
   useEffect(() => {
     loadConfig();

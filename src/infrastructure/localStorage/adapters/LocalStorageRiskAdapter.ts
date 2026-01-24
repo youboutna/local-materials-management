@@ -3,221 +3,186 @@
  * Implements IRiskRepository using LocalStorage for DEV_MODE
  */
 
-import { 
-  IRiskRepository, 
-  Risk, 
-  RiskLevel, 
-  RiskStatus, 
-  RiskCategory 
-} from '@/domain/repositories/IRiskRepository';
-import { allRisksData, MockRisk } from '@/data/mockData';
-
-// Convert MockRisk to Risk format
-const mockRisks: Risk[] = allRisksData.map((mock: MockRisk) => {
-  // Map mock status to domain status
-  const statusMap: Record<string, RiskStatus> = {
-    'identified': 'identified',
-    'assessed': 'assessed',
-    'mitigated': 'mitigated',
-    'accepted': 'accepted',
-    'rejected': 'rejected'
-  };
-
-  // Map mock level to domain level
-  const levelMap: Record<string, RiskLevel> = {
-    'low': 'low',
-    'medium': 'medium',
-    'high': 'high',
-    'critical': 'critical'
-  };
-
-  // Map mock category to domain category
-  const categoryMap: Record<string, RiskCategory> = {
-    'safety': 'safety',
-    'quality': 'quality',
-    'environmental': 'environmental',
-    'financial': 'financial',
-    'operational': 'operational',
-    'legal': 'legal'
-  };
-
-  return new Risk(
-    mock.id,
-    mock.title,
-    mock.description,
-    categoryMap[mock.category] || 'operational',
-    levelMap[mock.level] || 'medium',
-    statusMap[mock.status] || 'identified',
-    mock.projectId,
-    mock.likelihood,
-    mock.impact,
-    mock.mitigationMeasures,
-    mock.identifiedBy,
-    mock.identifiedDate,
-    mock.mitigationDate,
-    mock.reviewDate,
-    mock.createdBy,
-    mock.createdAt, // created_at
-    mock.updatedAt  // updated_at
-  );
-});
+import { IRiskRepository } from '@/domain/repositories/IRiskRepository';
+import { Risk, RiskStatus, RiskLevel, IProject, IEmployee } from '@/domain/entities/Risk';
 
 export class LocalStorageRiskAdapter implements IRiskRepository {
-  
+  private risks: Risk[] = [];
+
   async findById(id: string): Promise<Risk | null> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    const risks = this.getRisksFromStorage();
-    const risk = risks.find(r => r.id === id);
-    
-    return risk || null;
+    return this.risks.find(r => r.id === id) || null;
   }
 
   async findAll(): Promise<Risk[]> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    const risks = this.getRisksFromStorage();
-    return risks;
+    return [...this.risks];
   }
 
   async save(risk: Risk): Promise<void> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    const risks = this.getRisksFromStorage();
-    const existingIndex = risks.findIndex(r => r.id === risk.id);
-    
+    const existingIndex = this.risks.findIndex(r => r.id === risk.id);
     if (existingIndex >= 0) {
-      risks[existingIndex] = risk;
+      this.risks[existingIndex] = risk;
     } else {
-      risks.push(risk);
+      this.risks.push(risk);
     }
-    
-    this.saveRisksToStorage(risks);
-    
-    console.log(`[DEV_MODE] Saved risk ${risk.id}`);
   }
 
   async update(id: string, data: Partial<Risk>): Promise<void> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    const risks = this.getRisksFromStorage();
-    const riskIndex = risks.findIndex(r => r.id === id);
-    
-    if (riskIndex === -1) {
-      throw new Error(`Risk with id ${id} not found`);
+    const index = this.risks.findIndex(r => r.id === id);
+    if (index >= 0) {
+      // Create updated risk using with methods
+      const current = this.risks[index];
+      if (data.status) {
+        this.risks[index] = current.withStatus(data.status);
+      }
+      if (data.probability) {
+        this.risks[index] = current.withProbability(data.probability);
+      }
+      if (data.impact) {
+        this.risks[index] = current.withImpact(data.impact);
+      }
     }
-    
-    risks[riskIndex] = {
-      ...risks[riskIndex],
-      ...data,
-      updated_at: new Date().toISOString()
-    };
-    
-    this.saveRisksToStorage(risks);
-    
-    console.log(`[DEV_MODE] Updated risk ${id}`);
   }
 
   async delete(id: string): Promise<void> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    const risks = this.getRisksFromStorage();
-    const riskIndex = risks.findIndex(r => r.id === id);
-    
-    if (riskIndex === -1) {
-      throw new Error(`Risk with id ${id} not found`);
+    const index = this.risks.findIndex(r => r.id === id);
+    if (index >= 0) {
+      this.risks.splice(index, 1);
     }
-    
-    risks.splice(riskIndex, 1);
-    this.saveRisksToStorage(risks);
-    
-    console.log(`[DEV_MODE] Deleted risk ${id}`);
   }
 
-  async findByProject(projectId: string): Promise<Risk[]> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    const risks = this.getRisksFromStorage();
-    return risks.filter(risk => risk.projectId === projectId);
+  async findByProjectId(projectId: string): Promise<Risk[]> {
+    return this.risks.filter(r => r.projectId === projectId);
   }
 
-  async findByCategory(category: RiskCategory): Promise<Risk[]> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
+  async findActive(): Promise<Risk[]> {
+    return this.risks.filter(r => r.status !== 'resolved');
+  }
+
+  async findCritical(): Promise<Risk[]> {
+    return this.risks.filter(r => r.getRiskLevel() === 'critical');
+  }
+
+  async countByStatus(projectId: string): Promise<Record<RiskStatus, number>> {
+    const projectRisks = this.risks.filter(r => r.projectId === projectId);
+    const counts: Record<RiskStatus, number> = {
+      'identified': 0,
+      'monitored': 0,
+      'mitigated': 0,
+      'resolved': 0
+    };
     
-    const risks = this.getRisksFromStorage();
-    return risks.filter(risk => risk.category === category);
+    projectRisks.forEach(risk => {
+      counts[risk.status]++;
+    });
+    
+    return counts;
+  }
+
+  async findByCategory(category: string): Promise<Risk[]> {
+    return this.risks.filter(r => r.getCategory() === category);
   }
 
   async findByLevel(level: RiskLevel): Promise<Risk[]> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    const risks = this.getRisksFromStorage();
-    return risks.filter(risk => risk.level === level);
+    return this.risks.filter(r => r.getRiskLevel() === level);
   }
 
   async findByStatus(status: RiskStatus): Promise<Risk[]> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    const risks = this.getRisksFromStorage();
-    return risks.filter(risk => risk.status === status);
+    return this.risks.filter(r => r.status === status);
   }
 
   async findByDateRange(startDate: string, endDate: string): Promise<Risk[]> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    const risks = this.getRisksFromStorage();
-    return risks.filter(risk => 
-      risk.identifiedDate >= startDate && risk.identifiedDate <= endDate
-    );
+    return this.risks.filter(r => {
+      const identifiedDate = r.identifiedDate;
+      return identifiedDate && identifiedDate >= startDate && identifiedDate <= endDate;
+    });
   }
 
   async search(query: string): Promise<Risk[]> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    const risks = this.getRisksFromStorage();
-    const searchLower = query.toLowerCase();
-    
-    return risks.filter(risk => 
-      risk.title.toLowerCase().includes(searchLower) ||
-      risk.description?.toLowerCase().includes(searchLower) ||
-      risk.mitigationMeasures?.toLowerCase().includes(searchLower)
+    const queryLower = query.toLowerCase();
+    return this.risks.filter(r => 
+      r.title.toLowerCase().includes(queryLower) ||
+      (r.description && r.description.toLowerCase().includes(queryLower))
     );
   }
 
   async findHighRisk(): Promise<Risk[]> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    const risks = this.getRisksFromStorage();
-    return risks.filter(risk => risk.level === 'high' || risk.level === 'critical');
+    return this.risks.filter(r => r.getRiskLevel() === 'high' || r.getRiskLevel() === 'critical');
   }
 
   async findUnmitigated(): Promise<Risk[]> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
+    return this.risks.filter(r => !r.mitigationStrategy);
+  }
+
+  async countByLevel(projectId: string): Promise<Record<RiskLevel, number>> {
+    const projectRisks = this.risks.filter(r => r.projectId === projectId);
+    const counts: Record<RiskLevel, number> = {
+      'low': 0,
+      'medium': 0,
+      'high': 0,
+      'critical': 0
+    };
     
-    const risks = this.getRisksFromStorage();
-    return risks.filter(risk => risk.status === 'identified' || risk.status === 'assessed');
+    projectRisks.forEach(risk => {
+      counts[risk.getRiskLevel()]++;
+    });
+    
+    return counts;
+  }
+
+  async getAverageRiskScore(projectId: string): Promise<number> {
+    const projectRisks = this.risks.filter(r => r.projectId === projectId);
+    if (projectRisks.length === 0) return 0;
+    
+    const totalScore = projectRisks.reduce((sum, risk) => sum + risk.getRiskScore(), 0);
+    return totalScore / projectRisks.length;
+  }
+
+  async getHighestRisks(projectId: string, limit: number = 5): Promise<Risk[]> {
+    const projectRisks = this.risks.filter(r => r.projectId === projectId);
+    return projectRisks
+      .sort((a, b) => b.getRiskScore() - a.getRiskScore())
+      .slice(0, limit);
+  }
+
+  async getUnmitigatedRisks(projectId: string): Promise<Risk[]> {
+    return this.risks.filter(r => 
+      r.projectId === projectId && 
+      r.status !== 'resolved' && 
+      !r.mitigationStrategy
+    );
   }
 
   // ============= Utility Methods =============
 
+  private getMockRisks(): Risk[] {
+    // Create some sample risks for testing
+    return [
+      Risk.create({
+        id: 'risk-1',
+        project: { id: 'project-1', title: 'Test Project' },
+        title: 'Budget overrun risk',
+        description: 'Risk of exceeding project budget',
+        probability: 0.7,
+        impact: 0.8,
+        identifiedBy: { id: 'emp-1', fullName: 'John Doe', user: { id: 'user-1' } }
+      }),
+      Risk.create({
+        id: 'risk-2',
+        project: { id: 'project-1', title: 'Test Project' },
+        title: 'Schedule delay risk',
+        description: 'Risk of project schedule delays',
+        probability: 0.5,
+        impact: 0.6,
+        identifiedBy: { id: 'emp-1', fullName: 'John Doe', user: { id: 'user-1' } }
+      })
+    ];
+  }
+
   private getRisksFromStorage(): Risk[] {
-    if (typeof window === 'undefined') return mockRisks;
+    if (typeof window === 'undefined') return this.getMockRisks();
     
     const stored = localStorage.getItem('dev_risks');
-    return stored ? JSON.parse(stored) : mockRisks;
+    return stored ? JSON.parse(stored) : this.getMockRisks();
   }
 
   private saveRisksToStorage(risks: Risk[]): void {
@@ -233,7 +198,7 @@ export class LocalStorageRiskAdapter implements IRiskRepository {
     if (typeof window === 'undefined') return;
     
     if (!localStorage.getItem('dev_risks')) {
-      localStorage.setItem('dev_risks', JSON.stringify(mockRisks));
+      localStorage.setItem('dev_risks', JSON.stringify(this.getMockRisks()));
     }
     
     console.log('[DEV_MODE] LocalStorage risks initialized with mock data');

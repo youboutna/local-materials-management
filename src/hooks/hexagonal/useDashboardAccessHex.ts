@@ -3,7 +3,7 @@
  * Checks user roles and permissions
  */
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/use-auth';
 import { DEV_MODE, DEV_USER, DEV_CONFIG } from '@/config/constants';
 
 export interface DashboardAccess {

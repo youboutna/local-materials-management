@@ -2,23 +2,9 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
-import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-
-type AuthContextType = {
-  user: User | null;
-  session: Session | null;
-  loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, fullName: string, phone: string, nationalId: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
-  signInWithPhone: (phone: string) => Promise<{ success: boolean; error?: string; }>;
-  verifyPhoneOTP: (phone: string, token: string) => Promise<void>;
-  signInWithNationalId: (nationalId: string, password: string) => Promise<void>;
-  isDevelopmentMode: boolean;
-};
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { useEffect, useState } from 'react';
+import { ReactNode } from 'react';
+import { AuthContext, AuthContextType } from './auth-context';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -340,12 +326,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 }

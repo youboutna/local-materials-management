@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { useStorageHex } from '@/hooks/hexagonal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ import { Plus, ClipboardCheck, Trash2, Calendar, User, ExternalLink, Upload, Pen
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { useProjectProgressSync } from '@/hooks/useProjectProgressSync';
 import { InspectorSelector } from '@/components/selectors/InspectorSelector';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PhaseInspectionsProps {
   phaseId: string;
@@ -48,6 +49,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
   const { syncProgress } = useProjectProgressSync(projectId);
+  const { uploadFile, getPublicUrl } = useStorageHex('inspection-documents');
 
   const { data: inspections, isLoading } = useQuery({
     queryKey: ['phase-inspections', phaseId],
@@ -71,17 +73,11 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
         const uploadPromises = inspectionData.documents.map(async (file) => {
           const fileExt = file.name.split('.').pop();
           const fileName = `${Math.random()}.${fileExt}`;
-          const filePath = `inspections/${projectId}/${fileName}`;
+          const folder = `inspections/${projectId}`;
 
-          const { error: uploadError } = await supabase.storage
-            .from('project-documents')
-            .upload(filePath, file);
+          const uploadResult = await uploadFile({ file, folder });
 
-          if (uploadError) throw uploadError;
-
-          const { data: { publicUrl } } = supabase.storage
-            .from('project-documents')
-            .getPublicUrl(filePath);
+          const publicUrl = getPublicUrl(uploadResult.path);
 
           return {
             name: file.name,

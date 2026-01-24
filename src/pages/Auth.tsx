@@ -5,8 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useLoginHex, useRegisterHex } from "@/hooks/hexagonal";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from '@/hooks/hexagonal';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { AuthService } from '@/application/services/AuthService';
+import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import {
   Eye,
   EyeOff,
@@ -31,13 +34,17 @@ const Auth = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, refetch } = useAuth();
 
-  // Check for reset password mode from URL params
+  // Check for mode from URL params (login, register, reset-password)
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const mode = searchParams.get("mode");
-    if (mode === "reset-password") {
+    if (mode === "login") {
+      setActiveTab("login");
+    } else if (mode === "register") {
+      setActiveTab("register");
+    } else if (mode === "reset-password") {
       setActiveTab("reset-password");
     }
   }, [location]);
@@ -45,41 +52,69 @@ const Auth = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (user) {
-      const from = (location.state as any)?.from?.pathname || "/dashboard";
+      const from = (location.state as { from?: { pathname: string } })?.from?.pathname || "/dashboard";
       navigate(from);
     }
   }, [user, navigate, location]);
 
-  // Use hexagonal hooks
-  const loginMutation = useLoginHex();
-  const registerMutation = useRegisterHex();
+  // Create unified authentication service
+  const authRepository = RepositoryFactory.getAuthRepository();
+  const authService = new AuthService(authRepository);
+
+  // Login mutation
+  const loginMutation = useMutation({
+    mutationFn: async (credentials: { email: string; password: string }) => {
+      const result = await authService.login(credentials);
+      return result;
+    },
+    onSuccess: (data) => {
+      toast.success(`Bienvenue ${data.user?.name || data.user?.email || ''}!`);
+      refetch();
+      navigate('/dashboard');
+    },
+    onError: (error: Error) => {
+      console.error('Login error:', error);
+      toast.error("Échec de la connexion. Veuillez vérifier vos identifiants.");
+    }
+  });
+
+  // Register mutation
+  const registerMutation = useMutation({
+    mutationFn: async (userData: { 
+      email: string; 
+      password: string; 
+      full_name: string; 
+      phone?: string; 
+      national_id?: string; 
+    }) => {
+      const result = await authService.register(userData);
+      return result;
+    },
+    onSuccess: (data) => {
+      toast.success("Compte créé avec succès!");
+      refetch();
+      navigate('/dashboard');
+    },
+    onError: (error: Error) => {
+      console.error('Registration error:', error);
+      toast.error("Échec de l'inscription. Veuillez réessayer.");
+    }
+  });
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    try {
-      await loginMutation.mutateAsync({ email, password });
-      // Navigation is handled in the mutation's onSuccess callback
-    } catch (error) {
-      console.error('Login error:', error);
-    }
+    await loginMutation.mutateAsync({ email, password });
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    try {
-      await registerMutation.mutateAsync({
-        email,
-        password,
-        full_name: fullName,
-        phone,
-        national_id: nationalId,
-      });
-      // Navigation is handled in the mutation's onSuccess callback
-    } catch (error) {
-      console.error('Register error:', error);
-    }
+    await registerMutation.mutateAsync({
+      email,
+      password,
+      full_name: fullName,
+      phone,
+      national_id: nationalId,
+    });
   };
 
   const loading = loginMutation.isPending || registerMutation.isPending;

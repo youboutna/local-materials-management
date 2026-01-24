@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, LogIn } from "lucide-react";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from '@/contexts/use-auth';
 
 const CustomNavbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

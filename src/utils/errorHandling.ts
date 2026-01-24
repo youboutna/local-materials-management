@@ -18,6 +18,14 @@ export enum ErrorCode {
   // Business logic errors
   BUSINESS_RULE_VIOLATION = 'BUSINESS_RULE_VIOLATION',
   INSUFFICIENT_PERMISSIONS = 'INSUFFICIENT_PERMISSIONS',
+  
+  // User management errors
+  USER_FIND_ERROR = 'USER_FIND_ERROR',
+  USER_SEARCH_ERROR = 'USER_SEARCH_ERROR',
+  USER_FIND_ALL_ERROR = 'USER_FIND_ALL_ERROR',
+  USER_CREATE_ERROR = 'USER_CREATE_ERROR',
+  USER_UPDATE_ERROR = 'USER_UPDATE_ERROR',
+  USER_DELETE_ERROR = 'USER_DELETE_ERROR',
 }
 
 export class AppError extends Error {
@@ -60,6 +68,12 @@ export class AppError extends Error {
       [ErrorCode.INTERNAL_ERROR]: 'Erreur interne du serveur',
       [ErrorCode.BUSINESS_RULE_VIOLATION]: 'Opération non autorisée',
       [ErrorCode.INSUFFICIENT_PERMISSIONS]: 'Permissions insuffisantes',
+      [ErrorCode.USER_FIND_ERROR]: 'Utilisateur introuvable',
+      [ErrorCode.USER_SEARCH_ERROR]: 'Erreur lors de la recherche d\'utilisateurs',
+      [ErrorCode.USER_FIND_ALL_ERROR]: 'Erreur lors du chargement des utilisateurs',
+      [ErrorCode.USER_CREATE_ERROR]: 'Erreur lors de la création de l\'utilisateur',
+      [ErrorCode.USER_UPDATE_ERROR]: 'Erreur lors de la mise à jour de l\'utilisateur',
+      [ErrorCode.USER_DELETE_ERROR]: 'Erreur lors de la suppression de l\'utilisateur',
     };
 
     return messages[this.code] || 'Une erreur inattendue s\'est produite';

@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { DocumentService, DocumentCreateDTO } from '@/services/DocumentService';
 import { MilestoneService } from '@/services/MilestoneService';
 import { DecisionNode } from '@/types/unified-workflow';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/use-auth';
 
 interface UnifiedDecisionPanelProps {
   decisionNode: DecisionNode | null;

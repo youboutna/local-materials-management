@@ -128,4 +128,22 @@ export class UserService {
       throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage);
     }
   }
+
+  async updateProfile(userId: string, data: {
+    full_name?: string;
+    phone?: string;
+    national_id?: string;
+  }): Promise<void> {
+    try {
+      await this.updateUser(userId, {
+        full_name: data.full_name,
+        phone: data.phone,
+        national_id: data.national_id
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update profile';
+      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
+      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage);
+    }
+  }
 }

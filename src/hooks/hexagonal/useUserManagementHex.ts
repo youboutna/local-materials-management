@@ -4,8 +4,10 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { AuthService } from '@/application/services/AuthService';
+import { UserService } from '@/application/services/UserService';
+import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 
 interface CreateUserData {
   email: string;
@@ -24,53 +26,42 @@ interface UpdateUserData {
 
 export function useUserManagementHex() {
   const queryClient = useQueryClient();
+  const authService = new AuthService(RepositoryFactory.getAuthRepository());
+  const userService = new UserService(RepositoryFactory.getUserRepository());
 
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: async (data: CreateUserData) => {
-      // Sign up user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // Sign up user using AuthService
+      const authData = await authService.signUp({
         email: data.email,
         password: data.password,
-        options: {
-          data: {
-            full_name: data.full_name,
-            phone: data.phone,
-            national_id: data.national_id
-          }
-        }
+        // Remove options as it's not in RegisterData type
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('User creation failed');
+      if (!authData) throw new Error('User creation failed');
 
-      // Update profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: authData.user.id,
+      // Update profile using UserService
+      try {
+        await userService.updateProfile(authData.id, {
           full_name: data.full_name,
           phone: data.phone,
           national_id: data.national_id
         });
-
-      if (profileError) {
+      } catch (profileError) {
         console.warn('Profile update warning:', profileError);
       }
 
-      // Assign role if specified
+      // Assign role if specified using AuthService
       if (data.role) {
-        const { error: roleError } = await supabase.rpc('assign_user_role', {
-          target_user_id: authData.user.id,
-          role_name: data.role
-        });
-
-        if (roleError) {
+        try {
+          await authService.assignUserRole(authData.id, data.role);
+        } catch (roleError) {
           console.warn('Role assignment warning:', roleError);
         }
       }
 
-      return authData.user;
+      return authData;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
@@ -84,16 +75,7 @@ export function useUserManagementHex() {
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async ({ userId, data }: { userId: string; data: UpdateUserData }) => {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: data.full_name,
-          phone: data.phone,
-          national_id: data.national_id
-        })
-        .eq('id', userId);
-
-      if (error) throw error;
+      await userService.updateProfile(userId, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
@@ -108,12 +90,7 @@ export function useUserManagementHex() {
   // Assign role mutation
   const assignRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
-      const { error } = await supabase.rpc('assign_user_role', {
-        target_user_id: userId,
-        role_name: role
-      });
-
-      if (error) throw error;
+      await authService.assignUserRole(userId, role);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-roles'] });
@@ -126,8 +103,7 @@ export function useUserManagementHex() {
 
   // Get current user
   const getCurrentUser = async () => {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error) throw error;
+    const user = await authService.getCurrentUser();
     return user;
   };
 

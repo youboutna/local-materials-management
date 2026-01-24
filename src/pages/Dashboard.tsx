@@ -67,11 +67,8 @@ const Dashboard: React.FC = () => {
 
   // Use stats from hexagonal dashboard hook with safe defaults
   const stats = useMemo(() => {
-    console.log('Dashboard stats memo running, dashboardStats:', dashboardStats);
-    
     // Return safe defaults if dashboardStats is null or loading
     if (!dashboardStats) {
-      console.log('Dashboard stats is null, returning defaults');
       return {
         activeProjects: 0,
         totalBudget: 0,
@@ -82,14 +79,13 @@ const Dashboard: React.FC = () => {
       };
     }
     
-    console.log('Dashboard stats found, returning actual data');
     return {
       activeProjects: dashboardStats.activeProjects || 0,
       totalBudget: dashboardStats.totalBudget || 0,
       teamMembers: dashboardStats.totalEmployees || 0,
       materials: dashboardStats.totalMaterials || 0,
       statusDistribution: dashboardStats.statusDistribution || [],
-      locationDistribution: [], // This needs to be implemented in DashboardService
+      locationDistribution: dashboardStats.locationDistribution || [],
     };
   }, [dashboardStats]);
 

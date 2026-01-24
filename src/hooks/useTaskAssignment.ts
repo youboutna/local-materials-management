@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/use-auth';
 import { useNotifications } from '@/hooks/useNotifications';
 import { TaskType, NotificationMetadata } from '@/types/notification';
 import { toast } from '@/hooks/use-toast';

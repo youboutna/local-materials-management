@@ -40,7 +40,7 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
       .limit(5),
     supabase
       .from('supplier_payment_requests')
-      .select(`id, amount, requested_date, project_id, status, projects (id, title), suppliers (name)`)
+      .select(`id, amount, requested_date, project_id, status, supplier_id, projects (id, title)`)
       .eq('status', 'pending')
       .order('requested_date', { ascending: true })
       .limit(5),

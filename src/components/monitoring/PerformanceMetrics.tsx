@@ -17,6 +17,9 @@ import { formatMetric } from '@/utils/monitoringCalculations';
 import { httpMetricsCollector } from '@/utils/httpMetricsCollector';
 import { PerformanceMonitoringService } from '@/application/services/PerformanceMonitoringService';
 
+// Create service instance once
+const performanceService = new PerformanceMonitoringService();
+
 interface PerformanceData {
   database: {
     connections: number;
@@ -138,7 +141,7 @@ const PerformanceMetrics: React.FC = () => {
 
   const getDatabaseMetrics = async (): Promise<Partial<PerformanceData>> => {
     try {
-      const dbMetrics = await PerformanceMonitoringService.getDatabaseMetrics();
+      const dbMetrics = await performanceService.getDatabaseMetrics();
       
       return {
         database: dbMetrics

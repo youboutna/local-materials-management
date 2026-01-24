@@ -13,13 +13,18 @@ import { useToast } from '@/hooks/use-toast';
 import { pdf } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { supabase } from '@/integrations/supabase/client';
+import { useNotifications } from '@/hooks/useNotifications';
 import { TenderReportingService, TenderReportData } from '@/services/tenderReportingService';
 import { ReportFormatting } from '@/utils/reportFormatting';
 import { TenderPDFDocument } from './pdf/TenderPDFDocument';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TenderReportGeneratorProps {
-  tender: any; // Tender type from your system
+  tender: {
+    title: string;
+    reference?: string;
+    // ... other tender properties
+  };
   onClose?: () => void;
 }
 
@@ -42,18 +47,23 @@ interface TenderReportConfig {
   signatoryTitle?: string;
 }
 
-export function TenderReportGenerator({ tender, onClose }: TenderReportGeneratorProps) {
+const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, onClose }) => {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-  const [signature, setSignature] = useState<string>('');
+  const { invokeFunction } = useNotifications();
+  const [isGenerating, setIsGenerating] = useState(false);
   const [reportConfig, setReportConfig] = useState<TenderReportConfig>({
-    title: `Rapport d'appel d'offres - ${tender.title || tender.reference}`,
+    title: '',
     includeSections: {
       overview: true,
       workflow: true,
       suppliers: true,
-      documents: false,
+      documents: true,
       evaluation: true,
+    includeExecutiveSummary: true,
+    includeFinancialAnalysis: true,
+    includeTechnicalDetails: true,
+    includeRiskAssessment: true,
+    includeRecommendations: true,
       timeline: true,
       signatures: false,
     },
@@ -229,7 +239,7 @@ export function TenderReportGenerator({ tender, onClose }: TenderReportGenerator
   };
 
   const generatePDF = async () => {
-    setLoading(true);
+    setIsGenerating(true);
     try {
       // Create PDF document using @react-pdf/renderer
       const pdfDocument = (
@@ -245,7 +255,7 @@ export function TenderReportGenerator({ tender, onClose }: TenderReportGenerator
       const fileName = `rapport-tender-${(tender.reference || tender.title || 'tender').replace(/[^a-zA-Z0-9]/g, '-')}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
       return { blob, fileName };
     } finally {
-      setLoading(false);
+      setIsGenerating(false);
     }
   };
 
@@ -287,11 +297,12 @@ export function TenderReportGenerator({ tender, onClose }: TenderReportGenerator
       return;
     }
 
-    setLoading(true);
+    setIsGenerating(true);
     try {
       const { blob, fileName } = await generatePDF();
 
       // Call edge function to send email with PDF attachment
+      
       const { error } = await supabase.functions.invoke('send-tender-report', {
         body: {
           to: reportConfig.recipientEmail,
@@ -318,7 +329,7 @@ export function TenderReportGenerator({ tender, onClose }: TenderReportGenerator
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setIsGenerating(false);
     }
   };
 
@@ -502,4 +513,6 @@ export function TenderReportGenerator({ tender, onClose }: TenderReportGenerator
       </CardContent>
     </Card>
   );
-}
+};
+
+export default TenderReportGenerator;

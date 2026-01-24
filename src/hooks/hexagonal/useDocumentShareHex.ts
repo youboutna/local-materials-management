@@ -3,6 +3,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { AuthService } from '@/application/services/AuthService';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface SharedDocument {
@@ -49,7 +50,8 @@ export function useShareDocuments(tenderId: string) {
         throw new Error('Aucun document sélectionné');
       }
 
-      const { data: user } = await supabase.auth.getUser();
+      const authService = new AuthService();
+      const user = await authService.getCurrentUser();
       
       for (const docId of documentIds) {
         const { error } = await supabase

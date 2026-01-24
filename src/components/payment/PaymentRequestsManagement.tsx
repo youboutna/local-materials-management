@@ -4,7 +4,7 @@ import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { AuthService } from '@/application/services/AuthService';
 import { SupplierService } from '@/application/services/SupplierService';
 import { ProjectService } from '@/application/services/ProjectService';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/use-auth';
 import {
   Table,
   TableBody,

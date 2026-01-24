@@ -67,7 +67,7 @@ const PaymentBlockingInterface = () => {
           .select('threshold_value')
           .eq('threshold_type', 'project_delay')
           .eq('threshold_name', 'major_delay')
-          .single();
+          .maybeSingle();
 
         const delayThreshold = thresholds?.threshold_value || 20;
 

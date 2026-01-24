@@ -3,6 +3,7 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { AuthService } from '@/application/services/AuthService';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface CreateUserData {
@@ -25,19 +26,18 @@ export function useCreateUserHex() {
 
   return useMutation({
     mutationFn: async (data: CreateUserData) => {
-      const { data: result, error } = await supabase.auth.signUp({
+      const authService = new AuthService();
+      const result = await authService.register({
         email: data.email,
         password: data.password,
-        options: {
-          data: {
-            full_name: data.full_name,
-            phone: data.phone,
-            national_id: data.national_id
-          }
-        }
+        full_name: data.full_name,
+        phone: data.phone,
+        national_id: data.national_id
       });
-
-      if (error) throw error;
+      
+      if (!result) {
+        throw new Error('Registration failed');
+      }
       
       if (result.user) {
         // Update profile

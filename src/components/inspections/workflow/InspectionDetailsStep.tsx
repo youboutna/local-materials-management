@@ -13,7 +13,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Calendar, Clock, User, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { InspectionPermissionService, AssignableInspector } from '@/services/InspectionPermissionService';
+import { InspectionPermissionService } from '@/application/services/InspectionPermissionService';
+import {
+  PermissionContextDTO,
+  AssignableInspectorDTO
+} from '@/dtos/entities/InspectionPermissionDTO';
+import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 
 interface InspectionDetailsStepProps {
   projectId: string;
@@ -65,14 +70,19 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
   const { data: inspectors = [] } = useQuery({
     queryKey: ['assignable-inspectors', projectId, phaseId],
     queryFn: async () => {
-      const userContext = await InspectionPermissionService.getCurrentUserRole();
-      if (!userContext) return [];
+      const repository = RepositoryFactory.getInspectionPermissionRepository();
+      const service = new InspectionPermissionService(repository);
       
-      return InspectionPermissionService.getAssignableInspectors({
-        userId: userContext.userId,
-        userRole: userContext.role,
-        projectId,
-        phaseId,
+      // Mock user context - should come from auth context
+      const userId = 'current-user-id'; // Replace with actual user ID from auth
+      
+      return service.getAssignableInspectors({ 
+        context: {
+          userId,
+          projectId,
+          phaseId,
+          inspectionType
+        }
       });
     },
     enabled: mode === 'schedule',

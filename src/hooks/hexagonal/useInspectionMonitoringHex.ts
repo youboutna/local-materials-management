@@ -188,15 +188,12 @@ export function useInspectionMonitoringHex(options?: {
             const fileName = `${Date.now()}-${file.name}`;
             const filePath = `inspections/${inspection.project_id}/${fileName}`;
 
-            const { error: uploadError } = await supabase.storage
-              .from('documents')
-              .upload(filePath, file);
+            const storageService = new StorageService();
+            const { error: uploadError } = await storageService.uploadFile('documents', filePath, file);
 
             if (uploadError) throw uploadError;
 
-            const { data: { publicUrl } } = supabase.storage
-              .from('documents')
-              .getPublicUrl(filePath);
+            const publicUrl = storageService.getPublicUrl('documents', filePath);
 
             return { name: file.name, url: publicUrl, uploadedAt: new Date().toISOString() };
           })

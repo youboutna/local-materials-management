@@ -3,7 +3,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { SupplierService } from '@/application/services/SupplierService';
 
 export interface SupplierMgmtFormData {
   name: string;
@@ -23,12 +23,9 @@ export function useSuppliersList() {
   return useQuery({
     queryKey: ['suppliers-list-crud'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('suppliers')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data || [];
+      const supplierService = new SupplierService();
+      const suppliers = await supplierService.getAllSuppliers();
+      return suppliers || [];
     }
   });
 }
@@ -37,7 +34,8 @@ export function useCreateSupplier() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (data: SupplierMgmtFormData) => {
-      const { error } = await supabase.from('suppliers').insert({
+      const supplierService = new SupplierService();
+      await supplierService.createSupplier({
         company_name: data.name || data.company_name || '',
         contact_person: data.contact_person,
         category: data.category,
@@ -49,7 +47,6 @@ export function useCreateSupplier() {
         specializations: data.specializations,
         rating: data.rating
       });
-      if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['suppliers-list-crud'] })
   });
@@ -59,7 +56,8 @@ export function useUpdateSupplier() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: SupplierMgmtFormData }) => {
-      const { error } = await supabase.from('suppliers').update({
+      const supplierService = new SupplierService();
+      await supplierService.updateSupplier(id, {
         company_name: data.name || data.company_name,
         contact_person: data.contact_person,
         category: data.category,
@@ -70,8 +68,7 @@ export function useUpdateSupplier() {
         nif: data.nif,
         specializations: data.specializations,
         rating: data.rating
-      }).eq('id', id);
-      if (error) throw error;
+      });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['suppliers-list-crud'] })
   });
@@ -81,8 +78,8 @@ export function useDeleteSupplier() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('suppliers').delete().eq('id', id);
-      if (error) throw error;
+      const supplierService = new SupplierService();
+      await supplierService.deleteSupplier(id);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['suppliers-list-crud'] })
   });

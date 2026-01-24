@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, FileText, Loader2 } from 'lucide-react';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import type { Supplier } from '@/types/supplier';
 

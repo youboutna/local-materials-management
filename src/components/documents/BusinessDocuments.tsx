@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Upload, Receipt, FileCheck, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useUploadBusinessDocument, BusinessDocumentFormData } from '@/hooks/hexagonal/useBusinessDocumentsHex';
 import { parseInvoiceFromPdf } from '@/utils/btpCalculations';
 import { InvoiceLine } from '@/utils/types';
 
@@ -31,23 +31,22 @@ interface DocumentData {
 
 const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, supplierId }) => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('contract');
   const [loading, setLoading] = useState(false);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [parsedData, setParsedData] = useState<InvoiceLine[]>([]);
-  
-  const [formData, setFormData] = useState<DocumentData>({
+  const [activeTab, setActiveTab] = useState('upload');
+  const [formData, setFormData] = useState<BusinessDocumentFormData>({
     title: '',
     description: '',
-    file: null,
-    documentType: 'contract',
     amount: undefined,
     supplier: '',
-    reference: '',
-    dueDate: ''
+    invoice_date: '',
+    due_date: '',
+    file: undefined as any,
   });
-
-  const handleInputChange = (field: keyof DocumentData, value: any) => {
+  const [parsedInvoice, setParsedInvoice] = useState<InvoiceLine[]>([]);
+  
+  const uploadMutation = useUploadBusinessDocument();
+  
+  const handleInputChange = (field: keyof BusinessDocumentFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -56,19 +55,18 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
     setFormData(prev => ({ ...prev, file }));
     
     // Auto-analyze PDF invoices
-    if (file && file.type === 'application/pdf' && formData.documentType === 'tender') {
+    if (file && file.type === 'application/pdf') {
       analyzePDF(file);
     }
   };
 
   const analyzePDF = async (file: File) => {
-    setAnalyzing(true);
     try {
       const fileUrl = URL.createObjectURL(file);
       const parsedInvoice = await parseInvoiceFromPdf(fileUrl);
       URL.revokeObjectURL(fileUrl);
       
-      setParsedData(parsedInvoice);
+      setParsedInvoice(parsedInvoice);
       
       // Auto-fill form with parsed data
       if (parsedInvoice.length > 0) {
@@ -91,8 +89,6 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
         description: "Impossible d'analyser le PDF automatiquement",
         variant: "destructive",
       });
-    } finally {
-      setAnalyzing(false);
     }
   };
 
@@ -109,65 +105,28 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
 
     setLoading(true);
     try {
-      // Upload file to Supabase Storage
-      const fileExt = formData.file.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `business-docs/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(filePath, formData.file);
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('documents')
-        .getPublicUrl(filePath);
-
-      // Save document metadata
-      const documentRecord = {
-        title: formData.title,
-        description: formData.description,
-        document_type: formData.documentType,
-        file_url: publicUrl,
-        file_name: formData.file.name,
-        file_size: formData.file.size,
-        mime_type: formData.file.type,
-        project_id: projectId,
-        uploaded_by: (await supabase.auth.getUser()).data.user?.id,
-        metadata: {
-          amount: formData.amount,
-          supplier: formData.supplier,
-          reference: formData.reference,
-          dueDate: formData.dueDate,
-          parsedData: parsedData.length > 0 ? JSON.stringify(parsedData) : null
-        } as any
-      };
-
-      const { error: dbError } = await supabase
-        .from('documents')
-        .insert(documentRecord);
-
-      if (dbError) throw dbError;
-
-      toast({
-        title: "Document ajouté",
-        description: "Le document a été enregistré avec succès",
+      // Use hexagonal hook for upload
+      await uploadMutation.mutateAsync({
+        ...formData,
+        projectId,
       });
-
+      
+      toast({
+        title: "Succès",
+        description: "Document uploadé avec succès",
+      });
+      
       // Reset form
       setFormData({
         title: '',
         description: '',
-        file: null,
-        documentType: 'contract',
         amount: undefined,
         supplier: '',
-        reference: '',
-        dueDate: ''
+        invoice_date: '',
+        due_date: '',
+        file: undefined as any,
       });
-      setParsedData([]);
+      setParsedInvoice([]);
 
     } catch (error) {
       console.error('Error uploading document:', error);

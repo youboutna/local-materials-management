@@ -1,6 +1,7 @@
 /**
  * Supabase Adapter for Report Data Transformer Repository
  * Implements the IReportDataTransformerRepository using Supabase
+ * Following hexagonal architecture: Adapter → Entity → Transformer → DTO
  */
 import { supabase } from '@/integrations/supabase/client';
 import { IReportDataTransformerRepository } from '@/domain/repositories/IReportDataTransformerRepository';
@@ -12,17 +13,148 @@ import {
   FinancialMetricsDTO,
   RiskAssessmentDTO
 } from '@/types/reportTypes';
-import { ReportDataTransformer } from '@/services/reportDataTransformer';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import { ProjectDataCalculations } from '@/utils/projectDataCalculations';
+import { ProjectData } from '@/types/project';
+import { Database } from '@/integrations/supabase/types';
+import { Project } from '@/domain/entities/Project';
+import { ProjectDomainTransformer } from '@/dtos/transforms/ProjectDomainTransformer';
+
+// Types officiels Supabase pour les tables utilisées
+type ProjectPhaseRow = Database['public']['Tables']['project_phases']['Row'];
+type ProjectMilestoneRow = Database['public']['Tables']['project_milestones']['Row'];
+type ProjectMaterialRow = Database['public']['Tables']['project_materials']['Row'];
+type InspectionRow = Database['public']['Tables']['inspections']['Row'];
+type PaymentRow = Database['public']['Tables']['payments']['Row'];
 
 export class SupabaseReportDataTransformerAdapter implements IReportDataTransformerRepository {
 
   /**
    * Transform project data for reporting
+   * Following hexagonal architecture: Adapter → Entity → Transformer → DTO
    */
   async transformProjectForReport(project: ProjectData): Promise<ProjectReportDTO> {
-    return await ReportDataTransformer.transformProjectForReport(project);
+    try {
+      // 1. Convert ProjectData to Project entity (Domain)
+      const projectEntity = this.createProjectEntity(project);
+      
+      // 2. Fetch related data from database using official Supabase types
+      const [phasesData, milestonesData, materialsData, inspectionsData] = await Promise.all([
+        supabase.from('project_phases').select('*').eq('project_id', project.id),
+        supabase.from('project_milestones').select('*').eq('project_id', project.id),
+        supabase.from('project_materials').select('*').eq('project_id', project.id),
+        supabase.from('inspections').select('*').eq('project_id', project.id)
+      ]);
+
+      // 3. Calculate metrics using real data with proper typing
+      const phases = phasesData.data || [] as ProjectPhaseRow[];
+      const milestones = milestonesData.data || [] as ProjectMilestoneRow[];
+      const materials = materialsData.data || [] as ProjectMaterialRow[];
+      const inspections = inspectionsData.data || [] as InspectionRow[];
+
+      // 4. Use ReportCalculations for EVM metrics (Domain logic)
+      const { data: paymentsData } = await supabase
+        .from('payments')
+        .select('amount')
+        .eq('project_id', project.id);
+      
+      const actualCost = (paymentsData as PaymentRow[]).reduce((sum, payment) => sum + (payment.amount || 0), 0);
+      const evmMetrics = ReportCalculations.calculateEVMMetrics(projectEntity, actualCost, phases);
+
+      // 5. Use ProjectDataCalculations for project analytics (Domain logic)
+      const analytics = ProjectDataCalculations.calculateProjectHealthScore(
+        projectEntity.progress || 0,
+        85, // Default budget utilization
+        90, // Default schedule performance
+        88  // Default quality score
+      );
+
+      // 6. Transform Project entity to DTO using transformer
+      const projectDTO = ProjectDomainTransformer.toResponseDto(projectEntity);
+
+      // 7. Return final report DTO with all data
+      return {
+        project: {
+          ...projectDTO,
+          phases: phases.map(p => ({
+            ...p,
+            progress: this.calculatePhaseProgress(p),
+            status: this.getPhaseStatus(p)
+          })),
+          milestones: milestones.map(m => ({
+            ...m,
+            status: this.getMilestoneStatus(m)
+          })),
+          materials: materials,
+          inspections: inspections
+        },
+        evmMetrics,
+        analytics,
+        generatedAt: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Error transforming project for report:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create Project entity from ProjectData
+   * This is the Adapter → Entity transformation
+   */
+  private createProjectEntity(projectData: ProjectData): Project {
+    return new Project(
+      projectData.id,
+      projectData.title,
+      projectData.description || '',
+      projectData.status,
+      projectData.progress || 0,
+      projectData.budget || 0,
+      projectData.startDate ? new Date(projectData.startDate) : null,
+      projectData.endDate ? new Date(projectData.endDate) : null,
+      projectData.location || '',
+      projectData.coordinates ? {
+        latitude: projectData.coordinates.latitude || 0,
+        longitude: projectData.coordinates.longitude || 0
+      } : undefined,
+      projectData.teamSize || 0,
+      projectData.thumbnail || ''
+    );
+  }
+
+  /**
+   * Calculate phase progress using official Supabase types
+   */
+  private calculatePhaseProgress(phase: ProjectPhaseRow): number {
+    const now = new Date();
+    const start = phase.start_date ? new Date(phase.start_date) : new Date();
+    const end = phase.end_date ? new Date(phase.end_date) : new Date();
+    
+    if (now < start) return 0;
+    if (now > end) return 100;
+    
+    const total = end.getTime() - start.getTime();
+    const elapsed = now.getTime() - start.getTime();
+    return Math.round((elapsed / total) * 100);
+  }
+
+  /**
+   * Get phase status using official Supabase types
+   */
+  private getPhaseStatus(phase: ProjectPhaseRow): string {
+    const progress = this.calculatePhaseProgress(phase);
+    if (progress === 0) return 'pending';
+    if (progress === 100) return 'completed';
+    return 'in_progress';
+  }
+
+  /**
+   * Get milestone status using official Supabase types
+   */
+  private getMilestoneStatus(milestone: ProjectMilestoneRow): string {
+    if (milestone.completed) return 'completed';
+    if (milestone.target_date && new Date(milestone.target_date) < new Date()) return 'overdue';
+    return 'pending';
   }
 
   /**
@@ -317,7 +449,7 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
     return 'medium';
   }
 
-  private calculatePhaseRiskLevel(phase: any): 'low' | 'medium' | 'high' {
+  private calculatePhaseRiskLevel(phase: DatabasePhaseData): 'low' | 'medium' | 'high' {
     const progress = phase.progress || 0;
     const budget = phase.estimated_cost || 0;
     const actualCost = phase.actual_cost || 0;
@@ -327,12 +459,12 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
     return 'low';
   }
 
-  private calculateOnTimePerformance(phases: any[]): number {
-    const onTimePhases = phases.filter(p => p.status === 'completed' && new Date(p.end_date) >= new Date());
-    return phases.length > 0 ? (onTimePhases / phases.length) * 100 : 100;
+  private calculateOnTimePerformance(phases: DatabasePhaseData[]): number {
+    const onTimePhases = phases.filter(p => p.status === 'completed' && p.end_date && new Date(p.end_date) >= new Date());
+    return phases.length > 0 ? (onTimePhases.length / phases.length) * 100 : 100;
   }
 
-  private calculateQualityScore(inspections: any[]): number {
+  private calculateQualityScore(inspections: InspectionData[]): number {
     if (!inspections || inspections.length === 0) return 85; // Default score
     
     const completedInspections = inspections.filter(i => i.status === 'completed' || i.status === 'approved');
@@ -443,19 +575,19 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
     ];
   }
 
-  private generateRiskAssessment(project: ProjectData): any[] {
-    const risks: any[] = [];
+  private generateRiskAssessment(project: ProjectData): RiskData[] {
+    const risks: RiskData[] = [];
     
     // Budget risk
     if (project.progress < 50 && new Date() > new Date(project.startDate)) {
       risks.push({
         id: `risk-${project.id}-budget`,
-        category: 'financial' as const,
+        category: 'financial' as 'financial' | 'technical' | 'environmental' | 'regulatory' | 'schedule',
         description: 'Risque de dépassement budgétaire',
         probability: 70,
         impact: 80,
         riskScore: 56,
-        status: 'identified' as const
+        status: 'identified' as 'identified' | 'assessed' | 'mitigated' | 'closed'
       });
     }
     
@@ -465,12 +597,12 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
     if (project.progress < expectedProgress - 20) {
       risks.push({
         id: `risk-${project.id}-schedule`,
-        category: 'schedule' as const,
+        category: 'schedule' as 'financial' | 'technical' | 'environmental' | 'regulatory' | 'schedule',
         description: 'Retard dans la planification',
         probability: 80,
         impact: 70,
         riskScore: 56,
-        status: 'identified' as const
+        status: 'identified' as 'identified' | 'assessed' | 'mitigated' | 'closed'
       });
     }
     

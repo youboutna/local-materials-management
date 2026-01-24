@@ -10,7 +10,7 @@ import { getPriorityColor } from '@/utils/notificationUtils';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { useTaskAssignmentHex, useTaskAssignmentsHex } from '@/hooks/hexagonal';
 import { AppLayout } from '@/components/layout';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/use-auth';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const TaskDetail = () => {

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/use-auth';
 import { DEV_MODE } from '@/config/constants';
 import { PhaseService, PhaseData } from '@/application/services/PhaseService';
 import ConstructionPhaseManager from './ConstructionPhaseManager';

@@ -5,7 +5,10 @@
 
 import { ITenderRepository } from '@/domain/repositories/ITenderRepository';
 import { IParsedInvoiceRepository } from '@/domain/repositories/IParsedInvoiceRepository';
+import { ITenderDocumentRepository } from '@/domain/repositories/ITenderDocumentRepository';
 import { Tender } from '@/domain/entities/Tender';
+import { TenderDocumentTransformer } from '@/dtos/transforms/TenderDocumentTransformer';
+import { CreateTenderDocumentDTO, TenderDocumentDTO } from '@/dtos/transforms/TenderDocumentDTO';
 import { AppError, ErrorCode, ErrorLogger } from '@/utils/errorHandling';
 
 export interface TenderOption {
@@ -27,7 +30,8 @@ export class TenderService {
   }
   constructor(
     private tenderRepository: ITenderRepository,
-    private parsedInvoiceRepository: IParsedInvoiceRepository
+    private parsedInvoiceRepository: IParsedInvoiceRepository,
+    private tenderDocumentRepository: ITenderDocumentRepository
   ) {}
 
   /**
@@ -100,4 +104,33 @@ export class TenderService {
       return [];
     }
   }
+
+  /**
+   * Create a tender document
+   */
+  async createTenderDocument(data: CreateTenderDocumentDTO): Promise<TenderDocumentDTO> {
+    try {
+      // Generate ID
+      const id = crypto.randomUUID();
+      
+      // Transform DTO to Entity
+      const entity = TenderDocumentTransformer.fromCreateDtoToEntity(data, id);
+      
+      // Validate entity
+      if (!entity.isValid()) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Invalid tender document data');
+      }
+      
+      // Save entity
+      const savedEntity = await this.tenderDocumentRepository.save(entity);
+      
+      // Transform back to DTO
+      return TenderDocumentTransformer.toDTO(savedEntity);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create tender document';
+      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage, { data }));
+      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage, { data });
+    }
+  }
+
 }

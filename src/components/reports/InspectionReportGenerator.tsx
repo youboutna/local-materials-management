@@ -12,10 +12,11 @@ import { useToast } from '@/hooks/use-toast';
 import { pdf } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { supabase } from '@/integrations/supabase/client';
+import { useNotifications } from '@/hooks/useNotifications';
 import { InspectionReportingService, InspectionReportData, InspectionMetrics } from '@/services/inspectionReportingService';
 import { ReportFormatting } from '@/utils/reportFormatting';
 import { InspectionPDFDocument } from './pdf/InspectionPDFDocument';
+import { supabase } from '@/integrations/supabase/client';
 
 interface InspectionReportGeneratorProps {
   inspection: any; // Inspection type from your system
@@ -34,7 +35,11 @@ interface InspectionReportConfig {
   includeQualityScore: boolean;
 }
 
-export function InspectionReportGenerator({ inspection, project, onClose }: InspectionReportGeneratorProps) {
+const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({ 
+  inspection, 
+  project, 
+  onClose 
+}) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [reportData, setReportData] = useState<InspectionReportData | null>(null);
@@ -324,6 +329,7 @@ export function InspectionReportGenerator({ inspection, project, onClose }: Insp
       const { blob, fileName } = await generatePDF();
 
       // Call edge function to send email (you would need to create this)
+      
       const { error } = await supabase.functions.invoke('send-inspection-report', {
         body: {
           to: reportConfig.recipientEmail,
@@ -525,4 +531,6 @@ export function InspectionReportGenerator({ inspection, project, onClose }: Insp
       </CardContent>
     </Card>
   );
-}
+};
+
+export default InspectionReportGenerator;

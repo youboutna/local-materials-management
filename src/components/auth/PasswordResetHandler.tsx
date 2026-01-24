@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import { usePasswordManagement } from '@/hooks/usePasswordManagement';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/hexagonal';
 
 const PasswordResetHandler = () => {
   const [searchParams] = useSearchParams();
@@ -22,6 +22,7 @@ const PasswordResetHandler = () => {
   const [checking, setChecking] = useState(true);
 
   const { loading, updatePassword } = usePasswordManagement();
+  const { setSession, getSession } = useAuth();
 
   // Get URL parameters for password recovery
   const accessToken = searchParams.get('access_token');
@@ -37,7 +38,7 @@ const PasswordResetHandler = () => {
         if (accessToken && refreshToken && type === 'recovery') {
           console.log('Setting session with recovery tokens');
           
-          const { data, error } = await supabase.auth.setSession({
+          const { data, error } = await setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
           });
@@ -52,7 +53,7 @@ const PasswordResetHandler = () => {
           }
         } else {
           // Check if user is already authenticated (direct access)
-          const { data: { session } } = await supabase.auth.getSession();
+          const { data: { session } } = await getSession();
           console.log('Current session:', session);
           
           if (session && session.user) {
@@ -72,7 +73,7 @@ const PasswordResetHandler = () => {
     };
 
     handlePasswordRecovery();
-  }, [accessToken, refreshToken, type]);
+  }, [accessToken, refreshToken, type, setSession, getSession]);
 
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();

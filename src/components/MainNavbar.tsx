@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useLanguage, Language } from '@/contexts/LanguageContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/use-auth';
 import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { DEV_MODE } from '@/config/constants';

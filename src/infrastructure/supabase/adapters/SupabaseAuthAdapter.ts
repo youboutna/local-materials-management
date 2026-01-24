@@ -12,8 +12,14 @@ import {
   LoginCredentials, 
   RegisterData 
 } from '@/domain/repositories/IAuthRepository';
+import { AuthManagerConfig } from '@/application/services/AuthManager';
 
 export class SupabaseAuthAdapter implements IAuthRepository {
+  private config?: AuthManagerConfig;
+
+  constructor(config?: AuthManagerConfig) {
+    this.config = config;
+  }
   /**
    * Get current session
    */

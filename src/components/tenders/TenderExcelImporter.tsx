@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/hexagonal';
 import * as XLSX from 'xlsx';
 
 interface ImportedTender {
@@ -31,6 +31,8 @@ interface ProcessedTender {
 }
 
 const TenderExcelImporter: React.FC = () => {
+  const { toast } = useToast();
+  const { getUser } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [preview, setPreview] = useState<ImportedTender[]>([]);
@@ -41,8 +43,6 @@ const TenderExcelImporter: React.FC = () => {
     total: number;
     errorMessages: string[];
   } | null>(null);
-
-  const { toast } = useToast();
 
   const mapContractType = (type: string): string => {
     const typeMap: Record<string, string> = {
@@ -157,7 +157,7 @@ const TenderExcelImporter: React.FC = () => {
     if (!preview.length) return;
 
     // Check authentication first
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await getUser();
     
     if (authError || !user) {
       toast({

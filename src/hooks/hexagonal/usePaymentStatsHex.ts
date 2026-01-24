@@ -41,7 +41,7 @@ async function fetchPaymentStats(): Promise<PaymentStats> {
       .select('threshold_value')
       .eq('threshold_type', 'project_delay')
       .eq('threshold_name', 'bank_notification')
-      .single(),
+      .maybeSingle(),
     supabase
       .from('documents')
       .select('project_id', { count: 'exact' })

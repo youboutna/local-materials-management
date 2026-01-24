@@ -1,8 +1,8 @@
 /**
  * Hexagonal hook for supplier dashboard data
  */
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { AuthService } from '@/application/services/AuthService';
 import { useEffect, useState } from 'react';
 
 export interface SupplierDashboardData {
@@ -22,15 +22,12 @@ export const useSupplierAuthHex = () => {
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserId(session?.user?.id ?? null);
-    });
+    const authService = new AuthService();
     
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUserId(session?.user?.id ?? null);
+    // Set initial session
+    authService.getCurrentSession().then(({ user }) => {
+      setUserId(user?.id ?? null);
     });
-    
-    return () => subscription.unsubscribe();
   }, []);
 
   return { userId };

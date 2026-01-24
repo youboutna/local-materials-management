@@ -14,8 +14,9 @@ import { useToast } from '@/hooks/use-toast';
 import { pdf } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { supabase } from '@/integrations/supabase/client';
+import { useNotifications } from '@/hooks/useNotifications';
 import { DevisPDFDocument } from './pdf/DevisPDFDocument';
+import { supabase } from '@/integrations/supabase/client';
 
 interface EstimateItem {
   id?: string;
@@ -465,6 +466,7 @@ export function QuantitativeEstimateExporter({
       }
 
       // Call edge function to send email with PDF attachment
+      
       const { error } = await supabase.functions.invoke('send-tender-report', {
         body: {
           to: exportConfig.recipientEmail,
@@ -746,4 +748,6 @@ export function QuantitativeEstimateExporter({
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default QuantitativeEstimateExporter;

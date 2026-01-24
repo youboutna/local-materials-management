@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { getAppConfig, AuthProvider, DatabaseProvider, StorageProvider } from '@/config/app';
+import { getAuthManager, AuthManagerConfig } from '@/application/services/AuthManager';
 import { Shield, Database, HardDrive, Cloud, Check, AlertTriangle } from 'lucide-react';
 
 const ProviderSettings = () => {
@@ -20,6 +21,8 @@ const ProviderSettings = () => {
     database: 'unknown',
     storage: 'unknown'
   });
+  
+  const authManager = getAuthManager();
 
   const authProviders: { value: AuthProvider; label: string; description: string }[] = [
     { value: 'supabase', label: 'Supabase Auth', description: 'Managed authentication with social providers' },
@@ -47,14 +50,28 @@ const ProviderSettings = () => {
   const testConnection = async (provider: string, type: 'auth' | 'database' | 'storage') => {
     setConnectionStatus(prev => ({ ...prev, [type]: 'testing' }));
     
-    // Simulate connection test
-    setTimeout(() => {
-      const isConnected = Math.random() > 0.3; // 70% success rate for demo
-      setConnectionStatus(prev => ({ 
-        ...prev, 
-        [type]: isConnected ? 'connected' : 'failed' 
-      }));
-    }, 2000);
+    try {
+      if (type === 'auth') {
+        // Test auth provider by trying to get current session
+        const result = await authManager.getCurrentSession();
+        setConnectionStatus(prev => ({ 
+          ...prev, 
+          [type]: result.error ? 'failed' : 'connected' 
+        }));
+      } else {
+        // For database and storage, simulate for now
+        setTimeout(() => {
+          const isConnected = Math.random() > 0.3; // 70% success rate for demo
+          setConnectionStatus(prev => ({ 
+            ...prev, 
+            [type]: isConnected ? 'connected' : 'failed' 
+          }));
+        }, 2000);
+      }
+    } catch (error) {
+      console.error(`Error testing ${type} provider:`, error);
+      setConnectionStatus(prev => ({ ...prev, [type]: 'failed' }));
+    }
   };
 
   const handleProviderChange = (type: string, value: string) => {
@@ -80,13 +97,30 @@ const ProviderSettings = () => {
   };
 
   const saveConfiguration = () => {
-    // In a real implementation, this would save to a backend or local storage
-    localStorage.setItem('app_config', JSON.stringify(config));
-    setIsModified(false);
-    
-    toast({
-      title: "Configuration Saved",
-      description: "Provider settings have been updated successfully.",
+    // Create AuthManager config from current settings
+    const authConfig: AuthManagerConfig = {
+      provider: config.auth.provider as AuthProvider,
+      url: config.auth.url,
+      clientId: config.auth.clientId,
+      realm: config.auth.realm,
+      redirectUri: config.auth.redirectUri
+    };
+
+    // Switch to new auth provider
+    authManager.switchProvider(authConfig).then(() => {
+      setIsModified(false);
+      
+      toast({
+        title: "Configuration Saved",
+        description: "Provider settings have been updated successfully.",
+      });
+    }).catch((error) => {
+      console.error('Error switching auth provider:', error);
+      toast({
+        title: "Error",
+        description: "Failed to switch authentication provider.",
+        variant: "destructive"
+      });
     });
   };
 

@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, FileText, Loader2, Eye } from 'lucide-react';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/use-auth';
 import type { DocumentType } from '@/types/document';
 
 interface ProjectDocumentUploadProps {

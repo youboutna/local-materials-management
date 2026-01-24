@@ -54,6 +54,10 @@ export class ProjectService {
       endDate: project.endDate?.toISOString?.() || undefined,
       teamSize: project.teamSize || 0,
       thumbnail: project.thumbnail || '',
+      coordinates: project.coordinates ? {
+        latitude: project.coordinates.latitude,
+        longitude: project.coordinates.longitude
+      } : undefined,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };

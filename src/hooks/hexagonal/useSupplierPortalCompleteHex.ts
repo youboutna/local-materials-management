@@ -4,8 +4,14 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import { useToast } from '@/hooks/use-toast';
+import { AuthService } from '@/application/services/AuthService';
+import { SupplierService } from '@/application/services/SupplierService';
+import { StorageService } from '@/application/services/StorageService';
+import { DocumentService } from '@/application/services/DocumentService';
+import { TaskService } from '@/application/services/TaskService';
+import { NotificationService } from '@/application/services/NotificationService';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface Supplier {
   id: string;
@@ -34,7 +40,7 @@ export interface SupplierDocument {
   created_at: string;
   description?: string;
   file_size?: number;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SupplierTask {
@@ -90,10 +96,8 @@ export function useSupplierAuthHex() {
 
   const loginMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
+      const authService = new AuthService();
+      const { error } = await authService.signIn(email.trim(), password);
       
       if (error) throw error;
       return { success: true };
@@ -115,14 +119,9 @@ export function useSupplierAuthHex() {
 
   const signUpMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      const { error } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: {
-          data: {
-            full_name: email.split('@')[0],
-          },
-        },
+      const authService = new AuthService();
+      const { error } = await authService.signUp(email.trim(), password, {
+        full_name: email.split('@')[0],
       });
       
       if (error) throw error;
@@ -145,7 +144,8 @@ export function useSupplierAuthHex() {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.auth.signOut();
+      const authService = new AuthService();
+      const { error } = await authService.signOut();
       if (error) throw error;
     },
     onSuccess: () => {
@@ -175,38 +175,27 @@ export function useSupplierProfileHex(userId?: string | null) {
       if (!userId) return null;
 
       // First try to find by user_id
-      let { data, error } = await supabase
-        .from('suppliers')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
+      const supplierService = new SupplierService();
+      const data = await supplierService.findByUserId(userId);
       
-      if (error) throw error;
       
       // If no profile found by user_id, try to find by email
       if (!data) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.email) {
-          const { data: emailData, error: emailError } = await supabase
-            .from('suppliers')
-            .select('*')
-            .eq('email', user.email)
-            .maybeSingle();
+      const authService = new AuthService();
+      const { data: { user } } = await authService.getUser();
+      if (user?.email) {
+        const supplierService = new SupplierService();
+        const emailData = await supplierService.findByEmail(user.email);
+        
+        if (emailData) {
+          // Link existing supplier to this user
+          const { error: updateError } = await supplierService.updateUserId(emailData.id, userId);
           
-          if (emailError) throw emailError;
+          if (updateError) throw updateError;
           
-          if (emailData) {
-            // Link existing supplier to this user
-            const { error: updateError } = await supabase
-              .from('suppliers')
-              .update({ user_id: userId })
-              .eq('id', emailData.id);
-            
-            if (updateError) throw updateError;
-            
-            return emailData;
-          }
+          return emailData;
         }
+      }
       }
       
       return data || null;
@@ -363,29 +352,25 @@ export function useUploadSupplierDocumentHex() {
       const filePath = `supplier-documents/${userId}/${fileName}`;
 
       // Upload file to storage
-      const { error: uploadError } = await supabase.storage
-        .from('supplier-documents')
-        .upload(filePath, file);
+      const storageService = new StorageService();
+      const { error: uploadError } = await storageService.uploadFile('supplier-documents', filePath, file);
 
       if (uploadError) throw uploadError;
 
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('supplier-documents')
-        .getPublicUrl(filePath);
+      const { data: { publicUrl } } = storageService.getPublicUrl('supplier-documents', filePath);
 
       // Save document record
-      const { error } = await supabase
-        .from('documents')
-        .insert({
-          title,
-          description,
-          file_name: file.name,
-          file_url: publicUrl,
-          document_type: documentType,
-          uploaded_by: userId,
-          metadata: supplierId ? { supplier_id: supplierId } : null,
-        });
+      const documentService = new DocumentService();
+      const { error } = await documentService.createDocument({
+        title,
+        description,
+        file_name: file.name,
+        file_url: publicUrl,
+        document_type: documentType as any,
+        uploaded_by: userId,
+        metadata: supplierId ? { supplier_id: supplierId } : null,
+      });
 
       if (error) throw error;
       return { success: true, url: publicUrl };

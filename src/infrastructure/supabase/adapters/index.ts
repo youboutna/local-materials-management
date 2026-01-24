@@ -36,3 +36,5 @@ export { PVGeneratorAdapter } from './PVGeneratorAdapter';
 export { BankGuaranteeAdapter } from './BankGuaranteeAdapter';
 export { InspectionSchedulingAdapter } from './InspectionSchedulingAdapter';
 export { SupabaseParsedInvoiceAdapter } from './SupabaseParsedInvoiceAdapter';
+export { SupabaseInspectionPermissionAdapter } from './SupabaseInspectionPermissionAdapter';
+export { SupabaseTenderDocumentAdapter } from './SupabaseTenderDocumentAdapter';

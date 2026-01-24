@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, Lock, User } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from '@/contexts/use-auth';
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePasswordManagement } from "@/hooks/usePasswordManagement";
 import { useToast } from "@/hooks/use-toast";

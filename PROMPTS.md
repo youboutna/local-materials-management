@@ -40,16 +40,308 @@ Pense à une rivière qui coule :
   → Il ne fait pas de logique métier
 ```
 
-### **RÈGLE DU JEU #3 : LA PYRAMIDE DE RESPECT**
+### **RÈGLE DU JEU #4 : LA PURETÉ DES ENTITÉS**
 ```
-          🎨 PRÉSENTATION
-              ⬆ respecte
-          ⚡ APPLICATION
-              ⬆ respecte
-          🧠 DOMAINE
-          ⬇ implémente
-    🔧 INFRASTRUCTURE
+🧠 DOMAINE : Le temple de la pureté
+  → ✅ Champs simples : string, number, boolean, Date
+  → ✅ Références par ID : managerId, primaryContactId
+  → ✅ Types énumérés : Status, Category
+  → ✅ Objets complexes : rating: SupplierRating, contacts: SupplierContact[]
+  → ✅ Collections d'entités : employees: Employee[], phases: Phase[]
+  → ❌ DTOs de mapping : interfaces pour échanges API/UI
+  → ❌ Types any : Record<string, any>
+
+📦 DTO : Le marché des échanges
+  → ✅ Interfaces complexes : SupplierRating, SupplierContact
+  → ✅ Collections d'objets : contacts: SupplierContact[]
+  → ✅ Structures de mapping : pour API/UI
+  → ✅ Transformations : Entity ↔ DTO
+
+🔄 TRANSFORMERS : Les traducteurs sacrés
+  → ✅ Convertissent entités ↔ DTOs
+  → ✅ Font le pont entre Domaine et DTOs
+  → ✅ Maintiennent la cohérence des types
 ```
+
+### **🚨 ANTI-PATTERNS À ÉVITER**
+```
+❌ DTOs dans l'entité :
+export interface SupplierAPIDTO { ... }  // 🚨 INTERDIT - DTO de mapping
+
+✅ Interfaces de domaine :
+export interface SupplierRating { ... }  // ✅ CORRECT - Structure métier
+export class Supplier {
+  constructor(public rating: SupplierRating) { ... }  // ✅ CORRECT
+}
+```
+
+### **🎯 MANTRA SACRÉ**
+> **"Les entités peuvent contenir des objets et collections métier. Les DTOs sont réservés aux échanges API/UI. Les transformers font le pont.**
+
+### **🚨 PRÉREQUIS OBLIGATOIRES**
+```
+📋 Migration des entités dupliquées :
+- ❌ SUPPRIMER EmployeeEntity.ts → ✅ MIGRER vers Employee.ts
+- ❌ SUPPRIMER UserEntity.ts → ✅ MIGRER vers User.ts 
+- ❌ SUPPRIMER tous les *Entity.ts → ✅ CONSOLIDER dans l'entité principale
+
+📋 Pattern à appliquer :
+// ❌ ANTI-PATTERN - Fichiers dupliqués
+EmployeeEntity.ts  // Interface de données
+Employee.ts        // Entité métier
+
+// ✅ BONNE PRATIQUE - Fichier unique
+Employee.ts  // Entité métier + interfaces de structure
+```
+
+### **🎯 RÈGLE ARCHITECTURALE : OBJETS COMPLEXES DANS LES ENTITÉS**
+
+```
+🧠 DOMAINE : Le temple de la pureté
+  → ✅ Champs simples : string, number, boolean, Date
+  → ✅ Références par ID : managerId, primaryContactId
+  → ✅ Types énumérés : Status, Category
+  → ✅ OBJETS COMPLEXES : rating: SupplierRating, contacts: SupplierContact[]
+  → ✅ COLLECTIONS D'ENTITÉS : employees: Employee[], phases: Phase[]
+  → ❌ DTOs de mapping : interfaces pour échanges API/UI
+  → ❌ Types any : Record<string, any>
+
+📦 DTO : Le marché des échanges
+  → ✅ Interfaces complexes : SupplierRating, SupplierContact
+  → ✅ Collections d'objets : contacts: SupplierContact[]
+  → ✅ Structures de mapping : pour API/UI
+  → ✅ Transformations : Entity ↔ DTO
+
+🔄 TRANSFORMERS : Les traducteurs sacrés
+  → ✅ Convertissent entités ↔ DTOs
+  → ✅ Font le pont entre Domaine et DTOs
+  → ✅ Maintiennent la cohérence des types
+```
+
+### **🚨 PRÉREQUIS : SETTERS ET GETTERS POUR ENTITÉS**
+
+```
+🧠 DOMAINE : Le temple de la pureté
+  → ✅ Champs simples : string, number, boolean, Date
+  → ✅ OBJETS COMPLEXES : manager: Employee, user: User
+  → ✅ Types énumérés : Status, Category
+  → ✅ COLLECTIONS D'ENTITÉS : employees: Employee[], phases: Phase[]
+  → ✅ SETTERS AVEC VALIDATION : `setTitle(value: string) { this._title = this.validateTitle(value); }`
+  → ✅ GETTERS POUR NAVIGATION : `getManager(): Employee | null`
+  → ❌ PAS de logique métier dans les setters simples
+  → ❌ PAS d'effets de bord dans les getters simples
+
+📦 DTO : Le marché des échanges
+  → ✅ Interfaces complexes : SupplierRating, SupplierContact
+  → ✅ Collections d'objets : contacts: SupplierContact[]
+  → ✅ Structures de mapping : pour API/UI
+  → ✅ Transformations : Entity ↔ DTO
+
+🔄 TRANSFORMERS : Les traducteurs sacrés
+  → ✅ Convertissent entités ↔ DTOs
+  → ✅ Font le pont entre Domaine et DTOs
+  → ✅ Maintiennent la cohérence des types
+```
+
+### **🚨 PATTERN SETTERS/GETTERS CORRECT**
+
+```typescript
+// ✅ BONNE PRATIQUE - Entité avec setters/getters
+export class Employee {
+  constructor(
+    // ✅ Champs simples (readonly)
+    public readonly id: string,
+    public readonly createdAt: string,
+    public readonly updatedAt: string
+  ) {}
+
+  // ✅ Setter avec validation
+  set title(value: string) { 
+    this._title = this.validateTitle(value); 
+    this._updatedAt = new Date();
+  }
+  
+  set status(value: ProjectStatus) { 
+    this._status = this.validateStatus(value); 
+    this._updatedAt = new Date();
+  }
+  
+  // ✅ Getter pour navigation
+  get manager(): Employee | null {
+    return this._manager;
+  }
+  
+  get displayName(): string {
+    return this._title || this._id;
+  }
+  
+  // ✅ Getter avec logique métier
+  get progressPercentage(): number {
+    return this.calculateProgress();
+  }
+  
+  // ❌ ANTI-PATTERN - Logique métier dans getter simple
+  get isValid(): boolean {  // ❌ Pas de logique métier ici
+    return this.status === 'active';
+  }
+}
+```
+
+### **🚨 VALIDATION DANS LES SETTERS**
+
+```typescript
+// ✅ Validation centralisée
+private validateTitle(title: string): string {
+  if (!title || title.trim().length === 0) {
+    throw new Error('Title cannot be empty');
+  }
+  if (title.length > 200) {
+    throw new Error('Title too long (max 200 characters)');
+  }
+  return title.trim();
+}
+
+private validateStatus(status: ProjectStatus): ProjectStatus {
+  const validStatuses: ProjectStatus[] = ['active', 'inactive', 'suspended'];
+  if (!validStatuses.includes(status)) {
+    throw new Error(`Invalid status: ${status}`);
+  }
+  return status;
+}
+```
+
+### **🚨 NAVIGATION AVEC OBJETS COMPLEXES**
+
+```typescript
+// ✅ Navigation avec objets complexes
+getProject(): Project | null {
+  return this._project;
+}
+
+getAssignedEmployees(): Employee[] {
+  return this._assignedEmployees;
+}
+
+getProjectName(): string | null {
+  return this._project?.name || null;
+}
+
+// ✅ Collections avec getters
+getTeamSize(): number {
+  return this._teamMembers.length;
+}
+
+getActiveProjects(): Project[] {
+  return this._projects.filter(p => p.isActive);
+}
+```
+
+### **🚨 IMMUTABILITÉ CONTRÔLÉE**
+
+```typescript
+// ✅ Immutabilité avec setters
+export class Employee {
+  private _title: string;
+  private _status: ProjectStatus;
+  private _updatedAt: string;
+
+  // ✅ Setter retourne nouvelle instance (immutabilité)
+  withTitle(title: string): Employee {
+    return new Employee(
+      this.id,
+      this.validateTitle(title),
+      this._status,
+      this._updatedAt
+    );
+  }
+
+  // ✅ Factory method pour création
+  static create(params: EmployeeParams): Employee {
+    return new Employee(
+      params.id,
+      params.title,
+      'active', // Status par défaut
+      new Date().toISOString()
+    );
+  }
+}
+```
+
+### **🎯 MANTRA SACRÉ**
+> **"Les entités peuvent contenir des objets et collections métier. Les DTOs sont réservés aux échanges API/UI. Les transformers font le pont. Les setters/getters assurent la validation et l'immutabilité."**
+
+### **🎯 RÈGLE ARCHITECTURALE : OBJETS COMPLEXES DANS LES ENTITÉS**
+
+```
+🧠 DOMAINE : Le temple de la pureté
+  → ✅ Champs simples : string, number, boolean, Date
+  → ✅ OBJETS COMPLEXES : manager: Employee, user: User
+  → ✅ Types énumérés : Status, Category
+  → ✅ COLLECTIONS D'ENTITÉS : employees: Employee[], projects: Project[]
+  → ❌ DTOs de mapping : interfaces pour échanges API/UI
+  → ❌ Types any : Record<string, any>
+
+📦 DTO : Le marché des échanges
+  → ✅ Interfaces complexes : SupplierRating, SupplierContact
+  → ✅ Collections d'objets : contacts: SupplierContact[]
+  → ✅ Structures de mapping : pour API/UI
+  → ✅ Transformations : Entity ↔ DTO
+
+🔄 TRANSFORMERS : Les traducteurs sacrés
+  → ✅ Convertissent entités ↔ DTOs
+  → ✅ Font le pont entre Domaine et DTOs
+  → ✅ Maintiennent la cohérence des types
+```
+
+### **🚨 ANTI-PATTERN À ÉVITER**
+```
+❌ Mapping direct table → entité :
+constructor(
+  public readonly userId: string | null,      // ❌ Direct de user.id
+  public readonly managerId: string | null,     // ❌ Direct de manager_id
+  public readonly superiorId: string | null     // ❌ Direct de superior_id
+)
+
+✅ Entité avec objets complexes :
+constructor(
+  public readonly manager: Employee | null,        // ✅ Objet Employee
+  public readonly user: User | null,              // ✅ Objet User
+  public readonly directReports: Employee[],      // ✅ Collection d'Employee
+  public readonly managedProjects: Project[]     // ✅ Collection de Project
+)
+```
+
+### **🚨 PRÉREQUIS : MODIFICATION DES ENTITÉS**
+
+```typescript
+📋 RÈGLE D'OR : JAMAIS SUPPRIMER DE FICHIERS
+- ❌ INTERDIT : rm, del, suppression de fichiers existants
+- ✅ OBLIGATOIRE : Utiliser edit() ou multi_edit() pour modifier
+- ✅ OBLIGATOIRE : Préserver l'existant et améliorer
+
+📋 PROCESSUS DE MODIFICATION :
+1. ✅ Lire le fichier existant avec read_file()
+2. ✅ Analyser la structure actuelle
+3. ✅ Identifier les améliorations nécessaires
+4. ✅ Utiliser edit() pour ajouter les prérequis manquants
+5. ✅ Conserver ce qui est déjà conforme
+
+📋 PRÉREQUIS À AJOUTER :
+- Private fields avec underscore (_)
+- Getters pour tous les champs
+- Setters avec validation et updatedAt
+- Getters avec logique métier (displayName, etc.)
+- Getters pour navigation (getManager, etc.)
+- Getters pour collections (getTeamSize, etc.)
+- Validation methods privés
+- Immutability methods (with*)
+- Factory methods (create)
+- Business logic methods
+- toPlainObject method
+```
+
+### **🎯 MANTRA SACRÉ**
+> **"Les entités peuvent contenir des objets et collections métier. Les DTOs sont réservés aux échanges API/UI. Les transformers font le pont. Les setters/getters assurent la validation et l'immutabilité."**
 
 ---
 
@@ -187,7 +479,7 @@ L'architecture n'est pas une prison—c'est la **grammaire** qui permet à ton c
 4. Liste les composants refactorisés (SupplierPaymentRequest.tsx - 100% hexagonal)
 5. Suggère les 3 prochaines tâches prioritaires (correction types, refactoring composants)
 
-Architecture hexagonale centralisée 🚀 - Progression *var*% ✅
+Architecture hexagonale centralisée 🚀 - Progression 93.46% ✅
 ```
 
 ### **Prompt : Analyse Dynamique de la Migration**
@@ -212,19 +504,19 @@ Architecture hexagonale centralisée 🚀 - Analyse en temps réel ✅
 
 Fais-moi un résumé de l'état d'avancement :
 - Phase actuelle : "ARCHITECTURE HEXAGONALE TERMINÉE"
-- Progression globale : *var*% (excellente progression, finalisation en cours)
-- Services hexagonaux : *var*/*var* créés (*var*%)
+- Progression globale : 93.46% (excellente progression, finalisation en cours)
+- Services hexagonaux : 31/31 créés (100%)
 - RepositoryFactory : 100% configuré avec tous les singletons
 - Adapters critiques : InspectionScheduling, ParsedInvoice (100%)
-- Hooks migrés : *var*/*var* 🔄
-- Composants migrés : *var*/*var* 🔄
-- Appels directs Supabase : *var* appels identifiés dans *var* fichiers
-- Architecture : *var*% hexagonale et production-ready ✅
+- Hooks migrés : 89/103 🔄
+- Composants migrés : 368/386 🔄
+- Appels directs Supabase : 32 appels identifiés dans 32 fichiers
+- Architecture : 93.46% hexagonale et production-ready ✅
 - Types et erreurs : Corrections finales en cours 🔄
 - Dernière correction : Duplicate function implementation dans Project.ts (clone → copy) ✅
-- Temps restant : *var* jours (*var* heures) 🎯
+- Temps restant : 2 jours (16 heures) 🎯
 
-Architecture hexagonale centralisée 🚀 - Progression *var*% ✅
+Architecture hexagonale centralisée 🚀 - Progression 93.46% ✅
 ```
 
 ### **Prompt : Validation Architecture Hexagonale**
@@ -498,17 +790,17 @@ Fais-moi un bilan complet de la migration hexagonale avec les 130 fichiers ident
 
 ### **📈 STATISTIQUES GLOBALES DE MIGRATION**
 - **Services Legacy** : 8 fichiers à migrer
-- **Composants React** : *var* fichiers à migrer  
+- **Composants React** : 18 fichiers à migrer  
 - **Hooks Legacy** : 15 fichiers à migrer
-- **Hooks Hexagonaux** : *var* fichiers à finaliser
+- **Hooks Hexagonaux** : 103 fichiers à finaliser
 - **Document Repositories** : 3 fichiers à migrer
-- **TOTAL** : *var* fichiers à migrer
+- **TOTAL** : 515 fichiers à migrer
 
 #### **🎯 ÉTAT ACTUEL**
-- **Services créés** : *var*/*var* (*var%)
-- **Hooks hexagonaux** : *var*/*var* (*var%* propres)
-- **Composants refactorisés** : *var*/*var* (*var%)
-- **Architecture globale** : *var*% hexagonale
+- **Services créés** : 31/31 (100%)
+- **Hooks hexagonaux** : 89/103 (86.41% propres)
+- **Composants refactorisés** : 368/386 (95.34%)
+- **Architecture globale** : 93.46% hexagonale
 
 #### **📋 FICHIERS PAR PRIORITÉ**
 1. **Phase 1** : Hooks critiques (6+ appels) - 3 fichiers
@@ -813,18 +1105,6 @@ Priorise les tâches de refactoring par ordre de criticité :
 4. Propose un ordre de refactoring optimal
 ### **Documents Clés**
 - 📋 **[docs/task-plan.md](docs/task-plan.md)** : Plan de migration détaillé
-- 📋 **[CONTEXT.md](CONTEXT.md)** : Référence rapide architecture
-- 📋 **[docs/architecture-flux-complete.md](docs/architecture-flux-complete.md)** : Flux complet pour toutes les UI
-
-### **Patterns Architecturaux**
-- 🔄 **Flux standard** : UI → Hook → Service → Repository → Adapter → BDD
-- 🔄 **Transformation** : FormData ↔ DTO ↔ Entity ↔ DB Row
-- 🔄 **Services** : Entités pures, pas de DTOs
-- 🔄 **Hooks** : Gestion d'état + transformations
-
-### **Métriques de Migration**
-- ✅ **Architecture complète** : 95% (39/49 composants refactorisés)
-- ✅ **Transformers/Mappers** : 8/8 créés (User, Project, Supplier, Payment, Document)
 - ✅ **Hooks hexagonaux** : 21/40 créés (useProjectsHex, useSuppliersHex, useAuthHex, useMaterialsHex, useDocumentsHex, useInspectionHex, useUsersHex, useTaskAssignmentsHex)
 - ✅ **Services hexagonaux** : 31/31 créés (Document, Payment, Auth, etc.)
 - ✅ **Composants refactorisés** : ProjectPhasesDetail.tsx - 100% hexagonal

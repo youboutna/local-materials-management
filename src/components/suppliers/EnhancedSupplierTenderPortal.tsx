@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/hexagonal';
 import { TenderService } from '@/application/services/TenderService';
 import { TenderSubmissionService, UploadedDocument } from '@/services/TenderSubmissionService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -128,10 +128,11 @@ const EnhancedSupplierTenderPortal = () => {
   const [hasAccessToTender, setHasAccessToTender] = useState(false);
   const [accessGrantedTenderId, setAccessGrantedTenderId] = useState<string | null>(null);
   const [supplierEmailFromSecret, setSupplierEmailFromSecret] = useState<string | null>(null);
-  const { toast } = useToast();
   const { t } = useLanguage();
+  const { toast } = useToast();
+  const { uploadFile } = useDocumentStorage();
+  const { getUser } = useAuth();
   const queryClient = useQueryClient();
-  const { uploadFile, uploading } = useDocumentStorage();
 
   const handleAccessGranted = (tenderId: string, supplierEmail: string) => {
     setHasAccessToTender(true);
@@ -173,7 +174,7 @@ const EnhancedSupplierTenderPortal = () => {
     queryFn: async () => {
       if (!selectedTender?.id) return null;
       
-      const { data: user } = await supabase.auth.getUser();
+      const { data: user } = await getUser();
       if (!user.user) return null;
 
       return await TenderSubmissionService.getUserSubmission(
@@ -207,7 +208,7 @@ const EnhancedSupplierTenderPortal = () => {
         }
       }
       
-      const { data: user } = await supabase.auth.getUser();
+      const { data: user } = await getUser();
       if (!user.user) throw new Error('Utilisateur non connecté');
 
       // Get user profile for supplier info

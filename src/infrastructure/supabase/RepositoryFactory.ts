@@ -32,7 +32,9 @@ import {
   IAuthRepository,
   IStorageRepository,
   INotificationRepository,
-  IParsedInvoiceRepository
+  IParsedInvoiceRepository,
+  IInspectionPermissionRepository,
+  ITenderDocumentRepository
 } from '@/domain/repositories';
 
 import {
@@ -63,7 +65,9 @@ import {
   SupabaseStorageAdapter,
   SupabaseNotificationAdapter,
   SupabaseInsuranceAdapter,
-  SupabaseParsedInvoiceAdapter
+  SupabaseParsedInvoiceAdapter,
+  SupabaseInspectionPermissionAdapter,
+  SupabaseTenderDocumentAdapter
 } from './adapters';
 
 /**
@@ -98,6 +102,8 @@ let authRepository: IAuthRepository | null = null;
 let storageRepository: IStorageRepository | null = null;
 let notificationRepository: INotificationRepository | null = null;
 let parsedInvoiceRepository: IParsedInvoiceRepository | null = null;
+let tenderDocumentRepository: ITenderDocumentRepository | null = null;
+let inspectionPermissionRepository: IInspectionPermissionRepository | null = null;
 
 /**
  * Repository Factory
@@ -352,5 +358,25 @@ export class RepositoryFactory {
       notificationRepository = new SupabaseNotificationAdapter();
     }
     return notificationRepository;
+  }
+
+  /**
+   * Get Inspection Permission Repository instance
+   */
+  static getInspectionPermissionRepository(): IInspectionPermissionRepository {
+    if (!inspectionPermissionRepository) {
+      inspectionPermissionRepository = new SupabaseInspectionPermissionAdapter();
+    }
+    return inspectionPermissionRepository;
+  }
+
+  /**
+   * Get Tender Document Repository instance
+   */
+  static getTenderDocumentRepository(): ITenderDocumentRepository {
+    if (!tenderDocumentRepository) {
+      tenderDocumentRepository = new SupabaseTenderDocumentAdapter();
+    }
+    return tenderDocumentRepository;
   }
 }

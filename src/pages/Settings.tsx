@@ -23,7 +23,7 @@ import KeycloakSettings from "@/components/admin/KeycloakSettings";
 import KeycloakConfigurationTab from "@/components/admin/KeycloakConfigurationTab";
 import StorageSettings from "@/components/admin/StorageSettings";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from '@/contexts/use-auth';
 import {
   DEV_ROLES,
   getActiveDevRole,

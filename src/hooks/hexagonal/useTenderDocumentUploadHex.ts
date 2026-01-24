@@ -3,18 +3,14 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { StorageService } from '@/application/services/StorageService';
+import { DocumentService } from '@/application/services/DocumentService';
+import { TenderService } from '@/application/services/TenderService';
+import { RepositoryFactory } from '@/repositories/RepositoryFactory';
+import { TenderDocumentCategory, TenderDocumentSubcategory } from '@/dtos/transforms/TenderDocumentDTO';
 
-export type TenderCategory = "administrative" | "technical" | "financial";
-export type TenderSubcategory =
-  | "lettre_soumission"
-  | "pouvoir_signature"
-  | "acte_groupement"
-  | "attestation_impot"
-  | "attestation_cnss"
-  | "attestation_non_faillite"
-  | "renseignement_soumissionnaire"
-  | "garantie_soumission";
+export type TenderCategory = TenderDocumentCategory;
+export type TenderSubcategory = TenderDocumentSubcategory;
 
 export interface TenderDocumentUploadData {
   projectId: string;
@@ -31,47 +27,34 @@ export function useUploadTenderDocumentHex() {
   return useMutation({
     mutationFn: async (data: TenderDocumentUploadData) => {
       // Upload file
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("documents")
-        .upload(`tender/${data.projectId}/${data.file.name}`, data.file);
+      const storageService = new StorageService(RepositoryFactory.getStorageRepository());
+      const uploadData = await storageService.uploadFile('documents', `tender/${data.projectId}/${data.file.name}`, data.file);
 
-      if (uploadError || !uploadData?.path) {
-        throw new Error('Upload failed');
-      }
+      // Create document record using hexagonal service
+      const documentService = new DocumentService(RepositoryFactory.getDocumentRepository());
+      const docData = await documentService.createDocument({
+        projectId: data.projectId,
+        title: data.title,
+        description: data.description,
+        fileUrl: uploadData.path,
+        type: "contract" as const
+      });
 
-      // Create document record
-      const { data: docData, error: docError } = await supabase
-        .from("documents")
-        .insert({
-          project_id: data.projectId,
-          title: data.title,
-          description: data.description,
-          file_url: uploadData.path,
-          document_type: "contract" as const
-        })
-        .select()
-        .single();
-
-      if (docError || !docData) {
-        throw new Error('Document creation failed');
-      }
-
-      // Create tender document record
-      const { error: tenderDocError } = await supabase
-        .from("tender_documents")
-        .insert([{
-          project_id: data.projectId,
-          category: data.category,
-          subcategory: data.subcategory,
-          is_required: true,
-          is_submitted: true,
-          status: "draft",
-          document_id: docData.id
-        }]);
-
-      if (tenderDocError) {
-        throw new Error('Tender document creation failed');
-      }
+      // Create tender document record using hexagonal service
+      const tenderService = new TenderService(
+        RepositoryFactory.getTenderRepository(),
+        RepositoryFactory.getParsedInvoiceRepository(),
+        RepositoryFactory.getTenderDocumentRepository()
+      );
+      await tenderService.createTenderDocument({
+        project_id: data.projectId,
+        category: data.category,
+        subcategory: data.subcategory,
+        is_required: true,
+        is_submitted: true,
+        status: "draft",
+        document_id: docData.id
+      });
 
       return docData;
     },

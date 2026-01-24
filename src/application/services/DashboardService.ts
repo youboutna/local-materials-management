@@ -24,6 +24,7 @@ export interface DashboardStats {
   totalPayments: number;
   totalInspections: number;
   statusDistribution: { name: string; value: number; color: string }[];
+  locationDistribution: { name: string; value: number; color: string }[];
   healthDistribution: { name: string; value: number; color: string }[];
   performanceMetrics: {
     averageProjectHealth: number;
@@ -153,6 +154,22 @@ export class DashboardService {
         { name: 'Faible', value: projectsData.filter(p => (p.progress || 0) < 50).length, color: '#ef4444' },
       ];
 
+      // Location distribution based on project location
+      const locationCounts = projectsData.reduce((acc, project) => {
+        const location = project.location || 'Non spécifié';
+        acc[location] = (acc[location] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const locationColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+      const locationDistribution = Object.entries(locationCounts)
+        .map(([name, value], index) => ({
+          name,
+          value,
+          color: locationColors[index % locationColors.length]
+        }))
+        .sort((a, b) => b.value - a.value); // Sort by count descending
+
       // Calculate average project health
       const averageProjectHealth = projectsData.length > 0 
         ? projectsData.reduce((sum, p) => sum + (p.progress || 0), 0) / projectsData.length 
@@ -176,6 +193,7 @@ export class DashboardService {
         totalPayments: paymentsData.length,
         totalInspections: inspectionsData.length,
         statusDistribution,
+        locationDistribution,
         healthDistribution,
         performanceMetrics: {
           averageProjectHealth,

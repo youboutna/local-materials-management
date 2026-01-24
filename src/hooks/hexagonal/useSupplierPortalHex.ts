@@ -1,40 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { TenderService } from '@/application/services/TenderService';
 import { TenderSubmissionService, UploadedDocument } from '@/services/TenderSubmissionService';
-
-interface SharedDocument {
-  id: string;
-  title: string;
-  file_url: string;
-  file_name: string;
-  description?: string;
-  created_at: string;
-  metadata?: {
-    tender_id?: string;
-    phase?: number;
-    shared_by?: string;
-  };
-}
-
-interface PublicTender {
-  id: string;
-  title: string;
-  description: string;
-  project_id?: string;
-  launch_date?: string;
-  attribution_date?: string;
-  deadline_date?: string;
-  selection_mode?: string;
-  market_type?: string;
-  financing_source?: string;
-  project_reference?: string;
-  status: 'draft' | 'published' | 'closed' | 'awarded';
-  current_phase?: number;
-  created_at: string;
-  updated_at: string;
-}
+import { TenderService } from '@/application/services/TenderService';
+import { SharedDocument, PublicTender } from '@/dtos/transforms/TenderDocumentDTO';
+import { UserService } from '@/application/services/UserService';
+import { AuthService } from '@/application/services/AuthService';
+import { DocumentService } from '@/application/services/DocumentService';
+import { RepositoryFactory } from '@/repositories/RepositoryFactory';
+import { useToast } from '@/hooks/use-toast';
 
 interface SubmitBidParams {
   tender: PublicTender;
@@ -51,8 +23,28 @@ export function useSupplierPortalHex(selectedTenderId?: string) {
   const publicTendersQuery = useQuery({
     queryKey: ['public-tenders'],
     queryFn: async () => {
-      return await TenderService.getPublishedTendersForSubmission() as PublicTender[];
-    }
+      const tenderService = new TenderService(
+        RepositoryFactory.getTenderRepository(),
+        RepositoryFactory.getParsedInvoiceRepository(),
+        RepositoryFactory.getTenderDocumentRepository()
+      );
+      const allTenders = await tenderService.getAllTenders();
+      const now = new Date();
+      
+      // Filter for published tenders that are open for submission
+      return allTenders
+        .filter(tender => tender.status === 'published' && 
+                new Date(tender.deadlineDate || '') > now)
+        .map(tender => ({
+          id: tender.id,
+          title: tender.title,
+          description: tender.description,
+          deadline_date: tender.deadlineDate,
+          status: tender.status
+        })) as PublicTender[];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    refetchInterval: false // Disable auto-refetch to prevent infinite loops
   });
 
   // Fetch shared documents for selected tender
@@ -61,15 +53,25 @@ export function useSupplierPortalHex(selectedTenderId?: string) {
     queryFn: async () => {
       if (!selectedTenderId) return [];
       
-      const { data, error } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('document_type', 'tender')
-        .eq('is_shared_with_suppliers', true)
-        .contains('metadata', { tender_id: selectedTenderId });
-
-      if (error) throw error;
-      return (data || []) as SharedDocument[];
+      // Use repository directly until DocumentService implements getSharedTenderDocuments
+      const documentRepository = RepositoryFactory.getDocumentRepository();
+      // Search all documents and filter by tender_id in metadata (temporary solution)
+      const allDocuments = await documentRepository.findAll();
+      const documents = allDocuments.filter(doc => 
+        doc.metadata?.tender_id === selectedTenderId
+      );
+      
+      return documents.map(doc => ({
+        id: doc.id,
+        title: doc.title,
+        file_url: doc.fileUrl,
+        file_name: doc.fileName,
+        description: doc.description,
+        created_at: doc.createdAt,
+        metadata: {
+          tender_id: selectedTenderId
+        }
+      }));
     },
     enabled: !!selectedTenderId
   });
@@ -80,12 +82,13 @@ export function useSupplierPortalHex(selectedTenderId?: string) {
     queryFn: async () => {
       if (!selectedTenderId) return null;
       
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) return null;
+      const authService = new AuthService(RepositoryFactory.getAuthRepository());
+      const user = await authService.getCurrentUser();
+      if (!user) return null;
 
       return await TenderSubmissionService.getUserSubmission(
         selectedTenderId,
-        user.user.id
+        user.id
       );
     },
     enabled: !!selectedTenderId
@@ -108,23 +111,21 @@ export function useSupplierPortalHex(selectedTenderId?: string) {
         }
       }
       
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) throw new Error('Utilisateur non connecté');
+      const authService = new AuthService(RepositoryFactory.getAuthRepository());
+      const user = await authService.getCurrentUser();
+      if (!user) throw new Error('Utilisateur non connecté');
 
-      // Get user profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', user.user.id)
-        .single();
+      // Get user profile via hexagonal service
+      const userService = new UserService(RepositoryFactory.getUserRepository());
+      const profile = await userService.getUserById(user.id);
 
       // Create submission with documents
       return await TenderSubmissionService.createSubmissionWithDocuments(
         {
           tender_id: tender.id,
-          user_id: user.user.id,
+          user_id: user.id,
           supplier_name: profile?.full_name || 'Fournisseur',
-          supplier_email: user.user.email || '',
+          supplier_email: user.email || '',
           submission_date: new Date().toISOString(),
           status: 'submitted'
         },
@@ -134,7 +135,7 @@ export function useSupplierPortalHex(selectedTenderId?: string) {
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user-submission'] });
+      queryClient.invalidateQueries({ queryKey: ['user-submission', selectedTenderId] });
       toast({
         title: 'Soumission réussie',
         description: 'Votre offre a été soumise avec succès',

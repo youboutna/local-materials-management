@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from '@/contexts/use-auth';
 import { useKeycloakAuth } from "@/contexts/KeycloakAuthContext";
 import MergedNavbar from "@/components/MergedNavbar";
 import Footer from "@/components/Footer";

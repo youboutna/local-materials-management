@@ -18,16 +18,19 @@ import { Separator } from '@/components/ui/separator';
 import { Calendar, Clock, User, FileText, Bell, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
-  InspectionSchedulingService, 
-  InspectionScheduleData, 
+  InspectionPermissionService
+} from '@/application/services/InspectionPermissionService';
+import {
+  PermissionContextDTO,
+  AssignableInspectorDTO,
+  PermissionResultDTO
+} from '@/dtos/entities/InspectionPermissionDTO';
+import { RepositoryFactory } from '@/repositories/RepositoryFactory';
+import { 
+  InspectionScheduleData,
   InspectionType,
   INSPECTION_TYPES 
 } from '@/application/services/InspectionSchedulingService';
-import { 
-  InspectionPermissionService, 
-  PermissionContext, 
-  AssignableInspector 
-} from '@/application/services/InspectionPermissionService';
 
 interface ScheduleInspectionModalProps {
   open: boolean;
@@ -70,8 +73,13 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [availabilityWarning, setAvailabilityWarning] = useState<string | null>(null);
 
-  // Fetch permissions
-  const { data: userContext } = useQuery({
+  interface UserContext {
+  userId: string;
+  role: string;
+}
+
+// Fetch permissions
+  const { data: userContext } = useQuery<UserContext>({
     queryKey: ['user-role'],
     queryFn: () => ({ userId: 'default-user', role: 'inspector' }), // Mock user context for now
   });
@@ -80,7 +88,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
   const permissionContext: PermissionContext | null = useMemo(() => {
     if (!userContext) return null;
     return {
-      userId: (userContext as any).userId || 'default-user',
+      userId: userContext.userId || 'default-user',
       projectId,
       phaseId: phaseId || undefined,
       inspectionType: typeof inspectionType === 'string' ? inspectionType : inspectionType?.id || ''
@@ -103,7 +111,12 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
   // Fetch assignable inspectors
   const { data: inspectors = [] } = useQuery({
     queryKey: ['assignable-inspectors', permissionContext],
-    queryFn: () => permissionContext ? InspectionPermissionService.getAssignableInspectors(permissionContext) : [],
+    queryFn: async () => {
+      if (!permissionContext) return [];
+      const repository = RepositoryFactory.getInspectionPermissionRepository();
+      const service = new InspectionPermissionService(repository);
+      return await service.getAssignableInspectors({ context: permissionContext });
+    },
     enabled: !!permissionContext,
   });
 

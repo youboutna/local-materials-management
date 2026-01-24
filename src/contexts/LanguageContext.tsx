@@ -538,7 +538,14 @@ export const translations = {
                     },
             start_label: "Début",
             end_label: "Fin",
-            dev_mode: "Mode développement"
+            dev_mode: "Mode développement",
+            view_all: "Voir tout",
+            distribution_by_region: "Distribution par région",
+            project_distribution: "Distribution des projets",
+            no_geolocated_projects: "Aucun projet géolocalisé",
+            map_no_data: "Aucune donnée géographique à afficher",
+            legend_title: "Légende",
+            materials_label: "Matériaux"
         },
         management_actions: {
             loading: "Chargement...",

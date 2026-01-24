@@ -2,7 +2,7 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from '@/hooks/use-toast';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useAuth } from './AuthContext';
+import { useAuth } from './use-auth';
 import { DEV_MODE, DEV_USER, DEV_CONFIG } from '@/config/constants';
 
 interface Profile {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { StorageService } from '@/application/services/StorageService';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -167,15 +168,12 @@ export const useProgressInvoiceFormHex = (projectId?: string) => {
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `progress_invoices/${fileName}`;
 
-      const { error } = await supabase.storage
-        .from('documents')
-        .upload(filePath, file);
+      const storageService = new StorageService();
+      const { error } = await storageService.uploadFile('documents', filePath, file);
 
       if (error) throw error;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('documents')
-        .getPublicUrl(filePath);
+      const publicUrl = storageService.getPublicUrl('documents', filePath);
 
       return publicUrl;
     },

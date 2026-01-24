@@ -2,9 +2,15 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
 import { Supplier, SupplierStatus, SupplierCategory } from '@/domain/entities/Supplier';
+import { Database } from '@/integrations/supabase/types';
+
+type SupplierRow = Database['public']['Tables']['suppliers']['Row'];
 
 export class SupabaseSupplierAdapter implements ISupplierRepository {
-  private mapToEntity(data: any): Supplier {
+  private mapToEntity(data: SupplierRow): Supplier {
+    // Convert is_active boolean to status string
+    const status: SupplierStatus = data.is_active ? 'active' : 'inactive';
+    
     return new Supplier(
       data.id,
       data.name,
@@ -13,14 +19,14 @@ export class SupabaseSupplierAdapter implements ISupplierRepository {
       data.address || null,
       data.nif || null,
       (data.category as SupplierCategory) || null,
-      (data.status as SupplierStatus) || 'active',
+      status,
       data.rating ? { quality: 0, delivery: 0, price: 0, communication: 0, overall: data.rating } : null,
-      data.contacts || [],
-      data.is_verified ?? false,
-      data.verified_at || null,
-      data.workspace_id || null,
-      data.created_at,
-      data.updated_at
+      [], // Default contacts to empty array since column doesn't exist in DB
+      false, // Default is_verified to false since column doesn't exist in DB
+      null,  // Default verified_at to null since column doesn't exist in DB
+      data.user_id || null,
+      data.created_at || new Date().toISOString(),
+      data.updated_at || new Date().toISOString()
     );
   }
 
@@ -38,18 +44,24 @@ export class SupabaseSupplierAdapter implements ISupplierRepository {
 
   async save(supplier: Supplier): Promise<void> {
     const { error } = await supabase.from('suppliers').insert([{
-      id: supplier.id, name: supplier.name, email: supplier.email, phone: supplier.phone,
-      address: supplier.address, nif: supplier.nif, category: supplier.category,
-      status: supplier.status, workspace_id: supplier.workspaceId
+      id: supplier.id, 
+      name: supplier.name, 
+      email: supplier.email, 
+      phone: supplier.phone,
+      address: supplier.address, 
+      nif: supplier.nif, 
+      category: supplier.category,
+      is_active: supplier.status === 'active', // Convert status to boolean
+      user_id: supplier.workspaceId // Map workspaceId to user_id column
     }]);
     if (error) throw new Error(`Failed to save supplier: ${error.message}`);
   }
 
   async update(id: string, data: Partial<Supplier>): Promise<void> {
-    const updateData: Record<string, any> = {};
+    const updateData: Record<string, unknown> = {};
     if (data.name !== undefined) updateData.name = data.name;
     if (data.email !== undefined) updateData.email = data.email;
-    if (data.status !== undefined) updateData.status = data.status;
+    if (data.status !== undefined) updateData.is_active = data.status === 'active'; // Convert status to boolean
     const { error } = await supabase.from('suppliers').update(updateData).eq('id', id);
     if (error) throw new Error(`Failed to update supplier: ${error.message}`);
   }
@@ -60,7 +72,8 @@ export class SupabaseSupplierAdapter implements ISupplierRepository {
   }
 
   async findByStatus(status: SupplierStatus): Promise<Supplier[]> {
-    const { data, error } = await supabase.from('suppliers').select('*').eq('status', status);
+    const isActive = status === 'active';
+    const { data, error } = await supabase.from('suppliers').select('*').eq('is_active', isActive);
     if (error || !data) return [];
     return data.map(d => this.mapToEntity(d));
   }
@@ -72,7 +85,8 @@ export class SupabaseSupplierAdapter implements ISupplierRepository {
   }
 
   async findByWorkspace(workspaceId: string): Promise<Supplier[]> {
-    const { data, error } = await supabase.from('suppliers').select('*').eq('workspace_id', workspaceId);
+    // Since workspace_id doesn't exist, use user_id column instead
+    const { data, error } = await supabase.from('suppliers').select('*').eq('user_id', workspaceId);
     if (error || !data) return [];
     return data.map(d => this.mapToEntity(d));
   }
@@ -97,12 +111,13 @@ export class SupabaseSupplierAdapter implements ISupplierRepository {
 
   async findActive(): Promise<Supplier[]> { return this.findByStatus('active'); }
   async findVerified(): Promise<Supplier[]> {
-    const { data, error } = await supabase.from('suppliers').select('*').eq('is_verified', true);
-    if (error || !data) return [];
-    return data.map(d => this.mapToEntity(d));
+    // Since is_verified column doesn't exist, return empty array
+    // or implement alternative verification logic based on other criteria
+    return [];
   }
   async findEligibleForTenders(): Promise<Supplier[]> {
-    const { data, error } = await supabase.from('suppliers').select('*').eq('status', 'active').eq('is_verified', true);
+    // Since is_verified column doesn't exist, only check is_active
+    const { data, error } = await supabase.from('suppliers').select('*').eq('is_active', true);
     if (error || !data) return [];
     return data.map(d => this.mapToEntity(d));
   }

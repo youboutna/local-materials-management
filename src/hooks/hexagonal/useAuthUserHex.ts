@@ -2,7 +2,7 @@
  * Hexagonal Hook: useAuthUserHex - Uses AuthContext Provider
  * Gets user data from AuthContext instead of direct Supabase calls
  */
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/use-auth';
 
 export function useAuthUserHex() {
   // Use the existing useAuth hook from AuthContext

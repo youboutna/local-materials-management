@@ -16,7 +16,7 @@ import {
   Eye
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/hexagonal';
 import { useToast } from '@/hooks/use-toast';
 
 interface TenderEvaluationPanelProps {
@@ -53,14 +53,15 @@ interface Submission {
   }[];
 }
 
-const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
-  tenderId,
-  onEvaluationUpdate,
-  verifiedSubmissions = []
+const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({ 
+  tenderId, 
+  onEvaluationUpdate, 
+  verifiedSubmissions 
 }) => {
+  const { toast } = useToast();
+  const { getUser } = useAuth();
   const [activeTab, setActiveTab] = useState('administrative');
   const [selectedSubmission, setSelectedSubmission] = useState<string | null>(null);
-  const { toast } = useToast();
 
   // Fetch tender submissions grouped by bidder
   const { data: submissions, isLoading, refetch } = useQuery({
@@ -93,7 +94,7 @@ const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
       const updateData: any = { [field]: value };
       
       if (field === 'status' && value !== 'submitted') {
-        updateData.reviewer_id = (await supabase.auth.getUser()).data.user?.id;
+        updateData.reviewer_id = (await getUser()).data.user?.id;
         updateData.reviewed_at = new Date().toISOString();
       }
 

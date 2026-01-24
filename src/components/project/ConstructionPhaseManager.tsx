@@ -29,7 +29,7 @@ import {
   ClipboardCheck
 } from 'lucide-react';
 import { ConstructionPhase, ConstructionStage } from '@/types/project';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/use-auth';
 import { toast } from '@/hooks/use-toast';
 import { DEV_MODE } from '@/config/constants';
 import { ReferentialType } from '@/config/referentials';

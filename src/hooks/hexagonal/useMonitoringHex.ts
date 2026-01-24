@@ -3,7 +3,7 @@
  * Bank Guarantees, Payment Blocks, Insurance, Notifications
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { BankGuaranteeService } from '@/application/services/BankGuaranteeService';
 import { PaymentBlockingService } from '@/application/services/PaymentBlockingService';
@@ -30,7 +30,7 @@ export interface PaymentBlock {
   projectId: string;
   contractorId: string;
   amount: number;
-  blockingReasons: any;
+  blockingReasons: Record<string, unknown> | string;
   notes: string | null;
   blockedAt: string;
   blockedBy: string | null;
@@ -62,7 +62,7 @@ export interface Notification {
   type: string;
   read: boolean;
   relatedId: string | null;
-  metadata: Record<string, any> | null;
+  metadata: Record<string, unknown> | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -72,7 +72,11 @@ export function useBankGuaranteesHex(projectId?: string) {
   const [guarantees, setGuarantees] = useState<BankGuarantee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const bankGuaranteeService = new BankGuaranteeService(RepositoryFactory.getBankGuaranteeRepository());
+  
+  const bankGuaranteeService = useMemo(() => 
+    new BankGuaranteeService(), 
+    []
+  );
 
   const fetchGuarantees = useCallback(async () => {
     setLoading(true);
@@ -135,33 +139,33 @@ export function usePaymentBlocksHex(projectId?: string) {
   const [blocks, setBlocks] = useState<PaymentBlock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const paymentBlockingService = new PaymentBlockingService(RepositoryFactory.getPaymentRepository());
 
   const fetchBlocks = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const data = await paymentBlockingService.getPaymentBlocks(projectId);
+      // Use static method - PaymentBlockingService has static methods only
+      const data = await PaymentBlockingService.getPaymentBlocks(projectId || '');
       
       setBlocks(data.map(b => ({
         id: b.id,
-        projectId: b.project_id,
-        contractorId: b.contractor_id,
-        amount: b.amount,
-        blockingReasons: b.blocking_reasons,
-        notes: b.notes,
-        blockedAt: b.blocked_at,
-        blockedBy: b.blocked_by,
-        resolvedAt: b.resolved_at,
-        resolvedBy: b.resolved_by,
+        projectId: b.payment_request_id, // Map from payment_request_id
+        contractorId: '', // Not available in PaymentBlock interface
+        amount: b.blocked_amount, // Map from blocked_amount
+        blockingReasons: b.block_reason, // Map from block_reason
+        notes: b.resolution_notes || null, // Map from resolution_notes
+        blockedAt: b.created_at, // Map from created_at
+        blockedBy: null, // Not available in PaymentBlock interface
+        resolvedAt: b.resolved_at || null, // Map from resolved_at
+        resolvedBy: b.resolved_by || null, // Map from resolved_by
       })));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load payment blocks');
     } finally {
       setLoading(false);
     }
-  }, [projectId, paymentBlockingService]);
+  }, [projectId]);
 
   useEffect(() => {
     fetchBlocks();
@@ -169,14 +173,15 @@ export function usePaymentBlocksHex(projectId?: string) {
 
   const resolveBlock = useCallback(async (blockId: string, resolvedBy: string): Promise<boolean> => {
     try {
-      await paymentBlockingService.resolvePaymentBlock(blockId, resolvedBy);
+      // Use static method
+      await PaymentBlockingService.resolvePaymentBlock(blockId, '', resolvedBy);
       await fetchBlocks();
       return true;
     } catch (err) {
       console.error('Failed to resolve block:', err);
       return false;
     }
-  }, [fetchBlocks, paymentBlockingService]);
+  }, [fetchBlocks]);
 
   return {
     blocks,
@@ -199,13 +204,17 @@ export function useInsurancesHex(projectId?: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const insuranceService = useMemo(() => 
+    new InsuranceService(), 
+    []
+  );
+
   const fetchInsurances = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
       // Use InsuranceService - placeholder implementation
-      const insuranceService = new InsuranceService();
       const insuranceData = await insuranceService.getInsuranceCertificates(projectId);
 
       setInsurances(insuranceData.map(i => ({
@@ -228,7 +237,7 @@ export function useInsurancesHex(projectId?: string) {
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  }, [projectId, insuranceService]);
 
   useEffect(() => {
     fetchInsurances();
@@ -265,13 +274,17 @@ export function useNotificationsHex(recipientId?: string, types?: string[]) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const notificationService = useMemo(() => 
+    new NotificationService(RepositoryFactory.getNotificationRepository()), 
+    []
+  );
+
   const fetchNotifications = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
       // Use NotificationService through hexagonal architecture
-      const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
       const notificationsData = await notificationService.getUserNotifications(
         recipientId || '', 
         100
@@ -300,7 +313,7 @@ export function useNotificationsHex(recipientId?: string, types?: string[]) {
     } finally {
       setLoading(false);
     }
-  }, [recipientId, types]);
+  }, [recipientId, types, notificationService]);
 
   useEffect(() => {
     fetchNotifications();
@@ -309,7 +322,6 @@ export function useNotificationsHex(recipientId?: string, types?: string[]) {
   const markAsRead = useCallback(async (notificationId: string): Promise<boolean> => {
     try {
       // Use NotificationService through hexagonal architecture
-      const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
       await notificationService.markAsRead(notificationId);
       
       setNotifications(prev => 
@@ -320,14 +332,13 @@ export function useNotificationsHex(recipientId?: string, types?: string[]) {
       console.error('Failed to mark as read:', err);
       return false;
     }
-  }, []);
+  }, [notificationService]);
 
   const markAllAsRead = useCallback(async (): Promise<boolean> => {
     if (!recipientId) return false;
     
     try {
       // Use NotificationService through hexagonal architecture
-      const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
       // Mark all notifications for recipient as read
       const unreadNotifications = notifications.filter(n => !n.read && n.recipientId === recipientId);
       await Promise.all(unreadNotifications.map(n => notificationService.markAsRead(n.id)));
@@ -338,7 +349,7 @@ export function useNotificationsHex(recipientId?: string, types?: string[]) {
       console.error('Failed to mark all as read:', err);
       return false;
     }
-  }, [recipientId, notifications]);
+  }, [recipientId, notifications, notificationService]);
 
   return {
     notifications,

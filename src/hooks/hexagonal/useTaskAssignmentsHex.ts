@@ -212,7 +212,8 @@ export function useTaskAssignmentsHex(filters?: {
 
       if (fetchError) throw fetchError;
 
-      const { data: userData } = await supabase.auth.getUser();
+      const authService = new AuthService();
+      const { user: userData } = await authService.getCurrentUser();
       const timestamp = new Date().toLocaleString("fr-FR");
       const noteWithMeta = `[${timestamp}] ${userData.user?.email || "Utilisateur"}: ${note}`;
 

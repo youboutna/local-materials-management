@@ -31,23 +31,46 @@ export function useImportProjectsHex() {
     mutationFn: async (projects: ProjectImportData[]) => {
       const results: any[] = [];
 
-      for (const project of projects) {
-        // Check if project already exists
-        const { data: existing } = await supabase
-          .from('projects')
-          .select('id')
-          .eq('title', project.title as any)
-          .maybeSingle();
-
-        if (!existing) {
-          const { data, error } = await supabase
+      for (const projectData of projects) {
+        try {
+          // Check if project already exists
+          const { data: existing } = await supabase
             .from('projects')
-            .insert(project as any)
-            .select()
-            .single();
+            .select('id')
+            .eq('title', projectData.title)
+            .maybeSingle();
 
-          if (error) throw error;
-          if (data) results.push(data);
+          if (!existing) {
+            const { data, error } = await supabase
+              .from('projects')
+              .insert({
+                title: projectData.title,
+                description: projectData.description,
+                location: projectData.location,
+                status: projectData.status,
+                progress: projectData.progress,
+                budget: projectData.budget,
+                start_date: projectData.start_date,
+                end_date: projectData.end_date,
+                team_size: projectData.team_size,
+                financing_source: projectData.financing_source,
+                market_type: projectData.market_type,
+                selection_mode: projectData.selection_mode,
+                launch_date: projectData.launch_date,
+                attribution_date: projectData.attribution_date,
+                completion_date: projectData.completion_date,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              })
+              .select()
+              .single();
+
+            if (error) throw error;
+            if (data) results.push(data);
+          }
+        } catch (error) {
+          console.error('Error importing project:', projectData.title, error);
+          // Continue with other projects even if one fails
         }
       }
 

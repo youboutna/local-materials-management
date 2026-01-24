@@ -37,6 +37,8 @@ export const RepositoryFactory = {
   getStorageRepository: InfraRepositoryFactory.getStorageRepository,
   getParsedInvoiceRepository: InfraRepositoryFactory.getParsedInvoiceRepository,
   getNotificationRepository: InfraRepositoryFactory.getNotificationRepository,
+  getInspectionPermissionRepository: InfraRepositoryFactory.getInspectionPermissionRepository,
+  getTenderDocumentRepository: InfraRepositoryFactory.getTenderDocumentRepository,
   
   // Ajout des méthodes manquantes avec des implémentations temporaires
   getPerformanceMonitoringRepository: () => {

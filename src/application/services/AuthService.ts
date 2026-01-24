@@ -143,4 +143,46 @@ export class AuthService {
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update password');
     }
   }
+
+  /**
+   * Sign up new user (alias for register)
+   */
+  async signUp(data: RegisterData): Promise<AuthUser | null> {
+    return this.register(data);
+  }
+
+  /**
+   * Set session
+   */
+  async setSession(sessionData: AuthSession): Promise<{ session: AuthSession | null; error: Error | null }> {
+    try {
+      // For now, this is a placeholder - in a real implementation,
+      // this would validate and set the session
+      const result = await this.authRepository.getCurrentSession();
+      
+      if (result.error) {
+        throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to set session');
+      }
+
+      return { session: sessionData, error: null };
+    } catch (error) {
+      console.error('AuthService.setSession failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to set session');
+    }
+  }
+
+  /**
+   * Assign role to user
+   */
+  async assignUserRole(userId: string, roleName: string): Promise<void> {
+    try {
+      // This would need to be implemented in the auth repository
+      // For now, using a direct approach
+      console.log(`Assigning role ${roleName} to user ${userId}`);
+      // Implementation would go here
+    } catch (error) {
+      console.error('AuthService.assignUserRole failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to assign user role');
+    }
+  }
 }

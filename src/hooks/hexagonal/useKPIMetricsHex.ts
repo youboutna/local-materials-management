@@ -56,7 +56,7 @@ const fetchKPIMetrics = async (): Promise<KPIMetrics> => {
     // Fetch payments data
     const { data: payments, error: paymentsError } = await supabase
       .from('payments')
-      .select('id, amount, status, project_id');
+      .select('id, amount, project_id, payment_date, payment_method');
 
     if (paymentsError) throw paymentsError;
 
@@ -88,15 +88,14 @@ const fetchKPIMetrics = async (): Promise<KPIMetrics> => {
       ? projectsList.reduce((sum, p) => sum + (p.progress || 0), 0) / projectsList.length 
       : 0;
     const totalSpent = paymentsList
-      .filter(p => p.status === 'approved' || p.status === 'completed')
       .reduce((sum, p) => sum + (p.amount || 0), 0);
 
     // Project status counts
-    const projectsOnTrack = projectsList.filter(p => p.status === 'in_progress' && (p.progress || 0) >= 50).length;
-    const projectsDelayed = projectsList.filter(p => p.status === 'delayed' || p.status === 'on_hold').length;
+    const projectsOnTrack = projectsList.filter(p => p.status === 'en cours' && (p.progress || 0) >= 50).length;
+    const projectsDelayed = projectsList.filter(p => p.status === 'en retard' || p.status === 'suspendu').length;
     const projectsAtRisk = projectsList.filter(p => {
       const endDate = p.end_date ? new Date(p.end_date) : null;
-      return endDate && endDate < new Date() && p.status !== 'completed';
+      return endDate && endDate < new Date() && p.status !== 'terminé';
     }).length;
 
     // Milestone counts

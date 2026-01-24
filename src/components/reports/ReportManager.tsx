@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ProjectReportGenerator } from './ProjectReportGenerator';
-import { TenderReportGenerator } from './TenderReportGenerator';
-import { InspectionReportGenerator } from './InspectionReportGenerator';
-import { SupplierPaymentReportGenerator } from './SupplierPaymentReportGenerator';
+import TenderReportGenerator from './TenderReportGenerator';
+import InspectionReportGenerator from './InspectionReportGenerator';
+import SupplierPaymentReportGenerator from './SupplierPaymentReportGenerator';
 import { FileText, FileBarChart, CheckCircle, DollarSign } from 'lucide-react';
 import { ProjectData } from '@/types/project';
 

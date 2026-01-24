@@ -3,6 +3,7 @@ import { Plus, Shield, AlertTriangle, Eye, Edit, Trash2, Bell, CheckCircle, File
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,10 +26,11 @@ import {
   InsuranceCertificate,
   InsuranceAlert
 } from '@/services/insuranceCertificateService';
+import { InsuranceService } from '@/application/services/InsuranceService';
 import { createInsuranceAction } from '@/services/insuranceActionService';
 import { checkAndSendInsuranceAlerts } from '@/utils/insuranceAlertUtils';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/hexagonal';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import UserSelector from '@/components/selectors/UserSelector';
@@ -85,6 +87,7 @@ interface LocalInsuranceCertificate {
 const UnifiedInsuranceManager = () => {
   const { toast } = useToast();
   const { uploadFile, downloading, deleteFile } = useDocumentStorage();
+  const { getUser } = useAuth();
   const [alerts, setAlerts] = useState<InsuranceAlert[]>([]);
   const [certificates, setCertificates] = useState<LocalInsuranceCertificate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -191,16 +194,8 @@ const UnifiedInsuranceManager = () => {
     try {
       console.log('Loading insurance certificates...');
       
-      // Simple query first without JOIN to avoid complex relation issues
-      const { data, error } = await supabase
-        .from('insurance_certificates')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
+      // Use InsuranceService instead of direct Supabase call
+      const data = await InsuranceService.getCertificates();
 
       console.log('Raw certificates data:', data);
 
@@ -208,19 +203,19 @@ const UnifiedInsuranceManager = () => {
         id: cert.id,
         projectId: cert.project_id,
         contractorId: cert.contractor_id,
-        contractorName: cert.contractor_name,
-        insuranceCompany: cert.insurance_company,
+        contractorName: cert.provider, // Map provider to contractorName
+        insuranceCompany: cert.provider,
         policyNumber: cert.policy_number,
         coverageAmount: cert.coverage_amount,
-        coverageType: cert.coverage_type as 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques',
-        validFrom: cert.valid_from,
+        coverageType: cert.insurance_type as 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques',
+        validFrom: cert.start_date,
         validUntil: cert.valid_until,
         status: cert.status as 'active' | 'expired' | 'expiring_soon' | 'missing',
-        lastVerified: cert.last_verified || undefined,
-        verifiedBy: cert.verified_by || undefined,
-        notes: cert.notes || undefined,
-        certificateUrl: cert.certificate_url || undefined,
-        documents: [] // We'll load documents separately if needed
+        lastVerified: undefined, // Field not available in InsuranceCertificate
+        verifiedBy: undefined, // Field not available in InsuranceCertificate
+        notes: undefined, // Field not available in InsuranceCertificate
+        certificateUrl: undefined, // Field not available in InsuranceCertificate
+        documents: cert.documents || [] // Use documents from InsuranceCertificate
       }));
 
       console.log('Transformed certificates:', transformedCertificates);
@@ -299,7 +294,7 @@ const UnifiedInsuranceManager = () => {
       console.log('Creating/updating insurance certificate:', values);
       
       // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await getUser();
       const currentUserId = user?.id;
       
       if (isEditing && selectedCertificate) {
@@ -504,7 +499,7 @@ const UnifiedInsuranceManager = () => {
       }
 
       // Get current user or use a fallback
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await getUser();
       const currentUserId = user?.id || 'system-user';
 
       let title = '';

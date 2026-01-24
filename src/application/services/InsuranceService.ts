@@ -212,7 +212,14 @@ export class InsuranceService {
   async getInsuranceCertificates(projectId?: string): Promise<InsuranceCertificate[]> {
     try {
       console.log('Getting insurance certificates for project:', projectId);
-      return [];
+      
+      if (projectId) {
+        // Get certificates for specific project
+        return await this.repository.getByProjectId(projectId);
+      } else {
+        // Get all certificates
+        return await this.repository.getAll();
+      }
     } catch (error) {
       console.error('Error getting insurance certificates:', error);
       return [];

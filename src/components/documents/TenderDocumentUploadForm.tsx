@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Textarea } from "@/components/ui/textarea";
-import { supabase } from '@/integrations/supabase/client';
+import { useStorageHex } from '@/hooks/hexagonal';
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export type TenderCategory = "administrative" | "technical" | "financial";
@@ -71,6 +71,7 @@ export default function TenderDocumentUploadForm({ projectId }: { projectId: str
   const [loading, setLoading] = useState(false);
   const { t } = useLanguage();
   const { toast } = useToast();
+  const { uploadFile } = useStorageHex('tender-documents');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,15 +79,16 @@ export default function TenderDocumentUploadForm({ projectId }: { projectId: str
 
     setLoading(true);
 
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("documents")
-      .upload(`tender/${projectId}/${file.name}`, file);
+    const folder = `tender/${projectId}`;
+    
+    try {
+      const uploadData = await uploadFile({ file, folder });
 
-    if (uploadError || !uploadData?.path) {
-      toast({ title: t("tender.alert.upload_error"), variant: "destructive" });
-      setLoading(false);
-      return;
-    }
+      if (!uploadData?.path) {
+        toast({ title: t("tender.alert.upload_error"), variant: "destructive" });
+        setLoading(false);
+        return;
+      }
 
     // Fix: Use correct document_type that exists in the database schema
     const documentInsertObj = {
@@ -134,6 +136,11 @@ export default function TenderDocumentUploadForm({ projectId }: { projectId: str
       setSubcategory("");
     }
     setLoading(false);
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({ title: t("tender.alert.upload_error"), variant: "destructive" });
+      setLoading(false);
+    }
   };
 
   return (

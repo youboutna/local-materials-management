@@ -12,10 +12,11 @@ import { useToast } from '@/hooks/use-toast';
 import { pdf } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { supabase } from '@/integrations/supabase/client';
+import { useNotifications } from '@/hooks/useNotifications';
 import { SupplierPaymentReportingService, SupplierPaymentReportData } from '@/services/supplierPaymentReportingService';
 import { ReportFormatting } from '@/utils/reportFormatting';
 import { SupplierPaymentPDFDocument } from './pdf/SupplierPaymentPDFDocument';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SupplierPaymentReportGeneratorProps {
   supplier: any; // Supplier type from your system
@@ -36,12 +37,12 @@ interface PaymentReportConfig {
   includeBankInfo: boolean;
 }
 
-export function SupplierPaymentReportGenerator({ 
+const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorProps> = ({ 
   supplier, 
   payments, 
   dateRange, 
   onClose 
-}: SupplierPaymentReportGeneratorProps) {
+}) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [reportConfig, setReportConfig] = useState<PaymentReportConfig>({
@@ -253,6 +254,7 @@ export function SupplierPaymentReportGenerator({
       const { blob, fileName } = await generatePDF();
 
       // Call edge function to send email (you would need to create this)
+      
       const { error } = await supabase.functions.invoke('send-payment-report', {
         body: {
           to: reportConfig.recipientEmail,
@@ -430,4 +432,6 @@ export function SupplierPaymentReportGenerator({
       </CardContent>
     </Card>
   );
-}
+};
+
+export default SupplierPaymentReportGenerator;

@@ -9,12 +9,20 @@
 // ==================== CORE HOOKS ====================
 // Authentication
 export { 
-  useAuthHex as useAuth,
-  useAuthHex, 
+  useAuthHex,
   useLoginHex, 
   useRegisterHex 
 } from './useAuthHex';
 export { useAuthUserHex } from './useAuthUserHex';
+export { useAuth } from './useAuthSimple';
+
+// Configuration
+export { 
+  useConfiguration
+} from './useConfigurationHex';
+export { 
+  useOAuthConfig
+} from './useOAuthConfigHex';
 
 // Projects
 export { 

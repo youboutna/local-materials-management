@@ -36,7 +36,7 @@ import { TaskAssignmentDTO } from '@/dtos/transforms/shared';
 import type { Database } from "@/integrations/supabase/types";
 import { useLanguage } from "@/contexts/LanguageContext";
 import UserSelector from '@/components/selectors/UserSelector';
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from '@/contexts/use-auth';
 import { usePagination } from '@/hooks/usePagination';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { 
@@ -87,16 +87,27 @@ const TaskAssignmentsComponent = () => {
   const assigneeDetails = assigneeResult?.details;
 
   useEffect(() => {
-    // Only update form when we have assignee details
-    if (assigneeDetails) {
-      setFormData(prev => ({
-        ...prev,
-        assignee_type: assigneeDetails.type,
-        assignee_name: assigneeDetails.name,
-        assignee_email: assigneeDetails.email,
-      }));
+    // Only update form when we have assignee details and they're different from current values
+    if (assigneeDetails && formData.assigned_to) {
+      setFormData(prev => {
+        // Check if values actually need to be updated to avoid infinite loop
+        const needsUpdate = 
+          prev.assignee_type !== assigneeDetails.type ||
+          prev.assignee_name !== assigneeDetails.name ||
+          prev.assignee_email !== assigneeDetails.email;
+        
+        if (needsUpdate) {
+          return {
+            ...prev,
+            assignee_type: assigneeDetails.type,
+            assignee_name: assigneeDetails.name,
+            assignee_email: assigneeDetails.email,
+          };
+        }
+        return prev;
+      });
     }
-  }, [assigneeDetails]);
+  }, [formData.assigned_to, assigneeDetails?.type, assigneeDetails?.name, assigneeDetails?.email]);
 
   // Get unique assignees from tasks for filter
   const uniqueAssignees = (tasks as any[])?.reduce((acc: Record<string, string>, task: any) => {
