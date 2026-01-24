@@ -1,8 +1,10 @@
+/**
+ * Enhanced Task Assignment Hook - Hexagonal Architecture
+ * Delegates to useTaskAssignmentsHex for all operations
+ * Legacy interface maintained for backward compatibility
+ */
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@/hooks/use-toast';
+import { useTaskAssignmentsHex } from '@/hooks/hexagonal/useTaskAssignmentsHex';
 
 interface TaskAssignment {
   id: string;
@@ -22,125 +24,96 @@ interface TaskAssignment {
 }
 
 export const useEnhancedTaskAssignment = () => {
-  const [assignments, setAssignments] = useState<TaskAssignment[]>([]);
-  const queryClient = useQueryClient();
+  const {
+    tasks,
+    isLoading,
+    error,
+    createTask,
+    updateTask,
+    isCreating,
+    isUpdating
+  } = useTaskAssignmentsHex();
 
-  // Fetch task assignments
-  const { data: taskAssignments, isLoading, error } = useQuery({
-    queryKey: ['task-assignments'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('task_assignments')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
-    }
-  });
+  // Transform hexagonal tasks to legacy format
+  const transformedAssignments: TaskAssignment[] = (tasks || []).map((task: any) => ({
+    id: task.id,
+    title: task.title || '',
+    description: task.description || '',
+    status: task.status || 'pending',
+    priority: task.priority || 'medium',
+    due_date: task.dueDate || task.due_date || '',
+    assigned_to: task.assignedTo || task.assigned_to || '',
+    assigned_by: task.assignedBy || task.assigned_by || '',
+    project_id: task.projectId || task.project_id || '',
+    completion_token: task.completionToken || task.completion_token || '',
+    completion_url: task.completionUrl || task.completion_url || '',
+    notes: task.notes || '',
+    created_at: task.createdAt || task.created_at || '',
+    updated_at: task.updatedAt || task.updated_at || ''
+  }));
 
-  // Create task assignment
-  const createAssignment = useMutation({
-    mutationFn: async (newAssignment: Partial<TaskAssignment>) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-      
-      const { data, error } = await supabase
-        .from('task_assignments')
-        .insert({
-          title: newAssignment.title || '',
-          description: newAssignment.description || '',
-          assigned_to: newAssignment.assigned_to || null,
-          assigned_by: user.id,
-          completion_token: crypto.randomUUID(),
-          completion_url: `${window.location.origin}/task-completion/${crypto.randomUUID()}`,
-          priority: newAssignment.priority || 'medium',
-          status: newAssignment.status || 'pending',
-          due_date: newAssignment.due_date,
-          project_id: newAssignment.project_id,
-          notes: newAssignment.notes || ''
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['task-assignments'] });
-      toast({
-        title: "Tâche assignée",
-        description: "La tâche a été assignée avec succès.",
+  // Create assignment wrapper for legacy interface
+  const createAssignment = {
+    mutate: async (newAssignment: Partial<TaskAssignment>) => {
+      return createTask({
+        title: newAssignment.title || '',
+        description: newAssignment.description,
+        assignedTo: newAssignment.assigned_to || '',
+        priority: (newAssignment.priority as any) || 'medium',
+        status: (newAssignment.status as any) || 'pending',
+        dueDate: newAssignment.due_date,
+        projectId: newAssignment.project_id,
+        notes: newAssignment.notes,
       });
     },
-    onError: (error) => {
-      console.error('Error creating assignment:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de créer l'assignation.",
-        variant: "destructive",
-      });
-    }
-  });
-
-  // Update task assignment
-  const updateAssignment = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<TaskAssignment> }) => {
-      const { data, error } = await supabase
-        .from('task_assignments')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['task-assignments'] });
-      toast({
-        title: "Tâche mise à jour",
-        description: "La tâche a été mise à jour avec succès.",
+    mutateAsync: async (newAssignment: Partial<TaskAssignment>) => {
+      return createTask({
+        title: newAssignment.title || '',
+        description: newAssignment.description,
+        assignedTo: newAssignment.assigned_to || '',
+        priority: (newAssignment.priority as any) || 'medium',
+        status: (newAssignment.status as any) || 'pending',
+        dueDate: newAssignment.due_date,
+        projectId: newAssignment.project_id,
+        notes: newAssignment.notes,
       });
     },
-    onError: (error) => {
-      console.error('Error updating assignment:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour la tâche.",
-        variant: "destructive",
-      });
-    }
-  });
+    isPending: isCreating
+  };
 
-  useEffect(() => {
-    if (taskAssignments) {
-      // Transform the data to match TaskAssignment interface
-      const transformedAssignments: TaskAssignment[] = taskAssignments.map(assignment => ({
-        id: assignment.id,
-        title: assignment.title || '',
-        description: assignment.description || '',
-        status: assignment.status || 'pending',
-        priority: assignment.priority || 'medium',
-        due_date: assignment.due_date || '',
-        assigned_to: assignment.assigned_to || '',
-        assigned_by: assignment.assigned_by || '',
-        project_id: assignment.project_id || '',
-        completion_token: assignment.completion_token || '',
-        completion_url: assignment.completion_url || '',
-        notes: assignment.notes || '',
-        created_at: assignment.created_at || '',
-        updated_at: assignment.updated_at || ''
-      }));
-      setAssignments(transformedAssignments);
-    }
-  }, [taskAssignments]);
+  // Update assignment wrapper for legacy interface
+  const updateAssignment = {
+    mutate: async ({ id, updates }: { id: string; updates: Partial<TaskAssignment> }) => {
+      return updateTask({
+        id,
+        title: updates.title,
+        description: updates.description,
+        assignedTo: updates.assigned_to,
+        priority: updates.priority as any,
+        status: updates.status as any,
+        dueDate: updates.due_date,
+        projectId: updates.project_id,
+        notes: updates.notes,
+      });
+    },
+    mutateAsync: async ({ id, updates }: { id: string; updates: Partial<TaskAssignment> }) => {
+      return updateTask({
+        id,
+        title: updates.title,
+        description: updates.description,
+        assignedTo: updates.assigned_to,
+        priority: updates.priority as any,
+        status: updates.status as any,
+        dueDate: updates.due_date,
+        projectId: updates.project_id,
+        notes: updates.notes,
+      });
+    },
+    isPending: isUpdating
+  };
 
   return {
-    assignments: taskAssignments || [],
+    assignments: transformedAssignments,
     isLoading,
     error,
     createAssignment,

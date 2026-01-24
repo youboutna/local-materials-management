@@ -1,9 +1,16 @@
+/**
+ * User Roles Hook - Hexagonal Architecture
+ * Uses UserService and AuthService for role management
+ * Legacy interface maintained for backward compatibility
+ */
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { AuthService } from '@/application/services/AuthService';
+import { UserService } from '@/application/services/UserService';
 
 export interface UserRole {
   id: string;
@@ -22,8 +29,20 @@ export interface Role {
   updated_at: string;
 }
 
+// Initialize services
+const getServices = () => {
+  const authRepository = RepositoryFactory.getAuthRepository();
+  const userRepository = RepositoryFactory.getUserRepository();
+  return {
+    authService: new AuthService(authRepository),
+    userService: new UserService(userRepository)
+  };
+};
+
 export const useUserRoles = (userId?: string) => {
-  // Fetch user roles
+  const { userService } = getServices();
+
+  // Fetch user roles via UserService
   const { data: userRoles, isLoading: rolesLoading, error: rolesError } = useQuery({
     queryKey: ['userRoles', userId],
     queryFn: async () => {
@@ -31,23 +50,31 @@ export const useUserRoles = (userId?: string) => {
       
       console.log('Fetching user roles for:', userId);
       
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('user_id', userId);
-      
-      if (error) {
+      try {
+        // Get user with roles from UserService
+        const user = await userService.getUserById(userId);
+        if (!user) return [];
+        
+        // Map to UserRole format for backward compatibility
+        const roles: UserRole[] = (user.roles || []).map((roleName: string, index: number) => ({
+          id: `${userId}-${roleName}-${index}`,
+          user_id: userId,
+          role_name: roleName,
+          assigned_at: new Date().toISOString(),
+        }));
+        
+        return roles;
+      } catch (error) {
         console.error('Error fetching user roles:', error);
-        throw error;
+        return [];
       }
-      return data as UserRole[] || [];
     },
     enabled: !!userId,
     retry: 3,
     retryDelay: 1000
   });
 
-  // Fetch all available roles (simplified - using role names directly)
+  // Available roles (static list)
   const availableRoles = [
     { id: 'admin', name: 'admin', description: 'Administrator' },
     { id: 'director', name: 'director', description: 'Director' },
@@ -68,11 +95,16 @@ export const useUserRoles = (userId?: string) => {
 export const useCurrentUserRoles = () => {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const { profile, isAuthenticated } = useKeycloakAuth();
+  const { authService, userService } = getServices();
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUser(user);
+      try {
+        const user = await authService.getCurrentUser();
+        setCurrentUser(user);
+      } catch (error) {
+        console.error('Error getting current user:', error);
+      }
     };
     getUser();
   }, []);
@@ -87,27 +119,23 @@ export const useCurrentUserRoles = () => {
       
       console.log('Fetching current user roles for:', currentUser.id);
       
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role_name')
-        .eq('user_id', currentUser.id);
-      
-      if (error) {
+      try {
+        // Get user with roles from UserService
+        const user = await userService.getUserById(currentUser.id);
+        if (!user) return fallbackRoles;
+        
+        const dbRoles = (user.roles || []).map((r: string) => String(r).toLowerCase());
+        const merged = Array.from(new Set([...dbRoles, ...fallbackRoles]));
+        return merged;
+      } catch (error) {
         console.error('Error fetching current user roles:', error);
-        // Return at least the fallback role (from profile) if available
         return fallbackRoles;
       }
-
-      const dbRoles = (data?.map((r: any) => String(r.role_name).toLowerCase()) || []);
-      const merged = Array.from(new Set([...dbRoles, ...fallbackRoles]));
-      return merged;
     },
     enabled: !!currentUser?.id || !!profile?.role || !!isAuthenticated,
     retry: 2,
     retryDelay: 500,
-    // Add stale time to prevent excessive refetching
     staleTime: 5 * 60 * 1000, // 5 minutes
-    // Set default data to prevent loading states
     placeholderData: () => (profile?.role ? [String(profile.role).toLowerCase()] : [])
   });
 
@@ -134,16 +162,25 @@ export const useCurrentUserRoles = () => {
 
 export const useRoleManagement = () => {
   const queryClient = useQueryClient();
+  const { userService } = getServices();
 
   const assignRole = useMutation({
     mutationFn: async ({ userId, roleName }: { userId: string; roleName: string }) => {
       console.log('Assigning role:', roleName, 'to user:', userId);
       
-      const { error } = await supabase
-        .from('user_roles')
-        .insert({ user_id: userId, role_name: roleName });
-      
-      if (error) {
+      try {
+        // Get current user
+        const user = await userService.getUserById(userId);
+        if (!user) throw new Error('User not found');
+        
+        // Add role to user's roles array
+        const currentRoles = user.roles || [];
+        if (!currentRoles.includes(roleName)) {
+          await userService.updateUser(userId, {
+            roles: [...currentRoles, roleName]
+          });
+        }
+      } catch (error) {
         console.error('Error assigning role:', error);
         throw error;
       }
@@ -170,13 +207,17 @@ export const useRoleManagement = () => {
     mutationFn: async ({ userId, roleName }: { userId: string; roleName: string }) => {
       console.log('Removing role:', roleName, 'from user:', userId);
       
-      const { error } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', userId)
-        .eq('role_name', roleName);
-      
-      if (error) {
+      try {
+        // Get current user
+        const user = await userService.getUserById(userId);
+        if (!user) throw new Error('User not found');
+        
+        // Remove role from user's roles array
+        const currentRoles = user.roles || [];
+        await userService.updateUser(userId, {
+          roles: currentRoles.filter((r: string) => r !== roleName)
+        });
+      } catch (error) {
         console.error('Error removing role:', error);
         throw error;
       }
@@ -199,16 +240,7 @@ export const useRoleManagement = () => {
     }
   });
 
-  // Helper function to check if user has any of the specified roles
-  const hasAnyRole = (requiredRoles: string[]) => {
-    if (!userRoles || userRoles.length === 0) return false;
-    const userRoleNames = userRoles.map(role => role.role_name);
-    return requiredRoles.some(role => userRoleNames.includes(role));
-  };
-
   return {
-    userRoles: userRoles || [],
-    hasAnyRole,
     assignRole,
     removeRole
   };
