@@ -154,18 +154,11 @@ export function useTaskAssignmentsHex(filters?: {
 
   const startTaskMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { data, error } = await supabase
-        .from("task_assignments")
-        .update({
-          status: "in_progress",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      // Use TaskService to update task status
+      return await taskService.updateTask(id, {
+        status: 'in_progress',
+        updatedAt: new Date().toISOString(),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["task-assignments-hex"] });
@@ -178,19 +171,12 @@ export function useTaskAssignmentsHex(filters?: {
 
   const completeTaskMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { data, error } = await supabase
-        .from("task_assignments")
-        .update({
-          status: "completed",
-          completion_date: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      // Use TaskService to complete task
+      return await taskService.updateTask(id, {
+        status: 'completed',
+        completedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["task-assignments-hex"] });
@@ -203,39 +189,24 @@ export function useTaskAssignmentsHex(filters?: {
 
   const addNoteMutation = useMutation({
     mutationFn: async ({ id, note }: { id: string; note: string }) => {
-      // Get current notes
-      const { data: current, error: fetchError } = await supabase
-        .from("task_assignments")
-        .select("notes")
-        .eq("id", id)
-        .single();
+      // Get current task to append note
+      const currentTask = await taskService.getTaskById(id);
+      if (!currentTask) throw new Error('Task not found');
 
-      if (fetchError) throw fetchError;
-
-      const authService = new AuthService();
-      const { user: userData } = await authService.getCurrentUser();
+      const user = await authService.getCurrentUser();
       const timestamp = new Date().toLocaleString("fr-FR");
-      const noteWithMeta = `[${timestamp}] ${userData.user?.email || "Utilisateur"}: ${note}`;
+      const noteWithMeta = `[${timestamp}] ${user?.email || "Utilisateur"}: ${note}`;
 
-      const updatedNotes = current.notes
-        ? `${current.notes}\n\n${noteWithMeta}`
+      const currentNotes = currentTask.description || '';
+      const updatedNotes = currentNotes
+        ? `${currentNotes}\n\n${noteWithMeta}`
         : noteWithMeta;
 
-      const taskAssignmentRepository = RepositoryFactory.getTaskAssignmentRepository();
-      const { data, error } = await taskAssignmentRepository.create({
-        title: input.title,
-        description: input.description,
-        assigned_to: input.assignedTo,
-        assigned_by: userData.user?.id || "",
-        priority: input.priority || "medium",
-        status: input.status || "pending",
-        due_date: input.dueDate,
-        project_id: input.projectId,
-        notes: updatedNotes,
+      // Update task with new note
+      return await taskService.updateTask(id, {
+        description: updatedNotes,
+        updatedAt: new Date().toISOString(),
       });
-
-      if (error) throw error;
-      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["task-assignments-hex"] });

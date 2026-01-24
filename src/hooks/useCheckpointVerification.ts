@@ -1,18 +1,16 @@
 /**
- * useCheckpointVerification - Hook intégrant CheckpointVerificationEngine
- * Gère la vérification automatique et les déclenchements de paiement
+ * useCheckpointVerification - Hexagonal Architecture
+ * Uses MilestoneService and PaymentService for checkpoint verification
+ * Integrates with CheckpointVerificationEngine and AutomaticDecompteCalculator
  */
 
 import { useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getCheckpointVerificationEngine } from '@/application/services/CheckpointVerificationEngine';
 import { AutomaticDecompteCalculator } from '@/application/services/AutomaticDecompteCalculator';
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { toast } from '@/hooks/use-toast';
-import type { 
-  CheckpointDTO, 
-  AutomaticDecompteDTO,
-} from '@/types/checkpoint-dto';
+import type { AutomaticDecompteDTO } from '@/types/checkpoint-dto';
 
 interface UseCheckpointVerificationOptions {
   projectId: string;
@@ -28,34 +26,52 @@ interface SimpleCheckpoint {
   phase_id: string | null;
 }
 
+// Get milestone repository
+const getMilestoneRepository = () => {
+  return RepositoryFactory.getMilestoneRepository();
+};
+
+// Get payment repository
+const getPaymentRepository = () => {
+  return RepositoryFactory.getPaymentRepository();
+};
+
 export function useCheckpointVerification({ 
   projectId, 
   phaseId,
 }: UseCheckpointVerificationOptions) {
   const queryClient = useQueryClient();
 
-  // Fetch checkpoints for phase/project from milestones
+  // Fetch checkpoints for phase/project from milestones via repository
   const { data: checkpoints, isLoading: checkpointsLoading } = useQuery({
     queryKey: ['checkpoints', projectId, phaseId],
     queryFn: async (): Promise<SimpleCheckpoint[]> => {
-      const query = supabase
-        .from('enhanced_project_milestones')
-        .select('*')
-        .eq('project_id', projectId);
-      
-      if (phaseId) query.eq('phase_id', phaseId);
-      
-      const { data, error } = await query;
-      if (error) throw error;
-      
-      return (data || []).map(m => ({
-        id: m.id,
-        title: m.title,
-        status: m.status === 'completed' ? 'verified' : 'pending',
-        trigger_progress: m.weight || 25,
-        verification_score: m.status === 'completed' ? 100 : 0,
-        phase_id: m.phase_id,
-      }));
+      try {
+        const milestoneRepository = getMilestoneRepository();
+        
+        // Get milestones by project
+        const milestones = await milestoneRepository.findByProject(projectId);
+        
+        // Filter by phase if provided
+        let filteredMilestones = milestones;
+        if (phaseId) {
+          filteredMilestones = milestones.filter((m: any) => 
+            m.phaseId === phaseId || m.phase_id === phaseId
+          );
+        }
+        
+        return filteredMilestones.map((m: any) => ({
+          id: m.id,
+          title: m.title || m.name || '',
+          status: m.status === 'completed' ? 'verified' : 'pending',
+          trigger_progress: m.weight || m.trigger_progress || 25,
+          verification_score: m.status === 'completed' ? 100 : 0,
+          phase_id: m.phaseId || m.phase_id || null,
+        }));
+      } catch (error) {
+        console.error('Error fetching checkpoints:', error);
+        return [];
+      }
     },
     enabled: !!projectId,
     staleTime: 30_000,
@@ -85,21 +101,27 @@ export function useCheckpointVerification({
     staleTime: 30_000,
   });
 
-  // Trigger payment mutation
+  // Trigger payment mutation via PaymentRepository
   const triggerPaymentMutation = useMutation({
     mutationFn: async (decompte: AutomaticDecompteDTO) => {
-      const { error } = await supabase.from('payments').insert({
-        project_id: projectId,
-        phase_id: phaseId || null,
-        amount: decompte.net_payable,
-        payment_date: new Date().toISOString(),
-        payment_method: 'bank_transfer',
-        progress_at_payment: decompte.progress_at_decompte,
-        contractor_name: 'Auto-generated',
-        contractor_contact: '',
-        transaction_id: `AUTO-${Date.now()}`,
-      });
-      if (error) throw error;
+      try {
+        const paymentRepository = getPaymentRepository();
+        
+        await paymentRepository.create({
+          project_id: projectId,
+          phase_id: phaseId || null,
+          amount: decompte.net_payable,
+          payment_date: new Date().toISOString(),
+          payment_method: 'bank_transfer',
+          progress_at_payment: decompte.progress_at_decompte,
+          contractor_name: 'Auto-generated',
+          contractor_contact: '',
+          transaction_id: `AUTO-${Date.now()}`,
+        });
+      } catch (error) {
+        console.error('Error creating payment:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       toast({ title: 'Paiement créé', description: 'Décompte automatique enregistré' });
