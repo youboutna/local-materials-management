@@ -14,7 +14,8 @@ export interface BusinessDocumentFormData {
   supplier?: string;
   invoice_date?: string;
   due_date?: string;
-  file: File;
+  reference?: string;
+  file?: File;
 }
 
 export function useUploadBusinessDocument() {

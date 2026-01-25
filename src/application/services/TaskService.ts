@@ -3,7 +3,8 @@
  * Business logic layer with use cases
  */
 
-import { Task, TaskStatus, TaskPriority } from '@/domain/entities/Task';
+import { Task } from '@/domain/entities/Task';
+import { TaskStatus, TaskPriority } from '@/domain/types';
 import { ITaskRepository } from '@/domain/repositories';
 
 export interface TaskDTO {
@@ -127,30 +128,22 @@ export class TaskService {
 
       await this.taskRepository.update(id, updateData);
       
-      // Create updated task for return
-      const updatedTask = new Task(
-        existingTask.id,
-        (updateData as any).projectId ?? existingTask.projectId,
-        (updateData as any).phaseId ?? existingTask.phaseId,
-        existingTask.stepId,
-        (updateData as any).title ?? existingTask.title,
-        (updateData as any).description ?? existingTask.description,
-        (updateData as any).status ?? existingTask.status,
-        (updateData as any).priority ?? existingTask.priority,
-        existingTask.progress,
-        (updateData as any).assignedTo ?? existingTask.assignedTo,
-        existingTask.assignedBy,
-        existingTask.startDate,
-        existingTask.endDate,
-        (updateData as any).dueDate ?? existingTask.dueDate,
-        existingTask.completionDate,
-        existingTask.estimatedDuration,
-        existingTask.actualDuration,
-        existingTask.dependencies,
-        existingTask.notes,
-        existingTask.createdAt,
-        (updateData as any).updatedAt ?? existingTask.updatedAt
-      );
+      // Create updated task for return using factory method
+      const updatedTask = Task.create({
+        id: existingTask.id,
+        projectId: (updateData as any).projectId ?? existingTask.projectId,
+        phaseId: (updateData as any).phaseId ?? existingTask.phaseId ?? undefined,
+        stepId: existingTask.stepId ?? undefined,
+        title: (updateData as any).title ?? existingTask.title,
+        description: (updateData as any).description ?? existingTask.description ?? undefined,
+        status: (updateData as any).status ?? existingTask.status,
+        priority: (updateData as any).priority ?? existingTask.priority,
+        progress: existingTask.progress,
+        dueDate: (updateData as any).dueDate ?? existingTask.dueDate ?? undefined,
+        assignedTo: (updateData as any).assignedTo ?? existingTask.assignedTo,
+        assignedById: existingTask.assignedById ?? undefined,
+        notes: existingTask.notes ?? undefined,
+      });
       
       return this.toDTO(updatedTask);
     } catch (error) {

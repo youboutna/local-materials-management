@@ -4,9 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { FileText, Upload, Receipt, FileCheck, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUploadBusinessDocument, BusinessDocumentFormData } from '@/hooks/hexagonal/useBusinessDocumentsHex';
@@ -18,20 +16,10 @@ interface BusinessDocumentsProps {
   supplierId?: string;
 }
 
-interface DocumentData {
-  title: string;
-  description: string;
-  file: File | null;
-  documentType: 'contract' | 'supplier_info' | 'tender';
-  amount?: number;
-  supplier?: string;
-  reference?: string;
-  dueDate?: string;
-}
-
 const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, supplierId }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
   const [activeTab, setActiveTab] = useState('upload');
   const [formData, setFormData] = useState<BusinessDocumentFormData>({
     title: '',
@@ -40,7 +28,8 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
     supplier: '',
     invoice_date: '',
     due_date: '',
-    file: undefined as any,
+    reference: '',
+    file: undefined,
   });
   const [parsedInvoice, setParsedInvoice] = useState<InvoiceLine[]>([]);
   
@@ -51,7 +40,7 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
+    const file = e.target.files?.[0];
     setFormData(prev => ({ ...prev, file }));
     
     // Auto-analyze PDF invoices
@@ -61,16 +50,17 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
   };
 
   const analyzePDF = async (file: File) => {
+    setAnalyzing(true);
     try {
       const fileUrl = URL.createObjectURL(file);
-      const parsedInvoice = await parseInvoiceFromPdf(fileUrl);
+      const result = await parseInvoiceFromPdf(fileUrl);
       URL.revokeObjectURL(fileUrl);
       
-      setParsedInvoice(parsedInvoice);
+      setParsedInvoice(result);
       
       // Auto-fill form with parsed data
-      if (parsedInvoice.length > 0) {
-        const totalAmount = parsedInvoice.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
+      if (result.length > 0) {
+        const totalAmount = result.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
         setFormData(prev => ({
           ...prev,
           amount: totalAmount,
@@ -80,7 +70,7 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
       
       toast({
         title: "Analyse réussie",
-        description: `${parsedInvoice.length} lignes de facture détectées`,
+        description: `${result.length} lignes de facture détectées`,
       });
     } catch (error) {
       console.error('PDF analysis failed:', error);
@@ -89,6 +79,8 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
         description: "Impossible d'analyser le PDF automatiquement",
         variant: "destructive",
       });
+    } finally {
+      setAnalyzing(false);
     }
   };
 
@@ -124,7 +116,8 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
         supplier: '',
         invoice_date: '',
         due_date: '',
-        file: undefined as any,
+        reference: '',
+        file: undefined,
       });
       setParsedInvoice([]);
 
@@ -169,7 +162,6 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
       <CardContent>
         <Tabs value={activeTab} onValueChange={(tab) => {
           setActiveTab(tab);
-          setFormData(prev => ({ ...prev, documentType: tab as 'contract' | 'supplier_info' | 'tender' }));
         }}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="contract" className="flex items-center gap-2">
@@ -203,7 +195,7 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
                   <Label htmlFor="reference">Référence</Label>
                   <Input
                     id="reference"
-                    value={formData.reference}
+                    value={formData.reference || ''}
                     onChange={(e) => handleInputChange('reference', e.target.value)}
                     placeholder="Numéro de référence"
                   />
@@ -270,34 +262,34 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
                   />
                 </div>
                 <div>
-                  <Label htmlFor="dueDate">Date d'échéance</Label>
+                  <Label htmlFor="due_date">Date d'échéance</Label>
                   <Input
-                    id="dueDate"
+                    id="due_date"
                     type="date"
-                    value={formData.dueDate}
-                    onChange={(e) => handleInputChange('dueDate', e.target.value)}
+                    value={formData.due_date || ''}
+                    onChange={(e) => handleInputChange('due_date', e.target.value)}
                   />
                 </div>
               </div>
               
-              {parsedData.length > 0 && (
+              {parsedInvoice.length > 0 && (
                 <div className="p-4 border rounded-lg bg-muted/50">
                   <h4 className="font-medium mb-2 flex items-center gap-2">
                     <FileCheck className="h-4 w-4 text-green-600" />
                     Analyse automatique de la facture
                   </h4>
                   <div className="text-sm text-muted-foreground mb-2">
-                    {parsedData.length} lignes détectées
+                    {parsedInvoice.length} lignes détectées
                   </div>
                   <div className="max-h-32 overflow-y-auto space-y-1">
-                    {parsedData.slice(0, 3).map((item, index) => (
+                    {parsedInvoice.slice(0, 3).map((item, index) => (
                       <div key={index} className="text-xs bg-background p-2 rounded">
                         {item.designation} - {item.totalPrice?.toLocaleString()} MRU
                       </div>
                     ))}
-                    {parsedData.length > 3 && (
+                    {parsedInvoice.length > 3 && (
                       <div className="text-xs text-muted-foreground">
-                        +{parsedData.length - 3} autres lignes...
+                        +{parsedInvoice.length - 3} autres lignes...
                       </div>
                     )}
                   </div>

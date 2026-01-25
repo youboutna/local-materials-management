@@ -38,17 +38,17 @@ const PasswordResetHandler = () => {
         if (accessToken && refreshToken && type === 'recovery') {
           console.log('Setting session with recovery tokens');
           
-          const { data, error } = await setSession({
+          const result = await setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
           });
           
-          if (error) {
-            console.error('Error setting session:', error);
+          if (result.error) {
+            console.error('Error setting session:', result.error);
             setError('Lien de réinitialisation invalide ou expiré.');
             setIsValidLink(false);
           } else {
-            console.log('Session set successfully:', data);
+            console.log('Session set successfully:', result.session);
             setIsValidLink(true);
           }
         } else {

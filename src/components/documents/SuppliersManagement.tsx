@@ -244,15 +244,15 @@ const SuppliersManagement = () => {
                     )}
                   </div>
                 </div>
-                <Badge variant={supplier.is_active ? "default" : "secondary"}>
-                  {supplier.is_active ? 'Actif' : 'Inactif'}
+                <Badge variant={supplier.isActive ? "default" : "secondary"}>
+                  {supplier.isActive ? 'Actif' : 'Inactif'}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
-                {supplier.contact_person && (
-                  <div>Contact: {supplier.contact_person}</div>
+                {supplier.contacts?.[0]?.name && (
+                  <div>Contact: {supplier.contacts[0].name}</div>
                 )}
                 {supplier.email && (
                   <div>Email: {supplier.email}</div>
@@ -264,7 +264,7 @@ const SuppliersManagement = () => {
                   <div className="flex items-center space-x-1">
                     <span>Note:</span>
                     <div className="flex">
-                      {renderStars(supplier.rating)}
+                      {renderStars(supplier.rating.overall || 0)}
                     </div>
                   </div>
                 )}

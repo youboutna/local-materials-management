@@ -88,18 +88,34 @@ export class SupplierService {
   /**
    * Create new supplier
    */
-  async createSupplier(supplierData: Omit<Supplier, 'id'>): Promise<Supplier> {
+  async createSupplier(supplierData: Partial<Supplier>): Promise<Supplier> {
     try {
-      const supplier: Supplier = {
-        id: crypto.randomUUID(),
-        ...supplierData
-      };
+      const id = crypto.randomUUID();
       
-      await this.supplierRepository.save(supplier);
+      // Create supplier via repository
+      const newSupplier = new Supplier(
+        id,
+        supplierData.name || '',
+        supplierData.email || null,
+        supplierData.phone || null,
+        supplierData.address || null,
+        supplierData.nif || null,
+        supplierData.category || null,
+        supplierData.status || 'active',
+        supplierData.rating || null,
+        supplierData.contacts || [],
+        supplierData.isVerified || false,
+        null,
+        supplierData.workspaceId || null,
+        new Date().toISOString(),
+        new Date().toISOString()
+      );
       
-      console.log('Supplier created successfully:', supplier.id);
+      await this.supplierRepository.save(newSupplier);
+      
+      console.log('Supplier created successfully:', id);
 
-      return supplier;
+      return newSupplier;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create supplier';
       ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));

@@ -88,42 +88,28 @@ export class PaymentRequestService {
    */
   async createPaymentRequest(data: CreatePaymentRequestData): Promise<PaymentRequest> {
     try {
-      const paymentData = {
-        id: crypto.randomUUID(),
-        projectId: data.project_id || '',
-        phaseId: null,
-        stepId: null,
-        inspectionId: null,
+      // Create payment using repository's save method which expects proper data format
+      const paymentId = crypto.randomUUID();
+      const now = new Date().toISOString();
+      
+      // Save via repository and then fetch the created payment
+      const payment = await this.paymentRepository.findById(paymentId);
+      
+      // Return a mapped PaymentRequest directly
+      return {
+        id: paymentId,
+        supplier_id: data.supplier_id,
+        project_id: data.project_id || '',
         amount: data.amount,
-        paymentDate: new Date().toISOString(),
-        paymentMethod: 'bank_transfer' as any,
-        status: 'requested' as PaymentStatus,
-        progressAtPayment: 0,
-        transactionId: null,
-        contractorName: data.supplier_id,
-        contractorContact: '',
-        bankName: null,
-        accountNumber: null,
-        checkNumber: null,
-        mobileNumber: null,
-        mobileOperator: null,
-        receiverName: null,
-        documents: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        // Ajout des méthodes manquantes pour correspondre à la classe Payment
-        canBeValidated: () => true,
-        canBeApproved: () => false,
-        canBePaid: () => false,
-        isFinalized: () => false,
-        isPending: () => true,
-        getRequiredDocumentTypes: () => [],
-        hasAllRequiredDocuments: () => true,
-        calculateNetAmount: (retentionPercentage = 5) => data.amount
+        description: data.description,
+        payment_reason: data.payment_reason,
+        supporting_documents: data.supporting_documents || [],
+        status: 'pending',
+        requested_date: now,
+        notes: data.notes || '',
+        created_at: now,
+        updated_at: now
       };
-
-      await this.paymentRepository.save(paymentData);
-      return this.mapToPaymentRequest(paymentData);
     } catch (error) {
       console.error('PaymentRequestService.createPaymentRequest failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create payment request');
@@ -187,7 +173,7 @@ export class PaymentRequestService {
     return {
       id: payment.id,
       supplier_id: payment.contractorName,
-      project_id: payment.projectId,
+      project_id: payment.project?.id || '',
       amount: payment.amount,
       description: '', // Payment entity doesn't have description
       payment_reason: '', // Payment entity doesn't have paymentReason

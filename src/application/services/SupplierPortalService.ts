@@ -107,7 +107,7 @@ export class SupplierPortalService {
         amount: payment.amount,
         status: payment.status,
         requestDate: payment.paymentDate,
-        projectId: payment.projectId
+        projectId: payment.project?.id || ''
       }));
     } catch (error) {
       console.error('Error getting supplier payment requests:', error);
