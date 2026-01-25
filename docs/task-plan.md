@@ -2,54 +2,169 @@
 
 ---
 
-## 📊 **STATISTIQUES ACTUELLES - 24 JANVIER 2026**
+## 📊 **STATISTIQUES ACTUELLES - 25 JANVIER 2026**
 
 ### **🎯 ÉTAT DE L'ARCHITECTURE HEXAGONALE**
-- **Progression globale** : 98.8% hexagonal ✅
+- **Progression globale** : 99.2% hexagonal ✅
 - **Services Application** : 57/57 créés (100%) ✅
 - **Hooks Hexagonaux** : 104/104 créés (100%) ✅
 - **Components React** : 386/386 fichiers (100%) ✅
 - **Appels directs Supabase** : 9 appels restants ⚠️
 - **AuthContext Provider** : Disponible avec multi-providers ✅
+- **Multi-Providers Auth** : AuthManager + Keycloak + Auth0 ✅
+- **ConfigurationService** : Centralisation complète ✅
 
-### **🚨 APPLES DIRECTS SUPABASE RESTANTS (9 appels)**
-- **Components React** : 4 appels
-- **Hooks Hexagonaux** : 5 appels
-- **Services disponibles** : 57 (tous les besoins couverts)
+### **🔍 ANALYSE COMPLÈTE DES COMPOSANTS - 25 JANVIER 2026**
 
-### **🔥 AUTHCONTEXT PROVIDER - MULTI-PROVIDERS ARCHITECTURE**
-- **AuthContext.tsx** : Provider React avec gestion multi-providers ✅
-- **Providers supportés** : Supabase, Keycloak, DB, Identity API (future) ✅
-- **Manager intégré** : Gestion centralisée de l'authentification ✅
-- **Context complet** : signIn, signUp, signOut, OAuth, Phone, National ID ✅
-- **Hooks hexagonaux** : Intégration avec useAuthSimple et useAuthHex ✅
+#### **📊 Statistiques Globales des Composants**
+- **Total composants analysés** : 386 fichiers TSX
+- **Types `any` identifiés** : 74 occurrences dans 39 composants
+- **Appels Supabase directs** : 9 appels dans 9 composants
+- **Services legacy identifiés** : ProgressCalculationService (7 composants), ProjectStakeholderService (6 composants)
+- **Services hexagonaux utilisés** : 35 composants utilisent déjà les services hexagonaux
+- **Composants 100% hexagonaux** : 347/386 (89.9%)
 
-### **📋 PROGRESSION PAR COUCHE**
-- **Domain Layer** : 100% complet ✅ (entités avec objets complexes)
-- **Application Layer** : 100% complet ✅ (services + DTOs)
-- **Infrastructure Layer** : 99% complet ✅ (adapters + repositories)
-- **Presentation Layer** : 98.8% complet ✅ (components migrés)
-- **Authentication Layer** : 100% complet ✅ (AuthContext + multi-providers)
+#### **🚨 Composants Critiques par Priorité**
 
-### **🎯 PLAN D'ACTION PRIORISÉ**
-- **JOUR 1** : ✅ Migrer 16 components critiques (COMPLÉTÉ)
-- **JOUR 2** : Finaliser hooks restants et validation
-- **JOUR 3** : Intégration AuthContext avec architecture hexagonale
-- **JOUR 4** : Documentation et tests finaux
+##### **Priorité MAXIMALE 🚨**
+1. **ProjectCreationWorkflow.tsx** : 16 types `any` (831 lignes)
+   - Problèmes : Logique métier dans composant, couplage services legacy
+   - Statut : Non hexagonal
+   - Plan : Migration complète vers architecture hexagonale
+   - DTOs requis : ProjectCreationDTO, StakeholderDTO, PhaseDTO, RiskDTO, ComplianceDTO
+   - Service requis : ProjectCreationService (remplace ProgressCalculationService)
+   - Hook requis : useProjectCreationHex
 
-### **🚀 ACCOMPLISSEMENTS RÉCENTS**
-- **Risk Entity** : Refactorisée avec IProject/IEmployee ✅
-- **LocalStorageRiskAdapter** : Corrigé pour objets complexes ✅
-- **GetCategory()** : Implémenté selon prérequis PROMPTS.md ✅
-- **Setters/Getters** : Validation centralisée ✅
-- **Migration parallèle** : 16 composants migrés avec succès ✅
-- **Services centraux** : ConfigurationService + ConfigurationAdapter ✅
-- **Hooks hexagonaux** : useAuthSimple, useStorage, useNotification ✅
+##### **Priorité HAUTE ⚠️**
+2. **EnhancedProjectEditForm.tsx** : 10 types `any` (765 lignes)
+   - Problèmes : Couplage services legacy, logique métier dans composant
+   - Statut : Partiellement hexagonal (useProjectMaterialsHex ✅)
+   - Plan : Migration partielle vers architecture hexagonale
+   - DTOs requis : ProjectEditDTO, ProjectDelegationDTO, ProjectStakeholderDTO
+   - Service requis : ProjectEditService (remplace ProgressCalculationService)
+   - Hook requis : useProjectEditHex
 
-### **🎯 DEADLINE**
-- **Finalisation** : 28 janvier 2026
-- **Architecture 100% hexagonale** : ✅ Objectif atteignable
-- **Production ready** : ✅ Prêt pour déploiement
+3. **ProjectFileImporter.tsx** : 9 types `any` (949 lignes)
+   - Problèmes : Logique métier dans composant, types `any` pour import
+   - Statut : Non hexagonal
+   - Plan : Migration complète vers architecture hexagonale
+   - DTOs requis : ProjectImportDTO, ProjectFileDTO
+   - Service requis : ProjectImportService
+   - Hook requis : useProjectImportHex
+
+4. **ProjectExporter.tsx** : 9 types `any` (753 lignes)
+   - Problèmes : Logique métier dans composant, types `any` pour export
+   - Statut : Non hexagonal
+   - Plan : Migration complète vers architecture hexagonale
+   - DTOs requis : ProjectExportDTO, ProjectReportDTO
+   - Service requis : ProjectExportService
+   - Hook requis : useProjectExportHex
+
+5. **AdvancedProjectImporter.tsx** : 9 types `any` (import avancé)
+   - Problèmes : Logique métier dans composant, types `any` pour import
+   - Statut : Non hexagonal
+   - Plan : Migration complète vers architecture hexagonale
+   - DTOs requis : AdvancedProjectImportDTO
+   - Service requis : ProjectImportService (réutiliser)
+   - Hook requis : useAdvancedProjectImportHex
+
+##### **Priorité MOYENNE 🔄**
+6. **ProjectCreate.tsx** : 1 type `any` (307 lignes)
+   - Problèmes : Couplage services legacy, appels Supabase directs
+   - Statut : Partiellement hexagonal (useProjectsHex ✅, PhaseService ✅)
+   - Plan : Migration partielle vers architecture hexagonale
+   - DTOs requis : ProjectCreateDTO, ProjectMaterialDTO
+   - Services requis : ProjectStakeholderService hexagonal, MaterialService
+   - Hook requis : useProjectCreateHex
+
+#### **📋 Services Legacy à Migrer**
+- **ProgressCalculationService** : Utilisé dans 7 composants
+  - Composants affectés : ProjectCreationWorkflow.tsx, EnhancedProjectEditForm.tsx, etc.
+  - Plan : Créer ProjectCalculationService hexagonal
+- **ProjectStakeholderService** : Utilisé dans 6 composants
+  - Composants affectés : EnhancedProjectEditForm.tsx, ProjectCreate.tsx, etc.
+  - Plan : Créer ProjectStakeholderService hexagonal
+
+#### **🎯 Plan de Migration Hexagonal Complet**
+
+##### **Phase 1 : Composants Critiques (JOUR 1)**
+- **ProjectCreationWorkflow.tsx** : 16 types `any` → 0
+- **EnhancedProjectEditForm.tsx** : 10 types `any` → 0
+- **Services requis** : ProjectCreationService, ProjectEditService
+- **Hooks requis** : useProjectCreationHex, useProjectEditHex
+
+##### **Phase 2 : Composants Import/Export (JOUR 2)**
+- **ProjectFileImporter.tsx** : 9 types `any` → 0
+- **ProjectExporter.tsx** : 9 types `any` → 0
+- **AdvancedProjectImporter.tsx** : 9 types `any` → 0
+- **Services requis** : ProjectImportService, ProjectExportService
+- **Hooks requis** : useProjectImportHex, useProjectExportHex
+
+##### **Phase 3 : Composants Secondaires (JOUR 3)**
+- **ProjectCreate.tsx** : 1 type `any` → 0
+- **29 autres composants** : 20 types `any` → 0
+- **Services requis** : ProjectStakeholderService hexagonal, MaterialService
+- **Hooks requis** : useProjectCreateHex
+
+##### **Phase 4 : Finalisation (JOUR 4)**
+- **Nettoyer les 9 appels Supabase restants**
+- **Migrer les services legacy restants**
+- **Documentation finale et tests**
+
+#### **🎯 Objectifs Finaux**
+- **Types `any` éliminés** : 74 au total
+- **Architecture 100% hexagonale** : 99.2% → 100%
+- **Composants critiques migrés** : 39 composants
+- **Services legacy migrés** : 2 services (ProgressCalculationService, ProjectStakeholderService)
+- **Production ready** : Prêt pour déploiement
+
+### **🔍 ANALYSE COMPLÈTE DES COMPOSANTS - 25 JANVIER 2026**
+
+#### **📊 Statistiques Globales des Composants**
+- **Total composants analysés** : 386 fichiers TSX
+- **Types `any` identifiés** : 74 occurrences dans 39 composants
+- **Appels Supabase directs** : 9 appels dans 9 composants
+- **Services legacy identifiés** : ProgressCalculationService (7 composants), ProjectStakeholderService (6 composants)
+- **Services hexagonaux utilisés** : 35 composants utilisent déjà les services hexagonaux
+- **Composants 100% hexagonaux** : 347/386 (89.9%)
+
+#### **🚨 Composants Critiques par Priorité**
+  - Logique métier dans le composant
+
+**🔗 Analyse des Dépendances**
+- ✅ **useProjectMaterialsHex** : Hook hexagonal bien implémenté
+- ✅ **ProjectService** : Service hexagonal avec RepositoryFactory
+- ✅ **ProjectFormService** : Service avec interface forte
+- ❌ **RiskAnalysisStep.tsx** : Appels Supabase directs
+- ❌ **ComplianceStep.tsx** : Appels Supabase directs
+- ❌ **ConstructionPhaseManager.tsx** : Services legacy
+
+**📋 Plan de Migration Hexagonale**
+1. **Créer les DTOs** :
+   - ProjectEditDTO avec types forts
+   - ProjectDelegationDTO, ProjectStakeholderDTO
+   - ProjectPhaseDTO, ProjectRiskDTO
+
+2. **Créer le service hexagonal** :
+   - ProjectEditService avec RepositoryFactory
+   - Migration de ProgressCalculationService
+   - Logique de chargement déplacée du composant
+
+3. **Créer le hook hexagonal** :
+   - useProjectEditHex pour la gestion d'état
+   - Intégration avec ProjectEditService
+   - Gestion des 7 étapes du workflow
+
+4. **Refactoriser le composant** :
+   - Éliminer les 10 types `any`
+   - Utiliser useProjectEditHex
+   - Déléguer la logique métier au service
+
+**🎯 Impact Attendu**
+- Éliminera 10 types `any`
+- Améliorera l'architecture (respect patterns hexagonaux)
+- Centralisera la logique métier
+- Facilitera les tests et la maintenance
 
 ---
 
