@@ -200,7 +200,7 @@ export class DashboardService {
           averageMaterialEfficiency: materialsData.length > 0 ? materialsData.reduce((sum, m) => sum + (m.availableQuantity || 0), 0) / materialsData.length : 0,
           averagePaymentEfficiency: paymentsData.length > 0 ? paymentsData.filter(p => p.status === 'processed').length / paymentsData.length * 100 : 0,
           averageInspectionCompliance: inspectionsData.length > 0 ? inspectionsData.filter(i => i.status === 'completed').length / inspectionsData.length * 100 : 0,
-          averageEmployeeProductivity: employeesData.length > 0 ? employeesData.reduce((sum, e) => sum + (e.role === 'project_manager' ? 1 : 0), 0) / employeesData.length * 100 : 0,
+          averageEmployeeProductivity: employeesData.length > 0 ? employeesData.reduce((sum, e) => sum + (String(e.role) === 'project_manager' ? 1 : 0), 0) / employeesData.length * 100 : 0,
           averageSupplierReliability: suppliersData.length > 0 ? suppliersData.filter(s => s.isActive).length / suppliersData.length * 100 : 0,
           averageDocumentCompliance: documentsData.length > 0 ? documentsData.filter(d => d.status === 'validated').length / documentsData.length * 100 : 0,
         },
@@ -224,7 +224,7 @@ export class DashboardService {
             const daysSinceInspection = Math.floor((Date.now() - inspectionDate.getTime()) / (1000 * 60 * 60 * 24));
             return i.status !== 'completed' && daysSinceInspection > 7; // Overdue inspections as critical
           }).length,
-          overloadedEmployees: employeesData.filter(e => e.role === 'project_manager').length, // Managers as proxy for workload
+          overloadedEmployees: employeesData.filter(e => String(e.role) === 'project_manager').length, // Managers as proxy for workload
           unreliableSuppliers: suppliersData.filter(s => !s.isActive).length,
           expiredDocuments: documentsData.filter(d => {
             if (d.expiryDate) {

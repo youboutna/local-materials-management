@@ -66,7 +66,7 @@ export interface ConfigurationTemplate {
   name: string;
   description: string;
   difficulty: 'Easy' | 'Medium' | 'Hard' | 'Expert';
-  cost: 'Low' | 'Medium' | 'High';
+  cost: 'Low' | 'Low-Medium' | 'Medium' | 'Medium-High' | 'High';
   recommended: boolean;
   config: DeploymentConfig;
   setupSteps: string[];

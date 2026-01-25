@@ -12,10 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
-import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
-import { InspectionDomainTransformer } from '@/dtos/transforms/InspectionDomainTransformer';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
+import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import { 
   CheckCircle, 
   XCircle, 
@@ -27,6 +25,26 @@ import {
   ArrowLeft,
   Users
 } from 'lucide-react';
+
+// Local interface for inspection data
+interface InspectionData {
+  id: string;
+  projectId: string;
+  phaseId?: string;
+  date: string;
+  inspector: string;
+  status: string;
+  progressAtInspection: number;
+  comments?: string;
+  documents?: unknown;
+}
+
+// Local interface for project with stakeholders
+interface ProjectWithStakeholders {
+  id: string;
+  title: string;
+  stakeholders?: any[];
+}
 
 type PaymentType = 'contractor' | 'mission_fees' | 'engineer_fees';
 
@@ -55,9 +73,9 @@ const InspectionPaymentValidation: React.FC = () => {
   const canValidate = hasAnyRole(['project_manager', 'engineering_consultant', 'admin', 'director']);
 
   // Fetch inspection details with payment request
-  const { data: inspection, isLoading: inspectionLoading } = useQuery<InspectionDTO | null>({
+  const { data: inspection, isLoading: inspectionLoading } = useQuery<InspectionData | null>({
     queryKey: ['inspection', inspectionId],
-    queryFn: async () => {
+    queryFn: async (): Promise<InspectionData | null> => {
       if (!inspectionId) return null;
       
       // Get inspection
@@ -85,23 +103,34 @@ const InspectionPaymentValidation: React.FC = () => {
       
       console.log(`[InspectionPaymentValidation] Validation successful for inspection: ${inspectionId}, payment request: ${paymentRequest.id}`);
       
-      // Transform Inspection entity to InspectionDTO
-      return InspectionDomainTransformer.toResponseDto(inspectionData);
+      // Return inspection data mapped to local interface
+      return {
+        id: inspectionData.id,
+        projectId: inspectionData.projectId,
+        phaseId: inspectionData.phaseId,
+        date: inspectionData.date,
+        inspector: inspectionData.inspector,
+        status: inspectionData.status,
+        progressAtInspection: inspectionData.progressAtInspection,
+        comments: inspectionData.comments,
+        documents: inspectionData.documents
+      };
     },
     enabled: !!inspectionId,
   });
 
   // Fetch project details with external stakeholders (contractors)
-  const { data: project } = useQuery<ProjectDTO | null>({
+  const { data: project } = useQuery<ProjectWithStakeholders | null>({
     queryKey: ['project-summary', projectId],
-    queryFn: async () => {
+    queryFn: async (): Promise<ProjectWithStakeholders | null> => {
       if (!projectId) {
         console.warn('[InspectionPaymentValidation] No projectId provided');
         return null;
       }
       
       try {
-        const projectData = await ProjectService.getProjectWithStakeholders(projectId);
+        const projectRepo = RepositoryFactory.getProjectRepository();
+        const projectData = await projectRepo.findById(projectId);
         
         if (!projectData) {
           console.warn(`[InspectionPaymentValidation] Project not found: ${projectId}`);
@@ -109,7 +138,11 @@ const InspectionPaymentValidation: React.FC = () => {
         }
         
         console.log(`[InspectionPaymentValidation] Project loaded successfully: ${projectId}`);
-        return projectData;
+        return {
+          id: projectData.id,
+          title: projectData.title,
+          stakeholders: (projectData as any).stakeholders || []
+        };
       } catch (error) {
         console.error(`[InspectionPaymentValidation] Error loading project ${projectId}:`, error);
         return null;
