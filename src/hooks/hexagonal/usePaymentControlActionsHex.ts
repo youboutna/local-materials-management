@@ -51,9 +51,21 @@ export interface ActionMetadata {
   notificationChannels?: string[];
 }
 
-export const usePaymentControlActionsHex = (props: PaymentControlActionsProps) => {
+// Static schema export for form validation
+usePaymentControlActionsHex.actionFormSchema = actionFormSchema;
+
+export const usePaymentControlActionsHex = (props?: PaymentControlActionsProps) => {
   const queryClient = useQueryClient();
   const paymentControlService = PaymentControlActionsService.create();
+  
+  // Default props if not provided
+  const safeProps: PaymentControlActionsProps = props || {
+    paymentId: '',
+    projectId: '',
+    contractorId: '',
+    amount: 0,
+    blockingReasons: []
+  };
 
   // Task assignment mutation
   const taskAssignmentMutation = useMutation({
@@ -66,7 +78,7 @@ export const usePaymentControlActionsHex = (props: PaymentControlActionsProps) =
         title: 'Tâche assignée',
         description: 'La tâche a été assignée avec succès',
       });
-      queryClient.invalidateQueries({ queryKey: ['payment-actions', props.paymentId] });
+      queryClient.invalidateQueries({ queryKey: ['payment-actions', safeProps.paymentId] });
     },
     onError: (error) => {
       toast({
@@ -88,7 +100,7 @@ export const usePaymentControlActionsHex = (props: PaymentControlActionsProps) =
         title: 'Notification hiérarchique envoyée',
         description: 'La notification a été envoyée à la hiérarchie',
       });
-      queryClient.invalidateQueries({ queryKey: ['payment-actions', props.paymentId] });
+      queryClient.invalidateQueries({ queryKey: ['payment-actions', safeProps.paymentId] });
     },
     onError: (error) => {
       toast({
@@ -110,7 +122,7 @@ export const usePaymentControlActionsHex = (props: PaymentControlActionsProps) =
         title: 'SMS envoyé',
         description: 'La notification SMS a été envoyée',
       });
-      queryClient.invalidateQueries({ queryKey: ['payment-actions', props.paymentId] });
+      queryClient.invalidateQueries({ queryKey: ['payment-actions', safeProps.paymentId] });
     },
     onError: (error) => {
       toast({
@@ -132,7 +144,7 @@ export const usePaymentControlActionsHex = (props: PaymentControlActionsProps) =
         title: 'Appel programmé',
         description: 'L\'appel a été programmé avec succès',
       });
-      queryClient.invalidateQueries({ queryKey: ['payment-actions', props.paymentId] });
+      queryClient.invalidateQueries({ queryKey: ['payment-actions', safeProps.paymentId] });
     },
     onError: (error) => {
       toast({
@@ -154,7 +166,7 @@ export const usePaymentControlActionsHex = (props: PaymentControlActionsProps) =
         title: 'Email envoyé',
         description: 'L\'email a été envoyé avec succès',
       });
-      queryClient.invalidateQueries({ queryKey: ['payment-actions', props.paymentId] });
+      queryClient.invalidateQueries({ queryKey: ['payment-actions', safeProps.paymentId] });
     },
     onError: (error) => {
       toast({
@@ -176,7 +188,7 @@ export const usePaymentControlActionsHex = (props: PaymentControlActionsProps) =
         title: 'Courrier envoyé',
         description: 'Le courrier a été envoyé avec succès',
       });
-      queryClient.invalidateQueries({ queryKey: ['payment-actions', props.paymentId] });
+      queryClient.invalidateQueries({ queryKey: ['payment-actions', safeProps.paymentId] });
     },
     onError: (error) => {
       toast({
@@ -208,13 +220,13 @@ export const usePaymentControlActionsHex = (props: PaymentControlActionsProps) =
   };
 
   // Execute action based on type
-  const executeAction = (values: ActionFormData) => {
-    const metadata: ActionMetadata = {
-      paymentId: props.paymentId,
-      projectId: props.projectId,
-      contractorId: props.contractorId,
-      amount: props.amount,
-      blockingReasons: props.blockingReasons,
+  const executeAction = async (values: ActionFormData, metadata?: ActionMetadata) => {
+    const finalMetadata: ActionMetadata = metadata || {
+      paymentId: safeProps.paymentId,
+      projectId: safeProps.projectId,
+      contractorId: safeProps.contractorId,
+      amount: safeProps.amount,
+      blockingReasons: safeProps.blockingReasons,
       actionType: values.actionType,
       priority: values.priority,
       escalationLevel: values.escalationLevel,
@@ -225,7 +237,7 @@ export const usePaymentControlActionsHex = (props: PaymentControlActionsProps) =
     };
 
     const handler = getActionHandler(values.actionType);
-    return handler.mutateAsync({ values, metadata });
+    return handler.mutateAsync({ values, metadata: finalMetadata });
   };
 
   return {

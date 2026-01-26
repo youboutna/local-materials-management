@@ -29,9 +29,11 @@ import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import { 
   InspectionSchedulingService,
   InspectionScheduleData,
-  InspectionType,
   INSPECTION_TYPES 
 } from '@/application/services/InspectionSchedulingService';
+
+// Local type for inspection type selection
+type InspectionTypeId = 'technical' | 'safety' | 'quality';
 
 interface ScheduleInspectionModalProps {
   open: boolean;
@@ -52,8 +54,8 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
   phaseName,
   onSuccess,
 }) => {
-  // Form state
-  const [inspectionType, setInspectionType] = useState<InspectionType | ''>('');
+  // Form state - use string type for inspection type ID
+  const [inspectionType, setInspectionType] = useState<InspectionTypeId | ''>('');
   const [scheduledDate, setScheduledDate] = useState('');
   const [scheduledTime, setScheduledTime] = useState('09:00');
   const [estimatedDuration, setEstimatedDuration] = useState(2);
@@ -75,14 +77,14 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
   const [availabilityWarning, setAvailabilityWarning] = useState<string | null>(null);
 
   interface UserContext {
-  userId: string;
-  role: string;
-}
+    userId: string;
+    role: string;
+  }
 
-// Fetch permissions
+  // Fetch permissions
   const { data: userContext } = useQuery<UserContext>({
     queryKey: ['user-role'],
-    queryFn: () => ({ userId: 'default-user', role: 'inspector' }), // Mock user context for now
+    queryFn: () => ({ userId: 'default-user', role: 'inspector' }),
   });
 
   // Build permission context
@@ -92,7 +94,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
       userId: userContext.userId || 'default-user',
       projectId,
       phaseId: phaseId || undefined,
-      inspectionType: typeof inspectionType === 'string' ? inspectionType : inspectionType?.id || ''
+      inspectionType: inspectionType || ''
     };
   }, [userContext, projectId, phaseId, inspectionType]);
 
@@ -108,7 +110,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
       canSchedule: true,
       canSetHighPriority: true,
       message: permissionContext ? undefined : 'Permission accordée'
-    } : null, // Mock permission check for now
+    } : null,
     enabled: !!permissionContext,
   });
 
@@ -130,12 +132,21 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
     [inspectors, selectedInspectorId]
   );
 
+  // Get inspection type config
+  const getInspectionTypeConfig = (typeId: InspectionTypeId) => {
+    const typeMap: Record<InspectionTypeId, keyof typeof INSPECTION_TYPES> = {
+      'technical': 'TECHNICAL',
+      'safety': 'SAFETY', 
+      'quality': 'QUALITY'
+    };
+    return INSPECTION_TYPES[typeMap[typeId]];
+  };
+
   // Update duration when inspection type changes
   useEffect(() => {
     if (inspectionType) {
-      // Use the inspection type object directly
-      const config = typeof inspectionType === 'string' ? null : inspectionType;
-      if (config && 'estimatedDuration' in config) {
+      const config = getInspectionTypeConfig(inspectionType);
+      if (config) {
         setEstimatedDuration(config.estimatedDuration);
         setRequiredDocuments(config.requiresDocuments ? ['pv_service_fait', 'photos'] : []);
       }
@@ -145,7 +156,6 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
   // Auto-select default inspector when inspectors are loaded
   useEffect(() => {
     if (inspectors.length > 0 && !selectedInspectorId) {
-      // For now, select the first inspector as there's no isDefault property
       const defaultInspector = inspectors[0];
       if (defaultInspector) {
         setSelectedInspectorId(defaultInspector.id);
@@ -275,6 +285,9 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
     );
   };
 
+  // Get current type config for documents check
+  const currentTypeConfig = inspectionType ? getInspectionTypeConfig(inspectionType) : null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -308,7 +321,10 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Type d'inspection *</Label>
-                <Select value={inspectionType} onValueChange={(v) => setInspectionType(v as InspectionType)}>
+                <Select 
+                  value={inspectionType} 
+                  onValueChange={(v) => setInspectionType(v as InspectionTypeId)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner le type..." />
                   </SelectTrigger>
@@ -445,7 +461,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
             <div className="space-y-2">
               <Label>Documents requis</Label>
               <div className="flex flex-wrap gap-2">
-                {inspectionType && INSPECTION_TYPES[inspectionType as keyof typeof INSPECTION_TYPES]?.requiresDocuments ? (
+                {currentTypeConfig?.requiresDocuments ? (
                   <div className="flex flex-wrap gap-2">
                     {['Photo de progression', 'Rapport technique', 'Plan de sécurité'].map(doc => (
                     <Badge
@@ -482,58 +498,62 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
           <div className="space-y-4">
             <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Bell className="h-4 w-4" />
-              Rappels et notifications
+              Notifications
             </h3>
 
-            <div className="flex flex-wrap gap-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="notify-contractor"
-                  checked={notifyContractor}
-                  onCheckedChange={(checked) => setNotifyContractor(checked as boolean)}
-                />
-                <Label htmlFor="notify-contractor" className="text-sm">
-                  Notifier l'entrepreneur
-                </Label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="reminder-7d"
-                  checked={reminders.seven_days}
-                  onCheckedChange={(checked) => setReminders(r => ({ ...r, seven_days: checked as boolean }))}
-                />
-                <Label htmlFor="reminder-7d" className="text-sm">7 jours avant</Label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="reminder-1d"
-                  checked={reminders.one_day}
-                  onCheckedChange={(checked) => setReminders(r => ({ ...r, one_day: checked as boolean }))}
-                />
-                <Label htmlFor="reminder-1d" className="text-sm">1 jour avant</Label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="reminder-2h"
-                  checked={reminders.two_hours}
-                  onCheckedChange={(checked) => setReminders(r => ({ ...r, two_hours: checked as boolean }))}
-                />
-                <Label htmlFor="reminder-2h" className="text-sm">2 heures avant</Label>
-              </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="notifyContractor" 
+                checked={notifyContractor}
+                onCheckedChange={(checked) => setNotifyContractor(checked as boolean)}
+              />
+              <label htmlFor="notifyContractor" className="text-sm">
+                Notifier l'entreprise contractante
+              </label>
             </div>
 
             <div className="space-y-2">
-              <Label>Notes additionnelles</Label>
-              <Textarea
-                placeholder="Informations complémentaires..."
-                value={comments}
-                onChange={(e) => setComments(e.target.value)}
-                rows={2}
-              />
+              <Label>Rappels automatiques</Label>
+              <div className="flex flex-wrap gap-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="reminder7days" 
+                    checked={reminders.seven_days}
+                    onCheckedChange={(checked) => setReminders(prev => ({ ...prev, seven_days: checked as boolean }))}
+                  />
+                  <label htmlFor="reminder7days" className="text-sm">7 jours avant</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="reminder1day" 
+                    checked={reminders.one_day}
+                    onCheckedChange={(checked) => setReminders(prev => ({ ...prev, one_day: checked as boolean }))}
+                  />
+                  <label htmlFor="reminder1day" className="text-sm">1 jour avant</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="reminder2hours" 
+                    checked={reminders.two_hours}
+                    onCheckedChange={(checked) => setReminders(prev => ({ ...prev, two_hours: checked as boolean }))}
+                  />
+                  <label htmlFor="reminder2hours" className="text-sm">2 heures avant</label>
+                </div>
+              </div>
             </div>
+          </div>
+
+          <Separator />
+
+          {/* Section 5: Commentaires */}
+          <div className="space-y-2">
+            <Label>Commentaires additionnels</Label>
+            <Textarea
+              placeholder="Informations complémentaires..."
+              value={comments}
+              onChange={(e) => setComments(e.target.value)}
+              rows={3}
+            />
           </div>
         </div>
 

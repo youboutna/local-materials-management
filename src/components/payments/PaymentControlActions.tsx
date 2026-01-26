@@ -1,4 +1,4 @@
-﻿import UserSelector from '@/components/selectors/UserSelector';
+import UserSelector from '@/components/selectors/UserSelector';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,10 +29,12 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import {
   usePaymentControlActionsHex,
-  type ActionFormData,
-  type PaymentControlActionsProps,
-  type ActionMetadata
-} from '@/hooks/hexagonal'
+  actionFormSchema
+} from '@/hooks/hexagonal';
+import type { ActionFormData, PaymentControlActionsProps, ActionMetadata } from '@/hooks/hexagonal';
+
+// Use the same ActionType from schema
+type ActionType = 'task_assignment' | 'hierarchy_notification' | 'sms' | 'call' | 'email' | 'mail';
 
 const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
   paymentId,
@@ -46,14 +48,20 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
   const { t } = useLanguage();
   const { createNotification } = useNotifications();
 
-  // Use hexagonal hook
+  // Use hexagonal hook with props
   const {
     executeAction,
     isLoading
-  } = usePaymentControlActionsHex();
+  } = usePaymentControlActionsHex({
+    paymentId,
+    projectId,
+    contractorId,
+    amount,
+    blockingReasons
+  });
 
-  const form = useForm<ActionFormData>({
-    resolver: zodResolver(usePaymentControlActionsHex.actionFormSchema),
+  const form = useForm<z.infer<typeof actionFormSchema>>({
+    resolver: zodResolver(actionFormSchema),
     defaultValues: {
       priority: 'medium',
       followUpRequired: false,
@@ -63,23 +71,23 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
   });
 
   const actionTypes = [
-    { value: 'task_assignment', label: 'Assignation de tÃ¢che', icon: Briefcase },
-    { value: 'hierarchy_notification', label: 'Notification hiÃ©rarchique', icon: Users },
-    { value: 'sms', label: 'SMS', icon: MessageSquare },
-    { value: 'call', label: 'Appel tÃ©lÃ©phonique', icon: Phone },
-    { value: 'email', label: 'Email', icon: Mail },
-    { value: 'mail', label: 'Courrier postal', icon: Send }
+    { value: 'task_assignment' as ActionType, label: 'Assignation de tâche', icon: Briefcase },
+    { value: 'hierarchy_notification' as ActionType, label: 'Notification hiérarchique', icon: Users },
+    { value: 'sms' as ActionType, label: 'SMS', icon: MessageSquare },
+    { value: 'call' as ActionType, label: 'Appel téléphonique', icon: Phone },
+    { value: 'email' as ActionType, label: 'Email', icon: Mail },
+    { value: 'mail' as ActionType, label: 'Courrier postal', icon: Send }
   ];
 
   const priorityLevels = [
     { value: 'low', label: 'Faible', color: 'bg-green-100 text-green-800' },
     { value: 'medium', label: 'Moyen', color: 'bg-blue-100 text-blue-800' },
-    { value: 'high', label: 'Ã‰levÃ©', color: 'bg-orange-100 text-orange-800' },
+    { value: 'high', label: 'Élevé', color: 'bg-orange-100 text-orange-800' },
     { value: 'urgent', label: 'Urgent', color: 'bg-red-100 text-red-800' }
   ];
 
   const escalationLevels = [
-    { value: 'team', label: 'Ã‰quipe (CollÃ¨gues)' },
+    { value: 'team', label: 'Équipe (Collègues)' },
     { value: 'supervisor', label: 'Superviseur' },
     { value: 'manager', label: 'Manager' },
     { value: 'director', label: 'Directeur' }
@@ -89,10 +97,15 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
     { value: 'email', label: 'Email' },
     { value: 'sms', label: 'SMS' },
     { value: 'push', label: 'Notification push' },
-    { value: 'system', label: 'Notification systÃ¨me' }
+    { value: 'system', label: 'Notification système' }
   ];
 
-  const onSubmitAction = async (values: ActionFormData) => {
+  const getActionIcon = (actionType: string) => {
+    const action = actionTypes.find(t => t.value === actionType);
+    return action ? action.icon : Bell;
+  };
+
+  const onSubmitAction = async (values: z.infer<typeof actionFormSchema>) => {
     try {
       const actionMetadata: ActionMetadata = {
         paymentId,
@@ -122,11 +135,11 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
       }
 
       // Execute the specific action using hexagonal hook
-      await executeAction(values, actionMetadata);
+      await executeAction(values as ActionFormData, actionMetadata);
 
       toast({
         title: t('common.success'),
-        description: `${actionTypes.find(t => t.value === values.actionType)?.label} envoyÃ©e avec succÃ¨s`
+        description: `${actionTypes.find(t => t.value === values.actionType)?.label} envoyée avec succès`
       });
 
       form.reset();
@@ -136,15 +149,10 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
       console.error('Error executing action:', error);
       toast({
         title: t('common.error'),
-        description: "Erreur lors de l'exÃ©cution de l'action",
+        description: "Erreur lors de l'exécution de l'action",
         variant: "destructive"
       });
     }
-  };
-
-  const getActionIcon = (actionType: string) => {
-    const action = actionTypes.find(t => t.value === actionType);
-    return action ? action.icon : Bell;
   };
 
   const renderActionTypeFields = () => {
@@ -158,12 +166,12 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
             name="assigneeId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>AssignÃ© Ã </FormLabel>
+                <FormLabel>Assigné à</FormLabel>
                 <FormControl>
                   <UserSelector
                     value={field.value}
                     onChange={field.onChange}
-                    placeholder="SÃ©lectionner un utilisateur"
+                    placeholder="Sélectionner un utilisateur"
                   />
                 </FormControl>
                 <FormMessage />
@@ -183,7 +191,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="SÃ©lectionner un niveau" />
+                      <SelectValue placeholder="Sélectionner un niveau" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -210,7 +218,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Shield className="h-5 w-5" />
-          Actions de ContrÃ´le de Paiement
+          Actions de Contrôle de Paiement
         </CardTitle>
         <CardDescription>
           Actions disponibles pour le paiement de {amount.toLocaleString()} MRU
@@ -234,124 +242,90 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {actionTypes.map((action) => (
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} key={action.value}>
-              <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="h-auto p-4 flex flex-col items-center gap-2"
-                  onClick={() => form.setValue('actionType', action.value)}
-                >
-                  <action.icon className="h-6 w-6" />
-                  <span className="text-sm font-medium">{action.label}</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <getActionIcon className="h-5 w-5" />
-                    {actionTypes.find(t => t.value === form.watch('actionType'))?.label}
-                  </DialogTitle>
-                  <DialogDescription>
-                    Configurer et envoyer l'action de contrÃ´le de paiement
-                  </DialogDescription>
-                </DialogHeader>
+          {actionTypes.map((action) => {
+            const IconComponent = action.icon;
+            return (
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} key={action.value}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="h-auto p-4 flex flex-col items-center gap-2"
+                    onClick={() => form.setValue('actionType', action.value)}
+                  >
+                    <IconComponent className="h-6 w-6" />
+                    <span className="text-sm font-medium">{action.label}</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <IconComponent className="h-5 w-5" />
+                      {actionTypes.find(t => t.value === form.watch('actionType'))?.label}
+                    </DialogTitle>
+                    <DialogDescription>
+                      Configurer et envoyer l'action de contrôle de paiement
+                    </DialogDescription>
+                  </DialogHeader>
 
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmitAction)} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="title"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Titre</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Titre de l'action" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="priority"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>PrioritÃ©</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmitAction)} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="title"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Titre</FormLabel>
                               <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
+                                <Input placeholder="Titre de l'action" {...field} />
                               </FormControl>
-                              <SelectContent>
-                                {priorityLevels.map((priority) => (
-                                  <SelectItem key={priority.value} value={priority.value}>
-                                    <div className="flex items-center gap-2">
-                                      <Badge className={priority.color}>
-                                        {priority.label}
-                                      </Badge>
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                    <FormField
-                      control={form.control}
-                      name="message"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Message</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Description dÃ©taillÃ©e de l'action" 
-                              rows={4}
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        <FormField
+                          control={form.control}
+                          name="priority"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Priorité</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {priorityLevels.map((priority) => (
+                                    <SelectItem key={priority.value} value={priority.value}>
+                                      <div className="flex items-center gap-2">
+                                        <Badge className={priority.color}>
+                                          {priority.label}
+                                        </Badge>
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
 
-                    <FormField
-                      control={form.control}
-                      name="recipientIds"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Destinataires</FormLabel>
-                          <FormControl>
-                            <UserSelector
-                              value={field.value}
-                              onChange={field.onChange}
-                              placeholder="SÃ©lectionner les destinataires"
-                              multiple
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {renderActionTypeFields()}
-
-                    <div className="grid grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
-                        name="dueDate"
+                        name="message"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Date limite</FormLabel>
+                            <FormLabel>Message</FormLabel>
                             <FormControl>
-                              <Input type="date" {...field} />
+                              <Textarea 
+                                placeholder="Description détaillée de l'action" 
+                                rows={4}
+                                {...field} 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -360,81 +334,109 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
 
                       <FormField
                         control={form.control}
-                        name="notificationChannels"
+                        name="recipientIds"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Canaux de notification</FormLabel>
-                            <div className="space-y-2">
-                              {notificationChannels.map((channel) => (
-                                <FormField
-                                  key={channel.value}
-                                  control={form.control}
-                                  name="notificationChannels"
-                                  render={({ field }) => (
-                                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                      <FormControl>
-                                        <Checkbox
-                                          checked={field.value?.includes(channel.value)}
-                                          onCheckedChange={(checked) => {
-                                            return checked
-                                              ? field.onChange([...field.value, channel.value])
-                                              : field.onChange(
-                                                  field.value?.filter(
-                                                    (value) => value !== channel.value
-                                                  )
-                                                );
-                                          }}
-                                        />
-                                      </FormControl>
-                                      <FormLabel className="text-sm font-normal">
-                                        {channel.label}
-                                      </FormLabel>
-                                    </FormItem>
-                                  )}
-                                />
-                              ))}
-                            </div>
+                            <FormLabel>Destinataire principal</FormLabel>
+                            <FormControl>
+                              <UserSelector
+                                value={field.value?.[0] || ''}
+                                onChange={(val) => field.onChange([val])}
+                                placeholder="Sélectionner un destinataire"
+                              />
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                    </div>
 
-                    <FormField
-                      control={form.control}
-                      name="followUpRequired"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <FormLabel className="text-sm font-normal">
-                            Suivi requis
-                          </FormLabel>
-                        </FormItem>
-                      )}
-                    />
+                      {renderActionTypeFields()}
 
-                    <div className="flex justify-end gap-2 pt-4">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        onClick={() => setIsDialogOpen(false)}
-                      >
-                        Annuler
-                      </Button>
-                      <Button type="submit" disabled={isLoading}>
-                        {isLoading ? 'Envoi en cours...' : 'Envoyer'}
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
-              </DialogContent>
-            </Dialog>
-          ))}
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="dueDate"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Date limite</FormLabel>
+                              <FormControl>
+                                <Input type="date" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="notificationChannels"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Canaux de notification</FormLabel>
+                              <div className="space-y-2">
+                                {notificationChannels.map((channel) => (
+                                  <div key={channel.value} className="flex flex-row items-start space-x-3 space-y-0">
+                                    <Checkbox
+                                      checked={field.value?.includes(channel.value)}
+                                      onCheckedChange={(checked) => {
+                                        const currentValues = field.value || [];
+                                        return checked
+                                          ? field.onChange([...currentValues, channel.value])
+                                          : field.onChange(
+                                              currentValues.filter(
+                                                (value) => value !== channel.value
+                                              )
+                                            );
+                                      }}
+                                    />
+                                    <span className="text-sm font-normal">
+                                      {channel.label}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={form.control}
+                        name="followUpRequired"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormLabel className="text-sm font-normal">
+                              Suivi requis
+                            </FormLabel>
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="flex justify-end gap-2 pt-4">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => setIsDialogOpen(false)}
+                        >
+                          Annuler
+                        </Button>
+                        <Button type="submit" disabled={isLoading}>
+                          {isLoading ? 'Envoi en cours...' : 'Envoyer'}
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+            );
+          })}
         </div>
       </CardContent>
     </Card>

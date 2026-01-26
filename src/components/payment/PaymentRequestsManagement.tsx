@@ -73,9 +73,9 @@ export const PaymentRequestsManagement: React.FC = () => {
             ...request,
             suppliers: supplierData ? {
               name: supplierData.name,
-              account_number: supplierData.accountNumber || null,
-              bank_name: supplierData.bankName || null,
-              rib: supplierData.rib || null
+              account_number: (supplierData as any).account_number || null,
+              bank_name: (supplierData as any).bank_name || null,
+              rib: (supplierData as any).rib || null
             } : undefined,
             projects: projectData ? {
               title: projectData.title
