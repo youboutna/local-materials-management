@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Building2, Plus, Edit, Trash2, Star } from 'lucide-react';
 import { 
-  useSuppliersList, 
+  useSuppliersHex, 
   useCreateSupplier, 
   useUpdateSupplier, 
   useDeleteSupplier,
@@ -35,7 +35,7 @@ const SuppliersManagement = () => {
   const { toast } = useToast();
 
   // Hexagonal hooks
-  const { data: suppliers, isLoading } = useSuppliersList();
+  const { suppliers, isLoading } = useSuppliersHex();
   const createMutation = useCreateSupplier();
   const updateMutation = useUpdateSupplier();
   const deleteMutation = useDeleteSupplier();
@@ -65,24 +65,33 @@ const SuppliersManagement = () => {
         toast({ title: "Succès", description: "Fournisseur créé avec succès." });
       }
       resetForm();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Erreur",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Une erreur est survenue",
         variant: "destructive"
       });
     }
   };
 
-  const handleEdit = (supplier: any) => {
+  const handleEdit = (supplier: { 
+  id: string; 
+  name: string; 
+  email?: string; 
+  phone?: string; 
+  address?: string;
+  category?: string;
+  contacts?: Array<{ name: string }>; 
+  rating?: { overall: number } 
+}) => {
     setFormData({
       name: supplier.name || '',
-      contact_person: supplier.contact_person || '',
+      contact_person: supplier.contacts?.[0]?.name || '',
       email: supplier.email || '',
       phone: supplier.phone || '',
       address: supplier.address || '',
       category: supplier.category || '',
-      rating: supplier.rating || 0
+      rating: typeof supplier.rating === 'object' ? supplier.rating.overall : supplier.rating || 0
     });
     setEditingId(supplier.id);
     setIsCreating(true);
@@ -92,10 +101,10 @@ const SuppliersManagement = () => {
     try {
       await deleteMutation.mutateAsync(id);
       toast({ title: "Succès", description: "Fournisseur supprimé avec succès." });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Erreur",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Une erreur est survenue",
         variant: "destructive"
       });
     }

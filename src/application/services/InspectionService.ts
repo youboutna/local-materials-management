@@ -401,6 +401,9 @@ export class InspectionService {
     comments: string;
     payment_type: string;
     payment_status?: string;
+    project_id?: string;
+    inspection_id?: string;
+    rejection_notes?: string;
   }): Promise<Inspection> {
     const service = new InspectionService();
     return service.updateInspection(id, {
@@ -409,6 +412,9 @@ export class InspectionService {
       // Add payment-related fields if they exist in the entity
       ...(data.payment_type && { payment_type: data.payment_type }),
       ...(data.payment_status && { payment_status: data.payment_status }),
+      ...(data.project_id && { project_id: data.project_id }),
+      ...(data.inspection_id && { inspection_id: data.inspection_id }),
+      ...(data.rejection_notes && { rejection_notes: data.rejection_notes }),
     });
   }
 }

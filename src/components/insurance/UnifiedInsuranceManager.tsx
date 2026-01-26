@@ -17,7 +17,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PaginationControls } from '@/components/ui/pagination-controls';
+import { DocumentService, CreateDocumentRequestDto } from '@/application/services/DocumentService';
 import { useToast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { usePagination } from '@/hooks/usePagination';
 import { 
   detectExpiringInsurance, 
@@ -88,6 +90,10 @@ const UnifiedInsuranceManager = () => {
   const { toast } = useToast();
   const { uploadFile, downloading, deleteFile } = useDocumentStorage();
   const { getUser } = useAuth();
+  
+  // Initialize services
+  const documentService = new DocumentService(RepositoryFactory.getDocumentRepository());
+  
   const [alerts, setAlerts] = useState<InsuranceAlert[]>([]);
   const [certificates, setCertificates] = useState<LocalInsuranceCertificate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -215,7 +221,12 @@ const UnifiedInsuranceManager = () => {
         verifiedBy: undefined, // Field not available in InsuranceCertificate
         notes: undefined, // Field not available in InsuranceCertificate
         certificateUrl: undefined, // Field not available in InsuranceCertificate
-        documents: cert.documents || [] // Use documents from InsuranceCertificate
+        documents: (cert.documents || []).map((doc, index) => ({
+          id: index.toString(),
+          title: doc,
+          file_url: doc,
+          file_name: doc
+        })) // Transform string[] to expected object format
       }));
 
       console.log('Transformed certificates:', transformedCertificates);
@@ -226,11 +237,11 @@ const UnifiedInsuranceManager = () => {
         description: `${transformedCertificates.length} certificat(s) chargé(s)`,
       });
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading certificates:', error);
       toast({
         title: 'Erreur',
-        description: `Impossible de charger les certificats: ${error?.message || 'Erreur inconnue'}`,
+        description: `Impossible de charger les certificats: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
         variant: 'destructive'
       });
     } finally {
@@ -247,28 +258,16 @@ const UnifiedInsuranceManager = () => {
       const uploadResult = await uploadFile(file, `insurance-certificates/${Date.now()}-${file.name}`);
       
       if (uploadResult.success && uploadResult.url) {
-        // Create document record
-        const { data: document, error } = await supabase
-          .from('documents')
-          .insert({
-            title: `Certificat d'assurance - ${file.name}`,
-            description: `Document pour certificat d'assurance`,
-            file_url: uploadResult.url,
-            file_name: file.name,
-            mime_type: file.type,
-            file_size: file.size,
-            document_type: 'contract',
-            project_id: form.getValues('projectId'),
-            metadata: {
-              certificate_id: certificateId || 'new',
-              contractor_name: form.getValues('contractorName'),
-              policy_number: form.getValues('policyNumber')
-            }
-          })
-          .select()
-          .single();
+        // Create document record using DocumentService
+        const documentData: CreateDocumentRequestDto = {
+          title: `Certificat d'assurance - ${file.name}`,
+          type: 'contract',
+          projectId: form.getValues('projectId'),
+          description: `Document pour certificat d'assurance - ${form.getValues('contractorName')}`,
+          fileUrl: uploadResult.url
+        };
 
-        if (error) throw error;
+        const document = await documentService.createDocument(documentData);
 
         toast({
           title: "Succès",
@@ -294,7 +293,7 @@ const UnifiedInsuranceManager = () => {
       console.log('Creating/updating insurance certificate:', values);
       
       // Get current user
-      const { data: { user } } = await getUser();
+      const user = await getUser();
       const currentUserId = user?.id;
       
       if (isEditing && selectedCertificate) {
@@ -388,7 +387,7 @@ const UnifiedInsuranceManager = () => {
       insuranceCompany: certificate.insuranceCompany || certificate.insurance_company || '',
       policyNumber: certificate.policyNumber || certificate.policy_number || '',
       coverageAmount: certificate.coverageAmount || certificate.coverage_amount || 0,
-      coverageType: (certificate.coverageType || certificate.coverage_type || 'responsabilite_civile') as any,
+      coverageType: (certificate.coverageType || certificate.coverage_type || 'responsabilite_civile') as 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques',
       validFrom: certificate.validFrom || certificate.valid_from || '',
       validUntil: certificate.validUntil || certificate.valid_until || '',
       notes: certificate.notes || ''
@@ -407,7 +406,7 @@ const UnifiedInsuranceManager = () => {
       insuranceCompany: certificate.insuranceCompany || certificate.insurance_company || '',
       policyNumber: certificate.policyNumber || certificate.policy_number || '',
       coverageAmount: certificate.coverageAmount || certificate.coverage_amount || 0,
-      coverageType: (certificate.coverageType || certificate.coverage_type || 'responsabilite_civile') as any,
+      coverageType: (certificate.coverageType || certificate.coverage_type || 'responsabilite_civile') as 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques',
       validFrom: certificate.validFrom || certificate.valid_from || '',
       validUntil: certificate.validUntil || certificate.valid_until || '',
       notes: certificate.notes || ''
@@ -432,7 +431,7 @@ const UnifiedInsuranceManager = () => {
       insuranceCompany: certificate.insuranceCompany || certificate.insurance_company || '',
       policyNumber: `${certificate.policyNumber || certificate.policy_number}-REN${new Date().getFullYear()}`,
       coverageAmount: certificate.coverageAmount || certificate.coverage_amount || 0,
-      coverageType: (certificate.coverageType || certificate.coverage_type || 'responsabilite_civile') as any,
+      coverageType: (certificate.coverageType || certificate.coverage_type || 'responsabilite_civile') as 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques',
       validFrom: newValidFrom.toISOString().split('T')[0],
       validUntil: newValidUntil.toISOString().split('T')[0],
       notes: `Renouvellement du certificat ${certificate.policyNumber || certificate.policy_number}`
@@ -499,7 +498,7 @@ const UnifiedInsuranceManager = () => {
       }
 
       // Get current user or use a fallback
-      const { data: { user } } = await getUser();
+      const user = await getUser();
       const currentUserId = user?.id || 'system-user';
 
       let title = '';

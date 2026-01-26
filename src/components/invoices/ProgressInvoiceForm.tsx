@@ -133,7 +133,7 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
             <Label htmlFor="project_id">Projet *</Label>
             <EnhancedProjectSelector
               value={selectedProjectId}
-              onChange={(value) => setValue('project_id', value)}
+              onChange={(value) => setValue('project_id', value || '')}
               placeholder="SÃ©lectionner un projet"
             />
             {errors.project_id && (

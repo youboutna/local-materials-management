@@ -30,7 +30,7 @@ import {
 interface InspectionData {
   id: string;
   projectId: string;
-  phaseId?: string;
+  phaseId?: string | null;
   date: string;
   inspector: string;
   status: string;
@@ -171,7 +171,10 @@ const InspectionPaymentValidation: React.FC = () => {
           status: data.status,
           comments: data.comments,
           payment_type: data.payment_type,
-          payment_status: data.payment_status
+          payment_status: data.payment_status,
+          project_id: projectId,
+          inspection_id: inspectionId,
+          rejection_notes: data.comments
         });
 
         console.log(`[InspectionPaymentValidation] Inspection updated successfully: ${inspectionId}`);
@@ -186,22 +189,23 @@ const InspectionPaymentValidation: React.FC = () => {
 
       if (data.payment_type === 'contractor') {
         // Find external contractor (partie prenante externe - supplier)
-        const contractor = project?.project_stakeholders?.find(
-          (s: any) => s.stakeholder_entity_type === 'supplier' && s.supplier_id && s.suppliers
+        const contractor = project?.stakeholders?.find(
+          (s: StakeholderDTO) => s.stakeholderEntityType === 'supplier' && s.supplierId
         );
-        beneficiaryUserId = contractor?.suppliers?.user_id || null;
+        // Note: supplier details would need to be fetched separately or included in stakeholder data
+        beneficiaryUserId = null; // TODO: Get supplier user ID from supplier service
         console.log(`[InspectionPaymentValidation] Contractor beneficiary found: ${beneficiaryUserId ? 'YES' : 'NO'}`);
       } else if (data.payment_type === 'mission_fees' || data.payment_type === 'engineer_fees') {
         // Find engineering consultant (ingénieur conseil)
-        const engineer = project?.project_stakeholders?.find(
-          (s: any) => s.stakeholder_type === 'engineering_consultant' && s.employee_id
+        const engineer = project?.stakeholders?.find(
+          (s: StakeholderDTO) => s.stakeholderType === 'consultant' && s.employeeId
         );
         
-        if (engineer?.employee_id) {
-          console.log(`[InspectionPaymentValidation] Found engineer employee ID: ${engineer.employee_id}`);
+        if (engineer?.employeeId) {
+          console.log(`[InspectionPaymentValidation] Found engineer employee ID: ${engineer.employeeId}`);
           // Get employee user_id via service
-          const employeeData = await ProjectService.getEmployeeUserId(engineer.employee_id);
-          beneficiaryUserId = employeeData?.user_id || null;
+          const employeeData = await ProjectService.getEmployeeUserId(engineer.employeeId);
+          beneficiaryUserId = employeeData?.userId || null;
           console.log(`[InspectionPaymentValidation] Engineer beneficiary found: ${beneficiaryUserId ? 'YES' : 'NO'}`);
         } else {
           console.warn('[InspectionPaymentValidation] No engineer found in project stakeholders');
@@ -219,20 +223,17 @@ const InspectionPaymentValidation: React.FC = () => {
           engineer_fees: 'honoraires ingénieur conseil'
         };
 
-        await NotificationService.createNotification({
+        // Create notification service instance
+        const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
+        
+        await notificationService.createNotification({
           recipient_id: beneficiaryUserId,
           title: 'Validation de paiement',
           message: `Votre demande de paiement (${paymentTypeLabels[data.payment_type]}) a été ${
             data.payment_status === 'approved' ? 'approuvée' : 'rejetée'
           } pour le projet "${project.title}"`,
-          type: 'payment_validation',
-          metadata: {
-            project_id: projectId,
-            inspection_id: inspectionId,
-            payment_status: data.payment_status,
-            payment_type: data.payment_type,
-            rejection_notes: data.comments,
-          },
+          type: data.payment_status === 'approved' ? 'success' : 'error',
+          read: false
         });
         
         console.log(`[InspectionPaymentValidation] Notification created successfully for user: ${beneficiaryUserId}`);
@@ -396,7 +397,7 @@ const InspectionPaymentValidation: React.FC = () => {
                   <div className="flex items-center gap-2 mt-1">
                     <Calendar className="h-4 w-4" />
                     <p className="font-medium">
-                      {new Date(inspection.date).toLocaleDateString('fr-FR', {
+                      {new Date((inspection as InspectionDTO)?.date || '').toLocaleDateString('fr-FR', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric',
@@ -408,41 +409,47 @@ const InspectionPaymentValidation: React.FC = () => {
                 <div>
                   <Label className="text-muted-foreground">Statut</Label>
                   <div className="mt-1">
-                    {getStatusBadge(inspection.status)}
+                    {inspection ? getStatusBadge(inspection.status || 'unknown') : <Badge className="bg-gray-100 text-gray-800">Inconnu</Badge>}
                   </div>
                 </div>
 
                 <div>
                   <Label className="text-muted-foreground">Inspecteur</Label>
-                  <p className="font-medium mt-1">{inspection.inspector}</p>
+                  <p className="font-medium mt-1">{inspection?.inspector || 'Non spécifié'}</p>
                 </div>
 
                 <div>
                   <Label className="text-muted-foreground">Progression à l'inspection</Label>
                   <div className="flex items-center gap-2 mt-1">
                     <TrendingUp className="h-4 w-4 text-primary" />
-                    <p className="font-medium">{inspection.progress_at_inspection}%</p>
+                    <p className="font-medium">{inspection?.progressAtInspection || 0}%</p>
                   </div>
                 </div>
               </div>
 
-              {inspection.comments && (
+              {inspection?.comments && (
                 <div>
                   <Label className="text-muted-foreground">Commentaires</Label>
                   <p className="mt-1 p-3 bg-muted rounded-md">{inspection.comments}</p>
                 </div>
               )}
 
-              {inspection.documents && (
+              {inspection?.documents && (
                 <div>
                   <Label className="text-muted-foreground">Documents joints</Label>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {Array.isArray(inspection.documents) && inspection.documents.map((doc: any, idx: number) => (
-                      <Badge key={idx} variant="outline" className="flex items-center gap-1">
-                        <FileText className="h-3 w-3" />
-                        Document {idx + 1}
-                      </Badge>
-                    ))}
+                    {(() => {
+                      const docs = inspection.documents;
+                      if (Array.isArray(docs) && docs.length > 0) {
+                        return docs.map((doc, idx) => (
+                          <Badge key={idx} variant="outline" className="flex items-center gap-1">
+                            <FileText className="h-3 w-3" />
+                            Document {idx + 1}
+                          </Badge>
+                        ));
+                      }
+                      return null;
+                    })()}
                   </div>
                 </div>
               )}
@@ -567,38 +574,28 @@ const InspectionPaymentValidation: React.FC = () => {
             <CardContent className="space-y-3">
               {(() => {
                 if (paymentType === 'contractor') {
-                  const contractor = project?.project_stakeholders?.find(
-                    (s: any) => s.stakeholder_entity_type === 'supplier' && s.suppliers
+                  const contractor = project?.stakeholders?.find(
+                    (s: StakeholderDTO) => s.stakeholderEntityType === 'supplier'
                   );
                   
-                  return contractor?.suppliers ? (
+                  return contractor ? (
                     <>
                       <div>
                         <Label className="text-muted-foreground">Type</Label>
                         <p className="font-medium mt-1">Entreprise contractante</p>
                       </div>
                       <div>
-                        <Label className="text-muted-foreground">Entreprise</Label>
-                        <p className="font-medium mt-1">
-                          {contractor.suppliers.name}
-                        </p>
+                        <Label className="text-muted-foreground">Fournisseur ID</Label>
+                        <p className="font-medium mt-1">{contractor.supplierId || 'Non défini'}</p>
                       </div>
                       <div>
-                        <Label className="text-muted-foreground">Contact</Label>
-                        <p className="font-medium mt-1">
-                          {contractor.suppliers.contact_person || 'Non défini'}
-                        </p>
+                        <Label className="text-muted-foreground">Nom</Label>
+                        <p className="font-medium mt-1">{contractor.externalName || 'Non défini'}</p>
                       </div>
-                      {contractor.suppliers.phone && (
-                        <div>
-                          <Label className="text-muted-foreground">Téléphone</Label>
-                          <p className="font-medium mt-1">{contractor.suppliers.phone}</p>
-                        </div>
-                      )}
-                      {contractor.suppliers.email && (
+                      {contractor.externalEmail && (
                         <div>
                           <Label className="text-muted-foreground">Email</Label>
-                          <p className="font-medium mt-1">{contractor.suppliers.email}</p>
+                          <p className="font-medium mt-1">{contractor.externalEmail}</p>
                         </div>
                       )}
                     </>

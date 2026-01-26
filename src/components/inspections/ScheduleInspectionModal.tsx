@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Calendar, Clock, User, FileText, Bell, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 import { 
   InspectionPermissionService
 } from '@/application/services/InspectionPermissionService';
@@ -27,6 +27,7 @@ import {
 } from '@/dtos/entities/InspectionPermissionDTO';
 import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import { 
+  InspectionSchedulingService,
   InspectionScheduleData,
   InspectionType,
   INSPECTION_TYPES 
@@ -85,7 +86,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
   });
 
   // Build permission context
-  const permissionContext: PermissionContext | null = useMemo(() => {
+  const permissionContext: PermissionContextDTO | null = useMemo(() => {
     if (!userContext) return null;
     return {
       userId: userContext.userId || 'default-user',
@@ -94,6 +95,9 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
       inspectionType: typeof inspectionType === 'string' ? inspectionType : inspectionType?.id || ''
     };
   }, [userContext, projectId, phaseId, inspectionType]);
+
+  // Instantiate the scheduling service
+  const schedulingService = new InspectionSchedulingService();
 
   // Check permissions
   const { data: permissions } = useQuery({
@@ -157,7 +161,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
         return;
       }
 
-      const result = await InspectionSchedulingService.checkInspectorAvailability(
+      const result = await schedulingService.checkInspectorAvailability(
         selectedInspectorId,
         scheduledDate
       );
@@ -194,17 +198,29 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
   // Handle form submission
   const handleSubmit = async () => {
     if (!inspectionType || !scheduledDate || !selectedInspectorId) {
-      toast.error('Veuillez remplir tous les champs obligatoires');
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez remplir tous les champs obligatoires',
+        variant: 'destructive'
+      });
       return;
     }
 
     if (!permissions?.canSchedule) {
-      toast.error(permissions?.message || 'Vous n\'avez pas la permission de programmer des inspections');
+      toast({
+        title: 'Permission refusée',
+        description: permissions?.message || 'Vous n\'avez pas la permission de programmer des inspections',
+        variant: 'destructive'
+      });
       return;
     }
 
     if (priority === 'high' && !permissions.canSetHighPriority) {
-      toast.warning('Priorité haute nécessite approbation du chef de projet. Priorité changée à "moyenne".');
+      toast({
+        title: 'Information',
+        description: 'Priorité haute nécessite approbation du chef de projet. Priorité changée à "moyenne".',
+        variant: 'default'
+      });
       setPriority('medium');
     }
 
@@ -222,18 +238,29 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
         notes: comments,
       };
 
-      const result = await InspectionSchedulingService.scheduleInspection(scheduleData);
+      const result = await schedulingService.scheduleInspection(scheduleData);
 
       if (result) {
-        toast.success('Inspection programmée avec succès');
+        toast({
+          title: 'Succès',
+          description: 'Inspection programmée avec succès',
+        });
         onOpenChange(false);
         onSuccess?.();
       } else {
-        toast.error('Erreur lors de la programmation');
+        toast({
+          title: 'Erreur',
+          description: 'Erreur lors de la programmation',
+          variant: 'destructive'
+        });
       }
     } catch (error) {
       console.error('Error scheduling inspection:', error);
-      toast.error('Erreur lors de la programmation de l\'inspection');
+      toast({
+        title: 'Erreur',
+        description: 'Erreur lors de la programmation de l\'inspection',
+        variant: 'destructive'
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -418,17 +445,23 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
             <div className="space-y-2">
               <Label>Documents requis</Label>
               <div className="flex flex-wrap gap-2">
-                {inspectionType && InspectionSchedulingService.getInspectionTypeConfig(inspectionType)?.required_documents.map(doc => (
-                  <Badge
-                    key={doc}
-                    variant={requiredDocuments.includes(doc) ? 'default' : 'outline'}
-                    className="cursor-pointer"
-                    onClick={() => toggleDocument(doc)}
-                  >
-                    {requiredDocuments.includes(doc) && <CheckCircle2 className="h-3 w-3 mr-1" />}
-                    {doc}
-                  </Badge>
-                ))}
+                {inspectionType && INSPECTION_TYPES[inspectionType as keyof typeof INSPECTION_TYPES]?.requiresDocuments ? (
+                  <div className="flex flex-wrap gap-2">
+                    {['Photo de progression', 'Rapport technique', 'Plan de sécurité'].map(doc => (
+                    <Badge
+                      key={doc}
+                      variant={requiredDocuments.includes(doc) ? 'default' : 'outline'}
+                      className="cursor-pointer"
+                      onClick={() => toggleDocument(doc)}
+                    >
+                      {requiredDocuments.includes(doc) && <CheckCircle2 className="h-3 w-3 mr-1" />}
+                      {doc}
+                    </Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-sm">Aucun document requis</p>
+                )}
               </div>
             </div>
 

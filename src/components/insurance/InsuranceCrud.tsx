@@ -86,7 +86,7 @@ const InsuranceCrud: React.FC = () => {
       valid_until: certificate.valid_until,
       status: certificate.status,
       documents: certificate.documents,
-      notes: certificate.notes || ''
+      notes: '' // notes field doesn't exist in InsuranceCertificate interface
     });
     setSelectedCertificate(certificate);
     setIsEditing(true);
@@ -98,16 +98,15 @@ const InsuranceCrud: React.FC = () => {
     setFormData({
       project_id: certificate.project_id,
       contractor_id: certificate.contractor_id,
-      contractor_name: certificate.contractor_name,
-      insurance_company: certificate.insurance_company,
+      insurance_type: certificate.insurance_type,
+      provider: certificate.provider,
       policy_number: certificate.policy_number,
       coverage_amount: certificate.coverage_amount,
-      coverage_type: certificate.coverage_type,
-      valid_from: certificate.valid_from,
+      start_date: certificate.start_date,
       valid_until: certificate.valid_until,
-      certificate_url: certificate.certificate_url || '',
       status: certificate.status,
-      notes: certificate.notes || ''
+      documents: certificate.documents,
+      notes: '' // notes field doesn't exist in InsuranceCertificate interface
     });
     setSelectedCertificate(certificate);
     setIsViewMode(true);
@@ -123,14 +122,6 @@ const InsuranceCrud: React.FC = () => {
       if (isEditing && selectedCertificate) {
         // Update insurance certificate using InsuranceService
         await insuranceService.updateInsuranceCertificate(selectedCertificate.id, {
-          project_id: formData.project_id,
-          contractor_id: formData.contractor_id,
-          insurance_type: formData.coverage_type,
-          provider: formData.insurance_company,
-          policy_number: formData.policy_number,
-          coverage_amount: formData.coverage_amount,
-          start_date: formData.valid_from,
-          valid_until: formData.valid_until,
           status: formData.status,
           notes: formData.notes
         });
@@ -143,9 +134,10 @@ const InsuranceCrud: React.FC = () => {
           provider: formData.insurance_company,
           policy_number: formData.policy_number,
           coverage_amount: formData.coverage_amount,
-          start_date: formData.valid_from,
+          start_date: formData.start_date,
           valid_until: formData.valid_until,
           status: formData.status,
+          documents: formData.documents,
           notes: formData.notes
         });
       }
@@ -161,7 +153,7 @@ const InsuranceCrud: React.FC = () => {
       console.error('Error submitting form:', error);
       toast({
         title: "Erreur",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Une erreur est survenue",
         variant: "destructive",
       });
     }
@@ -183,7 +175,7 @@ const InsuranceCrud: React.FC = () => {
         console.error('Error deleting certificate:', error);
         toast({
           title: "Erreur",
-          description: error.message,
+          description: error instanceof Error ? error.message : "Une erreur est survenue",
           variant: "destructive",
         });
       }
@@ -206,7 +198,7 @@ const InsuranceCrud: React.FC = () => {
     setFormData(prev => ({ ...prev, project_id: projectId || '' }));
   };
 
-  const handleSupplierChange = (supplier: any) => {
+  const handleSupplierChange = (supplier: { id?: string; name: string; contact: string; leadTime: number }) => {
     setFormData(prev => ({ 
       ...prev, 
       contractor_id: supplier.id || '',
@@ -246,7 +238,7 @@ const InsuranceCrud: React.FC = () => {
                   <SupplierSelector
                     value={{ 
                       id: formData.contractor_id,
-                      name: formData.contractor_name,
+                      name: '', // contractor_name doesn't exist in CreateInsuranceData
                       contact: '',
                       leadTime: 0
                     }}
@@ -259,11 +251,11 @@ const InsuranceCrud: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="insurance_company">Compagnie d'assurance *</Label>
+                  <Label htmlFor="provider">Compagnie d'assurance *</Label>
                   <Input
-                    id="insurance_company"
-                    value={formData.insurance_company}
-                    onChange={(e) => setFormData(prev => ({ ...prev, insurance_company: e.target.value }))}
+                    id="provider"
+                    value={formData.provider}
+                    onChange={(e) => setFormData(prev => ({ ...prev, provider: e.target.value }))}
                     required
                     disabled={isViewMode}
                     placeholder="Nom de la compagnie"
@@ -285,10 +277,10 @@ const InsuranceCrud: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="coverage_type">Type de couverture *</Label>
+                  <Label htmlFor="insurance_type">Type de couverture *</Label>
                   <Select 
-                    value={formData.coverage_type} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, coverage_type: value }))}
+                    value={formData.insurance_type} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, insurance_type: value }))}
                     disabled={isViewMode}
                   >
                     <SelectTrigger>
@@ -366,15 +358,12 @@ const InsuranceCrud: React.FC = () => {
               </div>
 
               <div>
-                <Label htmlFor="certificate_url">URL du certificat</Label>
-                <Input
-                  id="certificate_url"
-                  type="url"
-                  value={formData.certificate_url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, certificate_url: e.target.value }))}
-                  disabled={isViewMode}
-                  placeholder="https://..."
-                />
+                <Label>Documents</Label>
+                <div className="mt-2">
+                  <p className="text-sm text-muted-foreground">
+                    Les documents seront gérés via le système de gestion des documents
+                  </p>
+                </div>
               </div>
 
               <div>
@@ -428,9 +417,9 @@ const InsuranceCrud: React.FC = () => {
                   <TableCell className="font-medium">
                     {certificate.project_id}
                   </TableCell>
-                  <TableCell>{certificate.contractor_name}</TableCell>
+                  <TableCell>{certificate.contractor_id}</TableCell>
                   <TableCell>
-                    {coverageTypes.find(t => t.value === certificate.coverage_type)?.label}
+                    {coverageTypes.find(t => t.value === certificate.insurance_type)?.label}
                   </TableCell>
                   <TableCell>{certificate.policy_number}</TableCell>
                   <TableCell>

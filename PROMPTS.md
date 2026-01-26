@@ -56,6 +56,12 @@ Pense à une rivière qui coule :
 🎨 PRÉSENTATION : L'interprète gracieux
   → Il AFFICHE, il INTERAGIT, il DÉLÈGUE
   → Il ne fait pas de logique métier
+  → ✅ **PEUT CONTENIR** : Attributs UI, états locaux, calculs d'affichage
+  → ✅ **PEUT CONTENIR** : Logique de présentation, formatage, validation UI
+  → 🔍 **EN MIGRATION** : Chercher dans les dépendances existantes
+    → `/src/types/*` : Types et interfaces legacy
+    → `/src/utils/*` : Fonctions utilitaires et helpers
+    → `/src/services/*` : Services legacy à réutiliser
 ```
 
 ### **RÈGLE DU JEU #4 : LA PURETÉ DES ENTITÉS**
@@ -87,14 +93,51 @@ Pense à une rivière qui coule :
 export interface SupplierAPIDTO { ... }  // 🚨 INTERDIT - DTO de mapping
 
 ✅ Interfaces de domaine :
+export interface Supplier {
+  id: string;
+  name: string;
+  rating: SupplierRating;        // ✅ Objet complexe du domaine
+  contacts: SupplierContact[];    // ✅ Collection du domaine
+}
+
+✅ **NOUVEAU** : Interfaces UI/Presentation :
+export interface SupplierUIState {
+  supplier: Supplier;            // Entité du domaine
+  isEditing: boolean;           // 🎨 État UI local
+  selectedTab: string;          // 🎨 Attribut de présentation
+  calculatedScore: number;       // 🎨 Calcul d'affichage
+  formattedRating: string;      // 🎨 Formatage pour l'UI
+}
+```
+
+### **🎨 RÈGLE #5 : LA SÉPARATION UI/DOMAINE**
+```
+🧠 DOMAINE : Pureté absolue
+  → ✅ Entités avec logique métier pure
+  → ✅ Calculs business rules
+  → ✅ Validation métier
+  → ❌ État UI, formatage, logique de présentation
+
+🎨 UI/PRÉSENTATION : Flexibilité contrôlée
+  → ✅ État local : loading, editing, selected
+  → ✅ Calculs d'affichage : formattedDate, calculatedScore
+  → ✅ Logique de présentation : showErrors, validation UI
+  → ✅ Attributs UI : className, styles, animations
+  → ✅ Dépendances UI : toast notifications, routing
+
+🔧 TRANSFORMERS : Pont intelligent
+  → ✅ Entity → UIState (avec calculs)
+  → ✅ UIState → Entity (pour sauvegarde)
+  → ✅ Formatage : date → formattedDate
+  → ✅ Calculs : rating → calculatedScore
+```
 export interface SupplierRating { ... }  // ✅ CORRECT - Structure métier
 export class Supplier {
   constructor(public rating: SupplierRating) { ... }  // ✅ CORRECT
 }
-```
 
 ### **🎯 MANTRA SACRÉ**
-> **"Les entités peuvent contenir des objets et collections métier. Les DTOs sont réservés aux échanges API/UI. Les transformers font le pont.**
+> **"Les entités peuvent contenir des objets et collections métier. Les DTOs sont réservés aux échanges API/UI. Les transformers font le pont. Les composants UI peuvent avoir des états et calculs de présentation."**
 
 ### **🚨 PRÉREQUIS OBLIGATOIRES**
 ```
@@ -999,6 +1042,16 @@ Check-list quotidienne ✅
 5. **AdvancedProjectImporter.tsx** - 9 types `any` (import avancé)
 6. **ProjectCreate.tsx** - 1 type `any` (307 lignes)
 
+#### **🔄 Priorité MOYENNE - Erreurs de Types et Services (8 fichiers)**
+7. **InspectionPaymentValidation.tsx** - Types stakeholders incorrects
+8. **ScheduleInspectionModal.tsx** - InspectionSchedulingService manquant
+9. **InsuranceCrud.tsx** - Propriétés snake_case vs camelCase
+10. **SuppliersManagement.tsx** - getter isActive au lieu de fonction
+11. **ConstructionPhaseManager.tsx** - Services legacy à migrer
+12. **RiskAnalysisStep.tsx** - Appels Supabase directs
+13. **ComplianceStep.tsx** - Appels Supabase directs
+14. **Autres composants d'inspections et invoices** - Erreurs de types multiples
+
 #### **🔄 Priorité MOYENNE - Composants Restants (33 fichiers)**
 - **29 autres composants** : 20 types `any` (1-4 types `any` chacun)
 - **Composants avec appels Supabase** : 7 appels dans 7 composants
@@ -1010,14 +1063,22 @@ Check-list quotidienne ✅
 #### **📋 Plan de Migration Hexagonal Complet**
 - **Phase 1 (JOUR 1)** : 2 composants critiques (26 types `any`)
 - **Phase 2 (JOUR 2)** : 3 composants import/export (27 types `any`)
-- **Phase 3 (JOUR 3)** : 30 composants secondaires (21 types `any`)
+- **Phase 3 (JOUR 3)** : 8 composants erreurs de types/services + 30 composants secondaires (21 types `any`)
 - **Phase 4 (JOUR 4)** : Nettoyage final et documentation
+
+#### **🔧 Corrections Spécifiques Requises**
+- **InspectionPaymentValidation.tsx** : Corriger les types stakeholders pour correspondre aux DTOs
+- **ScheduleInspectionModal.tsx** : Créer InspectionSchedulingService hexagonal
+- **InsuranceCrud.tsx** : Standardiser snake_case → camelCase pour les propriétés
+- **SuppliersManagement.tsx** : Corriger getter isActive() en propriété isActive
+- **Composants inspections/invoices** : Audit complet des types et services manquants
 
 #### **🎯 Objectifs Finaux**
 - **Types `any` éliminés** : 74 au total
 - **Architecture 100% hexagonale** : 99.2% → 100%
 - **Composants critiques migrés** : 39 composants
 - **Services legacy migrés** : 2 services (ProgressCalculationService, ProjectStakeholderService)
+- **Erreurs de types corrigées** : 8 composants spécifiques
 - **Production ready** : Prêt pour déploiement
 
 ### **📊 Validation Continue**
@@ -1032,6 +1093,51 @@ Get-ChildItem -Path "./src/hooks/hexagonal" -Recurse -Include "*.ts" | Select-St
 2. **StorageService** : Remplacer `supabase.storage.*` par `storageService.*`
 3. **NotificationService** : Remplacer `supabase.functions.invoke` par `notificationService.*`
 4. **RepositoryFactory** : Remplacer `supabase.from.*` par `RepositoryFactory.get*Repository()`
+5. **Types Stakesholders** : Utiliser StakeholderDTO au lieu de types `any`
+6. **InspectionSchedulingService** : Créer service hexagonal pour planification inspections
+7. **Propriétés Standardisées** : Convertir snake_case → camelCase systématiquement
+8. **Getters vs Propriétés** : Utiliser les propriétés directes des entités de domaine
+
+## 🔍 **PROMPTS SPÉCIFIQUES POUR CORRECTIONS**
+
+### **Prompt 1 : Correction Types Stakesholders**
+```
+Analyser InspectionPaymentValidation.tsx et corriger tous les types stakeholders incorrects.
+Utiliser StakeholderDTO du domaine et s'assurer que toutes les propriétés correspondent.
+Vérifier les transformers et mappers pour la cohérence des types.
+```
+
+### **Prompt 2 : Création InspectionSchedulingService**
+```
+Créer InspectionSchedulingService hexagonal dans src/application/services/.
+Implémenter l'interface IInspectionSchedulingService dans src/domain/repositories/.
+Créer SupabaseInspectionSchedulingAdapter dans src/infrastructure/supabase/adapters/.
+Créer useInspectionSchedulingHex hook dans src/hooks/hexagonal/.
+Mettre à jour ScheduleInspectionModal.tsx pour utiliser le nouveau service.
+```
+
+### **Prompt 3 : Standardisation Propriétés**
+```
+Analyser InsuranceCrud.tsx et identifier toutes les propriétés snake_case.
+Créer un transformer pour convertir snake_case → camelCase.
+Mettre à jour tous les DTOs concernés pour utiliser camelCase.
+Vérifier la cohérence avec les entités de domaine.
+```
+
+### **Prompt 4 : Correction Getters**
+```
+Analyser SuppliersManagement.tsx et corriger le getter isActive() en propriété isActive.
+Vérifier l'entité Supplier dans src/domain/entities/ pour s'assurer que la propriété existe.
+Mettre à jour les transformers si nécessaire.
+```
+
+### **Prompt 5 : Audit Complet Inspections/Invoices**
+```
+Analyser tous les composants dans src/components/inspections/ et src/components/invoices/.
+Identifier toutes les erreurs de types, services manquants, et incohérences.
+Créer une liste détaillée des corrections requises par composant.
+Prioriser les corrections par impact sur l'application.
+```
 
 ### **📈 Métriques de Succès**
 - **0 appels directs** Supabase dans les hooks hexagonaux ✅
@@ -1357,6 +1463,236 @@ CE QUE JE NE FAIS PAS : ❌
   • Modifier la logique métier
   • Cacher des erreurs de validation
   • Contenir de la logique d'affichage
+```
+
+---
+
+## **🎨 RÉALITÉ DES COMPOSANTS REACT**
+
+### **📋 VÉRITÉ ARCHITECTURALE**
+
+En tant que développeur senior et architecte, je confirme que **les composants React UI peuvent légitimement contenir** :
+
+#### **✅ ATTRIBUTS UI LOCAUX**
+```typescript
+// 🎨 État local purement UI
+const [isEditing, setIsEditing] = useState(false);
+const [selectedTab, setSelectedTab] = useState('details');
+const [showErrors, setShowErrors] = useState(false);
+const [loading, setLoading] = useState(false);
+```
+
+#### **✅ CALCULS D'AFFICHAGE**
+```typescript
+// 🎨 Calculs spécifiques à l'UI
+const formattedDate = useMemo(() => {
+  return new Date(inspection.date).toLocaleDateString('fr-FR');
+}, [inspection.date]);
+
+const calculatedScore = useMemo(() => {
+  return supplier.rating.overall * 0.8 + supplier.rating.quality * 0.2;
+}, [supplier.rating]);
+
+const displayStatus = useMemo(() => {
+  return status.charAt(0).toUpperCase() + status.slice(1);
+}, [status]);
+```
+
+#### **✅ LOGIQUE DE PRÉSENTATION**
+```typescript
+// 🎨 Logique purement de présentation
+const getBadgeVariant = (status: string) => {
+  switch (status) {
+    case 'approved': return 'default';
+    case 'rejected': return 'destructive';
+    default: return 'secondary';
+  }
+};
+
+const shouldShowWarning = useMemo(() => {
+  return !isValid && hasAttemptedSubmit;
+}, [isValid, hasAttemptedSubmit]);
+```
+
+#### **✅ DÉPENDANCES UI**
+```typescript
+// 🎨 Dépendances spécifiques à l'UI
+const { toast } = useToast();           // Notifications UI
+const navigate = useNavigate();          // Routing UI
+const { theme } = useTheme();           // Thème UI
+const { t } = useTranslation();        // Internationalisation UI
+```
+
+#### **✅ TRANSFORMATIONS POUR L'UI**
+```typescript
+// 🎨 Transformations entité → UI state
+const supplierUIState = useMemo(() => ({
+  supplier: entity,                    // Entité du domaine
+  isEditing,                           // État UI
+  formattedRating: formatRating(entity.rating.overall),
+  calculatedScore: calculateScore(entity),
+  badgeVariant: getBadgeVariant(entity.status),
+  canEdit: hasPermission(user, 'edit', entity.id)
+}), [entity, isEditing, user]);
+```
+
+### **🚨 CE QUI N'EST PASSE DANS L'UI**
+
+```typescript
+// ❌ LOGIQUE MÉTIER - Doit être dans le domaine
+const isValidBusinessRule = (supplier: Supplier) => {
+  return supplier.rating.overall > 3 && supplier.isActive; // 🚨 Domaine
+};
+
+// ❌ VALIDATION MÉTIER - Doit être dans le domaine
+const validateBusinessRules = (data: CreateSupplierData) => {
+  if (data.rating.overall > 5) throw new Error('Invalid rating'); // 🚨 Domaine
+};
+
+// ❌ PERSISTENCE - Doit être dans l'infrastructure
+const saveToDatabase = (supplier: Supplier) => {
+  return supabase.from('suppliers').insert(supplier); // 🚨 Infrastructure
+};
+```
+
+### **🎯 EXEMPLE CONCRET : SuppliersManagement.tsx**
+
+```typescript
+// ✅ CORRECT - Composant avec état UI et calculs
+const SuppliersManagement = () => {
+  // 🎨 État local UI
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  // 🎨 Calculs d'affichage
+  const formattedSuppliers = useMemo(() => 
+    suppliers.map(supplier => ({
+      ...supplier,
+      displayRating: `${supplier.rating.overall}/5`,
+      statusBadge: getBadgeVariant(supplier.status),
+      canEdit: hasPermission(user, 'edit', supplier.id)
+    }))
+  , [suppliers, user]);
+
+  // 🎨 Logique de présentation
+  const handleEdit = (supplier: SupplierUI) => {
+    setEditingId(supplier.id);
+    setIsCreating(true);
+    // 🎨 Transformation pour le formulaire UI
+    setFormData({
+      name: supplier.name,
+      contact_person: supplier.contacts?.[0]?.name || '',
+      rating: supplier.rating.overall, // 🎨 Valeur calculée
+    });
+  };
+
+  // ✅ Délégation au service hexagonal
+  const { mutate: deleteSupplier } = useMutation({
+    mutationFn: (id: string) => supplierService.deleteSupplier(id), // 🎯 Service
+    onSuccess: () => toast({ title: 'Succès', description: 'Supprimé' }) // 🎨 UI
+  });
+};
+```
+
+### **📊 STATISTIQUES DE SÉPARATION**
+
+| Type | Domaine | Application | UI/Présentation |
+|------|---------|------------|----------------|
+| **Entités** | ✅ 100% | ❌ 0% | ❌ 0% |
+| **Logique métier** | ✅ 100% | ❌ 0% | ❌ 0% |
+| **Validation métier** | ✅ 100% | ❌ 0% | ❌ 0% |
+| **État local** | ❌ 0% | ❌ 0% | ✅ 100% |
+| **Calculs d'affichage** | ❌ 0% | ❌ 0% | ✅ 100% |
+| **Formatage** | ❌ 0% | ✅ 20% | ✅ 80% |
+| **Toast/Notifications** | ❌ 0% | ❌ 0% | ✅ 100% |
+| **Routing** | ❌ 0% | ❌ 0% | ✅ 100% |
+
+### **🔄 STRATÉGIE DE MIGRATION**
+
+#### **🔍 OÙ CHERCHER LES ATTRIBUTS UI EN PHASE DE MIGRATION**
+
+```typescript
+// ✅ STRATÉGIE 1 : Types existants dans /src/types/
+import { SupplierStatus, RatingType } from '@/types/supplier';
+import { InspectionStatus } from '@/types/inspection';
+
+// ✅ STRATÉGIE 2 : Utils dans /src/utils/
+import { formatDate, formatCurrency } from '@/utils/formatters';
+import { calculateScore, getBadgeVariant } from '@/utils/ui-helpers';
+
+// ✅ STRATÉGIE 3 : Services legacy dans /src/services/
+import { NotificationService } from '@/services/notifications';
+import { ValidationService } from '@/services/validation';
+
+// ✅ STRATÉGIE 4 : Combiner avec l'architecture hexagonale
+const SuppliersManagement = () => {
+  // 🎨 Types legacy réutilisés
+  const [status, setStatus] = useState<SupplierStatus>('active');
+  
+  // 🎨 Utils legacy réutilisés
+  const formattedDate = useMemo(() => 
+    formatDate(supplier.createdAt), [supplier.createdAt]);
+  
+  // 🎨 Services legacy réutilisés
+  const { showNotification } = useNotificationService();
+  
+  // 🎯 Services hexagonaux pour la logique métier
+  const { mutate: deleteSupplier } = useMutation({
+    mutationFn: (id: string) => supplierService.deleteSupplier(id)
+  });
+};
+```
+
+#### **📋 CHECKLIST DE MIGRATION**
+
+```markdown
+🔍 **AVANT DE CRÉER** :
+1. Chercher dans `/src/types/*` : Le type existe-t-il déjà ?
+2. Chercher dans `/src/utils/*` : La fonction utilitaire existe-t-elle ?
+3. Chercher dans `/src/services/*` : Le service legacy peut-il être réutilisé ?
+
+✅ **SI TROUVÉ** :
+- Réutiliser directement l'existant
+- Adapter si nécessaire pour l'architecture hexagonale
+- Documenter la dépendance legacy
+
+❌ **SI NON TROUVÉ** :
+- Créer le nouveau type/fonction/service
+- Le placer au bon endroit selon l'architecture
+- Ajouter aux dépendances pour futures migrations
+```
+
+#### **🎯 EXEMPLE PRATIQUE DE MIGRATION**
+
+```typescript
+// ❌ ANTI-PATTERN - Tout recréer
+const SuppliersManagement = () => {
+  // Recréer ce qui existe déjà
+  const [status, setStatus] = useState<'active' | 'inactive'>('active');
+  const formatDate = (date: string) => new Date(date).toLocaleDateString();
+  const getBadgeVariant = (status: string) => status === 'active' ? 'default' : 'destructive';
+};
+
+// ✅ BONNE PRATIQUE - Réutiliser les dépendances
+const SuppliersManagement = () => {
+  // 🎨 Réutiliser les types legacy
+  const [status, setStatus] = useState<SupplierStatus>('active');
+  
+  // 🎨 Réutiliser les utils legacy
+  const formattedDate = useMemo(() => 
+    formatDateUtils(supplier.createdAt), [supplier.createdAt]);
+  
+  // 🎨 Réutiliser les helpers legacy
+  const badgeVariant = useMemo(() => 
+    getBadgeVariantUtils(status), [status]);
+  
+  // 🎯 Combiner avec services hexagonaux
+  const { data: suppliers } = useQuery({
+    queryKey: ['suppliers'],
+    queryFn: () => supplierService.getAllSuppliers()
+  });
+};
 ```
 
 ---

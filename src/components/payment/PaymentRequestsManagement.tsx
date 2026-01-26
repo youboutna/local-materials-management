@@ -17,6 +17,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Eye, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { PaymentRequestService } from '@/application/services/PaymentRequestService';
+import { NotificationService } from '@/application/services/NotificationService';
 import { PaymentRequestDetailsDialog } from './PaymentRequestDetailsDialog';
 
 interface PaymentRequest {
@@ -50,15 +52,14 @@ export const PaymentRequestsManagement: React.FC = () => {
   const authService = new AuthService(RepositoryFactory.getAuthRepository());
   const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
   const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+  const paymentRequestService = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
+  const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
 
   const { data: paymentRequests = [], refetch } = useQuery({
     queryKey: ['payment-requests-management'],
     queryFn: async () => {
-      // This would use PaymentRequestService - placeholder implementation
-      // const requests = await paymentRequestService.getAllPaymentRequests();
-      
-      // Placeholder implementation - would be replaced with service call
-      const requests = [];
+      // Use PaymentRequestService to get all payment requests
+      const requests = await paymentRequestService.getAllPaymentRequests();
       
       // Fetch supplier and project data separately
       const enrichedRequests = await Promise.all(
@@ -103,7 +104,14 @@ export const PaymentRequestsManagement: React.FC = () => {
   const handleApprove = async (request: PaymentRequest) => {
     if (!checkBankingInfo(request)) {
       // Send notification to supplier to complete banking info
-      // This would use NotificationService - placeholder implementation
+      await notificationService.createNotification({
+        recipient_id: request.supplier_id,
+        title: 'Informations bancaires requises',
+        message: 'Veuillez compléter vos informations bancaires pour recevoir le paiement.',
+        type: 'warning',
+        read: false
+      });
+      
       toast({
         title: '⚠️ Informations bancaires requises',
         description: 'Une notification a été envoyée au fournisseur pour compléter ses informations bancaires.',
@@ -113,10 +121,21 @@ export const PaymentRequestsManagement: React.FC = () => {
     }
 
     try {
-      // This would need a PaymentRequestService - placeholder implementation
-      // await paymentRequestService.updateStatus(request.id, 'approved', user?.id);
+      // Update payment request status using PaymentRequestService
+      await paymentRequestService.updatePaymentRequest(request.id, {
+        status: 'approved',
+        notes: `Approuvé par ${user?.email || 'admin'}`
+      });
       
       // Notify supplier
+      await notificationService.createNotification({
+        recipient_id: request.supplier_id,
+        title: 'Demande de paiement approuvée',
+        message: `Votre demande de paiement de ${request.amount}€ a été approuvée.`,
+        type: 'success',
+        read: false
+      });
+      
       toast({
         title: '✅ Demande approuvée',
         description: 'La demande de paiement a été approuvée avec succès.',
@@ -135,10 +154,21 @@ export const PaymentRequestsManagement: React.FC = () => {
 
   const handleReject = async (request: PaymentRequest, reason: string) => {
     try {
-      // This would need a PaymentRequestService - placeholder implementation
-      // await paymentRequestService.updateStatus(request.id, 'rejected', user?.id, reason);
+      // Update payment request status using PaymentRequestService
+      await paymentRequestService.updatePaymentRequest(request.id, {
+        status: 'rejected',
+        notes: `Rejeté par ${user?.email || 'admin'}: ${reason}`
+      });
       
       // Notify supplier
+      await notificationService.createNotification({
+        recipient_id: request.supplier_id,
+        title: 'Demande de paiement rejetée',
+        message: `Votre demande de paiement a été rejetée. Raison: ${reason}`,
+        type: 'error',
+        read: false
+      });
+      
       toast({
         title: '❌ Demande rejetée',
         description: 'La demande de paiement a été rejetée.',

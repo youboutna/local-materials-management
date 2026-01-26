@@ -420,6 +420,7 @@ export { usePhaseTasksHex } from './usePhaseTasksHex';
 
 // Progress Invoice Form
 export { useProgressInvoiceFormHex } from './useProgressInvoiceFormHex';
+export type { InvoiceFormData, WorkflowRequirements } from './useProgressInvoiceFormHex';
 
 // ==================== TYPE EXPORTS ====================
 // Export commonly used types

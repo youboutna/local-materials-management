@@ -11,9 +11,11 @@ import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { AuthService } from '@/application/services/AuthService';
 import { StorageService } from '@/application/services/StorageService';
+import { NotificationService } from '@/application/services/NotificationService';
 import { CheckCircle, XCircle, Eye, FileText, AlertTriangle, Upload } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProgressInvoice {
   id: string;
@@ -61,9 +63,32 @@ export function ConsultantValidationPanel() {
   const loadPendingInvoices = async () => {
     try {
       setLoading(true);
-      // Placeholder implementation - would be replaced with service call
-      const data: ProgressInvoice[] = [];
-      setInvoices(data);
+      // Load invoices pending consultant validation
+      const { data, error } = await supabase
+        .from('progress_invoices')
+        .select('*')
+        .eq('status', 'submitted')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      // Transform data to match ProgressInvoice interface
+      const transformedData = (data || []).map(invoice => ({
+        ...invoice,
+        previous_progress: invoice.previous_progress || 0,
+        work_description: invoice.work_description || '',
+        invoice_amount: invoice.invoice_amount || 0,
+        progress_percentage: invoice.progress_percentage || 0,
+        submitted_by: invoice.submitted_by || '',
+        project_id: invoice.project_id || '',
+        invoice_number: invoice.invoice_number || '',
+        invoice_type: invoice.invoice_type || 'progress',
+        status: invoice.status || 'draft',
+        created_at: invoice.created_at || '',
+        updated_at: invoice.updated_at || ''
+      } as ProgressInvoice));
+      
+      setInvoices(transformedData);
     } catch (error) {
       console.error('Error loading invoices:', error);
       toast({
@@ -90,6 +115,13 @@ export function ConsultantValidationPanel() {
     try {
       const user = await authService.getCurrentUser();
       if (!user) throw new Error('Non authentifié');
+      
+      // Create employee object from user
+      const employee = {
+        id: user.id,
+        name: user.email || 'Unknown',
+        email: user.email || ''
+      };
 
       let serviceFaitDocumentId: string | null = null;
 
@@ -102,7 +134,7 @@ export function ConsultantValidationPanel() {
         const filePath = `progress-invoices/${fileName}`;
 
         const uploadResult = await storageService.uploadFile('documents', filePath, serviceFaitFile);
-        if (uploadResult.error) throw uploadResult.error;
+        // StorageService throws exceptions on error, so if we get here it succeeded
 
         serviceFaitDocumentId = `doc-${Date.now()}`;
       }
@@ -151,16 +183,13 @@ export function ConsultantValidationPanel() {
       // Create notification for supplier
       const invoice = invoices.find(inv => inv.id === invoiceId);
       if (invoice) {
-        await NotificationService.createNotification({
+        const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
+        await notificationService.createNotification({
           recipient_id: invoice.id, // Should be supplier user ID
           title: approved ? 'Facture approuvée par le consultant' : 'Facture rejetée par le consultant',
           message: `Facture ${invoice.invoice_number}: ${approved ? 'Approuvée' : 'Rejetée'} par l'ingénieur conseil`,
-          type: 'progress_invoice_validation',
-          metadata: {
-            invoice_id: invoiceId,
-            approved,
-            comments,
-          },
+          type: approved ? 'success' : 'warning',
+          read: false
         });
       }
 
