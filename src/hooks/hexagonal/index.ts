@@ -494,6 +494,78 @@ export type { PhasePaymentFormData } from './usePhasePaymentsHex';
 // Additional type exports for components - aligned with useBankGuaranteesHex
 export type { MaterialDTO as MaterialOption } from '@/dtos/transforms';
 
+// Missing types for components
+export type { InspectionDTO as InspectionData } from '@/dtos/transforms';
+export type { PhaseDTO as ProjectPhase } from '@/dtos/transforms';
+export type { TaskDTO as ProjectTask } from '@/dtos/transforms';
+export type { EmployeeDTO as Employee } from '@/dtos/transforms';
+
+// Form data types
+export interface ProjectTaskFormData {
+  title: string;
+  description?: string;
+  phase_id?: string;
+  assigned_to?: string;
+  priority?: 'low' | 'medium' | 'high';
+  due_date?: string;
+  estimated_hours?: number;
+  status?: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+}
+
+export interface RiskFormData {
+  title: string;
+  description: string;
+  probability: 'low' | 'medium' | 'high';
+  impact: 'low' | 'medium' | 'high';
+  category: string;
+  mitigation?: string;
+  status?: 'active' | 'mitigated' | 'closed';
+}
+
+export interface ProjectRisk {
+  id: string;
+  title: string;
+  description: string;
+  probability: 'low' | 'medium' | 'high';
+  impact: 'low' | 'medium' | 'high';
+  category: string;
+  mitigation?: string;
+  status: 'active' | 'mitigated' | 'closed';
+  project_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface KanbanTask {
+  id: string;
+  title: string;
+  description?: string;
+  status: 'todo' | 'in_progress' | 'done';
+  phase_id?: string;
+  assigned_to?: string;
+  priority: 'low' | 'medium' | 'high';
+  due_date?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaymentMilestone {
+  id: string;
+  title: string;
+  amount: number;
+  due_date: string;
+  status: 'pending' | 'completed' | 'overdue';
+  project_id: string;
+  phase_id?: string;
+}
+
+// Payment schedule hook (alias for usePaymentsHex)
+export const usePaymentSchedule = () => {
+  // This would be implemented in a separate hook file
+  // For now, provide a placeholder that matches the expected interface
+  throw new Error('usePaymentSchedule hook not implemented yet');
+};
+
 // Re-export types from useBankGuaranteesHex to ensure consistency
 export type { 
   BankGuaranteeFormData, 

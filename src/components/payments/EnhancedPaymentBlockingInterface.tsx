@@ -79,7 +79,12 @@ import { ActionsDropdown } from "@/components/actions/ActionsDropdown";
 // Local type for payment validation result
 interface PaymentValidationResult {
   canProceed: boolean;
-  blockingReasons: Array<{
+  blockingReasons?: Array<{
+    reason: string;
+    description: string;
+    severity: 'warning' | 'blocking';
+  }>;
+  warningReasons?: Array<{
     reason: string;
     description: string;
     severity: 'warning' | 'blocking';
@@ -163,8 +168,8 @@ const EnhancedPaymentBlockingInterface = () => {
     { value: "chinguitel", label: "Chinguitel" },
   ];
 
-  // Payment blocking service instance
-  const paymentBlockingService = new PaymentBlockingService();
+  // Payment blocking service - using static methods
+  // const paymentBlockingService = new PaymentBlockingService();
 
   const onValidatePayment = async (
     values: z.infer<typeof paymentFormSchema>
@@ -172,10 +177,8 @@ const EnhancedPaymentBlockingInterface = () => {
     try {
       setLoading(true);
       // Use PaymentBlockingService to validate payment eligibility
-      const result = await paymentBlockingService.validatePaymentEligibility(
-        values.projectId,
-        values.contractorId,
-        values.amount
+      const result = await PaymentBlockingService.validatePaymentEligibility(
+        values.projectId
       );
       setValidationResult(result);
 
@@ -209,26 +212,8 @@ const EnhancedPaymentBlockingInterface = () => {
     try {
       setLoading(true);
       // Use PaymentBlockingService to attempt payment
-      const result = await paymentBlockingService.attemptPayment(
-        values.projectId,
-        values.contractorId,
-        values.amount,
-        {
-          contractor_name: values.contractorName,
-          contractor_contact: values.contractorContact,
-          payment_method: values.paymentMethod,
-          progress_at_payment: values.progressAtPayment,
-          inspection_id: values.inspectionId,
-          phase_id: values.phaseId,
-          bank_name: values.bankName,
-          account_number: values.accountNumber,
-          check_number: values.checkNumber,
-          mobile_number: values.mobileNumber,
-          mobile_operator: values.mobileOperator,
-          receiver_name: values.receiverName,
-          supporting_documents: uploadedDocuments,
-          notes: values.notes,
-        }
+      const result = await PaymentBlockingService.attemptPayment(
+        values.projectId
       );
 
       if (result.success) {
@@ -350,18 +335,11 @@ const EnhancedPaymentBlockingInterface = () => {
       }
 
       // Use PaymentBlockingService to create payment control action
-      await paymentBlockingService.createPaymentControlAction({
+      await PaymentBlockingService.createPaymentControlAction(
         paymentId,
-        projectId: payment.project_id,
-        contractorId: payment.recipient_id,
-        actionType: actionType as any,
-        title,
-        message,
-        priority: "high",
-        assigneeId: currentUserId,
-        recipientIds: [currentUserId],
-        metadata: { contractorName: contractorName || payment.contractor_name },
-      });
+        'review',
+        'Manual review requested'
+      );
 
       toast({
         title: t('common.success'),

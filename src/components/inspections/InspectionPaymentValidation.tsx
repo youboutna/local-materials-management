@@ -117,7 +117,7 @@ const InspectionPaymentValidation: React.FC = () => {
         inspector: inspectionData.inspector,
         status: inspectionData.status,
         progressAtInspection: inspectionData.progressAtInspection,
-        comments: inspectionData.comments,
+        comments: inspectionData.comments || undefined,
         documents: inspectionData.documents
       };
     },

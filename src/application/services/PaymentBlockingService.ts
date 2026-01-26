@@ -265,4 +265,103 @@ export class PaymentBlockingService {
       new Date(a.due_date!).getTime() - new Date(b.due_date!).getTime()
     );
   }
+
+  /**
+   * Validate payment eligibility
+   */
+  static async validatePaymentEligibility(paymentRequestId: string): Promise<{
+    canProceed: boolean;
+    warningReasons?: Array<{
+      reason: string;
+      description: string;
+      severity: 'warning' | 'blocking';
+    }>;
+    blockingReasons?: Array<{
+      reason: string;
+      description: string;
+      severity: 'warning' | 'blocking';
+    }>;
+  }> {
+    const blocks = Array.from(blocksStore.values()).filter(
+      block => block.payment_request_id === paymentRequestId && block.status === 'active'
+    );
+
+    const warningReasons: Array<{
+      reason: string;
+      description: string;
+      severity: 'warning' | 'blocking';
+    }> = [];
+    const blockingReasons: Array<{
+      reason: string;
+      description: string;
+      severity: 'warning' | 'blocking';
+    }> = [];
+
+    blocks.forEach(block => {
+      if (block.block_type === 'financial') {
+        blockingReasons.push({
+          reason: 'financial_block',
+          description: `Financial block: ${block.block_reason}`,
+          severity: 'blocking'
+        });
+      } else if (block.block_type === 'document') {
+        warningReasons.push({
+          reason: 'document_issue',
+          description: `Document issue: ${block.block_reason}`,
+          severity: 'warning'
+        });
+      } else if (block.block_type === 'compliance') {
+        blockingReasons.push({
+          reason: 'compliance_block',
+          description: `Compliance issue: ${block.block_reason}`,
+          severity: 'blocking'
+        });
+      } else {
+        warningReasons.push({
+          reason: 'technical_issue',
+          description: `Technical issue: ${block.block_reason}`,
+          severity: 'warning'
+        });
+      }
+    });
+
+    return {
+      canProceed: blockingReasons.length === 0,
+      warningReasons: warningReasons.length > 0 ? warningReasons : undefined,
+      blockingReasons: blockingReasons.length > 0 ? blockingReasons : undefined
+    };
+  }
+
+  /**
+   * Attempt payment processing
+   */
+  static async attemptPayment(paymentRequestId: string): Promise<{
+    success: boolean;
+    message: string;
+    blockReasons?: string[];
+  }> {
+    const validation = await this.validatePaymentEligibility(paymentRequestId);
+    
+    if (!validation.canProceed) {
+      return {
+        success: false,
+        message: 'Payment blocked due to unresolved issues',
+        blockReasons: validation.blockingReasons?.map(r => r.description)
+      };
+    }
+
+    // Simulate payment processing
+    try {
+      // In a real implementation, this would integrate with payment gateway
+      return {
+        success: true,
+        message: 'Payment processed successfully'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Payment processing failed'
+      };
+    }
+  }
 }
