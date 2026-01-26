@@ -183,7 +183,7 @@ export {
   usePaymentRequestsByProject 
 } from './usePaymentRequestsHexNew';
 export { usePaymentsHex } from './usePaymentsHex';
-export { usePaymentCrud } from './usePaymentCrudHex';
+export { usePaymentCrud, type Payment, type PaymentFormData } from './usePaymentCrudHex';
 export { usePaymentActionsHex } from './usePaymentActionsHex';
 export { useInspectionPaymentValidationHex } from './useInspectionPaymentValidationHex';
 export { usePaymentValidationHex } from './usePaymentValidationHex';
@@ -410,7 +410,13 @@ export {
 export { useEnhancedRiskManagerHex } from './useEnhancedRiskManagerHex';
 
 // Payment Control
-export { usePaymentControlActionsHex } from './usePaymentControlActionsHex';
+export { 
+  usePaymentControlActionsHex,
+  actionFormSchema,
+  type ActionFormData,
+  type PaymentControlActionsProps,
+  type ActionMetadata
+} from './usePaymentControlActionsHex';
 
 // Phase Employees
 export { usePhaseEmployeesHex } from './usePhaseEmployeesHex';

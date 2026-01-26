@@ -26,11 +26,21 @@ import {
   Users
 } from 'lucide-react';
 
+// Local interface for stakeholder
+interface Stakeholder {
+  id: string;
+  stakeholderEntityType?: string;
+  stakeholderType?: string;
+  supplierId?: string;
+  employeeId?: string;
+  name?: string;
+}
+
 // Local interface for inspection data
 interface InspectionData {
   id: string;
   projectId: string;
-  phaseId?: string | null;
+  phaseId?: string;
   date: string;
   inspector: string;
   status: string;
@@ -43,7 +53,9 @@ interface InspectionData {
 interface ProjectWithStakeholders {
   id: string;
   title: string;
-  stakeholders?: any[];
+  budget?: number;
+  progress?: number;
+  stakeholders?: Stakeholder[];
 }
 
 type PaymentType = 'contractor' | 'mission_fees' | 'engineer_fees';
@@ -78,7 +90,6 @@ const InspectionPaymentValidation: React.FC = () => {
     queryFn: async (): Promise<InspectionData | null> => {
       if (!inspectionId) return null;
       
-      // Get inspection
       const inspectionData = await InspectionService.getInspectionById(inspectionId);
       
       if (!inspectionData) {
@@ -86,28 +97,22 @@ const InspectionPaymentValidation: React.FC = () => {
         return null;
       }
       
-      // Check if inspection is approved (terminé)
       if (inspectionData.status !== 'approved') {
-        console.warn(`[InspectionPaymentValidation] Inspection not approved. Status: ${inspectionData.status}, ID: ${inspectionId}`);
+        console.warn(`[InspectionPaymentValidation] Inspection not approved. Status: ${inspectionData.status}`);
         return null;
       }
       
-      // Check if there's a pending payment request linked to this inspection
       const paymentRequest = await SupplierPaymentService.getPendingPaymentRequestByInspectionId(inspectionId);
       
-      // Only return inspection if it has a pending payment request
       if (!paymentRequest) {
         console.warn(`[InspectionPaymentValidation] No pending payment request found for inspection: ${inspectionId}`);
         return null;
       }
       
-      console.log(`[InspectionPaymentValidation] Validation successful for inspection: ${inspectionId}, payment request: ${paymentRequest.id}`);
-      
-      // Return inspection data mapped to local interface
       return {
         id: inspectionData.id,
         projectId: inspectionData.projectId,
-        phaseId: inspectionData.phaseId,
+        phaseId: inspectionData.phaseId || undefined,
         date: inspectionData.date,
         inspector: inspectionData.inspector,
         status: inspectionData.status,
@@ -119,32 +124,27 @@ const InspectionPaymentValidation: React.FC = () => {
     enabled: !!inspectionId,
   });
 
-  // Fetch project details with external stakeholders (contractors)
+  // Fetch project details with external stakeholders
   const { data: project } = useQuery<ProjectWithStakeholders | null>({
     queryKey: ['project-summary', projectId],
     queryFn: async (): Promise<ProjectWithStakeholders | null> => {
-      if (!projectId) {
-        console.warn('[InspectionPaymentValidation] No projectId provided');
-        return null;
-      }
+      if (!projectId) return null;
       
       try {
         const projectRepo = RepositoryFactory.getProjectRepository();
         const projectData = await projectRepo.findById(projectId);
         
-        if (!projectData) {
-          console.warn(`[InspectionPaymentValidation] Project not found: ${projectId}`);
-          return null;
-        }
+        if (!projectData) return null;
         
-        console.log(`[InspectionPaymentValidation] Project loaded successfully: ${projectId}`);
         return {
           id: projectData.id,
           title: projectData.title,
+          budget: (projectData as any).budget || 0,
+          progress: (projectData as any).progress || 0,
           stakeholders: (projectData as any).stakeholders || []
         };
       } catch (error) {
-        console.error(`[InspectionPaymentValidation] Error loading project ${projectId}:`, error);
+        console.error(`[InspectionPaymentValidation] Error loading project:`, error);
         return null;
       }
     },
@@ -154,76 +154,47 @@ const InspectionPaymentValidation: React.FC = () => {
   // Update inspection mutation
   const updateInspectionMutation = useMutation({
     mutationFn: async (data: { status: string; comments: string; payment_status?: PaymentStatus; payment_type: PaymentType }) => {
-      if (!inspectionId) {
-        console.error('[InspectionPaymentValidation] Inspection ID missing for update');
-        throw new Error('Inspection ID missing');
-      }
+      if (!inspectionId) throw new Error('Inspection ID missing');
 
-      console.log(`[InspectionPaymentValidation] Updating inspection ${inspectionId}:`, {
+      await InspectionService.updateInspectionPaymentValidation(inspectionId, {
         status: data.status,
+        comments: data.comments,
         payment_type: data.payment_type,
-        payment_status: data.payment_status
+        payment_status: data.payment_status,
+        project_id: projectId,
+        inspection_id: inspectionId,
+        rejection_notes: data.comments
       });
-
-      try {
-        // Update inspection using hexagonal service
-        await InspectionService.updateInspectionPaymentValidation(inspectionId, {
-          status: data.status,
-          comments: data.comments,
-          payment_type: data.payment_type,
-          payment_status: data.payment_status,
-          project_id: projectId,
-          inspection_id: inspectionId,
-          rejection_notes: data.comments
-        });
-
-        console.log(`[InspectionPaymentValidation] Inspection updated successfully: ${inspectionId}`);
-      } catch (error) {
-        console.error(`[InspectionPaymentValidation] Error updating inspection ${inspectionId}:`, error);
-        throw error;
-      }
 
       // Determine beneficiary based on payment type
       let beneficiaryUserId: string | null = null;
-      console.log(`[InspectionPaymentValidation] Determining beneficiary for payment type: ${data.payment_type}`);
 
       if (data.payment_type === 'contractor') {
-        // Find external contractor (partie prenante externe - supplier)
         const contractor = project?.stakeholders?.find(
-          (s: StakeholderDTO) => s.stakeholderEntityType === 'supplier' && s.supplierId
+          (s: Stakeholder) => s.stakeholderEntityType === 'supplier' && s.supplierId
         );
-        // Note: supplier details would need to be fetched separately or included in stakeholder data
-        beneficiaryUserId = null; // TODO: Get supplier user ID from supplier service
-        console.log(`[InspectionPaymentValidation] Contractor beneficiary found: ${beneficiaryUserId ? 'YES' : 'NO'}`);
+        beneficiaryUserId = null;
       } else if (data.payment_type === 'mission_fees' || data.payment_type === 'engineer_fees') {
-        // Find engineering consultant (ingénieur conseil)
         const engineer = project?.stakeholders?.find(
-          (s: StakeholderDTO) => s.stakeholderType === 'consultant' && s.employeeId
+          (s: Stakeholder) => s.stakeholderType === 'consultant' && s.employeeId
         );
         
         if (engineer?.employeeId) {
-          console.log(`[InspectionPaymentValidation] Found engineer employee ID: ${engineer.employeeId}`);
-          // Get employee user_id via service
-          const employeeData = await ProjectService.getEmployeeUserId(engineer.employeeId);
-          beneficiaryUserId = employeeData?.userId || null;
-          console.log(`[InspectionPaymentValidation] Engineer beneficiary found: ${beneficiaryUserId ? 'YES' : 'NO'}`);
-        } else {
-          console.warn('[InspectionPaymentValidation] No engineer found in project stakeholders');
+          // Use employee repository to get user ID
+          const employeeRepo = RepositoryFactory.getEmployeeRepository();
+          const employeeData = await employeeRepo.findById(engineer.employeeId);
+          beneficiaryUserId = (employeeData as any)?.userId || null;
         }
-      } else {
-        console.warn(`[InspectionPaymentValidation] Unknown payment type: ${data.payment_type}`);
       }
 
       // Create notification for beneficiary
       if (beneficiaryUserId && project) {
-        console.log(`[InspectionPaymentValidation] Creating notification for beneficiary: ${beneficiaryUserId}`);
         const paymentTypeLabels = {
           contractor: 'entreprise contractante',
           mission_fees: 'frais de mission',
           engineer_fees: 'honoraires ingénieur conseil'
         };
 
-        // Create notification service instance
         const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
         
         await notificationService.createNotification({
@@ -235,14 +206,9 @@ const InspectionPaymentValidation: React.FC = () => {
           type: data.payment_status === 'approved' ? 'success' : 'error',
           read: false
         });
-        
-        console.log(`[InspectionPaymentValidation] Notification created successfully for user: ${beneficiaryUserId}`);
-      } else {
-        console.warn('[InspectionPaymentValidation] No beneficiary found or project missing, skipping notification');
       }
     },
     onSuccess: () => {
-      console.log(`[InspectionPaymentValidation] Mutation successful, invalidating queries`);
       queryClient.invalidateQueries({ queryKey: ['inspection', inspectionId] });
       queryClient.invalidateQueries({ queryKey: ['project-detail', projectId] });
       toast({
@@ -251,7 +217,6 @@ const InspectionPaymentValidation: React.FC = () => {
       });
     },
     onError: (error) => {
-      console.error('[InspectionPaymentValidation] Mutation error:', error);
       toast({
         title: 'Erreur',
         description: 'Impossible de mettre à jour l\'inspection.',
@@ -397,7 +362,7 @@ const InspectionPaymentValidation: React.FC = () => {
                   <div className="flex items-center gap-2 mt-1">
                     <Calendar className="h-4 w-4" />
                     <p className="font-medium">
-                      {new Date((inspection as InspectionDTO)?.date || '').toLocaleDateString('fr-FR', {
+                      {new Date(inspection.date || '').toLocaleDateString('fr-FR', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric',
@@ -409,48 +374,28 @@ const InspectionPaymentValidation: React.FC = () => {
                 <div>
                   <Label className="text-muted-foreground">Statut</Label>
                   <div className="mt-1">
-                    {inspection ? getStatusBadge(inspection.status || 'unknown') : <Badge className="bg-gray-100 text-gray-800">Inconnu</Badge>}
+                    {getStatusBadge(inspection.status || 'unknown')}
                   </div>
                 </div>
 
                 <div>
                   <Label className="text-muted-foreground">Inspecteur</Label>
-                  <p className="font-medium mt-1">{inspection?.inspector || 'Non spécifié'}</p>
+                  <p className="font-medium mt-1">{inspection.inspector || 'Non spécifié'}</p>
                 </div>
 
                 <div>
                   <Label className="text-muted-foreground">Progression à l'inspection</Label>
                   <div className="flex items-center gap-2 mt-1">
-                    <TrendingUp className="h-4 w-4 text-primary" />
-                    <p className="font-medium">{inspection?.progressAtInspection || 0}%</p>
+                    <TrendingUp className="h-4 w-4" />
+                    <p className="font-medium">{inspection.progressAtInspection || 0}%</p>
                   </div>
                 </div>
               </div>
 
-              {inspection?.comments && (
+              {inspection.comments && (
                 <div>
                   <Label className="text-muted-foreground">Commentaires</Label>
-                  <p className="mt-1 p-3 bg-muted rounded-md">{inspection.comments}</p>
-                </div>
-              )}
-
-              {inspection?.documents && (
-                <div>
-                  <Label className="text-muted-foreground">Documents joints</Label>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {(() => {
-                      const docs = inspection.documents;
-                      if (Array.isArray(docs) && docs.length > 0) {
-                        return docs.map((doc, idx) => (
-                          <Badge key={idx} variant="outline" className="flex items-center gap-1">
-                            <FileText className="h-3 w-3" />
-                            Document {idx + 1}
-                          </Badge>
-                        ));
-                      }
-                      return null;
-                    })()}
-                  </div>
+                  <p className="mt-1">{inspection.comments}</p>
                 </div>
               )}
             </CardContent>
@@ -461,182 +406,101 @@ const InspectionPaymentValidation: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
-                Validation de paiement
+                Validation du paiement
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="payment-type">Type de paiement *</Label>
-                <Select value={paymentType} onValueChange={(value) => setPaymentType(value as PaymentType)}>
-                  <SelectTrigger id="payment-type" className="mt-2">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="contractor">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4" />
-                        Entreprise contractante
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="mission_fees">
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4" />
-                        Frais de mission
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="engineer_fees">
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4" />
-                        Honoraires ingénieur conseil
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="paymentType">Type de paiement</Label>
+                  <Select value={paymentType} onValueChange={(v) => setPaymentType(v as PaymentType)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="contractor">Entreprise contractante</SelectItem>
+                      <SelectItem value="mission_fees">Frais de mission</SelectItem>
+                      <SelectItem value="engineer_fees">Honoraires ingénieur conseil</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div>
-                <Label htmlFor="payment-status">Statut de validation *</Label>
-                <Select value={paymentStatus} onValueChange={(value) => setPaymentStatus(value as PaymentStatus)}>
-                  <SelectTrigger id="payment-status" className="mt-2">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PAYMENT_STATUS_OPTIONS.map((option) => {
-                      const Icon = option.icon;
-                      return (
+                <div>
+                  <Label htmlFor="paymentStatus">Décision de paiement</Label>
+                  <Select value={paymentStatus} onValueChange={(v) => setPaymentStatus(v as PaymentStatus)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PAYMENT_STATUS_OPTIONS.map(option => (
                         <SelectItem key={option.value} value={option.value}>
                           <div className="flex items-center gap-2">
-                            <Icon className="h-4 w-4" />
-                            {option.label}
+                            <option.icon className="h-4 w-4" />
+                            <span>{option.label}</span>
                           </div>
                         </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {paymentStatus !== 'approved' && (
                 <div>
-                  <Label htmlFor="rejection-notes">Notes de rejet / Explication *</Label>
+                  <Label htmlFor="rejectionNotes">Notes de rejet *</Label>
                   <Textarea
-                    id="rejection-notes"
+                    id="rejectionNotes"
                     value={rejectionNotes}
                     onChange={(e) => setRejectionNotes(e.target.value)}
-                    placeholder="Expliquez la raison du rejet ou les informations manquantes..."
-                    rows={5}
-                    className="mt-2"
+                    placeholder="Expliquez la raison du rejet..."
+                    rows={4}
                   />
                 </div>
               )}
 
-              <div className="flex gap-2">
-                <Button 
-                  onClick={handleValidatePayment}
-                  disabled={updateInspectionMutation.isPending}
-                  className="w-full"
-                  variant={paymentStatus === 'approved' ? 'default' : 'destructive'}
-                >
-                  <StatusIcon className="h-4 w-4 mr-2" />
-                  {updateInspectionMutation.isPending ? 'Enregistrement...' : 'Valider la décision'}
-                </Button>
-              </div>
+              <Button
+                onClick={handleValidatePayment}
+                disabled={updateInspectionMutation.isPending}
+                className="w-full"
+              >
+                {updateInspectionMutation.isPending ? 'Traitement...' : 'Valider la décision'}
+              </Button>
             </CardContent>
           </Card>
         </div>
 
-        {/* Project & Beneficiary Info */}
+        {/* Summary Sidebar */}
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Informations du projet</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <Label className="text-muted-foreground">Titre</Label>
-                <p className="font-medium mt-1">{project?.title}</p>
-              </div>
-              <div>
-                <Label className="text-muted-foreground">Budget total</Label>
-                <p className="font-medium mt-1">{(project?.budget || 0).toLocaleString()} MRU</p>
-              </div>
-              <div>
-                <Label className="text-muted-foreground">Progression projet</Label>
-                <p className="font-medium mt-1">{project?.progress || 0}%</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Bénéficiaire</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {(() => {
-                if (paymentType === 'contractor') {
-                  const contractor = project?.stakeholders?.find(
-                    (s: StakeholderDTO) => s.stakeholderEntityType === 'supplier'
-                  );
-                  
-                  return contractor ? (
-                    <>
-                      <div>
-                        <Label className="text-muted-foreground">Type</Label>
-                        <p className="font-medium mt-1">Entreprise contractante</p>
-                      </div>
-                      <div>
-                        <Label className="text-muted-foreground">Fournisseur ID</Label>
-                        <p className="font-medium mt-1">{contractor.supplierId || 'Non défini'}</p>
-                      </div>
-                      <div>
-                        <Label className="text-muted-foreground">Nom</Label>
-                        <p className="font-medium mt-1">{contractor.externalName || 'Non défini'}</p>
-                      </div>
-                      {contractor.externalEmail && (
-                        <div>
-                          <Label className="text-muted-foreground">Email</Label>
-                          <p className="font-medium mt-1">{contractor.externalEmail}</p>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <p className="text-muted-foreground text-sm">
-                      Aucune entreprise contractante définie pour ce projet.
-                    </p>
-                  );
-                } else if (paymentType === 'mission_fees' || paymentType === 'engineer_fees') {
-                  return (
-                    <>
-                      <div>
-                        <Label className="text-muted-foreground">Type</Label>
-                        <p className="font-medium mt-1">
-                          {paymentType === 'mission_fees' ? 'Frais de mission' : 'Honoraires ingénieur conseil'}
-                        </p>
-                      </div>
-                      <div>
-                        <Label className="text-muted-foreground">Bénéficiaire</Label>
-                        <p className="font-medium mt-1">Ingénieur conseil</p>
-                      </div>
-                    </>
-                  );
-                }
-                return null;
-              })()}
-            </CardContent>
-          </Card>
-
-          <Card className="border-yellow-200 bg-yellow-50">
-            <CardHeader>
-              <CardTitle className="text-sm flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4" />
-                Note importante
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Résumé du projet
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Une notification sera automatiquement envoyée au bénéficiaire pour l'informer de votre décision.
-                {paymentStatus !== 'approved' && ' Il sera invité à compléter les informations bancaires et joindre la facture de décompte.'}
-              </p>
+            <CardContent className="space-y-4">
+              <div>
+                <Label className="text-muted-foreground">Budget</Label>
+                <p className="font-medium text-lg">{(project?.budget || 0).toLocaleString()} MRU</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">Progression</Label>
+                <p className="font-medium text-lg">{project?.progress || 0}%</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">Parties prenantes</Label>
+                <div className="mt-2 space-y-2">
+                  {project?.stakeholders?.map((s: Stakeholder, index: number) => (
+                    <div key={s.id || index} className="text-sm">
+                      <span className="font-medium">{s.name || 'N/A'}</span>
+                      <span className="text-muted-foreground ml-2">({s.stakeholderType || s.stakeholderEntityType})</span>
+                    </div>
+                  ))}
+                  {(!project?.stakeholders || project.stakeholders.length === 0) && (
+                    <p className="text-muted-foreground text-sm">Aucune partie prenante</p>
+                  )}
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

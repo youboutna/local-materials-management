@@ -73,9 +73,18 @@ import { BankGuaranteeService } from '@/application/services/BankGuaranteeServic
 import ProjectSelector from "@/components/selectors/ProjectSelector";
 import SupplierSelector from "@/components/suppliers/SupplierSelector";
 import UserSelector from "@/components/selectors/UserSelector";
-import DocumentSelector from "@/components/selectors/DocumentSelector";
 import DocumentUpload from "@/components/documents/DocumentUpload";
 import { ActionsDropdown } from "@/components/actions/ActionsDropdown";
+
+// Local type for payment validation result
+interface PaymentValidationResult {
+  canProceed: boolean;
+  blockingReasons: Array<{
+    reason: string;
+    description: string;
+    severity: 'warning' | 'blocking';
+  }>;
+}
 
 const paymentFormSchema = z.object({
   projectId: z.string().min(1, "ID projet requis"),
@@ -154,12 +163,16 @@ const EnhancedPaymentBlockingInterface = () => {
     { value: "chinguitel", label: "Chinguitel" },
   ];
 
+  // Payment blocking service instance
+  const paymentBlockingService = new PaymentBlockingService();
+
   const onValidatePayment = async (
     values: z.infer<typeof paymentFormSchema>
   ) => {
     try {
       setLoading(true);
-      const result = await validatePaymentEligibility(
+      // Use PaymentBlockingService to validate payment eligibility
+      const result = await paymentBlockingService.validatePaymentEligibility(
         values.projectId,
         values.contractorId,
         values.amount
@@ -195,7 +208,8 @@ const EnhancedPaymentBlockingInterface = () => {
   ) => {
     try {
       setLoading(true);
-      const result = await attemptPayment(
+      // Use PaymentBlockingService to attempt payment
+      const result = await paymentBlockingService.attemptPayment(
         values.projectId,
         values.contractorId,
         values.amount,
@@ -335,7 +349,8 @@ const EnhancedPaymentBlockingInterface = () => {
           return;
       }
 
-      await createPaymentControlAction({
+      // Use PaymentBlockingService to create payment control action
+      await paymentBlockingService.createPaymentControlAction({
         paymentId,
         projectId: payment.project_id,
         contractorId: payment.recipient_id,

@@ -130,8 +130,8 @@ const InsuranceCrud: React.FC = () => {
         await insuranceService.createInsuranceCertificate({
           project_id: formData.project_id,
           contractor_id: formData.contractor_id,
-          insurance_type: formData.coverage_type,
-          provider: formData.insurance_company,
+          insurance_type: formData.insurance_type,
+          provider: formData.provider,
           policy_number: formData.policy_number,
           coverage_amount: formData.coverage_amount,
           start_date: formData.start_date,

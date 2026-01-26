@@ -1,6 +1,5 @@
-﻿import { ActionsDropdown } from '@/components/actions/ActionsDropdown';
+import { ActionsDropdown } from '@/components/actions/ActionsDropdown';
 import DocumentSection from '@/components/common/DocumentSection';
-import DocumentSelector from '@/components/selectors/DocumentSelector';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +13,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
-import { createPaymentControlAction } from '@/services/paymentControlActionService';
 import {
     Ban,
     CreditCard,
@@ -29,11 +27,8 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import {
-  usePaymentCrud,
-  type Payment,
-  type PaymentFormData
-} from '@/hooks/hexagonal'
+import { usePaymentCrud } from '@/hooks/hexagonal';
+import type { PaymentDTO } from '@/dtos/transforms/PaymentDomainTransformer';
 
 interface PaymentCrudProps {
   projectId?: string;
@@ -43,7 +38,7 @@ interface PaymentCrudProps {
 const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState<PaymentDTO | null>(null);
   const [loading, setLoading] = useState(false);
   const [uploadedDocuments, setUploadedDocuments] = useState<string[]>([]);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
@@ -140,31 +135,31 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
     setIsDialogOpen(true);
   };
 
-  const openEditDialog = (payment: Payment) => {
+  const openEditDialog = (payment: PaymentDTO) => {
     setSelectedPayment(payment);
     setFormData({
-      project_id: payment.project_id || '',
-      contractor_id: payment.contractor_id || '',
-      contractor_name: payment.contractor_name || '',
-      contractor_contact: payment.contractor_contact || '',
+      project_id: payment.projectId || '',
+      contractor_id: payment.contractorId || '',
+      contractor_name: payment.contractorName || '',
+      contractor_contact: payment.contractorContact || '',
       amount: payment.amount?.toString() || '',
-      payment_date: payment.payment_date || '',
-      progress_at_payment: payment.progress_at_payment?.toString() || '',
-      transaction_id: payment.transaction_id || '',
-      payment_method: payment.payment_method || 'bank_transfer',
-      inspection_id: payment.inspection_id || '',
-      phase_id: payment.phase_id || '',
-      bank_name: payment.bank_name || '',
-      account_number: payment.account_number || '',
-      check_number: payment.check_number || '',
-      mobile_number: payment.mobile_number || '',
-      mobile_operator: payment.mobile_operator || '',
-      receiver_name: payment.receiver_name || '',
-      supporting_documents: payment.supporting_documents || [],
+      payment_date: payment.paymentDate || '',
+      progress_at_payment: payment.progressAtPayment?.toString() || '',
+      transaction_id: payment.transactionId || '',
+      payment_method: payment.paymentMethod || 'bank_transfer',
+      inspection_id: payment.inspectionId || '',
+      phase_id: payment.phaseId || '',
+      bank_name: payment.bankName || '',
+      account_number: payment.accountNumber || '',
+      check_number: payment.checkNumber || '',
+      mobile_number: payment.mobileNumber || '',
+      mobile_operator: payment.mobileOperator || '',
+      receiver_name: payment.receiverName || '',
+      supporting_documents: [],
       notes: '',
       purchase_order_url: '',
       quote_url: '',
-      invoice_url: payment.invoice_url || ''
+      invoice_url: ''
     });
     setIsEditing(true);
     setIsDialogOpen(true);
@@ -174,7 +169,7 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
     if (!formData.project_id || !formData.contractor_id) {
       toast({
         title: "Erreur",
-        description: "Veuillez sÃ©lectionner un projet et un contractant",
+        description: "Veuillez sélectionner un projet et un contractant",
         variant: "destructive",
       });
       return false;
@@ -184,7 +179,7 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
     if (!isValid) {
       toast({
         title: "Erreur",
-        description: "Ce paiement est bloquÃ©. Veuillez rÃ©soudre les blocages avant de continuer.",
+        description: "Ce paiement est bloqué. Veuillez résoudre les blocages avant de continuer.",
         variant: "destructive",
       });
       return false;
@@ -216,25 +211,37 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
         invoiceUrl = await uploadInvoice(invoiceFile);
       }
 
-      const paymentData: PaymentFormData = {
-        ...formData,
+      const paymentData = {
+        projectId: formData.project_id,
+        contractorId: formData.contractor_id,
+        contractorName: formData.contractor_name,
+        contractorContact: formData.contractor_contact,
         amount: parseFloat(formData.amount),
-        progress_at_payment: parseFloat(formData.progress_at_payment),
-        supporting_documents: uploadedDocuments,
-        invoice_url: invoiceUrl
+        paymentDate: formData.payment_date,
+        progressAtPayment: parseFloat(formData.progress_at_payment),
+        transactionId: formData.transaction_id,
+        paymentMethod: formData.payment_method,
+        inspectionId: formData.inspection_id || undefined,
+        phaseId: formData.phase_id || undefined,
+        bankName: formData.bank_name || undefined,
+        accountNumber: formData.account_number || undefined,
+        checkNumber: formData.check_number || undefined,
+        mobileNumber: formData.mobile_number || undefined,
+        mobileOperator: formData.mobile_operator || undefined,
+        receiverName: formData.receiver_name || undefined,
       };
 
       if (isEditing && selectedPayment) {
         await updatePayment(selectedPayment.id, paymentData);
         toast({
-          title: "SuccÃ¨s",
-          description: "Paiement mis Ã  jour avec succÃ¨s",
+          title: "Succès",
+          description: "Paiement mis à jour avec succès",
         });
       } else {
         await createPayment(paymentData);
         toast({
-          title: "SuccÃ¨s",
-          description: "Paiement crÃ©Ã© avec succÃ¨s",
+          title: "Succès",
+          description: "Paiement créé avec succès",
         });
       }
 
@@ -252,13 +259,13 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
     }
   };
 
-  const handleDelete = async (payment: Payment) => {
-    if (confirm('ÃŠtes-vous sÃ»r de vouloir supprimer ce paiement ?')) {
+  const handleDelete = async (payment: PaymentDTO) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce paiement ?')) {
       try {
         await deletePayment(payment.id);
         toast({
-          title: "SuccÃ¨s",
-          description: "Paiement supprimÃ© avec succÃ¨s",
+          title: "Succès",
+          description: "Paiement supprimé avec succès",
         });
       } catch (error) {
         console.error('Error deleting payment:', error);
@@ -307,9 +314,9 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
       case 'bank_transfer':
         return 'Virement bancaire';
       case 'cash':
-        return 'EspÃ¨ces';
+        return 'Espèces';
       case 'check':
-        return 'ChÃ¨que';
+        return 'Chèque';
       case 'mobile_payment':
         return 'Paiement mobile';
       default:
@@ -346,7 +353,7 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                   <Label htmlFor="project_id">Projet *</Label>
                   <ProjectSelector
                     value={formData.project_id}
-                    onChange={(value) => setFormData(prev => ({ ...prev, project_id: value }))}
+                    onChange={(value) => setFormData(prev => ({ ...prev, project_id: value || '' }))}
                     disabled={!!projectId}
                   />
                 </div>
@@ -354,8 +361,13 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                 <div>
                   <Label htmlFor="contractor_id">Contractant *</Label>
                   <SupplierSelector
-                    value={formData.contractor_id}
-                    onChange={(value) => setFormData(prev => ({ ...prev, contractor_id: value }))}
+                    value={{ id: formData.contractor_id, name: formData.contractor_name, contact: formData.contractor_contact, leadTime: 0 }}
+                    onChange={(value) => setFormData(prev => ({ 
+                      ...prev, 
+                      contractor_id: value?.id || '',
+                      contractor_name: value?.name || '',
+                      contractor_contact: value?.contact || ''
+                    }))}
                     disabled={!!contractorId}
                   />
                 </div>
@@ -433,7 +445,7 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                 </div>
                 
                 <div>
-                  <Label htmlFor="payment_method">MÃ©thode de paiement *</Label>
+                  <Label htmlFor="payment_method">Méthode de paiement *</Label>
                   <Select 
                     value={formData.payment_method} 
                     onValueChange={(value) => setFormData(prev => ({ ...prev, payment_method: value }))}
@@ -443,8 +455,8 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="bank_transfer">Virement bancaire</SelectItem>
-                      <SelectItem value="cash">EspÃ¨ces</SelectItem>
-                      <SelectItem value="check">ChÃ¨que</SelectItem>
+                      <SelectItem value="cash">Espèces</SelectItem>
+                      <SelectItem value="check">Chèque</SelectItem>
                       <SelectItem value="mobile_payment">Paiement mobile</SelectItem>
                     </SelectContent>
                   </Select>
@@ -463,7 +475,7 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="account_number">NumÃ©ro de compte</Label>
+                    <Label htmlFor="account_number">Numéro de compte</Label>
                     <Input
                       id="account_number"
                       value={formData.account_number}
@@ -475,7 +487,7 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
 
               {formData.payment_method === 'check' && (
                 <div>
-                  <Label htmlFor="check_number">NumÃ©ro de chÃ¨que</Label>
+                  <Label htmlFor="check_number">Numéro de chèque</Label>
                   <Input
                     id="check_number"
                     value={formData.check_number}
@@ -487,7 +499,7 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
               {formData.payment_method === 'mobile_payment' && (
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <Label htmlFor="mobile_number">NumÃ©ro mobile</Label>
+                    <Label htmlFor="mobile_number">Numéro mobile</Label>
                     <Input
                       id="mobile_number"
                       value={formData.mobile_number}
@@ -495,23 +507,23 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="mobile_operator">OpÃ©rateur mobile</Label>
+                    <Label htmlFor="mobile_operator">Opérateur mobile</Label>
                     <Select 
                       value={formData.mobile_operator} 
                       onValueChange={(value) => setFormData(prev => ({ ...prev, mobile_operator: value }))}
                     >
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="Sélectionner" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="orange">Orange</SelectItem>
-                        <SelectItem value="mtn">MTN</SelectItem>
-                        <SelectItem value="moov">Moov</SelectItem>
+                        <SelectItem value="mauritel">Mauritel</SelectItem>
+                        <SelectItem value="mattel">Mattel</SelectItem>
+                        <SelectItem value="chinguitel">Chinguitel</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="receiver_name">Nom du bÃ©nÃ©ficiaire</Label>
+                    <Label htmlFor="receiver_name">Nom du récepteur</Label>
                     <Input
                       id="receiver_name"
                       value={formData.receiver_name}
@@ -520,42 +532,6 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                   </div>
                 </div>
               )}
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="receipt">ReÃ§u de paiement</Label>
-                  <Input
-                    id="receipt"
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={handleReceiptUpload}
-                  />
-                  {receiptFile && (
-                    <p className="text-sm text-gray-600 mt-1">Fichier sÃ©lectionnÃ©: {receiptFile.name}</p>
-                  )}
-                </div>
-                
-                <div>
-                  <Label htmlFor="invoice">Facture</Label>
-                  <Input
-                    id="invoice"
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={handleInvoiceUpload}
-                  />
-                  {invoiceFile && (
-                    <p className="text-sm text-gray-600 mt-1">Fichier sÃ©lectionnÃ©: {invoiceFile.name}</p>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <Label>Documents de support</Label>
-                <DocumentSelector
-                  onDocumentsChange={handleDocumentSelect}
-                  selectedDocuments={uploadedDocuments}
-                />
-              </div>
 
               <div>
                 <Label htmlFor="notes">Notes</Label>
@@ -567,12 +543,12 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-4">
+              <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Annuler
                 </Button>
                 <Button type="submit" disabled={loading}>
-                  {loading ? 'Enregistrement...' : 'Enregistrer'}
+                  {loading ? 'Enregistrement...' : (isEditing ? 'Mettre à jour' : 'Créer')}
                 </Button>
               </div>
             </form>
@@ -582,62 +558,84 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
 
       <CardContent>
         {isLoading ? (
-          <div className="text-center py-8">Chargement des paiements...</div>
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Date</TableHead>
                 <TableHead>Projet</TableHead>
                 <TableHead>Contractant</TableHead>
                 <TableHead>Montant</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>MÃ©thode</TableHead>
+                <TableHead>Méthode</TableHead>
                 <TableHead>Progression</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {payments.map((payment) => (
-                <TableRow key={payment.id}>
-                  <TableCell>{payment.project_id}</TableCell>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{payment.contractor_name}</div>
-                      <div className="text-sm text-gray-600">{payment.contractor_contact}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {payment.amount?.toLocaleString()} â‚¬
-                  </TableCell>
-                  <TableCell>
-                    {payment.payment_date && new Date(payment.payment_date).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {getPaymentMethodIcon(payment.payment_method || '')}
-                      {getPaymentMethodLabel(payment.payment_method || '')}
-                    </div>
-                  </TableCell>
-                  <TableCell>{payment.progress_at_payment}%</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => openEditDialog(payment)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleDelete(payment)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                      {payment.receipt_url && (
-                        <Button size="sm" variant="outline" asChild>
-                          <a href={payment.receipt_url} target="_blank" rel="noopener noreferrer">
-                            <Eye className="h-4 w-4" />
-                          </a>
-                        </Button>
-                      )}
-                    </div>
+              {payments.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                    Aucun paiement enregistré
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                payments.map((payment) => (
+                  <TableRow key={payment.id}>
+                    <TableCell>
+                      {payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString('fr-FR') : '-'}
+                    </TableCell>
+                    <TableCell>
+                      <Link 
+                        to={`/projects/${payment.projectId}`}
+                        className="text-primary hover:underline flex items-center gap-1"
+                      >
+                        {payment.projectId?.substring(0, 8)}...
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{payment.contractorName}</div>
+                        <div className="text-sm text-muted-foreground">{payment.contractorContact}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {payment.amount?.toLocaleString('fr-FR')} MRU
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {getPaymentMethodIcon(payment.paymentMethod || '')}
+                        <span>{getPaymentMethodLabel(payment.paymentMethod || '')}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{payment.progressAtPayment}%</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openEditDialog(payment)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(payment)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         )}

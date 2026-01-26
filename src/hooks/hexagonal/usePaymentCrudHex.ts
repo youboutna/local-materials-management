@@ -8,6 +8,10 @@ import { StorageService } from '@/application/services/StorageService';
 import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import { PaymentDTO, CreatePaymentRequestDto, UpdatePaymentRequestDto } from '@/dtos/transforms/PaymentDomainTransformer';
 
+// Re-export types for components
+export type Payment = PaymentDTO;
+export type PaymentFormData = CreatePaymentRequestDto;
+
 // Hook: Payment CRUD with real-time updates
 export function usePaymentCrud() {
   const [payments, setPayments] = useState<PaymentDTO[]>([]);
