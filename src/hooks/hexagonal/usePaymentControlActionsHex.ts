@@ -18,8 +18,6 @@ export const actionFormSchema = z.object({
   notificationChannels: z.array(z.string()).optional()
 });
 
-export type ActionFormData = z.infer<typeof actionFormSchema>;
-
 export interface PaymentControlActionsProps {
   paymentId: string;
   projectId: string;
@@ -32,27 +30,7 @@ export interface PaymentControlActionsProps {
   }>;
 }
 
-export interface ActionMetadata {
-  paymentId: string;
-  projectId: string;
-  contractorId: string;
-  amount: number;
-  blockingReasons?: Array<{
-    reason: string;
-    description: string;
-    severity: 'warning' | 'blocking';
-  }>;
-  actionType: string;
-  priority: string;
-  escalationLevel?: string;
-  dueDate?: string;
-  documentReferences?: string[];
-  followUpRequired?: boolean;
-  notificationChannels?: string[];
-}
-
-// Static schema export for form validation
-usePaymentControlActionsHex.actionFormSchema = actionFormSchema;
+// Static schema export for form validation - moved after function declaration
 
 export const usePaymentControlActionsHex = (props?: PaymentControlActionsProps) => {
   const queryClient = useQueryClient();
