@@ -15,6 +15,7 @@ export enum ErrorCode {
   NETWORK_ERROR = 'NETWORK_ERROR',
   INTERNAL_ERROR = 'INTERNAL_ERROR',
   CONNECTION_ERROR = 'CONNECTION_ERROR',
+  NOT_IMPLEMENTED = 'NOT_IMPLEMENTED',
   
   // Business logic errors
   BUSINESS_RULE_VIOLATION = 'BUSINESS_RULE_VIOLATION',
@@ -67,6 +68,8 @@ export class AppError extends Error {
       [ErrorCode.DATABASE_ERROR]: 'Erreur de base de données',
       [ErrorCode.NETWORK_ERROR]: 'Erreur de connexion',
       [ErrorCode.INTERNAL_ERROR]: 'Erreur interne du serveur',
+      [ErrorCode.CONNECTION_ERROR]: 'Erreur de connexion au serveur',
+      [ErrorCode.NOT_IMPLEMENTED]: 'Fonctionnalité non implémentée',
       [ErrorCode.BUSINESS_RULE_VIOLATION]: 'Opération non autorisée',
       [ErrorCode.INSUFFICIENT_PERMISSIONS]: 'Permissions insuffisantes',
       [ErrorCode.USER_FIND_ERROR]: 'Utilisateur introuvable',

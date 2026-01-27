@@ -61,32 +61,6 @@ export interface VerifyServiceFaitRequestDto {
   projectId: string;
 }
 
-// ============= TYPES INTERNES =============
-
-interface InspectionData {
-  id: string;
-  status: string;
-  date: string;
-  inspector: string;
-  progress_at_inspection: number;
-  comments?: string;
-}
-
-interface DocumentData {
-  id: string;
-  title: string;
-  document_type: string;
-  status?: string;
-  file_url?: string;
-}
-
-interface MaterialData {
-  id: string;
-  name: string;
-  available_quantity: number;
-  required_quantity?: number;
-}
-
 // ============= ENGINE =============
 
 export class CheckpointVerificationEngine {
@@ -122,7 +96,6 @@ export class CheckpointVerificationEngine {
       }
 
       const projectId = request.projectId || this.projectId;
-      const phaseId = request.phaseId || this.phaseId;
 
       const verificationItems: VerificationItemDTO[] = [];
       const blockingIssues: string[] = [];
@@ -227,15 +200,21 @@ export class CheckpointVerificationEngine {
         errors: [errorMessage]
       };
     }
-      // Vérifier s'il y a des inspections approuvées pour ce seuil
+  }
+
+  /**
+   * Vérifie les inspections
+   */
+  private async verifyInspections(request: VerifyInspectionsRequestDto): Promise<VerificationItemDTO[]> {
+    try {
       const inspections = await this.inspectionRepository.getApprovedInspections(this.projectId);
       if (!inspections || inspections.length === 0) {
         return [{
           id: `inspection-required-${request.triggerProgress}`,
-          category: 'inspection',
+          category: 'inspection' as CheckpointCategory,
           title: `Inspection requise à ${request.triggerProgress}%`,
           description: `Aucune inspection approuvée trouvée pour le seuil ${request.triggerProgress}%`,
-          status: 'pending',
+          status: 'pending' as VerificationStatus,
           required: true,
           weight: 0.3,
         }];
@@ -243,13 +222,106 @@ export class CheckpointVerificationEngine {
 
       return [{
         id: inspections[0].id,
-        category: 'inspection',
+        category: 'inspection' as CheckpointCategory,
         title: `Inspection à ${inspections[0].progress_at_inspection}%`,
         description: `Inspecteur: ${inspections[0].inspector}`,
-        status: 'verified',
+        status: 'verified' as VerificationStatus,
         required: true,
         weight: 0.3,
         reference_id: inspections[0].id,
+      }];
+    } catch (error) {
+      console.error('CheckpointVerificationEngine.verifyInspections failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to verify inspections');
+    }
+  }
+
+  /**
+   * Vérifie les documents
+   */
+  private async verifyDocuments(request: VerifyDocumentsRequestDto): Promise<VerificationItemDTO[]> {
+    try {
+      if (!request.requiredDocumentIds || request.requiredDocumentIds.length === 0) {
+        return [];
+      }
+
+      const items: VerificationItemDTO[] = [];
+      for (const documentId of request.requiredDocumentIds) {
+        const document = await this.documentRepository.getDocument(documentId);
+        if (!document) {
+          items.push({
+            id: documentId,
+            category: 'document' as CheckpointCategory,
+            title: 'Document requis',
+            status: 'pending' as VerificationStatus,
+            required: true,
+            weight: 0.2 / request.requiredDocumentIds.length,
+          });
+          continue;
+        }
+
+        const docStatus = document.status;
+        const isVerified = docStatus === 'pending_review' || docStatus === 'archived';
+        const isFailed = docStatus === 'rejected';
+
+        items.push({
+          id: document.id,
+          category: 'document' as CheckpointCategory,
+          title: document.title,
+          description: document.description || undefined,
+          status: isVerified ? 'verified' : isFailed ? 'failed' : 'in_progress' as VerificationStatus,
+          required: true,
+          weight: 0.2 / request.requiredDocumentIds.length,
+          reference_id: document.id,
+          reference_type: 'document',
+          evidence_urls: document.file_url ? [document.file_url] : undefined,
+        });
+      }
+
+      return items;
+    } catch (error) {
+      console.error('CheckpointVerificationEngine.verifyDocuments failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to verify documents');
+    }
+  }
+
+  /**
+   * Vérifie les approbations
+   */
+  private async verifyApprovals(request: VerifyApprovalsRequestDto): Promise<VerificationItemDTO[]> {
+    if (!request.requiredApprovalIds || request.requiredApprovalIds.length === 0) {
+      return [];
+    }
+
+    // Placeholder - approvals verification logic
+    return request.requiredApprovalIds.map(approvalId => ({
+      id: approvalId,
+      category: 'approval' as CheckpointCategory,
+      title: 'Approbation requise',
+      status: 'pending' as VerificationStatus,
+      required: true,
+      weight: 0.2 / request.requiredApprovalIds.length,
+    }));
+  }
+
+  /**
+   * Vérifie les ressources/matériaux pour une étape
+   */
+  private async verifyResources(request: VerifyResourcesRequestDto): Promise<VerificationItemDTO[]> {
+    try {
+      const materials = await this.materialRepository.getMaterialsForStep(request.stepId, this.projectId);
+      if (!materials || materials.length === 0) {
+        return [];
+      }
+
+      return [{
+        id: `resources-${request.stepId}`,
+        category: 'resource' as CheckpointCategory,
+        title: 'Vérification des ressources',
+        description: `${materials.length} matériaux disponibles`,
+        status: 'verified' as VerificationStatus,
+        required: false,
+        weight: 0.1,
       }];
     } catch (error) {
       console.error('CheckpointVerificationEngine.verifyResources failed:', error);
@@ -271,104 +343,31 @@ export class CheckpointVerificationEngine {
           title: 'PV de service fait',
           description: 'Document de réception requis',
           status: 'pending' as VerificationStatus,
-    if (!request.requiredDocumentIds || request.requiredDocumentIds.length === 0) {
-      return [];
-    }
-
-    const items: VerificationItemDTO[] = [];
-    for (const documentId of request.requiredDocumentIds) {
-      const document = await this.documentRepository.getDocument(documentId);
-      if (!document) {
-        items.push({
-          id: documentId,
-          category: 'document',
-          title: 'Document requis',
-          status: 'pending',
           required: true,
-          weight: 0.2 / request.requiredDocumentIds.length,
-        });
-        continue;
+          weight: 0.2,
+        };
       }
 
-      // Check document status - approved status may not exist in enum
-      const docStatus = document.status;
-      const isVerified = docStatus === 'pending_review' || docStatus === 'archived'; // Using available statuses
-      const isFailed = docStatus === 'rejected';
-
-      items.push({
-        id: document.id,
-        category: 'document',
-        title: document.title,
-        description: document.description || undefined,
-        status: isVerified ? 'verified' : isFailed ? 'failed' : 'in_progress',
-        required: true,
-        weight: 0.2 / request.requiredDocumentIds.length,
-        reference_id: document.id,
-        reference_type: 'document',
-        evidence_urls: document.file_url ? [document.file_url] : undefined,
-      });
-    }
-
-    return items;
-  } catch (error) {
-    console.error('CheckpointVerificationEngine.verifyDocuments failed:', error);
-    throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to verify documents');
-  }
-}
-
-/**
- * Vérifie les ressources/matériaux pour une étape
- */
-private async verifyResources(request: VerifyResourcesRequestDto): Promise<VerificationItemDTO[]> {
-  try {
-    const materials = await this.materialRepository.getMaterialsForStep(request.stepId, this.projectId);
-    if (!materials || materials.length === 0) {
-      return [];
-    }
-
-    return [{
-      id: `resources-${request.stepId}`,
-      category: 'resource',
-      title: 'Vérification des ressources',
-      description: `${materials.length} matériaux disponibles`,
-      status: 'verified',
-      required: false,
-      weight: 0.1,
-    }];
-  } catch (error) {
-    console.error('CheckpointVerificationEngine.verifyResources failed:', error);
-    throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to verify resources');
-  }
-
-    if (!pvDocuments || pvDocuments.length === 0) {
+      const pv = pvDocuments[0];
+      const pvStatus = pv.status;
+      const isVerified = pvStatus === 'archived' || pvStatus === 'pending_review';
+      
       return {
-        id: `service-fait-${checkpointId}`,
-        category: 'service_fait',
+        id: pv.id,
+        category: 'service_fait' as CheckpointCategory,
         title: 'PV de service fait',
-        description: 'Document de réception requis',
-        status: 'pending',
+        description: pv.title,
+        status: isVerified ? 'verified' : 'in_progress' as VerificationStatus,
         required: true,
         weight: 0.2,
+        reference_id: pv.id,
+        reference_type: 'pv',
+        evidence_urls: pv.file_url ? [pv.file_url] : undefined,
       };
+    } catch (error) {
+      console.error('CheckpointVerificationEngine.verifyServiceFait failed:', error);
+      return null;
     }
-
-    const pv = pvDocuments[0];
-    // Check document status using available enum values
-    const pvStatus = pv.status;
-    const isVerified = pvStatus === 'archived' || pvStatus === 'pending_review';
-    
-    return {
-      id: pv.id,
-      category: 'service_fait',
-      title: 'PV de service fait',
-      description: pv.title,
-      status: isVerified ? 'verified' : 'in_progress',
-      required: true,
-      weight: 0.2,
-      reference_id: pv.id,
-      reference_type: 'pv',
-      evidence_urls: pv.file_url ? [pv.file_url] : undefined,
-    };
   }
 
   /**
@@ -387,24 +386,20 @@ private async verifyResources(request: VerifyResourcesRequestDto): Promise<Verif
       };
     }
 
-    const result = await this.verifyCheckpoint(checkpoint);
+    const verifyResult = await this.verifyCheckpoint({ checkpoint, projectId: this.projectId });
 
-    if (!result.can_proceed) {
+    if (!verifyResult.result.can_proceed) {
       return {
         allowed: false,
-        reason: result.blocking_issues.join(', ') || 'Vérifications incomplètes',
+        reason: verifyResult.result.blocking_issues?.join(', ') || 'Vérifications incomplètes',
         maxAmount: 0,
       };
     }
 
-    // Récupérer le budget de la phase
+    // Récupérer le budget de la phase via le repository
     let phaseBudget = 0;
     if (checkpoint.phase_id) {
-      const { data: phase } = await supabase
-        .from('project_phases')
-        .select('estimated_cost')
-        .eq('id', checkpoint.phase_id)
-        .single();
+      const phase = await this.phaseRepository.getPhaseById(checkpoint.phase_id);
       phaseBudget = phase?.estimated_cost || 0;
     }
 
