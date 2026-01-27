@@ -46,6 +46,7 @@ export * from './IParsedInvoiceRepository';
 export * from './IDecompteRepository';
 export * from './IPVGeneratorRepository';
 export * from './IBankGuaranteeRepository';
+export * from './IMilestoneRepository';
 export type { IInsuranceRepository } from './IInsuranceRepository';
 export * from './IWorkspaceRepository';
 export { InsuranceRepository } from './InsuranceRepository';

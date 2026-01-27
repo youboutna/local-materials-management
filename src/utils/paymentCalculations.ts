@@ -2,6 +2,8 @@ import { InsuranceService } from '@/application/services/InsuranceService';
 import { BankGuaranteeService } from '@/application/services/BankGuaranteeService';
 import { ProjectService } from '@/application/services/ProjectService';
 import { DocumentService } from '@/application/services/DocumentService';
+import { PaymentService } from '@/application/services/PaymentService';
+import { PaymentBlockingService } from '@/application/services/PaymentBlockingService';
 
 export interface PaymentValidationResult {
   canProceed: boolean;
@@ -177,45 +179,53 @@ export const calculatePaymentMetrics = async (
   endDate: Date,
   projectId?: string
 ): Promise<PaymentMetrics> => {
-  let query = supabase
-    .from('payments')
-    .select('*')
-    .gte('created_at', startDate.toISOString())
-    .lte('created_at', endDate.toISOString());
+  // Use hexagonal services instead of direct Supabase access
+  const paymentService = new PaymentService();
+  const paymentBlockingService = new PaymentBlockingService();
 
+  // Get payments via service
+  let payments = [];
   if (projectId) {
-    query = query.eq('project_id', projectId);
+    payments = await paymentService.getPaymentsByProject(projectId);
+  } else {
+    payments = await paymentService.getAllPayments();
   }
 
-  const { data: payments } = await query;
+  // Filter by date range
+  const filteredPayments = payments.filter(p => {
+    const createdAt = new Date(p.created_at || p.createdAt || '');
+    return createdAt >= startDate && createdAt <= endDate;
+  });
 
-  // Get blocked payments
-  const { data: blockedPayments } = await supabase
-    .from('payment_blocks')
-    .select('*')
-    .gte('blocked_at', startDate.toISOString())
-    .lte('blocked_at', endDate.toISOString())
-    .is('resolved_at', null);
+  // Get blocked payments via service
+  const blockedPayments = await paymentBlockingService.getActiveBlocks();
+  const filteredBlocked = blockedPayments.filter(block => {
+    const blockedAt = new Date(block.blocked_at || '');
+    return blockedAt >= startDate && blockedAt <= endDate && !block.resolved_at;
+  });
 
-  const totalPayments = payments?.length || 0;
-  const blockedCount = blockedPayments?.length || 0;
-  const pendingCount = payments?.filter(p => !p.transaction_id).length || 0;
+  const totalPayments = filteredPayments.length;
+  const blockedCount = filteredBlocked.length;
+  const pendingCount = filteredPayments.filter(p => !p.transaction_id && !p.transactionId).length;
 
   // Calculate average processing time
-  const processedPayments = payments?.filter(p => p.transaction_id && p.created_at) || [];
+  const processedPayments = filteredPayments.filter(p => 
+    (p.transaction_id || p.transactionId) && (p.created_at || p.createdAt)
+  );
   const avgProcessingTime = processedPayments.length > 0
     ? processedPayments.reduce((sum, p) => {
-        const created = new Date(p.created_at);
-        const processed = new Date(p.payment_date);
+        const created = new Date(p.created_at || p.createdAt || '');
+        const processed = new Date(p.payment_date || p.paymentDate || '');
         return sum + (processed.getTime() - created.getTime());
-      }, 0) / processedPayments.length / (1000 * 60 * 60 * 24) // Convert to days
+      }, 0) / processedPayments.length / (1000 * 60 * 60 * 24)
     : 0;
 
   // Count blocking reasons
   const blockingReasons: Record<string, number> = {};
-  blockedPayments?.forEach(block => {
-    if (block.blocking_reasons && Array.isArray(block.blocking_reasons)) {
-      block.blocking_reasons.forEach((reason: any) => {
+  filteredBlocked.forEach(block => {
+    const reasons = block.blocking_reasons || block.blockingReasons;
+    if (reasons && Array.isArray(reasons)) {
+      reasons.forEach((reason: any) => {
         const reasonKey = reason.reason || 'unknown';
         blockingReasons[reasonKey] = (blockingReasons[reasonKey] || 0) + 1;
       });
