@@ -1,8 +1,9 @@
 /**
- * Payment Control Actions Service
+ * Payment Control Actions Service - Hexagonal Architecture
  * Business logic for payment control actions and notifications
  */
 
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface ActionFormData {
@@ -46,6 +47,16 @@ export class PaymentControlActionsService {
 
   async createTaskAssignment(values: ActionFormData, metadata: ActionMetadata): Promise<void> {
     try {
+      if (!values.recipientIds || values.recipientIds.length === 0) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Recipient IDs are required');
+      }
+      if (!values.title || !values.message) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Title and message are required');
+      }
+      if (!metadata.paymentId || !metadata.projectId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Payment ID and project ID are required in metadata');
+      }
+
       const authResult = await this.authRepository.getCurrentUser();
       const userId = authResult?.user?.id || 'system';
       
@@ -62,13 +73,23 @@ export class PaymentControlActionsService {
       
       console.log('Task assignment created:', { values, metadata, createdBy: userId });
     } catch (error) {
-      console.error('Error creating task assignment:', error);
-      throw error;
+      console.error('PaymentControlActionsService.createTaskAssignment failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create task assignment');
     }
   }
 
   async sendSMSNotification(values: ActionFormData, metadata: ActionMetadata): Promise<void> {
     try {
+      if (!values.recipientIds || values.recipientIds.length === 0) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Recipient IDs are required');
+      }
+      if (!values.message) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Message is required');
+      }
+      if (!metadata.paymentId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Payment ID is required in metadata');
+      }
+
       // SMS notification logic - would use NotificationService
       console.log('SMS notification:', {
         recipients: values.recipientIds,
@@ -87,13 +108,23 @@ export class PaymentControlActionsService {
         });
       }
     } catch (error) {
-      console.error('Error sending SMS notification:', error);
-      throw error;
+      console.error('PaymentControlActionsService.sendSMSNotification failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to send SMS notification');
     }
   }
 
   async scheduleCall(values: ActionFormData, metadata: ActionMetadata): Promise<void> {
     try {
+      if (!values.recipientIds || values.recipientIds.length === 0) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Recipient IDs are required');
+      }
+      if (!values.title || !values.message) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Title and message are required');
+      }
+      if (!metadata.paymentId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Payment ID is required in metadata');
+      }
+
       // Call scheduling logic - would use CommunicationService
       console.log('Call scheduled:', {
         recipients: values.recipientIds,
@@ -113,13 +144,23 @@ export class PaymentControlActionsService {
         });
       }
     } catch (error) {
-      console.error('Error scheduling call:', error);
-      throw error;
+      console.error('PaymentControlActionsService.scheduleCall failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to schedule call');
     }
   }
 
   async sendEmailNotification(values: ActionFormData, metadata: ActionMetadata): Promise<void> {
     try {
+      if (!values.recipientIds || values.recipientIds.length === 0) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Recipient IDs are required');
+      }
+      if (!values.title || !values.message) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Title and message are required');
+      }
+      if (!metadata.paymentId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Payment ID is required in metadata');
+      }
+
       // Email notification logic - would use EmailService
       console.log('Email notification:', {
         recipients: values.recipientIds,
@@ -139,13 +180,23 @@ export class PaymentControlActionsService {
         });
       }
     } catch (error) {
-      console.error('Error sending email notification:', error);
-      throw error;
+      console.error('PaymentControlActionsService.sendEmailNotification failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to send email notification');
     }
   }
 
   async createHierarchyNotification(values: ActionFormData, metadata: ActionMetadata): Promise<void> {
     try {
+      if (!values.recipientIds || values.recipientIds.length === 0) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Recipient IDs are required');
+      }
+      if (!values.title || !values.message) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Title and message are required');
+      }
+      if (!metadata.paymentId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Payment ID is required in metadata');
+      }
+
       const authResult = await this.authRepository.getCurrentUser();
       const userId = authResult?.user?.id || 'system';
       
@@ -162,13 +213,23 @@ export class PaymentControlActionsService {
       
       console.log('Hierarchy notification created:', { values, metadata, createdBy: userId });
     } catch (error) {
-      console.error('Error creating hierarchy notification:', error);
-      throw error;
+      console.error('PaymentControlActionsService.createHierarchyNotification failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create hierarchy notification');
     }
   }
 
   async createMailAction(values: ActionFormData, metadata: ActionMetadata): Promise<void> {
     try {
+      if (!values.recipientIds || values.recipientIds.length === 0) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Recipient IDs are required');
+      }
+      if (!values.title || !values.message) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Title and message are required');
+      }
+      if (!metadata.paymentId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Payment ID is required in metadata');
+      }
+
       // Mail action logic - would use MailService
       console.log('Mail action:', {
         recipients: values.recipientIds,
@@ -188,12 +249,8 @@ export class PaymentControlActionsService {
         });
       }
     } catch (error) {
-      console.error('Error creating mail action:', error);
-      throw error;
+      console.error('PaymentControlActionsService.createMailAction failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create mail action');
     }
-  }
-
-  static create(): PaymentControlActionsService {
-    return new PaymentControlActionsService();
   }
 }

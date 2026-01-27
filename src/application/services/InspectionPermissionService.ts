@@ -50,14 +50,4 @@ export class InspectionPermissionService {
     const result = await this.inspectionPermissionRepository.validateInspectorAssignment(params.inspectorId, repositoryContext);
     return InspectionPermissionDomainTransformer.toPermissionResultDTO(result);
   }
-
-  /**
-   * Static method for backward compatibility
-   */
-  static async canScheduleInspection(context: PermissionContext): Promise<PermissionResult> {
-    // This method needs repository injection - will be updated when RepositoryFactory is ready
-    throw new Error('Static method deprecated - use RepositoryFactory to get service instance');
-  }
-
-
 }

@@ -1,7 +1,13 @@
 /**
- * Performance Monitoring Service
- * Uses in-memory storage as the performance monitoring repository doesn't exist
+ * Performance Monitoring Service - Hexagonal Architecture
+ * Business logic for monitoring system and database performance
  */
+
+import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+
+// For now, using any repository as placeholder since performance monitoring repository doesn't exist
+import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 
 export interface DatabaseMetricsDTO {
   connections: number;
@@ -17,27 +23,49 @@ export interface PerformanceMetricsDTO {
   memory?: number;
 }
 
-// In-memory metrics store
-const metricsHistory: PerformanceMetricsDTO[] = [];
+export interface PerformanceAlertDTO {
+  type: 'warning' | 'critical';
+  message: string;
+  metric: string;
+  value: number;
+  threshold: number;
+}
+
+export interface PerformanceSummaryDTO {
+  current: PerformanceMetricsDTO;
+  healthStatus: 'healthy' | 'warning' | 'critical';
+  isHealthy: boolean;
+  trend: 'improving' | 'stable' | 'degrading';
+}
+
+export interface MetricsValidationResult {
+  isValid: boolean;
+  errors: string[];
+}
 
 export class PerformanceMonitoringService {
+  constructor(
+    private repository: IProjectRepository = RepositoryFactory.getProjectRepository() // Using project repository as placeholder
+  ) {}
   /**
    * Get database performance metrics
    * Returns mock metrics for demo purposes
    */
   async getDatabaseMetrics(): Promise<DatabaseMetricsDTO> {
     try {
-      // Return mock metrics
+      // For now, return mock data as performance monitoring repository is not available
+      // TODO: Implement proper database metrics retrieval when repository is available
+      console.warn('PerformanceMonitoringService.getDatabaseMetrics: Performance monitoring repository not available');
+      
       return {
         connections: Math.floor(Math.random() * 50) + 10,
         maxConnections: 100,
         queryTime: Math.floor(Math.random() * 500) + 50,
         slowQueries: Math.floor(Math.random() * 5)
       };
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Error getting database metrics:', error);
-      throw new Error(`Failed to get database metrics: ${message}`);
+    } catch (error) {
+      console.error('PerformanceMonitoringService.getDatabaseMetrics failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get database metrics');
     }
   }
 
@@ -53,10 +81,9 @@ export class PerformanceMonitoringService {
         cpu: Math.floor(Math.random() * 80) + 10,
         memory: Math.floor(Math.random() * 70) + 20
       };
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Error getting performance metrics:', error);
-      throw new Error(`Failed to get performance metrics: ${message}`);
+    } catch (error) {
+      console.error('PerformanceMonitoringService.getPerformanceMetrics failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get performance metrics');
     }
   }
 
@@ -68,10 +95,9 @@ export class PerformanceMonitoringService {
       const metrics = await this.getDatabaseMetrics();
       const connectionUsage = (metrics.connections / metrics.maxConnections) * 100;
       return connectionUsage < 80 && metrics.queryTime < 1000 && metrics.slowQueries < 5;
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Error checking database health:', error);
-      throw new Error(`Failed to check database health: ${message}`);
+    } catch (error) {
+      console.error('PerformanceMonitoringService.isDatabaseHealthy failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to check database health');
     }
   }
 
@@ -90,10 +116,9 @@ export class PerformanceMonitoringService {
         return 'warning';
       }
       return 'healthy';
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Error getting database health status:', error);
-      throw new Error(`Failed to get database health status: ${message}`);
+    } catch (error) {
+      console.error('PerformanceMonitoringService.getDatabaseHealthStatus failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get database health status');
     }
   }
 
@@ -102,29 +127,34 @@ export class PerformanceMonitoringService {
    */
   async getHistoricalMetrics(hours: number = 24): Promise<PerformanceMetricsDTO[]> {
     try {
-      // Return from in-memory history or generate mock data
-      if (metricsHistory.length === 0) {
-        // Generate mock historical data
-        const now = Date.now();
-        for (let i = hours; i >= 0; i--) {
-          metricsHistory.push({
-            database: {
-              connections: Math.floor(Math.random() * 50) + 10,
-              maxConnections: 100,
-              queryTime: Math.floor(Math.random() * 500) + 50,
-              slowQueries: Math.floor(Math.random() * 5)
-            },
-            timestamp: new Date(now - i * 3600000).toISOString(),
-            cpu: Math.floor(Math.random() * 80) + 10,
-            memory: Math.floor(Math.random() * 70) + 20
-          });
-        }
+      if (hours < 1 || hours > 168) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Hours must be between 1 and 168 (1 week)');
       }
-      return metricsHistory.slice(-hours);
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Error getting historical metrics:', error);
-      throw new Error(`Failed to get historical metrics: ${message}`);
+
+      // For now, return mock data as performance monitoring repository is not available
+      // TODO: Implement proper historical metrics retrieval when repository is available
+      console.warn('PerformanceMonitoringService.getHistoricalMetrics: Performance monitoring repository not available');
+      
+      // Generate mock historical data
+      const mockHistory: PerformanceMetricsDTO[] = [];
+      const now = Date.now();
+      for (let i = hours; i >= 0; i--) {
+        mockHistory.push({
+          database: {
+            connections: Math.floor(Math.random() * 50) + 10,
+            maxConnections: 100,
+            queryTime: Math.floor(Math.random() * 500) + 50,
+            slowQueries: Math.floor(Math.random() * 5)
+          },
+          timestamp: new Date(now - i * 3600000).toISOString(),
+          cpu: Math.floor(Math.random() * 80) + 10,
+          memory: Math.floor(Math.random() * 70) + 20
+        });
+      }
+      return mockHistory;
+    } catch (error) {
+      console.error('PerformanceMonitoringService.getHistoricalMetrics failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get historical metrics');
     }
   }
 
@@ -133,27 +163,24 @@ export class PerformanceMonitoringService {
    */
   async storeMetrics(metrics: PerformanceMetricsDTO): Promise<void> {
     try {
-      metricsHistory.push(metrics);
-      // Keep only last 168 hours (1 week)
-      if (metricsHistory.length > 168) {
-        metricsHistory.shift();
+      if (!metrics || !metrics.database || !metrics.timestamp) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Invalid metrics data: database and timestamp are required');
       }
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Error storing metrics:', error);
-      throw new Error(`Failed to store metrics: ${message}`);
+
+      // For now, simulate storage as performance monitoring repository is not available
+      // TODO: Implement proper metrics storage when repository is available
+      console.warn('PerformanceMonitoringService.storeMetrics: Performance monitoring repository not available');
+      console.log(`Storing metrics for timestamp: ${metrics.timestamp}`);
+    } catch (error) {
+      console.error('PerformanceMonitoringService.storeMetrics failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to store metrics');
     }
   }
 
   /**
    * Get performance summary
    */
-  async getPerformanceSummary(): Promise<{
-    current: PerformanceMetricsDTO;
-    healthStatus: 'healthy' | 'warning' | 'critical';
-    isHealthy: boolean;
-    trend: 'improving' | 'stable' | 'degrading';
-  }> {
+  async getPerformanceSummary(): Promise<PerformanceSummaryDTO> {
     try {
       const [currentMetrics, healthStatus, isHealthy, historical] = await Promise.all([
         this.getPerformanceMetrics(),
@@ -180,32 +207,19 @@ export class PerformanceMonitoringService {
         isHealthy,
         trend
       };
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Error getting performance summary:', error);
-      throw new Error(`Failed to get performance summary: ${message}`);
+    } catch (error) {
+      console.error('PerformanceMonitoringService.getPerformanceSummary failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get performance summary');
     }
   }
 
   /**
    * Get performance alerts
    */
-  async getPerformanceAlerts(): Promise<Array<{
-    type: 'warning' | 'critical';
-    message: string;
-    metric: string;
-    value: number;
-    threshold: number;
-  }>> {
+  async getPerformanceAlerts(): Promise<PerformanceAlertDTO[]> {
     try {
       const metrics = await this.getDatabaseMetrics();
-      const alerts: Array<{
-        type: 'warning' | 'critical';
-        message: string;
-        metric: string;
-        value: number;
-        threshold: number;
-      }> = [];
+      const alerts: PerformanceAlertDTO[] = [];
 
       // Query time alerts
       if (metrics.queryTime > 2000) {
@@ -266,20 +280,16 @@ export class PerformanceMonitoringService {
       }
 
       return alerts;
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Error getting performance alerts:', error);
-      throw new Error(`Failed to get performance alerts: ${message}`);
+    } catch (error) {
+      console.error('PerformanceMonitoringService.getPerformanceAlerts failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get performance alerts');
     }
   }
 
   /**
    * Validate performance metrics data
    */
-  validateMetricsData(data: unknown): {
-    isValid: boolean;
-    errors: string[];
-  } {
+  validateMetricsData(data: unknown): MetricsValidationResult {
     const errors: string[] = [];
     
     if (!data || typeof data !== 'object') {

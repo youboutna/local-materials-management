@@ -1,8 +1,10 @@
 /**
- * Tender Document Service
+ * Tender Document Service - Hexagonal Architecture
  * Implements business logic for tender document management
  */
 
+import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { ITenderDocumentRepository } from '@/domain/repositories/ITenderDocumentRepository';
 import { TenderDocument } from '@/domain/entities/TenderDocument';
 import { TenderDocumentTransformer } from '@/dtos/transforms/TenderDocumentTransformer';
@@ -14,16 +16,57 @@ import {
   TenderDocumentListDTO,
   TenderDocumentStatsDTO
 } from '@/dtos/transforms/TenderDocumentDTO';
-import { AppError, ErrorCode, ErrorLogger } from '@/utils/errorHandling';
+
+// Service DTOs for data exchange
+export interface GetTenderDocumentByIdRequestDto {
+  id: string;
+}
+
+export interface GetProjectTenderDocumentsRequestDto {
+  projectId: string;
+}
+
+export interface UpdateTenderDocumentRequestDto {
+  id: string;
+  data: UpdateTenderDocumentDTO;
+}
+
+export interface DeleteTenderDocumentRequestDto {
+  id: string;
+}
+
+export interface SubmitTenderDocumentRequestDto {
+  id: string;
+}
+
+export interface ApproveTenderDocumentRequestDto {
+  id: string;
+  notes?: string;
+}
+
+export interface RejectTenderDocumentRequestDto {
+  id: string;
+  notes: string;
+}
+
+export interface GetProjectStatisticsRequestDto {
+  projectId: string;
+}
 
 export class TenderDocumentService {
-  constructor(private tenderDocumentRepository: ITenderDocumentRepository) {}
+  constructor(
+    private tenderDocumentRepository: ITenderDocumentRepository = RepositoryFactory.getTenderDocumentRepository()
+  ) {}
 
   /**
    * Create a new tender document
    */
   async createTenderDocument(data: CreateTenderDocumentDTO): Promise<TenderDocumentDTO> {
     try {
+      if (!data) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender document data is required');
+      }
+
       // Generate ID (in a real app, this would come from the repository or a UUID generator)
       const id = crypto.randomUUID();
       
@@ -41,18 +84,21 @@ export class TenderDocumentService {
       // Transform back to DTO
       return TenderDocumentTransformer.toDTO(savedEntity);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create tender document';
-      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage, { data }));
-      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage, { data });
+      console.error('TenderDocumentService.createTenderDocument failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create tender document');
     }
   }
 
   /**
    * Get tender document by ID
    */
-  async getTenderDocumentById(id: string): Promise<TenderDocumentDTO | null> {
+  async getTenderDocumentById(request: GetTenderDocumentByIdRequestDto): Promise<TenderDocumentDTO | null> {
     try {
-      const entity = await this.tenderDocumentRepository.findById(id);
+      if (!request.id) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender document ID is required');
+      }
+
+      const entity = await this.tenderDocumentRepository.findById(request.id);
       
       if (!entity) {
         return null;
@@ -60,73 +106,88 @@ export class TenderDocumentService {
       
       return TenderDocumentTransformer.toDTO(entity);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to get tender document';
-      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage, { id }));
-      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage, { id });
+      console.error('TenderDocumentService.getTenderDocumentById failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get tender document');
     }
   }
 
   /**
    * Get all tender documents for a project
    */
-  async getProjectTenderDocuments(projectId: string): Promise<TenderDocumentListDTO[]> {
+  async getProjectTenderDocuments(request: GetProjectTenderDocumentsRequestDto): Promise<TenderDocumentListDTO[]> {
     try {
-      const entities = await this.tenderDocumentRepository.findByProjectId(projectId);
+      if (!request.projectId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
+      }
+
+      const entities = await this.tenderDocumentRepository.findByProjectId(request.projectId);
       
       // Transform to list DTOs (would need document service for titles/URLs in real implementation)
       return entities.map(entity => TenderDocumentTransformer.toListDTO(entity));
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to get project tender documents';
-      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage, { projectId }));
-      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage, { projectId });
+      console.error('TenderDocumentService.getProjectTenderDocuments failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get project tender documents');
     }
   }
 
   /**
    * Update tender document
    */
-  async updateTenderDocument(id: string, data: UpdateTenderDocumentDTO): Promise<TenderDocumentDTO> {
+  async updateTenderDocument(request: UpdateTenderDocumentRequestDto): Promise<TenderDocumentDTO> {
     try {
+      if (!request.id) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender document ID is required');
+      }
+      if (!request.data) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Update data is required');
+      }
+
       // Get existing entity
-      const existingEntity = await this.tenderDocumentRepository.findById(id);
+      const existingEntity = await this.tenderDocumentRepository.findById(request.id);
       
       if (!existingEntity) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Tender document not found');
       }
       
       // Transform update data
-      const updateData = TenderDocumentTransformer.fromUpdateDtoToEntityData(data);
+      const updateData = TenderDocumentTransformer.fromUpdateDtoToEntityData(request.data);
       
       // Update entity
-      const updatedEntity = await this.tenderDocumentRepository.update(id, updateData);
+      const updatedEntity = await this.tenderDocumentRepository.update(request.id, updateData);
       
       return TenderDocumentTransformer.toDTO(updatedEntity);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update tender document';
-      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage, { id, data }));
-      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage, { id, data });
+      console.error('TenderDocumentService.updateTenderDocument failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update tender document');
     }
   }
 
   /**
    * Delete tender document
    */
-  async deleteTenderDocument(id: string): Promise<void> {
+  async deleteTenderDocument(request: DeleteTenderDocumentRequestDto): Promise<void> {
     try {
-      await this.tenderDocumentRepository.delete(id);
+      if (!request.id) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender document ID is required');
+      }
+
+      await this.tenderDocumentRepository.delete(request.id);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to delete tender document';
-      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage, { id }));
-      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage, { id });
+      console.error('TenderDocumentService.deleteTenderDocument failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete tender document');
     }
   }
 
   /**
    * Submit tender document
    */
-  async submitTenderDocument(id: string): Promise<TenderDocumentDTO> {
+  async submitTenderDocument(request: SubmitTenderDocumentRequestDto): Promise<TenderDocumentDTO> {
     try {
-      const entity = await this.tenderDocumentRepository.findById(id);
+      if (!request.id) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender document ID is required');
+      }
+
+      const entity = await this.tenderDocumentRepository.findById(request.id);
       
       if (!entity) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Tender document not found');
@@ -139,22 +200,25 @@ export class TenderDocumentService {
       // Submit the document
       entity.submit();
       
-      const updatedEntity = await this.tenderDocumentRepository.update(id, entity);
+      const updatedEntity = await this.tenderDocumentRepository.update(request.id, entity);
       
       return TenderDocumentTransformer.toDTO(updatedEntity);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to submit tender document';
-      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage, { id }));
-      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage, { id });
+      console.error('TenderDocumentService.submitTenderDocument failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to submit tender document');
     }
   }
 
   /**
    * Approve tender document
    */
-  async approveTenderDocument(id: string, notes?: string): Promise<TenderDocumentDTO> {
+  async approveTenderDocument(request: ApproveTenderDocumentRequestDto): Promise<TenderDocumentDTO> {
     try {
-      const entity = await this.tenderDocumentRepository.findById(id);
+      if (!request.id) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender document ID is required');
+      }
+
+      const entity = await this.tenderDocumentRepository.findById(request.id);
       
       if (!entity) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Tender document not found');
@@ -165,24 +229,30 @@ export class TenderDocumentService {
       }
       
       // Approve the document
-      entity.approve(notes);
+      entity.approve(request.notes);
       
-      const updatedEntity = await this.tenderDocumentRepository.update(id, entity);
+      const updatedEntity = await this.tenderDocumentRepository.update(request.id, entity);
       
       return TenderDocumentTransformer.toDTO(updatedEntity);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to approve tender document';
-      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage, { id }));
-      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage, { id });
+      console.error('TenderDocumentService.approveTenderDocument failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to approve tender document');
     }
   }
 
   /**
    * Reject tender document
    */
-  async rejectTenderDocument(id: string, notes: string): Promise<TenderDocumentDTO> {
+  async rejectTenderDocument(request: RejectTenderDocumentRequestDto): Promise<TenderDocumentDTO> {
     try {
-      const entity = await this.tenderDocumentRepository.findById(id);
+      if (!request.id) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender document ID is required');
+      }
+      if (!request.notes) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Rejection notes are required');
+      }
+
+      const entity = await this.tenderDocumentRepository.findById(request.id);
       
       if (!entity) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Tender document not found');
@@ -193,30 +263,32 @@ export class TenderDocumentService {
       }
       
       // Reject the document
-      entity.reject(notes);
+      entity.reject(request.notes);
       
-      const updatedEntity = await this.tenderDocumentRepository.update(id, entity);
+      const updatedEntity = await this.tenderDocumentRepository.update(request.id, entity);
       
       return TenderDocumentTransformer.toDTO(updatedEntity);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to reject tender document';
-      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage, { id }));
-      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage, { id });
+      console.error('TenderDocumentService.rejectTenderDocument failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to reject tender document');
     }
   }
 
   /**
    * Get project statistics
    */
-  async getProjectStatistics(projectId: string): Promise<TenderDocumentStatsDTO> {
+  async getProjectStatistics(request: GetProjectStatisticsRequestDto): Promise<TenderDocumentStatsDTO> {
     try {
-      const documents = await this.tenderDocumentRepository.findByProjectId(projectId);
+      if (!request.projectId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
+      }
+
+      const documents = await this.tenderDocumentRepository.findByProjectId(request.projectId);
       
       return TenderDocumentTransformer.calculateStats(documents);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to get project statistics';
-      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage, { projectId }));
-      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage, { projectId });
+      console.error('TenderDocumentService.getProjectStatistics failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get project statistics');
     }
   }
 }

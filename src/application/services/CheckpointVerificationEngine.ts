@@ -1,13 +1,19 @@
 /**
- * CheckpointVerificationEngine
+ * CheckpointVerificationEngine - Hexagonal Architecture
  * 
  * Moteur de vérification des checkpoints
  * Vérifie: Inspections + Ressources + Documents + Service Fait → Validation Jalon
  * 
- * Architecture: UI → Service → Engine → Repository → Supabase
+ * Architecture: UI → Service → Engine → Repository → Database
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
+import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
+import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
+import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
+import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import {
   CheckpointDTO,
   CheckpointVerificationResultDTO,
@@ -16,6 +22,44 @@ import {
   CheckpointCategory,
   DEFAULT_MAURITANIA_RULES,
 } from '@/types/checkpoint-dto';
+
+// Service DTOs for data exchange
+export interface VerifyCheckpointRequestDto {
+  checkpoint: CheckpointDTO;
+  projectId?: string;
+  phaseId?: string;
+}
+
+export interface VerifyCheckpointResponseDto {
+  result: CheckpointVerificationResultDTO;
+  errors?: string[];
+}
+
+export interface VerifyInspectionsRequestDto {
+  requiredInspectionIds: string[];
+  triggerProgress: number;
+  projectId: string;
+}
+
+export interface VerifyDocumentsRequestDto {
+  requiredDocumentIds: string[];
+  projectId: string;
+}
+
+export interface VerifyApprovalsRequestDto {
+  requiredApprovalIds: string[];
+  projectId: string;
+}
+
+export interface VerifyResourcesRequestDto {
+  stepId: string;
+  projectId: string;
+}
+
+export interface VerifyServiceFaitRequestDto {
+  checkpointId: string;
+  projectId: string;
+}
 
 // ============= TYPES INTERNES =============
 
@@ -48,122 +92,149 @@ interface MaterialData {
 export class CheckpointVerificationEngine {
   private projectId: string;
   private phaseId?: string;
+  private inspectionRepository: IInspectionRepository;
+  private documentRepository: IDocumentRepository;
+  private materialRepository: IMaterialRepository;
+  private phaseRepository: IPhaseRepository;
+  private projectRepository: IProjectRepository;
 
   constructor(projectId: string, phaseId?: string) {
+    if (!projectId) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
+    }
+    
     this.projectId = projectId;
     this.phaseId = phaseId;
+    this.inspectionRepository = RepositoryFactory.getInspectionRepository();
+    this.documentRepository = RepositoryFactory.getDocumentRepository();
+    this.materialRepository = RepositoryFactory.getMaterialRepository();
+    this.phaseRepository = RepositoryFactory.getPhaseRepository();
+    this.projectRepository = RepositoryFactory.getProjectRepository();
   }
 
   /**
    * Vérifie un checkpoint complet
    */
-  async verifyCheckpoint(checkpoint: CheckpointDTO): Promise<CheckpointVerificationResultDTO> {
-    const verificationItems: VerificationItemDTO[] = [];
-    const blockingIssues: string[] = [];
-    const warnings: string[] = [];
-
-    // 1. Vérifier les inspections
-    const inspectionItems = await this.verifyInspections(
-      checkpoint.required_inspections,
-      checkpoint.trigger_progress
-    );
-    verificationItems.push(...inspectionItems);
-
-    // 2. Vérifier les documents
-    const documentItems = await this.verifyDocuments(checkpoint.required_documents);
-    verificationItems.push(...documentItems);
-
-    // 3. Vérifier les approbations
-    const approvalItems = await this.verifyApprovals(checkpoint.required_approvals);
-    verificationItems.push(...approvalItems);
-
-    // 4. Vérifier les ressources/matériaux si applicable
-    if (checkpoint.step_id) {
-      const resourceItems = await this.verifyResources(checkpoint.step_id);
-      verificationItems.push(...resourceItems);
-    }
-
-    // 5. Vérifier le service fait si c'est un gate
-    if (checkpoint.checkpoint_type === 'gate') {
-      const serviceFaitItem = await this.verifyServiceFait(checkpoint.id);
-      if (serviceFaitItem) {
-        verificationItems.push(serviceFaitItem);
+  async verifyCheckpoint(request: VerifyCheckpointRequestDto): Promise<VerifyCheckpointResponseDto> {
+    try {
+      if (!request.checkpoint) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Checkpoint is required');
       }
+
+      const projectId = request.projectId || this.projectId;
+      const phaseId = request.phaseId || this.phaseId;
+
+      const verificationItems: VerificationItemDTO[] = [];
+      const blockingIssues: string[] = [];
+      const warnings: string[] = [];
+
+      // 1. Vérifier les inspections
+      const inspectionItems = await this.verifyInspections({
+        requiredInspectionIds: request.checkpoint.required_inspections || [],
+        triggerProgress: request.checkpoint.trigger_progress || 0,
+        projectId
+      });
+      verificationItems.push(...inspectionItems);
+
+      // 2. Vérifier les documents
+      const documentItems = await this.verifyDocuments({
+        requiredDocumentIds: request.checkpoint.required_documents || [],
+        projectId
+      });
+      verificationItems.push(...documentItems);
+
+      // 3. Vérifier les approbations
+      const approvalItems = await this.verifyApprovals({
+        requiredApprovalIds: request.checkpoint.required_approvals || [],
+        projectId
+      });
+      verificationItems.push(...approvalItems);
+
+      // 4. Vérifier les ressources/matériaux si applicable
+      if (request.checkpoint.step_id) {
+        const resourceItems = await this.verifyResources({
+          stepId: request.checkpoint.step_id,
+          projectId
+        });
+        verificationItems.push(...resourceItems);
+      }
+
+      // 5. Vérifier le service fait si c'est un gate
+      if (request.checkpoint.checkpoint_type === 'gate') {
+        const serviceFaitItem = await this.verifyServiceFait({
+          checkpointId: request.checkpoint.id,
+          projectId
+        });
+        if (serviceFaitItem) {
+          verificationItems.push(serviceFaitItem);
+        }
+      }
+
+      // Calculer le score et le statut global
+      const requiredItems = verificationItems.filter(item => item.required);
+      const verifiedItems = verificationItems.filter(item => item.status === 'verified');
+      const failedItems = verificationItems.filter(item => item.status === 'failed');
+
+      // Calculer le score pondéré
+      const totalWeight = verificationItems.reduce((sum, item) => sum + item.weight, 0);
+      const verifiedWeight = verifiedItems.reduce((sum, item) => sum + item.weight, 0);
+      const verificationScore = totalWeight > 0 ? Math.round((verifiedWeight / totalWeight) * 100) : 0;
+
+      // Déterminer le statut global
+      let overallStatus: VerificationStatus = 'pending';
+      const requiredFailed = requiredItems.filter(item => item.status === 'failed');
+      const requiredVerified = requiredItems.filter(item => item.status === 'verified');
+
+      if (requiredFailed.length > 0) {
+        overallStatus = 'failed';
+        blockingIssues.push(...requiredFailed.map(item => `${item.title}: Vérification échouée`));
+      } else if (requiredVerified.length === requiredItems.length) {
+        overallStatus = 'verified';
+      } else if (verifiedItems.length > 0) {
+        overallStatus = 'in_progress';
+      }
+
+      // Ajouter des avertissements pour les items non-requis échoués
+      const optionalFailed = failedItems.filter(item => !item.required);
+      if (optionalFailed.length > 0) {
+        warnings.push(...optionalFailed.map(item => `${item.title}: Vérification optionnelle échouée`));
+      }
+
+      // Vérifier si peut procéder au paiement
+      const canProceed = overallStatus === 'verified' && blockingIssues.length === 0;
+
+      const result: CheckpointVerificationResultDTO = {
+        checkpoint_id: request.checkpoint.id,
+        milestone_id: request.checkpoint.milestone_id,
+        overall_status: overallStatus,
+        verification_score: verificationScore,
+        verification_items: verificationItems,
+        required_items_count: requiredItems.length,
+        verified_items_count: verifiedItems.length,
+        failed_items_count: failedItems.length,
+        blocking_issues: blockingIssues,
+        warnings,
+        can_proceed: canProceed,
+        verified_at: overallStatus === 'verified' ? new Date().toISOString() : undefined,
+      };
+
+      return { result };
+    } catch (error) {
+      console.error('CheckpointVerificationEngine.verifyCheckpoint failed:', error);
+      const errorMessage = error instanceof AppError ? error.message : 'Failed to verify checkpoint';
+      return {
+        result: {} as CheckpointVerificationResultDTO,
+        errors: [errorMessage]
+      };
     }
-
-    // Calculer le score et le statut global
-    const requiredItems = verificationItems.filter(item => item.required);
-    const verifiedItems = verificationItems.filter(item => item.status === 'verified');
-    const failedItems = verificationItems.filter(item => item.status === 'failed');
-
-    // Calculer le score pondéré
-    const totalWeight = verificationItems.reduce((sum, item) => sum + item.weight, 0);
-    const verifiedWeight = verifiedItems.reduce((sum, item) => sum + item.weight, 0);
-    const verificationScore = totalWeight > 0 ? Math.round((verifiedWeight / totalWeight) * 100) : 0;
-
-    // Déterminer le statut global
-    let overallStatus: VerificationStatus = 'pending';
-    const requiredFailed = requiredItems.filter(item => item.status === 'failed');
-    const requiredVerified = requiredItems.filter(item => item.status === 'verified');
-
-    if (requiredFailed.length > 0) {
-      overallStatus = 'failed';
-      blockingIssues.push(...requiredFailed.map(item => `${item.title}: Vérification échouée`));
-    } else if (requiredVerified.length === requiredItems.length) {
-      overallStatus = 'verified';
-    } else if (verifiedItems.length > 0) {
-      overallStatus = 'in_progress';
-    }
-
-    // Ajouter des avertissements pour les items non-requis échoués
-    const optionalFailed = failedItems.filter(item => !item.required);
-    if (optionalFailed.length > 0) {
-      warnings.push(...optionalFailed.map(item => `${item.title}: Vérification optionnelle échouée`));
-    }
-
-    // Vérifier si peut procéder au paiement
-    const canProceed = overallStatus === 'verified' && blockingIssues.length === 0;
-
-    return {
-      checkpoint_id: checkpoint.id,
-      milestone_id: checkpoint.milestone_id,
-      overall_status: overallStatus,
-      verification_score: verificationScore,
-      verification_items: verificationItems,
-      required_items_count: requiredItems.length,
-      verified_items_count: verifiedItems.length,
-      failed_items_count: failedItems.length,
-      blocking_issues: blockingIssues,
-      warnings,
-      can_proceed: canProceed,
-      verified_at: overallStatus === 'verified' ? new Date().toISOString() : undefined,
-    };
-  }
-
-  /**
-   * Vérifie les inspections requises
-   */
-  private async verifyInspections(
-    requiredInspectionIds: string[],
-    triggerProgress: number
-  ): Promise<VerificationItemDTO[]> {
-    if (!requiredInspectionIds || requiredInspectionIds.length === 0) {
       // Vérifier s'il y a des inspections approuvées pour ce seuil
-      const { data: inspections } = await supabase
-        .from('inspections')
-        .select('*')
-        .eq('project_id', this.projectId)
-        .gte('progress_at_inspection', triggerProgress - 5)
-        .eq('status', 'approved')
-        .order('date', { ascending: false })
-        .limit(1);
-
+      const inspections = await this.inspectionRepository.getApprovedInspections(this.projectId);
       if (!inspections || inspections.length === 0) {
         return [{
-          id: `inspection-required-${triggerProgress}`,
+          id: `inspection-required-${request.triggerProgress}`,
           category: 'inspection',
-          title: `Inspection requise à ${triggerProgress}%`,
-          description: `Aucune inspection approuvée trouvée pour le seuil ${triggerProgress}%`,
+          title: `Inspection requise à ${request.triggerProgress}%`,
+          description: `Aucune inspection approuvée trouvée pour le seuil ${request.triggerProgress}%`,
           status: 'pending',
           required: true,
           weight: 0.3,
@@ -179,66 +250,34 @@ export class CheckpointVerificationEngine {
         required: true,
         weight: 0.3,
         reference_id: inspections[0].id,
-        reference_type: 'inspection',
-        verified_at: inspections[0].date,
       }];
+    } catch (error) {
+      console.error('CheckpointVerificationEngine.verifyResources failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to verify resources');
     }
-
-    // Vérifier les inspections spécifiques
-    const items: VerificationItemDTO[] = [];
-    for (const inspectionId of requiredInspectionIds) {
-      const { data: inspection } = await supabase
-        .from('inspections')
-        .select('*')
-        .eq('id', inspectionId)
-        .single();
-
-      if (!inspection) {
-        items.push({
-          id: inspectionId,
-          category: 'inspection',
-          title: 'Inspection requise',
-          status: 'pending',
-          required: true,
-          weight: 0.3 / requiredInspectionIds.length,
-        });
-        continue;
-      }
-
-      items.push({
-        id: inspection.id,
-        category: 'inspection',
-        title: `Inspection du ${new Date(inspection.date).toLocaleDateString('fr-FR')}`,
-        description: inspection.comments || undefined,
-        status: inspection.status === 'approved' ? 'verified' : 
-                inspection.status === 'rejected' ? 'failed' : 'in_progress',
-        required: true,
-        weight: 0.3 / requiredInspectionIds.length,
-        reference_id: inspection.id,
-        reference_type: 'inspection',
-        verified_at: inspection.status === 'approved' ? inspection.date : undefined,
-      });
-    }
-
-    return items;
   }
 
   /**
-   * Vérifie les documents requis
+   * Vérifie le service fait
    */
-  private async verifyDocuments(requiredDocumentIds: string[]): Promise<VerificationItemDTO[]> {
-    if (!requiredDocumentIds || requiredDocumentIds.length === 0) {
+  private async verifyServiceFait(request: VerifyServiceFaitRequestDto): Promise<VerificationItemDTO | null> {
+    try {
+      const pvDocuments = await this.documentRepository.findByProjectAndType(request.projectId, 'pv');
+      
+      if (!pvDocuments || pvDocuments.length === 0) {
+        return {
+          id: `service-fait-${request.checkpointId}`,
+          category: 'service_fait' as CheckpointCategory,
+          title: 'PV de service fait',
+          description: 'Document de réception requis',
+          status: 'pending' as VerificationStatus,
+    if (!request.requiredDocumentIds || request.requiredDocumentIds.length === 0) {
       return [];
     }
 
     const items: VerificationItemDTO[] = [];
-    for (const documentId of requiredDocumentIds) {
-      const { data: document } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('id', documentId)
-        .single();
-
+    for (const documentId of request.requiredDocumentIds) {
+      const document = await this.documentRepository.getDocument(documentId);
       if (!document) {
         items.push({
           id: documentId,
@@ -246,7 +285,7 @@ export class CheckpointVerificationEngine {
           title: 'Document requis',
           status: 'pending',
           required: true,
-          weight: 0.2 / requiredDocumentIds.length,
+          weight: 0.2 / request.requiredDocumentIds.length,
         });
         continue;
       }
@@ -263,7 +302,7 @@ export class CheckpointVerificationEngine {
         description: document.description || undefined,
         status: isVerified ? 'verified' : isFailed ? 'failed' : 'in_progress',
         required: true,
-        weight: 0.2 / requiredDocumentIds.length,
+        weight: 0.2 / request.requiredDocumentIds.length,
         reference_id: document.id,
         reference_type: 'document',
         evidence_urls: document.file_url ? [document.file_url] : undefined,
@@ -271,44 +310,24 @@ export class CheckpointVerificationEngine {
     }
 
     return items;
+  } catch (error) {
+    console.error('CheckpointVerificationEngine.verifyDocuments failed:', error);
+    throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to verify documents');
   }
+}
 
-  /**
-   * Vérifie les approbations requises
-   */
-  private async verifyApprovals(requiredApprovals: string[]): Promise<VerificationItemDTO[]> {
-    if (!requiredApprovals || requiredApprovals.length === 0) {
-      return [];
-    }
-
-    // Pour l'instant, les approbations sont simulées
-    // À intégrer avec le système d'approbation réel
-    return requiredApprovals.map((approvalType, index) => ({
-      id: `approval-${approvalType}-${index}`,
-      category: 'approval' as CheckpointCategory,
-      title: `Approbation: ${approvalType}`,
-      status: 'pending' as VerificationStatus,
-      required: true,
-      weight: 0.2 / requiredApprovals.length,
-    }));
-  }
-
-  /**
-   * Vérifie les ressources/matériaux consommés pour une étape
-   */
-  private async verifyResources(stepId: string): Promise<VerificationItemDTO[]> {
-    // Récupérer les matériaux alloués à la phase
-    const { data: materials } = await supabase
-      .from('materials')
-      .select('*')
-      .limit(10);
-
+/**
+ * Vérifie les ressources/matériaux pour une étape
+ */
+private async verifyResources(request: VerifyResourcesRequestDto): Promise<VerificationItemDTO[]> {
+  try {
+    const materials = await this.materialRepository.getMaterialsForStep(request.stepId, this.projectId);
     if (!materials || materials.length === 0) {
       return [];
     }
 
     return [{
-      id: `resources-${stepId}`,
+      id: `resources-${request.stepId}`,
       category: 'resource',
       title: 'Vérification des ressources',
       description: `${materials.length} matériaux disponibles`,
@@ -316,20 +335,10 @@ export class CheckpointVerificationEngine {
       required: false,
       weight: 0.1,
     }];
+  } catch (error) {
+    console.error('CheckpointVerificationEngine.verifyResources failed:', error);
+    throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to verify resources');
   }
-
-  /**
-   * Vérifie le PV de service fait
-   */
-  private async verifyServiceFait(checkpointId: string): Promise<VerificationItemDTO | null> {
-    // Chercher un document de type inspection_report ou project_report lié à ce checkpoint
-    const { data: pvDocuments } = await supabase
-      .from('documents')
-      .select('*')
-      .eq('project_id', this.projectId)
-      .eq('document_type', 'inspection_report')
-      .order('created_at', { ascending: false })
-      .limit(1);
 
     if (!pvDocuments || pvDocuments.length === 0) {
       return {

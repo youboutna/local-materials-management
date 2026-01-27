@@ -1,7 +1,7 @@
 // Inspection Service - Hexagonal Architecture
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { Inspection, InspectionStatus } from '@/domain/entities/Inspection';
-import { AppError, ErrorLogger } from '@/utils/errorHandling';
+import { AppError, ErrorLogger, ErrorCode } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 // Types for inspection execution
@@ -96,9 +96,9 @@ export class InspectionService {
     try {
       const existing = await this.repository.findById(id);
       if (!existing) {
-        throw new AppError('NOT_FOUND' as any, 'Inspection not found');
+        throw new AppError('NOT_FOUND' as ErrorCode, 'Inspection not found');
       }
-      await this.repository.update(id, updates);
+      await this.repository.update(id, updates as Record<string, unknown>);
       return { ...existing, ...updates } as Inspection;
     } catch (error) {
       ErrorLogger.log(error as Error, 'InspectionService.updateInspection');
@@ -209,7 +209,7 @@ export class InspectionService {
     try {
       const existingInspection = await this.repository.findById(id);
       if (!existingInspection) {
-        throw new AppError('NOT_FOUND' as any, 'Inspection not found');
+        throw new AppError('NOT_FOUND' as ErrorCode, 'Inspection not found');
       }
 
       const updates: Partial<Inspection> = {
@@ -219,7 +219,7 @@ export class InspectionService {
         updatedAt: new Date().toISOString()
       };
 
-      await this.repository.update(id, updates);
+      await this.repository.update(id, updates as Record<string, unknown>);
       return { ...existingInspection, ...updates } as Inspection;
     } catch (error) {
       ErrorLogger.log(error as Error, 'InspectionService.completeInspection');
@@ -234,7 +234,7 @@ export class InspectionService {
     try {
       const existingInspection = await this.repository.findById(id);
       if (!existingInspection) {
-        throw new AppError('NOT_FOUND' as any, 'Inspection not found');
+        throw new AppError('NOT_FOUND' as ErrorCode, 'Inspection not found');
       }
 
       const updates: Partial<Inspection> = {
@@ -243,7 +243,7 @@ export class InspectionService {
         updatedAt: new Date().toISOString()
       };
 
-      await this.repository.update(id, updates);
+      await this.repository.update(id, updates as Record<string, unknown>);
       return { ...existingInspection, ...updates } as Inspection;
     } catch (error) {
       ErrorLogger.log(error as Error, 'InspectionService.cancelInspection');
@@ -280,10 +280,21 @@ export class InspectionService {
    */
   async uploadDocuments(inspectionId: string, files: File[]): Promise<InspectionDocument[]> {
     try {
+      if (!inspectionId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
+      }
+
+      if (!files || files.length === 0) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Files are required');
+      }
+
       const uploadedDocuments: InspectionDocument[] = [];
       
+      // For now, simulate document upload as storage service is not available
+      // TODO: Implement proper document upload when storage service is available
+      console.warn('InspectionService.uploadDocuments: Storage service not available');
+      
       for (const file of files) {
-        // Simulate document upload - in real implementation, this would use StorageService
         const document: InspectionDocument = {
           id: `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           type: file.type || 'unknown',
@@ -297,8 +308,8 @@ export class InspectionService {
       
       return uploadedDocuments;
     } catch (error) {
-      ErrorLogger.log(error as Error, 'InspectionService.uploadDocuments');
-      throw new Error('Failed to upload documents');
+      console.error('InspectionService.uploadDocuments failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to upload documents');
     }
   }
 
@@ -307,6 +318,10 @@ export class InspectionService {
    */
   async getInspectionExecutionData(inspectionId: string): Promise<InspectionExecutionData | null> {
     try {
+      if (!inspectionId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
+      }
+
       const inspection = await this.repository.findById(inspectionId);
       
       if (!inspection) {
@@ -332,8 +347,8 @@ export class InspectionService {
         completedAt: inspection.updatedAt
       };
     } catch (error) {
-      ErrorLogger.log(error as Error, 'InspectionService.getInspectionExecutionData');
-      throw new Error('Failed to get inspection execution data');
+      console.error('InspectionService.getInspectionExecutionData failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get inspection execution data');
     }
   }
 
@@ -342,6 +357,10 @@ export class InspectionService {
    */
   async updateInspectionExecution(data: InspectionExecutionData): Promise<InspectionExecutionData> {
     try {
+      if (!data.id) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
+      }
+
       const validStatus = ['scheduled', 'in_progress', 'completed', 'cancelled'].includes(data.status)
         ? data.status as InspectionStatus
         : 'scheduled';
@@ -351,7 +370,7 @@ export class InspectionService {
         progressAtInspection: data.progressAtInspection,
         comments: data.comments,
         updatedAt: new Date().toISOString()
-      });
+      } as Record<string, unknown>);
       
       return {
         id: data.id,
@@ -362,41 +381,15 @@ export class InspectionService {
         completedAt: data.completedAt
       };
     } catch (error) {
-      ErrorLogger.log(error as Error, 'InspectionService.updateInspectionExecution');
-      throw new Error('Failed to update inspection execution');
+      console.error('InspectionService.updateInspectionExecution failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update inspection execution');
     }
-  }
-
-  // Static methods for backward compatibility
-  static async getInspectionsByProject(projectId: string): Promise<Inspection[]> {
-    const service = new InspectionService();
-    return service.getInspectionsByProject(projectId);
-  }
-
-  static async createInspection(data: any): Promise<Inspection> {
-    const service = new InspectionService();
-    return service.createInspection(data);
-  }
-
-  static async updateInspection(id: string, data: any): Promise<Inspection> {
-    const service = new InspectionService();
-    return service.updateInspection(id, data);
-  }
-
-  static async deleteInspection(id: string): Promise<void> {
-    const service = new InspectionService();
-    return service.deleteInspection(id);
-  }
-
-  static async getInspectionById(id: string): Promise<Inspection | null> {
-    const service = new InspectionService();
-    return service.getInspectionById(id);
   }
 
   /**
    * Update inspection payment validation
    */
-  static async updateInspectionPaymentValidation(id: string, data: {
+  async updateInspectionPaymentValidation(id: string, data: {
     status: string;
     comments: string;
     payment_type: string;
@@ -405,16 +398,28 @@ export class InspectionService {
     inspection_id?: string;
     rejection_notes?: string;
   }): Promise<Inspection> {
-    const service = new InspectionService();
-    return service.updateInspection(id, {
-      status: data.status as InspectionStatus,
-      comments: data.comments,
-      // Add payment-related fields if they exist in the entity
-      ...(data.payment_type && { payment_type: data.payment_type }),
-      ...(data.payment_status && { payment_status: data.payment_status }),
-      ...(data.project_id && { project_id: data.project_id }),
-      ...(data.inspection_id && { inspection_id: data.inspection_id }),
-      ...(data.rejection_notes && { rejection_notes: data.rejection_notes }),
-    });
+    try {
+      if (!id) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
+      }
+
+      if (!data.status) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Status is required');
+      }
+
+      return this.updateInspection(id, {
+        status: data.status as InspectionStatus,
+        comments: data.comments,
+        // Add payment-related fields if they exist in the entity
+        ...(data.payment_type && { payment_type: data.payment_type }),
+        ...(data.payment_status && { payment_status: data.payment_status }),
+        ...(data.project_id && { project_id: data.project_id }),
+        ...(data.inspection_id && { inspection_id: data.inspection_id }),
+        ...(data.rejection_notes && { rejection_notes: data.rejection_notes }),
+      });
+    } catch (error) {
+      console.error('InspectionService.updateInspectionPaymentValidation failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update inspection payment validation');
+    }
   }
 }

@@ -2,6 +2,12 @@
  * Repository Factory - Hexagonal Architecture
  * Centralized factory for creating repository implementations
  * Provides dependency injection and adapter instantiation
+ * 
+ * Features:
+ * - Singleton pattern for performance
+ * - Lazy loading for memory efficiency
+ * - Type-safe repository instantiation
+ * - Centralized adapter management
  */
 
 import {
@@ -34,7 +40,15 @@ import {
   INotificationRepository,
   IParsedInvoiceRepository,
   IInspectionPermissionRepository,
-  ITenderDocumentRepository
+  ITenderDocumentRepository,
+  // New repositories for enhanced architecture
+  ITaskAssignmentRepository,
+  IPerformanceMonitoringRepository,
+  IWorkspaceRepository,
+  IProjectStakeholderRepository,
+  IProjectAlertRepository,
+  IDecompteRepository,
+  ITenderEstimateRepository
 } from '@/domain/repositories';
 
 import {
@@ -71,312 +85,412 @@ import {
 } from './adapters';
 
 /**
- * Singleton instances for repositories
- * Ensures single instance per repository type
+ * Repository Registry - Enhanced Singleton Management
+ * Type-safe registry with lazy loading and memory optimization
  */
-let projectRepository: IProjectRepository | null = null;
-let phaseRepository: IPhaseRepository | null = null;
-let hierarchyRepository: IHierarchyRepository | null = null;
-let inspectionSchedulingRepository: IInspectionSchedulingRepository | null = null;
-let inspectionRepository: IInspectionRepository | null = null;
-let paymentRepository: IPaymentRepository | null = null;
-let taskRepository: ITaskRepository | null = null;
-let materialRepository: IMaterialRepository | null = null;
-let employeeRepository: IEmployeeRepository | null = null;
-let riskRepository: IRiskRepository | null = null;
-let tenderRepository: ITenderRepository | null = null;
-let supplierRepository: ISupplierRepository | null = null;
-let documentRepository: IDocumentRepository | null = null;
-let quantityTakeoffRepository: IQuantityTakeoffRepository | null = null;
-let inspectionExecutionRepository: IInspectionExecutionRepository | null = null;
-let inspectionPaymentValidationRepository: IInspectionPaymentValidationRepository | null = null;
-let reportDataTransformerRepository: IReportDataTransformerRepository | null = null;
-let loadDataRepository: ILoadDataRepository | null = null;
-let reportingRepository: IReportingRepository | null = null;
-let projectFormRepository: IProjectFormRepository | null = null;
-let userRepository: IUserRepository | null = null;
-let pvGeneratorRepository: IPVGeneratorRepository | null = null;
-let bankGuaranteeRepository: IBankGuaranteeRepository | null = null;
-let insuranceRepository: IInsuranceRepository | null = null;
-let authRepository: IAuthRepository | null = null;
-let storageRepository: IStorageRepository | null = null;
-let notificationRepository: INotificationRepository | null = null;
-let parsedInvoiceRepository: IParsedInvoiceRepository | null = null;
-let tenderDocumentRepository: ITenderDocumentRepository | null = null;
-let inspectionPermissionRepository: IInspectionPermissionRepository | null = null;
+interface RepositoryRegistry {
+  projectRepository?: IProjectRepository;
+  phaseRepository?: IPhaseRepository;
+  hierarchyRepository?: IHierarchyRepository;
+  inspectionSchedulingRepository?: IInspectionSchedulingRepository;
+  inspectionRepository?: IInspectionRepository;
+  paymentRepository?: IPaymentRepository;
+  taskRepository?: ITaskRepository;
+  materialRepository?: IMaterialRepository;
+  employeeRepository?: IEmployeeRepository;
+  riskRepository?: IRiskRepository;
+  tenderRepository?: ITenderRepository;
+  supplierRepository?: ISupplierRepository;
+  documentRepository?: IDocumentRepository;
+  quantityTakeoffRepository?: IQuantityTakeoffRepository;
+  inspectionExecutionRepository?: IInspectionExecutionRepository;
+  inspectionPaymentValidationRepository?: IInspectionPaymentValidationRepository;
+  reportDataTransformerRepository?: IReportDataTransformerRepository;
+  loadDataRepository?: ILoadDataRepository;
+  reportingRepository?: IReportingRepository;
+  projectFormRepository?: IProjectFormRepository;
+  userRepository?: IUserRepository;
+  pvGeneratorRepository?: IPVGeneratorRepository;
+  bankGuaranteeRepository?: IBankGuaranteeRepository;
+  insuranceRepository?: IInsuranceRepository;
+  authRepository?: IAuthRepository;
+  storageRepository?: IStorageRepository;
+  notificationRepository?: INotificationRepository;
+  parsedInvoiceRepository?: IParsedInvoiceRepository;
+  tenderDocumentRepository?: ITenderDocumentRepository;
+  inspectionPermissionRepository?: IInspectionPermissionRepository;
+}
 
 /**
- * Repository Factory
- * Creates and manages repository instances
+ * Global repository registry with lazy initialization
+ */
+const repositoryRegistry: RepositoryRegistry = {};
+
+/**
+ * Repository Factory - Enhanced Hexagonal Architecture
+ * 
+ * Provides:
+ * - Lazy loading of repositories
+ * - Type-safe instantiation
+ * - Memory optimization
+ * - Centralized dependency injection
+ * 
+ * Usage:
+ * ```typescript
+ * const projectRepo = RepositoryFactory.getProjectRepository();
+ * const authRepo = RepositoryFactory.getAuthRepository();
+ * ```
  */
 export class RepositoryFactory {
   /**
+   * Reset all repositories (useful for testing)
+   */
+  static reset(): void {
+    Object.keys(repositoryRegistry).forEach(key => {
+      delete repositoryRegistry[key as keyof RepositoryRegistry];
+    });
+  }
+
+  /**
+   * Get all active repositories (useful for debugging)
+   */
+  static getActiveRepositories(): string[] {
+    return Object.keys(repositoryRegistry);
+  }
+
+  /**
+   * Check if a repository is initialized
+   */
+  static hasRepository<T extends keyof RepositoryRegistry>(name: T): boolean {
+    return repositoryRegistry[name] !== undefined;
+  }
+  /**
    * Get Project Repository instance
+   * Lazy loaded for memory efficiency
    */
   static getProjectRepository(): IProjectRepository {
-    if (!projectRepository) {
-      projectRepository = new SupabaseProjectAdapter();
+    if (!repositoryRegistry.projectRepository) {
+      repositoryRegistry.projectRepository = new SupabaseProjectAdapter();
     }
-    return projectRepository;
+    return repositoryRegistry.projectRepository;
   }
 
   /**
    * Get Phase Repository instance
+   * Lazy loaded for memory efficiency
    */
   static getPhaseRepository(): IPhaseRepository {
-    if (!phaseRepository) {
-      phaseRepository = new SupabasePhaseAdapter();
+    if (!repositoryRegistry.phaseRepository) {
+      repositoryRegistry.phaseRepository = new SupabasePhaseAdapter();
     }
-    return phaseRepository;
+    return repositoryRegistry.phaseRepository;
   }
 
+  /**
+   * Get Hierarchy Repository instance
+   * Lazy loaded for memory efficiency
+   */
   static getHierarchyRepository(): IHierarchyRepository {
-    if (!hierarchyRepository) {
-      hierarchyRepository = new SupabaseHierarchyAdapter();
+    if (!repositoryRegistry.hierarchyRepository) {
+      repositoryRegistry.hierarchyRepository = new SupabaseHierarchyAdapter();
     }
-    return hierarchyRepository;
+    return repositoryRegistry.hierarchyRepository;
   }
 
   /**
    * Get Inspection Scheduling Repository instance
+   * Lazy loaded for memory efficiency
    */
   static getInspectionSchedulingRepository(): IInspectionSchedulingRepository {
-    if (!inspectionSchedulingRepository) {
-      inspectionSchedulingRepository = new InspectionSchedulingAdapter();
+    if (!repositoryRegistry.inspectionSchedulingRepository) {
+      repositoryRegistry.inspectionSchedulingRepository = new InspectionSchedulingAdapter();
     }
-    return inspectionSchedulingRepository;
+    return repositoryRegistry.inspectionSchedulingRepository;
   }
 
   /**
    * Get Task Repository instance
+   * Lazy loaded for memory efficiency
    */
   static getTaskRepository(): ITaskRepository {
-    if (!taskRepository) {
-      taskRepository = new SupabaseTaskAdapter();
+    if (!repositoryRegistry.taskRepository) {
+      repositoryRegistry.taskRepository = new SupabaseTaskAdapter();
     }
-    return taskRepository;
+    return repositoryRegistry.taskRepository;
   }
 
+  /**
+   * Get Material Repository instance
+   * Lazy loaded for memory efficiency
+   */
   static getMaterialRepository(): IMaterialRepository {
-    if (!materialRepository) {
-      materialRepository = new SupabaseMaterialAdapter();
+    if (!repositoryRegistry.materialRepository) {
+      repositoryRegistry.materialRepository = new SupabaseMaterialAdapter();
     }
-    return materialRepository;
+    return repositoryRegistry.materialRepository;
   }
 
+  /**
+   * Get Employee Repository instance
+   * Lazy loaded for memory efficiency
+   */
   static getEmployeeRepository(): IEmployeeRepository {
-    if (!employeeRepository) {
-      employeeRepository = new SupabaseEmployeeAdapter();
+    if (!repositoryRegistry.employeeRepository) {
+      repositoryRegistry.employeeRepository = new SupabaseEmployeeAdapter();
     }
-    return employeeRepository;
+    return repositoryRegistry.employeeRepository;
   }
 
+  /**
+   * Get Risk Repository instance
+   * Lazy loaded for memory efficiency
+   */
   static getRiskRepository(): IRiskRepository {
-    if (!riskRepository) {
-      riskRepository = new SupabaseRiskAdapter();
+    if (!repositoryRegistry.riskRepository) {
+      repositoryRegistry.riskRepository = new SupabaseRiskAdapter();
     }
-    return riskRepository;
+    return repositoryRegistry.riskRepository;
   }
 
   /**
    * Get Inspection Repository instance
+   * Lazy loaded for memory efficiency
    */
   static getInspectionRepository(): IInspectionRepository {
-    if (!inspectionRepository) {
-      inspectionRepository = new SupabaseInspectionAdapter();
+    if (!repositoryRegistry.inspectionRepository) {
+      repositoryRegistry.inspectionRepository = new SupabaseInspectionAdapter();
     }
-    return inspectionRepository;
+    return repositoryRegistry.inspectionRepository;
   }
 
+  /**
+   * Get Payment Repository instance
+   * Lazy loaded for memory efficiency
+   */
   static getPaymentRepository(): IPaymentRepository {
-    if (!paymentRepository) {
-      paymentRepository = new SupabasePaymentAdapter();
+    if (!repositoryRegistry.paymentRepository) {
+      repositoryRegistry.paymentRepository = new SupabasePaymentAdapter();
     }
-    return paymentRepository;
+    return repositoryRegistry.paymentRepository;
   }
 
+  /**
+   * Get Document Repository instance
+   * Lazy loaded for memory efficiency
+   */
   static getDocumentRepository(): IDocumentRepository {
-    if (!documentRepository) {
-      documentRepository = new SupabaseDocumentAdapter();
+    if (!repositoryRegistry.documentRepository) {
+      repositoryRegistry.documentRepository = new SupabaseDocumentAdapter();
     }
-    return documentRepository;
+    return repositoryRegistry.documentRepository;
   }
 
+  /**
+   * Get Quantity Takeoff Repository instance
+   * Lazy loaded for memory efficiency
+   */
   static getQuantityTakeoffRepository(): IQuantityTakeoffRepository {
-    if (!quantityTakeoffRepository) {
-      quantityTakeoffRepository = new SupabaseQuantityTakeoffAdapter();
+    if (!repositoryRegistry.quantityTakeoffRepository) {
+      repositoryRegistry.quantityTakeoffRepository = new SupabaseQuantityTakeoffAdapter();
     }
-    return quantityTakeoffRepository;
+    return repositoryRegistry.quantityTakeoffRepository;
   }
 
+  /**
+   * Get Inspection Execution Repository instance
+   * Lazy loaded for memory efficiency
+   */
   static getInspectionExecutionRepository(): IInspectionExecutionRepository {
-    if (!inspectionExecutionRepository) {
-      inspectionExecutionRepository = new SupabaseInspectionExecutionAdapter();
+    if (!repositoryRegistry.inspectionExecutionRepository) {
+      repositoryRegistry.inspectionExecutionRepository = new SupabaseInspectionExecutionAdapter();
     }
-    return inspectionExecutionRepository;
+    return repositoryRegistry.inspectionExecutionRepository;
   }
 
+  /**
+   * Get Inspection Payment Validation Repository instance
+   * Lazy loaded for memory efficiency
+   */
   static getInspectionPaymentValidationRepository(): IInspectionPaymentValidationRepository {
-    if (!inspectionPaymentValidationRepository) {
-      inspectionPaymentValidationRepository = new SupabaseInspectionPaymentValidationAdapter();
+    if (!repositoryRegistry.inspectionPaymentValidationRepository) {
+      repositoryRegistry.inspectionPaymentValidationRepository = new SupabaseInspectionPaymentValidationAdapter();
     }
-    return inspectionPaymentValidationRepository;
+    return repositoryRegistry.inspectionPaymentValidationRepository;
   }
 
+  /**
+   * Get Load Data Repository instance
+   * Lazy loaded for memory efficiency
+   */
   static getLoadDataRepository(): ILoadDataRepository {
-    if (!loadDataRepository) {
-      loadDataRepository = new SupabaseLoadDataAdapter();
+    if (!repositoryRegistry.loadDataRepository) {
+      repositoryRegistry.loadDataRepository = new SupabaseLoadDataAdapter();
     }
-    return loadDataRepository;
+    return repositoryRegistry.loadDataRepository;
   }
 
   /**
    * Get Bank Guarantee Repository instance
+   * Lazy loaded for memory efficiency
    */
   static getBankGuaranteeRepository(): IBankGuaranteeRepository {
-    if (!bankGuaranteeRepository) {
-      bankGuaranteeRepository = new BankGuaranteeAdapter();
+    if (!repositoryRegistry.bankGuaranteeRepository) {
+      repositoryRegistry.bankGuaranteeRepository = new BankGuaranteeAdapter();
     }
-    return bankGuaranteeRepository;
+    return repositoryRegistry.bankGuaranteeRepository;
   }
 
   /**
    * Get PV Generator Repository instance
+   * Lazy loaded for memory efficiency
    */
   static getPVGeneratorRepository(): IPVGeneratorRepository {
-    if (!pvGeneratorRepository) {
-      pvGeneratorRepository = new PVGeneratorAdapter();
+    if (!repositoryRegistry.pvGeneratorRepository) {
+      repositoryRegistry.pvGeneratorRepository = new PVGeneratorAdapter();
     }
-    return pvGeneratorRepository;
+    return repositoryRegistry.pvGeneratorRepository;
   }
 
   /**
    * Get Insurance Repository instance
+   * Lazy loaded for memory efficiency
    */
   static getInsuranceRepository(): IInsuranceRepository {
-    if (!insuranceRepository) {
-      insuranceRepository = new SupabaseInsuranceAdapter();
+    if (!repositoryRegistry.insuranceRepository) {
+      repositoryRegistry.insuranceRepository = new SupabaseInsuranceAdapter();
     }
-    return insuranceRepository;
+    return repositoryRegistry.insuranceRepository;
   }
 
   /**
    * Get Reporting Repository instance
+   * Lazy loaded for memory efficiency
    */
   static getReportingRepository(): IReportingRepository {
-    if (!reportingRepository) {
-      reportingRepository = new SupabaseReportingAdapter();
+    if (!repositoryRegistry.reportingRepository) {
+      repositoryRegistry.reportingRepository = new SupabaseReportingAdapter();
     }
-    return reportingRepository;
+    return repositoryRegistry.reportingRepository;
   }
 
   /**
    * Get Report Data Transformer Repository instance
+   * Lazy loaded for memory efficiency
    */
   static getReportDataTransformerRepository(): IReportDataTransformerRepository {
-    if (!reportDataTransformerRepository) {
-      reportDataTransformerRepository = new SupabaseReportDataTransformerAdapter();
+    if (!repositoryRegistry.reportDataTransformerRepository) {
+      repositoryRegistry.reportDataTransformerRepository = new SupabaseReportDataTransformerAdapter();
     }
-    return reportDataTransformerRepository;
+    return repositoryRegistry.reportDataTransformerRepository;
   }
 
   /**
    * Get Project Form Repository instance
+   * Lazy loaded for memory efficiency
    */
   static getProjectFormRepository(): IProjectFormRepository {
-    if (!projectFormRepository) {
-      projectFormRepository = new SupabaseProjectFormAdapter();
+    if (!repositoryRegistry.projectFormRepository) {
+      repositoryRegistry.projectFormRepository = new SupabaseProjectFormAdapter();
     }
-    return projectFormRepository;
+    return repositoryRegistry.projectFormRepository;
   }
 
   /**
    * Get Tender Repository instance
+   * Lazy loaded for memory efficiency
    */
   static getTenderRepository(): ITenderRepository {
-    if (!tenderRepository) {
-      tenderRepository = new SupabaseTenderAdapter();
+    if (!repositoryRegistry.tenderRepository) {
+      repositoryRegistry.tenderRepository = new SupabaseTenderAdapter();
     }
-    return tenderRepository;
+    return repositoryRegistry.tenderRepository;
   }
 
   /**
    * Get Supplier Repository instance
+   * Lazy loaded for memory efficiency
    */
   static getSupplierRepository(): ISupplierRepository {
-    if (!supplierRepository) {
-      supplierRepository = new SupabaseSupplierAdapter();
+    if (!repositoryRegistry.supplierRepository) {
+      repositoryRegistry.supplierRepository = new SupabaseSupplierAdapter();
     }
-    return supplierRepository;
+    return repositoryRegistry.supplierRepository;
   }
 
   /**
    * Get User Repository instance
+   * Lazy loaded for memory efficiency
    */
   static getUserRepository(): IUserRepository {
-    if (!userRepository) {
-      userRepository = new SupabaseUserAdapter();
+    if (!repositoryRegistry.userRepository) {
+      repositoryRegistry.userRepository = new SupabaseUserAdapter();
     }
-    return userRepository;
+    return repositoryRegistry.userRepository;
   }
 
   /**
    * Get Auth Repository instance
+   * Lazy loaded for memory efficiency
    */
   static getAuthRepository(): IAuthRepository {
-    if (!authRepository) {
-      authRepository = new SupabaseAuthAdapter();
+    if (!repositoryRegistry.authRepository) {
+      repositoryRegistry.authRepository = new SupabaseAuthAdapter();
     }
-    return authRepository;
+    return repositoryRegistry.authRepository;
   }
 
   /**
    * Get Storage Repository instance
+   * Lazy loaded for memory efficiency
    */
   static getStorageRepository(): IStorageRepository {
-    if (!storageRepository) {
-      storageRepository = new SupabaseStorageAdapter();
+    if (!repositoryRegistry.storageRepository) {
+      repositoryRegistry.storageRepository = new SupabaseStorageAdapter();
     }
-    return storageRepository;
+    return repositoryRegistry.storageRepository!;
   }
 
   /**
    * Get Parsed Invoice Repository instance
+   * Lazy loaded for memory efficiency
    */
   static getParsedInvoiceRepository(): IParsedInvoiceRepository {
-    if (!parsedInvoiceRepository) {
-      parsedInvoiceRepository = new SupabaseParsedInvoiceAdapter();
+    if (!repositoryRegistry.parsedInvoiceRepository) {
+      repositoryRegistry.parsedInvoiceRepository = new SupabaseParsedInvoiceAdapter();
     }
-    return parsedInvoiceRepository;
+    return repositoryRegistry.parsedInvoiceRepository;
   }
 
   /**
    * Get Notification Repository instance
+   * Lazy loaded for memory efficiency
    */
   static getNotificationRepository(): INotificationRepository {
-    if (!notificationRepository) {
-      notificationRepository = new SupabaseNotificationAdapter();
+    if (!repositoryRegistry.notificationRepository) {
+      repositoryRegistry.notificationRepository = new SupabaseNotificationAdapter();
     }
-    return notificationRepository;
+    return repositoryRegistry.notificationRepository;
   }
 
   /**
    * Get Inspection Permission Repository instance
+   * Lazy loaded for memory efficiency
    */
   static getInspectionPermissionRepository(): IInspectionPermissionRepository {
-    if (!inspectionPermissionRepository) {
-      inspectionPermissionRepository = new SupabaseInspectionPermissionAdapter();
+    if (!repositoryRegistry.inspectionPermissionRepository) {
+      repositoryRegistry.inspectionPermissionRepository = new SupabaseInspectionPermissionAdapter();
     }
-    return inspectionPermissionRepository;
+    return repositoryRegistry.inspectionPermissionRepository;
   }
 
   /**
    * Get Tender Document Repository instance
+   * Lazy loaded for memory efficiency
    */
   static getTenderDocumentRepository(): ITenderDocumentRepository {
-    if (!tenderDocumentRepository) {
-      tenderDocumentRepository = new SupabaseTenderDocumentAdapter();
+    if (!repositoryRegistry.tenderDocumentRepository) {
+      repositoryRegistry.tenderDocumentRepository = new SupabaseTenderDocumentAdapter();
     }
-    return tenderDocumentRepository;
+    return repositoryRegistry.tenderDocumentRepository;
   }
 }

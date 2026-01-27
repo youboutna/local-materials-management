@@ -1,12 +1,15 @@
 /**
- * AlertService - Placeholder service for project alerts
- * Uses in-memory storage since the tables don't exist yet
+ * Alert Service - Hexagonal Architecture
+ * Business logic for project alert management
  */
 
+import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { INotificationRepository } from '@/domain/repositories/INotificationRepository';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { ProjectAlert } from '@/domain/entities/Workspace';
 
-// Simplified DTO interfaces
-interface ProjectAlertDTO {
+// Service DTOs for data exchange
+export interface ProjectAlertDTO {
   id: string;
   project_id: string;
   type: string;
@@ -23,7 +26,7 @@ interface ProjectAlertDTO {
   resolved_by?: string;
 }
 
-interface CreateProjectAlertRequestDto {
+export interface CreateProjectAlertRequestDto {
   project_id: string;
   type: string;
   severity: string;
@@ -31,7 +34,7 @@ interface CreateProjectAlertRequestDto {
   description?: string;
 }
 
-interface UpdateProjectAlertRequestDto {
+export interface UpdateProjectAlertRequestDto {
   type?: string;
   severity?: string;
   title?: string;
@@ -40,33 +43,51 @@ interface UpdateProjectAlertRequestDto {
   resolved?: boolean;
 }
 
-// In-memory storage for alerts (placeholder)
-const alertsStore: Map<string, ProjectAlert> = new Map();
+export interface AlertStatistics {
+  total: number;
+  active: number;
+  resolved: number;
+  acknowledged: number;
+  byType: Record<string, number>;
+  bySeverity: Record<string, number>;
+}
 
 export class AlertService {
+  constructor(
+    private notificationRepository: INotificationRepository = RepositoryFactory.getNotificationRepository()
+  ) {}
   /**
    * Create a new project alert
    */
   async createAlert(alertData: CreateProjectAlertRequestDto): Promise<ProjectAlertDTO> {
     try {
-      const id = `alert-${Date.now()}`;
-      const alert: ProjectAlert = {
-        id,
-        projectId: alertData.project_id,
-        type: alertData.type,
-        severity: alertData.severity,
+      // Validate alert data
+      const validation = this.validateAlertData(alertData);
+      if (!validation.isValid) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, `Validation failed: ${validation.errors.join(', ')}`);
+      }
+
+      // Create alert through notification repository
+      const createdAlert = await this.notificationRepository.createNotification({
+        recipient_id: 'system', // System alert
         title: alertData.title,
-        description: alertData.description,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        acknowledged: false,
-        resolved: false
-      };
-      alertsStore.set(id, alert);
-      return this.toDTO(alert);
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      throw new Error(`Failed to create alert: ${message}`);
+        message: alertData.description || '',
+        type: alertData.type as any,
+        metadata: {
+          project_id: alertData.project_id,
+          severity: alertData.severity,
+          alert_type: 'project_alert'
+        }
+      });
+      
+      if (!createdAlert.notification) {
+        throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create alert');
+      }
+
+      return this.mapToDTO(createdAlert.notification);
+    } catch (error) {
+      console.error('AlertService.createAlert failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create alert');
     }
   }
 
@@ -75,11 +96,13 @@ export class AlertService {
    */
   async getAlertById(id: string): Promise<ProjectAlertDTO | null> {
     try {
-      const alert = alertsStore.get(id);
-      return alert ? this.toDTO(alert) : null;
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      throw new Error(`Failed to fetch alert: ${message}`);
+      // For now, return null as notification repository doesn't have findById
+      // TODO: Implement proper alert retrieval when alert repository is available
+      console.warn('AlertService.getAlertById: Alert repository not available');
+      return null;
+    } catch (error) {
+      console.error('AlertService.getAlertById failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch alert');
     }
   }
 
@@ -88,12 +111,21 @@ export class AlertService {
    */
   async getAlertsByProjectId(projectId: string): Promise<ProjectAlertDTO[]> {
     try {
-      const alerts = Array.from(alertsStore.values())
-        .filter(a => a.projectId === projectId);
-      return alerts.map(a => this.toDTO(a));
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      throw new Error(`Failed to fetch project alerts: ${message}`);
+      // Get notifications for project alerts
+      const notifications = await this.notificationRepository.getNotifications({
+        type: 'project_alert',
+        limit: 100
+      });
+      
+      // Filter by project_id in metadata
+      const projectAlerts = notifications.filter(n => 
+        n.metadata && (n.metadata as any).project_id === projectId
+      );
+      
+      return projectAlerts.map(notification => this.mapToDTO(notification));
+    } catch (error) {
+      console.error('AlertService.getAlertsByProjectId failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch project alerts');
     }
   }
 
@@ -102,12 +134,21 @@ export class AlertService {
    */
   async getActiveAlerts(): Promise<ProjectAlertDTO[]> {
     try {
-      const alerts = Array.from(alertsStore.values())
-        .filter(a => !a.resolved);
-      return alerts.map(a => this.toDTO(a));
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      throw new Error(`Failed to fetch active alerts: ${message}`);
+      // Get all project alerts
+      const notifications = await this.notificationRepository.getNotifications({
+        type: 'project_alert',
+        limit: 100
+      });
+      
+      // Filter for unresolved alerts
+      const activeAlerts = notifications.filter(n => 
+        !(n.metadata as any).resolved
+      );
+      
+      return activeAlerts.map(notification => this.mapToDTO(notification));
+    } catch (error) {
+      console.error('AlertService.getActiveAlerts failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch active alerts');
     }
   }
 
@@ -116,19 +157,12 @@ export class AlertService {
    */
   async updateAlert(id: string, updateData: UpdateProjectAlertRequestDto): Promise<ProjectAlertDTO> {
     try {
-      const existing = alertsStore.get(id);
-      if (!existing) throw new Error('Alert not found');
-      
-      const updated: ProjectAlert = {
-        ...existing,
-        ...updateData,
-        updatedAt: new Date()
-      };
-      alertsStore.set(id, updated);
-      return this.toDTO(updated);
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      throw new Error(`Failed to update alert: ${message}`);
+      // For now, throw not implemented as notification repository doesn't support updates
+      // TODO: Implement proper alert update when alert repository is available
+      throw new AppError(ErrorCode.NOT_IMPLEMENTED, 'Alert update not yet implemented');
+    } catch (error) {
+      console.error('AlertService.updateAlert failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update alert');
     }
   }
 
@@ -137,10 +171,11 @@ export class AlertService {
    */
   async deleteAlert(id: string): Promise<void> {
     try {
-      alertsStore.delete(id);
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      throw new Error(`Failed to delete alert: ${message}`);
+      // Delete through notification repository
+      await this.notificationRepository.deleteNotification(id);
+    } catch (error) {
+      console.error('AlertService.deleteAlert failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete alert');
     }
   }
 
@@ -149,21 +184,12 @@ export class AlertService {
    */
   async acknowledgeAlert(id: string, userId: string): Promise<ProjectAlertDTO> {
     try {
-      const existing = alertsStore.get(id);
-      if (!existing) throw new Error('Alert not found');
-      
-      const updated: ProjectAlert = {
-        ...existing,
-        acknowledged: true,
-        acknowledgedAt: new Date(),
-        acknowledgedBy: userId,
-        updatedAt: new Date()
-      };
-      alertsStore.set(id, updated);
-      return this.toDTO(updated);
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      throw new Error(`Failed to acknowledge alert: ${message}`);
+      // For now, throw not implemented as notification repository doesn't support updates
+      // TODO: Implement proper alert acknowledgment when alert repository is available
+      throw new AppError(ErrorCode.NOT_IMPLEMENTED, 'Alert acknowledgment not yet implemented');
+    } catch (error) {
+      console.error('AlertService.acknowledgeAlert failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to acknowledge alert');
     }
   }
 
@@ -172,21 +198,12 @@ export class AlertService {
    */
   async resolveAlert(id: string, userId: string): Promise<ProjectAlertDTO> {
     try {
-      const existing = alertsStore.get(id);
-      if (!existing) throw new Error('Alert not found');
-      
-      const updated: ProjectAlert = {
-        ...existing,
-        resolved: true,
-        resolvedAt: new Date(),
-        resolvedBy: userId,
-        updatedAt: new Date()
-      };
-      alertsStore.set(id, updated);
-      return this.toDTO(updated);
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      throw new Error(`Failed to resolve alert: ${message}`);
+      // For now, throw not implemented as notification repository doesn't support updates
+      // TODO: Implement proper alert resolution when alert repository is available
+      throw new AppError(ErrorCode.NOT_IMPLEMENTED, 'Alert resolution not yet implemented');
+    } catch (error) {
+      console.error('AlertService.resolveAlert failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to resolve alert');
     }
   }
 
@@ -195,12 +212,21 @@ export class AlertService {
    */
   async getAlertsByType(type: string): Promise<ProjectAlertDTO[]> {
     try {
-      const alerts = Array.from(alertsStore.values())
-        .filter(a => a.type === type);
-      return alerts.map(a => this.toDTO(a));
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      throw new Error(`Failed to fetch alerts by type: ${message}`);
+      // Get notifications for project alerts
+      const notifications = await this.notificationRepository.getNotifications({
+        type: 'project_alert',
+        limit: 100
+      });
+      
+      // Filter by alert type in metadata
+      const typeAlerts = notifications.filter(n => 
+        n.metadata && (n.metadata as any).alert_type === type
+      );
+      
+      return typeAlerts.map(notification => this.mapToDTO(notification));
+    } catch (error) {
+      console.error('AlertService.getAlertsByType failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch alerts by type');
     }
   }
 
@@ -209,12 +235,63 @@ export class AlertService {
    */
   async getAlertsBySeverity(severity: string): Promise<ProjectAlertDTO[]> {
     try {
-      const alerts = Array.from(alertsStore.values())
-        .filter(a => a.severity === severity);
-      return alerts.map(a => this.toDTO(a));
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      throw new Error(`Failed to fetch alerts by severity: ${message}`);
+      // Get notifications for project alerts
+      const notifications = await this.notificationRepository.getNotifications({
+        type: 'project_alert',
+        limit: 100
+      });
+      
+      // Filter by severity in metadata
+      const severityAlerts = notifications.filter(n => 
+        n.metadata && (n.metadata as any).severity === severity
+      );
+      
+      return severityAlerts.map(notification => this.mapToDTO(notification));
+    } catch (error) {
+      console.error('AlertService.getAlertsBySeverity failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch alerts by severity');
+    }
+  }
+
+  /**
+   * Get alert statistics
+   */
+  async getAlertStatistics(projectId?: string): Promise<AlertStatistics> {
+    try {
+      // Get notifications for project alerts
+      const notifications = await this.notificationRepository.getNotifications({
+        type: 'project_alert',
+        limit: 100
+      });
+      
+      // Filter by project if specified
+      const alerts = projectId 
+        ? notifications.filter(n => n.metadata && (n.metadata as any).project_id === projectId)
+        : notifications;
+
+      const stats: AlertStatistics = {
+        total: alerts.length,
+        active: alerts.filter(a => !(a.metadata as any).resolved).length,
+        resolved: alerts.filter(a => (a.metadata as any).resolved).length,
+        acknowledged: alerts.filter(a => (a.metadata as any).acknowledged).length,
+        byType: {},
+        bySeverity: {}
+      };
+
+      // Calculate statistics by type and severity
+      alerts.forEach(alert => {
+        const metadata = alert.metadata as any;
+        const alertType = metadata.alert_type || 'unknown';
+        const severity = metadata.severity || 'unknown';
+        
+        stats.byType[alertType] = (stats.byType[alertType] || 0) + 1;
+        stats.bySeverity[severity] = (stats.bySeverity[severity] || 0) + 1;
+      });
+
+      return stats;
+    } catch (error) {
+      console.error('AlertService.getAlertStatistics failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch alert statistics');
     }
   }
 
@@ -227,50 +304,51 @@ export class AlertService {
     if ('project_id' in data && !data.project_id) {
       errors.push('Project ID is required');
     }
+
+    if ('type' in data && !data.type) {
+      errors.push('Alert type is required');
+    }
+
+    if ('severity' in data && !data.severity) {
+      errors.push('Alert severity is required');
+    }
+
+    if ('title' in data && !data.title) {
+      errors.push('Alert title is required');
+    }
+
+    // Validate severity values
+    if ('severity' in data && data.severity) {
+      const validSeverities = ['low', 'medium', 'high', 'critical'];
+      if (!validSeverities.includes(data.severity.toLowerCase())) {
+        errors.push('Invalid severity value. Must be: low, medium, high, or critical');
+      }
+    }
     
     return { isValid: errors.length === 0, errors };
   }
 
   /**
-   * Convert entity to DTO
+   * Map notification result to DTO
    */
-  private toDTO(alert: ProjectAlert): ProjectAlertDTO {
+  private mapToDTO(notificationResult: Record<string, unknown>): ProjectAlertDTO {
+    const metadata = notificationResult.metadata as any;
+    
     return {
-      id: alert.id,
-      project_id: alert.projectId,
-      type: alert.type,
-      severity: alert.severity,
-      title: alert.title,
-      description: alert.description,
-      created_at: alert.createdAt.toISOString(),
-      updated_at: alert.updatedAt?.toISOString(),
-      acknowledged: alert.acknowledged,
-      acknowledged_at: alert.acknowledgedAt?.toISOString(),
-      acknowledged_by: alert.acknowledgedBy,
-      resolved: alert.resolved,
-      resolved_at: alert.resolvedAt?.toISOString(),
-      resolved_by: alert.resolvedBy
+      id: (notificationResult.id as string) || '',
+      project_id: metadata?.project_id || '',
+      type: metadata?.alert_type || (notificationResult.type as string) || '',
+      severity: metadata?.severity || '',
+      title: (notificationResult.title as string) || '',
+      description: (notificationResult.message as string) || '',
+      created_at: (notificationResult.created_at as string) || new Date().toISOString(),
+      updated_at: notificationResult.updated_at as string,
+      acknowledged: metadata?.acknowledged || false,
+      acknowledged_at: metadata?.acknowledged_at,
+      acknowledged_by: metadata?.acknowledged_by,
+      resolved: metadata?.resolved || false,
+      resolved_at: metadata?.resolved_at,
+      resolved_by: metadata?.resolved_by
     };
-  }
-
-  // Static methods
-  static async create(data: CreateProjectAlertRequestDto): Promise<ProjectAlertDTO> {
-    const service = new AlertService();
-    return service.createAlert(data);
-  }
-
-  static async getById(id: string): Promise<ProjectAlertDTO | null> {
-    const service = new AlertService();
-    return service.getAlertById(id);
-  }
-
-  static async getByProject(projectId: string): Promise<ProjectAlertDTO[]> {
-    const service = new AlertService();
-    return service.getAlertsByProjectId(projectId);
-  }
-
-  static async getActive(): Promise<ProjectAlertDTO[]> {
-    const service = new AlertService();
-    return service.getActiveAlerts();
   }
 }

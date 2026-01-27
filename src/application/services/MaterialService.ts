@@ -1,89 +1,362 @@
-// Material Service - Hexagonal Architecture (Placeholder)
-import { Material, MaterialCategory } from '@/domain/entities/Material';
-import { AppError, ErrorLogger } from '@/utils/errorHandling';
+/**
+ * Material Service - Hexagonal Architecture
+ * Business logic for material management operations
+ */
 
-// In-memory storage placeholder
-const materialsStore: Map<string, Material> = new Map();
+import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { Material, MaterialCategory } from '@/domain/entities/Material';
+
+// Service DTOs for data exchange
+export interface MaterialDTO {
+  id: string;
+  name: string;
+  description: string;
+  category: MaterialCategory;
+  unit: string;
+  pricePerUnit: number;
+  availableQuantity: number;
+  minStockLevel: number;
+  workspaceId: string;
+  supplierId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateMaterialDTO {
+  name: string;
+  description?: string;
+  category: MaterialCategory;
+  unit: string;
+  pricePerUnit: number;
+  availableQuantity: number;
+  minStockLevel?: number;
+  workspaceId: string;
+  supplierId?: string;
+}
+
+export interface UpdateMaterialDTO {
+  name?: string;
+  description?: string;
+  category?: MaterialCategory;
+  unit?: string;
+  pricePerUnit?: number;
+  availableQuantity?: number;
+  minStockLevel?: number;
+  supplierId?: string;
+}
+
+export interface ProjectMaterialDTO {
+  id: string;
+  projectId: string;
+  materialId: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  addedAt: string;
+  addedBy: string;
+}
 
 export class MaterialService {
-  async getAllMaterials(): Promise<Material[]> {
-    return Array.from(materialsStore.values());
+  constructor(
+    private materialRepository: IMaterialRepository = RepositoryFactory.getMaterialRepository()
+  ) {}
+  /**
+   * Get all materials
+   */
+  async getAllMaterials(): Promise<MaterialDTO[]> {
+    try {
+      const materials = await this.materialRepository.findAll();
+      return materials.map(material => this.mapToDTO(material));
+    } catch (error) {
+      console.error('MaterialService.getAllMaterials failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch materials');
+    }
   }
 
-  async getMaterialById(id: string): Promise<Material | null> {
-    return materialsStore.get(id) || null;
+  /**
+   * Get material by ID
+   */
+  async getMaterialById(id: string): Promise<MaterialDTO | null> {
+    try {
+      const material = await this.materialRepository.findById(id);
+      return material ? this.mapToDTO(material) : null;
+    } catch (error) {
+      console.error('MaterialService.getMaterialById failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch material');
+    }
   }
 
-  async getMaterialsByCategory(category: MaterialCategory): Promise<Material[]> {
-    return Array.from(materialsStore.values()).filter(m => m.category === category);
+  /**
+   * Get materials by category
+   */
+  async getMaterialsByCategory(category: MaterialCategory): Promise<MaterialDTO[]> {
+    try {
+      const materials = await this.materialRepository.findByCategory(category);
+      return materials.map(material => this.mapToDTO(material));
+    } catch (error) {
+      console.error('MaterialService.getMaterialsByCategory failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch materials by category');
+    }
   }
 
-  async getMaterialsByWorkspace(workspaceId: string): Promise<Material[]> {
-    return Array.from(materialsStore.values()).filter(m => m.workspaceId === workspaceId);
+  /**
+   * Get materials by workspace
+   */
+  async getMaterialsByWorkspace(workspaceId: string): Promise<MaterialDTO[]> {
+    try {
+      const materials = await this.materialRepository.findByWorkspace(workspaceId);
+      return materials.map(material => this.mapToDTO(material));
+    } catch (error) {
+      console.error('MaterialService.getMaterialsByWorkspace failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch materials by workspace');
+    }
   }
 
-  async searchMaterials(query: string): Promise<Material[]> {
-    return Array.from(materialsStore.values()).filter(m => 
-      m.name.toLowerCase().includes(query.toLowerCase())
-    );
+  /**
+   * Search materials by query
+   */
+  async searchMaterials(query: string): Promise<MaterialDTO[]> {
+    try {
+      const materials = await this.materialRepository.search(query);
+      return materials.map(material => this.mapToDTO(material));
+    } catch (error) {
+      console.error('MaterialService.searchMaterials failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to search materials');
+    }
   }
 
-  async getLowStockMaterials(threshold: number = 10): Promise<Material[]> {
-    return Array.from(materialsStore.values()).filter(m => m.availableQuantity <= threshold);
+  /**
+   * Get low stock materials
+   */
+  async getLowStockMaterials(threshold: number = 10): Promise<MaterialDTO[]> {
+    try {
+      const materials = await this.materialRepository.findLowStock(threshold);
+      return materials.map(material => this.mapToDTO(material));
+    } catch (error) {
+      console.error('MaterialService.getLowStockMaterials failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch low stock materials');
+    }
   }
 
-  async getOutOfStockMaterials(): Promise<Material[]> {
-    return Array.from(materialsStore.values()).filter(m => m.availableQuantity === 0);
+  /**
+   * Get out of stock materials
+   */
+  async getOutOfStockMaterials(): Promise<MaterialDTO[]> {
+    try {
+      const materials = await this.materialRepository.findOutOfStock();
+      return materials.map(material => this.mapToDTO(material));
+    } catch (error) {
+      console.error('MaterialService.getOutOfStockMaterials failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch out of stock materials');
+    }
   }
 
-  async createMaterial(material: Partial<Material>): Promise<Material> {
-    const newMaterial = Material.create({
-      id: crypto.randomUUID(),
-      name: material.name || '',
-      description: material.description || '',
-      category: material.category || 'other',
-      unit: material.unit || 'unit',
-      pricePerUnit: material.pricePerUnit || 0,
-      availableQuantity: material.availableQuantity || 0
-    });
-    materialsStore.set(newMaterial.id, newMaterial);
-    return newMaterial;
+  /**
+   * Create a new material
+   */
+  async createMaterial(materialData: CreateMaterialDTO): Promise<MaterialDTO> {
+    try {
+      // Validate required fields
+      if (!materialData.name || !materialData.category || !materialData.unit || !materialData.workspaceId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Missing required fields for material');
+      }
+
+      // Validate price and quantity
+      if (materialData.pricePerUnit < 0) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Price per unit must be non-negative');
+      }
+
+      if (materialData.availableQuantity < 0) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Available quantity must be non-negative');
+      }
+
+      // Create material through repository
+      await this.materialRepository.create(materialData);
+      
+      // Get the created material - use a temporary ID for now
+      const tempId = `temp_${Date.now()}`;
+      const createdMaterial = await this.materialRepository.findById(tempId) || (materialData as unknown as Record<string, unknown>);
+
+      return this.mapToDTO(createdMaterial);
+    } catch (error) {
+      console.error('MaterialService.createMaterial failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create material');
+    }
   }
 
-  async updateMaterial(id: string, updates: Partial<Material>): Promise<Material> {
-    const existing = materialsStore.get(id);
-    if (!existing) throw new AppError('NOT_FOUND' as any, 'Material not found');
-    const updated = { ...existing, ...updates } as Material;
-    materialsStore.set(id, updated);
-    return updated;
+  /**
+   * Update an existing material
+   */
+  async updateMaterial(id: string, updates: UpdateMaterialDTO): Promise<MaterialDTO> {
+    try {
+      const existing = await this.materialRepository.findById(id);
+      if (!existing) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Material not found');
+      }
+
+      // Validate updates
+      if (updates.pricePerUnit !== undefined && updates.pricePerUnit < 0) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Price per unit must be non-negative');
+      }
+
+      if (updates.availableQuantity !== undefined && updates.availableQuantity < 0) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Available quantity must be non-negative');
+      }
+
+      // Update material through repository
+      await this.materialRepository.update(id, updates);
+      
+      // Get the updated material
+      const updated = await this.materialRepository.findById(id);
+      
+      if (!updated) {
+        throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update material');
+      }
+
+      return this.mapToDTO(updated);
+    } catch (error) {
+      console.error('MaterialService.updateMaterial failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update material');
+    }
   }
 
+  /**
+   * Delete a material
+   */
   async deleteMaterial(id: string): Promise<void> {
-    materialsStore.delete(id);
+    try {
+      const existing = await this.materialRepository.findById(id);
+      if (!existing) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Material not found');
+      }
+
+      await this.materialRepository.delete(id);
+    } catch (error) {
+      console.error('MaterialService.deleteMaterial failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete material');
+    }
   }
 
-  async getProjectMaterials(projectId: string): Promise<any[]> {
-    console.log('Getting project materials:', projectId);
-    return [];
+  /**
+   * Get materials for a specific project
+   */
+  async getProjectMaterials(projectId: string): Promise<ProjectMaterialDTO[]> {
+    try {
+      if (!projectId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
+      }
+
+      // Get project materials through repository
+      const projectMaterials = await this.materialRepository.getProjectMaterials(projectId);
+      
+      return projectMaterials.map(pm => ({
+        id: pm.id,
+        projectId: pm.projectId,
+        materialId: pm.materialId,
+        quantity: pm.quantity,
+        unitPrice: pm.unitPrice,
+        totalPrice: pm.totalPrice,
+        addedAt: pm.addedAt,
+        addedBy: pm.addedBy
+      }));
+    } catch (error) {
+      console.error('MaterialService.getProjectMaterials failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get project materials');
+    }
   }
 
+  /**
+   * Add material to a project
+   */
   async addMaterialToProject(projectId: string, materialId: string, quantity: number): Promise<void> {
-    console.log('Adding material to project:', projectId, materialId, quantity);
+    try {
+      if (!projectId || !materialId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID and Material ID are required');
+      }
+
+      if (quantity <= 0) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Quantity must be positive');
+      }
+
+      // Check if material exists
+      const material = await this.materialRepository.findById(materialId);
+      if (!material) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Material not found');
+      }
+
+      // Check if material has enough stock
+      if (material.availableQuantity < quantity) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Insufficient material stock');
+      }
+
+      // Add material to project through repository
+      await this.materialRepository.addMaterialToProject(projectId, materialId, quantity);
+      
+      // Update material stock
+      await this.materialRepository.update(materialId, {
+        availableQuantity: material.availableQuantity - quantity
+      });
+    } catch (error) {
+      console.error('MaterialService.addMaterialToProject failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to add material to project');
+    }
   }
 
+  /**
+   * Remove material from a project
+   */
   async removeMaterialFromProject(projectId: string, materialId: string): Promise<void> {
-    console.log('Removing material from project:', projectId, materialId);
+    try {
+      if (!projectId || !materialId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID and Material ID are required');
+      }
+
+      // Get project material to restore stock
+      const projectMaterials = await this.materialRepository.getProjectMaterials(projectId);
+      const projectMaterial = projectMaterials.find(pm => pm.materialId === materialId);
+      
+      if (!projectMaterial) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Material not found in project');
+      }
+
+      // Remove material from project through repository
+      await this.materialRepository.removeMaterialFromProject(projectId, materialId);
+      
+      // Restore material stock
+      const material = await this.materialRepository.findById(materialId);
+      if (material) {
+        await this.materialRepository.update(materialId, {
+          availableQuantity: material.availableQuantity + projectMaterial.quantity
+        });
+      }
+    } catch (error) {
+      console.error('MaterialService.removeMaterialFromProject failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to remove material from project');
+    }
   }
 
-  static async getProjectMaterials(projectId: string): Promise<any[]> {
-    return new MaterialService().getProjectMaterials(projectId);
-  }
-
-  static async addMaterialToProject(projectId: string, materialId: string, quantity: number): Promise<void> {
-    return new MaterialService().addMaterialToProject(projectId, materialId, quantity);
-  }
-
-  static async removeMaterialFromProject(projectId: string, materialId: string): Promise<void> {
-    return new MaterialService().removeMaterialFromProject(projectId, materialId);
+  /**
+   * Map repository result to DTO
+   */
+  private mapToDTO(repositoryResult: Material | Record<string, unknown> | CreateMaterialDTO): MaterialDTO {
+    // Handle Material entity, repository result, and DTO
+    const result = repositoryResult as Record<string, unknown>;
+    
+    return {
+      id: (result.id as string) || '',
+      name: (result.name as string) || '',
+      description: (result.description as string) || '',
+      category: (result.category as MaterialCategory) || 'other',
+      unit: (result.unit as string) || 'unit',
+      pricePerUnit: (result.pricePerUnit as number) || 0,
+      availableQuantity: (result.availableQuantity as number) || 0,
+      minStockLevel: (result.minStockLevel as number) || 0,
+      workspaceId: (result.workspaceId as string) || '',
+      supplierId: result.supplierId as string,
+      createdAt: (result.createdAt as string) || new Date().toISOString(),
+      updatedAt: (result.updatedAt as string) || new Date().toISOString()
+    };
   }
 }

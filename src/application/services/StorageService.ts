@@ -1,25 +1,79 @@
 /**
- * Storage Service
- * Implements business logic for file storage operations
- * Following hexagonal architecture principles
+ * Storage Service - Hexagonal Architecture
+ * Business logic for file storage operations
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { 
   IStorageRepository, 
   StorageFile, 
   UploadResult 
 } from '@/domain/repositories/IStorageRepository';
 
+// Service DTOs for data exchange
+export interface UploadFileRequestDto {
+  bucket: string;
+  path: string;
+  file: File;
+}
+
+export interface GetPublicUrlRequestDto {
+  bucket: string;
+  path: string;
+}
+
+export interface DeleteFileRequestDto {
+  bucket: string;
+  path: string;
+}
+
+export interface ListFilesRequestDto {
+  bucket: string;
+  prefix?: string;
+}
+
+export interface DownloadFileRequestDto {
+  bucket: string;
+  path: string;
+}
+
+export interface FileExistsRequestDto {
+  bucket: string;
+  path: string;
+}
+
+export interface UploadMultipleFilesRequestDto {
+  bucket: string;
+  files: Array<{ path: string; file: File }>;
+}
+
+export interface DeleteMultipleFilesRequestDto {
+  bucket: string;
+  paths: string[];
+}
+
 export class StorageService {
-  constructor(private storageRepository: IStorageRepository) {}
+  constructor(
+    private storageRepository: IStorageRepository = RepositoryFactory.getStorageRepository()
+  ) {}
 
   /**
    * Upload file to storage
    */
-  async uploadFile(bucket: string, path: string, file: File): Promise<UploadResult> {
+  async uploadFile(request: UploadFileRequestDto): Promise<UploadResult> {
     try {
-      const result = await this.storageRepository.uploadFile(bucket, path, file);
+      if (!request.bucket) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Bucket is required');
+      }
+      if (!request.path) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Path is required');
+      }
+      if (!request.file) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'File is required');
+      }
+
+      const result = await this.storageRepository.uploadFile(request.bucket, request.path, request.file);
       
       if (result.error) {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to upload file');
@@ -32,44 +86,62 @@ export class StorageService {
       return result.result;
     } catch (error) {
       console.error('StorageService.uploadFile failed:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to upload file');
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to upload file');
     }
   }
 
   /**
    * Get public URL for file
    */
-  getPublicUrl(bucket: string, path: string): string {
+  getPublicUrl(request: GetPublicUrlRequestDto): string {
     try {
-      return this.storageRepository.getPublicUrl(bucket, path);
+      if (!request.bucket) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Bucket is required');
+      }
+      if (!request.path) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Path is required');
+      }
+
+      return this.storageRepository.getPublicUrl(request.bucket, request.path);
     } catch (error) {
       console.error('StorageService.getPublicUrl failed:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get public URL');
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get public URL');
     }
   }
 
   /**
    * Delete file from storage
    */
-  async deleteFile(bucket: string, path: string): Promise<void> {
+  async deleteFile(request: DeleteFileRequestDto): Promise<void> {
     try {
-      const result = await this.storageRepository.deleteFile(bucket, path);
+      if (!request.bucket) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Bucket is required');
+      }
+      if (!request.path) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Path is required');
+      }
+
+      const result = await this.storageRepository.deleteFile(request.bucket, request.path);
       
       if (result.error) {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete file');
       }
     } catch (error) {
       console.error('StorageService.deleteFile failed:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete file');
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete file');
     }
   }
 
   /**
    * List files in bucket with optional prefix
    */
-  async listFiles(bucket: string, prefix?: string): Promise<StorageFile[]> {
+  async listFiles(request: ListFilesRequestDto): Promise<StorageFile[]> {
     try {
-      const result = await this.storageRepository.listFiles(bucket, prefix);
+      if (!request.bucket) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Bucket is required');
+      }
+
+      const result = await this.storageRepository.listFiles(request.bucket, request.prefix);
       
       if (result.error) {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to list files');
@@ -78,16 +150,23 @@ export class StorageService {
       return result.files;
     } catch (error) {
       console.error('StorageService.listFiles failed:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to list files');
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to list files');
     }
   }
 
   /**
    * Download file
    */
-  async downloadFile(bucket: string, path: string): Promise<Blob> {
+  async downloadFile(request: DownloadFileRequestDto): Promise<Blob> {
     try {
-      const result = await this.storageRepository.downloadFile(bucket, path);
+      if (!request.bucket) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Bucket is required');
+      }
+      if (!request.path) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Path is required');
+      }
+
+      const result = await this.storageRepository.downloadFile(request.bucket, request.path);
       
       if (result.error) {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to download file');
@@ -100,16 +179,23 @@ export class StorageService {
       return result.data;
     } catch (error) {
       console.error('StorageService.downloadFile failed:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to download file');
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to download file');
     }
   }
 
   /**
    * Check if file exists
    */
-  async fileExists(bucket: string, path: string): Promise<boolean> {
+  async fileExists(request: FileExistsRequestDto): Promise<boolean> {
     try {
-      const result = await this.storageRepository.fileExists(bucket, path);
+      if (!request.bucket) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Bucket is required');
+      }
+      if (!request.path) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Path is required');
+      }
+
+      const result = await this.storageRepository.fileExists(request.bucket, request.path);
       
       if (result.error) {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to check file existence');
@@ -118,17 +204,24 @@ export class StorageService {
       return result.exists;
     } catch (error) {
       console.error('StorageService.fileExists failed:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to check file existence');
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to check file existence');
     }
   }
 
   /**
    * Upload multiple files
    */
-  async uploadMultipleFiles(bucket: string, files: Array<{ path: string; file: File }>): Promise<UploadResult[]> {
+  async uploadMultipleFiles(request: UploadMultipleFilesRequestDto): Promise<UploadResult[]> {
     try {
-      const uploadPromises = files.map(({ path, file }) => 
-        this.uploadFile(bucket, path, file)
+      if (!request.bucket) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Bucket is required');
+      }
+      if (!request.files || request.files.length === 0) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Files are required');
+      }
+
+      const uploadPromises = request.files.map(({ path, file }) => 
+        this.uploadFile({ bucket: request.bucket, path, file })
       );
 
       const results = await Promise.allSettled(uploadPromises);
@@ -138,7 +231,7 @@ export class StorageService {
         if (result.status === 'fulfilled') {
           successfulUploads.push(result.value);
         } else {
-          console.error(`Failed to upload file ${files[index].path}:`, result.reason);
+          console.error(`Failed to upload file ${request.files[index].path}:`, result.reason);
         }
       });
 
@@ -149,23 +242,30 @@ export class StorageService {
       return successfulUploads;
     } catch (error) {
       console.error('StorageService.uploadMultipleFiles failed:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to upload multiple files');
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to upload multiple files');
     }
   }
 
   /**
    * Delete multiple files
    */
-  async deleteMultipleFiles(bucket: string, paths: string[]): Promise<void> {
+  async deleteMultipleFiles(request: DeleteMultipleFilesRequestDto): Promise<void> {
     try {
-      const deletePromises = paths.map(path => 
-        this.deleteFile(bucket, path)
+      if (!request.bucket) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Bucket is required');
+      }
+      if (!request.paths || request.paths.length === 0) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Paths are required');
+      }
+
+      const deletePromises = request.paths.map(path => 
+        this.deleteFile({ bucket: request.bucket, path })
       );
 
       await Promise.allSettled(deletePromises);
     } catch (error) {
       console.error('StorageService.deleteMultipleFiles failed:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete multiple files');
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete multiple files');
     }
   }
 }
