@@ -7,8 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
   }
@@ -353,6 +351,60 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_guarantee_actions: {
+        Row: {
+          id: string
+          guarantee_id: string
+          action_type: 'notification' | 'claim' | 'renewal' | 'cancellation' | 'extension'
+          description: string
+          executed_by: string
+          executed_at: string
+          status: 'pending' | 'completed' | 'failed'
+          metadata: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          guarantee_id: string
+          action_type: 'notification' | 'claim' | 'renewal' | 'cancellation' | 'extension'
+          description: string
+          executed_by: string
+          executed_at?: string
+          status?: 'pending' | 'completed' | 'failed'
+          metadata?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          guarantee_id?: string
+          action_type?: 'notification' | 'claim' | 'renewal' | 'cancellation' | 'extension'
+          description?: string
+          executed_by?: string
+          executed_at?: string
+          status?: 'pending' | 'completed' | 'failed'
+          metadata?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_guarantee_actions_guarantee_id_fkey"
+            columns: ["guarantee_id"]
+            isOneToOne: false
+            referencedRelation: "bank_guarantees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_guarantee_actions_executed_by_fkey"
+            columns: ["executed_by"]
+            isOneToOne: false
+            referencedRelation: "auth.users"
             referencedColumns: ["id"]
           },
         ]
@@ -2949,6 +3001,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "project_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
         ]
       }
       project_materials: {
@@ -3049,6 +3108,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_milestones_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -3207,6 +3273,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "project_phases_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
         ]
       }
       project_resources: {
@@ -3342,6 +3415,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_risks_identified_by_fkey"
+            columns: ["identified_by"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -4641,6 +4721,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "supplier_payment_requests_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
         ]
       }
       supplier_payments: {
@@ -5032,6 +5119,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "task_assignments_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
         ]
       }
       task_dependencies: {
@@ -5320,7 +5414,15 @@ export type Database = {
           total_with_tax?: number | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tender_estimates_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tender_sharing_access_logs: {
         Row: {
@@ -6295,13 +6397,7 @@ export type Database = {
           updated_at: string | null
           work_description: string | null
           workflow_history: Json | null
-        }
-        SetofOptions: {
-          from: "*"
-          to: "progress_invoices"
-          isOneToOne: true
-          isSetofReturn: false
-        }
+        }[]
       }
       create_station_from_authorization: {
         Args: { auth_id: string; territory_id_param?: string }
