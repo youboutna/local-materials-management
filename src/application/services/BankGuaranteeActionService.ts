@@ -92,7 +92,6 @@ export class BankGuaranteeActionService {
       action_type: data.action_type as BankGuaranteeActionDTO['action_type'],
       title: data.action_type,
       description: data.description,
-      status: 'pending',
       priority: 'medium',
       created_by: data.performed_by,
       documents: []
@@ -129,7 +128,7 @@ export class BankGuaranteeActionService {
         action_type: actionData.action_type,
         title: actionData.title,
         description: actionData.description,
-        status: actionData.status || 'pending',
+        status: 'pending',
         priority: actionData.priority || 'medium',
         assigned_to: actionData.assigned_to,
         created_by: actionData.created_by,
@@ -163,7 +162,7 @@ export class BankGuaranteeActionService {
       return {
         id: `action-${Date.now()}`,
         ...actionData,
-        status: actionData.status || 'pending',
+        status: 'pending',
         priority: actionData.priority || 'medium',
         documents: actionData.documents || [],
         created_at: new Date().toISOString(),

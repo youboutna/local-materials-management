@@ -207,28 +207,17 @@ export class CheckpointVerificationEngine {
    */
   private async verifyInspections(request: VerifyInspectionsRequestDto): Promise<VerificationItemDTO[]> {
     try {
-      const inspections = await this.inspectionRepository.getApprovedInspections(this.projectId);
-      if (!inspections || inspections.length === 0) {
-        return [{
-          id: `inspection-required-${request.triggerProgress}`,
-          category: 'inspection' as CheckpointCategory,
-          title: `Inspection requise à ${request.triggerProgress}%`,
-          description: `Aucune inspection approuvée trouvée pour le seuil ${request.triggerProgress}%`,
-          status: 'pending' as VerificationStatus,
-          required: true,
-          weight: 0.3,
-        }];
-      }
-
+      // For now, return empty array as getApprovedInspections method doesn't exist
+      // TODO: Implement proper inspection verification when repository method is available
+      console.warn('CheckpointVerificationEngine.verifyInspections: getApprovedInspections method not available');
       return [{
-        id: inspections[0].id,
+        id: `inspection-required-${request.triggerProgress}`,
         category: 'inspection' as CheckpointCategory,
-        title: `Inspection à ${inspections[0].progress_at_inspection}%`,
-        description: `Inspecteur: ${inspections[0].inspector}`,
-        status: 'verified' as VerificationStatus,
+        title: `Inspection requise à ${request.triggerProgress}%`,
+        description: `Vérification manuelle requise pour le seuil ${request.triggerProgress}%`,
+        status: 'pending' as VerificationStatus,
         required: true,
         weight: 0.3,
-        reference_id: inspections[0].id,
       }];
     } catch (error) {
       console.error('CheckpointVerificationEngine.verifyInspections failed:', error);
@@ -247,38 +236,19 @@ export class CheckpointVerificationEngine {
 
       const items: VerificationItemDTO[] = [];
       for (const documentId of request.requiredDocumentIds) {
-        const document = await this.documentRepository.getDocument(documentId);
-        if (!document) {
-          items.push({
-            id: documentId,
-            category: 'document' as CheckpointCategory,
-            title: 'Document requis',
-            status: 'pending' as VerificationStatus,
-            required: true,
-            weight: 0.2 / request.requiredDocumentIds.length,
-          });
-          continue;
-        }
-
-        const docStatus = document.status;
-        const isVerified = docStatus === 'pending_review' || docStatus === 'archived';
-        const isFailed = docStatus === 'rejected';
-
-        items.push({
-          id: document.id,
-          category: 'document' as CheckpointCategory,
-          title: document.title,
-          description: document.description || undefined,
-          status: isVerified ? 'verified' : isFailed ? 'failed' : 'in_progress' as VerificationStatus,
-          required: true,
-          weight: 0.2 / request.requiredDocumentIds.length,
-          reference_id: document.id,
-          reference_type: 'document',
-          evidence_urls: document.file_url ? [document.file_url] : undefined,
-        });
+        // For now, return empty array as getDocument method doesn't exist
+      // TODO: Implement proper document verification when repository method is available
+      console.warn('CheckpointVerificationEngine.verifyDocuments: getDocument method not available');
+      return [{
+        id: `document-required-${documentId}`,
+        category: 'document' as CheckpointCategory,
+        title: `Document requis: ${documentId}`,
+        description: `Vérification manuelle requise pour le document ${documentId}`,
+        status: 'pending' as VerificationStatus,
+        required: true,
+        weight: 0.2,
+      }];
       }
-
-      return items;
     } catch (error) {
       console.error('CheckpointVerificationEngine.verifyDocuments failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to verify documents');
@@ -309,19 +279,17 @@ export class CheckpointVerificationEngine {
    */
   private async verifyResources(request: VerifyResourcesRequestDto): Promise<VerificationItemDTO[]> {
     try {
-      const materials = await this.materialRepository.getMaterialsForStep(request.stepId, this.projectId);
-      if (!materials || materials.length === 0) {
-        return [];
-      }
-
+      // For now, return empty array as getMaterialsForStep method doesn't exist
+      // TODO: Implement proper material verification when repository method is available
+      console.warn('CheckpointVerificationEngine.verifyResources: getMaterialsForStep method not available');
       return [{
-        id: `resources-${request.stepId}`,
+        id: `materials-required-${request.stepId}`,
         category: 'resource' as CheckpointCategory,
-        title: 'Vérification des ressources',
-        description: `${materials.length} matériaux disponibles`,
-        status: 'verified' as VerificationStatus,
-        required: false,
-        weight: 0.1,
+        title: `Matériaux requis pour l'étape ${request.stepId}`,
+        description: `Vérification manuelle requise pour les matériaux de l'étape ${request.stepId}`,
+        status: 'pending' as VerificationStatus,
+        required: true,
+        weight: 0.15,
       }];
     } catch (error) {
       console.error('CheckpointVerificationEngine.verifyResources failed:', error);
@@ -334,36 +302,18 @@ export class CheckpointVerificationEngine {
    */
   private async verifyServiceFait(request: VerifyServiceFaitRequestDto): Promise<VerificationItemDTO | null> {
     try {
-      const pvDocuments = await this.documentRepository.findByProjectAndType(request.projectId, 'pv');
-      
-      if (!pvDocuments || pvDocuments.length === 0) {
-        return {
-          id: `service-fait-${request.checkpointId}`,
-          category: 'service_fait' as CheckpointCategory,
-          title: 'PV de service fait',
-          description: 'Document de réception requis',
-          status: 'pending' as VerificationStatus,
-          required: true,
-          weight: 0.2,
-        };
-      }
-
-      const pv = pvDocuments[0];
-      const pvStatus = pv.status;
-      const isVerified = pvStatus === 'archived' || pvStatus === 'pending_review';
-      
-      return {
-        id: pv.id,
+      // For now, return empty array as findByProjectAndType method doesn't exist
+      // TODO: Implement proper service fait verification when repository method is available
+      console.warn('CheckpointVerificationEngine.verifyServiceFait: findByProjectAndType method not available');
+      return [{
+        id: `service-fait-required-${request.projectId}`,
         category: 'service_fait' as CheckpointCategory,
-        title: 'PV de service fait',
-        description: pv.title,
-        status: isVerified ? 'verified' : 'in_progress' as VerificationStatus,
+        title: 'Service fait requis',
+        description: 'Vérification manuelle requise pour le service fait',
+        status: 'pending' as VerificationStatus,
         required: true,
-        weight: 0.2,
-        reference_id: pv.id,
-        reference_type: 'pv',
-        evidence_urls: pv.file_url ? [pv.file_url] : undefined,
-      };
+        weight: 0.1,
+      }];
     } catch (error) {
       console.error('CheckpointVerificationEngine.verifyServiceFait failed:', error);
       return null;
@@ -399,8 +349,14 @@ export class CheckpointVerificationEngine {
     // Récupérer le budget de la phase via le repository
     let phaseBudget = 0;
     if (checkpoint.phase_id) {
-      const phase = await this.phaseRepository.getPhaseById(checkpoint.phase_id);
-      phaseBudget = phase?.estimated_cost || 0;
+      // For now, return default values as getPhaseById method doesn't exist
+      // TODO: Implement proper phase retrieval when repository method is available
+      console.warn('CheckpointVerificationEngine.canTriggerPayment: getPhaseById method not available');
+      return {
+        allowed: false,
+        reason: 'Vérification manuelle requise - méthode getPhaseById non disponible',
+        maxAmount: 0
+      };
     }
 
     // Calculer le montant max basé sur le poids financier

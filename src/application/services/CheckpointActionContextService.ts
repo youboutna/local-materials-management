@@ -17,6 +17,55 @@ import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { MilestoneDTO, MilestoneSummaryDTO, MilestoneType, MilestonePriority, MilestoneStatus } from '@/types/milestone-dto';
 import { PhaseDTO, PhaseSummaryDTO, PhaseStepDTO, PhaseTaskDTO } from '@/types/phase-dto';
 
+// Type definitions for better type safety
+interface ProjectData {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  progress: number;
+  budget: number;
+  start_date: string;
+  end_date?: string;
+  main_contractor?: string;
+  project_reference?: string;
+  allows_initial_payment?: boolean;
+  initial_payment_percentage?: number;
+}
+
+interface PhaseData {
+  id: string;
+  name: string;
+  status: string;
+  progress: number;
+  budget?: number;
+}
+
+interface MilestoneData {
+  id: string;
+  title: string;
+  target_date: string;
+  actual_completion_date?: string;
+  status: string;
+  priority: string;
+}
+
+interface PaymentData {
+  id: string;
+  amount: number;
+  date: string;
+  status: string;
+}
+
+interface InspectionData {
+  id: string;
+  date: string;
+  status: string;
+  inspector: string;
+  progress_at_inspection: number;
+  phase_id: string;
+}
+
 /**
  * Contexte complet d'un projet pour les actions
  */
@@ -149,7 +198,7 @@ export class CheckpointActionContextService {
   constructor(
     private projectRepository: IProjectRepository = RepositoryFactory.getProjectRepository(),
     private phaseRepository: IPhaseRepository = RepositoryFactory.getPhaseRepository(),
-    private milestoneRepository: IMilestoneRepository = RepositoryFactory.getPhaseRepository(), // Using phase repository as placeholder
+    private milestoneRepository: IPhaseRepository = RepositoryFactory.getPhaseRepository(), // Using phase repository as placeholder for milestone
     private paymentRepository: IPaymentRepository = RepositoryFactory.getPaymentRepository(),
     private inspectionRepository: IInspectionRepository = RepositoryFactory.getInspectionRepository(),
     private supplierRepository: ISupplierRepository = RepositoryFactory.getSupplierRepository()
@@ -178,17 +227,18 @@ export class CheckpointActionContextService {
         throw new AppError(ErrorCode.NOT_FOUND, 'Project not found');
       }
 
-      const phaseSummaries = phases.map(p => this.mapPhaseToSummary(p));
-      const currentPhase = phaseSummaries.find(p => p.status === 'in_progress');
-      const currentStep = currentPhase?.steps.find(s => s.status === 'in_progress' || s.status === 'pending');
+      const phaseSummaries = (phases as PhaseData[]).map((p: PhaseData) => this.mapPhaseToSummary(p));
+      const currentPhase = phaseSummaries.find((p: PhaseSummary) => p.status === 'in_progress');
+      const currentStep = currentPhase?.steps.find((s: StepSummary) => s.status === 'in_progress' || s.status === 'pending');
       
       // Calculate financial summary
-      const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
-      const progressBasedAmount = (project.budget * project.progress) / 100;
+      const totalPaid = (payments as PaymentData[]).reduce((sum: number, p: PaymentData) => sum + (p.amount || 0), 0);
+      const projectData = project as ProjectData;
+      const progressBasedAmount = (projectData.budget * projectData.progress) / 100;
       const maxAllowedWithTolerance = progressBasedAmount * 1.5;
 
       // Calculate milestone progress
-      const milestonesSummary = milestones.map(m => ({
+      const milestonesSummary = (milestones as MilestoneData[]).map((m: MilestoneData) => ({
         id: m.id,
         title: m.title,
         target_date: m.target_date,
@@ -201,54 +251,54 @@ export class CheckpointActionContextService {
         float_days: 0
       }));
 
-      const checkpoints = milestonesSummary.filter(m => m.type === 'checkpoint' || m.type === 'gate');
-      const completedCheckpoints = checkpoints.filter(m => m.status === 'completed');
+      const checkpoints = milestonesSummary.filter((m: MilestoneSummaryDTO) => m.type === 'checkpoint' || m.type === 'gate');
+      const completedCheckpoints = checkpoints.filter((m: MilestoneSummaryDTO) => m.status === 'completed');
 
       // Latest inspection
       const latestInspection = inspections.length > 0 ? {
-        id: inspections[0].id,
-        date: inspections[0].date,
-        status: inspections[0].status,
-        inspector: inspections[0].inspector,
-        progressAtInspection: inspections[0].progress_at_inspection,
-        phaseId: inspections[0].phase_id
+        id: (inspections[0] as InspectionData).id,
+        date: (inspections[0] as InspectionData).date,
+        status: (inspections[0] as InspectionData).status,
+        inspector: (inspections[0] as InspectionData).inspector,
+        progressAtInspection: (inspections[0] as InspectionData).progress_at_inspection,
+        phaseId: (inspections[0] as InspectionData).phase_id
       } : undefined;
 
       return {
         project: {
-          id: project.id,
-          title: project.title,
-          description: project.description || undefined,
-          status: project.status,
-          progress: project.progress,
-          budget: project.budget,
-          startDate: project.start_date,
-          endDate: project.end_date || undefined,
-          mainContractor: project.main_contractor || undefined,
-          projectReference: project.project_reference || undefined,
-          allowsInitialPayment: project.allows_initial_payment ?? undefined,
-          initialPaymentPercentage: project.initial_payment_percentage ?? undefined
+          id: projectData.id,
+          title: projectData.title,
+          description: projectData.description || undefined,
+          status: projectData.status,
+          progress: projectData.progress,
+          budget: projectData.budget,
+          startDate: projectData.start_date,
+          endDate: projectData.end_date || undefined,
+          mainContractor: projectData.main_contractor || undefined,
+          projectReference: projectData.project_reference || undefined,
+          allowsInitialPayment: projectData.allows_initial_payment ?? undefined,
+          initialPaymentPercentage: projectData.initial_payment_percentage ?? undefined
         },
         phases: phaseSummaries,
         currentPhase,
         currentStep,
         milestones: milestonesSummary,
         financialSummary: {
-          totalBudget: project.budget,
+          totalBudget: projectData.budget,
           totalPaid,
-          remainingBudget: project.budget - totalPaid,
+          remainingBudget: projectData.budget - totalPaid,
           progressBasedAmount,
           maxAllowedWithTolerance,
           paymentCount: payments.length
         },
         progressSummary: {
-          overallProgress: project.progress,
+          overallProgress: projectData.progress,
           phaseProgress: currentPhase?.progress || 0,
           milestoneProgress: {
             total: milestones.length,
-            completed: milestones.filter(m => m.status === 'completed').length,
+            completed: (milestones as MilestoneData[]).filter(m => m.status === 'completed').length,
             percentage: milestones.length > 0 
-              ? Math.round((milestones.filter(m => m.status === 'completed').length / milestones.length) * 100)
+              ? Math.round(((milestones as MilestoneData[]).filter(m => m.status === 'completed').length / milestones.length) * 100)
               : 0
           },
           checkpointProgress: {
