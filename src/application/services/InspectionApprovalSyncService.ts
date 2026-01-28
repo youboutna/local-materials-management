@@ -157,11 +157,20 @@ export class InspectionApprovalSyncService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
       }
 
-      // For now, return mock progress as project repository is not available
-      // TODO: Implement proper project progress calculation when project repository is available
-      console.warn('InspectionApprovalSyncService.synchronizeProjectProgress: Project repository not available');
+      // Get project and calculate progress based on phases and inspections
+      const project = await this.projectRepository.findById(projectId);
+      if (!project) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Project not found');
+      }
+
+      // Calculate progress based on project's business logic
+      const progress = project.calculateProgressPercentage();
       
-      return 50;
+      // Update project with new progress
+      project.progress = progress;
+      await this.projectRepository.update(projectId, { progress });
+      
+      return progress;
     } catch (error) {
       console.error('InspectionApprovalSyncService.synchronizeProjectProgress failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to synchronize project progress');
@@ -177,10 +186,19 @@ export class InspectionApprovalSyncService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
       }
 
-      // For now, just log as inspection repository is not available
-      // TODO: Implement proper inspection update when inspection repository is available
-      console.warn('InspectionApprovalSyncService.updateInspectionWithValidation: Inspection repository not available');
-      console.log(`Updating inspection ${context.inspectionId} with validation documents`);
+      // Update inspection status and validation documents
+      const inspection = await this.inspectionRepository.findById(context.inspectionId);
+      if (!inspection) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
+      }
+      
+      await this.inspectionRepository.update(context.inspectionId, {
+        status: context.status as 'approved' | 'rejected' | 'requires_changes',
+        inspector: context.inspector,
+        progressAtInspection: context.progressAtInspection
+      });
+      
+      console.log(`Inspection ${context.inspectionId} updated with validation documents`);
     } catch (error) {
       console.error('InspectionApprovalSyncService.updateInspectionWithValidation failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update inspection with validation');
@@ -196,10 +214,16 @@ export class InspectionApprovalSyncService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID is required');
       }
 
-      // For now, just return the provided progress as phase repository is not available
-      // TODO: Implement proper phase progress update when phase repository is available
-      console.warn('InspectionApprovalSyncService.updatePhaseProgress: Phase repository not available');
-      console.log(`Updating phase ${phaseId} progress to: ${progress}%`);
+      // Get phase and update progress
+      const phase = await this.phaseRepository.findById(phaseId);
+      if (!phase) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Phase not found');
+      }
+
+      // Update phase progress using repository
+      await this.phaseRepository.update(phaseId, { progress });
+      
+      console.log(`Phase ${phaseId} progress updated to: ${progress}%`);
       
       return progress;
     } catch (error) {
@@ -217,12 +241,29 @@ export class InspectionApprovalSyncService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
       }
 
-      // For now, return 0 as milestone repository is not available
-      // TODO: Implement proper milestone update when milestone repository is available
-      console.warn('InspectionApprovalSyncService.updateRelatedMilestones: Milestone repository not available');
-      console.log(`Updating related milestones for inspection: ${context.inspectionId}`);
+      // Get milestones related to the inspection's phase or project
+      let updatedCount = 0;
       
-      return 0;
+      if (context.phaseId) {
+        // Update milestones for the specific phase
+        // Using phase repository as placeholder since milestone repository is not available
+        const phases = await this.milestoneRepository.findByProjectId(context.projectId);
+        const phaseMilestones = phases.filter(phase => phase.id === context.phaseId);
+        
+        for (const phase of phaseMilestones) {
+          // Update milestone status based on inspection approval
+          if (context.status === 'approved') {
+            await this.milestoneRepository.update(phase.id, { 
+              status: 'completed'
+            });
+            updatedCount++;
+          }
+        }
+      }
+      
+      console.log(`Updated ${updatedCount} milestones for inspection: ${context.inspectionId}`);
+      
+      return updatedCount;
     } catch (error) {
       console.error('InspectionApprovalSyncService.updateRelatedMilestones failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update related milestones');
@@ -272,12 +313,18 @@ export class InspectionApprovalSyncService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
       }
 
-      // For now, return mock amount as payment repository is not available
-      // TODO: Implement proper payment amount calculation when payment repository is available
-      console.warn('InspectionApprovalSyncService.calculatePaymentAmount: Payment repository not available');
-      console.log(`Calculating payment amount for project: ${projectId}`);
+      // Get project and calculate payment amount based on progress and contracts
+      const project = await this.projectRepository.findById(projectId);
+      if (!project) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Project not found');
+      }
+
+      // Calculate payment amount based on project progress and budget
+      const paymentAmount = project.progress * (project.budget * 0.1); // 10% of budget per 100% progress
       
-      return 25000;
+      console.log(`Calculated payment amount for project: ${projectId} - ${paymentAmount}`);
+      
+      return paymentAmount;
     } catch (error) {
       console.error('InspectionApprovalSyncService.calculatePaymentAmount failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to calculate payment amount');

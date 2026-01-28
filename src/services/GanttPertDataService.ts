@@ -7,7 +7,7 @@
  */
 
 import { ProjectDetailDTO } from '@/types/dto';
-import { getMilestoneService, UnifiedMilestoneService } from '@/application/services/UnifiedMilestoneService';
+import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
 import { GanttChartData, PERTAnalysis, PERTActivity } from '@/types/project';
 
 export interface GanttPhaseData {
@@ -48,7 +48,7 @@ export interface UnifiedPERTData extends PERTAnalysis {
 }
 
 export class GanttPertDataService {
-  private milestoneService: UnifiedMilestoneService;
+  private milestoneService: MilestoneService;
 
   constructor() {
     this.milestoneService = getMilestoneService();
@@ -59,9 +59,9 @@ export class GanttPertDataService {
    */
   async getUnifiedGanttData(projectId: string, projectDetail: ProjectDetailDTO): Promise<UnifiedGanttData> {
     // Get milestones from service
-    const ganttMilestones = await this.milestoneService.getGanttMilestones(projectId);
-    const milestoneProgress = await this.milestoneService.getMilestoneProgress(projectId);
-    const criticalPath = await this.milestoneService.calculateCriticalPath(projectId);
+    const ganttMilestones = await this.milestoneService.getProjectMilestonesDTO(projectId);
+    const milestoneProgress = await this.milestoneService.getMilestoneProgressWithMetrics(projectId);
+    const criticalPath = await this.milestoneService.getCriticalPath(projectId);
 
     // Map phases to Gantt format
     const phases: GanttPhaseData[] = (projectDetail.plannedPhases || []).map(phase => ({
@@ -75,9 +75,14 @@ export class GanttPertDataService {
 
     // Map milestones
     const milestones: GanttMilestoneData[] = ganttMilestones.map(m => ({
-      ...m,
-      type: 'checkpoint',
-      priority: m.isKey ? 'critical' : 'normal'
+      id: m.id,
+      name: m.title,
+      date: new Date(m.target_date),
+      status: this.mapMilestoneStatus(m.status),
+      isKey: m.priority === 'critical',
+      phaseId: m.phase_id,
+      type: m.type,
+      priority: m.priority
     }));
 
     // Determine project period
@@ -188,6 +193,19 @@ export class GanttPertDataService {
       standardDeviation: Math.round(totalStdDev * 10) / 10,
       confidenceLevel95Days: Math.round(confidenceLevel95Days)
     };
+  }
+
+  private mapMilestoneStatus(status: string): 'completed' | 'current' | 'upcoming' {
+    switch (status) {
+      case 'completed':
+        return 'completed';
+      case 'in_progress':
+        return 'current';
+      case 'pending':
+      case 'delayed':
+      default:
+        return 'upcoming';
+    }
   }
 
   private mapPhaseStatus(status: string | undefined): 'planned' | 'in_progress' | 'completed' {

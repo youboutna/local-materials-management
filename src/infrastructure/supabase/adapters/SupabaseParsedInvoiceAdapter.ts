@@ -248,12 +248,12 @@ export class SupabaseParsedInvoiceAdapter implements IParsedInvoiceRepository {
         query = query.or(`invoice_number.ilike.%${criteria.searchTerm}%,file_name.ilike.%${criteria.searchTerm}%`);
       }
 
-      if (criteria?.limit) {
+      if (criteria.limit && criteria.offset) {
+        query = query.range(criteria.offset, criteria.offset + criteria.limit - 1);
+      } else if (criteria.limit) {
         query = query.limit(criteria.limit);
-      }
-      if (criteria?.offset) {
-        // Note: offset is not available in this Supabase client version
-        // query = query.offset(criteria.offset);
+      } else if (criteria.offset) {
+        query = query.range(criteria.offset, 999999); // Large number pour obtenir tout à partir de l'offset
       }
 
       const { data, error, count } = await query.order('created_at', { ascending: false });
@@ -446,17 +446,17 @@ export class SupabaseParsedInvoiceAdapter implements IParsedInvoiceRepository {
       updated_at?: string;
     } = {};
 
-    if (entity.invoiceNumber !== undefined) row.invoice_number = entity.invoiceNumber;
-    if (entity.invoiceDate !== undefined) row.invoice_date = entity.invoiceDate;
-    if (entity.amount !== undefined) row.total_amount = entity.amount;
-    if (entity.extractedData !== undefined) row.parsed_data = entity.extractedData;
-    if (entity.parsingErrors !== undefined) row.parsing_errors = entity.parsingErrors?.join(', ') || null;
-    if (entity.status !== undefined) row.parsing_status = entity.status;
-    if (entity.tenderId !== undefined) row.tender_id = entity.tenderId;
+    if (entity.invoiceNumber !== undefined) row.invoice_number = entity.invoiceNumber || undefined;
+    if (entity.invoiceDate !== undefined) row.invoice_date = entity.invoiceDate || undefined;
+    if (entity.amount !== undefined) row.amount = entity.amount || undefined;
+    if (entity.extractedData !== undefined) row.extracted_data = entity.extractedData || undefined;
+    if (entity.parsingErrors !== undefined) row.parsing_errors = entity.parsingErrors?.join(', ') || undefined;
+    if (entity.status !== undefined) row.status = entity.status;
+    if (entity.tenderId !== undefined) row.tender_id = entity.tenderId || undefined;
 
     // Map supplier info
     if (entity.supplierId) {
-      row.supplier_info = { supplier_id: entity.supplierId };
+      row.supplier_id = entity.supplierId;
     }
 
     return row;

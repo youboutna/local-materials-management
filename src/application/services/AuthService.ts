@@ -206,12 +206,13 @@ export class AuthService {
         throw new AppError(ErrorCode.FORBIDDEN, 'Only admins can assign roles');
       }
 
-      // In a real implementation, this would call the auth repository
-      // to update the user's role in the database
-      console.log(`Assigning role ${roleName} to user ${userId} by admin ${currentUser.id}`);
+      // Update user role in auth repository
+      const result = await this.authRepository.updateUserRole(userId, roleName);
+      if (result.error) {
+        throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update user role');
+      }
       
-      // TODO: Implement actual role assignment in auth repository
-      // await this.authRepository.assignUserRole(userId, roleName);
+      console.log(`Successfully assigned role ${roleName} to user ${userId} by admin ${currentUser.id}`);
       
     } catch (error) {
       console.error('AuthService.assignUserRole failed:', error);

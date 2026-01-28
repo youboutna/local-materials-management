@@ -6,7 +6,7 @@
  */
 
 import { MilestoneDTO, MilestoneType } from '@/types/milestone-dto';
-import { getMilestoneService } from '@/application/services/UnifiedMilestoneService';
+import { getMilestoneService } from '@/application/services/MilestoneService';
 
 /**
  * Inspection data linked to milestone

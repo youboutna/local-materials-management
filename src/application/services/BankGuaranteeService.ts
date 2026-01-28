@@ -6,6 +6,7 @@
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { IBankGuaranteeRepository } from '@/domain/repositories/IBankGuaranteeRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { BankGuaranteeDTO as ReportBankGuaranteeDTO } from '@/types/reportTypes';
 
 // Service DTOs for data exchange
 export interface BankGuaranteeDTO {
@@ -324,10 +325,42 @@ export class BankGuaranteeService {
    */
   async getExpiringGuarantees(days: number = 30): Promise<BankGuaranteeDTO[]> {
     try {
-      // For now, return empty array as repository doesn't have findAll method
-      // TODO: Implement proper findAll method in repository
-      console.warn('BankGuaranteeService.getExpiringGuarantees: findAll method not available');
-      return [];
+      // Get all guarantees and filter for expiring ones
+      // Using getByProject with empty string to get all guarantees (workaround)
+      const guarantees = await this.bankGuaranteeRepository.getByProject('');
+      
+      if (!guarantees || guarantees.length === 0) {
+        return [];
+      }
+
+      const currentDate = new Date();
+      const expiryThreshold = new Date();
+      expiryThreshold.setDate(currentDate.getDate() + days);
+
+      const expiringGuarantees = guarantees.filter(guarantee => {
+        const expiryDate = new Date(guarantee.expiry_date);
+        return guarantee.status === 'active' && expiryDate <= expiryThreshold && expiryDate > currentDate;
+      });
+
+      return expiringGuarantees.map(guarantee => ({
+        id: guarantee.id,
+        project_id: guarantee.project_id,
+        guarantee_type: guarantee.guarantee_type,
+        guarantee_number: guarantee.guarantee_number,
+        bank_name: guarantee.issuing_bank,
+        amount: guarantee.guarantee_amount,
+        currency: 'USD', // Default currency
+        issue_date: guarantee.issue_date,
+        expiry_date: guarantee.expiry_date,
+        status: guarantee.status,
+        documents: guarantee.documents || [],
+        created_at: guarantee.issue_date, // Use issue_date as created_at
+        updated_at: guarantee.expiry_date, // Use expiry_date as updated_at
+        contractor_id: '', // Default empty
+        issuing_bank: guarantee.issuing_bank,
+        conditions: [], // Default empty
+        exchange_rate: 1.0 // Default exchange rate
+      }));
     } catch (error) {
       console.error('Error fetching expiring guarantees:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch expiring guarantees');

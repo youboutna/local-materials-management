@@ -42,3 +42,4 @@ export { SupabaseParsedInvoiceAdapter } from './SupabaseParsedInvoiceAdapter';
 export { SupabaseInspectionPermissionAdapter } from './SupabaseInspectionPermissionAdapter';
 export { SupabaseTenderDocumentAdapter } from './SupabaseTenderDocumentAdapter';
 export { SupabaseAlertRepository } from './SupabaseAlertRepository';
+export { SupabaseMilestoneAdapter } from './SupabaseMilestoneAdapter';

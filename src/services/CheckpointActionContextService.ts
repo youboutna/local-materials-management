@@ -8,7 +8,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { PhaseService } from './phaseService';
-import { getMilestoneService } from '@/application/services/UnifiedMilestoneService';
+import { getMilestoneService } from '@/application/services/MilestoneService';
 import { MilestoneDTO, MilestoneSummaryDTO } from '@/types/milestone-dto';
 import { PhaseDTO, PhaseSummaryDTO, PhaseStepDTO, PhaseTaskDTO } from '@/types/phase-dto';
 

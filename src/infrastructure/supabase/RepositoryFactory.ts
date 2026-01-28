@@ -49,7 +49,8 @@ import {
   IProjectAlertRepository,
   IDecompteRepository,
   ITenderEstimateRepository,
-  IPaymentBlockingRepository
+  IPaymentBlockingRepository,
+  IMilestoneRepository
 } from '@/domain/repositories';
 import { IAlertRepository } from '@/domain/repositories/IAlertRepository';
 
@@ -87,7 +88,8 @@ import {
   SupabaseTenderDocumentAdapter,
   TenderEstimateAdapter,
   PaymentBlockingAdapter,
-  TaskAssignmentAdapter
+  TaskAssignmentAdapter,
+  SupabaseMilestoneAdapter
 } from './adapters';
 
 /**
@@ -129,12 +131,18 @@ interface RepositoryRegistry {
   tenderDocumentRepository?: ITenderDocumentRepository;
   inspectionPermissionRepository?: IInspectionPermissionRepository;
   alertRepository?: IAlertRepository;
+  milestoneRepository?: IMilestoneRepository;
 }
 
 /**
  * Global repository registry with lazy initialization
  */
 const repositoryRegistry: RepositoryRegistry = {};
+
+/**
+ * Current data source for repositories
+ */
+let currentDataSource: 'supabase' | 'java_api' | 'prisma' | 'localStorage' | 'postgis' = 'supabase';
 
 /**
  * Repository Factory - Enhanced Hexagonal Architecture
@@ -546,5 +554,33 @@ export class RepositoryFactory {
       repositoryRegistry.tenderDocumentRepository = new SupabaseTenderDocumentAdapter();
     }
     return repositoryRegistry.tenderDocumentRepository;
+  }
+
+  /**
+   * Get Milestone Repository instance
+   * Lazy loaded for memory efficiency
+   */
+  static getMilestoneRepository(): IMilestoneRepository {
+    if (!repositoryRegistry.milestoneRepository) {
+      repositoryRegistry.milestoneRepository = new SupabaseMilestoneAdapter();
+    }
+    return repositoryRegistry.milestoneRepository;
+  }
+
+  /**
+   * Set the data source for repositories
+   * This allows switching between different backend implementations
+   */
+  static setDataSource(source: 'supabase' | 'java_api' | 'prisma' | 'localStorage' | 'postgis'): void {
+    currentDataSource = source;
+    // Reset all repositories to force re-instantiation with new data source
+    RepositoryFactory.reset();
+  }
+
+  /**
+   * Get the current data source
+   */
+  static getDataSource(): 'supabase' | 'java_api' | 'prisma' | 'localStorage' | 'postgis' {
+    return currentDataSource;
   }
 }

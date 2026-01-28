@@ -6060,54 +6060,6 @@ export type Database = {
         }
         Relationships: []
       }
-      vessels: {
-        Row: {
-          capacity: number
-          coordinates_latitude: number | null
-          coordinates_longitude: number | null
-          created_at: string | null
-          daily_cost: number
-          equipment: Json | null
-          fuel_capacity: number | null
-          id: string
-          insurance_expires_at: string | null
-          name: string
-          registration_number: string
-          status: Database["public"]["Enums"]["vessel_status"] | null
-          updated_at: string | null
-        }
-        Insert: {
-          capacity: number
-          coordinates_latitude?: number | null
-          coordinates_longitude?: number | null
-          created_at?: string | null
-          daily_cost: number
-          equipment?: Json | null
-          fuel_capacity?: number | null
-          id?: string
-          insurance_expires_at?: string | null
-          name: string
-          registration_number: string
-          status?: Database["public"]["Enums"]["vessel_status"] | null
-          updated_at?: string | null
-        }
-        Update: {
-          capacity?: number
-          coordinates_latitude?: number | null
-          coordinates_longitude?: number | null
-          created_at?: string | null
-          daily_cost?: number
-          equipment?: Json | null
-          fuel_capacity?: number | null
-          id?: string
-          insurance_expires_at?: string | null
-          name?: string
-          registration_number?: string
-          status?: Database["public"]["Enums"]["vessel_status"] | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       workflow_status: {
         Row: {
           assigned_to: string | null

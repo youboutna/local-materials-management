@@ -111,7 +111,7 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({ phaseId, projectId }) =
   }
 
   const totalCost = phaseMaterials?.reduce((sum, pm) => 
-    sum + (pm.quantity * pm.material.price_per_unit), 0
+    sum + (pm.quantity * (pm.material.price_per_unit || 0)), 0
   ) || 0;
 
   return (
@@ -194,7 +194,7 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({ phaseId, projectId }) =
                       {pm.quantity} {pm.material.unit}
                     </Badge>
                     <Badge>
-                      {(pm.quantity * pm.material.price_per_unit).toLocaleString()} MRU
+                      {(pm.quantity * (pm.material.price_per_unit || 0)).toLocaleString()} MRU
                     </Badge>
                   </div>
                   {pm.material.origin_location && (

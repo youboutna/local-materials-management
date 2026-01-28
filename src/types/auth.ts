@@ -75,5 +75,48 @@ export interface AuthError {
   message: string;
   status?: number;
   code?: string;
-  details?: any;
+  details?: unknown;
+}
+
+// Unified Auth Types for UnifiedAuthContext
+export interface UnifiedUser {
+  id: string;
+  email: string;
+  full_name?: string;
+  phone?: string;
+  national_id?: string;
+  role?: string;
+  avatar_url?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface UnifiedSession {
+  user: UnifiedUser;
+  expires_at?: string;
+  provider: import('@/config/app').AuthProvider;
+}
+
+export interface UnifiedAuthContextType {
+  // Core auth state
+  user: UnifiedUser | null;
+  session: UnifiedSession | null;
+  loading: boolean;
+  isAuthenticated: boolean;
+  
+  // Provider management
+  currentProvider: import('@/config/app').AuthProvider;
+  supportedProviders: Array<{ value: import('@/config/app').AuthProvider; label: string; description: string }>;
+  switchProvider: (config: import('@/application/services/AuthManager').AuthManagerConfig) => Promise<void>;
+  
+  // Auth methods
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName: string, phone: string, nationalId: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithPhone: (phone: string) => Promise<{ success: boolean; error?: string; }>;
+  verifyPhoneOTP: (phone: string, token: string) => Promise<void>;
+  signInWithNationalId: (nationalId: string, password: string) => Promise<void>;
+  
+  // Development mode
+  isDevelopmentMode: boolean;
 }

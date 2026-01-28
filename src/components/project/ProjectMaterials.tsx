@@ -171,7 +171,7 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
 
   const calculateTotalValue = () => {
     return materials.reduce((total, item) => {
-      return total + (item.quantity * item.material.price_per_unit);
+      return total + (item.quantity * (item.material.price_per_unit || 0));
     }, 0);
   };
 
@@ -306,13 +306,13 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Prix unitaire:</span>
                       <span className="font-medium">
-                        {item.material.price_per_unit.toLocaleString('fr-FR')} MRU/{item.material.unit}
+                        {(item.material.price_per_unit || 0).toLocaleString('fr-FR')} MRU/{item.material.unit}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Valeur totale:</span>
                       <span className="font-medium text-terracotta-600">
-                        {(item.quantity * item.material.price_per_unit).toLocaleString('fr-FR')} MRU
+                        {(item.quantity * (item.material.price_per_unit || 0)).toLocaleString('fr-FR')} MRU
                       </span>
                     </div>
                   </div>

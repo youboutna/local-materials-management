@@ -41,6 +41,7 @@ export const translations = {
             confirm: "Confirmer",
             optional: "Optionnel",
             required: "Requis",
+            refresh: "Actualiser",
             confirm_delete: "Confirmer la suppression"
         },
         supplier_portal: {
@@ -489,6 +490,8 @@ export const translations = {
                 overdue_inspections: "Inspections en retard"
             },
             loading: "Loading...",
+            loading_dashboard: "Chargement du tableau de bord...",
+            loading_stats: "Chargement des statistiques...",
             title: "Tableau de bord",
             welcome: "Bienvenue",
             team_members: "Members",
@@ -2076,6 +2079,7 @@ export const translations = {
             export_data: "تصدير البيانات",
             refresh: "تحديث",
             loading_dashboard: "جاري تحميل لوحة التحكم...",
+            loading_stats: "جاري تحميل الإحصائيات...",
             no_data: "لا توجد بيانات متاحة",
             error_loading: "خطأ في تحميل البيانات",
             active_projects: "المشاريع النشطة",
@@ -3501,6 +3505,7 @@ procurement_features: {
             export_data: "Export Data",
             refresh: "Refresh",
             loading_dashboard: "Loading dashboard...",
+            loading_stats: "Loading statistics...",
             no_data: "No data available",
             error_loading: "Error loading data",
             active_projects: "Active Projects",

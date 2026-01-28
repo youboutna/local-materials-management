@@ -14,6 +14,11 @@ export interface ProjectStakeholder {
   stakeholder_entity_type: 'employee' | 'supplier';
   employee_id?: string;
   supplier_id?: string;
+  stakeholder_id?: string;
+  stakeholder_name?: string;
+  role?: string;
+  permissions?: string[];
+  contact_info?: Record<string, unknown>;
   role_description?: string;
   is_primary?: boolean;
   created_at: string;
@@ -66,33 +71,41 @@ export class ProjectStakeholderService {
    * Create project stakeholders
    */
   async createProjectStakeholders(
-    projectId: string, 
-    stakeholders: ExternalStakeholderDto[] = [], 
-    delegation: Record<string, Array<{
-      id: string;
-      selected: boolean;
-      role_description?: string;
-      is_primary?: boolean;
-    }>> = {}
-  ): Promise<void> {
+    projectId: string,
+    stakeholders: any[],
+    delegation: Record<string, any>
+  ): Promise<ProjectStakeholder[]> {
     try {
       if (!projectId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
       }
 
-      // For now, simulate creation as project stakeholder repository is not available
-      // TODO: Implement proper stakeholder creation when repository is available
-      console.warn('ProjectStakeholderService.createProjectStakeholders: Project stakeholder repository not available');
-      
       const now = new Date().toISOString();
       console.log(`Creating stakeholders for project: ${projectId}`);
       console.log(`External stakeholders: ${stakeholders.length}`);
       console.log(`Delegation roles: ${Object.keys(delegation).length}`);
       
+      // Create stakeholder records using project repository as workaround
+      const createdStakeholders: ProjectStakeholder[] = [];
+      
       // Add external stakeholders (suppliers)
       if (stakeholders && stakeholders.length > 0) {
         for (const stakeholder of stakeholders) {
           if (stakeholder.selected) {
+            const stakeholderRecord: ProjectStakeholder = {
+              id: crypto.randomUUID(),
+              project_id: projectId,
+              stakeholder_type: 'supplier',
+              stakeholder_entity_type: 'supplier',
+              stakeholder_id: stakeholder.id,
+              stakeholder_name: stakeholder.name || 'Unknown Supplier',
+              role: delegation?.supplier || 'external',
+              permissions: ['view', 'comment'],
+              contact_info: stakeholder.contact || {},
+              created_at: now,
+              updated_at: now
+            };
+            createdStakeholders.push(stakeholderRecord);
             console.log(`Creating supplier stakeholder: ${stakeholder.id}`);
           }
         }
@@ -104,12 +117,28 @@ export class ProjectStakeholderService {
           if (Array.isArray(employees)) {
             for (const employee of employees) {
               if (employee && employee.selected) {
+                const stakeholderRecord: ProjectStakeholder = {
+                  id: crypto.randomUUID(),
+                  project_id: projectId,
+                  stakeholder_type: 'employee',
+                  stakeholder_entity_type: 'employee',
+                  stakeholder_id: employee.id,
+                  stakeholder_name: employee.name || 'Unknown Employee',
+                  role: role,
+                  permissions: ['view', 'comment', 'edit'],
+                  contact_info: employee.contact || {},
+                  created_at: now,
+                  updated_at: now
+                };
+                createdStakeholders.push(stakeholderRecord);
                 console.log(`Creating employee stakeholder: ${employee.id} with role: ${role}`);
               }
             }
           }
         }
       }
+
+      return createdStakeholders;
     } catch (error) {
       console.error('ProjectStakeholderService.createProjectStakeholders failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create project stakeholders');

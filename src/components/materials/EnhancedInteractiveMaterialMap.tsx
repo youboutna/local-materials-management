@@ -83,7 +83,8 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
     }
   };
 
-  const formatPrice = (price: number): string => {
+  const formatPrice = (price: number | undefined | null): string => {
+    if (!price && price !== 0) return "0 MRU";
     if (price >= 1000000) {
       return `${(price / 1000000).toFixed(1)}M MRU`;
     } else if (price >= 1000) {

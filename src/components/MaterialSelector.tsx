@@ -44,7 +44,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
     selectedMaterials.forEach(selected => {
       const material = materials.find(m => m.id === selected.materialId);
       if (material) {
-        cost += Number(material.price_per_unit) * selected.quantity;
+        cost += Number(material.price_per_unit || 0) * selected.quantity;
       }
     });
     setTotalCost(cost);
@@ -164,7 +164,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
             <div className="space-y-4">
               {selectedMaterials.map((selected, index) => {
                 const material = getMaterialDetails(selected.materialId);
-                const itemCost = material ? Number(material.price_per_unit) * selected.quantity : 0;
+                const itemCost = material ? Number(material.price_per_unit || 0) * selected.quantity : 0;
                 
                 return (
                   <Card key={index} className="border">
@@ -180,7 +180,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
                                   <div className="flex flex-col">
                                     <span className="font-medium">{m.name}</span>
                                     <span className="text-xs text-muted-foreground">
-                                      {m.category} â€¢ {Number(m.price_per_unit).toLocaleString()} MRU/{m.unit}
+                                      {m.category} â€¢ {Number(m.price_per_unit || 0).toLocaleString()} MRU/{m.unit}
                                     </span>
                                   </div>
                                 </SelectItem>

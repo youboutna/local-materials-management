@@ -62,7 +62,7 @@ export function useMaterialsHex(): UseMaterialsHexResult {
     queryFn: async (): Promise<any[]> => {
       try {
         const materialData = await materialService.getAllMaterials();
-        return materialData.map(entity => materialTransformer.fromEntityToDTO(entity));
+        return materialData.map(entity => MaterialDomainTransformer.toResponseDto(entity));
       } catch (err) {
         console.error('Error fetching materials:', err);
         throw err;
@@ -208,6 +208,9 @@ export function useMaterialsHex(): UseMaterialsHexResult {
     const averageCostEfficiency = materials.length > 0 
       ? materials.reduce((sum, m) => sum + (m.costEfficiency || 0), 0) / materials.length 
       : 0;
+    const averageQualityScore = materials.length > 0
+      ? materials.reduce((sum, m) => sum + (m.qualityScore || 0), 0) / materials.length
+      : 0;
     
     return {
       totalMaterials,
@@ -218,7 +221,8 @@ export function useMaterialsHex(): UseMaterialsHexResult {
         outOfStock: stockStatus.outOfStock
       },
       totalValue,
-      averageCostEfficiency: Math.round(averageCostEfficiency)
+      averageCostEfficiency: Math.round(averageCostEfficiency),
+      averageQualityScore: Math.round(averageQualityScore * 100) / 100
     };
   };
 
@@ -447,9 +451,9 @@ export function useMaterialsHex(): UseMaterialsHexResult {
           reportType: 'Material Analysis Report',
           summary: {
             totalMaterials: analytics.totalMaterials,
-            lowStockItems: analytics.lowStockItems,
-            outOfStockItems: analytics.outOfStockItems,
-            averageQualityScore: analytics.averageQualityScore
+            lowStockItems: analytics.stockStatus.low + analytics.stockStatus.critical,
+            outOfStockItems: analytics.stockStatus.outOfStock,
+            averageQualityScore: analytics.averageQualityScore || 0
           },
           recommendations: generateMaterialRecommendations(material, reorderLevel, stockLevel),
           compliance: {

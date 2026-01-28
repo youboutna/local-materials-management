@@ -6,6 +6,7 @@
 import { IEmployeeRepository } from '@/domain/repositories/IEmployeeRepository';
 import { Employee } from '@/domain/entities/Employee';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface SearchEmployeesOptions {
   searchTerm?: string;
@@ -20,14 +21,27 @@ export interface SearchEmployeesResult {
   total: number;
 }
 
+export interface EmployeeDTO {
+  id: string;
+  name: string;
+  email: string | null;
+  position: string | null;
+  phase_id: string;
+  role: string;
+}
+
 export class EmployeeService {
-  constructor(private employeeRepository: IEmployeeRepository) {}
+  constructor(private employeeRepository: IEmployeeRepository = RepositoryFactory.getEmployeeRepository()) {}
 
   /**
    * Get employees by phase ID
    */
-  async getEmployeesByPhase(phaseId: string): Promise<{ data: any[] }> {
+  async getEmployeesByPhase(phaseId: string): Promise<EmployeeDTO[]> {
     try {
+      if (!phaseId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID is required');
+      }
+
       // Get all employees and filter by their current assignments
       const allEmployees = await this.employeeRepository.findAll();
       
@@ -35,16 +49,14 @@ export class EmployeeService {
       // In a real implementation, this would query phase_assignments table
       const activeEmployees = allEmployees.filter(employee => employee.isActive);
       
-      return {
-        data: activeEmployees.map(employee => ({
-          id: employee.id,
-          name: employee.fullName,
-          email: employee.email,
-          position: employee.position,
-          phase_id: phaseId,
-          role: employee.role.name || 'employee'
-        }))
-      };
+      return activeEmployees.map(employee => ({
+        id: employee.id,
+        name: employee.fullName,
+        email: employee.email,
+        position: employee.position,
+        phase_id: phaseId,
+        role: employee.role.name || 'employee'
+      }));
     } catch (error) {
       console.error('EmployeeService.getEmployeesByPhase failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get employees by phase');

@@ -8,7 +8,7 @@ interface MaterialAvailabilityCardProps {
   material: {
     available_quantity: number;
     unit: string;
-    price_per_unit: number;
+    price_per_unit?: number;
   };
   className?: string;
 }
@@ -37,7 +37,7 @@ const MaterialAvailabilityCard: React.FC<MaterialAvailabilityCardProps> = ({
   };
 
   const getTotalValue = () => {
-    return material.available_quantity * material.price_per_unit;
+    return material.available_quantity * (material.price_per_unit || 0);
   };
 
   return (
@@ -66,7 +66,7 @@ const MaterialAvailabilityCard: React.FC<MaterialAvailabilityCardProps> = ({
           <div>
             <p className="text-sm text-gray-600">Prix unitaire</p>
             <p className="font-medium">
-              {material.price_per_unit.toLocaleString('fr-FR')} MRU
+              {(material.price_per_unit || 0).toLocaleString('fr-FR')} MRU
             </p>
           </div>
           <div>

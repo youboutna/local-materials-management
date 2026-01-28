@@ -811,6 +811,14 @@ export interface PhaseTaskDTO {
   assigned_to: string[];
   requires_inspection: boolean;
   requires_engineer_approval: boolean;
+  estimated_duration_days?: number;
+  actual_duration_days?: number;
+  start_date?: string;
+  end_date?: string;
+  dependencies?: string[];
+  weight?: number;
+  cost_estimate?: number;
+  actual_cost?: number;
 }
 
 export interface PhaseDTO extends BaseEntityDTO {
@@ -829,6 +837,12 @@ export interface PhaseDTO extends BaseEntityDTO {
   end_date: string;
   order_index: number;
   steps: PhaseStepDTO[];
+  dependencies: string[]; // JSONB array of phase IDs
+  milestones: string[]; // JSONB array of milestone IDs
+  location?: string | null;
+  notes?: string | null;
+  weight?: number | null;
+  created_by?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -847,6 +861,9 @@ export interface CreatePhaseRequestDto {
   end_date?: string;
   order_index?: number;
   steps?: PhaseStepDTO[];
+  location?: string | null;
+  notes?: string | null;
+  weight?: number | null;
 }
 
 export interface UpdatePhaseRequestDto {
@@ -863,6 +880,9 @@ export interface UpdatePhaseRequestDto {
   end_date?: string;
   order_index?: number;
   steps?: PhaseStepDTO[];
+  location?: string | null;
+  notes?: string | null;
+  weight?: number | null;
 }
 
 // Workspace DTOs

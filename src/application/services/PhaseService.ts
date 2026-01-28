@@ -6,8 +6,9 @@
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
-import { Phase } from '@/domain/entities/Phase';
-import { PhaseDTO, CreatePhaseRequestDto, UpdatePhaseRequestDto } from '@/dtos/transforms/shared';
+import { Phase, PhaseStep, PhaseTask, PhaseStatus } from '@/domain/entities/Phase';
+import { PhaseDTO, CreatePhaseRequestDto, UpdatePhaseRequestDto, PhaseTaskDTO as SharedPhaseTaskDTO } from '@/dtos/transforms/shared';
+import { PhaseStepDTO as SharedPhaseStepDTO, PhaseTaskDTO as PhaseTaskDTOFromPhaseDTO } from '@/dtos/transforms/PhaseDTO';
 import { PhaseDomainTransformer } from '@/dtos/transforms/PhaseDomainTransformer';
 import { ConstructionPhase, ConstructionStage } from '@/types/project';
 
@@ -24,6 +25,9 @@ export interface PhaseStepDTO {
   endDate?: string;
   estimatedDuration?: number;
   actualDuration?: number;
+  requiresInspection?: boolean;
+  requiresEngineerApproval?: boolean;
+  tasks?: PhaseTaskDTO[];
 }
 
 export interface PhaseTaskDTO {
@@ -37,6 +41,12 @@ export interface PhaseTaskDTO {
   priority: 'low' | 'medium' | 'high';
   dueDate?: string;
   completedAt?: string;
+  estimatedDuration?: number;
+  actualDuration?: number;
+  dependencies?: string[];
+  materials?: string[];
+  requiresInspection?: boolean;
+  requiresEngineerApproval?: boolean;
 }
 
 export interface PhaseMetricsDTO {
@@ -249,7 +259,7 @@ export class PhaseService {
   /**
    * Add step to phase
    */
-  async addStepToPhase(phaseId: string, step: Omit<PhaseStepDTO, 'id'>): Promise<PhaseStepDTO> {
+  async addStepToPhase(phaseId: string, step: Omit<SharedPhaseStepDTO, 'id'>): Promise<SharedPhaseStepDTO> {
     try {
       if (!phaseId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID is required');
@@ -259,34 +269,84 @@ export class PhaseService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Step name is required');
       }
 
-      const result = await this.phaseRepository.addStep(phaseId, step as Record<string, unknown>);
-      return result as PhaseStepDTO;
+      // Convert DTO to PhaseStep entity structure for repository
+      const stepEntity: Omit<PhaseStep, 'id'> = {
+        name: step.name,
+        description: step.description,
+        status: step.status as PhaseStatus,
+        progress: step.progress,
+        orderIndex: step.orderIndex,
+        tasks: step.tasks?.map(task => ({
+          id: task.id,
+          name: task.name,
+          description: task.description,
+          status: task.status as PhaseStatus,
+          progress: task.progress,
+          orderIndex: task.orderIndex,
+          assignedTo: [], // Entity expects Employee[] objects, DTO has IDs
+          requiresInspection: task.requiresInspection,
+          requiresEngineerApproval: task.requiresEngineerApproval,
+          estimatedDurationDays: task.estimatedDurationDays,
+          actualDurationDays: task.actualDurationDays,
+          startDate: task.startDate ? new Date(task.startDate) : undefined,
+          endDate: task.endDate ? new Date(task.endDate) : undefined,
+          dependencies: [], // Entity expects PhaseTask[] objects, DTO has IDs
+          materials: [], // Entity expects Material[] objects, DTO has IDs
+          documents: [], // Entity expects Document[] objects, DTO has IDs
+          inspections: [] // Entity expects Inspection[] objects, DTO has IDs
+        })) || [],
+        estimatedDurationDays: step.estimatedDurationDays,
+        requiresInspection: step.requiresInspection,
+        requiresEngineerApproval: step.requiresEngineerApproval,
+        startDate: step.startDate ? new Date(step.startDate) : undefined,
+        endDate: step.endDate ? new Date(step.endDate) : undefined,
+        inspections: [], // Entity expects Inspection[] objects, DTO has IDs
+        documents: [] // Entity expects Document[] objects, DTO has IDs
+      };
+
+      const result = await this.phaseRepository.addStep(phaseId, stepEntity);
+      
+      // Transform PhaseStep entity back to SharedPhaseStepDTO
+      return {
+        id: result.id,
+        name: result.name,
+        description: result.description,
+        status: result.status,
+        progress: result.progress,
+        orderIndex: result.orderIndex,
+        tasks: result.tasks?.map(task => ({
+          id: task.id,
+          name: task.name,
+          description: task.description,
+          status: task.status,
+          progress: task.progress,
+          orderIndex: task.orderIndex,
+          assignedTo: task.assignedTo?.map(emp => emp.id) || [], // Extract IDs from Employee objects
+          requiresInspection: task.requiresInspection,
+          requiresEngineerApproval: task.requiresEngineerApproval,
+          estimatedDurationDays: task.estimatedDurationDays,
+          actualDurationDays: task.actualDurationDays,
+          startDate: task.startDate?.toISOString(),
+          endDate: task.endDate?.toISOString(),
+          dependencies: task.dependencies?.map(dep => dep.id) || [], // Extract IDs from PhaseTask objects
+          materials: task.materials?.map(mat => mat.id) || [], // Extract IDs from Material objects
+          documents: task.documents?.map(doc => doc.id) || [], // Extract IDs from Document objects
+          inspections: task.inspections?.map(insp => insp.id) || [] // Extract IDs from Inspection objects
+        })) || [],
+        estimatedDurationDays: result.estimatedDurationDays,
+        requiresInspection: result.requiresInspection,
+        requiresEngineerApproval: result.requiresEngineerApproval,
+        startDate: result.startDate?.toISOString(),
+        endDate: result.endDate?.toISOString(),
+        inspections: result.inspections?.map(insp => insp.id) || [], // Extract IDs from Inspection objects
+        documents: result.documents?.map(doc => doc.id) || [] // Extract IDs from Document objects
+      } as SharedPhaseStepDTO;
     } catch (error) {
       console.error('PhaseService.addStepToPhase failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to add step to phase');
     }
   }
 
-  /**
-   * Update step in phase
-   */
-  async updateStepInPhase(phaseId: string, stepId: string, updates: Partial<PhaseStepDTO>): Promise<PhaseStepDTO> {
-    try {
-      if (!phaseId || !stepId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID and Step ID are required');
-      }
-
-      const result = await this.phaseRepository.updateStep(phaseId, stepId, updates as Record<string, unknown>);
-      return result as PhaseStepDTO;
-    } catch (error) {
-      console.error('PhaseService.updateStepInPhase failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update step in phase');
-    }
-  }
-
-  /**
-   * Delete step from phase
-   */
   async deleteStepFromPhase(phaseId: string, stepId: string): Promise<void> {
     try {
       if (!phaseId || !stepId) {
@@ -303,7 +363,7 @@ export class PhaseService {
   /**
    * Add task to step
    */
-  async addTaskToStep(phaseId: string, stepId: string, task: Omit<PhaseTaskDTO, 'id'>): Promise<PhaseTaskDTO> {
+  async addTaskToStep(phaseId: string, stepId: string, task: Omit<PhaseTaskDTOFromPhaseDTO, 'id'>): Promise<PhaseTaskDTOFromPhaseDTO> {
     try {
       if (!phaseId || !stepId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID and Step ID are required');
@@ -313,28 +373,52 @@ export class PhaseService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Task name is required');
       }
 
-      const result = await this.phaseRepository.addTask(phaseId, stepId, task as Record<string, unknown>);
-      return result as PhaseTaskDTO;
+      // Convert DTO to PhaseTask entity structure for repository
+      const taskEntityForRepo: Omit<PhaseTask, 'id'> = {
+        name: task.name,
+        description: task.description || '',
+        status: task.status as PhaseStatus,
+        progress: task.progress,
+        orderIndex: task.orderIndex,
+        assignedTo: [], // Entity expects Employee[] objects, DTO has IDs
+        requiresInspection: task.requiresInspection,
+        requiresEngineerApproval: task.requiresEngineerApproval,
+        estimatedDurationDays: task.estimatedDurationDays,
+        actualDurationDays: task.actualDurationDays,
+        startDate: task.startDate ? new Date(task.startDate) : undefined,
+        endDate: task.endDate ? new Date(task.endDate) : undefined,
+        dependencies: [], // Entity expects PhaseTask[] objects, DTO has IDs
+        materials: [], // Entity expects Material[] objects, DTO has IDs
+        documents: [], // Entity expects Document[] objects, DTO has IDs
+        inspections: [] // Entity expects Inspection[] objects, DTO has IDs
+      };
+
+      const result = await this.phaseRepository.addTask(phaseId, stepId, taskEntityForRepo);
+      // Transform PhaseTask entity to PhaseTaskDTO (local format)
+      const taskResult = result as PhaseTask;
+      const taskDTO: PhaseTaskDTOFromPhaseDTO = {
+        id: taskResult.id,
+        name: taskResult.name,
+        description: taskResult.description,
+        status: taskResult.status === 'blocked' ? 'delayed' : taskResult.status,
+        progress: taskResult.progress,
+        orderIndex: taskResult.orderIndex,
+        assignedTo: taskResult.assignedTo?.map(emp => emp.id) || [],
+        requiresInspection: taskResult.requiresInspection,
+        requiresEngineerApproval: taskResult.requiresEngineerApproval,
+        estimatedDurationDays: taskResult.estimatedDurationDays,
+        actualDurationDays: taskResult.actualDurationDays,
+        startDate: taskResult.startDate?.toISOString(),
+        endDate: taskResult.endDate?.toISOString(),
+        dependencies: taskResult.dependencies?.map(dep => dep.id) || [],
+        materials: taskResult.materials?.map(mat => mat.id) || [],
+        documents: taskResult.documents?.map(doc => doc.id) || [],
+        inspections: taskResult.inspections?.map(insp => insp.id) || []
+      };
+    
     } catch (error) {
       console.error('PhaseService.addTaskToStep failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to add task to step');
-    }
-  }
-
-  /**
-   * Update task in step
-   */
-  async updateTaskInStep(phaseId: string, stepId: string, taskId: string, updates: Partial<PhaseTaskDTO>): Promise<PhaseTaskDTO> {
-    try {
-      if (!phaseId || !stepId || !taskId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID, Step ID and Task ID are required');
-      }
-
-      const result = await this.phaseRepository.updateTask(phaseId, stepId, taskId, updates as Record<string, unknown>);
-      return result as PhaseTaskDTO;
-    } catch (error) {
-      console.error('PhaseService.updateTaskInStep failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update task in step');
     }
   }
 
@@ -389,7 +473,7 @@ export class PhaseService {
       }
 
       const result = await this.phaseRepository.getMetrics(id);
-      return result as PhaseMetricsDTO;
+      return PhaseDomainTransformer.toMetricsDTO(result);
     } catch (error) {
       console.error('PhaseService.getPhaseMetrics failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get phase metrics');

@@ -10,7 +10,7 @@ export type TenderEstimateStatus = 'draft' | 'submitted' | 'under_review' | 'acc
 export type CurrencyCode = 'MRU' | 'EUR' | 'USD' | 'GBP' | 'JPY' | 'CFA';
 
 // Interface for TenderEstimateItem (used by repository)
-export interface TenderEstimateItem {
+export interface ITenderEstimateItem {
   id: string;
   estimateId: string;
   itemCode: string;
@@ -21,6 +21,69 @@ export interface TenderEstimateItem {
   totalPrice: number;
   category?: string;
   specifications?: string;
+}
+
+// Class implementation for TenderEstimateItem
+export class TenderEstimateItem implements ITenderEstimateItem {
+  constructor(
+    public id: string,
+    public estimateId: string,
+    public itemCode: string,
+    public description: string,
+    public unit: string,
+    public quantity: number,
+    public unitPrice: number,
+    public totalPrice: number,
+    public category?: string,
+    public specifications?: string
+  ) {
+    // Validation in constructor
+    if (!id || id.trim().length === 0) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Item ID is required');
+    }
+    if (!itemCode || itemCode.trim().length === 0) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Item code is required');
+    }
+    if (!description || description.trim().length === 0) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Item description is required');
+    }
+    if (!unit || unit.trim().length === 0) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Item unit is required');
+    }
+    if (quantity <= 0) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Item quantity must be positive');
+    }
+    if (unitPrice <= 0) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Item unit price must be positive');
+    }
+    if (totalPrice !== quantity * unitPrice) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Item total price must equal quantity × unit price');
+    }
+  }
+
+  // Business logic methods
+  updatePrice(newUnitPrice: number): void {
+    if (newUnitPrice <= 0) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Unit price must be positive');
+    }
+    this.unitPrice = newUnitPrice;
+    this.totalPrice = this.quantity * newUnitPrice;
+  }
+
+  updateQuantity(newQuantity: number): void {
+    if (newQuantity <= 0) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Quantity must be positive');
+    }
+    this.quantity = newQuantity;
+    this.totalPrice = this.quantity * this.unitPrice;
+  }
+
+  getFormattedPrice(): string {
+    return new Intl.NumberFormat('fr-MR', {
+      style: 'currency',
+      currency: 'MRU'
+    }).format(this.totalPrice);
+  }
 }
 
 export interface TenderEstimateRisk {
@@ -235,19 +298,19 @@ export class TenderEstimate {
     let score = 0;
 
     // Amount-based risk
-    if (this._totalAmount > 1000000) {
+    if (this.totalAmount > 1000000) {
       score += 40;
       factors.push('High value amount');
-    } else if (this._totalAmount > 500000) {
+    } else if (this.totalAmount > 500000) {
       score += 25;
       factors.push('Medium-high value amount');
     }
 
     // Validity period risk
-    if (this._validityPeriod > 90) {
+    if (this.validityPeriod > 90) {
       score += 15;
       factors.push('Extended validity period');
-    } else if (this._validityPeriod < 7) {
+    } else if (this.validityPeriod < 7) {
       score += 20;
       factors.push('Very short validity period');
     }
@@ -282,7 +345,7 @@ export class TenderEstimate {
 
   get metrics(): TenderEstimateMetrics {
     const totalItems = this._items.length;
-    const totalAmount = this._totalAmount;
+    const totalAmount = this.totalAmount;
     const averageItemPrice = totalItems > 0 ? totalAmount / totalItems : 0;
 
     const sortedItems = [...this._items].sort((a, b) => b.totalPrice - a.totalPrice);
@@ -352,15 +415,23 @@ export class TenderEstimate {
   }
 
   // ============= Business Logic Methods =============
-  addItem(item: Omit<TenderEstimateItem, 'id'>): TenderEstimateItem {
+  addItem(item: Omit<ITenderEstimateItem, 'id'>): TenderEstimateItem {
     if (!this.canBeEdited) {
       throw new AppError(ErrorCode.BUSINESS_RULE_VIOLATION, 'Cannot add items to estimate in current status');
     }
 
-    const newItem: TenderEstimateItem = {
-      id: this.generateItemId(),
-      ...item
-    };
+    const newItem: TenderEstimateItem = new TenderEstimateItem(
+      this.generateItemId(),
+      item.estimateId,
+      item.itemCode,
+      item.description,
+      item.unit,
+      item.quantity,
+      item.unitPrice,
+      item.totalPrice,
+      item.category,
+      item.specifications
+    );
 
     this._items.push(newItem);
     this.recalculateFinancials();
@@ -386,7 +457,7 @@ export class TenderEstimate {
     return false;
   }
 
-  updateItem(itemId: string, updates: Partial<Omit<TenderEstimateItem, 'id'>>): TenderEstimateItem | null {
+  updateItem(itemId: string, updates: Partial<Omit<ITenderEstimateItem, 'id'>>): TenderEstimateItem | null {
     if (!this.canBeEdited) {
       throw new AppError(ErrorCode.BUSINESS_RULE_VIOLATION, 'Cannot update items in estimate in current status');
     }
@@ -394,7 +465,18 @@ export class TenderEstimate {
     const itemIndex = this._items.findIndex(item => item.id === itemId);
     if (itemIndex === -1) return null;
 
-    const updatedItem = { ...this._items[itemIndex], ...updates };
+    const updatedItem = new TenderEstimateItem(
+      this._items[itemIndex].id,
+      this._items[itemIndex].estimateId,
+      updates.itemCode || this._items[itemIndex].itemCode,
+      updates.description || this._items[itemIndex].description,
+      updates.unit || this._items[itemIndex].unit,
+      updates.quantity || this._items[itemIndex].quantity,
+      updates.unitPrice || this._items[itemIndex].unitPrice,
+      updates.totalPrice || this._items[itemIndex].totalPrice,
+      updates.category || this._items[itemIndex].category,
+      updates.specifications || this._items[itemIndex].specifications
+    );
     this._items[itemIndex] = this.validateItem(updatedItem);
     
     this.recalculateFinancials();
@@ -682,3 +764,6 @@ export class TenderEstimate {
     };
   }
 }
+
+// Default export for TenderEstimate class
+export default TenderEstimate;

@@ -65,22 +65,20 @@ export class MaterialService {
   /**
    * Get materials by phase ID
    */
-  async getMaterialsByPhase(phaseId: string): Promise<{ data: any[] }> {
+  async getMaterialsByPhase(phaseId: string): Promise<MaterialDTO[]> {
     try {
-      // For now, return mock data as the repository doesn't have this method yet
-      // TODO: Implement proper phase-based material retrieval
-      console.warn('MaterialService.getMaterialsByPhase: Using mock data');
+      if (!phaseId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID is required');
+      }
+
+      // Get all materials and filter by phase
+      const materials = await this.materialRepository.findAll();
+      const phaseMaterials = materials.filter(material => 
+        (material as any).phaseId === phaseId || 
+        (material as any).phase_id === phaseId
+      );
       
-      return {
-        data: [
-          {
-            id: 'mock-material-1',
-            material_id: 'material-1',
-            quantity: 100,
-            phase_id: phaseId
-          }
-        ]
-      };
+      return phaseMaterials.map(material => this.mapToDTO(material));
     } catch (error) {
       console.error('MaterialService.getMaterialsByPhase failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get materials by phase');

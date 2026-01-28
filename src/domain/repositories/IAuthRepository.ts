@@ -71,4 +71,9 @@ export interface IAuthRepository {
    * Get current user
    */
   getCurrentUser(): Promise<{ user: AuthUser | null; error: Error | null }>;
+
+  /**
+   * Update user role
+   */
+  updateUserRole(userId: string, role: string): Promise<{ user: AuthUser | null; error: Error | null }>;
 }

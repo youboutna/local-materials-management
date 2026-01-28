@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { AuthProvider } from "./contexts/AuthContext";
+import { UnifiedAuthProvider } from "./contexts/UnifiedAuthContext";
 import { KeycloakAuthProvider } from "./contexts/KeycloakAuthContext";
 import MainNavbar from "./components/MainNavbar";
 import Footer from "./components/Footer";
@@ -89,8 +90,9 @@ function App() {
       <ErrorBoundary>
         <LanguageProvider>
           <AuthProvider>
-            <KeycloakAuthProvider>
-              <BrowserRouter>
+            <UnifiedAuthProvider>
+              <KeycloakAuthProvider>
+                <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <div className="min-h-screen bg-background">
                   <MergedNavbar />
                   <main className="pt-16">
@@ -490,7 +492,8 @@ function App() {
                 </div>
               </BrowserRouter>
             </KeycloakAuthProvider>
-          </AuthProvider>
+          </UnifiedAuthProvider>
+        </AuthProvider>
         </LanguageProvider>
       </ErrorBoundary>
     </QueryClientProvider>

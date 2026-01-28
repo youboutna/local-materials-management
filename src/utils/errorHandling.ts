@@ -28,6 +28,33 @@ export enum ErrorCode {
   USER_CREATE_ERROR = 'USER_CREATE_ERROR',
   USER_UPDATE_ERROR = 'USER_UPDATE_ERROR',
   USER_DELETE_ERROR = 'USER_DELETE_ERROR',
+  ROLE_ASSIGNMENT_ERROR = 'ROLE_ASSIGNMENT_ERROR',
+  ROLE_REVOCATION_ERROR = 'ROLE_REVOCATION_ERROR',
+  ROLE_FETCH_ERROR = 'ROLE_FETCH_ERROR',
+  ROLE_UPDATE_ERROR = 'ROLE_UPDATE_ERROR',
+  ROLE_EXPORT_ERROR = 'ROLE_EXPORT_ERROR',
+  PROFILE_CREATE_ERROR = 'PROFILE_CREATE_ERROR',
+  PROFILE_UPDATE_ERROR = 'PROFILE_UPDATE_ERROR',
+  PROFILE_DELETE_ERROR = 'PROFILE_DELETE_ERROR',
+  PROFILE_FETCH_ERROR = 'PROFILE_FETCH_ERROR',
+  PROFILE_SYNC_ERROR = 'PROFILE_SYNC_ERROR',
+  PROFILE_EXPORT_ERROR = 'PROFILE_EXPORT_ERROR',
+  PROFILE_IMPORT_ERROR = 'PROFILE_IMPORT_ERROR',
+  
+  // Authentication errors
+  AUTH_CONFIG_ERROR = 'AUTH_CONFIG_ERROR',
+  AUTH_SIGNIN_ERROR = 'AUTH_SIGNIN_ERROR',
+  AUTH_SIGNUP_ERROR = 'AUTH_SIGNUP_ERROR',
+  AUTH_SIGNOUT_ERROR = 'AUTH_SIGNOUT_ERROR',
+  AUTH_SESSION_REFRESH_ERROR = 'AUTH_SESSION_REFRESH_ERROR',
+  AUTH_PASSWORD_RESET_ERROR = 'AUTH_PASSWORD_RESET_ERROR',
+  AUTH_PASSWORD_CHANGE_ERROR = 'AUTH_PASSWORD_CHANGE_ERROR',
+  AUTH_USER_UPDATE_ERROR = 'AUTH_USER_UPDATE_ERROR',
+  AUTH_USER_INFO_ERROR = 'AUTH_USER_INFO_ERROR',
+  AUTH_USER_SEARCH_ERROR = 'AUTH_USER_SEARCH_ERROR',
+  AUTH_USER_COUNT_ERROR = 'AUTH_USER_COUNT_ERROR',
+  AUTH_EMAIL_CHECK_ERROR = 'AUTH_EMAIL_CHECK_ERROR',
+  AUTH_MANAGEMENT_TOKEN_ERROR = 'AUTH_MANAGEMENT_TOKEN_ERROR',
 }
 
 export class AppError extends Error {
@@ -61,23 +88,57 @@ export class AppError extends Error {
    */
   getUserMessage(): string {
     const messages: Record<ErrorCode, string> = {
+      // Client errors (4xx)
       [ErrorCode.VALIDATION_ERROR]: 'Les données fournies sont invalides',
       [ErrorCode.NOT_FOUND]: 'Ressource introuvable',
       [ErrorCode.UNAUTHORIZED]: 'Authentification requise',
       [ErrorCode.FORBIDDEN]: 'Accès interdit',
+      
+      // Server errors (5xx)
       [ErrorCode.DATABASE_ERROR]: 'Erreur de base de données',
       [ErrorCode.NETWORK_ERROR]: 'Erreur de connexion',
       [ErrorCode.INTERNAL_ERROR]: 'Erreur interne du serveur',
       [ErrorCode.CONNECTION_ERROR]: 'Erreur de connexion au serveur',
       [ErrorCode.NOT_IMPLEMENTED]: 'Fonctionnalité non implémentée',
+      
+      // Business logic errors
       [ErrorCode.BUSINESS_RULE_VIOLATION]: 'Opération non autorisée',
       [ErrorCode.INSUFFICIENT_PERMISSIONS]: 'Permissions insuffisantes',
+      
+      // User management errors
       [ErrorCode.USER_FIND_ERROR]: 'Utilisateur introuvable',
       [ErrorCode.USER_SEARCH_ERROR]: 'Erreur lors de la recherche d\'utilisateurs',
       [ErrorCode.USER_FIND_ALL_ERROR]: 'Erreur lors du chargement des utilisateurs',
       [ErrorCode.USER_CREATE_ERROR]: 'Erreur lors de la création de l\'utilisateur',
       [ErrorCode.USER_UPDATE_ERROR]: 'Erreur lors de la mise à jour de l\'utilisateur',
       [ErrorCode.USER_DELETE_ERROR]: 'Erreur lors de la suppression de l\'utilisateur',
+      [ErrorCode.ROLE_ASSIGNMENT_ERROR]: 'Erreur lors de l\'assignation du rôle',
+      [ErrorCode.ROLE_REVOCATION_ERROR]: 'Erreur lors de la révocation du rôle',
+      [ErrorCode.ROLE_FETCH_ERROR]: 'Erreur lors de la récupération des rôles',
+      [ErrorCode.ROLE_UPDATE_ERROR]: 'Erreur lors de la mise à jour du rôle',
+      [ErrorCode.ROLE_EXPORT_ERROR]: 'Erreur lors de l\'exportation des rôles',
+      [ErrorCode.PROFILE_CREATE_ERROR]: 'Erreur lors de la création du profil',
+      [ErrorCode.PROFILE_UPDATE_ERROR]: 'Erreur lors de la mise à jour du profil',
+      [ErrorCode.PROFILE_DELETE_ERROR]: 'Erreur lors de la suppression du profil',
+      [ErrorCode.PROFILE_FETCH_ERROR]: 'Erreur lors de la récupération du profil',
+      [ErrorCode.PROFILE_SYNC_ERROR]: 'Erreur lors de la synchronisation du profil',
+      [ErrorCode.PROFILE_EXPORT_ERROR]: 'Erreur lors de l\'exportation du profil',
+      [ErrorCode.PROFILE_IMPORT_ERROR]: 'Erreur lors de l\'importation du profil',
+      
+      // Authentication errors
+      [ErrorCode.AUTH_CONFIG_ERROR]: 'Erreur de configuration de l\'authentification',
+      [ErrorCode.AUTH_SIGNIN_ERROR]: 'Erreur lors de la connexion',
+      [ErrorCode.AUTH_SIGNUP_ERROR]: 'Erreur lors de l\'inscription',
+      [ErrorCode.AUTH_SIGNOUT_ERROR]: 'Erreur lors de la déconnexion',
+      [ErrorCode.AUTH_SESSION_REFRESH_ERROR]: 'Erreur lors du rafraîchissement de la session',
+      [ErrorCode.AUTH_PASSWORD_RESET_ERROR]: 'Erreur lors de la réinitialisation du mot de passe',
+      [ErrorCode.AUTH_PASSWORD_CHANGE_ERROR]: 'Erreur lors du changement du mot de passe',
+      [ErrorCode.AUTH_USER_UPDATE_ERROR]: 'Erreur lors de la mise à jour de l\'utilisateur',
+      [ErrorCode.AUTH_USER_INFO_ERROR]: 'Erreur lors de la récupération des informations utilisateur',
+      [ErrorCode.AUTH_USER_SEARCH_ERROR]: 'Erreur lors de la recherche d\'utilisateurs',
+      [ErrorCode.AUTH_USER_COUNT_ERROR]: 'Erreur lors du comptage des utilisateurs',
+      [ErrorCode.AUTH_EMAIL_CHECK_ERROR]: 'Erreur lors de la vérification de l\'email',
+      [ErrorCode.AUTH_MANAGEMENT_TOKEN_ERROR]: 'Erreur lors de l\'obtention du token de gestion',
     };
 
     return messages[this.code] || 'Une erreur inattendue s\'est produite';

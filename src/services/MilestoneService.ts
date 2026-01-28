@@ -21,7 +21,7 @@ import { addDays, differenceInDays, format, isBefore, parseISO } from 'date-fns'
 
 // Re-export for convenience
 export { GanttPertDataService, getGanttPertService } from './GanttPertDataService';
-export { getMilestoneService, UnifiedMilestoneService } from '@/application/services/UnifiedMilestoneService';
+export { getMilestoneService, MilestoneService as UnifiedMilestoneService } from '@/application/services/MilestoneService';
 
 /**
  * MilestoneService class - Legacy API for backward compatibility

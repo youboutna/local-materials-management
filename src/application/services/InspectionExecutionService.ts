@@ -190,10 +190,22 @@ export class InspectionExecutionService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID and item ID are required');
       }
 
-      // For now, simulate updating checklist as inspection repository is not available
-      // TODO: Implement proper checklist update when inspection repository is available
-      console.warn('InspectionExecutionService.updateChecklistItem: Inspection repository not available');
-      console.log(`Updating checklist item: ${request.itemId} for inspection: ${request.inspectionId}`);
+      // Update checklist item in inspection repository
+      const inspection = await this.inspectionRepository.findById(request.inspectionId);
+      if (!inspection) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
+      }
+
+      // Update the checklist item status
+      await this.inspectionRepository.update(request.inspectionId, {
+        checklistItems: [{
+          id: request.itemId,
+          ...request.updates,
+          updatedAt: new Date().toISOString()
+        }]
+      });
+      
+      console.log(`Updated checklist item: ${request.itemId} for inspection: ${request.inspectionId}`);
       
       return { success: true };
     } catch (error) {

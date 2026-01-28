@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export interface WorkspaceDTO {
   id: string;
@@ -67,7 +68,7 @@ export class WorkspaceService {
       return newWorkspace;
     } catch (error) {
       console.error('Error creating workspace:', error);
-      throw new Error(`Failed to create workspace: ${(error as Error).message}`);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to create workspace: ${(error as Error).message}`);
     }
   }
 
@@ -79,7 +80,7 @@ export class WorkspaceService {
       return workspacesStore.get(id) || null;
     } catch (error) {
       console.error('Error fetching workspace:', error);
-      throw new Error(`Failed to fetch workspace: ${(error as Error).message}`);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to fetch workspace: ${(error as Error).message}`);
     }
   }
 
@@ -95,7 +96,7 @@ export class WorkspaceService {
       return workspaces;
     } catch (error) {
       console.error('Error fetching workspaces:', error);
-      throw new Error(`Failed to fetch workspaces: ${(error as Error).message}`);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to fetch workspaces: ${(error as Error).message}`);
     }
   }
 
@@ -106,7 +107,7 @@ export class WorkspaceService {
     try {
       const existing = workspacesStore.get(id);
       if (!existing) {
-        throw new Error('Workspace not found');
+        throw new AppError(ErrorCode.NOT_FOUND, 'Workspace not found');
       }
 
       const updatedWorkspace: WorkspaceDTO = {
@@ -119,7 +120,7 @@ export class WorkspaceService {
       return updatedWorkspace;
     } catch (error) {
       console.error('Error updating workspace:', error);
-      throw new Error(`Failed to update workspace: ${(error as Error).message}`);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to update workspace: ${(error as Error).message}`);
     }
   }
 
@@ -131,7 +132,7 @@ export class WorkspaceService {
       workspacesStore.delete(id);
     } catch (error) {
       console.error('Error deleting workspace:', error);
-      throw new Error(`Failed to delete workspace: ${(error as Error).message}`);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to delete workspace: ${(error as Error).message}`);
     }
   }
 
@@ -149,7 +150,7 @@ export class WorkspaceService {
       return workspaces;
     } catch (error) {
       console.error('Error fetching workspaces by status:', error);
-      throw new Error(`Failed to fetch workspaces by status: ${(error as Error).message}`);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to fetch workspaces by status: ${(error as Error).message}`);
     }
   }
 
@@ -168,7 +169,7 @@ export class WorkspaceService {
       return workspaces;
     } catch (error) {
       console.error('Error fetching workspaces by location:', error);
-      throw new Error(`Failed to fetch workspaces by location: ${(error as Error).message}`);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to fetch workspaces by location: ${(error as Error).message}`);
     }
   }
 
@@ -201,7 +202,7 @@ export class WorkspaceService {
       return stats;
     } catch (error) {
       console.error('Error fetching workspace stats:', error);
-      throw new Error(`Failed to fetch workspace stats: ${(error as Error).message}`);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to fetch workspace stats: ${(error as Error).message}`);
     }
   }
 

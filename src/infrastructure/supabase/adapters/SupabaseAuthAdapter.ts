@@ -209,4 +209,58 @@ export class SupabaseAuthAdapter implements IAuthRepository {
       return { user: null, error: error as Error };
     }
   }
+
+  /**
+   * Update user role
+   */
+  async updateUserRole(userId: string, role: string): Promise<{ user: AuthUser | null; error: Error | null }> {
+    try {
+      // First verify the current user is the one being updated or has admin privileges
+      const { data: { user: currentUser }, error: currentUserError } = await supabase.auth.getUser();
+      
+      if (currentUserError) {
+        return { user: null, error: currentUserError };
+      }
+
+      // For now, we'll update the current user's role
+      // In a real implementation, you might need to use admin privileges to update other users
+      if (currentUser?.id !== userId) {
+        return { 
+          user: null, 
+          error: new Error('Cannot update role for other users without admin privileges') 
+        };
+      }
+
+      const { data: { user }, error } = await supabase.auth.updateUser({
+        data: {
+          user_metadata: {
+            role: role
+          }
+        }
+      });
+      
+      if (error) {
+        return { user: null, error };
+      }
+
+      if (!user) {
+        return { user: null, error: new Error('No user returned') };
+      }
+
+      const authUser: AuthUser = {
+        id: user.id,
+        email: user.email || undefined,
+        full_name: user.user_metadata?.full_name || undefined,
+        role: user.user_metadata?.role || undefined,
+        phone: user.phone || undefined,
+        national_id: user.user_metadata?.national_id || undefined,
+        created_at: user.created_at,
+        updated_at: user.updated_at
+      };
+
+      return { user: authUser, error: null };
+    } catch (error) {
+      return { user: null, error: error as Error };
+    }
+  }
 }

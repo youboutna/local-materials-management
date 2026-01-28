@@ -174,7 +174,7 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
 
   const calculateTotalValue = () => {
     return takeoffs.reduce((total, takeoff) => {
-      return total + (takeoff.quantity * takeoff.material.price_per_unit);
+      return total + (takeoff.quantity * (takeoff.material.price_per_unit || 0));
     }, 0);
   };
 

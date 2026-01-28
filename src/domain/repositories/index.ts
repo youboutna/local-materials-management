@@ -43,6 +43,7 @@ export * from './IUserRepository';
 export * from './IProjectStakeholderRepository';
 export * from './IProjectAlertRepository';
 export * from './IParsedInvoiceRepository';
+export * from './IPaymentBlockingRepository';
 export * from './IDecompteRepository';
 export * from './IPVGeneratorRepository';
 export * from './IBankGuaranteeRepository';

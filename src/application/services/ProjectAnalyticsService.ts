@@ -5,8 +5,9 @@
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { ProjectDataCalculations } from '@/utils/projectDataCalculations';
+import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
+import { ProjectDataCalculations } from '@/utils/projectDataCalculations';
 import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { ProjectCalculationService } from '@/services/ProjectCalculationService';
 
@@ -280,35 +281,35 @@ export class ProjectAnalyticsService {
 
       const tasks = projectData.tasks || [];
       const totalTasks = tasks.length;
-      const completedTasks = tasks.filter((task: any) => task.status === 'completed').length;
-      const pendingTasks = tasks.filter((task: any) => task.status === 'not_started').length;
-      const overdueTasks = tasks.filter((task: any) => 
-        task.status !== 'completed' && new Date(task.endDate || task.end_date) < new Date()
+      const completedTasks = tasks.filter((task) => task.status === 'completed').length;
+      const pendingTasks = tasks.filter((task) => task.status === 'not_started').length;
+      const overdueTasks = tasks.filter((task) => 
+        task.status !== 'completed' && new Date(task.endDate || task.end_date || '') < new Date()
       ).length;
 
       // Get milestones
       const milestones = projectData.milestones || [];
       const totalMilestones = milestones.length;
-      const completedMilestones = milestones.filter((milestone: any) => milestone.status === 'completed').length;
+      const completedMilestones = milestones.filter((milestone) => milestone.status === 'completed').length;
 
       // Get risks
       const risks = projectData.risks || [];
       const totalRisks = risks.length;
-      const highRisks = risks.filter((risk: any) => 
+      const highRisks = risks.filter((risk) => 
         (risk.probability * risk.impact) >= 15 || risk.impact >= 4 || risk.probability >= 4
       ).length;
-      const mediumRisks = risks.filter((risk: any) => {
+      const mediumRisks = risks.filter((risk) => {
         const score = risk.probability * risk.impact;
         return score >= 8 && score < 15;
       }).length;
-      const lowRisks = risks.filter((risk: any) => (risk.probability * risk.impact) < 8).length;
+      const lowRisks = risks.filter((risk) => (risk.probability * risk.impact) < 8).length;
 
       // Get issues from inspections
       const inspections = await this.inspectionRepository.findByProjectId(projectId);
-      const allIssues = inspections.flatMap((inspection: any) => inspection.issues || []);
+      const allIssues = inspections.flatMap((inspection) => (inspection as any).issues || []);
       const totalIssues = allIssues.length;
-      const openIssues = allIssues.filter((issue: any) => issue.status !== 'resolved').length;
-      const resolvedIssues = allIssues.filter((issue: any) => issue.status === 'resolved').length;
+      const openIssues = allIssues.filter((issue) => issue.status !== 'resolved').length;
+      const resolvedIssues = allIssues.filter((issue) => issue.status === 'resolved').length;
     } catch (error) {
       console.error('ProjectAnalyticsService.getProjectRisks failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get project risks');
@@ -337,6 +338,14 @@ export class ProjectAnalyticsService {
       const estimateAtCompletion = actualCost + (totalBudget - actualCost) / costPerformanceIndex;
       const varianceAtCompletion = totalBudget - estimateAtCompletion;
 
+      // Update analytics cache using project calculations
+      const projectData = await this.projectRepository?.findById(projectId);
+      if (projectData) {
+        // Use existing analytics calculation method
+        const analytics = await this.getProjectAnalytics(projectId);
+        console.log(`Analytics updated for project ${projectId}:`, analytics);
+      }
+
       return {
         total_budget: totalBudget,
         actual_cost: actualCost,
@@ -353,14 +362,6 @@ export class ProjectAnalyticsService {
           { category: 'Other', budgeted_cost: totalBudget * 0.1, actual_cost: actualCost * 0.1, variance: costVariance * 0.1 }
         ]
       };
-
-      // Update analytics cache using project calculations
-      const projectData = await this.projectRepository?.findById(projectId);
-      if (projectData) {
-        // Use existing analytics calculation method
-        const analytics = await this.getProjectAnalytics(projectId);
-        console.log(`Analytics updated for project ${projectId}:`, analytics);
-      }
     } catch (error) {
       console.error('ProjectAnalyticsService.updateProjectAnalytics failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update project analytics');

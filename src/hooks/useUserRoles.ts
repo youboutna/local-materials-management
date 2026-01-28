@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { AuthService } from '@/application/services/AuthService';
@@ -55,13 +56,13 @@ export const useUserRoles = (userId?: string) => {
         const user = await userService.getUserById(userId);
         if (!user) return [];
         
-        // Map to UserRole format for backward compatibility
-        const roles: UserRole[] = (user.roles || []).map((roleName: string, index: number) => ({
-          id: `${userId}-${roleName}-${index}`,
+        // Map single role to UserRole format for backward compatibility
+        const roles: UserRole[] = user.role ? [{
+          id: `${userId}-${user.role}`,
           user_id: userId,
-          role_name: roleName,
+          role_name: user.role,
           assigned_at: new Date().toISOString(),
-        }));
+        }] : [];
         
         return roles;
       } catch (error) {
@@ -94,49 +95,68 @@ export const useUserRoles = (userId?: string) => {
 
 export const useCurrentUserRoles = () => {
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const { profile, isAuthenticated } = useKeycloakAuth();
+  const { user, isAuthenticated } = useUnifiedAuth();
   const { authService, userService } = getServices();
 
   useEffect(() => {
     const getUser = async () => {
       try {
-        const user = await authService.getCurrentUser();
-        setCurrentUser(user);
+        const authUser = await authService.getCurrentUser();
+        setCurrentUser(authUser);
       } catch (error) {
         console.error('Error getting current user:', error);
+        // Fallback to UnifiedAuth user if service fails
+        if (user) {
+          setCurrentUser(user);
+        }
       }
     };
     getUser();
-  }, []);
+  }, [user]);
 
   const { data: userRoles, isLoading, error } = useQuery({
-    queryKey: ['currentUserRoles', currentUser?.id, profile?.role],
+    queryKey: ['currentUserRoles', currentUser?.id, user?.role],
     queryFn: async () => {
-      // Start with profile role if present
-      const fallbackRoles = profile?.role ? [String(profile.role).toLowerCase()] : [];
+      // Start with UnifiedAuth user role if present
+      const fallbackRoles = user?.role ? [String(user.role).toLowerCase()] : [];
 
-      if (!currentUser?.id) return fallbackRoles;
+      if (!currentUser?.id && !user?.id) return fallbackRoles;
       
-      console.log('Fetching current user roles for:', currentUser.id);
+      const userId = currentUser?.id || user?.id;
+      console.log('Fetching current user roles for:', userId);
       
       try {
         // Get user with roles from UserService
-        const user = await userService.getUserById(currentUser.id);
-        if (!user) return fallbackRoles;
+        const userServiceUser = await userService.getUserById(userId);
+        if (!userServiceUser) {
+          // Fallback to user metadata role if service lookup fails
+          console.log('UserService lookup failed, using metadata role:', user?.role);
+          return fallbackRoles;
+        }
         
-        const dbRoles = (user.roles || []).map((r: string) => String(r).toLowerCase());
-        const merged = Array.from(new Set([...dbRoles, ...fallbackRoles]));
-        return merged;
+        // Get roles from the userRoles array (multi-role support)
+        const userRoles = userServiceUser.userRoles || [];
+        const roleNames = userRoles.map(ur => String(ur.roleName || ur).toLowerCase());
+        
+        // Also include primary role if it exists and isn't already in the array
+        const primaryRole = userServiceUser.primaryRole ? [String(userServiceUser.primaryRole).toLowerCase()] : [];
+        
+        // Merge all roles: userRoles + primaryRole + fallbackRoles
+        const allRoles = Array.from(new Set([...roleNames, ...primaryRole, ...fallbackRoles]));
+        console.log('User roles:', { userRoles: roleNames, primaryRole, fallbackRoles, merged: allRoles });
+        
+        return allRoles;
       } catch (error) {
         console.error('Error fetching current user roles:', error);
+        // Fallback to user metadata role
         return fallbackRoles;
       }
     },
-    enabled: !!currentUser?.id || !!profile?.role || !!isAuthenticated,
+    enabled: !!currentUser?.id || !!user?.id || !!isAuthenticated,
     retry: 2,
     retryDelay: 500,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    placeholderData: () => (profile?.role ? [String(profile.role).toLowerCase()] : [])
+    placeholderData: () => (user?.role ? [String(user.role).toLowerCase()] : [])
   });
 
   const hasRole = (roleName: string) => {
@@ -150,10 +170,43 @@ export const useCurrentUserRoles = () => {
     return wanted.some((role) => roles.includes(role));
   };
 
+  const hasAllRoles = (roleNames: string[]) => {
+    const roles = (userRoles as string[]) || [];
+    if (roles.length === 0 || !Array.isArray(roles)) return false;
+    const wanted = roleNames.map((r) => String(r).toLowerCase());
+    return wanted.every((role) => roles.includes(role));
+  };
+
+  const getRoleCount = () => {
+    return (userRoles as string[])?.length || 0;
+  };
+
+  const getRoleNames = () => {
+    return (userRoles as string[]) || [];
+  };
+
+  const isSuperAdmin = () => {
+    return hasRole('super_admin') || hasRole('admin');
+  };
+
+  const isManager = () => {
+    return hasRole('manager') || hasRole('project_manager') || isSuperAdmin();
+  };
+
+  const isEmployee = () => {
+    return hasRole('employee') || hasRole('staff') || isManager();
+  };
+
   return {
     userRoles: (userRoles as string[]) || [],
     hasRole,
     hasAnyRole,
+    hasAllRoles,
+    getRoleCount,
+    getRoleNames,
+    isSuperAdmin,
+    isManager,
+    isEmployee,
     isLoading,
     currentUser,
     error
@@ -173,13 +226,34 @@ export const useRoleManagement = () => {
         const user = await userService.getUserById(userId);
         if (!user) throw new Error('User not found');
         
-        // Add role to user's roles array
-        const currentRoles = user.roles || [];
-        if (!currentRoles.includes(roleName)) {
-          await userService.updateUser(userId, {
-            roles: [...currentRoles, roleName]
-          });
+        // Check if user already has this role
+        const currentRoles = user.userRoles || [];
+        const hasRole = currentRoles.some(ur => 
+          String(ur.roleName || ur).toLowerCase() === String(roleName).toLowerCase()
+        );
+        
+        if (hasRole) {
+          console.log('User already has role:', roleName);
+          return; // Role already assigned
         }
+        
+        // Add new role to the userRoles array
+        const newRole: UserRole = {
+          id: `${userId}_${roleName}_${Date.now()}`,
+          user_id: userId,
+          role_name: roleName,
+          assigned_at: new Date().toISOString(),
+          assigned_by: 'current_user' // This should come from auth context
+        };
+        
+        const updatedRoles = [...currentRoles, newRole];
+        
+        // Update user with new roles array
+        await userService.updateUser(userId, {
+          userRoles: updatedRoles
+        });
+        
+        console.log('Role assigned successfully:', { userId, roleName, totalRoles: updatedRoles.length });
       } catch (error) {
         console.error('Error assigning role:', error);
         throw error;
@@ -212,11 +286,18 @@ export const useRoleManagement = () => {
         const user = await userService.getUserById(userId);
         if (!user) throw new Error('User not found');
         
-        // Remove role from user's roles array
-        const currentRoles = user.roles || [];
+        // Remove role from userRoles array
+        const currentRoles = user.userRoles || [];
+        const filteredRoles = currentRoles.filter(ur => 
+          String(ur.roleName || ur).toLowerCase() !== String(roleName).toLowerCase()
+        );
+        
+        // Update user with filtered roles array
         await userService.updateUser(userId, {
-          roles: currentRoles.filter((r: string) => r !== roleName)
+          userRoles: filteredRoles
         });
+        
+        console.log('Role removed successfully:', { userId, roleName, remainingRoles: filteredRoles.length });
       } catch (error) {
         console.error('Error removing role:', error);
         throw error;
@@ -242,6 +323,14 @@ export const useRoleManagement = () => {
 
   return {
     assignRole,
-    removeRole
+    removeRole,
+    getUserRoles: async (userId: string) => {
+      const user = await userService.getUserById(userId);
+      return user?.userRoles || [];
+    },
+    getAllRoles: async () => {
+      // This could be extended to fetch all available roles from the system
+      return ['admin', 'manager', 'project_manager', 'employee', 'staff', 'user'];
+    }
   };
 };

@@ -257,7 +257,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
     return calculations.reduce((total, calc) => {
       const material = materials.find(m => m.id === calc.materialId);
       if (material) {
-        return total + (calc.quantity * material.price_per_unit);
+        return total + (calc.quantity * (material.price_per_unit || 0));
       }
       return total;
     }, 0);

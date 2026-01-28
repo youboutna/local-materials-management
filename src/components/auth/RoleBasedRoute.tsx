@@ -1,7 +1,7 @@
 
 import { ReactNode, useEffect, useRef } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { DEV_MODE } from '@/config/constants';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -22,7 +22,7 @@ const RoleBasedRoute = ({
   publicInDev = false 
 }: RoleBasedRouteProps) => {
   const { t } = useLanguage();
-  const { isAuthenticated, user, loading } = useKeycloakAuth();
+  const { isAuthenticated, user, loading } = useUnifiedAuth();
   const { hasAnyRole, isLoading: rolesLoading } = useCurrentUserRoles();
   const location = useLocation();
 
@@ -68,7 +68,8 @@ const RoleBasedRoute = ({
   }
 
   // Admin/Director override - always allow access
-  if (isAuthenticated && hasAnyRole(['admin','director'])) {
+  const userRole = user?.role || user?.metadata?.role;
+  if (isAuthenticated && (hasAnyRole(['admin','director']) || userRole === 'director' || userRole === 'admin')) {
     return <>{children}</>;
   }
 

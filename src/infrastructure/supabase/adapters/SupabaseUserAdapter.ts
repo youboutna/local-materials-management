@@ -14,21 +14,83 @@ export class SupabaseUserAdapter implements IUserRepository {
   
   async findById(id: string): Promise<User | null> {
     try {
-      const { data, error } = await supabase
+      // First try to get from profiles table (most reliable for user data)
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', id)
         .single();
 
-      if (error) {
-        ErrorLogger.log('error', 'SupabaseUserAdapter.findById failed', { id, error });
-        throw new AppError(ErrorCode.USER_FIND_ERROR, error.message);
+      // If profile exists, use it as primary source
+      if (profile && !profileError) {
+        // Get roles from user_roles table
+        const { data: userRoles, error: rolesError } = await supabase
+          .from('user_roles')
+          .select('role_name')
+          .eq('user_id', id);
+
+        const roles = userRoles?.map(ur => ur.role_name) || [];
+
+        const mergedData = {
+          id: profile.id,
+          email: '', // Email not in profiles table, will be filled by auth fallback
+          full_name: profile.full_name || '',
+          role: roles[0] || profile.role || 'user',
+          phone: profile.phone || null,
+          national_id: profile.national_id || null,
+          avatar_url: profile.avatar_url || null,
+          is_admin: profile.is_admin || false,
+          last_login: profile.updated_at, // Use updated_at as fallback
+          created_at: profile.created_at || new Date().toISOString(),
+          updated_at: profile.updated_at || new Date().toISOString(),
+          user_metadata: {}, // Not in profiles table
+          roles: roles
+        };
+
+        return UserMapper.toDomain(mergedData);
       }
 
-      return data ? UserMapper.toDomain(data) : null;
+      // Fallback: Try to get current user if it matches the requested ID
+      const { data: authUser, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !authUser.user) {
+        ErrorLogger.log(new Error('User not found'), 'SupabaseUserAdapter.findById failed');
+        return null; // Return null instead of throwing error
+      }
+
+      // Only return data if it matches the requested ID
+      if (authUser.user.id !== id) {
+        return null;
+      }
+
+      // Get roles from user_roles table
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('role_name')
+        .eq('user_id', id);
+
+      const roles = userRoles?.map(ur => ur.role_name) || [];
+
+      const mergedData = {
+        id: authUser.user.id,
+        email: authUser.user.email || '',
+        full_name: authUser.user.user_metadata?.full_name || '',
+        role: roles[0] || authUser.user.user_metadata?.role || 'user',
+        phone: authUser.user.phone || null,
+        national_id: authUser.user.user_metadata?.national_id || null,
+        avatar_url: authUser.user.user_metadata?.avatar_url || null,
+        is_admin: authUser.user.user_metadata?.is_admin || false,
+        last_login: authUser.user.last_sign_in_at,
+        created_at: authUser.user.created_at,
+        updated_at: authUser.user.updated_at,
+        user_metadata: authUser.user.user_metadata || {},
+        roles: roles
+      };
+
+      return UserMapper.toDomain(mergedData);
     } catch (error) {
-      ErrorLogger.log('error', 'SupabaseUserAdapter.findById unexpected error', { id, error });
-      throw new AppError(ErrorCode.USER_FIND_ERROR, 'Failed to find user');
+      ErrorLogger.log(error instanceof Error ? error : new Error('Unexpected error'), 'SupabaseUserAdapter.findById unexpected error');
+      return null; // Return null instead of throwing error
     }
   }
 
@@ -68,7 +130,7 @@ export class SupabaseUserAdapter implements IUserRepository {
       const { data, error } = await query;
 
       if (error) {
-        ErrorLogger.log('error', 'SupabaseUserAdapter.searchUsers failed', { options, error });
+        ErrorLogger.log(new Error(error.message), 'SupabaseUserAdapter.searchUsers failed');
         throw new AppError(ErrorCode.USER_SEARCH_ERROR, error.message, error);
       }
 
@@ -79,7 +141,7 @@ export class SupabaseUserAdapter implements IUserRepository {
         total: users.length
       };
     } catch (error) {
-      ErrorLogger.log('error', 'SupabaseUserAdapter.searchUsers unexpected error', { options, error });
+      ErrorLogger.log(error instanceof Error ? error : new Error('Unexpected error'), 'SupabaseUserAdapter.searchUsers unexpected error');
       throw new AppError(ErrorCode.USER_SEARCH_ERROR, 'Failed to search users', error);
     }
   }
@@ -92,13 +154,13 @@ export class SupabaseUserAdapter implements IUserRepository {
         .order('full_name', { ascending: true });
 
       if (error) {
-        ErrorLogger.log('error', 'SupabaseUserAdapter.findAll failed', { error });
+        ErrorLogger.log(new Error(error.message), 'SupabaseUserAdapter.findAll failed');
         throw new AppError(ErrorCode.USER_FIND_ALL_ERROR, error.message, error);
       }
 
       return data ? data.map(UserMapper.toDomain) : [];
     } catch (error) {
-      ErrorLogger.log('error', 'SupabaseUserAdapter.findAll unexpected error', { error });
+      ErrorLogger.log(error instanceof Error ? error : new Error('Unexpected error'), 'SupabaseUserAdapter.findAll unexpected error');
       throw new AppError(ErrorCode.USER_FIND_ALL_ERROR, 'Failed to get all users', error);
     }
   }
@@ -115,7 +177,7 @@ export class SupabaseUserAdapter implements IUserRepository {
         .single();
 
       if (error) {
-        ErrorLogger.log('error', 'SupabaseUserAdapter.create failed', { userData, error });
+        ErrorLogger.log(new Error(error.message), 'SupabaseUserAdapter.create failed');
         throw new AppError(ErrorCode.USER_CREATE_ERROR, error.message, error);
       }
 
@@ -125,7 +187,7 @@ export class SupabaseUserAdapter implements IUserRepository {
 
       return UserMapper.toDomain(data);
     } catch (error) {
-      ErrorLogger.log('error', 'SupabaseUserAdapter.create unexpected error', { userData, error });
+      ErrorLogger.log(error instanceof Error ? error : new Error('Unexpected error'), 'SupabaseUserAdapter.create unexpected error');
       throw new AppError(ErrorCode.USER_CREATE_ERROR, 'Failed to create user', error);
     }
   }
@@ -143,7 +205,7 @@ export class SupabaseUserAdapter implements IUserRepository {
         .single();
 
       if (error) {
-        ErrorLogger.log('error', 'SupabaseUserAdapter.update failed', { id, userData, error });
+        ErrorLogger.log(new Error(error.message), 'SupabaseUserAdapter.update failed');
         throw new AppError(ErrorCode.USER_UPDATE_ERROR, error.message, error);
       }
 
@@ -153,7 +215,7 @@ export class SupabaseUserAdapter implements IUserRepository {
 
       return UserMapper.toDomain(data);
     } catch (error) {
-      ErrorLogger.log('error', 'SupabaseUserAdapter.update unexpected error', { id, userData, error });
+      ErrorLogger.log(error instanceof Error ? error : new Error('Unexpected error'), 'SupabaseUserAdapter.update unexpected error');
       throw new AppError(ErrorCode.USER_UPDATE_ERROR, 'Failed to update user', error);
     }
   }
@@ -166,11 +228,11 @@ export class SupabaseUserAdapter implements IUserRepository {
         .eq('id', id);
 
       if (error) {
-        ErrorLogger.log('error', 'SupabaseUserAdapter.delete failed', { id, error });
+        ErrorLogger.log(new Error(error.message), 'SupabaseUserAdapter.delete failed');
         throw new AppError(ErrorCode.USER_DELETE_ERROR, error.message, error);
       }
     } catch (error) {
-      ErrorLogger.log('error', 'SupabaseUserAdapter.delete unexpected error', { id, error });
+      ErrorLogger.log(error instanceof Error ? error : new Error('Unexpected error'), 'SupabaseUserAdapter.delete unexpected error');
       throw new AppError(ErrorCode.USER_DELETE_ERROR, 'Failed to delete user', error);
     }
   }

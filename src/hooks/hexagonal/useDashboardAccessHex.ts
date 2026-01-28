@@ -4,6 +4,7 @@
  */
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/use-auth';
+import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { DEV_MODE, DEV_USER, DEV_CONFIG } from '@/config/constants';
 
 export interface DashboardAccess {
@@ -16,6 +17,7 @@ const ALLOWED_ROLES = ['admin', 'director', 'project_manager'];
 
 export const useDashboardAccessHex = (userId: string | undefined) => {
   const { user, loading: authLoading } = useAuth();
+  const { userRoles, hasAnyRole, isLoading: rolesLoading } = useCurrentUserRoles();
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['dashboard-access', userId || user?.id],
@@ -27,11 +29,12 @@ export const useDashboardAccessHex = (userId: string | undefined) => {
       }
 
       try {
-        // For development/demo purposes, grant access to all authenticated users
-        // In production, this would check actual roles from database
+        // Check if user has any of the allowed roles
+        const hasRequiredRole = hasAnyRole(ALLOWED_ROLES);
+        
         return { 
-          hasAccess: true, 
-          userRoles: ['admin'] // Default role for demo
+          hasAccess: hasRequiredRole, 
+          userRoles: userRoles || []
         };
       } catch (error) {
         console.error('Error in dashboard access check:', error);
@@ -46,7 +49,7 @@ export const useDashboardAccessHex = (userId: string | undefined) => {
   return {
     hasAccess: data?.hasAccess ?? false,
     userRoles: data?.userRoles ?? [],
-    loading: authLoading || isLoading,
+    loading: authLoading || rolesLoading || isLoading,
     allowedRoles: ALLOWED_ROLES,
     refetch,
   };

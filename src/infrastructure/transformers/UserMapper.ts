@@ -71,15 +71,16 @@ export class UserMapper {
     return new User(
       supabaseUser.id,
       supabaseUser.email || '',
-      supabaseUser.full_name || '',
-      supabaseUser.role || 'user',
+      supabaseUser.full_name || supabaseUser.user_metadata?.full_name || '',
+      supabaseUser.role || 'user', // Rôle principal depuis user_roles[0]
       supabaseUser.phone || null,
-      supabaseUser.national_id || null,
-      supabaseUser.avatar || null,
-      supabaseUser.is_active || true,
-      supabaseUser.last_login ? new Date(supabaseUser.last_login) : null,
+      supabaseUser.national_id || supabaseUser.user_metadata?.national_id || null,
+      supabaseUser.avatar_url || supabaseUser.user_metadata?.avatar_url || null,
+      supabaseUser.is_admin || false,
+      supabaseUser.last_login ? new Date(supabaseUser.last_login) : undefined,
       new Date(supabaseUser.created_at),
-      new Date(supabaseUser.updated_at)
+      new Date(supabaseUser.updated_at),
+      supabaseUser.roles || [] // Liste complète des rôles depuis user_roles
     );
   }
 
@@ -91,7 +92,7 @@ export class UserMapper {
       user.id,
       user.email,
       user.fullName,
-      user.role,
+      user.primaryRole,
       user.phone,
       user.nationalId,
       user.avatar,
@@ -111,13 +112,14 @@ export class UserMapper {
       requestDto.email,
       requestDto.fullName,
       requestDto.role,
-      requestDto.phone || null,
-      requestDto.nationalId || null,
-      requestDto.avatar || null,
+      requestDto.phone, // Keep as undefined instead of null
+      requestDto.nationalId, // Keep as undefined instead of null
+      requestDto.avatar, // Keep as undefined instead of null
       true, // isActive initial
-      null, // lastLogin initial
+      undefined, // lastLogin initial
       new Date(),
-      new Date()
+      new Date(),
+      [] // userRoles initial - empty array
     );
   }
 
@@ -145,7 +147,7 @@ export class UserMapper {
       id: user.id,
       email: user.email,
       full_name: user.fullName,
-      role: user.role,
+      role: user.primaryRole,
       phone: user.phone || null,
       national_id: user.nationalId || null,
       avatar: user.avatar || null,

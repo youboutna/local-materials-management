@@ -52,13 +52,14 @@ const defaultMetrics: PhaseMetrics = {
 export function usePhaseDetails(phaseId: string | undefined) {
   const queryClient = useQueryClient();
   const workflowService = new WorkflowPhaseService();
+  const phaseService = new PhaseService(RepositoryFactory.getPhaseRepository());
 
   // Fetch phase details using PhaseService DTO method
   const phaseQuery = useQuery({
     queryKey: ['phase-dto', phaseId],
     queryFn: async () => {
       if (!phaseId) throw new Error('Phase ID is required');
-      const phase = await PhaseService.getPhaseDTOById(phaseId);
+      const phase = await phaseService.getPhaseById(phaseId);
       if (!phase) throw new Error('Phase not found');
       return phase;
     },
@@ -183,7 +184,7 @@ export function usePhaseDetails(phaseId: string | undefined) {
         ...updates,
         status: updates.status === 'delayed' ? 'in_progress' : updates.status
       };
-      return PhaseService.updatePhaseFromDTO(phaseId, convertedUpdates as any);
+      return phaseService.updatePhase(phaseId, convertedUpdates as any);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
@@ -216,7 +217,7 @@ export function usePhaseDetails(phaseId: string | undefined) {
       progress: number;
     }) => {
       if (!phaseId) throw new Error('Phase ID is required');
-      return PhaseService.updateTaskStatus(phaseId, stepId, taskId, status, progress);
+      return phaseService.updateTaskStatus(phaseId, stepId, taskId, status, progress);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
@@ -248,7 +249,7 @@ export function usePhaseDetails(phaseId: string | undefined) {
       newStep.id = crypto.randomUUID();
       
       const updatedSteps = [...phaseQuery.data.steps, newStep];
-      return PhaseService.updatePhaseFromDTO(phaseId, { steps: updatedSteps });
+      return phaseService.updatePhase(phaseId, { steps: updatedSteps });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
@@ -276,7 +277,7 @@ export function usePhaseDetails(phaseId: string | undefined) {
         step.id === stepId ? { ...step, ...updates } : step
       ) as any; // Cast to any to handle type differences
       
-      return PhaseService.updatePhaseFromDTO(phaseId, { steps: updatedSteps });
+      return phaseService.updatePhase(phaseId, { steps: updatedSteps });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
@@ -297,7 +298,7 @@ export function usePhaseDetails(phaseId: string | undefined) {
       if (!phaseId || !phaseQuery.data) throw new Error('Phase data is required');
       
       const updatedSteps = phaseQuery.data.steps.filter(step => step.id !== stepId);
-      return PhaseService.updatePhaseFromDTO(phaseId, { steps: updatedSteps });
+      return phaseService.updatePhase(phaseId, { steps: updatedSteps });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
@@ -332,7 +333,7 @@ export function usePhaseDetails(phaseId: string | undefined) {
           : step
       );
       
-      return PhaseService.updatePhaseFromDTO(phaseId, { steps: updatedSteps });
+      return phaseService.updatePhase(phaseId, { steps: updatedSteps });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
@@ -375,7 +376,7 @@ export function usePhaseDetails(phaseId: string | undefined) {
           : step
       ) as any; // Cast to any to handle type differences
       
-      return PhaseService.updatePhaseFromDTO(phaseId, { steps: updatedSteps });
+      return phaseService.updatePhase(phaseId, { steps: updatedSteps });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
@@ -401,7 +402,7 @@ export function usePhaseDetails(phaseId: string | undefined) {
           : step
       );
       
-      return PhaseService.updatePhaseFromDTO(phaseId, { steps: updatedSteps });
+      return phaseService.updatePhase(phaseId, { steps: updatedSteps });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });

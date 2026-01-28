@@ -39,3 +39,11 @@ export {
   TenderEstimateValidationDto,
   TenderEstimateComparisonDto
 } from './entities/TenderEstimateDTO';
+
+export {
+  NotificationDTO,
+  CreateNotificationRequestDTO,
+  UpdateNotificationRequestDTO,
+  NotificationListDTO,
+  NotificationStatsDTO
+} from './entities/NotificationDTO';

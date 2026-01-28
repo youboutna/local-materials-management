@@ -74,18 +74,30 @@ export class TenderEstimateService {
       // TODO: Implement business rules calculation when needed
 
       // 4. Repository Layer - Create entity
-      const estimateData: Omit<TenderEstimateEntity, 'id' | 'createdAt' | 'updatedAt'> = {
+      const estimateData = {
         tenderId: request.tender_id,
-        submittedBy: request.submitted_by,
-        status: 'draft' as const,
+        status: 'draft' as TenderEstimateStatus,
         currency: request.currency as CurrencyCode,
         estimateType: 'standard',
-        finalTotal: request.total_amount,
-        notes: request.notes || undefined,
-        displayName: `Estimate-${request.tender_id}`,
-        withStatus: () => null as any, // Method placeholder - will be implemented by entity
-        toPlainObject: () => ({}), // Method placeholder - will be implemented by entity
-        items: []
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        options: {
+          projectId: '',
+          submittedBy: request.submitted_by,
+          subtotal: 0,
+          taxAmount: 0,
+          taxRate: 0,
+          totalWithTax: request.total_amount,
+          finalTotal: request.total_amount,
+          totalMaterialsCost: 0,
+          totalLaborCost: 0,
+          totalEquipmentCost: 0,
+          overheadPercentage: 0,
+          overheadAmount: 0,
+          profitMarginPercentage: 0,
+          profitMarginAmount: 0,
+          items: []
+        }
       } as any;
 
       const createdEstimate = await this.tenderEstimateRepository.create(estimateData);

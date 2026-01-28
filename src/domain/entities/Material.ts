@@ -3,11 +3,14 @@
 
 export type MaterialCategory = 
   | 'construction' 
+  | 'building'
+  | 'pierre'
   | 'electrical' 
   | 'plumbing' 
   | 'finishing' 
   | 'equipment' 
   | 'safety' 
+  | 'tools'
   | 'other';
 
 export class Material {
@@ -313,13 +316,16 @@ export class Material {
 
   private validateCategory(category: MaterialCategory): MaterialCategory {
     const validCategories: MaterialCategory[] = [
-      'construction', 'electrical', 'plumbing', 'finishing', 'equipment', 'safety', 'other'
+      'construction', 'building', 'pierre', 'electrical', 'plumbing', 'finishing', 'equipment', 'safety', 'tools', 'other'
     ];
     
-    if (!validCategories.includes(category)) {
+    // Accept both lowercase and capitalized versions
+    const normalizedCategory = category.toLowerCase() as MaterialCategory;
+    
+    if (!validCategories.includes(normalizedCategory)) {
       throw new Error(`Invalid material category: ${category}`);
     }
-    return category;
+    return normalizedCategory;
   }
 
   private validateUnit(unit: string): string {
@@ -333,7 +339,7 @@ export class Material {
     if (price < 0) {
       throw new Error('Price per unit must be positive');
     }
-    if (price > 1000000) {
+    if (price > 10000000) {
       throw new Error('Price per unit seems too high');
     }
     return price;
@@ -343,7 +349,7 @@ export class Material {
     if (quantity < 0) {
       throw new Error('Available quantity must be positive');
     }
-    if (quantity > 1000000) {
+    if (quantity > 10000000) {
       throw new Error('Available quantity seems too high');
     }
     return quantity;

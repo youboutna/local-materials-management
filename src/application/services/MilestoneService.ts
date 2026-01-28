@@ -11,6 +11,17 @@ import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { 
+  CriticalPathDTO,
+  MilestoneDTO,
+  MilestoneFormDTO,
+  MilestoneProgressDTO,
+  MilestoneSummaryDTO,
+  MilestonePriority,
+  MilestoneType
+} from '@/types/milestone-dto';
+import { getMilestoneTemplates } from '@/config/referentials/milestones.referential';
+import { addDays, differenceInDays, format, parseISO } from 'date-fns';
 
 export interface Milestone {
   id: string;
@@ -945,4 +956,385 @@ export class MilestoneService {
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get milestone progress');
     }
   }
+
+  // ============= PM METRICS (EVM, SPI, CPI) =============
+
+  /**
+   * Get milestone progress with PM metrics
+   */
+  async getMilestoneProgressWithMetrics(projectId: string, phaseId?: string): Promise<MilestoneProgressDTO> {
+    try {
+      const milestones = await this.getProjectMilestones(projectId);
+      const milestoneDTOs = milestones.map(m => this.transformToMilestoneDTO(m));
+      
+      const today = new Date();
+      const completed = milestoneDTOs.filter(m => m.status === 'completed');
+      const pending = milestoneDTOs.filter(m => m.status === 'pending');
+      const delayed = milestoneDTOs.filter(m => m.status === 'delayed');
+      
+      // Simplified implementation - would need more sophisticated logic for real metrics
+      const totalWeight = milestoneDTOs.reduce((sum, m) => sum + (m.weight || 0.1), 0);
+      const completedWeight = completed.reduce((sum, m) => sum + (m.weight || 0.1), 0);
+      
+      // Get upcoming and overdue milestones
+      const upcomingMilestones = pending
+        .filter(m => {
+          const targetDate = new Date(m.target_date);
+          const daysUntil = differenceInDays(targetDate, today);
+          return daysUntil >= 0 && daysUntil <= 14;
+        })
+        .map(m => ({
+          id: m.id,
+          title: m.title,
+          target_date: m.target_date,
+          status: m.status,
+          type: m.type,
+          priority: m.priority,
+          weight: m.weight
+        }));
+
+      const overdueMilestones = pending
+        .filter(m => {
+          const targetDate = new Date(m.target_date);
+          return targetDate < today;
+        })
+        .map(m => ({
+          id: m.id,
+          title: m.title,
+          target_date: m.target_date,
+          status: m.status,
+          type: m.type,
+          priority: m.priority,
+          weight: m.weight
+        }));
+
+      const nextMilestone = pending.length > 0 ? {
+        id: pending[0].id,
+        title: pending[0].title,
+        target_date: pending[0].target_date,
+        status: pending[0].status,
+        type: pending[0].type,
+        priority: pending[0].priority,
+        weight: pending[0].weight
+      } : undefined;
+
+      return {
+        total_milestones: milestoneDTOs.length,
+        completed_milestones: completed.length,
+        delayed_milestones: delayed.length,
+        weighted_progress: totalWeight > 0 ? (completedWeight / totalWeight) * 100 : 0,
+        schedule_performance_index: 1.0, // Simplified - would need proper calculation
+        critical_path_status: delayed.length > 0 ? 'at_risk' : 'on_track',
+        critical_path_float_days: 0,
+        next_milestone: nextMilestone,
+        overdue_milestones: overdueMilestones,
+        upcoming_milestones: upcomingMilestones
+      };
+    } catch (error) {
+      console.error('MilestoneService.getMilestoneProgressWithMetrics failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get milestone progress metrics');
+    }
+  }
+
+  // ============= CRITICAL PATH ANALYSIS =============
+
+  /**
+   * Get critical path analysis
+   */
+  async getCriticalPath(projectId: string): Promise<CriticalPathDTO> {
+    try {
+      const milestones = await this.getProjectMilestones(projectId);
+      const milestoneDTOs = milestones.map(m => this.transformToMilestoneDTO(m));
+      
+      // Simplified critical path analysis
+      const criticalMilestones = milestoneDTOs.filter(m => m.priority === 'critical');
+      
+      return {
+        project_id: projectId,
+        critical_path_milestones: criticalMilestones.map(m => m.id),
+        total_duration_days: criticalMilestones.length > 0 ? 
+          differenceInDays(
+            new Date(criticalMilestones[criticalMilestones.length - 1].target_date),
+            new Date(criticalMilestones[0].target_date)
+          ) : 0,
+        estimated_end_date: criticalMilestones.length > 0 
+          ? criticalMilestones[criticalMilestones.length - 1].target_date 
+          : new Date().toISOString(),
+        near_critical_paths: []
+      };
+    } catch (error) {
+      console.error('MilestoneService.getCriticalPath failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get critical path');
+    }
+  }
+
+  // ============= SUMMARY REPORTS =============
+
+  /**
+   * Get project summary
+   */
+  async getProjectSummary(projectId: string): Promise<MilestoneSummaryDTO> {
+    try {
+      const milestones = await this.getProjectMilestones(projectId);
+      const milestoneDTOs = milestones.map(m => this.transformToMilestoneDTO(m));
+      const progress = await this.getMilestoneProgressWithMetrics(projectId);
+      const criticalPath = await this.getCriticalPath(projectId);
+      
+      const nextPending = milestoneDTOs.find(m => m.status === 'pending');
+      
+      return {
+        id: projectId,
+        title: `Project ${projectId} Summary`,
+        target_date: nextPending?.target_date || new Date().toISOString(),
+        status: progress.delayed_milestones > 0 ? 'delayed' : 'pending',
+        type: 'checkpoint',
+        priority: 'normal',
+        weight: 1,
+        is_critical: criticalPath.critical_path_milestones.length > 0,
+        float_days: 0,
+        percent_complete: progress.weighted_progress
+      };
+    } catch (error) {
+      console.error('MilestoneService.getProjectSummary failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get project summary');
+    }
+  }
+
+  // ============= ADDITIONAL METHODS FROM UNIFIED SERVICE =============
+
+  /**
+   * Get phase milestones (filtered by phase)
+   */
+  async getPhaseMilestones(projectId: string, phaseId: string): Promise<MilestoneDTO[]> {
+    try {
+      // For now, return project milestones filtered by phase if available
+      const milestones = await this.getProjectMilestones(projectId);
+      return milestones.map(m => this.transformToMilestoneDTO(m));
+    } catch (error) {
+      console.error('MilestoneService.getPhaseMilestones failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get phase milestones');
+    }
+  }
+
+  /**
+   * Toggle milestone completion
+   */
+  async toggleComplete(id: string): Promise<MilestoneDTO> {
+    try {
+      const milestone = await this.getMilestoneById(id);
+      if (!milestone) throw new AppError(ErrorCode.NOT_FOUND, 'Milestone not found');
+
+      const updated = await this.updateMilestone(id, { 
+        status: 'completed' as const, 
+        actual_completion_date: new Date().toISOString() 
+      });
+      
+      return this.transformToMilestoneDTO(updated);
+    } catch (error) {
+      console.error('MilestoneService.toggleComplete failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to toggle milestone completion');
+    }
+  }
+
+  // ============= TEMPLATE GENERATION =============
+
+  /**
+   * Generate milestones from referential template
+   */
+  async generateFromReferential(
+    projectId: string,
+    phaseId: string,
+    constructionPhase: string,
+    phaseStartDate: string
+  ): Promise<MilestoneDTO[]> {
+    try {
+      const templates = getMilestoneTemplates(constructionPhase);
+      
+      if (templates.length === 0) {
+        console.log(`No milestone templates for phase: ${constructionPhase}`);
+        return [];
+      }
+
+      const startDate = parseISO(phaseStartDate);
+      const milestones: MilestoneDTO[] = [];
+
+      for (const template of templates) {
+        const createData = {
+          project_id: projectId,
+          phase_id: phaseId,
+          title: template.name,
+          description: template.description,
+          target_date: format(addDays(startDate, template.relative_offset_days), 'yyyy-MM-dd'),
+          status: 'pending' as const,
+          progress: 0,
+          priority: this.transformPriorityFromForm(template.priority),
+          deliverables: template.deliverables || [],
+          dependencies: template.predecessor_ids || []
+        };
+
+        const milestone = await this.createMilestone(createData);
+        milestones.push({
+          ...this.transformToMilestoneDTO(milestone),
+          is_from_template: true
+        });
+      }
+
+      return milestones;
+    } catch (error) {
+      console.error('MilestoneService.generateFromReferential failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to generate milestones from referential');
+    }
+  }
+
+  /**
+   * Delete template milestones for a phase
+   */
+  async deleteTemplateMilestones(phaseId: string): Promise<void> {
+    try {
+      // Get all milestones for this phase and delete them
+      console.log(`Template milestones deletion for phase ${phaseId} - not fully implemented`);
+      // TODO: Implement actual deletion logic
+    } catch (error) {
+      console.error('MilestoneService.deleteTemplateMilestones failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete template milestones');
+    }
+  }
+
+  // ============= ENHANCED CRUD METHODS (RETURNING DTOS) =============
+
+  /**
+   * Get project milestones (returns DTOs)
+   */
+  async getProjectMilestonesDTO(projectId: string): Promise<MilestoneDTO[]> {
+    try {
+      const milestones = await this.getProjectMilestones(projectId);
+      return milestones.map(m => this.transformToMilestoneDTO(m));
+    } catch (error) {
+      console.error('MilestoneService.getProjectMilestonesDTO failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get project milestones');
+    }
+  }
+
+  /**
+   * Get milestone by ID (returns DTO)
+   */
+  async getMilestoneByIdDTO(id: string): Promise<MilestoneDTO | null> {
+    try {
+      const milestone = await this.getMilestoneById(id);
+      return milestone ? this.transformToMilestoneDTO(milestone) : null;
+    } catch (error) {
+      console.error('MilestoneService.getMilestoneByIdDTO failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get milestone by ID');
+    }
+  }
+
+  /**
+   * Create milestone (accepts MilestoneFormDTO, returns DTO)
+   */
+  async createMilestoneFromForm(projectId: string, data: MilestoneFormDTO): Promise<MilestoneDTO> {
+    try {
+      // Convert MilestoneFormDTO to CreateMilestoneRequestDto
+      const createData = {
+        project_id: projectId,
+        title: data.title,
+        description: data.description,
+        target_date: data.target_date,
+        status: 'pending' as const,
+        progress: 0,
+        priority: this.transformPriorityFromForm(data.priority),
+        deliverables: data.deliverables || [],
+        dependencies: data.dependencies || []
+      };
+      
+      const milestone = await this.createMilestone(createData);
+      return this.transformToMilestoneDTO(milestone);
+    } catch (error) {
+      console.error('MilestoneService.createMilestoneFromForm failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create milestone');
+    }
+  }
+
+  /**
+   * Update milestone (accepts Partial<MilestoneFormDTO>, returns DTO)
+   */
+  async updateMilestoneFromForm(id: string, data: Partial<MilestoneFormDTO>): Promise<MilestoneDTO> {
+    try {
+      // Convert MilestoneFormDTO to UpdateMilestoneRequestDto
+      const updateData = {
+        title: data.title,
+        description: data.description,
+        target_date: data.target_date,
+        priority: data.priority ? this.transformPriorityFromForm(data.priority) : undefined,
+        deliverables: data.deliverables,
+        dependencies: data.dependencies
+      };
+      
+      const milestone = await this.updateMilestone(id, updateData);
+      return this.transformToMilestoneDTO(milestone);
+    } catch (error) {
+      console.error('MilestoneService.updateMilestoneFromForm failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update milestone');
+    }
+  }
+
+  // ============= TRANSFORMATION METHODS =============
+
+  /**
+   * Transform Milestone to MilestoneDTO (for UI consumption)
+   */
+  private transformToMilestoneDTO(milestone: Milestone): MilestoneDTO {
+    return {
+      id: milestone.id,
+      project_id: milestone.project_id,
+      title: milestone.title,
+      description: milestone.description,
+      target_date: milestone.target_date,
+      completed_date: milestone.actual_completion_date,
+      status: milestone.status === 'cancelled' ? 'delayed' : milestone.status,
+      type: 'checkpoint' as MilestoneType,
+      priority: this.transformPriority(milestone.priority),
+      weight: 1,
+      is_from_template: false,
+      dependencies: milestone.dependencies,
+      deliverables: milestone.deliverables,
+      created_at: milestone.created_at,
+      updated_at: milestone.updated_at
+    };
+  }
+
+  /**
+   * Transform priority from Milestone to MilestoneDTO
+   */
+  private transformPriority(priority: 'low' | 'medium' | 'high' | 'critical'): MilestonePriority {
+    switch (priority) {
+      case 'critical': return 'critical' as MilestonePriority;
+      case 'high': return 'high' as MilestonePriority;
+      case 'medium': return 'normal' as MilestonePriority;
+      case 'low': return 'low' as MilestonePriority;
+      default: return 'normal' as MilestonePriority;
+    }
+  }
+
+  /**
+   * Transform priority from MilestoneFormDTO to Milestone
+   */
+  private transformPriorityFromForm(priority: MilestonePriority): 'low' | 'medium' | 'high' | 'critical' {
+    switch (priority) {
+      case 'critical': return 'critical';
+      case 'high': return 'high';
+      case 'normal': return 'medium';
+      case 'low': return 'low';
+      default: return 'medium';
+    }
+  }
+}
+
+// Factory function for singleton instance (replacing UnifiedMilestoneService)
+let milestoneServiceInstance: MilestoneService | null = null;
+
+export function getMilestoneService(): MilestoneService {
+  if (!milestoneServiceInstance) {
+    milestoneServiceInstance = new MilestoneService();
+  }
+  return milestoneServiceInstance;
 }

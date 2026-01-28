@@ -17,6 +17,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DEV_MODE } from "@/config/constants";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useDashboardHex, useProjectsHex, useAuthUserHex, useDashboardAccessHex } from "@/hooks/hexagonal";
+import { useCurrentUserRoles } from "@/hooks/useUserRoles";
+import { useAuth } from "@/contexts/use-auth";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import {
@@ -36,17 +38,22 @@ import React, { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 
+
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   
-  // Use hexagonal architecture hooks
-  const { user } = useAuthUserHex();
+  // Use the original AuthContext
+  const { user, session } = useAuth();
+  const { userRoles, hasAnyRole, hasRole } = useCurrentUserRoles();
+  
+  // Check if user has access to dashboard (admin, director, or project_manager)
+  const hasAccess = hasAnyRole(['admin', 'director', 'project_manager']);
+  
+  // Use hexagonal architecture hooks for data
   const { projects: hexProjects } = useProjectsHex();
   const { stats: dashboardStats, loading: statsLoading } = useDashboardHex();
   
-  // Use hexagonal hook for access control
-  const { hasAccess, userRoles, loading, allowedRoles } = useDashboardAccessHex(user?.id);
 
   // Map domain entities to projects for compatibility with ProjectData
   const projects = useMemo(() => 
@@ -61,7 +68,10 @@ const Dashboard: React.FC = () => {
       teamSize: p.teamSize || 0,
       startDate: p.startDate ? new Date(p.startDate).toISOString() : new Date().toISOString(),
       endDate: p.endDate ? new Date(p.endDate).toISOString() : new Date().toISOString(),
-      coordinates: p.coordinates,
+      coordinates: p.coordinates ? {
+        latitude: p.coordinates.latitude || 0,
+        longitude: p.coordinates.longitude || 0
+      } : undefined,
     }))
   , [hexProjects]);
 
@@ -89,13 +99,13 @@ const Dashboard: React.FC = () => {
     };
   }, [dashboardStats]);
 
-  if (loading || statsLoading) {
+  if (statsLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">
-            {loading ? t("dashboard.checking_permissions") : t("dashboard.loading_stats")}
+            {t("dashboard.loading_stats")}
           </p>
         </div>
       </div>
@@ -123,7 +133,7 @@ const Dashboard: React.FC = () => {
               </p>
               <p className="text-sm text-red-600">
                 <strong>{t("dashboard.required_roles_label")}:</strong>{" "}
-                {allowedRoles.join(", ")}
+                admin, director, project_manager
               </p>
             </div>
             <Button
@@ -160,12 +170,13 @@ const Dashboard: React.FC = () => {
   );
 
   return (
-    <AppLayout
-      showBreadcrumb
-      pageTitle={t("dashboard.management_title")}
-      pageDescription={t("dashboard.management_subtitle")}
-      actions={dashboardActions}
-    >
+    <>
+      <AppLayout
+        showBreadcrumb
+        pageTitle={t("dashboard.management_title")}
+        pageDescription={t("dashboard.management_subtitle")}
+        actions={dashboardActions}
+      >
       <div className="space-y-6">
         {/* Role Badges */}
         <div className="flex items-center gap-2">
@@ -475,7 +486,8 @@ const Dashboard: React.FC = () => {
           </Tabs>
         </motion.div>
       </div>
-    </AppLayout>
+      </AppLayout>
+    </>
   );
 };
 

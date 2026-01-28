@@ -39,6 +39,7 @@ export const RepositoryFactory = {
   getNotificationRepository: InfraRepositoryFactory.getNotificationRepository,
   getInspectionPermissionRepository: InfraRepositoryFactory.getInspectionPermissionRepository,
   getTenderDocumentRepository: InfraRepositoryFactory.getTenderDocumentRepository,
+  getMilestoneRepository: InfraRepositoryFactory.getMilestoneRepository,
   
   // Ajout des méthodes manquantes avec des implémentations temporaires
   getPerformanceMonitoringRepository: () => {
