@@ -164,7 +164,7 @@ export class BudgetCalculationService {
       const monthlySpend = this.calculateAverageSpend(paidPayments, period);
       
       // Generate projections
-      const projectedCosts = [];
+      const projectedCosts: Array<{ period: string; projectedCost: number; actualCost?: number; variance?: number }> = [];
       const now = new Date();
       let totalProjectedCost = 0;
 
@@ -177,7 +177,7 @@ export class BudgetCalculationService {
         projectedCosts.push({
           period: projectionDate.toISOString().split('T')[0],
           projectedCost,
-          actualCost: undefined, // Will be filled when actual data is available
+          actualCost: undefined,
           variance: undefined
         });
       }
