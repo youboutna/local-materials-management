@@ -67,7 +67,7 @@ export interface SearchParamsDTO {
   limit?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
-  filters?: Record<string, any>;
+  filters?: Record<string, string | number | boolean>;
 }
 
 // Common file/document
@@ -95,10 +95,10 @@ export interface ValidationRule {
   required?: boolean;
   minLength?: number;
   maxLength?: number;
-  pattern?: RegExp;
   min?: number;
   max?: number;
-  custom?: (value: any) => string | null;
+  pattern?: RegExp;
+  custom?: (value: string | number | boolean) => string | null;
 }
 
 export interface ValidationResult {

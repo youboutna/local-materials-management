@@ -63,6 +63,31 @@ export class MaterialService {
     private materialRepository: IMaterialRepository = RepositoryFactory.getMaterialRepository()
   ) {}
   /**
+   * Get materials by phase ID
+   */
+  async getMaterialsByPhase(phaseId: string): Promise<{ data: any[] }> {
+    try {
+      // For now, return mock data as the repository doesn't have this method yet
+      // TODO: Implement proper phase-based material retrieval
+      console.warn('MaterialService.getMaterialsByPhase: Using mock data');
+      
+      return {
+        data: [
+          {
+            id: 'mock-material-1',
+            material_id: 'material-1',
+            quantity: 100,
+            phase_id: phaseId
+          }
+        ]
+      };
+    } catch (error) {
+      console.error('MaterialService.getMaterialsByPhase failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get materials by phase');
+    }
+  }
+
+  /**
    * Get all materials
    */
   async getAllMaterials(): Promise<MaterialDTO[]> {
@@ -172,12 +197,40 @@ export class MaterialService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Available quantity must be non-negative');
       }
 
-      // Create material through repository
-      await this.materialRepository.create(materialData);
+      // Generate ID first
+      const createdId = `material_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
-      // Get the created material - use a temporary ID for now
-      const tempId = `temp_${Date.now()}`;
-      const createdMaterial = await this.materialRepository.findById(tempId) || (materialData as unknown as Record<string, unknown>);
+      // Create Material entity from DTO
+      const materialEntity = new Material(
+        createdId,
+        materialData.name,
+        materialData.description || '',
+        materialData.category,
+        materialData.unit,
+        materialData.pricePerUnit,
+        materialData.availableQuantity,
+        null, // sku
+        null, // ean
+        null, // gtin
+        null, // asin
+        null, // image
+        null, // coordinates
+        materialData.workspaceId || null,
+        new Date().toISOString(),
+        new Date().toISOString(),
+        null, // originLocation
+        null, // adresse
+        null, // coordinatesLatitude
+        null, // coordinatesLongitude
+        null, // forme
+        null  // localisation
+      );
+
+      // Create material through repository
+      await this.materialRepository.save(materialEntity);
+      
+      // Return the created material
+      const createdMaterial = { ...materialEntity, id: createdId };
 
       return this.mapToDTO(createdMaterial);
     } catch (error) {

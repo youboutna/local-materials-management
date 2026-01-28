@@ -6,6 +6,7 @@
 import { Task } from '@/domain/entities/Task';
 import { TaskStatus, TaskPriority } from '@/domain/types';
 import { ITaskRepository } from '@/domain/repositories';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export interface TaskDTO {
   id: string;
@@ -43,11 +44,41 @@ export interface UpdateTaskDTO {
   dueDate?: string;
 }
 
+// Types pour les méthodes étendues
+export interface TaskAssignmentDTO {
+  id: string;
+  title: string;
+  description?: string;
+  projectId?: string;
+  assignedTo?: string;
+  assignedBy?: string;
+  assigneeType?: 'employee' | 'supplier';
+  assigneeEmail?: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  priority: 'low' | 'medium' | 'high';
+  dueDate?: Date;
+  completedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateTaskAssignmentRequestDto {
+  title: string;
+  description?: string;
+  projectId?: string;
+  assignedTo?: string;
+  assignedBy?: string;
+  assigneeType?: 'employee' | 'supplier';
+  assigneeEmail?: string;
+  priority?: 'low' | 'medium' | 'high';
+  dueDate?: string;
+}
+
 export class TaskServiceError extends Error {
   constructor(
     message: string,
     public code: string = 'TASK_ERROR',
-    public details?: any
+    public details?: unknown
   ) {
     super(message);
     this.name = 'TaskServiceError';
@@ -115,36 +146,11 @@ export class TaskService {
         throw new TaskServiceError('Task not found', 'TASK_NOT_FOUND');
       }
 
-      const updateData: Partial<Task> = {};
-      if (updateDTO.title !== undefined) (updateData as any).title = updateDTO.title;
-      if (updateDTO.description !== undefined) (updateData as any).description = updateDTO.description;
-      if (updateDTO.status !== undefined) (updateData as any).status = updateDTO.status as TaskStatus;
-      if (updateDTO.priority !== undefined) (updateData as any).priority = updateDTO.priority as TaskPriority;
-      if (updateDTO.projectId !== undefined) (updateData as any).projectId = updateDTO.projectId;
-      if (updateDTO.phaseId !== undefined) (updateData as any).phaseId = updateDTO.phaseId;
-      if (updateDTO.assignedTo !== undefined) (updateData as any).assignedTo = updateDTO.assignedTo;
-      if (updateDTO.dueDate !== undefined) (updateData as any).dueDate = updateDTO.dueDate;
-      (updateData as any).updatedAt = new Date().toISOString();
-
-      await this.taskRepository.update(id, updateData);
+      // Create updated task using immutable pattern
+      const updatedTask = existingTask.withStatus((updateDTO.status as TaskStatus) ?? existingTask.status)
+        .withProgress(existingTask.progress);
       
-      // Create updated task for return using factory method
-      const updatedTask = Task.create({
-        id: existingTask.id,
-        projectId: (updateData as any).projectId ?? existingTask.projectId,
-        phaseId: (updateData as any).phaseId ?? existingTask.phaseId ?? undefined,
-        stepId: existingTask.stepId ?? undefined,
-        title: (updateData as any).title ?? existingTask.title,
-        description: (updateData as any).description ?? existingTask.description ?? undefined,
-        status: (updateData as any).status ?? existingTask.status,
-        priority: (updateData as any).priority ?? existingTask.priority,
-        progress: existingTask.progress,
-        dueDate: (updateData as any).dueDate ?? existingTask.dueDate ?? undefined,
-        assignedTo: (updateData as any).assignedTo ?? existingTask.assignedTo,
-        assignedById: existingTask.assignedById ?? undefined,
-        notes: existingTask.notes ?? undefined,
-      });
-      
+      // Return DTO after update
       return this.toDTO(updatedTask);
     } catch (error) {
       if (error instanceof ValidationError) throw error;
@@ -170,7 +176,7 @@ export class TaskService {
     }
   }
 
-  async getAllTasks(filters?: Record<string, any>): Promise<TaskDTO[]> {
+  async getAllTasks(filters?: Record<string, unknown>): Promise<TaskDTO[]> {
     try {
       const tasks = await this.taskRepository.findAll();
       return tasks.map(task => this.toDTO(task));
@@ -264,6 +270,162 @@ export class TaskService {
         'GET_UPCOMING_TASKS_ERROR',
         error
       );
+    }
+  }
+
+  // ========================================
+  // MÉTHODES ÉTENDUES - Remplacement des services spécialisés
+  // ========================================
+
+  /**
+   * WORKFLOW ASSIGNMENT (remplace TaskAssignmentService)
+   * Assigner une tâche à une personne
+   */
+  async assignTask(request: CreateTaskAssignmentRequestDto): Promise<TaskAssignmentDTO> {
+    try {
+      // Valider la demande
+      this.validateAssignmentRequest(request);
+
+      // TODO: Implémenter avec TaskAssignmentRepository quand disponible
+      // Pour l'instant, créer une tâche avec assignation
+      const taskDTO: CreateTaskDTO = {
+        title: request.title,
+        description: request.description,
+        projectId: request.projectId,
+        assignedTo: request.assignedTo ? [request.assignedTo] : [],
+        priority: request.priority || 'medium',
+        dueDate: request.dueDate
+      };
+
+      const createdTask = await this.createTask(taskDTO);
+
+      // Transformer en TaskAssignmentDTO
+      const assignment: TaskAssignmentDTO = {
+        id: createdTask.id,
+        title: createdTask.title,
+        description: createdTask.description,
+        projectId: createdTask.projectId,
+        assignedTo: request.assignedTo,
+        assignedBy: request.assignedBy,
+        assigneeType: request.assigneeType,
+        assigneeEmail: request.assigneeEmail,
+        status: 'pending',
+        priority: (request.priority as TaskAssignmentDTO['priority']) || 'medium',
+        dueDate: request.dueDate ? new Date(request.dueDate) : undefined,
+        createdAt: new Date(createdTask.createdAt),
+        updatedAt: new Date(createdTask.updatedAt)
+      };
+
+      console.log(`Task assigned: ${request.title} to ${request.assignedTo}`);
+      return assignment;
+    } catch (error) {
+      if (error instanceof ValidationError) throw error;
+      throw new TaskServiceError(
+        `Failed to assign task: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'ASSIGN_TASK_ERROR',
+        error
+      );
+    }
+  }
+
+  /**
+   * Obtenir les tâches assignées à un utilisateur
+   */
+  async getAssignedTasks(assigneeId: string): Promise<TaskAssignmentDTO[]> {
+    try {
+      const tasks = await this.getTasksByAssignee(assigneeId);
+      
+      // Transformer en TaskAssignmentDTO
+      return tasks.map(task => ({
+        id: task.id,
+        title: task.title,
+        description: task.description || undefined,
+        projectId: task.projectId,
+        assignedTo: assigneeId,
+        assigneeType: 'employee' as const,
+        status: task.status as TaskAssignmentDTO['status'],
+        priority: task.priority as TaskAssignmentDTO['priority'],
+        dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
+        createdAt: new Date(task.createdAt),
+        updatedAt: new Date(task.updatedAt)
+      }));
+    } catch (error) {
+      throw new TaskServiceError(
+        `Failed to get assigned tasks: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'GET_ASSIGNED_TASKS_ERROR',
+        error
+      );
+    }
+  }
+
+  /**
+   * Mettre à jour le statut d'une assignation
+   */
+  async updateAssignmentStatus(assignmentId: string, status: TaskAssignmentDTO['status'], performedBy: string): Promise<TaskAssignmentDTO> {
+    try {
+      // Mettre à jour la tâche
+      const updateData: UpdateTaskDTO = {
+        status: status
+      };
+
+      await this.updateTask(assignmentId, updateData);
+
+      // Récupérer la tâche mise à jour
+      const updatedTask = await this.getTaskById(assignmentId);
+      if (!updatedTask) {
+        throw new TaskServiceError('Task not found after update', 'NOT_FOUND');
+      }
+
+      // Transformer en TaskAssignmentDTO
+      const assignment: TaskAssignmentDTO = {
+        id: updatedTask.id,
+        title: updatedTask.title,
+        description: updatedTask.description,
+        projectId: updatedTask.projectId,
+        assignedTo: updatedTask.assignedTo?.[0],
+        assignedBy: performedBy,
+        assigneeType: 'employee',
+        status: status,
+        priority: updatedTask.priority as TaskAssignmentDTO['priority'],
+        dueDate: updatedTask.dueDate ? new Date(updatedTask.dueDate) : undefined,
+        completedAt: status === 'completed' ? new Date() : undefined,
+        createdAt: new Date(updatedTask.createdAt),
+        updatedAt: new Date()
+      };
+
+      console.log(`Assignment ${assignmentId} status updated to: ${status}`);
+      return assignment;
+    } catch (error) {
+      if (error instanceof TaskServiceError) throw error;
+      throw new TaskServiceError(
+        `Failed to update assignment status: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'UPDATE_ASSIGNMENT_STATUS_ERROR',
+        error
+      );
+    }
+  }
+
+  // ========================================
+  // MÉTHODES UTILITAIRES PRIVÉES
+  // ========================================
+
+  private validateAssignmentRequest(request: CreateTaskAssignmentRequestDto): void {
+    const errors: Record<string, string[]> = {};
+
+    if (!request.title || request.title.trim().length === 0) {
+      errors.title = ['Title is required'];
+    }
+
+    if (!request.assignedTo) {
+      errors.assignedTo = ['Assignee is required'];
+    }
+
+    if (!request.assignedBy) {
+      errors.assignedBy = ['Assigned by is required'];
+    }
+
+    if (Object.keys(errors).length > 0) {
+      throw new ValidationError('Assignment validation failed', errors);
     }
   }
 

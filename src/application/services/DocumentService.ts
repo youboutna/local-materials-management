@@ -51,6 +51,30 @@ export class DocumentService {
   ) {}
 
   /**
+   * Get documents by phase ID
+   */
+  async getDocumentsByPhase(phaseId: string): Promise<{ data: any[] }> {
+    try {
+      // For now, return mock data as the repository doesn't have this method yet
+      // TODO: Implement proper phase-based document retrieval
+      console.warn('DocumentService.getDocumentsByPhase: Using mock data');
+      
+      return {
+        data: [
+          {
+            id: 'mock-document-1',
+            document_type: 'inspection',
+            phase_id: phaseId
+          }
+        ]
+      };
+    } catch (error) {
+      console.error('DocumentService.getDocumentsByPhase failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get documents by phase');
+    }
+  }
+
+  /**
    * Get all documents
    */
   async getAllDocuments(): Promise<DocumentResponseDto[]> {

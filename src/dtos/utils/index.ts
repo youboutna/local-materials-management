@@ -11,10 +11,10 @@ export interface ValidationRule {
   required?: boolean;
   minLength?: number;
   maxLength?: number;
-  pattern?: RegExp;
   min?: number;
   max?: number;
-  custom?: (value: any) => string | null;
+  pattern?: RegExp;
+  custom?: (value: string | number | boolean) => string | null;
 }
 
 export interface ValidationResult {
@@ -23,7 +23,7 @@ export interface ValidationResult {
   fieldErrors?: Record<string, string[]>;
 }
 
-export const validateRequired = (value: any, fieldName: string): string | null => {
+export const validateRequired = (value: string | number | boolean, fieldName: string): string | null => {
   if (!value || (typeof value === 'string' && value.trim() === '')) {
     return `${fieldName} is required`;
   }
@@ -89,7 +89,7 @@ export const getPaginationRange = (page: number, limit: number) => {
 };
 
 // Search utilities
-export const createSearchParams = (params: Record<string, any>): string => {
+export const createSearchParams = (params: Record<string, string | number | boolean>): string => {
   const searchParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {

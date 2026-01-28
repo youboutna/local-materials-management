@@ -22,8 +22,8 @@ export interface EntityToDTOMapper<Entity, DTO> {
   fromEntityToDTO(entity: Entity): DTO;
   fromDtosToAdapter(dtos: DTO[]): DTO[];
   toResponseDto(entity: Entity): DTO;
-  toRequestDto(dto: any): DTO;
-  toUpdateDto(dto: any): Partial<DTO>;
+  toRequestDto(dto: DTO): DTO;
+  toUpdateDto(dto: DTO): Partial<DTO>;
   validate(dto: DTO): ValidationResult;
 }
 
@@ -79,7 +79,7 @@ export interface PaginatedResult<T> {
 
 export interface SearchParams {
   query?: string;
-  filters?: Record<string, any>;
+  filters?: Record<string, string | number | boolean>;
   dateRange?: {
     start: string;
     end: string;
@@ -94,7 +94,7 @@ export interface ExportParams {
     start: string;
     end: string;
   };
-  filters?: Record<string, any>;
+  filters?: Record<string, string | number | boolean>;
 }
 
 // Enhanced DTOs for BTP calculations and business logic
@@ -405,7 +405,12 @@ export interface PaymentDTO extends BaseEntityDTO {
   invoiceId: string;
   complianceScore: number;
   lastComplianceCheck: string;
-  paymentWorkflowConfig: any;
+  paymentWorkflowConfig: {
+    enabled: boolean;
+    frequency: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+    approvalRequired: boolean;
+    autoApproveThreshold: number;
+  };
   paymentFrequency: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
   initialAdvance: number;
   retentionPercentage: number;
@@ -676,7 +681,13 @@ export interface ProjectDetailDTO extends ProjectDTO {
     issues: string[];
     created_at: string;
     updated_at: string;
-    projects: any;
+    projects: Array<{
+      id: string;
+      name: string;
+      status: string;
+      progress: number;
+      budget?: number;
+    }>;
   }>;
   payments: Array<{
     id: string;
@@ -862,7 +873,13 @@ export interface WorkspaceDTO {
   status: string;
   contact_manager?: string;
   contact_phone?: string;
-  facilities?: Record<string, any>;
+  facilities?: {
+    offices?: number;
+    warehouses?: number;
+    laboratories?: number;
+    equipment?: string[];
+    certifications?: string[];
+  };
   created_at: string;
   updated_at: string;
 }
@@ -873,7 +890,13 @@ export interface CreateWorkspaceRequestDto {
   status?: string;
   contact_manager?: string;
   contact_phone?: string;
-  facilities?: Record<string, any>;
+  facilities?: {
+    offices?: number;
+    warehouses?: number;
+    laboratories?: number;
+    equipment?: string[];
+    certifications?: string[];
+  };
 }
 
 export interface UpdateWorkspaceRequestDto {
@@ -882,7 +905,13 @@ export interface UpdateWorkspaceRequestDto {
   status?: string;
   contact_manager?: string;
   contact_phone?: string;
-  facilities?: Record<string, any>;
+  facilities?: {
+    offices?: number;
+    warehouses?: number;
+    laboratories?: number;
+    equipment?: string[];
+    certifications?: string[];
+  };
 }
 
 // Project Alert DTOs
@@ -902,8 +931,17 @@ export interface ProjectAlertDTO {
   resolved_at?: string;
   resolved_by?: string;
   assigned_actions?: string[];
-  action_proofs?: Record<string, any>;
-  metadata?: Record<string, any>;
+  action_proofs?: {
+    documentId?: string;
+    timestamp?: string;
+    userId?: string;
+    notes?: string;
+  };
+  metadata?: {
+    priority?: 'low' | 'medium' | 'high';
+    source?: string;
+    category?: string;
+  };
   created_at: string;
   updated_at: string;
 }
@@ -917,7 +955,11 @@ export interface CreateProjectAlertRequestDto {
   source?: string;
   escalation_level?: number;
   assigned_actions?: string[];
-  metadata?: Record<string, any>;
+  metadata?: {
+    priority?: 'low' | 'medium' | 'high';
+    source?: string;
+    category?: string;
+  };
 }
 
 export interface UpdateProjectAlertRequestDto {
@@ -930,8 +972,17 @@ export interface UpdateProjectAlertRequestDto {
   acknowledged?: boolean;
   resolved?: boolean;
   assigned_actions?: string[];
-  action_proofs?: Record<string, any>;
-  metadata?: Record<string, any>;
+  action_proofs?: {
+    documentId?: string;
+    timestamp?: string;
+    userId?: string;
+    notes?: string;
+  };
+  metadata?: {
+    priority?: 'low' | 'medium' | 'high';
+    source?: string;
+    category?: string;
+  };
 }
 
 // Action DTOs

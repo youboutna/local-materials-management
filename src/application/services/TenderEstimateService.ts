@@ -4,225 +4,156 @@
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { ITenderEstimateRepository } from '@/domain/repositories/ITenderEstimateRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { TenderEstimate, TenderEstimateItem } from '@/domain/entities/PerformanceMonitoring';
-
-// For now, using any repository as placeholder since tender estimate repository doesn't exist
-import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
-
-export interface TenderEstimateDTO {
-  id: string;
-  tender_id: string;
-  project_id?: string | null;
-  estimate_type: string;
-  total_materials_cost: number | null;
-  total_labor_cost: number | null;
-  total_equipment_cost: number | null;
-  subtotal: number | null;
-  tax_rate: number | null;
-  tax_amount: number | null;
-  total_with_tax: number | null;
-  overhead_percentage: number | null;
-  overhead_amount: number | null;
-  profit_margin_percentage: number | null;
-  profit_margin_amount: number | null;
-  final_total: number | null;
-  currency: string | null;
-  status: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface TenderEstimateItemDTO {
-  id: string;
-  estimate_id: string;
-  material_id?: string | null;
-  quantity: number;
-  unit_price: number;
-  total_price: number;
-  description: string | null;
-  item_type: string | null;
-  created_at?: string;
-  updated_at?: string;
-}
-
-// Service DTOs for data exchange
-export interface CreateEstimateRequestDto {
-  tender_id: string;
-  project_id?: string | null;
-  estimate_type: string;
-  total_materials_cost?: number | null;
-  total_labor_cost?: number | null;
-  total_equipment_cost?: number | null;
-  subtotal?: number | null;
-  tax_rate?: number | null;
-  tax_amount?: number | null;
-  total_with_tax?: number | null;
-  overhead_percentage?: number | null;
-  overhead_amount?: number | null;
-  profit_margin_percentage?: number | null;
-  profit_margin_amount?: number | null;
-  final_total?: number | null;
-  currency?: string | null;
-  status?: string;
-}
-
-export interface GetEstimatesByTenderIdRequestDto {
-  tenderId: string;
-}
-
-export interface GetEstimateByIdRequestDto {
-  id: string;
-}
-
-export interface UpdateEstimateRequestDto {
-  id: string;
-  updates: Partial<CreateEstimateRequestDto>;
-}
-
-export interface DeleteEstimateRequestDto {
-  id: string;
-}
-
-export interface CreateEstimateItemRequestDto {
-  estimate_id: string;
-  material_id?: string | null;
-  quantity: number;
-  unit_price: number;
-  total_price: number;
-  description?: string | null;
-  item_type?: string | null;
-}
-
-export interface GetEstimateItemsRequestDto {
-  estimateId: string;
-}
-
-export interface UpdateEstimateItemRequestDto {
-  id: string;
-  updates: Partial<CreateEstimateItemRequestDto>;
-}
-
-export interface DeleteEstimateItemRequestDto {
-  id: string;
-}
-
-export interface GetMyEstimatesRequestDto {
-  userId: string;
-}
-
-export interface GetEstimatesByProjectIdRequestDto {
-  projectId: string;
-}
-
-export interface GetEstimateStatsRequestDto {
-  tenderId: string;
-}
-
-export interface CalculateEstimateTotalsRequestDto {
-  estimateId: string;
-}
-
-export interface EstimateStatsDto {
-  totalEstimates: number;
-  totalAmount: number;
-  averageAmount: number;
-  byStatus: Record<string, number>;
-}
-
-export interface EstimateTotalsDto {
-  subtotal: number;
-  taxAmount: number;
-  totalWithTax: number;
-  overheadAmount: number;
-  profitMarginAmount: number;
-  finalTotal: number;
-}
+import { TenderEstimateTransformer } from '@/dtos/transforms/TenderEstimateTransformer';
+import { TenderEstimateValidation } from '@/dtos/utils/TenderEstimateValidation';
+import { TenderEstimateItemTransformer } from '@/dtos/transforms/TenderEstimateItemTransformer';
+import { TenderEstimate, TenderEstimateStatus, CurrencyCode } from '@/domain/entities/TenderEstimate';
+import { TenderEstimateItem } from '@/domain/entities/TenderEstimateItem';
+import { TenderEstimate as TenderEstimateEntity, TenderEstimateItem as TenderEstimateItemEntity } from '@/domain/repositories/ITenderEstimateRepository';
+import {
+  TenderEstimateDTO,
+  TenderEstimateItemDTO,
+  CreateTenderEstimateRequestDto,
+  CreateTenderEstimateItemRequestDto,
+  UpdateTenderEstimateRequestDto,
+  UpdateTenderEstimateItemRequestDto,
+  GetTenderEstimatesRequestDto,
+  GetTenderEstimateByIdRequestDto,
+  GetTenderEstimateItemsRequestDto,
+  GetMyEstimatesRequestDto,
+  GetEstimatesByProjectIdRequestDto,
+  GetEstimateStatsRequestDto,
+  CalculateEstimateTotalsRequestDto,
+  TenderEstimateStatsDto,
+  EstimateStatsDto,
+  EstimateTotalsDto,
+  TenderEstimateValidationDto,
+  TenderEstimateComparisonDto
+} from '@/dtos/entities/TenderEstimateDTO';
 
 export class TenderEstimateService {
-  constructor(
-    private repository: IProjectRepository = RepositoryFactory.getProjectRepository() // Using project repository as placeholder
-  ) {}
+  private tenderEstimateRepository: ITenderEstimateRepository;
+
+  constructor() {
+    this.tenderEstimateRepository = RepositoryFactory.getTenderEstimateRepository();
+  }
+
+  /**
+   * Transform entity to DTO
+   */
+  private transformEntityToDTO(entity: TenderEstimate): TenderEstimateDTO {
+    return TenderEstimateTransformer.toTenderEstimateDTO(entity);
+  }
+
   /**
    * Create a new tender estimate
+   * Repository + Validation + Transformer + Business Logic
    */
-  async createEstimate(request: CreateEstimateRequestDto): Promise<TenderEstimateDTO> {
+  async createTenderEstimate(request: CreateTenderEstimateRequestDto): Promise<TenderEstimateDTO> {
     try {
-      if (!request.tender_id || !request.estimate_type) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender ID and estimate type are required');
+      // 1. Validation Layer
+      TenderEstimateValidation.validateCreateTenderEstimateRequest(request);
+      TenderEstimateValidation.validateTenderId(request.tender_id);
+      TenderEstimateValidation.validateCurrencyCode(request.currency);
+
+      // 2. Business Logic - Check for duplicates
+      const existingEstimates = await this.tenderEstimateRepository.findByTenderId(request.tender_id);
+      if (existingEstimates.length > 0) {
+        const hasDuplicate = existingEstimates.some(estimate => 
+          estimate.submittedBy === request.submitted_by && 
+          estimate.status !== 'rejected'
+        );
+        if (hasDuplicate) {
+          throw new AppError(ErrorCode.VALIDATION_ERROR, 'An estimate from this submitter already exists for this tender');
+        }
       }
 
-      // For now, simulate creation as tender estimate repository is not available
-      // TODO: Implement proper tender estimate creation when repository is available
-      console.warn('TenderEstimateService.createEstimate: Tender estimate repository not available');
-      
-      const id = `estimate_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const now = new Date().toISOString();
-      
-      const newEstimate: TenderEstimateDTO = {
-        id,
-        tender_id: request.tender_id,
-        project_id: request.project_id || null,
-        estimate_type: request.estimate_type,
-        total_materials_cost: request.total_materials_cost || null,
-        total_labor_cost: request.total_labor_cost || null,
-        total_equipment_cost: request.total_equipment_cost || null,
-        subtotal: request.subtotal || null,
-        tax_rate: request.tax_rate || null,
-        tax_amount: request.tax_amount || null,
-        total_with_tax: request.total_with_tax || null,
-        overhead_percentage: request.overhead_percentage || null,
-        overhead_amount: request.overhead_amount || null,
-        profit_margin_percentage: request.profit_margin_percentage || null,
-        profit_margin_amount: request.profit_margin_amount || null,
-        final_total: request.final_total || null,
-        currency: request.currency || 'MRU',
-        status: request.status || 'draft',
-        created_at: now,
-        updated_at: now
-      };
+      // 3. Business Logic - Calculate business rules
+      // TODO: Implement business rules calculation when needed
 
-      return newEstimate;
+      // 4. Repository Layer - Create entity
+      const estimateData: Omit<TenderEstimateEntity, 'id' | 'createdAt' | 'updatedAt'> = {
+        tenderId: request.tender_id,
+        submittedBy: request.submitted_by,
+        status: 'draft' as const,
+        currency: request.currency as CurrencyCode,
+        estimateType: 'standard',
+        finalTotal: request.total_amount,
+        notes: request.notes || undefined,
+        displayName: `Estimate-${request.tender_id}`,
+        withStatus: () => null as any, // Method placeholder - will be implemented by entity
+        toPlainObject: () => ({}), // Method placeholder - will be implemented by entity
+        items: []
+      } as any;
+
+      const createdEstimate = await this.tenderEstimateRepository.create(estimateData);
+
+      // 5. Create items if provided
+      if (request.items && request.items.length > 0) {
+        for (const itemRequest of request.items) {
+          await this.createTenderEstimateItem({
+            estimate_id: createdEstimate.id,
+            item_code: itemRequest.item_code,
+            description: itemRequest.description,
+            unit: itemRequest.unit,
+            quantity: itemRequest.quantity,
+            unit_price: itemRequest.unit_price,
+            total_price: itemRequest.total_price,
+            category: itemRequest.category,
+            specifications: itemRequest.specifications,
+            item_type: itemRequest.item_type
+          });
+        }
+      }
+
+      // 6. Transformer Layer - Convert to DTO
+      return this.transformEntityToDTO(createdEstimate);
     } catch (error) {
-      console.error('TenderEstimateService.createEstimate failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create estimate');
+      console.error('TenderEstimateService.createTenderEstimate failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create tender estimate');
     }
   }
 
   /**
-   * Get estimates by tender ID
+   * Get tender estimates by tender ID
+   * Repository + Transformer
    */
-  async getEstimatesByTenderId(request: GetEstimatesByTenderIdRequestDto): Promise<TenderEstimateDTO[]> {
+  async getTenderEstimatesByTender(tenderId: string): Promise<TenderEstimateDTO[]> {
     try {
-      if (!request.tenderId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender ID is required');
-      }
+      // Validation Layer
+      TenderEstimateValidation.validateTenderId(tenderId);
 
-      // For now, return mock data as tender estimate repository is not available
-      // TODO: Implement proper tender estimate retrieval when repository is available
-      console.warn('TenderEstimateService.getEstimatesByTenderId: Tender estimate repository not available');
-      
-      return [];
+      // Repository Layer
+      const estimates = await this.tenderEstimateRepository.findByTenderId(tenderId);
+
+      // Transformer Layer
+      return estimates.map(estimate => this.transformEntityToDTO(estimate));
     } catch (error) {
-      console.error('TenderEstimateService.getEstimatesByTenderId failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get estimates by tender ID');
+      console.error('TenderEstimateService.getTenderEstimatesByTender failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get tender estimates');
     }
   }
 
   /**
    * Get estimate by ID
    */
-  async getEstimateById(request: GetEstimateByIdRequestDto): Promise<TenderEstimateDTO | null> {
+  async getEstimateById(request: GetTenderEstimateByIdRequestDto): Promise<TenderEstimateDTO | null> {
     try {
       if (!request.id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Estimate ID is required');
       }
 
-      // For now, return mock data as tender estimate repository is not available
-      // TODO: Implement proper tender estimate retrieval when repository is available
-      console.warn('TenderEstimateService.getEstimateById: Tender estimate repository not available');
-      
-      return null;
+      // Get estimate using repository
+      const estimate = await this.tenderEstimateRepository.findById(request.id);
+
+      if (!estimate) {
+        return null;
+      }
+
+      // Transform entity to DTO
+      return this.transformEntityToDTO(estimate);
     } catch (error) {
       console.error('TenderEstimateService.getEstimateById failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get estimate by ID');
@@ -230,76 +161,39 @@ export class TenderEstimateService {
   }
 
   /**
-   * Update estimate
+   * Update tender estimate status
+   * Validation + Repository + Transformer + Business Logic
    */
-  async updateEstimate(request: UpdateEstimateRequestDto): Promise<TenderEstimateDTO> {
+  async updateTenderEstimateStatus(estimateId: string, newStatus: 'draft' | 'submitted' | 'under_review' | 'accepted' | 'rejected'): Promise<TenderEstimateDTO> {
     try {
-      if (!request.id) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Estimate ID is required');
-      }
-      if (!request.updates || Object.keys(request.updates).length === 0) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Update data is required');
+      // 1. Validation Layer
+      TenderEstimateValidation.validateEstimateId(estimateId);
+      TenderEstimateValidation.validateUpdateTenderEstimateRequest({ status: newStatus });
+
+      // 2. Repository Layer - Get current estimate
+      const currentEstimate = await this.tenderEstimateRepository.findById(estimateId);
+      if (!currentEstimate) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Tender estimate not found');
       }
 
-      // For now, return mock data as tender estimate repository is not available
-      // TODO: Implement proper tender estimate update when repository is available
-      console.warn('TenderEstimateService.updateEstimate: Tender estimate repository not available');
-      
-      const now = new Date().toISOString();
-      const mockEstimate: TenderEstimateDTO = {
-        id: request.id,
-        tender_id: 'mock-tender-id',
-        project_id: null,
-        estimate_type: 'mock-type',
-        total_materials_cost: 0,
-        total_labor_cost: 0,
-        total_equipment_cost: 0,
-        subtotal: 0,
-        tax_rate: 0,
-        tax_amount: 0,
-        total_with_tax: 0,
-        overhead_percentage: 0,
-        overhead_amount: 0,
-        profit_margin_percentage: 0,
-        profit_margin_amount: 0,
-        final_total: 0,
-        currency: 'MRU',
-        status: 'draft',
-        created_at: now,
-        updated_at: now,
-        ...request.updates
-      };
-      
-      return mockEstimate;
+      // 3. Business Logic - Validate status transition
+      TenderEstimateValidation.validateStatusTransition(currentEstimate.status, newStatus);
+
+      // 4. Repository Layer - Update
+      const updatedEstimate = await this.tenderEstimateRepository.update(estimateId, { status: newStatus });
+
+      // 5. Transformer Layer
+      return this.transformEntityToDTO(updatedEstimate);
     } catch (error) {
-      console.error('TenderEstimateService.updateEstimate failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update estimate');
+      console.error('TenderEstimateService.updateTenderEstimateStatus failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update tender estimate status');
     }
   }
 
   /**
-   * Delete estimate
+   * Create tender estimate item
    */
-  async deleteEstimate(request: DeleteEstimateRequestDto): Promise<void> {
-    try {
-      if (!request.id) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Estimate ID is required');
-      }
-
-      // For now, simulate deletion as tender estimate repository is not available
-      // TODO: Implement proper tender estimate deletion when repository is available
-      console.warn('TenderEstimateService.deleteEstimate: Tender estimate repository not available');
-      console.log(`Deleting estimate: ${request.id}`);
-    } catch (error) {
-      console.error('TenderEstimateService.deleteEstimate failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete estimate');
-    }
-  }
-
-  /**
-   * Create estimate item
-   */
-  async createEstimateItem(request: CreateEstimateItemRequestDto): Promise<TenderEstimateItemDTO> {
+  async createTenderEstimateItem(request: CreateTenderEstimateItemRequestDto): Promise<TenderEstimateItemDTO> {
     try {
       if (!request.estimate_id || request.quantity <= 0 || request.unit_price <= 0) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Estimate ID, quantity, and unit price are required');
@@ -307,27 +201,31 @@ export class TenderEstimateService {
 
       // For now, simulate creation as tender estimate repository is not available
       // TODO: Implement proper tender estimate item creation when repository is available
-      console.warn('TenderEstimateService.createEstimateItem: Tender estimate repository not available');
-      
+      console.warn('TenderEstimateService.createTenderEstimateItem: Tender estimate repository not available');
+
       const id = `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const now = new Date().toISOString();
-      
+
       const newItem: TenderEstimateItemDTO = {
         id,
         estimate_id: request.estimate_id,
-        material_id: request.material_id || null,
+        material_id: request.material_id || undefined as string | undefined,
+        item_code: request.item_code,
+        description: request.description,
+        unit: request.unit,
         quantity: request.quantity,
         unit_price: request.unit_price,
         total_price: request.total_price,
-        description: request.description || null,
-        item_type: request.item_type || null,
+        category: request.category,
+        specifications: request.specifications,
+        item_type: request.item_type,
         created_at: now,
         updated_at: now
       };
 
       return newItem;
     } catch (error) {
-      console.error('TenderEstimateService.createEstimateItem failed:', error);
+      console.error('TenderEstimateService.createTenderEstimateItem failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create estimate item');
     }
   }
@@ -335,16 +233,16 @@ export class TenderEstimateService {
   /**
    * Get estimate items by estimate ID
    */
-  async getEstimateItems(request: GetEstimateItemsRequestDto): Promise<TenderEstimateItemDTO[]> {
+  async getEstimateItems(request: GetTenderEstimateItemsRequestDto): Promise<TenderEstimateItemDTO[]> {
     try {
-      if (!request.estimateId) {
+      if (!request.estimate_id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Estimate ID is required');
       }
 
       // For now, return mock data as tender estimate repository is not available
       // TODO: Implement proper tender estimate item retrieval when repository is available
       console.warn('TenderEstimateService.getEstimateItems: Tender estimate repository not available');
-      
+
       return [];
     } catch (error) {
       console.error('TenderEstimateService.getEstimateItems failed:', error);
@@ -355,7 +253,7 @@ export class TenderEstimateService {
   /**
    * Update estimate item
    */
-  async updateEstimateItem(request: UpdateEstimateItemRequestDto): Promise<TenderEstimateItemDTO> {
+  async updateEstimateItem(request: { id: string; updates: Partial<TenderEstimateItem> }): Promise<TenderEstimateItemDTO> {
     try {
       if (!request.id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Estimate item ID is required');
@@ -367,22 +265,23 @@ export class TenderEstimateService {
       // For now, return mock data as tender estimate repository is not available
       // TODO: Implement proper tender estimate item update when repository is available
       console.warn('TenderEstimateService.updateEstimateItem: Tender estimate repository not available');
-      
+
       const now = new Date().toISOString();
       const mockItem: TenderEstimateItemDTO = {
         id: request.id,
         estimate_id: 'mock-estimate-id',
-        material_id: null,
+        material_id: undefined,
+        item_code: 'mock-item',
+        description: 'Mock item',
+        unit: 'unit',
         quantity: 1,
         unit_price: 0,
         total_price: 0,
-        description: null,
-        item_type: null,
         created_at: now,
         updated_at: now,
         ...request.updates
       };
-      
+
       return mockItem;
     } catch (error) {
       console.error('TenderEstimateService.updateEstimateItem failed:', error);
@@ -393,7 +292,7 @@ export class TenderEstimateService {
   /**
    * Delete estimate item
    */
-  async deleteEstimateItem(request: DeleteEstimateItemRequestDto): Promise<void> {
+  async deleteEstimateItem(request: { id: string }): Promise<void> {
     try {
       if (!request.id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Estimate item ID is required');
@@ -414,7 +313,7 @@ export class TenderEstimateService {
    */
   async getMyEstimates(request: GetMyEstimatesRequestDto): Promise<TenderEstimateDTO[]> {
     try {
-      if (!request.userId) {
+      if (!request.submitted_by) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'User ID is required');
       }
 
@@ -434,7 +333,7 @@ export class TenderEstimateService {
    */
   async getEstimatesByProjectId(request: GetEstimatesByProjectIdRequestDto): Promise<TenderEstimateDTO[]> {
     try {
-      if (!request.projectId) {
+      if (!request.project_id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
       }
 
@@ -470,7 +369,7 @@ export class TenderEstimateService {
    */
   async getEstimateStats(request: GetEstimateStatsRequestDto): Promise<EstimateStatsDto> {
     try {
-      if (!request.tenderId) {
+      if (!request.tender_id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender ID is required');
       }
 
@@ -479,10 +378,10 @@ export class TenderEstimateService {
       console.warn('TenderEstimateService.getEstimateStats: Tender estimate repository not available');
       
       return {
-        totalEstimates: 0,
-        totalAmount: 0,
-        averageAmount: 0,
-        byStatus: {}
+        total_estimates: 0,
+        total_amount: 0,
+        average_amount: 0,
+        by_status: {}
       };
     } catch (error) {
       console.error('TenderEstimateService.getEstimateStats failed:', error);
@@ -495,7 +394,7 @@ export class TenderEstimateService {
    */
   async calculateEstimateTotals(request: CalculateEstimateTotalsRequestDto): Promise<EstimateTotalsDto> {
     try {
-      if (!request.estimateId) {
+      if (!request.estimate_id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Estimate ID is required');
       }
 
@@ -505,11 +404,9 @@ export class TenderEstimateService {
       
       return {
         subtotal: 0,
-        taxAmount: 0,
-        totalWithTax: 0,
-        overheadAmount: 0,
-        profitMarginAmount: 0,
-        finalTotal: 0
+        tax_amount: 0,
+        total_with_tax: 0,
+        final_total: 0
       };
     } catch (error) {
       console.error('TenderEstimateService.calculateEstimateTotals failed:', error);

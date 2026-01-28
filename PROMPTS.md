@@ -139,8 +139,24 @@ export class Supplier {
 ### **🎯 MANTRA SACRÉ**
 > **"Les entités peuvent contenir des objets et collections métier. Les DTOs sont réservés aux échanges API/UI. Les transformers font le pont. Les composants UI peuvent avoir des états et calculs de présentation."**
 
-### **🚨 PRÉREQUIS OBLIGATOIRES**
+### **🚨 PRÉREQUIS OBLIGATOIRES - CONSULTATION SYSTÉMATIQUE**
+```bash
+📋 CONSULTATION OBLIGATOIRE AVANT TOUTE MODIFICATION :
+- ✅ src/utils/* et sous-répertoires : Fonctions utilitaires, helpers, calculate*
+- ✅ src/services/* et sous-répertoires : Services legacy à réutiliser/migrer
+- ✅ src/supabase/* et src/integrations/* et sous-répertours : Adapters et intégrations
+- ✅ src/application/services/* : Services hexagonaux existants
+- ✅ src/domain/repositories/* : Interfaces de repositories
+- ✅ src/infrastructure/supabase/adapters/* : Implémentations concrètes
+
+📋 RÈGLE D'OR : Toujours consulter avant de créer
+- ❌ JAMAIS créer un service sans vérifier src/services/*
+- ❌ JAMAIS créer un utilitaire sans vérifier src/utils/*
+- ❌ JAMAIS créer un adapter sans vérifier src/supabase/* et src/integrations/*
+- ✅ TOUJOURS réutiliser/migrer l'existant
+- ✅ TOUJOURS améliorer l'existant plutôt que dupliquer
 ```
+
 📋 Migration des entités dupliquées :
 - ❌ SUPPRIMER EmployeeEntity.ts → ✅ MIGRER vers Employee.ts
 - ❌ SUPPRIMER UserEntity.ts → ✅ MIGRER vers User.ts 
@@ -601,156 +617,599 @@ Je veux créer les composants Phase 4 :
 1. Liste tous les composants Phase 4 à créer
 2. Identifie les dépendances avec Phase 3
 3. Suggère l'ordre de création optimal
-4. Donne-moi les templates de code pour chaque composant
-5. Indique les hooks hexagonaux à utiliser
+## **🚀 PLAN D'ACTION CONSOLIDÉ - MIGRATION HEXAGONALE COMPLÈTE**
 
-Réutilisation Phase 3 ✅ - Nouveaux composants Phase 4 🎯
+### **📋 RÉSUMÉ DES ANALYSES EFFECTUÉES**
+
+#### **🎯 Objectif Global**
+Atteindre 100% d'architecture hexagonale en éliminant tous les types `any`, appels directs Supabase et services legacy.
+
+#### **📊 État Actuel Consolidé**
+- **Total composants analysés** : 386 composants TSX
+- **Types `any` identifiés** : 74 occurrences dans 39 composants
+- **Appels Supabase directs** : 21 occurrences dans 11 composants
+- **Services legacy** : ProgressCalculationService (7), ProjectStakeholderService (6)
+- **Hooks hexagonaux existants** : 35 composants déjà migrés ✅
+- **Architecture actuelle** : 95.8% hexagonal
+
+---
+
+### **🏗️ PHASE 1 : CRÉATION DES DTOS (TYPES FORTS)**
+
+#### **🔥 Priorité MAXIMALE - DTOs Principaux**
+```typescript
+// src/dtos/entities/ProjectCreationDTO.ts
+export interface ProjectCreationDTO {
+  title: string;
+  project_reference: string;
+  description: string;
+  budget: number;
+  estimated_duration_days: number;
+  currency: CurrencyCode;
+  status: ProjectStatus;
+  start_date: string;
+  end_date?: string;
+  address: string;
+  latitude?: number;
+  longitude?: number;
+  area_sqm?: number;
+  payment_mode: PaymentMode;
+  payment_frequency: PaymentFrequency;
+  initial_advance: number;
+  retention_percentage: number;
+  project_type: ProjectType;
+  sector: string;
+  priority: Priority;
+  financing_source: string;
+  market_type: MarketType;
+  project_manager_id?: string;
+  technical_manager_id?: string;
+  supervisor_id?: string;
+  client_id?: string;
+}
+
+// src/dtos/entities/ProjectWorkflowDTO.ts
+export interface ProjectWorkflowDTO {
+  id: number;
+  title: string;
+  description: string;
+  isCompleted: boolean;
+  data: Partial<ProjectCreationDTO>;
+  stakeholders?: StakeholderDTO[];
+  risks?: RiskDTO[];
+  compliance?: ComplianceDTO[];
+  phases?: PhaseDTO[];
+}
 ```
 
-## **🏗️ MIGRATION HEXAGONALE**
+#### **⚡ DTOs Secondaires**
+```typescript
+// src/dtos/entities/StakeholderDTO.ts
+export interface StakeholderDTO {
+  id: string;
+  type: "employee" | "external";
+  entityId: string;
+  role: string;
+  isPrimary: boolean;
+  name: string;
+  email?: string;
+  phone?: string;
+}
 
-### **Prompt : Analyse Composant Critique**
-```
-@CONTEXT.md @docs/task-plan.md @CODEBASE_ANALYSIS_FINAL.md
+// src/dtos/entities/RiskDTO.ts
+export interface RiskDTO {
+  id: string;
+  title: string;
+  description: string;
+  category: 'technical' | 'financial' | 'environmental' | 'regulatory' | 'operational' | 'security';
+  probability: number; // 1-5 scale
+  impact: number; // 1-5 scale
+  riskScore: number; // probability * impact
+  mitigationPlan: string;
+  contingencyPlan: string;
+  status: 'identified' | 'assessed' | 'mitigated' | 'monitoring' | 'closed';
+  owner: string;
+  reviewDate?: string;
+  costs?: number;
+  timeline_impact?: number;
+}
 
-Je veux analyser le composant ProjectCreationWorkflow.tsx :
+// src/dtos/entities/ComplianceDTO.ts
+export interface ComplianceDTO {
+  id: string;
+  type: 'regulatory' | 'insurance' | 'bank_guarantee' | 'technical' | 'environmental';
+  title: string;
+  description: string;
+  status: 'pending' | 'in_progress' | 'approved' | 'rejected';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  deadline?: string;
+  responsible: string;
+  documents: string[];
+  notes?: string;
+}
 
-1. **Analyse l'état actuel** :
-   - 16 types `any` (violations TypeScript)
-   - Couplage avec ProgressCalculationService (legacy)
-   - Logique métier dans le composant (calculs de progression)
-   - Pas d'utilisation des hooks hexagonaux
+// src/dtos/entities/ProjectImportDTO.ts
+export interface ProjectImportDTO {
+  title: string;
+  description: string;
+  budget: number;
+  project_type: ProjectType;
+  start_date: string;
+  end_date?: string;
+  address?: string;
+  client_name?: string;
+  main_contractor?: string;
+}
 
-2. **Analyse les dépendances** :
-   - ✅ StakeholdersTeamStep.tsx (utilise `useStakeholdersHex`)
-   - ❌ RiskAnalysisStep.tsx (appels Supabase directs)
-   - ❌ ComplianceStep.tsx (appels Supabase directs)
-   - ❌ ConstructionPhaseManager.tsx (services legacy)
-
-3. **Plan de migration hexagonale** :
-   - Créer `ProjectCreationDTO` avec types forts
-   - Migrer `ProgressCalculationService` vers service hexagonal
-   - Créer `ProjectCreationService` et `useProjectCreationHex`
-   - Refactoriser le composant pour utiliser les hooks hexagonaux
-
-4. **Impact attendu** :
-   - Éliminera 16 types `any`
-   - Améliorera l'architecture
-   - Respectera les patterns hexagonaux
-
-Composant critique - Priorité HAUTE 🚨
-```
-
-### **Prompt : Analyse Complète des Composants src/components/*/***
-```
-@CONTEXT.md @docs/task-plan.md @CODEBASE_ANALYSIS_FINAL.md
-
-Je veux analyser tous les composants src/components/*/* :
-
-1. **Analyse l'état actuel** :
-   - 386 composants TSX analysés
-   - 74 types `any` identifiés dans 39 composants
-   - 9 appels Supabase directs dans 9 composants
-   - Services legacy : ProgressCalculationService (7 composants), ProjectStakeholderService (6 composants)
-   - 35 composants utilisent déjà les services hexagonaux
-
-2. **Analyse les composants critiques** :
-   - ProjectFileImporter.tsx : 9 types `any` (Priorité HAUTE)
-   - ProjectExporter.tsx : 9 types `any` (Priorité HAUTE)
-   - AdvancedProjectImporter.tsx : 9 types `any` (Priorité HAUTE)
-   - ProjectCreationWorkflow.tsx : 16 types `any` (Priorité MAXIMALE)
-   - EnhancedProjectEditForm.tsx : 10 types `any` (Priorité ÉLEVÉE)
-   - ProjectCreate.tsx : 1 type `any` (Priorité MOYENNE)
-   - 29 autres composants avec 1-4 types `any` chacun
-
-3. **Plan de migration hexagonale** :
-   - Créer DTOs pour tous les types `any` identifiés
-   - Migrer ProgressCalculationService vers service hexagonal
-   - Migrer ProjectStakeholderService vers service hexagonal
-   - Créer hooks hexagonaux pour les 39 composants critiques
-   - Refactoriser les 9 composants avec appels Supabase directs
-
-4. **Impact attendu** :
-   - Éliminera 74 types `any`
-   - Améliorera l'architecture de 99.2% → 100% hexagonal
-   - Centralisera tous les services legacy
-   - Respectera les patterns hexagonaux
-
-Analyse complète de 386 composants - Priorité MAXIMALE 🚨
-```
-
-### **Prompt : Migrer Composant vers Architecture Hexagonale**
-```
-@CONTEXT.md @docs/task-plan.md
-
-Je veux migrer ProjectCreationWorkflow.tsx vers l'architecture hexagonale :
-
-1. **Créer les DTOs** :
-   - ProjectCreationDTO avec types forts
-   - StakeholderDTO, PhaseDTO, RiskDTO, ComplianceDTO
-   - ProjectWorkflowDTO pour l'ensemble
-
-2. **Créer le service hexagonal** :
-   - ProjectCreationService avec RepositoryFactory
-   - Logique de calcul de progression déplacée du composant
-   - Validation des données métier
-
-3. **Créer le hook hexagonal** :
-   - useProjectCreationHex pour la gestion d'état
-   - Intégration avec ProjectCreationService
-   - Gestion des 7 étapes du workflow
-
-4. **Refactoriser le composant** :
-   - Éliminer tous les types `any`
-   - Utiliser le hook hexagonal
-   - Déléguer la logique métier au service
-
-5. **Valider la migration** :
-   - Tests TypeScript (0 erreurs)
-   - Tests fonctionnels du workflow
-   - Performance maintenue
-
-Migration complète vers hexagonal 🎯
+// src/dtos/entities/ProjectExportDTO.ts
+export interface ProjectExportDTO {
+  id: string;
+  title: string;
+  description: string;
+  budget: number;
+  status: ProjectStatus;
+  created_at: string;
+  updated_at: string;
+  project_type: ProjectType;
+  start_date: string;
+  end_date?: string;
+  client_name?: string;
+  progress?: number;
+}
 ```
 
-### **Prompt : Migrer Project Domain**
+---
+
+### **⚡ PHASE 2 : CRÉATION DES SERVICES HEXAGONAUX**
+
+#### **🔥 Service Principal - ProjectCreationService**
+```typescript
+// src/application/services/ProjectCreationService.ts
+export class ProjectCreationService {
+  constructor(
+    private projectRepository: IProjectRepository,
+    private riskRepository: IRiskRepository,
+    private complianceRepository: IComplianceRepository,
+    private stakeholderRepository: IStakeholderRepository
+  ) {}
+
+  async createProject(request: ProjectCreationDTO): Promise<ProjectDTO> {
+    // 1. Validation
+    this.validateProjectCreationRequest(request);
+    
+    // 2. Business Logic
+    const projectData = this.transformToProjectEntity(request);
+    
+    // 3. Repository
+    const createdProject = await this.projectRepository.create(projectData);
+    
+    // 4. Create related entities
+    if (request.stakeholders) {
+      await this.createStakeholders(createdProject.id, request.stakeholders);
+    }
+    
+    if (request.risks) {
+      await this.createRisks(createdProject.id, request.risks);
+    }
+    
+    if (request.compliance) {
+      await this.createComplianceItems(createdProject.id, request.compliance);
+    }
+    
+    return this.transformToDTO(createdProject);
+  }
+
+  async calculateProjectProgress(phases: PhaseDTO[]): Promise<number> {
+    // Logique métier centralisée (remplace ProgressCalculationService)
+    return this.progressCalculationService.calculateProjectProgress(
+      phases,
+      [], // tasks - seront ajoutés après création
+      []  // inspections - seront ajoutées après création
+    );
+  }
+
+  private validateProjectCreationRequest(request: ProjectCreationDTO): void {
+    if (!request.title || request.title.trim().length === 0) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project title is required');
+    }
+    if (!request.budget || request.budget <= 0) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Budget must be greater than 0');
+    }
+    // ... autres validations
+  }
+}
 ```
-@CONTEXT.md @CODEBASE_ANALYSIS_FINAL.md
 
-Je veux migrer le Project Domain vers l'architecture hexagonale :
+#### **⚡ Services Secondaires**
+```typescript
+// src/application/services/ProgressCalculationHexService.ts
+export class ProgressCalculationHexService {
+  async calculateProjectProgress(
+    phases: PhaseDTO[], 
+    tasks: TaskDTO[], 
+    inspections: InspectionDTO[]
+  ): Promise<number> {
+    // Logique métier améliorée et centralisée
+    const totalPhases = phases.length;
+    if (totalPhases === 0) return 0;
+    
+    const completedPhases = phases.filter(p => p.status === 'completed').length;
+    const inProgressPhases = phases.filter(p => p.status === 'in_progress').length;
+    
+    // Calcul pondéré
+    const progressScore = (completedPhases * 100 + inProgressPhases * 50) / totalPhases;
+    return Math.min(100, Math.round(progressScore));
+  }
+}
 
-1. Analyse l'état actuel de ProjectRepository.ts
-2. Valide ProjectService.ts existant
-3. Crée SupabaseProjectAdapter.ts avec IProjectRepository
-4. Met à jour RepositoryFactory.ts
-5. Valide useProjectsHex.ts
-6. Donne les commandes de test et validation
+// src/application/services/ProjectImportService.ts
+export class ProjectImportService {
+  async importFromFile(file: File, mode: ImportMode): Promise<ImportResult> {
+    // Validation et logique métier centralisée
+    this.validateFile(file);
+    
+    const data = await this.parseFile(file);
+    const validatedProjects = this.validateImportData(data);
+    
+    const results = [];
+    for (const projectData of validatedProjects) {
+      const project = await this.projectService.createProject(projectData);
+      results.push(project);
+    }
+    
+    return {
+      success: true,
+      imported: results.length,
+      total: data.length,
+      errors: []
+    };
+  }
+}
 
-Project Domain - Bien avancé ✅
+// src/application/services/DocumentSharingService.ts
+export class DocumentSharingService {
+  async shareDocument(documentId: string, recipients: string[]): Promise<ShareResult> {
+    // Logique de partage centralisée
+    const document = await this.documentService.getDocumentById(documentId);
+    
+    const shareResults = [];
+    for (const recipientId of recipients) {
+      const result = await this.createShareLink(documentId, recipientId);
+      shareResults.push(result);
+    }
+    
+    return {
+      success: true,
+      sharedLinks: shareResults
+    };
+  }
+}
 ```
 
-### **Prompt : Migrer Inspection Domain**
+---
+
+### **🪝 PHASE 3 : CRÉATION DES HOOKS HEXAGONAUX**
+
+#### **🔥 Hook Principal - useProjectCreationHex**
+```typescript
+// src/hooks/hexagonal/useProjectCreationHex.ts
+export function useProjectCreationHex() {
+  const projectCreationService = new ProjectCreationService(
+    RepositoryFactory.getProjectRepository(),
+    RepositoryFactory.getRiskRepository(),
+    RepositoryFactory.getComplianceRepository(),
+    RepositoryFactory.getStakeholderRepository()
+  );
+
+  const createProjectMutation = useMutation({
+    mutationFn: (data: ProjectCreationDTO) => 
+      projectCreationService.createProject(data),
+    onSuccess: (project) => {
+      toast({
+        title: "Projet créé",
+        description: `Le projet ${project.title} a été créé avec succès`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const calculateProgress = useQuery({
+    queryKey: ['project-progress', phases],
+    queryFn: ({ queryKey }) => {
+      const [_, phases] = queryKey;
+      return projectCreationService.calculateProjectProgress(phases);
+    },
+    enabled: !!phases
+  });
+
+  return {
+    createProject: createProjectMutation.mutate,
+    isCreating: createProjectMutation.isPending,
+    calculateProgress: calculateProgress.data || 0,
+    progressLoading: calculateProgress.isLoading
+  };
+}
 ```
-@CONTEXT.md @CODEBASE_ANALYSIS_FINAL.md
 
-Je veux migrer le Inspection Domain vers l'architecture hexagonale :
+#### **⚡ Hooks Secondaires**
+```typescript
+// src/hooks/hexagonal/useProjectImportHex.ts
+export function useProjectImportHex() {
+  const importService = new ProjectImportService();
+  
+  const importMutation = useMutation({
+    mutationFn: ({ file, mode }: { file: File; mode: ImportMode }) =>
+      importService.importFromFile(file, mode),
+    onSuccess: (result) => {
+      toast({
+        title: "Import réussi",
+        description: `${result.imported} projets importés avec succès`,
+      });
+    }
+  });
 
-1. Analyse l'état actuel de InspectionRepository.ts
-2. Crée InspectionService hexagonal
-3. Crée SupabaseInspectionAdapter.ts avec IInspectionRepository
-4. Met à jour les hooks inspection
-5. Donne les commandes de test et validation
+  return {
+    importProjects: importMutation.mutate,
+    isImporting: importMutation.isPending
+  };
+}
 
-Inspection Domain - Priorité moyenne 📋
+// src/hooks/hexagonal/useProjectExportHex.ts
+export function useProjectExportHex() {
+  const { projects } = useProjectsHex(); // Hook existant ✅
+  
+  const exportMutation = useMutation({
+    mutationFn: ({ projectIds, format }: { projectIds: string[]; format: 'json' | 'excel' | 'csv' }) =>
+      projectExportService.exportProjects(projectIds, format),
+    onSuccess: () => {
+      toast({
+        title: "Export réussi",
+        description: "Les projets ont été exportés avec succès",
+      });
+    }
+  });
+
+  return {
+    exportProjects: exportMutation.mutate,
+    isExporting: exportMutation.isPending
+  };
+}
+
+// src/hooks/hexagonal/usePhaseTasksHex.ts
+export function usePhaseTasksHex() {
+  const taskService = new TaskService(RepositoryFactory.getTaskRepository());
+  
+  const createTaskMutation = useMutation({
+    mutationFn: (taskData: CreateTaskDTO) => taskService.createTask(taskData),
+    onSuccess: () => {
+      toast({
+        title: "Tâche créée",
+        description: "La tâche a été créée avec succès",
+      });
+      queryClient.invalidateQueries({ queryKey: ['phase-tasks'] });
+    }
+  });
+
+  return {
+    createTask: createTaskMutation.mutate,
+    isCreating: createTaskMutation.isPending
+  };
+}
+
+// src/hooks/hexagonal/useDocumentSharingHex.ts
+export function useDocumentSharingHex() {
+  const sharingService = new DocumentSharingService();
+  
+  const shareMutation = useMutation({
+    mutationFn: ({ documentId, recipients }: { documentId: string; recipients: string[] }) =>
+      sharingService.shareDocument(documentId, recipients),
+    onSuccess: () => {
+      toast({
+        title: "Document partagé",
+        description: "Le document a été partagé avec succès",
+      });
+    }
+  });
+
+  return {
+    shareDocument: shareMutation.mutate,
+    isSharing: shareMutation.isPending
+  };
+}
 ```
 
-### **Prompt : Validation de Migration**
+---
+
+### **🎨 PHASE 4 : MIGRATION DES COMPOSANTS**
+
+#### **🔥 Composant Principal - ProjectCreationWorkflow.tsx**
+```typescript
+// Remplacer les types any par des interfaces fortes
+interface ProjectCreationWorkflowProps {
+  onSubmit: (data: ProjectCreationDTO) => void;
+  selectedMaterials: Array<{ materialId: string; quantity: number }>;
+  onMaterialsChange: (materials: Array<{ materialId: string; quantity: number }>) => void;
+  initialData?: Partial<ProjectCreationDTO>;
+}
+
+// Utiliser le hook hexagonal
+const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
+  onSubmit,
+  selectedMaterials,
+  onMaterialsChange,
+  initialData,
+}) => {
+  const { createProject, isCreating, calculateProgress } = useProjectCreationHex();
+  
+  // États typés
+  const [formData, setFormData] = useState<ProjectCreationDTO>({
+    title: "",
+    project_reference: "",
+    description: "",
+    budget: 0,
+    estimated_duration_days: 0,
+    currency: "MRU",
+    status: "en cours",
+    start_date: new Date().toISOString().split("T")[0],
+    ...initialData
+  });
+
+  const handleSubmit = async () => {
+    try {
+      const createdProject = await createProject(formData);
+      onSubmit(createdProject);
+    } catch (error) {
+      console.error('Project creation failed:', error);
+    }
+  };
+
+  // Utiliser le calcul de progression du hook
+  const progress = calculateProgress(phases);
+}
 ```
-@CONTEXT.md @CODEBASE_ANALYSIS_FINAL.md
 
-Je veux valider la migration hexagonale complète :
+#### **⚡ Composants Secondaires**
+```typescript
+// ProjectFileImporter.tsx - Migration complète
+export default function ProjectFileImporter({
+  onImportComplete,
+}: ProjectFileImporterProps) {
+  const { importProjects, isImporting } = useProjectImportHex();
+  
+  // Plus de types any - tout est typé
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  
+  const handleImport = async () => {
+    if (selectedFile) {
+      const result = await importProjects({ 
+        file: selectedFile, 
+        mode: importMode 
+      });
+      setImportResult(result);
+      onImportComplete?.(result);
+    }
+  };
+}
 
-1. Liste tous les services migrés avec succès
+// ProjectExporter.tsx - Utiliser hooks existants
+const ProjectExporter = () => {
+  const { projects } = useProjectsHex(); // Déjà existant ✅
+  const { exportProjects, isExporting } = useProjectExportHex();
+  
+  // Plus de types any
+  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
+  
+  const handleExport = async (format: 'json' | 'excel' | 'csv') => {
+    await exportProjects({ 
+      projectIds: selectedProjects, 
+      format 
+    });
+  };
+}
+
+// PhaseTasks.tsx - Remplacer les appels Supabase
+const PhaseTasks = ({ phaseId }: { phaseId: string }) => {
+  const { createTask, isCreating } = usePhaseTasksHex();
+  const { user } = useAuthSimple(); // Hook hexagonal existant ✅
+  
+  const handleCreateTask = async (taskData: CreateTaskDTO) => {
+    const taskWithPhase = {
+      ...taskData,
+      phase_id: phaseId,
+      created_by: user?.id
+    };
+    await createTask(taskWithPhase);
+  };
+}
+```
+
+---
+
+### **📊 PHASE 5 : VALIDATION ET TESTS**
+
+#### **🔥 Validation TypeScript**
+```bash
+# Commandes de validation
+npx tsc --noEmit --strict
+npx tsc --noEmit src/components/project/ProjectCreationWorkflow.tsx
+npx tsc --noEmit src/components/projects/ProjectFileImporter.tsx
+npx tsc --noEmit src/components/projects/ProjectExporter.tsx
+```
+
+#### **⚡ Tests Fonctionnels**
+```typescript
+// src/components/project/__tests__/ProjectCreationWorkflow.test.tsx
+describe('ProjectCreationWorkflow', () => {
+  it('should create project with valid data', async () => {
+    const mockOnSubmit = vi.fn();
+    render(<ProjectCreationWorkflow onSubmit={mockOnSubmit} />);
+    
+    // Remplir le formulaire et soumettre
+    // Tester que le hook hexagonal est appelé
+  });
+  
+  it('should calculate progress correctly', async () => {
+    // Tester le calcul de progression via le hook
+  });
+});
+```
+
+#### **🚀 Tests de Performance**
+```typescript
+// Tests de performance pour les hooks
+describe('useProjectCreationHex Performance', () => {
+  it('should handle large project data efficiently', () => {
+    const { result } = renderHook(() => useProjectCreationHex());
+    
+    // Simuler des données importantes
+    act(() => {
+      result.current.createProject(largeProjectData);
+    });
+    
+    expect(result.current.isCreating).toBe(true);
+  });
+});
+```
+
+---
+
+### **🎯 OBJECTIFS FINAUX**
+
+#### **📈 Métriques de Succès**
+- **Types `any`** : 74 → 0 🎯
+- **Appels Supabase directs** : 21 → 0 🎯
+- **Services legacy** : 13 → 0 🎯
+- **Architecture hexagonale** : 95.8% → 100% 🎯
+- **Composants migrés** : 39 → 39 🎯
+
+#### **🚀 Bénéfices Attendus**
+- **Type Safety** : TypeScript strict partout
+- **Maintenabilité** : Services centralisés et testables
+- **Performance** : React Query optimisé avec cache
+- **Architecture** : 100% hexagonale respectée
+- **Développement** : Code réutilisable et documenté
+
+#### **⏱️ Timeline Estimée**
+- **Phase 1 (DTOs)** : 2 jours
+- **Phase 2 (Services)** : 3 jours  
+- **Phase 3 (Hooks)** : 2 jours
+- **Phase 4 (Composants)** : 4 jours
+- **Phase 5 (Validation)** : 1 jour
+- **Total** : **12 jours** pour migration complète
+
+---
+
+**Plan d'action consolidé - Migration hexagonale complète !** 🚀
+
+*Prochaines étapes : Commencer par la Phase 1 avec les DTOs critiques*
 2. Vérifie que tous les hooks utilisent RepositoryFactory
 3. Confirme que tous les DTOs sont centralisés
 4. Donne les commandes de build, test et lint

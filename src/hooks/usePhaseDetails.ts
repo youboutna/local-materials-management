@@ -5,6 +5,13 @@ import { referentialService } from '@/services/ReferentialService';
 import { PhaseDTO, PhaseStatus, PhaseStepDTO, PhaseTaskDTO } from '@/types/phase-dto';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { MaterialService } from '@/application/services/MaterialService';
+import { TaskService } from '@/application/services/TaskService';
+import { InspectionService } from '@/application/services/InspectionService';
+import { EmployeeService } from '@/application/services/EmployeeService';
+import { PaymentService } from '@/application/services/PaymentService';
+import { DocumentService } from '@/application/services/DocumentService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface PhaseMetrics {
   materialCost: number;
@@ -65,24 +72,32 @@ export function usePhaseDetails(phaseId: string | undefined) {
       if (!phaseId) return defaultMetrics;
 
       try {
+        // Utiliser les services hexagonaux au lieu des appels directs Supabase
+        const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
+        const taskService = new TaskService(RepositoryFactory.getTaskRepository());
+        const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
+        const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
+        const paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
+        const documentService = new DocumentService(RepositoryFactory.getDocumentRepository());
+
         const [
-          materialData,
+          materialsData,
           tasksData,
           inspectionsData,
           employeeData,
           paymentsData,
           documentsData,
         ] = await Promise.all([
-          supabase.from('project_materials').select('quantity, material_id').eq('phase_id', phaseId),
-          supabase.from('task_assignments').select('status').eq('phase_id', phaseId),
-          supabase.from('inspections').select('status').eq('phase_id', phaseId),
-          supabase.from('phase_employees').select('*').eq('phase_id', phaseId),
-          supabase.from('payments').select('amount').eq('phase_id', phaseId),
-          supabase.from('documents').select('id, document_type').eq('phase_id', phaseId),
+          materialService.getMaterialsByPhase(phaseId),
+          taskService.getTasksByPhase(phaseId),
+          inspectionService.getInspectionsByPhase(phaseId),
+          employeeService.getEmployeesByPhase(phaseId),
+          paymentService.getPaymentsByPhase(phaseId),
+          documentService.getDocumentsByPhase(phaseId),
         ]);
 
         // Calculate material cost
-        const materialIds = materialData.data?.map((m) => m.material_id).filter(Boolean) || [];
+        const materialIds = materialsData.data?.map((m) => m.material_id).filter(Boolean) || [];
         let materialCost = 0;
 
         if (materialIds.length > 0) {
@@ -91,7 +106,7 @@ export function usePhaseDetails(phaseId: string | undefined) {
             .select('id, price_per_unit')
             .in('id', materialIds);
 
-          materialCost = materialData.data?.reduce((sum, pm) => {
+          materialCost = materialsData.data?.reduce((sum, pm) => {
             const material = materials?.find((m) => m.id === pm.material_id);
             return sum + (pm.quantity || 0) * (material?.price_per_unit || 0);
           }, 0) || 0;
@@ -114,7 +129,7 @@ export function usePhaseDetails(phaseId: string | undefined) {
 
         return {
           materialCost,
-          totalMaterials: materialData.data?.length || 0,
+          totalMaterials: materialsData.data?.length || 0,
           totalTasks,
           completedTasks,
           taskCompletionRate: totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0,

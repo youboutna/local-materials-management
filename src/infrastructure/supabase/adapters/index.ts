@@ -28,6 +28,9 @@ export { SupabaseHierarchyAdapter } from './SupabaseHierarchyAdapter';
 export { SupabaseUserAdapter } from './SupabaseUserAdapter';
 export { SupabaseAuthAdapter } from './SupabaseAuthAdapter';
 export { SupabaseStorageAdapter } from './SupabaseStorageAdapter';
+export { TenderEstimateAdapter } from './TenderEstimateAdapter';
+export { PaymentBlockingAdapter } from './PaymentBlockingAdapter';
+export { TaskAssignmentAdapter } from './TaskAssignmentAdapter';
 export { SupabaseNotificationAdapter } from './SupabaseNotificationAdapter';
 export { SupabaseInsuranceAdapter } from './SupabaseInsuranceAdapter';
 
@@ -38,3 +41,4 @@ export { InspectionSchedulingAdapter } from './InspectionSchedulingAdapter';
 export { SupabaseParsedInvoiceAdapter } from './SupabaseParsedInvoiceAdapter';
 export { SupabaseInspectionPermissionAdapter } from './SupabaseInspectionPermissionAdapter';
 export { SupabaseTenderDocumentAdapter } from './SupabaseTenderDocumentAdapter';
+export { SupabaseAlertRepository } from './SupabaseAlertRepository';

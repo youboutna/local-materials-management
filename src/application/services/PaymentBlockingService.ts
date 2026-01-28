@@ -1,128 +1,59 @@
 /**
  * Payment Blocking Service - Hexagonal Architecture
  * Business logic for managing payment blocks and control actions
+ * Following hexagonal principles: Repository + Transformers + DTOs + Validation + Calcul
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
+import { IPaymentBlockingRepository } from '@/domain/repositories/IPaymentBlockingRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-
-export interface PaymentBlock {
-  id: string;
-  payment_request_id: string;
-  block_reason: string;
-  block_type: 'financial' | 'document' | 'compliance' | 'technical';
-  status: 'active' | 'resolved' | 'cancelled';
-  blocked_amount: number;
-  resolution_notes?: string;
-  resolved_by?: string;
-  resolved_at?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface PaymentControlAction {
-  id: string;
-  payment_block_id: string;
-  action_type: 'review' | 'approve' | 'reject' | 'request_document' | 'escalate';
-  description: string;
-  assigned_to?: string;
-  due_date?: string;
-  status: 'pending' | 'completed' | 'cancelled';
-  created_by: string;
-  created_at: string;
-  completed_at?: string;
-}
-
-// Service DTOs for data exchange
-export interface CreatePaymentBlockRequestDto {
-  payment_request_id: string;
-  block_reason: string;
-  block_type: 'financial' | 'document' | 'compliance' | 'technical';
-  blocked_amount: number;
-}
-
-export interface ResolvePaymentBlockRequestDto {
-  block_id: string;
-  resolution_notes: string;
-  resolved_by: string;
-}
-
-export interface CreatePaymentControlActionRequestDto {
-  payment_block_id: string;
-  action_type: 'review' | 'approve' | 'reject' | 'request_document' | 'escalate';
-  description: string;
-  assigned_to?: string;
-  due_date?: string;
-  created_by?: string;
-}
-
-export interface PaymentBlockStatsDto {
-  total: number;
-  active: number;
-  resolved: number;
-  cancelled: number;
-  totalBlockedAmount: number;
-}
-
-export interface PaymentEligibilityValidationDto {
-  canProceed: boolean;
-  warningReasons?: PaymentWarningReasonDto[];
-  blockingReasons?: PaymentBlockingReasonDto[];
-}
-
-export interface PaymentWarningReasonDto {
-  type: string;
-  description: string;
-  severity: 'low' | 'medium' | 'high';
-  recommendedAction?: string;
-}
-
-export interface PaymentBlockingReasonDto {
-  type: string;
-  description: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  actionRequired?: string;
-}
-
-export interface PaymentProcessingResultDto {
-  success: boolean;
-  message: string;
-  blockReasons?: string[];
-}
+import { PaymentBlockingTransformer } from '@/dtos/transforms/PaymentBlockingTransformer';
+import { PaymentBlockingValidation } from '@/dtos/utils/PaymentBlockingValidation';
+import {
+  PaymentBlockDTO,
+  PaymentControlActionDTO,
+  CreatePaymentBlockRequestDto,
+  ResolvePaymentBlockRequestDto,
+  CreatePaymentControlActionRequestDto,
+  PaymentBlockStatsDto,
+  PaymentEligibilityValidationDto,
+  PaymentProcessingResultDto
+} from '@/dtos/entities/PaymentBlockingDTO';
+import { PaymentBlock, PaymentControlAction } from '@/domain/repositories/IPaymentBlockingRepository';
 
 export class PaymentBlockingService {
-  constructor(
-    private paymentRepository: IPaymentRepository = RepositoryFactory.getPaymentRepository()
-  ) {}
+  private paymentBlockingRepository: IPaymentBlockingRepository;
+
+  constructor() {
+    this.paymentBlockingRepository = RepositoryFactory.getPaymentBlockingRepository();
+  }
   /**
    * Block a payment request
+   * Repository + Validation + Transformer + Business Logic
    */
-  async blockPayment(request: CreatePaymentBlockRequestDto): Promise<PaymentBlock> {
+  async blockPayment(request: CreatePaymentBlockRequestDto): Promise<PaymentBlockDTO> {
     try {
-      if (!request.payment_request_id || !request.block_reason || !request.block_type) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Payment request ID, block reason, and block type are required');
-      }
+      // 1. Validation Layer
+      PaymentBlockingValidation.validateCreatePaymentBlockRequest(request);
+      PaymentBlockingValidation.validatePaymentRequestId(request.payment_request_id);
 
-      if (request.blocked_amount < 0) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Blocked amount must be positive');
-      }
+      // 2. Business Logic - Check for duplicates
+      const existingBlocks = await this.paymentBlockingRepository.getBlocksByPaymentRequest(request.payment_request_id);
+      PaymentBlockingValidation.checkForDuplicateBlocks(existingBlocks, request.payment_request_id);
 
-      // For now, return mock data as payment blocking repository is not available
-      // TODO: Implement proper payment blocking when repository is available
-      console.warn('PaymentBlockingService.blockPayment: Payment blocking repository not available');
-      
-      const now = new Date().toISOString();
-      return {
-        id: crypto.randomUUID(),
+      // 3. Repository Layer - Create entity
+      const blockData: Omit<PaymentBlock, 'id' | 'created_at' | 'updated_at'> = {
         payment_request_id: request.payment_request_id,
         block_reason: request.block_reason,
         block_type: request.block_type,
         blocked_amount: request.blocked_amount,
-        status: 'active',
-        created_at: now,
-        updated_at: now
+        status: 'active'
       };
+      
+      const createdBlock = await this.paymentBlockingRepository.createBlock(blockData);
+
+      // 4. Transformer Layer - Convert to DTO
+      return PaymentBlockingTransformer.toPaymentBlockDTO(createdBlock);
     } catch (error) {
       console.error('PaymentBlockingService.blockPayment failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to block payment');
@@ -131,14 +62,15 @@ export class PaymentBlockingService {
 
   /**
    * Get all active payment blocks
+   * Repository + Transformer
    */
-  async getActivePaymentBlocks(): Promise<PaymentBlock[]> {
+  async getActivePaymentBlocks(): Promise<PaymentBlockDTO[]> {
     try {
-      // For now, return mock data as payment blocking repository is not available
-      // TODO: Implement proper payment blocking retrieval when repository is available
-      console.warn('PaymentBlockingService.getActivePaymentBlocks: Payment blocking repository not available');
+      // Repository Layer
+      const blocks = await this.paymentBlockingRepository.getActiveBlocks();
       
-      return [];
+      // Transformer Layer
+      return PaymentBlockingTransformer.toPaymentBlockDTOs(blocks);
     } catch (error) {
       console.error('PaymentBlockingService.getActivePaymentBlocks failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get active payment blocks');
@@ -147,18 +79,18 @@ export class PaymentBlockingService {
 
   /**
    * Get payment blocks for a specific payment request
+   * Repository + Transformer
    */
-  async getPaymentBlocks(paymentRequestId: string): Promise<PaymentBlock[]> {
+  async getPaymentBlocks(paymentRequestId: string): Promise<PaymentBlockDTO[]> {
     try {
-      if (!paymentRequestId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Payment request ID is required');
-      }
+      // Validation Layer
+      PaymentBlockingValidation.validatePaymentRequestId(paymentRequestId);
 
-      // For now, return mock data as payment blocking repository is not available
-      // TODO: Implement proper payment blocking retrieval when repository is available
-      console.warn('PaymentBlockingService.getPaymentBlocks: Payment blocking repository not available');
+      // Repository Layer
+      const blocks = await this.paymentBlockingRepository.getBlocksByPaymentRequest(paymentRequestId);
       
-      return [];
+      // Transformer Layer
+      return PaymentBlockingTransformer.toPaymentBlockDTOs(blocks);
     } catch (error) {
       console.error('PaymentBlockingService.getPaymentBlocks failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get payment blocks');
@@ -167,31 +99,31 @@ export class PaymentBlockingService {
 
   /**
    * Resolve a payment block
+   * Validation + Repository + Transformer + Business Logic
    */
-  async resolvePaymentBlock(request: ResolvePaymentBlockRequestDto): Promise<PaymentBlock> {
+  async resolvePaymentBlock(request: ResolvePaymentBlockRequestDto): Promise<PaymentBlockDTO> {
     try {
-      if (!request.block_id || !request.resolution_notes || !request.resolved_by) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Block ID, resolution notes, and resolved by are required');
+      // 1. Validation Layer
+      PaymentBlockingValidation.validateResolvePaymentBlockRequest(request);
+
+      // 2. Repository Layer - Get current block
+      const currentBlock = await this.paymentBlockingRepository.getBlockById(request.block_id);
+      if (!currentBlock) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Payment block not found');
       }
 
-      // For now, return mock data as payment blocking repository is not available
-      // TODO: Implement proper payment blocking resolution when repository is available
-      console.warn('PaymentBlockingService.resolvePaymentBlock: Payment blocking repository not available');
-      
-      const now = new Date().toISOString();
-      return {
-        id: request.block_id,
-        payment_request_id: 'mock-payment-request-id',
-        block_reason: 'Mock block reason',
-        block_type: 'financial',
-        blocked_amount: 1000,
-        status: 'resolved',
-        resolved_at: now,
-        resolved_by: request.resolved_by,
-        resolution_notes: request.resolution_notes,
-        created_at: now,
-        updated_at: now
-      };
+      // 3. Business Logic - Validate status transition
+      PaymentBlockingValidation.validateStatusTransition(currentBlock.status, 'resolved');
+
+      // 4. Repository Layer - Update
+      const updatedBlock = await this.paymentBlockingRepository.resolveBlock(
+        request.block_id,
+        request.resolution_notes,
+        request.resolved_by
+      );
+
+      // 5. Transformer Layer
+      return PaymentBlockingTransformer.toPaymentBlockDTO(updatedBlock);
     } catch (error) {
       console.error('PaymentBlockingService.resolvePaymentBlock failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to resolve payment block');
@@ -207,21 +139,8 @@ export class PaymentBlockingService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Block ID is required');
       }
 
-      // For now, return mock data as payment blocking repository is not available
-      // TODO: Implement proper payment blocking cancellation when repository is available
-      console.warn('PaymentBlockingService.cancelPaymentBlock: Payment blocking repository not available');
-      
-      const now = new Date().toISOString();
-      return {
-        id: blockId,
-        payment_request_id: 'mock-payment-request-id',
-        block_reason: 'Mock block reason',
-        block_type: 'financial',
-        blocked_amount: 1000,
-        status: 'cancelled',
-        created_at: now,
-        updated_at: now
-      };
+      // Cancel block using repository
+      return await this.paymentBlockingRepository.cancelBlock(blockId);
     } catch (error) {
       console.error('PaymentBlockingService.cancelPaymentBlock failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to cancel payment block');
@@ -237,11 +156,8 @@ export class PaymentBlockingService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Payment request ID is required');
       }
 
-      // For now, return mock data as payment blocking repository is not available
-      // TODO: Implement proper payment blocking check when repository is available
-      console.warn('PaymentBlockingService.isPaymentBlocked: Payment blocking repository not available');
-      
-      return false;
+      // Check if payment is blocked using repository
+      return await this.paymentBlockingRepository.isPaymentBlocked(paymentRequestId);
     } catch (error) {
       console.error('PaymentBlockingService.isPaymentBlocked failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to check if payment is blocked');
@@ -269,16 +185,15 @@ export class PaymentBlockingService {
    */
   async getPaymentBlockStats(): Promise<PaymentBlockStatsDto> {
     try {
-      // For now, return mock data as payment blocking repository is not available
-      // TODO: Implement proper payment blocking statistics when repository is available
-      console.warn('PaymentBlockingService.getPaymentBlockStats: Payment blocking repository not available');
+      // Get block statistics using repository
+      const stats = await this.paymentBlockingRepository.getBlockStats();
       
       return {
-        total: 0,
-        active: 0,
-        resolved: 0,
-        cancelled: 0,
-        totalBlockedAmount: 0
+        total: stats.totalBlocks,
+        active: stats.activeBlocks,
+        resolved: stats.resolvedBlocks,
+        cancelled: stats.cancelledBlocks,
+        totalBlockedAmount: stats.totalBlockedAmount
       };
     } catch (error) {
       console.error('PaymentBlockingService.getPaymentBlockStats failed:', error);

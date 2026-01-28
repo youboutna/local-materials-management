@@ -48,8 +48,10 @@ import {
   IProjectStakeholderRepository,
   IProjectAlertRepository,
   IDecompteRepository,
-  ITenderEstimateRepository
+  ITenderEstimateRepository,
+  IPaymentBlockingRepository
 } from '@/domain/repositories';
+import { IAlertRepository } from '@/domain/repositories/IAlertRepository';
 
 import {
   SupabaseProjectAdapter,
@@ -81,7 +83,11 @@ import {
   SupabaseInsuranceAdapter,
   SupabaseParsedInvoiceAdapter,
   SupabaseInspectionPermissionAdapter,
-  SupabaseTenderDocumentAdapter
+  SupabaseAlertRepository,
+  SupabaseTenderDocumentAdapter,
+  TenderEstimateAdapter,
+  PaymentBlockingAdapter,
+  TaskAssignmentAdapter
 } from './adapters';
 
 /**
@@ -100,6 +106,9 @@ interface RepositoryRegistry {
   employeeRepository?: IEmployeeRepository;
   riskRepository?: IRiskRepository;
   tenderRepository?: ITenderRepository;
+  tenderEstimateRepository?: ITenderEstimateRepository;
+  paymentBlockingRepository?: IPaymentBlockingRepository;
+  taskAssignmentRepository?: ITaskAssignmentRepository;
   supplierRepository?: ISupplierRepository;
   documentRepository?: IDocumentRepository;
   quantityTakeoffRepository?: IQuantityTakeoffRepository;
@@ -119,6 +128,7 @@ interface RepositoryRegistry {
   parsedInvoiceRepository?: IParsedInvoiceRepository;
   tenderDocumentRepository?: ITenderDocumentRepository;
   inspectionPermissionRepository?: IInspectionPermissionRepository;
+  alertRepository?: IAlertRepository;
 }
 
 /**
@@ -407,6 +417,39 @@ export class RepositoryFactory {
   }
 
   /**
+   * Get Tender Estimate Repository instance
+   * Lazy loaded for memory efficiency
+   */
+  static getTenderEstimateRepository(): ITenderEstimateRepository {
+    if (!repositoryRegistry.tenderEstimateRepository) {
+      repositoryRegistry.tenderEstimateRepository = new TenderEstimateAdapter();
+    }
+    return repositoryRegistry.tenderEstimateRepository;
+  }
+
+  /**
+   * Get Payment Blocking Repository instance
+   * Lazy loaded for memory efficiency
+   */
+  static getPaymentBlockingRepository(): IPaymentBlockingRepository {
+    if (!repositoryRegistry.paymentBlockingRepository) {
+      repositoryRegistry.paymentBlockingRepository = new PaymentBlockingAdapter();
+    }
+    return repositoryRegistry.paymentBlockingRepository;
+  }
+
+  /**
+   * Get Task Assignment Repository instance
+   * Lazy loaded for memory efficiency
+   */
+  static getTaskAssignmentRepository(): ITaskAssignmentRepository {
+    if (!repositoryRegistry.taskAssignmentRepository) {
+      repositoryRegistry.taskAssignmentRepository = new TaskAssignmentAdapter();
+    }
+    return repositoryRegistry.taskAssignmentRepository;
+  }
+
+  /**
    * Get Supplier Repository instance
    * Lazy loaded for memory efficiency
    */
@@ -470,6 +513,17 @@ export class RepositoryFactory {
       repositoryRegistry.notificationRepository = new SupabaseNotificationAdapter();
     }
     return repositoryRegistry.notificationRepository;
+  }
+
+  /**
+   * Get Alert Repository instance
+   * Lazy loaded for memory efficiency
+   */
+  static getAlertRepository(): IAlertRepository {
+    if (!repositoryRegistry.alertRepository) {
+      repositoryRegistry.alertRepository = new SupabaseAlertRepository();
+    }
+    return repositoryRegistry.alertRepository;
   }
 
   /**

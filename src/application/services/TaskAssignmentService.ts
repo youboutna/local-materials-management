@@ -4,10 +4,9 @@
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { ITaskAssignmentRepository } from '@/domain/repositories/ITaskAssignmentRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-
-// For now, using any repository as placeholder since task assignment repository doesn't exist
-import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
+import { TaskAssignment } from '@/domain/entities/Workspace';
 
 export interface TaskAssignment {
   id: string;
@@ -140,9 +139,11 @@ export interface TaskAssignmentValidationResultDto {
 }
 
 export class TaskAssignmentService {
-  constructor(
-    private repository: IProjectRepository = RepositoryFactory.getProjectRepository() // Using project repository as placeholder
-  ) {}
+  private taskAssignmentRepository: ITaskAssignmentRepository;
+
+  constructor() {
+    this.taskAssignmentRepository = RepositoryFactory.getTaskAssignmentRepository();
+  }
   /**
    * Create a new task assignment
    */

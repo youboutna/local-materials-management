@@ -1,4 +1,8 @@
-import { TenderEstimate, TenderEstimateItem } from '@/domain/entities/PerformanceMonitoring';
+// Import domain entities - PAS d'interfaces dans repository
+import { TenderEstimate, TenderEstimateItem } from '../entities/TenderEstimate';
+
+// Export types for use in other layers
+export type { TenderEstimate, TenderEstimateItem } from '../entities/TenderEstimate';
 
 export interface ITenderEstimateRepository {
   /**

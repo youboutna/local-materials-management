@@ -1,15 +1,12 @@
-import { DatabaseMetrics, PerformanceMetrics, TenderEstimate, TenderEstimateItem } from '@/domain/entities/PerformanceMonitoring';
+import { DatabaseMetrics, PerformanceMetrics } from '@/domain/entities/PerformanceMonitoring';
+import { TenderEstimate, TenderEstimateItem } from '@/domain/entities/TenderEstimate';
 import { 
   DatabaseMetricsDTO, 
   PerformanceMetricsDTO,
   TenderEstimateDTO,
-  TenderEstimateItemDTO,
-  TenderEstimateCreateDTO,
-  TenderEstimateItemCreateDTO,
-  UpdateTenderEstimateRequestDto,
-  UpdateTenderEstimateItemRequestDto
-} from './shared';
-import { EntityToDTOMapper } from './shared';
+  TenderEstimateItemDTO
+} from '../entities/shared';
+import { EntityToDTOMapper } from '../entities/shared';
 
 export class PerformanceMonitoringDomainTransformer implements EntityToDTOMapper<PerformanceMetrics, PerformanceMetricsDTO> {
   

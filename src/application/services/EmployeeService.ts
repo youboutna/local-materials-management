@@ -23,6 +23,34 @@ export interface SearchEmployeesResult {
 export class EmployeeService {
   constructor(private employeeRepository: IEmployeeRepository) {}
 
+  /**
+   * Get employees by phase ID
+   */
+  async getEmployeesByPhase(phaseId: string): Promise<{ data: any[] }> {
+    try {
+      // Get all employees and filter by their current assignments
+      const allEmployees = await this.employeeRepository.findAll();
+      
+      // For now, return employees that could be assigned to phases
+      // In a real implementation, this would query phase_assignments table
+      const activeEmployees = allEmployees.filter(employee => employee.isActive);
+      
+      return {
+        data: activeEmployees.map(employee => ({
+          id: employee.id,
+          name: employee.fullName,
+          email: employee.email,
+          position: employee.position,
+          phase_id: phaseId,
+          role: employee.role.name || 'employee'
+        }))
+      };
+    } catch (error) {
+      console.error('EmployeeService.getEmployeesByPhase failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get employees by phase');
+    }
+  }
+
   async searchEmployees(options: SearchEmployeesOptions = {}): Promise<SearchEmployeesResult> {
     try {
       let employees: Employee[];
