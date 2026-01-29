@@ -15,6 +15,8 @@ import { useToast } from '@/hooks/use-toast';
 import { FileText, Upload, Send, Plus, Search } from 'lucide-react';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
+import { useDocumentsHex, type DocumentFilters } from '@/hooks/hexagonal/useDocumentsHex';
+import { useAuth } from '@/hooks/hexagonal/useAuthSimple';
 
 interface Document {
   id: string;
@@ -69,86 +71,115 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
     project_id: ''
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { uploadFile, uploading } = useDocumentStorage();
+  const { user } = useAuth();
+  const { documents, isLoading, createDocument } = useDocumentsHex();
 
-  // Fetch documents with filters
-  const { data: documents, isLoading } = useQuery({
-    queryKey: ['documents-for-sharing', searchTerm, selectedDocumentType, selectedProject],
-    queryFn: async (): Promise<Document[]> => {
-      let query = supabase
-        .from('documents')
-        .select(`
-          id, title, document_type, file_url, file_name, 
-          created_at, project_id, description
-        `)
-        .order('created_at', { ascending: false });
-
-      // Apply filters
-      if (searchTerm) {
-        query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
-      }
-      
-      if (selectedDocumentType) {
-        // Filter by valid document types from database enum
-        query = query.eq('document_type', 'contract'); // Use a valid enum value
-      }
-      
-      if (selectedProject) {
-        query = query.eq('project_id', selectedProject);
-      }
-
-      const { data, error } = await query.limit(50);
-      if (error) throw error;
-      return (data || []).map(doc => ({
-        ...doc,
-        created_at: doc.created_at || new Date().toISOString()
-      })) as Document[];
-    },
-  });
+  // Filter documents based on search and filters
+  const filteredDocuments = documents?.filter(doc => {
+    const matchesSearch = !searchTerm || 
+      doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (doc.description && doc.description.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesType = !selectedDocumentType || doc.document_type === selectedDocumentType;
+    const matchesProject = !selectedProject || doc.project_id === selectedProject;
+    
+    return matchesSearch && matchesType && matchesProject;
+  }) || [];
 
   // Upload document mutation
   const uploadMutation = useMutation({
     mutationFn: async () => {
-      // Check authentication
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Vous devez être connecté pour uploader un document');
-      }
+      try {
+        console.info('ENHANCED_DOCUMENT_SHARING_001: Starting document upload', {
+          code: 'ENHANCED_DOCUMENT_SHARING_001',
+          message: 'Début du téléchargement de document',
+          supplierId: supplier.id,
+          supplierName: supplier.name,
+          fileName: selectedFile?.name,
+          stack: new Error().stack
+        });
 
-      if (!selectedFile) throw new Error('Aucun fichier sélectionné');
-      
-      // Upload file
-      const uploadResult = await uploadFile(selectedFile, `documents/${selectedFile.name}`);
-      if (!uploadResult.success) {
-        throw new Error(uploadResult.error || 'Erreur lors du téléchargement');
-      }
+        if (!user) {
+          console.error('ENHANCED_DOCUMENT_SHARING_002: User not authenticated', {
+            code: 'ENHANCED_DOCUMENT_SHARING_002',
+            message: 'Utilisateur non authentifié pour le téléchargement',
+            supplierId: supplier.id,
+            stack: new Error().stack
+          });
+          throw new Error('ENHANCED_DOCUMENT_SHARING_002: Vous devez être connecté pour uploader un document');
+        }
 
-      // Create document record
-      const { data, error } = await supabase
-        .from('documents')
-        .insert({
+        if (!selectedFile) {
+          console.error('ENHANCED_DOCUMENT_SHARING_003: No file selected', {
+            code: 'ENHANCED_DOCUMENT_SHARING_003',
+            message: 'Aucun fichier sélectionné pour le téléchargement',
+            supplierId: supplier.id,
+            stack: new Error().stack
+          });
+          throw new Error('ENHANCED_DOCUMENT_SHARING_003: Aucun fichier sélectionné');
+        }
+        
+        // Upload file
+        const uploadResult = await uploadFile(selectedFile, `documents/${selectedFile.name}`);
+        if (!uploadResult.success) {
+          console.error('ENHANCED_DOCUMENT_SHARING_004: File upload failed', {
+            code: 'ENHANCED_DOCUMENT_SHARING_004',
+            message: 'Échec du téléchargement du fichier',
+            supplierId: supplier.id,
+            fileName: selectedFile.name,
+            technicalError: uploadResult.error,
+            stack: new Error().stack
+          });
+          throw new Error(`ENHANCED_DOCUMENT_SHARING_004: ${uploadResult.error || 'Erreur lors du téléchargement'}`);
+        }
+
+        console.info('ENHANCED_DOCUMENT_SHARING_005: File uploaded successfully', {
+          code: 'ENHANCED_DOCUMENT_SHARING_005',
+          message: 'Fichier téléchargé avec succès',
+          supplierId: supplier.id,
+          fileName: selectedFile.name,
+          fileUrl: uploadResult.url,
+          stack: new Error().stack
+        });
+
+        // Create document record using hexagonal hook
+        await createDocument({
           title: uploadFormData.title,
-          document_type: 'contract', // Use a valid document type from enum
+          document_type: 'contract',
           description: uploadFormData.description,
           project_id: uploadFormData.project_id || null,
           file_url: uploadResult.url,
           file_name: selectedFile.name,
           file_size: selectedFile.size,
           mime_type: selectedFile.type,
-          uploaded_by: session.user.id,
+          uploaded_by: user.id,
           status: 'draft'
-        })
-        .select()
-        .single();
+        });
 
-      if (error) throw error;
-      return data;
+        console.info('ENHANCED_DOCUMENT_SHARING_006: Document created successfully', {
+          code: 'ENHANCED_DOCUMENT_SHARING_006',
+          message: 'Document créé avec succès dans la base de données',
+          supplierId: supplier.id,
+          documentTitle: uploadFormData.title,
+          stack: new Error().stack
+        });
+      } catch (error) {
+        console.error('ENHANCED_DOCUMENT_SHARING_007: Upload mutation failed', {
+          code: 'ENHANCED_DOCUMENT_SHARING_007',
+          message: 'Échec de la mutation de téléchargement',
+          supplierId: supplier.id,
+          technicalError: error,
+          stack: new Error().stack
+        });
+        throw error;
+      }
     },
-    onSuccess: (newDocument) => {
-      queryClient.invalidateQueries({ queryKey: ['documents-for-sharing'] });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
       toast({
         title: "Succès",
         description: "Document téléchargé avec succès"
@@ -162,9 +193,6 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
         project_id: ''
       });
       setSelectedFile(null);
-      
-      // Auto-share the uploaded document
-      handleShareDocument(newDocument.id, uploadFormData.title || newDocument.file_name || 'Document');
     },
     onError: (error: Error) => {
       toast({
@@ -177,49 +205,73 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
 
   // Share document function
   const handleShareDocument = async (documentId: string, documentTitle: string) => {
-    // Check authentication
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      toast({
-        title: "Erreur",
-        description: "Vous devez être connecté pour partager un document.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!supplier.email) {
-      toast({
-        title: "Erreur",
-        description: "Ce fournisseur n'a pas d'adresse email.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     try {
-      // Create notification
-      await NotificationService.createNotification({
+      console.info('ENHANCED_DOCUMENT_SHARING_008: Starting document share', {
+        code: 'ENHANCED_DOCUMENT_SHARING_008',
+        message: 'Début du partage de document',
+        documentId,
+        documentTitle,
+        supplierId: supplier.id,
+        supplierName: supplier.name,
+        stack: new Error().stack
+      });
+
+      if (!user) {
+        console.error('ENHANCED_DOCUMENT_SHARING_009: User not authenticated for sharing', {
+          code: 'ENHANCED_DOCUMENT_SHARING_009',
+          message: 'Utilisateur non authentifié pour le partage',
+          documentId,
+          supplierId: supplier.id,
+          stack: new Error().stack
+        });
+        toast({
+          title: "Erreur",
+          description: "Vous devez être connecté pour partager un document.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (!supplier.email) {
+        console.error('ENHANCED_DOCUMENT_SHARING_010: Supplier has no email', {
+          code: 'ENHANCED_DOCUMENT_SHARING_010',
+          message: 'Le fournisseur n\'a pas d\'adresse email',
+          documentId,
+          supplierId: supplier.id,
+          supplierName: supplier.name,
+          stack: new Error().stack
+        });
+        toast({
+          title: "Erreur",
+          description: "Ce fournisseur n'a pas d'adresse email.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Create notification using NotificationService
+      const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
+      await notificationService.createNotification({
         recipient_id: supplier.id,
-        type: 'supplier_payment_request',
+        type: 'info',
         title: 'Nouveau document partagé',
         message: `Le document "${documentTitle}" a été partagé avec vous.`,
-        related_id: documentId,
         metadata: {
           document_id: documentId,
           document_title: documentTitle,
-          shared_by: session.user.id,
+          shared_by: user.id,
           action: 'document_shared'
         }
       });
 
-      // Send email notification
-      await sendSupplierNotification({
-        type: 'task_assignment',
-        email: supplier.email || '',
-        supplier_name: supplier.name || '',
-        supplier_id: supplier.id,
-        task_title: `Document partagé: ${documentTitle}`
+      console.info('ENHANCED_DOCUMENT_SHARING_011: Document shared successfully', {
+        code: 'ENHANCED_DOCUMENT_SHARING_011',
+        message: 'Document partagé avec succès',
+        documentId,
+        documentTitle,
+        supplierId: supplier.id,
+        supplierEmail: supplier.email,
+        stack: new Error().stack
       });
       
       toast({
@@ -227,7 +279,15 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
         description: `Document "${documentTitle}" partagé avec ${supplier.name || 'ce fournisseur'}`,
       });
     } catch (error) {
-      console.error('Error sharing document:', error);
+      console.error('ENHANCED_DOCUMENT_SHARING_012: Document share failed', {
+        code: 'ENHANCED_DOCUMENT_SHARING_012',
+        message: 'Échec du partage de document',
+        documentId,
+        documentTitle,
+        supplierId: supplier.id,
+        technicalError: error,
+        stack: new Error().stack
+      });
       toast({
         title: "Erreur",
         description: "Erreur lors du partage du document",

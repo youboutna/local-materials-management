@@ -1,9 +1,10 @@
 /**
  * Hexagonal hook for user administration
- * Note: Uses direct Supabase calls as admin API requires special privileges
+ * Provides admin-level user management through UserAdminService
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { UserAdminService } from '@/application/services/UserAdminService';
+import { UserAdminAdapter } from '@/infrastructure/supabase/adapters/UserAdminAdapter';
 import { toast } from '@/hooks/use-toast';
 
 export interface UserProfile {
@@ -21,50 +22,41 @@ export interface UserProfile {
 }
 
 export const useUserProfilesHex = (userId: string | undefined, isDevelopmentMode: boolean) => {
+  const adminService = new UserAdminService(new UserAdminAdapter());
+  
   return useQuery({
     queryKey: ['user-profiles', userId],
     queryFn: async (): Promise<UserProfile[]> => {
-      // Fetch profiles
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (profilesError) throw profilesError;
-
-      if (!profilesData) return [];
-
-      // Fetch roles and email for each user
-      const profilesWithRoles = await Promise.all(
-        profilesData.map(async (profile) => {
-          // Get user roles
-          const { data: rolesData } = await supabase
-            .from('user_roles')
-            .select('role_name')
-            .eq('user_id', profile.id);
-
-          // Get user email from auth.users (requires admin privileges)
-          let userEmail: string | null = null;
-          try {
-            const { data: userData } = await supabase.auth.admin.getUserById(profile.id);
-            userEmail = userData.user?.email || null;
-          } catch {
-            // Admin API may not be available
-          }
-
-          const roles = rolesData?.map((r: any) => r.role_name) || [];
-          const primaryRole = roles[0] || 'viewer';
-
-          return {
-            ...profile,
-            roles,
-            primaryRole,
-            email: userEmail,
-          } as UserProfile;
-        })
-      );
-
-      return profilesWithRoles;
+      try {
+        console.info('USE_USERS_ADMIN_HEX_001: Fetching user profiles', {
+          code: 'USE_USERS_ADMIN_HEX_001',
+          message: 'Début de la récupération des profils utilisateurs',
+          userId,
+          isDevelopmentMode,
+          stack: new Error().stack
+        });
+        
+        const profiles = await adminService.getUserProfiles();
+        
+        console.info('USE_USERS_ADMIN_HEX_002: User profiles fetched successfully', {
+          code: 'USE_USERS_ADMIN_HEX_002',
+          message: `${profiles.length} profils utilisateurs récupérés avec succès`,
+          userId,
+          profilesCount: profiles.length,
+          stack: new Error().stack
+        });
+        
+        return profiles;
+      } catch (error) {
+        console.error('USE_USERS_ADMIN_HEX_003: Failed to fetch user profiles', {
+          code: 'USE_USERS_ADMIN_HEX_003',
+          message: 'Échec de la récupération des profils utilisateurs dans le hook',
+          userId,
+          technicalError: error,
+          stack: new Error().stack
+        });
+        throw error;
+      }
     },
     enabled: !!userId && !isDevelopmentMode,
   });
@@ -72,24 +64,65 @@ export const useUserProfilesHex = (userId: string | undefined, isDevelopmentMode
 
 export const useToggleUserStatusHex = () => {
   const queryClient = useQueryClient();
+  const adminService = new UserAdminService(new UserAdminAdapter());
   
   return useMutation({
     mutationFn: async ({ userId, newStatus }: { userId: string; newStatus: boolean }) => {
-      const { error } = await supabase.auth.admin.updateUserById(userId, {
-        ban_duration: newStatus ? 'none' : '24h',
-      });
-      if (error) throw error;
-      return { userId, newStatus };
+      try {
+        console.info('USE_USERS_ADMIN_HEX_005: Toggling user status', {
+          code: 'USE_USERS_ADMIN_HEX_005',
+          message: `Basculement du statut utilisateur: ${userId} -> ${newStatus ? 'actif' : 'inactif'}`,
+          userId,
+          newStatus,
+          stack: new Error().stack
+        });
+        
+        const result = await adminService.toggleUserStatus(userId, newStatus);
+        
+        console.info('USE_USERS_ADMIN_HEX_006: User status toggled successfully', {
+          code: 'USE_USERS_ADMIN_HEX_006',
+          message: `Statut utilisateur basculé avec succès: ${userId}`,
+          userId,
+          isActive: result.isActive,
+          stack: new Error().stack
+        });
+        
+        return result;
+      } catch (error) {
+        console.error('USE_USERS_ADMIN_HEX_007: Failed to toggle user status', {
+          code: 'USE_USERS_ADMIN_HEX_007',
+          message: 'Échec du basculement du statut utilisateur dans le hook',
+          userId,
+          newStatus,
+          technicalError: error,
+          stack: new Error().stack
+        });
+        throw error;
+      }
     },
-    onSuccess: ({ userId, newStatus }) => {
+    onSuccess: ({ userId, isActive }) => {
+      console.info('USE_USERS_ADMIN_HEX_008: User status toggle success', {
+        code: 'USE_USERS_ADMIN_HEX_008',
+        message: `Succès du basculement du statut utilisateur: ${userId}`,
+        userId,
+        isActive,
+        stack: new Error().stack
+      });
+      
       queryClient.invalidateQueries({ queryKey: ['user-profiles'] });
       toast({
         title: 'Succès',
-        description: `Le compte a été ${newStatus ? 'activé' : 'désactivé'}.`,
+        description: `Le compte a été ${isActive ? 'activé' : 'désactivé'}.`,
       });
     },
-    onError: (error: any) => {
-      console.error('Error toggling user status:', error);
+    onError: (error: unknown) => {
+      console.error('USE_USERS_ADMIN_HEX_009: User status toggle error', {
+        code: 'USE_USERS_ADMIN_HEX_009',
+        message: 'Erreur lors du basculement du statut utilisateur',
+        technicalError: error,
+        stack: new Error().stack
+      });
+      
       toast({
         title: 'Erreur',
         description: "Impossible de modifier le statut de l'utilisateur",

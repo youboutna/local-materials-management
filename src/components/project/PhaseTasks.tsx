@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,26 +7,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2, Calendar, User } from 'lucide-react';
 import TaskAssigneeSelector from '@/components/selectors/TaskAssigneeSelector';
+import { usePhaseTasksHex, type TaskFormData, type PhaseTask } from '@/hooks/hexagonal/usePhaseTasksHex';
+import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface PhaseTasksProps {
   phaseId: string;
   projectId: string;
-}
-
-interface TaskFormData {
-  title: string;
-  description: string;
-  assigned_to: string;
-  assignee_name: string;
-  assignee_email: string;
-  assignee_type: 'employee' | 'supplier' | 'user';
-  due_date: string;
-  priority: string;
-  status: string;
-  notes: string;
 }
 
 const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
@@ -37,147 +24,138 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
   const [formData, setFormData] = useState<TaskFormData>({
     title: '',
     description: '',
-    assigned_to: '',
-    assignee_name: '',
-    assignee_email: '',
-    assignee_type: 'employee',
-    due_date: '',
     priority: 'medium',
     status: 'pending',
-    notes: '',
+    due_date: '',
   });
   
+  const { 
+    tasks, 
+    isLoading, 
+    createTask, 
+    updateTask, 
+    deleteTask,
+    isCreating: isCreatingTask,
+    isUpdating,
+    isDeleting
+  } = usePhaseTasksHex(phaseId);
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  const { data: tasks, isLoading } = useQuery({
-    queryKey: ['phase-tasks', phaseId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('task_assignments')
-        .select('*')
-        .eq('phase_id', phaseId)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const createTaskMutation = useMutation({
-    mutationFn: async (taskData: TaskFormData) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      const { data, error } = await supabase
-        .from('task_assignments')
-        .insert({
-          title: taskData.title,
-          description: taskData.description,
-          project_id: projectId,
-          phase_id: phaseId,
-          assigned_to: taskData.assigned_to || null,
-          assignee_type: taskData.assigned_to ? taskData.assignee_type : null,
-          assignee_name: taskData.assigned_to ? taskData.assignee_name : null,
-          assignee_email: taskData.assigned_to ? taskData.assignee_email : null,
-          assigned_by: user?.id || null,
-          due_date: taskData.due_date || null,
-          priority: taskData.priority,
-          status: taskData.status,
-          notes: taskData.notes || null,
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['phase-tasks', phaseId] });
-      setIsCreating(false);
-      resetForm();
-      toast({ title: 'Tâche créée avec succès' });
-    },
-  });
-
-  const updateTaskMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<TaskFormData> }) => {
-      const { error } = await supabase
-        .from('task_assignments')
-        .update(data)
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['phase-tasks', phaseId] });
-      setEditingId(null);
-      resetForm();
-      toast({ title: 'Tâche mise à jour avec succès' });
-    },
-  });
-
-  const deleteTaskMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('task_assignments')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['phase-tasks', phaseId] });
-      toast({ title: 'Tâche supprimée avec succès' });
-    },
-  });
 
   const resetForm = () => {
     setFormData({
       title: '',
       description: '',
-      assigned_to: '',
-      assignee_name: '',
-      assignee_email: '',
-      assignee_type: 'employee',
-      due_date: '',
       priority: 'medium',
       status: 'pending',
-      notes: '',
+      due_date: '',
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation
-    if (!formData.title.trim()) {
-      toast({
-        title: 'Erreur de validation',
-        description: 'Le titre de la tâche est requis',
-        variant: 'destructive',
+    try {
+      console.info('PHASE_TASKS_001: Starting task submission', {
+        code: 'PHASE_TASKS_001',
+        message: 'Début de la soumission de tâche',
+        phaseId,
+        projectId,
+        isEditing: !!editingId,
+        taskTitle: formData.title,
+        stack: new Error().stack
       });
-      return;
-    }
-    
-    if (editingId) {
-      updateTaskMutation.mutate({ id: editingId, data: formData });
-    } else {
-      createTaskMutation.mutate(formData);
+
+      // Validation
+      if (!formData.title.trim()) {
+        console.error('PHASE_TASKS_002: Task title validation failed', {
+          code: 'PHASE_TASKS_002',
+          message: 'Le titre de la tâche est requis',
+          phaseId,
+          projectId,
+          stack: new Error().stack
+        });
+        return;
+      }
+      
+      console.info('PHASE_TASKS_003: Task validation passed', {
+        code: 'PHASE_TASKS_003',
+        message: 'Validation de la tâche réussie',
+        taskData: formData,
+        stack: new Error().stack
+      });
+
+      if (editingId) {
+        console.info('PHASE_TASKS_004: Updating existing task', {
+          code: 'PHASE_TASKS_004',
+          message: 'Mise à jour de la tâche existante',
+          taskId: editingId,
+          taskData: formData,
+          stack: new Error().stack
+        });
+
+        await updateTask({ id: editingId, data: formData });
+        
+        console.info('PHASE_TASKS_005: Task updated successfully', {
+          code: 'PHASE_TASKS_005',
+          message: 'Tâche mise à jour avec succès',
+          taskId: editingId,
+          stack: new Error().stack
+        });
+
+        setEditingId(null);
+      } else {
+        console.info('PHASE_TASKS_006: Creating new task', {
+          code: 'PHASE_TASKS_006',
+          message: 'Création d\'une nouvelle tâche',
+          taskData: formData,
+          stack: new Error().stack
+        });
+
+        await createTask(formData);
+        
+        console.info('PHASE_TASKS_007: Task created successfully', {
+          code: 'PHASE_TASKS_007',
+          message: 'Tâche créée avec succès',
+          taskTitle: formData.title,
+          stack: new Error().stack
+        });
+      }
+      
+      setIsCreating(false);
+      resetForm();
+
+      console.info('PHASE_TASKS_008: Task submission completed', {
+        code: 'PHASE_TASKS_008',
+        message: 'Soumission de tâche terminée avec succès',
+        phaseId,
+        projectId,
+        taskTitle: formData.title,
+        stack: new Error().stack
+      });
+    } catch (error) {
+      console.error('PHASE_TASKS_009: Task submission failed', {
+        code: 'PHASE_TASKS_009',
+        message: 'Échec de la soumission de tâche',
+        phaseId,
+        projectId,
+        taskTitle: formData.title,
+        isEditing: !!editingId,
+        technicalError: error,
+        stack: new Error().stack
+      });
+      // Le hook gère déjà les notifications d'erreur
     }
   };
 
-  const startEdit = (task: any) => {
+  const startEdit = (task: PhaseTask) => {
     setFormData({
       title: task.title || '',
       description: task.description || '',
-      assigned_to: task.assigned_to || '',
-      assignee_name: task.assignee_name || '',
-      assignee_email: task.assignee_email || '',
-      assignee_type: task.assignee_type || 'employee',
-      due_date: task.due_date || '',
       priority: task.priority || 'medium',
       status: task.status || 'pending',
-      notes: task.notes || '',
+      due_date: task.due_date || '',
     });
     setEditingId(task.id);
     setIsCreating(true);
@@ -323,8 +301,8 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
                   <Button type="button" variant="outline" onClick={() => setIsCreating(false)}>
                     Annuler
                   </Button>
-                  <Button type="submit" disabled={createTaskMutation.isPending || updateTaskMutation.isPending}>
-                    {(createTaskMutation.isPending || updateTaskMutation.isPending) 
+                  <Button type="submit" disabled={isCreatingTask || isUpdating}>
+                    {(isCreatingTask || isUpdating) 
                       ? 'Enregistrement...' 
                       : editingId ? 'Mettre à jour' : 'Créer la tâche'}
                   </Button>
@@ -353,7 +331,8 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => deleteTaskMutation.mutate(task.id)}
+                      onClick={() => deleteTask(task.id)}
+                      disabled={isDeleting}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

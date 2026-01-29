@@ -1,9 +1,11 @@
 // hooks/hexagonal/usePhaseTasksHex.ts - Hexagonal hook for phase tasks management
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuthUserHex } from './useAuthUserHex';
+import { TaskService } from '@/application/services/TaskService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { TaskDTO, CreateTaskDTO, UpdateTaskDTO } from '@/dtos/entities/TaskDTO';
 
 export interface PhaseTask {
   id: string;
@@ -18,6 +20,10 @@ export interface PhaseTask {
   end_date?: string | null;
   progress?: number | null;
   created_at: string | null;
+  notes?: string | null;
+  assignee_name?: string | null;
+  assignee_email?: string | null;
+  assignee_type?: string | null;
 }
 
 export interface TaskFormData {
@@ -28,11 +34,16 @@ export interface TaskFormData {
   due_date?: string;
   start_date?: string;
   assigned_to?: string;
+  assignee_name?: string;
+  assignee_email?: string;
+  assignee_type?: string;
+  notes?: string;
 }
 
 export const usePhaseTasksHex = (phaseId: string) => {
   const queryClient = useQueryClient();
   const { user } = useAuthUserHex();
+  const taskService = new TaskService(RepositoryFactory.getTaskRepository());
 
   // Fetch phase tasks
   const {
@@ -42,126 +53,325 @@ export const usePhaseTasksHex = (phaseId: string) => {
     refetch
   } = useQuery({
     queryKey: ['phase-tasks-hex', phaseId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('task_assignments')
-        .select('*')
-        .eq('phase_id', phaseId)
-        .order('created_at', { ascending: false });
+    queryFn: async (): Promise<PhaseTask[]> => {
+      try {
+        console.info('USE_PHASE_TASKS_HEX_001: Fetching phase tasks', {
+          code: 'USE_PHASE_TASKS_HEX_001',
+          message: 'Début de la récupération des tâches de phase',
+          phaseId,
+          stack: new Error().stack
+        });
 
-      if (error) throw error;
-      return data as PhaseTask[];
+        const tasksData = await taskService.getTasksByPhase(phaseId);
+
+        console.info('USE_PHASE_TASKS_HEX_002: Phase tasks fetched successfully', {
+          code: 'USE_PHASE_TASKS_HEX_002',
+          message: 'Tâches de phase récupérées avec succès',
+          phaseId,
+          tasksCount: tasksData.length,
+          stack: new Error().stack
+        });
+
+        // Transform TaskDTO to PhaseTask interface
+        return tasksData.map((task: TaskDTO): PhaseTask => ({
+          id: task.id,
+          phase_id: task.phaseId || phaseId,
+          assigned_to: task.assignedTo?.[0] || null,
+          title: task.title,
+          description: task.description || null,
+          priority: task.priority || 'medium',
+          status: task.status || 'pending',
+          due_date: task.dueDate || null,
+          start_date: (task as any).startDate || null,
+          end_date: (task as any).endDate || null,
+          progress: (task as any).progress || null,
+          created_at: task.createdAt,
+          notes: (task as any).notes || null,
+          assignee_name: task.assigneeName || null,
+          assignee_email: null,
+          assignee_type: null
+        }));
+      } catch (error) {
+        console.error('USE_PHASE_TASKS_HEX_003: Failed to fetch phase tasks', {
+          code: 'USE_PHASE_TASKS_HEX_003',
+          message: 'Échec de la récupération des tâches de phase',
+          phaseId,
+          technicalError: error,
+          stack: new Error().stack
+        });
+        throw error;
+      }
     },
     enabled: !!phaseId
   });
 
-  const createMutation = useMutation({
-    mutationFn: async (taskData: TaskFormData) => {
-      const { data, error } = await supabase
-        .from('task_assignments')
-        .insert({
-          phase_id: phaseId,
+  // Create task mutation
+  const createTaskMutation = useMutation({
+    mutationFn: async (taskData: TaskFormData): Promise<PhaseTask> => {
+      try {
+        console.info('USE_PHASE_TASKS_HEX_004: Creating task', {
+          code: 'USE_PHASE_TASKS_HEX_004',
+          message: 'Début de la création de tâche',
+          phaseId,
+          taskTitle: taskData.title,
+          stack: new Error().stack
+        });
+
+        const createTaskDto: CreateTaskDTO = {
           title: taskData.title,
-          description: taskData.description,
-          priority: taskData.priority || 'medium',
-          status: taskData.status || 'pending',
-          due_date: taskData.due_date,
-          start_date: taskData.start_date,
-          assigned_to: taskData.assigned_to || user?.id
-        })
-        .select()
-        .single();
+          description: taskData.description || '',
+          priority: (taskData.priority as 'low' | 'medium' | 'high' | 'urgent') || 'medium',
+          status: (taskData.status as 'not_started' | 'in_progress' | 'completed' | 'delayed') || 'not_started',
+          progress: 0,
+          startDate: '',
+          endDate: '',
+          estimatedDuration: 0,
+          costEstimate: 0,
+          phaseId: phaseId,
+          assignedTo: taskData.assigned_to ? [taskData.assigned_to] : [],
+          dueDate: taskData.due_date
+        };
 
-      if (error) throw error;
-      return data;
+        const createdTask = await taskService.createTask(createTaskDto);
+
+        console.info('USE_PHASE_TASKS_HEX_005: Task created successfully', {
+          code: 'USE_PHASE_TASKS_HEX_005',
+          message: 'Tâche créée avec succès',
+          taskId: createdTask.id,
+          taskTitle: createdTask.title,
+          stack: new Error().stack
+        });
+
+        // Transform TaskDTO to PhaseTask interface
+        return {
+          id: createdTask.id,
+          phase_id: phaseId,
+          assigned_to: taskData.assigned_to || null,
+          title: createdTask.title,
+          description: createdTask.description || null,
+          priority: createdTask.priority || 'medium',
+          status: createdTask.status || 'pending',
+          due_date: createdTask.dueDate || null,
+          start_date: (createdTask as any).startDate || null,
+          end_date: (createdTask as any).endDate || null,
+          progress: (createdTask as any).progress || null,
+          created_at: createdTask.createdAt,
+          notes: taskData.notes || null,
+          assignee_name: taskData.assignee_name || null,
+          assignee_email: taskData.assignee_email || null,
+          assignee_type: taskData.assignee_type || null
+        };
+      } catch (error) {
+        console.error('USE_PHASE_TASKS_HEX_006: Failed to create task', {
+          code: 'USE_PHASE_TASKS_HEX_006',
+          message: 'Échec de la création de tâche',
+          phaseId,
+          taskTitle: taskData.title,
+          technicalError: error,
+          stack: new Error().stack
+        });
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (newTask) => {
+      console.info('USE_PHASE_TASKS_HEX_007: Task creation mutation success', {
+        code: 'USE_PHASE_TASKS_HEX_007',
+        message: 'Mutation de création de tâche réussie',
+        taskId: newTask.id,
+        taskTitle: newTask.title,
+        stack: new Error().stack
+      });
+
       queryClient.invalidateQueries({ queryKey: ['phase-tasks-hex', phaseId] });
       toast({
-        title: 'Tâche créée',
-        description: 'La tâche a été créée avec succès'
+        title: 'Succès',
+        description: `Tâche "${newTask.title}" créée avec succès`
       });
     },
-    onError: (error) => {
+    onError: (error: Error, variables) => {
+      console.error('USE_PHASE_TASKS_HEX_008: Task creation mutation error', {
+        code: 'USE_PHASE_TASKS_HEX_008',
+        message: 'Erreur dans la mutation de création de tâche',
+        taskTitle: variables.title,
+        technicalError: error,
+        stack: new Error().stack
+      });
+
       toast({
-        title: 'Erreur',
-        description: `Erreur lors de la création: ${error.message}`,
+        title: 'Erreur de création',
+        description: `Impossible de créer la tâche "${variables.title}"`,
         variant: 'destructive'
       });
     }
   });
 
-  // Update task
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<TaskFormData> }) => {
-      const { error } = await supabase
-        .from('task_assignments')
-        .update(data)
-        .eq('id', id);
+  // Update task mutation
+  const updateTaskMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: TaskFormData }): Promise<PhaseTask> => {
+      try {
+        console.info('USE_PHASE_TASKS_HEX_009: Updating task', {
+          code: 'USE_PHASE_TASKS_HEX_009',
+          message: 'Début de la mise à jour de tâche',
+          taskId: id,
+          taskTitle: data.title,
+          stack: new Error().stack
+        });
 
-      if (error) throw error;
+        const updateTaskDto: UpdateTaskDTO = {
+          title: data.title,
+          description: data.description,
+          priority: data.priority as 'low' | 'medium' | 'high' | 'urgent',
+          status: data.status as 'not_started' | 'in_progress' | 'completed' | 'delayed',
+          phaseId: phaseId,
+          assignedTo: data.assigned_to ? [data.assigned_to] : [],
+          dueDate: data.due_date
+        };
+
+        const updatedTask = await taskService.updateTask(id, updateTaskDto);
+
+        console.info('USE_PHASE_TASKS_HEX_010: Task updated successfully', {
+          code: 'USE_PHASE_TASKS_HEX_010',
+          message: 'Tâche mise à jour avec succès',
+          taskId: id,
+          taskTitle: updatedTask.title,
+          stack: new Error().stack
+        });
+
+        // Transform TaskDTO to PhaseTask interface
+        return {
+          id: updatedTask.id,
+          phase_id: phaseId,
+          assigned_to: data.assigned_to || null,
+          title: updatedTask.title,
+          description: updatedTask.description || null,
+          priority: updatedTask.priority || 'medium',
+          status: updatedTask.status || 'pending',
+          due_date: updatedTask.dueDate || null,
+          start_date: (updatedTask as any).startDate || null,
+          end_date: (updatedTask as any).endDate || null,
+          progress: (updatedTask as any).progress || null,
+          created_at: updatedTask.createdAt,
+          notes: data.notes || null,
+          assignee_name: data.assignee_name || null,
+          assignee_email: data.assignee_email || null,
+          assignee_type: data.assignee_type || null
+        };
+      } catch (error) {
+        console.error('USE_PHASE_TASKS_HEX_011: Failed to update task', {
+          code: 'USE_PHASE_TASKS_HEX_011',
+          message: 'Échec de la mise à jour de tâche',
+          taskId: id,
+          taskTitle: data.title,
+          technicalError: error,
+          stack: new Error().stack
+        });
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (updatedTask) => {
+      console.info('USE_PHASE_TASKS_HEX_012: Task update mutation success', {
+        code: 'USE_PHASE_TASKS_HEX_012',
+        message: 'Mutation de mise à jour de tâche réussie',
+        taskId: updatedTask.id,
+        taskTitle: updatedTask.title,
+        stack: new Error().stack
+      });
+
       queryClient.invalidateQueries({ queryKey: ['phase-tasks-hex', phaseId] });
       toast({
-        title: 'Tâche mise à jour',
-        description: 'La tâche a été mise à jour avec succès'
+        title: 'Succès',
+        description: `Tâche "${updatedTask.title}" mise à jour avec succès`
       });
     },
-    onError: (error) => {
+    onError: (error: Error, variables) => {
+      console.error('USE_PHASE_TASKS_HEX_013: Task update mutation error', {
+        code: 'USE_PHASE_TASKS_HEX_013',
+        message: 'Erreur dans la mutation de mise à jour de tâche',
+        taskId: variables.id,
+        taskTitle: variables.data.title,
+        technicalError: error,
+        stack: new Error().stack
+      });
+
       toast({
-        title: 'Erreur',
-        description: `Erreur lors de la mise à jour: ${error.message}`,
+        title: 'Erreur de mise à jour',
+        description: `Impossible de mettre à jour la tâche "${variables.data.title}"`,
         variant: 'destructive'
       });
     }
   });
 
-  // Delete task
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('task_assignments')
-        .delete()
-        .eq('id', id);
+  // Delete task mutation
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (taskId: string): Promise<void> => {
+      try {
+        console.info('USE_PHASE_TASKS_HEX_014: Deleting task', {
+          code: 'USE_PHASE_TASKS_HEX_014',
+          message: 'Début de la suppression de tâche',
+          taskId,
+          stack: new Error().stack
+        });
 
-      if (error) throw error;
+        await taskService.deleteTask(taskId);
+
+        console.info('USE_PHASE_TASKS_HEX_015: Task deleted successfully', {
+          code: 'USE_PHASE_TASKS_HEX_015',
+          message: 'Tâche supprimée avec succès',
+          taskId,
+          stack: new Error().stack
+        });
+      } catch (error) {
+        console.error('USE_PHASE_TASKS_HEX_016: Failed to delete task', {
+          code: 'USE_PHASE_TASKS_HEX_016',
+          message: 'Échec de la suppression de tâche',
+          taskId,
+          technicalError: error,
+          stack: new Error().stack
+        });
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (_, taskId) => {
+      console.info('USE_PHASE_TASKS_HEX_017: Task deletion mutation success', {
+        code: 'USE_PHASE_TASKS_HEX_017',
+        message: 'Mutation de suppression de tâche réussie',
+        taskId,
+        stack: new Error().stack
+      });
+
       queryClient.invalidateQueries({ queryKey: ['phase-tasks-hex', phaseId] });
       toast({
-        title: 'Tâche supprimée',
-        description: 'La tâche a été supprimée avec succès'
+        title: 'Succès',
+        description: 'Tâche supprimée avec succès'
       });
     },
-    onError: (error) => {
+    onError: (error: Error, taskId) => {
+      console.error('USE_PHASE_TASKS_HEX_018: Task deletion mutation error', {
+        code: 'USE_PHASE_TASKS_HEX_018',
+        message: 'Erreur dans la mutation de suppression de tâche',
+        taskId,
+        technicalError: error,
+        stack: new Error().stack
+      });
+
       toast({
-        title: 'Erreur',
-        description: `Erreur lors de la suppression: ${error.message}`,
+        title: 'Erreur de suppression',
+        description: 'Impossible de supprimer la tâche',
         variant: 'destructive'
       });
     }
   });
-
-  const stats = {
-    total: tasks.length,
-    completed: tasks.filter(t => t.status === 'completed').length,
-    inProgress: tasks.filter(t => t.status === 'in_progress').length,
-    pending: tasks.filter(t => t.status === 'pending').length,
-    overdue: tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length
-  };
 
   return {
     tasks,
     isLoading,
     error,
     refetch,
-    stats,
-    createTask: createMutation.mutateAsync,
-    updateTask: updateMutation.mutateAsync,
-    deleteTask: deleteMutation.mutateAsync,
-    isCreating: createMutation.isPending,
-    isUpdating: updateMutation.isPending,
-    isDeleting: deleteMutation.isPending
+    createTask: createTaskMutation.mutateAsync,
+    updateTask: updateTaskMutation.mutateAsync,
+    deleteTask: deleteTaskMutation.mutateAsync,
+    isCreating: createTaskMutation.isPending,
+    isUpdating: updateTaskMutation.isPending,
+    isDeleting: deleteTaskMutation.isPending
   };
 };
