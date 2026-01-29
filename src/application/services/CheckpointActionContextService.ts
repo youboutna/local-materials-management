@@ -242,19 +242,19 @@ export class CheckpointActionContextService {
       const progressBasedAmount = (projectData.budget * projectData.progress) / 100;
       const maxAllowedWithTolerance = progressBasedAmount * 1.5;
 
-      // Calculate milestone progress
-      const milestonesSummary = milestones.map((m: Milestone) => ({
+      // Calculate milestone progress - milestones is now MilestoneDTO[]
+      const milestonesSummary = milestones.map((m: MilestoneDTO) => ({
         id: m.id,
         title: m.title,
-        target_date: m.targetDate || '',
-        actual_completion_date: m.completionDate || undefined,
+        target_date: m.target_date || '',
+        actual_completion_date: m.completed_date || undefined,
         status: m.status,
-        type: m.configuration.type,
-        priority: m.priority,
-        weight: m.configuration.weight,
-        is_critical: m.configuration.isCritical,
-        float_days: m.configuration.relativeOffsetDays,
-        completed_date: m.completionDate || undefined
+        type: m.type || 'checkpoint',
+        priority: m.priority || 'normal',
+        weight: m.weight || 0.5,
+        is_critical: m.priority === 'critical',
+        float_days: 0,
+        completed_date: m.completed_date || undefined
       } as MilestoneSummaryDTO));
 
       const checkpoints = milestonesSummary.filter((m: MilestoneSummaryDTO) => m.type === 'checkpoint' || m.type === 'gate');
@@ -467,8 +467,8 @@ export class CheckpointActionContextService {
       // Get pending tasks (all tasks that are not completed)
       const pendingTasks: TaskInfo[] = [];
       if (linkedPhase) {
-        const phases = await this.fetchPhases(projectId);
-        const fullPhase = phases.find(p => p.id === linkedPhase.id);
+        const phases = await this.fetchPhases(projectId) as PhaseData[];
+        const fullPhase = phases.find((p: PhaseData) => p.id === linkedPhase.id);
         if (fullPhase) {
           // For now, we'll create placeholder tasks since PhaseData doesn't have steps
           pendingTasks.push({
@@ -632,73 +632,51 @@ export class CheckpointActionContextService {
     }
   }
 
-  private async fetchMilestones(projectId: string): Promise<Milestone[]> {
+  private async fetchMilestones(projectId: string): Promise<MilestoneDTO[]> {
     try {
-      // Use milestone repository with proper typing
+      // Use milestone repository with proper typing - returns MilestoneDTO[]
       const milestoneRepository = RepositoryFactory.getMilestoneRepository();
       const milestones = await milestoneRepository.findByProjectId(projectId);
       
       return milestones;
     } catch (error) {
       console.error('CheckpointActionContextService.fetchMilestones failed:', error);
-      // Fallback to mock data with proper Milestone entity structure
+      // Fallback to mock data with MilestoneDTO structure
       return [
-        new Milestone(
-          'milestone-1',
-          projectId,
-          'Milestone 1',
-          'First project milestone',
-          '2024-03-31T00:00:00.000Z',
-          '2024-03-30T00:00:00.000Z',
-          'completed',
-          'high',
-          100,
-          [],
-          [],
-          null,
-          null,
-          '2024-01-01T00:00:00.000Z',
-          '2024-03-30T00:00:00.000Z',
-          {
-            weight: 0.3,
-            isCritical: true,
-            type: 'gate',
-            priority: 'high',
-            tags: ['critical'],
-            predecessorIds: [],
-            expectedDeliverables: ['Phase 1 completion'],
-            approvalRequirements: ['Technical review'],
-            relativeOffsetDays: 30
-          }
-        ),
-        new Milestone(
-          'milestone-2',
-          projectId,
-          'Milestone 2',
-          'Second project milestone',
-          '2024-06-30T00:00:00.000Z',
-          null,
-          'pending',
-          'critical',
-          0,
-          [],
-          [],
-          null,
-          null,
-          '2024-01-01T00:00:00.000Z',
-          '2024-01-01T00:00:00.000Z',
-          {
-            weight: 0.4,
-            isCritical: true,
-            type: 'checkpoint',
-            priority: 'critical',
-            tags: ['critical', 'phase-transition'],
-            predecessorIds: ['milestone-1'],
-            expectedDeliverables: ['Phase 2 completion'],
-            approvalRequirements: ['Quality review', 'Safety inspection'],
-            relativeOffsetDays: 120
-          }
-        )
+        {
+          id: 'milestone-1',
+          project_id: projectId,
+          title: 'Milestone 1',
+          description: 'First project milestone',
+          target_date: '2024-03-31T00:00:00.000Z',
+          completed_date: '2024-03-30T00:00:00.000Z',
+          status: 'completed' as MilestoneStatus,
+          type: 'gate' as MilestoneType,
+          priority: 'high' as MilestonePriority,
+          weight: 0.3,
+          notes: '',
+          is_from_template: false,
+          dependencies: [],
+          created_at: '2024-01-01T00:00:00.000Z',
+          updated_at: '2024-03-30T00:00:00.000Z'
+        },
+        {
+          id: 'milestone-2',
+          project_id: projectId,
+          title: 'Milestone 2',
+          description: 'Second project milestone',
+          target_date: '2024-06-30T00:00:00.000Z',
+          completed_date: undefined,
+          status: 'pending' as MilestoneStatus,
+          type: 'checkpoint' as MilestoneType,
+          priority: 'critical' as MilestonePriority,
+          weight: 0.4,
+          notes: '',
+          is_from_template: false,
+          dependencies: ['milestone-1'],
+          created_at: '2024-01-01T00:00:00.000Z',
+          updated_at: '2024-01-01T00:00:00.000Z'
+        }
       ];
     }
   }

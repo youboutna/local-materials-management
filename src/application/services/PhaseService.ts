@@ -415,7 +415,8 @@ export class PhaseService {
         documents: taskResult.documents?.map(doc => doc.id) || [],
         inspections: taskResult.inspections?.map(insp => insp.id) || []
       };
-    
+      
+      return taskDTO;
     } catch (error) {
       console.error('PhaseService.addTaskToStep failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to add task to step');

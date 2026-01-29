@@ -55,6 +55,11 @@ export enum ErrorCode {
   AUTH_USER_COUNT_ERROR = 'AUTH_USER_COUNT_ERROR',
   AUTH_EMAIL_CHECK_ERROR = 'AUTH_EMAIL_CHECK_ERROR',
   AUTH_MANAGEMENT_TOKEN_ERROR = 'AUTH_MANAGEMENT_TOKEN_ERROR',
+  
+  // Provider errors
+  PROVIDER_SWITCH_ERROR = 'PROVIDER_SWITCH_ERROR',
+  PROVIDER_NOT_ENABLED = 'PROVIDER_NOT_ENABLED',
+  PROVIDER_NOT_FOUND = 'PROVIDER_NOT_FOUND',
 }
 
 export class AppError extends Error {
@@ -139,6 +144,11 @@ export class AppError extends Error {
       [ErrorCode.AUTH_USER_COUNT_ERROR]: 'Erreur lors du comptage des utilisateurs',
       [ErrorCode.AUTH_EMAIL_CHECK_ERROR]: 'Erreur lors de la vérification de l\'email',
       [ErrorCode.AUTH_MANAGEMENT_TOKEN_ERROR]: 'Erreur lors de l\'obtention du token de gestion',
+      
+      // Provider errors
+      [ErrorCode.PROVIDER_SWITCH_ERROR]: 'Erreur lors du changement de fournisseur',
+      [ErrorCode.PROVIDER_NOT_ENABLED]: 'Fournisseur non activé',
+      [ErrorCode.PROVIDER_NOT_FOUND]: 'Fournisseur introuvable',
     };
 
     return messages[this.code] || 'Une erreur inattendue s\'est produite';
@@ -162,8 +172,21 @@ export class AppError extends Error {
  * Error logger utility
  */
 export class ErrorLogger {
-  static log(error: Error | AppError, context?: string): void {
+  static log(errorOrLevel: Error | AppError | 'info' | 'error' | 'warn', contextOrMessage?: string, data?: any): void {
     const timestamp = new Date().toISOString();
+    
+    // Support both legacy (error, context) and new (level, message, data) signatures
+    if (typeof errorOrLevel === 'string') {
+      // New signature: log(level, message, data)
+      const level = errorOrLevel;
+      const message = contextOrMessage || '';
+      console.log(`[${timestamp}] [${level.toUpperCase()}] ${message}`, data || '');
+      return;
+    }
+    
+    // Legacy signature: log(error, context)
+    const error = errorOrLevel;
+    const context = contextOrMessage;
     
     if (error instanceof AppError) {
       console.error(`[${timestamp}] ${context || 'Error'}:`, {

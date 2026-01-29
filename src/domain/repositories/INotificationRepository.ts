@@ -9,10 +9,14 @@ export interface NotificationData {
   recipient_id: string;
   title: string;
   message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
+  type: 'info' | 'success' | 'warning' | 'error' | 'system';
   read: boolean;
   created_at?: string;
   updated_at?: string;
+  priority?: 'low' | 'medium' | 'high';
+  expires_at?: string | null;
+  action_url?: string | null;
+  metadata?: Record<string, any> | null;
 }
 
 export interface EmailData {
