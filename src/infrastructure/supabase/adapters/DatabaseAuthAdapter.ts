@@ -158,4 +158,31 @@ export class DatabaseAuthAdapter implements IAuthRepository {
       return { user: null, error: error as Error };
     }
   }
+
+  /**
+   * Update user role
+   */
+  async updateUserRole(userId: string, role: string): Promise<{ user: AuthUser | null; error: Error | null }> {
+    try {
+      // TODO: Implement database role update
+      // This would update user role in database
+      console.log('Database: Updating role for user', userId, 'to', role);
+      
+      // For now, return mock user with updated role
+      const mockUser: AuthUser = {
+        id: userId,
+        email: 'user@example.com',
+        full_name: 'Database User',
+        role: role,
+        phone: undefined,
+        national_id: undefined,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      return { user: mockUser, error: null };
+    } catch (error) {
+      return { user: null, error: error as Error };
+    }
+  }
 }

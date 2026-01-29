@@ -159,4 +159,31 @@ export class Auth0Adapter implements IAuthRepository {
       return { user: null, error: error as Error };
     }
   }
+
+  /**
+   * Update user role
+   */
+  async updateUserRole(userId: string, role: string): Promise<{ user: AuthUser | null; error: Error | null }> {
+    try {
+      // TODO: Implement Auth0 role update
+      // This would update user roles via Auth0 Management API
+      console.log('Auth0: Updating role for user', userId, 'to', role);
+      
+      // For now, return mock user with updated role
+      const mockUser: AuthUser = {
+        id: userId,
+        email: 'user@example.com',
+        full_name: 'Auth0 User',
+        role: role,
+        phone: undefined,
+        national_id: undefined,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      return { user: mockUser, error: null };
+    } catch (error) {
+      return { user: null, error: error as Error };
+    }
+  }
 }

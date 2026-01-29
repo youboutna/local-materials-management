@@ -348,6 +348,7 @@ export class BankGuaranteeService {
         guarantee_type: guarantee.guarantee_type,
         guarantee_number: guarantee.guarantee_number,
         bank_name: guarantee.issuing_bank,
+        guarantee_amount: guarantee.guarantee_amount,
         amount: guarantee.guarantee_amount,
         currency: 'USD', // Default currency
         issue_date: guarantee.issue_date,

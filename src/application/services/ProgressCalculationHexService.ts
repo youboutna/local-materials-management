@@ -50,11 +50,11 @@ export class ProgressCalculationHexService {
    * Calcule la progression globale d'un projet
    * Formule : (Phases terminées * 100 + Phases en cours * 50 + Tâches terminées * 30 + Inspections terminées * 20) / Total
    */
-  async calculateProjectProgress(
+  calculateProjectProgress(
     phases: PhaseDTO[], 
     tasks: TaskDTO[] = [], 
     inspections: InspectionDTO[] = []
-  ): Promise<number> {
+  ): number {
     try {
       // Calcul de progression des phases (poids 50%)
       const phaseProgress = this.calculatePhaseProgress(phases);
@@ -161,8 +161,9 @@ export class ProgressCalculationHexService {
     
     // Prédiction simple basée sur la vélocité actuelle
     const tasksInProgress = tasks.filter(t => t.status === 'in_progress').length;
+    const totalTasks = tasks.length || 1; // Prevent division by zero
     const expectedCompletions = Math.min(tasksInProgress, daysAhead / avgCompletionTime);
-    const predictedIncrease = (expectedCompletions / tasks.length) * 100 * 0.3; // 30% poids pour les tâches
+    const predictedIncrease = (expectedCompletions / totalTasks) * 100 * 0.3; // 30% poids pour les tâches
     
     const predictedProgress = Math.min(100, currentProgress + predictedIncrease);
     const confidence = Math.max(0, Math.min(100, 100 - (daysAhead / 365) * 50)); // Confidence diminue avec le temps
