@@ -11,6 +11,11 @@ export class SupabaseProjectAdapter implements IProjectRepository {
   // ============= CRUD Operations =============
 
   async findById(id: string): Promise<Project | null> {
+    // Validate ID to prevent invalid UUID queries
+    if (!id || id.trim() === '') {
+      return null;
+    }
+
     const { data, error } = await supabase
       .from('projects')
       .select('*')
@@ -51,6 +56,11 @@ export class SupabaseProjectAdapter implements IProjectRepository {
   }
 
   async update(id: string, updates: Partial<Project>): Promise<Project> {
+    // Validate ID to prevent invalid UUID queries
+    if (!id || id.trim() === '') {
+      throw new Error('Invalid project ID provided');
+    }
+
     const entityData = this.mapToEntity(updates);
 
     const { data, error } = await supabase
@@ -66,6 +76,11 @@ export class SupabaseProjectAdapter implements IProjectRepository {
   }
 
   async delete(id: string): Promise<void> {
+    // Validate ID to prevent invalid UUID queries
+    if (!id || id.trim() === '') {
+      throw new Error('Invalid project ID provided');
+    }
+
     const { error } = await supabase
       .from('projects')
       .delete()
@@ -119,6 +134,18 @@ export class SupabaseProjectAdapter implements IProjectRepository {
   }
 
   async findWithRelatedData(id: string): Promise<ProjectWithRelatedData> {
+    // Validate ID to prevent invalid UUID queries
+    if (!id || id.trim() === '') {
+      return {
+        project: null,
+        phases: [],
+        tasks: [],
+        risks: [],
+        inspections: [],
+        payments: [],
+      };
+    }
+
     const [
       projectResult,
       phasesResult,

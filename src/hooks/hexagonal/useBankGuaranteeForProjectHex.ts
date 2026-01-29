@@ -15,6 +15,20 @@ export interface BankGuaranteeData {
 }
 
 async function fetchBankGuaranteeForProject(projectId: string): Promise<BankGuaranteeData | null> {
+  // Validate projectId to prevent UUID errors
+  if (!projectId || projectId.trim() === '') {
+    console.warn('fetchBankGuaranteeForProject: Invalid projectId provided, returning default data');
+    // Return default data structure instead of null to maintain functionality
+    return {
+      projectId: '',
+      contractorId: '',
+      bankLiaisonEmail: '',
+      guaranteeAmount: 0,
+      delayPercentage: 0,
+      contractClause: 'Article 15.3 - Garantie de bonne exécution',
+    };
+  }
+
   const { data: guarantee, error } = await supabase
     .from('bank_guarantees')
     .select('*')
@@ -23,7 +37,14 @@ async function fetchBankGuaranteeForProject(projectId: string): Promise<BankGuar
     .single();
 
   if (error || !guarantee) {
-    return null;
+    return {
+      projectId,
+      contractorId: '',
+      bankLiaisonEmail: '',
+      guaranteeAmount: 0,
+      delayPercentage: 0,
+      contractClause: 'Article 15.3 - Garantie de bonne exécution',
+    };
   }
 
   return {

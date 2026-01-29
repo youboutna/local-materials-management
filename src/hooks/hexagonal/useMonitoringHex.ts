@@ -72,34 +72,44 @@ export function useBankGuaranteesHex(projectId?: string) {
   const [guarantees, setGuarantees] = useState<BankGuarantee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const bankGuaranteeService = useMemo(() => 
-    new BankGuaranteeService(), 
+    new BankGuaranteeService(RepositoryFactory.getBankGuaranteeRepository()), 
     []
   );
 
   const fetchGuarantees = useCallback(async () => {
+    // Don't fetch if no projectId provided - this is normal in a project management app
+    if (!projectId || projectId.trim() === '') {
+      console.log('useBankGuaranteesHex: No projectId provided, skipping fetch');
+      setGuarantees([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      const data = await bankGuaranteeService.getBankGuarantees(projectId);
-      
-      setGuarantees(data.map(g => ({
-        id: g.id,
-        projectId: g.project_id,
-        contractorId: g.contractor_id,
-        bankName: g.bank_name,
-        guaranteeType: g.guarantee_type,
-        guaranteeAmount: g.guarantee_amount,
-        issueDate: g.issue_date,
-        expiryDate: g.expiry_date,
-        status: g.status,
-        createdAt: g.created_at,
-        updatedAt: g.updated_at,
-      })));
+      const data = await bankGuaranteeService.getProjectBankGuarantees(projectId);
+      // Transform BankGuaranteeDTO to BankGuarantee
+      const transformedData = data.map(dto => ({
+        id: dto.id,
+        projectId: dto.project_id,
+        contractorId: dto.contractor_id,
+        bankName: dto.bank_name,
+        guaranteeType: dto.guarantee_type,
+        guaranteeAmount: dto.guarantee_amount,
+        issueDate: dto.issue_date,
+        expiryDate: dto.expiry_date,
+        status: dto.status,
+        createdAt: dto.created_at,
+        updatedAt: dto.updated_at,
+      }));
+      setGuarantees(transformedData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load bank guarantees');
+      setError(err instanceof Error ? err.message : 'Failed to fetch bank guarantees');
+      console.error('Error fetching bank guarantees:', err);
     } finally {
       setLoading(false);
     }
@@ -141,12 +151,20 @@ export function usePaymentBlocksHex(projectId?: string) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchBlocks = useCallback(async () => {
+    // Don't fetch if no projectId provided - this is normal in a project management app
+    if (!projectId || projectId.trim() === '') {
+      console.log('usePaymentBlocksHex: No projectId provided, skipping fetch');
+      setBlocks([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
       // Use static method - PaymentBlockingService has static methods only
-      const data = await PaymentBlockingService.getPaymentBlocks(projectId || '');
+      const data = await PaymentBlockingService.getPaymentBlocks(projectId);
       
       setBlocks(data.map(b => ({
         id: b.id,
@@ -210,6 +228,14 @@ export function useInsurancesHex(projectId?: string) {
   );
 
   const fetchInsurances = useCallback(async () => {
+    // Don't fetch if no projectId provided - this is normal in a project management app
+    if (!projectId || projectId.trim() === '') {
+      console.log('useInsurancesHex: No projectId provided, skipping fetch');
+      setInsurances([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -284,9 +310,16 @@ export function useNotificationsHex(recipientId?: string, types?: string[]) {
     setError(null);
 
     try {
+      // Validate recipientId to prevent UUID errors
+      if (!recipientId || recipientId.trim() === '') {
+        console.warn('useMonitoringHex.fetchNotifications: Invalid recipientId provided');
+        setNotifications([]);
+        return;
+      }
+
       // Use NotificationService through hexagonal architecture
       const notificationsData = await notificationService.getUserNotifications(
-        recipientId || '', 
+        recipientId, 
         100
       );
       

@@ -7,6 +7,7 @@ import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
+import { IMilestoneRepository } from '@/domain/repositories/IMilestoneRepository';
 import { ProjectDataCalculations } from '@/utils/projectDataCalculations';
 import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { ProjectCalculationService } from '@/services/ProjectCalculationService';
@@ -138,6 +139,7 @@ export class ProjectAnalyticsService {
   constructor(
     private projectRepository: IProjectRepository = RepositoryFactory.getProjectRepository(),
     private inspectionRepository: IInspectionRepository = RepositoryFactory.getInspectionRepository(),
+    private milestoneRepository: IMilestoneRepository = RepositoryFactory.getMilestoneRepository(),
     private projectCalculations: ProjectDataCalculations = new ProjectDataCalculations()
   ) {}
 
@@ -184,19 +186,25 @@ export class ProjectAnalyticsService {
         endDate: projectData.project.endDate?.toISOString(),
         thumbnail: projectData.project.thumbnail || '',
         teamSize: projectData.project.teamSize || 0,
+        coordinates: projectData.project.coordinates ? {
+          latitude: projectData.project.coordinates.latitude || 0,
+          longitude: projectData.project.coordinates.longitude || 0
+        } : undefined,
         tasks: projectData.tasks || [],
         risks: projectData.risks || [],
         resources: [], // Adding missing required property
         inspections: projectInspections,
         plannedPhases: [], // Adding missing required property
-        expenses: projectData.payments || []
+        expenses: projectData.payments || [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
 
       // Use ProjectCalculationService for real analytics
-      const progressAnalytics = ProjectCalculationService.calculateProgressAnalytics(projectDetailDTO);
-      const budgetAnalytics = ProjectCalculationService.calculateBudgetAnalytics(projectDetailDTO);
-      const timelineAnalytics = ProjectCalculationService.calculateTimelineAnalytics(projectDetailDTO);
-      const qualityMetrics = ProjectCalculationService.calculateQualityMetrics(projectDetailDTO);
+      const progressAnalytics = ProjectCalculationService.calculateProgressAnalytics(projectDetailDTO as any);
+      const budgetAnalytics = ProjectCalculationService.calculateBudgetAnalytics(projectDetailDTO as any);
+      const timelineAnalytics = ProjectCalculationService.calculateTimelineAnalytics(projectDetailDTO as any);
+      const qualityMetrics = ProjectCalculationService.calculateQualityMetrics(projectDetailDTO as any);
       const riskAnalytics = ProjectCalculationService.calculateRiskAnalytics(projectDetailDTO);
 
       // Build comprehensive analytics object
@@ -246,9 +254,9 @@ export class ProjectAnalyticsService {
         budget_variance: analytics.budget.costVariance || 0,
         remaining_budget: analytics.budget.remainingBudget || 0,
         progress_percentage: analytics.progress.overallProgress || 0,
-        milestone_completion: analytics.progress.milestonesProgress || 0,
-        risk_score: analytics.risk.overallRiskScore || 0,
-        quality_score: analytics.quality.qualityScore || 0,
+        milestone_completion: (progressAnalytics as any).milestonesProgress || 0,
+        risk_score: (riskAnalytics as any).overallRiskScore || 0,
+        quality_score: (qualityMetrics as any).qualityScore || 0,
         timeline_variance: analytics.timeline.scheduleVariance || 0,
         resource_utilization: 75, // Simplified - would need resource tracking
         cost_efficiency: analytics.evm.costPerformanceIndex || 1.0,
@@ -287,8 +295,8 @@ export class ProjectAnalyticsService {
         task.status !== 'completed' && new Date(task.endDate || (task as any).end_date || '') < new Date()
       ).length;
 
-      // Get milestones
-      const milestones = projectData.milestones || [];
+      // Get milestones from repository
+      const milestones = await this.milestoneRepository.findByProjectId(projectId);
       const totalMilestones = milestones.length;
       const completedMilestones = milestones.filter((milestone) => milestone.status === 'completed').length;
 

@@ -221,6 +221,12 @@ export class BankGuaranteeService {
    */
   static async getActiveGuaranteeForProject(projectId: string) {
     try {
+      // Validate projectId to prevent UUID errors
+      if (!projectId || projectId.trim() === '') {
+        console.warn('BankGuaranteeService.getActiveGuaranteeForProject: Invalid projectId provided');
+        return null;
+      }
+
       const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('bank_guarantees')

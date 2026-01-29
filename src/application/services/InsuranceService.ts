@@ -124,7 +124,7 @@ export class InsuranceService {
           title: alertTitle,
           message: `Assurance ${alert.insuranceType} pour le projet ${alert.projectId} expire le ${alert.expiryDate}.`,
           type: alert.alertLevel === 'expired' ? 'error' : 'warning',
-          read: false
+          priority: 'high'
         });
         notificationsSent++;
       }
@@ -165,12 +165,13 @@ export class InsuranceService {
       };
 
       // Notify relevant stakeholders about new certificate
+      const daysSinceExpiry = Math.floor((new Date().getTime() - new Date(newCertificate.valid_until).getTime()) / (1000 * 60 * 60 * 24));
       await this.notificationService.createNotification({
         recipient_id: 'system-admin',
-        title: "Nouvelle attestation d'assurance enregistrée",
-        message: `Attestation ${certificate.insurance_type} pour le projet ${certificate.project_id} ajoutée.`,
-        type: 'success',
-        read: false
+        title: 'Alerte: Assurance Expirée',
+        message: `Assurance ${newCertificate.insurance_type} expirée depuis ${daysSinceExpiry} jours pour le projet ${newCertificate.project_id}.`,
+        type: 'error',
+        priority: 'high'
       });
 
       return newCertificate;

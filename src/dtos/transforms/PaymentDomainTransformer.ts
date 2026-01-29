@@ -4,7 +4,7 @@
  */
 
 import { Payment } from '@/domain/entities/Payment';
-import { PaymentStatus } from '@/types/payment';
+import { PaymentStatus } from '@/domain/entities/Payment';
 
 export interface PaymentEfficiencyResult {
   paymentRate: number;
@@ -55,6 +55,8 @@ export interface PaymentDTO {
 }
 
 export interface CreatePaymentRequestDto {
+  projectId: string;
+  phaseId?: string;
   amount: number;
   paymentDate?: string;
   paymentMethod: string;
@@ -199,6 +201,8 @@ export class PaymentDomainTransformer {
   static fromCreateDtoToEntity(dto: CreatePaymentRequestDto): any {
     return {
       id: crypto.randomUUID(),
+      project_id: dto.projectId,
+      phase_id: dto.phaseId,
       amount: dto.amount,
       payment_date: dto.paymentDate ? new Date(dto.paymentDate).toISOString() : new Date().toISOString(),
       payment_method: dto.paymentMethod,

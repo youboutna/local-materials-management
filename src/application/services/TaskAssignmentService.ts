@@ -6,7 +6,7 @@
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { ITaskAssignmentRepository } from '@/domain/repositories/ITaskAssignmentRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { TaskAssignment } from '@/domain/entities/Workspace';
+import { TaskAssignment as WorkspaceTaskAssignment } from '@/domain/entities/Workspace';
 
 export interface TaskAssignment {
   id: string;

@@ -29,7 +29,8 @@ export interface SelectedMaterial {
 
 async function fetchProjectMaterials(projectId: string): Promise<ProjectMaterial[]> {
   try {
-    const materials = await MaterialService.getProjectMaterials(projectId);
+    const materialService = new MaterialService();
+    const materials = await materialService.getProjectMaterials(projectId);
     return materials.map((item: any) => ({
       id: item.id,
       project_id: item.project_id,
@@ -54,12 +55,13 @@ async function updateProjectMaterials(
   materials: SelectedMaterial[]
 ): Promise<void> {
   try {
+    const materialService = new MaterialService();
     // Supprimer tous les matériaux existants du projet
-    await MaterialService.removeMaterialFromProject(projectId, "all");
+    await materialService.removeMaterialFromProject(projectId, "all");
     
     // Ajouter les nouveaux matériaux
     for (const material of materials) {
-      await MaterialService.addMaterialToProject(projectId, material.materialId, material.quantity);
+      await materialService.addMaterialToProject(projectId, material.materialId, material.quantity);
     }
   } catch (error) {
     console.error('Error updating project materials:', error);

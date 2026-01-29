@@ -318,8 +318,10 @@ export type Database = {
           id: string
           issue_date: string
           project_id: string
+          phase_id: string
           status: string
           updated_at: string
+           released_at :string
         }
         Insert: {
           bank_name: string

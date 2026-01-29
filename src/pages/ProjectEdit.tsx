@@ -2,32 +2,178 @@ import ProjectDocumentUpload from "@/components/project/ProjectDocumentUpload";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "@/hooks/use-toast";
-import { useProjectEditHex } from "@/hooks/hexagonal";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import EnhancedProjectEditForm from "../components/project/EnhancedProjectEditForm";
+import { useState, useEffect } from "react";
+import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
+import { ProjectService } from "@/application/services/ProjectService";
 
 const ProjectEdit = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [initialData, setInitialData] = useState<any>(null);
 
-  // Use hexagonal hook for all data loading
-  const { 
-    formData, 
-    isLoading, 
-    saveProject, 
-    isSaving 
-  } = useProjectEditHex(id);
+  // Load project data using hexagonal architecture
+  useEffect(() => {
+    const fetchProject = async () => {
+      if (!id) return;
+
+      try {
+        setLoading(true);
+        const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+        const projectDetail = await projectService.getProjectWithDetails(id);
+
+        if (projectDetail) {
+          // Map status to form format
+          const statusMapping = {
+            "en attente": "Planning",
+            "en cours": "InProgress",
+            suspendu: "OnHold",
+            terminé: "Completed",
+            annulé: "Cancelled",
+          } as const;
+
+          // Safe date formatting helper
+          const formatDateForInput = (dateString: any) => {
+            if (!dateString) return "";
+            try {
+              const date = new Date(dateString);
+              if (isNaN(date.getTime())) return "";
+              return date.toISOString().split("T")[0];
+            } catch (error) {
+              console.warn("Date formatting error:", error);
+              return "";
+            }
+          };
+
+          // Map phases from detail DTO
+          const phases = projectDetail.phases?.map((phase: any) => ({
+            id: phase.id,
+            title: phase.title || phase.phase_name || phase.phase,
+            description: phase.description || "",
+            startDate: phase.startDate || phase.start_date,
+            endDate: phase.endDate || phase.end_date,
+            estimatedDuration: phase.estimatedDuration || phase.estimated_duration || 30,
+            status: phase.status,
+            budget: phase.budget || phase.estimated_cost || 0,
+            actualCost: phase.actualCost || phase.actual_cost || 0,
+            progress: phase.progress || 0,
+            materials: Array.isArray(phase.materials) ? phase.materials : [],
+            humanResources: Array.isArray(phase.humanResources || phase.human_resources)
+              ? phase.humanResources || phase.human_resources
+              : [],
+            suppliers: Array.isArray(phase.suppliers) ? phase.suppliers : [],
+            location: phase.location || "",
+            notes: phase.notes || "",
+          })) || [];
+
+          // Prepare initial data for the form
+          const formInitialData = {
+            title: projectDetail.title,
+            description: projectDetail.description,
+            location: projectDetail.location,
+            status: statusMapping[projectDetail.status as keyof typeof statusMapping] || "InProgress",
+            budget: projectDetail.budget,
+            progress: projectDetail.progress || 0,
+            startDate: formatDateForInput(projectDetail.startDate),
+            endDate: formatDateForInput(projectDetail.endDate),
+            start_date: formatDateForInput(projectDetail.startDate),
+            end_date: formatDateForInput(projectDetail.endDate),
+            team_size: projectDetail.teamSize || 1,
+            financing_source: projectDetail.financingSource || "",
+            market_type: projectDetail.marketType || "",
+            selection_mode: projectDetail.selectionMode || "",
+            project_responsable_id: projectDetail.projectResponsableId || "",
+            project_manager_id: projectDetail.projectResponsableId || "",
+            main_contractor: projectDetail.mainContractor || "",
+            engineering_consultant: projectDetail.engineeringConsultant || "",
+            project_reference: projectDetail.projectReference || "",
+            allows_initial_payment: projectDetail.allowsInitialPayment || false,
+            initial_payment_percentage: projectDetail.initialPaymentPercentage || 0,
+            current_phase: projectDetail.currentPhase || "",
+            current_stage: projectDetail.currentStage || "",
+            phases: phases,
+            facilitiesLocation: projectDetail.coordinates
+              ? {
+                  coordinates: {
+                    lat: projectDetail.coordinates.latitude,
+                    lng: projectDetail.coordinates.longitude,
+                  },
+                  center: {
+                    lat: projectDetail.coordinates.latitude,
+                    lng: projectDetail.coordinates.longitude,
+                  },
+                  polygon: Array.isArray(projectDetail.localisation)
+                    ? projectDetail.localisation
+                    : [],
+                  warehouseShape: Array.isArray(projectDetail.localisation)
+                    ? projectDetail.localisation
+                    : [],
+                  address: typeof projectDetail.adresse === "string"
+                    ? projectDetail.adresse
+                    : projectDetail.adresse?.address || "",
+                  shapeType: projectDetail.forme || undefined,
+                }
+              : {
+                  polygon: Array.isArray(projectDetail.localisation)
+                    ? projectDetail.localisation
+                    : [],
+                  warehouseShape: Array.isArray(projectDetail.localisation)
+                    ? projectDetail.localisation
+                    : [],
+                  address: typeof projectDetail.adresse === "string"
+                    ? projectDetail.adresse
+                    : projectDetail.adresse?.address || "",
+                  shapeType: projectDetail.forme || undefined,
+                },
+          };
+
+          setInitialData(formInitialData);
+        } else {
+          toast({
+            title: t("projects.edit.error"),
+            description: t("projects.edit.not_found"),
+            variant: "destructive",
+          });
+          navigate("/projects");
+        }
+      } catch (error) {
+        console.error("Error fetching project:", error);
+        toast({
+          title: t("projects.edit.error"),
+          description: t("projects.edit.load_error"),
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProject();
+  }, [id, navigate, t]);
 
   // Handle form submission
   const handleFormSubmit = async (data: any) => {
     if (!id) return;
 
+    setIsSubmitting(true);
     try {
-      // Prepare coordinates from facilitiesLocation
-      const coordinates =
+      // Status mapping from form values to database values
+      const statusMapping = {
+        Planning: "en attente",
+        InProgress: "en cours",
+        Pending: "en attente",
+        OnHold: "suspendu",
+        Completed: "terminé",
+        Cancelled: "annulé",
+      } as const;
+
+      const projectCoordinates =
         data.facilitiesLocation?.coordinates || data.facilitiesLocation?.center
           ? {
               latitude: (
@@ -41,45 +187,43 @@ const ProjectEdit = () => {
             }
           : undefined;
 
-      // Prepare update data
-      const updateData = {
+      // Helper to convert empty strings to null for UUIDs
+      const nullIfEmpty = (value: any) => {
+        if (value === "" || value === undefined) return null;
+        return value;
+      };
+
+      // Update the project with all the form data
+      const projectDataToUpdate = {
         title: data.title,
         description: data.description,
         location: data.location,
-        status: data.status,
+        status: statusMapping[data.status as keyof typeof statusMapping] || "en cours",
         budget: data.budget,
-        progress: data.progress || 0,
-        startDate: data.start_date || data.startDate,
-        endDate: data.end_date || data.endDate,
+        startDate: data.start_date || null,
+        endDate: data.end_date || null,
         teamSize: data.team_size || 1,
-        financing_source: data.financing_source,
-        market_type: data.market_type,
-        selection_mode: data.selection_mode,
-        project_reference: data.project_reference,
-        main_contractor: data.main_contractor,
-        engineering_consultant: data.engineering_consultant,
-        allows_initial_payment: data.allows_initial_payment,
-        initial_payment_percentage: data.initial_payment_percentage,
-        current_phase: data.current_phase,
-        current_stage: data.current_stage,
-        coordinates,
-        localisation: data.facilitiesLocation?.polygon || data.facilitiesLocation?.warehouseShape,
-        forme: data.facilitiesLocation?.shapeType,
-        adresse: data.facilitiesLocation?.address || data.location,
-        phases: data.phases,
-        stakeholders: [
-          ...(data.stakeholders || []),
-          ...(data.internalStakeholders || []),
-          ...(data.externalStakeholders || []),
-        ],
-        delegation: {
-          ...(data.delegation || {}),
-          ...(data.principals || {}),
-        },
-        materials: data.materials,
+        progress: data.progress || 0,
+        financingSource: nullIfEmpty(data.financing_source),
+        marketType: nullIfEmpty(data.market_type),
+        selectionMode: nullIfEmpty(data.selection_mode),
+        projectResponsableId: nullIfEmpty(data.project_responsable_id),
+        mainContractor: nullIfEmpty(data.main_contractor),
+        engineeringConsultant: nullIfEmpty(data.engineering_consultant),
+        projectReference: nullIfEmpty(data.project_reference),
+        allowsInitialPayment: data.allows_initial_payment || false,
+        initialPaymentPercentage: data.initial_payment_percentage || 0,
+        currentPhase: nullIfEmpty(data.current_phase),
+        currentStage: nullIfEmpty(data.current_stage),
+        coordinates: projectCoordinates,
+        forme: data.facilitiesLocation?.shapeType || null,
+        localisation: data.facilitiesLocation?.polygon || data.facilitiesLocation?.warehouseShape || null,
+        adresse: data.facilitiesLocation?.address || data.location || "",
       };
 
-      await saveProject(updateData);
+      // Use hexagonal service to update
+      const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+      await projectService.updateProject(id, projectDataToUpdate);
 
       // Context-aware toast
       if (data.saveType === "step_only") {
@@ -110,10 +254,12 @@ const ProjectEdit = () => {
         description: t("projects.edit.save_error"),
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  if (isLoading || !formData) {
+  if (loading || !initialData) {
     return (
       <div className="layout-main bg-gray-50">
         <main className="layout-content">
@@ -127,37 +273,13 @@ const ProjectEdit = () => {
     );
   }
 
-  // Prepare initial data for form
-  const initialData = {
-    ...formData,
-    start_date: formData.startDate,
-    end_date: formData.endDate,
-    team_size: formData.teamSize,
-    facilitiesLocation: formData.coordinates
-      ? {
-          coordinates: {
-            lat: formData.coordinates.latitude,
-            lng: formData.coordinates.longitude,
-          },
-          center: {
-            lat: formData.coordinates.latitude,
-            lng: formData.coordinates.longitude,
-          },
-          polygon: formData.localisation || [],
-          warehouseShape: formData.localisation || [],
-          address: formData.adresse || formData.location,
-          shapeType: formData.forme,
-        }
-      : undefined,
-  };
-
   return (
     <div className="layout-main -mt-8 bg-gray-50">
       <main className="layout-content">
         <div className="container-responsive">
           {/* Back button */}
           <Link to={`/projects/${id}`}>
-            <Button variant="ghost" className="mb-6">
+            <Button variant="ghost" className="mb-6" disabled={isSubmitting}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               {t("projects.edit.back_to_detail")}
             </Button>
@@ -178,6 +300,7 @@ const ProjectEdit = () => {
               <EnhancedProjectEditForm
                 initialData={initialData}
                 onSubmit={handleFormSubmit}
+                isSubmitting={isSubmitting}
               />
 
               {/* Documents Section */}

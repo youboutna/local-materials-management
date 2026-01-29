@@ -19,6 +19,10 @@ import {
 } from '@/types/checkpoint-dto';
 import { MilestoneDTO } from '@/types/milestone-dto';
 import { getCheckpointVerificationEngine } from './CheckpointVerificationEngine';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
+import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 
 // ============= TYPES INTERNES =============
 
@@ -52,9 +56,16 @@ interface VerifiedMilestone {
 export class AutomaticDecompteCalculator {
   private projectId: string;
   private rules: MauritaniaBusinessRulesDTO;
+  private paymentRepository: IPaymentRepository;
+  private inspectionRepository: IInspectionRepository;
 
   constructor(projectId: string, customRules?: Partial<MauritaniaBusinessRulesDTO>) {
+    if (!projectId) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required for AutomaticDecompteCalculator');
+    }
     this.projectId = projectId;
+    this.paymentRepository = RepositoryFactory.getPaymentRepository();
+    this.inspectionRepository = RepositoryFactory.getInspectionRepository();
     this.rules = { ...DEFAULT_MAURITANIA_RULES, ...customRules };
   }
 
@@ -62,182 +73,242 @@ export class AutomaticDecompteCalculator {
    * Calcule un décompte automatique pour le projet
    */
   async calculateProjectDecompte(): Promise<AutomaticDecompteDTO> {
-    const [projectFinancials, phases, verifiedMilestones, previousDecomptes] = await Promise.all([
-      this.getProjectFinancials(),
-      this.getPhaseFinancials(),
-      this.getVerifiedMilestones(),
-      this.getPreviousDecomptes(),
-    ]);
+    try {
+      const [projectFinancials, phases, verifiedMilestones, previousDecomptes] = await Promise.all([
+        this.getProjectFinancials(),
+        this.getPhaseFinancials(),
+        this.getVerifiedMilestones(),
+        this.getPreviousDecomptes(),
+      ]);
 
-    const decompteNumber = previousDecomptes.length + 1;
-    const previousCumulative = previousDecomptes.reduce(
-      (sum, d) => sum + d.current_period_amount,
-      0
-    );
+      if (!projectFinancials) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Project financial data not found');
+      }
 
-    // Calculer le montant de la période courante basé sur les jalons vérifiés non décomptés
-    const { currentPeriodAmount, lines } = this.calculateCurrentPeriodAmount(
-      verifiedMilestones,
-      previousDecomptes,
-      phases
-    );
+      if (!phases || phases.length === 0) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'No phases found for project');
+      }
 
-    // Calculer les retenues
-    const retentionAmount = currentPeriodAmount * this.rules.guarantee_retention_rate;
-    
-    // Calculer la libération de retenue si applicable
-    const retentionToRelease = this.calculateRetentionRelease(
-      projectFinancials.totalRetentionHeld,
-      phases
-    );
+      const decompteNumber = previousDecomptes.length + 1;
+      const previousCumulative = previousDecomptes.reduce(
+        (sum, d) => sum + d.current_period_amount,
+        0
+      );
 
-    // Calculer le montant net payable
-    const netPayable = currentPeriodAmount - retentionAmount + retentionToRelease;
+      // Calculer le montant de la période courante basé sur les jalons vérifiés non décomptés
+      const { currentPeriodAmount, lines } = this.calculateCurrentPeriodAmount(
+        verifiedMilestones,
+        previousDecomptes,
+        phases
+      );
 
-    // Déterminer le type de paiement
-    const paymentType = this.determinePaymentType(
-      decompteNumber,
-      projectFinancials,
-      phases
-    );
+      // Calculer les retenues
+      const retentionAmount = currentPeriodAmount * this.rules.guarantee_retention_rate;
+      
+      // Calculer la libération de retenue si applicable
+      const retentionToRelease = this.calculateRetentionRelease(
+        projectFinancials.totalRetentionHeld,
+        phases
+      );
 
-    // Calculer la progression globale
-    const overallProgress = phases.reduce(
-      (sum, p) => sum + (p.progress * p.estimatedCost),
-      0
-    ) / projectFinancials.budget;
+      // Calculer le montant net payable
+      const netPayable = currentPeriodAmount - retentionAmount + retentionToRelease;
 
-    return {
-      id: `decompte-${Date.now()}`,
-      project_id: this.projectId,
-      decompte_number: decompteNumber,
-      decompte_type: paymentType,
+      // Déterminer le type de paiement
+      const paymentType = this.determinePaymentType(
+        decompteNumber,
+        projectFinancials,
+        phases
+      );
 
-      // Montants
-      contract_amount: projectFinancials.budget,
-      previous_cumulative: previousCumulative,
-      current_period_amount: currentPeriodAmount,
-      cumulative_amount: previousCumulative + currentPeriodAmount,
+      // Calculer la progression globale
+      const overallProgress = phases.reduce(
+        (sum, p) => sum + (p.progress * p.estimatedCost),
+        0
+      ) / projectFinancials.budget;
 
-      // Retenues
-      retention_rate: this.rules.guarantee_retention_rate,
-      retention_amount: retentionAmount,
-      previous_retention_released: retentionToRelease,
-      retention_to_release: retentionToRelease,
+      return {
+        id: `decompte-${Date.now()}`,
+        project_id: this.projectId,
+        decompte_number: decompteNumber,
+        decompte_type: paymentType,
 
-      // Net
-      net_payable: netPayable,
+        // Montants
+        contract_amount: projectFinancials.budget,
+        previous_cumulative: previousCumulative,
+        current_period_amount: currentPeriodAmount,
+        cumulative_amount: previousCumulative + currentPeriodAmount,
 
-      // Jalons
-      verified_milestones: verifiedMilestones.map(m => ({
-        milestone_id: m.id,
-        title: m.title,
-        weight: m.weight,
-        amount: m.amount,
-        verified_at: m.completedDate,
-      })),
+        // Retenues
+        retention_rate: this.rules.guarantee_retention_rate,
+        retention_amount: retentionAmount,
+        previous_retention_released: retentionToRelease,
+        retention_to_release: retentionToRelease,
 
-      // Lignes
-      lines,
+        // Net
+        net_payable: netPayable,
 
-      // Justification
-      progress_at_decompte: Math.round(overallProgress * 100),
+        // Jalons
+        verified_milestones: verifiedMilestones.map(m => ({
+          milestone_id: m.id,
+          title: m.title,
+          weight: m.weight,
+          amount: m.amount,
+          verified_at: m.completedDate,
+        })),
 
-      // État
-      status: 'calculated',
-      calculated_at: new Date().toISOString(),
+        // Lignes
+        lines,
 
-      // Log
-      calculation_log: [{
-        timestamp: new Date().toISOString(),
-        action: 'calculated',
-        details: {
-          phases_count: phases.length,
-          milestones_count: verifiedMilestones.length,
-          rules_applied: this.rules,
-        },
-      }],
-    };
+        // Justification
+        progress_at_decompte: Math.round(overallProgress * 100),
+
+        // État
+        status: 'calculated',
+        calculated_at: new Date().toISOString(),
+
+        // Log
+        calculation_log: [{
+          timestamp: new Date().toISOString(),
+          action: 'calculated',
+          details: {
+            phases_count: phases.length,
+            milestones_count: verifiedMilestones.length,
+            rules_applied: this.rules,
+          },
+        }],
+      };
+    } catch (error) {
+      console.error('AutomaticDecompteCalculator.calculateProjectDecompte failed:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        projectId: this.projectId,
+        timestamp: new Date().toISOString()
+      });
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to calculate project decompte', error);
+    }
   }
 
   /**
    * Calcule un décompte pour une phase spécifique
    */
   async calculatePhaseDecompte(phaseId: string): Promise<AutomaticDecompteDTO> {
-    const [projectFinancials, phaseData, phaseMilestones, previousDecomptes] = await Promise.all([
-      this.getProjectFinancials(),
-      this.getPhaseData(phaseId),
-      this.getPhaseMilestones(phaseId),
-      this.getPreviousDecomptes(phaseId),
-    ]);
+    // IMMEDIATE debug at function entry - before any other code
+    console.log('AutomaticDecompteCalculator.calculatePhaseDecompte - ENTRY:', {
+      phaseId,
+      hasPhaseId: !!phaseId,
+      typeofPhaseId: typeof phaseId,
+      projectId: this.projectId,
+      timestamp: new Date().toISOString(),
+      parameters: { phaseId }
+    });
 
-    if (!phaseData) {
-      throw new Error('Phase non trouvée');
+    try {
+      if (!phaseId) {
+        console.error('AutomaticDecompteCalculator: Phase ID validation failed at ENTRY', {
+          phaseId,
+          hasPhaseId: !!phaseId,
+          typeofPhaseId: typeof phaseId,
+          parameters: { phaseId }
+        });
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID is required for phase decompte calculation');
+      }
+
+      const [projectFinancials, phaseData, phaseMilestones, previousDecomptes] = await Promise.all([
+        this.getProjectFinancials(),
+        this.getPhaseData(phaseId),
+        this.getPhaseMilestones(phaseId),
+        this.getPreviousDecomptes(phaseId),
+      ]);
+
+      if (!projectFinancials) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Project financial data not found');
+      }
+
+      if (!phaseData) {
+        throw new AppError(ErrorCode.NOT_FOUND, `Phase not found for ID: ${phaseId}`);
+      }
+
+      if (!phaseMilestones || phaseMilestones.length === 0) {
+        console.warn(`No milestones found for phase ${phaseId}, creating decompte without milestones`);
+      }
+
+      const decompteNumber = previousDecomptes.length + 1;
+      const previousCumulative = previousDecomptes.reduce(
+        (sum, d) => sum + d.current_period_amount,
+        0
+      );
+
+      // Calculer le montant basé sur la progression de la phase
+      const progressBasedAmount = (phaseData.estimatedCost * phaseData.progress) / 100;
+      const currentPeriodAmount = Math.max(0, progressBasedAmount - previousCumulative);
+
+      // Générer les lignes de décompte
+      const lines = this.generateDecompteLines(phaseMilestones, phaseData);
+
+      // Retenues
+      const retentionAmount = currentPeriodAmount * this.rules.guarantee_retention_rate;
+      const netPayable = currentPeriodAmount - retentionAmount;
+
+      return {
+        id: `decompte-phase-${phaseId}-${Date.now()}`,
+        project_id: this.projectId,
+        phase_id: phaseId,
+        decompte_number: decompteNumber,
+        decompte_type: 'progress',
+
+        contract_amount: phaseData.estimatedCost,
+        previous_cumulative: previousCumulative,
+        current_period_amount: currentPeriodAmount,
+        cumulative_amount: previousCumulative + currentPeriodAmount,
+
+        retention_rate: this.rules.guarantee_retention_rate,
+        retention_amount: retentionAmount,
+        previous_retention_released: 0,
+        retention_to_release: 0,
+
+        net_payable: netPayable,
+
+        verified_milestones: phaseMilestones
+          .filter(m => m.status === 'completed')
+          .map(m => ({
+            milestone_id: m.id,
+            title: m.title,
+            weight: m.weight || 0.1,
+            amount: (phaseData.estimatedCost * (m.weight || 0.1)),
+            verified_at: m.completed_date || new Date().toISOString(),
+          })),
+
+        lines,
+
+        progress_at_decompte: phaseData.progress,
+
+        status: 'calculated',
+        calculated_at: new Date().toISOString(),
+
+        calculation_log: [{
+          timestamp: new Date().toISOString(),
+          action: 'phase_decompte_calculated',
+          details: {
+            phase_id: phaseId,
+            phase_progress: phaseData.progress,
+            milestones_verified: phaseMilestones.filter(m => m.status === 'completed').length,
+            estimated_cost: phaseData.estimatedCost,
+            current_period_amount: currentPeriodAmount,
+            net_payable: netPayable,
+          },
+        }],
+      };
+    } catch (error) {
+      console.error('AutomaticDecompteCalculator.calculatePhaseDecompte failed:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        projectId: this.projectId,
+        phaseId: phaseId,
+        timestamp: new Date().toISOString()
+      });
+      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to calculate phase decompte for phase: ${phaseId}`, error);
     }
-
-    const decompteNumber = previousDecomptes.length + 1;
-    const previousCumulative = previousDecomptes.reduce(
-      (sum, d) => sum + d.current_period_amount,
-      0
-    );
-
-    // Calculer le montant basé sur la progression de la phase
-    const progressBasedAmount = (phaseData.estimatedCost * phaseData.progress) / 100;
-    const currentPeriodAmount = Math.max(0, progressBasedAmount - previousCumulative);
-
-    // Générer les lignes de décompte
-    const lines = this.generateDecompteLines(phaseMilestones, phaseData);
-
-    // Retenues
-    const retentionAmount = currentPeriodAmount * this.rules.guarantee_retention_rate;
-    const netPayable = currentPeriodAmount - retentionAmount;
-
-    return {
-      id: `decompte-phase-${phaseId}-${Date.now()}`,
-      project_id: this.projectId,
-      phase_id: phaseId,
-      decompte_number: decompteNumber,
-      decompte_type: 'progress',
-
-      contract_amount: phaseData.estimatedCost,
-      previous_cumulative: previousCumulative,
-      current_period_amount: currentPeriodAmount,
-      cumulative_amount: previousCumulative + currentPeriodAmount,
-
-      retention_rate: this.rules.guarantee_retention_rate,
-      retention_amount: retentionAmount,
-      previous_retention_released: 0,
-      retention_to_release: 0,
-
-      net_payable: netPayable,
-
-      verified_milestones: phaseMilestones
-        .filter(m => m.status === 'completed')
-        .map(m => ({
-          milestone_id: m.id,
-          title: m.title,
-          weight: m.weight || 0.1,
-          amount: (phaseData.estimatedCost * (m.weight || 0.1)),
-          verified_at: m.completed_date || new Date().toISOString(),
-        })),
-
-      lines,
-
-      progress_at_decompte: phaseData.progress,
-
-      status: 'calculated',
-      calculated_at: new Date().toISOString(),
-
-      calculation_log: [{
-        timestamp: new Date().toISOString(),
-        action: 'phase_decompte_calculated',
-        details: {
-          phase_id: phaseId,
-          phase_progress: phaseData.progress,
-          milestones_verified: phaseMilestones.filter(m => m.status === 'completed').length,
-        },
-      }],
-    };
   }
 
   /**
@@ -420,6 +491,8 @@ export class AutomaticDecompteCalculator {
 
     if (phaseId) {
       query = query.eq('phase_id', phaseId);
+    } else {
+      console.warn('Phase ID is required for getPreviousDecomptes, using all project payments');
     }
 
     const { data: payments } = await query;
@@ -450,27 +523,28 @@ export class AutomaticDecompteCalculator {
   }
 
   private async getPaidThresholds(): Promise<number[]> {
-    const { data: payments } = await supabase
-      .from('payments')
-      .select('progress_at_payment')
-      .eq('project_id', this.projectId);
-
-    return (payments || []).map(p => p.progress_at_payment || 0);
+    const payments = await this.paymentRepository.findByProjectId(this.projectId);
+    
+    return payments.map(p => p.progressAtPayment || 0);
   }
 
   private async hasApprovedInspectionForThreshold(threshold: number): Promise<boolean> {
-    const { data: inspections } = await supabase
-      .from('inspections')
-      .select('id')
-      .eq('project_id', this.projectId)
-      .eq('status', 'approved')
-      .gte('progress_at_inspection', threshold - 5)
-      .limit(1);
+    const inspections = await this.inspectionRepository.findByProjectId(this.projectId);
+    
+    const approvedInspections = inspections.filter(
+      inspection => inspection.status === 'approved' && 
+                   inspection.progressAtInspection >= (threshold - 5)
+    );
 
-    return inspections !== null && inspections.length > 0;
+    return approvedInspections.length > 0;
   }
 
   private async getPhaseData(phaseId: string): Promise<PhaseFinancials | null> {
+    if (!phaseId) {
+      console.warn('Phase ID is required for getPhaseData');
+      return null;
+    }
+
     const { data: phase } = await supabase
       .from('project_phases')
       .select('id, phase_name, estimated_cost, progress')
@@ -494,6 +568,11 @@ export class AutomaticDecompteCalculator {
   }
 
   private async getPhaseMilestones(phaseId: string): Promise<MilestoneDTO[]> {
+    if (!phaseId) {
+      console.warn('Phase ID is required for getPhaseMilestones');
+      return [];
+    }
+
     const { data: milestones } = await supabase
       .from('enhanced_project_milestones')
       .select('*')

@@ -94,6 +94,11 @@ export class PaymentService {
    */
   async createPayment(data: CreatePaymentRequestDto): Promise<PaymentDTO> {
     try {
+      // Validate required fields
+      if (!data.projectId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required for payment creation');
+      }
+      
       // Transform DTO to Entity
       const paymentEntity = PaymentDomainTransformer.fromCreateDtoToEntity(data);
       

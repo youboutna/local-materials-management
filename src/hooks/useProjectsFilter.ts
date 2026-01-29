@@ -15,6 +15,11 @@ export const useProjectsFilter = (projects: ProjectData[]) => {
   const [searchResults, setSearchResults] = useState<ProjectData[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
 
+  // Create a stable key for projects to prevent unnecessary re-renders
+  const projectsKey = useMemo(() => {
+    return `${projects.length}-${projects.map(p => p.id).join(',')}`;
+  }, [projects]);
+
   // Add debouncing for search to prevent immediate re-renders
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -32,7 +37,7 @@ export const useProjectsFilter = (projects: ProjectData[]) => {
       }
     });
     return Array.from(statuses);
-  }, [projects]);
+  }, [projectsKey]);
 
   // Get available regions from Mauritania regions
   const availableRegions = useMemo(() => {
@@ -143,7 +148,7 @@ export const useProjectsFilter = (projects: ProjectData[]) => {
       setSearchResults([]);
       setShowSearchResults(false);
     }
-  }, [activeSearchQuery, statusFilter, regionFilter, sortOption, projects]);
+  }, [activeSearchQuery, statusFilter, regionFilter, sortOption, projectsKey]);
 
   // Function to handle clicking on a search result
   const handleSelectSearchResult = (projectId: string) => {

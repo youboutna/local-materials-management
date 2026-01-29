@@ -22,8 +22,9 @@ import { ProjectAnalyticsService } from '@/application/services/ProjectAnalytics
 import { ProjectService } from '@/application/services/ProjectService';
 import { MilestoneService } from '@/application/services/MilestoneService';
 import { RepositoryFactory } from '@/repositories/RepositoryFactory';
-import { ProjectDetailDTO, ProjectSummaryDTO } from "@/dtos/entities/ProjectDTO";
+import { ProjectDetailDTO, ProjectSummaryDTO } from "@/types/dto";
 import { Dialog, DialogContent, DialogTrigger } from "@radix-ui/react-dialog";
+import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
@@ -143,11 +144,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     });
 
   // Analytics from ProjectService
-  const { data: analytics } = useQuery({
+  const projectAnalyticsQuery = useQuery({
     queryKey: ["project-analytics", projectId],
     queryFn: async () => {
       if (!projectId) return null;
-      return await ProjectAnalyticsService.getProjectAnalytics(
+      const analyticsService = new ProjectAnalyticsService();
+      return await analyticsService.getProjectAnalytics(
         projectId
       );
     },
@@ -162,10 +164,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       if (!projectId || !projectDetail) return null;
       
       // Get both analytics and metrics
+      const analyticsService = new ProjectAnalyticsService();
       const [analytics, metrics, costAnalysis] = await Promise.all([
-        ProjectAnalyticsService.getProjectAnalytics(projectDetail.id),
-        ProjectAnalyticsService.getProjectMetrics(projectDetail.id),
-        ProjectAnalyticsService.getProjectCostAnalysis(projectDetail.id)
+        analyticsService.getProjectAnalytics(projectDetail.id),
+        analyticsService.getProjectMetrics(projectDetail.id),
+        analyticsService.getProjectCostAnalysis(projectDetail.id)
       ]);
 
       // Combine all data into the expected format
@@ -213,7 +216,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     queryKey: ["project-compliance", projectId],
     queryFn: async (): Promise<any> => {
       if (!projectId || !projectDetail) return null;
-      return await ProjectAnalyticsService.getComplianceData(projectDetail);
+      const analyticsService = new ProjectAnalyticsService();
+      return await analyticsService.getComplianceData(projectDetail);
     },
     enabled: !!projectId && !!projectDetail,
     staleTime: 30_000,
@@ -259,11 +263,36 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   });
 
   // Use data from ProjectDetailDTO
-  const phasesSource = useMemo(() => projectDetail?.plannedPhases || [], [projectDetail?.plannedPhases]);
-  const tasksSource = projectDetail?.tasks || [];
-  const risksSource = projectDetail?.risks || [];
-  const inspectionsSource = projectDetail?.inspections || [];
-  const paymentsSource = projectDetail?.inspections || []; // TODO: Add payments to DTO
+  const phasesSource = useMemo(() => {
+    const phases = projectDetail?.plannedPhases || [];
+    console.log('📊 Phases Source:', phases);
+    console.log('📊 ProjectDetail:', projectDetail);
+    return phases;
+  }, [projectDetail]);
+  
+  const tasksSource = useMemo(() => {
+    const tasks = projectDetail?.tasks || [];
+    console.log('📊 Tasks Source:', tasks);
+    return tasks;
+  }, [projectDetail]);
+  
+  const risksSource = useMemo(() => {
+    const risks = projectDetail?.risks || [];
+    console.log('📊 Risks Source:', risks);
+    return risks;
+  }, [projectDetail]);
+  
+  const inspectionsSource = useMemo(() => {
+    const inspections = projectDetail?.inspections || [];
+    console.log('📊 Inspections Source:', inspections);
+    return inspections;
+  }, [projectDetail]);
+  
+  const paymentsSource = useMemo(() => {
+    const expenses = projectDetail?.expenses || [];
+    console.log('📊 Payments Source:', expenses);
+    return expenses;
+  }, [projectDetail]);
 
   // Calculate current phase and stage dynamically from phases
   const currentPhaseInfo = useMemo(() => {
@@ -336,27 +365,63 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   useEffect(() => {
     const computeResources = () => {
       if (!projectDetail) return;
-      const allResources: Array<{id: string, name: string, type: string, position?: string, costPerHour?: number, monthlyCost?: number}> = [];
-      if (projectDetail.projectResponsableId) {
+      
+      // Use real resources from projectDetail instead of mock data
+      const realResources = projectDetail.resources || [];
+      
+      // Transform real resources to the expected format
+      const allResources = realResources.map((resource: any) => ({
+        id: resource.id || `resource-${Math.random()}`,
+        name: resource.name || resource.title || "Ressource sans nom",
+        type: resource.type || "human",
+        position: resource.position || resource.role || "Non spécifié",
+        costPerHour: resource.costPerHour || resource.hourlyRate || 0,
+        monthlyCost: resource.monthlyCost || 0,
+        availability: resource.availability || 100,
+        skills: resource.skills || [],
+        department: resource.department || "Non spécifié"
+      }));
+      
+      // Add project manager if exists and not already included
+      if (projectDetail.projectResponsableId && !allResources.find(r => r.id.includes('manager'))) {
+        // Try to get real manager data from contacts or stakeholders
+        const managerContact = projectDetail.contacts?.find((c: any) => 
+          c.role === 'project_manager' || c.role === 'chef de projet'
+        );
+        
         allResources.push({
           id: `manager-${projectDetail.projectResponsableId}`,
-          name: "Chef de projet",
+          name: managerContact?.name || "Chef de projet",
           type: "human",
-          position: "Chef de projet",
+          position: managerContact?.role || "Chef de projet",
           costPerHour: 0,
+          monthlyCost: 0,
           availability: 100,
+          skills: ["Management", "Coordination"],
+          department: "Management"
         });
       }
-      if (projectDetail.mainContractor) {
+      
+      // Add main contractor if exists and not already included
+      if (projectDetail.mainContractor && !allResources.find(r => r.id.includes('contractor'))) {
+        // Try to get real contractor data from contacts or stakeholders
+        const contractorContact = projectDetail.contacts?.find((c: any) => 
+          c.role === 'contractor' || c.role === 'contractant principal'
+        );
+        
         allResources.push({
           id: `contractor-main`,
           name: projectDetail.mainContractor,
-          type: "human",
-          position: "Contractant principal",
+          type: "human", 
+          position: contractorContact?.role || "Contractant principal",
           costPerHour: 0,
+          monthlyCost: 0,
           availability: 100,
+          skills: ["Construction"],
+          department: "Construction"
         });
       }
+      
       setResources(allResources);
     };
     if (projectDetail) {
@@ -393,40 +458,53 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     
     return {
       id: typedProject.id,
-      title: typedProject.title,
-      description: typedProject.description || "",
+      title: typedProject.title || 'Projet sans titre',
+      description: typedProject.description || "Aucune description disponible",
+      location: typedProject.location || "Localisation non spécifiée",
       status: typedProject.status || "en cours",
-      progress: calculatedProgress || typedProject.progress || 0,
-      budget: typedProject.budget || 0,
-      location: typedProject.location || "",
-      startDate: typedProject.startDate || "",
-      endDate: typedProject.endDate || "",
+      progress: calculatedProgress || typedProject.progress || undefined,
+      budget: typedProject.budget || undefined,
+      startDate: typedProject.startDate || undefined,
+      endDate: typedProject.endDate || undefined,
+      teamSize: typedProject.teamSize || undefined,
+      coordinates: typedProject.coordinates || undefined,
+      financingSource: projectDetail?.financingSource || undefined,
+      marketType: typedProject.marketType || undefined,
+      mainContractor: projectDetail?.mainContractor || undefined,
+      projectResponsableId: projectDetail?.projectResponsableId || undefined,
+      allowsInitialPayment: typedProject.allowsInitialPayment || undefined,
+      initialPaymentPercentage: typedProject.initialPaymentPercentage || undefined,
+      // Add additional fields from projectDetail
       resources: resources,
       tasks: tasksSource,
+      phases: phasesSource, // Ajouter les phases du projet
+      inspections: inspectionsSource, // Ajouter les inspections
+      expenses: paymentsSource, // Ajouter les dépenses/payments
       risks: risksSource.map((r: any) => ({
-        id: r.id,
-        title: r.title || r.description,
-        description: r.description || "",
-        probability: r.probability || 50,
-        impact: r.impact || 50,
-        mitigationPlan: r.mitigationPlan || "",
+        id: r.id || `risk-${Date.now()}`,
+        title: r.title || r.description || 'Risque sans titre',
+        description: r.description || "Aucune description",
+        probability: r.probability || undefined,
+        impact: r.impact || undefined,
+        mitigationPlan: r.mitigationPlan || undefined,
         status: r.status || "identified",
         relatedTasks: r.relatedTasks || [],
       })),
       contacts: projectDetail?.mainContractor
         ? [
             {
-              id: "contractor-1",
+              id: `contractor-${projectDetail.mainContractor.replace(/\s+/g, '-').toLowerCase()}`,
               name: projectDetail.mainContractor,
               role: "contractor",
               email: "",
               isPrimary: true,
             },
           ]
-        : [],
+        : undefined,
       stakeholders: projectDetail?.financingSource
         ? [
             {
+              id: `stakeholder-${projectDetail.financingSource.replace(/\s+/g, '-').toLowerCase()}`,
               name: projectDetail.financingSource,
               email: "",
               phone: "",
@@ -435,8 +513,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               isPrimary: true,
             },
           ]
-        : [],
-      methodology: projectDetail?.methodology || "waterfall",
+        : undefined,
+      methodology: projectDetail?.methodology || undefined,
     } as any;
   }, [
     project,
@@ -445,6 +523,9 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     resources,
     tasksSource,
     risksSource,
+    phasesSource,
+    inspectionsSource,
+    paymentsSource,
   ]);
 
   // Use data from DTO for all tabs
@@ -747,9 +828,18 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden">
-            <div className="overflow-y-auto pr-1 max-h-[85vh]">
+            <DialogHeader>
+              <DialogTitle>Générer un Rapport Compact</DialogTitle>
+              <DialogDescription>
+                Créez un rapport PDF compact avec les informations essentielles du projet.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="overflow-y-auto pr-1 max-h-[75vh]">
               {projectDataForReport && (
-                <CompactProjectReportGenerator project={projectDataForReport} />
+                <CompactProjectReportGenerator 
+                  project={projectDataForReport}
+                  useDirectData={true}
+                />
               )}
             </div>
           </DialogContent>

@@ -214,6 +214,19 @@ export class TaskService {
     }
   }
 
+  async getTasksByPhase(phaseId: string): Promise<TaskDTO[]> {
+    try {
+      const tasks = await this.taskRepository.findByPhaseId(phaseId);
+      return tasks.map(task => this.toDTO(task));
+    } catch (error) {
+      throw new TaskServiceError(
+        `Failed to get tasks by phase: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'GET_TASKS_BY_PHASE_ERROR',
+        error
+      );
+    }
+  }
+
   async getTasksByStatus(status: string): Promise<TaskDTO[]> {
     try {
       const tasks = await this.taskRepository.findByStatus(status as TaskStatus);

@@ -43,12 +43,14 @@ interface EnhancedProjectEditFormProps {
   initialData?: any;
   onSubmit: (data: any) => Promise<void>;
   onFormDataChange?: (data: any) => void;
+  isSubmitting?: boolean;
 }
 
 const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
   initialData,
   onSubmit,
   onFormDataChange,
+  isSubmitting: externalIsSubmitting = false,
 }) => {
   const { toast } = useToast();
   const { id: projectId } = useParams<{ id: string }>();
@@ -68,6 +70,9 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     updateMaterials, 
     isLoading: isLoadingMaterials 
   } = useProjectMaterialsHex(projectId);
+
+  // Combine loading states
+  const combinedIsSubmitting = isSaving || externalIsSubmitting;
 
   // Initialize ProjectFormService
   const formService = new ProjectFormService();
@@ -721,7 +726,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
                   <Button
                     variant="outline"
                     onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
-                    disabled={currentStep === 1 || isSaving}
+                    disabled={currentStep === 1 || combinedIsSubmitting}
                   >
                     Précédent
                   </Button>
@@ -731,25 +736,25 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
                   <Button
                     variant="outline"
                     onClick={handleSaveStepOnly}
-                    disabled={isSaving}
+                    disabled={combinedIsSubmitting}
                   >
                     <Save className="h-4 w-4 mr-2" />
-                    {isSaving ? "Sauvegarde..." : "Sauvegarder"}
+                    {combinedIsSubmitting ? "Sauvegarde..." : "Sauvegarder"}
                   </Button>
 
                   {currentStep < steps.length && (
-                    <Button onClick={handleSaveAndNext} disabled={isSaving}>
-                      {isSaving ? "Sauvegarde..." : "Sauvegarder et suivant"}
+                    <Button onClick={handleSaveAndNext} disabled={combinedIsSubmitting}>
+                      {combinedIsSubmitting ? "Sauvegarde..." : "Sauvegarder et suivant"}
                     </Button>
                   )}
 
                   <Button
                     variant="default"
                     onClick={handleSaveGlobalAndClose}
-                    disabled={isSaving}
+                    disabled={combinedIsSubmitting}
                     className="bg-green-600 hover:bg-green-700"
                   >
-                    {isSaving ? "Sauvegarde..." : "Sauvegarder et fermer"}
+                    {combinedIsSubmitting ? "Sauvegarde..." : "Sauvegarder et fermer"}
                   </Button>
                 </div>
               </div>

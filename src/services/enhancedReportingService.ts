@@ -105,12 +105,12 @@ export class EnhancedReportingService {
           progress: task.progress,
           status: task.status
         })) || [],
-        riskAssessment: reportDTO.riskAssessment.risks.map(risk => ({
+        riskAssessment: reportDTO.riskAssessment?.risks?.map(risk => ({
           id: risk.id,
           title: risk.description,
           severity: String(risk.riskScore),
           status: risk.status
-        }))
+        })) || []
       };
 
       return {

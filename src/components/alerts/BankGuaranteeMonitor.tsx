@@ -414,19 +414,19 @@ const BankGuaranteeMonitor: React.FC = () => {
         <CardContent className="p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
             <div className="p-2 bg-yellow-50 rounded border-l-4 border-yellow-400">
-              <div className="font-medium">{t('bank_guarantee.severity.delay_alert')}</div>
+              <div className="font-medium">{t('bank_guarantee.severity_labels.delay_alert')}</div>
               <div className="text-muted-foreground">
                 ≥ {DELAY_THRESHOLDS.WARNING}% {t('bank_guarantee.delay_percentage_suffix')}
               </div>
             </div>
             <div className="p-2 bg-orange-50 rounded border-l-4 border-orange-400">
-              <div className="font-medium">{t('bank_guarantee.severity.bank_notification')}</div>
+              <div className="font-medium">{t('bank_guarantee.severity_labels.bank_notification')}</div>
               <div className="text-muted-foreground">
                 ≥ {DELAY_THRESHOLDS.BANK_NOTIFICATION}% {t('bank_guarantee.delay_percentage_suffix')}
               </div>
             </div>
             <div className="p-2 bg-red-50 rounded border-l-4 border-red-400">
-              <div className="font-medium">{t('bank_guarantee.severity.guarantee_trigger')}</div>
+              <div className="font-medium">{t('bank_guarantee.severity_labels.guarantee_trigger')}</div>
               <div className="text-muted-foreground">
                 ≥ {DELAY_THRESHOLDS.GUARANTEE_TRIGGER}% {t('bank_guarantee.delay_percentage_suffix')}
               </div>

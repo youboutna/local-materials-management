@@ -200,8 +200,9 @@ const UnifiedInsuranceManager = () => {
     try {
       console.log('Loading insurance certificates...');
       
-      // Use InsuranceService instead of direct Supabase call
-      const data = await InsuranceService.getCertificates();
+      // Use InsuranceService instance instead of static call
+      const insuranceService = new InsuranceService();
+      const data = await insuranceService.getInsuranceCertificates();
 
       console.log('Raw certificates data:', data);
 

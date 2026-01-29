@@ -19,7 +19,8 @@ export class ProjectDataCalculations {
       }
 
       // Get project phases using PhaseService
-      const phases = await PhaseService.getPhasesDTOByProject(projectId);
+      const phaseService = new PhaseService();
+      const phases = await phaseService.getPhasesByProject(projectId);
       
       // Calculate costs from expenses (payments are not in ProjectDetailDTO, use expenses instead)
       const totalPayments = projectDetail.expenses?.reduce((sum: number, expense: any) => 
@@ -62,7 +63,8 @@ export class ProjectDataCalculations {
   static async calculatePhaseCosts(projectId: string, phaseId: string) {
     try {
       // Get phase details using PhaseService
-      const phase = await PhaseService.getPhaseDTOById(phaseId);
+      const phaseService = new PhaseService();
+      const phase = await phaseService.getPhaseById(phaseId);
       if (!phase) {
         throw new Error('Phase not found');
       }
@@ -140,7 +142,8 @@ export class ProjectDataCalculations {
   static async calculatePhaseResourceUtilization(projectId: string, phaseId: string) {
     try {
       // Get phase details
-      const phase = await PhaseService.getPhaseDTOById(phaseId);
+      const phaseService = new PhaseService();
+      const phase = await phaseService.getPhaseById(phaseId);
       if (!phase) {
         throw new Error('Phase not found');
       }
@@ -200,7 +203,8 @@ export class ProjectDataCalculations {
   static async calculatePhaseProgressMetrics(phaseId: string) {
     try {
       // Get phase with detailed information using PhaseService
-      const phase = await PhaseService.getPhaseDTOById(phaseId);
+      const phaseService = new PhaseService();
+      const phase = await phaseService.getPhaseById(phaseId);
       if (!phase) {
         throw new Error('Phase not found');
       }

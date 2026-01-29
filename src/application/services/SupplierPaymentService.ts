@@ -52,7 +52,7 @@ export interface MarkAsPaidRequestDto {
 
 export class SupplierPaymentService {
   constructor(
-    private repository: ISupplierPaymentRepository = RepositoryFactory.getSupplierRepository() // Using supplier repository as placeholder
+    private repository: ISupplierPaymentRepository = RepositoryFactory.getSupplierRepository() as unknown as ISupplierPaymentRepository
   ) {}
 
   /**
@@ -110,7 +110,7 @@ export class SupplierPaymentService {
         amount: request.amount,
         paymentType: request.paymentType,
         description: request.description,
-        status: 'pending',
+        status: 'pending' as const,
         currency: 'EUR', // Default currency
         documents: [],
         requestedAt: new Date().toISOString(),

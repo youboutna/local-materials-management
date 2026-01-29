@@ -112,6 +112,13 @@ export class BankGuaranteeService {
    */
   async getBankGuarantees(projectId?: string): Promise<BankGuaranteeDTO[]> {
     try {
+      // Validate projectId to prevent UUID errors
+      if (projectId && projectId.trim() === '') {
+        console.warn('BankGuaranteeService.getBankGuarantees: Invalid projectId provided, fetching all guarantees');
+        // Fetch all guarantees when projectId is invalid
+        projectId = undefined;
+      }
+
       const guarantees = await this.bankGuaranteeRepository.getByProject(projectId || '');
       
       if (!guarantees) {

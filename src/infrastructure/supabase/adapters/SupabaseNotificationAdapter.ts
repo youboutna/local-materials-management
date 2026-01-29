@@ -51,14 +51,24 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
    */
   async getUserNotifications(userId: string, limit = 50): Promise<{ notifications: NotificationData[]; error: Error | null }> {
     try {
+      console.log('SupabaseNotificationAdapter.getUserNotifications: Querying notifications for userId:', userId, 'limit:', limit);
+      
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('user_id', userId)
+        .eq('recipient_id', userId)
         .order('created_at', { ascending: false })
         .limit(limit);
 
+      console.log('SupabaseNotificationAdapter.getUserNotifications: Supabase response:', {
+        hasError: !!error,
+        error: error,
+        dataCount: data?.length || 0,
+        data: data
+      });
+
       if (error) {
+        console.error('SupabaseNotificationAdapter.getUserNotifications: Supabase error:', error);
         return { notifications: [], error };
       }
 
@@ -70,11 +80,18 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
         type: item.type as NotificationData['type'],
         read: item.read,
         created_at: item.created_at,
-        updated_at: item.updated_at
+        updated_at: item.updated_at,
+        priority: undefined, // Pas dans la base de données actuelle
+        expires_at: null, // Pas dans la base de données actuelle
+        action_url: null, // Pas dans la base de données actuelle
+        metadata: item.metadata && typeof item.metadata === 'object' ? item.metadata as Record<string, any> : null
       }));
+
+      console.log('SupabaseNotificationAdapter.getUserNotifications: Successfully mapped', notifications.length, 'notifications');
 
       return { notifications, error: null };
     } catch (error) {
+      console.error('SupabaseNotificationAdapter.getUserNotifications: Exception caught:', error);
       return { notifications: [], error: error as Error };
     }
   }
@@ -164,7 +181,7 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
       const { data, error } = await supabase
         .from('notifications')
         .select('id', { count: 'exact' })
-        .eq('user_id', userId)
+        .eq('recipient_id', userId)
         .eq('read', false);
 
       if (error) {

@@ -32,8 +32,12 @@ const Projects: React.FC = () => {
   const { projects: hexProjects, isLoading, error, deleteProject } = useProjectsHex();
   
   // Map domain entities to ProjectData for compatibility
+  const projectsKey = React.useMemo(() => {
+    return `${hexProjects?.length || 0}-${hexProjects?.map(p => p.id).join(',') || ''}`;
+  }, [hexProjects]);
+
   const projects: ProjectData[] = React.useMemo(() => 
-    hexProjects.map(p => ({
+    hexProjects?.map(p => ({
       id: p.id || '',
       title: p.title || '',
       description: p.description || '',
@@ -48,8 +52,8 @@ const Projects: React.FC = () => {
       coordinates: p.coordinates?.latitude && p.coordinates?.longitude 
         ? { latitude: p.coordinates.latitude, longitude: p.coordinates.longitude }
         : undefined,
-    }))
-  , [hexProjects]);
+    })) || []
+  , [projectsKey]);
   
   const [originalMapLocations, setOriginalMapLocations] = useState<MapLocation[]>([]);
   const [filteredMapLocations, setFilteredMapLocations] = useState<MapLocation[]>([]);

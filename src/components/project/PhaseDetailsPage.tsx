@@ -48,6 +48,18 @@ const PhaseDetailsPage: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  // Debug logging for URL parameters
+  useEffect(() => {
+    console.log('PhaseDetailsPage - URL Parameters Debug:', {
+      projectId,
+      phaseId,
+      hasProjectId: !!projectId,
+      hasPhaseId: !!phaseId,
+      url: window.location.pathname,
+      timestamp: new Date().toISOString()
+    });
+  }, [projectId, phaseId]);
+
   const [activeTab, setActiveTab] = useState("hierarchy");
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<any>({});

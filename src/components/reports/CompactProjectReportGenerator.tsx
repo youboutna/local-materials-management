@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { EnhancedReportingService } from '@/services/enhancedReportingService';
+import { ProjectAnalyticsService } from '@/services/ProjectAnalyticsService';
+import { ProjectCalculationService } from '@/services/ProjectCalculationService';
 import { EVMMetrics, PERTAnalysis, ProjectData } from '@/types/project';
 import { ProjectReportDTO } from '@/types/reportTypes';
 import { ReportCalculations } from '@/utils/reportCalculations';
@@ -18,12 +20,14 @@ interface CompactProjectReportGeneratorProps {
   project?: ProjectData;
   projects?: ProjectData[];
   onClose?: () => void;
+  useDirectData?: boolean; // Nouveau prop pour utiliser les données directes
 }
 
 export function CompactProjectReportGenerator({ 
   project, 
   projects, 
-  onClose 
+  onClose,
+  useDirectData = false 
 }: CompactProjectReportGeneratorProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -48,23 +52,94 @@ export function CompactProjectReportGenerator({
       
       setLoading(true);
       try {
-        if (isSingleProject && project) {
-          // Load single project data
+        if (useDirectData && project) {
+          // Utiliser les données directes du projet avec les services
+          console.log('📊 Using direct project data for report:', project);
+          
+          // Utiliser ProjectAnalyticsService pour les analytics complets
+          const comprehensiveAnalytics = await ProjectAnalyticsService.getComprehensiveAnalytics(project);
+          const kpiMetrics = await ProjectAnalyticsService.getKPIMetrics(project);
+          const complianceData = await ProjectAnalyticsService.getComplianceData(project);
+          const financialData = ProjectAnalyticsService.getFinancialData(project);
+          
+          // Calculs EVM basés sur les données réelles du service
+          const evmMetrics = comprehensiveAnalytics.evm;
+          
+          // Créer le DTO avec les vraies données des services
+          const directReportDTO: ProjectReportDTO = {
+            project: project,
+            phases: project.phases || [],
+            constructionMilestones: [],
+            analytics: {
+              schedulePerformanceIndex: evmMetrics.schedulePerformanceIndex,
+              costPerformanceIndex: evmMetrics.costPerformanceIndex,
+              earnedValue: evmMetrics.earnedValue,
+              plannedValue: evmMetrics.plannedValue,
+              actualCost: evmMetrics.actualCost,
+              budgetAtCompletion: evmMetrics.budgetAtCompletion,
+              estimateAtCompletion: evmMetrics.estimateAtCompletion,
+              estimateToComplete: evmMetrics.estimateToComplete,
+              varianceAtCompletion: evmMetrics.varianceAtCompletion,
+              onTimePerformance: comprehensiveAnalytics.timeline.scheduleVariance > 0 ? 100 : Math.max(0, 100 + comprehensiveAnalytics.timeline.scheduleVariance),
+              budgetVariance: comprehensiveAnalytics.budget.costVariance,
+              qualityScore: comprehensiveAnalytics.quality.averageInspectionScore,
+              teamEfficiency: kpiMetrics.healthScore
+            },
+            financialMetrics: {
+              totalBudget: comprehensiveAnalytics.budget.totalBudget,
+              spentAmount: comprehensiveAnalytics.budget.spentAmount,
+              remainingBudget: comprehensiveAnalytics.budget.remainingBudget,
+              costOverrun: Math.max(0, comprehensiveAnalytics.budget.costVariance),
+              paymentMilestones: financialData.payments || [],
+              bankGuarantees: [],
+              insuranceCoverage: []
+            },
+            riskAssessment: {
+              overallRiskLevel: comprehensiveAnalytics.risk.riskScore > 75 ? 'critical' : comprehensiveAnalytics.risk.riskScore > 50 ? 'high' : comprehensiveAnalytics.risk.riskScore > 25 ? 'medium' : 'low',
+              risks: comprehensiveAnalytics.risk.topRisks.map(risk => ({
+                id: risk.id || '',
+                category: risk.category || 'schedule',
+                description: risk.description || '',
+                probability: risk.probability || 50,
+                impact: risk.impact || 50,
+                riskScore: risk.riskScore || comprehensiveAnalytics.risk.riskScore,
+                status: risk.status || 'identified'
+              })),
+              mitigationStrategies: []
+            }
+          };
+          setSingleEnrichedData(directReportDTO);
+          
+          const evmMetricsResult: EVMMetrics = {
+            schedulePerformanceIndex: evmMetrics.schedulePerformanceIndex,
+            costPerformanceIndex: evmMetrics.costPerformanceIndex,
+            estimateAtCompletion: evmMetrics.estimateAtCompletion,
+            varianceAtCompletion: evmMetrics.varianceAtCompletion,
+            budgetAtCompletion: evmMetrics.budgetAtCompletion,
+            actualCost: evmMetrics.actualCost,
+            plannedValue: evmMetrics.plannedValue,
+            earnedValue: evmMetrics.earnedValue,
+            scheduleVariance: evmMetrics.scheduleVariance,
+            costVariance: evmMetrics.costVariance,
+            estimateToComplete: evmMetrics.estimateToComplete
+          };
+          setSingleEvmMetrics(evmMetricsResult);
+          
+          // PERT Analysis avec ProjectCalculationService
+          const pertAnalysis = ProjectCalculationService.calculatePERTAnalysis(project);
+          setSinglePertAnalysis(pertAnalysis);
+          
+          setReportTitle(`Rapport - ${project.title}`);
+        } else if (isSingleProject && project) {
+          // Load single project data (original logic)
           const completeReport = await EnhancedReportingService.generateCompleteProjectReport(project);
           setSingleEnrichedData(completeReport.reportDTO);
           
           const evmMetricsResult = ReportCalculations.calculateEVMMetrics(
             project,
-            completeReport.costCalculation.actualCost,
-            completeReport.reportDTO.phases
+            completeReport.costCalculation.actualCost
           );
           setSingleEvmMetrics(evmMetricsResult);
-          
-          const pertAnalysisResult = ReportCalculations.calculatePERTAnalysis(
-            completeReport.reportDTO.phases,
-            project.tasks || []
-          );
-          setSinglePertAnalysis(pertAnalysisResult);
           
           setReportTitle(`Rapport - ${project.title}`);
         } else {
@@ -112,7 +187,7 @@ export function CompactProjectReportGenerator({
     };
 
     loadData();
-  }, [project, projects, isSingleProject, projectList.length, toast]);
+  }, [project, projects, isSingleProject, projectList.length, useDirectData, toast]);
 
   const generatePDF = async () => {
     if (projectList.length === 0) {

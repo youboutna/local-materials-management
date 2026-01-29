@@ -34,11 +34,9 @@ export class NotificationService {
         type: data.type,
         read: false,
         priority: data.priority || 'medium',
-        expires_at: data.expires_at || null,
-        action_url: data.action_url || null,
-        metadata: data.metadata || null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        expires_at: data.expires_at || undefined,
+        action_url: data.action_url || undefined,
+        metadata: data.metadata || undefined
       };
       
       const result = await this.notificationRepository.createNotification(notificationData);
@@ -57,14 +55,14 @@ export class NotificationService {
         recipient_id: result.notification.recipient_id,
         title: result.notification.title,
         message: result.notification.message,
-        type: result.notification.type as 'info' | 'success' | 'warning' | 'error' | 'system',
-        read: result.notification.read || false,
-        created_at: result.notification.created_at,
+        type: result.notification.type,
+        read: result.notification.read,
+        created_at: result.notification.created_at || new Date().toISOString(),
         updated_at: result.notification.updated_at,
-        priority: result.notification.priority as 'low' | 'medium' | 'high' || undefined,
+        priority: result.notification.priority,
         expires_at: result.notification.expires_at || undefined,
         action_url: result.notification.action_url || undefined,
-        metadata: result.notification.metadata || undefined,
+        metadata: result.notification.metadata || undefined
       };
     } catch (error) {
       console.error('NotificationService.createNotification failed:', error);
@@ -73,69 +71,71 @@ export class NotificationService {
   }
 
   /**
-   * Get all notifications
+   * Get all notifications (system admin only)
    */
   async getAllNotifications(): Promise<NotificationDTO[]> {
     try {
-      // Use getUserNotifications with a system user ID for now
-      // This is a workaround since getAllNotifications doesn't exist in the repository
-      const result = await this.notificationRepository.getUserNotifications('system', 1000);
-      
-      if (result.error) {
-        throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get notifications');
-      }
-
-      return result.notifications.map(notification => ({
-        id: notification.id,
-        recipient_id: notification.recipient_id,
-        title: notification.title,
-        message: notification.message,
-        type: notification.type as 'info' | 'success' | 'warning' | 'error' | 'system',
-        read: notification.read || false,
-        created_at: notification.created_at,
-        updated_at: notification.updated_at,
-        priority: notification.priority as 'low' | 'medium' | 'high' || undefined,
-        expires_at: notification.expires_at || undefined,
-        action_url: notification.action_url || undefined,
-        metadata: notification.metadata || undefined,
-      }));
+      // In a project management app, only system admins can see all notifications
+      // For now, we'll return an empty array as this requires admin privileges
+      console.warn('NotificationService.getAllNotifications: Admin privileges required');
+      return [];
     } catch (error) {
       console.error('NotificationService.getAllNotifications failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get notifications');
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get all notifications');
     }
   }
 
   /**
-   * Get system notifications
+   * Get system notifications (admin only)
    */
   async getSystemNotifications(): Promise<NotificationDTO[]> {
     try {
-      // Get notifications with type 'system'
-      const result = await this.notificationRepository.getUserNotifications('system', 100);
+      // System notifications are for all users, not tied to a specific user
+      // For now, we'll use a system user ID as workaround
+      const result = await this.notificationRepository.getUserNotifications('system', 1000);
       
       if (result.error) {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get system notifications');
       }
 
-      return result.notifications
-        .filter(notification => notification.type === 'system')
-        .map(notification => ({
-          id: notification.id,
-          recipient_id: notification.recipient_id,
-          title: notification.title,
-          message: notification.message,
-          type: notification.type as 'info' | 'success' | 'warning' | 'error' | 'system',
-          read: notification.read || false,
-          created_at: notification.created_at,
-          updated_at: notification.updated_at,
-          priority: notification.priority as 'low' | 'medium' | 'high' || undefined,
-          expires_at: notification.expires_at || undefined,
-          action_url: notification.action_url || undefined,
-          metadata: notification.metadata || undefined,
-        }));
+      // Filter for system type notifications
+      const systemNotifications = result.notifications.filter(n => n.type === 'system');
+      return systemNotifications.map(notification => this.mapToDTO(notification));
     } catch (error) {
       console.error('NotificationService.getSystemNotifications failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get system notifications');
+    }
+  }
+
+  /**
+   * Get project notifications for all project stakeholders
+   */
+  async getProjectNotifications(projectId: string): Promise<NotificationDTO[]> {
+    try {
+      // Validate projectId for project management context
+      if (!projectId || projectId.trim() === '') {
+        console.warn('NotificationService.getProjectNotifications: Invalid projectId provided');
+        return [];
+      }
+
+      // For now, we'll get all notifications and filter by project metadata
+      // This is a workaround until we have a proper project notification repository method
+      const allUsersResult = await this.notificationRepository.getUserNotifications('all', 1000);
+      
+      if (allUsersResult.error) {
+        throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get project notifications');
+      }
+
+      // Filter notifications related to this project
+      const projectNotifications = allUsersResult.notifications.filter(notification => {
+        const metadata = notification.metadata || {};
+        return metadata.project_id === projectId;
+      });
+
+      return projectNotifications.map(notification => this.mapToDTO(notification));
+    } catch (error) {
+      console.error('NotificationService.getProjectNotifications failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get project notifications');
     }
   }
 
@@ -144,26 +144,31 @@ export class NotificationService {
    */
   async getUserNotifications(userId: string, limit = 50): Promise<NotificationDTO[]> {
     try {
+      // Validate userId for project management context
+      if (!userId || userId.trim() === '') {
+        console.warn('NotificationService.getUserNotifications: Invalid userId provided');
+        return [];
+      }
+
+      console.log('NotificationService.getUserNotifications: Fetching notifications for userId:', userId);
+      
       const result = await this.notificationRepository.getUserNotifications(userId, limit);
       
+      console.log('NotificationService.getUserNotifications: Repository result:', {
+        hasError: !!result.error,
+        error: result.error,
+        notificationsCount: result.notifications.length
+      });
+      
       if (result.error) {
+        console.error('NotificationService.getUserNotifications: Repository error:', result.error);
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get user notifications');
       }
 
-      return result.notifications.map(notification => ({
-        id: notification.id,
-        recipient_id: notification.recipient_id,
-        title: notification.title,
-        message: notification.message,
-        type: notification.type as 'info' | 'success' | 'warning' | 'error' | 'system',
-        read: notification.read || false,
-        created_at: notification.created_at,
-        updated_at: notification.updated_at,
-        priority: notification.priority as 'low' | 'medium' | 'high' || undefined,
-        expires_at: notification.expires_at || undefined,
-        action_url: notification.action_url || undefined,
-        metadata: notification.metadata || undefined,
-      }));
+      const mappedNotifications = result.notifications.map(notification => this.mapToDTO(notification));
+      console.log('NotificationService.getUserNotifications: Successfully mapped', mappedNotifications.length, 'notifications');
+      
+      return mappedNotifications;
     } catch (error) {
       console.error('NotificationService.getUserNotifications failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get user notifications');
@@ -322,6 +327,12 @@ export class NotificationService {
    */
   async getUnreadCount(userId: string): Promise<number> {
     try {
+      // Validate userId for project management context
+      if (!userId || userId.trim() === '') {
+        console.warn('NotificationService.getUnreadCount: Invalid userId provided');
+        return 0;
+      }
+
       const result = await this.notificationRepository.getUnreadCount(userId);
       
       if (result.error) {
@@ -331,8 +342,50 @@ export class NotificationService {
       return result.count;
     } catch (error) {
       console.error('NotificationService.getUnreadCount failed:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get unread count');
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get unread count');
     }
+  }
+
+  /**
+   * Get unread count for project
+   */
+  async getProjectUnreadCount(projectId: string): Promise<number> {
+    try {
+      // Validate projectId for project management context
+      if (!projectId || projectId.trim() === '') {
+        console.warn('NotificationService.getProjectUnreadCount: Invalid projectId provided');
+        return 0;
+      }
+
+      // For now, we'll get all project notifications and count unread ones
+      const projectNotifications = await this.getProjectNotifications(projectId);
+      const unreadCount = projectNotifications.filter(n => !n.read).length;
+      
+      return unreadCount;
+    } catch (error) {
+      console.error('NotificationService.getProjectUnreadCount failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get project unread count');
+    }
+  }
+
+  /**
+   * Helper method to transform notification data to DTO
+   */
+  private mapToDTO(notification: NotificationData): NotificationDTO {
+    return {
+      id: notification.id,
+      recipient_id: notification.recipient_id,
+      title: notification.title,
+      message: notification.message,
+      type: notification.type,
+      read: notification.read,
+      created_at: notification.created_at || new Date().toISOString(),
+      updated_at: notification.updated_at || undefined,
+      priority: notification.priority || undefined,
+      expires_at: notification.expires_at || undefined,
+      action_url: notification.action_url || undefined,
+      metadata: notification.metadata || undefined,
+    };
   }
 
   /**
@@ -344,8 +397,7 @@ export class NotificationService {
         recipient_id: userId,
         title,
         message,
-        type,
-        read: false
+        type
       });
     } catch (error) {
       console.error('NotificationService.notifyUser failed:', error);

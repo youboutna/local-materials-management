@@ -4,13 +4,16 @@
  * Integrates with CheckpointVerificationEngine and AutomaticDecompteCalculator
  */
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getCheckpointVerificationEngine } from '@/application/services/CheckpointVerificationEngine';
 import { AutomaticDecompteCalculator } from '@/application/services/AutomaticDecompteCalculator';
+import { PaymentService } from '@/application/services/PaymentService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { toast } from '@/hooks/use-toast';
 import type { AutomaticDecompteDTO } from '@/types/checkpoint-dto';
+import type { CreatePaymentRequestDto } from '@/dtos/transforms/PaymentDomainTransformer';
+import type { MilestoneDTO } from '@/types/milestone-dto';
 
 interface UseCheckpointVerificationOptions {
   projectId: string;
@@ -31,9 +34,9 @@ const getMilestoneRepository = () => {
   return RepositoryFactory.getMilestoneRepository();
 };
 
-// Get payment repository
-const getPaymentRepository = () => {
-  return RepositoryFactory.getPaymentRepository();
+// Get payment service
+const getPaymentService = () => {
+  return new PaymentService(RepositoryFactory.getPaymentRepository());
 };
 
 export function useCheckpointVerification({ 
@@ -42,31 +45,58 @@ export function useCheckpointVerification({
 }: UseCheckpointVerificationOptions) {
   const queryClient = useQueryClient();
 
+  // Debug logging for phase ID availability
+  useEffect(() => {
+    console.log('useCheckpointVerification - Phase ID Debug:', {
+      projectId,
+      phaseId,
+      hasProjectId: !!projectId,
+      hasPhaseId: !!phaseId,
+      timestamp: new Date().toISOString()
+    });
+  }, [projectId, phaseId]);
+
   // Fetch checkpoints for phase/project from milestones via repository
   const { data: checkpoints, isLoading: checkpointsLoading } = useQuery({
     queryKey: ['checkpoints', projectId, phaseId],
     queryFn: async (): Promise<SimpleCheckpoint[]> => {
       try {
+        if (!projectId) {
+          console.warn('useCheckpointVerification: Project ID is undefined');
+          return [];
+        }
+        
+        if (!phaseId) {
+          console.warn('useCheckpointVerification: Phase ID is undefined');
+          return [];
+        }
+
+        console.log('useCheckpointVerification: Fetching checkpoints for', {
+          projectId,
+          phaseId,
+          timestamp: new Date().toISOString()
+        });
+
         const milestoneRepository = getMilestoneRepository();
         
         // Get milestones by project
-        const milestones = await milestoneRepository.findByProject(projectId);
+        const milestones = await milestoneRepository.findByProjectId(projectId);
         
         // Filter by phase if provided
         let filteredMilestones = milestones;
         if (phaseId) {
-          filteredMilestones = milestones.filter((m: any) => 
-            m.phaseId === phaseId || m.phase_id === phaseId
+          filteredMilestones = milestones.filter((m: MilestoneDTO) => 
+            m.phase_id === phaseId
           );
         }
         
-        return filteredMilestones.map((m: any) => ({
+        return filteredMilestones.map((m: MilestoneDTO) => ({
           id: m.id,
-          title: m.title || m.name || '',
+          title: m.title,
           status: m.status === 'completed' ? 'verified' : 'pending',
-          trigger_progress: m.weight || m.trigger_progress || 25,
+          trigger_progress: m.weight || 25,
           verification_score: m.status === 'completed' ? 100 : 0,
-          phase_id: m.phaseId || m.phase_id || null,
+          phase_id: m.phase_id || null,
         }));
       } catch (error) {
         console.error('Error fetching checkpoints:', error);
@@ -81,43 +111,82 @@ export function useCheckpointVerification({
   const { data: decompteData } = useQuery({
     queryKey: ['automatic-decompte', projectId, phaseId, checkpoints?.length],
     queryFn: async (): Promise<AutomaticDecompteDTO | null> => {
-      if (!phaseId) return null;
+      if (!phaseId) {
+        console.warn('Phase ID is required for decompte calculation');
+        return null;
+      }
       
-      const calculator = new AutomaticDecompteCalculator(projectId);
-      return calculator.calculatePhaseDecompte(phaseId);
+      try {
+        console.log('useCheckpointVerification - About to call calculator with:', {
+          projectId,
+          phaseId,
+          hasProjectId: !!projectId,
+          hasPhaseId: !!phaseId,
+          typeofPhaseId: typeof phaseId,
+          timestamp: new Date().toISOString()
+        });
+
+        const calculator = new AutomaticDecompteCalculator(projectId);
+        return await calculator.calculatePhaseDecompte(phaseId);
+      } catch (error) {
+        console.error('AutomaticDecompteCalculator.calculatePhaseDecompte failed:', error);
+        return null;
+      }
     },
     enabled: !!phaseId,
     staleTime: 30_000,
+    retry: (failureCount, error) => {
+      // Don't retry on "Phase ID is required" errors
+      if (error instanceof Error && error.message.includes('Phase ID is required')) {
+        return false;
+      }
+      return failureCount < 3;
+    },
   });
 
   // Check if payment can be generated
   const { data: canGenerateData } = useQuery({
     queryKey: ['can-generate-decompte', projectId],
     queryFn: async () => {
-      const calculator = new AutomaticDecompteCalculator(projectId);
-      return calculator.canGenerateDecompte();
+      try {
+        const calculator = new AutomaticDecompteCalculator(projectId);
+        return await calculator.canGenerateDecompte();
+      } catch (error) {
+        console.error('AutomaticDecompteCalculator.canGenerateDecompte failed:', error);
+        return false;
+      }
     },
     enabled: !!projectId,
     staleTime: 30_000,
+    retry: (failureCount, error) => {
+      // Don't retry on "Repository methods not available" errors
+      if (error instanceof Error && error.message.includes('Repository methods not available')) {
+        return false;
+      }
+      return failureCount < 2;
+    },
   });
 
-  // Trigger payment mutation via PaymentRepository
+  // Trigger payment mutation via PaymentService
   const triggerPaymentMutation = useMutation({
     mutationFn: async (decompte: AutomaticDecompteDTO) => {
       try {
-        const paymentRepository = getPaymentRepository();
+        const paymentService = getPaymentService();
         
-        await paymentRepository.create({
-          project_id: projectId,
-          phase_id: phaseId || null,
+        // Create payment request DTO
+        const paymentRequest: CreatePaymentRequestDto = {
+          projectId: projectId,
+          phaseId: phaseId || undefined,
           amount: decompte.net_payable,
-          payment_date: new Date().toISOString(),
-          payment_method: 'bank_transfer',
-          progress_at_payment: decompte.progress_at_decompte,
-          contractor_name: 'Auto-generated',
-          contractor_contact: '',
-          transaction_id: `AUTO-${Date.now()}`,
-        });
+          paymentDate: new Date().toISOString(),
+          paymentMethod: 'bank_transfer',
+          progressAtPayment: decompte.progress_at_decompte,
+          transactionId: `AUTO-${Date.now()}`,
+          contractorName: 'Auto-generated',
+          contractorContact: '',
+        };
+        
+        return await paymentService.createPayment(paymentRequest);
       } catch (error) {
         console.error('Error creating payment:', error);
         throw error;

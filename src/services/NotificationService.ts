@@ -114,6 +114,13 @@ export class NotificationService {
    */
   static async getUserNotifications(userId: string, limit = 50) {
     try {
+      // Validate userId to prevent UUID errors
+      if (!userId || userId.trim() === '') {
+        console.warn('NotificationService.getUserNotifications: Invalid userId provided, returning empty array');
+        // Return empty array to maintain functionality without errors
+        return [];
+      }
+
       const { data, error } = await supabase
         .from('notifications')
         .select('*')

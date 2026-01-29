@@ -32,6 +32,13 @@ export class BankGuaranteeAdapter implements IBankGuaranteeRepository {
   }
 
   async getByProject(projectId: string): Promise<any[]> {
+    // Validate projectId to prevent UUID errors
+    if (!projectId || projectId.trim() === '') {
+      console.warn('BankGuaranteeAdapter.getByProject: Invalid projectId provided, fetching all guarantees');
+      // When projectId is invalid, fetch all guarantees by using empty string for no filter
+      projectId = '';
+    }
+
     const { data, error } = await supabase
       .from('bank_guarantees')
       .select('*')
@@ -53,8 +60,8 @@ export class BankGuaranteeAdapter implements IBankGuaranteeRepository {
 
   async releasePhaseGuarantees(phaseId: string): Promise<void> {
     const { error } = await supabase
-      .from('phase_guarantees')
-      .update({ released: true, released_at: new Date().toISOString() })
+      .from('bank_guarantees')
+      .update({ status: 'released', released_at: new Date().toISOString() })
       .eq('phase_id', phaseId);
 
     if (error) throw error;
@@ -62,8 +69,8 @@ export class BankGuaranteeAdapter implements IBankGuaranteeRepository {
 
   async releaseProjectGuarantees(projectId: string): Promise<void> {
     const { error } = await supabase
-      .from('project_guarantees')
-      .update({ released: true, released_at: new Date().toISOString() })
+      .from('bank_guarantees')
+      .update({ status: 'released', released_at: new Date().toISOString() })
       .eq('project_id', projectId);
 
     if (error) throw error;

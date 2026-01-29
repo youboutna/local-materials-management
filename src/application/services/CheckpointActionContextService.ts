@@ -692,7 +692,27 @@ export class CheckpointActionContextService {
       const milestone = await milestoneRepository.findById(milestoneId);
       
       if (milestone) {
-        return milestone;
+        // Convert Milestone entity to MilestoneDTO for compatibility
+        return {
+          id: milestone.id,
+          title: milestone.title,
+          description: milestone.description,
+          targetDate: milestone.targetDate,
+          status: milestone.status,
+          completedDate: milestone.completionDate,
+          phaseId: milestone.phaseId || '',
+          progress: milestone.progressPercentage,
+          weight: milestone.configuration.weight,
+          priority: milestone.priority,
+          type: milestone.configuration.type,
+          predecessorIds: milestone.dependencies?.map(d => d.id) || [],
+          successorIds: [],
+          deliverables: milestone.deliverables?.map(d => d.name) || [],
+          actualCompletionDate: milestone.completionDate,
+          notes: milestone.description,
+          assignedTo: null,
+          tags: []
+        } as MilestoneDTO;
       }
 
       // Fallback to mock data with proper Milestone entity structure
