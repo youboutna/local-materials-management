@@ -420,7 +420,7 @@ services:
       case 'api':
         return this.currentConfig.api;
       default:
-        throw new Error(`Unknown adapter type: ${type}`);
+        throw new Error('Unknown adapter type: ' + type);
     }
   }
 
@@ -443,11 +443,11 @@ services:
           setupUrl: 'https://console.cloud.google.com/apis/credentials',
           redirectUris: config.auth.redirectUris,
           setupInstructions: [
-            'Go to Google Cloud Console → APIs & Credentials',
+            'Go to Google Cloud Console - APIs & Credentials',
             'Select your OAuth 2.0 Client ID',
             'Add the redirect URIs above in the authorized redirect URIs',
             'Configure the consent screen with your authorized domain',
-            'In Supabase → Auth → URL Configuration, set Site URL to your domain'
+            'In Supabase - Auth - URL Configuration, set Site URL to your domain'
           ]
         };
       case 'keycloak':
@@ -455,15 +455,15 @@ services:
           setupUrl: config.auth.url,
           redirectUris: config.auth.redirectUris,
           setupInstructions: [
-            `Go to ${config.auth.url}/admin`,
-            `Select realm: ${config.auth.realm}`,
-            'Go to Clients → Find your client',
-            'Add the redirect URis in Valid Redirect URIs',
+            'Go to ' + config.auth.url + '/admin',
+            'Select realm: ' + config.auth.realm,
+            'Go to Clients - Find your client',
+            'Add the redirect URIs in Valid Redirect URIs',
             'Configure Web Origins if needed'
           ]
         };
       default:
-        throw new Error(`OAuth provider ${provider} not supported`);
+        throw new Error('OAuth provider not supported: ' + provider);
     }
   }
 }

@@ -167,36 +167,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       component: ComplianceStep,
     },
   ], []);
-    workspace_id: '',
-    financingSource: '',
-    funding_source: '',
-    marketType: '',
-    market_type: '',
-    selectionMode: '',
-    selection_mode: '',
-    project_reference: '',
-    startDate: new Date().toISOString().split("T")[0],
-    endDate: '',
-    reception_status: '',
-    closure_notes: '',
-    // Localisation
-    address: '',
-    latitude: 0,
-    longitude: 0,
-    // Données associées (objets intégrés)
-    stakeholders: [],
-    phases: [],
-    risks: [],
-    materials: selectedMaterials || [],
-    compliance: [],
-    shapeData: {
-      type: '',
-      coordinates: [],
-      area: 0,
-      perimeter: 0,
-    },
-    ...initialData,
-  });
+
   // États locaux pour la présentation uniquement (Règle PROMPTS.md #5)
   const [currentStep, setCurrentStep] = useState(0);
   const [estimatedDuration, setEstimatedDuration] = useState("");

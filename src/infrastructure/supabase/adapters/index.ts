@@ -43,3 +43,9 @@ export { SupabaseInspectionPermissionAdapter } from './SupabaseInspectionPermiss
 export { SupabaseTenderDocumentAdapter } from './SupabaseTenderDocumentAdapter';
 export { SupabaseAlertRepository } from './SupabaseAlertRepository';
 export { SupabaseMilestoneAdapter } from './SupabaseMilestoneAdapter';
+export { SupabaseSupplierPaymentAdapter } from './SupabaseSupplierPaymentAdapter';
+
+// Auth adapters (multi-provider support)
+export { KeycloakAuthAdapter } from './KeycloakAuthAdapter';
+export { Auth0Adapter } from './Auth0Adapter';
+export { DatabaseAuthAdapter } from './DatabaseAuthAdapter';
