@@ -1,10 +1,12 @@
 /**
  * Supplier Service
  * Implements business logic for supplier management
+ * Follows hexagonal architecture principles from PROMPTS.md
  */
 
 import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
 import { Supplier } from '@/domain/entities/Supplier';
+import { SupplierTransformer, SupplierDTO } from '@/dtos/transforms/SupplierTransformer';
 import { AppError, ErrorCode, ErrorLogger } from '@/utils/errorHandling';
 
 export interface SearchSuppliersOptions {
@@ -168,6 +170,108 @@ export class SupplierService {
       console.log('Supplier deleted successfully:', id);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete supplier';
+      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
+      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage);
+    }
+  }
+
+  // ========== DTO TRANSFORMATION METHODS ==========
+  // For backward compatibility with existing components
+
+  /**
+   * Get all suppliers as DTOs (Legacy Compatibility)
+   * Transforms domain entities to DTOs for UI consumption
+   */
+  async getAllSuppliersAsDTO(): Promise<SupplierDTO[]> {
+    try {
+      const suppliers = await this.supplierRepository.findAll();
+      return SupplierTransformer.toDTOList(suppliers);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get all suppliers';
+      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
+      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage);
+    }
+  }
+
+  /**
+   * Get supplier by ID as DTO (Legacy Compatibility)
+   */
+  async getSupplierByIdAsDTO(id: string): Promise<SupplierDTO | null> {
+    try {
+      const supplier = await this.supplierRepository.findById(id);
+      if (!supplier) return null;
+      
+      return SupplierTransformer.toDTO(supplier);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get supplier';
+      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
+      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage);
+    }
+  }
+
+  /**
+   * Search suppliers as DTOs (Legacy Compatibility)
+   */
+  async searchSuppliersAsDTO(searchTerm: string): Promise<SupplierDTO[]> {
+    try {
+      const suppliers = await this.supplierRepository.search(searchTerm);
+      return SupplierTransformer.toDTOList(suppliers);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to search suppliers';
+      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
+      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage);
+    }
+  }
+
+  /**
+   * Get active suppliers as DTOs (Legacy Compatibility)
+   */
+  async getActiveSuppliersAsDTO(): Promise<SupplierDTO[]> {
+    try {
+      const suppliers = await this.supplierRepository.findActive();
+      return SupplierTransformer.toDTOList(suppliers);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get active suppliers';
+      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
+      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage);
+    }
+  }
+
+  /**
+   * Create supplier from DTO (Legacy Compatibility)
+   */
+  async createSupplierFromDTO(supplierDTO: SupplierDTO): Promise<SupplierDTO> {
+    try {
+      const supplier = SupplierTransformer.toEntity(supplierDTO);
+      await this.supplierRepository.save(supplier);
+      return SupplierTransformer.toDTO(supplier);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create supplier';
+      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
+      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage);
+    }
+  }
+
+  /**
+   * Update supplier from DTO (Legacy Compatibility)
+   */
+  async updateSupplierFromDTO(id: string, supplierDTO: Partial<SupplierDTO>): Promise<SupplierDTO> {
+    try {
+      const existingSupplier = await this.supplierRepository.findById(id);
+      if (!existingSupplier) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Supplier not found');
+      }
+
+      // Merge existing supplier with DTO updates
+      const updatedSupplier = SupplierTransformer.toEntity({
+        ...SupplierTransformer.toDTO(existingSupplier),
+        ...supplierDTO
+      });
+
+      await this.supplierRepository.update(id, updatedSupplier);
+      return SupplierTransformer.toDTO(updatedSupplier);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update supplier';
       ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
       throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage);
     }

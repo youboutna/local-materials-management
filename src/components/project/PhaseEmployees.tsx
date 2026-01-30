@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Users, Edit2, Trash2, Star } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useQuery as useSuppliersQuery } from '@tanstack/react-query'; // Add this import
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 interface PhaseEmployeesProps {
   phaseId: string;
@@ -62,8 +63,12 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
   const { data: suppliersList } = useSuppliersQuery({
     queryKey: ['suppliers'],
     queryFn: async () => {
-      const { SupplierService } = await import('@/services/SupplierService');
-      return await SupplierService.getAllSuppliers();
+      const { SupplierService } = await import('@/application/services/SupplierService');
+      const { SupplierTransformer } = await import('@/dtos/transforms/SupplierTransformer');
+      const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
+      const result = await supplierService.searchSuppliers({ isActive: true });
+      // Transformer les entités en DTOs legacy compatibles
+      return SupplierTransformer.toDTOList(result.suppliers);
     },
   });
 

@@ -1,9 +1,11 @@
 /**
  * RiskTransformer - Transformer pour les entités Risk
  * Respecte l'architecture hexagonale : Entity ↔ DTO
+ * Cache invalidation - v5 - Final solution
  */
 
-import { Risk, RiskStatus, RiskLevel, RiskCategory } from '@/domain/entities/Risk';
+import { Risk } from '@/domain/entities/Risk';
+import { RiskStatus, RiskLevel, RiskCategory, RISK_STATUS_VALUES, RISK_CATEGORY_VALUES } from '@/domain/entities/RiskTypesExport';
 import { RiskDTO, CreateRiskRequest, UpdateRiskRequest } from '@/application/services/RiskService';
 
 export class RiskTransformer {
@@ -15,14 +17,14 @@ export class RiskTransformer {
       id: entity.id,
       project_id: entity.project?.id,
       title: entity.title,
-      description: entity.description,
+      description: entity.description || undefined,
       probability: entity.probability,
       impact: entity.impact,
       status: entity.status,
       category: entity.category,
-      mitigation_strategy: entity.mitigationStrategy,
+      mitigation_strategy: entity.mitigationStrategy || undefined,
       identified_by: entity.identifiedBy?.id,
-      identified_date: entity.identifiedDate,
+      identified_date: entity.identifiedDate || undefined,
       related_tasks: entity.relatedTasks,
       created_at: entity.createdAt,
       updated_at: entity.updatedAt
@@ -139,11 +141,11 @@ export class RiskTransformer {
     };
 
     // Validation des types
-    if (!Object.values(RiskStatus).includes(cleaned.status)) {
+    if (!RISK_STATUS_VALUES.includes(cleaned.status)) {
       cleaned.status = 'identified';
     }
 
-    if (!Object.values(RiskCategory).includes(cleaned.category)) {
+    if (!RISK_CATEGORY_VALUES.includes(cleaned.category)) {
       cleaned.category = 'operational';
     }
 

@@ -59,31 +59,31 @@ export interface UseSupplierHexResult {
 export interface SupplierLegacy {
   id: string;
   name: string;
-  contact_person?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  address?: string | null;
-  category?: string | null;
-  rating?: number | null;
-  is_active: boolean | null;
-  user_id?: string | null;
-  default_password_reset_required: boolean | null;
+  contact_person?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  category?: string;
+  rating?: number;
+  is_active: boolean;
+  user_id?: string;
+  default_password_reset_required: boolean;
   created_at: string | null;
   updated_at: string | null;
 }
 
 export interface SupplierNotification {
   id: string;
-  supplier_id?: string | null;
-  task_id?: string | null;
+  supplier_id?: string;
+  task_id?: string;
   notification_type: string; // Allow any string from database
   email: string;
-  reset_token?: string | null;
-  sent_at?: string | null;
-  expires_at?: string | null;
-  used_at?: string | null;
-  created_by?: string | null;
-  metadata?: any;
+  reset_token?: string;
+  sent_at?: string;
+  expires_at?: string;
+  used_at?: string;
+  created_by?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SupplierViewedItem {
@@ -120,7 +120,7 @@ export interface DocumentWithViewStatus {
   status?: string | null;
   uploaded_by?: string | null;
   assigned_to?: string | null;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   tags?: string[] | null;
   created_at: string | null;
   updated_at: string | null;

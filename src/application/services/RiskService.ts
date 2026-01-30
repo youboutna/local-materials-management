@@ -3,7 +3,8 @@
  * Respecte l'architecture hexagonale : Service → Repository → Adapter → Supabase
  */
 
-import { Risk, RiskStatus, RiskLevel, RiskCategory } from '@/domain/entities/Risk';
+import { Risk } from '@/domain/entities/Risk';
+import { RiskStatus, RiskLevel, RiskCategory } from '@/domain/entities/RiskTypesExport';
 import { IRiskRepository } from '@/domain/repositories/IRiskRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { RiskTransformer } from '@/dtos/transforms/RiskTransformer';

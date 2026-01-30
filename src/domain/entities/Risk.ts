@@ -1,5 +1,6 @@
 // Domain Entity: Risk
 // Pure business logic without infrastructure concerns
+// Cache invalidation fix - v3 - RiskStatus export issue
 
 export type RiskStatus = 'identified' | 'monitored' | 'mitigated' | 'resolved';
 export type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
@@ -144,6 +145,16 @@ export class Risk {
     this._mitigationStrategy = value; 
     this._updatedAt = new Date().toISOString();
   }
+  
+  set category(value: RiskCategory) { 
+    this._category = this.validateCategory(value); 
+    this._updatedAt = new Date().toISOString();
+  }
+  
+  set relatedTasks(value: string[]) { 
+    this._relatedTasks = value || []; 
+    this._updatedAt = new Date().toISOString();
+  }
 
   // ============= Business Logic Methods =============
   getRiskScore(): number {
@@ -219,6 +230,44 @@ export class Risk {
       this._identifiedBy,
       this._identifiedDate,
       this._relatedTasks,
+      this._createdAt,
+      new Date().toISOString()
+    );
+  }
+
+  withCategory(newCategory: RiskCategory): Risk {
+    return new Risk(
+      this._id,
+      this._project,
+      this._title,
+      this._description,
+      this._probability,
+      this._impact,
+      this._status,
+      this.validateCategory(newCategory),
+      this._mitigationStrategy,
+      this._identifiedBy,
+      this._identifiedDate,
+      this._relatedTasks,
+      this._createdAt,
+      new Date().toISOString()
+    );
+  }
+
+  withRelatedTasks(newRelatedTasks: string[]): Risk {
+    return new Risk(
+      this._id,
+      this._project,
+      this._title,
+      this._description,
+      this._probability,
+      this._impact,
+      this._status,
+      this._category,
+      this._mitigationStrategy,
+      this._identifiedBy,
+      this._identifiedDate,
+      newRelatedTasks || [],
       this._createdAt,
       new Date().toISOString()
     );

@@ -4,7 +4,8 @@
  */
 
 import { IRiskRepository } from '@/domain/repositories/IRiskRepository';
-import { Risk, RiskStatus, RiskLevel, IProject, IEmployee } from '@/domain/entities/Risk';
+import { Risk, IProject, IEmployee } from '@/domain/entities/Risk';
+import { RiskStatus, RiskLevel, RiskCategory } from '@/domain/entities/RiskTypesExport';
 
 export class LocalStorageRiskAdapter implements IRiskRepository {
   private risks: Risk[] = [];

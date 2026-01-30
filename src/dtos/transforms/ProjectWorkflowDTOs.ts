@@ -89,6 +89,30 @@ export interface ProjectFormDataDTO {
   inspections?: InspectionFormDataDTO[];
   compliance?: ComplianceDataDTO;
   estimatedBudget?: number;
+  
+  // 🎨 UI/Presentation layer properties (PROMPTS.md Rule #5)
+  project_reference?: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  technical_manager_id?: string;
+  client_name?: string;
+  project_type?: string;
+  sector?: string;
+  permit_number?: string;
+  payment_mode?: string;
+  payment_frequency?: string;
+  initial_advance?: number;
+  retention_percentage?: number;
+  currency?: string;
+  funding_source?: string;
+  market_type?: string;
+  selection_mode?: string;
+  main_contractor?: string;
+  estimatedDuration?: string;
+  reception_status?: string;
+  closure_notes?: string;
+  shapeData?: any; // 🎨 UI state for map data
 }
 
 export interface PhaseFormDataDTO {

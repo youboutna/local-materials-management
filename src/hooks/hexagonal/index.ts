@@ -600,3 +600,18 @@ export {
   useDeleteSupplier,
   type SupplierMgmtFormData
 } from './useSuppliersCrudHex';
+
+// Infrastructure adapters - re-export for accessibility
+export { 
+  SupabaseAlertRepository,
+  SupabaseMilestoneAdapter,
+  SupabaseSupplierPaymentAdapter
+} from '@/infrastructure/supabase/adapters';
+
+// Application services - re-export for accessibility
+export { 
+  ProjectAnalyticsService
+} from '@/application/services/ProjectAnalyticsService';
+export { 
+  MilestoneService
+} from '@/application/services/MilestoneService';

@@ -1,5 +1,6 @@
 // Repository interface for Risk entity
-import { Risk, RiskStatus, RiskLevel } from '../entities/Risk';
+import { Risk } from '../entities/Risk';
+import { RiskStatus, RiskLevel, RiskCategory } from '../entities/RiskTypesExport';
 
 export interface IRiskRepository {
   // CRUD operations

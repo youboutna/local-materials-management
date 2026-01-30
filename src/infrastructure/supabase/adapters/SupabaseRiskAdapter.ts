@@ -2,7 +2,8 @@
 // Note: Risk table doesn't exist in current schema - this is a stub implementation
 // that can be connected when the table is created
 import { IRiskRepository } from '@/domain/repositories/IRiskRepository';
-import { Risk, RiskStatus, RiskLevel } from '@/domain/entities/Risk';
+import { Risk } from '@/domain/entities/Risk';
+import { RiskStatus, RiskLevel, RiskCategory } from '@/domain/entities/RiskTypesExport';
 
 export class SupabaseRiskAdapter implements IRiskRepository {
   // In-memory storage for risks until table is created

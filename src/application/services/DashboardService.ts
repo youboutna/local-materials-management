@@ -465,10 +465,3 @@ export class DashboardService {
     return Math.round((acknowledgedAlerts / alerts.length) * 100);
   }
 }
-
-class DashboardServiceError extends Error {
-  constructor(message: string, public code: string, public cause?: Error) {
-    super(message);
-    this.name = 'DashboardServiceError';
-  }
-}

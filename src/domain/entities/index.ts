@@ -22,7 +22,8 @@ export { Employee, type EmployeeRole, type Department, type Permission } from '.
 export { UserRole } from './UserRole';
 export { Position, type PositionPermissions } from './Position';
 export { Certification } from './Certification';
-export { Risk, type RiskStatus, type RiskLevel } from './Risk';
+export { Risk } from './Risk';
+export { type RiskStatus, type RiskLevel, type RiskCategory } from './RiskTypesExport';
 export { Tender, type TenderStatus, type SelectionMode, type MarketType, type EvaluationCriteria } from './Tender';
 export { Supplier, type SupplierStatus, type SupplierCategory, type SupplierContact, type SupplierRating } from './Supplier';
 export { Document, type DocumentType, type DocumentStatus } from './Document';

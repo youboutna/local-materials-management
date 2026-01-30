@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Shield, AlertTriangle, Eye, Edit, Trash2, Bell, CheckCircle, FileText, Upload, Download, Calendar, Users, MessageSquare, Phone, Mail, Settings } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -27,7 +27,7 @@ import {
   createInsuranceCertificate,
   InsuranceCertificate,
   InsuranceAlert
-} from '@/application/services/InsuranceCertificatesService';
+} from '@/services/insuranceCertificateService';
 import { InsuranceService } from '@/application/services/InsuranceService';
 import { createInsuranceAction } from '@/application/services/enhancedActionService';
 import { checkAndSendInsuranceAlerts } from '@/utils/insuranceAlertUtils';
@@ -158,15 +158,20 @@ const UnifiedInsuranceManager = () => {
     { value: 'active', label: 'Active', color: 'bg-green-100 text-green-800' },
     { value: 'expired', label: 'Expirée', color: 'bg-red-100 text-red-800' },
     { value: 'expiring_soon', label: 'Expire bientôt', color: 'bg-orange-100 text-orange-800' },
-    { value: 'missing', label: 'Manquante', color: 'bg-gray-100 text-gray-800' }
+    { value: 'missing', label: 'Manquante', color: 'bg-gray-100 text-gray-800' },
+    { value: 'pending', label: 'En attente', color: 'bg-yellow-100 text-yellow-800' },
+    { value: 'verified', label: 'Vérifié', color: 'bg-blue-100 text-blue-800' },
+    { value: 'new', label: 'Nouveau', color: 'bg-purple-100 text-purple-800' },
+    { value: 'in_progress', label: 'En cours', color: 'bg-blue-200 text-blue-800' },
+    { value: 'cancelled', label: 'Annulé', color: 'bg-red-200 text-red-800' }
   ];
 
   useEffect(() => {
     loadInsuranceData();
     loadCertificates();
-  }, []);
+  }, [loadInsuranceData, loadCertificates]);
 
-  const loadInsuranceData = async () => {
+  const loadInsuranceData = useCallback(async () => {
     try {
       setLoading(true);
       const expiringAlerts = await detectExpiringInsurance();
@@ -181,21 +186,9 @@ const UnifiedInsuranceManager = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
-  const handleSendAlerts = async () => {
-    setLoading(true);
-    try {
-      await checkAndSendInsuranceAlerts();
-      await loadInsuranceData(); // Refresh alerts
-    } catch (error) {
-      console.error('Error sending alerts:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadCertificates = async () => {
+  const loadCertificates = useCallback(async () => {
     setLoading(true);
     try {
       console.log('Loading insurance certificates...');
@@ -248,8 +241,19 @@ const UnifiedInsuranceManager = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
+  const handleSendAlerts = async () => {
+    setLoading(true);
+    try {
+      await checkAndSendInsuranceAlerts();
+      await loadInsuranceData(); // Refresh alerts
+    } catch (error) {
+      console.error('Error sending alerts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleFileUpload = async (file: File, certificateId?: string) => {
     if (!file) return;
