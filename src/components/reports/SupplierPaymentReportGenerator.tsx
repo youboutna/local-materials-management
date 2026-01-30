@@ -13,14 +13,16 @@ import { pdf } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useNotifications } from '@/hooks/useNotifications';
+import { NotificationService } from '@/application/services/NotificationService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { SupplierPaymentReportingService, SupplierPaymentReportData } from '@/services/supplierPaymentReportingService';
 import { ReportFormatting } from '@/utils/reportFormatting';
 import { SupplierPaymentPDFDocument } from './pdf/SupplierPaymentPDFDocument';
-import { supabase } from '@/integrations/supabase/client';
+import { SupplierDTO, PaymentDTO, SupplierPaymentReportConfig, ReportGenerationResultDTO } from '@/dtos/reports/reportDTOs';
 
 interface SupplierPaymentReportGeneratorProps {
-  supplier: any; // Supplier type from your system
-  payments: any[]; // Array of payments
+  supplier: SupplierDTO;
+  payments: PaymentDTO[];
   dateRange: {
     startDate: Date;
     endDate: Date;
@@ -100,13 +102,13 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
               <div>
                 <p style="margin: 5px 0;"><strong>Nom:</strong> ${supplier.name || 'Non défini'}</p>
-                <p style="margin: 5px 0;"><strong>Contact:</strong> ${supplier.contact_person || 'Non défini'}</p>
+                <p style="margin: 5px 0;"><strong>Contact:</strong> ${supplier.contactPerson || 'Non défini'}</p>
                 <p style="margin: 5px 0;"><strong>Email:</strong> ${supplier.email || 'Non défini'}</p>
               </div>
               <div>
                 <p style="margin: 5px 0;"><strong>Téléphone:</strong> ${supplier.phone || 'Non défini'}</p>
                 <p style="margin: 5px 0;"><strong>Catégorie:</strong> ${supplier.category || 'Non défini'}</p>
-                <p style="margin: 5px 0;"><strong>Statut:</strong> <span style="padding: 2px 8px; border-radius: 4px; font-size: 12px; background: ${supplier.is_active ? '#dcfce7; color: #166534' : '#fee2e2; color: #991b1b'};">${supplier.is_active ? 'Actif' : 'Inactif'}</span></p>
+                <p style="margin: 5px 0;"><strong>Statut:</strong> <span style="padding: 2px 8px; border-radius: 4px; font-size: 12px; background: ${supplier.isActive ? '#dcfce7; color: #166534' : '#fee2e2; color: #991b1b'};">${supplier.isActive ? 'Actif' : 'Inactif'}</span></p>
               </div>
             </div>
             ${supplier.address ? `<p style="margin: 15px 0 5px 0;"><strong>Adresse:</strong></p><p style="margin: 5px 0;">${supplier.address}</p>` : ''}
@@ -155,8 +157,8 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
               <tbody>
                 ${payments.map((payment, index) => `
                 <tr style="border-bottom: 1px solid #f3f4f6;">
-                  <td style="padding: 12px 8px; font-size: 14px; color: #374151;">${payment.due_date ? format(new Date(payment.due_date), 'dd/MM/yyyy') : 'N/A'}</td>
-                  <td style="padding: 12px 8px; font-size: 14px; color: #374151;">${payment.description || payment.reference_number || `Paiement #${index + 1}`}</td>
+                  <td style="padding: 12px 8px; font-size: 14px; color: #374151;">${payment.paymentDate ? format(new Date(payment.paymentDate), 'dd/MM/yyyy') : 'N/A'}</td>
+                  <td style="padding: 12px 8px; font-size: 14px; color: #374151;">${payment.transactionId || `Paiement #${index + 1}`}</td>
                   <td style="padding: 12px 8px; font-size: 14px; color: #374151; text-align: right; font-weight: 500;">${payment.amount ? payment.amount.toLocaleString('fr-FR') : '0'} MRU</td>
                   <td style="padding: 12px 8px; text-align: center;">
                     <span style="padding: 2px 8px; border-radius: 4px; font-size: 12px;" class="${getPaymentStatusColor(payment.status)}">${payment.status || 'pending'}</span>
@@ -253,19 +255,27 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
     try {
       const { blob, fileName } = await generatePDF();
 
-      // Call edge function to send email (you would need to create this)
+      // Use NotificationService to send email 
+      const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
       
-      const { error } = await supabase.functions.invoke('send-payment-report', {
-        body: {
-          to: reportConfig.recipientEmail,
-          supplierName: supplier.name,
-          reportTitle: reportConfig.title,
-          pdfBlob: Array.from(new Uint8Array(await blob.arrayBuffer())),
-          fileName,
-        },
+      await notificationService.sendEmail({
+        to: reportConfig.recipientEmail!,
+        subject: `Rapport de paiements: ${reportConfig.title}`,
+        body: `Veuillez trouver ci-joint le rapport de paiements "${reportConfig.title}" pour le fournisseur ${supplier.name}. Le rapport couvre la période du ${format(dateRange.startDate, 'dd/MM/yyyy')} au ${format(dateRange.endDate, 'dd/MM/yyyy')}.`,
+        html: `
+          <h2>Rapport de paiements: ${reportConfig.title}</h2>
+          <p>Bonjour,</p>
+          <p>Veuillez trouver ci-joint le rapport de paiements pour le fournisseur <strong>${supplier.name}</strong>.</p>
+          <p><strong>Période:</strong> ${format(dateRange.startDate, 'dd/MM/yyyy')} au ${format(dateRange.endDate, 'dd/MM/yyyy')}</p>
+          <p><strong>Total des paiements:</strong> ${calculateTotals().totalAmount.toLocaleString('fr-FR')} MRU</p>
+          <p><strong>Montants payés:</strong> ${calculateTotals().paidAmount.toLocaleString('fr-FR')} MRU</p>
+          <p><strong>Montants en attente:</strong> ${calculateTotals().pendingAmount.toLocaleString('fr-FR')} MRU</p>
+          <p>Ce rapport a été généré automatiquement par le système.</p>
+          <br>
+          <p>Cordialement,</p>
+          <p>L'équipe de gestion des paiements</p>
+        `,
       });
-
-      if (error) throw error;
 
       toast({
         title: "Rapport envoyé",

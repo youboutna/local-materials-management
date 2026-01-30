@@ -14,21 +14,19 @@ import { pdf } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useNotifications } from '@/hooks/useNotifications';
+import { NotificationService } from '@/application/services/NotificationService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { TenderReportingService, TenderReportData } from '@/services/tenderReportingService';
 import { ReportFormatting } from '@/utils/reportFormatting';
 import { TenderPDFDocument } from './pdf/TenderPDFDocument';
-import { supabase } from '@/integrations/supabase/client';
+import { TenderDTO, TenderReportConfig as TenderReportConfigDTO, ReportGenerationResultDTO } from '@/dtos/reports/reportDTOs';
 
 interface TenderReportGeneratorProps {
-  tender: {
-    title: string;
-    reference?: string;
-    // ... other tender properties
-  };
+  tender: TenderDTO;
   onClose?: () => void;
 }
 
-interface TenderReportConfig {
+interface LocalTenderReportConfig {
   title: string;
   includeSections: {
     overview: boolean;
@@ -51,7 +49,7 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
   const { toast } = useToast();
   const { invokeFunction } = useNotifications();
   const [isGenerating, setIsGenerating] = useState(false);
-  const [reportConfig, setReportConfig] = useState<TenderReportConfig>({
+  const [reportConfig, setReportConfig] = useState<LocalTenderReportConfig>({
     title: '',
     includeSections: {
       overview: true,
@@ -105,14 +103,14 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
           <div style="background: #faf5ff; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
               <div>
-                <p style="margin: 5px 0;"><strong>Référence:</strong> ${tender.reference || 'Non défini'}</p>
+                <p style="margin: 5px 0;"><strong>Référence:</strong> ${tender.projectReference || 'Non défini'}</p>
                 <p style="margin: 5px 0;"><strong>Titre:</strong> ${tender.title || 'Non défini'}</p>
                 <p style="margin: 5px 0;"><strong>Statut:</strong> <span style="padding: 2px 8px; border-radius: 4px; font-size: 12px;" class="${getStatusColor(tender.status)}">${tender.status || 'Non défini'}</span></p>
               </div>
               <div>
-                <p style="margin: 5px 0;"><strong>Budget Min:</strong> ${tender.budget_min ? `${tender.budget_min.toLocaleString('fr-FR')} MRU` : 'Non défini'}</p>
-                <p style="margin: 5px 0;"><strong>Budget Max:</strong> ${tender.budget_max ? `${tender.budget_max.toLocaleString('fr-FR')} MRU` : 'Non défini'}</p>
-                <p style="margin: 5px 0;"><strong>Date limite:</strong> ${tender.deadline_date ? format(new Date(tender.deadline_date), 'dd/MM/yyyy') : 'Non défini'}</p>
+                <p style="margin: 5px 0;"><strong>Date de lancement:</strong> ${tender.launchDate ? format(new Date(tender.launchDate), 'dd/MM/yyyy') : 'Non défini'}</p>
+                <p style="margin: 5px 0;"><strong>Date d'attribution:</strong> ${tender.attributionDate ? format(new Date(tender.attributionDate), 'dd/MM/yyyy') : 'Non défini'}</p>
+                <p style="margin: 5px 0;"><strong>Mode de sélection:</strong> ${tender.selectionMode || 'Non défini'}</p>
               </div>
             </div>
             ${tender.description ? `<p style="margin: 15px 0 5px 0;"><strong>Description:</strong></p><p style="margin: 5px 0; line-height: 1.5;">${tender.description}</p>` : ''}
@@ -156,22 +154,22 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
           <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Calendrier</h2>
           <div style="background: #fffbeb; padding: 20px; border-radius: 8px;">
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-              ${tender.publication_date ? `
+              ${tender.launchDate ? `
               <div style="text-align: center;">
-                <p style="margin: 0; font-size: 12px; color: #92400e; font-weight: 500;">PUBLICATION</p>
-                <p style="margin: 5px 0; font-weight: bold; color: #374151;">${format(new Date(tender.publication_date), 'dd MMM yyyy', { locale: fr })}</p>
+                <p style="margin: 0; font-size: 12px; color: #92400e; font-weight: 500;">LANCEMENT</p>
+                <p style="margin: 5px 0; font-weight: bold; color: #374151;">${format(new Date(tender.launchDate), 'dd MMM yyyy', { locale: fr })}</p>
               </div>
               ` : ''}
-              ${tender.deadline_date ? `
-              <div style="text-align: center;">
-                <p style="margin: 0; font-size: 12px; color: #92400e; font-weight: 500;">DATE LIMITE</p>
-                <p style="margin: 5px 0; font-weight: bold; color: #374151;">${format(new Date(tender.deadline_date), 'dd MMM yyyy', { locale: fr })}</p>
-              </div>
-              ` : ''}
-              ${tender.attribution_date ? `
+              ${tender.attributionDate ? `
               <div style="text-align: center;">
                 <p style="margin: 0; font-size: 12px; color: #92400e; font-weight: 500;">ATTRIBUTION</p>
-                <p style="margin: 5px 0; font-weight: bold; color: #374151;">${format(new Date(tender.attribution_date), 'dd MMM yyyy', { locale: fr })}</p>
+                <p style="margin: 5px 0; font-weight: bold; color: #374151;">${format(new Date(tender.attributionDate), 'dd MMM yyyy', { locale: fr })}</p>
+              </div>
+              ` : ''}
+              ${tender.marketType ? `
+              <div style="text-align: center;">
+                <p style="margin: 0; font-size: 12px; color: #92400e; font-weight: 500;">MARCHÉ</p>
+                <p style="margin: 5px 0; font-weight: bold; color: #374151;">${tender.marketType}</p>
               </div>
               ` : ''}
             </div>
@@ -182,18 +180,14 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
         ${reportConfig.includeSections.evaluation ? `
         <!-- Evaluation Criteria -->
         <section style="margin-bottom: 30px;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #3b82f6; padding-left: 15px;">Critères d'Évaluation</h2>
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #3b82f6; padding-left: 15px;">Informations sur l'appel d'offres</h2>
           <div style="background: #eff6ff; padding: 20px; border-radius: 8px;">
-            ${tender.evaluation_criteria ? `
-              <div style="display: grid; gap: 10px;">
-                ${tender.evaluation_criteria.split('\n').map((criterion: string) => `
-                  <div style="display: flex; align-items: center; gap: 10px;">
-                    <div style="width: 6px; height: 6px; background: #3b82f6; border-radius: 50%;"></div>
-                    <span>${criterion}</span>
-                  </div>
-                `).join('')}
-              </div>
-            ` : '<p style="margin: 0; color: #6b7280;">Aucun critère d\'évaluation défini.</p>'}
+            <div style="display: grid; gap: 10px;">
+              <p><strong>Mode de sélection:</strong> ${tender.selectionMode || 'Non défini'}</p>
+              <p><strong>Type de marché:</strong> ${tender.marketType || 'Non défini'}</p>
+              <p><strong>Source de financement:</strong> ${tender.financingSource || 'Non défini'}</p>
+              <p><strong>Référence projet:</strong> ${tender.projectReference || 'Non défini'}</p>
+            </div>
           </div>
         </section>
         ` : ''}
@@ -252,7 +246,7 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
       // Generate PDF blob
       const blob = await pdf(pdfDocument).toBlob();
       
-      const fileName = `rapport-tender-${(tender.reference || tender.title || 'tender').replace(/[^a-zA-Z0-9]/g, '-')}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      const fileName = `rapport-tender-${(tender.projectReference || tender.title || 'tender').replace(/[^a-zA-Z0-9]/g, '-')}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
       return { blob, fileName };
     } finally {
       setIsGenerating(false);
@@ -301,19 +295,25 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
     try {
       const { blob, fileName } = await generatePDF();
 
-      // Call edge function to send email with PDF attachment
+      // Use NotificationService to send email with PDF attachment
+      const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
       
-      const { error } = await supabase.functions.invoke('send-tender-report', {
-        body: {
-          to: reportConfig.recipientEmail,
-          tenderTitle: tender.title || tender.reference,
-          reportTitle: reportConfig.title,
-          pdfBlob: Array.from(new Uint8Array(await blob.arrayBuffer())),
-          fileName,
-        },
+      await notificationService.sendEmail({
+        to: reportConfig.recipientEmail!,
+        subject: `Rapport: ${reportConfig.title}`,
+        body: `Veuillez trouver ci-joint le rapport "${reportConfig.title}" pour l'appel d'offres "${tender.title || tender.projectReference}". Le rapport a été généré le ${format(new Date(), 'dd/MM/yyyy')}.`,
+        html: `
+          <h2>Rapport: ${reportConfig.title}</h2>
+          <p>Bonjour,</p>
+          <p>Veuillez trouver ci-joint le rapport "${reportConfig.title}" pour l'appel d'offres "${tender.title || tender.projectReference}".</p>
+          <p><strong>Référence:</strong> ${tender.projectReference || 'N/A'}</p>
+          <p><strong>Date de génération:</strong> ${format(new Date(), 'dd/MM/yyyy HH:mm')}</p>
+          <p>Ce rapport a été généré automatiquement par le système.</p>
+          <br>
+          <p>Cordialement,</p>
+          <p>L'équipe de gestion des projets</p>
+        `
       });
-
-      if (error) throw error;
 
       toast({
         title: "Rapport envoyé",

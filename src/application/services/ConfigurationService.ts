@@ -382,6 +382,43 @@ services:
     restart: unless-stopped
 
   keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USER: keycloak
+      KC_DB_PASSWORD: keycloak
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  minio_data:`;
+  }
+
+  // ============= Configuration Validation =============
+  validateConfiguration(config: DeploymentConfig): { valid: boolean; errors: string[] } {
+    const errors: string[] = [];
+
+    // Validate database config
     if (!config.database.host) errors.push('Database host is required');
     if (!config.database.database) errors.push('Database name is required');
     if (!config.database.username) errors.push('Database username is required');
@@ -402,6 +439,15 @@ services:
       valid: errors.length === 0,
       errors
     };
+  }
+
+  // ============= Current Configuration Management =============
+  getCurrentConfig(): DeploymentConfig | null {
+    return this.currentConfig;
+  }
+
+  setCurrentConfig(config: DeploymentConfig): void {
+    this.currentConfig = config;
   }
 
   // ============= Adapter Configuration =============

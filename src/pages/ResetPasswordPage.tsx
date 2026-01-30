@@ -6,12 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import { usePasswordManagement } from '@/hooks/usePasswordManagement';
-import { supabase } from '@/integrations/supabase/client';
+import { AuthService } from '@/application/services/AuthService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 const ResetPasswordPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { updatePassword, loading } = usePasswordManagement();
+  const authService = new AuthService(RepositoryFactory.getAuthRepository());
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -29,9 +31,10 @@ const ResetPasswordPage = () => {
 
       if (type === 'recovery' && accessToken && refreshToken) {
         try {
-          const { error } = await supabase.auth.setSession({
+          const { error } = await authService.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
+            user: null // Will be populated by the adapter
           });
 
           if (error) {
@@ -54,7 +57,7 @@ const ResetPasswordPage = () => {
     };
 
     checkResetLink();
-  }, [searchParams]);
+  }, [searchParams, authService]);
 
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();

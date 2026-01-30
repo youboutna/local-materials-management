@@ -15,8 +15,10 @@ import { pdf } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useNotifications } from '@/hooks/useNotifications';
+import { NotificationService } from '@/application/services/NotificationService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { DevisPDFDocument } from './pdf/DevisPDFDocument';
-import { supabase } from '@/integrations/supabase/client';
+import { TenderEstimateDTO, TenderEstimateItemDTO, TenderDTO } from '@/dtos/reports/reportDTOs';
 
 interface EstimateItem {
   id?: string;
@@ -51,9 +53,9 @@ interface TenderEstimate {
 }
 
 interface QuantitativeEstimateExporterProps {
-  estimate: TenderEstimate;
-  estimateItems: EstimateItem[];
-  tender: any;
+  estimate: TenderEstimateDTO;
+  estimateItems: TenderEstimateItemDTO[];
+  tender: TenderDTO;
   company?: {
     name: string;
     address: string;
@@ -98,7 +100,7 @@ export function QuantitativeEstimateExporter({
   const [isDrawing, setIsDrawing] = useState(false);
 
   const [exportConfig, setExportConfig] = useState<ExportConfig>({
-    title: `Devis Quantitatif Estimatif - ${tender?.title || tender?.reference || 'Appel d\'Offres'}`,
+    title: `Devis Quantitatif Estimatif - ${tender?.title || tender?.projectReference || 'Appel d\'Offres'}`,
     includeCompanyHeader: true,
     includeItemDetails: true,
     includePriceBreakdown: true,
@@ -254,7 +256,7 @@ export function QuantitativeEstimateExporter({
           <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 15px;">Informations Appel d'Offres</h3>
           <div style="background: #f8fafc; padding: 15px; border-radius: 8px;">
             <p style="margin: 5px 0;"><strong>Titre:</strong> ${tender?.title || 'Non défini'}</p>
-            <p style="margin: 5px 0;"><strong>Référence:</strong> ${tender?.reference || 'Non défini'}</p>
+            <p style="margin: 5px 0;"><strong>Référence:</strong> ${tender?.projectReference || 'Non défini'}</p>
             ${tender?.description ? `<p style="margin: 5px 0;"><strong>Description:</strong> ${tender.description}</p>` : ''}
           </div>
         </section>
@@ -408,7 +410,7 @@ export function QuantitativeEstimateExporter({
 
       // Generate PDF blob
       const blob = await pdf(pdfDocument).toBlob();
-      const fileName = `devis-quantitatif-${(tender?.reference || tender?.title || 'estimate').replace(/[^a-zA-Z0-9]/g, '-')}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      const fileName = `devis-quantitatif-${(tender?.projectReference || tender?.title || 'estimate').replace(/[^a-zA-Z0-9]/g, '-')}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
       return { blob, fileName };
     } finally {
       setLoading(false);
@@ -457,27 +459,27 @@ export function QuantitativeEstimateExporter({
     try {
       const { blob, fileName } = await generatePDF();
 
-      // Save estimate as submitted if sending by email
-      if (estimate.id) {
-        await supabase
-          .from('tender_estimates')
-          .update({ status: 'submitted' })
-          .eq('id', estimate.id);
-      }
-
-      // Call edge function to send email with PDF attachment
+      // Use NotificationService to send email 
+      const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
       
-      const { error } = await supabase.functions.invoke('send-tender-report', {
-        body: {
-          to: exportConfig.recipientEmail,
-          tenderTitle: tender?.title || tender?.reference || 'Appel d\'Offres',
-          reportTitle: exportConfig.title,
-          pdfBlob: Array.from(new Uint8Array(await blob.arrayBuffer())),
-          fileName,
-        },
+      await notificationService.sendEmail({
+        to: exportConfig.recipientEmail!,
+        subject: `Devis Quantitatif: ${exportConfig.title}`,
+        body: `Veuillez trouver ci-joint le devis quantitatif estimatif "${exportConfig.title}" pour l'appel d'offres "${tender?.projectReference || tender?.title}". Le devis a été généré le ${format(new Date(), 'dd/MM/yyyy')} et est valide jusqu'au ${format(new Date(Date.now() + exportConfig.validityPeriod * 24 * 60 * 60 * 1000), 'dd/MM/yyyy')}.`,
+        html: `
+          <h2>Devis Quantitatif: ${exportConfig.title}</h2>
+          <p>Bonjour,</p>
+          <p>Veuillez trouver ci-joint le devis quantitatif estimatif pour l'appel d'offres <strong>${tender?.projectReference || tender?.title}</strong>.</p>
+          <p><strong>Référence:</strong> ${tender?.projectReference || 'N/A'}</p>
+          <p><strong>Date de génération:</strong> ${format(new Date(), 'dd/MM/yyyy')}</p>
+          <p><strong>Validité:</strong> ${exportConfig.validityPeriod} jours (jusqu'au ${format(new Date(Date.now() + exportConfig.validityPeriod * 24 * 60 * 60 * 1000), 'dd/MM/yyyy')})</p>
+          <p><strong>Montant total:</strong> ${calculateTotals().finalTotal.toLocaleString('fr-FR')} MRU</p>
+          <p>Ce devis a été généré automatiquement par le système.</p>
+          <br>
+          <p>Cordialement,</p>
+          <p>L'équipe de gestion des appels d'offres</p>
+        `
       });
-
-      if (error) throw error;
 
       toast({
         title: "Devis envoyé",

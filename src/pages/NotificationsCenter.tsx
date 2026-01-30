@@ -10,7 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { useNotificationsHex } from '@/hooks/hexagonal';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/use-auth';
 import { AppLayout } from '@/components/layout';
 import {
     AlertTriangle,
@@ -56,15 +56,20 @@ interface NotificationData {
 
 const NotificationsCenterPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const { user } = useAuth();
   const [currentUserId, setCurrentUserId] = useState<string | undefined>();
   const { hasAnyRole } = useCurrentUserRoles();
   const { toast } = useToast();
   const { t } = useLanguage();
 
+  // Set current user ID from auth context
+  useEffect(() => {
+    setCurrentUserId(user?.id);
+  }, [user?.id]);
+
   // Fetch current user ID for notifications
   useEffect(() => {
     const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       setCurrentUserId(user?.id);
     };
     fetchUser();
@@ -121,40 +126,22 @@ const NotificationsCenterPage = () => {
     refetchSystem();
   };
 
-  // Set up real-time listener
+  // Refresh notifications periodically instead of real-time listener
   useEffect(() => {
-    const channel = supabase
-      .channel('notifications-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
-        },
-        () => {
-          fetchAllNotifications();
-        }
-      )
-      .subscribe();
+    const interval = setInterval(() => {
+      fetchAllNotifications();
+    }, 30000); // Refresh every 30 seconds
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => clearInterval(interval);
   }, []);
 
 
   const markAllAsRead = async () => {
     try {
-      const user = await supabase.auth.getUser();
-      if (!user.data.user?.id) return;
+      if (!user?.id) return;
 
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('recipient_id', user.data.user.id);
-
-      if (error) throw error;
+      // Use the hexagonal hook's markAllAsRead function
+      await markAllSystemAsRead();
 
       toast({
         title: t('common.success'),

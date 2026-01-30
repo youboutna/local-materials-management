@@ -13,18 +13,25 @@ import { pdf } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useNotifications } from '@/hooks/useNotifications';
+import { NotificationService } from '@/application/services/NotificationService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { InspectionReportingService, InspectionReportData, InspectionMetrics } from '@/services/inspectionReportingService';
 import { ReportFormatting } from '@/utils/reportFormatting';
 import { InspectionPDFDocument } from './pdf/InspectionPDFDocument';
-import { supabase } from '@/integrations/supabase/client';
+import { InspectionDTO, InspectionReportConfig as InspectionReportConfigDTO, ReportGenerationResultDTO } from '@/dtos/reports/reportDTOs';
 
 interface InspectionReportGeneratorProps {
-  inspection: any; // Inspection type from your system
-  project?: any;   // Associated project if available
+  inspection: InspectionDTO;
+  project?: {
+    id: string;
+    title: string;
+    reference?: string;
+    description?: string;
+  };
   onClose?: () => void;
 }
 
-interface InspectionReportConfig {
+interface LocalInspectionReportConfig {
   title: string;
   recipientEmail?: string;
   notes?: string;
@@ -44,7 +51,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
   const [loading, setLoading] = useState(false);
   const [reportData, setReportData] = useState<InspectionReportData | null>(null);
   const [metrics, setMetrics] = useState<InspectionMetrics | null>(null);
-  const [reportConfig, setReportConfig] = useState<InspectionReportConfig>({
+  const [reportConfig, setReportConfig] = useState<LocalInspectionReportConfig>({
     title: `Rapport d'inspection - ${inspection.title || inspection.id}`,
     recipientEmail: '',
     notes: '',
@@ -328,19 +335,26 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
     try {
       const { blob, fileName } = await generatePDF();
 
-      // Call edge function to send email (you would need to create this)
+      // Use NotificationService to send email 
+      const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
       
-      const { error } = await supabase.functions.invoke('send-inspection-report', {
-        body: {
-          to: reportConfig.recipientEmail,
-          inspectionId: inspection.id,
-          reportTitle: reportConfig.title,
-          pdfBlob: Array.from(new Uint8Array(await blob.arrayBuffer())),
-          fileName,
-        },
+      await notificationService.sendEmail({
+        to: reportConfig.recipientEmail!,
+        subject: `Rapport d'inspection: ${reportConfig.title}`,
+        body: `Veuillez trouver ci-joint le rapport d'inspection "${reportConfig.title}" pour l'inspection ${inspection.id}. Le rapport a été généré le ${format(new Date(), 'dd/MM/yyyy')}.`,
+        html: `
+          <h2>Rapport d'inspection: ${reportConfig.title}</h2>
+          <p>Bonjour,</p>
+          <p>Veuillez trouver ci-joint le rapport d'inspection pour l'inspection <strong>${inspection.id}</strong>.</p>
+          <p><strong>Date d'inspection:</strong> ${inspection.inspection_date ? format(new Date(inspection.inspection_date), 'dd/MM/yyyy') : 'N/A'}</p>
+          <p><strong>Type d'inspection:</strong> ${inspection.inspection_type || 'Non spécifié'}</p>
+          <p><strong>Statut:</strong> ${inspection.status || 'En attente'}</p>
+          <p>Ce rapport a été généré automatiquement par le système.</p>
+          <br>
+          <p>Cordialement,</p>
+          <p>L'équipe d'inspection qualité</p>
+        `
       });
-
-      if (error) throw error;
 
       toast({
         title: "Rapport envoyé",
