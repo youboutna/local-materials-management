@@ -181,7 +181,7 @@ export function DevisPDFDocument({
           <PDFRow>
             <PDFCol>
               <PDFText label="Titre" value={tender?.title || 'Non défini'} />
-              <PDFText label="Référence" value={tender?.reference || 'Non défini'} />
+              <PDFText label="Référence" value={tender?.projectReference || 'Non défini'} />
             </PDFCol>
             <PDFCol>
               <PDFText label="Type d'estimation" value={estimate.estimate_type || 'Standard'} />

@@ -64,13 +64,13 @@ export function SupplierPaymentPDFDocument({
           <PDFRow>
             <PDFCol>
               <PDFText label="Nom" value={supplier.name || 'Non défini'} />
-              <PDFText label="Contact" value={supplier.contact_person || 'Non défini'} />
+              <PDFText label="Contact" value={supplier.contactPerson || 'Non défini'} />
               <PDFText label="Email" value={supplier.email || 'Non défini'} />
             </PDFCol>
             <PDFCol>
               <PDFText label="Téléphone" value={supplier.phone || 'Non défini'} />
               <PDFText label="Catégorie" value={supplier.category || 'Non défini'} />
-              <PDFText label="Statut" value={supplier.is_active ? 'Actif' : 'Inactif'} />
+              <PDFText label="Statut" value={supplier.isActive ? 'Actif' : 'Inactif'} />
             </PDFCol>
           </PDFRow>
           {supplier.address && (
@@ -117,8 +117,8 @@ export function SupplierPaymentPDFDocument({
           <PDFTable
             headers={['Date', 'Description', 'Montant', 'Statut']}
             data={payments.map((payment, index) => [
-              payment.due_date ? format(new Date(payment.due_date), 'dd/MM/yyyy') : 'N/A',
-              payment.description || payment.reference_number || `Paiement #${index + 1}`,
+              payment.paymentDate ? format(new Date(payment.paymentDate), 'dd/MM/yyyy') : 'N/A',
+              payment.transactionId || `Paiement #${index + 1}`,
               payment.amount ? `${payment.amount.toLocaleString('fr-FR')} MRU` : '0 MRU',
               getStatusText(payment.status)
             ])}

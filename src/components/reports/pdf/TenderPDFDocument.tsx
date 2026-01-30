@@ -2,9 +2,10 @@ import React from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { PDFDocument, PDFSection, PDFCard, PDFRow, PDFCol, PDFText } from './PDFDocument';
+import { TenderDTO } from '@/dtos/reports/reportDTOs';
 
 interface TenderPDFDocumentProps {
-  tender: any;
+  tender: TenderDTO;
   reportConfig: {
     title: string;
     includeSections: {
@@ -40,7 +41,7 @@ export function TenderPDFDocument({ tender, reportConfig }: TenderPDFDocumentPro
   return (
     <PDFDocument
       title={reportConfig.title}
-      subtitle={`Référence: ${tender.reference || 'Non défini'} - ${format(new Date(), 'dd MMMM yyyy', { locale: fr })}`}
+      subtitle={`Référence: ${tender.projectReference || 'Non défini'} - ${format(new Date(), 'dd MMMM yyyy', { locale: fr })}`}
     >
       {/* Tender Overview */}
       {reportConfig.includeSections.overview && (
@@ -48,22 +49,22 @@ export function TenderPDFDocument({ tender, reportConfig }: TenderPDFDocumentPro
           <PDFCard>
             <PDFRow>
               <PDFCol>
-                <PDFText label="Référence" value={tender.reference || 'Non défini'} />
+                <PDFText label="Référence" value={tender.projectReference || 'Non défini'} />
                 <PDFText label="Titre" value={tender.title || 'Non défini'} />
                 <PDFText label="Statut" value={getStatusText(tender.status)} />
               </PDFCol>
               <PDFCol>
                 <PDFText 
-                  label="Budget Min" 
-                  value={tender.budget_min ? `${tender.budget_min.toLocaleString('fr-FR')} MRU` : 'Non défini'} 
+                  label="Date de lancement" 
+                  value={tender.launchDate ? format(new Date(tender.launchDate), 'dd/MM/yyyy') : 'Non défini'} 
                 />
                 <PDFText 
-                  label="Budget Max" 
-                  value={tender.budget_max ? `${tender.budget_max.toLocaleString('fr-FR')} MRU` : 'Non défini'} 
+                  label="Date d'attribution" 
+                  value={tender.attributionDate ? format(new Date(tender.attributionDate), 'dd/MM/yyyy') : 'Non défini'} 
                 />
                 <PDFText 
-                  label="Date limite" 
-                  value={tender.deadline_date ? format(new Date(tender.deadline_date), 'dd/MM/yyyy') : 'Non défini'} 
+                  label="Mode de sélection" 
+                  value={tender.selectionMode || 'Non défini'} 
                 />
               </PDFCol>
             </PDFRow>
@@ -90,11 +91,11 @@ export function TenderPDFDocument({ tender, reportConfig }: TenderPDFDocumentPro
               <PDFCol>
                 <PDFText 
                   label="Créé le" 
-                  value={tender.created_at ? format(new Date(tender.created_at), 'dd/MM/yyyy') : 'Non défini'} 
+                  value={tender.createdAt ? format(new Date(tender.createdAt), 'dd/MM/yyyy') : 'Non défini'} 
                 />
                 <PDFText 
                   label="Dernière modification" 
-                  value={tender.updated_at ? format(new Date(tender.updated_at), 'dd/MM/yyyy') : 'Non défini'} 
+                  value={tender.updatedAt ? format(new Date(tender.updatedAt), 'dd/MM/yyyy') : 'Non défini'} 
                 />
               </PDFCol>
             </PDFRow>
@@ -108,32 +109,28 @@ export function TenderPDFDocument({ tender, reportConfig }: TenderPDFDocumentPro
           <PDFCard>
             <PDFRow>
               <PDFCol>
-                {tender.publication_date && (
+                {tender.launchDate && (
                   <PDFText 
-                    label="Publication" 
-                    value={format(new Date(tender.publication_date), 'dd MMM yyyy', { locale: fr })} 
+                    label="Lancement" 
+                    value={format(new Date(tender.launchDate), 'dd MMM yyyy', { locale: fr })} 
                   />
                 )}
-                {tender.deadline_date && (
+                {tender.attributionDate && (
                   <PDFText 
-                    label="Date limite" 
-                    value={format(new Date(tender.deadline_date), 'dd MMM yyyy', { locale: fr })} 
+                    label="Attribution" 
+                    value={format(new Date(tender.attributionDate), 'dd MMM yyyy', { locale: fr })} 
                   />
                 )}
               </PDFCol>
               <PDFCol>
-                {tender.attribution_date && (
-                  <PDFText 
-                    label="Attribution" 
-                    value={format(new Date(tender.attribution_date), 'dd MMM yyyy', { locale: fr })} 
-                  />
-                )}
-                {tender.contract_start_date && (
-                  <PDFText 
-                    label="Début contrat" 
-                    value={format(new Date(tender.contract_start_date), 'dd MMM yyyy', { locale: fr })} 
-                  />
-                )}
+                <PDFText 
+                  label="Type de marché" 
+                  value={tender.marketType || 'Non défini'} 
+                />
+                <PDFText 
+                  label="Source de financement" 
+                  value={tender.financingSource || 'Non défini'} 
+                />
               </PDFCol>
             </PDFRow>
           </PDFCard>
@@ -142,13 +139,18 @@ export function TenderPDFDocument({ tender, reportConfig }: TenderPDFDocumentPro
 
       {/* Evaluation Criteria */}
       {reportConfig.includeSections.evaluation && (
-        <PDFSection title="Critères d'Évaluation" borderColor="#3b82f6">
+        <PDFSection title="Informations sur l'appel d'offres" borderColor="#3b82f6">
           <PDFCard>
-            {tender.evaluation_criteria ? (
-              <PDFText label="Critères" value={tender.evaluation_criteria} />
-            ) : (
-              <PDFText label="Critères" value="Aucun critère d'évaluation défini." />
-            )}
+            <PDFRow>
+              <PDFCol>
+                <PDFText label="Mode de sélection" value={tender.selectionMode || 'Non défini'} />
+                <PDFText label="Type de marché" value={tender.marketType || 'Non défini'} />
+              </PDFCol>
+              <PDFCol>
+                <PDFText label="Source de financement" value={tender.financingSource || 'Non défini'} />
+                <PDFText label="Référence projet" value={tender.projectReference || 'Non défini'} />
+              </PDFCol>
+            </PDFRow>
           </PDFCard>
         </PDFSection>
       )}
