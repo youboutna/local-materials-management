@@ -318,10 +318,8 @@ export type Database = {
           id: string
           issue_date: string
           project_id: string
-          phase_id: string
           status: string
           updated_at: string
-           released_at :string
         }
         Insert: {
           bank_name: string
@@ -3445,7 +3443,6 @@ export type Database = {
           location: string
           main_contractor: string | null
           market_type: string | null
-          methodology: string | null
           payment_frequency: string | null
           payment_mode: string | null
           payment_workflow_config: Json | null
@@ -3474,15 +3471,6 @@ export type Database = {
           title: string
           updated_at: string
           workspace_id: string | null
-          bank_guarantee_required: boolean | null
-          bank_guarantee_amount: number | null
-          bank_guarantee_percentage: number | null
-          insurance_required: boolean | null
-          materials_budget: number | null
-          procurement_lead_time: number | null
-          resource_assignment: string | null
-          reception_status: string | null
-          closure_notes: string | null
         }
         Insert: {
           adresse?: Json | null
@@ -3583,7 +3571,6 @@ export type Database = {
           location?: string
           main_contractor?: string | null
           market_type?: string | null
-          methodology?: string | null
           payment_frequency?: string | null
           payment_mode?: string | null
           payment_workflow_config?: Json | null
@@ -3612,15 +3599,6 @@ export type Database = {
           title?: string
           updated_at?: string
           workspace_id?: string | null
-          bank_guarantee_required?: boolean | null
-          bank_guarantee_amount?: number | null
-          bank_guarantee_percentage?: number | null
-          insurance_required?: boolean | null
-          materials_budget?: number | null
-          procurement_lead_time?: number | null
-          resource_assignment?: string | null
-          reception_status?: string | null
-          closure_notes?: string | null
         }
         Relationships: [
           {
