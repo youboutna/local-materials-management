@@ -4,12 +4,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Package, FileText } from 'lucide-react';
 import MaterialFormSection from '@/components/MaterialFormSection';
 import ProjectDocumentUpload from '@/components/project/ProjectDocumentUpload';
+import { ProjectFormDataDTO } from '@/application/services/ProjectService';
 
 interface ResourcesMaterialsStepProps {
   selectedMaterials: Array<{ materialId: string; quantity: number }>;
   onMaterialsChange: (materials: Array<{ materialId: string; quantity: number }>) => void;
-  formData?: any;
-  onUpdate?: (data: any) => void;
+  projectData?: ProjectFormDataDTO;
+  onUpdate?: (data: Partial<ProjectFormDataDTO>) => void;
   isEditing?: boolean;
   currentPhaseId?: string;
   currentStepId?: string;
@@ -18,7 +19,7 @@ interface ResourcesMaterialsStepProps {
 const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
   selectedMaterials,
   onMaterialsChange,
-  formData,
+  projectData,
   onUpdate,
   isEditing = false,
   currentPhaseId,
@@ -52,7 +53,7 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
               <MaterialFormSection
                 selectedMaterials={selectedMaterials}
                 onChange={onMaterialsChange}
-                projectId={formData?.id}
+                projectId={projectData?.id || 'new-project'}
               />
             </div>
 
@@ -109,8 +110,8 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
                   type="number" 
                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="Montant en MRU"
-                  value={formData?.materials_budget || ''}
-                  onChange={(e) => onUpdate?.({ materials_budget: parseFloat(e.target.value) })}
+                  value={projectData?.budget || 0}
+                  onChange={(e) => onUpdate?.({ budget: parseFloat(e.target.value) })}
                 />
               </div>
               <div>
@@ -119,8 +120,8 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
                   type="number" 
                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="Nombre de jours"
-                  value={formData?.procurement_lead_time || ''}
-                  onChange={(e) => onUpdate?.({ procurement_lead_time: parseInt(e.target.value) })}
+                  value={projectData?.team_size || 0}
+                  onChange={(e) => onUpdate?.({ team_size: parseInt(e.target.value) })}
                 />
               </div>
             </div>
@@ -144,7 +145,7 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
           
           <TabsContent value="documents" className="space-y-4">
             <ProjectDocumentUpload
-              projectId={formData?.id || null}
+              projectId={projectData?.id || 'new-project'}
               phaseId={currentPhaseId || null}
               stepId={currentStepId || null}
               context="step"

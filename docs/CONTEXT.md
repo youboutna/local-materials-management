@@ -1,54 +1,25 @@
 # CONTEXT.md - Référence Rapide HadraTech-GPI
-
----
-
-## 📊 **ARCHITECTURE HEXAGONALE - ÉTAT ACTUEL 29 JANVIER 2026**
-
-### **✅ MÉTRIQUES GLOBALES**
-- **Services Application** : 57/57 créés (100%) ✅
-- **Hooks Hexagonaux** : 104/104 créés (100%) ✅
-- **Components React** : 386/386 fichiers (100%) ✅
-- **Appels directs Supabase** : 9 appels restants ⚠️
-- **Progression globale** : 98.8% hexagonal ✅
-
-### **🎯 ACCOMPLISSEMENTS MAJEURS**
-- **Architecture multi-providers auth** : Implémentée avec AuthManager ✅
-- **ConfigurationService centralisé** : Templates de déploiement ✅
-- **Risk Entity refactorisée** : Avec IProject/IEmployee ✅
-- **Placeholders éliminés** : Plus d'implémentations vides ✅
-- **Services hexagonaux** : 57 services opérationnels ✅
-
-### **🚨 APPELS DIRECTS SUPABASE RESTANTS (9 appels)**
-- **Components** : 4 appels (auth, commentaires, URLs externes)
-- **Hooks** : 5 appels (auth admin, commentaires documentation)
-- **Estimation finalisation** : 1-2 jours
-
-### **🏗️ ARCHITECTURE HEXAGONALE VÉRIFIÉE**
-```
-UI → Hook → Service → Repository → Adapter → BDD
-```
-- **Domain Layer** : Entités pures avec logique métier ✅
-- **Application Layer** : Services d'orchestration ✅
-- **Infrastructure Layer** : Adapters Supabase ✅
-- **Presentation Layer** : Components React ✅
-
----
-
 **Projet** : HadraTech-GPI (Infrastructure Réseau, bâtiment, géolocalisé)
 
  **HADRATECH-GPI : PLAN DE MANAGEMENT ET STRATÉGIE OPÉRATIONNELLE
  **🎯 CONTEXTE STRATÉGIQUE ÉTENDU **: 
 🏢 Vision du Projet
+Manages construction projects that use local Mauritanian materials, with features for:
+- Project lifecycle management (creation, tracking, status updates)
+- Material sourcing and inventory tracking
+- User role management (Admin, Manager, Supplier, etc.)
+- Geolocation of buildings and material sources
+- Financial tracking and payment management
+- Monitoring and reporting, banking garantee, insurance
+- Document management and tender workflows.
 
   HadraTech-GPI n'est pas seulement un outil technique, mais une plateforme de management collaboratif pour la gestion de projets d'infrastructure stratégiques en Mauritanie (1-20 ans), intégrant :
   ##🎯 SCHÉMAS DIRECTEURS → PLANIFICATION → EXÉCUTION → PILOTAGE## 
 
-  🎯 SCHÉMAS DIRECTEURS → PLANIFICATION → EXÉCUTION → PILOTAGE
-
   🎨 SÉMANTIQUE SPÉCIALISTE MANAGEMENT PROJET
   📋 Terminologie Professionnelle
   Pour Directeurs (Niveau Stratégique)
-  yaml
+
 
   KPIs:
     - "ROI Portefeuille" : Return on Investment global

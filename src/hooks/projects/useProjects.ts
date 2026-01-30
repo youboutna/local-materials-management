@@ -1,6 +1,6 @@
 /**
- * Projects Hook - Enhanced with ProjectDomainTransformer Integration
- * Uses ProjectDomainTransformer with advanced calculations and analytics
+ * Projects Hook - Enhanced with ProjectTransformer Integration
+ * Uses ProjectTransformer with advanced calculations and analytics
  * Following hexagonal architecture principles with UI-specific enhancements
  */
 
@@ -8,7 +8,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RepositoryFactory } from "@/repositories/RepositoryFactory";
 import { ProjectService } from "@/application/services/ProjectService";
-import { ProjectDomainTransformer, CreateProjectRequestDto, UpdateProjectRequestDto } from "@/dtos/transforms";
+import { ProjectTransformer } from '@/dtos/transforms';
+import { CreateProjectRequestDto, UpdateProjectRequestDto } from "@/dtos/transforms";
 import { ProjectData } from "@/types/project";
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -48,7 +49,7 @@ export const useProjects = (): UseProjectsResult => {
   const { t } = useLanguage();
   
   const projectRepository = RepositoryFactory.getProjectRepository();
-  const projectService = new ProjectService(projectRepository, ProjectDomainTransformer);
+  const projectService = new ProjectService(projectRepository);
 
   // Query for projects list
   const {

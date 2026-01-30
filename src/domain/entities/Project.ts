@@ -76,8 +76,22 @@ export class Project {
   private _updatedAt?: Date;
   private _coordinates?: ProjectCoordinates;
   private _financingSource?: string;
+  private _marketType?: string;
+  private _selectionMode?: string;
+  private _methodology?: string;
   private _mainContractor?: string | ProjectStakeholder;
   private _currency?: string;
+  
+  // Financial and insurance attributes
+  private _bankGuaranteeRequired?: boolean;
+  private _bankGuaranteeAmount?: number;
+  private _bankGuaranteePercentage?: number;
+  private _insuranceRequired?: boolean;
+  private _materialsBudget?: number;
+  private _procurementLeadTime?: number;
+  private _resourceAssignment?: any[]; // ✅ SEMANTIC: Array of ProjectResource[] from project_resources table
+  private _receptionStatus?: string;
+  private _closureNotes?: string;
   private _clientOrganization?: string;
   private _donorOrganization?: string;
   private _sector?: string;
@@ -123,6 +137,19 @@ export class Project {
   private _suppliers?: Supplier[];
   private _employees?: Employee[];
   private _projectReference?: string;
+  
+  // Additional relationship properties from database
+  private _bankGuarantees?: any[];
+  private _insuranceCertificates?: any[];
+  private _projectAlerts?: any[];
+  private _projectComments?: any[];
+  private _projectOrganizations?: any[];
+  private _quantityTakeoffs?: any[];
+  private _progressInvoices?: any[];
+  private _paymentBlocks?: any[];
+  private _supplierPaymentRequests?: any[];
+  private _taskAssignments?: any[];
+  private _projectResources?: any[]; // ⚠️ CRITICAL: For resourceAssignment mapping
 
   constructor(
     // Core attributes from form and database
@@ -146,8 +173,22 @@ export class Project {
     // Object references
     coordinates?: ProjectCoordinates,
     financingSource?: string,
+    marketType?: string,
+    selectionMode?: string,
+    methodology?: string,
     mainContractor?: string | ProjectStakeholder,
     currency?: string,
+    
+    // Financial and insurance attributes
+    bankGuaranteeRequired?: boolean,
+    bankGuaranteeAmount?: number,
+    bankGuaranteePercentage?: number,
+    insuranceRequired?: boolean,
+    materialsBudget?: number,
+    procurementLeadTime?: number,
+    resourceAssignment?: any[], // ✅ SEMANTIC: Array of ProjectResource[] from project_resources table
+    receptionStatus?: string,
+    closureNotes?: string,
     
     // Additional project details
     clientOrganization?: string,
@@ -229,8 +270,23 @@ export class Project {
     this._updatedAt = updatedAt || new Date();
     this._coordinates = coordinates;
     this._financingSource = financingSource;
+    this._marketType = marketType;
+    this._selectionMode = selectionMode;
+    this._methodology = methodology;
     this._mainContractor = mainContractor;
     this._currency = currency;
+    
+    // Financial and insurance attributes
+    this._bankGuaranteeRequired = bankGuaranteeRequired;
+    this._bankGuaranteeAmount = bankGuaranteeAmount;
+    this._bankGuaranteePercentage = bankGuaranteePercentage;
+    this._insuranceRequired = insuranceRequired;
+    this._materialsBudget = materialsBudget;
+    this._procurementLeadTime = procurementLeadTime;
+    this._resourceAssignment = resourceAssignment;
+    this._receptionStatus = receptionStatus;
+    this._closureNotes = closureNotes;
+    
     this._clientOrganization = clientOrganization;
     this._donorOrganization = donorOrganization;
     this._sector = sector;
@@ -295,8 +351,36 @@ export class Project {
   get updatedAt(): Date | undefined { return this._updatedAt; }
   get coordinates(): ProjectCoordinates | undefined { return this._coordinates; }
   get financingSource(): string | undefined { return this._financingSource; }
+  get marketType(): string | undefined { return this._marketType; }
+  get selectionMode(): string | undefined { return this._selectionMode; }
+  get methodology(): string | undefined { return this._methodology; }
   get mainContractor(): string | ProjectStakeholder | undefined { return this._mainContractor; }
   get currency(): string | undefined { return this._currency; }
+  
+  // Financial and insurance getters
+  get bankGuaranteeRequired(): boolean | undefined { return this._bankGuaranteeRequired; }
+  get bankGuaranteeAmount(): number | undefined { return this._bankGuaranteeAmount; }
+  get bankGuaranteePercentage(): number | undefined { return this._bankGuaranteePercentage; }
+  get insuranceRequired(): boolean | undefined { return this._insuranceRequired; }
+  get materialsBudget(): number | undefined { return this._materialsBudget; }
+  get procurementLeadTime(): number | undefined { return this._procurementLeadTime; }
+  get resourceAssignment(): any[] { return this._resourceAssignment || []; } // ✅ SEMANTIC: Array of ProjectResource[]
+  get receptionStatus(): string | undefined { return this._receptionStatus; }
+  get closureNotes(): string | undefined { return this._closureNotes; }
+  
+  // Relationship getters
+  get bankGuarantees(): any[] { return this._bankGuarantees || []; }
+  get insuranceCertificates(): any[] { return this._insuranceCertificates || []; }
+  get projectAlerts(): any[] { return this._projectAlerts || []; }
+  get projectComments(): any[] { return this._projectComments || []; }
+  get projectOrganizations(): any[] { return this._projectOrganizations || []; }
+  get quantityTakeoffs(): any[] { return this._quantityTakeoffs || []; }
+  get progressInvoices(): any[] { return this._progressInvoices || []; }
+  get paymentBlocks(): any[] { return this._paymentBlocks || []; }
+  get supplierPaymentRequests(): any[] { return this._supplierPaymentRequests || []; }
+  get taskAssignments(): any[] { return this._taskAssignments || []; }
+  get projectResources(): any[] { return this._projectResources || []; } // ⚠️ CRITICAL: For resourceAssignment
+  
   get clientOrganization(): string | undefined { return this._clientOrganization; }
   get donorOrganization(): string | undefined { return this._donorOrganization; }
   get sector(): string | undefined { return this._sector; }
@@ -717,7 +801,7 @@ export class Project {
     materials?: Material[];
     phases?: Phase[];
     milestones?: Milestone[];
-    risks?: ProjectRisk[];
+    risks?: Risk[];
     tenders?: Tender[];
     suppliers?: Supplier[];
     employees?: Employee[];
@@ -1026,7 +1110,7 @@ export class Project {
       data.materials as Material[],
       data.phases as Phase[],
       data.milestones as Milestone[],
-      data.risks as ProjectRisk[],
+      data.risks as Risk[],
       data.tenders as Tender[],
       data.suppliers as Supplier[],
       data.employees as Employee[],
@@ -1278,7 +1362,7 @@ export class Project {
     materials?: Material[];
     phases?: Phase[];
     milestones?: Milestone[];
-    risks?: ProjectRisk[];
+    risks?: Risk[];
     tenders?: Tender[];
     suppliers?: Supplier[];
     employees?: Employee[];

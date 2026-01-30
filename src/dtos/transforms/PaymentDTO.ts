@@ -54,19 +54,28 @@ export interface PaymentDTO {
 }
 
 export interface CreatePaymentRequestDTO {
-  projectId: string;
-  phaseId?: string;
-  milestoneId?: string;
+  projectId: string; // ✅ CAMELCASE: Primary field
+  phaseId?: string; // ✅ CAMELCASE: Instead of phase_id
+  milestoneId?: string; // ✅ CAMELCASE: Instead of milestone_id
   title: string;
   description?: string;
   amount: number;
   currency?: string;
-  paymentType: 'bank_transfer' | 'cash' | 'check' | 'mobile_money' | 'crypto';
-  dueDate?: string;
-  recipientId?: string;
-  recipientName?: string;
-  recipientBankInfo?: string;
+  paymentType: 'bank_transfer' | 'cash' | 'check' | 'mobile_money' | 'crypto'; // ✅ CAMELCASE: Instead of payment_type
+  dueDate?: string; // ✅ CAMELCASE: Instead of due_date
+  recipientId?: string; // ✅ CAMELCASE: Instead of recipient_id
+  recipientName?: string; // ✅ CAMELCASE: Instead of recipient_name
+  recipientBankInfo?: string; // ✅ CAMELCASE: Instead of recipient_bank_info
   documents?: PaymentDocumentDTO[];
+  
+  // Legacy snake_case for backward compatibility
+  phase_id?: string; // Legacy snake_case for backward compatibility
+  milestone_id?: string; // Legacy snake_case for backward compatibility
+  payment_type?: 'bank_transfer' | 'cash' | 'check' | 'mobile_money' | 'crypto'; // Legacy snake_case for backward compatibility
+  due_date?: string; // Legacy snake_case for backward compatibility
+  recipient_id?: string; // Legacy snake_case for backward compatibility
+  recipient_name?: string; // Legacy snake_case for backward compatibility
+  recipient_bank_info?: string; // Legacy snake_case for backward compatibility
 }
 
 export interface UpdatePaymentRequestDTO {
@@ -75,10 +84,17 @@ export interface UpdatePaymentRequestDTO {
   amount?: number;
   currency?: string;
   status?: 'pending' | 'approved' | 'rejected' | 'paid' | 'cancelled';
-  dueDate?: string;
-  paidDate?: string;
-  recipientId?: string;
-  recipientName?: string;
-  recipientBankInfo?: string;
+  dueDate?: string; // ✅ CAMELCASE: Instead of due_date
+  paidDate?: string; // ✅ CAMELCASE: Instead of paid_date
+  recipientId?: string; // ✅ CAMELCASE: Instead of recipient_id
+  recipientName?: string; // ✅ CAMELCASE: Instead of recipient_name
+  recipientBankInfo?: string; // ✅ CAMELCASE: Instead of recipient_bank_info
   documents?: PaymentDocumentDTO[];
+  
+  // Legacy snake_case for backward compatibility
+  due_date?: string; // Legacy snake_case for backward compatibility
+  paid_date?: string; // Legacy snake_case for backward compatibility
+  recipient_id?: string; // Legacy snake_case for backward compatibility
+  recipient_name?: string; // Legacy snake_case for backward compatibility
+  recipient_bank_info?: string; // Legacy snake_case for backward compatibility
 }

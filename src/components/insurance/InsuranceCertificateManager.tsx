@@ -20,7 +20,7 @@ import {
   createInsuranceCertificate,
   InsuranceAlert,
   InsuranceCertificate 
-} from '@/services/insuranceCertificateService';
+} from '@/application/services/InsuranceCertificatesService';
 
 const insuranceFormSchema = z.object({
   projectId: z.string().min(1, 'ID projet requis'),

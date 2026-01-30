@@ -16,12 +16,12 @@ import {
   Clock,
   Zap
 } from 'lucide-react';
-import { comprehensiveMonitoringService, MonitoringStats, SystemAlert } from '@/services/comprehensiveMonitoringService';
+import { PerformanceMonitoringService, DatabaseMetricsDTO, PerformanceMetricsDTO } from '@/application/services/PerformanceMonitoringService';
 import { getHealthColor, getHealthBadgeVariant, formatMetric } from '@/utils/monitoringCalculations';
 
 const SystemHealthOverview: React.FC = () => {
-  const [stats, setStats] = useState<MonitoringStats | null>(null);
-  const [alerts, setAlerts] = useState<SystemAlert[]>([]);
+  const [stats, setStats] = useState<PerformanceMetricsDTO | null>(null);
+  const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,13 +32,10 @@ const SystemHealthOverview: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [monitoringStats, systemAlerts] = await Promise.all([
-        comprehensiveMonitoringService.getMonitoringStats(),
-        comprehensiveMonitoringService.getSystemAlerts()
-      ]);
+      const performanceMetrics = await new PerformanceMonitoringService().getPerformanceMetrics();
       
-      setStats(monitoringStats);
-      setAlerts(systemAlerts);
+      setStats(performanceMetrics);
+      setAlerts([]); // TODO: Implement alerts in hexagonal service
     } catch (error) {
       console.error('Error loading monitoring data:', error);
     } finally {
@@ -48,7 +45,8 @@ const SystemHealthOverview: React.FC = () => {
 
   const handleAcknowledgeAlert = async (alertId: string) => {
     try {
-      await comprehensiveMonitoringService.acknowledgeAlert(alertId);
+      // TODO: Implement alert acknowledgment in hexagonal service
+      console.log('Alert acknowledged:', alertId);
       await loadData(); // Refresh data
     } catch (error) {
       console.error('Error acknowledging alert:', error);

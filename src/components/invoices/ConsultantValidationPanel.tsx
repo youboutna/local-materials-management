@@ -19,23 +19,36 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface ProgressInvoice {
   id: string;
-  invoice_number: string;
-  invoice_type: string;
-  progress_percentage: number;
-  previous_progress: number;
-  total_contract_amount: number;
-  invoice_amount: number;
-  work_description: string;
+  invoiceNumber: string; // ✅ CAMELCASE: Instead of invoice_number
+  invoiceType: string; // ✅ CAMELCASE: Instead of invoice_type
+  progressPercentage: number; // ✅ CAMELCASE: Instead of progress_percentage
+  previousProgress: number; // ✅ CAMELCASE: Instead of previous_progress
+  totalContractAmount: number; // ✅ CAMELCASE: Instead of total_contract_amount
+  invoiceAmount: number; // ✅ CAMELCASE: Instead of invoice_amount
+  workDescription: string; // ✅ CAMELCASE: Instead of work_description
   status: string;
-  submitted_at: string;
-  project_id: string;
-  inspection_id: string;
-  supporting_documents: string[];
+  submittedAt: string; // ✅ CAMELCASE: Instead of submitted_at
+  projectId: string; // ✅ CAMELCASE: Instead of project_id
+  inspectionId: string; // ✅ CAMELCASE: Instead of inspection_id
+  supportingDocuments: string[]; // ✅ CAMELCASE: Instead of supporting_documents
   projects?: {
     title: string;
-    project_type: string;
-    funding_source: string;
+    projectType: string; // ✅ CAMELCASE: Instead of project_type
+    fundingSource: string; // ✅ CAMELCASE: Instead of funding_source
   };
+  
+  // Legacy snake_case for backward compatibility
+  invoice_number?: string; // Legacy snake_case for backward compatibility
+  invoice_type?: string; // Legacy snake_case for backward compatibility
+  progress_percentage?: number; // Legacy snake_case for backward compatibility
+  previous_progress?: number; // Legacy snake_case for backward compatibility
+  total_contract_amount?: number; // Legacy snake_case for backward compatibility
+  invoice_amount?: number; // Legacy snake_case for backward compatibility
+  work_description?: string; // Legacy snake_case for backward compatibility
+  submitted_at?: string; // Legacy snake_case for backward compatibility
+  project_id?: string; // Legacy snake_case for backward compatibility
+  inspection_id?: string; // Legacy snake_case for backward compatibility
+  supporting_documents?: string[]; // Legacy snake_case for backward compatibility
 }
 
 export function ConsultantValidationPanel() {
@@ -73,19 +86,25 @@ export function ConsultantValidationPanel() {
       if (error) throw error;
       
       // Transform data to match ProgressInvoice interface
-      const transformedData = (data || []).map(invoice => ({
-        ...invoice,
-        previous_progress: invoice.previous_progress || 0,
-        work_description: invoice.work_description || '',
-        invoice_amount: invoice.invoice_amount || 0,
-        progress_percentage: invoice.progress_percentage || 0,
-        submitted_by: invoice.submitted_by || '',
-        project_id: invoice.project_id || '',
-        invoice_number: invoice.invoice_number || '',
-        invoice_type: invoice.invoice_type || 'progress',
+      const transformedData = data.map(invoice => ({
+        id: invoice.id,
+        // ✅ PRIORITY: camelCase first, snake_case fallback
+        invoiceNumber: invoice.invoice_number || invoice.invoiceNumber || '',
+        invoiceType: invoice.invoice_type || invoice.invoiceType || 'progress',
+        progressPercentage: invoice.progress_percentage || invoice.progressPercentage || 0,
+        previousProgress: invoice.previous_progress || invoice.previousProgress || 0,
+        totalContractAmount: invoice.total_contract_amount || invoice.totalContractAmount || 0,
+        invoiceAmount: invoice.invoice_amount || invoice.invoiceAmount || 0,
+        workDescription: invoice.work_description || invoice.workDescription || '',
         status: invoice.status || 'draft',
+        submittedAt: invoice.submitted_at || invoice.submittedAt || '',
+        projectId: invoice.project_id || invoice.projectId || '',
+        inspectionId: invoice.inspection_id || invoice.inspectionId || '',
+        supportingDocuments: invoice.supporting_documents || invoice.supportingDocuments || [],
+        submitted_by: invoice.submitted_by || '',
         created_at: invoice.created_at || '',
-        updated_at: invoice.updated_at || ''
+        updated_at: invoice.updated_at || '',
+        projects: invoice.projects
       } as ProgressInvoice));
       
       setInvoices(transformedData);
@@ -289,31 +308,41 @@ export function ConsultantValidationPanel() {
             <TableBody>
               {invoices.map((invoice) => (
                 <TableRow key={invoice.id}>
-                  <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
+                  <TableCell className="font-medium">{invoice.invoiceNumber || invoice.invoice_number}</TableCell>
                   <TableCell>
                     <div>
                       <p className="font-medium">{invoice.projects?.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        {invoice.projects?.project_type}
+                        {invoice.projects?.projectType || invoice.projects?.project_type}
                       </p>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{invoice.invoice_type}</Badge>
+                    <Badge variant="outline">{invoice.invoiceType || invoice.invoice_type}</Badge>
                   </TableCell>
                   <TableCell>
                     <div>
-                      <p className="font-medium">{invoice.progress_percentage}%</p>
+                      <p className="font-medium">{invoice.progressPercentage || invoice.progress_percentage}%</p>
                       <p className="text-xs text-muted-foreground">
-                        +{(invoice.progress_percentage - invoice.previous_progress).toFixed(2)}%
+                        Précédent: {invoice.previousProgress || invoice.previous_progress}%
                       </p>
                     </div>
                   </TableCell>
                   <TableCell>
-                    {invoice.invoice_amount.toLocaleString('fr-FR')} MRU
+                    <div>
+                      <p className="font-medium">{(invoice.invoiceAmount || invoice.invoice_amount).toLocaleString('fr-FR')} MRU</p>
+                      <p className="text-xs text-muted-foreground">
+                        Total: {(invoice.totalContractAmount || invoice.total_contract_amount).toLocaleString('fr-FR')} MRU
+                      </p>
+                    </div>
                   </TableCell>
                   <TableCell>
-                    {new Date(invoice.submitted_at).toLocaleDateString('fr-FR')}
+                    <div>
+                      <p className="font-medium">{new Date(invoice.submittedAt || invoice.submitted_at).toLocaleDateString('fr-FR')}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {invoice.invoiceNumber || invoice.invoice_number}
+                      </p>
+                    </div>
                   </TableCell>
                   <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                   <TableCell>

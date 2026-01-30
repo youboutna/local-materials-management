@@ -439,4 +439,17 @@ export class NotificationService {
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to send multi-channel notification');
     }
   }
+
+  // Static methods for backward compatibility
+  static async createNotification(data: CreateNotificationRequestDTO): Promise<NotificationDTO> {
+    const { RepositoryFactory } = await import('@/infrastructure/supabase/RepositoryFactory');
+    const service = new NotificationService(RepositoryFactory.getNotificationRepository());
+    return await service.createNotification(data);
+  }
+
+  static async notifyUser(userId: string, title: string, message: string): Promise<void> {
+    const { RepositoryFactory } = await import('@/infrastructure/supabase/RepositoryFactory');
+    const service = new NotificationService(RepositoryFactory.getNotificationRepository());
+    await service.notifyUser(userId, title, message);
+  }
 }

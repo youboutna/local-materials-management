@@ -26,12 +26,13 @@ import {
   SelectValue,
 } from "../../ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
+import { ProjectFormDataDTO } from "@/application/services/ProjectService";
 
 interface StakeholdersTeamStepProps {
-  formData: any;
-  onUpdate: (data: any) => void;
+  projectData: ProjectFormDataDTO;
+  onUpdate: (data: Partial<ProjectFormDataDTO>) => void;
   isEditing?: boolean;
-  baseData?: any;
+  baseData?: ProjectFormDataDTO;
 }
 
 interface Stakeholder {
@@ -71,8 +72,20 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
   const { employees: hexEmployees, suppliers: hexSuppliers, isLoading: stakeholdersLoading } = useStakeholdersHex();
 
   // Use database data from baseData or hexagonal hooks
-  const [employees, setEmployees] = useState<any[]>(baseData.employees || []);
-  const [suppliers, setSuppliers] = useState<any[]>(baseData.suppliers || []);
+  const [employees, setEmployees] = useState<Array<{
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    position: string;
+  }>>(baseData.employees || []);
+  const [suppliers, setSuppliers] = useState<Array<{
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    specialty: string;
+  }>>(baseData.suppliers || []);
 
   // Update local state when baseData or hex data changes
   useEffect(() => {

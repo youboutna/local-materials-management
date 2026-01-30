@@ -61,11 +61,35 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
   } = usePaymentCrud();
 
   const [formData, setFormData] = useState({
+    // ✅ CAMELCASE: Primary fields
+    projectId: projectId || '',
+    contractorId: contractorId || '',
+    contractorName: '',
+    contractorContact: '',
+    amount: '',
+    paymentDate: '',
+    progressAtPayment: '',
+    transactionId: '',
+    paymentMethod: 'bank_transfer',
+    inspectionId: '',
+    phaseId: '',
+    bankName: '',
+    accountNumber: '',
+    checkNumber: '',
+    mobileNumber: '',
+    mobileOperator: '',
+    receiverName: '',
+    supportingDocuments: [] as string[],
+    notes: '',
+    purchaseOrderUrl: '',
+    quoteUrl: '',
+    invoiceUrl: '',
+    
+    // Legacy snake_case for backward compatibility
     project_id: projectId || '',
     contractor_id: contractorId || '',
     contractor_name: '',
     contractor_contact: '',
-    amount: '',
     payment_date: '',
     progress_at_payment: '',
     transaction_id: '',
@@ -78,8 +102,6 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
     mobile_number: '',
     mobile_operator: '',
     receiver_name: '',
-    supporting_documents: [] as string[],
-    notes: '',
     purchase_order_url: '',
     quote_url: '',
     invoice_url: ''
@@ -212,23 +234,24 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
       }
 
       const paymentData = {
-        projectId: formData.project_id,
-        contractorId: formData.contractor_id,
-        contractorName: formData.contractor_name,
-        contractorContact: formData.contractor_contact,
+        // ✅ PRIORITY: camelCase first, snake_case fallback
+        projectId: formData.projectId || formData.project_id,
+        contractorId: formData.contractorId || formData.contractor_id,
+        contractorName: formData.contractorName || formData.contractor_name,
+        contractorContact: formData.contractorContact || formData.contractor_contact,
         amount: parseFloat(formData.amount),
-        paymentDate: formData.payment_date,
-        progressAtPayment: parseFloat(formData.progress_at_payment),
-        transactionId: formData.transaction_id,
-        paymentMethod: formData.payment_method,
-        inspectionId: formData.inspection_id || undefined,
-        phaseId: formData.phase_id || undefined,
-        bankName: formData.bank_name || undefined,
-        accountNumber: formData.account_number || undefined,
-        checkNumber: formData.check_number || undefined,
-        mobileNumber: formData.mobile_number || undefined,
-        mobileOperator: formData.mobile_operator || undefined,
-        receiverName: formData.receiver_name || undefined,
+        paymentDate: formData.paymentDate || formData.payment_date,
+        progressAtPayment: parseFloat(formData.progressAtPayment || formData.progress_at_payment),
+        transactionId: formData.transactionId || formData.transaction_id,
+        paymentMethod: formData.paymentMethod || formData.payment_method,
+        inspectionId: formData.inspectionId || formData.inspection_id || undefined,
+        phaseId: formData.phaseId || formData.phase_id || undefined,
+        bankName: formData.bankName || formData.bank_name || undefined,
+        accountNumber: formData.accountNumber || formData.account_number || undefined,
+        checkNumber: formData.checkNumber || formData.check_number || undefined,
+        mobileNumber: formData.mobileNumber || formData.mobile_number || undefined,
+        mobileOperator: formData.mobileOperator || formData.mobile_operator || undefined,
+        receiverName: formData.receiverName || formData.receiver_name || undefined,
       };
 
       if (isEditing && selectedPayment) {
@@ -413,8 +436,13 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                   <Input
                     id="payment_date"
                     type="date"
-                    value={formData.payment_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, payment_date: e.target.value }))}
+                    // ✅ PRIORITY: camelCase first, snake_case fallback
+                    value={formData.paymentDate || formData.payment_date}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      paymentDate: e.target.value || '', // ✅ CAMELCASE: Update primary field
+                      payment_date: e.target.value || '' // ✅ LEGACY: Update fallback field
+                    }))}
                     required
                   />
                 </div>

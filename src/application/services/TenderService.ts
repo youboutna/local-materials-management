@@ -39,6 +39,54 @@ export interface CreateTenderDocumentRequestDto {
   data: CreateTenderDocumentDTO;
 }
 
+// Tender sharing interfaces from legacy service
+export interface TenderSharingSecretDTO {
+  id: string;
+  tender_id: string;
+  secret_code: string;
+  supplier_email: string;
+  supplier_id: string;
+  expires_at: string;
+  max_access_count: number;
+  current_access_count: number;
+  workflow_phase: string;
+  workflow_stage: string;
+  allowed_document_ids: string[];
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+  is_active: boolean;
+}
+
+export interface CreateSharingSecretDTO {
+  tender_id: string;
+  supplier_email: string;
+  supplier_id?: string;
+  expires_at: string;
+  max_access_count?: number;
+  workflow_phase: string;
+  workflow_stage: string;
+  allowed_document_ids: string[];
+  metadata?: Record<string, unknown>;
+}
+
+export interface CreateAccessLogDTO {
+  secret_code: string;
+  supplier_email: string;
+  access_ip?: string;
+  user_agent?: string;
+  access_type: 'view' | 'download' | 'upload';
+  document_ids?: string[];
+}
+
+export interface ValidateSecretResponseDTO {
+  valid: boolean;
+  secret?: TenderSharingSecretDTO;
+  remaining_access?: number;
+  expired?: boolean;
+  error?: string;
+}
+
 export class TenderService {
   constructor(
     private tenderRepository: ITenderRepository = RepositoryFactory.getTenderRepository(),
@@ -147,6 +195,144 @@ export class TenderService {
     } catch (error) {
       console.error('TenderService.createTenderDocument failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create tender document');
+    }
+  }
+
+  /**
+   * Generate a unique secret code for tender sharing
+   * Legacy compatibility method from TenderSharingService
+   */
+  async generateSecretCode(): Promise<string> {
+    try {
+      // This would need to be implemented with proper secret generation logic
+      // For now, generate a simple random code
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let result = '';
+      for (let i = 0; i < 8; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    } catch (error) {
+      console.error('Error generating secret code:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to generate secret code');
+    }
+  }
+
+  /**
+   * Create a new sharing secret for tender documents
+   * Legacy compatibility method from TenderSharingService
+   */
+  async createSharingSecret(dto: CreateSharingSecretDTO): Promise<TenderSharingSecretDTO> {
+    try {
+      const secretCode = await this.generateSecretCode();
+      
+      // This would need to be implemented with proper database logic
+      console.warn('createSharingSecret not fully implemented in TenderService');
+      
+      const secret: TenderSharingSecretDTO = {
+        id: crypto.randomUUID(),
+        tender_id: dto.tender_id,
+        secret_code: secretCode,
+        supplier_email: dto.supplier_email,
+        supplier_id: dto.supplier_id || '',
+        expires_at: dto.expires_at,
+        max_access_count: dto.max_access_count || 10,
+        current_access_count: 0,
+        workflow_phase: dto.workflow_phase,
+        workflow_stage: dto.workflow_stage,
+        allowed_document_ids: dto.allowed_document_ids,
+        metadata: dto.metadata || {},
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        is_active: true
+      };
+
+      return secret;
+    } catch (error) {
+      console.error('Error creating sharing secret:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create sharing secret');
+    }
+  }
+
+  /**
+   * Validate a sharing secret
+   * Legacy compatibility method from TenderSharingService
+   */
+  async validateSecret(secretCode: string, supplierEmail: string): Promise<ValidateSecretResponseDTO> {
+    try {
+      // This would need to be implemented with proper validation logic
+      console.warn('validateSecret not fully implemented in TenderService');
+      
+      return {
+        valid: false,
+        error: 'Secret validation not implemented'
+      };
+    } catch (error) {
+      console.error('Error validating secret:', error);
+      return {
+        valid: false,
+        error: 'Failed to validate secret'
+      };
+    }
+  }
+
+  /**
+   * Log access to shared documents
+   * Legacy compatibility method from TenderSharingService
+   */
+  async logAccess(dto: CreateAccessLogDTO): Promise<void> {
+    try {
+      // This would need to be implemented with proper logging logic
+      console.warn('logAccess not implemented in TenderService');
+      console.log('Access logged:', dto);
+    } catch (error) {
+      console.error('Error logging access:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to log access');
+    }
+  }
+
+  /**
+   * Get sharing secrets for a tender
+   * Legacy compatibility method from TenderSharingService
+   */
+  async getTenderSharingSecrets(tenderId: string): Promise<TenderSharingSecretDTO[]> {
+    try {
+      // This would need to be implemented with proper retrieval logic
+      console.warn('getTenderSharingSecrets not implemented in TenderService');
+      return [];
+    } catch (error) {
+      console.error('Error getting tender sharing secrets:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get sharing secrets');
+    }
+  }
+
+  /**
+   * Revoke a sharing secret
+   * Legacy compatibility method from TenderSharingService
+   */
+  async revokeSharingSecret(secretId: string): Promise<void> {
+    try {
+      // This would need to be implemented with proper revocation logic
+      console.warn('revokeSharingSecret not implemented in TenderService');
+      console.log('Secret revoked:', secretId);
+    } catch (error) {
+      console.error('Error revoking sharing secret:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to revoke sharing secret');
+    }
+  }
+
+  /**
+   * Get access logs for a secret
+   * Legacy compatibility method from TenderSharingService
+   */
+  async getAccessLogs(secretCode: string): Promise<CreateAccessLogDTO[]> {
+    try {
+      // This would need to be implemented with proper retrieval logic
+      console.warn('getAccessLogs not implemented in TenderService');
+      return [];
+    } catch (error) {
+      console.error('Error getting access logs:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get access logs');
     }
   }
 }

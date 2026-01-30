@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Camera, MapPin, CheckCircle, AlertTriangle, Upload } from 'lucide-react';
-import { createDigitalInspection, MANDATORY_INSPECTION_FIELDS } from '@/services/inspectionMonitoringService';
+import { createDigitalInspection, MANDATORY_INSPECTION_FIELDS } from '@/application/services/InspectionMonitoringService';
 import { toast } from '@/hooks/use-toast';
 
 interface DigitalInspectionFormProps {

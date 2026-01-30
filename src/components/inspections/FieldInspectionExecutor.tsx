@@ -17,7 +17,7 @@ import {
   FileText, Users, Ruler, Play, Square, Save, Clock, Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { InspectionExecutionService } from '@/services/InspectionExecutionService';
+import { InspectionExecutionService } from '@/application/services/InspectionExecutionService';
 import {
   InspectionExecutionData,
   InspectionObservation,

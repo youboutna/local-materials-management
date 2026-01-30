@@ -5,7 +5,7 @@
  */
 
 // Core transformers (PascalCase - correct naming convention)
-export { ProjectDomainTransformer } from './ProjectDomainTransformer';
+export { ProjectTransformer } from './ProjectTransformer'; // Unified transformer (includes ProjectDomainTransformer functionality)
 export { InspectionDomainTransformer } from './InspectionDomainTransformer';
 export { MaterialDomainTransformer } from './MaterialDomainTransformer';
 export { PaymentDomainTransformer } from './PaymentDomainTransformer';

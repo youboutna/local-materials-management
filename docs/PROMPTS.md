@@ -4,7 +4,7 @@
 
 ### **Prompt : Démarrer la journée Architecture Hexagonale**
 ```
-@docs/task-plan.md @CONTEXT.md 
+@docs/task-plan.md @docs/CONTEXT.md 
 Bonjour agent AI ! Nous sommes en phase finale de l'Architecture Hexagonale du projet HadraTech-GPI.
 
 📊 **ÉTAT ACTUEL - 29 JANVIER 2026** :

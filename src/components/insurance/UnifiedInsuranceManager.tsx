@@ -27,9 +27,9 @@ import {
   createInsuranceCertificate,
   InsuranceCertificate,
   InsuranceAlert
-} from '@/services/insuranceCertificateService';
+} from '@/application/services/InsuranceCertificatesService';
 import { InsuranceService } from '@/application/services/InsuranceService';
-import { createInsuranceAction } from '@/services/insuranceActionService';
+import { createInsuranceAction } from '@/application/services/enhancedActionService';
 import { checkAndSendInsuranceAlerts } from '@/utils/insuranceAlertUtils';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { useAuth } from '@/hooks/hexagonal';

@@ -16,7 +16,18 @@ import {
   Save,
   Users,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+
+// Import DTOs for type safety
+import { 
+  ProjectFormDataDTO, 
+  ProjectWorkflowData, 
+  WorkflowMetadataDTO,
+  StepRelatedDataDTO,
+  TaskFormDataDTO,
+  InspectionFormDataDTO,
+  ComplianceDataDTO
+} from "@/dtos/transforms/ProjectWorkflowDTOs";
 
 // Import step components
 import InteractiveMapGIS from "../materials/InteractiveMapGIS";
@@ -33,13 +44,21 @@ import {
   SelectValue,
 } from "../ui/select";
 
+// Import des types et services existants
+import { useProjectWorkflowHex, type ProjectWorkflowData } from "@/hooks/hexagonal/useProjectWorkflowHex";
+import { ProjectTransformer } from "@/dtos/transforms/ProjectTransformer";
+import { ProjectService, type ProjectFormDataDTO } from "@/application/services/ProjectService";
+import { CreateProjectRequestDTO } from "@/dtos/entities/ProjectDTO";
+import { Project } from "@/domain/entities/Project";
+import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
+
 interface ProjectCreationWorkflowProps {
-  onSubmit: (data: any) => void;
+  onSubmit: (data: ProjectFormDataDTO) => void;
   selectedMaterials: Array<{ materialId: string; quantity: number }>;
   onMaterialsChange: (
     materials: Array<{ materialId: string; quantity: number }>
   ) => void;
-  initialData?: any;
+  initialData?: ProjectFormDataDTO;
 }
 
 const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
@@ -48,77 +67,175 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   onMaterialsChange,
   initialData,
 }) => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState({
-    // Basic info matching database schema
-    title: "",
-    project_reference: "",
-    description: "",
-    budget: "",
-    estimated_duration_days: "",
-    currency: "MRU",
-    status: "en cours",
-    start_date: new Date().toISOString().split("T")[0], // Default to today
+  // Hook hexagonal pour la gestion du workflow (logique métier déléguée)
+  const {
+    saveStep,
+    completeWorkflow,
+    isSaving,
+    getWorkflowProgress,
+    isStepCompleted,
+    canProceedToNext,
+    validateCurrentStep,
+    calculateDatesFromDuration,
+    getStepProgress,
+  } = useProjectWorkflowHex();
+
+  // Service hexagonal pour la gestion des projets
+  const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+
+  // Données du projet avec types corrects
+  const [projectData, setProjectData] = useState<ProjectFormDataDTO>(() => ({
+    title: '',
+    description: '',
+    location: '',
+    status: 'planifié',
+    progress: 0,
+    budget: 0,
+    start_date: new Date().toISOString().split("T")[0],
+    end_date: '',
+    team_size: 0,
+    // Champs additionnels pour compatibilité
+    phases: [],
+    materials: [],
+    risks: [],
+    bankGuarantees: [],
+    insurances: [],
+    documents: [],
+    employees: [],
+    suppliers: [],
+    tasks: [],
+    inspections: [],
+    compliance: {
+      regulations: [],
+      certifications: [],
+      standards: [],
+      status: 'pending',
+      documents: []
+    },
+    estimatedBudget: 0
+  }));
+
+  // Étapes du workflow avec useMemo pour éviter les re-renders
+  const steps = useMemo(() => [
+    {
+      id: 1,
+      title: "Informations générales",
+      description: "Détails de base du projet",
+      icon: Building,
+      component: null, // Sera rendu directement
+    },
+    {
+      id: 2,
+      title: "Localisation",
+      description: "Emplacement et zone du projet",
+      icon: MapPin,
+      component: InteractiveMapGIS,
+    },
+    {
+      id: 3,
+      title: "Phases de construction",
+      description: "Planification des phases",
+      icon: Layers,
+      component: ConstructionPhaseManager,
+    },
+    {
+      id: 4,
+      title: "Ressources et matériaux",
+      description: "Allocation des ressources",
+      icon: Users,
+      component: ResourcesMaterialsStep,
+    },
+    {
+      id: 5,
+      title: "Analyse des risques",
+      description: "Identification et mitigation",
+      icon: AlertTriangle,
+      component: RiskAnalysisStep,
+    },
+    {
+      id: 6,
+      title: "Parties prenantes",
+      description: "Équipe et collaborateurs",
+      icon: Users,
+      component: StakeholdersTeamStep,
+    },
+    {
+      id: 7,
+      title: "Conformité",
+      description: "Réglementations et certifications",
+      icon: FileCheck,
+      component: ComplianceStep,
+    },
+  ], []);
+    workspace_id: '',
+    financingSource: '',
+    funding_source: '',
+    marketType: '',
+    market_type: '',
+    selectionMode: '',
+    selection_mode: '',
+    project_reference: '',
     startDate: new Date().toISOString().split("T")[0],
-    end_date: "",
-    endDate: "",
-    payment_mode: "progressive",
-    payment_frequency: "monthly",
-    initial_advance: 20,
-    retention_percentage: 5,
-    priority: "medium",
-    progress: 0, // Progression globale calculée
-    // Project type: infrastructure | fourniture | distribution_rurale
-    project_type: "infrastructure",
-    sector: "",
-    permit_number: "",
-    // Location data
-    address: "",
-    latitude: null,
-    longitude: null,
-    area_sqm: null,
-    site_details: "",
-    // Financial data
-    advance_percentage: 20,
-    // Additional fields to match database
-    client_name: "",
-    main_contractor: "",
-    engineering_consultant: "",
-    project_manager_id: null,
-    technical_manager_id: null,
-    supervisor_id: null,
-    client_id: null,
-    workspace_id: null,
-    // Funding source fields (Bailleurs de fonds)
-    financing_source: "",
-    donor_organization: "",
-    // Market type (Mauritania procurement)
-    market_type: "appel_offre_international",
-    selection_mode: "qualite_cout",
+    endDate: '',
+    reception_status: '',
+    closure_notes: '',
+    // Localisation
+    address: '',
+    latitude: 0,
+    longitude: 0,
+    // Données associées (objets intégrés)
+    stakeholders: [],
+    phases: [],
+    risks: [],
+    materials: selectedMaterials || [],
+    compliance: [],
+    shapeData: {
+      type: '',
+      coordinates: [],
+      area: 0,
+      perimeter: 0,
+    },
     ...initialData,
   });
-  const statusOptions = [
-    { value: "en cours", label: "En cours" },
-    { value: "terminé", label: "Terminé" },
-    { value: "en attente", label: "En attente" },
-    { value: "suspendu", label: "Suspendu" },
-    { value: "annulé", label: "Annulé" },
-  ] as const;
-  const [stakeholders, setStakeholders] = useState<any[]>([]);
-  const [delegation, setDelegation] = useState<any>({
-    projectManager: "",
-    technicalManager: "",
-    supervisor: "",
-    client: "",
-  });
-  const [risks, setRisks] = useState<any[]>([]);
-  const [compliance, setCompliance] = useState<any[]>([]);
-  const [phases, setPhases] = useState<any[]>([]);
-  const [shapeData, setShapeData] = useState<any>(null);
-  const [phasesData, setPhasesData] = useState<any[]>([]);
-  const [estimatedDuration, setEstimatedDuration] = useState(
-    formData.estimated_duration_days || ""
-  );
+  // États locaux pour la présentation uniquement (Règle PROMPTS.md #5)
+  const [currentStep, setCurrentStep] = useState(0);
+  const [estimatedDuration, setEstimatedDuration] = useState("");
+
+  // Auto-sauvegarde lors des changements avec sauvegarde par étape
+  useEffect(() => {
+    const saveWorkflowData = async () => {
+      if (projectData.title && projectData.description) {
+        try {
+          // Sauvegarde par étape via le hook hexagonal
+          const workflowData: ProjectWorkflowData = {
+            currentStep: currentStep + 1,
+            isDraft: true,
+            isComplete: false,
+            projectData: projectData,
+            relatedData: {
+              // Données associées à cette étape
+              materials: projectData.materials || selectedMaterials || [],
+            },
+            metadata: {
+              lastSavedAt: new Date().toISOString(),
+              totalSteps: 7,
+              completedSteps: currentStep + 1,
+              progressPercentage: getWorkflowProgress(),
+              stepName: steps[currentStep]?.title || `Étape ${currentStep + 1}`,
+            },
+          };
+
+          await saveStep(workflowData);
+          console.log(`Étape ${currentStep + 1} sauvegardée automatiquement`);
+        } catch (error) {
+          console.error('Erreur lors de la sauvegarde automatique:', error);
+        }
+      }
+    };
+
+    const timeoutId = setTimeout(saveWorkflowData, 2000); // Auto-sauvegarde après 2s
+    return () => clearTimeout(timeoutId);
+  }, [projectData, currentStep, saveStep, getWorkflowProgress, selectedMaterials, steps]);
 
   // Steps aligned with workflow specification (7 étapes critiques)
   const steps = [
@@ -128,14 +245,12 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       icon: Building,
       description: "Type, budget, dates, référence",
       color: "bg-blue-500",
-      isCompleted: (data: any) =>
-        Boolean(
-          data.title &&
-            data.description &&
-            data.budget &&
-            data.project_type &&
-            data.start_date
-        ),
+      isCompleted: () => Boolean(
+        projectData.title &&
+        projectData.description &&
+        projectData.budget &&
+        projectData.startDate
+      ),
     },
     {
       id: 2,
@@ -144,13 +259,11 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       description:
         "Bailleurs, Ministères, Entreprises, Banques, Bureau conseil",
       color: "bg-green-500",
-      isCompleted: (data: any) =>
-        Boolean(
-          data.project_manager_id ||
-            data.client_id ||
-            data.engineering_consultant ||
-            data.main_contractor
-        ),
+      isCompleted: () => Boolean(
+        projectData.delegation.projectManager ||
+        projectData.delegation.client ||
+        projectData.stakeholders.length > 0
+      ),
     },
     {
       id: 3,
@@ -158,8 +271,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       icon: MapPin,
       description: "Géolocalisation interactive (Maps/Leaflet)",
       color: "bg-cyan-500",
-      isCompleted: (data: any) =>
-        Boolean(data.address && (data.latitude || data.longitude)),
+      isCompleted: () => Boolean(projectData.location),
     },
     {
       id: 4,
@@ -168,7 +280,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       description:
         "Phase → Step → Task avec documents, ressources, inspections",
       color: "bg-indigo-500",
-      isCompleted: (data: any) => Boolean(phases && phases.length > 0),
+      isCompleted: () => Boolean(projectData.phases && projectData.phases.length > 0),
     },
     {
       id: 5,
@@ -176,7 +288,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       icon: AlertTriangle,
       description: "Analyse et gestion des risques",
       color: "bg-red-500",
-      isCompleted: (data: any) => Boolean(risks && risks.length >= 0),
+      isCompleted: () => Boolean(projectData.risks && projectData.risks.length >= 0),
     },
     {
       id: 6,
@@ -184,7 +296,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       icon: FileCheck,
       description: "Standards SOMELEC et bailleurs (BM, BAD, BID, AFD)",
       color: "bg-amber-500",
-      isCompleted: (data: any) => Boolean(compliance && compliance.length >= 0),
+      isCompleted: () => Boolean(projectData.compliance && projectData.compliance.length >= 0),
     },
     {
       id: 7,
@@ -192,19 +304,96 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       icon: CheckCircle,
       description: "Réception définitive et clôture",
       color: "bg-teal-500",
-      isCompleted: (data: any) => true,
+      isCompleted: () => true,
     },
   ];
 
-  const updateFormData = (updates: any) => {
-    setFormData((prev) => ({ ...prev, ...updates }));
+  // Sauvegarde manuelle de l'étape actuelle
+  const saveCurrentStep = async () => {
+    try {
+      const workflowData: ProjectWorkflowData = {
+        currentStep: currentStep + 1,
+        isDraft: true,
+        isComplete: false,
+        projectData: projectData as Record<string, unknown>,
+        relatedData: {
+          // Données spécifiques à l'étape actuelle
+          ...(currentStep === 0 && {
+            basicInfo: {
+              title: projectData.title,
+              description: projectData.description,
+              budget: projectData.budget,
+              dates: {
+                start: projectData.start_date,
+                end: projectData.end_date,
+              },
+            },
+          }),
+          ...(currentStep === 1 && {
+            stakeholders: projectData.stakeholders || [],
+          }),
+          ...(currentStep === 2 && {
+            location: {
+              address: projectData.address,
+              coordinates: {
+                latitude: projectData.latitude,
+                longitude: projectData.longitude,
+              },
+            },
+          }),
+          ...(currentStep === 3 && {
+            phases: projectData.phases || [],
+          }),
+          ...(currentStep === 4 && {
+            risks: projectData.risks || [],
+          }),
+          ...(currentStep === 5 && {
+            compliance: projectData.compliance || [],
+          }),
+          materials: projectData.materials || selectedMaterials || [],
+        },
+        metadata: {
+          lastSavedAt: new Date().toISOString(),
+          totalSteps: 7,
+          completedSteps: currentStep + 1,
+          progressPercentage: getWorkflowProgress(),
+          stepName: steps[currentStep]?.title || `Étape ${currentStep + 1}`,
+          stepType: 'manual_save',
+        },
+      };
+
+      const result = await saveStep(workflowData);
+      
+      if (result.success) {
+        console.log(`Étape ${currentStep + 1} sauvegardée manuellement avec succès`);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde manuelle:', error);
+      throw error;
+    }
   };
 
-  const getStepProgress = () => {
-    const completedCount = steps.filter((step) =>
-      step.isCompleted(formData)
-    ).length;
-    return (completedCount / steps.length) * 100;
+  const updateProjectData = (updates: Partial<ProjectFormDataDTO>) => {
+    setProjectData((prev) => ({ ...prev, ...updates }));
+  };
+
+  // Navigation avec sauvegarde automatique
+  const nextStepWithSave = async () => {
+    if (canProceedNext()) {
+      // Sauvegarder l'étape actuelle avant de passer à la suivante
+      await saveCurrentStep();
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const prevStepWithSave = async () => {
+    if (currentStep > 0) {
+      // Sauvegarder l'étape actuelle avant de revenir en arrière
+      await saveCurrentStep();
+      setCurrentStep(currentStep - 1);
+    }
   };
 
   const nextStep = () => {
@@ -221,53 +410,73 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
   const canProceedNext = () => {
     const step = steps[currentStep];
-    return step ? step.isCompleted(formData) : false;
+    return step ? step.isCompleted() : false;
   };
 
   const handleSubmit = async () => {
-    // Calculer la progression globale avant soumission
-    const { ProgressCalculationService } = await import(
-      "@/services/ProgressCalculationService"
-    );
+    try {
+      console.log("Submitting project data:", projectData);
+      
+      // Transformer les données du formulaire en entité de domaine
+      const createProjectDTO: CreateProjectRequestDTO = {
+        title: projectData.title,
+        description: projectData.description,
+        budget: projectData.budget,
+        startDate: projectData.start_date || projectData.startDate,
+        endDate: projectData.end_date || projectData.endDate,
+        location: projectData.location || projectData.address,
+        latitude: projectData.latitude,
+        longitude: projectData.longitude,
+        projectManagerId: projectData.technical_manager_id,
+        clientId: projectData.client_name,
+        status: projectData.status as 'planifié' | 'en cours' | 'terminé' | 'suspendu' | 'annulé',
+        priority: 'medium',
+        estimatedDuration: parseInt(projectData.estimatedDuration?.toString() || '0'),
+        // Champs additionnels
+        projectType: projectData.project_type,
+        sector: projectData.sector,
+        permitNumber: projectData.permit_number,
+        paymentMode: projectData.payment_mode,
+        paymentFrequency: projectData.payment_frequency,
+        initialAdvance: projectData.initial_advance,
+        retentionPercentage: projectData.retention_percentage,
+        currency: projectData.currency,
+        financingSource: projectData.financingSource || projectData.funding_source,
+        marketType: projectData.marketType || projectData.market_type,
+        selectionMode: projectData.selectionMode || projectData.selection_mode,
+        mainContractor: projectData.main_contractor,
+        createdBy: 'current-user', // À adapter avec l'auth
+      };
 
-    const calculatedProgress =
-      ProgressCalculationService.calculateProjectProgress(
-        phases,
-        [], // tasks seront ajoutés après création
-        [] // inspections seront ajoutés après création
-      );
+      // Créer le projet via le service hexagonal
+      const projectEntity = ProjectTransformer.fromCreateDTOToEntity(createProjectDTO);
+      const savedProject = await projectService.createProject(projectEntity);
+      
+      // Finaliser le workflow
+      const workflowData: ProjectWorkflowData = {
+        currentStep: 7,
+        isDraft: false,
+        isComplete: true,
+        projectData: projectData as Record<string, unknown>,
+        relatedData: {
+          // Données associées (objets intégrés) - gérées par le service
+        },
+        metadata: {
+          lastSavedAt: new Date().toISOString(),
+          totalSteps: 7,
+          completedSteps: 7,
+          progressPercentage: 100,
+        },
+      };
 
-    // Prepare data for submission with correct field mappings
-    const submitData = {
-      ...formData,
-      // Ensure both naming conventions are present
-      startDate: formData.start_date || formData.startDate,
-      endDate: formData.end_date || formData.endDate,
-      start_date: formData.start_date || formData.startDate,
-      end_date: formData.end_date || formData.endDate,
-      progress: calculatedProgress,
-      // Include all related data
-      stakeholders,
-      delegation,
-      phases,
-      materials: selectedMaterials,
-      risks,
-      compliance,
-      shapeData,
-    };
-
-    console.log("Submitting project data:", submitData);
-    onSubmit(submitData);
-  };
-  const calculateDatesFromDuration = (durationDays: number) => {
-    const startDate = new Date(formData.start_date || new Date());
-    const endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + durationDays);
-
-    return {
-      startDate: startDate.toISOString().split("T")[0],
-      endDate: endDate.toISOString().split("T")[0],
-    };
+      const result = await completeWorkflow(workflowData);
+      
+      if (result.success) {
+        onSubmit(projectData);
+      }
+    } catch (error) {
+      console.error("Error submitting project:", error);
+    }
   };
   const renderStepContent = () => {
     switch (currentStep) {
@@ -292,9 +501,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       placeholder="Nom du projet de construction"
                       required
-                      value={formData.title}
+                      value={projectData.title}
                       onChange={(e) =>
-                        updateFormData({ title: e.target.value })
+                        updateProjectData({ title: e.target.value })
                       }
                     />
                   </div>
@@ -306,9 +515,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                       type="text"
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       placeholder="REF-2025-001"
-                      value={formData.project_reference}
+                      value={projectData.project_reference}
                       onChange={(e) =>
-                        updateFormData({ project_reference: e.target.value })
+                        updateProjectData({ project_reference: e.target.value })
                       }
                     />
                   </div>
@@ -317,10 +526,10 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   <div>
                     <label className="text-sm font-medium">Status *</label>
                     <Select
-                      value={formData.status ?? undefined}
+                      value={projectData.status ?? undefined}
                       required
                       onValueChange={(value) =>
-                        updateFormData({ status: value })
+                        updateProjectData({ status: value })
                       }
                     >
                       <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
@@ -347,11 +556,11 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                     {/* Progress Bar */}
                     <div className="flex items-center gap-3 mb-2">
                       <Progress
-                        value={formData.progress || 0}
+                        value={projectData.progress || 0}
                         className="flex-1 h-2"
                       />
                       <span className="text-sm font-medium w-12 text-right">
-                        {formData.progress || 0}%
+                        {projectData.progress || 0}%
                       </span>
                     </div>
 
@@ -363,9 +572,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                       min={0}
                       max={100}
                       required
-                      value={formData.progress || ""}
+                      value={projectData.progress || ""}
                       onChange={(e) =>
-                        updateFormData({
+                        updateProjectData({
                           progress: parseInt(e.target.value) || 0,
                         })
                       }
@@ -381,9 +590,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent min-h-[120px]"
                     placeholder="Description complète du projet, objectifs et spécifications techniques"
                     required
-                    value={formData.description}
+                    value={projectData.description}
                     onChange={(e) =>
-                      updateFormData({ description: e.target.value })
+                      updateProjectData({ description: e.target.value })
                     }
                   />
                 </div>
@@ -396,9 +605,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                     <select
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       required
-                      value={formData.project_type}
+                      value={projectData.project_type}
                       onChange={(e) =>
-                        updateFormData({ project_type: e.target.value })
+                        updateProjectData({ project_type: e.target.value })
                       }
                     >
                       <option value="infrastructure">
@@ -421,9 +630,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       placeholder="1000000"
                       required
-                      value={formData.budget}
+                      value={projectData.budget}
                       onChange={(e) =>
-                        updateFormData({ budget: e.target.value })
+                        updateProjectData({ budget: parseFloat(e.target.value) || 0 })
                       }
                     />
                   </div>
@@ -441,17 +650,17 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                         const duration = e.target.value;
                         setEstimatedDuration(duration);
 
-                        if (duration && formData.start_date) {
+                        if (duration && projectData.start_date) {
                           const calculatedDates = calculateDatesFromDuration(
                             parseInt(duration)
                           );
-                          updateFormData({
+                          updateProjectData({
                             estimated_duration_days: duration,
                             end_date: calculatedDates.endDate,
                             endDate: calculatedDates.endDate,
                           });
                         } else {
-                          updateFormData({
+                          updateProjectData({
                             estimated_duration_days: duration,
                             end_date: "",
                             endDate: "",
@@ -469,9 +678,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                     </label>
                     <select
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      value={formData.financing_source}
+                      value={projectData.financing_source}
                       onChange={(e) =>
-                        updateFormData({ financing_source: e.target.value })
+                        updateProjectData({ financing_source: e.target.value })
                       }
                     >
                       <option value="">Sélectionner</option>
@@ -494,9 +703,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                     </label>
                     <select
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      value={formData.market_type}
+                      value={projectData.market_type}
                       onChange={(e) =>
-                        updateFormData({ market_type: e.target.value })
+                        updateProjectData({ market_type: e.target.value })
                       }
                     >
                       <option value="appel_offre_international">
@@ -521,20 +730,19 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                     <input
                       type="date"
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      value={formData.start_date}
+                      value={projectData.start_date}
                       onChange={(e) => {
                         const startDate = e.target.value;
-                        updateFormData({
+                        updateProjectData({
                           start_date: startDate,
                           startDate: startDate,
                         });
 
-                        // Recalculer la date de fin si la durée est définie
-                        if (estimatedDuration && startDate) {
+                        if (estimatedDuration) {
                           const calculatedDates = calculateDatesFromDuration(
                             parseInt(estimatedDuration)
                           );
-                          updateFormData({
+                          updateProjectData({
                             end_date: calculatedDates.endDate,
                             endDate: calculatedDates.endDate,
                           });
@@ -549,9 +757,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                     <input
                       type="date"
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      value={formData.end_date}
+                      value={projectData.end_date}
                       onChange={(e) =>
-                        updateFormData({ end_date: e.target.value })
+                        updateProjectData({ end_date: e.target.value })
                       }
                     />
                   </div>
@@ -563,7 +771,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
       case 1: // Stakeholders
         return (
-          <StakeholdersTeamStep formData={formData} onUpdate={updateFormData} />
+          <StakeholdersTeamStep projectData={projectData} onUpdate={updateProjectData} />
         );
 
       case 2: // Location
@@ -583,26 +791,29 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   allowPolygon={true}
                   value={{
                     coordinates:
-                      formData.latitude && formData.longitude
-                        ? { lat: formData.latitude, lng: formData.longitude }
+                      projectData.latitude && projectData.longitude
+                        ? { lat: projectData.latitude, lng: projectData.longitude }
                         : undefined,
-                    address: formData.address,
-                    shape: shapeData?.shape,
-                    shapeType: shapeData?.shapeType,
+                    address: projectData.address,
+                    shape: projectData.shapeData?.type,
+                    shapeType: projectData.shapeData?.type,
                   }}
                   onChange={(locationData) => {
-                    // Update formData with location info
-                    updateFormData({
-                      address: locationData.address || formData.address,
+                    // Update projectData with location info
+                    updateProjectData({
+                      address: locationData.address || projectData.address,
                       latitude:
-                        locationData.coordinates?.lat || formData.latitude,
+                        locationData.coordinates?.lat || projectData.latitude,
                       longitude:
-                        locationData.coordinates?.lng || formData.longitude,
+                        locationData.coordinates?.lng || projectData.longitude,
                     });
                     // Store shape data separately
-                    setShapeData({
-                      shape: locationData.shape,
-                      shapeType: locationData.shapeType,
+                    updateProjectData({
+                      shapeData: {
+                        ...projectData.shapeData,
+                        type: locationData.shapeType || '',
+                        coordinates: locationData.shape?.coordinates || [],
+                      },
                     });
                   }}
                 />
@@ -623,15 +834,15 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
             <CardContent className="space-y-6">
               {/* Construction Phase Manager for Phase → Step → Task structure */}
               <ConstructionPhaseManager
-                phases={phases}
-                onChange={setPhases}
-                projectBudget={parseFloat(formData.budget) || 0}
+                phases={projectData.phases}
+                onChange={(phases) => updateProjectData({ phases })}
+                projectBudget={projectData.budget || 0}
               />
 
               {/* Resources and Materials integrated within phase planning */}
               <ResourcesMaterialsStep
-                formData={formData}
-                onUpdate={updateFormData}
+                projectData={projectData}
+                onUpdate={updateProjectData}
                 selectedMaterials={selectedMaterials}
                 onMaterialsChange={onMaterialsChange}
               />
@@ -641,11 +852,13 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
       case 4: // Risks
         return (
-          <RiskAnalysisStep formData={formData} onUpdate={updateFormData} />
+          <RiskAnalysisStep projectData={projectData} onUpdate={updateProjectData} />
         );
 
       case 5: // Compliance
-        return <ComplianceStep formData={formData} onUpdate={updateFormData} />;
+        return (
+          <ComplianceStep projectData={projectData} onUpdate={updateProjectData} />
+        );
 
       case 6: // Validation & Closure
         return (
@@ -667,9 +880,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   </label>
                   <select
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary"
-                    value={formData.reception_status || ""}
+                    value={projectData.reception_status || ""}
                     onChange={(e) =>
-                      updateFormData({ reception_status: e.target.value })
+                      updateProjectData({ reception_status: e.target.value })
                     }
                   >
                     <option value="">Sélectionner</option>
@@ -684,9 +897,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   <textarea
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary min-h-[100px]"
                     placeholder="Notes finales, observations, recommandations..."
-                    value={formData.closure_notes || ""}
+                    value={projectData.closure_notes || ""}
                     onChange={(e) =>
-                      updateFormData({ closure_notes: e.target.value })
+                      updateProjectData({ closure_notes: e.target.value })
                     }
                   />
                 </div>
@@ -710,7 +923,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
               Création de Projet - Étape {currentStep + 1} sur {steps.length}
             </CardTitle>
             <Badge variant="outline" className="text-sm">
-              {Math.round(getStepProgress())}% complété
+              {Math.round(getStepProgressLocal())}% complété
             </Badge>
           </div>
           <Progress value={getStepProgress()} className="h-2" />
@@ -724,7 +937,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           <div className="space-y-2">
             {steps.map((step, index) => {
               const Icon = step.icon;
-              const isCompleted = step.isCompleted(formData);
+              const isCompleted = step.isCompleted();
               const isActive = currentStep === index;
               const canAccess = index <= currentStep || isCompleted;
 
@@ -781,45 +994,6 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
             transition={{ duration: 0.3 }}
           >
             {renderStepContent()}
-
-            {/* Navigation Buttons */}
-            <div className="flex justify-between items-center mt-6">
-              <Button
-                variant="outline"
-                onClick={prevStep}
-                disabled={currentStep === 0}
-              >
-                <ChevronLeft className="h-4 w-4 mr-2" />
-                Précédent
-              </Button>
-
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    // Save current step without navigating
-                    console.log("Saving step data:", formData);
-                  }}
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  Sauvegarder
-                </Button>
-
-                {currentStep === steps.length - 1 ? (
-                  <Button
-                    onClick={handleSubmit}
-                    className="bg-primary hover:bg-primary/90"
-                  >
-                    Créer le projet
-                  </Button>
-                ) : (
-                  <Button onClick={nextStep} disabled={!canProceedNext()}>
-                    Sauvegarder et suivant
-                    <ChevronRight className="h-4 w-4 ml-2" />
-                  </Button>
-                )}
-              </div>
-            </div>
           </motion.div>
         </div>
       </div>

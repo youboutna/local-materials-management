@@ -8,40 +8,56 @@ import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface Submission {
   id: string;
-  tender_id: string;
-  supplier_name: string;
-  supplier_email: string;
-  submission_date: string;
+  tenderId: string; 
+  supplierName: string; 
+  supplierEmail: string; 
+  submissionDate: string; 
   status: 'submitted' | 'under_review' | 'approved' | 'rejected';
-  secret_code?: string;
-  created_at: string;
-  updated_at: string;
+  secretCode?: string; 
+  createdAt: string; 
+  updatedAt: string; 
   tender?: {
     title: string;
-    deadline_date?: string;
+    deadlineDate?: string; 
   };
+
+  // Legacy snake_case for backward compatibility
+  tender_id?: string; 
+  supplier_name?: string; 
+  supplier_email?: string; 
+  submission_date?: string; 
+  secret_code?: string; 
+  created_at?: string; 
+  updated_at?: string; 
 }
 
 export interface SubmissionDocument {
   id: string;
-  submission_id: string;
-  document_id: string;
+  submissionId: string; 
+  documentId: string; 
   category: string;
   subcategory: string;
   document: {
     id: string;
     title: string;
-    file_name: string;
-    file_url: string;
-    file_size: number;
+    fileName: string; 
+    fileUrl: string; 
+    fileSize: number; 
     metadata?: Record<string, unknown>;
   };
+
+  // Legacy snake_case for backward compatibility
+  submission_id?: string; 
+  document_id?: string; 
+  file_name?: string; 
+  file_url?: string; 
+  file_size?: number; 
   uploaded_at: string;
 }
 
 export interface ActivityLog {
   id: string;
-  submission_id: string;
+  submissionId: string; 
   action: string;
   details: string;
   created_at: string;

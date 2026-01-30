@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import UserSelector from '@/components/selectors/UserSelector';
-import { NotificationService } from '@/services/NotificationService';
+import { NotificationService } from '@/application/services/NotificationService';
 
 interface Project {
   id: string;

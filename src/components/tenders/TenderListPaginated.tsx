@@ -10,12 +10,20 @@ interface Tender {
   title: string;
   description: string;
   status: 'draft' | 'published' | 'closed' | 'awarded';
-  launch_date?: string;
-  deadline_date?: string;
-  budget_min?: number;
-  budget_max?: number;
-  market_type?: string;
-  created_at: string;
+  launchDate?: string; // ✅ CAMELCASE: Instead of launch_date
+  deadlineDate?: string; // ✅ CAMELCASE: Instead of deadline_date
+  budgetMin?: number; // ✅ CAMELCASE: Instead of budget_min
+  budgetMax?: number; // ✅ CAMELCASE: Instead of budget_max
+  marketType?: string; // ✅ CAMELCASE: Instead of market_type
+  createdAt?: string; // ✅ CAMELCASE: Instead of created_at
+  
+  // Legacy snake_case for backward compatibility
+  launch_date?: string; // Legacy snake_case for backward compatibility
+  deadline_date?: string; // Legacy snake_case for backward compatibility
+  budget_min?: number; // Legacy snake_case for backward compatibility
+  budget_max?: number; // Legacy snake_case for backward compatibility
+  market_type?: string; // Legacy snake_case for backward compatibility
+  created_at?: string; // Legacy snake_case for backward compatibility
 }
 
 interface TenderListPaginatedProps {
@@ -178,34 +186,34 @@ const TenderListPaginated: React.FC<TenderListPaginatedProps> = ({
                   <div className="flex items-center gap-2">
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">Budget:</span>
-                    <span className="font-medium">{formatBudget(tender.budget_min, tender.budget_max)}</span>
+                    <span className="font-medium">{formatBudget(tender.budgetMin || tender.budget_min, tender.budgetMax || tender.budget_max)}</span>
                   </div>
 
-                  {tender.launch_date && (
+                  {(tender.launchDate || tender.launch_date) && (
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                       <span className="text-muted-foreground">Lancement:</span>
                       <span className="font-medium">
-                        {new Date(tender.launch_date).toLocaleDateString('fr-FR')}
+                        {new Date(tender.launchDate || tender.launch_date!).toLocaleDateString('fr-FR')}
                       </span>
                     </div>
                   )}
 
-                  {tender.deadline_date && (
+                  {(tender.deadlineDate || tender.deadline_date) && (
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <span className="text-muted-foreground">Échéance:</span>
                       <span className="font-medium">
-                        {new Date(tender.deadline_date).toLocaleDateString('fr-FR')}
+                        {new Date(tender.deadlineDate || tender.deadline_date!).toLocaleDateString('fr-FR')}
                       </span>
                     </div>
                   )}
 
-                  {tender.market_type && (
+                  {(tender.marketType || tender.market_type) && (
                     <div className="flex items-center gap-2">
                       <FileText className="h-4 w-4 text-muted-foreground" />
                       <span className="text-muted-foreground">Type:</span>
-                      <span className="font-medium">{tender.market_type}</span>
+                      <span className="font-medium">{tender.marketType || tender.market_type}</span>
                     </div>
                   )}
                 </div>

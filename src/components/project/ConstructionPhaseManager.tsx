@@ -1298,3 +1298,4 @@ const ProcurementPhaseCreator: React.FC<{
 };
 
 export default ConstructionPhaseManager;
+export type { PhaseData, CustomPhase };

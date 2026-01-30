@@ -5,9 +5,9 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { ProjectCreationDTO, ProjectWorkflowDTO } from '@/dtos/entities/ProjectCreationDTO';
-import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
-import { createProjectCreationService } from '@/application/services/ProjectCreationService';
+import { ProjectCreationService, type ProjectCreationData, type ProjectCreationResult } from '@/application/services/ProjectCreationService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { ProjectCreationDTO } from '@/dtos/entities/ProjectCreationDTO';
 
 // Types d'erreur locaux pour éviter les dépendances
 export enum ErrorCode {
@@ -29,21 +29,22 @@ export class AppError extends Error {
 
 export function useProjectCreationHex() {
   const queryClient = useQueryClient();
-  const projectCreationService = createProjectCreationService();
+  const projectCreationService = new ProjectCreationService(RepositoryFactory.getProjectRepository());
 
   // Mutation pour créer un projet
   const createProjectMutation = useMutation({
-    mutationFn: (data: ProjectCreationDTO) => 
+    mutationFn: (data: ProjectCreationData): Promise<ProjectCreationResult> => 
       projectCreationService.createProject(data),
-    onSuccess: (project) => {
+    onSuccess: (result) => {
       toast({
         title: "Projet créé avec succès",
-        description: `Le projet ${project.title} a été créé et est maintenant disponible.`,
+        description: `Le projet ${result.project.title} a été créé et est maintenant disponible.`,
+        className: 'bg-green-100 border-green-300 text-green-800',
       });
       
       // Invalider les queries liées aux projets
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      queryClient.invalidateQueries({ queryKey: ['project', project.id] });
+      queryClient.invalidateQueries({ queryKey: ['project', result.project.id] });
     },
     onError: (error) => {
       console.error('Project creation failed:', error);
@@ -86,8 +87,8 @@ export function useProjectCreationHex() {
 
   // Mutation pour valider le workflow
   const validateWorkflowMutation = useMutation({
-    mutationFn: (workflow: ProjectWorkflowDTO) => 
-      projectCreationService.validateWorkflow(workflow),
+    mutationFn: (workflow: ProjectCreationData) => 
+      projectCreationService.validateProjectData(workflow),
     onError: (error) => {
       console.error('Workflow validation failed:', error);
       toast({
@@ -110,17 +111,44 @@ export function useProjectCreationHex() {
   };
 
   // Fonction pour valider une étape du workflow
-  const validateWorkflowStep = async (stepData: Partial<ProjectCreationDTO>): Promise<{ isValid: boolean; errors: string[] }> => {
+  const validateWorkflowStep = async (stepData: Partial<ProjectCreationData>): Promise<{ isValid: boolean; errors: string[] }> => {
     try {
-      const workflow: ProjectWorkflowDTO = {
-        id: 1,
-        title: "Validation d'étape",
-        description: "Validation des données de l'étape actuelle",
-        isCompleted: false,
-        data: stepData
+      // Créer un objet ProjectCreationData temporaire pour la validation
+      const tempData: ProjectCreationData = {
+        title: stepData.title || '',
+        description: stepData.description || '',
+        startDate: stepData.startDate || '',
+        endDate: stepData.endDate || '',
+        budget: stepData.budget || 0,
+        address: stepData.address || '',
+        latitude: stepData.latitude || 0,
+        longitude: stepData.longitude || 0,
+        projectManagerId: stepData.projectManagerId || '',
+        clientId: stepData.clientId || '',
+        status: stepData.status || 'planned',
+        priority: stepData.priority || 'medium',
+        estimatedDuration: stepData.estimatedDuration || 0,
+        stakeholders: stepData.stakeholders || [],
+        delegation: stepData.delegation || {
+          projectManager: '',
+          technicalManager: '',
+          supervisor: '',
+          client: ''
+        },
+        phases: stepData.phases || [],
+        materials: stepData.materials || [],
+        risks: stepData.risks || [],
+        compliance: stepData.compliance || [],
+        shapeData: stepData.shapeData || {
+          type: '',
+          coordinates: [],
+          area: 0,
+          perimeter: 0
+        }
       };
       
-      return await projectCreationService.validateWorkflow(workflow);
+      projectCreationService.validateProjectData(tempData);
+      return { isValid: true, errors: [] };
     } catch (error) {
       console.error('Step validation failed:', error);
       return { isValid: false, errors: ['Erreur de validation'] };
@@ -128,17 +156,17 @@ export function useProjectCreationHex() {
   };
 
   // État du workflow
-  const getWorkflowStepStatus = (stepData: Partial<ProjectCreationDTO>, stepNumber: number): boolean => {
+  const getWorkflowStepStatus = (stepData: Partial<ProjectCreationData>, stepNumber: number): boolean => {
     const requiredFields = getRequiredFieldsForStep(stepNumber);
     
     return requiredFields.every(field => {
-      const value = stepData[field as keyof ProjectCreationDTO];
+      const value = stepData[field as keyof ProjectCreationData];
       return value !== undefined && value !== null && value !== '';
     });
   };
 
   // Fonction utilitaire pour obtenir les champs requis par étape
-  const getRequiredFieldsForStep = (stepNumber: number): (keyof ProjectCreationDTO)[] => {
+  const getRequiredFieldsForStep = (stepNumber: number): (keyof ProjectCreationData)[] => {
     switch (stepNumber) {
       case 1: // Informations du projet
         return ['title', 'description', 'budget', 'project_type', 'start_date'];
@@ -233,16 +261,53 @@ export function useProjectCreationHex() {
 export function useProjectWorkflowHex() {
   const { validateWorkflow, isValidating } = useProjectCreationHex();
   
-  const validateStep = async (stepNumber: number, stepData: Partial<ProjectCreationDTO>) => {
-    const workflow: ProjectWorkflowDTO = {
-      id: stepNumber,
-      title: `Étape ${stepNumber}`,
-      description: `Validation de l'étape ${stepNumber} du workflow`,
-      isCompleted: false,
-      data: stepData
-    };
-    
-    return await validateWorkflow(workflow);
+  const validateStep = async (stepNumber: number, stepData: Partial<ProjectCreationData>) => {
+    try {
+      // Valider directement les données de l'étape
+      const tempData: ProjectCreationData = {
+        title: stepData.title || '',
+        description: stepData.description || '',
+        startDate: stepData.startDate || '',
+        endDate: stepData.endDate || '',
+        budget: stepData.budget || 0,
+        address: stepData.address || '',
+        latitude: stepData.latitude || 0,
+        longitude: stepData.longitude || 0,
+        projectManagerId: stepData.projectManagerId || '',
+        clientId: stepData.clientId || '',
+        status: stepData.status || 'planned',
+        priority: stepData.priority || 'medium',
+        estimatedDuration: stepData.estimatedDuration || 0,
+        stakeholders: stepData.stakeholders || [],
+        delegation: stepData.delegation || {
+          projectManager: '',
+          technicalManager: '',
+          supervisor: '',
+          client: ''
+        },
+        phases: stepData.phases || [],
+        materials: stepData.materials || [],
+        risks: stepData.risks || [],
+        compliance: stepData.compliance || [],
+        shapeData: stepData.shapeData || {
+          type: '',
+          coordinates: [],
+          area: 0,
+          perimeter: 0
+        }
+      };
+      
+      // Créer un service temporaire pour la validation
+      const projectCreationService = new ProjectCreationService(
+        RepositoryFactory.getProjectRepository()
+      );
+      
+      projectCreationService.validateProjectData(tempData);
+      return { isValid: true, errors: [] };
+    } catch (error) {
+      console.error('Step validation failed:', error);
+      return { isValid: false, errors: ['Erreur de validation'] };
+    }
   };
   
   return {

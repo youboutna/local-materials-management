@@ -18,7 +18,7 @@ import { ProjectDataCalculations } from '@/utils/projectDataCalculations';
 import { ProjectData } from '@/types/project';
 import { Database } from '@/integrations/supabase/types';
 import { Project } from '@/domain/entities/Project';
-import { ProjectDomainTransformer } from '@/dtos/transforms/ProjectDomainTransformer';
+import { ProjectTransformer } from '@/dtos/transforms';
 
 // Types officiels Supabase pour les tables utilisées
 type ProjectPhaseRow = Database['public']['Tables']['project_phases']['Row'];
@@ -70,7 +70,7 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
       );
 
       // 6. Transform Project entity to DTO using transformer
-      const projectDTO = ProjectDomainTransformer.toResponseDto(projectEntity);
+      const projectDTO = ProjectTransformer.toResponseDto(projectEntity);
 
       // 7. Return final report DTO with all data
       return {

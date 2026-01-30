@@ -52,7 +52,7 @@ export function useProjects(): UseProjectsHexResult {
         const projects = await projectService.getAllProjects();
         
         // [Transformers]: DTOs → ResponseDTOs
-        // Utilisation du Transformer unifié : ProjectDomainTransformer
+        // Utilisation du Transformer unifié : ProjectTransformer
         return projects;
       } catch (error) {
         console.error('Error fetching projects:', error);
@@ -181,7 +181,7 @@ export function useProjectsByStatus(status: string) {
         const projects = await projectService.getProjectsByStatus(status);
         
         // [Transformers]: DTOs → ResponseDTOs
-        // Utilisation du Transformer unifié : ProjectDomainTransformer
+        // Utilisation du Transformer unifié : ProjectTransformer
         return projects;
       } catch (error) {
         console.error('Error fetching projects by status:', error);

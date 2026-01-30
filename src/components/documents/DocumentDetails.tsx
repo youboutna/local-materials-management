@@ -12,15 +12,25 @@ interface Document {
   id: string;
   title: string;
   description: string;
-  document_type: string;
+  documentType: string; // ✅ CAMELCASE: Instead of document_type
   status: string;
-  file_url: string;
-  file_name: string;
-  file_size: number;
-  created_at: string;
-  uploaded_by: string;
-  project_id: string;
-  mime_type?: string;
+  fileUrl: string; // ✅ CAMELCASE: Instead of file_url
+  fileName: string; // ✅ CAMELCASE: Instead of file_name
+  fileSize: number; // ✅ CAMELCASE: Instead of file_size
+  createdAt: string; // ✅ CAMELCASE: Instead of created_at
+  uploadedBy: string; // ✅ CAMELCASE: Instead of uploaded_by
+  projectId: string; // ✅ CAMELCASE: Instead of project_id
+  mimeType?: string; // ✅ CAMELCASE: Instead of mime_type
+  
+  // Legacy snake_case for backward compatibility
+  document_type?: string; // Legacy snake_case for backward compatibility
+  file_url?: string; // Legacy snake_case for backward compatibility
+  file_name?: string; // Legacy snake_case for backward compatibility
+  file_size?: number; // Legacy snake_case for backward compatibility
+  created_at?: string; // Legacy snake_case for backward compatibility
+  uploaded_by?: string; // Legacy snake_case for backward compatibility
+  project_id?: string; // Legacy snake_case for backward compatibility
+  mime_type?: string; // Legacy snake_case for backward compatibility
 }
 
 interface DocumentDetailsProps {
@@ -94,7 +104,8 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
 
   const handleDownload = async () => {
     try {
-      const result = await downloadFile(document.file_url, document.file_name);
+      // ✅ PRIORITY: camelCase first, snake_case fallback
+      const result = await downloadFile(document.fileUrl || document.file_url, document.fileName || document.file_name);
       
       if (result.success) {
         toast({

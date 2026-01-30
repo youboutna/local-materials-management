@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { EnhancedReportingService } from '@/services/enhancedReportingService';
+import { ReportingService } from '@/application/services/ReportingService';
 import { EVMMetrics, PERTAnalysis, ProjectData } from '@/types/project';
 import { CostCalculation, ProjectReportDTO, ReportData } from '@/types/reportTypes';
 import { ReportCalculations } from '@/utils/reportCalculations';

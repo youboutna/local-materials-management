@@ -13,6 +13,43 @@ import { InspectionService } from './InspectionService';
 import { SupplierService } from './SupplierService';
 import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 
+// Monitoring interfaces from legacy service
+export interface MonitoringConfiguration {
+  autoAcknowledgeLevel: 'none' | 'low' | 'medium' | 'high';
+  autoEscalationEnabled: boolean;
+  autoNotificationEnabled: boolean;
+  autoReportGeneration: boolean;
+  checkIntervals: {
+    insurance: number; // hours
+    delays: number; // hours
+    inspections: number; // hours
+    financial: number; // hours
+  };
+}
+
+export interface MonitoringMetrics {
+  projectHealth: 'excellent' | 'good' | 'warning' | 'critical';
+  automationRate: number; // percentage of automated actions
+  manualInterventionsRequired: number;
+  alertsResolved: number;
+  alertsPending: number;
+}
+
+export interface Alert {
+  id: string;
+  type: 'insurance' | 'delay' | 'inspection' | 'financial' | 'quality' | 'safety';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  description: string;
+  projectId?: string;
+  createdAt: string;
+  acknowledgedAt?: string;
+  resolvedAt?: string;
+  assignedTo?: string;
+  status: 'pending' | 'acknowledged' | 'resolved' | 'escalated';
+  actions: string[];
+}
+
 export interface DashboardStats {
   activeProjects: number;
   totalProjects: number;
@@ -270,5 +307,168 @@ export class DashboardService {
         error
       );
     }
+  }
+
+  /**
+   * Automated monitoring cycle - reduces manual intervention
+   * Legacy compatibility method from MonitoringService
+   */
+  async runAutomatedMonitoring(config?: MonitoringConfiguration): Promise<{
+    metrics: MonitoringMetrics;
+    alerts: Alert[];
+    automatedActions: string[];
+    manualActionsRequired: string[];
+  }> {
+    try {
+      const defaultConfig: MonitoringConfiguration = {
+        autoAcknowledgeLevel: 'medium',
+        autoEscalationEnabled: true,
+        autoNotificationEnabled: true,
+        autoReportGeneration: true,
+        checkIntervals: {
+          insurance: 24,
+          delays: 24,
+          inspections: 24,
+          financial: 24,
+        }
+      };
+
+      const monitoringConfig = config || defaultConfig;
+      
+      // Get all projects for monitoring
+      const stats = await this.getDashboardStats();
+      
+      // Generate alerts based on project health
+      const alerts: Alert[] = [];
+      const automatedActions: string[] = [];
+      const manualActionsRequired: string[] = [];
+
+
+      // Check for high-risk projects
+      if (stats.riskMetrics.highRiskProjects > 0) {
+        alerts.push({
+          id: `alert-${Date.now()}-1`,
+          type: 'quality',
+          severity: 'high',
+          title: 'High Risk Projects Detected',
+          description: `${stats.riskMetrics.highRiskProjects} projects require immediate attention`,
+          createdAt: new Date().toISOString(),
+          status: 'pending',
+          actions: ['Review project risk assessment', 'Implement mitigation strategies']
+        });
+      }
+
+      // Check for overdue payments
+      if (stats.riskMetrics.overduePayments > 0) {
+        alerts.push({
+          id: `alert-${Date.now()}-2`,
+          type: 'financial',
+          severity: 'critical',
+          title: 'Overdue Payments',
+          description: `${stats.riskMetrics.overduePayments} payments are overdue`,
+          createdAt: new Date().toISOString(),
+          status: 'pending',
+          actions: ['Contact suppliers', 'Update payment schedules']
+        });
+      }
+
+      // Check for critical inspections
+      if (stats.riskMetrics.criticalInspections > 0) {
+        alerts.push({
+          id: `alert-${Date.now()}-3`,
+          type: 'inspection',
+          severity: 'high',
+          title: 'Critical Inspections Overdue',
+          description: `${stats.riskMetrics.criticalInspections} inspections require immediate attention`,
+          createdAt: new Date().toISOString(),
+          status: 'pending',
+          actions: ['Schedule inspections', 'Review inspection reports']
+        });
+      }
+
+      // Calculate metrics
+      const metrics: MonitoringMetrics = {
+        projectHealth: this.calculateProjectHealth(stats),
+        automationRate: this.calculateAutomationRate(alerts),
+        manualInterventionsRequired: alerts.filter(a => a.severity === 'critical').length,
+        alertsResolved: 0,
+        alertsPending: alerts.length
+      };
+
+      // Auto-acknowledge low severity alerts
+      if (monitoringConfig.autoAcknowledgeLevel !== 'none') {
+        const autoAcknowledgeSeverity = monitoringConfig.autoAcknowledgeLevel;
+        alerts.forEach(alert => {
+          if (alert.severity === 'low' || 
+              (autoAcknowledgeSeverity === 'medium' && alert.severity === 'medium')) {
+            alert.status = 'acknowledged';
+            alert.acknowledgedAt = new Date().toISOString();
+            automatedActions.push(`Auto-acknowledged ${alert.type} alert`);
+          }
+        });
+      }
+
+      return {
+        metrics,
+        alerts,
+        automatedActions,
+        manualActionsRequired
+      };
+    } catch (error) {
+      throw new DashboardServiceError(
+        'Failed to run automated monitoring',
+        'MONITORING_ERROR',
+        error
+      );
+    }
+  }
+
+  /**
+   * Get monitoring configuration
+   * Legacy compatibility method from MonitoringService
+   */
+  getMonitoringConfiguration(): MonitoringConfiguration {
+    return {
+      autoAcknowledgeLevel: 'medium',
+      autoEscalationEnabled: true,
+      autoNotificationEnabled: true,
+      autoReportGeneration: true,
+      checkIntervals: {
+        insurance: 24,
+        delays: 24,
+        inspections: 24,
+        financial: 24,
+      }
+    };
+  }
+
+  /**
+   * Calculate project health based on metrics
+   */
+  private calculateProjectHealth(stats: DashboardStats): 'excellent' | 'good' | 'warning' | 'critical' {
+    const riskScore = stats.riskMetrics.highRiskProjects + 
+                      stats.riskMetrics.criticalInspections + 
+                      stats.riskMetrics.overduePayments;
+    
+    if (riskScore === 0) return 'excellent';
+    if (riskScore <= 2) return 'good';
+    if (riskScore <= 5) return 'warning';
+    return 'critical';
+  }
+
+  /**
+   * Calculate automation rate based on alerts
+   */
+  private calculateAutomationRate(alerts: Alert[]): number {
+    if (alerts.length === 0) return 100;
+    const acknowledgedAlerts = alerts.filter(a => a.status === 'acknowledged').length;
+    return Math.round((acknowledgedAlerts / alerts.length) * 100);
+  }
+}
+
+class DashboardServiceError extends Error {
+  constructor(message: string, public code: string, public cause?: Error) {
+    super(message);
+    this.name = 'DashboardServiceError';
   }
 }

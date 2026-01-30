@@ -16,10 +16,22 @@ import { format } from 'date-fns';
 
 interface MaterialDocument {
   id: string;
-  material_id: string;
-  document_type: 'invoice' | 'delivery_note' | 'warranty' | 'certificate' | 'manual' | 'other';
+  materialId: string;
+  documentType: 'invoice' | 'delivery_note' | 'warranty' | 'certificate' | 'manual' | 'other';
   title: string;
   description?: string;
+  fileName?: string;
+  fileUrl?: string;
+  fileSize?: number;
+  mimeType?: string;
+  documentNumber?: string;
+  documentDate?: string;
+  expiryDate?: string;
+  supplierName?: string;
+  
+  // Legacy snake_case for backward compatibility
+  material_id?: string;
+  document_type?: 'invoice' | 'delivery_note' | 'warranty' | 'certificate' | 'manual' | 'other';
   file_name?: string;
   file_url?: string;
   file_size?: number;
@@ -28,6 +40,7 @@ interface MaterialDocument {
   document_date?: string;
   expiry_date?: string;
   supplier_name?: string;
+  
   metadata?: Record<string, any>;
   tags?: string[];
   uploaded_by?: string;
@@ -57,14 +70,21 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
   const { uploadFile, uploading } = useDocumentStorage();
 
   const [formData, setFormData] = useState({
-    document_type: 'invoice' as MaterialDocument['document_type'],
+    documentType: 'invoice' as MaterialDocument['documentType'],
     title: '',
     description: '',
+    documentNumber: '',
+    documentDate: '',
+    expiryDate: '',
+    supplierName: '',
+    tags: '',
+    
+    // Legacy snake_case for backward compatibility
+    document_type: 'invoice' as MaterialDocument['document_type'],
     document_number: '',
     document_date: '',
     expiry_date: '',
     supplier_name: '',
-    tags: '',
   });
 
   useEffect(() => {
@@ -148,17 +168,17 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
         .from('material_documents')
         .insert({
           material_id: materialId,
-          document_type: formData.document_type,
+          document_type: formData.documentType || formData.document_type,
           title: formData.title,
           description: formData.description || null,
           file_name: fileName || null,
           file_url: fileUrl || null,
           file_size: fileSize || null,
           mime_type: mimeType || null,
-          document_number: formData.document_number || null,
-          document_date: formData.document_date || null,
-          expiry_date: formData.expiry_date || null,
-          supplier_name: formData.supplier_name || null,
+          document_number: formData.documentNumber || formData.document_number,
+          document_date: formData.documentDate || formData.document_date,
+          expiry_date: formData.expiryDate || formData.expiry_date,
+          supplier_name: formData.supplierName || formData.supplier_name,
           tags: tags.length > 0 ? tags : null,
         });
 
@@ -197,14 +217,21 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
 
   const resetForm = () => {
     setFormData({
-      document_type: 'invoice',
+      documentType: 'invoice' as MaterialDocument['documentType'],
       title: '',
       description: '',
+      documentNumber: '',
+      documentDate: '',
+      expiryDate: '',
+      supplierName: '',
+      tags: '',
+      
+      // Legacy snake_case for backward compatibility
+      document_type: 'invoice' as MaterialDocument['document_type'],
       document_number: '',
       document_date: '',
       expiry_date: '',
       supplier_name: '',
-      tags: '',
     });
     setSelectedFile(null);
   };

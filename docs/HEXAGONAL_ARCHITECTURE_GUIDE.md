@@ -1,4 +1,3 @@
-# 🏗️ **Architecture Hexagonale Complète - 99.2% TERMINÉE**
 
 ## 📚 **Principes Fondamentaux**
 

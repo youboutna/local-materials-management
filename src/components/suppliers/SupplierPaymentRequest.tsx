@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { PaymentRequestService, PaymentRequest, CreatePaymentRequestData } from '@/application/services/PaymentRequestService';
 import { AuthService } from '@/application/services/AuthService';
 import { DocumentService, CreateDocumentRequestDto } from '@/application/services/DocumentService';
-import { NotificationService } from '@/services/NotificationService';
+import { NotificationService } from '@/application/services/NotificationService';
 import { useProjectsHex } from '@/hooks/hexagonal'
 import { useAuth } from '@/hooks/hexagonal';
 import EnhancedProjectSelector from '@/components/selectors/EnhancedProjectSelector';

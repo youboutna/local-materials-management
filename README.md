@@ -3,35 +3,7 @@
 A comprehensive solution for managing construction projects using local Mauritanian materials, with project tracking, geolocation capabilities, and material sourcing management.
 
 ---
-
-## 🏗️ **Architecture Status - 29 Janvier 2026**
-
-### **🎯 Architecture Hexagonale**
-- **Progression globale** : 98.8% hexagonal ✅
-- **Services Application** : 57/57 créés (100%) ✅
-- **Hooks Hexagonaux** : 104/104 créés (100%) ✅
-- **Components React** : 386/386 fichiers (100%) ✅
-- **Appels directs Supabase** : 9 appels restants ⚠️
-
-### **📊 État par Couche**
-- **Domain Layer** : 100% complet ✅ (entités avec objets complexes)
-- **Application Layer** : 100% complet ✅ (services + DTOs)
-- **Infrastructure Layer** : 98.8% complet ✅ (adapters + repositories)
-- **Presentation Layer** : 98.8% complet ✅ (components migrés)
-
-### **🚀 Accomplissements Récents**
-- **Architecture multi-providers auth** : Implémentée avec AuthManager ✅
-- **ConfigurationService centralisé** : Templates de déploiement ✅
-- **Risk Entity refactorisée** : Avec IProject/IEmployee ✅
-- **Placeholders éliminés** : Plus d'implémentations vides ✅
-- **OAuthConfigGuide & DeploymentSettings** : 100% hexagonaux ✅
-
-### **🎯 Finalisation**
-- **Appels restants** : 9 appels directs Supabase
-- **Estimation** : 1-2 jours pour finalisation
-- **Architecture 100% hexagonale** : ✅ Objectif atteignable
-- **Production ready** : ✅ Prêt pour déploiement
-
+todo
 ---
 
 ## 🎯 Purpose
@@ -41,6 +13,7 @@ Manages construction projects that use local Mauritanian materials, with feature
 - User role management (Admin, Manager, Supplier, etc.)
 - Geolocation of buildings and material sources
 - Financial tracking and payment management
+- Monitoring and reporting, banking garantee, insurance
 - Document management and tender workflows
 
 ## 🛠 Tech Stack
