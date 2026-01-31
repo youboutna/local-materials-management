@@ -97,9 +97,10 @@ export class RiskService {
         new Date().toISOString()
       );
 
-      // Sauvegarde via le repository
-      const savedRisk = await this.riskRepository.save(risk);
-      return RiskTransformer.toDTO(savedRisk);
+      // Sauvegarde via le repository (save returns void)
+      await this.riskRepository.save(risk);
+      // Return the risk we created since save doesn't return it
+      return RiskTransformer.toDTO(risk);
     } catch (error) {
       console.error('Error creating risk:', error);
       throw new Error('Failed to create risk');
@@ -134,8 +135,9 @@ export class RiskService {
         new Date().toISOString()
       );
 
-      const savedRisk = await this.riskRepository.save(updatedRisk);
-      return RiskTransformer.toDTO(savedRisk);
+      // save returns void, so we return the updated risk entity
+      await this.riskRepository.save(updatedRisk);
+      return RiskTransformer.toDTO(updatedRisk);
     } catch (error) {
       console.error('Error updating risk:', error);
       throw new Error('Failed to update risk');

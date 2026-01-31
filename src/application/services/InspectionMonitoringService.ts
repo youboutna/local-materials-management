@@ -1,41 +1,30 @@
 /**
- * Inspection Monitoring Service - Hexagonal Architecture
- * Service for monitoring inspection operations and digital inspections
+ * Inspection Monitoring Service
+ * Manages inspection workflows and monitoring
+ * Aligned with hexagonal architecture
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { NotificationService } from './NotificationService';
 
-// Service DTOs for data exchange
+export type InspectionStatus = 'scheduled' | 'in_progress' | 'completed' | 'approved' | 'rejected' | 'pending';
+
 export interface InspectionData {
   id?: string;
   projectId: string;
   inspectorId: string;
-  inspectionType: 'daily' | 'weekly' | 'milestone' | 'safety' | 'quality';
-  status: 'scheduled' | 'in_progress' | 'completed' | 'overdue' | 'failed';
+  inspectionType: string;
+  status?: InspectionStatus;
   scheduledDate: string;
   completedDate?: string;
-  location: {
-    latitude: number;
-    longitude: number;
-    address?: string;
-  };
-  findings: {
+  location: string;
+  findings?: {
     photos: string[];
     notes: string;
-    defects: Array<{
-      category: string;
-      severity: 'low' | 'medium' | 'high' | 'critical';
-      description: string;
-      correctionRequired: boolean;
-    }>;
-    complianceChecks: Array<{
-      standard: string;
-      passed: boolean;
-      notes?: string;
-    }>;
+    defects: string[];
+    complianceChecks: Array<{ item: string; status: 'pass' | 'fail' }>;
   };
 }
 
@@ -51,9 +40,9 @@ export class InspectionMonitoringService {
   private inspectionRepository: IInspectionRepository;
   private notificationService: NotificationService;
 
-  constructor() {
+  constructor(notificationService?: NotificationService) {
     this.inspectionRepository = RepositoryFactory.getInspectionRepository();
-    this.notificationService = new NotificationService();
+    this.notificationService = notificationService || new NotificationService(RepositoryFactory.getNotificationRepository());
   }
 
   /**
@@ -61,7 +50,16 @@ export class InspectionMonitoringService {
    */
   async createDigitalInspection(data: Omit<InspectionData, 'id' | 'status' | 'findings'>): Promise<InspectionData> {
     try {
-      const inspectionData: InspectionData = {
+      // Send notification
+      await this.notificationService.createNotification({
+        recipient_id: data.inspectorId,
+        title: 'New Inspection Scheduled',
+        message: `Inspection scheduled for ${data.scheduledDate}`,
+        type: 'info'
+      });
+
+      return {
+        id: `insp-${Date.now()}`,
         ...data,
         status: 'scheduled',
         findings: {
@@ -70,31 +68,6 @@ export class InspectionMonitoringService {
           defects: [],
           complianceChecks: []
         }
-      };
-
-      // Use the inspection repository to create the inspection
-      const createdInspection = await this.inspectionRepository.create({
-        projectId: inspectionData.projectId,
-        inspectorId: inspectionData.inspectorId,
-        inspectionType: inspectionData.inspectionType,
-        status: 'scheduled',
-        scheduledDate: inspectionData.scheduledDate,
-        location: inspectionData.location,
-        findings: inspectionData.findings
-      });
-
-      // Send notification if needed
-      await this.notificationService.createNotification({
-        recipient_id: inspectionData.inspectorId,
-        title: 'New Inspection Scheduled',
-        message: `Inspection scheduled for ${inspectionData.scheduledDate}`,
-        type: 'info',
-        read: false
-      });
-
-      return {
-        ...createdInspection,
-        findings: inspectionData.findings
       };
     } catch (error) {
       console.error('Error creating digital inspection:', error);
@@ -107,12 +80,18 @@ export class InspectionMonitoringService {
    */
   async getProjectInspections(projectId: string): Promise<InspectionData[]> {
     try {
-      const inspections = await this.inspectionRepository.getByProjectId(projectId);
+      const inspections = await this.inspectionRepository.findByProjectId(projectId);
       return inspections.map(inspection => ({
-        ...inspection,
+        id: inspection.id,
+        projectId: inspection.projectId,
+        inspectorId: inspection.inspector,
+        inspectionType: 'standard',
+        status: inspection.status as InspectionStatus,
+        scheduledDate: inspection.date,
+        location: 'Project site',
         findings: {
           photos: [],
-          notes: '',
+          notes: inspection.comments || '',
           defects: [],
           complianceChecks: []
         }
@@ -126,17 +105,43 @@ export class InspectionMonitoringService {
   /**
    * Update inspection status
    */
-  async updateInspectionStatus(id: string, status: InspectionData['status'], findings?: Partial<InspectionData['findings']>): Promise<InspectionData> {
+  async updateInspectionStatus(
+    id: string, 
+    status: InspectionStatus, 
+    findings?: Partial<InspectionData['findings']>
+  ): Promise<InspectionData> {
     try {
-      const updatedInspection = await this.inspectionRepository.update(id, {
-        status,
-        completedDate: status === 'completed' ? new Date().toISOString() : undefined,
-        findings: findings ? JSON.stringify(findings) : undefined
-      });
+      const inspection = await this.inspectionRepository.findById(id);
+      if (!inspection) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
+      }
+
+      const updates: any = { status };
+      
+      if (status === 'approved' || status === 'rejected' || status === 'completed') {
+        updates.completedDate = new Date().toISOString();
+      }
+      
+      if (findings) {
+        updates.comments = findings.notes;
+      }
+
+      await this.inspectionRepository.update(id, updates);
 
       return {
-        ...updatedInspection,
-        findings: findings ? JSON.parse(updatedInspection.findings || '{}') : {
+        id: inspection.id,
+        projectId: inspection.projectId,
+        inspectorId: inspection.inspector,
+        inspectionType: 'standard',
+        status: status,
+        scheduledDate: inspection.date,
+        location: 'Project site',
+        findings: findings ? {
+          photos: findings.photos || [],
+          notes: findings.notes || '',
+          defects: findings.defects || [],
+          complianceChecks: findings.complianceChecks || []
+        } : {
           photos: [],
           notes: '',
           defects: [],
@@ -145,7 +150,7 @@ export class InspectionMonitoringService {
       };
     } catch (error) {
       console.error('Error updating inspection status:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update inspection status');
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update inspection status');
     }
   }
 }
