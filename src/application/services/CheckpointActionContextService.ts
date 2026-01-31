@@ -356,10 +356,10 @@ export class CheckpointActionContextService {
             title: milestone.title,
             target_date: milestone.targetDate || '',
             completed_date: milestone.completionDate || undefined,
-            status: milestone.status as MilestoneStatus,
+            status: milestone.status,
             type: 'checkpoint',
-            priority: milestone.priority as MilestonePriority,
-            weight: 0.1,
+            priority: milestone.priority,
+            weight: milestone.weight || 0.1,
             is_critical: milestone.priority === 'critical',
             float_days: 0
           };
@@ -441,10 +441,10 @@ export class CheckpointActionContextService {
             title: milestone.title,
             target_date: milestone.targetDate || '',
             completed_date: milestone.completionDate || undefined,
-            status: milestone.status as MilestoneStatus,
+            status: milestone.status,
             type: 'checkpoint',
-            priority: milestone.priority as MilestonePriority,
-            weight: 0.1,
+            priority: milestone.priority,
+            weight: milestone.weight || 0.1,
             is_critical: milestone.priority === 'critical',
             float_days: 0
           };
@@ -681,69 +681,44 @@ export class CheckpointActionContextService {
     }
   }
 
-  private async fetchMilestoneById(milestoneId: string): Promise<Milestone> {
+  private async fetchMilestoneById(milestoneId: string): Promise<MilestoneData> {
     try {
       if (!milestoneId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Milestone ID is required');
       }
 
-      // Use milestone repository with proper typing
+      // Use milestone repository with proper typing - returns MilestoneDTO
       const milestoneRepository = RepositoryFactory.getMilestoneRepository();
-      const milestone = await milestoneRepository.findById(milestoneId);
+      const milestoneDTO = await milestoneRepository.findById(milestoneId);
       
-      if (milestone) {
-        // Convert Milestone entity to MilestoneDTO for compatibility
+      if (milestoneDTO) {
+        // Convert MilestoneDTO to internal MilestoneData
         return {
-          id: milestone.id,
-          title: milestone.title,
-          description: milestone.description,
-          targetDate: milestone.targetDate,
-          status: milestone.status,
-          completedDate: milestone.completionDate,
-          phaseId: milestone.phaseId || '',
-          progress: milestone.progressPercentage,
-          weight: milestone.configuration.weight,
-          priority: milestone.priority,
-          type: milestone.configuration.type,
-          predecessorIds: milestone.dependencies?.map(d => d.id) || [],
-          successorIds: [],
-          deliverables: milestone.deliverables?.map(d => d.name) || [],
-          actualCompletionDate: milestone.completionDate,
-          notes: milestone.description,
-          assignedTo: null,
+          id: milestoneDTO.id,
+          title: milestoneDTO.title,
+          targetDate: milestoneDTO.target_date || '',
+          completionDate: milestoneDTO.completed_date || undefined,
+          status: milestoneDTO.status,
+          priority: milestoneDTO.priority || 'normal',
+          progressPercentage: 0, // MilestoneDTO doesn't have direct progress
+          weight: milestoneDTO.weight || 0.5,
+          type: milestoneDTO.type || 'checkpoint',
           tags: []
-        } as MilestoneDTO;
+        };
       }
 
-      // Fallback to mock data with proper Milestone entity structure
-      return new Milestone(
-        milestoneId,
-        'project-1',
-        'Milestone Test',
-        'Test milestone for context',
-        '2024-06-30T00:00:00.000Z',
-        null,
-        'pending',
-        'critical',
-        0,
-        [],
-        [],
-        null,
-        null,
-        '2024-01-01T00:00:00.000Z',
-        '2024-01-01T00:00:00.000Z',
-        {
-          weight: 0.3,
-          isCritical: true,
-          type: 'checkpoint',
-          priority: 'critical',
-          tags: ['test'],
-          predecessorIds: [],
-          expectedDeliverables: ['Test deliverable'],
-          approvalRequirements: ['Test approval'],
-          relativeOffsetDays: 90
-        }
-      );
+      // Fallback to default data
+      return {
+        id: milestoneId,
+        title: 'Milestone',
+        targetDate: new Date().toISOString(),
+        status: 'pending',
+        priority: 'normal',
+        progressPercentage: 0,
+        weight: 0.5,
+        type: 'checkpoint',
+        tags: []
+      };
     } catch (error) {
       console.error('CheckpointActionContextService.fetchMilestoneById failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch milestone by ID');

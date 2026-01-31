@@ -189,10 +189,15 @@ export class ArchitectureValidationReportService {
     const criticalIssues = report.summary.alerts.critical.length;
     const highIssues = report.summary.alerts.high.length;
 
+    const entityScoreValues = Object.values(report.summary.entityScores) as number[];
+    const entityScoreKeys = Object.keys(report.summary.entityScores);
+    
     return {
       score,
-      totalRecords: Object.values(report.summary.entityScores).reduce((sum: number, count: number) => sum + count, 0),
-      consistentRecords: Math.round(Object.values(report.summary.entityScores).reduce((sum: number, score: number) => sum + score, 0) / Object.keys(report.summary.entityScores).length),
+      totalRecords: entityScoreValues.reduce((sum, count) => sum + count, 0),
+      consistentRecords: entityScoreKeys.length > 0 
+        ? Math.round(entityScoreValues.reduce((sum, s) => sum + s, 0) / entityScoreKeys.length)
+        : 0,
       inconsistentRecords: report.summary.totalIssues,
       entityScores: report.summary.entityScores,
       criticalIssues,
