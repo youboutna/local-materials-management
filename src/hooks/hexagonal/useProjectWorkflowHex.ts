@@ -8,45 +8,33 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { ProjectWorkflowService } from '@/application/services/ProjectWorkflowService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { ProjectFormDataDTO } from '@/application/services/ProjectService';
-import { StakeholderDTO } from '@/dtos/entities/StakeholderDTO';
-import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
+import { 
+  ProjectWorkflowData,
+  WorkflowStateDTO,
+  WorkflowValidationDTO,
+  WorkflowSaveContextDTO,
+  WorkflowTransitionDTO,
+  WorkflowAuditLogDTO,
+  WorkflowMetricsDTO,
+  WorkflowTemplateDTO,
+  WorkflowSessionDTO,
+  ProjectCreationWorkflowDTO,
+  ProjectBasicInfoDTO,
+  ProjectStakeholdersDTO,
+  ProjectLocationDTO,
+  ProjectPlanningDTO,
+  ProjectRisksDTO,
+  ProjectComplianceDTO,
+ ProjectValidationDTO,
+  StepProgressDTO,
+  ValidationResult,
+  SaveResult
+} from '@/dtos/transforms/ProjectWorkflowDTOs';
+import { StakeholderDTO } from '@/dtos/transforms/ProjectCreationWorkflowDTO';
+import { MaterialDTO as MaterialEntityDTO } from '@/dtos/entities/MaterialDTO';
 
-// Types spécifiques pour le workflow
-export interface ProjectWorkflowRelatedData {
-  stakeholders?: StakeholderDTO[];
-  phases?: Array<{
-    id: string;
-    phase_name: string;
-    start_date?: string;
-    end_date?: string;
-    status: string;
-  }>;
-  risks?: Array<{
-    id: string;
-    title: string;
-    description: string;
-    severity: 'low' | 'medium' | 'high';
-    probability: 'low' | 'medium' | 'high';
-  }>;
-  materials?: MaterialDTO[];
-}
-
-export interface ProjectWorkflowData {
-  projectId?: string;
-  currentStep: number;
-  isDraft: boolean;
-  isComplete: boolean;
-  projectData: ProjectFormDataDTO;
-  relatedData: ProjectWorkflowRelatedData;
-  metadata: {
-    lastSavedAt: string;
-    totalSteps: number;
-    completedSteps: number;
-    progressPercentage: number;
-    stepName?: string;
-  };
-}
+// ✅ Rule #4: Use centralized DTOs, no custom interfaces in hooks
+// Using StepRelatedDataDTO from ProjectWorkflowDTOs for consistency
 
 export interface WorkflowSaveResult {
   success: boolean;

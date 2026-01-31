@@ -1,0 +1,397 @@
+/**
+ * Payment Transformer - Hexagonal Architecture
+ * Transforms between Payment entities and DTOs
+ * Following clean architecture principles with proper separation of concerns
+ * Includes functionality from PaymentDomainTransformer
+ */
+
+import { Payment, PaymentStatus } from '@/domain/entities/Payment';
+import { PaymentDTO, CreatePaymentDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
+import { EntityToDTOMapper, ValidationResult } from '@/dtos/transforms/shared';
+
+export interface PaymentEfficiencyResult {
+  paymentRate: number;
+  onTimePaymentRate: string;
+  daysOverdue: number;
+  averagePaymentDelay: number;
+}
+
+export interface PaymentRiskResult {
+  riskLevel: 'low' | 'medium' | 'high';
+  riskFactors: string[];
+  recommendations: string[];
+  financialHealth: string;
+}
+
+export interface CashFlowMetricsResult {
+  totalPaid: number;
+  totalDue: number;
+  cashFlowVariance: number;
+  averagePaymentDelay: number;
+  paymentEfficiency: PaymentEfficiencyResult;
+}
+
+export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO> {
+  /**
+   * Transform Payment entity to PaymentDTO (Domain Entity → DTO)
+   * Converts domain entity to data transfer object for UI layer
+   * Following hexagonal architecture: Domain → Application → Presentation
+   */
+  static toDTO(entity: Payment): PaymentDTO {
+    return {
+      id: entity.id,
+      amount: entity.amount,
+      paymentDate: entity.paymentDate,
+      paymentMethod: entity.paymentMethod,
+      status: entity.status,
+      progressAtPayment: entity.progressAtPayment,
+      transactionId: entity.transactionId,
+      contractorName: entity.contractorName,
+      contractorContact: entity.contractorContact,
+      bankName: entity.bankName,
+      accountNumber: entity.accountNumber,
+      checkNumber: entity.checkNumber,
+      mobileNumber: entity.mobileNumber,
+      receiverName: entity.receiverName,
+      mobileOperator: entity.mobileOperator,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt
+    };
+  }
+
+  /**
+   * Transform PaymentDTO to Payment entity (DTO → Domain Entity)
+   * Converts data transfer object to domain entity
+   * Following hexagonal architecture: Presentation → Application → Domain
+   */
+  static toEntity(dto: PaymentDTO): Payment {
+    return {
+      id: dto.id,
+      amount: dto.amount,
+      paymentDate: dto.paymentDate,
+      paymentMethod: dto.paymentMethod,
+      status: dto.status,
+      progressAtPayment: dto.progressAtPayment,
+      transactionId: dto.transactionId,
+      contractorName: dto.contractorName,
+      contractorContact: dto.contractorContact,
+      bankName: dto.bankName,
+      accountNumber: dto.accountNumber,
+      checkNumber: dto.checkNumber,
+      mobileNumber: dto.mobileNumber,
+      receiverName: dto.receiverName,
+      mobileOperator: dto.mobileOperator,
+      createdAt: dto.createdAt,
+      updatedAt: dto.updatedAt
+    };
+  }
+
+  /**
+   * Transform CreatePaymentDTO to Payment entity
+   */
+  static fromCreateDTOToEntity(dto: CreatePaymentDTO): Payment {
+    return {
+      id: dto.id || crypto.randomUUID(),
+      amount: dto.amount,
+      paymentDate: dto.paymentDate,
+      paymentMethod: dto.paymentMethod,
+      status: dto.status || 'pending',
+      progressAtPayment: dto.progressAtPayment || 0,
+      transactionId: dto.transactionId || '',
+      contractorName: dto.contractorName,
+      contractorContact: dto.contractorContact,
+      bankName: dto.bankName,
+      accountNumber: dto.accountNumber,
+      checkNumber: dto.checkNumber,
+      mobileNumber: dto.mobileNumber,
+      receiverName: dto.receiverName,
+      mobileOperator: dto.mobileOperator,
+      createdAt: dto.createdAt || new Date().toISOString(),
+      updatedAt: dto.updatedAt || new Date().toISOString()
+    };
+  }
+
+  /**
+   * Transform UpdatePaymentDTO to partial Payment entity
+   */
+  static fromUpdateDTOToEntity(dto: UpdatePaymentDTO): Partial<Payment> {
+    return {
+      amount: dto.amount,
+      paymentDate: dto.paymentDate,
+      paymentMethod: dto.paymentMethod,
+      status: dto.status,
+      progressAtPayment: dto.progressAtPayment,
+      transactionId: dto.transactionId,
+      contractorName: dto.contractorName,
+      contractorContact: dto.contractorContact,
+      bankName: dto.bankName,
+      accountNumber: dto.accountNumber,
+      checkNumber: dto.checkNumber,
+      mobileNumber: dto.mobileNumber,
+      receiverName: dto.receiverName,
+      mobileOperator: dto.mobileOperator,
+      updatedAt: new Date().toISOString()
+    };
+  }
+
+  /**
+   * Validate payment data for business rules
+   */
+  static validatePaymentData(payment: Partial<Payment>): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+    
+    if (!payment.amount || payment.amount <= 0) {
+      errors.push('Payment amount must be greater than 0');
+    }
+    
+    if (!payment.paymentDate) {
+      errors.push('Payment date is required');
+    } else if (new Date(payment.paymentDate) > new Date()) {
+      errors.push('Payment date cannot be in the future');
+    }
+    
+    if (!payment.paymentMethod || payment.paymentMethod.trim() === '') {
+      errors.push('Payment method is required');
+    }
+    
+    if (!payment.contractorName || payment.contractorName.trim() === '') {
+      errors.push('Contractor name is required');
+    }
+    
+    if (payment.progressAtPayment !== undefined && (payment.progressAtPayment < 0 || payment.progressAtPayment > 100)) {
+      errors.push('Progress at payment must be between 0 and 100');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
+
+  /**
+   * Calculate payment efficiency metrics
+   */
+  static calculatePaymentEfficiency(payments: Payment[]): PaymentEfficiencyResult {
+    const totalPayments = payments.length;
+    const onTimePayments = payments.filter(p => {
+      const paymentDate = new Date(p.paymentDate);
+      const dueDate = new Date(p.paymentDate);
+      dueDate.setDate(dueDate.getDate() + 30); // Assume 30-day payment term
+      return paymentDate <= dueDate;
+    }).length;
+    
+    const paymentRate = totalPayments > 0 ? (onTimePayments / totalPayments) * 100 : 0;
+    const onTimePaymentRate = paymentRate >= 90 ? 'Excellent' : paymentRate >= 70 ? 'Good' : 'Poor';
+    
+    const daysOverdue = payments.reduce((total, payment) => {
+      const paymentDate = new Date(payment.paymentDate);
+      const dueDate = new Date(payment.paymentDate);
+      dueDate.setDate(dueDate.getDate() + 30);
+      return paymentDate > dueDate ? total + Math.floor((paymentDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)) : total;
+    }, 0);
+    
+    const averagePaymentDelay = totalPayments > 0 ? daysOverdue / totalPayments : 0;
+    
+    return {
+      paymentRate,
+      onTimePaymentRate,
+      daysOverdue,
+      averagePaymentDelay
+    };
+  }
+
+  /**
+   * Calculate payment risk assessment
+   */
+  static calculatePaymentRisk(payment: Payment): PaymentRiskResult {
+    const riskFactors: string[] = [];
+    const recommendations: string[] = [];
+    
+    // Check payment status
+    if (payment.status === 'overdue') {
+      riskFactors.push('Payment is overdue');
+      recommendations.push('Follow up immediately with contractor');
+    }
+    
+    if (payment.status === 'blocked') {
+      riskFactors.push('Payment is blocked');
+      recommendations.push('Resolve blocking issues before processing');
+    }
+    
+    // Check payment method risk
+    if (payment.paymentMethod === 'cash') {
+      riskFactors.push('Cash payment - higher risk');
+      recommendations.push('Consider electronic payment methods');
+    }
+    
+    // Check amount risk
+    if (payment.amount > 100000) {
+      riskFactors.push('High payment amount');
+      recommendations.push('Require additional approval for large payments');
+    }
+    
+    // Determine risk level
+    let riskLevel: 'low' | 'medium' | 'high' = 'low';
+    if (riskFactors.length >= 3) {
+      riskLevel = 'high';
+    } else if (riskFactors.length >= 1) {
+      riskLevel = 'medium';
+    }
+    
+    // Financial health assessment
+    let financialHealth = 'Good';
+    if (riskLevel === 'high') {
+      financialHealth = 'Poor';
+    } else if (riskLevel === 'medium') {
+      financialHealth = 'Fair';
+    }
+    
+    return {
+      riskLevel,
+      riskFactors,
+      recommendations,
+      financialHealth
+    };
+  }
+
+  /**
+   * Calculate cash flow metrics
+   */
+  static calculateCashFlowMetrics(payments: Payment[]): CashFlowMetricsResult {
+    const totalPaid = payments
+      .filter(p => p.status === 'completed')
+      .reduce((sum, p) => sum + p.amount, 0);
+    
+    const totalDue = payments
+      .filter(p => p.status === 'pending' || p.status === 'overdue')
+      .reduce((sum, p) => sum + p.amount, 0);
+    
+    const cashFlowVariance = totalDue > 0 ? ((totalPaid - totalDue) / totalDue) * 100 : 0;
+    
+    const efficiency = PaymentTransformer.calculatePaymentEfficiency(payments);
+    
+    return {
+      totalPaid,
+      totalDue,
+      cashFlowVariance,
+      averagePaymentDelay: efficiency.averagePaymentDelay,
+      paymentEfficiency: efficiency
+    };
+  }
+
+  /**
+   * Check if payment is overdue
+   */
+  static isOverdue(payment: Payment): boolean {
+    const paymentDate = new Date(payment.paymentDate);
+    const dueDate = new Date(payment.paymentDate);
+    dueDate.setDate(dueDate.getDate() + 30); // Assume 30-day payment term
+    return paymentDate > dueDate && payment.status !== 'completed';
+  }
+
+  /**
+   * Get payment priority based on amount and status
+   */
+  static getPriority(payment: Payment): 'high' | 'medium' | 'low' {
+    if (payment.status === 'overdue' || payment.status === 'blocked') {
+      return 'high';
+    }
+    
+    if (payment.amount > 50000) {
+      return 'high';
+    }
+    
+    if (payment.amount > 10000) {
+      return 'medium';
+    }
+    
+    return 'low';
+  }
+
+  // EntityToDTOMapper interface implementation
+  toDTO(entity: Payment): PaymentDTO {
+    return PaymentTransformer.toDTO(entity);
+  }
+
+  fromDTO(dto: PaymentDTO): Payment {
+    return PaymentTransformer.toEntity(dto);
+  }
+
+  fromEntityToDTO(entity: Payment): PaymentDTO {
+    return PaymentTransformer.toDTO(entity);
+  }
+
+  fromDtosToAdapter(dtos: PaymentDTO[]): PaymentDTO[] {
+    return dtos;
+  }
+
+  toResponseDto(entity: Payment): PaymentDTO {
+    return PaymentTransformer.toDTO(entity);
+  }
+
+  toRequestDto(dto: PaymentDTO): PaymentDTO {
+    return dto;
+  }
+
+  toUpdateDto(dto: PaymentDTO): Partial<PaymentDTO> {
+    return {
+      amount: dto.amount,
+      paymentDate: dto.paymentDate,
+      paymentMethod: dto.paymentMethod,
+      status: dto.status,
+      progressAtPayment: dto.progressAtPayment,
+      transactionId: dto.transactionId,
+      contractorName: dto.contractorName,
+      contractorContact: dto.contractorContact,
+      bankName: dto.bankName,
+      accountNumber: dto.accountNumber,
+      checkNumber: dto.checkNumber,
+      mobileNumber: dto.mobileNumber,
+      receiverName: dto.receiverName,
+      mobileOperator: dto.mobileOperator
+    };
+  }
+
+  validate(dto: PaymentDTO): ValidationResult {
+    const payment = PaymentTransformer.toEntity(dto);
+    const validation = PaymentTransformer.validatePaymentData(payment);
+    return {
+      isValid: validation.isValid,
+      errors: validation.errors
+    };
+  }
+
+  toDTOs(entities: Payment[]): PaymentDTO[] {
+    return entities.map(entity => PaymentTransformer.toDTO(entity));
+  }
+
+  toEntities(dtos: PaymentDTO[]): Payment[] {
+    return dtos.map(dto => PaymentTransformer.toEntity(dto));
+  }
+
+  toEntitiesFromDatabaseRows(rows: Record<string, unknown>[]): Payment[] {
+    return rows.map(row => PaymentTransformer.toEntityFromDatabaseRow(row));
+  }
+
+  static toEntityFromDatabaseRow(row: Record<string, unknown>): Payment {
+    return {
+      id: row.id as string,
+      amount: Number(row.amount) || 0,
+      paymentDate: row.payment_date as string,
+      paymentMethod: row.payment_method as string,
+      status: row.status as PaymentStatus,
+      progressAtPayment: Number(row.progress_at_payment) || 0,
+      transactionId: row.transaction_id as string || '',
+      contractorName: row.contractor_name as string,
+      contractorContact: row.contractor_contact as string,
+      bankName: row.bank_name as string || null,
+      accountNumber: row.account_number as string || null,
+      checkNumber: row.check_number as string || null,
+      mobileNumber: row.mobile_number as string || null,
+      receiverName: row.receiver_name as string || null,
+      mobileOperator: row.mobile_operator as string || null,
+      createdAt: row.created_at as string,
+      updatedAt: row.updated_at as string
+    };
+  }
+}

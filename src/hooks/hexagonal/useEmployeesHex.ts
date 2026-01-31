@@ -4,11 +4,12 @@
  * Following hexagonal architecture principles with UI-specific enhancements
  */
 
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RepositoryFactory } from "@/repositories/RepositoryFactory";
 import { EmployeeService } from "@/application/services/EmployeeService";
-import { EmployeeDomainTransformer, CreateEmployeeRequestDto, UpdateEmployeeRequestDto } from "@/dtos/transforms";
+import { EmployeeTransformer, CreateEmployeeRequestDto, UpdateEmployeeRequestDto } from '@/dtos/transforms';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -49,7 +50,7 @@ export function useEmployeesHex(): UseEmployeesHexResult {
   // TODO: Implement EmployeeRepository in RepositoryFactory
   // For now, using a mock implementation
   const employeeRepository = {} as any; // RepositoryFactory.getEmployeeRepository();
-  const employeeService = new EmployeeService(employeeRepository, EmployeeDomainTransformer);
+  const employeeService = new EmployeeService(employeeRepository, EmployeeTransformer);
 
   // Query for employees list
   const {

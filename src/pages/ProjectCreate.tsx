@@ -5,6 +5,7 @@ import { useProjectsHex } from "@/hooks/hexagonal";
 import { toast } from "@/hooks/use-toast";
 import { PhaseService } from '@/application/services/PhaseService';
 import { ProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
@@ -132,7 +133,12 @@ const ProjectCreate = () => {
               ...(data.principals || {}),
             };
 
-            await ProjectStakeholderService.createProjectStakeholders(
+            // Create service instances
+            const stakeholderService = new ProjectStakeholderService(
+              RepositoryFactory.getStakeholderRepository()
+            );
+            
+            await stakeholderService.createProjectStakeholders(
               projectResult.id,
               allStakeholders,
               allDelegation
@@ -156,7 +162,28 @@ const ProjectCreate = () => {
         // Save construction phases if any are defined
         if (data.phases && data.phases.length > 0) {
           try {
-            await PhaseService.saveProjectPhases(projectResult.id, data.phases);
+            // Create service instance
+            const phaseService = new PhaseService(
+              RepositoryFactory.getPhaseRepository()
+            );
+            
+            // Create phases one by one
+            for (const phase of data.phases) {
+              await phaseService.createPhase({
+                project_id: projectResult.id,
+                phase_name: phase.name || phase.phase_name,
+                description: phase.description || '',
+                start_date: phase.start_date || new Date().toISOString(),
+                end_date: phase.end_date || new Date().toISOString(),
+                estimated_duration_days: phase.estimated_duration || 30,
+                estimated_cost: phase.estimated_cost || 0,
+                status: phase.status || 'pending',
+                progress: phase.progress || 0,
+                construction_phase: phase.construction_phase || phase.name,
+                notes: phase.custom_phase_data ? JSON.stringify(phase.custom_phase_data) : null
+              });
+            }
+            
             toast({
               title: "Phases sauvegardées",
               description: `${data.phases.length} phase(s) de construction sauvegardée(s).`,
@@ -165,12 +192,8 @@ const ProjectCreate = () => {
             console.error("Error saving phases:", phaseError);
             toast({
               title: "Avertissement",
-              description: `Projet créé mais erreur lors de la sauvegarde des phases: ${
-                phaseError instanceof Error
-                  ? phaseError.message
-                  : "Erreur inconnue"
-              }`,
-              variant: "destructive",
+              description:
+                "Les phases n'ont pas pu être sauvegardées, mais le projet a été créé.",
             });
           }
         }

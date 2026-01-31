@@ -6,8 +6,8 @@
 
 import { Payment, PaymentStatus } from '@/domain/entities/Payment';
 import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
-import { PaymentDTO, CreatePaymentRequestDto, UpdatePaymentRequestDto } from '@/dtos/transforms/PaymentDomainTransformer';
-import { PaymentDomainTransformer } from '@/dtos/transforms/PaymentDomainTransformer';
+import { PaymentTransformer } from '@/dtos/transforms/PaymentTransformer';
+import { PaymentDTO, CreatePaymentDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 // Types pour les méthodes étendues
@@ -55,7 +55,7 @@ export class PaymentService {
       const phasePayments = allPayments.filter(payment => payment.phase?.id === phaseId);
       
       return {
-        data: phasePayments.map(payment => PaymentDomainTransformer.toResponseDto(payment))
+        data: phasePayments.map(payment => PaymentTransformer.toDTO(payment))
       };
     } catch (error) {
       console.error('PaymentService.getPaymentsByPhase failed:', error);
@@ -69,7 +69,7 @@ export class PaymentService {
   async getAllPayments(): Promise<PaymentDTO[]> {
     try {
       const payments = await this.paymentRepository.findAll();
-      return payments.map(payment => PaymentDomainTransformer.toResponseDto(payment));
+      return payments.map(payment => PaymentTransformer.toDTO(payment));
     } catch (error) {
       console.error('[PaymentService] Error fetching all payments:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch payments');
@@ -82,7 +82,7 @@ export class PaymentService {
   async getPaymentById(id: string): Promise<PaymentDTO | null> {
     try {
       const payment = await this.paymentRepository.findById(id);
-      return payment ? PaymentDomainTransformer.toResponseDto(payment) : null;
+      return payment ? PaymentTransformer.toDTO(payment) : null;
     } catch (error) {
       console.error('[PaymentService] Error fetching payment:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch payment');
@@ -92,21 +92,20 @@ export class PaymentService {
   /**
    * Create a new payment
    */
-  async createPayment(data: CreatePaymentRequestDto): Promise<PaymentDTO> {
+  async createPayment(data: CreatePaymentDTO): Promise<PaymentDTO> {
     try {
       // Validate required fields
       if (!data.projectId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required for payment creation');
       }
       
-      // Transform DTO to Entity
-      const paymentEntity = PaymentDomainTransformer.fromCreateDtoToEntity(data);
+      const paymentEntity = PaymentTransformer.toEntity(data);
       
       // Save entity
       await this.paymentRepository.save(paymentEntity);
       
       // Transform back to DTO
-      return PaymentDomainTransformer.toResponseDto(paymentEntity);
+      return PaymentTransformer.toDTO(paymentEntity);
     } catch (error) {
       console.error('[PaymentService] Error creating payment:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create payment');
@@ -116,7 +115,7 @@ export class PaymentService {
   /**
    * Update an existing payment
    */
-  async updatePayment(id: string, data: UpdatePaymentRequestDto): Promise<void> {
+  async updatePayment(id: string, data: UpdatePaymentDTO): Promise<void> {
     try {
       // Get existing payment
       const existingPayment = await this.paymentRepository.findById(id);
@@ -125,7 +124,7 @@ export class PaymentService {
       }
 
       // Transform update data to partial entity
-      const updateData = PaymentDomainTransformer.fromUpdateDtoToEntity(data);
+      const updateData = PaymentTransformer.toEntity(data as unknown as PaymentDTO) as Partial<Payment>;
       
       // Update entity
       await this.paymentRepository.update(id, updateData);
@@ -158,7 +157,7 @@ export class PaymentService {
   async getPaymentsByProject(projectId: string): Promise<PaymentDTO[]> {
     try {
       const payments = await this.paymentRepository.findByProjectId(projectId);
-      return payments.map(payment => PaymentDomainTransformer.toResponseDto(payment));
+      return payments.map(payment => PaymentTransformer.toDTO(payment));
     } catch (error) {
       console.error('[PaymentService] Error fetching project payments:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch project payments');
@@ -171,7 +170,7 @@ export class PaymentService {
   async getPaymentsByStatus(status: string): Promise<PaymentDTO[]> {
     try {
       const payments = await this.paymentRepository.findByStatus(status as PaymentStatus);
-      return payments.map(payment => PaymentDomainTransformer.toResponseDto(payment));
+      return payments.map(payment => PaymentTransformer.toDTO(payment));
     } catch (error) {
       console.error('[PaymentService] Error fetching payments by status:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch payments by status');
@@ -225,7 +224,7 @@ export class PaymentService {
       };
 
       // Mettre à jour le statut du paiement
-      await this.updatePayment(request.payment_id, {} as UpdatePaymentRequestDto);
+      await this.updatePayment(request.payment_id, {} as UpdatePaymentDTO);
       // TODO: Ajouter le statut 'blocked' quand UpdatePaymentRequestDto le supportera
 
       console.log(`Payment ${request.payment_id} blocked: ${request.block_reason}`);
@@ -273,10 +272,10 @@ export class PaymentService {
    * WORKFLOW SUPPLIER PAYMENTS (remplace SupplierPaymentService)
    * Créer un paiement fournisseur
    */
-  async createSupplierPayment(request: CreatePaymentRequestDto, supplierId: string): Promise<PaymentDTO> {
+  async createSupplierPayment(request: CreatePaymentDTO, supplierId: string): Promise<PaymentDTO> {
     try {
       // Ajouter le supplierId aux données du paiement
-      const supplierPaymentRequest: CreatePaymentRequestDto = {
+      const supplierPaymentRequest: CreatePaymentDTO = {
         ...request,
         // TODO: Ajouter supplierId quand le DTO le supportera
       };
@@ -306,7 +305,7 @@ export class PaymentService {
       });
 
       // 2. Approuver le paiement
-      await this.updatePayment(paymentId, {} as UpdatePaymentRequestDto);
+      await this.updatePayment(paymentId, {} as UpdatePaymentDTO);
       // TODO: Ajouter le statut 'approved' quand UpdatePaymentRequestDto le supportera
       
       // Récupérer le paiement mis à jour

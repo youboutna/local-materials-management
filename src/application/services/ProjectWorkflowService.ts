@@ -1,7 +1,7 @@
 /**
  * Service: ProjectWorkflowService
  * Gère les workflows de création et modification de projets avec sauvegarde partielle par étapes
- * Architecture hexagonale pour les workflows multi-étapes
+ * Architecture hexagonale pour les workflows multi-étapes avec DTOs spécialisés
  */
 
 import { Project } from '@/domain/entities/Project';
@@ -11,7 +11,30 @@ import { ProjectDTO, CreateProjectRequestDTO, UpdateProjectRequestDTO } from '@/
 import { MaterialService } from './MaterialService';
 import { PhaseService } from './PhaseService';
 import { StakeholderService } from './StakeholderService';
-
+import { 
+  ProjectWorkflowData,
+  WorkflowStateDTO,
+  WorkflowValidationDTO,
+  WorkflowSaveContextDTO,
+  WorkflowTransitionDTO,
+  WorkflowAuditLogDTO,
+  WorkflowMetricsDTO,
+  WorkflowTemplateDTO,
+  WorkflowSessionDTO,
+  ProjectCreationWorkflowDTO,
+  ProjectBasicInfoDTO,
+  ProjectStakeholdersDTO,
+  ProjectLocationDTO,
+  ProjectPlanningDTO,
+  ProjectRisksDTO,
+  ProjectComplianceDTO,
+  ProjectValidationDTO,
+  StepProgressDTO,
+  ValidationResult,
+  SaveResult
+} from '@/dtos/transforms/ProjectWorkflowDTOs';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export interface ProjectWorkflowStep {
   stepNumber: number;
@@ -19,10 +42,11 @@ export interface ProjectWorkflowStep {
   description: string;
   isRequired: boolean;
   validationRules: string[];
-  relatedEntities: ('stakeholders' | 'phases' | 'risks' | 'materials')[];
+  relatedEntities: ('stakeholders' | 'phases' | 'risks' | 'materials' | 'documents' | 'inspections')[];
 }
 
-export interface ProjectWorkflowData {
+// Legacy interface for backward compatibility
+export interface LegacyProjectWorkflowData {
   projectId?: string;
   currentStep: number;
   isDraft: boolean;
@@ -56,12 +80,302 @@ export interface WorkflowSaveResult {
 
 export class ProjectWorkflowService {
   constructor(
-    private projectRepository: IProjectRepository,
-    private stakeholderService: StakeholderService,
-    private phaseService: PhaseService,
-    private riskService: RiskService,
-    private materialService: MaterialService
+    private projectRepository: IProjectRepository = RepositoryFactory.getProjectRepository(),
+    private phaseRepository: IPhaseRepository = RepositoryFactory.getPhaseRepository(),
+    private riskRepository: IRiskRepository = RepositoryFactory.getRiskRepository(),
+    private stakeholderRepository: IProjectStakeholderRepository = RepositoryFactory.getProjectStakeholderRepository()
   ) {}
+
+  // 🔄 Specialized Workflow Methods for Complex Multi-Step Processes
+  // Following hexagonal architecture with proper object injection and flow
+
+  /**
+   * Initialize a new workflow session with specialized DTOs
+   */
+  async initializeWorkflowSession(
+    templateId: string,
+    userId?: string
+  ): Promise<WorkflowSessionDTO> {
+    const template = await this.getWorkflowTemplate(templateId);
+    const sessionId = this.generateSessionId();
+    const startTime = new Date().toISOString();
+
+    const workflowState: WorkflowStateDTO = {
+      currentStep: 1,
+      totalSteps: template.steps.length,
+      isDraft: true,
+      isComplete: false,
+      canProceed: false,
+      canGoBack: false,
+      progressPercentage: 0,
+      lastSavedAt: startTime,
+      estimatedCompletionTime: this.calculateEstimatedCompletionTime(template)
+    };
+
+    const session: WorkflowSessionDTO = {
+      sessionId,
+      workflowId: this.generateWorkflowId(),
+      templateId,
+      userId,
+      startTime,
+      lastActivityTime: startTime,
+      currentState: workflowState,
+      completedSteps: [],
+      skippedSteps: [],
+      auditLog: [],
+      metrics: this.initializeMetrics(),
+      isActive: true,
+      expiresAt: this.calculateSessionExpiry(startTime)
+    };
+
+    return session;
+  }
+
+  /**
+   * Validate current step with specialized validation DTO
+   */
+  async validateWorkflowStep(
+    sessionId: string,
+    stepNumber: number,
+    stepData: Record<string, unknown>
+  ): Promise<WorkflowValidationDTO> {
+    const session = await this.getWorkflowSession(sessionId);
+    const template = await this.getWorkflowTemplate(session.templateId);
+    const step = template.steps.find(s => s.stepNumber === stepNumber);
+    
+    if (!step) {
+      throw new AppError(
+        `Step ${stepNumber} not found in template`,
+        ErrorCode.NOT_FOUND
+      );
+    }
+
+    const validation: WorkflowValidationDTO = {
+      stepNumber,
+      isValid: true,
+      errors: [],
+      warnings: [],
+      missingFields: [],
+      validationTimestamp: new Date().toISOString()
+    };
+
+    // Validate required fields
+    for (const rule of step.validationRules) {
+      const ruleResult = await this.applyValidationRule(rule, stepData);
+      if (!ruleResult.isValid) {
+        validation.isValid = false;
+        validation.errors.push(...ruleResult.errors);
+        validation.missingFields.push(...ruleResult.missingFields);
+      }
+      validation.warnings.push(...ruleResult.warnings);
+    }
+
+    // Log validation
+    await this.logWorkflowAction(sessionId, {
+      action: 'step_validated',
+      stepNumber,
+      details: {
+        isValid: validation.isValid,
+        errorsCount: validation.errors.length,
+        warningsCount: validation.warnings.length
+      }
+    });
+
+    return validation;
+  }
+
+  /**
+   * Save workflow step with specialized context DTO
+   */
+  async saveWorkflowStep(
+    sessionId: string,
+    stepNumber: number,
+    stepData: Record<string, unknown>,
+    saveContext: WorkflowSaveContextDTO
+  ): Promise<SaveResult> {
+    try {
+      const session = await this.getWorkflowSession(sessionId);
+      const validation = await this.validateWorkflowStep(sessionId, stepNumber, stepData);
+      
+      if (!validation.isValid && saveContext.saveType !== 'save_all') {
+        return {
+          success: false,
+          projectId: null,
+          error: `Validation failed for step ${stepNumber}: ${validation.errors.join(', ')}`,
+          warnings: validation.warnings
+        };
+      }
+
+      // Save step data based on step type
+      let projectId: string | null = null;
+      
+      if (stepNumber === 1) {
+        projectId = await this.saveProjectBasicInfo(stepData as ProjectBasicInfoDTO);
+      } else if (stepNumber === 2) {
+        await this.saveProjectStakeholders(projectId!, stepData as ProjectStakeholdersDTO);
+      } else if (stepNumber === 3) {
+        await this.saveProjectLocation(projectId!, stepData as ProjectLocationDTO);
+      } else if (stepNumber === 4) {
+        await this.saveProjectPlanning(projectId!, stepData as ProjectPlanningDTO);
+      } else if (stepNumber === 5) {
+        await this.saveProjectRisks(projectId!, stepData as ProjectRisksDTO);
+      } else if (stepNumber === 6) {
+        await this.saveProjectCompliance(projectId!, stepData as ProjectComplianceDTO);
+      } else if (stepNumber === 7) {
+        await this.saveProjectValidation(projectId!, stepData as ProjectValidationDTO);
+      }
+
+      // Update session state
+      await this.updateSessionProgress(sessionId, stepNumber, validation.isValid);
+      
+      // Log save action
+      await this.logWorkflowAction(sessionId, {
+        action: 'step_saved',
+        stepNumber,
+        details: {
+          saveType: saveContext.saveType,
+          isValid: validation.isValid,
+          projectId
+        }
+      });
+
+      return {
+        success: true,
+        projectId,
+        warnings: validation.warnings
+      };
+
+    } catch (error) {
+      await this.logWorkflowAction(sessionId, {
+        action: 'error_occurred',
+        stepNumber,
+        details: { error: error instanceof Error ? error.message : 'Unknown error' }
+      });
+
+      return {
+        success: false,
+        projectId: null,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      };
+    }
+  }
+
+  /**
+   * Execute workflow transition with specialized DTO
+   */
+  async executeWorkflowTransition(
+    sessionId: string,
+    fromStep: number,
+    toStep: number,
+    transitionType: 'forward' | 'backward' | 'jump',
+    reason?: string
+  ): Promise<WorkflowTransitionDTO> {
+    const session = await this.getWorkflowSession(sessionId);
+    const transition: WorkflowTransitionDTO = {
+      fromStep,
+      toStep,
+      transitionType,
+      reason,
+      timestamp: new Date().toISOString(),
+      userId: session.userId
+    };
+
+    // Validate transition
+    await this.validateTransition(session, transition);
+    
+    // Update session state
+    session.currentState.currentStep = toStep;
+    session.currentState.canProceed = this.canProceedToStep(session, toStep);
+    session.currentState.canGoBack = toStep > 1;
+    session.currentState.progressPercentage = this.calculateProgress(session, toStep);
+    session.lastActivityTime = new Date().toISOString();
+
+    // Log transition
+    await this.logWorkflowAction(sessionId, {
+      action: 'step_completed',
+      stepNumber: fromStep,
+      details: { transition }
+    });
+
+    return transition;
+  }
+
+  /**
+   * Get workflow metrics with specialized DTO
+   */
+  async getWorkflowMetrics(sessionId: string): Promise<WorkflowMetricsDTO> {
+    const session = await this.getWorkflowSession(sessionId);
+    const currentTime = new Date().getTime();
+    const startTime = new Date(session.startTime).getTime();
+    const totalElapsedTime = Math.floor((currentTime - startTime) / (1000 * 60)); // in minutes
+
+    const metrics: WorkflowMetricsDTO = {
+      totalSteps: session.currentState.totalSteps,
+      completedSteps: session.completedSteps.length,
+      averageTimePerStep: totalElapsedTime / Math.max(session.currentState.currentStep - 1, 1),
+      totalElapsedTime,
+      validationErrors: session.auditLog.filter(log => log.action === 'error_occurred').length,
+      saveOperations: session.auditLog.filter(log => log.action === 'data_saved').length,
+      userInteractions: session.auditLog.length,
+      completionRate: (session.completedSteps.length / session.currentState.totalSteps) * 100,
+      abandonmentRate: session.isActive ? 0 : this.calculateAbandonmentRate(session)
+    };
+
+    return metrics;
+  }
+
+  /**
+   * Complete workflow with final validation
+   */
+  async completeWorkflow(
+    sessionId: string,
+    finalData: Record<string, unknown>
+  ): Promise<SaveResult> {
+    const session = await this.getWorkflowSession(sessionId);
+    
+    // Final validation
+    const finalValidation = await this.validateWorkflowSession(session);
+    if (!finalValidation.isValid) {
+      return {
+        success: false,
+        projectId: null,
+        error: 'Workflow validation failed',
+        warnings: finalValidation.warnings
+      };
+    }
+
+    // Save final data
+    const saveResult = await this.saveWorkflowStep(sessionId, 7, finalData, {
+      saveType: 'complete_workflow',
+      currentStep: 7,
+      totalSteps: 7,
+      isDraft: false,
+      isComplete: true,
+      lastSavedAt: new Date().toISOString(),
+      userId: session.userId,
+      sessionId
+    });
+
+    if (saveResult.success) {
+      // Mark session as completed
+      session.currentState.isComplete = true;
+      session.currentState.isDraft = false;
+      session.isActive = false;
+      session.completedAt = new Date().toISOString();
+      
+      // Log completion
+      await this.logWorkflowAction(sessionId, {
+        action: 'workflow_completed',
+        details: {
+          projectId: saveResult.projectId,
+          totalSteps: session.currentState.totalSteps,
+          totalTime: session.metrics.totalElapsedTime
+        }
+      });
+    }
+
+    return saveResult;
+  }
 
   /**
    * Définit les étapes du workflow de projet

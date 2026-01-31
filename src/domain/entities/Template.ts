@@ -6,11 +6,13 @@
 
 import { UserRole } from './UserRole';
 
-export interface MultiLanguageLabel {
+import { MultiLanguageLabel } from '@/config/referentials';
+
+// ✅ Rule #4: Domain entities can have complex objects and collections
+interface ProjectPhaseData {
   code: string;
-  fr: string;
-  ar: string;
-  en: string;
+  name?: string;
+  status?: string;
 }
 
 export interface TemplateMetadata {
@@ -48,12 +50,13 @@ export class ProjectTemplate {
     );
   }
 
-  validateProjectStructure(projectData: any): ValidationResult {
+  validateProjectStructure(projectData: Record<string, unknown>): ValidationResult {
     const validation: ValidationResult = { isValid: true, errors: [], warnings: [] };
     
     // Validate required phases
     this.phases.forEach(phase => {
-      if (phase.isRequired && !projectData.phases?.find((p: any) => p.code === phase.code)) {
+      const phases = projectData.phases as ProjectPhaseData[] || [];
+      if (phase.isRequired && !phases.some((p: ProjectPhaseData) => p.code === phase.code)) {
         validation.isValid = false;
         validation.errors.push(`Required phase ${phase.code} is missing`);
       }
@@ -111,8 +114,8 @@ export class TemplatePhase {
     public readonly description?: MultiLanguageLabel,
     public readonly steps: TemplateStep[],
     public readonly order: number,
-    public readonly isRequired: boolean = true,
-    public readonly dependencies?: string[] // Phase dependencies
+    public readonly dependencies?: string[], // Phase dependencies
+    public readonly isRequired: boolean = true
   ) {}
 
   getEstimatedDuration(): number {
@@ -228,7 +231,7 @@ export class TemplateTask {
   }
 
   canBeCompletedBy(role: UserRole): boolean {
-    if (this.requiresEngineerApproval && role !== UserRole.ENGINEER) {
+    if (this.requiresEngineerApproval && role.level < UserRole.engineeringConsultant().level) {
       return false;
     }
     return true;

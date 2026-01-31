@@ -6,20 +6,20 @@
 
 // Core transformers (PascalCase - correct naming convention)
 export { ProjectTransformer } from './ProjectTransformer'; // Unified transformer (includes ProjectDomainTransformer functionality)
-export { InspectionDomainTransformer } from './InspectionDomainTransformer';
-export { MaterialDomainTransformer } from './MaterialDomainTransformer';
-export { PaymentDomainTransformer } from './PaymentDomainTransformer';
-export { SupplierDomainTransformer } from './SupplierDomainTransformer';
-export { EmployeeDomainTransformer } from './EmployeeDomainTransformer';
+export { InspectionTransformer } from './InspectionTransformer'; // Consolidated transformer (includes InspectionDomainTransformer functionality)
+export { MaterialTransformer } from './MaterialTransformer'; // Consolidated transformer (includes MaterialDomainTransformer functionality)
+export { PaymentTransformer } from './PaymentTransformer'; // Consolidated transformer (includes PaymentDomainTransformer functionality)
+export { SupplierTransformer } from './SupplierTransformer'; // Consolidated transformer (includes SupplierDomainTransformer functionality)
+export { EmployeeTransformer } from './EmployeeTransformer'; // Consolidated transformer (includes EmployeeDomainTransformer functionality)
 export { AuthDomainTransformer } from './AuthDomainTransformer';
-export { DocumentDomainTransformer } from './DocumentDomainTransformer';
+export { DocumentTransformer } from './DocumentTransformer'; // Consolidated transformer (includes DocumentDomainTransformer functionality)
 
 // Additional transformers
 export { CheckpointDomainTransformer } from './CheckpointDomainTransformer';
 export { DecompteDomainTransformer } from './DecompteDomainTransformer';
 export { MilestoneDomainTransformer } from './MilestoneDomainTransformer';
 export { PerformanceMonitoringDomainTransformer } from './PerformanceMonitoringDomainTransformer';
-export { PhaseDomainTransformer } from './PhaseDomainTransformer';
+export { PhaseTransformer } from './PhaseTransformer'; // Consolidated transformer (includes PhaseDomainTransformer functionality)
 export { TaskAssignmentDomainTransformer } from './TaskAssignmentDomainTransformer';
 export { WorkspaceDomainTransformer } from './WorkspaceDomainTransformer';
 

@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,6 +26,20 @@ const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
   const { data: suppliers, isLoading } = useSuppliersSelector(searchTerm);
 
   const selectedSupplier = suppliers?.find(s => s.id === value);
+  
+  // 🔧 Debug: Log supplier selection issues
+  useEffect(() => {
+    if (value && suppliers && suppliers.length > 0) {
+      const found = suppliers.find(s => s.id === value);
+      if (!found) {
+        console.warn('Fournisseur inconnu - ID non trouvé:', {
+          searchedId: value,
+          availableIds: suppliers.map(s => s.id),
+          availableNames: suppliers.map(s => ({ id: s.id, name: s.name }))
+        });
+      }
+    }
+  }, [value, suppliers]);
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -64,7 +78,7 @@ const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
         >
           <SelectTrigger>
             <SelectValue placeholder={placeholder}>
-              {selectedSupplier && (
+              {selectedSupplier ? (
                 <div className="flex items-center gap-2">
                   <Building2 className="h-4 w-4" />
                   <span>{selectedSupplier.name}</span>
@@ -74,7 +88,12 @@ const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
                     </Badge>
                   )}
                 </div>
-              )}
+              ) : value ? (
+                <div className="flex items-center gap-2 text-orange-600">
+                  <Building2 className="h-4 w-4" />
+                  <span>Fournisseur sÃ©lectionnÃ© (ID: {value})</span>
+                </div>
+              ) : null}
             </SelectValue>
           </SelectTrigger>
           <SelectContent className="bg-background z-50">

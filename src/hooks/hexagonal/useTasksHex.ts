@@ -1,6 +1,6 @@
 /**
- * Tasks Hook - Enhanced with TaskDomainTransformer Integration
- * Uses TaskDomainTransformer with advanced calculations and analytics
+ * Tasks Hook - Enhanced with Task Service Integration
+ * Uses TaskService with advanced calculations and analytics
  * Following hexagonal architecture principles with UI-specific enhancements
  */
 

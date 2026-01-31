@@ -1,23 +1,141 @@
 /**
- * Material Domain Transformer - Hexagonal Architecture
+ * Material Transformer - Hexagonal Architecture
  * Transforms between Material entities and DTOs
  * Following clean architecture principles with proper separation of concerns
+ * Includes BTP calculations and business logic from MaterialDomainTransformer
  */
 
 import { Material } from '@/domain/entities/Material';
-import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
+import { MaterialDTO, MaterialDetailDTO, MaterialSummaryDTO, MaterialListItemDTO, CreateMaterialRequestDto, UpdateMaterialRequestDto } from '@/dtos/transforms/shared';
+import { EntityToDTOMapper, ValidationResult } from '@/dtos/transforms/shared';
+export class MaterialTransformer implements EntityToDTOMapper<Material, MaterialDTO> {
+  /**
+   * Calculate material stock metrics
+   * BTP-specific business logic for inventory management
+   */
+  static calculateStockMetrics(material: Material): {
+    currentStock: number;
+    minStock: number;
+    maxStock: number;
+    stockStatus: 'optimal' | 'low' | 'critical' | 'out_of_stock';
+    reorderPoint: number;
+    stockTurnover: number;
+    daysUntilReorder: number;
+  } {
+    const currentStock = material.currentStock || 0;
+    const minStock = material.minStock || 0;
+    const maxStock = material.maxStock || 0;
+    
+    // Determine stock status
+    let stockStatus: 'optimal' | 'low' | 'critical' | 'out_of_stock' = 'optimal';
+    if (currentStock <= minStock) {
+      stockStatus = 'critical';
+    } else if (currentStock <= minStock * 0.2) {
+      stockStatus = 'low';
+    } else if (currentStock <= minStock * 0.5) {
+      stockStatus = 'out_of_stock';
+    }
+    
+    // Calculate reorder point (when to reorder)
+    const reorderPoint = minStock * 1.2; // 20% above minimum
+    
+    // Calculate days until reorder
+    const daysUntilReorder = reorderPoint > currentStock ? 
+      Math.ceil((reorderPoint - currentStock) / (material.dailyUsage || 1)) : 0;
+    
+    // Calculate stock turnover (annual)
+    const stockTurnover = material.dailyUsage ? 
+      (material.dailyUsage * 365) / ((currentStock + maxStock) / 2) : 0;
+    
+    return {
+      currentStock,
+      minStock,
+      maxStock,
+      stockStatus,
+      reorderPoint,
+      stockTurnover,
+      daysUntilReorder
+    };
+  }
 
-/**
- * Material Transformer - Hexagonal Architecture
- * Handles transformation between Material entities and DTOs
- */
-export class MaterialTransformer {
+  /**
+   * Calculate material cost analysis
+   * BTP-specific cost tracking and variance analysis
+   */
+  static calculateCostAnalysis(material: Material): {
+    unitCost: number;
+    totalValue: number;
+    costPerUnit: number;
+    costVariance: number;
+    efficiency: number;
+  } {
+    const unitCost = material.unitCost || 0;
+    const currentStock = material.currentStock || 0;
+    const totalValue = unitCost * currentStock;
+    const costPerUnit = unitCost;
+    
+    // Calculate cost variance (if we have expected vs actual cost)
+    const expectedCost = material.expectedCost || 0;
+    const costVariance = expectedCost > 0 ? (expectedCost - unitCost) : 0;
+    
+    // Calculate efficiency
+    const efficiency = expectedCost > 0 ? (unitCost / expectedCost) : 1;
+    
+    return {
+      unitCost,
+      totalValue,
+      costPerUnit,
+      costVariance,
+      efficiency
+    };
+  }
+
+  /**
+   * Calculate material quality metrics
+   * BTP-specific quality control and recommendations
+   */
+  static calculateQualityMetrics(material: Material): {
+    qualityScore: number;
+    defectRate: number;
+    supplierReliability: number;
+    recommendations: string[];
+  } {
+    const qualityScore = material.qualityScore || 100;
+    const defectRate = material.defectRate || 0;
+    const supplierReliability = material.supplierReliability || 100;
+    
+    const recommendations: string[] = [];
+    
+    if (defectRate > 5) {
+      recommendations.push('High defect rate detected - quality control needed');
+    }
+    
+    if (supplierReliability < 80) {
+      recommendations.push('Supplier reliability below threshold - consider alternative suppliers');
+    }
+    
+    if (qualityScore < 70) {
+      recommendations.push('Quality score below acceptable - review material specifications');
+    }
+    
+    return {
+      qualityScore,
+      defectRate,
+      supplierReliability,
+      recommendations
+    };
+  }
+
   /**
    * Transform Material entity to MaterialDTO (Domain Entity → DTO)
    * Converts domain entity to data transfer object for UI layer
    * Following hexagonal architecture: Domain → Application → Presentation
    */
   static toDTO(entity: Material): MaterialDTO {
+    const stockMetrics = this.calculateStockMetrics(entity);
+    const costAnalysis = this.calculateCostAnalysis(entity);
+    const qualityMetrics = this.calculateQualityMetrics(entity);
+    
     return {
       id: entity.id,
       name: entity.name,
@@ -32,7 +150,13 @@ export class MaterialTransformer {
       projectId: entity.projectId,
       phaseId: entity.phaseId,
       taskId: entity.taskId,
-      // Additional fields
+      
+      // Enriched fields from MaterialDomainTransformer
+      stockMetrics,
+      costAnalysis,
+      qualityMetrics,
+      
+      // BTP specific fields
       specifications: entity.specifications || {},
       brand: entity.brand || '',
       model: entity.model || '',
@@ -41,6 +165,26 @@ export class MaterialTransformer {
       availability: entity.availability || 'available',
       deliveryTime: entity.deliveryTime || 0,
       storageLocation: entity.storageLocation || '',
+      
+      // Additional BTP fields from MaterialDomainTransformer
+      currentStock: entity.currentStock || 0,
+      minStock: entity.minStock || 0,
+      maxStock: entity.maxStock || 0,
+      dimensions: entity.dimensions || { length: 0, width: 0, height: 0, thickness: 0 },
+      weight: entity.weight || 0,
+      density: entity.density || 0,
+      supplierName: entity.supplierName || '',
+      leadTime: entity.leadTime || 0,
+      qualityCertificate: entity.qualityCertificate || '',
+      complianceStandards: entity.complianceStandards || [],
+      dailyUsage: entity.dailyUsage || 0,
+      monthlyUsage: entity.monthlyUsage || 0,
+      lastUsed: entity.lastUsed || null,
+      expectedCost: entity.expectedCost || 0,
+      actualCost: entity.actualCost || 0,
+      costVariance: entity.costVariance || 0,
+      storageConditions: entity.storageConditions || '',
+      
       // Metadata
       createdAt: entity.createdAt?.toISOString() || new Date().toISOString(),
       updatedAt: entity.updatedAt?.toISOString() || new Date().toISOString(),
@@ -81,114 +225,196 @@ export class MaterialTransformer {
   }
 
   /**
-   * Transform CreateMaterialDTO to Material entity
-   * Used for creating new materials from form data
+   * Transform CreateMaterialRequestDto to Material entity
+   * Enhanced with BTP-specific fields from MaterialDomainTransformer
    */
-  static fromCreateDTOToEntity(dto: Partial<MaterialDTO>): Material {
-    return new Material(
-      dto.id || crypto.randomUUID(),
-      dto.name || '',
-      dto.type || 'raw',
-      dto.category || 'general',
-      dto.unit || 'unit',
-      dto.quantity || 0,
-      dto.unitPrice || 0,
-      dto.supplierId || '',
-      dto.projectId || '',
-      dto.description || '',
-      dto.phaseId,
-      dto.taskId,
-      dto.specifications || {},
-      dto.brand || '',
-      dto.model || '',
-      dto.reference || '',
-      dto.quality || 'standard',
-      dto.availability || 'available',
-      dto.deliveryTime || 0,
-      dto.storageLocation || '',
-      new Date(),
-      new Date()
-    );
+  static fromCreateDtoToEntity(dto: CreateMaterialRequestDto): Material {
+    return Material.create({
+      id: crypto.randomUUID(),
+      name: dto.name,
+      description: dto.description,
+      category: dto.category || '',
+      unit: dto.unit || 'unit',
+      currentStock: dto.currentStock || 0,
+      minStock: dto.minStock || 0,
+      maxStock: dto.maxStock || 0,
+      unitCost: dto.unitCost || 0,
+      
+      // BTP specific fields
+      specifications: dto.specifications || '',
+      dimensions: dto.dimensions || { length: 0, width: 0, height: 0, thickness: 0 },
+      weight: dto.weight || 0,
+      density: dto.density || 0,
+      
+      // Supplier information
+      supplierId: dto.supplierId || '',
+      supplierName: dto.supplierName || '',
+      leadTime: dto.leadTime || 0,
+      
+      // Quality and compliance
+      qualityCertificate: dto.qualityCertificate || '',
+      complianceStandards: dto.complianceStandards || [],
+      
+      // Usage tracking
+      dailyUsage: dto.dailyUsage || 0,
+      monthlyUsage: dto.monthlyUsage || 0,
+      
+      // Cost tracking
+      expectedCost: dto.expectedCost || 0,
+      
+      // Location information
+      storageLocation: dto.storageLocation || '',
+      storageConditions: dto.storageConditions || '',
+      
+      // Metadata
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
   }
 
   /**
-   * Transform array of Material entities to array of MaterialDTOs
+   * Transform UpdateMaterialRequestDto to partial Material entity
    */
-  static toDTOList(entities: Material[]): MaterialDTO[] {
-    return entities.map(entity => this.toDTO(entity));
+  static fromUpdateDtoToEntity(dto: UpdateMaterialRequestDto): Partial<Material> {
+    return {
+      name: dto.name,
+      description: dto.description,
+      category: dto.category,
+      unit: dto.unit,
+      currentStock: dto.currentStock,
+      minStock: dto.minStock,
+      maxStock: dto.maxStock,
+      unitCost: dto.unitCost,
+      
+      // BTP specific fields
+      specifications: dto.specifications,
+      dimensions: dto.dimensions,
+      weight: dto.weight,
+      density: dto.density,
+      
+      // Supplier information
+      supplierId: dto.supplierId,
+      supplierName: dto.supplierName,
+      leadTime: dto.leadTime,
+      
+      // Quality and compliance
+      qualityCertificate: dto.qualityCertificate,
+      complianceStandards: dto.complianceStandards,
+      
+      // Usage tracking
+      dailyUsage: dto.dailyUsage,
+      monthlyUsage: dto.monthlyUsage,
+      
+      // Cost tracking
+      expectedCost: dto.expectedCost,
+      actualCost: dto.actualCost,
+      costVariance: dto.costVariance,
+      
+      // Location information
+      storageLocation: dto.storageLocation,
+      storageConditions: dto.storageConditions,
+      
+      // Metadata
+      updatedAt: new Date()
+    };
   }
 
   /**
-   * Transform array of MaterialDTOs to array of Material entities
+   * Validate material data for business rules
+   * BTP-specific validation logic
    */
-  static toEntityList(dtos: MaterialDTO[]): Material[] {
-    return dtos.map(dto => this.toEntity(dto));
-  }
-
-  /**
-   * Transform Material entity to Update DTO (partial)
-   * Used for partial updates in form workflows
-   */
-  static toUpdateDTO(entity: Partial<Material>): Partial<MaterialDTO> {
-    const dto: Partial<MaterialDTO> = {};
-
-    if (entity.id !== undefined) dto.id = entity.id;
-    if (entity.name !== undefined) dto.name = entity.name;
-    if (entity.description !== undefined) dto.description = entity.description;
-    if (entity.type !== undefined) dto.type = entity.type;
-    if (entity.category !== undefined) dto.category = entity.category;
-    if (entity.unit !== undefined) dto.unit = entity.unit;
-    if (entity.quantity !== undefined) dto.quantity = entity.quantity;
-    if (entity.unitPrice !== undefined) dto.unitPrice = entity.unitPrice;
-    if (entity.supplierId !== undefined) dto.supplierId = entity.supplierId;
-    if (entity.projectId !== undefined) dto.projectId = entity.projectId;
-    if (entity.phaseId !== undefined) dto.phaseId = entity.phaseId;
-    if (entity.taskId !== undefined) dto.taskId = entity.taskId;
-    if (entity.specifications !== undefined) dto.specifications = entity.specifications;
-    if (entity.brand !== undefined) dto.brand = entity.brand;
-    if (entity.model !== undefined) dto.model = entity.model;
-    if (entity.reference !== undefined) dto.reference = entity.reference;
-    if (entity.quality !== undefined) dto.quality = entity.quality;
-    if (entity.availability !== undefined) dto.availability = entity.availability;
-    if (entity.deliveryTime !== undefined) dto.deliveryTime = entity.deliveryTime;
-    if (entity.storageLocation !== undefined) dto.storageLocation = entity.storageLocation;
-
-    // Calculate total price if quantity and unit price are available
-    if (entity.quantity !== undefined && entity.unitPrice !== undefined) {
-      dto.totalPrice = entity.quantity * entity.unitPrice;
+  static validateMaterialData(material: Partial<Material>): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+    
+    // Validate required fields
+    if (!material.name || material.name.trim() === '') {
+      errors.push('Material name is required');
     }
-
-    return dto;
+    
+    if (!material.category || material.category.trim() === '') {
+      errors.push('Material category is required');
+    }
+    
+    if (material.unitCost !== undefined && material.unitCost <= 0) {
+      errors.push('Unit cost must be greater than 0');
+    }
+    
+    if (material.currentStock !== undefined && material.currentStock < 0) {
+      errors.push('Current stock cannot be negative');
+    }
+    
+    if (material.minStock !== undefined && material.maxStock !== undefined && material.minStock > material.maxStock) {
+      errors.push('Minimum stock cannot be greater than maximum stock');
+    }
+    
+    // Validate BTP specific fields
+    if (material.weight !== undefined && material.weight <= 0) {
+      errors.push('Material weight must be greater than 0');
+    }
+    
+    if (material.density !== undefined && material.density <= 0) {
+      errors.push('Material density must be greater than 0');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
   }
 
-  /**
-   * Transform simple material selection to Material entity
-   * Used in project creation workflow for material selection
-   */
-  static fromSelectionToEntity(selection: { materialId: string; quantity: number }): Material {
-    return new Material(
-      selection.materialId,
-      '', // name - will be populated from material catalog
-      'raw', // type
-      'general', // category
-      'unit', // unit
-      selection.quantity,
-      0, // unitPrice - will be populated from material catalog
-      '', // supplierId
-      '', // projectId
-      '', // description
-      undefined, // phaseId
-      undefined, // taskId
-      {}, // specifications
-      '', // brand
-      '', // model
-      '', // reference
-      'standard', // quality
-      'available', // availability
-      0, // deliveryTime
-      '', // storageLocation
-      new Date(),
-      new Date()
-    );
+  // EntityToDTOMapper interface implementation
+  toDTO(entity: Material): MaterialDTO {
+    return MaterialTransformer.toDTO(entity);
+  }
+
+  fromDTO(dto: MaterialDTO): Material {
+    return MaterialTransformer.toEntity(dto);
+  }
+
+  fromEntityToDTO(entity: Material): MaterialDTO {
+    return MaterialTransformer.toDTO(entity);
+  }
+
+  toResponseDto(entity: Material): MaterialDTO {
+    return MaterialTransformer.toDTO(entity);
+  }
+
+  validate(dto: MaterialDTO): ValidationResult {
+    const material = MaterialTransformer.toEntity(dto);
+    const validation = MaterialTransformer.validateMaterialData(material);
+    return {
+      isValid: validation.isValid,
+      errors: validation.errors
+    };
+  }
+
+  toDTOs(entities: Material[]): MaterialDTO[] {
+    return entities.map(entity => MaterialTransformer.toDTO(entity));
+  }
+
+  toEntities(dtos: MaterialDTO[]): Material[] {
+    return dtos.map(dto => MaterialTransformer.toEntity(dto));
+  }
+
+  toEntitiesFromDatabaseRows(rows: Record<string, unknown>[]): Material[] {
+    return rows.map(row => MaterialTransformer.toEntityFromDatabaseRow(row));
+  }
+
+  toEntityFromDatabaseRow(row: Record<string, unknown>): Material {
+    // Implementation for database row to entity transformation
+    return Material.create({
+      id: row.id as string,
+      name: row.name as string,
+      description: row.description as string,
+      category: row.category as string, // Cast to string, will be validated by Material.create
+      unit: row.unit as string,
+      currentStock: Number(row.current_stock) || 0,
+      minStock: Number(row.min_stock) || 0,
+      maxStock: Number(row.max_stock) || 0,
+      unitCost: Number(row.unit_cost) || 0,
+      // ... map other fields
+      createdAt: new Date(row.created_at as string),
+      updatedAt: new Date(row.updated_at as string)
+    });
   }
 }

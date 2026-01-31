@@ -118,17 +118,32 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     queryKey: ["project-summary", projectId],
     queryFn: async (): Promise<ProjectSummaryDTO | undefined> => {
       console.log("🔍 Query function starting for projectId:", projectId);
-      if (!projectId) throw new Error(t("project.errors.missing_id"));
+      if (!projectId) {
+        console.error("🚫 Project ID is missing");
+        throw new Error(t("project.errors.missing_id"));
+      }
 
       console.log("🔍 Calling ProjectService.getProjectSummary...");
-      const result = await projectService.getProjectSummary(projectId);
-      console.log("🔍 ProjectService result:", result ? "SUCCESS" : "NULL");
-      if (!result) throw new Error(t("project.errors.not_found"));
-      return result;
+      try {
+        const result = await projectService.getProjectSummary(projectId);
+        console.log("🔍 ProjectService result:", result ? "SUCCESS" : "NULL");
+        if (!result) {
+          console.error("🚫 Project not found for ID:", projectId);
+          throw new Error(t("project.errors.not_found"));
+        }
+        return result;
+      } catch (error) {
+        console.error("🚫 Error in ProjectService.getProjectSummary:", error);
+        throw error;
+      }
     },
     enabled: !!projectId,
     retry: 1,
     staleTime: 30_000,
+    onError: (error) => {
+      console.error("🚫 Query error:", error);
+      setError(error?.message || "Failed to load project");
+    },
   });
 
   // Fetch detailed project data (includes plannedPhases, tasks, risks, inspections, etc.)
@@ -778,6 +793,9 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
           <p className="text-destructive mb-2">
             {projectError?.message || "Impossible de charger le projet"}
+          </p>
+          <p className="text-sm text-muted-foreground mb-2">
+            ID du projet: {projectId || "Non défini"}
           </p>
           <p className="text-sm text-muted-foreground mb-4">
             Vérifiez que l'ID du projet est correct ou que vous avez les

@@ -8,13 +8,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RepositoryFactory } from "@/repositories/RepositoryFactory";
 import { PaymentRequestService } from "@/application/services/PaymentRequestService";
-import { PaymentDomainTransformer, CreatePaymentRequestDto, UpdatePaymentRequestDto } from "@/dtos/transforms";
+import { CreatePaymentDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 // Types compatibles avec le service
-type ServiceCreatePaymentDTO = Omit<CreatePaymentRequestDto, 'status'> & { status?: any };
-type ServiceUpdatePaymentDTO = Omit<UpdatePaymentRequestDto, 'status'> & { status?: any };
+type ServiceCreatePaymentDTO = Omit<CreatePaymentDTO, 'status'> & { status?: any };
+type ServiceUpdatePaymentDTO = Omit<UpdatePaymentDTO, 'status'> & { status?: any };
 
 // Enhanced types for UI components
 export interface UsePaymentsHexResult {
@@ -22,8 +22,8 @@ export interface UsePaymentsHexResult {
   isLoading: boolean;
   error: any;
   refetch: () => void;
-  createPayment: (data: CreatePaymentRequestDto) => void;
-  updatePayment: ({ id, data }: { id: string; data: UpdatePaymentRequestDto }) => void;
+  createPayment: (data: CreatePaymentDTO) => void;
+  updatePayment: ({ id, data }: { id: string; data: UpdatePaymentDTO }) => void;
   deletePayment: (id: string) => void;
   isCreating: boolean;
   isUpdating: boolean;
@@ -74,7 +74,7 @@ export function usePaymentsHex(): UsePaymentsHexResult {
 
   // Create payment mutation
   const createPaymentMutation = useMutation({
-    mutationFn: async (paymentData: CreatePaymentRequestDto) => {
+    mutationFn: async (paymentData: CreatePaymentDTO) => {
       try {
         // Convert to service-compatible format
         const serviceData: ServiceCreatePaymentDTO = { ...paymentData };
@@ -98,7 +98,7 @@ export function usePaymentsHex(): UsePaymentsHexResult {
 
   // Update payment mutation
   const updatePaymentMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: UpdatePaymentRequestDto }) => {
+    mutationFn: async ({ id, data }: { id: string; data: UpdatePaymentDTO }) => {
       try {
         // Convert to service-compatible format
         const serviceData: ServiceUpdatePaymentDTO = { ...data };

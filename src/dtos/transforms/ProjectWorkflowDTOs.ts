@@ -4,9 +4,10 @@
  */
 
 export interface ProjectWorkflowData {
+  projectId?: string;
   currentStep: number;
-  isDraft?: boolean;
-  isComplete?: boolean;
+  isDraft: boolean;
+  isComplete: boolean;
   projectData: ProjectFormDataDTO;
   relatedData?: StepRelatedDataDTO;
   metadata: WorkflowMetadataDTO;
@@ -96,7 +97,16 @@ export interface ProjectFormDataDTO {
   latitude?: number;
   longitude?: number;
   technical_manager_id?: string;
+  project_manager_id?: string;
+  supervisor_id?: string;
   client_name?: string;
+  // 🏢 Contractors and suppliers (optional fields)
+  contractors?: {
+    engineeringConsultant?: string;
+    generalContractor?: string;
+    specializedSubcontractors?: string;
+    mainSuppliers?: string;
+  };
   project_type?: string;
   sector?: string;
   permit_number?: string;
@@ -112,7 +122,7 @@ export interface ProjectFormDataDTO {
   estimatedDuration?: string;
   reception_status?: string;
   closure_notes?: string;
-  shapeData?: any; // 🎨 UI state for map data
+  shapeData?: Record<string, unknown>; // 🎨 UI state for map data (Rule #4 compliant)
 }
 
 export interface PhaseFormDataDTO {
@@ -237,6 +247,258 @@ export interface SaveResult {
   projectId: string | null;
   error?: string;
   warnings?: string[];
+}
+
+// 🔄 Specialized Workflow DTOs for Complex Multi-Step Processes
+// Following hexagonal architecture with proper object injection and flow
+
+export interface WorkflowStepDTO {
+  stepNumber: number;
+  title: string;
+  description: string;
+  isRequired: boolean;
+  isCompleted: boolean;
+  validationRules: string[];
+  relatedEntities: ('stakeholders' | 'phases' | 'risks' | 'materials' | 'documents' | 'inspections')[];
+  estimatedDuration?: number; // in minutes
+  dependencies?: number[]; // step numbers that must be completed first
+}
+
+export interface WorkflowStateDTO {
+  currentStep: number;
+  totalSteps: number;
+  isDraft: boolean;
+  isComplete: boolean;
+  canProceed: boolean;
+  canGoBack: boolean;
+  progressPercentage: number;
+  lastSavedAt?: string;
+  estimatedCompletionTime?: string;
+}
+
+export interface WorkflowValidationDTO {
+  stepNumber: number;
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  missingFields: string[];
+  validationTimestamp: string;
+}
+
+export interface WorkflowSaveContextDTO {
+  saveType: 'step_only' | 'save_and_next' | 'save_all' | 'complete_workflow';
+  currentStep: number;
+  totalSteps: number;
+  isDraft: boolean;
+  isComplete: boolean;
+  lastSavedAt: string;
+  userId?: string;
+  sessionId?: string;
+}
+
+export interface WorkflowTransitionDTO {
+  fromStep: number;
+  toStep: number;
+  transitionType: 'forward' | 'backward' | 'jump';
+  reason?: string;
+  timestamp: string;
+  userId?: string;
+}
+
+export interface WorkflowAuditLogDTO {
+  id: string;
+  workflowId: string;
+  action: 'step_completed' | 'step_skipped' | 'data_saved' | 'workflow_completed' | 'error_occurred';
+  stepNumber?: number;
+  details: Record<string, unknown>;
+  timestamp: string;
+  userId?: string;
+  sessionId?: string;
+  ipAddress?: string;
+}
+
+export interface WorkflowMetricsDTO {
+  totalSteps: number;
+  completedSteps: number;
+  averageTimePerStep: number; // in minutes
+  totalElapsedTime: number; // in minutes
+  validationErrors: number;
+  saveOperations: number;
+  userInteractions: number;
+  completionRate: number;
+  abandonmentRate?: number;
+}
+
+export interface WorkflowTemplateDTO {
+  id: string;
+  name: string;
+  description: string;
+  category: 'project_creation' | 'project_edit' | 'procurement' | 'inspection' | 'compliance';
+  steps: WorkflowStepDTO[];
+  defaultSettings: {
+    allowSkipSteps: boolean;
+    requireValidation: boolean;
+    autoSave: boolean;
+    maxRetries: number;
+  };
+  isActive: boolean;
+  version: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WorkflowSessionDTO {
+  sessionId: string;
+  workflowId: string;
+  templateId: string;
+  userId?: string;
+  startTime: string;
+  lastActivityTime: string;
+  currentState: WorkflowStateDTO;
+  completedSteps: number[];
+  skippedSteps: number[];
+  auditLog: WorkflowAuditLogDTO[];
+  metrics: WorkflowMetricsDTO;
+  isActive: boolean;
+  expiresAt?: string;
+}
+
+// 🔄 Specialized DTOs for Project Creation Workflow
+export interface ProjectCreationWorkflowDTO extends ProjectFormDataDTO {
+  // Workflow-specific state
+  workflowState: WorkflowStateDTO;
+  validationResults: WorkflowValidationDTO[];
+  saveContext: WorkflowSaveContextDTO;
+  transitions: WorkflowTransitionDTO[];
+  
+  // Step-specific data containers
+  stepData: {
+    step1: ProjectBasicInfoDTO;
+    step2: ProjectStakeholdersDTO;
+    step3: ProjectLocationDTO;
+    step4: ProjectPlanningDTO;
+    step5: ProjectRisksDTO;
+    step6: ProjectComplianceDTO;
+    step7: ProjectValidationDTO;
+  };
+  
+  // Workflow metadata
+  templateId: string;
+  sessionId: string;
+  startedAt: string;
+  completedAt?: string;
+}
+
+export interface ProjectBasicInfoDTO {
+  title: string;
+  description: string;
+  budget: number;
+  currency: string;
+  estimatedDuration: string;
+  project_type: string;
+  sector: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+}
+
+export interface ProjectStakeholdersDTO {
+  project_manager_id: string;
+  technical_manager_id: string;
+  supervisor_id: string;
+  client_name: string;
+  contractors: {
+    engineeringConsultant?: string;
+    generalContractor?: string;
+    specializedSubcontractors?: string;
+    mainSuppliers?: string;
+  };
+  stakeholders: StakeholderDTO[];
+}
+
+export interface ProjectLocationDTO {
+  address: string;
+  latitude: number;
+  longitude: number;
+  area_sqm?: number;
+  site_details?: string;
+  geographic_zone?: string;
+  shapeData?: Record<string, unknown>;
+  coordinates?: {
+    lat: number;
+    lng: number;
+  }[];
+}
+
+export interface ProjectPlanningDTO {
+  phases: PhaseFormDataDTO[];
+  milestones: {
+    id: string;
+    name: string;
+    description: string;
+    dueDate: string;
+    status: 'pending' | 'in_progress' | 'completed' | 'overdue';
+    deliverables: string[];
+  }[];
+  materials: MaterialFormDataDTO[];
+  tasks: TaskFormDataDTO[];
+  estimatedBudget?: number;
+}
+
+export interface ProjectRisksDTO {
+  risks: RiskFormDataDTO[];
+  riskAssessment: {
+    overallRiskLevel: 'low' | 'medium' | 'high' | 'critical';
+    riskScore: number;
+    mitigationPlan: string;
+    contingencyPlan: string;
+  };
+  insuranceRequirements: {
+    required: boolean;
+    types: string[];
+    minimumCoverage: number;
+  };
+}
+
+export interface ProjectComplianceDTO {
+  compliance: ComplianceDataDTO;
+  regulations: {
+    name: string;
+    authority: string;
+    required: boolean;
+    status: 'pending' | 'in_progress' | 'compliant' | 'non_compliant';
+    documents: string[];
+  }[];
+  certifications: {
+    name: string;
+    issuer: string;
+    required: boolean;
+    status: 'pending' | 'in_progress' | 'obtained' | 'expired';
+    expiryDate?: string;
+  }[];
+  standards: {
+    name: string;
+    category: 'quality' | 'safety' | 'environmental' | 'technical';
+    complianceLevel: 'basic' | 'standard' | 'advanced';
+    evidence: string[];
+  }[];
+}
+
+export interface ProjectValidationDTO {
+  reception_status: 'pending' | 'provisional' | 'definitive';
+  closure_notes: string;
+  finalInspection: {
+    date: string;
+    inspector: string;
+    result: 'passed' | 'failed' | 'pending';
+    score?: number;
+    notes?: string;
+  };
+  clientAcceptance: {
+    accepted: boolean;
+    date?: string;
+    representative?: string;
+    notes?: string;
+  };
+  handoverDocumentation: DocumentFormDataDTO[];
 }
 
 export interface StepProgressDTO {

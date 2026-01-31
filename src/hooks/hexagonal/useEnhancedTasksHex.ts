@@ -6,7 +6,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import { TaskService } from '@/application/services/TaskService';
-import { EntityToDTOMapper } from '@/dtos/transforms';
 
 export interface ProjectTaskFormData {
   title: string;
@@ -48,7 +47,7 @@ export function useProjectPhasesForTasks(projectId: string) {
     queryKey: ['project-phases-for-tasks', projectId],
     queryFn: async (): Promise<ProjectPhase[]> => {
       const taskRepository = RepositoryFactory.getTaskRepository();
-      const taskService = new TaskService(taskRepository, TaskDomainTransformer);
+      const taskService = new TaskService(taskRepository);
       const phases = await taskService.getProjectPhases(projectId);
       return phases;
     },
@@ -63,7 +62,7 @@ export function useProjectTasks(projectId: string) {
     queryKey: ['project-tasks', projectId],
     queryFn: async (): Promise<ProjectTask[]> => {
       const taskRepository = RepositoryFactory.getTaskRepository();
-      const taskService = new TaskService(taskRepository, TaskDomainTransformer);
+      const taskService = new TaskService(taskRepository);
       const tasks = await taskService.getProjectTasks(projectId);
       return tasks;
     },
@@ -79,7 +78,7 @@ export function useCreateProjectTask(projectId: string) {
   return useMutation({
     mutationFn: async (taskData: ProjectTaskFormData) => {
       const taskRepository = RepositoryFactory.getTaskRepository();
-      const taskService = new TaskService(taskRepository, TaskDomainTransformer);
+      const taskService = new TaskService(taskRepository);
       const { data: { user } } = await taskService.createTask(taskData);
       if (!user) throw new Error('User not authenticated');
       return data;
@@ -97,7 +96,7 @@ export function useUpdateProjectTask(projectId: string) {
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<ProjectTaskFormData> }) => {
       const taskRepository = RepositoryFactory.getTaskRepository();
-      const taskService = new TaskService(taskRepository, TaskDomainTransformer);
+      const taskService = new TaskService(taskRepository);
       const updatedTask = await taskService.updateTask(id, data);
       return updatedTask;
     },
@@ -114,7 +113,7 @@ export function useDeleteProjectTask(projectId: string) {
   return useMutation({
     mutationFn: async (id: string) => {
       const taskRepository = RepositoryFactory.getTaskRepository();
-      const taskService = new TaskService(taskRepository, TaskDomainTransformer);
+      const taskService = new TaskService(taskRepository);
       const deletedTask = await taskService.deleteTask(id);
       return deletedTask;
     },

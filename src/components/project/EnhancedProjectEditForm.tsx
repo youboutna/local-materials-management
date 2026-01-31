@@ -120,7 +120,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       if (projectDetail) {
         // Load stakeholders from database
         const { ProjectStakeholderService } = await import(
-          "@/services/ProjectStakeholderService"
+          "@/application/services/ProjectStakeholderService"
         );
         const stakeholdersData =
           await ProjectStakeholderService.getProjectStakeholders(projectId);
@@ -271,12 +271,12 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     setIsSaving(true);
     try {
       // Calculer la progression globale avant sauvegarde
-      const { ProgressCalculationService } = await import(
-        "@/services/ProgressCalculationService"
+      const { ProgressCalculationHexService } = await import(
+        "@/application/services/ProgressCalculationHexService"
       );
 
       const calculatedProgress =
-        ProgressCalculationService.calculateProjectProgress(
+        ProgressCalculationHexService.calculateProjectProgress(
           phasesData,
           formData.tasks || [],
           formData.inspections || []

@@ -29,7 +29,7 @@ import {
   InsuranceAlert
 } from '@/services/insuranceCertificateService';
 import { InsuranceService } from '@/application/services/InsuranceService';
-import { createInsuranceAction } from '@/application/services/enhancedActionService';
+import { createInsuranceAction, type CreateEnhancedActionRequest } from '@/application/services/enhancedActionService';
 import { checkAndSendInsuranceAlerts } from '@/utils/insuranceAlertUtils';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { useAuth } from '@/hooks/hexagonal';
@@ -163,7 +163,14 @@ const UnifiedInsuranceManager = () => {
     { value: 'verified', label: 'Vérifié', color: 'bg-blue-100 text-blue-800' },
     { value: 'new', label: 'Nouveau', color: 'bg-purple-100 text-purple-800' },
     { value: 'in_progress', label: 'En cours', color: 'bg-blue-200 text-blue-800' },
-    { value: 'cancelled', label: 'Annulé', color: 'bg-red-200 text-red-800' }
+    { value: 'cancelled', label: 'Annulé', color: 'bg-red-200 text-red-800' },
+    { value: 'archived', label: 'Archivé', color: 'bg-gray-200 text-gray-800' },
+    { value: 'rejected', label: 'Rejeté', color: 'bg-red-300 text-red-800' },
+    { value: 'approved', label: 'Approuvé', color: 'bg-green-200 text-green-800' },
+    { value: 'sent', label: 'Envoyé', color: 'bg-blue-300 text-blue-800' },
+    { value: 'received', label: 'Reçu', color: 'bg-green-300 text-green-800' },
+    { value: 'test', label: 'Test', color: 'bg-red-400 text-red-800' },
+    { value: 'awaiting_approval', label: 'En attente d\'approbation', color: 'bg-yellow-200 text-yellow-800' },
   ];
 
   useEffect(() => {
@@ -547,7 +554,7 @@ const UnifiedInsuranceManager = () => {
         insuranceId: certificateId,
         projectId: certificate.projectId || certificate.project_id || '',
         contractorId: certificate.contractorId || certificate.contractor_id || '',
-        actionType: actionType as any,
+        actionType: actionType as CreateEnhancedActionRequest['actionType'],
         title,
         message,
         priority: 'high',
@@ -560,11 +567,11 @@ const UnifiedInsuranceManager = () => {
         title: 'Action créée',
         description: `${title} créée avec succès`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating insurance action:', error);
       toast({
         title: 'Erreur',
-        description: `Impossible de créer l'action: ${error?.message || 'Erreur inconnue'}`,
+        description: `Impossible de créer l'action: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
         variant: 'destructive'
       });
     }

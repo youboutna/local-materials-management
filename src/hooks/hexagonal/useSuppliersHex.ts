@@ -8,7 +8,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RepositoryFactory } from "@/repositories/RepositoryFactory";
 import { SupplierService } from "@/application/services/SupplierService";
-import { SupplierDomainTransformer, CreateSupplierRequestDto, UpdateSupplierRequestDto } from "@/dtos/transforms";
+import { SupplierTransformer, CreateSupplierRequestDto, UpdateSupplierRequestDto } from '@/dtos/transforms';
 
 // Types pour les hooks
 export interface UseSuppliersHexResult {
@@ -38,7 +38,7 @@ export function useSuppliersHex(): UseSuppliersHexResult {
   const queryClient = useQueryClient();
   
   const supplierRepository = RepositoryFactory.getSupplierRepository();
-  const supplierService = new SupplierService(supplierRepository, SupplierDomainTransformer);
+  const supplierService = new SupplierService(supplierRepository);
 
   const {
     data: suppliers = [],
@@ -188,7 +188,7 @@ export function useSuppliersHex(): UseSuppliersHexResult {
  */
 export function useSuppliersBySpecialization(specialization: string) {
   const supplierRepository = RepositoryFactory.getSupplierRepository();
-  const supplierService = new SupplierService(supplierRepository, SupplierDomainTransformer);
+  const supplierService = new SupplierService(supplierRepository);
   
   return useQuery({
     queryKey: ['suppliers', 'specialization', specialization],

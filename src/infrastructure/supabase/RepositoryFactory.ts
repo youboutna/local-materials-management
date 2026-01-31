@@ -120,6 +120,8 @@ interface RepositoryRegistry {
   loadDataRepository?: ILoadDataRepository;
   reportingRepository?: IReportingRepository;
   projectFormRepository?: IProjectFormRepository;
+  projectStakeholderRepository?: IProjectStakeholderRepository;
+  stakeholderRepository?: any; // TODO: Create proper IStakeholderRepository
   userRepository?: IUserRepository;
   pvGeneratorRepository?: IPVGeneratorRepository;
   bankGuaranteeRepository?: IBankGuaranteeRepository;
@@ -521,6 +523,32 @@ export class RepositoryFactory {
       repositoryRegistry.notificationRepository = new SupabaseNotificationAdapter();
     }
     return repositoryRegistry.notificationRepository;
+  }
+
+  /**
+   * Get Project Stakeholder Repository instance
+   * Lazy loaded for memory efficiency
+   */
+  static getProjectStakeholderRepository(): IProjectStakeholderRepository {
+    if (!repositoryRegistry.projectStakeholderRepository) {
+      // TODO: Create SupabaseProjectStakeholderAdapter when available
+      // For now, use ProjectAdapter as stakeholders are handled through project repository
+      repositoryRegistry.projectStakeholderRepository = new SupabaseProjectAdapter() as any;
+    }
+    return repositoryRegistry.projectStakeholderRepository!;
+  }
+
+  /**
+   * Get Stakeholder Repository instance
+   * Lazy loaded for memory efficiency
+   */
+  static getStakeholderRepository(): any {
+    if (!repositoryRegistry.stakeholderRepository) {
+      // TODO: Create proper SupabaseStakeholderAdapter
+      // For now, use ProjectAdapter as temporary solution
+      repositoryRegistry.stakeholderRepository = new SupabaseProjectAdapter();
+    }
+    return repositoryRegistry.stakeholderRepository!;
   }
 
   /**

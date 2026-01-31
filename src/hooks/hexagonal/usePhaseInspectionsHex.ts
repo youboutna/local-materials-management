@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { InspectionService } from '@/application/services/InspectionService';
 import { StorageService } from '@/application/services/StorageService';
-import { InspectionDomainTransformer } from '@/dtos/transforms/InspectionDomainTransformer';
+import { InspectionTransformer } from '@/dtos/transforms/InspectionTransformer';
 import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 import { Inspection, InspectionStatus } from '@/domain/entities/Inspection';
 import { useToast } from '@/hooks/use-toast';
@@ -36,7 +36,7 @@ export function usePhaseInspectionsHex(phaseId: string, projectId: string) {
   const { toast } = useToast();
   const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
   const storageService = new StorageService(RepositoryFactory.getStorageRepository());
-  const transformer = new InspectionDomainTransformer();
+  const transformer = new InspectionTransformer();
 
   // Fetch inspections
   const inspectionsQuery = useQuery({

@@ -6,11 +6,11 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { PaymentService } from '@/application/services/PaymentService';
 import { StorageService } from '@/application/services/StorageService';
 import { RepositoryFactory } from '@/repositories/RepositoryFactory';
-import { PaymentDTO, CreatePaymentRequestDto, UpdatePaymentRequestDto } from '@/dtos/transforms/PaymentDomainTransformer';
+import { PaymentDTO, CreatePaymentDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
 
 // Re-export types for components
 export type Payment = PaymentDTO;
-export type PaymentFormData = CreatePaymentRequestDto;
+export type PaymentFormData = CreatePaymentDTO;
 
 // Hook: Payment CRUD with real-time updates
 export function usePaymentCrud() {
@@ -53,12 +53,12 @@ export function usePaymentCrud() {
     }
   };
 
-  const createPayment = async (formData: CreatePaymentRequestDto) => {
+  const createPayment = async (formData: CreatePaymentDTO) => {
     const paymentData = await paymentService.createPayment(formData);
     return paymentData;
   };
 
-  const updatePayment = async (paymentId: string, formData: UpdatePaymentRequestDto) => {
+  const updatePayment = async (paymentId: string, formData: UpdatePaymentDTO) => {
     await paymentService.updatePayment(paymentId, formData);
   };
 

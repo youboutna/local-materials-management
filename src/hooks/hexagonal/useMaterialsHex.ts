@@ -4,11 +4,12 @@
  * Following hexagonal architecture principles with UI-specific enhancements
  */
 
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { MaterialService } from "@/application/services/MaterialService";
-import { MaterialDomainTransformer, CreateMaterialRequestDto, UpdateMaterialRequestDto } from "@/dtos/transforms";
+import { MaterialTransformer, CreateMaterialRequestDto, UpdateMaterialRequestDto } from '@/dtos/transforms';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -48,8 +49,8 @@ export function useMaterialsHex(): UseMaterialsHexResult {
   
   // Initialize services with transformers
   const materialRepository = RepositoryFactory.getMaterialRepository();
-  const materialService = new MaterialService(materialRepository, MaterialDomainTransformer);
-  const materialTransformer = MaterialDomainTransformer;
+  const materialService = new MaterialService(materialRepository);
+  const materialTransformer = MaterialTransformer;
 
   // Query for materials list
   const {
@@ -62,7 +63,7 @@ export function useMaterialsHex(): UseMaterialsHexResult {
     queryFn: async (): Promise<any[]> => {
       try {
         const materialData = await materialService.getAllMaterials();
-        return materialData.map(entity => MaterialDomainTransformer.toResponseDto(entity));
+        return materialData.map(entity => MaterialTransformer.toDTO(entity));
       } catch (err) {
         console.error('Error fetching materials:', err);
         throw err;

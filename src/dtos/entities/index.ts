@@ -1,27 +1,51 @@
 /**
- * Entity DTOs Index
- * Centralized DTOs for all domain entities
- * Follows hexagonal architecture principles
+ * DTOs Index - Centralized DTO Definitions
+ * Following hexagonal architecture principles from PROMPTS.md
+ * Rule #4: No DTOs in entities, proper type separation
+ * Rule #5: UI layer can have state and display calculations
  */
 
-// Re-export shared DTOs and utilities
-export * from '../shared';
-
-// Entity DTOs - Single source of truth
+// Core Entity DTOs
 export * from './ProjectDTO';
-export * from './InspectionDTO';
-export * from './MaterialDTO';
-export * from './SupplierDTO';
-export * from './PaymentDTO';
-export * from './TaskDTO';
+export * from './UserDTO';
 export * from './EmployeeDTO';
+export * from './SupplierDTO';
+export * from './MaterialDTO';
+export * from './PaymentDTO';
+export * from './DocumentDTO';
+export * from './TaskDTO';
+export * from './PhaseDTO';
+export * from './MilestoneDTO';
+export * from './InspectionDTO';
+export * from './RiskDTO';
+export * from './StakeholderDTO';
+export * from './TenderDTO';
+
+// Extended Entity DTOs
+export * from './TenderEstimateDTO';
+export * from './TenderDocumentDTO';
+export * from './TenderSubmissionDTO';
+export * from './PerformanceMonitoringDTO';
+export * from './WorkspaceDTO';
+export * from './CertificationDTO';
+export * from './ParsedInvoiceDTO';
+export * from './UserRoleDTO';
+export * from './TemplateDTO';
+export * from './HierarchyDTO';
+export * from './PositionDTO';
+export * from './AuthUserDTO';
+export * from './UserProfileDTO';
+export * from './ProjectStakeholderDTO';
+
+// Specialized DTOs
+export * from './InspectionPermissionDTO';
 export * from './AlertDTO';
 export * from './AuthDTO';
-
-// DTOs nouvellement migrés (critiques pour décomptes)
 export * from './AutomaticDecompteDTO';
 export * from './VerificationItemDTO';
 export * from './CheckpointDTO';
 export * from './CheckpointVerificationResultDTO';
-export * from './MilestoneDTO';
 export * from './MauritaniaBusinessRulesDTO';
+
+// Shared utilities and common interfaces
+export * from '../shared';

@@ -645,4 +645,126 @@ export class ProjectFormService {
       return { success: false, projectId, error: message };
     }
   }
+
+  /**
+   * Transform UI entity to DTO - Service layer transformation (Rule #4 compliant)
+   * Handles the transformation from nested UI entity structure to flat DTO structure
+   */
+  static flattenEntityToDTO(entity: any): ProjectFormDataDTO {
+    return {
+      // 🔄 Extract nested fields from entity to flat DTO structure
+      title: entity.title || "",
+      description: entity.description || "",
+      budget: entity.budget || "",
+      start_date: entity.start_date || entity.startDate || "",
+      end_date: entity.end_date || entity.endDate || "",
+      // 🧁 Extract from nested objects (Rule #4 compliant)
+      project_reference: entity.project_reference || "",
+      address: entity.location?.address || "",
+      latitude: entity.location?.latitude || null,
+      longitude: entity.location?.longitude || null,
+      technical_manager_id: entity.financial?.technical_manager_id || null,
+      project_manager_id: entity.financial?.project_manager_id || null,
+      supervisor_id: entity.financial?.supervisor_id || null,
+      client_name: entity.financial?.client_name || "",
+      project_type: entity.project_type?.type || "",
+      sector: entity.project_type?.sector || "",
+      permit_number: entity.project_type?.permit_number || "",
+      payment_mode: entity.payment_mode || "progressive",
+      payment_frequency: entity.payment_frequency || "monthly",
+      initial_advance: entity.initial_advance || 20,
+      retention_percentage: entity.retention_percentage || 5,
+      currency: entity.currency || "MRU",
+      funding_source: entity.funding?.financing_source || "",
+      market_type: entity.procurement?.market_type || "",
+      selection_mode: entity.procurement?.selection_mode || "",
+      main_contractor: entity.financial?.main_contractor || "",
+      status: entity.status || "en cours",
+      progress: entity.progress || 0,
+      // 📊 Required fields for DTO compliance
+      location: entity.location?.address || "",
+      team_size: entity.team_size || 0,
+      // 🏢 Contractors and suppliers (Rule #5 compliant)
+      contractors: entity.contractors || {
+        engineeringConsultant: "",
+        generalContractor: "",
+        specializedSubcontractors: "",
+        mainSuppliers: "",
+      },
+      // 🎨 UI state (Rule #5 compliant)
+      shapeData: entity.ui?.shapeData || null,
+    };
+  }
+
+  /**
+   * Transform DTO to UI entity structure - Service layer transformation (Rule #4 compliant)
+   * Handles the transformation from flat DTO structure to nested UI entity structure
+   */
+  static dtoToEntity(dto: ProjectFormDataDTO): any {
+    return {
+      // Basic info matching database schema
+      title: dto.title || "",
+      project_reference: dto.project_reference || "",
+      description: dto.description || "",
+      budget: dto.budget || "",
+      currency: dto.currency || "MRU",
+      status: dto.status || "en cours",
+      start_date: dto.start_date || "",
+      startDate: dto.start_date || "",
+      end_date: dto.end_date || "",
+      endDate: dto.end_date || "",
+      payment_mode: dto.payment_mode || "progressive",
+      payment_frequency: dto.payment_frequency || "monthly",
+      initial_advance: dto.initial_advance || 20,
+      retention_percentage: dto.retention_percentage || 5,
+      priority: dto.priority || "medium",
+      progress: dto.progress || 0,
+
+      // 🧁 Nested objects (Rule #4 compliant)
+      project_type: {
+        type: dto.project_type || "infrastructure",
+        sector: dto.sector || "",
+        permit_number: dto.permit_number || ""
+      },
+
+      location: {
+        address: dto.address || "",
+        latitude: dto.latitude || null,
+        longitude: dto.longitude || null,
+        area_sqm: null,
+        site_details: ""
+      },
+
+      financial: {
+        advance_percentage: dto.initial_advance || 20,
+        client_name: dto.client_name || "",
+        main_contractor: dto.main_contractor || "",
+        engineering_consultant: dto.contractors?.engineeringConsultant || "",
+        project_manager_id: dto.project_manager_id || null,
+        technical_manager_id: dto.technical_manager_id || null,
+        supervisor_id: dto.supervisor_id || null,
+        client_id: null,
+        workspace_id: null
+      },
+
+      funding: {
+        financing_source: dto.funding_source || "",
+        donor_organization: ""
+      },
+
+      procurement: {
+        market_type: dto.market_type || "appel_offre_international",
+        selection_mode: dto.selection_mode || "qualite_cout"
+      },
+
+      // 🎨 UI state (Rule #5 compliant)
+      ui: {
+        shapeData: dto.shapeData || null,
+        isDirty: false,
+        lastSavedAt: null
+      },
+
+      team_size: dto.team_size || 0
+    };
+  }
 }

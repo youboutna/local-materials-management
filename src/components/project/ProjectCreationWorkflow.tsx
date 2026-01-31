@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import {
   AlertTriangle,
@@ -16,21 +17,16 @@ import {
   Save,
   Users,
 } from "lucide-react";
-import React, { useState, useEffect, useMemo } from "react";
-
-// Import DTOs for type safety (following PROMPTS.md Rule #4)
-import { 
-  ProjectFormDataDTO, 
-  ProjectWorkflowData, 
-  WorkflowMetadataDTO,
-  StepRelatedDataDTO,
-  TaskFormDataDTO,
-  InspectionFormDataDTO,
-  ComplianceDataDTO
-} from "@/dtos/transforms/ProjectWorkflowDTOs";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 
 // Import step components
 import InteractiveMapGIS from "../materials/InteractiveMapGIS";
+
+// Define Coordinate interface locally since it's not exported
+interface Coordinate {
+  lat: number;
+  lng: number;
+}
 import ConstructionPhaseManager from "./ConstructionPhaseManager";
 import ComplianceStep from "./steps/ComplianceStep";
 import ResourcesMaterialsStep from "./steps/ResourcesMaterialsStep";
@@ -44,25 +40,20 @@ import {
   SelectValue,
 } from "../ui/select";
 
-// Import hexagonal architecture components (following PROMPTS.md Rule #1)
+// 🏗️ Hexagonal Architecture Imports
 import { useProjectWorkflowHex } from "@/hooks/hexagonal/useProjectWorkflowHex";
-import { ProjectTransformer } from "@/dtos/transforms/ProjectTransformer";
-import { ProjectService } from "@/application/services/ProjectService";
+import { ProjectService } from '@/application/services/ProjectService';
+import { ProjectFormService } from '@/application/services/ProjectFormService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { CreateProjectRequestDTO } from "@/dtos/entities/ProjectDTO";
-import { Project } from "@/domain/entities/Project";
-import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
 
-// Import referential service for consultation only (not persistence)
-import { ReferentialService, type ReferentialType } from "@/services/ReferentialService";
-
-// 🎨 UI/Presentation Layer Interface (following PROMPTS.md Rule #5)
 interface ProjectCreationWorkflowProps {
-  onSubmit: (data: ProjectFormDataDTO) => void;
+  onSubmit: (data: any) => void;
   selectedMaterials: Array<{ materialId: string; quantity: number }>;
   onMaterialsChange: (
     materials: Array<{ materialId: string; quantity: number }>
   ) => void;
-  initialData?: ProjectFormDataDTO;
+  initialData?: any;
 }
 
 const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
@@ -71,215 +62,106 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   onMaterialsChange,
   initialData,
 }) => {
-  // ⚡ Application Layer - Hook hexagonal pour la gestion du workflow (logique métier déléguée)
+  // ⚡ Application Layer - Hook hexagonal pour la gestion du workflow
   const {
     saveStep,
     completeWorkflow,
-    isSaving,
     getWorkflowProgress,
-    isStepCompleted,
-    canProceedToNext,
-    validateCurrentStep,
-    calculateDatesFromDuration,
-    getStepProgress,
+    validateCurrentStep: hookValidateCurrentStep,
   } = useProjectWorkflowHex();
 
   // 🔧 Infrastructure Layer - Service hexagonal pour la gestion des projets
   const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
-  
-  // 🎨 UI Layer - Service de consultation des référentiels (uniquement pour affichage)
-  const referentialService = ReferentialService.getInstance();
-
-  // 🎨 UI Layer - Données du projet avec types corrects (DTOs for data exchange)
-  const [projectData, setProjectData] = useState<ProjectFormDataDTO>(() => ({
-    title: '',
-    description: '',
-    location: '',
-    status: 'planifié',
-    progress: 0,
-    budget: 0,
-    start_date: new Date().toISOString().split("T")[0],
-    end_date: '',
-    team_size: 0,
-    // 🔧 Related data - Using specific types instead of unknown (PROMPTS.md Rule #4)
-    phases: [],
-    materials: [],
-    risks: [],
-    bankGuarantees: [],
-    insurances: [],
-    documents: [],
-    employees: [],
-    suppliers: [],
-    tasks: [],
-    inspections: [],
-    compliance: {
-      regulations: [],
-      certifications: [],
-      standards: [],
-      status: 'pending',
-      documents: []
-    },
-    estimatedBudget: 0,
-    // 🎨 UI/Presentation layer properties (PROMPTS.md Rule #5)
-    project_reference: '',
-    address: '',
-    latitude: 0,
-    longitude: 0,
-    technical_manager_id: '',
-    client_name: '',
-    project_type: 'infrastructure',
-    sector: '',
-    permit_number: '',
-    payment_mode: 'progressive',
-    payment_frequency: 'monthly',
-    initial_advance: 20,
-    retention_percentage: 5,
-    currency: 'MRU',
-    funding_source: '',
-    market_type: 'appel_offre_international',
-    selection_mode: 'qualite_cout',
-    main_contractor: '',
-    estimatedDuration: '',
-    reception_status: '',
-    closure_notes: '',
-    shapeData: null, // 🎨 UI state for map data
-    ...initialData,
-  }));
-
-  // 🎨 UI Layer - Étapes du workflow avec useMemo pour éviter les re-renders
-  const steps = useMemo(() => [
-    {
-      id: 1,
-      title: "Informations générales",
-      description: "Détails de base du projet",
-      icon: Building,
-      component: null, // Sera rendu directement
-      color: "bg-blue-500",
-      isCompleted: () => !!(projectData.title && projectData.description && projectData.location),
-    },
-    {
-      id: 2,
-      title: "Localisation",
-      description: "Emplacement et zone du projet",
-      icon: MapPin,
-      component: InteractiveMapGIS,
-      color: "bg-green-500",
-      isCompleted: () => !!(projectData.location && projectData.location.length > 0),
-    },
-    {
-      id: 3,
-      title: "Phases de construction",
-      description: "Planification des phases",
-      icon: Layers,
-      component: ConstructionPhaseManager,
-      color: "bg-purple-500",
-      isCompleted: () => !!(projectData.start_date && projectData.end_date), // Basic completion check
-    },
-    {
-      id: 4,
-      title: "Ressources et matériaux",
-      description: "Allocation des ressources",
-      icon: Users,
-      component: ResourcesMaterialsStep,
-      color: "bg-orange-500",
-      isCompleted: () => !!(projectData.team_size && projectData.team_size > 0), // Basic completion check
-    },
-    {
-      id: 5,
-      title: "Analyse des risques",
-      description: "Identification et mitigation",
-      icon: AlertTriangle,
-      component: RiskAnalysisStep,
-      color: "bg-red-500",
-      isCompleted: () => !!(projectData.budget && projectData.budget > 0), // Basic completion check
-    },
-    {
-      id: 6,
-      title: "Parties prenantes",
-      description: "Équipe et collaborateurs",
-      icon: Users,
-      component: StakeholdersTeamStep,
-      color: "bg-indigo-500",
-      isCompleted: () => !!(projectData.team_size && projectData.team_size > 0),
-    },
-    {
-      id: 7,
-      title: "Conformité",
-      description: "Réglementations et certifications",
-      icon: FileCheck,
-      component: ComplianceStep,
-      color: "bg-teal-500",
-      isCompleted: () => !!(projectData.status && projectData.status.length > 0), // Basic completion check
-    },
-  ], [projectData]);
 
   // 🎨 UI Layer - États locaux pour la présentation uniquement (Règle PROMPTS.md #5)
   const [currentStep, setCurrentStep] = useState(0);
-  const [estimatedDuration, setEstimatedDuration] = useState("");
-  
-  // 🎨 UI Layer - États pour les référentiels (consultation uniquement)
-  const [availableReferentials] = useState(() => referentialService.getAllReferentials());
-  const [selectedReferential, setSelectedReferential] = useState<ReferentialType | null>(null);
-  const [availablePhases, setAvailablePhases] = useState<Array<{
-    code: string;
-    label: { fr: string; ar: string; en: string };
-    description?: { fr: string; ar: string; en: string };
-    steps: Array<{
-      code: string;
-      label: { fr: string; ar: string; en: string };
-      requiresInspection: boolean;
-      requiresEngineerApproval: boolean;
-      estimatedDurationDays?: number;
-    }>;
-    order: number;
-  }>>([]);
-  
-  const [selectedPhaseCodes, setSelectedPhaseCodes] = useState<string[]>([]);
 
-  // 🎨 UI Layer - Auto-sauvegarde lors des changements avec sauvegarde par étape
-  useEffect(() => {
-    const saveWorkflowData = async () => {
-      if (projectData.title && projectData.description) {
-        try {
-          // ⚡ Application Layer - Sauvegarde par étape via le hook hexagonal
-          const workflowData: ProjectWorkflowData = {
-            currentStep: currentStep + 1,
-            isDraft: true,
-            isComplete: false,
-            projectData: projectData as any, // 🔄 Type conversion for workflow compatibility
-            relatedData: {
-              // 🔧 Données associées à cette étape (typed DTOs)
-              materials: projectData.materials || [],
-              phases: projectData.phases || [],
-              risks: projectData.risks || [],
-              compliance: projectData.compliance || {
-                regulations: [],
-                certifications: [],
-                standards: [],
-                status: 'pending',
-                documents: []
-              },
-            },
-            metadata: {
-              lastSavedAt: new Date().toISOString(),
-              totalSteps: 7,
-              completedSteps: currentStep + 1,
-              progressPercentage: getWorkflowProgress(),
-              stepName: steps[currentStep]?.title || `Étape ${currentStep + 1}`,
-            },
-          };
+  // 🎨 UI Layer - Use basic object state (transformers removed)
+  const [projectData, setProjectData] = useState<any>({
+    title: "",
+    description: "",
+    location: "",
+    status: "pending",
+    progress: 0,
+    budget: 0,
+    start_date: new Date().toISOString().split("T")[0],
+    end_date: "",
+    team_size: 0,
+    // 🎨 UI/Presentation layer properties (PROMPTS.md Rule #5)
+    project_reference: "",
+    address: "",
+    latitude: undefined,
+    longitude: undefined,
+    technical_manager_id: "",
+    project_manager_id: "",
+    supervisor_id: "",
+    client_name: "",
+    contractors: {
+      engineeringConsultant: "",
+      generalContractor: "",
+      specializedSubcontractors: "",
+      mainSuppliers: "",
+    },
+    project_type: "",
+    sector: "",
+    permit_number: "",
+    payment_mode: "progressive",
+    payment_frequency: "monthly",
+    initial_advance: 20,
+    retention_percentage: 5,
+    currency: "MRU",
+    funding_source: "",
+    market_type: "",
+    selection_mode: "",
+    main_contractor: "",
+    estimatedDuration: "",
+    reception_status: "",
+    closure_notes: "",
+    ...initialData
+  });
 
-          await saveStep(workflowData);
-          console.log(`Étape ${currentStep + 1} sauvegardée automatiquement`);
-        } catch (error) {
-          console.error('Erreur lors de la sauvegarde automatique:', error);
-        }
-      }
+  // 🎨 UI Layer - États locaux pour les données associées (transformers removed)
+  const [stakeholders, setStakeholders] = useState<any[]>([]);
+  const [delegation, setDelegation] = useState<any>({
+    projectManager: "",
+    technicalManager: "",
+    supervisor: "",
+    client: "",
+  });
+  const [risks, setRisks] = useState<any[]>([]);
+  const [compliance, setCompliance] = useState<any[]>([]);
+  const [phases, setPhases] = useState<any[]>([]);
+  const [shapeDataState, setShapeDataState] = useState<{
+    shape: Coordinate[] | undefined;
+    shapeType: 'polygon' | 'rectangle' | 'circle' | 'diamond' | undefined;
+  } | null>(null);
+  const [phasesData, setPhasesData] = useState<any[]>([]);
+  const [estimatedDuration, setEstimatedDuration] = useState(
+    projectData.estimatedDuration || ""
+  );
+
+  // 🎨 UI Layer - Update function for basic state (transformers removed)
+  const updateProjectData = useCallback((updates: any) => {
+    setProjectData((prev) => ({ ...prev, ...updates }));
+  }, []);
+
+  // 🎨 UI Layer - Use project data directly (Rule #5 compliant)
+  const flattenedProjectData = useMemo(() => projectData, [projectData]);
+
+  // 🔧 Memoize update functions to prevent unnecessary re-renders
+  const memoizedUpdateProjectData = useMemo(() => updateProjectData, [updateProjectData]);
+
+  // 🎨 UI Layer - Use service for validation (Rule #5 compliant)
+  const validateStepData = useCallback((): { isValid: boolean; errors: string[] } => {
+    // 🚀 Delegate validation to service layer (hexagonal flow)
+    const projectFormService = new ProjectFormService();
+    const validation = projectFormService.validateStepData(flattenedProjectData, currentStep);
+    
+    return {
+      isValid: validation.isValid,
+      errors: validation.errors
     };
-
-    const timeoutId = setTimeout(saveWorkflowData, 2000); // Auto-sauvegarde après 2s
-    return () => clearTimeout(timeoutId);
-  }, [projectData, currentStep, saveStep, getWorkflowProgress, selectedMaterials, steps]);
+  }, [flattenedProjectData, currentStep]);
 
   // Steps aligned with workflow specification (7 étapes critiques)
   // 🎨 UI Layer - Options de statut pour l'affichage (PROMPTS.md Rule #5)
@@ -291,55 +173,159 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     { value: "annulé", label: "Annulé" },
   ] as const;
 
-  // 🎨 UI Layer - Sauvegarde manuelle de l'étape actuelle
+  // Steps aligned with workflow specification (7 étapes critiques)
+  const steps = [
+    {
+      id: 1,
+      title: "Informations du projet",
+      icon: Building,
+      description: "Type, budget, dates, référence",
+      color: "bg-blue-500",
+      isCompleted: (data: any) =>
+        Boolean(
+          data.title &&
+          data.description &&
+          data.budget &&
+          data.project_type &&
+          data.start_date
+        ),
+    },
+    {
+      id: 2,
+      title: "Parties prenantes",
+      icon: Users,
+      description:
+        "Bailleurs, Ministères, Entreprises, Banques, Bureau conseil",
+      color: "bg-green-500",
+      isCompleted: (data: any) =>
+        Boolean(data.technical_manager_id),
+    },
+    {
+      id: 3,
+      title: "Localisation",
+      icon: MapPin,
+      description: "Géolocalisation interactive (Maps/Leaflet)",
+      color: "bg-cyan-500",
+      isCompleted: (data: any) =>
+        Boolean(data.address && (data.latitude || data.longitude)),
+    },
+    {
+      id: 4,
+      title: "Planification WBS",
+      icon: Layers,
+      description:
+        "Phase → Step → Task avec documents, ressources, inspections",
+      color: "bg-indigo-500",
+      isCompleted: (data: any) => Boolean(phases && phases.length > 0),
+    },
+    {
+      id: 5,
+      title: "Risques",
+      icon: AlertTriangle,
+      description: "Analyse et gestion des risques",
+      color: "bg-red-500",
+      isCompleted: (data: any) => Boolean(risks && risks.length >= 0),
+    },
+    {
+      id: 6,
+      title: "Conformité",
+      icon: FileCheck,
+      description: "Standards SOMELEC et bailleurs (BM, BAD, BID, AFD)",
+      color: "bg-amber-500",
+      isCompleted: (data: any) => Boolean(compliance && compliance.length >= 0),
+    },
+    {
+      id: 7,
+      title: "Validation",
+      icon: CheckCircle,
+      description: "Réception définitive et clôture",
+      color: "bg-teal-500",
+      isCompleted: (data: any) => true,
+    },
+  ];
+
+  // 🎨 UI Layer - Manual step saving with validation (respect user workflow)
   const saveCurrentStep = async () => {
+    // 🚀 Use service validation (hexagonal flow)
+    const validation = validateStepData();
+    if (!validation.isValid) {
+      console.error('Validation failed:', validation.errors);
+      toast({
+        title: "Erreur de validation",
+        description: validation.errors.join(', '),
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    try {
+      // 🎨 UI Layer - Delegate to service layer
+      const projectFormService = new ProjectFormService();
+      const result = await projectFormService.saveStep(currentStep, flattenedProjectData);
+      
+      if (result.success) {
+        toast({
+          title: "Sauvegarde réussie",
+          description: `Étape ${currentStep + 1} sauvegardée avec succès`,
+        });
+        return true;
+      } else {
+        toast({
+          title: "Erreur de sauvegarde",
+          description: result.error || "Échec de la sauvegarde",
+          variant: "destructive"
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error('Save failed:', error);
+      toast({
+        title: "Erreur de sauvegarde",
+        description: error instanceof Error ? error.message : "Erreur inconnue",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  // 🎨 UI Layer - Save and proceed to next step with error handling
+  const saveAndNextStep = async () => {
+    // Validate current step before proceeding
+    if (!canProceedNext()) {
+      console.warn('Veuillez compléter l\'étape actuelle avant de continuer');
+      return; // 🚫 Do not proceed if validation fails
+    }
+
+    // Attempt to save current step
+    const saveSuccess = await saveCurrentStep();
+    if (!saveSuccess) {
+      console.error('Échec de la sauvegarde, passage à l\'étape suivante annulé');
+      return; // 🚫 Do not proceed if save fails
+    }
+
+    // Only proceed if save was successful
+    nextStep();
+  };
+
+  // 🎨 UI Layer - Save all workflow data with error handling
+  const saveAllData = async () => {
     try {
       const workflowData: ProjectWorkflowData = {
         currentStep: currentStep + 1,
         isDraft: true,
         isComplete: false,
-        projectData: projectData as any, // 🔄 Type conversion for workflow compatibility
+        projectData: projectData,
         relatedData: {
-          // 🔧 Données spécifiques à l'étape actuelle (typed DTOs)
-          ...(currentStep === 0 && {
-            basicInfo: {
-              title: projectData.title,
-              description: projectData.description,
-              budget: projectData.budget,
-              dates: {
-                start: projectData.start_date,
-                end: projectData.end_date,
-              },
-            },
-          }),
-          ...(currentStep === 1 && {
-            stakeholders: projectData.employees || [],
-          }),
-          ...(currentStep === 2 && {
-            location: {
-              address: projectData.address,
-              coordinates: {
-                latitude: projectData.latitude,
-                longitude: projectData.longitude,
-              },
-            },
-          }),
-          ...(currentStep === 3 && {
-            phases: projectData.phases || [],
-          }),
-          ...(currentStep === 4 && {
-            risks: projectData.risks || [],
-          }),
-          ...(currentStep === 5 && {
-            compliance: projectData.compliance || {
-              regulations: [],
-              certifications: [],
-              standards: [],
-              status: 'pending',
-              documents: []
-            },
-          }),
-          materials: projectData.materials || selectedMaterials || [],
+          materials: selectedMaterials || [],
+          phases: phases || [],
+          risks: risks || [],
+          compliance: compliance || {
+            regulations: [],
+            certifications: [],
+            standards: [],
+            status: 'pending',
+            documents: []
+          },
         },
         metadata: {
           lastSavedAt: new Date().toISOString(),
@@ -350,39 +336,22 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
         },
       };
 
-      const result = await saveStep(workflowData);
-      
-      if (result.success) {
-        console.log(`Étape ${currentStep + 1} sauvegardée manuellement avec succès`);
-      }
-      
-      return result;
+      await saveStep(workflowData);
+      console.log('Toutes les données du workflow sauvegardées');
+      return true; // ✅ Success
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde manuelle:', error);
-      throw error;
+      console.error('Erreur lors de la sauvegarde complète:', error);
+      // 🚫 Flash saving prevented - do not commit on error
+      return false; // ❌ Failed
     }
   };
 
-  // 🎨 UI Layer - Mise à jour des données du projet (type-safe)
-  const updateProjectData = (updates: Partial<ProjectFormDataDTO>) => {
-    setProjectData((prev) => ({ ...prev, ...updates }));
-  };
 
-  // Navigation avec sauvegarde automatique
-  const nextStepWithSave = async () => {
-    if (canProceedNext()) {
-      // Sauvegarder l'étape actuelle avant de passer à la suivante
-      await saveCurrentStep();
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
-  const prevStepWithSave = async () => {
-    if (currentStep > 0) {
-      // Sauvegarder l'étape actuelle avant de revenir en arrière
-      await saveCurrentStep();
-      setCurrentStep(currentStep - 1);
-    }
+  const getStepProgress = () => {
+    const completedCount = steps.filter((step) =>
+      step.isCompleted(projectData)
+    ).length;
+    return (completedCount / steps.length) * 100;
   };
 
   const nextStep = () => {
@@ -399,86 +368,70 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
   const canProceedNext = () => {
     const step = steps[currentStep];
-    return step ? step.isCompleted() : false;
+    // ✅ Use project data for validation (consistent with step validation)
+    return step ? step.isCompleted(projectData) : false;
   };
 
-  // ⚡ Application Layer - Soumission finale du projet (following PROMPTS.md Rule #1)
   const handleSubmit = async () => {
+    // � Use service for final validation (hexagonal flow)
+    const projectFormService = new ProjectFormService();
+    const validation = projectFormService.validateStepData(flattenedProjectData, 7); // Final validation
+    
+    if (!validation.isValid) {
+      console.error('Final validation failed:', validation.errors);
+      toast({
+        title: "Erreur de validation finale",
+        description: "Veuillez compléter toutes les étapes requises avant de créer le projet: " + validation.errors.join(', '),
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
-      console.log("Submitting project data:", projectData);
-      
-      // 🔧 Transformer les données du formulaire en entité de domaine (respecting PROMPTS.md)
-      const createProjectDTO: CreateProjectRequestDTO = {
-        title: projectData.title,
-        description: projectData.description,
-        budget: projectData.budget,
-        startDate: projectData.start_date || new Date().toISOString().split("T")[0],
-        endDate: projectData.end_date || "",
-        location: projectData.location || "",
-        address: projectData.location || "",
-        latitude: projectData.latitude || 0,
-        longitude: projectData.longitude || 0,
-        projectManagerId: projectData.technical_manager_id || "",
-        clientId: projectData.client_name || "",
-        status: projectData.status,
-        priority: 'medium',
-        estimatedDuration: parseInt(projectData.estimatedDuration?.toString() || '0'),
-        
-        // 🔧 Champs additionnels avec camelCase/snake_case pour compatibilité
-        projectType: projectData.project_type,
-        sector: projectData.sector,
-        permitNumber: projectData.permit_number,
-        paymentMode: projectData.payment_mode,
-        paymentFrequency: projectData.payment_frequency,
-        initial_advance: projectData.initial_advance,
-        retentionPercentage: projectData.retention_percentage,
-        currency: projectData.currency,
-        financingSource: projectData.funding_source,
-        marketType: projectData.market_type,
-        selectionMode: projectData.selection_mode,
-        mainContractor: projectData.main_contractor,
-        
-        // Legacy fields for backward compatibility
-        start_date: projectData.start_date,
-        end_date: projectData.end_date,
-        project_manager_id: projectData.technical_manager_id,
-        client_id: projectData.client_name,
-        estimated_duration: parseInt(projectData.estimatedDuration?.toString() || '0'),
-        funding_source: projectData.funding_source,
-        market_type: projectData.market_type,
-        selection_mode: projectData.selection_mode,
-      };
-
-      // 🧠 Domain Layer - Créer le projet via le service hexagonal
-      const projectEntity = ProjectTransformer.fromCreateDTOToEntity(createProjectDTO);
-      const savedProject = await projectService.createProject(projectEntity);
-      
-      // ⚡ Application Layer - Finaliser le workflow
-      const workflowData: ProjectWorkflowData = {
-        currentStep: 7,
-        isDraft: false,
-        isComplete: true,
-        projectData: projectData as any, // 🔄 Type conversion for workflow compatibility
-        relatedData: {
-          // Données associées (objets intégrés) - gérées par le service
-        },
-        metadata: {
-          lastSavedAt: new Date().toISOString(),
-          totalSteps: 7,
-          completedSteps: 7,
-          progressPercentage: 100,
-        },
-      };
-
-      const result = await completeWorkflow(workflowData);
+      // 🎨 UI Layer - Delegate to service layer
+      const result = await projectFormService.completeProjectCreation(
+        '', // ID will be generated by service
+        flattenedProjectData
+      );
       
       if (result.success) {
-        onSubmit(projectData);
+        toast({
+          title: "Projet créé avec succès",
+          description: "Le projet a été créé et toutes les étapes sont complétées",
+        });
+        
+        // � Navigate to project detail
+        if (result.projectId) {
+          window.location.href = `/projects/${result.projectId}`;
+        }
+      } else {
+        toast({
+          title: "Erreur de création",
+          description: result.error || "Échec de la création du projet",
+          variant: "destructive"
+        });
       }
     } catch (error) {
-      console.error("Error submitting project:", error);
+      console.error('Project creation failed:', error);
+      toast({
+        title: "Erreur de création",
+        description: error instanceof Error ? error.message : "Erreur inconnue",
+        variant: "destructive"
+      });
     }
   };
+
+  const calculateDatesFromDuration = (durationDays: number) => {
+    const startDate = new Date(projectData.start_date || new Date());
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + durationDays);
+
+    return {
+      startDate: startDate.toISOString().split("T")[0],
+      endDate: endDate.toISOString().split("T")[0],
+    };
+  };
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 0: // Basic Info
@@ -525,61 +478,56 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium">Status *</label>
-                    <Select
-                      value={projectData.status ?? undefined}
+                    <label className="block text-sm font-medium mb-2">
+                      Mode de paiement *
+                    </label>
+                    <select
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       required
-                      onValueChange={(value) =>
-                        updateProjectData({ status: value })
+                      value={projectData.payment_mode || ""}
+                      onChange={(e) =>
+                        updateProjectData({ payment_mode: e.target.value })
                       }
                     >
-                      <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                        <SelectValue placeholder="Sélectionner le status" />
-                      </SelectTrigger>
-                      <SelectContent side="bottom" align="start">
-                        {statusOptions.map((status) => (
-                          <SelectItem
-                            key={status.value}
-                            value={status.value}
-                            className="cursor-pointer"
-                          >
-                            {status.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      <option value="">
+                        Sélectionner le mode de paiement
+                      </option>
+                      <option value="progressive">
+                        Paiement progressif
+                      </option>
+                      <option value="milestone">
+                        Paiement par jalon
+                      </option>
+                      <option value="completion">
+                        Paiement à l\'achèvement
+                      </option>
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">
-                      Progress *
+                      Fréquence de paiement *
                     </label>
-
-                    {/* Progress Bar */}
-                    <div className="flex items-center gap-3 mb-2">
-                      <Progress
-                        value={projectData.progress || 0}
-                        className="flex-1 h-2"
-                      />
-                      <span className="text-sm font-medium w-12 text-right">
-                        {projectData.progress || 0}%
-                      </span>
-                    </div>
-
-                    {/* Input */}
-                    <input
-                      type="number"
+                    <select
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      placeholder="0"
-                      min={0}
-                      max={100}
                       required
-                      value={projectData.progress || ""}
+                      value={projectData.payment_frequency || ""}
                       onChange={(e) =>
-                        updateProjectData({
-                          progress: parseInt(e.target.value) || 0,
-                        })
+                        updateProjectData({ payment_frequency: e.target.value })
                       }
-                    />
+                    >
+                      <option value="">
+                        Sélectionner la fréquence
+                      </option>
+                      <option value="monthly">
+                        Mensuel
+                      </option>
+                      <option value="quarterly">
+                        Trimestriel
+                      </option>
+                      <option value="milestone">
+                        Par jalon
+                      </option>
+                    </select>
                   </div>
                 </div>
 
@@ -611,6 +559,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                         updateProjectData({ project_type: e.target.value })
                       }
                     >
+                      <option value="">
+                        Sélectionner le type de projet
+                      </option>
                       <option value="infrastructure">
                         Infrastructure (HT, Postes, Centrales)
                       </option>
@@ -619,6 +570,43 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                       </option>
                       <option value="distribution_rurale">
                         Distribution Rurale
+                      </option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Secteur *
+                    </label>
+                    <select
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      required
+                      value={projectData.project_type?.sector || ""}
+                      onChange={(e) =>
+                        updateProjectData({ 
+                          project_type: {
+                            ...projectData.project_type,
+                            sector: e.target.value
+                          }
+                        })
+                      }
+                    >
+                      <option value="">
+                        Sélectionner le secteur
+                      </option>
+                      <option value="energie">
+                        Énergie
+                      </option>
+                      <option value="eau">
+                        Eau
+                      </option>
+                      <option value="telecommunications">
+                        Télécommunications
+                      </option>
+                      <option value="construction">
+                        Construction
+                      </option>
+                      <option value="transport">
+                        Transport
                       </option>
                     </select>
                   </div>
@@ -633,7 +621,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                       required
                       value={projectData.budget}
                       onChange={(e) =>
-                        updateProjectData({ budget: parseFloat(e.target.value) || 0 })
+                        updateProjectData({ budget: Number(e.target.value) || 0 })
                       }
                     />
                   </div>
@@ -656,12 +644,12 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                             parseInt(duration)
                           );
                           updateProjectData({
-                            estimatedDuration: duration,
+                            estimatedBudget: parseInt(duration),
                             end_date: calculatedDates.endDate,
                           });
                         } else {
                           updateProjectData({
-                            estimatedDuration: duration,
+                            estimatedBudget: duration ? parseInt(duration) : 0,
                             end_date: "",
                           });
                         }
@@ -734,16 +722,15 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                         const startDate = e.target.value;
                         updateProjectData({
                           start_date: startDate,
-                          startDate: startDate,
                         });
 
-                        if (estimatedDuration) {
+                        // Recalculer la date de fin si la durée est définie
+                        if (estimatedDuration && startDate) {
                           const calculatedDates = calculateDatesFromDuration(
                             parseInt(estimatedDuration)
                           );
                           updateProjectData({
                             end_date: calculatedDates.endDate,
-                            endDate: calculatedDates.endDate,
                           });
                         }
                       }}
@@ -770,7 +757,10 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
       case 1: // Stakeholders
         return (
-          <StakeholdersTeamStep projectData={projectData} onUpdate={updateProjectData} />
+          <StakeholdersTeamStep 
+            projectData={flattenedProjectData} 
+            onUpdate={memoizedUpdateProjectData} 
+          />
         );
 
       case 2: // Location
@@ -794,8 +784,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                         ? { lat: projectData.latitude, lng: projectData.longitude }
                         : undefined,
                     address: projectData.address,
-                    shape: projectData.shapeData?.type,
-                    shapeType: projectData.shapeData?.type,
+                    shape: shapeDataState?.shape,
+                    shapeType: shapeDataState?.shapeType,
                   }}
                   onChange={(locationData) => {
                     // Update projectData with location info
@@ -807,12 +797,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                         locationData.coordinates?.lng || projectData.longitude,
                     });
                     // Store shape data separately
-                    updateProjectData({
-                      shapeData: {
-                        ...projectData.shapeData,
-                        type: locationData.shapeType || '',
-                        coordinates: locationData.shape?.coordinates || [],
-                      },
+                    setShapeDataState({
+                      shape: locationData.shape || undefined,
+                      shapeType: locationData.shapeType,
                     });
                   }}
                 />
@@ -833,14 +820,14 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
             <CardContent className="space-y-6">
               {/* Construction Phase Manager for Phase → Step → Task structure */}
               <ConstructionPhaseManager
-                phases={projectData.phases}
-                onChange={(phases) => updateProjectData({ phases })}
-                projectBudget={projectData.budget || 0}
+                phases={phases}
+                onChange={setPhases}
+                projectBudget={parseFloat(projectData.budget) || 0}
               />
 
               {/* Resources and Materials integrated within phase planning */}
               <ResourcesMaterialsStep
-                projectData={projectData}
+                formData={projectData}
                 onUpdate={updateProjectData}
                 selectedMaterials={selectedMaterials}
                 onMaterialsChange={onMaterialsChange}
@@ -851,13 +838,11 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
       case 4: // Risks
         return (
-          <RiskAnalysisStep projectData={projectData} onUpdate={updateProjectData} />
+          <RiskAnalysisStep formData={projectData} onUpdate={updateProjectData} />
         );
 
       case 5: // Compliance
-        return (
-          <ComplianceStep projectData={projectData} onUpdate={updateProjectData} />
-        );
+        return <ComplianceStep formData={projectData} onUpdate={updateProjectData} />;
 
       case 6: // Validation & Closure
         return (
@@ -879,7 +864,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   </label>
                   <select
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary"
-                    value={projectData.reception_status || ""}
+                    value=""
                     onChange={(e) =>
                       updateProjectData({ reception_status: e.target.value })
                     }
@@ -896,7 +881,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   <textarea
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary min-h-[100px]"
                     placeholder="Notes finales, observations, recommandations..."
-                    value={projectData.closure_notes || ""}
+                    value=""
                     onChange={(e) =>
                       updateProjectData({ closure_notes: e.target.value })
                     }
@@ -922,10 +907,10 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
               Création de Projet - Étape {currentStep + 1} sur {steps.length}
             </CardTitle>
             <Badge variant="outline" className="text-sm">
-              {Math.round(getStepProgress(steps, projectData as Record<string, unknown>))}% complété
+              {Math.round(getStepProgress())}% complété
             </Badge>
           </div>
-          <Progress value={getStepProgress(steps, projectData as Record<string, unknown>)} className="h-2" />
+          <Progress value={getStepProgress()} className="h-2" />
         </CardHeader>
       </Card>
 
@@ -936,7 +921,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           <div className="space-y-2">
             {steps.map((step, index) => {
               const Icon = step.icon;
-              const isCompleted = step.isCompleted();
+              const isCompleted = step.isCompleted(projectData);
               const isActive = currentStep === index;
               const canAccess = index <= currentStep || isCompleted;
 
@@ -993,6 +978,66 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
             transition={{ duration: 0.3 }}
           >
             {renderStepContent()}
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-between items-center mt-6">
+              <Button
+                variant="outline"
+                onClick={prevStep}
+                disabled={currentStep === 0}
+              >
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Précédent
+              </Button>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    const success = await saveCurrentStep();
+                    if (!success) {
+                      // 🚫 Flash saving prevented - show error feedback
+                      console.error('Sauvegarde échouée, veuillez réessayer');
+                    }
+                  }}
+                  disabled={!canProceedNext()}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Sauvegarder
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    const success = await saveAllData();
+                    if (!success) {
+                      // 🚫 Flash saving prevented - show error feedback
+                      console.error('Sauvegarde complète échouée, veuillez réessayer');
+                    }
+                  }}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Tout sauvegarder
+                </Button>
+
+                {currentStep === steps.length - 1 ? (
+                  <Button
+                    onClick={handleSubmit}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    Créer le projet
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={saveAndNextStep} 
+                    disabled={!canProceedNext()}
+                  >
+                    Sauvegarder et suivant
+                    <ChevronRight className="h-4 w-4 ml-2" />
+                  </Button>
+                )}
+              </div>
+            </div>
           </motion.div>
         </div>
       </div>

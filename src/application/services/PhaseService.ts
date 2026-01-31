@@ -8,8 +8,8 @@ import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import { Phase, PhaseStep, PhaseTask, PhaseStatus } from '@/domain/entities/Phase';
 import { PhaseDTO, CreatePhaseRequestDto, UpdatePhaseRequestDto, PhaseTaskDTO as SharedPhaseTaskDTO } from '@/dtos/transforms/shared';
-import { PhaseStepDTO as SharedPhaseStepDTO, PhaseTaskDTO as PhaseTaskDTOFromPhaseDTO } from '@/dtos/transforms/PhaseDTO';
-import { PhaseDomainTransformer } from '@/dtos/transforms/PhaseDomainTransformer';
+import { PhaseStepDTO as SharedPhaseStepDTO, PhaseTaskDTO as PhaseTaskDTOFromPhaseDTO, PhaseDTO as PhaseDTOPhase } from '@/dtos/transforms/PhaseDTO';
+import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
 import { ConstructionPhase, ConstructionStage } from '@/types/project';
 
 // Service DTOs for data exchange
@@ -106,7 +106,7 @@ export interface CustomPhase {
 export class PhaseService {
   constructor(
     private phaseRepository: IPhaseRepository = RepositoryFactory.getPhaseRepository(),
-    private phaseTransformer: PhaseDomainTransformer = new PhaseDomainTransformer()
+    private phaseTransformer: PhaseTransformer = new PhaseTransformer()
   ) {}
 
   /**
@@ -120,9 +120,9 @@ export class PhaseService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, `Validation failed: ${validation.errors.join(', ')}`);
       }
 
-      const entity = PhaseDomainTransformer.fromCreateDtoToEntity(data) as Partial<Phase>;
+      const entity = PhaseTransformer.toEntity(data as unknown as PhaseDTOPhase) as Partial<Phase>;
       const createdEntity = await this.phaseRepository.create(entity);
-      return PhaseDomainTransformer.toDTO(createdEntity);
+      return PhaseTransformer.toDTO(createdEntity);
     } catch (error) {
       console.error('PhaseService.createPhase failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create phase');
@@ -139,7 +139,7 @@ export class PhaseService {
       }
 
       const entity = await this.phaseRepository.findById(id);
-      return entity ? PhaseDomainTransformer.toDTO(entity) : null;
+      return entity ? PhaseTransformer.toDTO(entity) : null;
     } catch (error) {
       console.error('PhaseService.getPhaseById failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get phase');
@@ -156,7 +156,7 @@ export class PhaseService {
       }
 
       const entities = await this.phaseRepository.findByProjectId(projectId);
-      return entities.map(entity => PhaseDomainTransformer.toDTO(entity));
+      return entities.map(entity => PhaseTransformer.toDTO(entity));
     } catch (error) {
       console.error('PhaseService.getPhasesByProject failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get phases');
@@ -178,9 +178,9 @@ export class PhaseService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, `Validation failed: ${validation.errors.join(', ')}`);
       }
 
-      const updates = PhaseDomainTransformer.fromUpdateDtoToEntity(data);
+      const updates = PhaseTransformer.toEntity(data as unknown as PhaseDTOPhase) as Partial<Phase>;
       const updatedEntity = await this.phaseRepository.update(id, updates);
-      return PhaseDomainTransformer.toDTO(updatedEntity);
+      return PhaseTransformer.toDTO(updatedEntity);
     } catch (error) {
       console.error('PhaseService.updatePhase failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update phase');
@@ -213,7 +213,7 @@ export class PhaseService {
       }
 
       const entity = await this.phaseRepository.findWithSteps(id);
-      return entity ? PhaseDomainTransformer.toDTO(entity) : null;
+      return entity ? PhaseTransformer.toDTO(entity) : null;
     } catch (error) {
       console.error('PhaseService.getPhaseWithSteps failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get phase with steps');
@@ -457,7 +457,7 @@ export class PhaseService {
       }
 
       const updatedPhase = await this.phaseRepository.updateTaskStatus(phaseId, stepId, taskId, status, progress);
-      return PhaseDomainTransformer.toDTO(updatedPhase);
+      return PhaseTransformer.toDTO(updatedPhase);
     } catch (error) {
       console.error('PhaseService.updateTaskStatus failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update task status');
@@ -474,7 +474,8 @@ export class PhaseService {
       }
 
       const result = await this.phaseRepository.getMetrics(id);
-      return PhaseDomainTransformer.toMetricsDTO(result);
+      // Convert metrics to DTO format - PhaseTransformer doesn't have toMetricsDTO
+      return result as unknown as PhaseMetricsDTO;
     } catch (error) {
       console.error('PhaseService.getPhaseMetrics failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get phase metrics');
@@ -486,6 +487,8 @@ export class PhaseService {
    */
   validatePhaseData(data: CreatePhaseRequestDto | UpdatePhaseRequestDto): { isValid: boolean; errors: string[] } {
     const dto = data as CreatePhaseRequestDto;
-    return PhaseDomainTransformer.validate(dto as PhaseDTO);
+    // Create transformer instance to use validate method
+    const transformer = new PhaseTransformer();
+    return transformer.validate(dto as unknown as PhaseDTOPhase);
   }
 }

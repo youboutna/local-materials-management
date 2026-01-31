@@ -8,11 +8,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RepositoryFactory } from "@/repositories/RepositoryFactory";
 import { MaterialService } from "@/application/services/MaterialService";
-import { MaterialDomainTransformer, MaterialResponseDto, CreateMaterialRequestDto, UpdateMaterialRequestDto } from "@/dtos/transforms";
+import { MaterialTransformer, CreateMaterialRequestDto, UpdateMaterialRequestDto } from '@/dtos/transforms';
+import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
 
 // Enhanced types for UI components
 export interface UseMaterialsEnhancedResult {
-  materials: MaterialResponseDto[];
+  materials: MaterialDTO[];
   isLoading: boolean;
   error: any;
   refetch: () => void;
@@ -23,14 +24,14 @@ export interface UseMaterialsEnhancedResult {
   isUpdating: boolean;
   isDeleting: boolean;
   // Enhanced UI features
-  searchMaterials: (term: string) => MaterialResponseDto[];
-  filterByCategory: (category: string) => MaterialResponseDto[];
-  sortByPrice: (ascending?: boolean) => MaterialResponseDto[];
-  sortByQuantity: (ascending?: boolean) => MaterialResponseDto[];
-  calculateTotalCost: (materials: MaterialResponseDto[], quantities: number[]) => number;
+  searchMaterials: (term: string) => MaterialDTO[];
+  filterByCategory: (category: string) => MaterialDTO[];
+  sortByPrice: (ascending?: boolean) => MaterialDTO[];
+  sortByQuantity: (ascending?: boolean) => MaterialDTO[];
+  calculateTotalCost: (materials: MaterialDTO[], quantities: number[]) => number;
   calculateInventoryValue: () => number;
-  getLowStockMaterials: () => MaterialResponseDto[];
-  getOutOfStockMaterials: () => MaterialResponseDto[];
+  getLowStockMaterials: () => MaterialDTO[];
+  getOutOfStockMaterials: () => MaterialDTO[];
 }
 
 /**
@@ -41,7 +42,7 @@ export function useMaterialsEnhanced(): UseMaterialsEnhancedResult {
   
   const materialRepository = RepositoryFactory.getMaterialRepository();
   const materialService = new MaterialService(materialRepository);
-  const materialTransformer = new MaterialDomainTransformer();
+  const materialTransformer = new MaterialTransformer();
 
   // Query for materials list
   const {
@@ -51,7 +52,7 @@ export function useMaterialsEnhanced(): UseMaterialsEnhancedResult {
     refetch
   } = useQuery({
     queryKey: ['materials'],
-    queryFn: async (): Promise<MaterialResponseDto[]> => {
+    queryFn: async (): Promise<MaterialDTO[]> => {
       try {
         const materialEntities = await materialService.getAllMaterials();
         return materialTransformer.fromDtosToAdapter(
@@ -66,7 +67,7 @@ export function useMaterialsEnhanced(): UseMaterialsEnhancedResult {
 
   // Create material mutation
   const createMaterialMutation = useMutation({
-    mutationFn: async (data: CreateMaterialRequestDto): Promise<MaterialResponseDto> => {
+    mutationFn: async (data: CreateMaterialRequestDto): Promise<MaterialDTO> => {
       try {
         const materialDTO = materialTransformer.toRequestDto(data);
         const materialEntity = materialService.createMaterial(materialDTO);
@@ -88,7 +89,7 @@ export function useMaterialsEnhanced(): UseMaterialsEnhancedResult {
 
   // Update material mutation
   const updateMaterialMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: UpdateMaterialRequestDto }): Promise<MaterialResponseDto> => {
+    mutationFn: async ({ id, data }: { id: string; data: UpdateMaterialRequestDto }): Promise<MaterialDTO> => {
       try {
         const materialDTO = materialTransformer.toUpdateDto(data);
         const materialEntity = await materialService.updateMaterial(id, materialDTO);
@@ -128,41 +129,48 @@ export function useMaterialsEnhanced(): UseMaterialsEnhancedResult {
     }
   });
 
-  // Enhanced UI methods
-  const searchMaterials = (term: string): MaterialResponseDto[] => {
-    return MaterialDomainTransformer.searchMaterials(materials, term);
+  // Enhanced UI methods (simplified)
+  const searchMaterials = (term: string): MaterialDTO[] => {
+    return materials.filter(material => 
+      material.name.toLowerCase().includes(term.toLowerCase())
+    );
   };
 
-  const filterByCategory = (category: string): MaterialResponseDto[] => {
-    return MaterialDomainTransformer.filterMaterialsByCategory(materials, category);
+  const filterByCategory = (category: string): MaterialDTO[] => {
+    return materials.filter(material => material.category === category);
   };
 
-  const sortByPrice = (ascending: boolean = true): MaterialResponseDto[] => {
-    return MaterialDomainTransformer.sortMaterialsByPrice(materials, ascending);
+  const sortByPrice = (ascending: boolean = true): MaterialDTO[] => {
+    return [...materials].sort((a, b) => 
+      ascending ? a.unitPrice - b.unitPrice : b.unitPrice - a.unitPrice
+    );
   };
 
-  const sortByQuantity = (ascending: boolean = false): MaterialResponseDto[] => {
-    return MaterialDomainTransformer.sortMaterialsByQuantity(materials, ascending);
+  const sortByQuantity = (ascending: boolean = false): MaterialDTO[] => {
+    return [...materials].sort((a, b) => 
+      ascending ? a.availableQuantity - b.availableQuantity : b.availableQuantity - a.availableQuantity
+    );
   };
 
-  const calculateTotalCost = (materialsList: MaterialResponseDto[], quantities: number[]): number => {
-    return MaterialDomainTransformer.calculateTotalCost(materialsList, quantities);
+  const calculateTotalCost = (materialsList: MaterialDTO[], quantities: number[]): number => {
+    return materialsList.reduce((total, material, index) => {
+      const quantity = quantities[index] || 0;
+      return total + (material.unitPrice * quantity);
+    }, 0);
   };
 
   const calculateInventoryValue = (): number => {
-    return MaterialDomainTransformer.calculateTotalInventoryValue(materials);
+    return materials.reduce((total, material) => {
+      return total + (material.unitPrice * material.availableQuantity);
+    }, 0);
   };
 
-  const getLowStockMaterials = (): MaterialResponseDto[] => {
-    return materials.filter(material => 
-      MaterialDomainTransformer.getMaterialStockStatus(material.availableQuantity) === 'low-stock'
-    );
+  const getLowStockMaterials = (): MaterialDTO[] => {
+    return materials.filter(material => material.availableQuantity <= material.minStock);
   };
 
-  const getOutOfStockMaterials = (): MaterialResponseDto[] => {
-    return materials.filter(material => 
-      MaterialDomainTransformer.getMaterialStockStatus(material.availableQuantity) === 'out-of-stock'
-    );
+  const getOutOfStockMaterials = (): MaterialDTO[] => {
+    return materials.filter(material => material.availableQuantity === 0);
   };
 
   return {

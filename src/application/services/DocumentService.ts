@@ -6,7 +6,7 @@
 import { Document, DocumentType } from '@/domain/entities/Document';
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { DocumentDomainTransformer } from '@/dtos/transforms/DocumentDomainTransformer';
+import { DocumentTransformer } from '@/dtos/transforms/DocumentTransformer';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 // Service DTOs for data exchange
@@ -47,7 +47,7 @@ export interface DocumentSearchDto {
 export class DocumentService {
   constructor(
     private documentRepository: IDocumentRepository = RepositoryFactory.getDocumentRepository(),
-    private documentTransformer: DocumentDomainTransformer = new DocumentDomainTransformer()
+    private documentTransformer: DocumentTransformer = new DocumentTransformer()
   ) {}
 
   /**
