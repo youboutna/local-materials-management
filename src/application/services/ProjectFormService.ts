@@ -58,6 +58,20 @@ export interface ProjectFormDataDTO {
   supervisor_id?: string | null;
   client_id?: string | null;
   workspace_id?: string | null;
+  // Stakeholder/financial fields
+  client_name?: string;
+  main_contractor?: string;
+  contractors?: {
+    engineeringConsultant?: string;
+    generalContractor?: string;
+    specializedSubcontractors?: string;
+    mainSuppliers?: string;
+  };
+  funding_source?: string;
+  market_type?: string;
+  selection_mode?: string;
+  // UI state fields
+  shapeData?: unknown;
   // Related data - Using specific types
   phases?: PhaseFormDataDTO[];
   materials?: MaterialFormDataDTO[];
@@ -99,8 +113,9 @@ export interface RiskFormDataDTO {
   title: string;
   description: string;
   level: 'low' | 'medium' | 'high' | 'critical';
-  probability: 'low' | 'medium' | 'high';
-  impact: 'low' | 'medium' | 'high';
+  category?: 'technical' | 'financial' | 'operational' | 'strategic' | 'compliance' | 'safety';
+  probability: number;
+  impact: number;
   mitigation: string;
   status: 'identified' | 'mitigated' | 'accepted';
 }
@@ -457,14 +472,19 @@ export class ProjectFormService {
         case 4: // Phases
           if (data.phases?.length) {
             for (const phase of data.phases) {
-              await this.phaseService.createPhase(projectId, {
-                name: phase.name,
-                description: phase.description,
-                startDate: phase.start_date,
-                endDate: phase.end_date,
-                status: phase.status as any,
+              await this.phaseService.createPhase({
+                id: phase.id || crypto.randomUUID(),
+                project_id: projectId,
+                phase_name: phase.name,
+                phase_type: 'custom',
+                description: phase.description || '',
+                status: phase.status || 'pending',
+                start_date: phase.start_date,
+                end_date: phase.end_date,
                 progress: phase.progress || 0,
-                estimatedCost: phase.estimated_cost || 0
+                budget: phase.estimated_cost || 0,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
               });
             }
             console.log(`[ProjectFormService] Saved ${data.phases.length} phases`);
@@ -474,15 +494,14 @@ export class ProjectFormService {
         case 5: // Risks
           if (data.risks?.length) {
             for (const risk of data.risks) {
-              await this.riskService.create({
+              await this.riskService.createRisk({
                 project_id: projectId,
-                risk_title: risk.title,
-                risk_description: risk.description,
-                risk_level: risk.level,
-                probability: risk.probability,
-                impact: risk.impact,
-                mitigation_strategy: risk.mitigation,
-                status: risk.status
+                title: risk.title,
+                description: risk.description,
+                category: (risk.category || 'operational') as 'technical' | 'financial' | 'operational' | 'strategic' | 'compliance' | 'safety',
+                probability: risk.probability || 0.5,
+                impact: risk.impact || 0.5,
+                mitigation_strategy: risk.mitigation
               });
             }
             console.log(`[ProjectFormService] Saved ${data.risks.length} risks`);
