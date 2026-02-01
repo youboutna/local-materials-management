@@ -315,12 +315,12 @@ export class TaskService {
       // Transformer en TaskAssignmentDTO
       const assignment: TaskAssignmentDTO = {
         id: createdTask.id,
-        title: createdTask.title,
-        description: createdTask.description,
-        projectId: createdTask.projectId,
-        assignedTo: request.assignedTo,
+        title: createdTask.title || '',
+        description: createdTask.description || '',
+        projectId: createdTask.projectId || '',
+        assignedTo: request.assignedTo || undefined,
         assignedBy: request.assignedBy,
-        assigneeType: request.assigneeType,
+        assigneeType: request.assigneeType || 'employee',
         assigneeEmail: request.assigneeEmail,
         status: 'pending',
         priority: (request.priority as TaskAssignmentDTO['priority']) || 'medium',
@@ -393,9 +393,9 @@ export class TaskService {
       const assignment: TaskAssignmentDTO = {
         id: updatedTask.id,
         title: updatedTask.title,
-        description: updatedTask.description,
+        description: updatedTask.description || '',
         projectId: updatedTask.projectId,
-        assignedTo: updatedTask.assignedTo?.[0],
+        assignedTo: updatedTask.assignedTo?.[0] || undefined,
         assignedBy: performedBy,
         assigneeType: 'employee',
         status: status,
@@ -442,7 +442,7 @@ export class TaskService {
     }
   }
 
-  async getProjectPhases(projectId: string): Promise<any[]> {
+  async getProjectPhases(projectId: string): Promise<TaskDTO[]> {
     return [];
   }
 }

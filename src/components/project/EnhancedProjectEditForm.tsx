@@ -23,13 +23,17 @@ import {
 // Import hexagonal services
 import {
   ProjectFormService,
-  ProjectFormDataDTO,
+  FormServiceDTO as FormServiceDTO,
   SaveContextDTO,
 } from "../../application/services/ProjectFormService";
 
 // Import hexagonal hooks
-import { useProjectWorkflowHex, type ProjectWorkflowData } from "@/hooks/hexagonal";
+import { usePaymentWorkflowHex, type ProjectWorkflowData } from "@/hooks/hexagonal";
 import { useProjectMaterialsHex } from "@/hooks/hexagonal";
+import { MaterialService } from "@/application/services/MaterialService";
+import { MaterialDTO } from "@/dtos/entities/MaterialDTO";
+// Import only MaterialFormDataDTO and PhaseFormDataDTO from ProjectWorkflowDTOs
+import { MaterialFormDataDTO, PhaseFormDataDTO } from "@/dtos/transforms/ProjectWorkflowDTOs";
 
 // Import step components
 import ProjectInfoStep from "./steps/ProjectInfoStep";
@@ -37,16 +41,40 @@ import StakeholdersTeamStep from "./steps/StakeholdersTeamStep";
 import LocationStep from "./steps/LocationStep";
 import RiskAnalysisStep from "./steps/RiskAnalysisStep";
 import ComplianceStep from "./steps/ComplianceStep";
-// Import types directly from ConstructionPhaseManager to avoid type conflicts
-import { PhaseData, type CustomPhase } from "./ConstructionPhaseManager";
 import { PhaseDTO } from "@/dtos/entities";
 import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
+import ConstructionPhaseManager from "./ConstructionPhaseManager";
 
 interface EnhancedProjectEditFormProps {
-  initialData?: ProjectFormDataDTO;
-  onSubmit: (data: ProjectFormDataDTO) => Promise<void>;
-  onFormDataChange?: (data: ProjectFormDataDTO) => void;
+  initialData?: FormServiceDTO;
+  onSubmit: (data: FormServiceDTO) => Promise<void>;
+  onFormDataChange?: (data: FormServiceDTO) => void;
   isSubmitting?: boolean;
+}
+
+// Unified FormServiceDTO for compatibility
+type UnifiedFormServiceDTO = FormServiceDTO & {
+  receptionStatus?: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  closureNotes?: string;
+};
+
+// Temporary PhaseData interface until ConstructionPhaseManager is fixed
+interface PhaseData {
+  id: string;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  estimatedDuration: number;
+  status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
+  budget: number;
+  actualCost: number;
+  progress: number;
+  materials: Array<{ materialId: string; quantity: number; name?: string }>;
+  humanResources: Array<{ roleId: string; quantity: number; role?: string }>;
+  suppliers: Array<{ supplierId: string; name?: string; contact?: string }>;
+  location: string;
+  notes?: string;
 }
 
 // Transformer function to convert any phase data to PhaseData
@@ -76,9 +104,9 @@ const transformPhaseDataToPhaseDTO = (phases: PhaseData[], projectId: string): P
     id: phase.id,
     name: phase.title, // Utiliser title pour name
     description: phase.description,
-    status: phase.status === 'not_started' ? 'planning' : 
-            phase.status === 'in_progress' ? 'active' : 
-            phase.status === 'completed' ? 'completed' : 'paused',
+    status: phase.status === 'not_started' ? 'pending' : 
+            phase.status === 'in_progress' ? 'in_progress' : 
+            phase.status === 'completed' ? 'completed' : 'cancelled',
     phase_name: phase.title, // Utiliser title pour phase_name
     projectId: projectId || '',
     startDate: phase.startDate,
@@ -99,6 +127,33 @@ const transformPhaseDataToPhaseDTO = (phases: PhaseData[], projectId: string): P
   }));
 };
 
+// Transformer function to convert SelectedMaterial to MaterialFormDataDTO
+const transformSelectedMaterialsToFormData = async (selectedMaterials: Array<{materialId: string; quantity: number}>): Promise<MaterialFormDataDTO[]> => {
+  const materialService = new MaterialService();
+  const allMaterials = await materialService.getAllMaterials();
+  
+  return selectedMaterials.map(selected => {
+    const material = allMaterials.find(m => m.id === selected.materialId);
+    return {
+      id: selected.materialId,
+      name: material?.name || '',
+      type: material?.category as 'raw' | 'equipment' | 'consumable' | 'service' || 'raw',
+      unit: material?.unit || '',
+      quantity: selected.quantity,
+      unit_price: material?.pricePerUnit || 0,
+      supplier_id: material?.supplierId || '',
+    };
+  });
+};
+
+// Transformer function to convert MaterialFormDataDTO to SelectedMaterial
+const transformFormDataToSelectedMaterials = (materials: MaterialFormDataDTO[]): Array<{materialId: string; quantity: number}> => {
+  return materials.map(material => ({
+    materialId: material.id || '',
+    quantity: material.quantity,
+  }));
+};
+
 const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
   initialData,
   onSubmit,
@@ -108,10 +163,10 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
   const { toast } = useToast();
   const { id: projectId } = useParams<{ id: string }>();
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<ProjectFormDataDTO>(() => {
-    if (initialData) return initialData;
+  const [formData, setFormData] = useState<UnifiedFormServiceDTO>(() => {
+    if (initialData) return initialData as UnifiedFormServiceDTO;
     
-    // Retourner un objet ProjectFormDataDTO valide selon Règle #4
+    // Retourner un objet UnifiedFormServiceDTO valide selon Règle #4
     return {
       title: '',
       description: '',
@@ -123,13 +178,15 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       project_manager_id: '',
       client_id: '',
       progress: 0,
-      team_size: 0
+      team_size: 0,
+      receptionStatus: 'pending',
+      closureNotes: ''
     };
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasLoadedData, setHasLoadedData] = useState(false);
-  const [baseData, setBaseData] = useState<ProjectFormDataDTO>({
+  const [baseData, setBaseData] = useState<FormServiceDTO>({
     title: '',
     description: '',
     location: '',
@@ -156,261 +213,6 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
 
   // Initialize ProjectFormService
   const formService = useMemo(() => new ProjectFormService(), []);
-
-  // Load project data using ProjectService
-  const loadProjectData = useCallback(async () => {
-    if (
-      !projectId ||
-      hasLoadedData ||
-      (initialData && Object.keys(initialData).length > 0)
-    )
-      return;
-
-    setIsLoading(true);
-    try {
-      const { ProjectService } = await import("@/application/services/ProjectService");
-      const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
-
-      // Load complete project details with validation
-      const projectDetail = await projectService.getProjectWithDetails(projectId);
-
-      if (!projectDetail) {
-        console.warn(`Project with ID ${projectId} not found`);
-        setPhasesData([]);
-        setHasLoadedData(true);
-        return;
-      }
-
-      // Validate projectDetail structure before accessing properties
-      if (!projectDetail.id || !projectDetail.title) {
-        console.error('Invalid project data structure:', projectDetail);
-        toast({
-          title: "Erreur de données",
-          description: "Les données du projet sont incomplètes ou corrompues",
-          variant: "destructive",
-        });
-        setPhasesData([]);
-        setHasLoadedData(true);
-        return;
-      }
-
-      // Load stakeholders from database
-      const { ProjectStakeholderService } = await import(
-        "@/application/services/ProjectStakeholderService"
-      );
-      const stakeholdersData =
-        await ProjectStakeholderService.getProjectStakeholders(projectId);
-
-      // Map stakeholders to form format using correct ProjectDTO properties
-      const formattedData: ProjectFormDataDTO = {
-        title: projectDetail.title || '',
-        description: projectDetail.description || '',
-        location: projectDetail.location || '',
-        status: 'draft',
-        budget: projectDetail.budget || 0,
-        start_date: projectDetail.startDate || '',
-        end_date: projectDetail.endDate || '',
-        project_manager_id: projectDetail.projectResponsableId || '',
-        client_id: projectDetail.mainContractor || '',
-        progress: projectDetail.progress || 0,
-        team_size: projectDetail.teamSize || 0
-      };
-      
-      console.log('Project data loaded successfully:', {
-        projectId: projectDetail.id,
-        title: projectDetail.title,
-        managerId: projectDetail.projectResponsableId,
-        contractor: projectDetail.mainContractor
-      });
-      
-      setFormData(formattedData);
-      setPhasesData(transformProjectPhaseToPhaseData(projectDetail.plannedPhases || []));
-      setHasLoadedData(true);
-      
-    } catch (error) {
-      console.error("Error loading project data:", error);
-      toast({
-        title: "Erreur",
-        description: `Erreur lors du chargement des données du projet: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
-        variant: "destructive",
-      });
-      // Set safe defaults on error
-      setPhasesData([]);
-      setHasLoadedData(true);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [projectId, hasLoadedData, initialData, toast]);
-
-  // Load related data - now handled by ProjectService above
-  const loadRelatedData = useCallback(async () => {
-    // Data is now loaded in loadProjectData via ProjectService
-    return;
-  }, []);
-
-  // Load base data for dropdowns
-  const loadBaseData = useCallback(async () => {
-    try {
-      const data = await formService.loadBaseData();
-      // setBaseData(data);
-    } catch (error) {
-      console.error("Error loading base data:", error);
-    }
-  }, [formService]);
-
-  // Update form data helper
-  const updateFormData = (updates: Partial<ProjectFormDataDTO>) => {
-    const updatedData = { ...formData, ...updates };
-    setFormData(updatedData);
-    if (onFormDataChange) {
-      onFormDataChange(updatedData);
-    }
-  };
-
-  // Save handlers with distinct behavior
-  const handleSaveStepOnly = async () => {
-    if (!onSubmit) return;
-
-    setIsSaving(true);
-    try {
-      const context: SaveContextDTO = {
-        currentStep,
-        saveType: "step_only",
-        isDraft: true,
-        totalSteps: steps.length,
-      };
-
-      const processedData = formService.processFormDataForSave(
-        {
-          ...formData,
-          materials: selectedMaterials,
-          phases: phasesData,
-        },
-        context
-      );
-
-      await onSubmit(processedData);
-
-      toast({
-        title: "Étape sauvegardée",
-        description: "Les données de cette étape ont été sauvegardées.",
-      });
-    } catch (error) {
-      console.error("Error saving step:", error);
-      toast({
-        title: "Erreur",
-        description: "Erreur lors de la sauvegarde de l'étape.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleSaveAndNext = async () => {
-    if (!onSubmit) return;
-
-    setIsSaving(true);
-    try {
-      const context: SaveContextDTO = {
-        currentStep,
-        saveType: "save_and_next",
-        isDraft: true,
-        totalSteps: steps.length,
-      };
-
-      const processedData = formService.processFormDataForSave(
-        {
-          ...formData,
-          materials: selectedMaterials,
-          phases: phasesData,
-        },
-        context
-      );
-
-      await onSubmit(processedData);
-
-      // Move to next step if not at the end
-      if (currentStep < steps.length) {
-        setCurrentStep(currentStep + 1);
-        toast({
-          title: "Étape sauvegardée",
-          description: `Passage à l'étape ${currentStep + 1}: ${
-            steps[currentStep]?.title
-          }`,
-        });
-      } else {
-        toast({
-          title: "Toutes les étapes complétées",
-          description: "Vous avez terminé toutes les étapes du projet.",
-        });
-      }
-    } catch (error) {
-      console.error("Error saving step:", error);
-      toast({
-        title: "Erreur",
-        description: "Erreur lors de la sauvegarde.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleSaveGlobalAndClose = async () => {
-    if (!onSubmit) return;
-
-    setIsSaving(true);
-    try {
-      // Calculer la progression globale avant sauvegarde
-      const { ProgressCalculationHexService } = await import(
-        "@/application/services/ProgressCalculationHexService"
-      );
-
-      const progressService = new ProgressCalculationHexService();
-      const calculatedProgress =
-        progressService.calculateProjectProgress(
-          transformPhaseDataToPhaseDTO(phasesData, projectId || '')
-      );
-
-      const context: SaveContextDTO = {
-        currentStep,
-        saveType: "global_and_close",
-        isDraft: false,
-        isComplete: true,
-        totalSteps: steps.length,
-      };
-
-      const processedData = formService.processFormDataForSave(
-        {
-          ...formData,
-          progress: calculatedProgress,
-          materials: selectedMaterials,
-          phases: phasesData,
-        },
-        context
-      );
-
-      await onSubmit(processedData);
-
-      toast({
-        title: "Projet sauvegardé",
-        description: "Toutes les modifications ont été sauvegardées.",
-      });
-
-      // Navigate back or close form
-      window.history.back();
-    } catch (error) {
-      console.error("Error saving project:", error);
-      toast({
-        title: "Erreur",
-        description: "Erreur lors de la sauvegarde globale.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   // Step configuration aligned with workflow spec (7 steps)
   const steps = [
@@ -472,6 +274,289 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       isCompleted: () => formService.validateStep(7, formData),
     },
   ];
+
+  // Load project data using ProjectService
+  const loadProjectData = useCallback(async () => {
+    if (
+      !projectId ||
+      hasLoadedData ||
+      (initialData && Object.keys(initialData).length > 0)
+    )
+      return;
+
+    setIsLoading(true);
+    try {
+      const { ProjectService } = await import("@/application/services/ProjectService");
+      const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+
+      // Load complete project details with validation
+      const projectDetail = await projectService.getProjectWithDetails(projectId);
+
+      if (!projectDetail) {
+        console.warn(`Project with ID ${projectId} not found`);
+        setPhasesData([]);
+        setHasLoadedData(true);
+        return;
+      }
+
+      // Validate projectDetail structure before accessing properties
+      if (!projectDetail.id || !projectDetail.title) {
+        console.error('Invalid project data structure:', projectDetail);
+        toast({
+          title: "Erreur de données",
+          description: "Les données du projet sont incomplètes ou corrompues",
+          variant: "destructive",
+        });
+        setPhasesData([]);
+        setHasLoadedData(true);
+        return;
+      }
+
+      // Load stakeholders from database
+      const { ProjectStakeholderService } = await import(
+        "@/application/services/ProjectStakeholderService"
+      );
+      const stakeholderService = new ProjectStakeholderService();
+      const stakeholdersData =
+        await stakeholderService.getProjectStakeholders(projectId);
+
+      // Map stakeholders to form format using correct ProjectDTO properties
+      const formattedData: FormServiceDTO = {
+        title: projectDetail.title || '',
+        description: projectDetail.description || '',
+        location: projectDetail.location || '',
+        status: 'draft',
+        budget: projectDetail.budget || 0,
+        start_date: projectDetail.startDate || '',
+        end_date: projectDetail.endDate || '',
+        project_manager_id: projectDetail.projectResponsableId || '',
+        client_id: projectDetail.mainContractor || '',
+        progress: projectDetail.progress || 0,
+        team_size: projectDetail.teamSize || 0
+      };
+      
+      console.log('Project data loaded successfully:', {
+        projectId: projectDetail.id,
+        title: projectDetail.title,
+        managerId: projectDetail.projectResponsableId,
+        contractor: projectDetail.mainContractor
+      });
+      
+      setFormData(formattedData);
+      setPhasesData(transformProjectPhaseToPhaseData(projectDetail.plannedPhases || []));
+      setHasLoadedData(true);
+      
+    } catch (error) {
+      console.error("Error loading project data:", error);
+      toast({
+        title: "Erreur",
+        description: `Erreur lors du chargement des données du projet: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
+        variant: "destructive",
+      });
+      // Set safe defaults on error
+      setPhasesData([]);
+      setHasLoadedData(true);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [projectId, hasLoadedData, initialData, toast]);
+
+  // Load related data - now handled by ProjectService above
+  const loadRelatedData = useCallback(async () => {
+    // Data is now loaded in loadProjectData via ProjectService
+    return;
+  }, []);
+
+  // Load base data for dropdowns
+  const loadBaseData = useCallback(async () => {
+    try {
+      const data = await formService.loadBaseData();
+      // setBaseData(data);
+    } catch (error) {
+      console.error("Error loading base data:", error);
+    }
+  }, [formService]);
+
+  // Update form data helper
+  const updateFormData = (updates: Partial<UnifiedFormServiceDTO>) => {
+    const updatedData = { ...formData, ...updates };
+    setFormData(updatedData);
+    if (onFormDataChange) {
+      onFormDataChange(updatedData as FormServiceDTO);
+    }
+  };
+
+  // Save handlers with distinct behavior
+  const handleSaveStepOnly = async () => {
+    if (!onSubmit) return;
+
+    setIsSaving(true);
+    try {
+      const context: SaveContextDTO = {
+        currentStep,
+        saveType: "step_only",
+        isDraft: true,
+        totalSteps: steps.length,
+      };
+
+      const processedData = formService.processFormDataForSave(
+        {
+          ...formData,
+          materials: await transformSelectedMaterialsToFormData(selectedMaterials),
+          phases: phasesData.map((phase, index) => ({
+            id: phase.id,
+            name: phase.title,
+            description: phase.description,
+            order: index, // Utiliser l'index comme ordre
+            status: phase.status as 'pending' | 'in_progress' | 'completed' | 'cancelled',
+            start_date: phase.startDate,
+            end_date: phase.endDate,
+            progress: phase.progress,
+          })),
+        },
+        context
+      );
+
+      await onSubmit(processedData as unknown as FormServiceDTO);
+
+      toast({
+        title: "Étape sauvegardée",
+        description: "Les données de cette étape ont été sauvegardées.",
+      });
+    } catch (error) {
+      console.error("Error saving step:", error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la sauvegarde de l'étape.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSaveAndNext = async () => {
+    if (!onSubmit) return;
+
+    setIsSaving(true);
+    try {
+      const context: SaveContextDTO = {
+        currentStep,
+        saveType: "save_and_next",
+        isDraft: true,
+        totalSteps: steps.length,
+      };
+
+      const processedData = formService.processFormDataForSave(
+        {
+          ...formData,
+          materials: await transformSelectedMaterialsToFormData(selectedMaterials),
+          phases: phasesData.map((phase, index) => ({
+            id: phase.id,
+            name: phase.title,
+            description: phase.description,
+            order: index, // Utiliser l'index comme ordre
+            status: phase.status as 'pending' | 'in_progress' | 'completed' | 'cancelled',
+            start_date: phase.startDate,
+            end_date: phase.endDate,
+            progress: phase.progress,
+          })),
+        },
+        context
+      );
+
+      await onSubmit(processedData as unknown as FormServiceDTO);
+
+      // Move to next step if not at the end
+      if (currentStep < steps.length) {
+        setCurrentStep(currentStep + 1);
+        toast({
+          title: "Étape sauvegardée",
+          description: `Passage à l'étape ${currentStep + 1}: ${
+            steps[currentStep]?.title
+          }`,
+        });
+      } else {
+        toast({
+          title: "Toutes les étapes complétées",
+          description: "Vous avez terminé toutes les étapes du projet.",
+        });
+      }
+    } catch (error) {
+      console.error("Error saving step:", error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la sauvegarde.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSaveGlobalAndClose = async () => {
+    if (!onSubmit) return;
+
+    setIsSaving(true);
+    try {
+      // Calculer la progression globale avant sauvegarde
+      const { ProgressCalculationHexService } = await import(
+        "@/application/services/ProgressCalculationHexService"
+      );
+
+      const progressService = new ProgressCalculationHexService();
+      const calculatedProgress =
+        progressService.calculateProjectProgress(
+          transformPhaseDataToPhaseDTO(phasesData, projectId || '')
+      );
+
+      const context: SaveContextDTO = {
+        currentStep,
+        saveType: "global_and_close",
+        isDraft: false,
+        isComplete: true,
+        totalSteps: steps.length,
+      };
+
+      const processedData = formService.processFormDataForSave(
+        {
+          ...formData,
+          progress: calculatedProgress,
+          materials: await transformSelectedMaterialsToFormData(selectedMaterials),
+          phases: phasesData.map((phase, index) => ({
+            id: phase.id,
+            name: phase.title,
+            description: phase.description,
+            order: index, // Utiliser l'index comme ordre
+            status: phase.status as 'pending' | 'in_progress' | 'completed' | 'cancelled',
+            start_date: phase.startDate,
+            end_date: phase.endDate,
+            progress: phase.progress,
+          })),
+        },
+        context
+      );
+
+      await onSubmit(processedData as unknown as FormServiceDTO);
+
+      toast({
+        title: "Projet sauvegardé",
+        description: "Toutes les modifications ont été sauvegardées.",
+      });
+
+      // Navigate back or close form
+      window.history.back();
+    } catch (error) {
+      console.error("Error saving project:", error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la sauvegarde globale.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -537,24 +622,25 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
             <CardContent className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Statut de réception
+                  Statut de Réception
                 </label>
                 <select
                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary"
                   value={formData.receptionStatus || ""}
                   onChange={(e) =>
-                    updateFormData({ receptionStatus: e.target.value })
+                    updateFormData({ receptionStatus: e.target.value as 'pending' | 'in_progress' | 'completed' | 'cancelled' })
                   }
                 >
                   <option value="">Sélectionner</option>
                   <option value="pending">En attente</option>
-                  <option value="approved">Approuvé</option>
-                  <option value="rejected">Rejeté</option>
+                  <option value="in_progress">En cours</option>
+                  <option value="completed">Terminé</option>
+                  <option value="cancelled">Annulé</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Notes de clôture
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Notes de Clôture
                 </label>
                 <textarea
                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary min-h-[100px]"

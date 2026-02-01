@@ -11,7 +11,7 @@ import { ReportCalculations } from '@/utils/reportCalculations';
 import { pdf } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver';
 import { Download, FileText, Loader2, MapPin } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { CompactProjectPDFDocument, SingleCompactProjectPDF } from './pdf/CompactProjectPDFDocument';
 import type { EVMMetrics, PERTAnalysis, ProjectData } from '@/types/project';
 
@@ -42,7 +42,7 @@ export function CompactProjectReportGenerator({
   const [singleEvmMetrics, setSingleEvmMetrics] = useState<EVMMetrics | null>(null);
   const [singlePertAnalysis, setSinglePertAnalysis] = useState<PERTAnalysis | null>(null);
 
-  const projectList = projects || (project ? [project] : []);
+  const projectList = useMemo(() => projects || (project ? [project] : []), [projects, project]);
   const isSingleProject = !projects && project;
 
   useEffect(() => {
@@ -120,7 +120,23 @@ export function CompactProjectReportGenerator({
           } else {
             // Use ReportingService for comprehensive report
             const completeReport = await ReportingService.generateCompleteProjectReport(project);
-            setSingleEnrichedData(completeReport.reportDTO);
+            // Convert ProjectData to ProjectDetailDTO
+            const projectDetailFromService: ProjectDetailDTO = {
+              ...completeReport.reportDTO.project,
+              tasks: completeReport.reportDTO.project.tasks || [],
+              risks: completeReport.reportDTO.project.risks || [],
+              resources: completeReport.reportDTO.project.resources || [],
+              inspections: completeReport.reportDTO.project.inspections || [],
+              plannedPhases: completeReport.reportDTO.project.phases || [],
+              expenses: completeReport.reportDTO.project.expenses || [],
+              alerts: completeReport.reportDTO.project.alerts || [],
+              insurancePolicies: completeReport.reportDTO.project.insurancePolicies || [],
+              methodology: completeReport.reportDTO.project.methodology || 'hybrid',
+              ganttChart: completeReport.reportDTO.project.ganttChart,
+              pertAnalysis: completeReport.reportDTO.project.pertAnalysis,
+              earnedValueManagement: completeReport.reportDTO.project.earnedValueManagement
+            };
+            setSingleEnrichedData(projectDetailFromService);
             
             const evmMetricsResult = ReportCalculations.calculateEVMMetrics(
               project,
@@ -142,7 +158,23 @@ export function CompactProjectReportGenerator({
           for (const proj of projectList) {
             try {
               const completeReport = await ReportingService.generateCompleteProjectReport(proj);
-              enrichedMap.set(proj.id, completeReport.reportDTO);
+              // Convert ProjectData to ProjectDetailDTO
+              const projectDetailFromService: ProjectDetailDTO = {
+                ...completeReport.reportDTO.project,
+                tasks: completeReport.reportDTO.project.tasks || [],
+                risks: completeReport.reportDTO.project.risks || [],
+                resources: completeReport.reportDTO.project.resources || [],
+                inspections: completeReport.reportDTO.project.inspections || [],
+                plannedPhases: completeReport.reportDTO.project.phases || [],
+                expenses: completeReport.reportDTO.project.expenses || [],
+                alerts: completeReport.reportDTO.project.alerts || [],
+                insurancePolicies: completeReport.reportDTO.project.insurancePolicies || [],
+                methodology: completeReport.reportDTO.project.methodology || 'hybrid',
+                ganttChart: completeReport.reportDTO.project.ganttChart,
+                pertAnalysis: completeReport.reportDTO.project.pertAnalysis,
+                earnedValueManagement: completeReport.reportDTO.project.earnedValueManagement
+              };
+              enrichedMap.set(proj.id, projectDetailFromService);
               
               const evmMetricsResult = ReportCalculations.calculateEVMMetrics(
                 proj,
@@ -174,7 +206,7 @@ export function CompactProjectReportGenerator({
     };
 
     loadData();
-  }, [project, projects, isSingleProject, projectList.length, toast, useDirectData]);
+  }, [project, projects, isSingleProject, projectList.length, toast, useDirectData, projectList]);
 
   const generatePDF = async () => {
     if (projectList.length === 0) {

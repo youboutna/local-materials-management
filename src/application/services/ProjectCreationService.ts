@@ -134,8 +134,23 @@ export class ProjectCreationService {
       // Validate required fields
       this.validateProjectData(data);
 
-      // Transform DTO to Domain Entity
-      const projectEntity = ProjectTransformer.fromCreateDTOToEntity(data);
+      // Transform DTO to Domain Entity with materials and risks conversion
+      const projectEntity = ProjectTransformer.fromCreateDTOToEntity({
+        ...data,
+        materials: data.materials?.map(m => ({
+          id: m.materialId,
+          name: m.materialId, // Use materialId as name for now
+          quantity: m.quantity,
+          unit: 'unit' // Default unit
+        })) || [],
+        risks: data.risks?.map(r => ({
+          id: r.id || '',
+          title: r.title || '',
+          probability: Number(r.probability) || 0.5,
+          impact: Number(r.impact) || 0.5,
+          mitigation: r.mitigation || ''
+        })) || []
+      });
 
       // Save project to repository
       const savedProject = await this.projectRepository.create(projectEntity);

@@ -103,8 +103,8 @@ export class InsuranceService {
           certificateId: cert.id,
           projectId: cert.project_id,
           contractorId: cert.contractor_id,
-          insuranceType: cert.insurance_type,
-          provider: cert.provider,
+          insuranceType: (cert as any).insurance_type || 'general',
+          provider: (cert as any).provider || 'Unknown',
           expiryDate: cert.valid_until,
           alertLevel,
           daysUntilExpiry

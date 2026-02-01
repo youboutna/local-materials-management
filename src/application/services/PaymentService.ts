@@ -99,13 +99,19 @@ export class PaymentService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required for payment creation');
       }
       
-      const paymentEntity = PaymentTransformer.toEntity(data);
+      const paymentEntity = PaymentTransformer.fromCreateDTOToEntity(data);
       
       // Save entity
       await this.paymentRepository.save(paymentEntity);
       
-      // Transform back to DTO
-      return PaymentTransformer.toDTO(paymentEntity);
+      // Transform back to DTO and add missing properties
+      const paymentDTO = PaymentTransformer.toDTO(paymentEntity);
+      return {
+        ...paymentDTO,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        id: paymentEntity.id
+      };
     } catch (error) {
       console.error('[PaymentService] Error creating payment:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create payment');
@@ -283,7 +289,7 @@ export class PaymentService {
       // Créer le paiement
       const payment = await this.createPayment(supplierPaymentRequest);
       
-      console.log(`Supplier payment created for supplier ${supplierId}: ${payment.id}`);
+      console.log(`Supplier payment created for supplier ${supplierId}`);
       return payment;
     } catch (error) {
       if (error instanceof AppError) throw error;

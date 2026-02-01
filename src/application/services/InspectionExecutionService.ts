@@ -410,13 +410,13 @@ export class InspectionExecutionService {
       
       const document: InspectionDocument = {
         id: `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        inspectionId,
-        projectId,
         name: file.name,
-        type: file.type,
+        type: file.type as "certificate" | "checklist" | "photo" | "report" | "scan",
         url: `mock-url/${file.name}`,
-        uploadedAt: new Date().toISOString(),
-        uploadedBy: 'system'
+        size: 0, // Mock size
+        mime_type: 'application/octet-stream', // Mock mime type
+        uploaded_at: new Date().toISOString(),
+        uploaded_by: 'system'
       };
       
       console.log(`Document uploaded: ${file.name} for inspection: ${inspectionId}`);

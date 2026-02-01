@@ -27,8 +27,8 @@ export interface ConsistencyIssue {
   recordId: string;
   field: string;
   issue: string;
-  expectedValue: any;
-  actualValue: any;
+  expectedValue: string | number;
+  actualValue: string | number;
   suggestedFix: string;
 }
 
@@ -267,9 +267,9 @@ export class DataConsistencyMonitoringService {
             suggestedFix: 'Update phase status to valid value'
           });
         }
-
+        
         // Check progress value range
-        if (phase.progress < 0 || phase.progress > 100) {
+        if (phase.progress !== undefined && (phase.progress < 0 || phase.progress > 100)) {
           issues.push({
             severity: 'medium',
             recordId: phase.id,
@@ -281,11 +281,11 @@ export class DataConsistencyMonitoringService {
           });
         }
       }
-
-      const totalRecords = phases.length;
+      
       const consistentRecords = phases.filter(p => 
         issues.filter(i => i.recordId === p.id).length === 0
       ).length;
+      const totalRecords = phases.length;
 
       return {
         timestamp: new Date(),

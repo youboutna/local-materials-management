@@ -379,7 +379,7 @@ export class StakeholderService {
         stack: new Error().stack
       });
 
-      const result = await this.updateStakeholder(id, { isActive });
+      const result = await this.updateStakeholder(id, { isActive } as UpdateStakeholderRequestDTO);
 
       if (result.success) {
         console.info('STAKEHOLDER_SERVICE_021: Status toggled successfully', {
