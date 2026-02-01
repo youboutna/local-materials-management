@@ -135,7 +135,7 @@ export class ProjectCreationService {
       this.validateProjectData(data);
 
       // Transform DTO to Domain Entity
-      const projectEntity = ProjectTransformer.fromCreateDtoToEntity(data);
+      const projectEntity = ProjectTransformer.fromCreateDTOToEntity(data);
 
       // Save project to repository
       const savedProject = await this.projectRepository.create(projectEntity);
