@@ -9,33 +9,41 @@ import { toast } from "sonner";
 import { RepositoryFactory } from "@/repositories/RepositoryFactory";
 import { AuthService } from "@/application/services/AuthService";
 import { AuthDomainTransformer } from "@/dtos/transforms";
-import { LoginData, RegisterData } from "@/dtos/entities";
+import { LoginData, RegisterData, UserDTO } from "@/dtos/entities";
 
 // Re-export types for convenience
-export type { LoginData, RegisterData };
+export type { LoginData, RegisterData, UserDTO };
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 // Enhanced types for UI components
 export interface UseAuthHexResult {
-  user: any;
+  user: UserDTO | null;
   isLoading: boolean;
-  error: any;
+  error: string | null;
   refetch: () => void;
   login: (credentials: LoginData) => void;
   register: (userData: RegisterData) => void;
   logout: () => void;
-  updateProfile: (profileData: any) => void;
+  updateProfile: (profileData: Partial<UserDTO>) => void;
   changePassword: (newPassword: string) => void;
   isLoggingIn: boolean;
   isRegistering: boolean;
   isUpdating: boolean;
   // Enhanced UI features
-  getUserSecurityLevel: (user: any) => 'low' | 'medium' | 'high';
-  getUserActivityScore: (user: any) => number;
-  getUserTrustLevel: (user: any) => 'trusted' | 'verified' | 'unverified';
-  getUserLastLoginDays: (user: any) => number;
-  generateUserReport: (user: any) => any;
+  getUserSecurityLevel: (user: UserDTO) => 'low' | 'medium' | 'high';
+  getUserActivityScore: (user: UserDTO) => number;
+  getUserTrustLevel: (user: UserDTO) => 'trusted' | 'verified' | 'unverified';
+  getUserLastLoginDays: (user: UserDTO) => number;
+  generateUserReport: (user: UserDTO) => UserSecurityReport;
+}
+
+export interface UserSecurityReport {
+  securityLevel: 'low' | 'medium' | 'high';
+  trustLevel: 'trusted' | 'verified' | 'unverified';
+  activityScore: number;
+  lastLoginDays: number;
+  recommendations: string[];
 }
 
 /**

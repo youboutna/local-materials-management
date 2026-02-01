@@ -6,6 +6,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
 // Re-export AlertData type for compatibility
 export type { AlertData } from "@/dtos/entities";
@@ -23,11 +24,43 @@ export interface AlertStats {
 }
 
 // Enhanced result type with all needed properties
+export interface AlertError extends Error {
+  code?: string;
+  details?: Record<string, unknown>;
+}
+
+export interface AlertAnalytics {
+  totalAlerts: number;
+  criticalAlerts: number;
+  trends: Array<{
+    date: string;
+    count: number;
+  }>;
+  averageResolutionTime: number;
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+export interface AlertReport {
+  alert: AlertData;
+  generatedAt: string;
+  reportType: string;
+  analytics: AlertAnalytics;
+}
+
+export type AlertSeverity = 'low' | 'medium' | 'high' | 'critical';
+export type AlertPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type AlertRisk = 'low' | 'medium' | 'high';
+
 export interface UseAlertsHexResult {
   alerts: AlertData[];
   isLoading: boolean;
   loading: boolean; // Alias for isLoading for compatibility
-  error: any;
+  error: AlertError | null;
   stats: AlertStats;
   refetch: () => void;
   createAlert: (data: Partial<AlertData>) => void;
@@ -39,13 +72,31 @@ export interface UseAlertsHexResult {
   isCreating: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
-  getAlertSeverity: (alert: any) => 'low' | 'medium' | 'high' | 'critical';
-  getAlertPriority: (alert: any) => 'low' | 'medium' | 'high' | 'urgent';
-  getAlertRisk: (alert: any) => 'low' | 'medium' | 'high';
-  getAlertDaysSinceCreation: (alert: any) => number;
-  getAlertAnalytics: () => any;
-  validateAlertWithReferential: (alert: any, referentialType: string) => Promise<any>;
-  generateAlertReport: (alert: any) => any;
+  getAlertSeverity: (alert: AlertData) => AlertSeverity;
+  getAlertPriority: (alert: AlertData) => AlertPriority;
+  getAlertRisk: (alert: AlertData) => AlertRisk;
+  getAlertDaysSinceCreation: (alert: AlertData) => number;
+  getAlertAnalytics: () => AlertAnalytics;
+  validateAlertWithReferential: (alert: AlertData, referentialType: string) => Promise<ValidationResult>;
+  generateAlertReport: (alert: AlertData) => AlertReport;
+}
+
+// Database row interface for type safety
+interface AlertDatabaseRow {
+  id: string;
+  alert_type: string;
+  priority: string;
+  title: string;
+  description: string | null;
+  station_id: string | null;
+  status: string;
+  created_at: string;
+  resolved_by: string | null;
+  resolved_at: string | null;
+  resolution_notes: string | null;
+  metadata: Json | null;
+  assigned_to: string | null;
+  updated_at: string;
 }
 
 /**
@@ -59,11 +110,11 @@ async function fetchAlertsFromSupabase(): Promise<AlertData[]> {
 
   if (error) {
     console.error('Error fetching alerts:', error);
-    throw error;
+    throw new Error('Failed to fetch alerts');
   }
 
   // Map database rows to AlertData type
-  return (data || []).map((row: any) => ({
+  return (data || []).map((row: AlertDatabaseRow) => ({
     id: row.id,
     type: mapAlertType(row.alert_type),
     severity: mapPriorityToSeverity(row.priority),
@@ -276,40 +327,59 @@ export function useAlertsHex(): UseAlertsHexResult {
       queryClient.invalidateQueries({ queryKey: ['alerts'] });
       toast.success("L'alerte a été résolue.");
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error('Error resolving alert:', error);
       toast.error("Impossible de résoudre l'alerte.");
     }
   });
 
   // Helper functions
-  const getAlertSeverity = (alert: any): 'low' | 'medium' | 'high' | 'critical' => {
+  const getAlertSeverity = (alert: AlertData): AlertSeverity => {
     return alert.severity || 'medium';
   };
 
-  const getAlertPriority = (alert: any): 'low' | 'medium' | 'high' | 'urgent' => {
+  const getAlertPriority = (alert: AlertData): AlertPriority => {
     const severity = getAlertSeverity(alert);
     const daysSinceCreation = getAlertDaysSinceCreation(alert);
     if (severity === 'critical' || daysSinceCreation > 7) return 'urgent';
     if (severity === 'high' || daysSinceCreation > 3) return 'high';
-    if (severity === 'medium') return 'medium';
     return 'low';
   };
 
-  const getAlertRisk = (alert: any): 'low' | 'medium' | 'high' => {
+  const getAlertRisk = (alert: AlertData): AlertRisk => {
     const severity = getAlertSeverity(alert);
     if (severity === 'critical') return 'high';
     if (severity === 'high') return 'medium';
     return 'low';
   };
 
-  const getAlertDaysSinceCreation = (alert: any): number => {
+  const getAlertDaysSinceCreation = (alert: AlertData): number => {
     const createdAt = alert.timestamp ? new Date(alert.timestamp) : new Date();
     const now = new Date();
     return Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
   };
 
-  const getAlertAnalytics = () => stats;
+  const getAlertAnalytics = (): AlertAnalytics => ({
+    totalAlerts: stats.total,
+    criticalAlerts: stats.critical,
+    trends: [],
+    averageResolutionTime: 24 // Mock data
+  });
+
+  const validateAlertWithReferential = async (alert: AlertData, referentialType: string): Promise<ValidationResult> => {
+    // Mock validation logic
+    return { isValid: true, errors: [], warnings: [] };
+  };
+
+  const generateAlertReport = (alert: AlertData): AlertReport => {
+    const analytics = getAlertAnalytics();
+    return {
+      alert,
+      generatedAt: new Date().toISOString(),
+      reportType: 'Alert Analysis Report',
+      analytics
+    };
+  };
 
   return {
     alerts,
@@ -332,11 +402,7 @@ export function useAlertsHex(): UseAlertsHexResult {
     getAlertRisk,
     getAlertDaysSinceCreation,
     getAlertAnalytics,
-    validateAlertWithReferential: async () => ({ isValid: true, errors: [], warnings: [] }),
-    generateAlertReport: (alert: any) => ({
-      alert,
-      generatedAt: new Date().toISOString(),
-      reportType: 'Alert Analysis Report'
-    })
+    validateAlertWithReferential,
+    generateAlertReport
   };
 }

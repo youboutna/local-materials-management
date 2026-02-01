@@ -46,9 +46,21 @@ export interface InspectionDetails extends InspectionDTO {
   }>;
 }
 
-export interface CreateInspectionDTO extends Omit<InspectionDTO, 'id' | 'createdAt' | 'updatedAt'> {}
+export interface CreateInspectionDTO {
+  projectId: string;
+  projectTitle?: string;
+  phaseId?: string;
+  phaseName?: string;
+  date: string;
+  inspector: string;
+  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled' | 'approved' | 'rejected' | 'requires_changes' | 'pending';
+  progressAtInspection: number;
+  paymentType?: string;
+  comments?: string;
+  documents?: Record<string, unknown>;
+}
 
-export interface UpdateInspectionDTO extends Partial<CreateInspectionDTO> {}
+export type UpdateInspectionDTO = Partial<CreateInspectionDTO>;
 
 export interface InspectionDocument {
   id: string;

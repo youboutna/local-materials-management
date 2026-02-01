@@ -12,7 +12,7 @@ import {
   CreateStakeholderRequestDTO, 
   UpdateStakeholderRequestDTO, 
   StakeholderResponseDTO
-} from '@/dtos/transforms/StakeholderDTO';
+} from '@/dtos/entities/StakeholderDTO';
 
 export function useStakeholdersHex(projectId?: string) {
   const queryClient = useQueryClient();
@@ -93,17 +93,17 @@ export function useStakeholdersHex(projectId?: string) {
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });
     },
 
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('USE_STAKEHOLDERS_HEX_004: Creation mutation error', {
         code: 'USE_STAKEHOLDERS_HEX_004',
         message: 'Erreur de mutation de création',
-        error: error,
+        error: error.message,
         stack: new Error().stack
       });
 
       toast({
         title: 'Erreur lors de l\'ajout',
-        description: error?.message || 'Une erreur est survenue lors de l\'ajout de la partie prenante.',
+        description: error.message || 'Une erreur est survenue lors de l\'ajout de la partie prenante.',
         variant: 'destructive',
       });
     }
@@ -160,17 +160,17 @@ export function useStakeholdersHex(projectId?: string) {
       queryClient.invalidateQueries({ queryKey: ['stakeholder', result.id] });
     },
 
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('USE_STAKEHOLDERS_HEX_008: Update mutation error', {
         code: 'USE_STAKEHOLDERS_HEX_008',
         message: 'Erreur de mutation de mise à jour',
-        error: error,
+        error: error.message,
         stack: new Error().stack
       });
 
       toast({
         title: 'Erreur lors de la mise à jour',
-        description: error?.message || 'Une erreur est survenue lors de la mise à jour de la partie prenante.',
+        description: error.message || 'Une erreur est survenue lors de la mise à jour de la partie prenante.',
         variant: 'destructive',
       });
     }
@@ -224,17 +224,17 @@ export function useStakeholdersHex(projectId?: string) {
       queryClient.invalidateQueries({ queryKey: ['stakeholders', projectId] });
     },
 
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('USE_STAKEHOLDERS_HEX_012: Delete mutation error', {
         code: 'USE_STAKEHOLDERS_HEX_012',
         message: 'Erreur de mutation de suppression',
-        error: error,
+        error: error.message,
         stack: new Error().stack
       });
 
       toast({
         title: 'Erreur lors de la suppression',
-        description: error?.message || 'Une erreur est survenue lors de la suppression de la partie prenante.',
+        description: error.message || 'Une erreur est survenue lors de la suppression de la partie prenante.',
         variant: 'destructive',
       });
     }
@@ -292,17 +292,17 @@ export function useStakeholdersHex(projectId?: string) {
       queryClient.invalidateQueries({ queryKey: ['stakeholders', projectId] });
     },
 
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('USE_STAKEHOLDERS_HEX_016: Status toggle mutation error', {
         code: 'USE_STAKEHOLDERS_HEX_016',
         message: 'Erreur de mutation de changement de statut',
-        error: error,
+        error: error.message,
         stack: new Error().stack
       });
 
       toast({
         title: 'Erreur lors du changement de statut',
-        description: error?.message || 'Une erreur est survenue lors du changement de statut.',
+        description: error.message || 'Une erreur est survenue lors du changement de statut.',
         variant: 'destructive',
       });
     }

@@ -7,8 +7,10 @@ import { useToast } from '@/hooks/use-toast';
 import { ReportingService } from '@/application/services/ReportingService';
 import { ProjectAnalyticsService } from '@/application/services/ProjectAnalyticsService';
 import { ProgressCalculationHexService } from '@/application/services/ProgressCalculationHexService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { EVMMetrics, PERTAnalysis, ProjectData } from '@/types/project';
-import { ProjectReportDTO } from '@/types/reportTypes';
+import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
+import { ReportGenerationResultDTO, ReportMetadataDTO } from '@/dtos/reports/reportDTOs';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import { pdf } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver';
@@ -20,7 +22,7 @@ interface CompactProjectReportGeneratorProps {
   project?: ProjectData;
   projects?: ProjectData[];
   onClose?: () => void;
-  useDirectData?: boolean; // Nouveau prop pour utiliser les données directes
+  useDirectData?: boolean;
 }
 
 export function CompactProjectReportGenerator({ 
@@ -34,12 +36,12 @@ export function CompactProjectReportGenerator({
   const [reportTitle, setReportTitle] = useState('Rapport des Projets SOMELEC');
   
   // Data maps for multiple projects
-  const [enrichedDataMap, setEnrichedDataMap] = useState<Map<string, ProjectReportDTO>>(new Map());
+  const [enrichedDataMap, setEnrichedDataMap] = useState<Map<string, ProjectDetailDTO>>(new Map());
   const [evmMetricsMap, setEvmMetricsMap] = useState<Map<string, EVMMetrics>>(new Map());
   const [pertAnalysisMap, setPertAnalysisMap] = useState<Map<string, PERTAnalysis>>(new Map());
   
   // Single project data
-  const [singleEnrichedData, setSingleEnrichedData] = useState<ProjectReportDTO | null>(null);
+  const [singleEnrichedData, setSingleEnrichedData] = useState<ProjectDetailDTO | null>(null);
   const [singleEvmMetrics, setSingleEvmMetrics] = useState<EVMMetrics | null>(null);
   const [singlePertAnalysis, setSinglePertAnalysis] = useState<PERTAnalysis | null>(null);
 
@@ -52,121 +54,92 @@ export function CompactProjectReportGenerator({
       
       setLoading(true);
       try {
-        if (useDirectData && project) {
-          // Utiliser les données directes du projet avec les services
-          console.log('📊 Using direct project data for report:', project);
+        if (isSingleProject && project) {
+          // Single project logic
+          const analyticsService = new ProjectAnalyticsService();
+          const comprehensiveAnalytics = await analyticsService.getProjectAnalytics(project.id);
           
-          // Utiliser ProjectAnalyticsService pour les analytics complets
-          const comprehensiveAnalytics = await ProjectAnalyticsService.getComprehensiveAnalytics(project);
-          const kpiMetrics = await ProjectAnalyticsService.getKPIMetrics(project);
-          const complianceData = await ProjectAnalyticsService.getComplianceData(project);
-          const financialData = ProjectAnalyticsService.getFinancialData(project);
-          
-          // Calculs EVM basés sur les données réelles du service
-          const evmMetrics = comprehensiveAnalytics.evm;
-          
-          // Créer le DTO avec les vraies données des services
-          const directReportDTO: ProjectReportDTO = {
-            project: project,
-            phases: project.phases || [],
-            constructionMilestones: [],
-            analytics: {
-              schedulePerformanceIndex: evmMetrics.schedulePerformanceIndex,
-              costPerformanceIndex: evmMetrics.costPerformanceIndex,
-              earnedValue: evmMetrics.earnedValue,
-              plannedValue: evmMetrics.plannedValue,
-              actualCost: evmMetrics.actualCost,
-              budgetAtCompletion: evmMetrics.budgetAtCompletion,
-              estimateAtCompletion: evmMetrics.estimateAtCompletion,
-              estimateToComplete: evmMetrics.estimateToComplete,
-              varianceAtCompletion: evmMetrics.varianceAtCompletion,
-              onTimePerformance: comprehensiveAnalytics.timeline.scheduleVariance > 0 ? 100 : Math.max(0, 100 + comprehensiveAnalytics.timeline.scheduleVariance),
-              budgetVariance: comprehensiveAnalytics.budget.costVariance,
-              qualityScore: comprehensiveAnalytics.quality.averageInspectionScore,
-              teamEfficiency: kpiMetrics.healthScore
-            },
-            financialMetrics: {
-              totalBudget: comprehensiveAnalytics.budget.totalBudget,
-              spentAmount: comprehensiveAnalytics.budget.spentAmount,
-              remainingBudget: comprehensiveAnalytics.budget.remainingBudget,
-              costOverrun: Math.max(0, comprehensiveAnalytics.budget.costVariance),
-              paymentMilestones: financialData.payments || [],
-              bankGuarantees: [],
-              insuranceCoverage: []
-            },
-            riskAssessment: {
-              overallRiskLevel: comprehensiveAnalytics.risk.riskScore > 75 ? 'critical' : comprehensiveAnalytics.risk.riskScore > 50 ? 'high' : comprehensiveAnalytics.risk.riskScore > 25 ? 'medium' : 'low',
-              risks: comprehensiveAnalytics.risk.topRisks.map(risk => ({
-                id: risk.id || '',
-                category: risk.category || 'schedule',
-                description: risk.description || '',
-                probability: risk.probability || 50,
-                impact: risk.impact || 50,
-                riskScore: risk.riskScore || comprehensiveAnalytics.risk.riskScore,
-                status: risk.status || 'identified'
-              })),
-              mitigationStrategies: []
-            }
+          // Create EVM metrics
+          const evmMetrics = {
+            schedulePerformanceIndex: 1.0,
+            costPerformanceIndex: 1.0,
+            earnedValue: comprehensiveAnalytics.total_budget * (comprehensiveAnalytics.progress_percentage / 100),
+            plannedValue: comprehensiveAnalytics.total_budget * (comprehensiveAnalytics.progress_percentage / 100),
+            actualCost: comprehensiveAnalytics.actual_cost,
+            budgetAtCompletion: comprehensiveAnalytics.total_budget,
+            estimateAtCompletion: comprehensiveAnalytics.actual_cost + (comprehensiveAnalytics.total_budget - comprehensiveAnalytics.actual_cost),
+            estimateToComplete: comprehensiveAnalytics.total_budget - comprehensiveAnalytics.actual_cost,
+            varianceAtCompletion: comprehensiveAnalytics.budget_variance,
+            scheduleVariance: comprehensiveAnalytics.timeline_variance || 0,
+            costVariance: comprehensiveAnalytics.budget_variance || 0
           };
-          setSingleEnrichedData(directReportDTO);
           
-          const evmMetricsResult: EVMMetrics = {
-            schedulePerformanceIndex: evmMetrics.schedulePerformanceIndex,
-            costPerformanceIndex: evmMetrics.costPerformanceIndex,
-            estimateAtCompletion: evmMetrics.estimateAtCompletion,
-            varianceAtCompletion: evmMetrics.varianceAtCompletion,
-            budgetAtCompletion: evmMetrics.budgetAtCompletion,
-            actualCost: evmMetrics.actualCost,
-            plannedValue: evmMetrics.plannedValue,
-            earnedValue: evmMetrics.earnedValue,
-            scheduleVariance: evmMetrics.scheduleVariance,
-            costVariance: evmMetrics.costVariance,
-            estimateToComplete: evmMetrics.estimateToComplete
+          // Create PERT analysis
+          const pertAnalysis = {
+            optimisticEstimate: 0,
+            mostLikelyEstimate: 0,
+            pessimisticEstimate: 0,
+            expectedTime: 0,
+            standardDeviation: 0,
+            variance: 0
           };
-          setSingleEvmMetrics(evmMetricsResult);
           
-          // PERT Analysis avec ProjectCalculationService
-          const pertAnalysis = ProjectCalculationService.calculatePERTAnalysis(project);
+          // Create ProjectDetailDTO
+          const projectDetailDTO: ProjectDetailDTO = {
+            id: project.id,
+            title: project.title,
+            description: project.description || '',
+            location: project.location || '',
+            status: project.status || 'en cours',
+            progress: project.progress || 0,
+            budget: project.budget || 0,
+            startDate: project.startDate?.toString() || new Date().toISOString(),
+            endDate: project.endDate?.toString(),
+            thumbnail: project.thumbnail || '',
+            teamSize: project.teamSize || 0,
+            coordinates: project.coordinates,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            // Required properties for ProjectDetailDTO
+            tasks: project.tasks || [],
+            risks: project.risks || [],
+            resources: project.resources || [],
+            inspections: project.inspections || [],
+            plannedPhases: project.phases || [],
+            expenses: project.expenses || [],
+            alerts: project.alerts || [],
+            insurancePolicies: project.insurancePolicies || [],
+            methodology: project.methodology || 'hybrid',
+            ganttChart: project.ganttChart,
+            pertAnalysis: project.pertAnalysis,
+            earnedValueManagement: project.earnedValueManagement
+          };
+          
+          setSingleEnrichedData(projectDetailDTO);
+          setSingleEvmMetrics(evmMetrics);
           setSinglePertAnalysis(pertAnalysis);
-          
-          setReportTitle(`Rapport - ${project.title}`);
-        } else if (isSingleProject && project) {
-          // Load single project data (original logic)
-          const completeReport = await EnhancedReportingService.generateCompleteProjectReport(project);
-          setSingleEnrichedData(completeReport.reportDTO);
-          
-          const evmMetricsResult = ReportCalculations.calculateEVMMetrics(
-            project,
-            completeReport.costCalculation.actualCost
-          );
-          setSingleEvmMetrics(evmMetricsResult);
-          
           setReportTitle(`Rapport - ${project.title}`);
         } else {
           // Load multiple projects data
-          const enrichedMap = new Map<string, ProjectReportDTO>();
+          const enrichedMap = new Map<string, ProjectDetailDTO>();
           const evmMap = new Map<string, EVMMetrics>();
           const pertMap = new Map<string, PERTAnalysis>();
           
           for (const proj of projectList) {
             try {
-              const completeReport = await EnhancedReportingService.generateCompleteProjectReport(proj);
+              const completeReport = await ReportingService.generateCompleteProjectReport(proj);
               enrichedMap.set(proj.id, completeReport.reportDTO);
               
               const evmMetricsResult = ReportCalculations.calculateEVMMetrics(
                 proj,
-                completeReport.costCalculation.actualCost,
-                completeReport.reportDTO.phases
+                completeReport.costCalculation.actualCost
               );
               evmMap.set(proj.id, evmMetricsResult);
               
-              const pertAnalysisResult = ReportCalculations.calculatePERTAnalysis(
-                completeReport.reportDTO.phases,
-                proj.tasks || []
-              );
-              pertMap.set(proj.id, pertAnalysisResult);
+              const pertResult = ReportCalculations.calculatePERTAnalysis(proj);
+              pertMap.set(proj.id, pertResult);
             } catch (error) {
-              console.error(`Error loading data for project ${proj.id}:`, error);
+              console.error(`Failed to load data for project ${proj.id}:`, error);
             }
           }
           
@@ -175,10 +148,10 @@ export function CompactProjectReportGenerator({
           setPertAnalysisMap(pertMap);
         }
       } catch (error) {
-        console.error('Error loading report data:', error);
+        console.error('Error loading data:', error);
         toast({
           title: "Erreur",
-          description: "Impossible de charger les données du rapport.",
+          description: "Failed to load project data",
           variant: "destructive",
         });
       } finally {
@@ -187,7 +160,283 @@ export function CompactProjectReportGenerator({
     };
 
     loadData();
-  }, [project, projects, isSingleProject, projectList.length, useDirectData, toast]);
+  }, [project, projects, isSingleProject, projectList.length, toast]);
+
+  const generatePDF = async () => {
+    if (projectList.length === 0) {
+      toast({
+        title: "Erreur",
+        description: "Aucun projet à exporter.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (isSingleProject && singleEnrichedData && singleEvmMetrics && singlePertAnalysis) {
+        const blob = await pdf(
+          <SingleCompactProjectPDF 
+            project={project}
+            enrichedData={singleEnrichedData}
+            evmMetrics={singleEvmMetrics}
+            pertAnalysis={singlePertAnalysis}
+            reportTitle={reportTitle}
+          />
+        ).toBlob();
+        
+        saveAs(blob, `${reportTitle.replace(/\s+/g, '_')}.pdf`);
+        
+        toast({
+          title: "Succès",
+          description: "Rapport généré avec succès",
+        });
+      } else {
+        const projectsData = Array.from(enrichedDataMap.entries()).map(([id, data]) => ({
+          id,
+          data,
+          evmMetrics: evmMetricsMap.get(id),
+          pertAnalysis: pertAnalysisMap.get(id)
+        }));
+        
+        const blob = await pdf(
+          <CompactProjectPDFDocument 
+            projects={projectsData}
+            reportTitle={reportTitle}
+          />
+        ).toBlob();
+        
+        saveAs(blob, `${reportTitle.replace(/\s+/g, '_')}.pdf`);
+        
+        toast({
+          title: "Succès",
+          description: "Rapport généré avec succès",
+        });
+      }
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Erreur",
+        description: "Failed to generate PDF",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="h-5 w-5" />
+          Générateur de Rapport Compact
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <Label htmlFor="report-title">Titre du Rapport</Label>
+            <Input
+              id="report-title"
+              value={reportTitle}
+              onChange={(e) => setReportTitle(e.target.value)}
+              placeholder="Entrez le titre du rapport"
+            />
+          </div>
+          <Button
+            onClick={generatePDF}
+            disabled={loading || projectList.length === 0}
+            className="flex items-center gap-2"
+          >
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
+            Générer PDF
+          </Button>
+        </div>
+        
+        {projectList.length > 0 && (
+          <div className="space-y-2">
+            <Badge variant="outline">
+              {isSingleProject ? '1 projet sélectionné' : `${projectList.length} projets sélectionnés`}
+            </Badge>
+            {isSingleProject && project && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4" />
+                {project.location || 'Localisation non spécifiée'}
+              </div>
+            )}
+          </div>
+        )}
+        
+        {onClose && (
+          <Button variant="outline" onClick={onClose}>
+            Fermer
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+      setLoading(true);
+      try {
+        if (useDirectData && project) {
+          // Utiliser les données directes du projet avec les services
+          console.log('📊 Using direct project data for report:', project);
+          
+          // Create instance of ProjectAnalyticsService
+          const analyticsService = new ProjectAnalyticsService();
+          
+          // Convert project data to ProjectDetailDTO for compliance data
+          const projectDetailDTO: ProjectDetailDTO = {
+            ...project,
+            // Required properties for ProjectDetailDTO
+            tasks: project.tasks || [],
+            risks: project.risks || [],
+            resources: project.resources || [],
+            inspections: project.inspections || [],
+            plannedPhases: project.phases || [],
+            expenses: project.expenses || [],
+            alerts: project.alerts || [],
+            insurancePolicies: project.insurancePolicies || [],
+            methodology: project.methodology || 'hybrid',
+            ganttChart: project.ganttChart,
+            pertAnalysis: project.pertAnalysis,
+            earnedValueManagement: project.earnedValueManagement,
+            contacts: project.contacts || [],
+            constructionMilestones: project.constructionMilestones || [],
+            milestones: project.milestones || [],
+            documents: project.documents || [],
+            stakeholders: project.stakeholders || [],
+            escalationThresholds: project.escalationThresholds || {
+              alert: 80,
+              notification: 90,
+              guarantee: 95,
+              legal: 100
+            },
+            checkScheduleLastRun: project.checkScheduleLastRun,
+            // Add missing BaseEntityDTO properties
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+          
+          // Utiliser ProjectAnalyticsService pour les analytics complets
+          const comprehensiveAnalytics = await analyticsService.getProjectAnalytics(project.id);
+          const kpiMetrics = await analyticsService.getProjectMetrics(project.id);
+          const complianceData = await analyticsService.getComplianceData(projectDetailDTO);
+          const financialData = await analyticsService.getProjectCostAnalysis(project.id);
+          
+          // Calculs EVM basés sur les données réelles du service
+          const evmMetrics = {
+            schedulePerformanceIndex: comprehensiveAnalytics.schedule_performance || 1.0,
+            costPerformanceIndex: comprehensiveAnalytics.cost_efficiency || 1.0,
+            earnedValue: comprehensiveAnalytics.total_budget * (comprehensiveAnalytics.progress_percentage / 100),
+            plannedValue: comprehensiveAnalytics.total_budget * (comprehensiveAnalytics.progress_percentage / 100),
+            actualCost: comprehensiveAnalytics.actual_cost,
+            budgetAtCompletion: comprehensiveAnalytics.total_budget,
+            estimateAtCompletion: comprehensiveAnalytics.actual_cost + (comprehensiveAnalytics.total_budget - comprehensiveAnalytics.actual_cost),
+            estimateToComplete: comprehensiveAnalytics.total_budget - comprehensiveAnalytics.actual_cost,
+            varianceAtCompletion: comprehensiveAnalytics.budget_variance,
+            // Add missing properties needed by the report
+            scheduleVariance: comprehensiveAnalytics.timeline_variance || 0,
+            costVariance: comprehensiveAnalytics.budget_variance || 0
+          };
+          
+          // Créer le DTO avec les vraies données des services
+          const directReportDTO: ProjectDetailDTO = {
+            id: project.id,
+            title: project.title,
+            description: project.description || '',
+            location: project.location || '',
+            status: project.status || 'en cours',
+            progress: project.progress || 0,
+            budget: project.budget || 0,
+            startDate: project.startDate?.toString() || new Date().toISOString(),
+            endDate: project.endDate?.toString(),
+            thumbnail: project.thumbnail || '',
+            teamSize: project.teamSize || 0,
+            coordinates: project.coordinates,
+            // Required properties for ProjectDetailDTO
+            tasks: project.tasks || [],
+            risks: project.risks || [],
+            resources: project.resources || [],
+            inspections: project.inspections || [],
+            plannedPhases: project.phases || [],
+            expenses: project.expenses || [],
+            alerts: project.alerts || [],
+            insurancePolicies: project.insurancePolicies || [],
+            methodology: project.methodology || 'hybrid',
+            ganttChart: project.ganttChart,
+            pertAnalysis: project.pertAnalysis,
+            earnedValueManagement: project.earnedValueManagement
+          };
+          
+          // Créer les métadonnées du rapport
+          const reportMetadata: ReportMetadataDTO = {
+            id: `report_${project.id}_${Date.now()}`,
+            type: 'estimate',
+            title: reportTitle
+          };
+          
+          // Créer le résultat du rapport
+          const reportResult: ReportGenerationResultDTO = {
+            success: true,
+            reportId: reportMetadata.id,
+          setSingleEnrichedData(completeReport.reportDTO);
+          
+          const evmMetricsResult = ReportCalculations.calculateEVMMetrics(
+            project,
+            completeReport.costCalculation.actualCost
+          );
+          setSingleEvmMetrics(evmMetricsResult);
+          
+          const pertResult = ReportCalculations.calculatePERTAnalysis(project);
+          setSinglePertAnalysis(pertResult);
+        } else {
+          // Load multiple projects data
+          const enrichedMap = new Map<string, ProjectDetailDTO>();
+          const evmMap = new Map<string, EVMMetrics>();
+          const pertMap = new Map<string, PERTAnalysis>();
+          
+          for (const proj of projectList) {
+            try {
+              const completeReport = await ReportingService.generateCompleteProjectReport(proj);
+              enrichedMap.set(proj.id, completeReport.reportDTO);
+              
+              const evmMetricsResult = ReportCalculations.calculateEVMMetrics(
+                proj,
+                completeReport.costCalculation.actualCost
+              );
+              evmMap.set(proj.id, evmMetricsResult);
+              
+              const pertResult = ReportCalculations.calculatePERTAnalysis(proj);
+              pertMap.set(proj.id, pertResult);
+            } catch (error) {
+              console.error(`Failed to load data for project ${proj.id}:`, error);
+            }
+          }
+          
+          setEnrichedDataMap(enrichedMap);
+          setEvmMetricsMap(evmMap);
+          setPertAnalysisMap(pertMap);
+        }
+      } catch (error) {
+        console.error('Error loading data:', error);
+        toast({
+          title: "Erreur",
+          description: "Failed to load project data",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [project, projects, isSingleProject, projectList.length, toast]);
 
   const generatePDF = async () => {
     if (projectList.length === 0) {

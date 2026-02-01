@@ -48,12 +48,12 @@ import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { CreateProjectRequestDTO } from "@/dtos/entities/ProjectDTO";
 
 interface ProjectCreationWorkflowProps {
-  onSubmit: (data: any) => void;
+  onSubmit: (data: CreateProjectRequestDTO) => void;
   selectedMaterials: Array<{ materialId: string; quantity: number }>;
   onMaterialsChange: (
     materials: Array<{ materialId: string; quantity: number }>
   ) => void;
-  initialData?: any;
+  initialData?: CreateProjectRequestDTO;
 }
 
 const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
@@ -77,21 +77,23 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   const [currentStep, setCurrentStep] = useState(0);
 
   // 🎨 UI Layer - Use basic object state (transformers removed)
-  const [projectData, setProjectData] = useState<any>({
+  const [projectData, setProjectData] = useState<CreateProjectRequestDTO>({
     title: "",
     description: "",
     location: "",
-    status: "pending",
-    progress: 0,
-    budget: 0,
-    start_date: new Date().toISOString().split("T")[0],
+    latitude: 0,
+    longitude: 0,
+    project_manager_id: "",
+    client_name: "",
+    contractor_id: "",
+    estimated_budget: 0,
+    start_date: "",
     end_date: "",
-    team_size: 0,
-    // 🎨 UI/Presentation layer properties (PROMPTS.md Rule #5)
+    thumbnail: "",
+    progress: 0,
+    teamSize: 0,
     project_reference: "",
     address: "",
-    latitude: undefined,
-    longitude: undefined,
     technical_manager_id: "",
     project_manager_id: "",
     supervisor_id: "",
@@ -121,27 +123,27 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   });
 
   // 🎨 UI Layer - États locaux pour les données associées (transformers removed)
-  const [stakeholders, setStakeholders] = useState<any[]>([]);
-  const [delegation, setDelegation] = useState<any>({
+  const [stakeholders, setStakeholders] = useState<Array<{id: string; name: string; role: string; contact: string}>>([]);
+  const [delegation, setDelegation] = useState({
     projectManager: "",
     technicalManager: "",
     supervisor: "",
     client: "",
   });
-  const [risks, setRisks] = useState<any[]>([]);
-  const [compliance, setCompliance] = useState<any[]>([]);
-  const [phases, setPhases] = useState<any[]>([]);
+  const [risks, setRisks] = useState<Array<{id: string; title: string; severity: 'low' | 'medium' | 'high'; description: string}>>([]);
+  const [compliance, setCompliance] = useState<Array<{id: string; standard: string; status: 'pending' | 'completed'; document: string}>>([]);
+  const [phases, setPhases] = useState<Array<{id: string; name: string; status: string; progress: number}>>([]);
   const [shapeDataState, setShapeDataState] = useState<{
     shape: Coordinate[] | undefined;
     shapeType: 'polygon' | 'rectangle' | 'circle' | 'diamond' | undefined;
   } | null>(null);
-  const [phasesData, setPhasesData] = useState<any[]>([]);
+  const [phasesData, setPhasesData] = useState<Array<{id: string; name: string; status: string; progress: number}>>([]);
   const [estimatedDuration, setEstimatedDuration] = useState(
     projectData.estimatedDuration || ""
   );
 
   // 🎨 UI Layer - Update function for basic state (transformers removed)
-  const updateProjectData = useCallback((updates: any) => {
+  const updateProjectData = useCallback((updates: Partial<CreateProjectRequestDTO>) => {
     setProjectData((prev) => ({ ...prev, ...updates }));
   }, []);
 
@@ -181,11 +183,11 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       icon: Building,
       description: "Type, budget, dates, référence",
       color: "bg-blue-500",
-      isCompleted: (data: any) =>
+      isCompleted: (data: CreateProjectRequestDTO) =>
         Boolean(
           data.title &&
           data.description &&
-          data.budget &&
+          data.estimated_budget &&
           data.project_type &&
           data.start_date
         ),
@@ -197,7 +199,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       description:
         "Bailleurs, Ministères, Entreprises, Banques, Bureau conseil",
       color: "bg-green-500",
-      isCompleted: (data: any) =>
+      isCompleted: (data: CreateProjectRequestDTO) =>
         Boolean(data.technical_manager_id),
     },
     {
@@ -206,7 +208,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       icon: MapPin,
       description: "Géolocalisation interactive (Maps/Leaflet)",
       color: "bg-cyan-500",
-      isCompleted: (data: any) =>
+      isCompleted: (data: CreateProjectRequestDTO) =>
         Boolean(data.address && (data.latitude || data.longitude)),
     },
     {
@@ -216,7 +218,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       description:
         "Phase → Step → Task avec documents, ressources, inspections",
       color: "bg-indigo-500",
-      isCompleted: (data: any) => Boolean(phases && phases.length > 0),
+      isCompleted: (data: CreateProjectRequestDTO) => Boolean(phases && phases.length > 0),
     },
     {
       id: 5,
@@ -224,7 +226,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       icon: AlertTriangle,
       description: "Analyse et gestion des risques",
       color: "bg-red-500",
-      isCompleted: (data: any) => Boolean(risks && risks.length >= 0),
+      isCompleted: (data: CreateProjectRequestDTO) => Boolean(risks && risks.length >= 0),
     },
     {
       id: 6,
@@ -232,7 +234,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       icon: FileCheck,
       description: "Standards SOMELEC et bailleurs (BM, BAD, BID, AFD)",
       color: "bg-amber-500",
-      isCompleted: (data: any) => Boolean(compliance && compliance.length >= 0),
+      isCompleted: (data: CreateProjectRequestDTO) => Boolean(compliance && compliance.length >= 0),
     },
     {
       id: 7,
@@ -240,7 +242,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       icon: CheckCircle,
       description: "Réception définitive et clôture",
       color: "bg-teal-500",
-      isCompleted: (data: any) => true,
+      isCompleted: (data: CreateProjectRequestDTO) => true,
     },
   ];
 

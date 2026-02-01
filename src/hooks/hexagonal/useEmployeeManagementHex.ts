@@ -1,13 +1,17 @@
 /**
  * Hexagonal hooks for Employee Management CRUD
- * Centralizes all employee operations
+ * Uses hexagonal architecture with RepositoryFactory and EmployeeService
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/integrations/supabase/types';
-
-type Employee = Database['public']['Tables']['employees']['Row'];
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { EmployeeService } from '@/application/services/EmployeeService';
+import { EmployeeTransformer } from '@/dtos/transforms/EmployeeTransformer';
+import { 
+  EmployeeDTO, 
+  CreateEmployeeDTO, 
+  UpdateEmployeeDTO 
+} from '@/dtos/entities/EmployeeDTO';
 
 export interface EmployeeFormData {
   employee_id: string;
@@ -24,21 +28,15 @@ export interface EmployeeFormData {
 
 // Hook: Fetch employees with search
 export function useEmployeesList(searchTerm: string = '') {
+  const queryClient = useQueryClient();
+  const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
+
   return useQuery({
     queryKey: ['employees-management', searchTerm],
-    queryFn: async (): Promise<Employee[]> => {
-      let query = supabase
-        .from('employees')
-        .select('*')
-        .order('full_name');
-
-      if (searchTerm) {
-        query = query.or(`full_name.ilike.%${searchTerm}%,employee_id.ilike.%${searchTerm}%,position.ilike.%${searchTerm}%`);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data as unknown as Employee[]) || [];
+    queryFn: async (): Promise<EmployeeDTO[]> => {
+      const searchOptions = { searchTerm };
+      const searchResult = await employeeService.searchEmployees(searchOptions);
+      return searchResult.employees.map(employee => EmployeeTransformer.toDTO(employee));
     }
   });
 }
@@ -46,16 +44,14 @@ export function useEmployeesList(searchTerm: string = '') {
 // Hook: Create employee
 export function useCreateEmployee() {
   const queryClient = useQueryClient();
+  const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
 
   return useMutation({
-    mutationFn: async (employeeData: EmployeeFormData) => {
-      const { data, error } = await supabase
-        .from('employees')
-        .insert(employeeData as any)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
+    mutationFn: async (employeeData: CreateEmployeeDTO): Promise<EmployeeDTO> => {
+      // Convert DTO to entity using the correct method
+      const employee = EmployeeTransformer.fromCreateDTOToEntity(employeeData);
+      const createdEmployee = await employeeService.createEmployee(employee);
+      return EmployeeTransformer.toDTO(createdEmployee);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees-management'] });
@@ -66,14 +62,14 @@ export function useCreateEmployee() {
 // Hook: Update employee
 export function useUpdateEmployee() {
   const queryClient = useQueryClient();
+  const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: EmployeeFormData }) => {
-      const { error } = await supabase
-        .from('employees')
-        .update(data as any)
-        .eq('id', id as any);
-      if (error) throw error;
+    mutationFn: async ({ id, data }: { id: string; data: UpdateEmployeeDTO }): Promise<EmployeeDTO> => {
+      // Convert DTO to entity partial using the correct method
+      const employeeUpdates = EmployeeTransformer.fromUpdateDTOToEntity(data);
+      const updatedEmployee = await employeeService.updateEmployee(id, employeeUpdates);
+      return EmployeeTransformer.toDTO(updatedEmployee);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees-management'] });
@@ -84,14 +80,11 @@ export function useUpdateEmployee() {
 // Hook: Delete employee
 export function useDeleteEmployee() {
   const queryClient = useQueryClient();
+  const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('employees')
-        .delete()
-        .eq('id', id as any);
-      if (error) throw error;
+    mutationFn: async (id: string): Promise<void> => {
+      await employeeService.deleteEmployee(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees-management'] });

@@ -83,9 +83,32 @@ export interface DocumentSummaryDTO {
   projectTitle?: string;
 }
 
-export interface CreateDocumentDTO extends Omit<DocumentDTO, 'id' | 'createdAt' | 'updatedAt'> {}
+export interface CreateDocumentDTO {
+  projectId: string | null;
+  phaseId: string | null;
+  inspectionId: string | null;
+  paymentId: string | null;
+  supplierId: string | null;
+  title: string;
+  description: string | null;
+  documentType: DocumentType;
+  status: DocumentStatus;
+  fileName: string | null;
+  fileUrl: string | null;
+  fileSize: number | null;
+  mimeType: string | null;
+  tags: string[];
+  isInternalOnly: boolean;
+  isSharedWithSuppliers: boolean;
+  deadlineDate: string | null;
+  assignedTo: string | null;
+  uploadedBy: string | null;
+  category: string | null;
+  subcategory: string | null;
+  metadata: Record<string, unknown> | null;
+}
 
-export interface UpdateDocumentDTO extends Partial<CreateDocumentDTO> {}
+export type UpdateDocumentDTO = Partial<CreateDocumentDTO>;
 
 export interface DocumentFilterDTO {
   projectId?: string;

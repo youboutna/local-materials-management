@@ -16,7 +16,7 @@ interface InspectionData {
   status: string;
   progress_at_inspection: number;
   comments: string | null;
-  documents: any;
+  documents: string[]; // URLs des documents uploadés
   payment_type: string | null;
   created_at: string;
   updated_at: string;
@@ -29,6 +29,15 @@ interface InspectionFormData {
   progress_at_inspection: string;
   comments: string;
   documents?: File[];
+}
+
+interface UploadedDocument {
+  id: string;
+  url: string;
+  name: string;
+  type: string;
+  size: number;
+  uploaded_at: string;
 }
 
 export function usePhaseInspectionsHex(phaseId: string, projectId: string) {
@@ -49,12 +58,12 @@ export function usePhaseInspectionsHex(phaseId: string, projectId: string) {
         return {
           id: dto.id,
           project_id: dto.projectId,
-          phase_id: dto.phaseId,
+          phase_id: dto.phaseId || null, // ✅ Convertir undefined en null
           inspector: dto.inspector,
           date: dto.date,
           status: dto.status,
           progress_at_inspection: dto.progressAtInspection,
-          comments: dto.comments,
+          comments: dto.comments || null, // ✅ Convertir undefined en null
           documents: dto.documents,
           payment_type: dto.paymentType,
           created_at: dto.createdAt,
@@ -66,12 +75,28 @@ export function usePhaseInspectionsHex(phaseId: string, projectId: string) {
   });
 
   // Upload documents helper
-  const uploadDocuments = async (documents: File[]): Promise<any[]> => {
-    // This would use StorageService - placeholder implementation
-    const uploadedDocs = [];
+  const uploadDocuments = async (documents: File[]): Promise<UploadedDocument[]> => {
+    // Use StorageService for document upload
+    const uploadedDocs: UploadedDocument[] = [];
     for (const doc of documents) {
-      const result = await storageService.uploadFile(doc, 'inspection-documents');
-      uploadedDocs.push(result);
+      try {
+        const result = await storageService.uploadFile({
+          bucket: 'inspections',
+          path: `inspection-documents/${Date.now()}_${doc.name}`,
+          file: doc
+        });
+        uploadedDocs.push({
+          id: result.id,
+          url: result.url,
+          name: doc.name,
+          type: doc.type,
+          size: doc.size,
+          uploaded_at: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Failed to upload document:', error);
+        throw new Error(`Failed to upload ${doc.name}`);
+      }
     }
     return uploadedDocs;
   };

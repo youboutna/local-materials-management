@@ -1,6 +1,6 @@
 
 import { cn } from '@/lib/utils';
-import { ProjectStatus } from '@/types/project';
+import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
 
 export type StatusType = ProjectStatus | 'approuvée' | 'rejetée' | 'modifications requises';
 

@@ -60,7 +60,22 @@ export interface EmployeeSummaryDTO {
   averagePerformance?: number;
 }
 
-export interface CreateEmployeeDTO extends Omit<EmployeeDTO, 'id' | 'createdAt' | 'updatedAt'> {}
+export interface CreateEmployeeDTO {
+  employeeId: string;
+  fullName: string;
+  email: string | null;
+  phone: string | null;
+  position: string | null;
+  department: string | null;
+  hireDate: string | null;
+  isActive: boolean;
+  salary: number | null;
+  skills: string[] | null;
+  certifications: Record<string, unknown> | null;
+  managerId: string | null;
+  superiorId: string | null;
+  userId: string | null;
+}
 
 export interface UpdateEmployeeDTO extends Partial<CreateEmployeeDTO> {
   isActive?: boolean;
@@ -73,4 +88,27 @@ export interface EmployeeFilterDTO {
   skills?: string[];
   managerId?: string;
   searchQuery?: string;
+}
+
+// Legacy compatibility types from transforms
+export type EmployeeDepartment = 'engineering' | 'construction' | 'quality' | 'administration' | 'finance' | 'procurement';
+export type EmployeePosition = 'engineer' | 'technician' | 'manager' | 'supervisor' | 'inspector' | 'analyst';
+
+// Legacy request DTOs for backward compatibility
+export interface CreateEmployeeRequestDTO {
+  full_name: string;
+  position?: string;
+  department?: string;
+  email?: string;
+  phone?: string;
+  employee_id: string;
+}
+
+export interface UpdateEmployeeRequestDTO {
+  full_name?: string;
+  position?: string;
+  department?: string;
+  email?: string;
+  phone?: string;
+  is_active?: boolean;
 }

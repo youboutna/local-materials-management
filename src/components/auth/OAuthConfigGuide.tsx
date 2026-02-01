@@ -5,6 +5,11 @@ import { Info, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useOAuthConfig } from '@/hooks/hexagonal/useOAuthConfigHex';
 
+// Configuration URLs - externalisées pour maintenance facile
+const CONFIGURATION_URLS = {
+  supabase: 'https://supabase.com/dashboard/project/huttgbybeuzeikaqfvam/auth/providers'
+} as const;
+
 const OAuthConfigGuide = () => {
   const { 
     currentProvider, 
@@ -87,7 +92,7 @@ const OAuthConfigGuide = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => window.open('https://supabase.com/dashboard/project/huttgbybeuzeikaqfvam/auth/providers', '_blank')}
+              onClick={() => window.open(CONFIGURATION_URLS.supabase, '_blank')}
             >
               <ExternalLink className="mr-2 h-4 w-4" />
               Supabase Auth Settings

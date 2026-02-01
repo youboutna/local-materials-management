@@ -11,7 +11,7 @@ import {
   StakeholderResponseDTO,
   StakeholderContactDTO,
   StakeholderOrganizationDTO
-} from '@/dtos/transforms/StakeholderDTO';
+} from '@/dtos/entities/StakeholderDTO';
 
 export class StakeholderTransformer {
   // Entity → DTO

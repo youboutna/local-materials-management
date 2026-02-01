@@ -28,7 +28,7 @@ import {
 } from "../../application/services/ProjectFormService";
 
 // Import hexagonal hooks
-import { useProjectWorkflowHex, type ProjectWorkflowData } from "@/hooks/hexagonal/useProjectWorkflowHex";
+import { useProjectWorkflowHex, type ProjectWorkflowData } from "@/hooks/hexagonal";
 import { useProjectMaterialsHex } from "@/hooks/hexagonal";
 
 // Import step components
@@ -38,7 +38,8 @@ import LocationStep from "./steps/LocationStep";
 import RiskAnalysisStep from "./steps/RiskAnalysisStep";
 import ComplianceStep from "./steps/ComplianceStep";
 // Import types directly from ConstructionPhaseManager to avoid type conflicts
-import ConstructionPhaseManager, { type PhaseData, type CustomPhase } from "./ConstructionPhaseManager";
+import { PhaseData, type CustomPhase } from "./ConstructionPhaseManager";
+import { PhaseDTO } from "@/dtos/entities";
 import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
 
 interface EnhancedProjectEditFormProps {
@@ -69,6 +70,35 @@ const transformProjectPhaseToPhaseData = (phases: unknown[]): PhaseData[] => {
   }));
 };
 
+// Transformer function to convert PhaseData to PhaseDTO for ProgressCalculationHexService
+const transformPhaseDataToPhaseDTO = (phases: PhaseData[], projectId: string): PhaseDTO[] => {
+  return phases.map(phase => ({
+    id: phase.id,
+    name: phase.title, // Utiliser title pour name
+    description: phase.description,
+    status: phase.status === 'not_started' ? 'planning' : 
+            phase.status === 'in_progress' ? 'active' : 
+            phase.status === 'completed' ? 'completed' : 'paused',
+    phase_name: phase.title, // Utiliser title pour phase_name
+    projectId: projectId || '',
+    startDate: phase.startDate,
+    endDate: phase.endDate,
+    progress: phase.progress,
+    budget: phase.budget,
+    actualCost: phase.actualCost,
+    steps: [], // Empty steps for now - ProgressCalculationHexService mainly needs basic phase info
+    resources: {
+      employees: [],
+      contractors: [],
+      totalRequired: 0,
+      totalAssigned: 0,
+      skills: []
+    },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }));
+};
+
 const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
   initialData,
   onSubmit,
@@ -78,13 +108,40 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
   const { toast } = useToast();
   const { id: projectId } = useParams<{ id: string }>();
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<ProjectFormDataDTO>(
-    () => initialData || {}
-  );
+  const [formData, setFormData] = useState<ProjectFormDataDTO>(() => {
+    if (initialData) return initialData;
+    
+    // Retourner un objet ProjectFormDataDTO valide selon Règle #4
+    return {
+      title: '',
+      description: '',
+      location: '',
+      status: 'draft',
+      budget: 0,
+      start_date: '',
+      end_date: '',
+      project_manager_id: '',
+      client_id: '',
+      progress: 0,
+      team_size: 0
+    };
+  });
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasLoadedData, setHasLoadedData] = useState(false);
-  const [baseData, setBaseData] = useState<ProjectFormDataDTO>({});
+  const [baseData, setBaseData] = useState<ProjectFormDataDTO>({
+    title: '',
+    description: '',
+    location: '',
+    status: 'draft',
+    budget: 0,
+    start_date: '',
+    end_date: '',
+    project_manager_id: '',
+    client_id: '',
+    progress: 0,
+    team_size: 0
+  });
   const [phasesData, setPhasesData] = useState<PhaseData[]>([]);
 
   // Use hexagonal hook for materials
@@ -114,39 +171,72 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       const { ProjectService } = await import("@/application/services/ProjectService");
       const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
 
-      // Load complete project details
+      // Load complete project details with validation
       const projectDetail = await projectService.getProjectWithDetails(projectId);
 
-      if (projectDetail) {
-        // Load stakeholders from database
-        const { ProjectStakeholderService } = await import(
-          "@/application/services/ProjectStakeholderService"
-        );
-        const stakeholdersData =
-          await ProjectStakeholderService.getProjectStakeholders(projectId);
-
-        // Map stakeholders to form format
-        const formattedData: ProjectFormDataDTO = {
-          title: projectDetail.title || '',
-          description: projectDetail.description || '',
-          estimated_budget: projectDetail.budget || 0,
-          // Add other mappings as needed
-        };
-        setFormData(formattedData);
-        setPhasesData(transformProjectPhaseToPhaseData(projectDetail.plannedPhases || projectDetail.phases || []));
-        setHasLoadedData(true);
-      } else {
-        // Handle case where projectDetail is null
+      if (!projectDetail) {
+        console.warn(`Project with ID ${projectId} not found`);
         setPhasesData([]);
         setHasLoadedData(true);
+        return;
       }
+
+      // Validate projectDetail structure before accessing properties
+      if (!projectDetail.id || !projectDetail.title) {
+        console.error('Invalid project data structure:', projectDetail);
+        toast({
+          title: "Erreur de données",
+          description: "Les données du projet sont incomplètes ou corrompues",
+          variant: "destructive",
+        });
+        setPhasesData([]);
+        setHasLoadedData(true);
+        return;
+      }
+
+      // Load stakeholders from database
+      const { ProjectStakeholderService } = await import(
+        "@/application/services/ProjectStakeholderService"
+      );
+      const stakeholdersData =
+        await ProjectStakeholderService.getProjectStakeholders(projectId);
+
+      // Map stakeholders to form format using correct ProjectDTO properties
+      const formattedData: ProjectFormDataDTO = {
+        title: projectDetail.title || '',
+        description: projectDetail.description || '',
+        location: projectDetail.location || '',
+        status: 'draft',
+        budget: projectDetail.budget || 0,
+        start_date: projectDetail.startDate || '',
+        end_date: projectDetail.endDate || '',
+        project_manager_id: projectDetail.projectResponsableId || '',
+        client_id: projectDetail.mainContractor || '',
+        progress: projectDetail.progress || 0,
+        team_size: projectDetail.teamSize || 0
+      };
+      
+      console.log('Project data loaded successfully:', {
+        projectId: projectDetail.id,
+        title: projectDetail.title,
+        managerId: projectDetail.projectResponsableId,
+        contractor: projectDetail.mainContractor
+      });
+      
+      setFormData(formattedData);
+      setPhasesData(transformProjectPhaseToPhaseData(projectDetail.plannedPhases || []));
+      setHasLoadedData(true);
+      
     } catch (error) {
       console.error("Error loading project data:", error);
       toast({
         title: "Erreur",
-        description: "Erreur lors du chargement des données du projet",
+        description: `Erreur lors du chargement des données du projet: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
         variant: "destructive",
       });
+      // Set safe defaults on error
+      setPhasesData([]);
+      setHasLoadedData(true);
     } finally {
       setIsLoading(false);
     }
@@ -187,6 +277,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
         currentStep,
         saveType: "step_only",
         isDraft: true,
+        totalSteps: steps.length,
       };
 
       const processedData = formService.processFormDataForSave(
@@ -225,6 +316,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
         currentStep,
         saveType: "save_and_next",
         isDraft: true,
+        totalSteps: steps.length,
       };
 
       const processedData = formService.processFormDataForSave(
@@ -275,18 +367,18 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
         "@/application/services/ProgressCalculationHexService"
       );
 
+      const progressService = new ProgressCalculationHexService();
       const calculatedProgress =
-        ProgressCalculationHexService.calculateProjectProgress(
-          phasesData,
-          formData.tasks || [],
-          formData.inspections || []
-        );
+        progressService.calculateProjectProgress(
+          transformPhaseDataToPhaseDTO(phasesData, projectId || '')
+      );
 
       const context: SaveContextDTO = {
         currentStep,
         saveType: "global_and_close",
         isDraft: false,
         isComplete: true,
+        totalSteps: steps.length,
       };
 
       const processedData = formService.processFormDataForSave(
@@ -414,9 +506,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
           <ConstructionPhaseManager
             phases={phasesData}
             onChange={setPhasesData}
-            projectBudget={
-              formData.estimatedBudget || formData.estimated_budget || 0
-            }
+            projectBudget={formData.budget || 0}
           />
         );
       case 5: // Risques
@@ -445,39 +535,35 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-muted-foreground">
-                Dernière étape: réception définitive, solde et clôture du projet
-              </p>
-              <div className="grid gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Statut de réception
-                  </label>
-                  <select
-                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary"
-                    value={formData.reception_status || ""}
-                    onChange={(e) =>
-                      updateFormData({ reception_status: e.target.value })
-                    }
-                  >
-                    <option value="">Sélectionner</option>
-                    <option value="provisional">Réception provisoire</option>
-                    <option value="definitive">Réception définitive</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Notes de clôture
-                  </label>
-                  <textarea
-                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary min-h-[100px]"
-                    placeholder="Notes finales, observations, recommandations..."
-                    value={formData.closure_notes || ""}
-                    onChange={(e) =>
-                      updateFormData({ closure_notes: e.target.value })
-                    }
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Statut de réception
+                </label>
+                <select
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary"
+                  value={formData.receptionStatus || ""}
+                  onChange={(e) =>
+                    updateFormData({ receptionStatus: e.target.value })
+                  }
+                >
+                  <option value="">Sélectionner</option>
+                  <option value="pending">En attente</option>
+                  <option value="approved">Approuvé</option>
+                  <option value="rejected">Rejeté</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Notes de clôture
+                </label>
+                <textarea
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary min-h-[100px]"
+                  placeholder="Notes finales, observations, recommandations..."
+                  value={formData.closureNotes || ""}
+                  onChange={(e) =>
+                    updateFormData({ closureNotes: e.target.value })
+                  }
+                />
               </div>
             </CardContent>
           </Card>

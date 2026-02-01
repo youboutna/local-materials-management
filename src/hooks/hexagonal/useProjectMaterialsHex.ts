@@ -7,19 +7,18 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { MaterialService } from "@/application/services/MaterialService";
 import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
+import { MaterialDTO } from "@/dtos/entities/MaterialDTO";
 
 export interface ProjectMaterial {
   id?: string;
   project_id: string;
   material_id: string;
   quantity: number;
-  material?: {
-    id: string;
-    name: string;
-    category: string;
-    unit: string;
-    price_per_unit: number;
-  };
+  unit_cost: number;
+  total_cost: number;
+  material_name?: string;
+  material_type?: string;
+  material?: MaterialDTO;
 }
 
 export interface SelectedMaterial {
@@ -31,7 +30,16 @@ async function fetchProjectMaterials(projectId: string): Promise<ProjectMaterial
   try {
     const materialService = new MaterialService();
     const materials = await materialService.getProjectMaterials(projectId);
-    return materials.map((item: any) => ({
+    return materials.map((item: {
+      id: string;
+      project_id: string;
+      material_id: string;
+      quantity: number;
+      unit_cost: number;
+      total_cost: number;
+      material_name?: string;
+      material_type?: string;
+    }) => ({
       id: item.id,
       project_id: item.project_id,
       material_id: item.material_id,

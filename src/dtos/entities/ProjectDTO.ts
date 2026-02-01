@@ -253,9 +253,107 @@ export interface ProjectListItemDTO extends BaseEntityDTO {
   coordinates?: LocationDTO;
 }
 
-export interface CreateProjectDTO extends Omit<ProjectDTO, 'id' | 'createdAt' | 'updatedAt'> {}
+export interface CreateProjectDTO {
+  title: string;
+  description: string;
+  location: string;
+  status: ProjectStatus;
+  progress: number;
+  budget: number;
+  startDate: string;
+  endDate?: string;
+  thumbnail: string;
+  teamSize: number;
+  coordinates?: LocationDTO;
+  
+  // Localization fields
+  localisation?: any[];
+  forme?: string;
+  adresse?: string | any;
+  
+  // Location-specific fields
+  geographicZone?: string;
+  terrainType?: string;
+  environmentalConstraints?: string;
+  hasUtilities?: boolean;
+  requiresPermits?: boolean;
+  
+  // Classification
+  category?: string;
+  subCategory?: string;
+  priorityLevel?: 'Faible' | 'Moyenne' | 'Élevée' | 'Très élevée';
+  riskLevel?: 'Faible' | 'Moyen' | 'Élevé' | 'Critique';
+  environmentalImpact?: 'Nul' | 'Faible' | 'Modéré' | 'Élevé';
+  sustainabilityScore?: number;
+  
+  financingSource?: string;
+  marketType?: string;
+  selectionMode?: string;
+  methodology?: string;
+  launchDate?: string;
+  attributionDate?: string;
+  projectResponsableId?: string;
+  mainContractor?: string;
+  projectReference?: string;
+  allowsInitialPayment?: boolean;
+  initialPaymentPercentage?: number;
+  currentPhase?: string;
+  currentStage?: string;
+  createdBy? : string//user uuid   
+  // Financial and insurance attributes
+  bankGuaranteeRequired?: boolean;
+  bankGuaranteeAmount?: number;
+  bankGuaranteePercentage?: number;
+  insuranceRequired?: boolean;
+  materialsBudget?: number;
+  procurementLeadTime?: number;
+  resourceAssignment?: any[]; // ✅ SEMANTIC: Array of ProjectResource[] from project_resources table
+  receptionStatus?: string;
+  closureNotes?: string;
+  currency?: string;//use by default MRU
+  
+  // Aggregated properties from relationships
+  totalSpent?: number;
+  budgetUtilization?: number;
+  remainingBudget?: number;
+  scheduleVariance?: number;
+  isOnTrack?: boolean;
+  activeTeamMembers?: number;
+  
+  // Risk aggregations
+  riskCount?: number;
+  highRiskCount?: number;
+  
+  // Document aggregations
+  documentCount?: number;
+  pendingDocuments?: number;
+  
+  // Material aggregations
+  materialCount?: number;
+  totalMaterialCost?: number;
+  
+  // Phase aggregations
+  phaseCount?: number;
+  completedPhases?: number;
+  activePhases?: number;
+  
+  // Inspection aggregations
+  inspectionCount?: number;
+  passedInspections?: number;
+  failedInspections?: number;
+  
+  // Task aggregations
+  taskCount?: number;
+  completedTasks?: number;
+  overdueTasks?: number;
+  
+  // Payment aggregations
+  paymentCount?: number;
+  paidAmount?: number;
+  pendingPayments?: number;
+}
 
-export interface UpdateProjectDTO extends Partial<CreateProjectDTO> {}
+export type UpdateProjectDTO = Partial<CreateProjectDTO>;
 
 export interface CreateProjectRequestDTO {
   title: string;

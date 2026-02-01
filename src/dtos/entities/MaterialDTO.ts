@@ -65,9 +65,24 @@ export interface MaterialSummaryDTO {
   lastUpdated: string;
 }
 
-export interface CreateMaterialDTO extends Omit<MaterialDTO, 'id' | 'createdAt' | 'updatedAt'> {}
+export interface CreateMaterialDTO {
+  name: string;
+  description: string;
+  category: string;
+  unit: string;
+  pricePerUnit: number;
+  availableQuantity: number;
+  sku?: string;
+  coordinatesLatitude?: number;
+  coordinatesLongitude?: number;
+  workspaceId?: string;
+  image?: string;
+  originLocation?: string;
+  adresse?: string;
+  forme?: string;
+}
 
-export interface UpdateMaterialDTO extends Partial<CreateMaterialDTO> {}
+export type UpdateMaterialDTO = Partial<CreateMaterialDTO>;
 
 export interface MaterialFilterDTO {
   category?: string;

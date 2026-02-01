@@ -413,10 +413,12 @@ export { useEnhancedRiskManagerHex } from './useEnhancedRiskManagerHex';
 export { 
   usePaymentControlActionsHex,
   actionFormSchema,
-  type ActionFormData,
-  type PaymentControlActionsProps,
-  type ActionMetadata
+  type PaymentControlActionsProps
 } from './usePaymentControlActionsHex';
+export type { 
+  ActionFormData,
+  ActionMetadata
+} from '@/application/services/PaymentControlActionsService';
 
 // Phase Employees
 export { usePhaseEmployeesHex } from './usePhaseEmployeesHex';
@@ -491,6 +493,40 @@ export type { Submission, SubmissionDocument, ActivityLog } from './useSupplierS
 export type { Milestone } from './useMilestonesHex';
 export type { PhasePaymentFormData } from './usePhasePaymentsHex';
 
+// Project Workflow types
+export type { 
+  ProjectWorkflowData,
+  WorkflowStateDTO,
+  WorkflowValidationDTO,
+  WorkflowSaveContextDTO,
+  WorkflowTransitionDTO,
+  WorkflowAuditLogDTO,
+  WorkflowMetricsDTO,
+  WorkflowTemplateDTO,
+  WorkflowSessionDTO,
+  ProjectCreationWorkflowDTO,
+  ProjectBasicInfoDTO,
+  ProjectStakeholdersDTO,
+  ProjectLocationDTO,
+  ProjectPlanningDTO,
+  ProjectRisksDTO,
+  ProjectComplianceDTO,
+  ProjectValidationDTO,
+  StepProgressDTO,
+  ValidationResult,
+  SaveResult,
+  ProjectFormDataDTO,
+  StepRelatedDataDTO,
+  WorkflowMetadataDTO,
+  ComplianceDataDTO,
+  TaskFormDataDTO,
+  RiskFormDataDTO,
+  MaterialFormDataDTO,
+  EmployeeFormDataDTO,
+  InspectionFormDataDTO,
+  DocumentFormDataDTO
+} from '@/dtos/transforms/ProjectWorkflowDTOs';
+
 // Additional type exports for components - aligned with useBankGuaranteesHex
 export type { MaterialDTO as MaterialOption } from '@/dtos/transforms';
 
@@ -498,7 +534,7 @@ export type { MaterialDTO as MaterialOption } from '@/dtos/transforms';
 export type { InspectionDTO as InspectionData } from '@/dtos/transforms';
 export type { PhaseDTO as ProjectPhase } from '@/dtos/transforms';
 export type { TaskDTO as ProjectTask } from '@/dtos/transforms';
-export type { EmployeeDTO as Employee } from '@/dtos/transforms';
+export type { EmployeeDTO as Employee } from '@/dtos/entities';
 
 // Form data types
 export interface ProjectTaskFormData {

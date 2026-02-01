@@ -81,9 +81,29 @@ export interface TaskDetailsDTO extends TaskDTO {
   }>;
 }
 
-export interface CreateTaskDTO extends Omit<TaskDTO, 'id' | 'createdAt' | 'updatedAt'> {}
+export interface CreateTaskDTO {
+  title: string;
+  description: string;
+  assignedTo: string[];
+  status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
+  progress: number;
+  startDate: string;
+  endDate: string;
+  estimatedDuration: number;
+  actualDuration?: number;
+  costEstimate: number;
+  actualCost?: number;
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  projectId?: string;
+  phaseId?: string;
+  assigneeName?: string;
+  projectTitle?: string;
+  dueDate?: string;
+  completedAt?: string;
+  notes?: string;
+}
 
-export interface UpdateTaskDTO extends Partial<CreateTaskDTO> {}
+export type UpdateTaskDTO = Partial<CreateTaskDTO>;
 
 export interface TaskFilterDTO {
   projectId?: string;

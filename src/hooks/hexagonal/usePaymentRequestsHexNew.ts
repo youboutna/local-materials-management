@@ -39,7 +39,7 @@ export function usePaymentRequests() {
         description: 'Demande de paiement créée avec succès',
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         title: 'Erreur',
         description: 'Échec de la création de la demande de paiement',
@@ -59,7 +59,7 @@ export function usePaymentRequests() {
         description: 'Demande de paiement mise à jour avec succès',
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         title: 'Erreur',
         description: 'Échec de la mise à jour de la demande de paiement',
@@ -79,7 +79,7 @@ export function usePaymentRequests() {
         description: 'Demande de paiement supprimée avec succès',
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         title: 'Erreur',
         description: 'Échec de la suppression de la demande de paiement',

@@ -77,9 +77,39 @@ export interface ContractSummaryDTO {
   supplierName?: string;
 }
 
-export interface CreateContractDTO extends Omit<ContractDTO, 'id' | 'createdAt' | 'updatedAt'> {}
+export interface CreateContractDTO {
+  contractNumber: string;
+  title: string;
+  description: string | null;
+  projectId: string | null;
+  supplierId: string | null;
+  clientId: string | null;
+  contractType: ContractType;
+  status: ContractStatus;
+  startDate: string;
+  endDate: string | null;
+  totalValue: MonetaryDTO;
+  currency: string;
+  paymentTerms: PaymentTerms;
+  deliveryTerms: string | null;
+  scopeOfWork: string | null;
+  deliverables: string[];
+  milestones: ContractMilestone[];
+  penalties: ContractPenalty[];
+  documents: string[]; // Document IDs
+  signedAt: string | null;
+  signedBy: string | null;
+  approvedBy: string | null;
+  approvedAt: string | null;
+  renewalDate: string | null;
+  autoRenewal: boolean;
+  terminationClause: string | null;
+  governingLaw: string | null;
+  jurisdiction: string | null;
+  metadata: Record<string, unknown> | null;
+}
 
-export interface UpdateContractDTO extends Partial<CreateContractDTO> {}
+export type UpdateContractDTO = Partial<CreateContractDTO>;
 
 export interface ContractFilterDTO {
   projectId?: string;

@@ -96,7 +96,10 @@ export function useKanbanTasks(projectId: string, phaseId?: string) {
       const milestoneRepository = RepositoryFactory.getMilestoneRepository();
       
       // Business logic: Set completion date if status is completed
-      const updateData: any = { status: targetStatus };
+      const updateData: {
+        status: string;
+        completed_date?: string;
+      } = { status: targetStatus };
       if (targetStatus === 'completed') {
         updateData.completed_date = new Date().toISOString();
       }

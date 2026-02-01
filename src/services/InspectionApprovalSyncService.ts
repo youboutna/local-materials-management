@@ -1,9 +1,12 @@
 /**
  * Service de synchronisation après approbation d'inspection
  * Gère la mise à jour en cascade du projet, phases, jalons et la mainlevée des garanties
+ * Migré vers l'architecture hexagonale
  */
-import { supabase } from '@/integrations/supabase/client';
-import { ProjectService } from './ProjectService';
+import { InspectionService } from '@/application/services/InspectionService';
+import { ProjectService } from '@/application/services/ProjectService';
+import { PhaseService } from '@/application/services/PhaseService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface InspectionApprovalContext {
   inspectionId: string;
@@ -51,7 +54,7 @@ export class InspectionApprovalSyncService {
   private projectService: ProjectService;
 
   constructor() {
-    this.projectService = new ProjectService();
+    this.projectService = new ProjectService(RepositoryFactory.getProjectRepository());
   }
 
   /**
@@ -77,9 +80,11 @@ export class InspectionApprovalSyncService {
       result.actions.push(`Inspection ${context.inspectionId} mise à jour avec statut: ${context.status}`);
 
       // 2. Synchroniser la progression du projet
-      const newProgress = await this.projectService.synchronizeProjectProgress(context.projectId);
-      result.projectProgressUpdated = newProgress;
-      result.actions.push(`Progression projet synchronisée: ${newProgress}%`);
+      const updatedProject = await this.projectService.updateProject(context.projectId, {
+        progress: context.progressAtInspection
+      });
+      result.projectProgressUpdated = updatedProject.progress;
+      result.actions.push(`Progression projet synchronisée: ${updatedProject.progress}%`);
 
       // 3. Mettre à jour la phase si applicable
       let phaseProgress = 0;
@@ -153,17 +158,11 @@ export class InspectionApprovalSyncService {
    * Vérifier si TOUTES les phases du projet sont complètes (100%)
    */
   private async checkAllPhasesComplete(projectId: string): Promise<boolean> {
-    const { data: phases, error } = await supabase
-      .from('project_phases')
-      .select('id, progress, status')
-      .eq('project_id', projectId);
-
-    if (error || !phases || phases.length === 0) return false;
-
-    // Toutes les phases doivent avoir une progression >= 100 ou status 'completed'
-    return phases.every(phase => 
-      (phase.progress ?? 0) >= SYNC_THRESHOLDS.PROJECT_RELEASE || phase.status === 'completed'
-    );
+    const phaseService = new PhaseService(RepositoryFactory.getPhaseRepository());
+    const phases = await phaseService.getPhasesByProject(projectId);
+    
+    return phases.every(phase => (phase.progress || 0) >= SYNC_THRESHOLDS.PROJECT_RELEASE || phase.status === 'completed');
+  }
   }
 
   /**

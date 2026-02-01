@@ -41,7 +41,7 @@ export function useProjects() {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       toast.success('Projet créé avec succès');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error('Échec de la création du projet');
     },
   });
@@ -56,7 +56,7 @@ export function useProjects() {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       toast.success('Projet mis à jour avec succès');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error('Échec de la mise à jour du projet');
     },
   });
@@ -69,7 +69,7 @@ export function useProjects() {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       toast.success('Projet supprimé avec succès');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error('Échec de la suppression du projet');
     },
   });

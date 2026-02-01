@@ -32,6 +32,7 @@ export * from './ParsedInvoiceDTO';
 export * from './UserRoleDTO';
 export * from './TemplateDTO';
 export * from './HierarchyDTO';
+export * from './HierarchyMappingDTO';
 export * from './PositionDTO';
 export * from './AuthUserDTO';
 export * from './UserProfileDTO';
@@ -46,6 +47,14 @@ export * from './VerificationItemDTO';
 export * from './CheckpointDTO';
 export * from './CheckpointVerificationResultDTO';
 export * from './MauritaniaBusinessRulesDTO';
+export * from './NotificationDTO';
+export * from './PaymentBlockingDTO';
+export * from './InsuranceCertificateDTO';
+export * from './ContractDTO';
+export * from './ProjectCreationDTO';
+export * from './ProjectImportDTO';
+export * from './SupplierPaymentDTO';
+export * from './PhaseTaskDTO';
 
 // Shared utilities and common interfaces
 export * from '../shared';

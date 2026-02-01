@@ -56,7 +56,7 @@ export function useTenderEvaluationHex(tenderId: string) {
     }: { 
       submissionId: string; 
       field: string; 
-      value: any 
+      value: string | number | boolean 
     }) => {
       const user = await authRepository.getCurrentUser();
       

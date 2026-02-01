@@ -10,7 +10,7 @@ import { Upload, FileText, Loader2 } from 'lucide-react';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { useAuth } from '@/contexts/use-auth';
 import { supabase } from '@/integrations/supabase/client';
-import type { Supplier } from '@/types/supplier';
+import type { SupplierDTO as Supplier } from '@/dtos/entities/SupplierDTO';
 
 interface SupplierDocumentUploadProps {
   supplier: Supplier;

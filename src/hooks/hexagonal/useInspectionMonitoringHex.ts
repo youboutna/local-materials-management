@@ -21,7 +21,13 @@ export interface MonitoringInspection {
   created_at: string;
   updated_at: string;
   phase_id?: string | null;
-  documents?: any;
+  documents?: {
+    id: string;
+    name: string;
+    url: string;
+    type: string;
+    size?: number;
+  }[];
 }
 
 export interface MonitoringProject {
@@ -176,7 +182,11 @@ export function useInspectionMonitoringHex(options?: {
       const inspection = inspectionsQuery.data?.find(i => i.id === inspectionId);
       if (!inspection) throw new Error('Inspection non trouvée');
 
-      const updateData: any = { status };
+      const updateData: {
+        status: string;
+        progress_at_inspection?: number;
+        updated_at: string;
+      } = { status, updated_at: new Date().toISOString() };
       if (progress !== undefined) {
         updateData.progress_at_inspection = progress;
       }
@@ -243,7 +253,7 @@ export function useInspectionMonitoringHex(options?: {
       message: string;
       type: string;
       relatedId: string;
-      metadata?: any;
+      metadata?: Record<string, unknown>;
     }) => {
       const { error } = await supabase
         .from('notifications')

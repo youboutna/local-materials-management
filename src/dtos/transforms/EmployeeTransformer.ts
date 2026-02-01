@@ -37,21 +37,66 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
    * Converts data transfer object to domain entity
    * Following hexagonal architecture: Presentation → Application → Domain
    */
-  static toEntity(dto: EmployeeDTO): Employee {
-    return {
-      id: dto.id,
-      userId: dto.userId,
-      fullName: dto.fullName,
-      email: dto.email,
-      phone: dto.phone,
-      position: dto.position,
-      department: dto.department,
-      hireDate: dto.hireDate,
-      salary: dto.salary,
-      isActive: dto.isActive,
-      createdAt: dto.createdAt,
-      updatedAt: dto.updatedAt
-    };
+  static toEntity(dto: EmployeeDTO | CreateEmployeeDTO): Employee {
+    // Handle CreateEmployeeDTO case
+    if ('employeeId' in dto) {
+      return this.fromCreateDTOToEntity(dto as CreateEmployeeDTO);
+    }
+    
+    // Handle UpdateEmployeeDTO case
+    if ('isActive' in dto && !('id' in dto)) {
+      // For updates, we need to create a partial entity
+      const partialEntity = this.fromUpdateDTOToEntity(dto as UpdateEmployeeDTO);
+      // Convert partial to full entity by creating a new Employee with defaults
+      return new Employee(
+        '', // id
+        '', // employeeId
+        partialEntity.fullName || '',
+        partialEntity.email || null,
+        partialEntity.phone || null,
+        partialEntity.position || null,
+        partialEntity.department as any || null, // Department type
+        { name: 'employee', level: 1 }, // Default role
+        partialEntity.hireDate || null,
+        partialEntity.salary || null,
+        partialEntity.isActive !== undefined ? partialEntity.isActive : true,
+        partialEntity.user || null,
+        null, // manager
+        null, // superior
+        [], // directReports
+        [], // managedProjects
+        [], // teamMembers
+        [], // skills
+        [], // certifications
+        new Date().toISOString(), // createdAt
+        new Date().toISOString()  // updatedAt
+      );
+    }
+    
+    // Handle EmployeeDTO case
+    return new Employee(
+      dto.id,
+      dto.employeeId || '',
+      dto.fullName,
+      dto.email,
+      dto.phone,
+      dto.position,
+      dto.department as any || null, // Department type
+      { name: 'employee', level: 1 }, // Default role
+      dto.hireDate,
+      dto.salary,
+      dto.isActive,
+      dto.user,
+      null, // manager
+      null, // superior
+      [], // directReports
+      [], // managedProjects
+      [], // teamMembers
+      [], // skills
+      [], // certifications
+      dto.createdAt || new Date().toISOString(),
+      dto.updatedAt || new Date().toISOString()
+    );
   }
 
   /**

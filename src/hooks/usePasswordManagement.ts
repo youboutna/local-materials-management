@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { AuthService } from '@/application/services/AuthService';
 import { PasswordServiceFactory } from '@/services/password/PasswordServiceFactory';
 import { IPasswordResetRequest, IPasswordUpdateRequest } from '@/application/services/IPasswordService';
 
@@ -63,8 +63,9 @@ export const usePasswordManagement = () => {
           description: "Votre mot de passe a été mis à jour avec succès.",
         });
         
-        // Sign out and redirect to login
-        //await supabase.auth.signOut();
+        // Sign out and redirect to login using AuthService
+        const authService = new AuthService();
+        await authService.logout();
         navigate('/auth');
         
         return { success: true };

@@ -11,7 +11,7 @@ import {
   CreateStakeholderRequestDTO, 
   UpdateStakeholderRequestDTO, 
   StakeholderResponseDTO 
-} from '@/dtos/transforms/StakeholderDTO';
+} from '@/dtos/entities/StakeholderDTO';
 import { StakeholderTransformer } from '@/dtos/transforms/StakeholderTransformer';
 
 export interface StakeholderServiceResult<T = StakeholderResponseDTO> {

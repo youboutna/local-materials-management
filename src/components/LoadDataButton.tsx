@@ -1,10 +1,31 @@
 import { useState } from 'react';
 import { Button } from './ui/button';
-import { loadProjectsToSupabase } from '@/scripts/loadDataToSupabase';
 import { DatabaseIcon, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { USE_TYPEORM } from '@/hooks/projects/constants';
+import { ProjectService } from '@/application/services/ProjectService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+
+// Sample data for import - externalisé pour maintenance
+const SAMPLE_PROJECTS = [
+  {
+    title: "Construction Centre Communautaire Adrar",
+    description: "Centre communautaire moderne avec installations sportives et culturelles",
+    location: "Adrar, Algérie",
+    estimated_budget: 250000000,
+    start_date: "2024-01-15",
+    end_date: "2025-12-31"
+  },
+  {
+    title: "Réhabilitation Route Nationale N1",
+    description: "Modernisation et réhabilitation de 150km de route",
+    location: "Adrar - Tamanrasset, Algérie",
+    estimated_budget: 450000000,
+    start_date: "2024-03-01",
+    end_date: "2026-08-31"
+  }
+] as const;
 
 interface LoadDataButtonProps {
   variant?: 'default' | 'secondary' | 'outline' | 'ghost' | 'link' | 'destructive';
@@ -34,19 +55,45 @@ const LoadDataButton = ({
         });
       }
       
-      // This loads data to Supabase
-      const result = await loadProjectsToSupabase();
+      // Use ProjectService hexagonal instead of direct Supabase calls
+      const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+      let importedCount = 0;
       
-      if (result > 0) {
+      for (const projectData of SAMPLE_PROJECTS) {
+        try {
+          await projectService.createProject({
+            title: projectData.title,
+            description: projectData.description,
+            location: projectData.location,
+            budget: projectData.estimated_budget,
+            start_date: projectData.start_date,
+            end_date: projectData.end_date,
+            latitude: 0,
+            longitude: 0,
+            project_manager_id: "",
+            client_name: "",
+            contractor_id: "",
+            status: "en cours" as const,
+            thumbnail: "",
+            progress: 0,
+            teamSize: 0
+          });
+          importedCount++;
+        } catch (error) {
+          console.warn(`Failed to import project: ${projectData.title}`, error);
+        }
+      }
+      
+      if (importedCount > 0) {
         toast({
           title: t('common.success'),
-          description: `${result} projets ont été ajoutés avec succès à Supabase.`,
+          description: `${importedCount} projets ont été ajoutés avec succès.`,
           className: "bg-adrar-100 border-adrar-300 text-adrar-800",
         });
       } else {
         toast({
           title: t('common.info'),
-          description: "Aucun nouveau projet n'a été ajouté à la base de données.",
+          description: "Aucun nouveau projet n'a été ajouté (ils existent peut-être déjà).",
           variant: "default",
         });
       }

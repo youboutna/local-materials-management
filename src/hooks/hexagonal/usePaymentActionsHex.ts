@@ -9,16 +9,63 @@ import { AuthService } from '@/application/services/AuthService';
 import { NotificationService } from '@/application/services/NotificationService';
 import { toast } from '@/hooks/use-toast';
 
-interface ActionMetadata {
-  paymentId: string;
+export interface PaymentActionRequest {
   projectId: string;
   contractorId: string;
   amount: number;
-  blockingReasons?: any[];
+  blockingReasons?: Record<string, unknown>[];
   actionType: string;
   priority: string;
   escalationLevel?: string;
+}
+
+export interface ActionMetadata {
+  userId: string;
+  timestamp: string;
+  source: string;
+  context?: Record<string, unknown>;
+}
+
+export interface NotificationRequest {
+  recipientId: string;
+  title: string;
+  message: string;
+  type: string;
+  relatedId?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface TaskAssignmentRequest {
+  assigneeId: string;
+  title: string;
+  message: string;
   dueDate?: string;
+  priority?: string;
+}
+
+export interface SmsRequest {
+  recipientIds: string[];
+  message: string;
+}
+
+export interface CallRequest {
+  recipientIds: string[];
+  message: string;
+  dueDate: string;
+}
+
+export interface EmailRequest {
+  recipientIds: string[];
+  subject: string;
+  body: string;
+}
+
+export interface ActionMetadata {
+  userId: string;
+  timestamp: string;
+  source: string;
+  context?: Record<string, unknown>;
+  paymentId?: string;
 }
 
 export function usePaymentActionsHex() {
@@ -27,21 +74,29 @@ export function usePaymentActionsHex() {
 
   // Create notification mutation
   const createNotificationMutation = useMutation({
-    mutationFn: async ({ recipientId, title, message, type, relatedId, metadata }: {
-      recipientId: string;
-      title: string;
-      message: string;
-      type: string;
-      relatedId: string;
-      metadata?: any;
-    }) => {
-      await notificationService.notifyUser(recipientId, title, message, type as any);
+    mutationFn: async (notification: NotificationRequest) => {
+      await notificationService.notifyUser(
+        notification.recipientId,
+        notification.title,
+        notification.message,
+        notification.type
+      );
+    },
+    onSuccess: () => {
+      toast({ title: 'Notification créée', description: 'Notification envoyée avec succès' });
+    },
+    onError: (error: Error | unknown) => {
+      toast({ 
+        title: 'Erreur', 
+        description: error instanceof Error ? error.message : 'Failed to create notification', 
+        variant: 'destructive' 
+      });
     }
   });
 
   // Task assignment mutation
   const taskAssignmentMutation = useMutation({
-    mutationFn: async ({ values, metadata }: { values: any; metadata: ActionMetadata }) => {
+    mutationFn: async ({ values, metadata }: { values: TaskAssignmentRequest; metadata: ActionMetadata }) => {
       const user = await authService.getCurrentUser();
       
       await notificationService.notifyUser(
@@ -61,7 +116,7 @@ export function usePaymentActionsHex() {
 
   // SMS notification via edge function
   const sendSmsMutation = useMutation({
-    mutationFn: async ({ values, metadata }: { values: any; metadata: ActionMetadata }) => {
+    mutationFn: async ({ values, metadata }: { values: SmsRequest; metadata: ActionMetadata }) => {
       await notificationService.sendSMS({
         to: values.recipientIds,
         message: values.message
@@ -77,7 +132,7 @@ export function usePaymentActionsHex() {
 
   // Schedule call via edge function
   const scheduleCallMutation = useMutation({
-    mutationFn: async ({ values, metadata }: { values: any; metadata: ActionMetadata }) => {
+    mutationFn: async ({ values, metadata }: { values: CallRequest; metadata: ActionMetadata }) => {
       await notificationService.scheduleCall({
         to: values.recipientIds[0],
         message: values.message,
@@ -94,7 +149,7 @@ export function usePaymentActionsHex() {
 
   // Email notification via edge function
   const sendEmailMutation = useMutation({
-    mutationFn: async ({ values, metadata }: { values: any; metadata: ActionMetadata }) => {
+    mutationFn: async ({ values, metadata }: { values: EmailRequest; metadata: ActionMetadata }) => {
       await notificationService.sendEmail({
         to: values.recipientIds,
         subject: values.title,
@@ -110,7 +165,7 @@ export function usePaymentActionsHex() {
   });
 
   // Execute action based on type
-  const executeAction = async (actionType: string, values: any, metadata: ActionMetadata) => {
+  const executeAction = async (actionType: string, values: TaskAssignmentRequest | SmsRequest | CallRequest | EmailRequest, metadata: ActionMetadata) => {
     switch (actionType) {
       case 'task_assignment':
         return taskAssignmentMutation.mutateAsync({ values, metadata });

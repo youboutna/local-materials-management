@@ -8,19 +8,54 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RepositoryFactory } from "@/repositories/RepositoryFactory";
 import { PaymentRequestService } from "@/application/services/PaymentRequestService";
-import { CreatePaymentDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
+import { 
+  PaymentDTO, 
+  CreatePaymentDTO, 
+  UpdatePaymentDTO,
+  PaymentSummaryDTO,
+  PaymentValidationDTO
+} from '@/dtos/entities/PaymentDTO';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-// Types compatibles avec le service
-type ServiceCreatePaymentDTO = Omit<CreatePaymentDTO, 'status'> & { status?: any };
-type ServiceUpdatePaymentDTO = Omit<UpdatePaymentDTO, 'status'> & { status?: any };
-
 // Enhanced types for UI components
+export interface PaymentAnalytics {
+  totalPayments: number;
+  averageAmount: number;
+  overdueCount: number;
+  pendingCount: number;
+  completedCount: number;
+  totalOverdue: number;
+  efficiency: number;
+  riskDistribution: {
+    low: number;
+    medium: number;
+    high: number;
+  };
+}
+
+export interface PaymentRiskAssessment {
+  level: 'low' | 'medium' | 'high';
+  factors: string[];
+  recommendations: string[];
+  score: number;
+}
+
+export interface PaymentValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  referentialCompliance: {
+    financial: boolean;
+    regulatory: boolean;
+    procedural: boolean;
+  };
+}
+
 export interface UsePaymentsHexResult {
-  payments: any[];
+  payments: PaymentDTO[];
   isLoading: boolean;
-  error: any;
+  error: string | null;
   refetch: () => void;
   createPayment: (data: CreatePaymentDTO) => void;
   updatePayment: ({ id, data }: { id: string; data: UpdatePaymentDTO }) => void;
@@ -29,13 +64,13 @@ export interface UsePaymentsHexResult {
   isUpdating: boolean;
   isDeleting: boolean;
   // Enhanced UI features
-  getPaymentRisk: (payment: any) => 'low' | 'medium' | 'high';
-  getPaymentEfficiency: (payment: any) => number;
-  getPaymentFinancialHealth: (payment: any) => 'healthy' | 'warning' | 'critical';
-  getPaymentDaysOverdue: (payment: any) => number;
-  getPaymentAnalytics: () => any;
-  validatePaymentWithReferential: (payment: any, referentialType: string) => Promise<any>;
-  generatePaymentReport: (payment: any) => any;
+  getPaymentRisk: (payment: PaymentDTO) => PaymentRiskAssessment;
+  getPaymentEfficiency: (payment: PaymentDTO) => number;
+  getPaymentFinancialHealth: (payment: PaymentDTO) => 'healthy' | 'warning' | 'critical';
+  getPaymentDaysOverdue: (payment: PaymentDTO) => number;
+  getPaymentAnalytics: () => PaymentAnalytics;
+  validatePaymentWithReferential: (payment: PaymentDTO, referentialType: string) => Promise<PaymentValidationResult>;
+  generatePaymentReport: (payment: PaymentDTO) => PaymentSummaryDTO;
 }
 
 /**

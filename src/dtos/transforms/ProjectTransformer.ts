@@ -397,6 +397,85 @@ export class ProjectTransformer {
   }
 
   /**
+   * Calculate project progress percentage
+   * Business logic method for progress calculation
+   */
+  static calculateProjectProgress(project: ProjectDTO): number {
+    if (!project.progress) return 0;
+    return Math.min(100, Math.max(0, project.progress));
+  }
+
+  /**
+   * Format project duration as human readable string
+   * Calculates duration between start and end dates
+   */
+  static formatProjectDuration(startDate: string | undefined, endDate: string | undefined): string {
+    if (!startDate) return 'Non défini';
+    
+    const start = new Date(startDate);
+    const end = endDate ? new Date(endDate) : new Date();
+    
+    if (isNaN(start.getTime())) return 'Date invalide';
+    if (isNaN(end.getTime())) return 'Date invalide';
+    
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Même jour';
+    if (diffDays === 1) return '1 jour';
+    if (diffDays < 30) return `${diffDays} jours`;
+    if (diffDays < 365) return `${Math.round(diffDays / 30)} mois`;
+    return `${Math.round(diffDays / 365)} ans`;
+  }
+
+  /**
+   * Calculate project efficiency based on budget and progress
+   * Business logic for efficiency calculation
+   */
+  static calculateProjectEfficiency(project: ProjectDTO): number {
+    if (!project.budget || project.budget <= 0) return 0;
+    
+    const progress = project.progress || 0;
+    const efficiency = progress / 100;
+    
+    // Add some business logic based on project status
+    if (project.status === 'completed') {
+      return Math.min(100, efficiency * 100);
+    }
+    
+    return Math.round(efficiency * 100);
+  }
+
+  /**
+   * Calculate project risk level based on various factors
+   * Business logic for risk assessment
+   */
+  static calculateProjectRisk(project: ProjectDTO): 'low' | 'medium' | 'high' {
+    let riskScore = 0;
+    
+    // Budget risk
+    if (project.budget && project.budget > 1000000) riskScore += 1;
+    
+    // Timeline risk
+    if (project.startDate && project.endDate) {
+      const duration = new Date(project.endDate).getTime() - new Date(project.startDate).getTime();
+      const days = duration / (1000 * 60 * 60 * 24);
+      if (days > 365) riskScore += 1;
+    }
+    
+    // Progress risk
+    if (project.progress && project.progress < 25) riskScore += 1;
+    
+    // Status risk
+    if (project.status === 'en retard' || project.status === 'suspendu') riskScore += 2;
+    
+    // Determine risk level
+    if (riskScore >= 3) return 'high';
+    if (riskScore >= 1) return 'medium';
+    return 'low';
+  }
+
+  /**
    * Transform ProjectDTO to Project entity (Domain DTO → Entity)
    * Converts ISO strings to Date objects
    * Following hexagonal architecture: Presentation → Application → Domain

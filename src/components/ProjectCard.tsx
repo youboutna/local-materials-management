@@ -1,12 +1,14 @@
-// Re-export types from the main types file
-export type { ProjectData, ProjectStatus, ProjectWithPayments, Payment, Inspection } from '@/types/project';
+// Re-export types from centralized DTOs for hexagonal architecture
+export type { ProjectDTO as ProjectData, ProjectStatus } from '@/dtos/entities/ProjectDTO';
+export type { PaymentDTO as Payment } from '@/dtos/entities/PaymentDTO';
+export type { InspectionDTO as Inspection } from '@/dtos/entities/InspectionDTO';
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, Calendar, Users, Eye, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
-import { ProjectData } from '@/types/project';
+import { ProjectDTO as ProjectData, ProjectStatus } from '@/dtos/entities/ProjectDTO';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';

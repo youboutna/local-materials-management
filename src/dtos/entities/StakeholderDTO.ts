@@ -57,3 +57,64 @@ export interface StakeholderFilterDTO {
   isActive?: boolean;
   searchQuery?: string;
 }
+
+// Legacy compatibility types from transforms
+export interface CreateStakeholderRequestDTO {
+  name: string;
+  email?: string;
+  phone?: string;
+  role: string;
+  organization?: string;
+  projectId?: string;
+  type: 'employee' | 'supplier' | 'client' | 'other';
+}
+
+export interface UpdateStakeholderRequestDTO {
+  name?: string;
+  email?: string;
+  phone?: string;
+  role?: string;
+  organization?: string;
+  type?: 'employee' | 'supplier' | 'client' | 'other';
+}
+
+export interface StakeholderResponseDTO extends StakeholderDTO {
+  employeeDetails?: {
+    id: string;
+    fullName: string;
+    position: string;
+    department: string;
+  };
+  supplierDetails?: {
+    id: string;
+    name: string;
+    category: string;
+    rating: number;
+  };
+  projectCount?: number;
+  totalHours?: number;
+  averageRate?: number;
+}
+
+export interface StakeholderContactDTO {
+  id: string;
+  stakeholderId: string;
+  contactType: 'email' | 'phone' | 'address';
+  value: string;
+  isPrimary: boolean;
+  isActive: boolean;
+}
+
+export interface StakeholderOrganizationDTO {
+  id: string;
+  name: string;
+  type: string;
+  industry?: string;
+  size?: string;
+  address?: string;
+  contactInfo?: {
+    email?: string;
+    phone?: string;
+    website?: string;
+  };
+}
