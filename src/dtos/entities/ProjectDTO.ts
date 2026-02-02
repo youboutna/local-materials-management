@@ -4,6 +4,9 @@
  */
 
 import { BaseEntityDTO, ContactInfoDTO, LocationDTO } from '../shared';
+
+// Re-export ProjectStatus for external use
+export { ProjectStatus } from '@/types/project';
 import { ProjectStatus } from '@/types/project';
 
 export interface ProjectDTO extends BaseEntityDTO {

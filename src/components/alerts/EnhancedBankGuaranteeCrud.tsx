@@ -35,15 +35,15 @@ const EnhancedBankGuaranteeCrud = () => {
   const [uploadedDocuments, setUploadedDocuments] = useState<any[]>([]);
 
   const [formData, setFormData] = useState<BankGuaranteeFormData>({
-    project_id: '',
-    contractor_id: '',
-    contractor_name: '',
-    bank_name: '',
-    guarantee_amount: 0,
-    guarantee_type: '',
-    issue_date: '',
-    expiry_date: '',
+    projectId: '',
+    contractorId: '',
+    bankName: '',
+    guaranteeAmount: 0,
+    guaranteeType: '',
+    issueDate: '',
+    expiryDate: '',
     status: 'active',
+    contractor_name: '',
     supporting_documents: [],
     notes: ''
   });
@@ -74,15 +74,15 @@ const EnhancedBankGuaranteeCrud = () => {
 
   const resetForm = () => {
     setFormData({
-      project_id: '',
-      contractor_id: '',
-      contractor_name: '',
-      bank_name: '',
-      guarantee_amount: 0,
-      guarantee_type: '',
-      issue_date: '',
-      expiry_date: '',
+      projectId: '',
+      contractorId: '',
+      bankName: '',
+      guaranteeAmount: 0,
+      guaranteeType: '',
+      issueDate: '',
+      expiryDate: '',
       status: 'active',
+      contractor_name: '',
       supporting_documents: [],
       notes: ''
     });
@@ -98,16 +98,16 @@ const EnhancedBankGuaranteeCrud = () => {
 
   const openEditForm = (guarantee: BankGuaranteeRow) => {
     setFormData({
-      project_id: guarantee.project_id,
-      contractor_id: guarantee.contractor_id,
-      contractor_name: guarantee.contractor_name || '',
-      bank_name: guarantee.bank_name,
-      guarantee_amount: guarantee.guarantee_amount,
-      guarantee_type: guarantee.guarantee_type,
-      issue_date: guarantee.issue_date,
-      expiry_date: guarantee.expiry_date,
+      projectId: guarantee.projectId || guarantee.project_id || '',
+      contractorId: guarantee.contractorId || guarantee.contractor_id || '',
+      bankName: guarantee.bankName || guarantee.bank_name || '',
+      guaranteeAmount: guarantee.guaranteeAmount || guarantee.guarantee_amount || 0,
+      guaranteeType: guarantee.guaranteeType || guarantee.guarantee_type || '',
+      issueDate: guarantee.issueDate || guarantee.issue_date || '',
+      expiryDate: guarantee.expiryDate || guarantee.expiry_date || '',
       status: guarantee.status,
-      supporting_documents: guarantee.supporting_documents || [],
+      contractor_name: guarantee.contractor_name || '',
+      supporting_documents: guarantee.supportingDocuments || guarantee.supporting_documents || [],
       notes: guarantee.notes || ''
     });
     setSelectedGuarantee(guarantee);
@@ -118,16 +118,16 @@ const EnhancedBankGuaranteeCrud = () => {
 
   const openViewForm = (guarantee: BankGuaranteeRow) => {
     setFormData({
-      project_id: guarantee.project_id,
-      contractor_id: guarantee.contractor_id,
-      contractor_name: guarantee.contractor_name || '',
-      bank_name: guarantee.bank_name,
-      guarantee_amount: guarantee.guarantee_amount,
-      guarantee_type: guarantee.guarantee_type,
-      issue_date: guarantee.issue_date,
-      expiry_date: guarantee.expiry_date,
+      projectId: guarantee.projectId || guarantee.project_id || '',
+      contractorId: guarantee.contractorId || guarantee.contractor_id || '',
+      bankName: guarantee.bankName || guarantee.bank_name || '',
+      guaranteeAmount: guarantee.guaranteeAmount || guarantee.guarantee_amount || 0,
+      guaranteeType: guarantee.guaranteeType || guarantee.guarantee_type || '',
+      issueDate: guarantee.issueDate || guarantee.issue_date || '',
+      expiryDate: guarantee.expiryDate || guarantee.expiry_date || '',
       status: guarantee.status,
-      supporting_documents: guarantee.supporting_documents || [],
+      contractor_name: guarantee.contractor_name || '',
+      supporting_documents: guarantee.supportingDocuments || guarantee.supporting_documents || [],
       notes: guarantee.notes || ''
     });
     setSelectedGuarantee(guarantee);
@@ -138,7 +138,7 @@ const EnhancedBankGuaranteeCrud = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.project_id || !formData.contractor_name || !formData.bank_name || !formData.guarantee_amount) {
+    if (!formData.projectId || !formData.contractorId || !formData.bankName || !formData.guaranteeAmount) {
       toast({
         title: t('common.error'),
         description: "Veuillez remplir tous les champs obligatoires",
@@ -197,7 +197,7 @@ const EnhancedBankGuaranteeCrud = () => {
   };
 
   const handleProjectChange = (projectId: string | undefined) => {
-    setFormData(prev => ({ ...prev, project_id: projectId || '' }));
+    setFormData(prev => ({ ...prev, projectId: projectId || '' }));
   };
 
   const formatCurrency = (amount: number) => {
@@ -416,16 +416,16 @@ const EnhancedBankGuaranteeCrud = () => {
           <TableBody>
             {guarantees.map((guarantee) => (
               <TableRow key={guarantee.id}>
-                <TableCell className="font-medium">{guarantee.project_id.slice(0, 8)}...</TableCell>
-                <TableCell>{guarantee.bank_name}</TableCell>
+                <TableCell className="font-medium">{(guarantee.projectId || guarantee.project_id || '').slice(0, 8)}...</TableCell>
+                <TableCell>{guarantee.bankName || guarantee.bank_name}</TableCell>
                 <TableCell>
-                  {guaranteeTypes.find(t => t.value === guarantee.guarantee_type)?.label || guarantee.guarantee_type}
+                  {guaranteeTypes.find(t => t.value === (guarantee.guaranteeType || guarantee.guarantee_type))?.label || guarantee.guaranteeType || guarantee.guarantee_type}
                 </TableCell>
-                <TableCell>{formatCurrency(guarantee.guarantee_amount)}</TableCell>
+                <TableCell>{formatCurrency(guarantee.guaranteeAmount || guarantee.guarantee_amount || 0)}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    {new Date(guarantee.expiry_date).toLocaleDateString('fr-FR')}
-                    {isExpiringSoon(guarantee.expiry_date) && (
+                    {new Date(guarantee.expiryDate || guarantee.expiry_date || '').toLocaleDateString('fr-FR')}
+                    {isExpiringSoon(guarantee.expiryDate || guarantee.expiry_date || '') && (
                       <AlertTriangle className="h-4 w-4 text-yellow-500" />
                     )}
                   </div>

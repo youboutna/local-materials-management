@@ -141,7 +141,10 @@ export class WorkflowOrchestrator {
       const canGenerate = await this.decompteCalculator.canGenerateDecompte();
       
       if (canGenerate.allowed) {
-        const decompte = await this.decompteCalculator.calculatePhaseDecompte(request.phaseId);
+        const decompte = await this.decompteCalculator.calculatePhaseDecompte({
+          projectId: '', // Will be determined by the calculator
+          phaseId: request.phaseId
+        });
         const decompteEvent: WorkflowEvent = {
           type: 'DECOMPTE_CALCULATED',
           payload: { decompte },
@@ -181,7 +184,10 @@ export class WorkflowOrchestrator {
       }
 
       // 1. Vérifier que le décompte est valide
-      const decompte = await this.decompteCalculator.calculatePhaseDecompte(request.phaseId);
+      const decompte = await this.decompteCalculator.calculatePhaseDecompte({
+        projectId: '', // Will be determined by the calculator
+        phaseId: request.phaseId
+      });
       
       if (decompte.net_payable <= 0) {
         return { success: false, error: 'Aucun montant payable' };
