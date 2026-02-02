@@ -10,7 +10,7 @@ import { IParsedInvoiceRepository } from '@/domain/repositories/IParsedInvoiceRe
 import { ITenderDocumentRepository } from '@/domain/repositories/ITenderDocumentRepository';
 import { Tender } from '@/domain/entities/Tender';
 import { TenderDocumentTransformer } from '@/dtos/transforms/TenderDocumentTransformer';
-import { CreateTenderDocumentDTO, TenderDocumentDTO } from '@/dtos/transforms/TenderDocumentDTO';
+import { CreateTenderDocumentDTO, TenderDocumentDTO } from '@/dtos/entities/TenderDocumentDTO';
 
 export interface TenderOption {
   id: string;

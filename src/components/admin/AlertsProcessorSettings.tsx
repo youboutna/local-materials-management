@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { useNotifications } from '@/hooks/useNotifications';
 import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, Play, Pause, Clock, Settings, Activity } from 'lucide-react';
 import { useNotificationHex } from '@/hooks/hexagonal/useNotificationHex';
@@ -45,49 +44,36 @@ const AlertsProcessorSettings: React.FC = () => {
     maxRetries: 3,
   });
   
-  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setSaving] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [logs, setLogs] = useState<ProcessingLog[]>([]);
 
-  useEffect(() => {
-    loadConfig();
-    loadLogs();
-  }, [loadConfig, loadLogs]);
-
-  const loadConfig = useCallback(async () => {
+  // Load config from notifications
+  const loadConfig = useCallback(() => {
     try {
-      const notifications = await notificationService.getNotifications({
-        type: 'processor_config',
-        limit: 1
-      });
+      const configNotification = notificationService.notifications.find(
+        n => n.type === 'system' && n.metadata && (n.metadata as Record<string, unknown>).action === 'processor_config'
+      );
       
-      if (notifications.length > 0) {
-        const configData = notifications[0].metadata as ProcessorConfig;
-        if (configData) {
+      if (configNotification) {
+        const configData = configNotification.metadata as ProcessorConfig;
+        if (configData && configData.enabled !== undefined) {
           setConfig(configData);
         }
       }
     } catch (error) {
       console.error('Error loading config:', error);
-      toast({
-        title: "Erreur de chargement",
-        description: "Impossible de charger la configuration du processeur.",
-        variant: "destructive"
-      });
     }
-  }, [notificationService, toast]);
+  }, [notificationService.notifications]);
 
-  const loadLogs = useCallback(async () => {
+  // Load logs from notifications
+  const loadLogs = useCallback(() => {
     try {
-      const notifications = await notificationService.getNotifications({
-        type: 'processor_log',
-        limit: 10,
-        order: 'created_at',
-        ascending: false
-      });
+      const logNotifications = notificationService.notifications
+        .filter(n => n.type === 'system' && n.metadata && (n.metadata as Record<string, unknown>).action === 'processor_log')
+        .slice(0, 10);
       
-      const formattedLogs: ProcessingLog[] = notifications.map(notification => ({
+      const formattedLogs: ProcessingLog[] = logNotifications.map(notification => ({
         id: notification.id,
         created_at: notification.created_at,
         summary: (notification.metadata as ProcessingLog['summary']) || {
@@ -102,7 +88,12 @@ const AlertsProcessorSettings: React.FC = () => {
     } catch (error) {
       console.error('Error loading logs:', error);
     }
-  }, [notificationService, config]);
+  }, [notificationService.notifications, config]);
+
+  useEffect(() => {
+    loadConfig();
+    loadLogs();
+  }, [loadConfig, loadLogs]);
 
   const saveConfig = async () => {
     setSaving(true);
@@ -112,7 +103,6 @@ const AlertsProcessorSettings: React.FC = () => {
         title: 'Configuration processeur mise à jour',
         message: `Nouvelle configuration: ${config.enabled ? 'Activé' : 'Désactivé'}, lot: ${config.batchSize}, interval: ${config.intervalMinutes}min`,
         type: 'info',
-        read: false,
         metadata: config
       });
 
@@ -135,12 +125,11 @@ const AlertsProcessorSettings: React.FC = () => {
   const runProcessor = async () => {
     setIsRunning(true);
     try {
-      const result = await notificationService.createNotification({
+      await notificationService.createNotification({
         recipient_id: 'system',
         title: 'Exécution du processeur d\'alertes',
         message: `Démarrage du traitement par lots de ${config.batchSize} projets`,
         type: 'system',
-        read: false,
         metadata: {
           action: 'run_processor',
           config: config,
@@ -170,7 +159,6 @@ const AlertsProcessorSettings: React.FC = () => {
         title: 'Résultat du processeur d\'alertes',
         message: `${processorResult.alertsGenerated} alertes générées pour ${processorResult.processed} projets.`,
         type: 'success',
-        read: false,
         metadata: log
       });
 

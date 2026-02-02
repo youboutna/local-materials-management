@@ -15,7 +15,7 @@ import {
   TenderDocumentResponseDTO,
   TenderDocumentListDTO,
   TenderDocumentStatsDTO
-} from '@/dtos/transforms/TenderDocumentDTO';
+} from '@/dtos/entities/TenderDocumentDTO';
 
 // Service DTOs for data exchange
 export interface GetTenderDocumentByIdRequestDto {

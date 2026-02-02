@@ -16,16 +16,19 @@ export interface BankGuaranteeFormData {
   expiryDate: string; // ✅ CAMELCASE: Instead of expiry_date
   status: string;
   phaseId?: string; // ✅ CAMELCASE: Instead of phase_id
+  notes?: string; // ✅ Added: Notes field
   
   // Legacy snake_case for backward compatibility
   project_id?: string; // Legacy snake_case for backward compatibility
   contractor_id?: string; // Legacy snake_case for backward compatibility
+  contractor_name?: string; // Legacy snake_case for backward compatibility (UI display)
   bank_name?: string; // Legacy snake_case for backward compatibility
   guarantee_amount?: number; // Legacy snake_case for backward compatibility
   guarantee_type?: string; // Legacy snake_case for backward compatibility
   issue_date?: string; // Legacy snake_case for backward compatibility
   expiry_date?: string; // Legacy snake_case for backward compatibility
   phase_id?: string; // Legacy snake_case for backward compatibility
+  supporting_documents?: string[]; // Legacy: supporting documents
 }
 
 export interface BankGuaranteeRow {
@@ -42,10 +45,13 @@ export interface BankGuaranteeRow {
   createdAt?: string; // ✅ CAMELCASE: Instead of created_at
   updatedAt?: string; // ✅ CAMELCASE: Instead of updated_at
   releasedAt?: string; // ✅ CAMELCASE: Instead of released_at
+  notes?: string; // ✅ Added: Notes field
+  supportingDocuments?: string[]; // ✅ Added: Supporting documents
   
   // Legacy snake_case for backward compatibility
   project_id?: string; // Legacy snake_case for backward compatibility
   contractor_id?: string; // Legacy snake_case for backward compatibility
+  contractor_name?: string; // Legacy snake_case for backward compatibility (UI display)
   bank_name?: string; // Legacy snake_case for backward compatibility
   guarantee_amount?: number; // Legacy snake_case for backward compatibility
   guarantee_type?: string; // Legacy snake_case for backward compatibility
@@ -55,6 +61,7 @@ export interface BankGuaranteeRow {
   created_at?: string; // Legacy snake_case for backward compatibility
   updated_at?: string; // Legacy snake_case for backward compatibility
   released_at?: string; // Legacy snake_case for backward compatibility
+  supporting_documents?: string[]; // Legacy snake_case for backward compatibility
 }
 
 // Hook: Fetch all bank guarantees

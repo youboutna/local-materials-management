@@ -6,7 +6,8 @@
 
 import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
 import { Supplier } from '@/domain/entities/Supplier';
-import { SupplierTransformer, SupplierDTO } from '@/dtos/transforms/SupplierTransformer';
+import { SupplierTransformer } from '@/dtos/transforms/SupplierTransformer';
+import { SupplierDTO } from '@/dtos/entities/SupplierDTO';
 import { AppError, ErrorCode, ErrorLogger } from '@/utils/errorHandling';
 
 export interface SearchSuppliersOptions {

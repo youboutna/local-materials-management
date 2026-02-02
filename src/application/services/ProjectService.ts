@@ -309,8 +309,16 @@ export class ProjectService {
 
       const projectDTO = this.toDTO(projectWithRelated.project);
       
+      // Cast methodology to the union type or use undefined
+      const methodology = projectDTO.methodology;
+      const validMethodology: 'waterfall' | 'agile' | 'hybrid' | undefined = 
+        methodology === 'waterfall' || methodology === 'agile' || methodology === 'hybrid' 
+          ? methodology 
+          : undefined;
+      
       return {
         ...projectDTO,
+        methodology: validMethodology,
         tasks: projectWithRelated.tasks || [],
         inspections: projectWithRelated.inspections || [],
         risks: projectWithRelated.risks || [],
