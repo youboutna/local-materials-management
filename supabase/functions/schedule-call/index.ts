@@ -23,7 +23,36 @@ interface ScheduleCallRequest {
   priority: 'low' | 'medium' | 'high' | 'urgent';
   scheduledFor?: string;
   actionType: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
+}
+
+interface CallTask {
+  id: string;
+  recipient_id: string;
+  recipient_phone: string;
+  subject: string;
+  message: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  scheduled_for: string;
+  action_type: string;
+  status: 'scheduled' | 'completed' | 'cancelled';
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+interface Notification {
+  recipient_id: string;
+  title: string;
+  message: string;
+  type: string;
+  metadata: Record<string, unknown>;
+  related_id?: string;
+}
+
+interface ScheduleCallResponse {
+  success: boolean;
+  scheduledCall: CallTask;
+  message: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -50,7 +79,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Scheduling call:", { recipientId, recipientPhone, subject, priority });
 
     // Schedule the call by creating a task in the database
-    const callTask = {
+    const callTask: CallTask = {
       id: `call-${Date.now()}`,
       recipient_id: recipientId,
       recipient_phone: recipientPhone,
@@ -90,25 +119,31 @@ const handler = async (req: Request): Promise<Response> => {
           phone_number: recipientPhone,
           scheduled_for: callTask.scheduled_for
         }
-      }]);
+      } as Notification]);
 
     console.log("Call scheduled successfully:", callTask);
 
-    return new Response(JSON.stringify({
+    const response = {
       success: true,
       scheduledCall: callTask,
       message: "Call scheduled successfully"
-    }), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders,
-      },
-    });
-  } catch (error: any) {
+    };
+
+    return new Response(
+      JSON.stringify(response),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      }
+    );
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error("Error in schedule-call function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

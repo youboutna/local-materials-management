@@ -4,6 +4,11 @@ import { WorkflowStepService } from '@/services/workflowStepService';
 import { WorkflowStepDTO, StepDocumentDTO, DocumentUploadDTO } from '@/types/workflow-dto';
 import { useToast } from '@/hooks/use-toast';
 
+interface WorkflowError {
+  message: string;
+  code?: string;
+}
+
 export const useWorkflowSteps = (tenderId: string) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -51,9 +56,10 @@ export const useWorkflowSteps = (tenderId: string) => {
       });
     },
     onError: (error: Error) => {
+      const err = error as WorkflowError;
       toast({
         title: 'Erreur',
-        description: error.message || 'Erreur lors du téléchargement du document.',
+        description: err.message || 'Erreur lors du téléchargement du document.',
         variant: 'destructive',
       });
     }
@@ -81,10 +87,11 @@ export const useWorkflowSteps = (tenderId: string) => {
       });
     },
     onError: (error: Error) => {
+      const err = error as WorkflowError;
       console.error('Update step status error:', error);
       toast({
         title: 'Erreur',
-        description: error.message || 'Erreur lors de la mise à jour du statut.',
+        description: err.message || 'Erreur lors de la mise à jour du statut.',
         variant: 'destructive',
       });
     }
@@ -123,10 +130,11 @@ export const useWorkflowSteps = (tenderId: string) => {
       if (ctx?.previous) {
         queryClient.setQueryData(['workflow-steps', tenderId], ctx.previous);
       }
-      console.error('Update step dates error:', err);
+      const error = err as WorkflowError;
+      console.error('Update step dates error:', error);
       toast({
         title: 'Erreur',
-        description: (err as any)?.message || 'Erreur lors de la mise à jour des dates.',
+        description: error.message || 'Erreur lors de la mise à jour des dates.',
         variant: 'destructive',
       });
     },

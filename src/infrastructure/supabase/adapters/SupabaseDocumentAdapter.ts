@@ -127,6 +127,10 @@ export class SupabaseDocumentAdapter implements IDocumentRepository {
     return data.map(d => this.mapToEntity(d));
   }
 
+  async getByTags(tags: string[]): Promise<Document[]> {
+    return this.findByTags(tags);
+  }
+
   async search(query: string): Promise<Document[]> {
     const { data, error } = await supabase.from('documents').select('*').or(`title.ilike.%${query}%,description.ilike.%${query}%`);
     if (error || !data) return [];

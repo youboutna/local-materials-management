@@ -4,13 +4,14 @@
  * NO UI dependencies - pure transformation logic
  */
 
-import { InsuranceCertificateEntity } from '@/types/insurance.entity';
+import { InsuranceCertificateEntity } from '@/domain/entities/InsuranceCertificate.entity';
 import { 
   InsuranceCertificateDTO, 
   InsuranceCertificateFormData,
   InsuranceCertificateCreateData,
   InsuranceCertificateUpdateData 
 } from '@/dtos/entities/InsuranceCertificateDTO';
+
 
 export const insuranceTransform = {
   /**

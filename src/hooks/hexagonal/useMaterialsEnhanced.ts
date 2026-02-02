@@ -15,7 +15,7 @@ import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
 export interface UseMaterialsEnhancedResult {
   materials: MaterialDTO[];
   isLoading: boolean;
-  error: any;
+  error: string | null;
   refetch: () => void;
   createMaterial: (data: CreateMaterialRequestDto) => void;
   updateMaterial: ({ id, data }: { id: string; data: UpdateMaterialRequestDto }) => void;
@@ -81,7 +81,7 @@ export function useMaterialsEnhanced(): UseMaterialsEnhancedResult {
       toast.success('Matériel créé avec succès');
       queryClient.invalidateQueries({ queryKey: ['materials'] });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Create material error:', error);
       toast.error('Erreur lors de la création du matériel');
     }
@@ -103,7 +103,7 @@ export function useMaterialsEnhanced(): UseMaterialsEnhancedResult {
       toast.success('Matériel mis à jour avec succès');
       queryClient.invalidateQueries({ queryKey: ['materials'] });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Update material error:', error);
       toast.error('Erreur lors de la mise à jour du matériel');
     }
@@ -123,7 +123,7 @@ export function useMaterialsEnhanced(): UseMaterialsEnhancedResult {
       toast.success('Matériel supprimé avec succès');
       queryClient.invalidateQueries({ queryKey: ['materials'] });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Delete material error:', error);
       toast.error('Erreur lors de la suppression du matériel');
     }

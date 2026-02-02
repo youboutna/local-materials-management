@@ -8,6 +8,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { MaterialService } from '@/application/services/MaterialService';
 import { toast } from 'sonner';
+import { CreateMaterialRequestDto } from '@/application/dtos/CreateMaterialRequestDto';
+import { UpdateMaterialRequestDto } from '@/application/dtos/UpdateMaterialRequestDto';
 
 export function useMaterials() {
   const queryClient = useQueryClient();
@@ -30,27 +32,27 @@ export function useMaterials() {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (materialData: any) => {
+    mutationFn: async (materialData: CreateMaterialRequestDto) => {
       return await materialService.createMaterial(materialData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['materials'] });
       toast.success('Matériel créé avec succès');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error('Échec de la création du matériel');
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+    mutationFn: async ({ id, data }: { id: string; data: UpdateMaterialRequestDto }) => {
       return await materialService.updateMaterial(id, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['materials'] });
       toast.success('Matériel mis à jour avec succès');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error('Échec de la mise à jour du matériel');
     },
   });
@@ -63,7 +65,7 @@ export function useMaterials() {
       queryClient.invalidateQueries({ queryKey: ['materials'] });
       toast.success('Matériel supprimé avec succès');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error('Échec de la suppression du matériel');
     },
   });

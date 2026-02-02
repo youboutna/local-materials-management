@@ -19,9 +19,9 @@ import {
   CheckpointVerificationResultDTO,
   VerificationItemDTO,
   VerificationStatus,
-  CheckpointCategory,
-  DEFAULT_MAURITANIA_RULES,
-} from '@/types/checkpoint-dto';
+  CheckpointCategory
+} from '@/dtos/entities/CheckpointDTO';
+import { DEFAULT_MAURITANIA_RULES } from '@/types/checkpoint-dto';
 
 // Service DTOs for data exchange
 export interface VerifyCheckpointRequestDto {
@@ -338,10 +338,11 @@ export class CheckpointVerificationEngine {
     try {
       // Get materials for the project
       const materials = await this.materialRepository.findAll();
-      const projectMaterials = materials.filter(m => 
-        (m as any).projectId === request.projectId || 
-        (m as any).project_id === request.projectId
-      );
+      const projectMaterials = materials.filter(m => {
+        const material = m as unknown as {projectId?: string, project_id?: string};
+        return material.projectId === request.projectId || 
+               material.project_id === request.projectId;
+      });
       
       const hasMaterials = projectMaterials.length > 0;
 
@@ -475,6 +476,177 @@ export class CheckpointVerificationEngine {
       maxAmount: netAmount,
     };
   }
+
+  /**
+   * Vérifie un checkpoint complet
+   */
+  async verifyCheckpoint(checkpoint: CheckpointDTO): Promise<{
+    isValid: boolean;
+    issues: string[];
+    timestamp: Date;
+  }> {
+    try {
+      const projectId = this.projectId;
+
+      const verificationItems: VerificationItemDTO[] = [];
+      const blockingIssues: string[] = [];
+      const warnings: string[] = [];
+
+      // 1. Vérifier les inspections
+      const inspectionItems = await this.verifyInspections({
+        requiredInspectionIds: checkpoint.required_inspections || [],
+        triggerProgress: checkpoint.trigger_progress || 0,
+        projectId
+      });
+      verificationItems.push(...inspectionItems);
+
+      // 2. Vérifier les documents
+      const documentItems = await this.verifyDocuments({
+        requiredDocumentIds: checkpoint.required_documents || [],
+        projectId
+      });
+      verificationItems.push(...documentItems);
+
+      // 3. Vérifier les approbations
+      const approvalItems = await this.verifyApprovals({
+        requiredApprovalIds: checkpoint.required_approvals || [],
+        projectId
+      });
+      verificationItems.push(...approvalItems);
+
+      // 4. Vérifier les ressources/matériaux si applicable
+      if (checkpoint.step_id) {
+        const resourceItems = await this.verifyResources({
+          stepId: checkpoint.step_id,
+          projectId
+        });
+        verificationItems.push(...resourceItems);
+      }
+
+      // 5. Vérifier le service fait si c'est un gate
+      if (checkpoint.checkpoint_type === 'gate') {
+        const serviceFaitItem = await this.verifyServiceFait({
+          checkpointId: checkpoint.id,
+          projectId
+        });
+        if (serviceFaitItem) {
+          verificationItems.push(serviceFaitItem);
+        }
+      }
+
+      // Calculer le score et le statut global
+      const requiredItems = verificationItems.filter(item => item.required);
+      const verifiedItems = verificationItems.filter(item => item.status === 'verified');
+      const failedItems = verificationItems.filter(item => item.status === 'failed');
+
+      // Calculer le score pondéré
+      const totalWeight = verificationItems.reduce((sum, item) => sum + item.weight, 0);
+      const verifiedWeight = verifiedItems.reduce((sum, item) => sum + item.weight, 0);
+      const verificationScore = totalWeight > 0 ? Math.round((verifiedWeight / totalWeight) * 100) : 0;
+
+      // Déterminer le statut global
+      let overallStatus: VerificationStatus = 'pending';
+      const requiredFailed = requiredItems.filter(item => item.status === 'failed');
+      const requiredVerified = requiredItems.filter(item => item.status === 'verified');
+
+      if (requiredFailed.length > 0) {
+        overallStatus = 'failed';
+        blockingIssues.push(...requiredFailed.map(item => `${item.title}: Vérification échouée`));
+      } else if (requiredVerified.length === requiredItems.length) {
+        overallStatus = 'verified';
+      } else if (verifiedItems.length > 0) {
+        overallStatus = 'in_progress';
+      }
+
+      // Ajouter des avertissements pour les items non-requis échoués
+      const optionalFailed = failedItems.filter(item => !item.required);
+      if (optionalFailed.length > 0) {
+        warnings.push(...optionalFailed.map(item => `${item.title}: Vérification optionnelle échouée`));
+      }
+
+      // Vérifier si peut procéder au paiement
+      const canProceed = overallStatus === 'verified' && blockingIssues.length === 0;
+
+      const result = {
+        isValid: canProceed,
+        issues: blockingIssues,
+        timestamp: new Date(),
+      };
+
+      return result;
+    } catch (error) {
+      console.error('CheckpointVerificationEngine.verifyCheckpoint failed:', error);
+      const errorMessage = error instanceof AppError ? error.message : 'Failed to verify checkpoint';
+      return {
+        isValid: false,
+        issues: [errorMessage],
+        timestamp: new Date(),
+      };
+    }
+  }
+
+  /**
+   * Vérifie si un paiement peut être déclenché
+   */
+  async validateCheckpoint(checkpoint: CheckpointDTO): Promise<{
+    isValid: boolean;
+    issues: string[];
+    timestamp: Date;
+  }> {
+    try {
+      const verifyResult = await this.verifyCheckpoint(checkpoint);
+
+      if (!verifyResult.isValid) {
+        return verifyResult;
+      }
+
+      // Récupérer le budget de la phase via le repository
+      let phaseBudget = 0;
+      if (checkpoint.phase_id) {
+        try {
+          const phase = await this.phaseRepository.findById(checkpoint.phase_id);
+          if (phase) {
+            phaseBudget = phase.estimatedCost || phase.actualCost || 0;
+          }
+        } catch (error) {
+          console.warn('Failed to get phase budget:', error);
+        }
+      }
+
+      // Si pas de budget phase, utiliser le budget projet
+      if (phaseBudget === 0) {
+        try {
+          const project = await this.projectRepository.findById(this.projectId);
+          if (project) {
+            phaseBudget = project.budget || 0;
+          }
+        } catch (error) {
+          console.warn('Failed to get project budget:', error);
+        }
+      }
+
+      // Calculer le montant max basé sur le poids financier
+      const maxAmount = phaseBudget * checkpoint.financial_weight;
+      const retentionRate = DEFAULT_MAURITANIA_RULES.guarantee_retention_rate;
+      const netAmount = maxAmount * (1 - retentionRate);
+
+      const result = {
+        isValid: true,
+        issues: [],
+        timestamp: new Date(),
+      };
+
+      return result;
+    } catch (error) {
+      console.error('CheckpointVerificationEngine.validateCheckpoint failed:', error);
+      const errorMessage = error instanceof AppError ? error.message : 'Failed to validate checkpoint';
+      return {
+        isValid: false,
+        issues: [errorMessage],
+        timestamp: new Date(),
+      };
+    }
+  }
 }
 
 // ============= FACTORY =============
@@ -485,7 +657,7 @@ export function getCheckpointVerificationEngine(
   projectId: string,
   phaseId?: string
 ): CheckpointVerificationEngine {
-  if (!engineInstance || (engineInstance as any).projectId !== projectId) {
+  if (!engineInstance || engineInstance['projectId'] !== projectId) {
     engineInstance = new CheckpointVerificationEngine(projectId, phaseId);
   }
   return engineInstance;

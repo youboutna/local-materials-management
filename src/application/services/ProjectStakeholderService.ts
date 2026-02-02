@@ -63,85 +63,53 @@ export interface ExternalStakeholderDto {
   is_primary?: boolean;
 }
 
+export interface StakeholderInput {
+  id?: string;
+  type: string;
+  role: string;
+  name: string;
+  email: string;
+  phone?: string;
+  organization_id?: string;
+  employee_id?: string;
+  is_primary?: boolean;
+  is_internal?: boolean;
+}
+
+export interface CreateStakeholderInput extends StakeholderInput {
+  project_id: string;
+}
+
 export class ProjectStakeholderService {
   constructor(
     private projectRepository: IProjectRepository = RepositoryFactory.getProjectRepository() // Using project repository as placeholder
   ) {}
+
   /**
    * Create project stakeholders
    */
   async createProjectStakeholders(
     projectId: string,
-    stakeholders: any[],
-    delegation: Record<string, any>
+    stakeholders: StakeholderInput[],
+    delegation: Record<string, unknown>
   ): Promise<ProjectStakeholder[]> {
     try {
-      if (!projectId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
-      }
-
-      const now = new Date().toISOString();
-      console.log(`Creating stakeholders for project: ${projectId}`);
-      console.log(`External stakeholders: ${stakeholders.length}`);
-      console.log(`Delegation roles: ${Object.keys(delegation).length}`);
-      
-      // Create stakeholder records using project repository as workaround
       const createdStakeholders: ProjectStakeholder[] = [];
-      
-      // Add external stakeholders (suppliers)
-      if (stakeholders && stakeholders.length > 0) {
-        for (const stakeholder of stakeholders) {
-          if (stakeholder.selected) {
-            const stakeholderRecord: ProjectStakeholder = {
-              id: crypto.randomUUID(),
-              project_id: projectId,
-              stakeholder_type: 'supplier',
-              stakeholder_entity_type: 'supplier',
-              stakeholder_id: stakeholder.id,
-              stakeholder_name: stakeholder.name || 'Unknown Supplier',
-              role: delegation?.supplier || 'external',
-              permissions: ['view', 'comment'],
-              contact_info: stakeholder.contact || {},
-              created_at: now,
-              updated_at: now
-            };
-            createdStakeholders.push(stakeholderRecord);
-            console.log(`Creating supplier stakeholder: ${stakeholder.id}`);
-          }
-        }
-      }
 
-      // Add team delegation (employees)
-      if (delegation && Object.keys(delegation).length > 0) {
-        for (const [role, employees] of Object.entries(delegation)) {
-          if (Array.isArray(employees)) {
-            for (const employee of employees) {
-              if (employee && employee.selected) {
-                const stakeholderRecord: ProjectStakeholder = {
-                  id: crypto.randomUUID(),
-                  project_id: projectId,
-                  stakeholder_type: 'employee',
-                  stakeholder_entity_type: 'employee',
-                  stakeholder_id: employee.id,
-                  stakeholder_name: employee.name || 'Unknown Employee',
-                  role: role,
-                  permissions: ['view', 'comment', 'edit'],
-                  contact_info: employee.contact || {},
-                  created_at: now,
-                  updated_at: now
-                };
-                createdStakeholders.push(stakeholderRecord);
-                console.log(`Creating employee stakeholder: ${employee.id} with role: ${role}`);
-              }
-            }
-          }
-        }
+      for (const stakeholder of stakeholders) {
+        const createInput: CreateStakeholderInput = {
+          ...stakeholder,
+          project_id: projectId
+        };
+
+        const created = await this.createStakeholder(createInput);
+        createdStakeholders.push(created);
       }
 
       return createdStakeholders;
     } catch (error) {
-      console.error('ProjectStakeholderService.createProjectStakeholders failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create project stakeholders');
+      console.error('Failed to create project stakeholders:', error);
+      throw error;
     }
   }
 
@@ -157,7 +125,7 @@ export class ProjectStakeholderService {
       // For now, return mock data as project stakeholder repository is not available
       // TODO: Implement proper stakeholder retrieval when repository is available
       console.warn('ProjectStakeholderService.getProjectStakeholders: Project stakeholder repository not available');
-      
+
       return [];
     } catch (error) {
       console.error('ProjectStakeholderService.getProjectStakeholders failed:', error);
@@ -169,7 +137,7 @@ export class ProjectStakeholderService {
    * Update a project stakeholder
    */
   async updateProjectStakeholder(
-    stakeholderId: string, 
+    stakeholderId: string,
     updates: UpdateProjectStakeholderRequestDto
   ): Promise<ProjectStakeholder> {
     try {
@@ -183,7 +151,7 @@ export class ProjectStakeholderService {
       // For now, return mock data as project stakeholder repository is not available
       // TODO: Implement proper stakeholder update when repository is available
       console.warn('ProjectStakeholderService.updateProjectStakeholder: Project stakeholder repository not available');
-      
+
       const now = new Date().toISOString();
       return {
         id: stakeholderId,
@@ -226,7 +194,7 @@ export class ProjectStakeholderService {
    * Get stakeholders by type for a project
    */
   async getStakeholdersByType(
-    projectId: string, 
+    projectId: string,
     stakeholderType: string
   ): Promise<ProjectStakeholder[]> {
     try {
@@ -240,7 +208,7 @@ export class ProjectStakeholderService {
       // For now, return mock data as project stakeholder repository is not available
       // TODO: Implement proper stakeholder retrieval by type when repository is available
       console.warn('ProjectStakeholderService.getStakeholdersByType: Project stakeholder repository not available');
-      
+
       return [];
     } catch (error) {
       console.error('ProjectStakeholderService.getStakeholdersByType failed:', error);
@@ -260,7 +228,7 @@ export class ProjectStakeholderService {
       // For now, return mock data as project stakeholder repository is not available
       // TODO: Implement proper primary stakeholder retrieval when repository is available
       console.warn('ProjectStakeholderService.getPrimaryStakeholders: Project stakeholder repository not available');
-      
+
       return [];
     } catch (error) {
       console.error('ProjectStakeholderService.getPrimaryStakeholders failed:', error);
@@ -286,7 +254,7 @@ export class ProjectStakeholderService {
       // For now, return mock data as project stakeholder repository is not available
       // TODO: Implement proper stakeholder creation when repository is available
       console.warn('ProjectStakeholderService.addStakeholder: Project stakeholder repository not available');
-      
+
       const now = new Date().toISOString();
       return {
         id: crypto.randomUUID(),
@@ -304,5 +272,29 @@ export class ProjectStakeholderService {
       console.error('ProjectStakeholderService.addStakeholder failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to add stakeholder');
     }
+  }
+
+  private async createStakeholder(stakeholder: CreateStakeholderInput): Promise<ProjectStakeholder> {
+    // Implement stakeholder creation logic here
+    // For now, return mock data
+    const now = new Date().toISOString();
+    return {
+      id: crypto.randomUUID(),
+      project_id: stakeholder.project_id,
+      stakeholder_type: stakeholder.type,
+      stakeholder_entity_type: stakeholder.is_internal ? 'employee' : 'supplier',
+      employee_id: stakeholder.employee_id,
+      supplier_id: stakeholder.organization_id,
+      stakeholder_id: stakeholder.id,
+      stakeholder_name: stakeholder.name,
+      role: stakeholder.role,
+      permissions: ['view', 'comment'],
+      contact_info: {
+        email: stakeholder.email,
+        phone: stakeholder.phone
+      },
+      created_at: now,
+      updated_at: now
+    };
   }
 }

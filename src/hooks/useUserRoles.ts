@@ -4,7 +4,7 @@
  * Legacy interface maintained for backward compatibility
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
@@ -13,19 +13,30 @@ import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { AuthService } from '@/application/services/AuthService';
 import { UserService } from '@/application/services/UserService';
 
-export interface UserRole {
+export interface UserRole extends UnifiedUser {
   id: string;
-  user_id: string;
-  role_name: string;
-  assigned_at: string;
-  assigned_by?: string;
+  roleName: string;
+  permissions?: Record<string, boolean>;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface UserRolePermissions {
+  [key: string]: boolean;
+}
+
+interface UserPermission {
+  id: string;
+  name: string;
+  description?: string;
+  scope: string[];
 }
 
 export interface Role {
   id: string;
   name: string;
   description?: string;
-  permissions?: any;
+  permissions?: UserPermission[];
   created_at: string;
   updated_at: string;
 }
@@ -59,9 +70,10 @@ export const useUserRoles = (userId?: string) => {
         // Map single role to UserRole format for backward compatibility
         const roles: UserRole[] = user.role ? [{
           id: `${userId}-${user.role}`,
-          user_id: userId,
-          role_name: user.role,
-          assigned_at: new Date().toISOString(),
+          roleName: user.role,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          permissions: user.permissions || {}
         }] : [];
         
         return roles;
@@ -89,30 +101,33 @@ export const useUserRoles = (userId?: string) => {
     userRoles: userRoles || [],
     availableRoles,
     isLoading: rolesLoading,
-    error: rolesError
+    error: rolesError as string | null
   };
 };
 
 export const useCurrentUserRoles = () => {
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<UserRole | null>(null);
   const { user, isAuthenticated } = useUnifiedAuth();
   const { authService, userService } = getServices();
 
+  const loadCurrentUser = useCallback(async () => {
+    if (!user?.id) return;
+    const userData = await userService.getUserById(user.id);
+    setCurrentUser(userData ? {
+      ...userData,
+      permissions: userData.permissions || {},
+      roleName: userData.role || '',
+      id: userData.id || user.id,
+      created_at: userData.created_at || undefined,
+      updated_at: userData.updated_at || undefined
+    } : null);
+  }, [user?.id, userService]);
+
   useEffect(() => {
-    const getUser = async () => {
-      try {
-        const authUser = await authService.getCurrentUser();
-        setCurrentUser(authUser);
-      } catch (error) {
-        console.error('Error getting current user:', error);
-        // Fallback to UnifiedAuth user if service fails
-        if (user) {
-          setCurrentUser(user);
-        }
-      }
-    };
-    getUser();
-  }, [user]);
+    if (isAuthenticated && user) {
+      loadCurrentUser();
+    }
+  }, [isAuthenticated, user, loadCurrentUser]);
 
   const { data: userRoles, isLoading, error } = useQuery({
     queryKey: ['currentUserRoles', currentUser?.id, user?.role],
@@ -120,9 +135,9 @@ export const useCurrentUserRoles = () => {
       // Start with UnifiedAuth user role if present
       const fallbackRoles = user?.role ? [String(user.role).toLowerCase()] : [];
 
-      if (!currentUser?.id && !user?.id) return fallbackRoles;
-      
       const userId = currentUser?.id || user?.id;
+      if (!userId) return fallbackRoles;
+      
       console.log('Fetching current user roles for:', userId);
       
       try {
@@ -163,11 +178,9 @@ export const useCurrentUserRoles = () => {
     return (userRoles as string[])?.includes(String(roleName).toLowerCase()) || false;
   };
 
-  const hasAnyRole = (roleNames: string[]) => {
-    const roles = (userRoles as string[]) || [];
-    if (roles.length === 0 || !Array.isArray(roles)) return false;
-    const wanted = roleNames.map((r) => String(r).toLowerCase());
-    return wanted.some((role) => roles.includes(role));
+  const hasAnyRole = (roleNames: string[]): boolean => {
+    const roles = userRoles || [];
+    return roleNames.some(role => roles.includes(role.toLowerCase()));
   };
 
   const hasAllRoles = (roleNames: string[]) => {
@@ -240,13 +253,12 @@ export const useRoleManagement = () => {
         // Add new role to the userRoles array
         const newRole: UserRole = {
           id: `${userId}_${roleName}_${Date.now()}`,
-          user_id: userId,
-          role_name: roleName,
-          assigned_at: new Date().toISOString(),
-          assigned_by: 'current_user' // This should come from auth context
+          roleName: roleName,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         };
         
-        const updatedRoles = [...currentRoles, newRole];
+        const updatedRoles = [...currentRoles, newRole] as UserRole[];
         
         // Update user with new roles array
         await userService.updateUser(userId, {

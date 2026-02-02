@@ -156,14 +156,32 @@ const fetchKPIMetrics = async (): Promise<KPIMetrics> => {
     };
 
     // Map critical alerts
-    const criticalAlerts: CriticalAlert[] = alertsList.map((alert: any) => ({
+    interface CriticalAlert {
+      id: string;
+      type: 'payment' | 'milestone' | 'delay' | 'inspection' | 'guarantee';
+      title: string;
+      description: string;
+      message: string;
+      severity: 'low' | 'medium' | 'high';
+      priority: number;
+      status: 'open' | 'resolved';
+      projectId?: string;
+      phaseId?: string;
+      createdAt: string;
+    }
+
+    const criticalAlerts: CriticalAlert[] = alertsList.map((alert: AlertDTO) => ({
       id: alert.id,
       type: mapAlertType(alert.alert_type),
       title: alert.title,
       description: alert.description || '',
-      severity: alert.priority === 'critical' ? 'critical' : 'warning',
-      entityId: alert.id,
-      entityType: alert.alert_type
+      message: alert.message || '',
+      severity: alert.severity || 'medium',
+      priority: alert.priority || 0,
+      status: alert.status || 'open',
+      projectId: alert.project_id,
+      phaseId: alert.phase_id,
+      createdAt: alert.created_at
     }));
 
     return {
@@ -189,8 +207,8 @@ const fetchKPIMetrics = async (): Promise<KPIMetrics> => {
   }
 };
 
-function mapAlertType(alertType: string): CriticalAlert['type'] {
-  const typeMap: Record<string, CriticalAlert['type']> = {
+function mapAlertType(alertType: string): 'payment' | 'milestone' | 'delay' | 'inspection' | 'guarantee' {
+  const typeMap: Record<string, 'payment' | 'milestone' | 'delay' | 'inspection' | 'guarantee'> = {
     'payment': 'payment',
     'milestone': 'milestone',
     'delay': 'delay',

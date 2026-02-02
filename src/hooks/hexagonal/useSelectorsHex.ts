@@ -136,8 +136,7 @@ export function useProjectsSelector(options?: {
     queryFn: async (): Promise<ProjectOption[]> => {
       const projectService = new ProjectService(
         RepositoryFactory.getProjectRepository(),
-        // TODO: Add transformer when needed
-        null as any
+        new ProjectTransformer()
       );
       
       const result = await projectService.searchProjects({

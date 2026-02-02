@@ -10,9 +10,33 @@ import { RepositoryFactory } from "@/repositories/RepositoryFactory";
 import { CreateTaskRequestDto, UpdateTaskRequestDto } from "@/dtos/transforms";
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { TaskStatus } from '@/domain/entities/Task'; 
+import { TaskDTO } from '@/domain/entities/TaskDTO'; 
 
 // Validation functions for referential checks
-const validateQualityReferential = (task: any) => {
+interface Task {
+  id: string;
+  title: string;
+  description: string | null;
+  status: TaskStatus;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  dueDate?: string | null;
+  projectId: string;
+  assigneeId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  completionRate?: number;
+  assignedEmployees?: any[];
+  getProgressPercentage?: () => number;
+  startDate?: string;
+  endDate?: string;
+  estimatedDuration?: number;
+  actualDuration?: number;
+  phaseId?: string;
+  notes?: string;
+}
+
+const validateQualityReferential = (task: Task) => {
   const errors: string[] = [];
   const warnings: string[] = [];
   
@@ -32,16 +56,16 @@ const validateQualityReferential = (task: any) => {
   };
 };
 
-const validateSafetyReferential = (task: any) => {
+const validateSafetyReferential = (task: Task) => {
   const errors: string[] = [];
   const warnings: string[] = [];
   
   // Safety validation logic
-  if (task.priority === 'critical' && !task.assigned_to?.length) {
+  if (task.priority === 'critical' && !task.assigneeId) {
     errors.push('Critical safety tasks must be assigned');
   }
   
-  if (task.due_date && new Date(task.due_date) < new Date()) {
+  if (task.dueDate && new Date(task.dueDate) < new Date()) {
     warnings.push('Task due date is in the past');
   }
   
@@ -52,21 +76,21 @@ const validateSafetyReferential = (task: any) => {
   };
 };
 
-const validateTimelineReferential = (task: any) => {
+const validateTimelineReferential = (task: Task) => {
   const errors: string[] = [];
   const warnings: string[] = [];
   
   // Timeline validation logic
-  if (task.start_date && task.end_date) {
-    const start = new Date(task.start_date);
-    const end = new Date(task.end_date);
+  if (task.dueDate) {
+    const dueDate = new Date(task.dueDate);
+    const now = new Date();
+    const daysUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     
-    if (start > end) {
-      errors.push('Start date must be before end date');
+    if (daysUntilDue < 0) {
+      errors.push('Task due date is in the past');
     }
     
-    const duration = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    if (duration > 365) {
+    if (daysUntilDue > 365) {
       warnings.push('Task duration exceeds 1 year');
     }
   }
@@ -78,17 +102,13 @@ const validateTimelineReferential = (task: any) => {
   };
 };
 
-const validateResourceReferential = (task: any) => {
+const validateResourceReferential = (task: Task) => {
   const errors: string[] = [];
   const warnings: string[] = [];
   
   // Resource validation logic
-  if (!task.assigned_to?.length) {
+  if (!task.assigneeId) {
     warnings.push('Task has no assigned resources');
-  }
-  
-  if (task.weight && (task.weight < 0 || task.weight > 100)) {
-    errors.push('Task weight must be between 0 and 100');
   }
   
   return {
@@ -99,14 +119,42 @@ const validateResourceReferential = (task: any) => {
 };
 
 // Types compatibles avec le service
-type ServiceCreateTaskDTO = Omit<CreateTaskRequestDto, 'status'> & { status?: any };
-type ServiceUpdateTaskDTO = Omit<UpdateTaskRequestDto, 'status'> & { status?: any };
+type ServiceCreateTaskDTO = Omit<CreateTaskRequestDto, 'status'> & { status?: TaskStatus };
+type ServiceUpdateTaskDTO = Omit<UpdateTaskRequestDto, 'status'> & { status?: TaskStatus };
+
+// Fonction de conversion complète
+const taskToDTO = (task: Task): TaskDTO => {
+  if (!task) throw new Error('Invalid task data');
+  
+  return {
+    id: task.id,
+    title: task.title,
+    description: task.description || '',
+    assignedTo: task.assignedEmployees?.map(e => e.id),
+    status: task.status as 'not_started' | 'in_progress' | 'completed' | 'delayed',
+    progress: task.getProgressPercentage?.() || 0,
+    startDate: task.startDate || '',
+    endDate: task.endDate || '',
+    estimatedDuration: task.estimatedDuration || 0,
+    actualDuration: task.actualDuration || 0,
+    costEstimate: 0, // Valeur par défaut
+    actualCost: 0, // Valeur par défaut
+    priority: (task.priority === 'critical' ? 'urgent' : task.priority) as 'low' | 'medium' | 'high' | 'urgent',
+    projectId: task.projectId,
+    phaseId: task.phaseId || undefined,
+    assigneeName: '', // Valeur par défaut
+    projectTitle: '', // Valeur par défaut
+    dueDate: task.dueDate || undefined,
+    completedAt: undefined,
+    notes: task.notes || undefined
+  };
+};
 
 // Enhanced types for UI components
 export interface UseTasksHexResult {
-  tasks: any[];
+  tasks: Task[];
   isLoading: boolean;
-  error: any;
+  error: string | null;
   refetch: () => void;
   createTask: (data: CreateTaskRequestDto) => void;
   updateTask: ({ id, data }: { id: string; data: UpdateTaskRequestDto }) => void;
@@ -114,14 +162,37 @@ export interface UseTasksHexResult {
   isCreating: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
-  // Enhanced UI features
-  getTaskPriority: (task: any) => 'low' | 'medium' | 'high' | 'critical';
-  getTaskStatus: (task: any) => 'todo' | 'in_progress' | 'completed' | 'cancelled';
-  getTaskUrgency: (task: any) => 'low' | 'medium' | 'high' | 'critical';
-  getTaskDaysUntilDue: (task: any) => number;
-  getTaskAnalytics: () => any;
-  validateTaskWithReferential: (task: any, referentialType: string) => Promise<any>;
-  generateTaskReport: (task: any) => any;
+  getTaskPriority: (task: Task) => 'low' | 'medium' | 'high' | 'critical';
+  getTaskStatus: (task: Task) => TaskStatus;
+  getTaskUrgency: (task: Task) => 'low' | 'medium' | 'high' | 'critical';
+  getTaskDaysUntilDue: (task: Task) => number;
+  getTaskAnalytics: () => TaskAnalytics;
+  validateTaskWithReferential: (task: Task, referentialType: string) => Promise<ValidationResult>;
+  generateTaskReport: (task: Task) => TaskReport;
+}
+
+interface TaskAnalytics {
+  completionRate: number;
+  overdueCount: number;
+  highPriorityCount: number;
+}
+
+interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+interface TaskReport {
+  status: TaskStatus;
+  progress: number;
+  issues: string[];
+}
+
+interface TaskFilterOptions {
+  status?: TaskStatus;
+  priority?: 'low' | 'medium' | 'high' | 'critical';
+  assigneeId?: string;
 }
 
 /**
@@ -143,13 +214,12 @@ export function useTasksHex(projectId?: string): UseTasksHexResult {
     refetch
   } = useQuery({
     queryKey: ['tasks', projectId],
-    queryFn: async (): Promise<any[]> => {
+    queryFn: async (): Promise<Task[]> => {
       try {
-        const taskData = await taskRepository.findAll();
-        return taskData;
-      } catch (err) {
-        console.error('Error fetching tasks:', err);
-        throw err;
+        const taskData: TaskDTO[] = await taskRepository.findAll();
+        return taskData as Task[];
+      } catch (error) {
+        throw new Error('Failed to fetch tasks');
       }
     },
     enabled: true
@@ -181,7 +251,12 @@ export function useTasksHex(projectId?: string): UseTasksHexResult {
   const updateTaskMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateTaskRequestDto }) => {
       try {
-        const updatedTask = await taskRepository.update(id, data);
+        const updateData: ServiceUpdateTaskDTO = {
+          ...data,
+          status: data.status as TaskStatus,
+          priority: (data.priority === 'critical' ? 'urgent' : data.priority) as 'low' | 'medium' | 'high' | 'urgent'
+        };
+        const updatedTask = await taskRepository.update(id, updateData);
         return updatedTask;
       } catch (error) {
         console.error('Error updating task:', error);
@@ -220,7 +295,7 @@ export function useTasksHex(projectId?: string): UseTasksHexResult {
   });
 
   // Enhanced UI functions
-  const getTaskPriority = (task: any): 'low' | 'medium' | 'high' | 'critical' => {
+  const getTaskPriority = (task: Task): 'low' | 'medium' | 'high' | 'critical' => {
     const priority = task.priority || 'medium';
     const dueDate = task.dueDate ? new Date(task.dueDate) : null;
     const now = new Date();
@@ -234,17 +309,11 @@ export function useTasksHex(projectId?: string): UseTasksHexResult {
     return priority as 'low' | 'medium' | 'high' | 'critical';
   };
 
-  const getTaskStatus = (task: any): 'todo' | 'in_progress' | 'completed' | 'cancelled' => {
-    const status = task.status || 'todo';
-    const completedAt = task.completedAt ? new Date(task.completedAt) : null;
-    
-    if (status === 'cancelled') return 'cancelled';
-    if (completedAt) return 'completed';
-    if (status === 'in_progress') return 'in_progress';
-    return 'todo';
+  const getTaskStatus = (task: Task): TaskStatus => {
+    return task.status || 'not_started';
   };
 
-  const getTaskUrgency = (task: any): 'low' | 'medium' | 'high' | 'critical' => {
+  const getTaskUrgency = (task: Task): 'low' | 'medium' | 'high' | 'critical' => {
     const priority = getTaskPriority(task);
     const status = getTaskStatus(task);
     const daysUntilDue = getTaskDaysUntilDue(task);
@@ -261,47 +330,73 @@ export function useTasksHex(projectId?: string): UseTasksHexResult {
     return 'low';
   };
 
-  const getTaskDaysUntilDue = (task: any): number => {
+  const getTaskDaysUntilDue = (task: Task): number => {
     if (!task.dueDate) return -1; // No due date
     const dueDate = new Date(task.dueDate);
     const now = new Date();
     return Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
   };
 
-  const getTaskAnalytics = () => {
+  const getTaskAnalytics = (): TaskAnalytics => {
     const totalTasks = tasks.length;
-    const todoTasks = tasks.filter(t => getTaskStatus(t) === 'todo').length;
-    const inProgressTasks = tasks.filter(t => getTaskStatus(t) === 'in_progress').length;
-    const completedTasks = tasks.filter(t => getTaskStatus(t) === 'completed').length;
-    const cancelledTasks = tasks.filter(t => getTaskStatus(t) === 'cancelled').length;
     const overdueTasks = tasks.filter(t => getTaskDaysUntilDue(t) < 0).length;
     const highPriorityTasks = tasks.filter(t => getTaskPriority(t) === 'high' || getTaskPriority(t) === 'critical').length;
-    const criticalTasks = tasks.filter(t => getTaskUrgency(t) === 'critical').length;
     
     return {
-      totalTasks,
-      statusBreakdown: {
-        todo: todoTasks,
-        inProgress: inProgressTasks,
-        completed: completedTasks,
-        cancelled: cancelledTasks
-      },
-      priorityBreakdown: {
-        low: tasks.filter(t => getTaskPriority(t) === 'low').length,
-        medium: tasks.filter(t => getTaskPriority(t) === 'medium').length,
-        high: tasks.filter(t => getTaskPriority(t) === 'high').length,
-        critical: tasks.filter(t => getTaskPriority(t) === 'critical').length
-      },
-      urgencyBreakdown: {
-        low: tasks.filter(t => getTaskUrgency(t) === 'low').length,
-        medium: tasks.filter(t => getTaskUrgency(t) === 'medium').length,
-        high: tasks.filter(t => getTaskUrgency(t) === 'high').length,
-        critical: criticalTasks
-      },
-      overdueTasks,
-      highPriorityTasks,
-      completionRate: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+      completionRate: totalTasks > 0 ? Math.round((tasks.filter(t => getTaskStatus(t) === 'completed').length / totalTasks) * 100) : 0,
+      overdueCount: overdueTasks,
+      highPriorityCount: highPriorityTasks
     };
+  };
+
+  const validateTaskWithReferential = async (task: Task, referentialType: string): Promise<ValidationResult> => {
+    try {
+      // Validation selon le type de référentiel
+      switch (referentialType) {
+        case 'quality':
+          return validateQualityReferential(task);
+        case 'safety':
+          return validateSafetyReferential(task);
+        case 'timeline':
+          return validateTimelineReferential(task);
+        case 'resource':
+          return validateResourceReferential(task);
+        default:
+          return { isValid: true, errors: [], warnings: ['Unknown referential type'] };
+      }
+    } catch (error) {
+      console.error('Referential validation error:', error);
+      return { isValid: false, errors: ['Validation failed'], warnings: [] };
+    }
+  };
+
+  const generateTaskReport = (task: Task): TaskReport => {
+    try {
+      const status = getTaskStatus(task);
+      const progress = task.completionRate || 0;
+      const issues = [];
+      
+      if (getTaskUrgency(task) === 'critical') {
+        issues.push('Task is critical');
+      }
+      
+      if (getTaskDaysUntilDue(task) < 0) {
+        issues.push('Task is overdue');
+      }
+      
+      return {
+        status,
+        progress,
+        issues
+      };
+    } catch (error) {
+      console.error('Report generation error:', error);
+      return { 
+        status: 'error',
+        progress: 0,
+        issues: ['Report generation failed']
+      };
+    }
   };
 
   return {
@@ -320,66 +415,8 @@ export function useTasksHex(projectId?: string): UseTasksHexResult {
     getTaskUrgency,
     getTaskDaysUntilDue,
     getTaskAnalytics,
-    validateTaskWithReferential: async (task: any, referentialType: string) => {
-      try {
-        // Validation selon le type de référentiel
-        switch (referentialType) {
-          case 'quality':
-            return validateQualityReferential(task);
-          case 'safety':
-            return validateSafetyReferential(task);
-          case 'timeline':
-            return validateTimelineReferential(task);
-          case 'resource':
-            return validateResourceReferential(task);
-          default:
-            return { isValid: true, errors: [], warnings: ['Unknown referential type'] };
-        }
-      } catch (error) {
-        console.error('Referential validation error:', error);
-        return { isValid: false, errors: ['Validation failed'], warnings: [] };
-      }
-    },
-    generateTaskReport: (task: any) => {
-      try {
-        const analytics = getTaskAnalytics();
-        const status = getTaskStatus(task);
-        const urgency = getTaskUrgency(task);
-        const daysUntilDue = getTaskDaysUntilDue(task);
-        
-        return {
-          task: {
-            ...task,
-            status,
-            urgency,
-            daysUntilDue,
-            completionRate: task.completionRate || 0
-          },
-          generatedAt: new Date().toISOString(),
-          reportType: 'Task Analysis Report',
-          summary: {
-            totalTasks: analytics.totalTasks,
-            completedTasks: analytics.statusBreakdown.completed,
-            overdueTasks: analytics.overdueTasks,
-            completionRate: analytics.completionRate
-          },
-          recommendations: ['Task completed successfully', 'Monitor deadlines', 'Resource allocation optimized'],
-          compliance: {
-            isValid: true,
-            lastValidated: new Date().toISOString(),
-            validatedBy: 'TaskSystem'
-          }
-        };
-      } catch (error) {
-        console.error('Report generation error:', error);
-        return { 
-          task, 
-          generatedAt: new Date().toISOString(),
-          error: 'Report generation failed',
-          status: 'error'
-        };
-      }
-    }
+    validateTaskWithReferential,
+    generateTaskReport
   };
 };
 

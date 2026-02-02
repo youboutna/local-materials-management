@@ -21,7 +21,7 @@ export interface Supplier {
   nif: string | null;
   category: string | null;
   status: string;
-  rating: any | null;
+  rating: SupplierRating | null;
   contacts: Array<{
     name: string;
     email: string;
@@ -31,6 +31,12 @@ export interface Supplier {
   isVerified: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+interface SupplierRating {
+  score: number;
+  reviews: number;
+  lastUpdated: string;
 }
 
 export const useSupplierPortalAuthHex = () => {

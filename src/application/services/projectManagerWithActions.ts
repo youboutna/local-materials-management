@@ -1,7 +1,7 @@
 import { ProjectData, EscalationRoles } from '@/types/project';
 
 // Define ActionLabels locally to avoid circular import
-export type ActionLabels = {
+export interface ActionLabels {
   budget: string;
   timeline: string;
   quality: string;
@@ -9,7 +9,7 @@ export type ActionLabels = {
   risk: string;
   compliance: string;
   [key: string]: string;
-};
+}
 
 export interface ProjectAlert {
   id: string;
@@ -36,19 +36,75 @@ export interface ProjectManagerState {
   resolvedAlerts: number;
   pendingActions: string[];
   progress: number;
-  evmData?: any;
-  ganttData?: any;
-  pertData?: any;
+  evmData?: EVMData;
+  ganttData?: GanttData;
+  pertData?: PERTData;
+}
+
+interface EVMData {
+  plannedValue: number;
+  earnedValue: number;
+  actualCost: number;
+  schedulePerformanceIndex: number;
+  costPerformanceIndex: number;
+  budgetAtCompletion: number;
+  estimateAtCompletion: number;
+  estimateToComplete: number;
+  varianceAtCompletion: number;
+}
+
+interface GanttData {
+  tasks: Array<{
+    id: string;
+    name: string;
+    start: Date;
+    end: Date;
+    progress: number;
+    dependencies: string[];
+  }>;
+}
+
+interface PERTData {
+  activities: Array<{
+    id: string;
+    name: string;
+    optimistic: number;
+    mostLikely: number;
+    pessimistic: number;
+    expected: number;
+    standardDeviation: number;
+    dependencies: string[];
+  }>;
+}
+
+interface ProjectWithCost {
+  id: string;
+  budget: number;
+  progress: number;
+  actual_cost?: number;
+  actualCost?: number;
+  endDate?: string;
+  budgetVariance?: number;
+  phases?: Array<{
+    id: string;
+    name: string;
+    progress: number;
+    start_date?: string;
+    end_date?: string;
+    optimisticEstimate?: number;
+    mostLikelyEstimate?: number;
+    pessimisticEstimate?: number;
+  }>;
 }
 
 export class ProjectManager {
-  private project: ProjectData;
+  private project: ProjectWithCost;
   private roles: EscalationRoles;
   private actionLabels: ActionLabels;
   private alerts: ProjectAlert[] = [];
   private state: ProjectManagerState;
 
-  constructor(project: ProjectData, roles: EscalationRoles, actionLabels: ActionLabels) {
+  constructor(project: ProjectWithCost, roles: EscalationRoles, actionLabels: ActionLabels) {
     this.project = project;
     this.roles = roles;
     this.actionLabels = actionLabels;
@@ -127,11 +183,11 @@ export class ProjectManager {
    * Check budget alerts
    */
   private checkBudgetAlerts(): void {
-    // Use budget as actual cost approximation if actual_cost not available
-    const actualCost = (this.project as any).actual_cost || (this.project as any).actualCost || (this.project.budget * (this.project.progress / 100));
+    const project = this.project;
+    const actualCost = project.actual_cost || project.actualCost || (project.budget * (project.progress / 100));
     
-    if (this.project.budget && actualCost) {
-      const budgetUtilization = (actualCost / this.project.budget) * 100;
+    if (project.budget && actualCost) {
+      const budgetUtilization = (actualCost / project.budget) * 100;
       
       if (budgetUtilization > 90) {
         this.addAlert({
@@ -139,7 +195,7 @@ export class ProjectManager {
           severity: budgetUtilization > 95 ? 'critical' : 'high',
           title: 'Budget Overrun Alert',
           description: `Project has used ${budgetUtilization.toFixed(1)}% of its budget`,
-          projectId: this.project.id,
+          projectId: project.id,
           createdBy: 'system',
           status: 'open',
           actions: []
@@ -150,7 +206,7 @@ export class ProjectManager {
           severity: 'medium',
           title: 'Budget Warning',
           description: `Project has used ${budgetUtilization.toFixed(1)}% of its budget`,
-          projectId: this.project.id,
+          projectId: project.id,
           createdBy: 'system',
           status: 'open',
           actions: []
@@ -163,23 +219,24 @@ export class ProjectManager {
    * Check timeline alerts
    */
   private checkTimelineAlerts(): void {
-    if (this.project.endDate) {
-      const now = new Date();
-      const endDate = new Date(this.project.endDate);
-      const daysRemaining = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const endDate = this.project.endDate ? new Date(this.project.endDate) : null;
+    const currentDate = new Date();
+    
+    if (endDate && currentDate > endDate) {
+      this.addAlert({
+        type: 'timeline',
+        severity: 'critical',
+        title: 'Project Overdue',
+        description: `Project is ${Math.ceil((currentDate.getTime() - endDate.getTime()) / (1000 * 60 * 60 * 24))} days overdue`,
+        projectId: this.project.id,
+        createdBy: 'system',
+        status: 'open',
+        actions: []
+      });
+    } else if (endDate && currentDate < endDate) {
+      const daysRemaining = Math.ceil((endDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
       
-      if (daysRemaining < 0) {
-        this.addAlert({
-          type: 'timeline',
-          severity: 'critical',
-          title: 'Project Overdue',
-          description: `Project is ${Math.abs(daysRemaining)} days overdue`,
-          projectId: this.project.id,
-          createdBy: 'system',
-          status: 'open',
-          actions: []
-        });
-      } else if (daysRemaining < 7) {
+      if (daysRemaining < 7) {
         this.addAlert({
           type: 'timeline',
           severity: 'high',
@@ -381,40 +438,51 @@ export class ProjectManager {
   /**
    * Calculate Earned Value Management (EVM) data
    */
-  private calculateEVMData(): any {
-    // Placeholder for EVM calculations
+  private calculateEVMData(): EVMData {
     return {
       plannedValue: this.project.budget * (this.project.progress / 100) || 0,
       earnedValue: this.project.budget * (this.project.progress / 100) || 0,
-      actualCost: (this.project as any).actual_cost || (this.project.budget * (this.project.progress / 100)) || 0,
-      scheduleVariance: 0,
-      costVariance: 0,
-      schedulePerformanceIndex: 1,
-      costPerformanceIndex: 1
+      actualCost: this.project.actualCost || 0,
+      schedulePerformanceIndex: 1.0,
+      costPerformanceIndex: 1.0,
+      budgetAtCompletion: this.project.budget || 0,
+      estimateAtCompletion: (this.project.actualCost || 0) + ((this.project.budget || 0) - (this.project.actualCost || 0)),
+      estimateToComplete: (this.project.budget || 0) - (this.project.actualCost || 0),
+      varianceAtCompletion: this.project.budgetVariance || 0
     };
   }
 
   /**
    * Calculate Gantt chart data
    */
-  private calculateGanttData(): any {
-    // Placeholder for Gantt data
+  private calculateGanttData(): GanttData {
     return {
-      tasks: [],
-      milestones: [],
-      dependencies: []
+      tasks: this.project.phases?.map(phase => ({
+        id: phase.id,
+        name: phase.name,
+        start: phase.start_date ? new Date(phase.start_date) : new Date(),
+        end: phase.end_date ? new Date(phase.end_date) : new Date(),
+        progress: phase.progress || 0,
+        dependencies: []
+      })) || []
     };
   }
 
   /**
    * Calculate PERT chart data
    */
-  private calculatePertData(): any {
-    // Placeholder for PERT data
+  private calculatePertData(): PERTData {
     return {
-      activities: [],
-      criticalPath: [],
-      expectedDuration: 0
+      activities: this.project.phases?.map(phase => ({
+        id: phase.id,
+        name: phase.name,
+        optimistic: phase.optimisticEstimate || 0,
+        mostLikely: phase.mostLikelyEstimate || 0,
+        pessimistic: phase.pessimisticEstimate || 0,
+        expected: 0,
+        standardDeviation: 0,
+        dependencies: []
+      })) || []
     };
   }
 }

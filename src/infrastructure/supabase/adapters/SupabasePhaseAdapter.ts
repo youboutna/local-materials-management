@@ -4,8 +4,10 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { Phase, PhaseStep, PhaseTask } from '@/domain/entities';
-import { IPhaseRepository, PhaseMetrics } from '@/domain/repositories';
+import { Phase, PhaseStep, PhaseTask, PhaseStatus, PhaseMetrics } from '@/domain/entities';
+import { IPhaseRepository } from '@/domain/repositories';
+import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
+import { Json } from '@supabase/supabase-js';
 
 const defaultMetrics: PhaseMetrics = {
   materialCost: 0,
@@ -25,12 +27,36 @@ const defaultMetrics: PhaseMetrics = {
   completedSteps: 0,
 };
 
+interface PhaseOperationParams {
+  id: string;
+  name?: string;
+  projectId: string;
+  status: PhaseStatus;
+}
+
+interface PhaseDB {
+  id: string;
+  project_id: string;
+  phase_name: string | null;
+  description: string | null;
+  status: string | null;
+  progress: number | null;
+  order_index: number | null;
+  start_date: string | null;
+  end_date: string | null;
+  estimated_cost: number | null;
+  actual_cost: number | null;
+  construction_phase: string | null;
+  construction_stage: string | null;
+  custom_phase_data: Json | null;
+}
+
 export class SupabasePhaseAdapter implements IPhaseRepository {
   // ============= CRUD Operations =============
 
   async findById(id: string): Promise<Phase | null> {
     const { data, error } = await supabase
-      .from('project_phases')
+      .from<PhaseDB>('project_phases')
       .select('*')
       .eq('id', id)
       .single();
@@ -40,24 +66,21 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
       throw error;
     }
 
-    return this.mapToPhase(data);
+    return PhaseTransformer.fromDTO(data);
   }
 
-  async findByProjectId(projectId: string): Promise<Phase[]> {
+  async getPhasesByProjectId(projectId: string): Promise<Phase[]> {
     const { data, error } = await supabase
       .from('project_phases')
       .select('*')
-      .eq('project_id', projectId)
-      .order('order_index', { ascending: true })
-      .order('created_at', { ascending: true });
+      .eq('project_id', projectId);
 
-    if (error) throw error;
-
-    return (data || []).map(this.mapToPhase);
+    if (error) throw new Error(error.message);
+    return data.map(d => PhaseTransformer.fromDTO(d));
   }
 
   async create(phase: Partial<Phase>): Promise<Phase> {
-    const entityData = this.mapToEntity(phase);
+    const entityData = await this.mapToEntity(phase);
 
     const { data, error } = await supabase
       .from('project_phases')
@@ -66,12 +89,11 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
       .single();
 
     if (error) throw error;
-
-    return this.mapToPhase(data);
+    return PhaseTransformer.fromDTO(data);
   }
 
   async update(id: string, updates: Partial<Phase>): Promise<Phase> {
-    const entityData = this.mapToEntity(updates);
+    const entityData = await this.mapToEntity(updates);
 
     const { data, error } = await supabase
       .from('project_phases')
@@ -81,8 +103,7 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
       .single();
 
     if (error) throw error;
-
-    return this.mapToPhase(data);
+    return PhaseTransformer.fromDTO(data);
   }
 
   async delete(id: string): Promise<void> {
@@ -305,15 +326,13 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
     await this.updateSteps(phaseId, updatedSteps);
   }
 
-  async updateTaskStatus(phaseId: string, stepId: string, taskId: string, status: string, progress: number): Promise<Phase> {
-    await this.updateTask(phaseId, stepId, taskId, { 
-      status: status as any, 
+  async updateTaskStatus(phaseId: string, stepId: string, taskId: string, status: TaskStatus, progress: number): Promise<Phase> {
+    await this.updateTask(phaseId, stepId, taskId, {
+      status,
       progress 
     });
-
     const phase = await this.findById(phaseId);
-    if (!phase) throw new Error('Phase not found');
-    
+    if (!phase) throw new Error(`Phase ${phaseId} not found after update`);
     return phase;
   }
 
@@ -353,85 +372,51 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
     if (error) throw error;
   }
 
-  private mapToPhase(data: any): Phase {
-    // Parse steps from custom_phase_data
-    let steps: PhaseStep[] = [];
+  private async mapToEntity(phase: Partial<Phase>): Promise<Partial<PhaseDB>> {
+    const entity: Partial<PhaseDB> = {};
     
-    if (data.custom_phase_data) {
-      const customData = typeof data.custom_phase_data === 'string'
-        ? JSON.parse(data.custom_phase_data)
-        : data.custom_phase_data;
-      
-      const rawSteps = customData?.steps || customData?.customStages || [];
-      steps = rawSteps.map((s: any, index: number) => ({
-        id: s.id || crypto.randomUUID(),
-        name: s.name,
-        description: s.description || '',
-        status: s.status || 'pending',
-        progress: s.progress || 0,
-        orderIndex: s.order_index ?? s.order ?? index,
-        tasks: (s.tasks || []).map((t: any, tIndex: number) => ({
-          id: t.id || crypto.randomUUID(),
-          name: t.name,
-          description: t.description || '',
-          status: t.status || 'pending',
-          progress: t.progress || 0,
-          orderIndex: t.order_index ?? tIndex,
-          assignedTo: t.assigned_to || t.assignedTo || [],
-          requiresInspection: t.requires_inspection || t.requiresInspection || false,
-          requiresEngineerApproval: t.requires_engineer_approval || t.requiresEngineerApproval || false,
-        })),
-        estimatedDurationDays: s.estimated_duration_days,
-        requiresInspection: s.requires_inspection || false,
-        requiresEngineerApproval: s.requires_engineer_approval || false,
-      }));
-    }
-
-    return Phase.create({
-      id: data.id,
-      projectId: data.project_id,
-      name: data.phase_name,
-      description: data.description || '',
-      status: data.status || 'pending',
-      progress: data.progress || 0,
-      orderIndex: data.order_index || 0,
-      startDate: data.start_date ? new Date(data.start_date) : null,
-      endDate: data.end_date ? new Date(data.end_date) : null,
-      estimatedCost: data.estimated_cost || 0,
-      actualCost: data.actual_cost || 0,
-      constructionPhase: data.construction_phase,
-      constructionStage: data.construction_stage,
-      steps,
-    });
-  }
-
-  private mapToEntity(phase: Partial<Phase>): any {
-    const entity: any = {};
-
     if (phase.projectId !== undefined) entity.project_id = phase.projectId;
     if (phase.name !== undefined) entity.phase_name = phase.name;
     if (phase.description !== undefined) entity.description = phase.description;
     if (phase.status !== undefined) entity.status = phase.status;
     if (phase.progress !== undefined) entity.progress = phase.progress;
-    if (phase.orderIndex !== undefined) entity.order_index = phase.orderIndex;
+    
     if (phase.startDate !== undefined) {
-      entity.start_date = phase.startDate instanceof Date
-        ? phase.startDate.toISOString().split('T')[0]
+      entity.start_date = phase.startDate instanceof Date 
+        ? phase.startDate.toISOString()
         : phase.startDate;
     }
+    
     if (phase.endDate !== undefined) {
       entity.end_date = phase.endDate instanceof Date
-        ? phase.endDate.toISOString().split('T')[0]
+        ? phase.endDate.toISOString()
         : phase.endDate;
     }
-    if (phase.estimatedCost !== undefined) entity.estimated_cost = phase.estimatedCost;
-    if (phase.actualCost !== undefined) entity.actual_cost = phase.actualCost;
-    if (phase.constructionPhase !== undefined) entity.construction_phase = phase.constructionPhase;
-    if (phase.constructionStage !== undefined) entity.construction_stage = phase.constructionStage;
-    if (phase.steps !== undefined) {
-      entity.custom_phase_data = JSON.stringify({ steps: phase.steps });
-    }
-
+    
     return entity;
+  }
+
+  async updatePhase(params: PhaseOperationParams): Promise<Phase> {
+    const entityData = await this.mapToEntity(params);
+
+    const { data, error } = await supabase
+      .from('project_phases')
+      .update(entityData)
+      .eq('id', params.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return PhaseTransformer.fromDTO(data);
+  }
+
+  async getAllPhases(): Promise<Phase[]> {
+    const { data, error } = await supabase
+      .from<PhaseDB>('project_phases')
+      .select();
+      
+    if (error) throw error;
+    return data.map(d => PhaseTransformer.fromDTO(d));
   }
 }

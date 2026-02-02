@@ -21,6 +21,13 @@ export interface InspectionFormData {
   phase_id?: string; // Legacy snake_case for backward compatibility
 }
 
+export interface InspectionDocument {
+  id: string;
+  type: string;
+  url: string;
+  uploaded_at: string;
+}
+
 export interface InspectionRow {
   id: string;
   projectId: string; // ✅ CAMELCASE: Instead of project_id
@@ -30,7 +37,7 @@ export interface InspectionRow {
   progressAtInspection: number; // ✅ CAMELCASE: Instead of progress_at_inspection
   comments?: string;
   phaseId?: string; // ✅ CAMELCASE: Instead of phase_id
-  documents?: any;
+  documents?: InspectionDocument[];
   createdAt?: string; // ✅ CAMELCASE: Instead of created_at
   updatedAt?: string; // ✅ CAMELCASE: Instead of updated_at
   

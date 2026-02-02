@@ -1,18 +1,22 @@
 import { useState, useCallback } from 'react';
 import { httpHandler, HttpErrorResponse, fetchWithErrorHandling } from '@/services/httpStatusHandler';
 
-interface UseHttpHandlerOptions {
+interface HttpHandlerSuccessCallback<T = unknown> {
+  (data: T): void;
+}
+
+interface UseHttpHandlerOptions<T = unknown> {
   showToasts?: boolean;
   maxRetries?: number;
   onError?: (error: HttpErrorResponse) => void;
-  onSuccess?: (data: any) => void;
+  onSuccess?: HttpHandlerSuccessCallback<T>;
 }
 
-export const useHttpHandler = (options: UseHttpHandlerOptions = {}) => {
+export const useHttpHandler = <T = unknown>(options: UseHttpHandlerOptions<T> = {}) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<HttpErrorResponse | null>(null);
 
-  const execute = useCallback(async <T>(
+  const execute = useCallback(async (
     requestFn: () => Promise<Response>,
     requestId?: string
   ): Promise<T | null> => {
@@ -41,7 +45,7 @@ export const useHttpHandler = (options: UseHttpHandlerOptions = {}) => {
     }
   }, [options]);
 
-  const fetchData = useCallback(async <T>(
+  const fetchData = useCallback(async (
     url: string,
     init: RequestInit = {},
     requestId?: string
@@ -86,12 +90,12 @@ export const useHttpHandler = (options: UseHttpHandlerOptions = {}) => {
 };
 
 // Hook spécialisé pour les requêtes Supabase
-export const useSupabaseHandler = () => {
+export const useSupabaseHandler = <T = unknown>() => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSupabaseResponse = useCallback(async <T>(
-    supabasePromise: Promise<{ data: T; error: any }>
+  const handleSupabaseResponse = useCallback(async (
+    supabasePromise: Promise<{ data: T; error: Error | null }>
   ): Promise<T | null> => {
     setLoading(true);
     setError(null);

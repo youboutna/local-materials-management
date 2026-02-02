@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/use-auth';
@@ -69,18 +68,27 @@ export const useTaskAssignment = () => {
       }
 
       // Create the task assignment with assigned_to + assignee_type pattern
-      const insertData: any = {
+      interface TaskAssignmentData {
+        title: string;
+        description: string;
+        assignee_type: string;
+        assigned_to: string;
+        priority: 'low' | 'medium' | 'high' | 'urgent';
+        due_date?: string;
+      }
+
+      const insertData: TaskAssignmentData = {
         title,
         description,
         assignee_type: assigneeType,
-        assignee_name: assigneeName,
-        assignee_email: assigneeEmail,
+        assigned_to: assignedTo,
         priority,
-        status: 'pending',
         due_date: dueDate,
         project_id: projectId,
-        assigned_to: assignedTo,
         assigned_by: user?.id || null,
+        assignee_name: assigneeName,
+        assignee_email: assigneeEmail,
+        status: 'pending',
       };
 
       const { data: taskData, error: taskError } = await supabase
@@ -125,7 +133,7 @@ export const useTaskAssignment = () => {
         `Nouvelle tâche assignée: ${title}`,
         `Vous avez été assigné(e) à une nouvelle tâche${priority === 'urgent' ? ' URGENTE' : priority === 'high' ? ' prioritaire' : ''}. ${description ? description.substring(0, 100) + '...' : ''}`,
         'task_assignment',
-        (taskData as any)?.id,
+        taskData?.id,
         metadata
       );
 

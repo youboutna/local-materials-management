@@ -30,7 +30,6 @@ export interface ProjectFormDataDTO {
   start_date: string;
   end_date: string;
   team_size: number;
-  // Extended fields
   project_reference?: string;
   currency?: string;
   payment_mode?: string;
@@ -41,24 +40,16 @@ export interface ProjectFormDataDTO {
   project_type?: string;
   sector?: string;
   permit_number?: string;
-  // Location fields
   address?: string;
   latitude?: number | null;
   longitude?: number | null;
   area_sqm?: number | null;
   site_details?: string;
-  geographic_zone?: string;
-  terrain_type?: string;
-  environmental_constraints?: string;
-  has_utilities?: boolean;
-  requires_permits?: boolean;
-  // Project managers
   project_manager_id?: string | null;
   technical_manager_id?: string | null;
   supervisor_id?: string | null;
   client_id?: string | null;
   workspace_id?: string | null;
-  // Stakeholder/financial fields
   client_name?: string;
   main_contractor?: string;
   contractors?: {
@@ -70,9 +61,7 @@ export interface ProjectFormDataDTO {
   funding_source?: string;
   market_type?: string;
   selection_mode?: string;
-  // UI state fields
-  shapeData?: unknown;
-  // Related data - Using specific types
+  shapeData?: ShapeData;
   phases?: PhaseFormDataDTO[];
   materials?: MaterialFormDataDTO[];
   risks?: RiskFormDataDTO[];
@@ -82,6 +71,14 @@ export interface ProjectFormDataDTO {
   employees?: EmployeeFormDataDTO[];
   suppliers?: SupplierFormDataDTO[];
   stakeholders?: StakeholderFormDataDTO[];
+}
+
+interface ShapeData {
+  polygons: Array<{
+    points: Array<{lat: number, lng: number}>;
+    color?: string;
+  }>;
+  markers?: Array<{lat: number, lng: number, label?: string}>;
 }
 
 // Specific DTOs for related entities
@@ -228,6 +225,68 @@ export interface OperationResult {
   error?: string;
 }
 
+interface ProjectFormUIEntity {
+  title: string;
+  description: string;
+  budget: number;
+  start_date: string;
+  end_date: string;
+  payment_mode: string;
+  payment_frequency: string;
+  initial_advance: number;
+  retention_percentage: number;
+  priority: string;
+  project_type: {
+    type: string;
+    sector: string;
+    permit_number: string;
+  };
+  location: {
+    address: string;
+    latitude: number | null;
+    longitude: number | null;
+    area_sqm: number | null;
+    site_details: string;
+  };
+  financial: {
+    advance_percentage: number;
+    client_name: string;
+    main_contractor: string;
+    engineering_consultant: string;
+    project_manager_id: string | null;
+    technical_manager_id: string | null;
+    supervisor_id: string | null;
+    client_id: string | null;
+    workspace_id: string | null;
+  };
+  funding: {
+    financing_source: string;
+    donor_organization: string;
+  };
+  procurement: {
+    market_type: string;
+    selection_mode: string;
+  };
+  ui: {
+    shapeData?: ShapeData;
+    isDirty: boolean;
+    lastSavedAt: string | null;
+  };
+  team_size: number;
+  status: string;
+  progress: number;
+  currency: string;
+  project_reference: string;
+  phases: PhaseFormDataDTO[];
+  materials: MaterialFormDataDTO[];
+  contractors: {
+    engineeringConsultant: string;
+    generalContractor: string;
+    specializedSubcontractors: string;
+    mainSuppliers: string;
+  };
+}
+
 /**
  * ProjectFormService - Complete Hexagonal Implementation
  * Handles step-wise project form persistence with proper domain validation
@@ -320,15 +379,15 @@ export class ProjectFormService {
    */
   mapFieldsToDB(formData: ProjectFormDataDTO, step?: number): Record<string, unknown> {
     const dbData: Record<string, unknown> = {
-      title: formData.title,
-      description: formData.description,
+      title: formData.title ?? '',
+      description: formData.description ?? '',
       location: formData.location || formData.address,
       status: formData.status,
       progress: formData.progress || 0,
-      budget: formData.budget,
-      start_date: formData.start_date,
-      end_date: formData.end_date,
-      team_size: formData.team_size
+      budget: formData.budget ?? 0,
+      start_date: formData.start_date ?? '',
+      end_date: formData.end_date ?? '',
+      team_size: formData.team_size ?? 0
     };
 
     // Add optional fields if present
@@ -427,20 +486,17 @@ export class ProjectFormService {
 
       if (projectId) {
         // Update existing project
-        await this.projectRepository.update(projectId, dbData as any);
+        await this.projectRepository.update(projectId, dbData);
         console.log(`[ProjectFormService] Updated project ${projectId} at step ${step}`);
         return { success: true, projectId };
       } else {
         // Create new project
-        const newProject = await this.projectRepository.create(dbData as any);
+        const newProject = await this.projectRepository.create(dbData);
         console.log(`[ProjectFormService] Created new project ${newProject.id} at step ${step}`);
         return { success: true, projectId: newProject.id };
       }
     } catch (error) {
       console.error('ProjectFormService.saveStepData failed:', error);
-      if (error instanceof AppError) {
-        return { success: false, projectId: null, error: error.message };
-      }
       const message = error instanceof Error ? error.message : 'Unknown error';
       return { success: false, projectId: null, error: message };
     }
@@ -574,12 +630,12 @@ export class ProjectFormService {
       // Cast to 'any' to avoid type mismatches between service DTOs and form DTOs
       // The actual data will be properly structured - this is a temporary fix for type compatibility
       return {
-        phases: (phasesData || []) as any,
-        materials: (materialsData || []) as any,
-        risks: (risksData || []) as any,
-        bankGuarantees: (bankGuaranteesData || []) as any,
-        insurances: (insuranceData || []) as any,
-        documents: (documentsData || []) as any
+        phases: phasesData as PhaseFormDataDTO[],
+        materials: materialsData as MaterialFormDataDTO[],
+        risks: risksData as RiskFormDataDTO[],
+        bankGuarantees: bankGuaranteesData as BankGuaranteeFormDataDTO[],
+        insurances: insuranceData as InsuranceFormDataDTO[],
+        documents: documentsData as DocumentFormDataDTO[]
       };
     } catch (error) {
       console.error('ProjectFormService.loadRelatedData failed:', error);
@@ -648,13 +704,12 @@ export class ProjectFormService {
 
       // Update project status to active
       const finalData = {
-        ...this.mapFieldsToDB(formData),
-        status: 'en cours',
+        status: 'en cours' as 'en cours' | 'suspendu' | 'terminé' | 'annulé',
         is_draft: false,
         completed_at: new Date().toISOString()
       };
 
-      await this.projectRepository.update(projectId, finalData as any);
+      await this.projectRepository.update(projectId, finalData);
       console.log(`[ProjectFormService] Completed project creation: ${projectId}`);
 
       return { success: true, projectId };
@@ -669,49 +724,31 @@ export class ProjectFormService {
    * Transform UI entity to DTO - Service layer transformation (Rule #4 compliant)
    * Handles the transformation from nested UI entity structure to flat DTO structure
    */
-  static flattenEntityToDTO(entity: any): ProjectFormDataDTO {
+  static flattenEntityToDTO(entity: ProjectFormUIEntity): ProjectFormDataDTO {
     return {
-      // 🔄 Extract nested fields from entity to flat DTO structure
-      title: entity.title || "",
-      description: entity.description || "",
-      budget: entity.budget || "",
-      start_date: entity.start_date || entity.startDate || "",
-      end_date: entity.end_date || entity.endDate || "",
-      // 🧁 Extract from nested objects (Rule #4 compliant)
-      project_reference: entity.project_reference || "",
-      address: entity.location?.address || "",
-      latitude: entity.location?.latitude || null,
-      longitude: entity.location?.longitude || null,
-      technical_manager_id: entity.financial?.technical_manager_id || null,
-      project_manager_id: entity.financial?.project_manager_id || null,
-      supervisor_id: entity.financial?.supervisor_id || null,
-      client_name: entity.financial?.client_name || "",
-      project_type: entity.project_type?.type || "",
-      sector: entity.project_type?.sector || "",
-      permit_number: entity.project_type?.permit_number || "",
-      payment_mode: entity.payment_mode || "progressive",
-      payment_frequency: entity.payment_frequency || "monthly",
-      initial_advance: entity.initial_advance || 20,
-      retention_percentage: entity.retention_percentage || 5,
-      currency: entity.currency || "MRU",
-      funding_source: entity.funding?.financing_source || "",
-      market_type: entity.procurement?.market_type || "",
-      selection_mode: entity.procurement?.selection_mode || "",
-      main_contractor: entity.financial?.main_contractor || "",
-      status: entity.status || "en cours",
-      progress: entity.progress || 0,
-      // 📊 Required fields for DTO compliance
-      location: entity.location?.address || "",
-      team_size: entity.team_size || 0,
-      // 🏢 Contractors and suppliers (Rule #5 compliant)
-      contractors: entity.contractors || {
-        engineeringConsultant: "",
-        generalContractor: "",
-        specializedSubcontractors: "",
-        mainSuppliers: "",
-      },
-      // 🎨 UI state (Rule #5 compliant)
-      shapeData: entity.ui?.shapeData || null,
+      ...entity,
+      location: entity.location.address,
+      address: entity.location.address,
+      latitude: entity.location.latitude,
+      longitude: entity.location.longitude,
+      project_manager_id: entity.financial.project_manager_id,
+      technical_manager_id: entity.financial.technical_manager_id,
+      supervisor_id: entity.financial.supervisor_id,
+      client_name: entity.financial.client_name,
+      project_type: entity.project_type.type,
+      sector: entity.project_type.sector,
+      permit_number: entity.project_type.permit_number,
+      funding_source: entity.funding.financing_source,
+      market_type: entity.procurement.market_type,
+      selection_mode: entity.procurement.selection_mode,
+      main_contractor: entity.financial.main_contractor,
+      shapeData: entity.ui.shapeData,
+      contractors: {
+        engineeringConsultant: entity.financial.engineering_consultant,
+        generalContractor: entity.contractors.generalContractor,
+        specializedSubcontractors: entity.contractors.specializedSubcontractors,
+        mainSuppliers: entity.contractors.mainSuppliers
+      }
     };
   }
 
@@ -719,71 +756,69 @@ export class ProjectFormService {
    * Transform DTO to UI entity structure - Service layer transformation (Rule #4 compliant)
    * Handles the transformation from flat DTO structure to nested UI entity structure
    */
-  static dtoToEntity(dto: ProjectFormDataDTO): any {
+  static dtoToEntity(dto: ProjectFormDataDTO): ProjectFormUIEntity {
+    const defaultContractors = {
+      engineeringConsultant: dto.contractors?.engineeringConsultant || '',
+      generalContractor: dto.contractors?.generalContractor || '',
+      specializedSubcontractors: dto.contractors?.specializedSubcontractors || '',
+      mainSuppliers: dto.contractors?.mainSuppliers || ''
+    };
+
     return {
-      // Basic info matching database schema
-      title: dto.title || "",
-      project_reference: dto.project_reference || "",
-      description: dto.description || "",
-      budget: dto.budget || "",
-      currency: dto.currency || "MRU",
-      status: dto.status || "en cours",
-      start_date: dto.start_date || "",
-      startDate: dto.start_date || "",
-      end_date: dto.end_date || "",
-      endDate: dto.end_date || "",
-      payment_mode: dto.payment_mode || "progressive",
-      payment_frequency: dto.payment_frequency || "monthly",
-      initial_advance: dto.initial_advance || 20,
-      retention_percentage: dto.retention_percentage || 5,
-      priority: dto.priority || "medium",
-      progress: dto.progress || 0,
-
-      // 🧁 Nested objects (Rule #4 compliant)
+      title: dto.title,
+      description: dto.description,
+      budget: dto.budget,
+      start_date: dto.start_date,
+      end_date: dto.end_date,
+      payment_mode: dto.payment_mode || '',
+      payment_frequency: dto.payment_frequency || '',
+      initial_advance: dto.initial_advance || 0,
+      retention_percentage: dto.retention_percentage || 0,
+      priority: dto.priority || 'normal',
       project_type: {
-        type: dto.project_type || "infrastructure",
-        sector: dto.sector || "",
-        permit_number: dto.permit_number || ""
+        type: dto.project_type || '',
+        sector: dto.sector || '',
+        permit_number: dto.permit_number || ''
       },
-
       location: {
-        address: dto.address || "",
+        address: dto.address || '',
         latitude: dto.latitude || null,
         longitude: dto.longitude || null,
-        area_sqm: null,
-        site_details: ""
+        area_sqm: dto.area_sqm || null,
+        site_details: dto.site_details || ''
       },
-
       financial: {
-        advance_percentage: dto.initial_advance || 20,
-        client_name: dto.client_name || "",
-        main_contractor: dto.main_contractor || "",
-        engineering_consultant: dto.contractors?.engineeringConsultant || "",
+        advance_percentage: dto.initial_advance || 0,
+        client_name: dto.client_name || '',
+        main_contractor: dto.main_contractor || '',
+        engineering_consultant: defaultContractors.engineeringConsultant,
         project_manager_id: dto.project_manager_id || null,
         technical_manager_id: dto.technical_manager_id || null,
         supervisor_id: dto.supervisor_id || null,
-        client_id: null,
-        workspace_id: null
+        client_id: dto.client_id || null,
+        workspace_id: dto.workspace_id || null
       },
-
       funding: {
-        financing_source: dto.funding_source || "",
-        donor_organization: ""
+        financing_source: dto.funding_source || '',
+        donor_organization: ''
       },
-
       procurement: {
-        market_type: dto.market_type || "appel_offre_international",
-        selection_mode: dto.selection_mode || "qualite_cout"
+        market_type: dto.market_type || '',
+        selection_mode: dto.selection_mode || ''
       },
-
-      // 🎨 UI state (Rule #5 compliant)
       ui: {
-        shapeData: dto.shapeData || null,
+        shapeData: dto.shapeData,
         isDirty: false,
         lastSavedAt: null
       },
-
-      team_size: dto.team_size || 0
+      team_size: dto.team_size,
+      status: dto.status,
+      progress: dto.progress,
+      currency: dto.currency || '',
+      project_reference: dto.project_reference || '',
+      phases: dto.phases || [],
+      materials: dto.materials || [],
+      contractors: defaultContractors
     };
   }
 }

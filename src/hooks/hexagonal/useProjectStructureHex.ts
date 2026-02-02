@@ -38,6 +38,26 @@ export interface ProjectDetails {
   phases: Phase[];
 }
 
+interface PhaseDTO {
+  id: string;
+  phase_name?: string;
+  name?: string;
+  description?: string;
+  status: string;
+  start_date?: string;
+  end_date?: string;
+  budget_allocated?: number;
+  phase_steps?: PhaseStepDTO[];
+}
+
+interface PhaseStepDTO {
+  id: string;
+  step_name?: string;
+  name?: string;
+  status: string;
+  step_order?: number;
+}
+
 export function useProjectStructureHex(projectId: string) {
   return useQuery({
     queryKey: ['project-structure', projectId],
@@ -64,22 +84,20 @@ export function useProjectStructureHex(projectId: string) {
       if (phasesError) throw phasesError;
 
       // Map phases with steps
-      const phases: Phase[] = (phasesData || []).map((phase: any) => ({
+      const phases: Phase[] = (phasesData || []).map((phase: PhaseDTO) => ({
         id: phase.id,
         name: phase.phase_name || phase.name,
         description: phase.description,
-        status: phase.status || 'pending',
-        progress: phase.progress || 0,
+        status: phase.status,
         start_date: phase.start_date,
         end_date: phase.end_date,
         budget: phase.budget_allocated,
         steps: (phase.phase_steps || [])
-          .sort((a: any, b: any) => (a.step_order || 0) - (b.step_order || 0))
-          .map((step: any) => ({
+          .sort((a: PhaseStepDTO, b: PhaseStepDTO) => (a.step_order || 0) - (b.step_order || 0))
+          .map((step: PhaseStepDTO) => ({
             id: step.id,
             name: step.step_name || step.name,
             status: step.status || 'pending',
-            progress: step.progress || 0,
             order_index: step.step_order || 0
           }))
       }));

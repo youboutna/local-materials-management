@@ -19,7 +19,23 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 // Enhanced types for UI components
-export interface PaymentAnalytics {
+interface ServiceCreatePaymentDTO {
+  amount: number;
+  currency: string;
+  payment_date: string;
+  status: 'pending' | 'paid' | 'cancelled';
+  project_id: string;
+}
+
+interface ServiceUpdatePaymentDTO extends Partial<ServiceCreatePaymentDTO> {}
+
+interface PaymentRiskAssessment {
+  risk: 'low' | 'medium' | 'high';
+  efficiency: number;
+  financialHealth: 'healthy' | 'warning' | 'critical';
+}
+
+interface PaymentAnalytics {
   totalPayments: number;
   averageAmount: number;
   overdueCount: number;
@@ -34,14 +50,7 @@ export interface PaymentAnalytics {
   };
 }
 
-export interface PaymentRiskAssessment {
-  level: 'low' | 'medium' | 'high';
-  factors: string[];
-  recommendations: string[];
-  score: number;
-}
-
-export interface PaymentValidationResult {
+interface PaymentValidationResult {
   isValid: boolean;
   errors: string[];
   warnings: string[];
@@ -52,7 +61,7 @@ export interface PaymentValidationResult {
   };
 }
 
-export interface UsePaymentsHexResult {
+interface UsePaymentsHexResult {
   payments: PaymentDTO[];
   isLoading: boolean;
   error: string | null;
@@ -93,7 +102,7 @@ export function usePaymentsHex(): UsePaymentsHexResult {
     refetch
   } = useQuery({
     queryKey: ['payments'],
-    queryFn: async (): Promise<any[]> => {
+    queryFn: async (): Promise<PaymentDTO[]> => {
       try {
         const paymentData = await paymentRequestService.getAllPaymentRequests();
         return paymentData;
@@ -111,9 +120,7 @@ export function usePaymentsHex(): UsePaymentsHexResult {
   const createPaymentMutation = useMutation({
     mutationFn: async (paymentData: CreatePaymentDTO) => {
       try {
-        // Convert to service-compatible format
-        const serviceData: ServiceCreatePaymentDTO = { ...paymentData };
-        const createdPayment = await paymentRequestService.createPaymentRequest(serviceData as any);
+        const createdPayment = await paymentRequestService.createPaymentRequest(paymentData);
         return createdPayment;
       } catch (error) {
         console.error('Error creating payment:', error);
@@ -135,9 +142,7 @@ export function usePaymentsHex(): UsePaymentsHexResult {
   const updatePaymentMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdatePaymentDTO }) => {
       try {
-        // Convert to service-compatible format
-        const serviceData: ServiceUpdatePaymentDTO = { ...data };
-        const updatedPayment = await paymentRequestService.updatePaymentRequest(id, serviceData as any);
+        const updatedPayment = await paymentRequestService.updatePaymentRequest(id, data);
         return updatedPayment;
       } catch (error) {
         console.error('Error updating payment:', error);
@@ -176,17 +181,20 @@ export function usePaymentsHex(): UsePaymentsHexResult {
   });
 
   // Enhanced UI functions
-  const getPaymentRisk = (payment: any): 'low' | 'medium' | 'high' => {
+  const getPaymentRisk = (payment: PaymentDTO): PaymentRiskAssessment => {
     const daysOverdue = getPaymentDaysOverdue(payment);
     const amount = payment.amount || 0;
     const status = payment.status || 'pending';
     
-    if (daysOverdue > 30 || amount > 100000 || status === 'overdue') return 'high';
-    if (daysOverdue > 7 || amount > 50000 || status === 'delayed') return 'medium';
-    return 'low';
+    const risk = daysOverdue > 30 || amount > 100000 || status === 'overdue' ? 'high' : 
+      daysOverdue > 7 || amount > 50000 || status === 'delayed' ? 'medium' : 'low';
+    const efficiency = getPaymentEfficiency(payment);
+    const financialHealth = getPaymentFinancialHealth(payment);
+    
+    return { risk, efficiency, financialHealth };
   };
 
-  const getPaymentEfficiency = (payment: any): number => {
+  const getPaymentEfficiency = (payment: PaymentDTO): number => {
     const paidOnTime = payment.paidOnTime || false;
     const processingDays = payment.processingDays || 0;
     const amount = payment.amount || 0;
@@ -200,9 +208,9 @@ export function usePaymentsHex(): UsePaymentsHexResult {
     return Math.round((timelinessScore * 0.5 + efficiencyScore * 0.3 + amountScore * 0.2));
   };
 
-  const getPaymentFinancialHealth = (payment: any): 'healthy' | 'warning' | 'critical' => {
+  const getPaymentFinancialHealth = (payment: PaymentDTO): 'healthy' | 'warning' | 'critical' => {
     const efficiency = getPaymentEfficiency(payment);
-    const risk = getPaymentRisk(payment);
+    const risk = getPaymentRisk(payment).risk;
     const daysOverdue = getPaymentDaysOverdue(payment);
     const cashFlowImpact = payment.cashFlowImpact || 0;
     
@@ -211,7 +219,7 @@ export function usePaymentsHex(): UsePaymentsHexResult {
     return 'critical';
   };
 
-  const getPaymentDaysOverdue = (payment: any): number => {
+  const getPaymentDaysOverdue = (payment: PaymentDTO): number => {
     const dueDate = payment.dueDate ? new Date(payment.dueDate) : null;
     const paidDate = payment.paidDate ? new Date(payment.paidDate) : null;
     const now = new Date();
@@ -228,7 +236,7 @@ export function usePaymentsHex(): UsePaymentsHexResult {
     const paidPayments = payments.filter(p => p.status === 'paid').length;
     const pendingPayments = payments.filter(p => p.status === 'pending').length;
     const overduePayments = payments.filter(p => getPaymentDaysOverdue(p) > 0).length;
-    const highRiskPayments = payments.filter(p => getPaymentRisk(p) === 'high').length;
+    const highRiskPayments = payments.filter(p => getPaymentRisk(p).risk === 'high').length;
     const totalAmount = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
     const averageEfficiency = payments.length > 0 
       ? payments.reduce((sum, p) => sum + getPaymentEfficiency(p), 0) / payments.length 
@@ -243,8 +251,8 @@ export function usePaymentsHex(): UsePaymentsHexResult {
         overdue: overduePayments
       },
       riskBreakdown: {
-        low: payments.filter(p => getPaymentRisk(p) === 'low').length,
-        medium: payments.filter(p => getPaymentRisk(p) === 'medium').length,
+        low: payments.filter(p => getPaymentRisk(p).risk === 'low').length,
+        medium: payments.filter(p => getPaymentRisk(p).risk === 'medium').length,
         high: highRiskPayments
       },
       healthBreakdown: {
@@ -259,7 +267,7 @@ export function usePaymentsHex(): UsePaymentsHexResult {
   };
 
   // Validation functions for different referential types
-  const validateFinancialReferential = (payment: any) => {
+  const validateFinancialReferential = (payment: PaymentDTO) => {
     const errors: string[] = [];
     const warnings: string[] = [];
     
@@ -297,7 +305,7 @@ export function usePaymentsHex(): UsePaymentsHexResult {
     };
   };
 
-  const validateRegulatoryReferential = (payment: any) => {
+  const validateRegulatoryReferential = (payment: PaymentDTO) => {
     const errors: string[] = [];
     const warnings: string[] = [];
     
@@ -324,7 +332,7 @@ export function usePaymentsHex(): UsePaymentsHexResult {
     };
   };
 
-  const validateContractualReferential = (payment: any) => {
+  const validateContractualReferential = (payment: PaymentDTO) => {
     const errors: string[] = [];
     const warnings: string[] = [];
     
@@ -351,7 +359,7 @@ export function usePaymentsHex(): UsePaymentsHexResult {
     };
   };
 
-  const validateQualityReferential = (payment: any) => {
+  const validateQualityReferential = (payment: PaymentDTO) => {
     const errors: string[] = [];
     const warnings: string[] = [];
     
@@ -379,7 +387,7 @@ export function usePaymentsHex(): UsePaymentsHexResult {
   };
 
   // Generate payment recommendations based on analysis
-  const generatePaymentRecommendations = (payment: any, risk: string, health: string) => {
+  const generatePaymentRecommendations = (payment: PaymentDTO, risk: string, health: string) => {
     const recommendations: string[] = [];
     
     // Risk-based recommendations
@@ -437,7 +445,7 @@ export function usePaymentsHex(): UsePaymentsHexResult {
     getPaymentFinancialHealth,
     getPaymentDaysOverdue,
     getPaymentAnalytics,
-    validatePaymentWithReferential: async (payment: any, referentialType: string) => {
+    validatePaymentWithReferential: async (payment: PaymentDTO, referentialType: string) => {
       try {
         // Validation selon le type de référentiel
         switch (referentialType) {
@@ -457,7 +465,7 @@ export function usePaymentsHex(): UsePaymentsHexResult {
         return { isValid: false, errors: ['Validation failed'], warnings: [] };
       }
     },
-    generatePaymentReport: (payment: any) => {
+    generatePaymentReport: (payment: PaymentDTO) => {
       try {
         const analytics = getPaymentAnalytics();
         const risk = getPaymentRisk(payment);
@@ -467,7 +475,7 @@ export function usePaymentsHex(): UsePaymentsHexResult {
         return {
           payment: {
             ...payment,
-            risk,
+            risk: risk.risk,
             health,
             efficiency,
             daysOverdue: getPaymentDaysOverdue(payment)
@@ -480,7 +488,7 @@ export function usePaymentsHex(): UsePaymentsHexResult {
             averageEfficiency: analytics.averageEfficiency,
             totalAmount: analytics.totalAmount
           },
-          recommendations: generatePaymentRecommendations(payment, risk, health),
+          recommendations: generatePaymentRecommendations(payment, risk.risk, health),
           compliance: {
             isValid: true,
             lastValidated: new Date().toISOString(),

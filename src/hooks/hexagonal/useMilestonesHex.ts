@@ -18,6 +18,19 @@ export interface Milestone {
   notes?: string;
 }
 
+export interface MilestoneDTO {
+  id: string;
+  project_id: string;
+  phase_id?: string;
+  title: string;
+  description?: string;
+  target_date: string;
+  completed_date?: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'delayed';
+  weight: number;
+  notes?: string;
+}
+
 export function useMilestonesHex(projectId?: string, phaseId?: string) {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,11 +109,11 @@ export function useMilestonesHex(projectId?: string, phaseId?: string) {
   }, [fetchMilestones]);
 
   const updateMilestone = useCallback(async (
-    id: string,
+    milestoneId: string,
     updates: Partial<Milestone>
   ): Promise<boolean> => {
     try {
-      const updateData: any = {};
+      const updateData: Partial<MilestoneDTO> = {};
       if (updates.title) updateData.title = updates.title;
       if (updates.description !== undefined) updateData.description = updates.description;
       if (updates.targetDate) updateData.target_date = updates.targetDate;
@@ -112,13 +125,13 @@ export function useMilestonesHex(projectId?: string, phaseId?: string) {
       const { error } = await supabase
         .from('enhanced_project_milestones')
         .update(updateData)
-        .eq('id', id);
+        .eq('id', milestoneId);
 
       if (error) throw error;
       await fetchMilestones();
       return true;
-    } catch (err) {
-      console.error('Error updating milestone:', err);
+    } catch (error) {
+      console.error('Error updating milestone:', error);
       return false;
     }
   }, [fetchMilestones]);

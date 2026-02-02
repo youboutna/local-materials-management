@@ -18,7 +18,7 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
   static toDTO(entity: Employee): EmployeeDTO {
     return {
       id: entity.id,
-      userId: entity.userId,
+      userId: entity.employeeId,
       fullName: entity.fullName,
       email: entity.email,
       phone: entity.phone,

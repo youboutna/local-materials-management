@@ -28,7 +28,7 @@ export interface InspectionRecord {
   inspector: string;
   phase_id: string | null;
   project_id: string;
-  documents?: any;
+  documents?: PhaseDocument[];
   comments?: string | null;
 }
 
@@ -82,6 +82,22 @@ export interface DecompteData {
   netPayable: number;
   previousPayments: number;
   remainingAmount: number;
+}
+
+interface PhaseDocument {
+  id: string;
+  type: string;
+  url: string;
+  uploaded_at: string;
+}
+
+interface WorkflowStep {
+  id: string;
+  title: string;
+  description: string;
+  progress: number;
+  status: 'pending' | 'in_progress' | 'completed';
+  documents?: PhaseDocument[];
 }
 
 export function usePhaseWorkflow(projectId: string, phaseId: string, phase?: PhaseDTO | null) {
@@ -325,15 +341,10 @@ export function usePhaseWorkflow(projectId: string, phaseId: string, phase?: Pha
     }) => {
       if (!phase) throw new Error('Phase data required');
       
-      const updatedSteps = phase.steps.map(step => 
-        step.id === stepId 
-          ? { 
-              ...step, 
-              progress, 
-              status: status || (progress >= 100 ? 'completed' : progress > 0 ? 'in_progress' : 'pending')
-            }
-          : step
-      ) as any;
+      const updatedSteps = phase.steps.map((step: WorkflowStep) => ({
+        ...step,
+        status: step.status === 'delayed' ? 'in_progress' : step.status
+      }));
 
       const { error } = await supabase
         .from('project_phases')
@@ -364,8 +375,8 @@ export function usePhaseWorkflow(projectId: string, phaseId: string, phase?: Pha
   });
 
   // Get step status with inspection info
-  const getStepWorkflowStatus = useCallback((step: PhaseStepDTO | StepItem) => {
-    const stepProgress = (step as any).progress ?? 0;
+  const getStepWorkflowStatus = useCallback((step: WorkflowStep | StepItem) => {
+    const stepProgress = step.progress ?? 0;
     const stepInspections = inspections.filter(i => 
       // Match inspection by progress range
       i.progress_at_inspection >= stepProgress - 10 &&

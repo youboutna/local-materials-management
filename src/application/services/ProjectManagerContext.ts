@@ -1,34 +1,49 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { ProjectManagerState, ProjectAlert } from './projectManagerWithActions';
+import { ProjectManagerState, ProjectAlert, AlertType, AlertSeverity, ProjectStats } from './projectManagerWithActions';
+
+interface ProjectManager {
+  getAlertsByType: (type: AlertType) => ProjectAlert[];
+  getAlertsBySeverity: (severity: AlertSeverity) => ProjectAlert[];
+  getActionLabel: (alertType: AlertType) => string;
+  getSummaryStats: () => ProjectStats;
+  needsEscalation: (alert: ProjectAlert) => boolean;
+  runChecks: () => void;
+  acknowledgeAlert: (alertId: string, userId: string, actionTaken?: string) => void;
+  resolveAlert: (alertId: string, userId: string, resolution?: string) => void;
+  closeAlert: (alertId: string, userId: string) => void;
+  getAlerts: () => ProjectAlert[];
+  getState: () => ProjectManagerState;
+  getEscalationPath: (alert: ProjectAlert) => string[];
+}
 
 export interface ProjectManagerContextType {
-  manager: any;
+  manager: ProjectManager;
   state: ProjectManagerState;
   alerts: ProjectAlert[];
   runChecks: () => void;
   acknowledgeAlert: (alertId: string, userId: string, actionTaken?: string) => void;
   resolveAlert: (alertId: string, userId: string, resolution?: string) => void;
   closeAlert: (alertId: string, userId: string) => void;
-  getAlertsByType: (type: string) => ProjectAlert[];
-  getAlertsBySeverity: (severity: string) => ProjectAlert[];
+  getAlertsByType: (type: AlertType) => ProjectAlert[];
+  getAlertsBySeverity: (severity: AlertSeverity) => ProjectAlert[];
   needsEscalation: (alert: ProjectAlert) => boolean;
   getEscalationPath: (alert: ProjectAlert) => string[];
-  getActionLabel: (alertType: string) => string;
-  getSummaryStats: () => any;
+  getActionLabel: (alertType: AlertType) => string;
+  getSummaryStats: () => ProjectStats;
+}
+
+interface ProjectManagerProviderProps {
+  manager: ProjectManager;
+  children: ReactNode;
 }
 
 export const ProjectManagerContext = createContext<ProjectManagerContextType | null>(null);
-
-interface ProjectManagerProviderProps {
-  manager: any;
-  children: ReactNode;
-}
 
 export const ProjectManagerProvider: React.FC<ProjectManagerProviderProps> = ({ manager, children }) => {
   const [state, setState] = React.useState<ProjectManagerState>(manager.getState());
 
   const runChecks = React.useCallback(() => {
-    const newState = manager.runAllChecks();
+    const newState = manager.runChecks();
     setState(newState);
   }, [manager]);
 
@@ -50,12 +65,12 @@ export const ProjectManagerProvider: React.FC<ProjectManagerProviderProps> = ({ 
     setState(newState);
   }, [manager]);
 
-  const getAlertsByType = React.useCallback((type: string) => {
-    return manager.getAlertsByType(type as any);
+  const getAlertsByType = React.useCallback((type: AlertType) => {
+    return manager.getAlertsByType(type);
   }, [manager]);
 
-  const getAlertsBySeverity = React.useCallback((severity: string) => {
-    return manager.getAlertsBySeverity(severity as any);
+  const getAlertsBySeverity = React.useCallback((severity: AlertSeverity) => {
+    return manager.getAlertsBySeverity(severity);
   }, [manager]);
 
   const needsEscalation = React.useCallback((alert: ProjectAlert) => {
@@ -66,8 +81,8 @@ export const ProjectManagerProvider: React.FC<ProjectManagerProviderProps> = ({ 
     return manager.getEscalationPath(alert);
   }, [manager]);
 
-  const getActionLabel = React.useCallback((alertType: string) => {
-    return manager.getActionLabel(alertType as any);
+  const getActionLabel = React.useCallback((alertType: AlertType) => {
+    return manager.getActionLabel(alertType);
   }, [manager]);
 
   const getSummaryStats = React.useCallback(() => {

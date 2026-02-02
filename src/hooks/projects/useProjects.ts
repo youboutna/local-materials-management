@@ -9,20 +9,40 @@ import { toast } from "sonner";
 import { RepositoryFactory } from "@/repositories/RepositoryFactory";
 import { ProjectService } from "@/application/services/ProjectService";
 import { ProjectTransformer } from '@/dtos/transforms';
-import { CreateProjectRequestDto, UpdateProjectRequestDto } from "@/dtos/transforms";
+import { CreateProjectRequestDto, UpdateProjectRequestDto, ProjectDetailDTO, TaskDTO, RiskDTO, ResourceDTO } from "@/dtos/transforms";
 import { ProjectData } from "@/types/project";
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 // Types compatibles avec le service
-type ServiceCreateProjectDTO = Omit<CreateProjectRequestDto, 'status'> & { status?: any };
-type ServiceUpdateProjectDTO = Omit<UpdateProjectRequestDto, 'status'> & { status?: any };
+interface ProjectAnalytics {
+  progress: number;
+  budgetUsage: number;
+  riskScore: number;
+  issues: string[];
+}
+
+interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  compliance: string;
+}
+
+interface ProjectReport {
+  summary: string;
+  details: Record<string, unknown>;
+  generatedAt: string;
+}
+
+type ServiceCreateProjectDTO = Omit<CreateProjectRequestDto, 'status'> & { status?: string };
+type ServiceUpdateProjectDTO = Omit<UpdateProjectRequestDto, 'status'> & { status?: string };
 
 // Enhanced types for UI components
 export interface UseProjectsResult {
   projects: ProjectData[];
   isLoading: boolean;
-  error: any;
+  error: string | null;
   refetch: () => void;
   createProject: (data: CreateProjectRequestDto) => void;
   updateProject: ({ id, data }: { id: string; data: UpdateProjectRequestDto }) => void;
@@ -35,9 +55,9 @@ export interface UseProjectsResult {
   getProjectProgress: (project: ProjectData) => number;
   getProjectDuration: (project: ProjectData) => string;
   getProjectRisk: (project: ProjectData) => 'low' | 'medium' | 'high';
-  getProjectAnalytics: () => any;
-  validateProjectWithReferential: (project: ProjectData, referentialType: string) => Promise<any>;
-  generateProjectReport: (project: ProjectData) => any;
+  getProjectAnalytics: () => ProjectAnalytics;
+  validateProjectWithReferential: (project: ProjectData, referentialType: string) => Promise<ValidationResult>;
+  generateProjectReport: (project: ProjectData) => ProjectReport;
 }
 
 /**
@@ -76,7 +96,17 @@ export const useProjects = (): UseProjectsResult => {
       try {
         // Convert to service-compatible format
         const serviceData: ServiceCreateProjectDTO = { ...projectData };
-        const createdProject = await projectService.createProject(serviceData as any);
+        const createdProject = await projectService.createProject({
+          ...serviceData,
+          startDate: serviceData.start_date,
+          endDate: serviceData.end_date,
+          status: serviceData.status || 'draft',
+          progress: 0,
+          estimatedCost: serviceData.budget || 0,
+          geographicZone: '',
+          terrainType: '',
+          environmentalConstraints: ''
+        });
         return createdProject;
       } catch (error) {
         console.error('Error creating project:', error);
@@ -100,7 +130,14 @@ export const useProjects = (): UseProjectsResult => {
       try {
         // Convert to service-compatible format
         const serviceData: ServiceUpdateProjectDTO = { ...data };
-        const updatedProject = await projectService.updateProject(id, serviceData as any);
+        const updatedProject = await projectService.updateProject(id, {
+          ...serviceData,
+          startDate: serviceData.start_date,
+          endDate: serviceData.end_date,
+          status: serviceData.status || 'draft',
+          progress: serviceData.progress || 0,
+          estimatedCost: serviceData.budget || 0
+        } as ServiceUpdateProjectDTO);
         return updatedProject;
       } catch (error) {
         console.error('Error updating project:', error);
@@ -200,7 +237,7 @@ export const useProjects = (): UseProjectsResult => {
     return 'low';
   };
 
-  const getProjectAnalytics = () => {
+  const getProjectAnalytics = (): ProjectAnalytics => {
     const totalProjects = projects.length;
     const activeProjects = projects.filter(p => p.status === 'en cours').length;
     const completedProjects = projects.filter(p => p.status === 'terminé').length;
@@ -208,18 +245,21 @@ export const useProjects = (): UseProjectsResult => {
     const averageBudget = totalProjects > 0 ? totalBudget / totalProjects : 0;
     
     return {
-      totalProjects,
-      activeProjects,
-      completedProjects,
-      totalBudget,
-      averageBudget,
-      completionRate: totalProjects > 0 ? Math.round((completedProjects / totalProjects) * 100) : 0,
-      budgetUtilization: totalBudget > 0 ? Math.round((projects.reduce((sum, p) => sum + ((p.progress || 0) / 100) * (p.budget || 0), 0) / totalBudget) * 100) : 0
+      progress: Math.round((completedProjects / totalProjects) * 100),
+      budgetUsage: Math.round((projects.reduce((sum, p) => sum + ((p.progress || 0) / 100) * (p.budget || 0), 0) / totalBudget) * 100),
+      riskScore: 0, // TODO: Implement risk score calculation
+      issues: [] // TODO: Implement issue detection
     };
   };
 
   // Validation functions for different referential types
-  const validateFinancialReferential = (project: any) => {
+  type ProjectValidationInput = Omit<ProjectDetailDTO, 'tasks' | 'risks' | 'resources'> & {
+    tasks?: TaskDTO[];
+    risks?: RiskDTO[];
+    resources?: ResourceDTO[];
+  };
+
+  const validateFinancialReferential = (project: ProjectValidationInput): ValidationResult => {
     const errors: string[] = [];
     const warnings: string[] = [];
     
@@ -251,7 +291,7 @@ export const useProjects = (): UseProjectsResult => {
     };
   };
 
-  const validateRegulatoryReferential = (project: any) => {
+  const validateRegulatoryReferential = (project: ProjectValidationInput): ValidationResult => {
     const errors: string[] = [];
     const warnings: string[] = [];
     
@@ -283,7 +323,7 @@ export const useProjects = (): UseProjectsResult => {
     };
   };
 
-  const validateContractualReferential = (project: any) => {
+  const validateContractualReferential = (project: ProjectValidationInput): ValidationResult => {
     const errors: string[] = [];
     const warnings: string[] = [];
     
@@ -315,7 +355,7 @@ export const useProjects = (): UseProjectsResult => {
     };
   };
 
-  const validateQualityReferential = (project: any) => {
+  const validateQualityReferential = (project: ProjectValidationInput): ValidationResult => {
     const errors: string[] = [];
     const warnings: string[] = [];
     
@@ -348,7 +388,7 @@ export const useProjects = (): UseProjectsResult => {
   };
 
   // Generate project recommendations based on analysis
-  const generateProjectRecommendations = (project: any, risk: string, health: string) => {
+  const generateProjectRecommendations = (project: ProjectValidationInput, risk: string, health: string): string[] => {
     const recommendations: string[] = [];
     
     // Risk-based recommendations
@@ -412,18 +452,18 @@ export const useProjects = (): UseProjectsResult => {
     getProjectDuration,
     getProjectRisk,
     getProjectAnalytics,
-    validateProjectWithReferential: async (project: ProjectData, referentialType: string) => {
+    validateProjectWithReferential: async (project: ProjectData, referentialType: string): Promise<ValidationResult> => {
       try {
         // Validation selon le type de référentiel
         switch (referentialType) {
           case 'financial':
-            return validateFinancialReferential(project);
+            return validateFinancialReferential(project as ProjectValidationInput);
           case 'regulatory':
-            return validateRegulatoryReferential(project);
+            return validateRegulatoryReferential(project as ProjectValidationInput);
           case 'contractual':
-            return validateContractualReferential(project);
+            return validateContractualReferential(project as ProjectValidationInput);
           case 'quality':
-            return validateQualityReferential(project);
+            return validateQualityReferential(project as ProjectValidationInput);
           default:
             return { isValid: true, errors: [], warnings: ['Unknown referential type'] };
         }
@@ -432,7 +472,7 @@ export const useProjects = (): UseProjectsResult => {
         return { isValid: false, errors: ['Validation failed'], warnings: [] };
       }
     },
-    generateProjectReport: (project: ProjectData) => {
+    generateProjectReport: (project: ProjectData): ProjectReport => {
       try {
         const risk = getProjectRisk(project);
         const health = getProjectHealth(project);
@@ -440,36 +480,27 @@ export const useProjects = (): UseProjectsResult => {
         const analytics = getProjectAnalytics();
         
         return {
-          project: {
-            ...project,
-            risk,
-            health,
-            duration,
-            progress: project.progress || 0,
-            budgetUtilization: project.budget ? ((project.progress || 0) / 100) * 100 : 0
+          summary: `Project ${project.title} - ${health} health, ${risk} risk, ${duration} duration`,
+          details: {
+            project: {
+              ...project,
+              risk,
+              health,
+              duration,
+              progress: project.progress || 0,
+              budgetUtilization: project.budget ? ((project.progress || 0) / 100) * 100 : 0
+            },
+            analytics,
+            recommendations: generateProjectRecommendations(project as ProjectValidationInput, risk, health)
           },
-          generatedAt: new Date().toISOString(),
-          reportType: 'Project Analysis Report',
-          summary: {
-            totalProjects: analytics.totalProjects,
-            activeProjects: analytics.activeProjects,
-            completionRate: analytics.completionRate,
-            budgetUtilization: analytics.budgetUtilization
-          },
-          recommendations: generateProjectRecommendations(project, risk, health),
-          compliance: {
-            isValid: true,
-            lastValidated: new Date().toISOString(),
-            validatedBy: 'ProjectSystem'
-          }
+          generatedAt: new Date().toISOString()
         };
       } catch (error) {
         console.error('Report generation error:', error);
         return { 
-          project, 
-          generatedAt: new Date().toISOString(),
-          error: 'Report generation failed',
-          status: 'error'
+          summary: 'Error generating report',
+          details: {},
+          generatedAt: new Date().toISOString()
         };
       }
     }

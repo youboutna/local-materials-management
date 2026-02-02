@@ -58,6 +58,24 @@ export interface ProjectMaterialDTO {
   addedBy: string;
 }
 
+interface MaterialWithPhase {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  phaseId?: string;
+  phase_id?: string;
+  description: string;
+  category: MaterialCategory;
+  pricePerUnit: number;
+  availableQuantity: number;
+  minStockLevel: number;
+  workspaceId: string;
+  supplierId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export class MaterialService {
   constructor(
     private materialRepository: IMaterialRepository = RepositoryFactory.getMaterialRepository()
@@ -73,9 +91,9 @@ export class MaterialService {
 
       // Get all materials and filter by phase
       const materials = await this.materialRepository.findAll();
-      const phaseMaterials = materials.filter(material => 
-        (material as any).phaseId === phaseId || 
-        (material as any).phase_id === phaseId
+      const phaseMaterials = materials.filter((material: MaterialWithPhase) => 
+        material.phaseId === phaseId || 
+        material.phase_id === phaseId
       );
       
       return phaseMaterials.map(material => this.mapToDTO(material));

@@ -10,17 +10,24 @@ interface TaskAssignment {
   id: string;
   title: string;
   description: string;
-  status: string;
-  priority: string;
-  due_date: string;
-  assigned_to: string;
-  assigned_by: string;
-  project_id: string;
-  completion_token: string;
-  completion_url: string;
-  notes: string;
-  created_at: string;
-  updated_at: string;
+  assignedTo: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  dueDate?: string;
+  projectId: string;
+  notes?: string;
+}
+
+interface TaskUpdate {
+  id?: string;
+  title?: string;
+  description?: string;
+  assignedTo?: string;
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  status?: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  dueDate?: string;
+  projectId?: string;
+  notes?: string;
 }
 
 export const useEnhancedTaskAssignment = () => {
@@ -35,79 +42,76 @@ export const useEnhancedTaskAssignment = () => {
   } = useTaskAssignmentsHex();
 
   // Transform hexagonal tasks to legacy format
-  const transformedAssignments: TaskAssignment[] = (tasks || []).map((task: any) => ({
+  const transformedAssignments: TaskAssignment[] = (tasks || []).map((task) => ({
     id: task.id,
     title: task.title || '',
     description: task.description || '',
-    status: task.status || 'pending',
+    assignedTo: task.assignedTo || task.assigned_to || '',
     priority: task.priority || 'medium',
-    due_date: task.dueDate || task.due_date || '',
-    assigned_to: task.assignedTo || task.assigned_to || '',
-    assigned_by: task.assignedBy || task.assigned_by || '',
-    project_id: task.projectId || task.project_id || '',
-    completion_token: task.completionToken || task.completion_token || '',
-    completion_url: task.completionUrl || task.completion_url || '',
-    notes: task.notes || '',
-    created_at: task.createdAt || task.created_at || '',
-    updated_at: task.updatedAt || task.updated_at || ''
+    status: task.status || 'pending',
+    dueDate: task.dueDate || task.due_date || '',
+    projectId: task.projectId || task.project_id || '',
+    notes: task.notes || ''
   }));
 
   // Create assignment wrapper for legacy interface
   const createAssignment = {
-    mutate: async (newAssignment: Partial<TaskAssignment>) => {
-      return createTask({
+    mutate: async (newAssignment: TaskUpdate) => {
+      const updates = {
         title: newAssignment.title || '',
-        description: newAssignment.description,
-        assignedTo: newAssignment.assigned_to || '',
-        priority: (newAssignment.priority as any) || 'medium',
-        status: (newAssignment.status as any) || 'pending',
-        dueDate: newAssignment.due_date,
-        projectId: newAssignment.project_id,
-        notes: newAssignment.notes,
-      });
+        description: newAssignment.description || '',
+        assignedTo: newAssignment.assignedTo || '',
+        priority: newAssignment.priority || 'medium',
+        status: newAssignment.status || 'pending',
+        dueDate: newAssignment.dueDate || '',
+        projectId: newAssignment.projectId || '',
+        notes: newAssignment.notes || ''
+      };
+      return createTask(updates);
     },
-    mutateAsync: async (newAssignment: Partial<TaskAssignment>) => {
-      return createTask({
+    mutateAsync: async (newAssignment: TaskUpdate) => {
+      const updates = {
         title: newAssignment.title || '',
-        description: newAssignment.description,
-        assignedTo: newAssignment.assigned_to || '',
-        priority: (newAssignment.priority as any) || 'medium',
-        status: (newAssignment.status as any) || 'pending',
-        dueDate: newAssignment.due_date,
-        projectId: newAssignment.project_id,
-        notes: newAssignment.notes,
-      });
+        description: newAssignment.description || '',
+        assignedTo: newAssignment.assignedTo || '',
+        priority: newAssignment.priority || 'medium',
+        status: newAssignment.status || 'pending',
+        dueDate: newAssignment.dueDate || '',
+        projectId: newAssignment.projectId || '',
+        notes: newAssignment.notes || ''
+      };
+      return createTask(updates);
     },
     isPending: isCreating
   };
 
   // Update assignment wrapper for legacy interface
   const updateAssignment = {
-    mutate: async ({ id, updates }: { id: string; updates: Partial<TaskAssignment> }) => {
-      return updateTask({
-        id,
-        title: updates.title,
-        description: updates.description,
-        assignedTo: updates.assigned_to,
-        priority: updates.priority as any,
-        status: updates.status as any,
-        dueDate: updates.due_date,
-        projectId: updates.project_id,
-        notes: updates.notes,
-      });
+    mutate: async ({ id, updates }: { id: string; updates: TaskUpdate }) => {
+      const newAssignment = {
+        title: updates.title || '',
+        description: updates.description || '',
+        assigned_to: updates.assignedTo || '',
+        priority: updates.priority || 'medium',
+        status: updates.status || 'pending',
+        due_date: updates.dueDate || '',
+        project_id: updates.projectId || '',
+        notes: updates.notes || ''
+      };
+      return updateTask({ id, ...newAssignment });
     },
-    mutateAsync: async ({ id, updates }: { id: string; updates: Partial<TaskAssignment> }) => {
-      return updateTask({
-        id,
-        title: updates.title,
-        description: updates.description,
-        assignedTo: updates.assigned_to,
-        priority: updates.priority as any,
-        status: updates.status as any,
-        dueDate: updates.due_date,
-        projectId: updates.project_id,
-        notes: updates.notes,
-      });
+    mutateAsync: async ({ id, updates }: { id: string; updates: TaskUpdate }): Promise<any> => {
+      const newAssignment = {
+        title: updates.title || '',
+        description: updates.description || '',
+        assigned_to: updates.assignedTo || '',
+        priority: updates.priority || 'medium',
+        status: updates.status || 'pending',
+        due_date: updates.dueDate || '',
+        project_id: updates.projectId || '',
+        notes: updates.notes || ''
+      };
+      return updateTask({ id, ...newAssignment });
     },
     isPending: isUpdating
   };

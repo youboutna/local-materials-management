@@ -15,10 +15,52 @@ interface TaskAssignmentRequest {
   description: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
   dueDate?: string;
-  projectId?: string;
-  relatedId?: string;
+  projectId?: string | null;
+  relatedId?: string | null;
   actionType: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
+}
+
+interface TaskAssignment {
+  id: string;
+  assignee_id: string;
+  assignee_name: string;
+  title: string;
+  description: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  due_date?: string;
+  project_id?: string | null;
+  related_id?: string | null;
+  action_type: string;
+  status: 'assigned' | 'completed' | 'cancelled';
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+interface NotificationPayload {
+  recipient_id: string;
+  title: string;
+  message: string;
+  type: string;
+  related_id?: string | null;
+  metadata: Record<string, unknown>;
+}
+
+interface EmailPayload {
+  to: string;
+  subject: string;
+  message: string;
+  priority: string;
+  actionType: string;
+  metadata: Record<string, unknown>;
+}
+
+interface TaskAssignmentResponse {
+  success: boolean;
+  task: TaskAssignment;
+  notification?: NotificationPayload | null;
+  message: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -57,7 +99,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Assigning task to employee:", { assigneeId, assigneeName, title, priority });
 
     // Create task assignment record
-    const taskAssignment = {
+    const taskAssignment: TaskAssignment = {
       id: `task-${Date.now()}`,
       assignee_id: assigneeId,
       assignee_name: assigneeName,
@@ -87,22 +129,24 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Create notification for the assignee
+    const notificationPayload: NotificationPayload = {
+      recipient_id: assigneeId,
+      title: `📋 Nouvelle tâche assignée: ${title}`,
+      message: `${description}\n\nPriorité: ${priority.toUpperCase()}${dueDate ? `\nÉchéance: ${new Date(dueDate).toLocaleDateString('fr-FR')}` : ''}`,
+      type: 'task_assigned',
+      related_id: relatedId || projectId,
+      metadata: {
+        ...metadata,
+        task_id: taskAssignment.id,
+        priority,
+        due_date: dueDate,
+        action_type: actionType
+      }
+    };
+
     const { data: notification, error: notificationError } = await supabase
       .from('notifications')
-      .insert([{
-        recipient_id: assigneeId,
-        title: `📋 Nouvelle tâche assignée: ${title}`,
-        message: `${description}\n\nPriorité: ${priority.toUpperCase()}${dueDate ? `\nÉchéance: ${new Date(dueDate).toLocaleDateString('fr-FR')}` : ''}`,
-        type: 'task_assigned',
-        related_id: relatedId || projectId,
-        metadata: {
-          ...metadata,
-          task_id: taskAssignment.id,
-          priority,
-          due_date: dueDate,
-          action_type: actionType
-        }
-      }])
+      .insert([notificationPayload])
       .select()
       .single();
 
@@ -113,24 +157,26 @@ const handler = async (req: Request): Promise<Response> => {
     // If email is provided, also send email notification
     if (assigneeEmail) {
       try {
+        const emailPayload: EmailPayload = {
+          to: assigneeEmail,
+          subject: `Nouvelle tâche assignée: ${title}`,
+          message: description,
+          priority,
+          actionType,
+          metadata: {
+            ...metadata,
+            task_id: taskAssignment.id,
+            due_date: dueDate
+          }
+        };
+
         const emailResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-email-notification`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`
           },
-          body: JSON.stringify({
-            to: assigneeEmail,
-            subject: `Nouvelle tâche assignée: ${title}`,
-            message: description,
-            priority,
-            actionType,
-            metadata: {
-              ...metadata,
-              task_id: taskAssignment.id,
-              due_date: dueDate
-            }
-          })
+          body: JSON.stringify(emailPayload)
         });
 
         if (!emailResponse.ok) {
@@ -145,22 +191,28 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Task assigned successfully:", taskAssignment);
 
-    return new Response(JSON.stringify({
+    const response: TaskAssignmentResponse = {
       success: true,
       task: createdTask || taskAssignment,
       notification: notification,
       message: "Task assigned successfully"
-    }), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders,
-      },
-    });
-  } catch (error: any) {
+    };
+
+    return new Response(
+      JSON.stringify(response),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      }
+    );
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error("Error in assign-task-to-employee function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

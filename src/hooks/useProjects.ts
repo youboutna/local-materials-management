@@ -1,12 +1,77 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { ProjectData } from '@/types/project';
 import { ProjectService } from '@/application/services/ProjectService';
 import { ProjectFormDTO } from '@/types/dto';
+import { RepositoryFactory } from '@/infrastructure/repository/RepositoryFactory';
+
+interface ProjectAnalytics {
+  progress: number;
+  budgetUsage: number;
+  riskScore: number;
+  issues: string[];
+}
+
+interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+type ServiceCreateProjectDTO = Omit<CreateProjectRequestDto, 'status'> & { status?: string };
+type ServiceUpdateProjectDTO = Omit<UpdateProjectRequestDto, 'status'> & { status?: string };
+
+type ProjectStatus = 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé';
+
+type ConstructionPhase = 'preparation' | 'foundation' | 'structure' | 'finishing' | 'completed';
+
+interface Location {
+  latitude: number;
+  longitude: number;
+}
+
+interface SafeCoordinates {
+  latitude: number;
+  longitude: number;
+}
+
+const safeCoordinates = (coords?: LocationDTO): SafeCoordinates | undefined => {
+  if (!coords || coords.latitude === undefined || coords.longitude === undefined) 
+    return undefined;
+  return {
+    latitude: coords.latitude,
+    longitude: coords.longitude
+  };
+};
+
+const safeLocation = (loc?: any): Location | undefined => {
+  if (!loc || loc.latitude === undefined || loc.longitude === undefined) 
+    return undefined;
+  return {
+    latitude: loc.latitude,
+    longitude: loc.longitude
+  };
+};
+
+const toConstructionPhase = (phase?: string): ConstructionPhase | undefined => {
+  const validPhases: ConstructionPhase[] = ['preparation', 'foundation', 'structure', 'finishing', 'completed'];
+  return phase && validPhases.includes(phase as ConstructionPhase) 
+    ? phase as ConstructionPhase 
+    : undefined;
+};
 
 // Use injectable service instead of direct Supabase dependency
-const projectService = new ProjectService();
+const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+
+const handleError = (error: unknown) => {
+  const message = error instanceof Error ? error.message : 'Unknown error';
+  setError(message);
+  toast({
+    title: "Erreur",
+    description: message,
+    variant: "destructive",
+  });
+};
 
 export const useProjects = () => {
   const [projects, setProjects] = useState<ProjectData[]>([]);
@@ -21,30 +86,16 @@ const fetchProjects = async () => {
     
     // Map DTOs to ProjectData (ProjectListItemDTO has limited fields)
     const transformedData: ProjectData[] = projectsList.map((dto) => ({
-      id: dto.id,
-      title: dto.title,
-      description: '', // Not available in list view
-      location: dto.location,
-      status: dto.status as 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé',
-      progress: dto.progress,
-      budget: dto.budget,
-      startDate: dto.startDate,
-      endDate: dto.endDate,
-      thumbnail: dto.thumbnail,
-      teamSize: dto.teamSize,
-      coordinates: dto.coordinates
+      ...dto,
+      coordinates: safeLocation(dto.coordinates),
+      status: dto.status as ProjectStatus,
+      currentPhase: toConstructionPhase(dto.currentPhase)
     }));
 
     setProjects(transformedData);
     setError(null);
-  } catch (err) {
-    console.error('Error fetching projects:', err);
-    setError('Failed to fetch projects');
-    toast({
-      title: "Erreur",
-      description: "Impossible de récupérer les projets. Veuillez réessayer plus tard.",
-      variant: "destructive",
-    });
+  } catch (error: unknown) {
+    handleError(error);
   } finally {
     setLoading(false);
   }
@@ -82,14 +133,14 @@ const fetchProjects = async () => {
         title: createdDTO.title,
         description: createdDTO.description,
         location: createdDTO.location,
-        status: createdDTO.status as 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé',
+        status: createdDTO.status as ProjectStatus,
         progress: createdDTO.progress,
         budget: createdDTO.budget,
         startDate: createdDTO.startDate,
         endDate: createdDTO.endDate,
         thumbnail: createdDTO.thumbnail,
         teamSize: createdDTO.teamSize,
-        coordinates: createdDTO.coordinates,
+        coordinates: safeLocation(createdDTO.coordinates),
         financingSource: createdDTO.financingSource,
         marketType: createdDTO.marketType,
         selectionMode: createdDTO.selectionMode,
@@ -100,7 +151,7 @@ const fetchProjects = async () => {
         mainContractor: createdDTO.mainContractor,
         allowsInitialPayment: createdDTO.allowsInitialPayment,
         initialPaymentPercentage: createdDTO.initialPaymentPercentage,
-        currentPhase: createdDTO.currentPhase,
+        currentPhase: toConstructionPhase(createdDTO.currentPhase),
         currentStage: createdDTO.currentStage
       };
 
@@ -113,14 +164,9 @@ const fetchProjects = async () => {
       });
 
       return newProject;
-    } catch (err) {
-      console.error('Error creating project:', err);
-      toast({
-        title: "Erreur",
-        description: "Impossible de créer le projet. Veuillez réessayer plus tard.",
-        variant: "destructive",
-      });
-      throw err;
+    } catch (error: unknown) {
+      handleError(error);
+      throw error;
     }
   };
 
@@ -136,14 +182,14 @@ const fetchProjects = async () => {
         title: dto.title,
         description: dto.description,
         location: dto.location,
-        status: dto.status as 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé',
+        status: dto.status as ProjectStatus,
         progress: dto.progress,
         budget: dto.budget,
         startDate: dto.startDate,
         endDate: dto.endDate,
         thumbnail: dto.thumbnail,
         teamSize: dto.teamSize,
-        coordinates: dto.coordinates,
+        coordinates: safeLocation(dto.coordinates),
         financingSource: dto.financingSource,
         marketType: dto.marketType,
         selectionMode: dto.selectionMode,
@@ -154,16 +200,11 @@ const fetchProjects = async () => {
         mainContractor: dto.mainContractor,
         allowsInitialPayment: dto.allowsInitialPayment,
         initialPaymentPercentage: dto.initialPaymentPercentage,
-        currentPhase: dto.currentPhase,
+        currentPhase: toConstructionPhase(dto.currentPhase),
         currentStage: dto.currentStage
       };
     } catch (err) {
-      console.error(`Error fetching project with id ${id}:`, err);
-      toast({
-        title: "Erreur",
-        description: "Impossible de récupérer les détails du projet.",
-        variant: "destructive",
-      });
+      handleError(err);
       return null;
     }
   };

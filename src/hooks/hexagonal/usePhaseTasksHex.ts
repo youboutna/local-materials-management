@@ -6,6 +6,7 @@ import { useAuthUserHex } from './useAuthUserHex';
 import { TaskService } from '@/application/services/TaskService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { TaskDTO, CreateTaskDTO, UpdateTaskDTO } from '@/dtos/entities/TaskDTO';
+import { Task } from '@/domain/entities/Task';
 
 export interface PhaseTask {
   id: string;
@@ -40,6 +41,27 @@ export interface TaskFormData {
   notes?: string;
 }
 
+interface TaskDetails {
+  startDate?: string | null;
+  endDate?: string | null;
+  progress?: number | null;
+  notes?: string | null;
+}
+
+const toPhaseTask = (task: TaskDTO): Task => Task.create({
+  id: task.id,
+  projectId: task.projectId,
+  phaseId: task.phaseId || undefined,
+  title: task.title,
+  description: task.description || undefined,
+  status: task.status as TaskStatus,
+  priority: task.priority as TaskPriority,
+  progress: task.progress || 0,
+  startDate: task.startDate || undefined,
+  endDate: task.endDate || undefined,
+  estimatedDuration: task.estimatedDuration || undefined
+});
+
 export const usePhaseTasksHex = (phaseId: string) => {
   const queryClient = useQueryClient();
   const { user } = useAuthUserHex();
@@ -53,7 +75,7 @@ export const usePhaseTasksHex = (phaseId: string) => {
     refetch
   } = useQuery({
     queryKey: ['phase-tasks-hex', phaseId],
-    queryFn: async (): Promise<PhaseTask[]> => {
+    queryFn: async (): Promise<Task[]> => {
       try {
         console.info('USE_PHASE_TASKS_HEX_001: Fetching phase tasks', {
           code: 'USE_PHASE_TASKS_HEX_001',
@@ -73,24 +95,7 @@ export const usePhaseTasksHex = (phaseId: string) => {
         });
 
         // Transform TaskDTO to PhaseTask interface
-        return tasksData.map((task: TaskDTO): PhaseTask => ({
-          id: task.id,
-          phase_id: task.phaseId || phaseId,
-          assigned_to: task.assignedTo?.[0] || null,
-          title: task.title,
-          description: task.description || null,
-          priority: task.priority || 'medium',
-          status: task.status || 'pending',
-          due_date: task.dueDate || null,
-          start_date: (task as any).startDate || null,
-          end_date: (task as any).endDate || null,
-          progress: (task as any).progress || null,
-          created_at: task.createdAt,
-          notes: (task as any).notes || null,
-          assignee_name: task.assigneeName || null,
-          assignee_email: null,
-          assignee_type: null
-        }));
+        return tasksData.map(toPhaseTask);
       } catch (error) {
         console.error('USE_PHASE_TASKS_HEX_003: Failed to fetch phase tasks', {
           code: 'USE_PHASE_TASKS_HEX_003',
@@ -107,7 +112,7 @@ export const usePhaseTasksHex = (phaseId: string) => {
 
   // Create task mutation
   const createTaskMutation = useMutation({
-    mutationFn: async (taskData: TaskFormData): Promise<PhaseTask> => {
+    mutationFn: async (taskData: TaskFormData): Promise<Task> => {
       try {
         console.info('USE_PHASE_TASKS_HEX_004: Creating task', {
           code: 'USE_PHASE_TASKS_HEX_004',
@@ -143,24 +148,7 @@ export const usePhaseTasksHex = (phaseId: string) => {
         });
 
         // Transform TaskDTO to PhaseTask interface
-        return {
-          id: createdTask.id,
-          phase_id: phaseId,
-          assigned_to: taskData.assigned_to || null,
-          title: createdTask.title,
-          description: createdTask.description || null,
-          priority: createdTask.priority || 'medium',
-          status: createdTask.status || 'pending',
-          due_date: createdTask.dueDate || null,
-          start_date: (createdTask as any).startDate || null,
-          end_date: (createdTask as any).endDate || null,
-          progress: (createdTask as any).progress || null,
-          created_at: createdTask.createdAt,
-          notes: taskData.notes || null,
-          assignee_name: taskData.assignee_name || null,
-          assignee_email: taskData.assignee_email || null,
-          assignee_type: taskData.assignee_type || null
-        };
+        return toPhaseTask(createdTask);
       } catch (error) {
         console.error('USE_PHASE_TASKS_HEX_006: Failed to create task', {
           code: 'USE_PHASE_TASKS_HEX_006',
@@ -207,7 +195,7 @@ export const usePhaseTasksHex = (phaseId: string) => {
 
   // Update task mutation
   const updateTaskMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: TaskFormData }): Promise<PhaseTask> => {
+    mutationFn: async ({ id, data }: { id: string; data: TaskFormData }): Promise<Task> => {
       try {
         console.info('USE_PHASE_TASKS_HEX_009: Updating task', {
           code: 'USE_PHASE_TASKS_HEX_009',
@@ -238,24 +226,7 @@ export const usePhaseTasksHex = (phaseId: string) => {
         });
 
         // Transform TaskDTO to PhaseTask interface
-        return {
-          id: updatedTask.id,
-          phase_id: phaseId,
-          assigned_to: data.assigned_to || null,
-          title: updatedTask.title,
-          description: updatedTask.description || null,
-          priority: updatedTask.priority || 'medium',
-          status: updatedTask.status || 'pending',
-          due_date: updatedTask.dueDate || null,
-          start_date: (updatedTask as any).startDate || null,
-          end_date: (updatedTask as any).endDate || null,
-          progress: (updatedTask as any).progress || null,
-          created_at: updatedTask.createdAt,
-          notes: data.notes || null,
-          assignee_name: data.assignee_name || null,
-          assignee_email: data.assignee_email || null,
-          assignee_type: data.assignee_type || null
-        };
+        return toPhaseTask(updatedTask);
       } catch (error) {
         console.error('USE_PHASE_TASKS_HEX_011: Failed to update task', {
           code: 'USE_PHASE_TASKS_HEX_011',

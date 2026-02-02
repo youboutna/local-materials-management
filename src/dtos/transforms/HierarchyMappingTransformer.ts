@@ -1,8 +1,8 @@
 // Transformer: Hierarchy Mapping
 // Converts between domain entities and DTOs for hierarchy mapping
 
-import { Employee, EmployeeRole, Permission } from '../../domain/entities/Employee';
-import { HierarchyMember } from '../../domain/entities/Hierarchy';
+import { Employee, EmployeeRole, Permission } from '@/domain/entities';
+import { HierarchyMember } from '@/domain/entities/Hierarchy';
 import { 
   PositionTemplateDTO, 
   RoleSuggestionDTO, 

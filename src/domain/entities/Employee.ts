@@ -6,10 +6,10 @@ import { Certification } from './Certification';
 import { UserRole } from './UserRole';
 import { User } from './User';
 import { Project } from './Project';
-import { Permission, Department, EmployeeData } from '../types';
+import { Permission, Department, EmployeeData, EmployeeRole } from '../types';
 
 // Re-export for backward compatibility
-export type { Permission, Department, EmployeeData };
+export type { Permission, Department, EmployeeData, EmployeeRole };
 
 export class Employee {
   // Private fields for encapsulation

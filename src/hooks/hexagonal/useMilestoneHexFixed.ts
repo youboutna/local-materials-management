@@ -10,10 +10,16 @@ import { MilestoneService } from '@/application/services/MilestoneService';
 import { ProjectMapper } from '@/infrastructure/transformers/ProjectMapper';
 import { toast } from 'sonner';
 
+interface MilestoneProgress {
+  percentage: number;
+  status: 'on_track' | 'delayed' | 'ahead';
+  lastUpdated: string;
+}
+
 export interface UseMilestoneResult {
-  milestoneProgress: any;
+  milestoneProgress: MilestoneProgress | null;
   isLoading: boolean;
-  error: any;
+  error: string | null;
   refetch: () => void;
 }
 

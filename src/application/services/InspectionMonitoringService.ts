@@ -28,6 +28,30 @@ export interface InspectionData {
   };
 }
 
+export interface InspectionUpdates {
+  status: 'pending' | 'in_progress' | 'completed' | 'rejected';
+  completedDate?: string;
+  notes?: string;
+  inspectorId?: string;
+  findings?: InspectionFinding[];
+}
+
+export interface InspectionFinding {
+  id: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high';
+  status: 'open' | 'resolved';
+  createdAt: string;
+  updatedAt?: string;
+  photoUrls?: string[];
+}
+
+export interface InspectionUpdateData {
+  status: InspectionStatus;
+  completedDate?: string;
+  comments?: string;
+}
+
 export const MANDATORY_INSPECTION_FIELDS = {
   projectId: 'Project ID is required',
   inspectorId: 'Inspector ID is required',
@@ -116,7 +140,7 @@ export class InspectionMonitoringService {
         throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
       }
 
-      const updates: any = { status };
+      const updates: InspectionUpdateData = { status };
       
       if (status === 'approved' || status === 'rejected' || status === 'completed') {
         updates.completedDate = new Date().toISOString();

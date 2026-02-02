@@ -84,24 +84,14 @@ export class ArchitectureUpdateService {
       // Read file content
       const content = await this.readFileContent(filePath);
       
+      const updater = new ContentUpdater(content);
+      
       // Apply updates based on file type and patterns
-      let updatedContent = content;
-      
-      // Replace unknown types with specific types
-      updatedContent = this.replaceUnknownTypes(updatedContent, changes);
-      
-      // Replace any types with specific types
-      updatedContent = this.replaceAnyTypes(updatedContent, changes);
-      
-      // Fix missing properties in DTOs
-      updatedContent = this.fixMissingProperties(updatedContent, changes);
-      
-      // Ensure proper hexagonal patterns
-      updatedContent = this.ensureHexagonalPatterns(updatedContent, changes);
+      updater.updateContent(changes);
       
       // Write updated content
-      if (updatedContent !== content) {
-        await this.writeFileContent(filePath, updatedContent);
+      if (updater.getContent() !== content) {
+        await this.writeFileContent(filePath, updater.getContent());
         return {
           file: filePath,
           status: 'success',
@@ -127,13 +117,8 @@ export class ArchitectureUpdateService {
     }
   }
 
-  /**
-   * Replace unknown types with specific types
-   */
-  private static replaceUnknownTypes(content: string, changes: string[]): string {
-    let updatedContent = content;
-    
-    // Replace unknown[] with specific DTO types
+  private static updateContent(updater: ContentUpdater, changes: string[]): void {
+    // Replace unknown types with specific types
     const unknownPatterns = [
       { from: /unknown\[\]/g, to: 'unknown[]' }, // Keep unknown[] for now, will be replaced specifically
       { from: /: unknown\[]/g, to: ': unknown[]' },
@@ -155,22 +140,13 @@ export class ArchitectureUpdateService {
     ];
 
     specificPatterns.forEach(pattern => {
-      if (pattern.from.test(updatedContent)) {
-        updatedContent = updatedContent.replace(pattern.from, pattern.to);
+      if (pattern.from.test(updater.getContent())) {
+        updater.updateSection(pattern.from, pattern.to);
         changes.push(`Replaced ${pattern.from} with ${pattern.to}`);
       }
     });
 
-    return updatedContent;
-  }
-
-  /**
-   * Replace any types with specific types
-   */
-  private static replaceAnyTypes(content: string, changes: string[]): string {
-    let updatedContent = content;
-    
-    // Replace any with specific types where possible
+    // Replace any types with specific types
     const anyPatterns = [
       { from: /: any\[\]/g, to: ': unknown[]' },
       { from: /: any(?!\w)/g, to: ': unknown' },
@@ -178,24 +154,15 @@ export class ArchitectureUpdateService {
     ];
 
     anyPatterns.forEach(pattern => {
-      if (pattern.from.test(updatedContent)) {
-        updatedContent = updatedContent.replace(pattern.from, pattern.to);
+      if (pattern.from.test(updater.getContent())) {
+        updater.updateSection(pattern.from, pattern.to);
         changes.push(`Replaced ${pattern.from} with ${pattern.to}`);
       }
     });
 
-    return updatedContent;
-  }
-
-  /**
-   * Fix missing properties in DTOs
-   */
-  private static fixMissingProperties(content: string, changes: string[]): string {
-    let updatedContent = content;
-    
-    // Fix SaveContextDTO missing totalSteps
-    if (updatedContent.includes('SaveContextDTO') && !updatedContent.includes('totalSteps: number')) {
-      updatedContent = updatedContent.replace(
+    // Fix missing properties in DTOs
+    if (updater.getContent().includes('SaveContextDTO') && !updater.getContent().includes('totalSteps: number')) {
+      updater.updateSection(
         /export interface SaveContextDTO \{([^}]*)\}/g,
         (match, content) => {
           if (!content.includes('totalSteps')) {
@@ -213,40 +180,27 @@ export class ArchitectureUpdateService {
     }
 
     // Fix ProjectFormDataDTO missing properties
-    if (updatedContent.includes('ProjectFormDataDTO')) {
+    if (updater.getContent().includes('ProjectFormDataDTO')) {
       const requiredProps = ['title', 'description', 'location', 'status', 'progress', 'budget', 'start_date', 'end_date', 'team_size'];
       requiredProps.forEach(prop => {
-        if (!updatedContent.includes(`${prop}:`)) {
+        if (!updater.getContent().includes(`${prop}:`)) {
           changes.push(`Note: ProjectFormDataDTO may need ${prop} property`);
         }
       });
     }
 
-    return updatedContent;
-  }
-
-  /**
-   * Ensure proper hexagonal patterns
-   */
-  private static ensureHexagonalPatterns(content: string, changes: string[]): string {
-    let updatedContent = content;
-    
-    // Ensure proper imports for hexagonal services
-    if (updatedContent.includes('RepositoryFactory') && !updatedContent.includes('from \'@/infrastructure/supabase/RepositoryFactory\'')) {
+    // Ensure proper hexagonal patterns
+    if (updater.getContent().includes('RepositoryFactory') && !updater.getContent().includes('from \'@/infrastructure/supabase/RepositoryFactory\'')) {
       changes.push('Note: Ensure RepositoryFactory import is correct');
     }
 
-    // Ensure proper error handling
-    if (updatedContent.includes('throw new Error') && !updatedContent.includes('AppError')) {
+    if (updater.getContent().includes('throw new Error') && !updater.getContent().includes('AppError')) {
       changes.push('Note: Consider using AppError for proper error handling');
     }
 
-    // Ensure proper DTO usage
-    if (updatedContent.includes('supabase') && !updatedContent.includes('RepositoryFactory')) {
+    if (updater.getContent().includes('supabase') && !updater.getContent().includes('RepositoryFactory')) {
       changes.push('Note: Replace direct supabase calls with RepositoryFactory');
     }
-
-    return updatedContent;
   }
 
   /**
@@ -357,5 +311,107 @@ export class ArchitectureUpdateService {
       issues,
       score
     };
+  }
+}
+
+class ContentUpdater {
+  private content: string;
+
+  constructor(initialContent: string) {
+    this.content = initialContent;
+  }
+
+  updateSection(section: RegExp, newContent: string): void {
+    this.content = this.content.replace(section, newContent);
+  }
+
+  updateContent(changes: string[]): void {
+    // Replace unknown types with specific types
+    const unknownPatterns = [
+      { from: /unknown\[\]/g, to: 'unknown[]' }, // Keep unknown[] for now, will be replaced specifically
+      { from: /: unknown\[]/g, to: ': unknown[]' },
+      { from: /: unknown/g, to: ': unknown' }
+    ];
+
+    // Specific replacements for common patterns
+    const specificPatterns = [
+      { from: /phases\?: unknown\[]/g, to: 'phases?: PhaseFormDataDTO[]' },
+      { from: /materials\?: unknown\[]/g, to: 'materials?: MaterialFormDataDTO[]' },
+      { from: /risks\?: unknown\[]/g, to: 'risks?: RiskFormDataDTO[]' },
+      { from: /bankGuarantees\?: unknown\[]/g, to: 'bankGuarantees?: BankGuaranteeFormDataDTO[]' },
+      { from: /insurances\?: unknown\[]/g, to: 'insurances?: InsuranceFormDataDTO[]' },
+      { from: /documents\?: unknown\[]/g, to: 'documents?: DocumentFormDataDTO[]' },
+      { from: /employees\?: unknown\[]/g, to: 'employees?: EmployeeFormDataDTO[]' },
+      { from: /suppliers\?: unknown\[]/g, to: 'suppliers?: SupplierFormDataDTO[]' },
+      { from: /tasks\?: unknown\[]/g, to: 'tasks?: TaskFormDataDTO[]' },
+      { from: /inspections\?: unknown\[]/g, to: 'inspections?: InspectionFormDataDTO[]' }
+    ];
+
+    specificPatterns.forEach(pattern => {
+      if (pattern.from.test(this.content)) {
+        this.updateSection(pattern.from, pattern.to);
+        changes.push(`Replaced ${pattern.from} with ${pattern.to}`);
+      }
+    });
+
+    // Replace any types with specific types
+    const anyPatterns = [
+      { from: /: any\[\]/g, to: ': unknown[]' },
+      { from: /: any(?!\w)/g, to: ': unknown' },
+      { from: /Record<string, any>/g, to: 'Record<string, unknown>' }
+    ];
+
+    anyPatterns.forEach(pattern => {
+      if (pattern.from.test(this.content)) {
+        this.updateSection(pattern.from, pattern.to);
+        changes.push(`Replaced ${pattern.from} with ${pattern.to}`);
+      }
+    });
+
+    // Fix missing properties in DTOs
+    if (this.content.includes('SaveContextDTO') && !this.content.includes('totalSteps: number')) {
+      this.updateSection(
+        /export interface SaveContextDTO \{([^}]*)\}/g,
+        (match, content) => {
+          if (!content.includes('totalSteps')) {
+            const hasCurrentStep = content.includes('currentStep');
+            if (hasCurrentStep) {
+              content = content.replace(/currentStep: number;?/, 'currentStep: number;\n  totalSteps: number;');
+            } else {
+              content = '  currentStep: number;\n  totalSteps: number;\n' + content;
+            }
+            changes.push('Added missing totalSteps property to SaveContextDTO');
+          }
+          return `export interface SaveContextDTO {${content}}`;
+        }
+      );
+    }
+
+    // Fix ProjectFormDataDTO missing properties
+    if (this.content.includes('ProjectFormDataDTO')) {
+      const requiredProps = ['title', 'description', 'location', 'status', 'progress', 'budget', 'start_date', 'end_date', 'team_size'];
+      requiredProps.forEach(prop => {
+        if (!this.content.includes(`${prop}:`)) {
+          changes.push(`Note: ProjectFormDataDTO may need ${prop} property`);
+        }
+      });
+    }
+
+    // Ensure proper hexagonal patterns
+    if (this.content.includes('RepositoryFactory') && !this.content.includes('from \'@/infrastructure/supabase/RepositoryFactory\'')) {
+      changes.push('Note: Ensure RepositoryFactory import is correct');
+    }
+
+    if (this.content.includes('throw new Error') && !this.content.includes('AppError')) {
+      changes.push('Note: Consider using AppError for proper error handling');
+    }
+
+    if (this.content.includes('supabase') && !this.content.includes('RepositoryFactory')) {
+      changes.push('Note: Replace direct supabase calls with RepositoryFactory');
+    }
+  }
+
+  getContent(): string {
+    return this.content;
   }
 }

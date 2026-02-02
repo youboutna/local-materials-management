@@ -9,19 +9,39 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { MaterialService } from "@/application/services/MaterialService";
-import { MaterialTransformer, CreateMaterialRequestDto, UpdateMaterialRequestDto } from '@/dtos/transforms';
+import { MaterialTransformer, CreateMaterialRequestDto, UpdateMaterialRequestDto, MaterialDTO, MaterialCategory } from '@/dtos/transforms';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 // Types compatibles avec le service
-type ServiceCreateMaterialDTO = Omit<CreateMaterialRequestDto, 'category'> & { category?: any };
-type ServiceUpdateMaterialDTO = Omit<UpdateMaterialRequestDto, 'category'> & { category?: any };
+type ServiceCreateMaterialDTO = Omit<CreateMaterialRequestDto, 'category'> & { category?: MaterialCategory };
+type ServiceUpdateMaterialDTO = Omit<UpdateMaterialRequestDto, 'category'> & { category?: MaterialCategory };
 
 // Enhanced types for UI components
+interface MaterialAnalytics {
+  stockStatus: 'optimal' | 'low' | 'critical' | 'out_of_stock';
+  costEfficiency: number;
+  qualityScore: number;
+  reorderLevel: number;
+}
+
+interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  compliance: string;
+}
+
+interface MaterialReport {
+  id: string;
+  name: string;
+  analytics: MaterialAnalytics;
+}
+
 export interface UseMaterialsHexResult {
-  materials: any[];
+  materials: MaterialDTO[];
   isLoading: boolean;
-  error: any;
+  error: string | null;
   refetch: () => void;
   createMaterial: (data: CreateMaterialRequestDto) => void;
   updateMaterial: ({ id, data }: { id: string; data: UpdateMaterialRequestDto }) => void;
@@ -30,13 +50,13 @@ export interface UseMaterialsHexResult {
   isUpdating: boolean;
   isDeleting: boolean;
   // Enhanced UI features
-  getMaterialStockStatus: (material: any) => 'optimal' | 'low' | 'critical' | 'out_of_stock';
-  getMaterialCostEfficiency: (material: any) => number;
-  getMaterialQualityScore: (material: any) => number;
-  getMaterialReorderLevel: (material: any) => number;
-  getMaterialAnalytics: () => any;
-  validateMaterialWithReferential: (material: any, referentialType: string) => Promise<any>;
-  generateMaterialReport: (material: any) => any;
+  getMaterialStockStatus: (material: MaterialDTO) => 'optimal' | 'low' | 'critical' | 'out_of_stock';
+  getMaterialCostEfficiency: (material: MaterialDTO) => number;
+  getMaterialQualityScore: (material: MaterialDTO) => number;
+  getMaterialReorderLevel: (material: MaterialDTO) => number;
+  getMaterialAnalytics: () => MaterialAnalytics;
+  validateMaterialWithReferential: (material: MaterialDTO, referentialType: string) => Promise<ValidationResult>;
+  generateMaterialReport: (material: MaterialDTO) => MaterialReport;
 }
 
 /**
@@ -60,7 +80,7 @@ export function useMaterialsHex(): UseMaterialsHexResult {
     refetch
   } = useQuery({
     queryKey: ['materials'],
-    queryFn: async (): Promise<any[]> => {
+    queryFn: async (): Promise<MaterialDTO[]> => {
       try {
         const materialData = await materialService.getAllMaterials();
         return materialData.map(entity => MaterialTransformer.toDTO(entity));
@@ -80,7 +100,12 @@ export function useMaterialsHex(): UseMaterialsHexResult {
       try {
         // Convert to service-compatible format
         const serviceData: ServiceCreateMaterialDTO = { ...materialData };
-        const createdMaterial = await materialService.createMaterial(serviceData as any);
+        const createdMaterial = await materialService.createMaterial({
+          ...serviceData,
+          name: serviceData.name || '',
+          description: serviceData.description || '',
+          unit: serviceData.unit || 'unit'
+        } as ServiceCreateMaterialDTO);
         return createdMaterial;
       } catch (error) {
         console.error('Error creating material:', error);
@@ -104,7 +129,12 @@ export function useMaterialsHex(): UseMaterialsHexResult {
       try {
         // Convert to service-compatible format
         const serviceData: ServiceUpdateMaterialDTO = { ...data };
-        const updatedMaterial = await materialService.updateMaterial(id, serviceData as any);
+        const updatedMaterial = await materialService.updateMaterial(id, {
+          ...serviceData,
+          name: data.name || '',
+          description: data.description || '',
+          unit: data.unit || 'unit'
+        } as ServiceUpdateMaterialDTO);
         return updatedMaterial;
       } catch (error) {
         console.error('Error updating material:', error);
@@ -115,7 +145,7 @@ export function useMaterialsHex(): UseMaterialsHexResult {
       queryClient.invalidateQueries({ queryKey: ['materials'] });
       toast.success(`Le matériel "${data.name}" a été mis à jour avec succès.`);
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error('Error updating material:', error);
       toast.error("Impossible de mettre à jour le matériel. Veuillez réessayer.");
     }
@@ -143,7 +173,7 @@ export function useMaterialsHex(): UseMaterialsHexResult {
   });
 
   // Enhanced UI functions
-  const getMaterialStockStatus = (material: any): 'optimal' | 'low' | 'critical' | 'out_of_stock' => {
+  const getMaterialStockStatus = (material: MaterialDTO): 'optimal' | 'low' | 'critical' | 'out_of_stock' => {
     const currentStock = material.currentStock || 0;
     const minStock = material.minStock || 0;
     
@@ -153,7 +183,7 @@ export function useMaterialsHex(): UseMaterialsHexResult {
     return 'optimal';
   };
 
-  const getMaterialCostEfficiency = (material: any): number => {
+  const getMaterialCostEfficiency = (material: MaterialDTO): number => {
     const unitCost = material.unitCost || 0;
     const expectedCost = material.expectedCost || unitCost;
     const actualCost = material.actualCost || unitCost;
@@ -162,7 +192,7 @@ export function useMaterialsHex(): UseMaterialsHexResult {
     return Math.round((expectedCost / actualCost) * 100);
   };
 
-  const getMaterialQualityScore = (material: any): number => {
+  const getMaterialQualityScore = (material: MaterialDTO): number => {
     // Calcul basé sur le taux de défauts et la fiabilité du fournisseur
     const defectRate = material.defectRate || 0;
     const supplierReliability = material.supplierReliability || 100;
@@ -172,7 +202,7 @@ export function useMaterialsHex(): UseMaterialsHexResult {
     return Math.round(qualityScore);
   };
 
-  const getMaterialReorderLevel = (material: any): number => {
+  const getMaterialReorderLevel = (material: MaterialDTO): number => {
     const currentStock = material.currentStock || 0;
     const minStock = material.minStock || 0;
     const dailyUsage = material.dailyUsage || 1;
@@ -182,7 +212,7 @@ export function useMaterialsHex(): UseMaterialsHexResult {
     return Math.round((currentStock - minStock) / dailyUsage);
   };
 
-  const getMaterialStockLevel = (material: any): 'optimal' | 'low' | 'critical' | 'out_of_stock' => {
+  const getMaterialStockLevel = (material: MaterialDTO): 'optimal' | 'low' | 'critical' | 'out_of_stock' => {
     const currentStock = material.currentStock || 0;
     const minStock = material.minStock || 0;
     
@@ -192,7 +222,7 @@ export function useMaterialsHex(): UseMaterialsHexResult {
     return 'optimal';
   };
 
-  const getMaterialAnalytics = () => {
+  const getMaterialAnalytics = (): MaterialAnalytics => {
     const totalMaterials = materials.length;
     const stockStatus = materials.reduce((acc, material) => {
       const stock = material.currentStock || 0;
@@ -214,21 +244,20 @@ export function useMaterialsHex(): UseMaterialsHexResult {
       : 0;
     
     return {
-      totalMaterials,
       stockStatus: {
         optimal: stockStatus.optimal,
         low: stockStatus.low,
         critical: stockStatus.critical,
         outOfStock: stockStatus.outOfStock
       },
-      totalValue,
-      averageCostEfficiency: Math.round(averageCostEfficiency),
-      averageQualityScore: Math.round(averageQualityScore * 100) / 100
+      costEfficiency: Math.round(averageCostEfficiency),
+      qualityScore: Math.round(averageQualityScore * 100) / 100,
+      reorderLevel: 0
     };
   };
 
   // Validation functions for different referential types
-  const validateQualityReferential = (material: any) => {
+  const validateQualityReferential = (material: MaterialDTO) => {
     const errors: string[] = [];
     const warnings: string[] = [];
     
@@ -260,7 +289,7 @@ export function useMaterialsHex(): UseMaterialsHexResult {
     };
   };
 
-  const validateSafetyReferential = (material: any) => {
+  const validateSafetyReferential = (material: MaterialDTO) => {
     const errors: string[] = [];
     const warnings: string[] = [];
     
@@ -292,7 +321,7 @@ export function useMaterialsHex(): UseMaterialsHexResult {
     };
   };
 
-  const validateEnvironmentalReferential = (material: any) => {
+  const validateEnvironmentalReferential = (material: MaterialDTO) => {
     const errors: string[] = [];
     const warnings: string[] = [];
     
@@ -324,7 +353,7 @@ export function useMaterialsHex(): UseMaterialsHexResult {
     };
   };
 
-  const validateRegulatoryReferential = (material: any) => {
+  const validateRegulatoryReferential = (material: MaterialDTO) => {
     const errors: string[] = [];
     const warnings: string[] = [];
     
@@ -357,7 +386,7 @@ export function useMaterialsHex(): UseMaterialsHexResult {
   };
 
   // Generate material recommendations based on analysis
-  const generateMaterialRecommendations = (material: any, reorderLevel: string, stockLevel: string) => {
+  const generateMaterialRecommendations = (material: MaterialDTO, reorderLevel: string, stockLevel: string) => {
     const recommendations: string[] = [];
     
     // Stock level-based recommendations
@@ -398,6 +427,54 @@ export function useMaterialsHex(): UseMaterialsHexResult {
     return recommendations;
   };
 
+  const validateMaterialWithReferential = async (material: MaterialDTO, referentialType: string): Promise<ValidationResult> => {
+    try {
+      // Validation selon le type de référentiel
+      switch (referentialType) {
+        case 'quality':
+          return validateQualityReferential(material);
+        case 'safety':
+          return validateSafetyReferential(material);
+        case 'environmental':
+          return validateEnvironmentalReferential(material);
+        case 'regulatory':
+          return validateRegulatoryReferential(material);
+        default:
+          return { isValid: true, errors: [], warnings: ['Unknown referential type'] };
+      }
+    } catch (error) {
+      console.error('Referential validation error:', error);
+      return { isValid: false, errors: ['Validation failed'], warnings: [] };
+    }
+  };
+
+  const generateMaterialReport = (material: MaterialDTO): MaterialReport => {
+    try {
+      const analytics = getMaterialAnalytics();
+      const reorderLevel = getMaterialReorderLevel(material);
+      const stockLevel = getMaterialStockLevel(material);
+      
+      return {
+        id: material.id,
+        name: material.name,
+        analytics: {
+          stockStatus: analytics.stockStatus,
+          costEfficiency: analytics.costEfficiency,
+          qualityScore: analytics.qualityScore,
+          reorderLevel: reorderLevel
+        }
+      };
+    } catch (error) {
+      console.error('Report generation error:', error);
+      return { 
+        id: material.id, 
+        name: material.name,
+        error: 'Report generation failed',
+        status: 'error'
+      };
+    }
+  };
+
   return {
     materials,
     isLoading,
@@ -414,65 +491,8 @@ export function useMaterialsHex(): UseMaterialsHexResult {
     getMaterialQualityScore,
     getMaterialReorderLevel,
     getMaterialAnalytics,
-    validateMaterialWithReferential: async (material: any, referentialType: string) => {
-      try {
-        // Validation selon le type de référentiel
-        switch (referentialType) {
-          case 'quality':
-            return validateQualityReferential(material);
-          case 'safety':
-            return validateSafetyReferential(material);
-          case 'environmental':
-            return validateEnvironmentalReferential(material);
-          case 'regulatory':
-            return validateRegulatoryReferential(material);
-          default:
-            return { isValid: true, errors: [], warnings: ['Unknown referential type'] };
-        }
-      } catch (error) {
-        console.error('Referential validation error:', error);
-        return { isValid: false, errors: ['Validation failed'], warnings: [] };
-      }
-    },
-    generateMaterialReport: (material: any) => {
-      try {
-        const analytics = getMaterialAnalytics();
-        const reorderLevel = getMaterialReorderLevel(material);
-        const stockLevel = getMaterialStockLevel(material);
-        
-        return {
-          material: {
-            ...material,
-            reorderLevel,
-            stockLevel,
-            qualityScore: material.qualityScore || 0,
-            safetyRating: material.safetyRating || 'unknown'
-          },
-          generatedAt: new Date().toISOString(),
-          reportType: 'Material Analysis Report',
-          summary: {
-            totalMaterials: analytics.totalMaterials,
-            lowStockItems: analytics.stockStatus.low + analytics.stockStatus.critical,
-            outOfStockItems: analytics.stockStatus.outOfStock,
-            averageQualityScore: analytics.averageQualityScore || 0
-          },
-          recommendations: generateMaterialRecommendations(material, reorderLevel, stockLevel),
-          compliance: {
-            isValid: true,
-            lastValidated: new Date().toISOString(),
-            validatedBy: 'MaterialSystem'
-          }
-        };
-      } catch (error) {
-        console.error('Report generation error:', error);
-        return { 
-          material, 
-          generatedAt: new Date().toISOString(),
-          error: 'Report generation failed',
-          status: 'error'
-        };
-      }
-    }
+    validateMaterialWithReferential,
+    generateMaterialReport
   };
 }
 
@@ -484,7 +504,7 @@ export function useMaterialsByCategory(category: string) {
   return useQuery({
     queryKey: ['materials', 'category', category],
     queryFn: async () => {
-      return await materialService.getMaterialsByCategory(category as any);
+      return await materialService.getMaterialsByCategory(category);
     },
     enabled: !!category,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -558,7 +578,7 @@ export function useMaterialHex(id: string) {
       toast.success(t('material.updated'));
       queryClient.invalidateQueries({ queryKey: ['materials'] });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(t('material.updateError'));
       console.error('Error updating material:', error);
     }

@@ -4,29 +4,31 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { InsuranceCertificateEntity } from '@/domain/entities/InsuranceCertificate.entity';
 import { IInsuranceRepository } from '@/domain/repositories/IInsuranceRepository';
-import { InsuranceCertificateEntity } from '@/types/insurance.entity';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { InsuranceCertificateDB } from '@/dtos/transforms/insuranceTransform';
 
 export class SupabaseInsuranceAdapter implements IInsuranceRepository {
-  private mapToEntity(data: any): InsuranceCertificateEntity {
+  private mapToEntity(data: InsuranceCertificateDB): InsuranceCertificateEntity {
     return {
       id: data.id,
       project_id: data.project_id,
       contractor_id: data.contractor_id,
-      insurance_type: data.insurance_type,
-      provider: data.provider,
+      contractor_name: data.contractor_name,
+      insurance_company: data.insurance_company,
       policy_number: data.policy_number,
       coverage_amount: data.coverage_amount,
-      start_date: data.start_date,
+      coverage_type: data.coverage_type,
+      valid_from: data.valid_from,
       valid_until: data.valid_until,
-      status: data.status,
-      documents: data.documents || [],
-      created_at: data.created_at,
-      updated_at: data.updated_at,
+      certificate_url: data.certificate_url,
+      status: data.status as 'active' | 'expired' | 'expiring_soon' | 'missing',
       last_verified: data.last_verified,
       verified_by: data.verified_by,
-      notes: data.notes
+      notes: data.notes,
+      created_at: data.created_at,
+      updated_at: data.updated_at
     };
   }
 
@@ -161,14 +163,13 @@ export class SupabaseInsuranceAdapter implements IInsuranceRepository {
     status?: string;
     contractor_id?: string;
     project_id?: string;
-    insurance_type?: string;
     coverage_type?: string;
     search?: string;
   }): Promise<InsuranceCertificateEntity[]> {
     try {
       let query = supabase
         .from('insurance_certificates')
-        .select('*', { count: 'exact' });
+        .select('*');
 
       if (filters.status) {
         query = query.eq('status', filters.status);
@@ -180,10 +181,6 @@ export class SupabaseInsuranceAdapter implements IInsuranceRepository {
 
       if (filters.project_id) {
         query = query.eq('project_id', filters.project_id);
-      }
-
-      if (filters.insurance_type) {
-        query = query.eq('insurance_type', filters.insurance_type);
       }
 
       if (filters.coverage_type) {

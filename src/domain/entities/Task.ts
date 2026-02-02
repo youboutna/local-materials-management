@@ -5,7 +5,7 @@ import { Employee } from './Employee';
 import { Project } from './Project';
 import { Phase } from './Phase';
 import { Document } from './Document';
-import { TaskStatus, TaskPriority } from '../types';
+import { TaskStatus, TaskPriority } from '@/domain/types/TaskTypes';
 
 export class Task {
   // Private fields for encapsulation

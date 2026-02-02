@@ -3,52 +3,15 @@
  * Business logic for phase management using repositories and transformers
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import { Phase, PhaseStep, PhaseTask, PhaseStatus } from '@/domain/entities/Phase';
-import { PhaseDTO, CreatePhaseRequestDto, UpdatePhaseRequestDto, PhaseTaskDTO as SharedPhaseTaskDTO } from '@/dtos/transforms/shared';
-import { PhaseStepDTO as SharedPhaseStepDTO, PhaseTaskDTO as PhaseTaskDTOFromPhaseDTO, PhaseDTOLegacy } from '@/dtos/entities/PhaseDTO';
+import { PhaseDTO, CreatePhaseRequestDto, UpdatePhaseRequestDto, PhaseTaskDTO, PhaseStepDTO } from '@/dtos/entities/PhaseDTO';
 import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
 import { ConstructionPhase, ConstructionStage } from '@/types/project';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 // Service DTOs for data exchange
-export interface PhaseStepDTO {
-  id: string;
-  phaseId: string;
-  name: string;
-  description?: string;
-  order: number;
-  status: string;
-  progress: number;
-  startDate?: string;
-  endDate?: string;
-  estimatedDuration?: number;
-  actualDuration?: number;
-  requiresInspection?: boolean;
-  requiresEngineerApproval?: boolean;
-  tasks?: PhaseTaskDTO[];
-}
-
-export interface PhaseTaskDTO {
-  id: string;
-  stepId: string;
-  name: string;
-  description?: string;
-  status: string;
-  progress: number;
-  assignedTo?: string;
-  priority: 'low' | 'medium' | 'high';
-  dueDate?: string;
-  completedAt?: string;
-  estimatedDuration?: number;
-  actualDuration?: number;
-  dependencies?: string[];
-  materials?: string[];
-  requiresInspection?: boolean;
-  requiresEngineerApproval?: boolean;
-}
-
 export interface PhaseMetricsDTO {
   totalSteps: number;
   completedSteps: number;
@@ -272,7 +235,7 @@ export class PhaseService {
   /**
    * Add step to phase
    */
-  async addStepToPhase(phaseId: string, step: Omit<SharedPhaseStepDTO, 'id'>): Promise<SharedPhaseStepDTO> {
+  async addStepToPhase(phaseId: string, step: Omit<PhaseStepDTO, 'id'>): Promise<PhaseStepDTO> {
     try {
       if (!phaseId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID is required');
@@ -319,7 +282,7 @@ export class PhaseService {
 
       const result = await this.phaseRepository.addStep(phaseId, stepEntity);
       
-      // Transform PhaseStep entity back to SharedPhaseStepDTO
+      // Transform PhaseStep entity back to PhaseStepDTO
       return {
         id: result.id,
         name: result.name,
@@ -353,7 +316,7 @@ export class PhaseService {
         endDate: result.endDate?.toISOString(),
         inspections: result.inspections?.map(insp => insp.id) || [], // Extract IDs from Inspection objects
         documents: result.documents?.map(doc => doc.id) || [] // Extract IDs from Document objects
-      } as SharedPhaseStepDTO;
+      } as PhaseStepDTO;
     } catch (error) {
       console.error('PhaseService.addStepToPhase failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to add step to phase');
@@ -376,7 +339,7 @@ export class PhaseService {
   /**
    * Add task to step
    */
-  async addTaskToStep(phaseId: string, stepId: string, task: Omit<PhaseTaskDTOFromPhaseDTO, 'id'>): Promise<PhaseTaskDTOFromPhaseDTO> {
+  async addTaskToStep(phaseId: string, stepId: string, task: Omit<PhaseTaskDTO, 'id'>): Promise<PhaseTaskDTO> {
     try {
       if (!phaseId || !stepId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID and Step ID are required');
@@ -409,7 +372,7 @@ export class PhaseService {
       const result = await this.phaseRepository.addTask(phaseId, stepId, taskEntityForRepo);
       // Transform PhaseTask entity to PhaseTaskDTO (local format)
       const taskResult = result as PhaseTask;
-      const taskDTO: PhaseTaskDTOFromPhaseDTO = {
+      const taskDTO: PhaseTaskDTO = {
         id: taskResult.id,
         name: taskResult.name,
         description: taskResult.description,

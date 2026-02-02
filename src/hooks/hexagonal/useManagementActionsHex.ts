@@ -77,8 +77,8 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
         urgency: inspection.status === 'in_progress' ? 'high' : 'medium',
         category: 'approval',
         createdAt: new Date().toISOString(),
-        projectId: (inspection.projects as any)?.id,
-        projectName: (inspection.projects as any)?.title,
+        projectId: inspection.project_id || '',
+        projectName: inspection.project_title || '',
         inspectionId: inspection.id,
         dueDate: new Date(inspection.date)
       });
@@ -91,15 +91,15 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
       actions.push({
         id: `payment-request-${request.id}`,
         title: 'Demande de paiement fournisseur',
-        description: `Montant: ${request.amount.toLocaleString()} MRU - ${(request.suppliers as any)?.name}`,
+        description: `Montant: ${request.amount.toLocaleString()} MRU - ${request.supplier_id || 'Fournisseur inconnu'}`,
         type: 'approval',
         priority: request.amount > 100000 ? 'high' : 'medium',
         status: 'pending',
         urgency: request.amount > 100000 ? 'critical' : 'high',
         category: 'approval',
         createdAt: new Date().toISOString(),
-        projectId: (request.projects as any)?.id,
-        projectName: (request.projects as any)?.title,
+        projectId: request.project_id || '',
+        projectName: request.project_title || '',
         paymentId: request.id,
         dueDate: new Date(request.requested_date)
       });
@@ -120,8 +120,8 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
         urgency: daysPast > 7 ? 'high' : 'medium',
         category: 'task',
         createdAt: new Date().toISOString(),
-        projectId: (inspection.projects as any)?.id,
-        projectName: (inspection.projects as any)?.title,
+        projectId: inspection.project_id || '',
+        projectName: inspection.project_title || '',
         dueDate: new Date(inspection.date)
       });
     });

@@ -23,7 +23,24 @@ interface SubmissionNotificationRequest {
   admin_emails?: string[];
 }
 
-const handler = async (req: Request): Promise<Response> => {
+interface SubmissionNotificationResponse {
+  success: boolean;
+  supplier_email_sent: string;
+  admin_emails_sent: number;
+  admin_emails_failed: number;
+}
+
+interface ResendEmailResponse {
+  id: string;
+}
+
+interface AdminEmailResult {
+  status: 'fulfilled' | 'rejected';
+  value?: ResendEmailResponse;
+  reason?: Error;
+}
+
+const handler = async (req: Request): Promise<Response<SubmissionNotificationResponse>> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -60,7 +77,7 @@ const handler = async (req: Request): Promise<Response> => {
       to: [supplier_email],
       subject: `Confirmation de soumission - ${tender_title}`,
       html: supplierHtml,
-    });
+    }) as { id: string };
 
     console.log("Supplier email sent:", supplierEmailResponse);
 
@@ -82,16 +99,18 @@ const handler = async (req: Request): Promise<Response> => {
       })
     );
 
-    const adminEmailResults = await Promise.allSettled(adminEmailPromises);
+    const adminEmailResults: AdminEmailResult[] = await Promise.allSettled(adminEmailPromises) as AdminEmailResult[];
     console.log("Admin emails sent:", adminEmailResults);
 
+    const response: SubmissionNotificationResponse = {
+      success: true,
+      supplier_email_sent: supplierEmailResponse.id || 'sent',
+      admin_emails_sent: adminEmailResults.filter(r => r.status === 'fulfilled').length,
+      admin_emails_failed: adminEmailResults.filter(r => r.status === 'rejected').length
+    };
+
     return new Response(
-      JSON.stringify({
-        success: true,
-        supplier_email_sent: (supplierEmailResponse as any).id || 'sent',
-        admin_emails_sent: adminEmailResults.filter(r => r.status === 'fulfilled').length,
-        admin_emails_failed: adminEmailResults.filter(r => r.status === 'rejected').length
-      }),
+      JSON.stringify(response),
       {
         status: 200,
         headers: {
@@ -100,12 +119,13 @@ const handler = async (req: Request): Promise<Response> => {
         },
       }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error("Error in send-tender-submission-notification function:", error);
     return new Response(
       JSON.stringify({ 
-        error: error.message,
-        details: error.toString()
+        error: errorMessage,
+        details: error instanceof Error ? error.toString() : 'Unknown error details'
       }),
       {
         status: 500,

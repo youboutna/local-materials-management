@@ -18,6 +18,15 @@ export interface ComplianceItem {
   notes?: string;
 }
 
+export interface ComplianceItemMetadata {
+  category: 'regulatory' | 'financial' | 'technical' | 'environmental';
+  status: 'compliant' | 'pending' | 'non_compliant' | 'in_review';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  responsiblePerson?: string;
+  notes?: string;
+  documents?: string[];
+}
+
 export function useComplianceHex(phaseId?: string, projectId?: string) {
   const [complianceItems, setComplianceItems] = useState<ComplianceItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,15 +50,15 @@ export function useComplianceHex(phaseId?: string, projectId?: string) {
 
       // Transform documents to compliance items
       const items: ComplianceItem[] = (data || []).map((doc) => {
-        const metadata = (doc.metadata as any) || {};
+        const metadata = doc.metadata || {};
         return {
           id: doc.id,
           category: metadata.category || 'regulatory',
           title: doc.title,
-          description: doc.description || undefined,
-          status: metadata.status || 'pending',
+          description: doc.description,
+          status: doc.status,
+          deadline: doc.deadline_date,
           priority: metadata.priority || 'medium',
-          deadline: doc.deadline_date || undefined,
           responsiblePerson: metadata.responsible_person,
           documents: metadata.documents || [],
           notes: metadata.notes,
@@ -111,18 +120,18 @@ export function useComplianceHex(phaseId?: string, projectId?: string) {
     updates: Partial<ComplianceItem>
   ): Promise<boolean> => {
     try {
-      const complianceData: any = {};
+      const complianceData: Partial<ComplianceItem> = {};
       
       if (updates.title) complianceData.title = updates.title;
       if (updates.description) complianceData.description = updates.description;
       if (updates.deadline) complianceData.deadline_date = updates.deadline;
       
       // Update metadata fields
-      const metadataUpdates: any = {};
+      const metadataUpdates: Partial<ComplianceItemMetadata> = {};
       if (updates.category) metadataUpdates.category = updates.category;
       if (updates.status) metadataUpdates.status = updates.status;
       if (updates.priority) metadataUpdates.priority = updates.priority;
-      if (updates.responsiblePerson) metadataUpdates.responsible_person = updates.responsiblePerson;
+      if (updates.responsiblePerson) metadataUpdates.responsiblePerson = updates.responsiblePerson;
       if (updates.notes) metadataUpdates.notes = updates.notes;
 
       // First get existing metadata

@@ -8,7 +8,7 @@ import {
   Employee, 
   EmployeeRole, 
   Department 
-} from '@/domain/repositories/IEmployeeRepository';
+} from '@/domain/entities';
 import { allUsersData, MockUser } from '@/data/mockData';
 
 // Convert MockUser to Employee format

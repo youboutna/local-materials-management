@@ -8,19 +8,14 @@ import { toast } from 'sonner';
 
 export interface ProjectPhase {
   id: string;
-  project_id: string;
-  phase_name: string;
-  description?: string | null;
-  start_date?: string | null;
-  end_date?: string | null;
-  estimated_duration?: number | null;
-  estimated_cost?: number | null;
-  status: string | null;
+  name: string;
+  description: string | null;
+  start_date: string | null;
+  end_date: string | null;
   progress: number | null;
   phase_type?: string | null;
   construction_phase?: string | null;
-  custom_phase_data?: any;
-  created_at?: string | null;
+  custom_phase_data?: Record<string, unknown>;
 }
 
 export interface PhaseFormData {
@@ -35,7 +30,7 @@ export interface PhaseFormData {
   progress?: number;
   phase_type?: string;
   construction_phase?: string;
-  custom_phase_data?: any;
+  custom_phase_data?: Record<string, unknown>;
 }
 
 async function fetchProjectPhases(projectId: string): Promise<ProjectPhase[]> {
@@ -52,7 +47,7 @@ async function fetchProjectPhases(projectId: string): Promise<ProjectPhase[]> {
 async function insertPhases(phases: PhaseFormData[]): Promise<ProjectPhase[]> {
   const { data, error } = await supabase
     .from('project_phases')
-    .insert(phases as any)
+    .insert(phases)
     .select();
 
   if (error) throw error;

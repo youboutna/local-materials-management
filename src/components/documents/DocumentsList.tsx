@@ -204,69 +204,11 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
 
       {/* Documents List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {documents?.map((doc) => (
-          <Card key={doc.id} className="hover:shadow-md transition-shadow">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-2">
-                  <FileText className="h-5 w-5 text-blue-500" />
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-medium truncate">{doc.title}</h3>
-                    <p className="text-sm text-gray-500">
-                      {getDocumentTypeLabel(doc.document_type)}
-                    </p>
-                  </div>
-                </div>
-                <Badge className={getStatusColor(doc.status)}>
-                  {getStatusLabel(doc.status)}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {doc.description && (
-                <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                  {doc.description}
-                </p>
-              )}
-              
-              <div className="space-y-2 text-xs text-gray-500">
-                {doc.file_name && (
-                  <div>Fichier: {doc.file_name}</div>
-                )}
-                {doc.file_size && (
-                  <div>Taille: {formatFileSize(doc.file_size)}</div>
-                )}
-                <div>
-                  Créé: {new Date(doc.created_at || '').toLocaleDateString('fr-FR')}
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-2 mt-4">
-                {doc.file_url && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDownload(doc)}
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
-                )}
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => handleViewDocument(doc)}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-                <Button size="sm" variant="outline">
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        {documents?.map(doc => (
+          <div key={doc.id}>
+            <span>{doc.file_name}</span>
+            <span>{getDocumentTypeLabel(doc.document_type)}</span>
+          </div>
         ))}
       </div>
 

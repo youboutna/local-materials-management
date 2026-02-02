@@ -1,5 +1,5 @@
 // Repository interface for Employee entity
-import { Employee, EmployeeRole, Department } from '../entities/Employee';
+import { Employee, EmployeeRole, Department } from '@/domain/entities';
 
 export interface IEmployeeRepository {
   // CRUD operations

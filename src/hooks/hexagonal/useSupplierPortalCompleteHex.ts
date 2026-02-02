@@ -35,7 +35,7 @@ export interface SupplierDocument {
   title: string;
   file_name: string;
   file_url: string;
-  document_type: string;
+  document_type: DocumentType;
   uploaded_by: string;
   created_at: string;
   description?: string;
@@ -87,6 +87,13 @@ export interface ParsedInvoice {
   due_date: string;
   status: string;
   created_at: string;
+}
+
+enum DocumentType {
+  INVOICE = 'invoice',
+  DELIVERY_NOTE = 'delivery_note',
+  CERTIFICATE = 'certificate',
+  CONTRACT = 'contract'
 }
 
 // Auth hooks
@@ -344,7 +351,7 @@ export function useUploadSupplierDocumentHex() {
       file: File;
       title: string;
       description?: string;
-      documentType: string;
+      documentType: DocumentType;
       userId: string;
       supplierId?: string;
     }) => {
@@ -367,7 +374,7 @@ export function useUploadSupplierDocumentHex() {
         description,
         file_name: file.name,
         file_url: publicUrl,
-        document_type: documentType as any,
+        document_type: documentType,
         uploaded_by: userId,
         metadata: supplierId ? { supplier_id: supplierId } : null,
       });

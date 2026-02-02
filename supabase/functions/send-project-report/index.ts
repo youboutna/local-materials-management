@@ -14,35 +14,53 @@ interface ReportEmailRequest {
   fileName: string;
 }
 
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+interface EmailLog {
+  recipient: string;
+  subject: string;
+  content_type: string;
+  status: string;
+  metadata: {
+    projectTitle: string;
+    reportTitle: string;
+    fileName: string;
+    fileSize: number;
+  };
+}
 
-  try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+interface ReportResponse {
+  success: boolean;
+  message: string;
+  details: {
+    recipient: string;
+    fileName: string;
+    size: number;
+  };
+}
 
-    const { to, projectTitle, reportTitle, pdfBlob, fileName }: ReportEmailRequest = await req.json();
+interface EmailContent {
+  subject: string;
+  html: string;
+  metadata: {
+    projectTitle: string;
+    reportTitle: string;
+    fileName: string;
+    generatedAt: string;
+  };
+}
 
-    console.log('Sending project report email:', {
-      to,
-      projectTitle,
-      reportTitle,
-      fileName,
-      pdfSize: pdfBlob?.length || 0
-    });
+const generateEmailContent = (projectTitle: string, reportTitle: string, fileName: string): EmailContent => {
+  const generatedAt = new Date().toLocaleDateString('fr-FR', { 
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 
-    // Convert number array back to Uint8Array
-    const pdfBuffer = new Uint8Array(pdfBlob);
-
-    // Create email content
-    const subject = `Rapport de projet: ${projectTitle}`;
-    
-    const htmlContent = `
+  return {
+    subject: `Rapport de projet: ${projectTitle}`,
+    html: `
       <!DOCTYPE html>
       <html>
       <head>
@@ -67,14 +85,7 @@ serve(async (req) => {
               <h3 style="margin: 0 0 10px 0; color: #2d3748;">📋 ${reportTitle}</h3>
               <p style="margin: 5px 0; color: #4a5568;"><strong>Projet:</strong> ${projectTitle}</p>
               <p style="margin: 5px 0; color: #4a5568;"><strong>Fichier:</strong> ${fileName}</p>
-              <p style="margin: 5px 0; color: #4a5568;"><strong>Généré le:</strong> ${new Date().toLocaleDateString('fr-FR', { 
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}</p>
+              <p style="margin: 5px 0; color: #4a5568;"><strong>Généré le:</strong> ${generatedAt}</p>
             </div>
             
             <p style="margin: 20px 0;">
@@ -98,13 +109,46 @@ serve(async (req) => {
         </div>
       </body>
       </html>
-    `;
+    `,
+    metadata: {
+      projectTitle,
+      reportTitle,
+      fileName,
+      generatedAt
+    }
+  };
+};
 
-    // For development, we'll log the email instead of actually sending it
-    // In production, you would integrate with an email service like Resend
+const handler = async (req: Request): Promise<Response<ReportResponse>> => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const { to, projectTitle, reportTitle, pdfBlob, fileName }: ReportEmailRequest = await req.json();
+
+    console.log('Sending project report email:', {
+      to,
+      projectTitle,
+      reportTitle,
+      fileName,
+      pdfSize: pdfBlob?.length || 0
+    });
+
+    // Convert number array back to Uint8Array
+    const pdfBuffer = new Uint8Array(pdfBlob);
+
+    const emailContent = generateEmailContent(projectTitle, reportTitle, fileName);
+
     console.log('Email would be sent with the following content:', {
       to,
-      subject,
+      subject: emailContent.subject,
       attachmentSize: pdfBuffer.length,
       fileName
     });
@@ -116,35 +160,39 @@ serve(async (req) => {
     // 3. Handle email sending errors
 
     // Save email record to database for tracking
+    const emailLog: EmailLog = {
+      recipient: to,
+      subject: emailContent.subject,
+      content_type: 'project_report',
+      status: 'sent',
+      metadata: {
+        projectTitle,
+        reportTitle,
+        fileName,
+        fileSize: pdfBuffer.length
+      }
+    };
+
     const { error: dbError } = await supabaseClient
       .from('email_logs')
-      .insert({
-        recipient: to,
-        subject,
-        content_type: 'project_report',
-        status: 'sent',
-        metadata: {
-          projectTitle,
-          reportTitle,
-          fileName,
-          fileSize: pdfBuffer.length
-        }
-      });
+      .insert(emailLog);
 
     if (dbError) {
       console.error('Error saving email log:', dbError);
     }
 
+    const response: ReportResponse = {
+      success: true,
+      message: 'Rapport envoyé avec succès par email',
+      details: {
+        recipient: to,
+        fileName,
+        size: pdfBuffer.length
+      }
+    };
+
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Rapport envoyé avec succès par email',
-        details: {
-          recipient: to,
-          fileName,
-          size: pdfBuffer.length
-        }
-      }),
+      JSON.stringify(response),
       { 
         headers: { 
           ...corsHeaders, 
@@ -153,12 +201,13 @@ serve(async (req) => {
       }
     );
 
-  } catch (error) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error in send-project-report function:', error);
     return new Response(
       JSON.stringify({ 
         error: 'Erreur lors de l\'envoi du rapport par email',
-        details: error.message 
+        details: errorMessage 
       }),
       { 
         status: 500, 
@@ -169,4 +218,6 @@ serve(async (req) => {
       }
     );
   }
-});
+};
+
+serve(handler);

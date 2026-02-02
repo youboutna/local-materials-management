@@ -34,7 +34,7 @@ export interface IPhaseRepository {
   /**
    * Find all phases for a project
    */
-  findByProjectId(projectId: string): Promise<Phase[]>;
+  getPhasesByProjectId(projectId: string): Promise<Phase[]>;
 
   /**
    * Create new phase

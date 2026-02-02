@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { ProjectWithPayments, Payment } from '@/types/project';
@@ -56,7 +55,7 @@ export const useCreateProjectPayment = () => {
           amount: payment.amount,
           payment_date: payment.paymentDate,
           payment_method: payment.paymentMethod,
-          progress_at_payment: (project as any).progress,
+          progress_at_payment: (project as ProjectWithBudget).progress,
           inspection_id: latestInspection?.id,
           transaction_id: `TX-${Date.now()}`,
           contractor_id: payment.contractorId,
@@ -68,29 +67,29 @@ export const useCreateProjectPayment = () => {
           mobile_number: payment.mobileNumber,
           mobile_operator: payment.mobileOperator,
           receiver_name: payment.receiverName,
-        } as any)
+        })
         .select()
         .single();
       
       if (error) throw new Error(error.message);
 
       // Update project status to 'payé' if full amount
-      if (payment.amount >= (project as any).budget) {
+      if (payment.amount >= (project as ProjectWithBudget).budget) {
         await supabase
           .from('projects')
-          .update({ status: 'payé' } as any)
+          .update({ status: 'payé' })
           .eq('id', projectId);
       }
       
-      return data;
+      return data as Payment;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data: Payment, variables) => {
       queryClient.invalidateQueries({ queryKey: ['project', variables.projectId] });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       
       toast({
         title: 'Paiement réussi',
-        description: `Transfert de ${(data as any).amount.toLocaleString()} MRU complété`,
+        description: `Transfert de ${data.amount.toLocaleString()} MRU complété`,
       });
     },
     onError: (error: Error) => {
@@ -102,6 +101,23 @@ export const useCreateProjectPayment = () => {
     },
   });
 };
+
+interface ProjectWithBudget {
+  progress?: number;
+  budget?: number;
+}
+
+interface ProjectPayment {
+  id: string;
+  amount: number;
+  paymentDate: string;
+  paymentMethod: string;
+  progress?: number;
+  contractorId?: string;
+  mobileNumber?: string;
+  mobileOperator?: string;
+  receiverName?: string;
+}
 
 export const useProjectPayments = (projectId: string) => {
   const { data: project, isLoading: projectLoading } = useQuery({
@@ -131,7 +147,7 @@ export const useProjectPayments = (projectId: string) => {
       if (inspectionsError) throw inspectionsError;
 
       return {
-        ...(projectData as any),
+        ...projectData,
         payments: paymentsData || [],
         inspections: inspectionsData || [],
       };
@@ -139,38 +155,31 @@ export const useProjectPayments = (projectId: string) => {
     enabled: !!projectId,
   });
 
-  const createPayment = async (paymentData: any) => {
+  const createPayment = async (paymentData: ProjectPayment) => {
     try {
       const { data, error } = await supabase
         .from('payments')
         .insert({
           project_id: projectId,
           amount: paymentData.amount,
-          payment_date: paymentData.payment_date,
-          payment_method: paymentData.payment_method,
-          progress_at_payment: paymentData.progress_at_payment,
-          inspection_id: paymentData.inspection_id,
-          transaction_id: paymentData.transaction_id,
-          contractor_id: paymentData.contractor_id,
-          contractor_name: paymentData.contractor_name,
-          contractor_contact: paymentData.contractor_contact,
-          bank_name: paymentData.bank_name,
-          account_number: paymentData.account_number,
-          check_number: paymentData.check_number,
-          mobile_number: paymentData.mobile_number,
-          mobile_operator: paymentData.mobile_operator,
-          receiver_name: paymentData.receiver_name,
-        } as any)
+          payment_date: paymentData.paymentDate,
+          payment_method: paymentData.paymentMethod,
+          progress_at_payment: paymentData.progress,
+          contractor_id: paymentData.contractorId,
+          mobile_number: paymentData.mobileNumber,
+          mobile_operator: paymentData.mobileOperator,
+          receiver_name: paymentData.receiverName
+        })
         .select()
         .single();
 
       if (error) throw error;
 
       // Update project progress if needed
-      if (data && (data as any).progress_at_payment !== undefined) {
+      if (data && data.progress_at_payment !== undefined) {
         await supabase
           .from('projects')
-          .update({ progress: (data as any).progress_at_payment } as any)
+          .update({ progress: data.progress_at_payment })
           .eq('id', projectId);
       }
 
@@ -179,7 +188,7 @@ export const useProjectPayments = (projectId: string) => {
         description: "Le paiement a été enregistré avec succès.",
       });
 
-      return data;
+      return data as Payment;
     } catch (err) {
       console.error('Error creating payment:', err);
       toast({

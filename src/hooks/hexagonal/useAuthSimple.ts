@@ -38,7 +38,7 @@ export function useAuth() {
         access_token: sessionData.access_token,
         refresh_token: sessionData.refresh_token,
         expires_at: Math.floor(Date.now() / 1000) + 3600, // Default 1 hour expiry
-        user: null as any // Will be populated by auth service
+        user: null as AuthUser | null // Will be populated by auth service
       } as AuthSession);
       refetch();
       return { session: result, error: null };

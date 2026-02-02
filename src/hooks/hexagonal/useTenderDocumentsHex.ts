@@ -73,10 +73,10 @@ export function useWorkflowStepDocumentsList(tenderId: string) {
         tender_id: tenderId,
         document_id: doc.document_id,
         category: doc.document_type as TenderDocumentCategory || 'administrative',
-        subcategory: 'workflow_step' as any,
+        subcategory: TenderDocumentSubcategory.WORKFLOW_STEP,
         is_required: doc.is_required,
         reviewer_notes: doc.reviewer_notes,
-        status: doc.status as any,
+        status: doc.status as TenderDocumentStatus,
         created_at: doc.created_at,
         updated_at: doc.created_at,
         document: doc.document,
@@ -156,4 +156,18 @@ export function useUploadTenderDocument(tenderId: string, projectId?: string) {
       queryClient.invalidateQueries({ queryKey: ['tender-documents', tenderId] });
     }
   });
+}
+
+enum TenderDocumentSubcategory {
+  WORKFLOW_STEP = 'workflow_step',
+  ADMINISTRATIVE = 'administrative',
+  TECHNICAL = 'technical',
+  FINANCIAL = 'financial'
+}
+
+enum TenderDocumentStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  REVISION = 'needs_revision'
 }

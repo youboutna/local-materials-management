@@ -33,7 +33,7 @@ import {
   IUserRepository,
   IPVGeneratorRepository,
   IBankGuaranteeRepository,
-  IInspectionSchedulingRepository,
+  IBankGuaranteeActionRepository,
   IInsuranceRepository,
   IAuthRepository,
   IStorageRepository,
@@ -41,7 +41,8 @@ import {
   IParsedInvoiceRepository,
   IInspectionPermissionRepository,
   ITenderDocumentRepository,
-  // New repositories for enhanced architecture
+  IAlertRepository,
+  IMilestoneRepository,
   ITaskAssignmentRepository,
   IPerformanceMonitoringRepository,
   IWorkspaceRepository,
@@ -49,10 +50,8 @@ import {
   IProjectAlertRepository,
   IDecompteRepository,
   ITenderEstimateRepository,
-  IPaymentBlockingRepository,
-  IMilestoneRepository
+  IPaymentBlockingRepository
 } from '@/domain/repositories';
-import { IAlertRepository } from '@/domain/repositories/IAlertRepository';
 
 import {
   SupabaseProjectAdapter,
@@ -125,6 +124,7 @@ interface RepositoryRegistry {
   userRepository?: IUserRepository;
   pvGeneratorRepository?: IPVGeneratorRepository;
   bankGuaranteeRepository?: IBankGuaranteeRepository;
+  bankGuaranteeActionRepository?: IBankGuaranteeActionRepository;
   insuranceRepository?: IInsuranceRepository;
   authRepository?: IAuthRepository;
   storageRepository?: IStorageRepository;

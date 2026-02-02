@@ -1,10 +1,14 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { AuthService } from '@/application/services/AuthService';
 import { PasswordServiceFactory } from '@/services/password/PasswordServiceFactory';
 import { IPasswordResetRequest, IPasswordUpdateRequest } from '@/application/services/IPasswordService';
+
+interface PasswordError {
+  message: string;
+  code?: string;
+}
 
 export const usePasswordManagement = () => {
   const [loading, setLoading] = useState(false);
@@ -35,13 +39,14 @@ export const usePasswordManagement = () => {
         });
         return { success: false, error: result.error };
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as PasswordError;
       toast({
         title: "Erreur",
-        description: error.message || "Une erreur inattendue est survenue.",
+        description: err.message || "Une erreur inattendue est survenue.",
         variant: "destructive",
       });
-      return { success: false, error: error.message };
+      return { success: false, error: err.message };
     } finally {
       setLoading(false);
     }
@@ -77,13 +82,14 @@ export const usePasswordManagement = () => {
         });
         return { success: false, error: result.error };
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as PasswordError;
       toast({
         title: "Erreur",
-        description: error.message || "Une erreur inattendue est survenue.",
+        description: err.message || "Une erreur inattendue est survenue.",
         variant: "destructive",
       });
-      return { success: false, error: error.message };
+      return { success: false, error: err.message };
     } finally {
       setLoading(false);
     }
@@ -92,10 +98,16 @@ export const usePasswordManagement = () => {
   const validateResetToken = async (token: string) => {
     setLoading(true);
     try {
-      const result = await passwordService.validateResetToken(token);
+      const result = await passwordService.validateResetToken(token as string);
       return result;
-    } catch (error: any) {
-      return { valid: false, error: error.message };
+    } catch (error: unknown) {
+      const err = error as PasswordError;
+      toast({
+        title: "Erreur",
+        description: err.message || "Une erreur inattendue est survenue.",
+        variant: "destructive"
+      });
+      return { valid: false, error: err.message };
     } finally {
       setLoading(false);
     }

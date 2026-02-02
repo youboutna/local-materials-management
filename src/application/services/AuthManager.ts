@@ -5,12 +5,9 @@
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { IAuthRepository, AuthUser, AuthSession, LoginCredentials, RegisterData } from '@/domain/repositories/IAuthRepository';
-import { SupabaseAuthAdapter } from '@/infrastructure/supabase/adapters/SupabaseAuthAdapter';
-import { KeycloakAuthAdapter } from '@/infrastructure/supabase/adapters/KeycloakAuthAdapter';
-import { Auth0Adapter } from '@/infrastructure/supabase/adapters/Auth0Adapter';
-import { DatabaseAuthAdapter } from '@/infrastructure/supabase/adapters/DatabaseAuthAdapter';
+import { AuthUser, AuthSession, LoginCredentials, RegisterData, AuthCredentials, AuthResult, AuthError, AuthErrorDTO } from '@/domain/repositories/IAuthRepository';
 import { getAppConfig, AuthProvider } from '@/config/app';
+import { AuthUserStatus } from '@/domain/entities/AuthUser';
 
 export interface AuthManagerConfig {
   provider: AuthProvider;
@@ -18,6 +15,196 @@ export interface AuthManagerConfig {
   clientId?: string;
   realm?: string;
   redirectUri?: string;
+}
+
+interface SignInCredentials {
+  email: string;
+  password: string;
+}
+
+interface SignUpData {
+  email: string;
+  password: string;
+  name: string;
+}
+
+interface AuthSession {
+  token: string;
+  refreshToken: string;
+  expiresAt: number;
+}
+
+interface AuthProviderConfig {
+  provider: AuthProvider;
+  url?: string;
+  clientId?: string;
+  realm?: string;
+  redirectUri?: string;
+}
+
+interface IAuthRepository {
+  authenticate(provider: AuthProvider, credentials: AuthCredentials): Promise<AuthResult>;
+  getCurrentSession(): Promise<{ session: AuthSession | null; error: Error | null }>;
+  getCurrentUser(): Promise<{ user: AuthUser | null; error: Error | null }>;
+  signIn(credentials: LoginCredentials): Promise<{ session: AuthSession | null; error: Error | null }>;
+  signUp(data: RegisterData): Promise<{ user: AuthUser | null; error: Error | null }>;
+  signOut(): Promise<{ error: Error | null }>;
+  resetPassword(email: string): Promise<{ error: Error | null }>;
+  updatePassword(newPassword: string): Promise<{ error: Error | null }>;
+}
+
+class SupabaseAuthAdapter implements IAuthRepository {
+  async authenticate(provider: AuthProvider, credentials: AuthCredentials): Promise<AuthResult> {
+    // Implementation
+  }
+
+  async getCurrentSession(): Promise<{ session: AuthSession | null; error: Error | null }> {
+    // Implementation
+  }
+
+  async getCurrentUser(): Promise<{ user: AuthUser | null; error: Error | null }> {
+    // Implementation
+  }
+
+  async signIn(credentials: LoginCredentials): Promise<{ session: AuthSession | null; error: Error | null }> {
+    // Implementation
+  }
+
+  async signUp(data: RegisterData): Promise<{ user: AuthUser | null; error: Error | null }> {
+    // Implementation
+  }
+
+  async signOut(): Promise<{ error: Error | null }> {
+    // Implementation
+  }
+
+  async resetPassword(email: string): Promise<{ error: Error | null }> {
+    // Implementation
+  }
+
+  async updatePassword(newPassword: string): Promise<{ error: Error | null }> {
+    // Implementation
+  }
+}
+
+class KeycloakAuthAdapter implements IAuthRepository {
+  private config: AuthManagerConfig;
+
+  constructor(config: AuthManagerConfig) {
+    this.config = config;
+  }
+
+  async authenticate(provider: AuthProvider, credentials: AuthCredentials): Promise<AuthResult> {
+    // Implementation
+  }
+
+  async getCurrentSession(): Promise<{ session: AuthSession | null; error: Error | null }> {
+    // Implementation
+  }
+
+  async getCurrentUser(): Promise<{ user: AuthUser | null; error: Error | null }> {
+    // Implementation
+  }
+
+  async signIn(credentials: LoginCredentials): Promise<{ session: AuthSession | null; error: Error | null }> {
+    // Implementation
+  }
+
+  async signUp(data: RegisterData): Promise<{ user: AuthUser | null; error: Error | null }> {
+    // Implementation
+  }
+
+  async signOut(): Promise<{ error: Error | null }> {
+    // Implementation
+  }
+
+  async resetPassword(email: string): Promise<{ error: Error | null }> {
+    // Implementation
+  }
+
+  async updatePassword(newPassword: string): Promise<{ error: Error | null }> {
+    // Implementation
+  }
+}
+
+class Auth0Adapter implements IAuthRepository {
+  private config: AuthManagerConfig;
+
+  constructor(config: AuthManagerConfig) {
+    this.config = config;
+  }
+
+  async authenticate(provider: AuthProvider, credentials: AuthCredentials): Promise<AuthResult> {
+    // Implementation
+  }
+
+  async getCurrentSession(): Promise<{ session: AuthSession | null; error: Error | null }> {
+    // Implementation
+  }
+
+  async getCurrentUser(): Promise<{ user: AuthUser | null; error: Error | null }> {
+    // Implementation
+  }
+
+  async signIn(credentials: LoginCredentials): Promise<{ session: AuthSession | null; error: Error | null }> {
+    // Implementation
+  }
+
+  async signUp(data: RegisterData): Promise<{ user: AuthUser | null; error: Error | null }> {
+    // Implementation
+  }
+
+  async signOut(): Promise<{ error: Error | null }> {
+    // Implementation
+  }
+
+  async resetPassword(email: string): Promise<{ error: Error | null }> {
+    // Implementation
+  }
+
+  async updatePassword(newPassword: string): Promise<{ error: Error | null }> {
+    // Implementation
+  }
+}
+
+class DatabaseAuthAdapter implements IAuthRepository {
+  private config: AuthManagerConfig;
+
+  constructor(config: AuthManagerConfig) {
+    this.config = config;
+  }
+
+  async authenticate(provider: AuthProvider, credentials: AuthCredentials): Promise<AuthResult> {
+    // Implementation
+  }
+
+  async getCurrentSession(): Promise<{ session: AuthSession | null; error: Error | null }> {
+    // Implementation
+  }
+
+  async getCurrentUser(): Promise<{ user: AuthUser | null; error: Error | null }> {
+    // Implementation
+  }
+
+  async signIn(credentials: LoginCredentials): Promise<{ session: AuthSession | null; error: Error | null }> {
+    // Implementation
+  }
+
+  async signUp(data: RegisterData): Promise<{ user: AuthUser | null; error: Error | null }> {
+    // Implementation
+  }
+
+  async signOut(): Promise<{ error: Error | null }> {
+    // Implementation
+  }
+
+  async resetPassword(email: string): Promise<{ error: Error | null }> {
+    // Implementation
+  }
+
+  async updatePassword(newPassword: string): Promise<{ error: Error | null }> {
+    // Implementation
+  }
 }
 
 export class AuthManager {
@@ -192,6 +379,47 @@ export class AuthManager {
         return false;
     }
   }
+
+  /**
+   * Sign in with credentials
+   */
+  async signIn(credentials: SignInCredentials, provider?: AuthProvider): Promise<AuthSession> {
+    // implementation
+  }
+
+  async authenticate(
+    provider: AuthProvider,
+    credentials: AuthCredentials
+  ): Promise<AuthResult> {
+    try {
+      const result = await this.getAdapter().authenticate(provider, credentials);
+      return {
+        success: true,
+        user: result.user,
+        token: result.token
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: this.handleAuthError(error)
+      };
+    }
+  }
+
+  private handleAuthError(error: unknown): AuthErrorDTO {
+    if (error instanceof Error) {
+      return {
+        code: 'server_error',
+        message: error.message
+      };
+    }
+    return {
+      code: 'server_error',
+      message: 'Unknown authentication error'
+    };
+  }
+
+  // ... all other methods from AuthManagerNew
 }
 
 // Singleton instance for global access

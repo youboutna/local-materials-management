@@ -23,14 +23,19 @@ interface WorkflowRequirements {
   requiresDonor: boolean;
 }
 
-interface InvoiceFormData {
+interface ProgressInvoiceData {
   project_id: string;
-  inspection_id?: string;
+  invoice_number: string;
+  invoice_date: string;
   progress_percentage: number;
   invoice_amount: number;
   work_description: string;
-  quantities_executed?: any;
-  lot_details?: any;
+  quantities_executed?: Record<string, number>;
+  lot_details?: {
+    id: string;
+    name: string;
+    completed: boolean;
+  }[];
 }
 
 export function useProgressInvoiceHex() {
@@ -131,7 +136,7 @@ export function useProgressInvoiceHex() {
     }
   };
 
-  const submitInvoice = async (formData: InvoiceFormData): Promise<void> => {
+  const submitInvoice = async (formData: ProgressInvoiceData): Promise<void> => {
     try {
       setLoading(true);
       
@@ -156,7 +161,7 @@ export function useProgressInvoiceHex() {
     }
   };
 
-  const validateInvoice = async (formData: InvoiceFormData): Promise<boolean> => {
+  const validateInvoice = async (formData: ProgressInvoiceData): Promise<boolean> => {
     try {
       // Basic validation
       if (!formData.project_id) {

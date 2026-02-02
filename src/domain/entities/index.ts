@@ -13,17 +13,21 @@ export {
   type EscalationLevel 
 } from './Hierarchy';
 
+// Exporter Task et ses types associés
+export { Task } from './Task';
+export type { TaskStatus, TaskPriority } from '../types/TaskTypes';
+
 // Additional entities
 export { Inspection, type InspectionStatus, type InspectionDocument } from './Inspection';
 export { Payment, type PaymentStatus, type PaymentMethod, type PaymentDocument } from './Payment';
-export { Task, type TaskStatus, type TaskPriority } from './Task';
 export { Material, type MaterialCategory } from './Material';
-export { Employee, type EmployeeRole, type Department, type Permission } from './Employee';
+export { Employee } from './Employee';
+export type { EmployeeRole, Department, Permission } from './Employee';
 export { UserRole } from './UserRole';
 export { Position, type PositionPermissions } from './Position';
 export { Certification } from './Certification';
 export { Risk } from './Risk';
-export { type RiskStatus, type RiskLevel, type RiskCategory } from './RiskTypesExport';
+export type { RiskStatus, RiskLevel, RiskCategory } from './RiskTypesExport';
 export { Tender, type TenderStatus, type SelectionMode, type MarketType, type EvaluationCriteria } from './Tender';
 export { Supplier, type SupplierStatus, type SupplierCategory, type SupplierContact, type SupplierRating } from './Supplier';
 export { Document, type DocumentType, type DocumentStatus } from './Document';

@@ -8,8 +8,7 @@ import { toast } from '@/hooks/use-toast';
 import { DocumentService } from '@/application/services/DocumentService';
 
 interface DocumentSectionProps {
-  relatedId: string;
-  relatedType: 'project' | 'inspection' | 'payment' | 'bank_guarantee' | 'insurance';
+  projectId: string;
   title?: string;
 }
 
@@ -30,8 +29,7 @@ interface LocalDocument {
 }
 
 const DocumentSection: React.FC<DocumentSectionProps> = ({
-  relatedId,
-  relatedType,
+  projectId,
   title = "Documents associés"
 }) => {
   const [documents, setDocuments] = useState<LocalDocument[]>([]);
@@ -40,65 +38,15 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
 
   useEffect(() => {
     loadDocuments();
-  }, [relatedId]);
+  }, [projectId]);
 
   const loadDocuments = async () => {
-    if (!relatedId) return;
+    if (!projectId) return;
     
     setLoading(true);
     try {
-      let loadedDocuments: any[] = [];
+      const loadedDocuments = await DocumentService.getProjectDocuments(projectId);
       
-      // Filter based on related type using DocumentService
-      switch (relatedType) {
-        case 'project':
-          loadedDocuments = await DocumentService.getProjectDocuments(relatedId);
-          break;
-        case 'inspection':
-          loadedDocuments = await DocumentService.getInspectionDocuments(relatedId);
-          break;
-        case 'payment':
-          loadedDocuments = await DocumentService.getPaymentDocuments(relatedId);
-          break;
-        case 'bank_guarantee':
-          // Get project_id from bank_guarantee and filter documents
-          try {
-            const guaranteeData = await DocumentService.getBankGuaranteeProject(relatedId);
-            
-            if (guaranteeData && guaranteeData.project_id) {
-              loadedDocuments = await DocumentService.getProjectDocumentsByTags(guaranteeData.project_id, ['bank_guarantee']);
-            } else {
-              setDocuments([]);
-              return;
-            }
-          } catch (err) {
-            console.error('Error fetching bank guarantee project:', err);
-            setDocuments([]);
-            return;
-          }
-          break;
-        case 'insurance':
-          // Get project_id from insurance_certificates and filter documents
-          try {
-            const insuranceData = await DocumentService.getInsuranceProject(relatedId);
-            
-            if (insuranceData && insuranceData.project_id) {
-              loadedDocuments = await DocumentService.getProjectDocumentsByTags(insuranceData.project_id, ['insurance']);
-            } else {
-              setDocuments([]);
-              return;
-            }
-          } catch (err) {
-            console.error('Error fetching insurance project:', err);
-            setDocuments([]);
-            return;
-          }
-          break;
-        default:
-          // For other types, try to match by project_id
-          loadedDocuments = await DocumentService.getProjectDocuments(relatedId);
-      }
-
       setDocuments(loadedDocuments.map((doc: any) => ({
         ...doc,
         description: doc.description || undefined,

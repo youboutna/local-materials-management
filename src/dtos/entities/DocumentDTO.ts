@@ -6,25 +6,28 @@
 import { BaseEntityDTO } from '../shared';
 
 export interface DocumentDTO extends BaseEntityDTO {
+  id: string;
   projectId: string | null;
   phaseId: string | null;
   inspectionId: string | null;
   paymentId: string | null;
   supplierId: string | null;
-  title: string;
+  documentType: string;
+  title: string | null;
   description: string | null;
-  documentType: DocumentType;
-  status: DocumentStatus;
   fileName: string | null;
-  fileUrl: string | null;
   fileSize: number | null;
+  fileUrl: string | null;
   mimeType: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  uploadedBy: string | null;
   tags: string[];
   isInternalOnly: boolean;
   isSharedWithSuppliers: boolean;
   deadlineDate: string | null;
   assignedTo: string | null;
-  uploadedBy: string | null;
   category: string | null;
   subcategory: string | null;
   metadata: Record<string, unknown> | null;
@@ -177,4 +180,13 @@ export interface DocumentShareDTO {
   };
   expiresAt?: string;
   message?: string;
+}
+
+export interface DocumentResponseDTO {
+  id: string;
+  fileName: string;
+  fileSize: number;
+  fileUrl: string;
+  documentType: string;
+  createdAt: string;
 }

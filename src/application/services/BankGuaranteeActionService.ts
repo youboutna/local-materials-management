@@ -77,6 +77,7 @@ export class BankGuaranteeActionService {
   constructor(
     private bankGuaranteeRepository: IBankGuaranteeRepository = RepositoryFactory.getBankGuaranteeRepository()
   ) {}
+
   /**
    * Create action (simplified interface)
    */
@@ -87,15 +88,40 @@ export class BankGuaranteeActionService {
     performed_by: string;
     metadata?: Record<string, unknown>;
   }): Promise<BankGuaranteeActionDTO> {
-    return this.createBankGuaranteeAction({
+    // First get the guarantee to validate it exists
+    const guarantee = await this.bankGuaranteeRepository.getById(data.guarantee_id);
+    
+    if (!guarantee) {
+      throw new AppError(ErrorCode.NOT_FOUND, 'Bank guarantee not found');
+    }
+
+    // Create full action record matching DTO
+    const actionRecord: BankGuaranteeActionDTO = {
+      id: `action-${Date.now()}`,
       guarantee_id: data.guarantee_id,
       action_type: data.action_type as BankGuaranteeActionDTO['action_type'],
-      title: data.action_type,
+      title: `Action: ${data.action_type}`,
       description: data.description,
+      status: 'pending',
       priority: 'medium',
       created_by: data.performed_by,
-      documents: []
+      documents: [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      ...(data.metadata || {})
+    };
+
+    // Update guarantee with new action
+    const updatedGuarantee = await this.bankGuaranteeRepository.update(data.guarantee_id, {
+      actions: [...(guarantee.actions || []), actionRecord]
     });
+
+    if (!updatedGuarantee.actions) {
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create action');
+    }
+
+    // Return the newly created action
+    return actionRecord;
   }
   
   /**
@@ -108,25 +134,18 @@ export class BankGuaranteeActionService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Missing required fields for action');
       }
 
-      // Validate action type
-      const validActionTypes = ['notification', 'claim', 'renewal', 'cancellation', 'extension', 'modification'];
-      if (!validActionTypes.includes(actionData.action_type)) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, `Invalid action type: ${actionData.action_type}`);
+      // Get the existing guarantee
+      const guarantee = await this.bankGuaranteeRepository.getById(actionData.guarantee_id);
+      if (!guarantee) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Bank guarantee not found');
       }
 
-      // Validate priority if provided
-      if (actionData.priority) {
-        const validPriorities = ['low', 'medium', 'high', 'urgent'];
-        if (!validPriorities.includes(actionData.priority)) {
-          throw new AppError(ErrorCode.VALIDATION_ERROR, `Invalid priority: ${actionData.priority}`);
-        }
-      }
-
-      // For now, create action through bank guarantee repository
-      // TODO: Implement dedicated action repository when available
-      const actionMetadata = {
+      // Create full action record
+      const actionRecord: BankGuaranteeActionDTO = {
+        id: `action-${Date.now()}`,
+        guarantee_id: actionData.guarantee_id,
         action_type: actionData.action_type,
-        title: actionData.title,
+        title: actionData.title || `Action: ${actionData.action_type}`,
         description: actionData.description,
         status: 'pending',
         priority: actionData.priority || 'medium',
@@ -139,35 +158,15 @@ export class BankGuaranteeActionService {
         updated_at: new Date().toISOString()
       };
 
-      // Create action as a notification through bank guarantee repository
-      // This is a temporary solution until a dedicated action repository is available
-      const result = await this.bankGuaranteeRepository.create({
-        project_id: 'temp', // This will be updated when proper repository is available
-        guarantee_type: 'temp',
-        guarantee_amount: 0,
-        issuing_bank: 'temp',
-        guarantee_number: 'temp',
-        issue_date: new Date().toISOString(),
-        expiry_date: new Date().toISOString(),
-        status: 'temp',
-        conditions: [],
-        documents: []
-      });
+      // Update guarantee with new action
+      const updatedGuarantee = await this.bankGuaranteeRepository.update(
+        actionData.guarantee_id, 
+        {
+          actions: [...(guarantee.actions || []), actionRecord]
+        }
+      );
 
-      if (!result) {
-        throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create action');
-      }
-
-      // Return mock action DTO for now
-      return {
-        id: `action-${Date.now()}`,
-        ...actionData,
-        status: 'pending',
-        priority: actionData.priority || 'medium',
-        documents: actionData.documents || [],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
+      return actionRecord;
     } catch (error) {
       console.error('BankGuaranteeActionService.createBankGuaranteeAction failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create action');

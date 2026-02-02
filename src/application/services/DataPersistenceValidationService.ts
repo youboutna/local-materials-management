@@ -10,41 +10,16 @@ import { MaterialService } from './MaterialService';
 import { EmployeeService } from './EmployeeService';
 import { SupplierService } from './SupplierService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-
-export interface ValidationResult {
-  isValid: boolean;
-  entity: string;
-  entityId: string;
-  issues: ValidationIssue[];
-  metrics: PersistenceMetrics;
-}
-
-export interface ValidationIssue {
-  severity: 'error' | 'warning' | 'info';
-  field: string;
-  message: string;
-  expectedType?: string;
-  actualType?: string;
-}
-
-export interface PersistenceMetrics {
-  totalEntities: number;
-  validEntities: number;
-  invalidEntities: number;
-  dataIntegrityScore: number;
-  lastValidated: Date;
-}
-
-export interface ValidationReport {
-  summary: {
-    totalValidations: number;
-    passedValidations: number;
-    failedValidations: number;
-    overallScore: number;
-  };
-  details: ValidationResult[];
-  recommendations: string[];
-}
+import {
+  DataValidationResultDTO,
+  DataValidationIssueDTO,
+  PersistenceMetricsDTO
+} from '@/dtos/entities/DataValidationDTO';
+import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
+import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
+import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
+import { SupplierDTO } from '@/dtos/entities/SupplierDTO';
 
 export class DataPersistenceValidationService {
   private projectService: ProjectService;
@@ -64,9 +39,9 @@ export class DataPersistenceValidationService {
   /**
    * Validate all complex data persistence
    */
-  static async validateAllComplexData(): Promise<ValidationResult[]> {
+  static async validateAllComplexData(): Promise<DataValidationResultDTO[]> {
     const service = new DataPersistenceValidationService();
-    const results: ValidationResult[] = [];
+    const results: DataValidationResultDTO[] = [];
 
     try {
       // Validate Projects
@@ -99,7 +74,16 @@ export class DataPersistenceValidationService {
   /**
    * Generate complete validation report
    */
-  static async generateValidationReport(): Promise<ValidationReport> {
+  static async generateValidationReport(): Promise<{
+    summary: {
+      totalValidations: number;
+      passedValidations: number;
+      failedValidations: number;
+      overallScore: number;
+    };
+    details: DataValidationResultDTO[];
+    recommendations: string[];
+  }> {
     const results = await DataPersistenceValidationService.validateAllComplexData();
     
     const totalValidations = results.length;
@@ -130,14 +114,14 @@ export class DataPersistenceValidationService {
   /**
    * Validate Projects
    */
-  private async validateProjects(): Promise<ValidationResult[]> {
-    const results: ValidationResult[] = [];
+  private async validateProjects(): Promise<DataValidationResultDTO[]> {
+    const results: DataValidationResultDTO[] = [];
     
     try {
       const projects = await this.projectService.getAllProjects();
       
       for (const project of projects) {
-        const issues: ValidationIssue[] = [];
+        const issues: DataValidationIssueDTO[] = [];
 
         // Validate required fields
         if (!project.title || project.title.trim() === '') {
@@ -212,8 +196,8 @@ export class DataPersistenceValidationService {
   /**
    * Validate Phases
    */
-  private async validatePhases(): Promise<ValidationResult[]> {
-    const results: ValidationResult[] = [];
+  private async validatePhases(): Promise<DataValidationResultDTO[]> {
+    const results: DataValidationResultDTO[] = [];
     
     try {
       // Get all phases from all projects
@@ -223,10 +207,14 @@ export class DataPersistenceValidationService {
         const phases = await this.phaseService.getPhasesByProject(project.id);
         
         for (const phase of phases) {
-          const issues: ValidationIssue[] = [];
+          const issues: DataValidationIssueDTO[] = [];
 
-          // Validate required fields - using phase_name from PhaseDTO
-          const phaseName = (phase as any).phase_name || (phase as any).name;
+          function isLegacyPhase(phase: unknown): phase is { phase_name?: string } {
+            return typeof phase === 'object' && phase !== null && 'phase_name' in phase;
+          }
+
+          const phaseName = isLegacyPhase(phase) ? phase.phase_name || '' : phase.name;
+
           if (!phaseName || phaseName.trim() === '') {
             issues.push({
               severity: 'error',
@@ -279,14 +267,14 @@ export class DataPersistenceValidationService {
   /**
    * Validate Materials
    */
-  private async validateMaterials(): Promise<ValidationResult[]> {
-    const results: ValidationResult[] = [];
+  private async validateMaterials(): Promise<DataValidationResultDTO[]> {
+    const results: DataValidationResultDTO[] = [];
     
     try {
       const materials = await this.materialService.getAllMaterials();
       
       for (const material of materials) {
-        const issues: ValidationIssue[] = [];
+        const issues: DataValidationIssueDTO[] = [];
 
         // Validate required fields
         if (!material.name || material.name.trim() === '') {
@@ -348,14 +336,14 @@ export class DataPersistenceValidationService {
   /**
    * Validate Employees
    */
-  private async validateEmployees(): Promise<ValidationResult[]> {
-    const results: ValidationResult[] = [];
+  private async validateEmployees(): Promise<DataValidationResultDTO[]> {
+    const results: DataValidationResultDTO[] = [];
     
     try {
       const employees = await this.employeeService.getAllEmployees();
       
       for (const employee of employees) {
-        const issues: ValidationIssue[] = [];
+        const issues: DataValidationIssueDTO[] = [];
 
         // Validate required fields
         if (!employee.fullName || employee.fullName.trim() === '') {
@@ -408,14 +396,14 @@ export class DataPersistenceValidationService {
   /**
    * Validate Suppliers
    */
-  private async validateSuppliers(): Promise<ValidationResult[]> {
-    const results: ValidationResult[] = [];
+  private async validateSuppliers(): Promise<DataValidationResultDTO[]> {
+    const results: DataValidationResultDTO[] = [];
     
     try {
       const suppliers = await this.supplierService.getAllSuppliers();
       
       for (const supplier of suppliers) {
-        const issues: ValidationIssue[] = [];
+        const issues: DataValidationIssueDTO[] = [];
 
         // Validate required fields
         if (!supplier.name || supplier.name.trim() === '') {

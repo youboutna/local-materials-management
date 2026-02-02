@@ -24,8 +24,27 @@ interface ValidationResult {
   };
 }
 
+interface ValidationLog {
+  document_id: string;
+  submission_id: string;
+  is_valid: boolean;
+  errors: string[] | null;
+  warnings: string[] | null;
+  validated_at: string;
+}
+
+type DocumentCategory = 'administrative' | 'technical' | 'financial';
+
+interface AllowedMimeTypes extends Record<DocumentCategory, string[]> {
+  [key: string]: string[];
+}
+
+interface MaxFileSizes extends Record<DocumentCategory, number> {
+  [key: string]: number;
+}
+
 // Allowed MIME types by category
-const ALLOWED_MIME_TYPES = {
+const ALLOWED_MIME_TYPES: AllowedMimeTypes = {
   administrative: [
     'application/pdf',
     'application/msword',
@@ -51,13 +70,13 @@ const ALLOWED_MIME_TYPES = {
 };
 
 // Max file sizes by category (in bytes)
-const MAX_FILE_SIZES = {
+const MAX_FILE_SIZES: MaxFileSizes = {
   administrative: 10 * 1024 * 1024, // 10MB
   technical: 20 * 1024 * 1024, // 20MB
   financial: 15 * 1024 * 1024 // 15MB
 };
 
-serve(async (req) => {
+const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -88,15 +107,15 @@ serve(async (req) => {
     const warnings: string[] = [];
 
     // 1. Validate file size
-    const category = expected_category || 'administrative';
-    const maxSize = MAX_FILE_SIZES[category as keyof typeof MAX_FILE_SIZES] || MAX_FILE_SIZES.administrative;
+    const category = (expected_category as DocumentCategory) || 'administrative';
+    const maxSize = MAX_FILE_SIZES[category] || MAX_FILE_SIZES.administrative;
     
     if (document.file_size && document.file_size > maxSize) {
       errors.push(`La taille du fichier (${(document.file_size / 1024 / 1024).toFixed(2)} MB) dépasse la limite autorisée (${(maxSize / 1024 / 1024).toFixed(2)} MB)`);
     }
 
     // 2. Validate MIME type
-    const allowedTypes = ALLOWED_MIME_TYPES[category as keyof typeof ALLOWED_MIME_TYPES] || ALLOWED_MIME_TYPES.administrative;
+    const allowedTypes = ALLOWED_MIME_TYPES[category] || ALLOWED_MIME_TYPES.administrative;
     
     if (document.mime_type && !allowedTypes.includes(document.mime_type)) {
       errors.push(`Type de fichier non autorisé: ${document.mime_type}. Types acceptés: ${allowedTypes.join(', ')}`);
@@ -150,6 +169,15 @@ serve(async (req) => {
       }
     };
 
+    const validationLog: ValidationLog = {
+      document_id,
+      submission_id,
+      is_valid,
+      errors: errors.length > 0 ? errors : null,
+      warnings: warnings.length > 0 ? warnings : null,
+      validated_at: new Date().toISOString()
+    };
+
     // Update document validation status
     const { error: updateError } = await supabase
       .from('documents')
@@ -169,14 +197,7 @@ serve(async (req) => {
     // Create validation log
     await supabase
       .from('document_validation_logs')
-      .insert({
-        document_id,
-        submission_id,
-        is_valid,
-        errors: errors.length > 0 ? errors : null,
-        warnings: warnings.length > 0 ? warnings : null,
-        validated_at: new Date().toISOString()
-      });
+      .insert(validationLog);
 
     console.log('Validation result:', validationResult);
 
@@ -188,14 +209,15 @@ serve(async (req) => {
       }
     );
 
-  } catch (error) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error in validate-document function:', error);
     
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: errorMessage,
         is_valid: false,
-        errors: [error.message],
+        errors: [errorMessage],
         warnings: []
       }),
       {
@@ -204,4 +226,6 @@ serve(async (req) => {
       }
     );
   }
-});
+};
+
+serve(handler);

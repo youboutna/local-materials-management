@@ -159,8 +159,8 @@ export function usePhaseDetails(phaseId: string | undefined) {
     const referentials = referentialService.getAllReferentials();
     for (const ref of referentials) {
       try {
-        const phases = referentialService.getPhasesForReferential(ref.code as any);
-        const matchingPhase = phases.find((p: any) => p.code === constructionPhase);
+        const phases = referentialService.getPhasesForReferential(ref.code);
+        const matchingPhase = phases.find((p) => p.code === constructionPhase);
         if (matchingPhase) {
           return {
             referential: ref,
@@ -184,7 +184,7 @@ export function usePhaseDetails(phaseId: string | undefined) {
         ...updates,
         status: updates.status === 'delayed' ? 'in_progress' : updates.status
       };
-      return phaseService.updatePhase(phaseId, convertedUpdates as any);
+      return phaseService.updatePhase(phaseId, convertedUpdates);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
@@ -245,10 +245,13 @@ export function usePhaseDetails(phaseId: string | undefined) {
         ...step,
         description: step.description || '', // Ensure description is not undefined
         tasks: step.tasks || [] // Ensure tasks is array
-      } as any; // Cast to any to handle type differences
+      } as PhaseStepDTO; // Cast to PhaseStepDTO
       newStep.id = crypto.randomUUID();
       
-      const updatedSteps = [...phaseQuery.data.steps, newStep];
+      const updatedSteps = phaseQuery.data.steps.map((step: PhaseStepDTO) => 
+        step.id === newStep.id ? newStep : step
+      );
+      
       return phaseService.updatePhase(phaseId, { steps: updatedSteps });
     },
     onSuccess: () => {
@@ -273,9 +276,9 @@ export function usePhaseDetails(phaseId: string | undefined) {
     mutationFn: async ({ stepId, updates }: { stepId: string; updates: Partial<PhaseStepDTO> }) => {
       if (!phaseId || !phaseQuery.data) throw new Error('Phase data is required');
       
-      const updatedSteps = phaseQuery.data.steps.map((step: any) => 
+      const updatedSteps = phaseQuery.data.steps.map((step: PhaseStepDTO) => 
         step.id === stepId ? { ...step, ...updates } : step
-      ) as any; // Cast to any to handle type differences
+      );
       
       return phaseService.updatePhase(phaseId, { steps: updatedSteps });
     },
@@ -297,7 +300,7 @@ export function usePhaseDetails(phaseId: string | undefined) {
     mutationFn: async (stepId: string) => {
       if (!phaseId || !phaseQuery.data) throw new Error('Phase data is required');
       
-      const updatedSteps = phaseQuery.data.steps.filter(step => step.id !== stepId);
+      const updatedSteps = phaseQuery.data.steps.filter((step: PhaseStepDTO) => step.id !== stepId);
       return phaseService.updatePhase(phaseId, { steps: updatedSteps });
     },
     onSuccess: () => {
@@ -327,7 +330,7 @@ export function usePhaseDetails(phaseId: string | undefined) {
         id: crypto.randomUUID(),
       };
       
-      const updatedSteps = phaseQuery.data.steps.map(step => 
+      const updatedSteps = phaseQuery.data.steps.map((step: PhaseStepDTO) => 
         step.id === stepId 
           ? { ...step, tasks: [...step.tasks, newTask] }
           : step
@@ -365,16 +368,16 @@ export function usePhaseDetails(phaseId: string | undefined) {
     }) => {
       if (!phaseId || !phaseQuery.data) throw new Error('Phase data is required');
       
-      const updatedSteps = phaseQuery.data.steps.map((step: any) => 
+      const updatedSteps = phaseQuery.data.steps.map((step: PhaseStepDTO) => 
         step.id === stepId 
           ? { 
               ...step, 
-              tasks: step.tasks.map((task: any) => 
+              tasks: step.tasks.map((task: PhaseTaskDTO) => 
                 task.id === taskId ? { ...task, ...updates } : task
               )
             }
           : step
-      ) as any; // Cast to any to handle type differences
+      );
       
       return phaseService.updatePhase(phaseId, { steps: updatedSteps });
     },
@@ -396,9 +399,9 @@ export function usePhaseDetails(phaseId: string | undefined) {
     mutationFn: async ({ stepId, taskId }: { stepId: string; taskId: string }) => {
       if (!phaseId || !phaseQuery.data) throw new Error('Phase data is required');
       
-      const updatedSteps = phaseQuery.data.steps.map(step => 
+      const updatedSteps = phaseQuery.data.steps.map((step: PhaseStepDTO) => 
         step.id === stepId 
-          ? { ...step, tasks: step.tasks.filter(task => task.id !== taskId) }
+          ? { ...step, tasks: step.tasks.filter((task: PhaseTaskDTO) => task.id !== taskId) }
           : step
       );
       

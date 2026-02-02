@@ -51,84 +51,128 @@ export interface BankGuaranteeStats {
   expiringSoonCount: number;
 }
 
+interface CreateBankGuaranteeDto {
+  project_id: string;
+  contractor_id: string;
+  guarantee_type: 'performance' | 'payment' | 'advance_payment' | 'warranty' | 'retention';
+  guarantee_amount: number;
+  issuing_bank: string;
+  bank_name: string;
+  guarantee_number: string;
+  issue_date: string;
+  expiry_date: string;
+  status: 'active' | 'expired' | 'cancelled' | 'claimed' | 'pending';
+  conditions: string[];
+  documents: string[];
+  currency: string;
+  exchange_rate?: number;
+}
+
+interface BankGuaranteeEntity {
+  id: string;
+  project_id: string;
+  contractor_id: string;
+  guarantee_type: 'performance' | 'payment' | 'advance_payment' | 'warranty' | 'retention';
+  guarantee_amount: number;
+  issuing_bank: string;
+  bank_name: string;
+  guarantee_number: string;
+  issue_date: string;
+  expiry_date: string;
+  status: 'active' | 'expired' | 'cancelled' | 'claimed' | 'pending';
+  conditions: string[];
+  documents: string[];
+  currency: string;
+  exchange_rate?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Options for querying bank guarantees
+ */
+interface GetBankGuaranteesOptions {
+  projectId?: string;
+  limit?: number;
+  offset?: number;
+  status?: BankGuaranteeDTO['status'];
+}
+
+/**
+ * Bank Guarantee Service - Hexagonal Architecture
+ * Handles all business logic related to bank guarantees
+ * 
+ * @example
+ * const service = new BankGuaranteeService();
+ * const guarantees = await service.getBankGuarantees({ projectId: '123', limit: 10 });
+ */
 export class BankGuaranteeService {
   constructor(
     private bankGuaranteeRepository: IBankGuaranteeRepository = RepositoryFactory.getBankGuaranteeRepository()
   ) {}
+
+  static async getByProjectId(projectId: string): Promise<BankGuaranteeDTO[]> {
+    const repo = RepositoryFactory.getBankGuaranteeRepository();
+    return repo.findByProjectId(projectId);
+  }
+
   /**
    * Create a new bank guarantee
    */
-  async createBankGuarantee(guaranteeData: Omit<BankGuaranteeDTO, 'id' | 'created_at' | 'updated_at'>): Promise<BankGuaranteeDTO> {
+  async createBankGuarantee(guaranteeData: CreateBankGuaranteeDto): Promise<BankGuaranteeDTO> {
     try {
-      // Validate required fields
-      if (!guaranteeData.project_id || !guaranteeData.guarantee_amount || !guaranteeData.issuing_bank) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Missing required fields for bank guarantee');
+      // Validation renforcée
+      if (!guaranteeData.project_id || !guaranteeData.issuing_bank) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID and issuing bank are required');
       }
-
-      // Validate amount
+      
       if (guaranteeData.guarantee_amount <= 0) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Guarantee amount must be positive');
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Amount must be positive');
       }
-
-      // Validate dates
+      
       const issueDate = new Date(guaranteeData.issue_date);
       const expiryDate = new Date(guaranteeData.expiry_date);
       
       if (expiryDate <= issueDate) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Expiry date must be after issue date');
       }
-
-      // Create domain entity for repository
-      const domainGuarantee = {
-        project_id: guaranteeData.project_id,
-        guarantee_type: guaranteeData.guarantee_type,
-        guarantee_amount: guaranteeData.guarantee_amount,
-        issuing_bank: guaranteeData.issuing_bank,
-        guarantee_number: guaranteeData.guarantee_number,
-        issue_date: guaranteeData.issue_date,
-        expiry_date: guaranteeData.expiry_date,
-        status: guaranteeData.status,
-        conditions: guaranteeData.conditions,
-        documents: guaranteeData.documents
-      };
-
-      // Save through repository
-      const createdGuarantee = await this.bankGuaranteeRepository.create(domainGuarantee);
       
-      if (!createdGuarantee) {
-        throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create bank guarantee');
-      }
-
-      // Convert back to DTO
-      return this.mapToDTO(createdGuarantee);
+      const created = await this.bankGuaranteeRepository.create({
+        ...guaranteeData,
+        status: guaranteeData.status || 'pending'
+      });
+      
+      return this.mapToDTO(created);
     } catch (error) {
-      console.error('Error creating bank guarantee:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create bank guarantee');
+      throw this.normalizeError(error, 'Failed to create guarantee');
     }
   }
 
   /**
-   * Get all bank guarantees (with optional project filter)
+   * Get bank guarantees with pagination and filtering
+   * @param options Query options including pagination and filters
+   * @returns Promise<BankGuaranteeDTO[]> List of bank guarantees
    */
-  async getBankGuarantees(projectId?: string): Promise<BankGuaranteeDTO[]> {
+  async getBankGuarantees(options: GetBankGuaranteesOptions = {}): Promise<BankGuaranteeDTO[]> {
     try {
-      // Validate projectId to prevent UUID errors
-      if (projectId && projectId.trim() === '') {
-        console.warn('BankGuaranteeService.getBankGuarantees: Invalid projectId provided, fetching all guarantees');
-        // Fetch all guarantees when projectId is invalid
-        projectId = undefined;
-      }
-
-      const guarantees = await this.bankGuaranteeRepository.getByProject(projectId || '');
+      const { projectId, limit, offset, status } = options;
       
-      if (!guarantees) {
-        return [];
+      // Validate projectId if provided
+      if (projectId && projectId.trim() === '') {
+        console.warn('Invalid projectId provided, ignoring filter');
+        options.projectId = undefined;
       }
 
-      return guarantees.map(guarantee => this.mapToDTO(guarantee));
+      const guarantees = await this.bankGuaranteeRepository.getByProject({
+        projectId,
+        limit,
+        offset,
+        status
+      });
+      
+      return guarantees.map(this.mapToDTO);
     } catch (error) {
-      console.error('Error fetching bank guarantees:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch bank guarantees');
+      throw this.normalizeError(error, 'Failed to fetch bank guarantees');
     }
   }
 
@@ -136,7 +180,7 @@ export class BankGuaranteeService {
    * Get all bank guarantees for a project
    */
   async getProjectBankGuarantees(projectId: string): Promise<BankGuaranteeDTO[]> {
-    return this.getBankGuarantees(projectId);
+    return this.getBankGuarantees({ projectId });
   }
 
   /**
@@ -456,25 +500,43 @@ export class BankGuaranteeService {
   /**
    * Map repository result to DTO
    */
-  private mapToDTO(repositoryResult: Record<string, unknown>): BankGuaranteeDTO {
+  private mapToDTO(repositoryResult: BankGuaranteeEntity): BankGuaranteeDTO {
+    if (!repositoryResult) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Invalid repository result');
+    }
+    
     return {
-      id: (repositoryResult.id as string) || '',
-      project_id: (repositoryResult.project_id as string) || '',
-      contractor_id: (repositoryResult.contractor_id as string) || '',
-      guarantee_type: (repositoryResult.guarantee_type as BankGuaranteeDTO['guarantee_type']) || 'performance',
-      guarantee_amount: (repositoryResult.guarantee_amount as number) || 0,
-      issuing_bank: (repositoryResult.issuing_bank as string) || (repositoryResult.bank_name as string) || '',
-      bank_name: (repositoryResult.bank_name as string) || (repositoryResult.issuing_bank as string) || '',
-      guarantee_number: (repositoryResult.guarantee_number as string) || '',
-      issue_date: (repositoryResult.issue_date as string) || '',
-      expiry_date: (repositoryResult.expiry_date as string) || '',
-      status: (repositoryResult.status as BankGuaranteeDTO['status']) || 'active',
-      conditions: (repositoryResult.conditions as string[]) || [],
-      documents: (repositoryResult.documents as string[]) || [],
-      currency: (repositoryResult.currency as string) || 'MRO',
-      exchange_rate: repositoryResult.exchange_rate as number,
-      created_at: (repositoryResult.created_at as string) || new Date().toISOString(),
-      updated_at: (repositoryResult.updated_at as string) || new Date().toISOString()
+      id: repositoryResult.id,
+      project_id: repositoryResult.project_id,
+      contractor_id: repositoryResult.contractor_id || '',
+      guarantee_type: repositoryResult.guarantee_type,
+      guarantee_amount: repositoryResult.guarantee_amount,
+      issuing_bank: repositoryResult.issuing_bank,
+      bank_name: repositoryResult.bank_name || repositoryResult.issuing_bank,
+      guarantee_number: repositoryResult.guarantee_number,
+      issue_date: repositoryResult.issue_date,
+      expiry_date: repositoryResult.expiry_date,
+      status: repositoryResult.status,
+      conditions: repositoryResult.conditions || [],
+      documents: repositoryResult.documents || [],
+      currency: repositoryResult.currency || 'MRO',
+      exchange_rate: repositoryResult.exchange_rate,
+      created_at: repositoryResult.created_at,
+      updated_at: repositoryResult.updated_at
     };
+  }
+
+  /**
+   * Normalize error
+   */
+  private normalizeError(error: unknown, defaultMessage: string): AppError {
+    if (error instanceof AppError) return error;
+    
+    console.error('BankGuaranteeService error:', error);
+    return new AppError(
+      ErrorCode.INTERNAL_ERROR, 
+      defaultMessage,
+      error instanceof Error ? error : undefined
+    );
   }
 }

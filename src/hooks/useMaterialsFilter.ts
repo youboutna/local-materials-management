@@ -9,15 +9,28 @@ interface Material {
   price_per_unit: number;
   available_quantity: number;
   image?: string;
-  origin_location?: string;
-  minimum_quantity?: number;
-  local_type?: string;
-  adresse?: string | any;
-  coordinates_latitude?: number;
-  coordinates_longitude?: number;
-  forme?: string;
-  localisation?: any;
-  is_active?: boolean;
+  location?: string;
+  type?: string;
+  address?: string;
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
+  shape?: string;
+  isActive?: boolean;
+}
+
+interface MaterialFilter {
+  location?: string;
+  minimumQuantity?: number;
+  type?: string;
+  address?: string;
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
+  shape?: string;
+  isActive?: boolean;
 }
 
 export const useMaterialsFilter = (materials: Material[]) => {
@@ -34,6 +47,8 @@ export const useMaterialsFilter = (materials: Material[]) => {
   const [selectedRegion, setSelectedRegion] = useState("all");
   const [selectedStockLevel, setSelectedStockLevel] = useState("all");
   
+  const [filters, setFilters] = useState<MaterialFilter>({});
+  
   // Extract unique values for filter options
   const categories = useMemo(() => 
     Array.from(new Set(materials.map((m) => m.category))).filter(Boolean),
@@ -41,12 +56,12 @@ export const useMaterialsFilter = (materials: Material[]) => {
   );
   
   const localTypes = useMemo(() => 
-    Array.from(new Set(materials.map((m) => m.local_type).filter(Boolean))) as string[],
+    Array.from(new Set(materials.map((m) => m.type).filter(Boolean))) as string[],
     [materials]
   );
   
   const regions = useMemo(() => 
-    Array.from(new Set(materials.map((m) => m.origin_location).filter(Boolean))) as string[],
+    Array.from(new Set(materials.map((m) => m.location).filter(Boolean))) as string[],
     [materials]
   );
   
@@ -65,11 +80,6 @@ export const useMaterialsFilter = (materials: Material[]) => {
           material.description,
           material.category,
           material.unit,
-          material.origin_location,
-          material.local_type,
-          material.price_per_unit?.toString(),
-          material.available_quantity?.toString(),
-          typeof material.adresse === 'string' ? material.adresse : JSON.stringify(material.adresse)
         ].filter(Boolean).join(' ').toLowerCase();
         
         // Check if all query terms are found in searchable text
@@ -87,12 +97,22 @@ export const useMaterialsFilter = (materials: Material[]) => {
     // Apply local type filter
     if (selectedLocalType && selectedLocalType !== "all") {
       filtered = filtered.filter(
-        (material) => material.local_type === selectedLocalType
+        (material) => material.type === selectedLocalType
       );
     }
 
+    // Apply location filter
+    if (filters.location) {
+      filtered = filtered.filter((material) => material.location?.includes(filters.location || ''));
+    }
+
+    // Apply type filter
+    if (filters.type) {
+      filtered = filtered.filter((material) => material.type === filters.type);
+    }
+
     setFilteredMaterials(filtered);
-  }, [materials, activeSearchTerm, selectedCategory, selectedLocalType]);
+  }, [materials, activeSearchTerm, selectedCategory, selectedLocalType, filters]);
   
   // Get stock level for material
   const getStockLevel = (available: number) => {
@@ -106,7 +126,7 @@ export const useMaterialsFilter = (materials: Material[]) => {
   const filteredInteractiveMaterials = useMemo(() => {
     return materials.filter(material => {
       // Only show materials with GPS coordinates
-      if (!material.coordinates_latitude || !material.coordinates_longitude) return false;
+      if (!material.coordinates?.lat || !material.coordinates?.lng) return false;
 
       // Fulltext search filter using active search term
       if (activeInteractiveSearchTerm && activeInteractiveSearchTerm.trim()) {
@@ -116,8 +136,8 @@ export const useMaterialsFilter = (materials: Material[]) => {
           material.name,
           material.description,
           material.category,
-          material.origin_location,
-          material.local_type,
+          material.location,
+          material.type,
           material.unit
         ].filter(Boolean).join(' ').toLowerCase();
         
@@ -132,7 +152,7 @@ export const useMaterialsFilter = (materials: Material[]) => {
       }
 
       // Region filter
-      if (selectedRegion !== "all" && material.origin_location !== selectedRegion) {
+      if (selectedRegion !== "all" && material.location !== selectedRegion) {
         return false;
       }
 
@@ -204,6 +224,8 @@ export const useMaterialsFilter = (materials: Material[]) => {
     handleResetFilters,
     handleResetInteractiveFilters,
     performSearch,
-    performInteractiveSearch
+    performInteractiveSearch,
+    filters,
+    setFilters
   };
 };

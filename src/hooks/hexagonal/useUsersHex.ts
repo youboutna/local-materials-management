@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 export interface UseUsersHexResult {
   users: UserResponseDto[];
   isLoading: boolean;
-  error: any;
+  error: string | null;
   refetch: () => void;
   createUser: (data: CreateUserRequestDto) => void;
   updateUser: ({ id, data }: { id: string; data: UpdateUserRequestDto }) => void;

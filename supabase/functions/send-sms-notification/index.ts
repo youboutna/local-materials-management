@@ -11,10 +11,26 @@ interface SMSNotificationRequest {
   message: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
   actionType: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
-const handler = async (req: Request): Promise<Response> => {
+interface SMSResponse {
+  sid: string;
+  to: string;
+  body: string;
+  status: 'queued' | 'sent' | 'failed';
+  date_created: string;
+  price: number | null;
+  uri: string;
+}
+
+interface SMSNotificationResponse {
+  success: boolean;
+  sms: SMSResponse;
+  message: string;
+}
+
+const handler = async (req: Request): Promise<Response<SMSNotificationResponse>> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -38,7 +54,7 @@ const handler = async (req: Request): Promise<Response> => {
     const smsContent = `[${priority.toUpperCase()}] ${message}`;
     
     // Simulate SMS API call
-    const smsResponse = {
+    const smsResponse: SMSResponse = {
       sid: `SMS${Date.now()}`,
       to,
       body: smsContent,
@@ -50,21 +66,27 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("SMS simulation completed:", smsResponse);
 
-    return new Response(JSON.stringify({
+    const response: SMSNotificationResponse = {
       success: true,
       sms: smsResponse,
       message: "SMS notification queued successfully"
-    }), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders,
-      },
-    });
-  } catch (error: any) {
+    };
+
+    return new Response(
+      JSON.stringify(response),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      }
+    );
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error("Error in send-sms-notification function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

@@ -14,35 +14,53 @@ interface TenderReportEmailRequest {
   fileName: string;
 }
 
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+interface TenderEmailLog {
+  recipient: string;
+  subject: string;
+  content_type: string;
+  status: string;
+  metadata: {
+    tenderTitle: string;
+    reportTitle: string;
+    fileName: string;
+    fileSize: number;
+  };
+}
 
-  try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+interface TenderReportResponse {
+  success: boolean;
+  message: string;
+  details: {
+    recipient: string;
+    fileName: string;
+    size: number;
+  };
+}
 
-    const { to, tenderTitle, reportTitle, pdfBlob, fileName }: TenderReportEmailRequest = await req.json();
+interface TenderEmailContent {
+  subject: string;
+  html: string;
+  metadata: {
+    tenderTitle: string;
+    reportTitle: string;
+    fileName: string;
+    generatedAt: string;
+  };
+}
 
-    console.log('Sending tender report email:', {
-      to,
-      tenderTitle,
-      reportTitle,
-      fileName,
-      pdfSize: pdfBlob?.length || 0
-    });
+const generateTenderEmailContent = (tenderTitle: string, reportTitle: string, fileName: string): TenderEmailContent => {
+  const generatedAt = new Date().toLocaleDateString('fr-FR', { 
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 
-    // Convert number array back to Uint8Array
-    const pdfBuffer = new Uint8Array(pdfBlob);
-
-    // Create email content
-    const subject = `Rapport d'appel d'offres: ${tenderTitle}`;
-    
-    const htmlContent = `
+  return {
+    subject: `Rapport d'appel d'offres: ${tenderTitle}`,
+    html: `
       <!DOCTYPE html>
       <html>
       <head>
@@ -67,14 +85,7 @@ serve(async (req) => {
               <h3 style="margin: 0 0 10px 0; color: #2d3748;">📋 ${reportTitle}</h3>
               <p style="margin: 5px 0; color: #4a5568;"><strong>Appel d'offres:</strong> ${tenderTitle}</p>
               <p style="margin: 5px 0; color: #4a5568;"><strong>Fichier:</strong> ${fileName}</p>
-              <p style="margin: 5px 0; color: #4a5568;"><strong>Généré le:</strong> ${new Date().toLocaleDateString('fr-FR', { 
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}</p>
+              <p style="margin: 5px 0; color: #4a5568;"><strong>Généré le:</strong> ${generatedAt}</p>
             </div>
             
             <p style="margin: 20px 0;">
@@ -110,13 +121,55 @@ serve(async (req) => {
         </div>
       </body>
       </html>
-    `;
+    `,
+    metadata: {
+      tenderTitle,
+      reportTitle,
+      fileName,
+      generatedAt
+    }
+  };
+};
+
+const handler = async (req: Request): Promise<Response> => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const { to, tenderTitle, reportTitle, pdfBlob, fileName }: TenderReportEmailRequest = await req.json();
+
+    console.log('Sending tender report email:', {
+      to,
+      tenderTitle,
+      reportTitle,
+      fileName,
+      pdfSize: pdfBlob?.length || 0
+    });
+
+    // Convert number array back to Uint8Array
+    const pdfBuffer = new Uint8Array(pdfBlob);
+
+    const emailContent = generateTenderEmailContent(tenderTitle, reportTitle, fileName);
+
+    console.log('Tender report email would be sent with the following content:', {
+      to,
+      subject: emailContent.subject,
+      attachmentSize: pdfBuffer.length,
+      fileName
+    });
 
     // For development, we'll log the email instead of actually sending it
     // In production, you would integrate with an email service like Resend
     console.log('Tender report email would be sent with the following content:', {
       to,
-      subject,
+      subject: emailContent.subject,
       attachmentSize: pdfBuffer.length,
       fileName
     });
@@ -128,35 +181,39 @@ serve(async (req) => {
     // 3. Handle email sending errors
 
     // Save email record to database for tracking
+    const emailLog: TenderEmailLog = {
+      recipient: to,
+      subject: emailContent.subject,
+      content_type: 'tender_report',
+      status: 'sent',
+      metadata: {
+        tenderTitle,
+        reportTitle,
+        fileName,
+        fileSize: pdfBuffer.length
+      }
+    };
+
     const { error: dbError } = await supabaseClient
       .from('email_logs')
-      .insert({
-        recipient: to,
-        subject,
-        content_type: 'tender_report',
-        status: 'sent',
-        metadata: {
-          tenderTitle,
-          reportTitle,
-          fileName,
-          fileSize: pdfBuffer.length
-        }
-      });
+      .insert(emailLog);
 
     if (dbError) {
       console.error('Error saving email log:', dbError);
     }
 
+    const response: TenderReportResponse = {
+      success: true,
+      message: 'Rapport d\'appel d\'offres envoyé avec succès par email',
+      details: {
+        recipient: to,
+        fileName,
+        size: pdfBuffer.length
+      }
+    };
+
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Rapport d\'appel d\'offres envoyé avec succès par email',
-        details: {
-          recipient: to,
-          fileName,
-          size: pdfBuffer.length
-        }
-      }),
+      JSON.stringify(response),
       { 
         headers: { 
           ...corsHeaders, 
@@ -165,12 +222,13 @@ serve(async (req) => {
       }
     );
 
-  } catch (error) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error in send-tender-report function:', error);
     return new Response(
       JSON.stringify({ 
         error: 'Erreur lors de l\'envoi du rapport d\'appel d\'offres par email',
-        details: error.message 
+        details: errorMessage 
       }),
       { 
         status: 500, 
@@ -181,4 +239,6 @@ serve(async (req) => {
       }
     );
   }
-});
+};
+
+serve(handler);

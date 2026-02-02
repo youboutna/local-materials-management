@@ -15,7 +15,7 @@ import { SupplierCategory } from "@/domain/entities/Supplier";
 export interface UseSuppliersHexResult {
   suppliers: SupplierResponseDto[];
   isLoading: boolean;
-  error: any;
+  error: string | null;
   refetch: () => void;
   createSupplier: (data: CreateSupplierRequestDto) => void;
   updateSupplier: ({ id, data }: { id: string; data: UpdateSupplierRequestDto }) => void;

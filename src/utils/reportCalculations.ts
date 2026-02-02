@@ -1,13 +1,44 @@
-import { EVMMetrics, PERTAnalysis, ProjectData } from '@/types/project';
+import { EVMMetrics, PERTAnalysis, ProjectData, PhaseDTO, TaskDTO } from '@/types/project';
+import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
+import { TaskDTO } from '@/dtos/entities/TaskDTO';
 
+interface PERTActivity {
+  name: string;
+  optimistic: number;
+  mostLikely: number;
+  pessimistic: number;
+}
 
+interface FinancialPayment {
+  amount: number;
+  date?: string;
+  category?: string;
+}
 
+interface FinancialExpense {
+  amount: number;
+  date?: string;
+  category?: string;
+}
+
+interface PhaseTimeline {
+  id: string;
+  name: string;
+  startDate: Date;
+  endDate: Date;
+  progress: number;
+  status: 'planned' | 'in_progress' | 'completed';
+}
+
+/**
+ * Calculate Earned Value Management (EVM) metrics with real project data
+ */
 export class ReportCalculations {
   
   /**
    * Calculate Earned Value Management (EVM) metrics with real project data
    */
-  static calculateEVMMetrics(project: ProjectData, actualCost: number, phases?: any[]): EVMMetrics {
+  static calculateEVMMetrics(project: ProjectData, actualCost: number, phases: PhaseDTO[] = []): EVMMetrics {
     const budget = project.budget || 0;
     const progress = project.progress || 0;
     
@@ -59,8 +90,8 @@ export class ReportCalculations {
   /**
    * Calculate PERT analysis for project phases with realistic estimates
    */
-  static calculatePERTAnalysis(phases?: any[], tasks?: any[]): PERTAnalysis {
-    let activities: any[] = [];
+  static calculatePERTAnalysis(phases?: PhaseDTO[], tasks?: TaskDTO[]): PERTAnalysis {
+    let activities: PERTActivity[] = [];
 
     // Use tasks if available, otherwise use phases
     if (tasks && tasks.length > 0) {
@@ -148,7 +179,11 @@ export class ReportCalculations {
   /**
    * Calculate comprehensive financial metrics from actual project data
    */
-  static async calculateFinancialMetrics(project: ProjectData, payments: any[], expenses: any[]): Promise<{
+  static async calculateFinancialMetrics(
+    project: ProjectData, 
+    payments: FinancialPayment[], 
+    expenses: FinancialExpense[]
+  ): Promise<{
     totalBudget: number;
     spentAmount: number;
     remainingBudget: number;
@@ -346,14 +381,7 @@ export class ReportCalculations {
   /**
    * Generate phase timeline data for Gantt chart
    */
-  static generatePhaseTimeline(project: ProjectData, phases?: any[]): Array<{
-    id: string;
-    name: string;
-    startDate: Date;
-    endDate: Date;
-    progress: number;
-    status: 'planned' | 'in_progress' | 'completed';
-  }> {
+  static generatePhaseTimeline(project: ProjectData, phases?: PhaseDTO[]): PhaseTimeline[] {
     const today = new Date();
     const projectStart = project.startDate ? new Date(project.startDate) : today;
     
@@ -378,14 +406,7 @@ export class ReportCalculations {
     }
 
     // Default phases
-    const phases1: Array<{
-      id: string;
-      name: string;
-      startDate: Date;
-      endDate: Date;
-      progress: number;
-      status: 'planned' | 'in_progress' | 'completed';
-    }> = [];
+    const phases1: PhaseTimeline[] = [];
 
     const phaseNames = [
       'Préparation et études',

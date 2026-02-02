@@ -9,7 +9,7 @@ export interface LoginRequestDto {
 }
 
 export interface LoginResponseDto {
-  user: any;
+  user: UserResponseDto;
   token: string;
   refreshToken: string;
 }
@@ -46,8 +46,8 @@ export interface RegisterResponseDto {
 }
 
 export interface AuthSessionDto {
-  user: any;
-  session: any;
+  user: UserResponseDto;
+  session: object;
   accessToken: string;
   refreshToken: string;
   expiresAt: number;
@@ -68,7 +68,7 @@ export interface UserProfileDto {
 export interface AuthErrorDto {
   message: string;
   code?: string;
-  details?: any;
+  details?: object;
 }
 
 export interface AuthValidationDto {

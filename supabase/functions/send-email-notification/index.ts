@@ -15,10 +15,18 @@ interface EmailNotificationRequest {
   message: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
   actionType: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
-const handler = async (req: Request): Promise<Response> => {
+interface ResendEmailResponse {
+  id: string;
+  from: string;
+  to: string[];
+  subject: string;
+  html: string;
+}
+
+const handler = async (req: Request): Promise<Response<ResendEmailResponse>> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -81,11 +89,11 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    const fromName = Deno.env.get("Deno_mail_from_name") || "Système de Surveillance";
-    const fromEmail = Deno.env.get("Deno_mail_from_notif") || "notifications@resend.dev";
-    const defaultSubject = Deno.env.get("Deno_mail_default_subject") || "Notification";
+    const fromName: string = Deno.env.get("Deno_mail_from_name") ?? "Système de Surveillance";
+    const fromEmail: string = Deno.env.get("Deno_mail_from_notif") ?? "notifications@resend.dev";
+    const defaultSubject: string = Deno.env.get("Deno_mail_default_subject") ?? "Notification";
 
-    const emailResponse = await resend.emails.send({
+    const emailResponse: ResendEmailResponse = await resend.emails.send({
       from: `${fromName} <${fromEmail}>`,
       to: [to],
       subject: `${priorityEmojis[priority]} ${subject || defaultSubject}`,
@@ -94,17 +102,21 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Email sent successfully:", emailResponse);
 
-    return new Response(JSON.stringify(emailResponse), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders,
-      },
-    });
-  } catch (error: any) {
+    return new Response(
+      JSON.stringify(emailResponse),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      }
+    );
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error("Error in send-email-notification function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

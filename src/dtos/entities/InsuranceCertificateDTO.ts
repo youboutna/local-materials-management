@@ -12,7 +12,7 @@ export interface InsuranceCertificateDTO {
   insurance_company: string;
   policy_number: string;
   coverage_amount: number;
-  coverage_type: string;
+  coverage_type: 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques';
   valid_from: string;
   valid_until: string;
   status: 'active' | 'expired' | 'expiring_soon' | 'missing';
@@ -29,7 +29,7 @@ export interface InsuranceCertificateFormData {
   insurance_company: string;
   policy_number: string;
   coverage_amount: number;
-  coverage_type: string;
+  coverage_type: 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques';
   valid_from: string;
   valid_until: string;
   status: 'active' | 'expired' | 'expiring_soon' | 'missing';
@@ -45,7 +45,7 @@ export interface InsuranceCertificateUpdateData {
   insurance_company?: string;
   policy_number?: string;
   coverage_amount?: number;
-  coverage_type?: string;
+  coverage_type?: 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques';
   valid_from?: string;
   valid_until?: string;
   status?: 'active' | 'expired' | 'expiring_soon' | 'missing';
@@ -58,7 +58,7 @@ export interface InsuranceCertificateFilterData {
   project_id?: string;
   contractor_id?: string;
   status?: 'active' | 'expired' | 'expiring_soon' | 'missing';
-  coverage_type?: string;
+  coverage_type?: 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques';
   search_term?: string;
   expiring_soon_days?: number;
 }

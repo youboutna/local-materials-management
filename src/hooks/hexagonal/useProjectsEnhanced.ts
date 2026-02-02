@@ -104,7 +104,7 @@ export function useProjectsEnhanced(): UseProjectsEnhancedResult {
       toast.success('Projet créé avec succès');
       queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Create project error:', error);
       toast.error('Erreur lors de la création du projet');
     }
@@ -125,7 +125,7 @@ export function useProjectsEnhanced(): UseProjectsEnhancedResult {
       toast.success('Projet mis à jour avec succès');
       queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Update project error:', error);
       toast.error('Erreur lors de la mise à jour du projet');
     }
@@ -145,7 +145,7 @@ export function useProjectsEnhanced(): UseProjectsEnhancedResult {
       toast.success('Projet supprimé avec succès');
       queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Delete project error:', error);
       toast.error('Erreur lors de la suppression du projet');
     }

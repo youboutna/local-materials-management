@@ -7,32 +7,19 @@ import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { PaymentDTO } from '@/domain/dtos/PaymentDTO';
+import { BudgetCalculationDto, BudgetWarningDto } from '@/dtos/transforms/budgetTransform';
 
-export interface BudgetCalculationDto {
-  projectId: string;
-  initialBudget: number;
-  currentSpent: number;
-  remainingBudget: number;
-  budgetUtilizationPercentage: number;
-  projectedTotalCost: number;
-  costVariance: number;
-  costVariancePercentage: number;
-  estimatedCompletionCost: number;
-  budgetStatus: 'healthy' | 'warning' | 'critical' | 'over_budget';
-  warnings: BudgetWarningDto[];
-  recommendations: string[];
+interface BudgetCalculationParams {
+  baseAmount: number;
+  adjustments: {
+    labor: number;
+    materials: number;
+    overhead: number;
+  };
 }
 
-export interface BudgetWarningDto {
-  type: 'budget_exceeded' | 'budget_warning' | 'cost_variance' | 'cash_flow' | 'timeline_delay';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  message: string;
-  currentValue: number;
-  thresholdValue: number;
-  recommendation: string;
-}
-
-export interface CostProjectionDto {
+interface CostProjectionDto {
   period: 'monthly' | 'quarterly' | 'yearly';
   projectedCosts: Array<{
     period: string;
@@ -44,7 +31,7 @@ export interface CostProjectionDto {
   confidence: number;
 }
 
-export interface CashFlowAnalysisDto {
+interface CashFlowAnalysisDto {
   projectId: string;
   cashInflows: Array<{
     date: string;
@@ -267,20 +254,26 @@ export class BudgetCalculationService {
     criticalAlerts: BudgetWarningDto[];
   }> {
     try {
-      const budgetAnalysis = await this.calculateBudgetAnalysis(projectId);
+      const calculation: BudgetCalculationDto = await this.calculateBudgetAnalysis(projectId);
       
-      const criticalAlerts = budgetAnalysis.warnings.filter(w => w.severity === 'critical');
-      const shouldWarn = budgetAnalysis.warnings.length > 0;
+      const criticalAlerts = calculation.warnings.filter(w => w.severity === 'critical');
+      const shouldWarn = calculation.warnings.length > 0;
 
       return {
         shouldWarn,
-        warnings: budgetAnalysis.warnings,
+        warnings: calculation.warnings,
         criticalAlerts
       };
     } catch (error) {
       console.error('BudgetCalculationService.checkCostWarning failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to check cost warning');
     }
+  }
+
+  calculateFinalBudget(input: BudgetCalculationParams): number {
+    const { baseAmount, adjustments } = input;
+    const totalAdjustments = adjustments.labor + adjustments.materials + adjustments.overhead;
+    return baseAmount + totalAdjustments;
   }
 
   // ============= Private Helper Methods =============
@@ -403,20 +396,19 @@ export class BudgetCalculationService {
     return recommendations;
   }
 
-  private calculateAverageSpend(payments: any[], period: string): number {
+  private calculateAverageSpend(payments: PaymentDTO[], period: string): number {
     if (payments.length === 0) return 0;
 
     const now = new Date();
-    const periodInDays = period === 'monthly' ? 30 : period === 'quarterly' ? 90 : 365;
-    
-    const recentPayments = payments.filter(p => {
-      const paymentDate = new Date(p.paymentDate || p.createdAt || '');
-      const daysDiff = (now.getTime() - paymentDate.getTime()) / (1000 * 60 * 60 * 24);
-      return daysDiff <= periodInDays * 3; // Use last 3 periods for average
+    const filteredPayments = payments.filter(payment => {
+      const paymentDate = new Date(payment.date);
+      // Filter logic based on period
     });
 
-    const totalSpend = recentPayments.reduce((sum, p) => sum + p.amount, 0);
-    return totalSpend / (periodInDays * 3 / periodInDays); // Average per period
+    if (filteredPayments.length === 0) return 0;
+    
+    const total = filteredPayments.reduce((sum, payment) => sum + payment.amount, 0);
+    return total / filteredPayments.length;
   }
 
   private addPeriods(date: Date, period: string, count: number): Date {

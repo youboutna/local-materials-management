@@ -7,8 +7,8 @@ import { SupplierService } from '@/application/services/SupplierService';
 
 export interface SupplierMgmtFormData {
   name: string;
-  company_name?: string;
-  contact_person?: string;
+  companyName?: string;
+  contactPerson?: string;
   category: string;
   status?: string;
   email?: string;
@@ -36,8 +36,8 @@ export function useCreateSupplier() {
     mutationFn: async (data: SupplierMgmtFormData) => {
       const supplierService = new SupplierService();
       await supplierService.createSupplier({
-        company_name: data.name || data.company_name || '',
-        contact_person: data.contact_person,
+        company_name: data.companyName || data.name || '',
+        contact_person: data.contactPerson,
         category: data.category,
         status: data.status || 'active',
         email: data.email,
@@ -58,8 +58,8 @@ export function useUpdateSupplier() {
     mutationFn: async ({ id, data }: { id: string; data: SupplierMgmtFormData }) => {
       const supplierService = new SupplierService();
       await supplierService.updateSupplier(id, {
-        company_name: data.name || data.company_name,
-        contact_person: data.contact_person,
+        company_name: data.companyName || data.name,
+        contact_person: data.contactPerson,
         category: data.category,
         status: data.status,
         email: data.email,

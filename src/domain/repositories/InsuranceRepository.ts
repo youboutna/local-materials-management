@@ -5,8 +5,9 @@
  */
 
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { InsuranceCertificateEntity } from '@/types/insurance.entity';
+import { InsuranceCertificateEntity } from '@/domain/entities/InsuranceCertificate.entity';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { InsuranceCertificateFilterData } from '@/dtos/entities/InsuranceCertificateDTO';
 
 export interface IInsuranceRepository {
   getActiveCertificates(): Promise<InsuranceCertificateEntity[]>;
@@ -17,7 +18,7 @@ export interface IInsuranceRepository {
   delete(id: string): Promise<void>;
   getExpiringSoon(daysThreshold: number): Promise<InsuranceCertificateEntity[]>;
   getByContractorId(contractorId: string): Promise<InsuranceCertificateEntity[]>;
-  search(filters: any): Promise<InsuranceCertificateEntity[]>;
+  search(filters: InsuranceCertificateFilterData): Promise<InsuranceCertificateEntity[]>;
 }
 
 export class InsuranceRepository implements IInsuranceRepository {
@@ -55,7 +56,7 @@ export class InsuranceRepository implements IInsuranceRepository {
     return this.adapter.getByContractorId(contractorId);
   }
 
-  async search(filters: any): Promise<InsuranceCertificateEntity[]> {
+  async search(filters: InsuranceCertificateFilterData): Promise<InsuranceCertificateEntity[]> {
     return this.adapter.search(filters);
   }
 }

@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,6 +19,66 @@ interface ProcessorConfig {
   maxRetries: number;
 }
 
+interface TaskRecord {
+  id: string;
+  project_id: string;
+  status: string;
+  start_date: string;
+  end_date: string;
+  actual_cost?: number;
+  weight?: number;
+}
+
+interface InsuranceRecord {
+  id: string;
+  policy_number: string;
+  insurance_company: string;
+  valid_until: string;
+  status: string;
+}
+
+interface Task {
+  id: string;
+  project_id: string;
+  status: string;
+  start_date: string;
+  end_date: string;
+  actual_cost?: number;
+  weight?: number;
+}
+
+interface InsurancePolicy {
+  id: string;
+  policy_number: string;
+  insurance_company: string;
+  valid_until: string;
+  status: string;
+  alertSent?: boolean;
+}
+
+interface InspectionRecord {
+  id: string;
+  status: string;
+  progress_at_inspection: number;
+}
+
+interface Inspection {
+  id: string;
+  status: string;
+  progress_at_inspection: number;
+  issues: Array<{
+    id: string;
+    description: string;
+    severity: string;
+    status: string;
+  }>;
+}
+
+interface EscalationThresholdRecord {
+  threshold_name: string;
+  threshold_value: number;
+}
+
 interface ProjectCheckTimestamps {
   projectId: string;
   lastChecks: {
@@ -27,6 +87,32 @@ interface ProjectCheckTimestamps {
     inspection: string;
   };
   updatedAt: string;
+}
+
+interface Project {
+  id: string;
+  title: string;
+  budget?: number;
+  status: string;
+  start_date: string;
+  end_date: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface ProjectManagerContext {
+  id: string;
+  title: string;
+  budget: number;
+  tasks?: Task[];
+  insurancePolicies?: InsurancePolicy[];
+  inspections?: Inspection[];
+  escalationThresholds?: {
+    alert: number;
+    notification: number;
+    guarantee: number;
+    legal: number;
+  };
 }
 
 interface ProjectManagerAlert {
@@ -44,16 +130,6 @@ interface ProjectManagerAlert {
   relatedEntityId?: string;
   deadline?: string;
   availableActions?: string[];
-}
-
-interface ProjectManagerContext {
-  id: string;
-  title: string;
-  budget: number;
-  tasks?: any[];
-  insurancePolicies?: any[];
-  inspections?: any[];
-  escalationThresholds?: any;
 }
 
 Deno.serve(async (req) => {
@@ -197,7 +273,7 @@ Deno.serve(async (req) => {
   }
 });
 
-async function getProcessorConfig(supabase: any): Promise<ProcessorConfig> {
+async function getProcessorConfig(supabase: SupabaseClient): Promise<ProcessorConfig> {
   // Try to get config from database settings table
   const { data: settings } = await supabase
     .from('system_settings')
@@ -218,39 +294,42 @@ async function getProcessorConfig(supabase: any): Promise<ProcessorConfig> {
   };
 }
 
-async function buildProjectContext(supabase: any, project: any): Promise<ProjectManagerContext> {
-  // Get related data for the project
-  const [tasksResult, insuranceResult, inspectionsResult, escalationResult] = await Promise.all([
-    supabase.from('tasks').select('*').eq('project_id', project.id),
-    supabase.from('insurance_certificates').select('*').eq('project_id', project.id),
-    supabase.from('inspections').select('*').eq('project_id', project.id),
-    supabase.from('escalation_thresholds').select('*').eq('is_active', true)
+async function buildProjectContext(supabase: SupabaseClient, project: Project): Promise<ProjectManagerContext> {
+  const [
+    { data: tasks },
+    { data: insurance },
+    { data: inspections },
+    { data: escalation }
+  ] = await Promise.all([
+    supabase.from('tasks').select('*').eq('project_id', project.id) as { data: TaskRecord[] | null },
+    supabase.from('insurance_certificates').select('*').eq('project_id', project.id) as { data: InsuranceRecord[] | null },
+    supabase.from('inspections').select('*').eq('project_id', project.id) as { data: InspectionRecord[] | null },
+    supabase.from('escalation_thresholds').select('*').eq('is_active', true) as { data: EscalationThresholdRecord[] | null }
   ]);
 
   return {
     id: project.id,
     title: project.title,
     budget: project.budget || 0,
-    tasks: tasksResult.data || [],
-    insurancePolicies: insuranceResult.data?.map(cert => ({
+    tasks: tasks || [],
+    insurancePolicies: insurance?.map(cert => ({
       id: cert.id,
-      reference: cert.policy_number,
-      type: 'assurance',
-      issuer: cert.insurance_company,
-      endDate: cert.valid_until,
+      policy_number: cert.policy_number,
+      insurance_company: cert.insurance_company,
+      valid_until: cert.valid_until,
       status: cert.status,
       alertSent: false
     })) || [],
-    inspections: inspectionsResult.data?.map(inspection => ({
+    inspections: inspections?.map(inspection => ({
       id: inspection.id,
       status: inspection.status,
       progress_at_inspection: inspection.progress_at_inspection || 0,
-      issues: [] // Would need to get issues from related table
+      issues: []
     })) || [],
-    escalationThresholds: escalationResult.data?.reduce((acc: any, threshold: any) => {
-      acc[threshold.threshold_name] = threshold.threshold_value;
-      return acc;
-    }, {}) || { alert: 10, notification: 20, guarantee: 30, legal: 40 }
+    escalationThresholds: escalation?.reduce((acc, threshold) => ({
+      ...acc,
+      [threshold.threshold_name]: threshold.threshold_value
+    }), { alert: 10, notification: 20, guarantee: 30, legal: 40 })
   };
 }
 
@@ -280,7 +359,7 @@ async function processProjectAlertsWithScheduling(projectContext: ProjectManager
   return alerts;
 }
 
-async function getProjectCheckTimestamps(supabase: any, projectId: string): Promise<ProjectCheckTimestamps> {
+async function getProjectCheckTimestamps(supabase: SupabaseClient, projectId: string): Promise<ProjectCheckTimestamps> {
   const { data } = await supabase
     .from('system_settings')
     .select('*')
@@ -329,7 +408,7 @@ function determineChecksToRun(checkTimestamps: ProjectCheckTimestamps): string[]
   return checksToRun;
 }
 
-async function updateProjectCheckTimestamps(supabase: any, projectId: string, checksRun: string[]): Promise<void> {
+async function updateProjectCheckTimestamps(supabase: SupabaseClient, projectId: string, checksRun: string[]): Promise<void> {
   const now = new Date().toISOString();
   
   // Get current timestamps
@@ -366,7 +445,7 @@ function checkInsurancePolicies(project: ProjectManagerContext): ProjectManagerA
   for (const policy of project.insurancePolicies || []) {
     if (policy.status === 'expired' && policy.alertSent) continue;
 
-    const endDate = new Date(policy.endDate);
+    const endDate = new Date(policy.valid_until);
     const daysToExpire = Math.floor((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     
     let severity: 'low' | 'medium' | 'high' | 'critical' = 'low';
@@ -382,7 +461,7 @@ function checkInsurancePolicies(project: ProjectManagerContext): ProjectManagerA
         type: 'insurance_expiry',
         severity,
         title: `Expiration d'assurance`,
-        message: `La police d'assurance ${policy.reference} (${policy.issuer}) ${daysToExpire <= 0 ? 'a expiré' : `expire dans ${daysToExpire} jours`}`,
+        message: `La police d'assurance ${policy.policy_number} (${policy.insurance_company}) ${daysToExpire <= 0 ? 'a expiré' : `expire dans ${daysToExpire} jours`}`,
         projectId: project.id,
         relatedEntityId: policy.id,
         triggerDate: today.toISOString(),
@@ -519,7 +598,7 @@ function checkFinancialRisks(project: ProjectManagerContext): ProjectManagerAler
   return alerts;
 }
 
-async function saveAlerts(supabase: any, alerts: ProjectManagerAlert[]): Promise<void> {
+async function saveAlerts(supabase: SupabaseClient, alerts: ProjectManagerAlert[]): Promise<void> {
   if (alerts.length === 0) return;
 
   // Save alerts to notifications table
@@ -550,7 +629,15 @@ async function saveAlerts(supabase: any, alerts: ProjectManagerAlert[]): Promise
   }
 }
 
-async function logProcessingSummary(supabase: any, summary: any): Promise<void> {
+async function logProcessingSummary(
+  supabase: SupabaseClient, 
+  summary: {
+    processedProjects: number;
+    totalAlerts: number;
+    processingTime: string;
+    config: ProcessorConfig;
+  }
+): Promise<void> {
   const { error } = await supabase
     .from('processing_logs')
     .insert({

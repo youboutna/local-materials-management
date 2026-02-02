@@ -1,8 +1,19 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/use-auth';
 import { toast } from '@/hooks/use-toast';
+
+interface Notification {
+  id: string;
+  recipient_id: string;
+  title: string;
+  message: string;
+  type: string;
+  related_id?: string;
+  read: boolean;
+  created_at: string;
+  metadata: Record<string, unknown>;
+}
 
 export const useNotifications = (userId?: string) => {
   const { user } = useAuth();
@@ -15,12 +26,12 @@ export const useNotifications = (userId?: string) => {
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('recipient_id' as any, actualUserId as any)
+        .eq('recipient_id', actualUserId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
-      return (data || []).map((notification: any) => ({
+      return (data || []).map((notification: Notification) => ({
         ...notification,
         metadata: notification.metadata || {}
       }));
@@ -28,14 +39,14 @@ export const useNotifications = (userId?: string) => {
     enabled: !!actualUserId,
   });
 
-  const unreadCount = notifications.filter((n: any) => !n.read).length;
+  const unreadCount = notifications.filter((n: Notification) => !n.read).length;
 
   const markAsRead = async (notificationId: string) => {
     try {
       const { error } = await supabase
         .from('notifications')
-        .update({ read: true } as any)
-        .eq('id' as any, notificationId as any);
+        .update({ read: true })
+        .eq('id', notificationId);
 
       if (error) throw error;
       
@@ -49,9 +60,9 @@ export const useNotifications = (userId?: string) => {
     try {
       const { error } = await supabase
         .from('notifications')
-        .update({ read: true } as any)
-        .eq('recipient_id' as any, actualUserId as any)
-        .eq('read' as any, false as any);
+        .update({ read: true })
+        .eq('recipient_id', actualUserId)
+        .eq('read', false);
 
       if (error) throw error;
       
@@ -67,7 +78,7 @@ export const useNotifications = (userId?: string) => {
     message: string,
     type: string,
     relatedId?: string,
-    metadata?: any
+    metadata?: Record<string, unknown>
   ) => {
     try {
       const { error } = await supabase
@@ -79,7 +90,7 @@ export const useNotifications = (userId?: string) => {
           type,
           related_id: relatedId,
           metadata: metadata || {},
-        } as any);
+        });
 
       if (error) throw error;
       

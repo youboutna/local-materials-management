@@ -8,27 +8,13 @@ import { IInsuranceRepository } from '@/domain/repositories/IInsuranceRepository
 import { INotificationRepository } from '@/domain/repositories/INotificationRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { NotificationService } from '@/application/services/NotificationService';
+import { InsuranceCertificateEntity } from '@/domain/entities/InsuranceCertificate.entity';
+import { InsuranceCertificateDTO } from '@/dtos/entities/InsuranceCertificateDTO';
 
-export interface InsuranceCertificateDTO {
-  id: string;
+interface CreateInsuranceRequestDto {
   project_id: string;
   contractor_id: string;
-  insurance_type: string;
-  provider: string;
-  policy_number: string;
-  coverage_amount: number;
-  start_date: string;
-  valid_until: string;
-  status: 'active' | 'expired' | 'pending';
-  documents: string[];
-  created_at: string;
-  updated_at: string;
-}
-
-export interface CreateInsuranceRequestDto {
-  project_id: string;
-  contractor_id: string;
-  insurance_type: string;
+  insurance_type: 'liability' | 'property' | 'professional_indemnity' | 'workers_compensation';
   provider: string;
   policy_number: string;
   coverage_amount: number;
@@ -39,13 +25,13 @@ export interface CreateInsuranceRequestDto {
   notes?: string;
 }
 
-export interface UpdateInsuranceRequestDto {
+interface UpdateInsuranceRequestDto {
   status?: 'active' | 'expired' | 'pending';
   notes?: string;
   documents?: string[];
 }
 
-export interface InsuranceStatistics {
+interface InsuranceStatistics {
   totalCertificates: number;
   activeCertificates: number;
   expiredCertificates: number;
@@ -53,7 +39,7 @@ export interface InsuranceStatistics {
   totalCoverage: number;
 }
 
-export interface InsuranceAlert {
+interface InsuranceAlert {
   certificateId: string;
   projectId: string;
   contractorId: string;
@@ -70,19 +56,19 @@ export class InsuranceService {
     private notificationService: NotificationService = new NotificationService(RepositoryFactory.getNotificationRepository())
   ) {}
 
-  private mapEntityToDTO(entity: any): InsuranceCertificateDTO {
+  private mapEntityToDTO(entity: InsuranceCertificateEntity): InsuranceCertificateDTO {
     return {
       id: entity.id,
       project_id: entity.project_id,
       contractor_id: entity.contractor_id,
-      insurance_type: entity.insurance_type,
-      provider: entity.provider,
+      contractor_name: entity.contractor_name,
+      insurance_company: entity.insurance_company,
       policy_number: entity.policy_number,
       coverage_amount: entity.coverage_amount,
-      start_date: entity.start_date,
+      coverage_type: entity.coverage_type,
+      valid_from: entity.valid_from,
       valid_until: entity.valid_until,
       status: entity.status,
-      documents: entity.documents || [],
       created_at: entity.created_at,
       updated_at: entity.updated_at
     };
@@ -103,8 +89,8 @@ export class InsuranceService {
           certificateId: cert.id,
           projectId: cert.project_id,
           contractorId: cert.contractor_id,
-          insuranceType: (cert as any).insurance_type || 'general',
-          provider: (cert as any).provider || 'Unknown',
+          insuranceType: cert.coverage_type,
+          provider: cert.insurance_company,
           expiryDate: cert.valid_until,
           alertLevel,
           daysUntilExpiry

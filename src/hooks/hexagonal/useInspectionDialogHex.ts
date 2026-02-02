@@ -22,7 +22,7 @@ export function useCreateInspectionHex() {
     mutationFn: async (data: CreateInspectionData) => {
       const { data: result, error } = await supabase
         .from('inspections')
-        .insert(data as any)
+        .insert(data)
         .select()
         .single();
 
@@ -43,8 +43,8 @@ export function useUpdateProjectStatusHex() {
     mutationFn: async ({ projectId, status }: { projectId: string; status: string }) => {
       const { error } = await supabase
         .from('projects')
-        .update({ status } as any)
-        .eq('id', projectId as any);
+        .update({ status })
+        .eq('id', projectId);
 
       if (error) throw error;
     },

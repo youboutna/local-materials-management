@@ -3,39 +3,44 @@
  * Business logic for document management
  */
 
-import { Document, DocumentType } from '@/domain/entities/Document';
+import { Document as DocumentEntity, DocumentType } from '@/domain/entities/Document';
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { DocumentTransformer } from '@/dtos/transforms/DocumentTransformer';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { DocumentDTO, CreateDocumentDTO, UpdateDocumentDTO } from '@/dtos/entities/DocumentDTO';
+import { DocumentResponseDto } from '@/dtos/entities/DocumentResponseDto';
 
-// Service DTOs for data exchange
-export interface DocumentResponseDto {
+// Ensure Document entity has required properties
+interface RepositoryDocument {
   id: string;
   title: string;
-  type: DocumentType;
+  documentType: DocumentType;
   projectId?: string;
-  fileUrl?: string;
-  status?: string;
-  expiryDate?: string;
+  phaseId?: string;
+  inspectionId?: string;
+  paymentId?: string;
+  supplierId?: string;
+  description?: string;
+  fileName?: string;
+  fileSize?: number;
+  fileUrl: string;
+  mimeType?: string;
+  status: string;
+  isInternalOnly: boolean;
+  isSharedWithSuppliers: boolean;
+  deadlineDate?: string;
+  assignedTo?: string;
+  metadata: Record<string, unknown>;
+  category?: string;
+  subcategory?: string;
   createdAt: string;
   updatedAt: string;
+  uploadedBy?: string;
+  tags: string[];
 }
 
-export interface CreateDocumentRequestDto {
-  title: string;
-  type: DocumentType;
-  projectId?: string;
-  description?: string;
-  fileUrl?: string;
-}
-
-export interface UpdateDocumentRequestDto {
-  title?: string;
-  description?: string;
-  status?: string;
-}
-
+// Service DTOs for data exchange
 export interface DocumentSearchDto {
   query: string;
   projectId?: string;
@@ -59,14 +64,12 @@ export class DocumentService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID is required');
       }
 
-      // Get all documents and filter by phase
-      const documents = await this.documentRepository.findAll();
+      const documents = await this.documentRepository.findAll() as RepositoryDocument[];
       const phaseDocuments = documents.filter(doc => 
-        (doc as any).phaseId === phaseId || 
-        (doc as any).phase_id === phaseId
+        doc.phaseId === phaseId
       );
       
-      return phaseDocuments.map(doc => this.mapToDTO(doc));
+      return phaseDocuments.map(doc => this.documentTransformer.toResponseDto(doc));
     } catch (error) {
       console.error('DocumentService.getDocumentsByPhase failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get documents by phase');
@@ -78,8 +81,8 @@ export class DocumentService {
    */
   async getAllDocuments(): Promise<DocumentResponseDto[]> {
     try {
-      const documents = await this.documentRepository.findAll();
-      return documents.map(doc => this.mapToDTO(doc));
+      const documents = await this.documentRepository.findAll() as RepositoryDocument[];
+      return documents.map(doc => this.documentTransformer.toResponseDto(doc));
     } catch (error) {
       console.error('DocumentService.getAllDocuments failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get all documents');
@@ -89,18 +92,14 @@ export class DocumentService {
   /**
    * Get project documents
    */
-  async getProjectDocuments(projectId: string): Promise<DocumentResponseDto[]> {
-    try {
-      if (!projectId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
-      }
-
-      const documents = await this.documentRepository.findByProjectId(projectId);
-      return documents.map(doc => this.mapToDTO(doc));
-    } catch (error) {
-      console.error('DocumentService.getProjectDocuments failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get project documents');
-    }
+  static async getProjectDocuments(projectId: string): Promise<DocumentDTO[]> {
+    const repo = RepositoryFactory.getDocumentRepository();
+    const documents = await repo.findByProjectId(projectId) as RepositoryDocument[];
+    return documents.map(doc => ({
+      ...doc,
+      category: doc.category || 'general',
+      subcategory: doc.subcategory || null
+    }));
   }
 
   /**
@@ -205,28 +204,16 @@ export class DocumentService {
   /**
    * Create document
    */
-  async createDocument(data: CreateDocumentRequestDto): Promise<DocumentResponseDto> {
+  async createDocument(data: CreateDocumentDTO): Promise<DocumentResponseDto> {
     try {
-      // Validate required fields
-      if (!data.title || !data.type) {
+      if (!data.title || !data.documentType) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Title and document type are required');
       }
 
-      // Create entity from DTO
-      const documentEntity = this.mapToEntity(data);
+      const documentEntity = this.documentTransformer.fromCreateDto(data);
+      const createdDocument = await this.documentRepository.save(documentEntity);
       
-      // For now, return mock data as create method is not available in repository
-      // TODO: Implement proper document creation when repository supports it
-      console.warn('DocumentService.createDocument: Create method not available in repository');
-      
-      const mockDocument = {
-        ...documentEntity,
-        id: `doc_${Date.now()}`,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
-      return this.mapToDTO(mockDocument);
+      return this.documentTransformer.toResponseDto(createdDocument);
     } catch (error) {
       console.error('DocumentService.createDocument failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create document');
@@ -236,31 +223,27 @@ export class DocumentService {
   /**
    * Update document
    */
-  async updateDocument(id: string, updates: UpdateDocumentRequestDto): Promise<DocumentResponseDto | null> {
+  async updateDocument(id: string, updates: UpdateDocumentDTO): Promise<DocumentResponseDto | null> {
     try {
       if (!id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Document ID is required');
       }
 
-      const existing = await this.documentRepository.findById(id);
+      const existing = await this.documentRepository.findById(id) as RepositoryDocument | null;
       if (!existing) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Document not found');
       }
 
-      // Create update entity
-      const updateEntity = this.mapToUpdateEntity(updates);
-      
-      // Update through repository
+      const updateEntity = this.documentTransformer.fromUpdateDto(updates);
       await this.documentRepository.update(id, updateEntity);
       
-      // Get updated document
-      const updatedDocument = await this.documentRepository.findById(id);
+      const updatedDocument = await this.documentRepository.findById(id) as RepositoryDocument | null;
       
       if (!updatedDocument) {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to retrieve updated document');
       }
 
-      return this.mapToDTO(updatedDocument);
+      return this.documentTransformer.toResponseDto(updatedDocument);
     } catch (error) {
       console.error('DocumentService.updateDocument failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update document');
@@ -276,7 +259,7 @@ export class DocumentService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Document ID is required');
       }
 
-      const existing = await this.documentRepository.findById(id);
+      const existing = await this.documentRepository.findById(id) as RepositoryDocument | null;
       if (!existing) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Document not found');
       }
@@ -286,52 +269,5 @@ export class DocumentService {
       console.error('DocumentService.deleteDocument failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete document');
     }
-  }
-
-  /**
-   * Map repository result to DTO
-   */
-  private mapToDTO(repositoryResult: Document | Record<string, unknown>): DocumentResponseDto {
-    const result = repositoryResult as Record<string, unknown>;
-    
-    return {
-      id: (result.id as string) || '',
-      title: (result.title as string) || '',
-      type: (result.type as DocumentType) || 'other',
-      projectId: result.projectId as string,
-      fileUrl: result.fileUrl as string,
-      status: result.status as string,
-      expiryDate: result.expiryDate as string,
-      createdAt: (result.createdAt as string) || new Date().toISOString(),
-      updatedAt: (result.updatedAt as string) || new Date().toISOString()
-    };
-  }
-
-  /**
-   * Map DTO to entity
-   */
-  private mapToEntity(dto: CreateDocumentRequestDto): Record<string, unknown> {
-    return {
-      title: dto.title,
-      type: dto.type,
-      projectId: dto.projectId,
-      description: dto.description,
-      fileUrl: dto.fileUrl,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-  }
-
-  /**
-   * Map update DTO to entity
-   */
-  private mapToUpdateEntity(dto: UpdateDocumentRequestDto): Record<string, unknown> {
-    return {
-      title: dto.title,
-      description: dto.description,
-      status: dto.status,
-      updatedAt: new Date().toISOString()
-    };
   }
 }

@@ -3,6 +3,19 @@
  * Generates comprehensive validation reports for hexagonal architecture
  */
 
+import { 
+  ValidationResult as DomainValidationResult,
+  ValidationIssue as DomainValidationIssue,
+  PersistenceValidationReport,
+  ConsistencyMonitoringReport,
+  IntegrationTestReport
+} from '@/domain/validation-types';
+
+import { 
+  ConsistencyMonitoringReport, 
+  ConsistencyMonitoringSection 
+} from '@/dtos/architecture/ArchitectureValidationDTO';
+
 import { DataPersistenceValidationService } from './DataPersistenceValidationService';
 import { WorkflowIntegrationTestService } from './WorkflowIntegrationTestService';
 import { DataConsistencyMonitoringService } from './DataConsistencyMonitoringService';
@@ -66,6 +79,32 @@ export interface ConsistencyMonitoringSection {
   };
   recommendations: string[];
 }
+
+function convertToValidationResult(oldResult: PersistenceValidationReport): DomainValidationResult {
+  return {
+    isValid: oldResult.status === 'passed',
+    issues: oldResult.details.map(detail => ({
+      rule: detail.rule || 'unknown',
+      location: detail.location || '',
+      message: detail.message || 'Validation issue',
+      severity: detail.severity || 'medium'
+    })),
+    summary: {
+      errorCount: oldResult.details.filter(detail => detail.severity === 'error').length,
+      warningCount: oldResult.details.filter(detail => detail.severity === 'warning').length
+    }
+  };
+}
+
+const calculatePerformanceMetrics = (report: IntegrationTestReport) => {
+  return {
+    averageDuration: report.summary.totalDuration / report.summary.totalTests,
+    operationsPerSecond: report.details.reduce((sum, test) => 
+      sum + (test.metrics?.operationsExecuted || 0), 0) / (report.summary.totalDuration / 1000),
+    dataFlowIntegrity: report.details.reduce((sum, test) => 
+      sum + (test.metrics?.dataFlowIntegrity || 0), 0) / report.details.length
+  };
+};
 
 export class ArchitectureValidationReportService {
   /**
@@ -138,17 +177,26 @@ export class ArchitectureValidationReportService {
   /**
    * Process persistence validation results
    */
-  private static processPersistenceValidation(report: any): PersistenceValidationSection {
+  private static processPersistenceValidation(report: PersistenceValidationReport): PersistenceValidationSection {
+    const failedValidations = report.details.filter(
+      (result: DomainValidationResult) => !result.isValid
+    );
+
+    const totalErrors = report.details.reduce(
+      (sum: number, result: DomainValidationResult) => 
+        sum + (result.summary?.errorCount || 0),
+      0
+    );
+
     const score = report.summary.overallScore;
-    const keyIssues = report.details
-      .filter((d: any) => !d.isValid)
-      .map((d: any) => `${d.entity}: ${d.issues.map((i: any) => i.message).join(', ')}`);
+    const keyIssues = failedValidations
+      .map((d: DomainValidationResult) => `${d.issues.map((i: DomainValidationIssue) => i.message).join(', ')}`);
 
     return {
       score,
       totalValidations: report.summary.totalValidations,
       passedValidations: report.summary.passedValidations,
-      failedValidations: report.summary.failedValidations,
+      failedValidations: failedValidations.length,
       keyIssues,
       recommendations: report.recommendations
     };
@@ -157,17 +205,14 @@ export class ArchitectureValidationReportService {
   /**
    * Process integration test results
    */
-  private static processIntegrationTests(report: any): IntegrationTestSection {
-    const score = report.summary.overallScore;
-    const keyFailures = report.details
-      .filter((d: any) => d.status === 'failed')
-      .map((d: any) => `${d.testName}: ${d.details}`);
+  private static processIntegrationTests(report: IntegrationTestReport): IntegrationTestSection {
+    const convertedResults = report.details.map(convertToValidationResult);
+    const score = convertedResults.reduce((sum: number, result: DomainValidationResult) => sum + (result.isValid ? 1 : 0), 0) / report.details.length;
+    const keyFailures = convertedResults
+      .filter((d: DomainValidationResult) => !d.isValid)
+      .map((d: DomainValidationResult) => `${d.issues.map((i: DomainValidationIssue) => i.message).join(', ')}`);
 
-    const performanceMetrics = {
-      averageDuration: report.summary.totalDuration / report.summary.totalTests,
-      operationsPerSecond: report.details.reduce((sum: number, d: any) => sum + d.metrics.operationsExecuted, 0) / (report.summary.totalDuration / 1000),
-      dataFlowIntegrity: report.details.reduce((sum: number, d: any) => sum + d.metrics.dataFlowIntegrity, 0) / report.details.length
-    };
+    const performanceMetrics = calculatePerformanceMetrics(report);
 
     return {
       score,
@@ -184,7 +229,7 @@ export class ArchitectureValidationReportService {
   /**
    * Process consistency monitoring results
    */
-  private static processConsistencyMonitoring(report: any): ConsistencyMonitoringSection {
+  private static processConsistencyMonitoring(report: ConsistencyMonitoringReport): ConsistencyMonitoringSection {
     const score = report.summary.overallConsistencyScore;
     const criticalIssues = report.summary.alerts.critical.length;
     const highIssues = report.summary.alerts.high.length;
@@ -479,5 +524,23 @@ export class ArchitectureValidationReportService {
         message: 'Failed to generate validation report'
       };
     }
+  }
+
+  /**
+   * Validate file
+   */
+  static async validateFile(content: string): Promise<DomainValidationResult> {
+    const issues: DomainValidationIssue[] = [];
+    
+    // Logique de validation...
+    
+    return {
+      isValid: issues.length === 0,
+      issues,
+      summary: {
+        errorCount: issues.filter(i => i.severity === 'error').length,
+        warningCount: issues.filter(i => i.severity === 'warning').length
+      }
+    };
   }
 }

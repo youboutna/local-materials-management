@@ -1,8 +1,103 @@
-
 import { ProjectData } from '@/types/project';
 import { ProjectService } from '../application/services/ProjectService';
 import { RepositoryFactory } from '../infrastructure/supabase/RepositoryFactory';
 import { PhaseService } from '../application/services/PhaseService';
+import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
+import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
+
+interface PhaseCostData {
+  id: string;
+  name: string;
+  phase_name?: string;
+  status: string;
+  progress?: number;
+  actual_cost?: number;
+  project_id?: string;
+  estimated_cost?: number;
+  budget?: number;
+  estimated_labor_cost?: number;
+  estimated_material_cost?: number;
+  estimated_duration_days?: number;
+  start_date?: string;
+  end_date?: string;
+  steps?: Array<{
+    id: string;
+    name: string;
+    status: string;
+    progress?: number;
+    tasks?: Array<{
+      id: string;
+      status: string;
+      progress?: number;
+      description?: string;
+    }>;
+    description?: string;
+  }>;
+}
+
+interface ProjectPayment {
+  amount: number;
+  phase_id?: string;
+  contractor_id?: string;
+  contractor_name?: string;
+}
+
+interface ProjectDetailDTO {
+  payments?: ProjectPayment[];
+  expenses?: any[];
+}
+
+interface TimelineMetrics {
+  timeProgress: number;
+  totalDays: number;
+  elapsedDays: number;
+  remainingDays: number;
+  scheduleVariance: number;
+  isOnSchedule: boolean;
+  schedulePerformanceIndex: number;
+  startDate: string | null;
+  endDate: string | null;
+}
+
+interface ProgressMetrics {
+  stepProgress: number;
+  taskProgress: number;
+  timeProgress: number;
+  milestoneProgress: number;
+  overallProgress: number;
+  riskAdjustedProgress: number;
+  completedSteps: number;
+  totalSteps: number;
+  stepCompletionRate: number;
+  completedTasks: number;
+  totalTasks: number;
+  taskCompletionRate: number;
+  stepStatus: {
+    completed: number;
+    inProgress: number;
+    delayed: number;
+    pending: number;
+  };
+  taskStatus: {
+    completed: number;
+    inProgress: number;
+    delayed: number;
+    pending: number;
+  };
+  completedMilestones: number;
+  totalMilestones: number;
+  timeline: TimelineMetrics;
+  productivity: {
+    tasksPerDay: number;
+    stepsPerWeek: number;
+    efficiencyScore: number;
+    bottleneckSteps: Array<{
+      stepId: string;
+      stepName: string;
+      taskCompletion: number;
+    }>;
+  };
+}
 
 export class ProjectDataCalculations {
   /**
@@ -13,27 +108,27 @@ export class ProjectDataCalculations {
       // Get project detail with all related data using ProjectService
       const projectRepository = RepositoryFactory.getProjectRepository();
       const projectService = new ProjectService(projectRepository);
-      const projectDetail = await projectService.getProjectWithDetails(projectId);
+      const projectDetail: ProjectDetailDTO = await projectService.getProjectWithDetails(projectId);
       if (!projectDetail) {
-        throw new Error('Project not found');
+        throw new Error('Project detail is null');
       }
 
       // Get project phases using PhaseService
       const phaseService = new PhaseService();
-      const phases = await phaseService.getPhasesByProject(projectId);
-      
+      const phases: PhaseCostData[] = await phaseService.getPhasesByProject(projectId) || [];
+
       // Calculate costs from expenses (payments are not in ProjectDetailDTO, use expenses instead)
-      const totalPayments = projectDetail.expenses?.reduce((sum: number, expense: any) => 
+      const totalPayments = projectDetail.expenses?.reduce((sum: number, expense: ProjectPayment) => 
         sum + (expense.amount || 0), 0) || 0;
       
       // Note: Expenses would need to be fetched through a separate service
       // For now, we'll estimate based on phase costs
       const totalExpenses = this.estimateProjectExpenses(projectDetail, phases);
       
-      const estimatedCost = phases.reduce((sum, phase) => 
+      const estimatedCost = phases.reduce((sum, phase: PhaseCostData) => 
         sum + (phase.estimated_cost || 0), 0);
       
-      const actualPhaseCost = phases.reduce((sum, phase) => 
+      const actualPhaseCost = phases.reduce((sum, phase: PhaseCostData) => 
         sum + (phase.actual_cost || 0), 0);
 
       return {
@@ -64,7 +159,7 @@ export class ProjectDataCalculations {
     try {
       // Get phase details using PhaseService
       const phaseService = new PhaseService();
-      const phase = await phaseService.getPhaseById(phaseId);
+      const phase: PhaseCostData = await phaseService.getPhaseById(phaseId);
       if (!phase) {
         throw new Error('Phase not found');
       }
@@ -72,15 +167,15 @@ export class ProjectDataCalculations {
       // Get project detail for payments data
       const projectRepository = RepositoryFactory.getProjectRepository();
       const projectService = new ProjectService(projectRepository);
-      const projectDetail = await projectService.getProjectWithDetails(projectId);
+      const projectDetail: ProjectDetailDTO = await projectService.getProjectWithDetails(projectId);
       
       // Calculate costs from project data and phase information
       const costs = await this.extractPhaseCostsFromProjectData(projectDetail, phase);
       
       const estimatedCost = phase.estimated_cost || 
-        ((phase as any).budget || 0) + 
-        ((phase as any).estimated_labor_cost || 0) +
-        ((phase as any).estimated_material_cost || 0);
+        ((phase as PhaseCostData).budget || 0) + 
+        ((phase as PhaseCostData).estimated_labor_cost || 0) +
+        ((phase as PhaseCostData).estimated_material_cost || 0);
       
       const totalSpent = costs.totalPayments + costs.totalExpenses + 
                          costs.totalLaborCost + costs.materialCost;
@@ -143,7 +238,7 @@ export class ProjectDataCalculations {
     try {
       // Get phase details
       const phaseService = new PhaseService();
-      const phase = await phaseService.getPhaseById(phaseId);
+      const phase: PhaseCostData = await phaseService.getPhaseById(phaseId);
       if (!phase) {
         throw new Error('Phase not found');
       }
@@ -204,83 +299,101 @@ export class ProjectDataCalculations {
     try {
       // Get phase with detailed information using PhaseService
       const phaseService = new PhaseService();
-      const phase = await phaseService.getPhaseById(phaseId);
+      const phase: PhaseCostData = await phaseService.getPhaseById(phaseId);
       if (!phase) {
         throw new Error('Phase not found');
       }
 
       const steps = phase.steps || [];
       
-      // Calculate progress metrics
-      const progressMetrics = this.calculateDetailedProgressMetrics(phase, steps);
+      // Calculate step-based progress
+      const stepProgress = steps.length > 0 
+        ? steps.reduce((sum, step) => sum + (step.progress || 0), 0) / steps.length
+        : 0;
       
-      // Get project analytics for additional context
-      const projectRepository = RepositoryFactory.getProjectRepository();
-      const projectService = new ProjectService(projectRepository);
-      // Note: getProjectAnalytics doesn't exist in new ProjectService, using getProjectWithDetails instead
-      const projectAnalytics = await projectService.getProjectWithDetails(phase.project_id);
+      // Calculate task-based progress
+      const allTasks = steps.flatMap(step => step.tasks || []);
+      const taskProgress = allTasks.length > 0 
+        ? allTasks.reduce((sum, task) => sum + (task.progress || 0), 0) / allTasks.length
+        : 0;
       
-      // Calculate performance indicators
-      const performanceIndicators = this.calculatePerformanceIndicators(
-        progressMetrics,
-        projectAnalytics
+      // Calculate completion rates
+      const completedSteps = steps.filter(step => step.status === 'completed').length;
+      const inProgressSteps = steps.filter(step => step.status === 'in_progress').length;
+      const delayedSteps = steps.filter(step => step.status === 'delayed').length;
+      
+      const completedTasks = allTasks.filter(task => task.status === 'completed').length;
+      const inProgressTasks = allTasks.filter(task => task.status === 'in_progress').length;
+      const delayedTasks = allTasks.filter(task => task.status === 'delayed').length;
+
+      // Calculate time-based progress
+      const timeMetrics = this.calculateTimeProgressMetrics(
+        phase.start_date,
+        phase.end_date,
+        phase.progress || 0
+      );
+
+      // Calculate weighted overall progress
+      const overallProgress = this.calculateWeightedProgress({
+        stepProgress,
+        taskProgress,
+        timeProgress: timeMetrics.timeProgress,
+        milestoneProgress: 0, // Would need milestone data
+        manualProgress: phase.progress || 0
+      });
+
+      // Calculate risk-adjusted progress
+      const riskAdjustedProgress = overallProgress * 0.9; // Simple 10% risk adjustment
+
+      // Calculate productivity metrics
+      const productivityMetrics = this.calculateProductivityMetrics(
+        steps,
+        allTasks,
+        timeMetrics.elapsedDays
       );
 
       return {
         // Progress metrics
-        stepProgress: Math.round(progressMetrics.stepProgress),
-        taskProgress: Math.round(progressMetrics.taskProgress),
-        timeProgress: Math.round(progressMetrics.timeProgress),
-        milestoneProgress: Math.round(progressMetrics.milestoneProgress),
-        overallProgress: Math.min(100, Math.max(0, progressMetrics.overallProgress)),
-        riskAdjustedProgress: Math.min(100, Math.max(0, progressMetrics.riskAdjustedProgress)),
-        
-        // Completion counts
-        completedSteps: progressMetrics.completedSteps,
+        stepProgress,
+        taskProgress,
+        timeProgress: timeMetrics.timeProgress,
+        milestoneProgress: 0,
+        overallProgress,
+        riskAdjustedProgress,
+        completedSteps,
         totalSteps: steps.length,
-        stepCompletionRate: progressMetrics.stepCompletionRate,
-        
-        completedTasks: progressMetrics.completedTasks,
-        totalTasks: progressMetrics.totalTasks,
-        taskCompletionRate: progressMetrics.taskCompletionRate,
-        
-        // Status distribution
-        stepStatus: progressMetrics.stepStatus,
-        taskStatus: progressMetrics.taskStatus,
-        
-        // Milestones
-        completedMilestones: progressMetrics.completedMilestones,
-        totalMilestones: progressMetrics.totalMilestones,
-        
-        // Timeline metrics
-        timeline: progressMetrics.timeline,
-        
-        // Productivity metrics
-        productivity: progressMetrics.productivity,
-        
-        // Steps details
-        steps: steps.map(step => ({
-          id: step.id,
-          name: step.name,
-          status: step.status,
-          progress: step.progress || 0,
-          tasksCount: step.tasks?.length || 0,
-          completedTasks: step.tasks?.filter(t => t.status === 'completed').length || 0,
-          delayed: step.status === 'cancelled', // 'delayed' doesn't exist in PhaseStatus, using 'cancelled' as fallback
-          estimatedDuration: (step as any).estimated_duration_days,
-          startDate: (step as any).start_date,
-          endDate: (step as any).end_date,
-          criticalPath: false // Critical path not available in PhaseStepDTO
-        })),
+        stepCompletionRate: steps.length > 0 ? (completedSteps / steps.length) * 100 : 0,
+        completedTasks,
+        totalTasks: allTasks.length,
+        taskCompletionRate: allTasks.length > 0 ? (completedTasks / allTasks.length) * 100 : 0,
+        stepStatus: {
+          completed: completedSteps,
+          inProgress: inProgressSteps,
+          delayed: delayedSteps,
+          pending: steps.length - completedSteps - inProgressSteps - delayedSteps
+        },
+        taskStatus: {
+          completed: completedTasks,
+          inProgress: inProgressTasks,
+          delayed: delayedTasks,
+          pending: allTasks.length - completedTasks - inProgressTasks - delayedTasks
+        },
+        completedMilestones: 0,
+        totalMilestones: 0,
+        timeline: timeMetrics,
+        productivity: productivityMetrics,
         
         // Critical path analysis
         criticalPath: this.identifyCriticalPath(steps),
         
         // Progress trends
-        progressTrend: await this.calculateProgressTrend(phaseId, progressMetrics.overallProgress),
+        progressTrend: await this.calculateProgressTrend(phaseId, overallProgress),
         
         // Performance indicators
-        performanceIndicators
+        performanceIndicators: this.calculatePerformanceIndicators(
+          { overallProgress } as ProgressMetrics,
+          {}
+        )
       };
     } catch (error) {
       console.error('Error calculating phase progress:', error);
@@ -290,14 +403,14 @@ export class ProjectDataCalculations {
 
   // ============= Helper Methods =============
 
-  private static async extractPhaseCostsFromProjectData(projectDetail: any, phase: any) {
+  private static async extractPhaseCostsFromProjectData(projectDetail: ProjectDetailDTO, phase: PhaseCostData) {
     // Filter payments for this specific phase
-    const phasePayments = projectDetail?.payments?.filter((payment: any) => 
+    const phasePayments = projectDetail.payments?.filter((payment: ProjectPayment) => 
       payment.phase_id === phase.id
     ) || [];
 
     // Calculate payment distribution by contractor
-    const paymentDistribution = phasePayments.reduce((acc: Record<string, number>, payment: any) => {
+    const paymentDistribution = phasePayments.reduce((acc: Record<string, number>, payment: ProjectPayment) => {
       const contractorName = payment.contractor_name || `Contractor ${payment.contractor_id?.slice(0, 8)}` || 'Unknown';
       acc[contractorName] = (acc[contractorName] || 0) + (payment.amount || 0);
       return acc;
@@ -314,7 +427,7 @@ export class ProjectDataCalculations {
     const materialData = this.estimateMaterialCost(phase);
 
     return {
-      totalPayments: phasePayments.reduce((sum: number, p: any) => sum + (p.amount || 0), 0),
+      totalPayments: phasePayments.reduce((sum: number, p: ProjectPayment) => sum + (p.amount || 0), 0),
       totalExpenses: this.estimateTotalExpenses(phase),
       totalLaborCost: laborData.totalCost,
       materialCost: materialData.totalCost,
@@ -327,14 +440,14 @@ export class ProjectDataCalculations {
     };
   }
 
-  private static estimateProjectExpenses(projectDetail: any, phases: any[]) {
+  private static estimateProjectExpenses(projectDetail: ProjectDetailDTO, phases: PhaseCostData[]) {
     // Estimate expenses as 20% of total phase costs
     const totalPhaseCosts = phases.reduce((sum, phase) => 
       sum + (phase.estimated_cost || 0), 0);
     return totalPhaseCosts * 0.2;
   }
 
-  private static estimateExpenseDistribution(phase: any) {
+  private static estimateExpenseDistribution(phase: PhaseCostData) {
     // Default expense categories based on phase type
     const categories = ['Matériaux', 'Main d\'œuvre', 'Équipement', 'Transport', 'Administratif'];
     const distribution: Record<string, number> = {};
@@ -350,7 +463,7 @@ export class ProjectDataCalculations {
     return distribution;
   }
 
-  private static estimateLaborCost(phase: any) {
+  private static estimateLaborCost(phase: PhaseCostData) {
     const duration = phase.estimated_duration_days || 30;
     const typicalDailyRate = 5000; // MRU per day
     const typicalWorkers = 5; // Average workers per phase
@@ -362,7 +475,7 @@ export class ProjectDataCalculations {
     };
   }
 
-  private static estimateMaterialCost(phase: any) {
+  private static estimateMaterialCost(phase: PhaseCostData) {
     // Estimate based on phase type and budget
     const estimatedCost = phase.estimated_cost || 100000;
     const materialPercentage = 0.4; // 40% of total cost for materials
@@ -373,12 +486,12 @@ export class ProjectDataCalculations {
     };
   }
 
-  private static estimateTotalExpenses(phase: any) {
+  private static estimateTotalExpenses(phase: PhaseCostData) {
     const estimatedCost = phase.estimated_cost || 100000;
     return estimatedCost * 0.15; // 15% for miscellaneous expenses
   }
 
-  private static async extractResourceDataFromPhase(phase: any) {
+  private static async extractResourceDataFromPhase(phase: PhaseCostData) {
     const steps = phase.steps || [];
     
     // Extract resource information from steps and tasks
@@ -551,7 +664,7 @@ export class ProjectDataCalculations {
     return recommendations;
   }
 
-  private static calculateDetailedProgressMetrics(phase: any, steps: any[]) {
+  private static calculateDetailedProgressMetrics(phase: PhaseCostData, steps: any[]) {
     // Calculate step-based progress
     const stepProgress = steps.length > 0 
       ? steps.reduce((sum, step) => sum + (step.progress || 0), 0) / steps.length
@@ -606,10 +719,11 @@ export class ProjectDataCalculations {
       overallProgress,
       riskAdjustedProgress,
       completedSteps,
-      totalTasks: allTasks.length,
-      taskCompletionRate: allTasks.length > 0 ? (completedTasks / allTasks.length) * 100 : 0,
+      totalSteps: steps.length,
       stepCompletionRate: steps.length > 0 ? (completedSteps / steps.length) * 100 : 0,
       completedTasks,
+      totalTasks: allTasks.length,
+      taskCompletionRate: allTasks.length > 0 ? (completedTasks / allTasks.length) * 100 : 0,
       stepStatus: {
         completed: completedSteps,
         inProgress: inProgressSteps,
@@ -681,7 +795,11 @@ export class ProjectDataCalculations {
     );
   }
 
-  private static calculateProductivityMetrics(steps: any[], tasks: any[], elapsedDays: number) {
+  private static calculateProductivityMetrics(
+    steps: any[],
+    tasks: any[],
+    elapsedDays: number
+  ) {
     const tasksPerDay = elapsedDays > 0 ? tasks.length / elapsedDays : 0;
     const stepsPerWeek = elapsedDays > 0 ? (steps.length / elapsedDays) * 7 : 0;
     
@@ -733,7 +851,7 @@ export class ProjectDataCalculations {
     };
   }
 
-  private static calculatePerformanceIndicators(progressMetrics: any, projectAnalytics: any) {
+  private static calculatePerformanceIndicators(progressMetrics: ProgressMetrics, projectAnalytics: ProjectDetailDTO) {
     // Simplified performance indicators
     const schedulePerformanceIndex = progressMetrics.timeline.schedulePerformanceIndex || 1;
     const costPerformanceIndex = 1; // Would need actual cost data
@@ -891,7 +1009,7 @@ export class ProjectDataCalculations {
   /**
    * Calculate project timeline performance
    */
-  static calculateTimelinePerformance(project: ProjectData, phases: any[]) {
+  static calculateTimelinePerformance(project: ProjectData, phases: PhaseCostData[]) {
     if (!phases || phases.length === 0) {
       return {
         onTimePhases: 0,

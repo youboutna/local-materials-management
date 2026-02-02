@@ -44,7 +44,7 @@ export function useCreateSupplier() {
     mutationFn: async (supplierData: SupplierFormData) => {
       const { data, error } = await supabase
         .from('suppliers')
-        .insert(supplierData as any)
+        .insert(supplierData)
         .select()
         .single();
       if (error) throw error;
@@ -64,8 +64,8 @@ export function useUpdateSupplier() {
     mutationFn: async ({ id, data }: { id: string; data: SupplierFormData }) => {
       const { error } = await supabase
         .from('suppliers')
-        .update(data as any)
-        .eq('id', id as any);
+        .update(data)
+        .eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -83,7 +83,7 @@ export function useDeleteSupplier() {
       const { error } = await supabase
         .from('suppliers')
         .delete()
-        .eq('id', id as any);
+        .eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {

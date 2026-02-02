@@ -1,8 +1,8 @@
 // Domain Service: Hierarchy Mapping
 // Decoupled mapping between hierarchy templates and employee roles
 
-import { Employee, EmployeeRole, Permission } from '../entities/Employee';
-import { HierarchyMember } from '../entities/Hierarchy';
+import { Employee, EmployeeRole, Permission } from '@/domain/entities';
+import { HierarchyMember } from '@/domain/entities/Hierarchy';
 
 // Template permissions (from OrganizationalHierarchyManager)
 export interface TemplatePermissions {
