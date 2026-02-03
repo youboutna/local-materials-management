@@ -48,6 +48,9 @@ export interface WorkflowSaveResult {
   };
 }
 
+// Import the ProjectFormDataDTO from the transforms
+import { ProjectFormDataDTO } from '@/dtos/transforms/ProjectWorkflowDTOs';
+
 // Fonctions utilitaires pour le calcul de progression
 export function determineCurrentStep(formData: ProjectFormDataDTO): number {
   // Logique pour déterminer l'étape actuelle basée sur les données du projet

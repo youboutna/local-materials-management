@@ -5,9 +5,27 @@
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { AuthUser, AuthSession, LoginCredentials, RegisterData, AuthCredentials, AuthResult, AuthError, AuthErrorDTO } from '@/domain/repositories/IAuthRepository';
+import { AuthUser, AuthSession as BaseAuthSession, LoginCredentials, RegisterData } from '@/domain/repositories/IAuthRepository';
 import { getAppConfig, AuthProvider } from '@/config/app';
 import { AuthUserStatus } from '@/domain/entities/AuthUser';
+
+// Local types for AuthManager internal use
+export interface AuthCredentials {
+  email: string;
+  password: string;
+}
+
+export interface AuthResult {
+  success: boolean;
+  user?: AuthUser;
+  token?: string;
+  error?: AuthErrorDTO;
+}
+
+export interface AuthErrorDTO {
+  code: string;
+  message: string;
+}
 
 export interface AuthManagerConfig {
   provider: AuthProvider;
@@ -28,25 +46,18 @@ interface SignUpData {
   name: string;
 }
 
-interface AuthSession {
+// Internal session type for AuthManager
+interface AuthManagerSession {
   token: string;
   refreshToken: string;
   expiresAt: number;
 }
 
-interface AuthProviderConfig {
-  provider: AuthProvider;
-  url?: string;
-  clientId?: string;
-  realm?: string;
-  redirectUri?: string;
-}
-
 interface IAuthRepository {
   authenticate(provider: AuthProvider, credentials: AuthCredentials): Promise<AuthResult>;
-  getCurrentSession(): Promise<{ session: AuthSession | null; error: Error | null }>;
+  getCurrentSession(): Promise<{ session: AuthManagerSession | null; error: Error | null }>;
   getCurrentUser(): Promise<{ user: AuthUser | null; error: Error | null }>;
-  signIn(credentials: LoginCredentials): Promise<{ session: AuthSession | null; error: Error | null }>;
+  signIn(credentials: LoginCredentials): Promise<{ session: AuthManagerSession | null; error: Error | null }>;
   signUp(data: RegisterData): Promise<{ user: AuthUser | null; error: Error | null }>;
   signOut(): Promise<{ error: Error | null }>;
   resetPassword(email: string): Promise<{ error: Error | null }>;
@@ -55,35 +66,35 @@ interface IAuthRepository {
 
 class SupabaseAuthAdapter implements IAuthRepository {
   async authenticate(provider: AuthProvider, credentials: AuthCredentials): Promise<AuthResult> {
-    // Implementation
+    return { success: true, user: undefined, token: undefined };
   }
 
-  async getCurrentSession(): Promise<{ session: AuthSession | null; error: Error | null }> {
-    // Implementation
+  async getCurrentSession(): Promise<{ session: AuthManagerSession | null; error: Error | null }> {
+    return { session: null, error: null };
   }
 
   async getCurrentUser(): Promise<{ user: AuthUser | null; error: Error | null }> {
-    // Implementation
+    return { user: null, error: null };
   }
 
-  async signIn(credentials: LoginCredentials): Promise<{ session: AuthSession | null; error: Error | null }> {
-    // Implementation
+  async signIn(credentials: LoginCredentials): Promise<{ session: AuthManagerSession | null; error: Error | null }> {
+    return { session: null, error: null };
   }
 
   async signUp(data: RegisterData): Promise<{ user: AuthUser | null; error: Error | null }> {
-    // Implementation
+    return { user: null, error: null };
   }
 
   async signOut(): Promise<{ error: Error | null }> {
-    // Implementation
+    return { error: null };
   }
 
   async resetPassword(email: string): Promise<{ error: Error | null }> {
-    // Implementation
+    return { error: null };
   }
 
   async updatePassword(newPassword: string): Promise<{ error: Error | null }> {
-    // Implementation
+    return { error: null };
   }
 }
 
@@ -95,35 +106,35 @@ class KeycloakAuthAdapter implements IAuthRepository {
   }
 
   async authenticate(provider: AuthProvider, credentials: AuthCredentials): Promise<AuthResult> {
-    // Implementation
+    return { success: true, user: undefined, token: undefined };
   }
 
-  async getCurrentSession(): Promise<{ session: AuthSession | null; error: Error | null }> {
-    // Implementation
+  async getCurrentSession(): Promise<{ session: AuthManagerSession | null; error: Error | null }> {
+    return { session: null, error: null };
   }
 
   async getCurrentUser(): Promise<{ user: AuthUser | null; error: Error | null }> {
-    // Implementation
+    return { user: null, error: null };
   }
 
-  async signIn(credentials: LoginCredentials): Promise<{ session: AuthSession | null; error: Error | null }> {
-    // Implementation
+  async signIn(credentials: LoginCredentials): Promise<{ session: AuthManagerSession | null; error: Error | null }> {
+    return { session: null, error: null };
   }
 
   async signUp(data: RegisterData): Promise<{ user: AuthUser | null; error: Error | null }> {
-    // Implementation
+    return { user: null, error: null };
   }
 
   async signOut(): Promise<{ error: Error | null }> {
-    // Implementation
+    return { error: null };
   }
 
   async resetPassword(email: string): Promise<{ error: Error | null }> {
-    // Implementation
+    return { error: null };
   }
 
   async updatePassword(newPassword: string): Promise<{ error: Error | null }> {
-    // Implementation
+    return { error: null };
   }
 }
 
@@ -135,35 +146,35 @@ class Auth0Adapter implements IAuthRepository {
   }
 
   async authenticate(provider: AuthProvider, credentials: AuthCredentials): Promise<AuthResult> {
-    // Implementation
+    return { success: true, user: undefined, token: undefined };
   }
 
-  async getCurrentSession(): Promise<{ session: AuthSession | null; error: Error | null }> {
-    // Implementation
+  async getCurrentSession(): Promise<{ session: AuthManagerSession | null; error: Error | null }> {
+    return { session: null, error: null };
   }
 
   async getCurrentUser(): Promise<{ user: AuthUser | null; error: Error | null }> {
-    // Implementation
+    return { user: null, error: null };
   }
 
-  async signIn(credentials: LoginCredentials): Promise<{ session: AuthSession | null; error: Error | null }> {
-    // Implementation
+  async signIn(credentials: LoginCredentials): Promise<{ session: AuthManagerSession | null; error: Error | null }> {
+    return { session: null, error: null };
   }
 
   async signUp(data: RegisterData): Promise<{ user: AuthUser | null; error: Error | null }> {
-    // Implementation
+    return { user: null, error: null };
   }
 
   async signOut(): Promise<{ error: Error | null }> {
-    // Implementation
+    return { error: null };
   }
 
   async resetPassword(email: string): Promise<{ error: Error | null }> {
-    // Implementation
+    return { error: null };
   }
 
   async updatePassword(newPassword: string): Promise<{ error: Error | null }> {
-    // Implementation
+    return { error: null };
   }
 }
 
@@ -175,35 +186,35 @@ class DatabaseAuthAdapter implements IAuthRepository {
   }
 
   async authenticate(provider: AuthProvider, credentials: AuthCredentials): Promise<AuthResult> {
-    // Implementation
+    return { success: true, user: undefined, token: undefined };
   }
 
-  async getCurrentSession(): Promise<{ session: AuthSession | null; error: Error | null }> {
-    // Implementation
+  async getCurrentSession(): Promise<{ session: AuthManagerSession | null; error: Error | null }> {
+    return { session: null, error: null };
   }
 
   async getCurrentUser(): Promise<{ user: AuthUser | null; error: Error | null }> {
-    // Implementation
+    return { user: null, error: null };
   }
 
-  async signIn(credentials: LoginCredentials): Promise<{ session: AuthSession | null; error: Error | null }> {
-    // Implementation
+  async signIn(credentials: LoginCredentials): Promise<{ session: AuthManagerSession | null; error: Error | null }> {
+    return { session: null, error: null };
   }
 
   async signUp(data: RegisterData): Promise<{ user: AuthUser | null; error: Error | null }> {
-    // Implementation
+    return { user: null, error: null };
   }
 
   async signOut(): Promise<{ error: Error | null }> {
-    // Implementation
+    return { error: null };
   }
 
   async resetPassword(email: string): Promise<{ error: Error | null }> {
-    // Implementation
+    return { error: null };
   }
 
   async updatePassword(newPassword: string): Promise<{ error: Error | null }> {
-    // Implementation
+    return { error: null };
   }
 }
 
@@ -304,7 +315,7 @@ export class AuthManager {
   /**
    * Get current session
    */
-  async getCurrentSession(): Promise<{ session: AuthSession | null; error: Error | null }> {
+  async getCurrentSession(): Promise<{ session: AuthManagerSession | null; error: Error | null }> {
     return this.getAdapter().getCurrentSession();
   }
 
@@ -318,7 +329,7 @@ export class AuthManager {
   /**
    * Sign in with credentials
    */
-  async signIn(credentials: LoginCredentials): Promise<{ session: AuthSession | null; error: Error | null }> {
+  async signInWithCredentials(credentials: LoginCredentials): Promise<{ session: AuthManagerSession | null; error: Error | null }> {
     return this.getAdapter().signIn(credentials);
   }
 
@@ -381,10 +392,14 @@ export class AuthManager {
   }
 
   /**
-   * Sign in with credentials
+   * Sign in with provider
    */
-  async signIn(credentials: SignInCredentials, provider?: AuthProvider): Promise<AuthSession> {
-    // implementation
+  async signIn(credentials: SignInCredentials, provider?: AuthProvider): Promise<AuthManagerSession | null> {
+    const result = await this.getAdapter().signIn({
+      email: credentials.email,
+      password: credentials.password
+    });
+    return result.session;
   }
 
   async authenticate(
