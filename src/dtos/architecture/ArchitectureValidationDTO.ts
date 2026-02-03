@@ -20,12 +20,28 @@ export interface ConsistencyMonitoringReport {
     overallConsistencyScore: number;
     alerts: AlertSummary;
     entityScores: EntityScores;
+    totalIssues: number;
   };
   recommendations: string[];
+  trends: {
+    improving: string[];
+    declining: string[];
+    stable: string[];
+  };
 }
 
 export interface ConsistencyMonitoringSection {
   score: number;
   totalRecords: number;
   consistentRecords: number;
+  inconsistentRecords: number;
+  entityScores: EntityScores;
+  criticalIssues: number;
+  highIssues: number;
+  trends: {
+    improving: string[];
+    declining: string[];
+    stable: string[];
+  };
+  recommendations: string[];
 }

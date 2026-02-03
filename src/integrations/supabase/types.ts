@@ -2583,6 +2583,7 @@ export type Database = {
           national_id: string | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"] | null
+          status: string | null
           updated_at: string | null
         }
         Insert: {
@@ -2594,6 +2595,7 @@ export type Database = {
           national_id?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
+          status?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -2605,6 +2607,7 @@ export type Database = {
           national_id?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
+          status?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -3413,9 +3416,13 @@ export type Database = {
           allows_initial_payment: boolean | null
           area_sqm: number | null
           attribution_date: string | null
+          bank_guarantee_amount: number | null
+          bank_guarantee_percentage: number | null
+          bank_guarantee_required: boolean | null
           budget: number
           check_schedule_last_run: Json | null
           client_id: string | null
+          closure_notes: string | null
           completion_date: string | null
           coordinates_latitude: number | null
           coordinates_longitude: number | null
@@ -3438,25 +3445,31 @@ export type Database = {
           id: string
           initial_advance_percentage: number | null
           initial_payment_percentage: number | null
+          insurance_required: boolean | null
           launch_date: string | null
           localisation: Json | null
           location: string
           main_contractor: string | null
           market_type: string | null
+          materials_budget: number | null
+          methodology: string | null
           payment_frequency: string | null
           payment_mode: string | null
           payment_workflow_config: Json | null
           permit_number: string | null
           priority: string | null
+          procurement_lead_time: number | null
           progress: number
           project_order: number | null
           project_reference: string | null
           project_reference_number: string | null
           project_responsable_id: string | null
           project_type: string | null
+          reception_status: string | null
           requires_consultant_validation: boolean | null
           requires_ministry_approval: boolean | null
           requires_permits: boolean | null
+          resource_assignment: string | null
           retention_percentage: number | null
           sector: string | null
           selection_mode: string | null
@@ -3477,9 +3490,13 @@ export type Database = {
           allows_initial_payment?: boolean | null
           area_sqm?: number | null
           attribution_date?: string | null
+          bank_guarantee_amount?: number | null
+          bank_guarantee_percentage?: number | null
+          bank_guarantee_required?: boolean | null
           budget: number
           check_schedule_last_run?: Json | null
           client_id?: string | null
+          closure_notes?: string | null
           completion_date?: string | null
           coordinates_latitude?: number | null
           coordinates_longitude?: number | null
@@ -3502,25 +3519,31 @@ export type Database = {
           id?: string
           initial_advance_percentage?: number | null
           initial_payment_percentage?: number | null
+          insurance_required?: boolean | null
           launch_date?: string | null
           localisation?: Json | null
           location: string
           main_contractor?: string | null
           market_type?: string | null
+          materials_budget?: number | null
+          methodology?: string | null
           payment_frequency?: string | null
           payment_mode?: string | null
           payment_workflow_config?: Json | null
           permit_number?: string | null
           priority?: string | null
+          procurement_lead_time?: number | null
           progress?: number
           project_order?: number | null
           project_reference?: string | null
           project_reference_number?: string | null
           project_responsable_id?: string | null
           project_type?: string | null
+          reception_status?: string | null
           requires_consultant_validation?: boolean | null
           requires_ministry_approval?: boolean | null
           requires_permits?: boolean | null
+          resource_assignment?: string | null
           retention_percentage?: number | null
           sector?: string | null
           selection_mode?: string | null
@@ -3541,9 +3564,13 @@ export type Database = {
           allows_initial_payment?: boolean | null
           area_sqm?: number | null
           attribution_date?: string | null
+          bank_guarantee_amount?: number | null
+          bank_guarantee_percentage?: number | null
+          bank_guarantee_required?: boolean | null
           budget?: number
           check_schedule_last_run?: Json | null
           client_id?: string | null
+          closure_notes?: string | null
           completion_date?: string | null
           coordinates_latitude?: number | null
           coordinates_longitude?: number | null
@@ -3566,25 +3593,31 @@ export type Database = {
           id?: string
           initial_advance_percentage?: number | null
           initial_payment_percentage?: number | null
+          insurance_required?: boolean | null
           launch_date?: string | null
           localisation?: Json | null
           location?: string
           main_contractor?: string | null
           market_type?: string | null
+          materials_budget?: number | null
+          methodology?: string | null
           payment_frequency?: string | null
           payment_mode?: string | null
           payment_workflow_config?: Json | null
           permit_number?: string | null
           priority?: string | null
+          procurement_lead_time?: number | null
           progress?: number
           project_order?: number | null
           project_reference?: string | null
           project_reference_number?: string | null
           project_responsable_id?: string | null
           project_type?: string | null
+          reception_status?: string | null
           requires_consultant_validation?: boolean | null
           requires_ministry_approval?: boolean | null
           requires_permits?: boolean | null
+          resource_assignment?: string | null
           retention_percentage?: number | null
           sector?: string | null
           selection_mode?: string | null
@@ -5911,22 +5944,28 @@ export type Database = {
         Row: {
           assigned_at: string | null
           assigned_by: string | null
+          expires_at: string | null
           id: string
           role_name: string
+          status: string | null
           user_id: string
         }
         Insert: {
           assigned_at?: string | null
           assigned_by?: string | null
+          expires_at?: string | null
           id?: string
           role_name: string
+          status?: string | null
           user_id: string
         }
         Update: {
           assigned_at?: string | null
           assigned_by?: string | null
+          expires_at?: string | null
           id?: string
           role_name?: string
+          status?: string | null
           user_id?: string
         }
         Relationships: [

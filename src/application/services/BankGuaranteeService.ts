@@ -274,8 +274,8 @@ export class BankGuaranteeService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID is required');
       }
 
-      // Get all guarantees (repository doesn't have findAll, use getByProject with empty string)
-      const allGuarantees = await this.bankGuaranteeRepository.getByProject('');
+      // Get all guarantees (repository uses options object)
+      const allGuarantees = await this.bankGuaranteeRepository.getByProject({ projectId: '' });
       
       if (!allGuarantees) {
         return;
@@ -286,8 +286,7 @@ export class BankGuaranteeService {
       
       for (const guarantee of activeGuarantees) {
         await this.bankGuaranteeRepository.update(guarantee.id, {
-          status: 'cancelled',
-          updated_at: new Date().toISOString()
+          status: 'cancelled'
         });
       }
 
@@ -308,7 +307,7 @@ export class BankGuaranteeService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
       }
 
-      const projectGuarantees = await this.bankGuaranteeRepository.getByProject(projectId);
+      const projectGuarantees = await this.bankGuaranteeRepository.getByProject({ projectId });
       
       if (!projectGuarantees) {
         return;
@@ -319,8 +318,7 @@ export class BankGuaranteeService {
       
       for (const guarantee of activeGuarantees) {
         await this.bankGuaranteeRepository.update(guarantee.id, {
-          status: 'cancelled',
-          updated_at: new Date().toISOString()
+          status: 'cancelled'
         });
       }
 
@@ -377,8 +375,7 @@ export class BankGuaranteeService {
   async getExpiringGuarantees(days: number = 30): Promise<BankGuaranteeDTO[]> {
     try {
       // Get all guarantees and filter for expiring ones
-      // Using getByProject with empty string to get all guarantees (workaround)
-      const guarantees = await this.bankGuaranteeRepository.getByProject('');
+      const guarantees = await this.bankGuaranteeRepository.getByProject({ projectId: '' });
       
       if (!guarantees || guarantees.length === 0) {
         return [];

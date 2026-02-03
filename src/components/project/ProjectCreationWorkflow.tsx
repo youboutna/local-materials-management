@@ -77,33 +77,33 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   const [currentStep, setCurrentStep] = useState(0);
 
   // 🎨 UI Layer - Use basic object state (transformers removed)
-  const [projectData, setProjectData] = useState<CreateProjectRequestDTO>({
+  // 🎨 UI Layer - Use basic object state with CreateProjectRequestDTO (no duplicate keys)
+  const [projectData, setProjectData] = useState<CreateProjectRequestDTO>(() => ({
     title: "",
     description: "",
     location: "",
+    address: "",
     latitude: 0,
     longitude: 0,
-    project_manager_id: "",
-    client_name: "",
-    contractor_id: "",
-    estimated_budget: 0,
+    budget: 0,
+    startDate: "",
+    endDate: "",
+    projectManagerId: "",
+    clientId: "",
+    status: "en attente",
+    priority: "Moyenne",
+    estimatedDuration: 0,
+    // Legacy snake_case for backward compatibility
     start_date: "",
     end_date: "",
-    thumbnail: "",
-    progress: 0,
-    teamSize: 0,
-    project_reference: "",
-    address: "",
-    technical_manager_id: "",
     project_manager_id: "",
+    client_id: "",
+    estimated_duration: 0,
+    // Additional fields
+    technical_manager_id: "",
     supervisor_id: "",
     client_name: "",
-    contractors: {
-      engineeringConsultant: "",
-      generalContractor: "",
-      specializedSubcontractors: "",
-      mainSuppliers: "",
-    },
+    project_reference: "",
     project_type: "",
     sector: "",
     permit_number: "",
@@ -116,11 +116,14 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     market_type: "",
     selection_mode: "",
     main_contractor: "",
-    estimatedDuration: "",
+    // UI-specific fields
+    progress: 0,
+    thumbnail: "",
+    teamSize: 0,
     reception_status: "",
     closure_notes: "",
     ...initialData
-  });
+  }));
 
   // 🎨 UI Layer - États locaux pour les données associées (transformers removed)
   const [stakeholders, setStakeholders] = useState<Array<{id: string; name: string; role: string; contact: string}>>([]);
