@@ -4,7 +4,7 @@
  * Following clean architecture principles
  */
 
-import { Payment, PaymentStatus } from '@/domain/entities/Payment';
+import { Payment } from '@/domain/entities/Payment';
 import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
 import { PaymentTransformer } from '@/dtos/transforms/PaymentTransformer';
 import { PaymentDTO, CreatePaymentDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
@@ -42,7 +42,7 @@ export interface PaymentControlActionDTO {
   notes?: string;
 }
 
-export enum PaymentStatus {
+export enum PaymentStatusEnum {
   PENDING = 'pending',
   APPROVED = 'approved',
   PROCESSED = 'processed',
@@ -51,6 +51,24 @@ export enum PaymentStatus {
   BLOCKED = 'blocked',
   REJECTED = 'rejected',
   CANCELLED = 'cancelled'
+}
+
+// Status transition validation (moved outside class)
+function isValidPaymentStatusTransition(
+  current: PaymentStatusEnum,
+  next: PaymentStatusEnum
+): boolean {
+  const validTransitions: Record<PaymentStatusEnum, PaymentStatusEnum[]> = {
+    [PaymentStatusEnum.PENDING]: [PaymentStatusEnum.APPROVED, PaymentStatusEnum.REJECTED, PaymentStatusEnum.BLOCKED],
+    [PaymentStatusEnum.APPROVED]: [PaymentStatusEnum.PROCESSED, PaymentStatusEnum.CANCELLED],
+    [PaymentStatusEnum.PROCESSED]: [PaymentStatusEnum.COMPLETED, PaymentStatusEnum.FAILED],
+    [PaymentStatusEnum.BLOCKED]: [PaymentStatusEnum.PENDING, PaymentStatusEnum.CANCELLED],
+    [PaymentStatusEnum.REJECTED]: [],
+    [PaymentStatusEnum.CANCELLED]: [],
+    [PaymentStatusEnum.COMPLETED]: [],
+    [PaymentStatusEnum.FAILED]: []
+  };
+  return validTransitions[current]?.includes(next) ?? false;
 }
 
 export class PaymentService {
@@ -142,8 +160,8 @@ export class PaymentService {
 
       // Validate status transition if status is being updated
       if (data.status && !isValidPaymentStatusTransition(
-        existingPayment.status as PaymentStatus,
-        data.status as PaymentStatus
+        existingPayment.status as PaymentStatusEnum,
+        data.status as unknown as PaymentStatusEnum
       )) {
         throw new AppError(
           ErrorCode.VALIDATION_ERROR,
@@ -152,7 +170,10 @@ export class PaymentService {
       }
 
       // Transform update data to partial entity
-      const updateData = PaymentTransformer.toEntity(data as unknown as PaymentDTO) as Partial<Payment>;
+      const updateData: Partial<Payment> = {
+        ...data,
+        updatedAt: new Date().toISOString()
+      };
       
       // Update entity
       await this.paymentRepository.update(id, updateData);
@@ -195,9 +216,9 @@ export class PaymentService {
   /**
    * Get payments by status
    */
-  async getPaymentsByStatus(status: PaymentStatus): Promise<PaymentDTO[]> {
+  async getPaymentsByStatus(status: PaymentStatusEnum | string): Promise<PaymentDTO[]> {
     try {
-      const payments = await this.paymentRepository.findByStatus(status);
+      const payments = await this.paymentRepository.findByStatus(status as string);
       return payments.map(payment => PaymentTransformer.toDTO(payment));
     } catch (error) {
       console.error('[PaymentService] Error fetching payments by status:', error);
@@ -363,30 +384,10 @@ export class PaymentService {
    */
   async getActiveBlockedPayments(): Promise<PaymentDTO[]> {
     try {
-      // TODO: Implémenter avec PaymentBlockingRepository quand disponible
-      // Pour l'instant, retourner les paiements avec statut 'blocked'
-      return await this.getPaymentsByStatus(PaymentStatus.BLOCKED);
+      return await this.getPaymentsByStatus(PaymentStatusEnum.BLOCKED);
     } catch (error) {
       if (error instanceof AppError) throw error;
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get active blocked payments');
     }
-  }
-
-  // Add status transition validation
-  function isValidPaymentStatusTransition(
-    current: PaymentStatus,
-    next: PaymentStatus
-  ): boolean {
-    const validTransitions: Record<PaymentStatus, PaymentStatus[]> = {
-      [PaymentStatus.PENDING]: [PaymentStatus.APPROVED, PaymentStatus.REJECTED, PaymentStatus.BLOCKED],
-      [PaymentStatus.APPROVED]: [PaymentStatus.PROCESSED, PaymentStatus.CANCELLED],
-      [PaymentStatus.PROCESSED]: [PaymentStatus.COMPLETED, PaymentStatus.FAILED],
-      [PaymentStatus.BLOCKED]: [PaymentStatus.PENDING, PaymentStatus.CANCELLED],
-      [PaymentStatus.REJECTED]: [],
-      [PaymentStatus.CANCELLED]: [],
-      [PaymentStatus.COMPLETED]: [],
-      [PaymentStatus.FAILED]: []
-    };
-    return validTransitions[current].includes(next);
   }
 }
