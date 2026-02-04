@@ -22,6 +22,11 @@ export interface ProjectDTO extends BaseEntityDTO {
   teamSize: number;
   coordinates?: LocationDTO;
   
+  // Legacy snake_case properties for compatibility
+  start_date?: string;
+  end_date?: string;
+  team_size?: number;
+  
   // Localization fields
   localisation?: any[];
   forme?: string;
@@ -156,6 +161,11 @@ export interface ProjectFormDTO {
   teamSize: number;
   coordinates?: LocationDTO;
   
+  // Legacy snake_case properties for compatibility
+  start_date?: string;
+  end_date?: string;
+  team_size?: number;
+  
   // Database schema fields
   project_reference?: string;
   start_date?: string;
@@ -254,6 +264,11 @@ export interface ProjectListItemDTO extends BaseEntityDTO {
   thumbnail: string;
   teamSize: number;
   coordinates?: LocationDTO;
+  
+  // Legacy snake_case properties for compatibility
+  start_date?: string;
+  end_date?: string;
+  team_size?: number;
 }
 
 export interface CreateProjectDTO {
@@ -268,6 +283,11 @@ export interface CreateProjectDTO {
   thumbnail: string;
   teamSize: number;
   coordinates?: LocationDTO;
+  
+  // Legacy snake_case properties for compatibility
+  start_date?: string;
+  end_date?: string;
+  team_size?: number;
   
   // Localization fields
   localisation?: any[];
@@ -395,17 +415,29 @@ export interface CreateProjectRequestDTO {
   supervisor_id?: string;
   workspace_id?: string;
   
-  // Legacy fields for compatibility with existing forms
-  location?: string;
-  progress?: number;
-  thumbnail?: string;
-  teamSize?: number;
+  // Legacy snake_case properties for compatibility
+  start_date?: string;
+  end_date?: string;
+  team_size?: number;
+  
+  // Location-specific fields
+  geographicZone?: string;
+  terrainType?: string;
+  environmentalConstraints?: string;
+  hasUtilities?: boolean;
+  requiresPermits?: boolean;
+  
+  // Classification
+  category?: string;
+  subCategory?: string;
+  priorityLevel?: 'Faible' | 'Moyenne' | 'Élevée' | 'Très élevée';
+  riskLevel?: 'Faible' | 'Moyen' | 'Élevé' | 'Critique';
+  environmentalImpact?: 'Nul' | 'Faible' | 'Modéré' | 'Élevé';
+  sustainabilityScore?: number;
+  
   financingSource?: string;
-  funding_source?: string; // Legacy snake_case for backward compatibility
-  marketType?: string; // ✅ CAMELCASE: Instead of market_type
-  market_type?: string; // Legacy snake_case for backward compatibility
-  selectionMode?: string; // ✅ CAMELCASE: Instead of selection_mode
-  selection_mode?: string; // Legacy snake_case for backward compatibility
+  marketType?: string;
+  selectionMode?: string;
   methodology?: string;
   geographicZone?: string; // ✅ CAMELCASE: Instead of geographic_zone
   geographic_zone?: string; // Legacy snake_case for backward compatibility

@@ -3,26 +3,11 @@ import { IInspectionRepository } from '@/domain/repositories/IInspectionReposito
 import { Inspection, InspectionStatus } from '@/domain/entities/Inspection';
 import { AppError, ErrorLogger, ErrorCode } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-
-// Types for inspection execution
-export interface InspectionDocument {
-  id: string;
-  type: string;
-  name: string;
-  url?: string;
-  uploadedAt?: string;
-  inspectionId: string;
-}
-
-export interface InspectionExecutionData {
-  id: string;
-  status: string;
-  progressAtInspection?: number;
-  comments?: string;
-  documents: InspectionDocument[];
-  completedAt?: string;
-  completedBy?: string;
-}
+import { 
+  InspectionDocumentDTO,
+  InspectionExecutionDataDTO,
+  InspectionPaymentValidationDTO
+} from '@/dtos/entities/InspectionDTO';
 
 export class InspectionService {
   private repository: IInspectionRepository;
@@ -70,7 +55,7 @@ export class InspectionService {
   /**
    * Create inspection
    */
-  async createInspection(data: Partial<Inspection>): Promise<Inspection> {
+  async createInspection(data: Omit<InspectionExecutionDataDTO, 'id'>): Promise<Inspection> {
     try {
       const newInspection = Inspection.create({
         id: crypto.randomUUID(),
@@ -81,6 +66,7 @@ export class InspectionService {
         date: data.date || new Date().toISOString(),
         comments: data.comments || undefined
       });
+      
       await this.repository.save(newInspection);
       return newInspection;
     } catch (error) {
@@ -92,7 +78,7 @@ export class InspectionService {
   /**
    * Update inspection
    */
-  async updateInspection(id: string, updates: Partial<Inspection>): Promise<Inspection> {
+  async updateInspection(id: string, updates: InspectionExecutionDataDTO): Promise<Inspection> {
     try {
       const existing = await this.repository.findById(id);
       if (!existing) {
@@ -205,17 +191,17 @@ export class InspectionService {
   /**
    * Complete inspection
    */
-  async completeInspection(id: string, progress: number, comments?: string): Promise<Inspection> {
+  async completeInspection(id: string, data: InspectionExecutionDataDTO): Promise<Inspection> {
     try {
       const existingInspection = await this.repository.findById(id);
       if (!existingInspection) {
         throw new AppError('NOT_FOUND' as ErrorCode, 'Inspection not found');
       }
 
-      const updates: Partial<Inspection> = {
+      const updates: InspectionExecutionDataDTO = {
         status: 'completed',
-        progressAtInspection: progress,
-        comments: comments || existingInspection.comments,
+        progressAtInspection: data.progressAtInspection,
+        comments: data.comments,
         updatedAt: new Date().toISOString()
       };
 
@@ -230,16 +216,16 @@ export class InspectionService {
   /**
    * Cancel inspection
    */
-  async cancelInspection(id: string, reason?: string): Promise<Inspection> {
+  async cancelInspection(id: string, data: InspectionExecutionDataDTO): Promise<Inspection> {
     try {
       const existingInspection = await this.repository.findById(id);
       if (!existingInspection) {
         throw new AppError('NOT_FOUND' as ErrorCode, 'Inspection not found');
       }
 
-      const updates: Partial<Inspection> = {
+      const updates: InspectionExecutionDataDTO = {
         status: 'cancelled',
-        comments: reason ? `${existingInspection.comments}\n\nCancelled: ${reason}` : existingInspection.comments,
+        comments: data.comments,
         updatedAt: new Date().toISOString()
       };
 
@@ -278,7 +264,7 @@ export class InspectionService {
   /**
    * Upload documents for inspection
    */
-  async uploadDocuments(inspectionId: string, files: File[]): Promise<InspectionDocument[]> {
+  async uploadDocuments(inspectionId: string, files: File[]): Promise<InspectionDocumentDTO[]> {
     try {
       if (!inspectionId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
@@ -288,14 +274,14 @@ export class InspectionService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Files are required');
       }
 
-      const uploadedDocuments: InspectionDocument[] = [];
+      const uploadedDocuments: InspectionDocumentDTO[] = [];
       
       // For now, simulate document upload as storage service is not available
       // TODO: Implement proper document upload when storage service is available
       console.warn('InspectionService.uploadDocuments: Storage service not available');
       
       for (const file of files) {
-        const document: InspectionDocument = {
+        const document: InspectionDocumentDTO = {
           id: `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           type: file.type || 'unknown',
           name: file.name,
@@ -316,46 +302,42 @@ export class InspectionService {
   /**
    * Get inspection with execution data
    */
-  async getInspectionExecutionData(inspectionId: string): Promise<InspectionExecutionData | null> {
+  async getInspectionExecutionData(inspectionId: string): Promise<InspectionExecutionDataDTO | null> {
     try {
-      if (!inspectionId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
-      }
-
       const inspection = await this.repository.findById(inspectionId);
       
-      if (!inspection) {
-        return null;
-      }
-
-      // Map documents to local format with inspectionId
-      const mappedDocuments: InspectionDocument[] = (inspection.documents || []).map(doc => ({
-        id: doc.id,
-        type: doc.type,
-        name: doc.name,
-        url: doc.url,
-        uploadedAt: doc.uploadedAt,
-        inspectionId: inspection.id
-      }));
-
+      if (!inspection) return null;
+      
       return {
         id: inspection.id,
         status: inspection.status,
         progressAtInspection: inspection.progressAtInspection,
         comments: inspection.comments ?? undefined,
-        documents: mappedDocuments,
-        completedAt: inspection.updatedAt
+        documents: inspection.documents?.map(doc => ({
+          id: doc.id,
+          type: doc.type,
+          name: doc.name,
+          url: doc.url,
+          uploadedAt: doc.uploadedAt,
+          inspectionId: inspection.id
+        })) || [],
+        completedAt: inspection.completedAt,
+        projectId: inspection.projectId,
+        phaseId: inspection.phaseId,
+        stepId: inspection.stepId,
+        inspector: inspection.inspector,
+        date: inspection.date
       };
     } catch (error) {
-      console.error('InspectionService.getInspectionExecutionData failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get inspection execution data');
+      ErrorLogger.log(error as Error, 'InspectionService.getInspectionExecutionData');
+      throw error;
     }
   }
 
   /**
    * Update inspection with execution data
    */
-  async updateInspectionExecution(data: InspectionExecutionData): Promise<InspectionExecutionData> {
+  async updateInspectionExecution(data: InspectionExecutionDataDTO): Promise<InspectionExecutionDataDTO> {
     try {
       if (!data.id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
@@ -389,15 +371,7 @@ export class InspectionService {
   /**
    * Update inspection payment validation
    */
-  async updateInspectionPaymentValidation(id: string, data: {
-    status: string;
-    comments: string;
-    payment_type: string;
-    payment_status?: string;
-    project_id?: string;
-    inspection_id?: string;
-    rejection_notes?: string;
-  }): Promise<Inspection> {
+  async updateInspectionPaymentValidation(id: string, data: InspectionPaymentValidationDTO): Promise<Inspection> {
     try {
       if (!id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');

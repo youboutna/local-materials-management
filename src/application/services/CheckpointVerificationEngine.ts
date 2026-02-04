@@ -15,51 +15,22 @@ import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
 import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import {
-  CheckpointDTO,
-  CheckpointVerificationResultDTO,
-  VerificationItemDTO,
-  VerificationStatus,
-  CheckpointCategory
+  CheckpointDTO
 } from '@/dtos/entities/CheckpointDTO';
+import { CheckpointVerificationResultDTO } from '@/dtos/entities/CheckpointVerificationResultDTO';
+import {
+  VerificationStatus,
+  CheckpointCategory,
+  VerificationItemDTO,
+  VerifyCheckpointRequestDto,
+  VerifyCheckpointResponseDto,
+  VerifyInspectionsRequestDto,
+  VerifyDocumentsRequestDto,
+  VerifyApprovalsRequestDto,
+  VerifyResourcesRequestDto,
+  VerifyServiceFaitRequestDto
+} from '@/dtos/entities/CheckpointVerificationDTO';
 import { DEFAULT_MAURITANIA_RULES } from '@/types/checkpoint-dto';
-
-// Service DTOs for data exchange
-export interface VerifyCheckpointRequestDto {
-  checkpoint: CheckpointDTO;
-  projectId?: string;
-  phaseId?: string;
-}
-
-export interface VerifyCheckpointResponseDto {
-  result: CheckpointVerificationResultDTO;
-  errors?: string[];
-}
-
-export interface VerifyInspectionsRequestDto {
-  requiredInspectionIds: string[];
-  triggerProgress: number;
-  projectId: string;
-}
-
-export interface VerifyDocumentsRequestDto {
-  requiredDocumentIds: string[];
-  projectId: string;
-}
-
-export interface VerifyApprovalsRequestDto {
-  requiredApprovalIds: string[];
-  projectId: string;
-}
-
-export interface VerifyResourcesRequestDto {
-  stepId: string;
-  projectId: string;
-}
-
-export interface VerifyServiceFaitRequestDto {
-  checkpointId: string;
-  projectId: string;
-}
 
 // ============= ENGINE =============
 

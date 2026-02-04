@@ -26,12 +26,12 @@ interface ProjectData {
   status: string;
   progress: number;
   budget: number;
-  start_date: string;
-  end_date?: string;
-  main_contractor?: string;
-  project_reference?: string;
-  allows_initial_payment?: boolean;
-  initial_payment_percentage?: number;
+  startDate: string;
+  endDate?: string;
+  mainContractor?: string;
+  projectReference?: string;
+  allowsInitialPayment?: boolean;
+  initialPaymentPercentage?: number;
 }
 
 interface PhaseData {
@@ -67,8 +67,8 @@ interface InspectionData {
   date: string;
   status: string;
   inspector: string;
-  progress_at_inspection: number;
-  phase_id: string;
+  progressAtInspection: number;
+  phaseId: string;
 }
 
 /**

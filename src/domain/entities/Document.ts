@@ -1,25 +1,27 @@
 // Domain Entity: Document
 // Pure business logic without infrastructure concerns
 
-export type DocumentType = 
-  | 'contract'
-  | 'invoice'
-  | 'report'
-  | 'plan'
-  | 'permit'
-  | 'pv'
-  | 'photo'
-  | 'certificate'
-  | 'specification'
-  | 'correspondence'
-  | 'other';
+export enum DocumentType {
+  CONTRACT = 'contract',
+  INVOICE = 'invoice',
+  REPORT = 'report',
+  PLAN = 'plan',
+  PERMIT = 'permit',
+  PV = 'pv',
+  PHOTO = 'photo',
+  CERTIFICATE = 'certificate',
+  SPECIFICATION = 'specification',
+  CORRESPONDENCE = 'correspondence',
+  OTHER = 'other'
+}
 
-export type DocumentStatus = 
-  | 'draft'
-  | 'pending_review'
-  | 'approved'
-  | 'rejected'
-  | 'archived';
+export enum DocumentStatus {
+  DRAFT = 'draft',
+  PENDING_REVIEW = 'pending_review',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  ARCHIVED = 'archived'
+}
 
 export class Document {
   // Private fields for encapsulation

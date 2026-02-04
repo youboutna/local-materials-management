@@ -8,6 +8,7 @@
 import { Payment, PaymentStatus } from '@/domain/entities/Payment';
 import { PaymentDTO, CreatePaymentDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { EntityToDTOMapper, ValidationResult } from '@/dtos/transforms/shared';
+import { PaymentRequestDTO } from '@/dtos/entities/PaymentRequestDTO'; // Import PaymentRequestDTO
 
 export interface PaymentEfficiencyResult {
   paymentRate: number;
@@ -306,6 +307,45 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
     }
     
     return 'low';
+  }
+
+  /**
+   * Transform Payment to PaymentRequestDTO
+   */
+  static paymentToRequestDTO(payment: Payment): PaymentRequestDTO {
+    return {
+      id: payment.id,
+      supplierId: payment.contractorName,
+      projectId: payment.projectId,
+      amount: payment.amount,
+      description: payment.description || '',
+      paymentReason: payment.paymentReason || '',
+      status: payment.status as 'pending' | 'approved' | 'rejected' | 'paid' | 'cancelled',
+      createdAt: payment.createdAt,
+      updatedAt: payment.updatedAt
+    };
+  }
+
+  /**
+   * Transform PaymentRequestDTO to Payment
+   */
+  static requestDTOToPayment(dto: PaymentRequestDTO): Payment {
+    return {
+      id: dto.id,
+      contractorName: dto.supplierId,
+      projectId: dto.projectId || '',
+      amount: dto.amount,
+      description: dto.description,
+      paymentReason: dto.paymentReason || '',
+      status: dto.status,
+      paymentDate: new Date().toISOString(),
+      paymentMethod: '',
+      progressAtPayment: 0,
+      transactionId: '',
+      contractorContact: '',
+      createdAt: dto.createdAt || new Date().toISOString(),
+      updatedAt: dto.updatedAt || new Date().toISOString()
+    };
   }
 
   // EntityToDTOMapper interface implementation

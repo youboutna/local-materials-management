@@ -10,21 +10,40 @@ import {
   StakeholderDTO, 
   CreateStakeholderRequestDTO, 
   UpdateStakeholderRequestDTO, 
-  StakeholderResponseDTO 
+  StakeholderResponseDTO,
+  StakeholderServiceResult,
+  StakeholderListResult
 } from '@/dtos/entities/StakeholderDTO';
 import { StakeholderTransformer } from '@/dtos/transforms/StakeholderTransformer';
 
-export interface StakeholderServiceResult<T = StakeholderResponseDTO> {
-  success: boolean;
-  data?: T;
-  error?: {
-    code: string;
-    message: string;
-    details?: unknown;
-  };
+export enum StakeholderType {
+  CLIENT = 'client',
+  SUPPLIER = 'supplier',
+  CONTRACTOR = 'contractor',
+  REGULATOR = 'regulator',
+  OTHER = 'other'
 }
 
-export type StakeholderListResult = StakeholderServiceResult<StakeholderResponseDTO[]>;
+const StakeholderRoles = {
+  [StakeholderType.CLIENT]: ['owner', 'representative', 'manager'],
+  [StakeholderType.SUPPLIER]: ['material', 'equipment', 'service'],
+  [StakeholderType.CONTRACTOR]: ['general', 'specialized', 'subcontractor'],
+  [StakeholderType.REGULATOR]: ['government', 'safety', 'environmental'],
+  [StakeholderType.OTHER]: ['community', 'media', 'other']
+} as const;
+
+// Enhanced type definitions for stakeholder roles
+type StakeholderRoleMap = {
+  [StakeholderType.CLIENT]: 'owner' | 'representative' | 'manager';
+  [StakeholderType.SUPPLIER]: 'material' | 'equipment' | 'service';
+  [StakeholderType.CONTRACTOR]: 'general' | 'specialized' | 'subcontractor';
+  [StakeholderType.REGULATOR]: 'government' | 'safety' | 'environmental';
+  [StakeholderType.OTHER]: 'community' | 'media' | 'other';
+};
+
+type StakeholderRole<T extends StakeholderType> = T extends keyof StakeholderRoleMap 
+  ? StakeholderRoleMap[T] 
+  : never;
 
 export class StakeholderService {
   constructor(private stakeholderRepository: IStakeholderRepository) {}
@@ -59,6 +78,33 @@ export class StakeholderService {
             code: 'VALIDATION_ERROR',
             message: 'Données invalides',
             details: validation.errors
+          }
+        };
+      }
+
+      // Validate type
+      if (!isValidStakeholderType(data.type)) {
+        return {
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid stakeholder type',
+            details: { type: ['Invalid stakeholder type'] }
+          }
+        };
+      }
+
+      // Validate role if provided
+      if (data.role && !isValidStakeholderRole(data.type, data.role)) {
+        return {
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid role for stakeholder type',
+            details: { 
+              role: [`Invalid role '${data.role}' for type '${data.type}'`],
+              validRoles: StakeholderRoles[data.type]
+            }
           }
         };
       }
@@ -149,6 +195,33 @@ export class StakeholderService {
             code: 'VALIDATION_ERROR',
             message: 'Données de mise à jour invalides',
             details: validation.errors
+          }
+        };
+      }
+
+      // Validate type
+      if (data.type && !isValidStakeholderType(data.type)) {
+        return {
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid stakeholder type',
+            details: { type: ['Invalid stakeholder type'] }
+          }
+        };
+      }
+
+      // Validate role if provided
+      if (data.role && !isValidStakeholderRole(data.type, data.role)) {
+        return {
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid role for stakeholder type',
+            details: { 
+              role: [`Invalid role '${data.role}' for type '${data.type}'`],
+              validRoles: StakeholderRoles[data.type]
+            }
           }
         };
       }
@@ -412,4 +485,17 @@ export class StakeholderService {
       };
     }
   }
+}
+
+// Enhanced type guards
+function isValidStakeholderType(type: string): type is StakeholderType {
+  return Object.values(StakeholderType).includes(type as StakeholderType);
+}
+
+function isValidStakeholderRole<T extends StakeholderType>(
+  type: T,
+  role: string
+): role is StakeholderRole<T> {
+  const validRoles: StakeholderRole<T>[] = StakeholderRoles[type] as StakeholderRole<T>[];
+  return validRoles.includes(role as StakeholderRole<T>);
 }

@@ -441,14 +441,6 @@ export type {
   UseMaterialsHexResult,
   UseInspectionsHexResult,
   UseAuthHexResult,
-  SupplierResponseDto,
-  UserResponseDto,
-  TaskAssignmentResponseDto,
-  DocumentResponseDto,
-  ProjectResponseDto,
-  MaterialResponseDto,
-  InspectionResponseDto,
-  AuthResponseDto,
   PaginatedResult,
   QueryResult,
   MutationResult,
@@ -473,8 +465,21 @@ export type {
   TaskDTO,
   CreateTaskRequestDto,
   UpdateTaskRequestDto
-} from '@/dtos/transforms';
+} 
+from '@/dtos/transforms';
+ 
+export type {
+ SupplierResponseDto,
+  UserResponseDto,
+  TaskAssignmentResponseDto,
+  DocumentResponseDto,
+  ProjectResponseDto,
+  MaterialResponseDto,
+  InspectionResponseDto,
+  AuthResponseDto
+ } from '@/dtos/*';
 
+ 
 // Specialized type exports
 export type { CreateInspectionData } from './useInspectionDialogHex';
 export type { ProjectImportData } from './useProjectImporterHex';

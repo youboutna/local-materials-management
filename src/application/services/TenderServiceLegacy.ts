@@ -6,118 +6,22 @@
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { ITenderRepository } from '@/domain/repositories/ITenderRepository';
-
-export interface TenderDTO {
-  id: string;
-  title: string;
-  description: string;
-  project_id?: string | null;
-  tender_number: string;
-  status: 'draft' | 'published' | 'closed' | 'awarded';
-  market_type?: string;
-  financing_source?: string;
-  budget_min?: number;
-  budget_max?: number;
-  publication_date?: string;
-  deadline_date?: string;
-  opening_date?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-// Service DTOs for data exchange
-export interface GetAllTendersRequestDto {
-  limit?: number;
-  offset?: number;
-}
-
-export interface GetTenderByIdRequestDto {
-  id: string;
-}
-
-export interface CreateTenderRequestDto {
-  title: string;
-  description: string;
-  project_id?: string | null;
-  tender_number?: string;
-  status?: 'draft' | 'published' | 'closed' | 'awarded';
-  market_type?: string;
-  financing_source?: string;
-  budget_min?: number;
-  budget_max?: number;
-  publication_date?: string;
-  deadline_date?: string;
-  opening_date?: string;
-}
-
-export interface UpdateTenderRequestDto {
-  id: string;
-  updates: Partial<CreateTenderRequestDto>;
-}
-
-export interface DeleteTenderRequestDto {
-  id: string;
-}
-
-export interface GetTenderSubmissionsRequestDto {
-  tenderId: string;
-}
-
-export interface GetTendersByStatusRequestDto {
-  status: 'draft' | 'published' | 'closed' | 'awarded';
-}
-
-export interface SearchTendersRequestDto {
-  searchTerm: string;
-}
-
-export interface GetPublishedTendersForSubmissionRequestDto {
-  limit?: number;
-}
-
-export interface GetTendersByProjectRequestDto {
-  projectId: string;
-}
-
-export interface GetTenderStatsRequestDto {
-  startDate?: string;
-  endDate?: string;
-}
-
-export interface TenderStatsDto {
-  total: number;
-  byStatus: Record<string, number>;
-  byMarketType: Record<string, number>;
-  byFinancingSource: Record<string, number>;
-  publishedThisMonth: number;
-  closingThisMonth: number;
-}
-
-export interface TenderValidationResultDto {
-  isValid: boolean;
-  errors: string[];
-}
-
-export interface TenderDocumentDTO {
-  id: string;
-  tender_id: string;
-  document_type: string;
-  file_name: string;
-  file_path: string;
-  file_size: number;
-  mime_type: string;
-  uploaded_at: string;
-  uploaded_by: string;
-}
-
-export interface TenderSubmissionDTO {
-  id: string;
-  tender_id: string;
-  supplier_id: string;
-  status: string;
-  submitted_at: string;
-  documents?: TenderDocumentDTO[];
-}
+import { 
+  TenderDTO,
+  TenderCreateDTO,
+  TenderUpdateDTO,
+  GetAllTendersRequestDTO,
+  GetTenderByIdRequestDTO,
+  GetTenderSubmissionsRequestDTO,
+  GetTendersByStatusRequestDTO,
+  SearchTendersRequestDTO,
+  GetPublishedTendersForSubmissionRequestDTO,
+  GetTendersByProjectRequestDTO,
+  GetTenderStatsRequestDTO,
+  TenderValidationResultDTO,
+  TenderDocumentDTO,
+  TenderSubmissionDTO
+} from '@/dtos/entities/TenderDTO';
 
 export class TenderServiceLegacy {
   constructor(
@@ -126,7 +30,7 @@ export class TenderServiceLegacy {
   /**
    * Get all tenders
    */
-  async getAllTenders(request?: GetAllTendersRequestDto): Promise<TenderDTO[]> {
+  async getAllTenders(request?: GetAllTendersRequestDTO): Promise<TenderDTO[]> {
     try {
       // For now, return mock data as repository methods are not available
       // TODO: Implement proper repository methods when available
@@ -142,7 +46,7 @@ export class TenderServiceLegacy {
   /**
    * Get tender by ID
    */
-  async getTenderById(request: GetTenderByIdRequestDto): Promise<TenderDTO | null> {
+  async getTenderById(request: GetTenderByIdRequestDTO): Promise<TenderDTO | null> {
     try {
       if (!request.id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender ID is required');
@@ -162,7 +66,7 @@ export class TenderServiceLegacy {
   /**
    * Create a new tender
    */
-  async createTender(request: CreateTenderRequestDto): Promise<TenderDTO> {
+  async createTender(request: TenderCreateDTO): Promise<TenderDTO> {
     try {
       if (!request.title || !request.description) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Title and description are required');
@@ -215,7 +119,7 @@ export class TenderServiceLegacy {
   /**
    * Update tender
    */
-  async updateTender(request: UpdateTenderRequestDto): Promise<TenderDTO> {
+  async updateTender(request: { id: string; updates: TenderUpdateDTO }): Promise<TenderDTO> {
     try {
       if (!request.id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender ID is required');
@@ -263,7 +167,7 @@ export class TenderServiceLegacy {
   /**
    * Delete tender
    */
-  async deleteTender(request: DeleteTenderRequestDto): Promise<void> {
+  async deleteTender(request: { id: string }): Promise<void> {
     try {
       if (!request.id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender ID is required');
@@ -279,7 +183,7 @@ export class TenderServiceLegacy {
   /**
    * Get tender submissions
    */
-  async getTenderSubmissions(request: GetTenderSubmissionsRequestDto): Promise<TenderSubmissionDTO[]> {
+  async getTenderSubmissions(request: GetTenderSubmissionsRequestDTO): Promise<TenderSubmissionDTO[]> {
     try {
       if (!request.tenderId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender ID is required');
@@ -299,7 +203,7 @@ export class TenderServiceLegacy {
   /**
    * Get tenders by status
    */
-  async getTendersByStatus(request: GetTendersByStatusRequestDto): Promise<TenderDTO[]> {
+  async getTendersByStatus(request: GetTendersByStatusRequestDTO): Promise<TenderDTO[]> {
     try {
       if (!request.status) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Status is required');
@@ -319,7 +223,7 @@ export class TenderServiceLegacy {
   /**
    * Search tenders
    */
-  async searchTenders(request: SearchTendersRequestDto): Promise<TenderDTO[]> {
+  async searchTenders(request: SearchTendersRequestDTO): Promise<TenderDTO[]> {
     try {
       if (!request.searchTerm || request.searchTerm.trim().length === 0) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Search term is required');
@@ -339,7 +243,7 @@ export class TenderServiceLegacy {
   /**
    * Get published tenders available for submission
    */
-  async getPublishedTendersForSubmission(request?: GetPublishedTendersForSubmissionRequestDto): Promise<TenderDTO[]> {
+  async getPublishedTendersForSubmission(request?: GetPublishedTendersForSubmissionRequestDTO): Promise<TenderDTO[]> {
     try {
       const now = new Date().toISOString();
       
@@ -361,7 +265,7 @@ export class TenderServiceLegacy {
   /**
    * Get tenders by project
    */
-  async getTendersByProject(request: GetTendersByProjectRequestDto): Promise<TenderDTO[]> {
+  async getTendersByProject(request: GetTendersByProjectRequestDTO): Promise<TenderDTO[]> {
     try {
       if (!request.projectId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
@@ -381,7 +285,7 @@ export class TenderServiceLegacy {
   /**
    * Get tender statistics
    */
-  async getTenderStats(request?: GetTenderStatsRequestDto): Promise<TenderStatsDto> {
+  async getTenderStats(request?: GetTenderStatsRequestDTO): Promise<{ total: number; byStatus: Record<string, number>; byMarketType: Record<string, number>; byFinancingSource: Record<string, number>; publishedThisMonth: number; closingThisMonth: number; }> {
     try {
       const tenders = await this.getAllTenders();
       const now = new Date();
@@ -442,7 +346,7 @@ export class TenderServiceLegacy {
   /**
    * Validate tender data
    */
-  validateTenderData(data: CreateTenderRequestDto | Partial<CreateTenderRequestDto>): TenderValidationResultDto {
+  validateTenderData(data: TenderCreateDTO | Partial<TenderCreateDTO>): TenderValidationResultDTO {
     const errors: string[] = [];
 
     if (!data.title || data.title.trim().length === 0) {

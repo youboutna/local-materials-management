@@ -26,6 +26,12 @@ export interface InspectionApprovalContext {
     url: string;
     uploadedAt: string;
   }>;
+  validationDate?: string;
+  approvedBy?: string;
+  notes?: string;
+  checklistItems?: InspectionChecklistItem[];
+  nonConformities?: InspectionNonConformity[];
+  nextActions?: InspectionAction[];
 }
 
 export interface SyncResult {

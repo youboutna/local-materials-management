@@ -211,31 +211,36 @@ export class TenderEstimateService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Estimate ID, quantity, and unit price are required');
       }
 
-      // For now, simulate creation as tender estimate repository is not available
-      // TODO: Implement proper tender estimate item creation when repository is available
-      console.warn('TenderEstimateService.createTenderEstimateItem: Tender estimate repository not available');
-
-      const id = `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const now = new Date().toISOString();
-
-      const newItem: TenderEstimateItemDTO = {
-        id,
-        estimate_id: request.estimate_id,
-        material_id: request.material_id || undefined as string | undefined,
-        item_code: request.item_code,
+      const createdItem = await this.tenderEstimateRepository.createItem({
+        estimateId: request.estimate_id,
+        materialId: request.material_id,
+        itemCode: request.item_code,
         description: request.description,
         unit: request.unit,
         quantity: request.quantity,
-        unit_price: request.unit_price,
-        total_price: request.total_price,
+        unitPrice: request.unit_price,
+        totalPrice: request.total_price || request.quantity * request.unit_price,
         category: request.category,
         specifications: request.specifications,
-        item_type: request.item_type,
-        created_at: now,
-        updated_at: now
-      };
+        itemType: request.item_type
+      });
 
-      return newItem;
+      return {
+        id: createdItem.id,
+        estimate_id: createdItem.estimateId,
+        material_id: createdItem.materialId,
+        item_code: createdItem.itemCode,
+        description: createdItem.description,
+        unit: createdItem.unit,
+        quantity: createdItem.quantity,
+        unit_price: createdItem.unitPrice,
+        total_price: createdItem.totalPrice,
+        category: createdItem.category,
+        specifications: createdItem.specifications,
+        item_type: createdItem.itemType,
+        created_at: createdItem.createdAt.toISOString(),
+        updated_at: createdItem.updatedAt.toISOString()
+      };
     } catch (error) {
       console.error('TenderEstimateService.createTenderEstimateItem failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create estimate item');
@@ -251,11 +256,23 @@ export class TenderEstimateService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Estimate ID is required');
       }
 
-      // For now, return mock data as tender estimate repository is not available
-      // TODO: Implement proper tender estimate item retrieval when repository is available
-      console.warn('TenderEstimateService.getEstimateItems: Tender estimate repository not available');
-
-      return [];
+      const items = await this.tenderEstimateRepository.findItemsByEstimateId(request.estimate_id);
+      return items.map(item => ({
+        id: item.id,
+        estimate_id: item.estimateId,
+        material_id: item.materialId,
+        item_code: item.itemCode,
+        description: item.description,
+        unit: item.unit,
+        quantity: item.quantity,
+        unit_price: item.unitPrice,
+        total_price: item.totalPrice,
+        category: item.category,
+        specifications: item.specifications,
+        item_type: item.itemType,
+        created_at: item.createdAt.toISOString(),
+        updated_at: item.updatedAt.toISOString()
+      }));
     } catch (error) {
       console.error('TenderEstimateService.getEstimateItems failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get estimate items');
@@ -274,27 +291,23 @@ export class TenderEstimateService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Update data is required');
       }
 
-      // For now, return mock data as tender estimate repository is not available
-      // TODO: Implement proper tender estimate item update when repository is available
-      console.warn('TenderEstimateService.updateEstimateItem: Tender estimate repository not available');
-
-      const now = new Date().toISOString();
-      const mockItem: TenderEstimateItemDTO = {
-        id: request.id,
-        estimate_id: 'mock-estimate-id',
-        material_id: undefined,
-        item_code: 'mock-item',
-        description: 'Mock item',
-        unit: 'unit',
-        quantity: 1,
-        unit_price: 0,
-        total_price: 0,
-        created_at: now,
-        updated_at: now,
-        ...request.updates
+      const updatedItem = await this.tenderEstimateRepository.updateItem(request.id, request.updates);
+      return {
+        id: updatedItem.id,
+        estimate_id: updatedItem.estimateId,
+        material_id: updatedItem.materialId,
+        item_code: updatedItem.itemCode,
+        description: updatedItem.description,
+        unit: updatedItem.unit,
+        quantity: updatedItem.quantity,
+        unit_price: updatedItem.unitPrice,
+        total_price: updatedItem.totalPrice,
+        category: updatedItem.category,
+        specifications: updatedItem.specifications,
+        item_type: updatedItem.itemType,
+        created_at: updatedItem.createdAt.toISOString(),
+        updated_at: updatedItem.updatedAt.toISOString()
       };
-
-      return mockItem;
     } catch (error) {
       console.error('TenderEstimateService.updateEstimateItem failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update estimate item');
@@ -310,10 +323,7 @@ export class TenderEstimateService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Estimate item ID is required');
       }
 
-      // For now, simulate deletion as tender estimate repository is not available
-      // TODO: Implement proper tender estimate item deletion when repository is available
-      console.warn('TenderEstimateService.deleteEstimateItem: Tender estimate repository not available');
-      console.log(`Deleting estimate item: ${request.id}`);
+      await this.tenderEstimateRepository.deleteItem(request.id);
     } catch (error) {
       console.error('TenderEstimateService.deleteEstimateItem failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete estimate item');
@@ -404,25 +414,44 @@ export class TenderEstimateService {
   /**
    * Calculate estimate totals
    */
-  async calculateEstimateTotals(request: CalculateEstimateTotalsRequestDto): Promise<EstimateTotalsDto> {
+  async calculateEstimateTotals(estimateId: string): Promise<EstimateTotalsDto> {
     try {
-      if (!request.estimate_id) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Estimate ID is required');
+      const estimate = await this.tenderEstimateRepository.findById(estimateId);
+      if (!estimate) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Tender estimate not found');
       }
 
-      // For now, return mock data as tender estimate repository is not available
-      // TODO: Implement proper estimate totals calculation when repository is available
-      console.warn('TenderEstimateService.calculateEstimateTotals: Tender estimate repository not available');
+      // Calculate subtotal from all items
+      const subtotal = estimate.items.reduce(
+        (sum, item) => sum + (item.quantity * item.unitPrice),
+        0
+      );
+
+      // Apply discount if any
+      const discountAmount = estimate.discountPercentage 
+        ? subtotal * (estimate.discountPercentage / 100) 
+        : 0;
       
+      // Calculate tax if applicable
+      const taxAmount = estimate.taxPercentage
+        ? (subtotal - discountAmount) * (estimate.taxPercentage / 100)
+        : 0;
+      
+      // Calculate grand total
+      const total = subtotal - discountAmount + taxAmount;
+
       return {
-        subtotal: 0,
-        tax_amount: 0,
-        total_with_tax: 0,
-        final_total: 0
+        subtotal,
+        discountAmount,
+        taxAmount,
+        total,
+        currency: estimate.currency,
       };
     } catch (error) {
       console.error('TenderEstimateService.calculateEstimateTotals failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to calculate estimate totals');
+      throw error instanceof AppError 
+        ? error 
+        : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to calculate estimate totals');
     }
   }
 }

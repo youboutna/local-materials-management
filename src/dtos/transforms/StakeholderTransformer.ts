@@ -171,45 +171,45 @@ export class StakeholderTransformer {
   // Database Row → Entity
   static fromDatabaseRow(row: any): Stakeholder {
     const contact: StakeholderContact = {
-      name: row.contact_name || row.name || '',
-      email: row.contact_email || row.email || '',
-      phone: row.contact_phone || row.phone || undefined,
-      position: row.contact_position || row.position || undefined
+      name: row.contact_name || row.contactName || row.name || '',
+      email: row.contact_email || row.contactEmail || row.email || '',
+      phone: row.contact_phone || row.contactPhone || row.phone || undefined,
+      position: row.contact_position || row.contactPosition || row.position || undefined
     };
 
-    const organization: StakeholderOrganization | null = row.organization_id ? {
-      id: row.organization_id,
-      name: row.organization_name || '',
-      type: (row.organization_type || '') as StakeholderType,
-      category: row.organization_category || undefined,
-      address: row.organization_address || undefined,
-      phone: row.organization_phone || undefined,
-      email: row.organization_email || undefined,
-      nif: row.organization_nif || undefined,
-      registrationNumber: row.organization_registration_number || undefined
+    const organization: StakeholderOrganization | null = row.organization_id || row.organizationId ? {
+      id: row.organization_id || row.organizationId,
+      name: row.organization_name || row.organizationName || '',
+      type: (row.organization_type || row.organizationType || '') as StakeholderType,
+      category: row.organization_category || row.organizationCategory || undefined,
+      address: row.organization_address || row.organizationAddress || undefined,
+      phone: row.organization_phone || row.organizationPhone || undefined,
+      email: row.organization_email || row.organizationEmail || undefined,
+      nif: row.organization_nif || row.organizationNif || undefined,
+      registrationNumber: row.organization_registration_number || row.organizationRegistrationNumber || undefined
     } : null;
 
     return new Stakeholder(
       row.id,
-      row.project_id,
+      row.project_id || row.projectId,
       (row.type || '') as StakeholderType,
       (row.role || '') as StakeholderRole,
-      row.organization_id || null,
-      row.employee_id || null,
-      Boolean(row.is_primary),
-      Boolean(row.is_internal),
+      row.organization_id || row.organizationId || null,
+      row.employee_id || row.employeeId || null,
+      Boolean(row.is_primary || row.isPrimary),
+      Boolean(row.is_internal || row.isInternal),
       contact,
       organization,
       row.responsibilities || [],
-      row.access_level || 'read',
-      row.start_date || null,
-      row.end_date || null,
-      row.hourly_rate || null,
-      row.contract_type || null,
+      row.access_level || row.accessLevel || 'read',
+      row.start_date || row.startDate || null,
+      row.end_date || row.endDate || null,
+      row.hourly_rate || row.hourlyRate || null,
+      row.contract_type || row.contractType || null,
       row.notes || null,
-      Boolean(row.is_active),
-      row.created_at,
-      row.updated_at
+      Boolean(row.is_active || row.isActive),
+      row.created_at || row.createdAt,
+      row.updated_at || row.updatedAt
     );
   }
 

@@ -6,20 +6,13 @@
 
 import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
 import { Supplier } from '@/domain/entities/Supplier';
+import { 
+  SupplierDTO,
+  SearchSuppliersOptions,
+  SearchSuppliersResult
+} from '@/dtos/entities/SupplierDTO';
 import { SupplierTransformer } from '@/dtos/transforms/SupplierTransformer';
-import { SupplierDTO } from '@/dtos/entities/SupplierDTO';
 import { AppError, ErrorCode, ErrorLogger } from '@/utils/errorHandling';
-
-export interface SearchSuppliersOptions {
-  searchTerm?: string;
-  isActive?: boolean;
-  limit?: number;
-}
-
-export interface SearchSuppliersResult {
-  suppliers: Supplier[];
-  total: number;
-}
 
 export class SupplierService {
   constructor(private supplierRepository: ISupplierRepository) {}
@@ -45,7 +38,7 @@ export class SupplierService {
       }
 
       return {
-        suppliers,
+        suppliers: SupplierTransformer.toSummaryDTOList(suppliers),
         total: suppliers.length
       };
     } catch (error) {

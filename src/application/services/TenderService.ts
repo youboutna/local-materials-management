@@ -3,89 +3,25 @@
  * Implements business logic for tender management
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
+import {
+  TenderOption,
+  SearchTendersOptions,
+  GetProjectTendersRequestDto,
+  GetTenderByIdRequestDto,
+  CreateTenderDocumentRequestDto,
+  TenderSharingSecretDTO,
+  CreateSharingSecretDTO,
+  CreateAccessLogDTO,
+  ValidateSecretResponseDTO
+} from '@/dtos/entities/TenderServiceDTO';
+import { CreateTenderDocumentDTO, TenderDocumentDTO } from '@/dtos/entities/TenderDocumentDTO';
+import { TenderDocumentTransformer } from '@/dtos/transforms/TenderDocumentTransformer';
 import { ITenderRepository } from '@/domain/repositories/ITenderRepository';
 import { IParsedInvoiceRepository } from '@/domain/repositories/IParsedInvoiceRepository';
 import { ITenderDocumentRepository } from '@/domain/repositories/ITenderDocumentRepository';
 import { Tender } from '@/domain/entities/Tender';
-import { TenderDocumentTransformer } from '@/dtos/transforms/TenderDocumentTransformer';
-import { CreateTenderDocumentDTO, TenderDocumentDTO } from '@/dtos/entities/TenderDocumentDTO';
-
-export interface TenderOption {
-  id: string;
-  title: string;
-  reference: string;
-  project_id: string;
-  status?: string;
-}
-
-export interface SearchTendersOptions {
-  projectId?: string;
-  limit?: number;
-}
-
-// Service DTOs for data exchange
-export interface GetProjectTendersRequestDto {
-  projectId?: string;
-  limit?: number;
-}
-
-export interface GetTenderByIdRequestDto {
-  id: string;
-}
-
-export interface CreateTenderDocumentRequestDto {
-  data: CreateTenderDocumentDTO;
-}
-
-// Tender sharing interfaces from legacy service
-export interface TenderSharingSecretDTO {
-  id: string;
-  tender_id: string;
-  secret_code: string;
-  supplier_email: string;
-  supplier_id: string;
-  expires_at: string;
-  max_access_count: number;
-  current_access_count: number;
-  workflow_phase: string;
-  workflow_stage: string;
-  allowed_document_ids: string[];
-  metadata: Record<string, unknown>;
-  created_at: string;
-  updated_at: string;
-  is_active: boolean;
-}
-
-export interface CreateSharingSecretDTO {
-  tender_id: string;
-  supplier_email: string;
-  supplier_id?: string;
-  expires_at: string;
-  max_access_count?: number;
-  workflow_phase: string;
-  workflow_stage: string;
-  allowed_document_ids: string[];
-  metadata?: Record<string, unknown>;
-}
-
-export interface CreateAccessLogDTO {
-  secret_code: string;
-  supplier_email: string;
-  access_ip?: string;
-  user_agent?: string;
-  access_type: 'view' | 'download' | 'upload';
-  document_ids?: string[];
-}
-
-export interface ValidateSecretResponseDTO {
-  valid: boolean;
-  secret?: TenderSharingSecretDTO;
-  remaining_access?: number;
-  expired?: boolean;
-  error?: string;
-}
 
 export class TenderService {
   constructor(

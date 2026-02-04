@@ -11,9 +11,6 @@ type VerificationStatus = 'pending' | 'in_progress' | 'verified' | 'failed' | 's
 export type DecompteStatus = 'draft' | 'calculated' | 'submitted' | 'approved' | 'paid' | 'rejected';
 export type PaymentType = 'initial' | 'progress' | 'retention_release' | 'final';
 
-export type DecompteStatus = 'draft' | 'calculated' | 'submitted' | 'approved' | 'paid' | 'rejected';
-export type PaymentType = 'initial' | 'progress' | 'retention_release' | 'final';
-
 /**
  * Décompte calculé automatiquement
  */

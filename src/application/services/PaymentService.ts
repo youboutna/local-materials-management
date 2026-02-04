@@ -42,6 +42,17 @@ export interface PaymentControlActionDTO {
   notes?: string;
 }
 
+export enum PaymentStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  PROCESSED = 'processed',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  BLOCKED = 'blocked',
+  REJECTED = 'rejected',
+  CANCELLED = 'cancelled'
+}
+
 export class PaymentService {
   constructor(private paymentRepository: IPaymentRepository) {}
 
@@ -129,6 +140,17 @@ export class PaymentService {
         throw new AppError(ErrorCode.NOT_FOUND, 'Payment not found');
       }
 
+      // Validate status transition if status is being updated
+      if (data.status && !isValidPaymentStatusTransition(
+        existingPayment.status as PaymentStatus,
+        data.status as PaymentStatus
+      )) {
+        throw new AppError(
+          ErrorCode.VALIDATION_ERROR,
+          `Invalid status transition from ${existingPayment.status} to ${data.status}`
+        );
+      }
+
       // Transform update data to partial entity
       const updateData = PaymentTransformer.toEntity(data as unknown as PaymentDTO) as Partial<Payment>;
       
@@ -173,9 +195,9 @@ export class PaymentService {
   /**
    * Get payments by status
    */
-  async getPaymentsByStatus(status: string): Promise<PaymentDTO[]> {
+  async getPaymentsByStatus(status: PaymentStatus): Promise<PaymentDTO[]> {
     try {
-      const payments = await this.paymentRepository.findByStatus(status as PaymentStatus);
+      const payments = await this.paymentRepository.findByStatus(status);
       return payments.map(payment => PaymentTransformer.toDTO(payment));
     } catch (error) {
       console.error('[PaymentService] Error fetching payments by status:', error);
@@ -343,10 +365,28 @@ export class PaymentService {
     try {
       // TODO: Implémenter avec PaymentBlockingRepository quand disponible
       // Pour l'instant, retourner les paiements avec statut 'blocked'
-      return await this.getPaymentsByStatus('blocked');
+      return await this.getPaymentsByStatus(PaymentStatus.BLOCKED);
     } catch (error) {
       if (error instanceof AppError) throw error;
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get active blocked payments');
     }
+  }
+
+  // Add status transition validation
+  function isValidPaymentStatusTransition(
+    current: PaymentStatus,
+    next: PaymentStatus
+  ): boolean {
+    const validTransitions: Record<PaymentStatus, PaymentStatus[]> = {
+      [PaymentStatus.PENDING]: [PaymentStatus.APPROVED, PaymentStatus.REJECTED, PaymentStatus.BLOCKED],
+      [PaymentStatus.APPROVED]: [PaymentStatus.PROCESSED, PaymentStatus.CANCELLED],
+      [PaymentStatus.PROCESSED]: [PaymentStatus.COMPLETED, PaymentStatus.FAILED],
+      [PaymentStatus.BLOCKED]: [PaymentStatus.PENDING, PaymentStatus.CANCELLED],
+      [PaymentStatus.REJECTED]: [],
+      [PaymentStatus.CANCELLED]: [],
+      [PaymentStatus.COMPLETED]: [],
+      [PaymentStatus.FAILED]: []
+    };
+    return validTransitions[current].includes(next);
   }
 }

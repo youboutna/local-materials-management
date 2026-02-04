@@ -8,130 +8,15 @@ import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { IProjectRepository, IInspectionRepository, IMilestoneRepository } from '@/domain/repositories';
 import { ProjectDetailDTO } from '@/types/dto';
 import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
-import { Inspection } from '@/types/project';
-
-// Service DTOs for data exchange
-export interface ProjectAnalyticsDTO {
-  project_id: string;
-  total_budget: number;
-  actual_cost: number;
-  budget_variance: number;
-  remaining_budget: number;
-  progress_percentage: number;
-  milestone_completion: number;
-  risk_score: number;
-  quality_score: number;
-  timeline_variance: number;
-  resource_utilization: number;
-  cost_efficiency: number;
-  schedule_performance: number;
-  stakeholder_satisfaction: number;
-  last_updated: string;
-  cpi: number;
-}
-
-export interface ProjectMetricsDTO {
-  total_tasks: number;
-  completed_tasks: number;
-  pending_tasks: number;
-  overdue_tasks: number;
-  total_milestones: number;
-  completed_milestones: number;
-  total_risks: number;
-  high_risks: number;
-  medium_risks: number;
-  low_risks: number;
-  total_issues: number;
-  open_issues: number;
-  resolved_issues: number;
-}
-
-export interface ProjectRiskDTO {
-  id: string;
-  project_id: string;
-  risk_title: string;
-  risk_description: string;
-  risk_category: string;
-  probability: 'low' | 'medium' | 'high';
-  impact: 'low' | 'medium' | 'high';
-  risk_score: number;
-  mitigation_strategy: string;
-  status: 'active' | 'mitigated' | 'closed';
-  identified_date: string;
-  target_resolution_date?: string;
-  assigned_to?: string;
-}
-
-export interface ProjectProgressDTO {
-  overall_progress: number;
-  phases_progress: Array<{
-    phase_name: string;
-    progress: number;
-    status: string;
-  }>;
-  timeline_progress: Array<{
-    date: string;
-    planned_progress: number;
-    actual_progress: number;
-  }>;
-}
-
-export interface ProjectCostAnalysisDTO {
-  total_budget: number;
-  actual_cost: number;
-  committed_cost: number;
-  remaining_budget: number;
-  cost_variance: number;
-  cost_performance_index: number;
-  estimate_at_completion: number;
-  variance_at_completion: number;
-  cost_breakdown: Array<{
-    category: string;
-    budgeted_cost: number;
-    actual_cost: number;
-    variance: number;
-  }>;
-}
-
-export interface ProjectComplianceDTO {
-  compliance_score: number;
-  regulatory_compliance: number;
-  safety_compliance: number;
-  quality_compliance: number;
-  documentation_compliance: number;
-  last_audit_date: string;
-  next_audit_date: string;
-  compliance_issues: Array<{
-    category: string;
-    severity: 'low' | 'medium' | 'high';
-    description: string;
-    due_date: string;
-  }>;
-}
-
-export interface CreateProjectRiskRequestDto {
-  project_id: string;
-  risk_title: string;
-  risk_description: string;
-  risk_category: string;
-  probability: 'low' | 'medium' | 'high';
-  impact: 'low' | 'medium' | 'high';
-  mitigation_strategy: string;
-  target_resolution_date?: string;
-  assigned_to?: string;
-}
-
-export interface UpdateProjectRiskRequestDto {
-  risk_title?: string;
-  risk_description?: string;
-  risk_category?: string;
-  probability?: 'low' | 'medium' | 'high';
-  impact?: 'low' | 'medium' | 'high';
-  mitigation_strategy?: string;
-  status?: 'active' | 'mitigated' | 'closed';
-  target_resolution_date?: string;
-  assigned_to?: string;
-}
+import { 
+  ProjectAnalyticsDTO,
+  ProjectMetricsDTO,
+  ProjectRiskDTO,
+  CreateProjectRiskRequestDTO,
+  UpdateProjectRiskRequestDTO
+} from '@/dtos/entities/ProjectAnalyticsDTO';
+import { Inspection, InspectionStatus } from '@/domain';
+import { ProjectComplianceDTO } from '@/hooks/hexagonal';
 
 export class ProjectAnalyticsService {
   constructor(
@@ -146,16 +31,15 @@ export class ProjectAnalyticsService {
   private convertToInspection(inspection: InspectionDTO): Inspection {
     return {
       id: inspection.id,
-      project_id: inspection.projectId,
+      projectId: inspection.projectId,
       inspector: inspection.inspector,
       date: inspection.date,
-      status: inspection.status as "scheduled" | "in_progress" | "completed" | "cancelled" | "approved" | "rejected" | "requires_changes" | "pending" | "planned",
-      progress_at_inspection: inspection.progressAtInspection,
+      status: inspection.status as InspectionStatus,
       progressAtInspection: inspection.progressAtInspection,
       comments: inspection.comments,
-      created_at: inspection.createdAt,
-      updated_at: inspection.updatedAt,
-      phase_id: inspection.phaseId,
+      createdAt: inspection.createdAt,
+      updatedAt: inspection.updatedAt,
+      phaseId: inspection.phaseId,
       documents: [],
       issues: [],
       recommendations: []
@@ -221,21 +105,21 @@ export class ProjectAnalyticsService {
       const actualCost = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
 
       return {
-        project_id: projectId,
-        total_budget: budget,
-        actual_cost: actualCost,
-        budget_variance: budget - actualCost,
-        remaining_budget: budget - actualCost,
-        progress_percentage: overallProgress,
-        milestone_completion: 75, // Simplified
-        risk_score: 30, // Simplified
-        quality_score: 85, // Simplified
-        timeline_variance: 0, // Simplified
-        resource_utilization: 75, // Simplified
-        cost_efficiency: budget > 0 ? (actualCost / budget) * 100 : 0,
-        schedule_performance: overallProgress / 100,
-        stakeholder_satisfaction: 80, // Simplified
-        last_updated: new Date().toISOString(),
+        projectId: projectId,
+        totalBudget: budget,
+        actualCost: actualCost,
+        budgetVariance: budget - actualCost,
+        remainingBudget: budget - actualCost,
+        progressPercentage: overallProgress,
+        milestoneCompletion: 75, // Simplified
+        riskScore: 30, // Simplified
+        qualityScore: 85, // Simplified
+        timelineVariance: 0, // Simplified
+        resourceUtilization: 75, // Simplified
+        costEfficiency: budget > 0 ? (actualCost / budget) * 100 : 0,
+        schedulePerformance: overallProgress / 100,
+        stakeholderSatisfaction: 80, // Simplified
+        lastUpdated: new Date().toISOString(),
         cpi: budget > 0 ? budget / actualCost : 1.0
       };
     } catch (error) {
@@ -265,7 +149,7 @@ export class ProjectAnalyticsService {
       const completedTasks = tasks.filter((task) => task.status === 'completed').length;
       const pendingTasks = tasks.filter((task) => task.status === 'not_started').length;
       const overdueTasks = tasks.filter((task) => 
-        task.status !== 'completed' && new Date(task.endDate || task.end_date || '') < new Date()
+        task.status !== 'completed' && new Date(task.endDate || task.endDate || '') < new Date()
       ).length;
 
       // Get milestones from repository
@@ -294,19 +178,19 @@ export class ProjectAnalyticsService {
       const resolvedIssues = allIssues.filter((issue) => issue.status === 'resolved').length;
 
       return {
-        total_tasks: totalTasks,
-        completed_tasks: completedTasks,
-        pending_tasks: pendingTasks,
-        overdue_tasks: overdueTasks,
-        total_milestones: totalMilestones,
-        completed_milestones: completedMilestones,
-        total_risks: totalRisks,
-        high_risks: highRisks,
-        medium_risks: mediumRisks,
-        low_risks: lowRisks,
-        total_issues: totalIssues,
-        open_issues: openIssues,
-        resolved_issues: resolvedIssues
+        totalTasks: totalTasks,
+        completedTasks: completedTasks,
+        pendingTasks: pendingTasks,
+        overdueTasks: overdueTasks,
+        totalMilestones: totalMilestones,
+        completedMilestones: completedMilestones,
+        totalRisks: totalRisks,
+        highRisks: highRisks,
+        mediumRisks: mediumRisks,
+        lowRisks: lowRisks,
+        totalIssues: totalIssues,
+        openIssues: openIssues,
+        resolvedIssues: resolvedIssues
       };
     } catch (error) {
       console.error('ProjectAnalyticsService.getProjectMetrics failed:', error);
@@ -317,7 +201,7 @@ export class ProjectAnalyticsService {
   /**
    * Get project cost analysis
    */
-  async getProjectCostAnalysis(projectId: string): Promise<ProjectCostAnalysisDTO> {
+  async getProjectCostAnalysis(projectId: string): Promise<any> {
     try {
       if (!projectId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
@@ -340,19 +224,19 @@ export class ProjectAnalyticsService {
       const varianceAtCompletion = totalBudget - estimateAtCompletion;
 
       return {
-        total_budget: totalBudget,
-        actual_cost: actualCost,
-        committed_cost: actualCost,
-        remaining_budget: remainingBudget,
-        cost_variance: costVariance,
-        cost_performance_index: costPerformanceIndex,
-        estimate_at_completion: estimateAtCompletion,
-        variance_at_completion: varianceAtCompletion,
-        cost_breakdown: [
-          { category: 'Labor', budgeted_cost: totalBudget * 0.4, actual_cost: actualCost * 0.4, variance: costVariance * 0.4 },
-          { category: 'Materials', budgeted_cost: totalBudget * 0.3, actual_cost: actualCost * 0.3, variance: costVariance * 0.3 },
-          { category: 'Equipment', budgeted_cost: totalBudget * 0.2, actual_cost: actualCost * 0.2, variance: costVariance * 0.2 },
-          { category: 'Other', budgeted_cost: totalBudget * 0.1, actual_cost: actualCost * 0.1, variance: costVariance * 0.1 }
+        totalBudget: totalBudget,
+        actualCost: actualCost,
+        committedCost: actualCost,
+        remainingBudget: remainingBudget,
+        costVariance: costVariance,
+        costPerformanceIndex: costPerformanceIndex,
+        estimateAtCompletion: estimateAtCompletion,
+        varianceAtCompletion: varianceAtCompletion,
+        costBreakdown: [
+          { category: 'Labor', budgetedCost: totalBudget * 0.4, actualCost: actualCost * 0.4, variance: costVariance * 0.4 },
+          { category: 'Materials', budgetedCost: totalBudget * 0.3, actualCost: actualCost * 0.3, variance: costVariance * 0.3 },
+          { category: 'Equipment', budgetedCost: totalBudget * 0.2, actualCost: actualCost * 0.2, variance: costVariance * 0.2 },
+          { category: 'Other', budgetedCost: totalBudget * 0.1, actualCost: actualCost * 0.1, variance: costVariance * 0.1 }
         ]
       };
     } catch (error) {
@@ -378,25 +262,25 @@ export class ProjectAnalyticsService {
       const complianceScore = totalInspections > 0 ? Math.round((completedInspections / totalInspections) * 100) : 85;
       
       return {
-        compliance_score: complianceScore,
-        regulatory_compliance: Math.min(100, complianceScore + 5),
-        safety_compliance: Math.max(70, complianceScore - 2),
-        quality_compliance: Math.min(100, complianceScore + 3),
-        documentation_compliance: Math.max(75, complianceScore - 3),
-        last_audit_date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-        next_audit_date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
-        compliance_issues: [
+        complianceScore: complianceScore,
+        regulatoryCompliance: Math.min(100, complianceScore + 5),
+        safetyCompliance: Math.max(70, complianceScore - 2),
+        qualityCompliance: Math.min(100, complianceScore + 3),
+        documentationCompliance: Math.max(75, complianceScore - 3),
+        lastAuditDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        nextAuditDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
+        complianceIssues: [
           {
             category: 'Documentation',
             severity: 'medium',
             description: 'Missing safety inspection reports for phase 2',
-            due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+            dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
           },
           {
             category: 'Quality',
             severity: 'low',
             description: 'Minor deviations in material specifications',
-            due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+            dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
           }
         ]
       };

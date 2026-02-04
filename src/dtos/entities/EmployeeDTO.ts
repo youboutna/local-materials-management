@@ -90,6 +90,21 @@ export interface EmployeeFilterDTO {
   searchQuery?: string;
 }
 
+// Add search-related interfaces
+export interface SearchEmployeesOptions {
+  searchTerm?: string;
+  departmentFilter?: string[];
+  positionFilter?: string[];
+  skillsFilter?: string[];
+  isActive?: boolean;
+  limit?: number;
+}
+
+export interface SearchEmployeesResult {
+  employees: EmployeeDTO[];
+  total: number;
+}
+
 // Legacy compatibility types from transforms
 export type EmployeeDepartment = 'engineering' | 'construction' | 'quality' | 'administration' | 'finance' | 'procurement';
 export type EmployeePosition = 'engineer' | 'technician' | 'manager' | 'supervisor' | 'inspector' | 'analyst';
@@ -111,4 +126,18 @@ export interface UpdateEmployeeRequestDTO {
   email?: string;
   phone?: string;
   is_active?: boolean;
+}
+
+export interface UserResponseDto {
+  id: string;
+  fullName: string | null;
+  phone: string | null;
+  nationalId: string | null;
+  avatarUrl: string | null;
+  email: string | null;
+  roles: string[];
+  primaryRole: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }

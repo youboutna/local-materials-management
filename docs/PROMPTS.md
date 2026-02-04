@@ -4,33 +4,71 @@
 
 ### **Prompt : Démarrer la journée Architecture Hexagonale**
 ```
-@docs/task-plan.md @docs/CONTEXT.md 
+@CONTEXT.md @ARCHITECTURE.md @task-plan.md
 Bonjour agent AI ! Nous sommes en phase finale de l'Architecture Hexagonale du projet HadraTech-GPI.
 
-📊 **ÉTAT ACTUEL - 29 JANVIER 2026** :
-- **Services Application** : 57/57 créés (100%) ✅
-- **Hooks Hexagonaux** : 104/104 créés (100%) ✅
-- **Components React** : 386/386 fichiers (100%) ✅
-- **Appels directs Supabase** : 9 appels restants ⚠️
-- **Progression globale** : 98.8% hexagonal ✅
+📊 **ÉTAT ACTUEL - date** :
+- **Services Application** : $number créés ($number%) ✅
+- **Hooks Hexagonaux** : $number créés ($number%) ✅
+- **Components React** : $number fichiers ($number%) ✅
+- **Appels directs Supabase** :$number appels restants ⚠️
+- **Progression globale** : $number% hexagonal ✅
 - **Architecture multi-providers auth** : Implémentée ✅
 
 🎯 **OBJECTIF FINAL** :
-- **Appels directs Supabase** : 0/9 🎯
-- **Architecture 100% hexagonale** : 🎯
-- **Finalisation** : 1-2 jours pour terminer la migration
+- **Appels directs Supabase** : $number 🎯
+- **Architecture $number% hexagonale** : 🎯
+- **Finalisation** : $number jours pour terminer la migration
 
 Architecture quasi-terminée - Prêt pour finalisation !
 ```
 
 
 ## **🎮 MANUEL DE JEU POUR AI-AGENT**
+RÈGLES À ÉTABLIR :
+
+1. BASE DE DONNÉES (PostgreSQL) : snake_case OBLIGATOIRE
+   - colonnes : project_name, created_at, kpi_score
+   - tables : project_details, material_sources
+
+2. DTOs (src/dtos/entities/* et src/dtos/workflows/*) : camelCase OBLIGATOIRE
+   - projectName, createdAt, kpiScore
+   - Les DTOs représentent les données pour l'application
+
+3. TRANSFORMERS (src/dtos/transforms/*) : 
+   - DOIVENT convertir snake_case ↔ camelCase
+   - Une méthode toModel() et fromModel()
+
+4. MODÈLES DOMAINE (src/domain/*) : camelCase
+   - Entities et Value Objects en camelCase
+
+5. SERVICES (src/application/*) : camelCase uniquement
+   - Ne jamais voir de snake_case dans les services
+
+6. UI Components (React)
+        ↓ (utilise)
+      HOOKS ←─────── Adaptateurs UI
+        ↓ (appelle)
+      PORTS (Interfaces)
+        ↓ (implémente)
+    SERVICES (Logique Métier)
+        ↓ (utilise)
+    DOMAINE (Entités)
+
 
 ### **RÈGLE DU JEU #1 : LA FLÈCHE SACRÉE**
 ```
 TU PEUX : Présentation → Application → Domaine ← Infrastructure
 TU NE PEUX PAS : Domaine → Infrastructure (direct)
 TU NE PEUX PAS : Infrastructure → Présentation (direct)
+
+❌ À éviter dans les hooks :
+
+    Définir des types/interfaces (c'est le rôle des DTOs)
+
+    Contenir la logique métier pure (c'est le rôle des services)
+
+    Stocker l'état métier persistant (c'est le rôle du domaine)
 
 Pense à une rivière qui coule :
   🏔️ Source (UI) → ⛰️ Montagne (App) → 🌊 Lac (Domaine) ← 💧 Affluent (Infra)

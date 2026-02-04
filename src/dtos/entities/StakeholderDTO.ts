@@ -8,21 +8,23 @@ import { StakeholderType, StakeholderEntityType } from '@/domain/entities/Projec
 
 export interface StakeholderDTO extends BaseEntityDTO {
   projectId: string;
-  stakeholderType: StakeholderType;
-  stakeholderEntityType: StakeholderEntityType;
+  stakeholderType: 'employee' | 'external';
+  entityId: string;
+  role: string;
+  isPrimary: boolean;
+  isInternal: boolean;
+  name: string;
+  email?: string;
+  phone?: string;
+  organizationId?: string;
   employeeId?: string;
-  supplierId?: string;
-  externalName?: string;
-  externalEmail?: string;
-  externalPhone?: string;
-  roleDescription?: string;
   responsibilities?: string[];
-  isActive: boolean;
   startDate?: string;
   endDate?: string;
   hourlyRate?: number;
   contractType?: string;
   notes?: string;
+  isActive: boolean;
 }
 
 export interface StakeholderSummaryDTO {
@@ -78,6 +80,19 @@ export interface UpdateStakeholderRequestDTO {
   type?: 'employee' | 'supplier' | 'client' | 'other';
 }
 
+export interface StakeholderFormDataDTO {
+  stakeholderType: 'employee' | 'external';
+  entityId: string;
+  role: string;
+  isPrimary: boolean;
+  isInternal: boolean;
+  name: string;
+  email?: string;
+  phone?: string;
+  organizationId?: string;
+  employeeId?: string;
+}
+
 export interface StakeholderResponseDTO extends StakeholderDTO {
   employeeDetails?: {
     id: string;
@@ -118,3 +133,15 @@ export interface StakeholderOrganizationDTO {
     website?: string;
   };
 }
+
+export interface StakeholderServiceResult<T = StakeholderResponseDTO> {
+  success: boolean;
+  data?: T;
+  error?: {
+    code: string;
+    message: string;
+    details?: unknown;
+  };
+}
+
+export type StakeholderListResult = StakeholderServiceResult<StakeholderResponseDTO[]>;

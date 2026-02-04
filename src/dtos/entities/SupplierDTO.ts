@@ -89,3 +89,14 @@ export interface SupplierFilterDTO {
   searchQuery?: string;
   hasActiveContracts?: boolean;
 }
+
+export interface SearchSuppliersOptions {
+  searchTerm?: string;
+  isActive?: boolean;
+  limit?: number;
+}
+
+export interface SearchSuppliersResult {
+  suppliers: SupplierSummaryDTO[];
+  total: number;
+}

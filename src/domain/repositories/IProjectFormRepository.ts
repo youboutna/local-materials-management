@@ -2,7 +2,7 @@
  * Project Form Repository Interface
  * Defines the contract for project form operations
  */
-import { ProjectFormData } from '@/application/services/ProjectFormService';
+import { ProjectFormData } from '@/application/services/ProjectEditWorkflowService';
 
 export interface SaveContext {
   step: number;

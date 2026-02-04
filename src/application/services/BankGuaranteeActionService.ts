@@ -5,77 +5,20 @@
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { IBankGuaranteeRepository } from '@/domain/repositories/IBankGuaranteeRepository';
+import { IActionRepository } from '@/domain/repositories/IActionRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-
-// Service DTOs for data exchange
-export interface BankGuaranteeActionDTO {
-  id: string;
-  guarantee_id: string;
-  action_type: 'notification' | 'claim' | 'renewal' | 'cancellation' | 'extension' | 'modification';
-  title: string;
-  description: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'failed';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  assigned_to?: string;
-  created_by: string;
-  due_date?: string;
-  completed_at?: string;
-  documents: string[];
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface BankGuaranteeActionTemplateDTO {
-  id: string;
-  action_type: BankGuaranteeActionDTO['action_type'];
-  title_template: string;
-  description_template: string;
-  priority: BankGuaranteeActionDTO['priority'];
-  default_due_days: number;
-  required_documents: string[];
-  is_active: boolean;
-}
-
-export interface CreateBankGuaranteeActionRequestDto {
-  guarantee_id: string;
-  action_type: BankGuaranteeActionDTO['action_type'];
-  title: string;
-  description: string;
-  priority?: BankGuaranteeActionDTO['priority'];
-  assigned_to?: string;
-  created_by: string;
-  due_date?: string;
-  documents?: string[];
-  notes?: string;
-}
-
-export interface UpdateBankGuaranteeActionRequestDto {
-  title?: string;
-  description?: string;
-  status?: BankGuaranteeActionDTO['status'];
-  priority?: BankGuaranteeActionDTO['priority'];
-  assigned_to?: string;
-  due_date?: string;
-  documents?: string[];
-  notes?: string;
-}
-
-export interface BankGuaranteeActionStatistics {
-  total: number;
-  pending: number;
-  in_progress: number;
-  completed: number;
-  cancelled: number;
-  failed: number;
-  overdue: number;
-  by_type: Record<string, number>;
-  by_priority: Record<string, number>;
-}
+import {
+  BankGuaranteeActionDTO,
+  BankGuaranteeActionTemplateDTO,
+  CreateBankGuaranteeActionRequestDto,
+  UpdateBankGuaranteeActionRequestDto,
+  BankGuaranteeActionStatistics
+} from '@/dtos/entities/BankGuaranteeDTO';
 
 export class BankGuaranteeActionService {
   constructor(
-    private bankGuaranteeRepository: IBankGuaranteeRepository = RepositoryFactory.getBankGuaranteeRepository()
+    private bankGuaranteeRepository: IBankGuaranteeRepository = RepositoryFactory.getBankGuaranteeRepository(),
+    private actionRepository: IActionRepository = RepositoryFactory.getActionRepository()
   ) {}
 
   /**
@@ -178,24 +121,63 @@ export class BankGuaranteeActionService {
    */
   async getActionsByGuaranteeId(guaranteeId: string): Promise<BankGuaranteeActionDTO[]> {
     try {
-      // For now, return empty array as action repository is not available
-      // TODO: Implement proper action retrieval when action repository is available
-      console.warn('BankGuaranteeActionService.getActionsByGuaranteeId: Action repository not available');
-      return [];
+      const actions = await this.actionRepository.findByType(`bank-guarantee-${guaranteeId}`);
+      return actions.map(action => ({
+        id: action.id,
+        guarantee_id: guaranteeId,
+        action_type: action.type as BankGuaranteeActionDTO['action_type'],
+        title: action.title,
+        description: action.description,
+        status: action.status as BankGuaranteeActionDTO['status'],
+        priority: action.priority as BankGuaranteeActionDTO['priority'],
+        assigned_to: action.assignedTo,
+        created_by: action.createdBy,
+        due_date: action.dueDate?.toISOString(),
+        completed_at: action.completedAt?.toISOString(),
+        documents: action.documents || [],
+        notes: action.notes,
+        created_at: action.createdAt.toISOString(),
+        updated_at: action.updatedAt.toISOString()
+      }));
     } catch (error) {
       console.error('BankGuaranteeActionService.getActionsByGuaranteeId failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch guarantee actions');
     }
   }
-
+  
   /**
    * Update an action
    */
   async updateAction(id: string, updates: UpdateBankGuaranteeActionRequestDto): Promise<BankGuaranteeActionDTO> {
     try {
-      // For now, throw not implemented as action repository is not available
-      // TODO: Implement proper action update when action repository is available
-      throw new AppError(ErrorCode.NOT_IMPLEMENTED, 'Action update not yet implemented');
+      const updatedAction = await this.actionRepository.update(id, {
+        title: updates.title,
+        description: updates.description,
+        status: updates.status,
+        priority: updates.priority,
+        assignedTo: updates.assigned_to,
+        dueDate: updates.due_date ? new Date(updates.due_date) : undefined,
+        documents: updates.documents,
+        notes: updates.notes
+      });
+      
+      return {
+        id: updatedAction.id,
+        guarantee_id: '', // Will be set by caller
+        action_type: '', // Will be set by caller
+        title: updatedAction.title,
+        description: updatedAction.description,
+        status: updatedAction.status as BankGuaranteeActionDTO['status'],
+        priority: updatedAction.priority as BankGuaranteeActionDTO['priority'],
+        assigned_to: updatedAction.assignedTo,
+        created_by: '', // Will be set by caller
+        due_date: updatedAction.dueDate?.toISOString(),
+        completed_at: updatedAction.completedAt?.toISOString(),
+        documents: updatedAction.documents || [],
+        notes: updatedAction.notes,
+        created_at: updatedAction.createdAt.toISOString(),
+        updated_at: updatedAction.updatedAt.toISOString()
+      };
     } catch (error) {
       console.error('BankGuaranteeActionService.updateAction failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update action');
@@ -207,9 +189,7 @@ export class BankGuaranteeActionService {
    */
   async deleteAction(id: string): Promise<void> {
     try {
-      // For now, throw not implemented as action repository is not available
-      // TODO: Implement proper action deletion when action repository is available
-      throw new AppError(ErrorCode.NOT_IMPLEMENTED, 'Action deletion not yet implemented');
+      await this.actionRepository.delete(id);
     } catch (error) {
       console.error('BankGuaranteeActionService.deleteAction failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete action');
@@ -221,10 +201,26 @@ export class BankGuaranteeActionService {
    */
   async getActionById(id: string): Promise<BankGuaranteeActionDTO | null> {
     try {
-      // For now, return null as action repository is not available
-      // TODO: Implement proper action retrieval when action repository is available
-      console.warn('BankGuaranteeActionService.getActionById: Action repository not available');
-      return null;
+      const action = await this.actionRepository.findById(id);
+      if (!action) return null;
+      
+      return {
+        id: action.id,
+        guarantee_id: '', // Will be set by caller
+        action_type: '', // Will be set by caller
+        title: action.title,
+        description: action.description,
+        status: action.status as BankGuaranteeActionDTO['status'],
+        priority: action.priority as BankGuaranteeActionDTO['priority'],
+        assigned_to: action.assignedTo,
+        created_by: '', // Will be set by caller
+        due_date: action.dueDate?.toISOString(),
+        completed_at: action.completedAt?.toISOString(),
+        documents: action.documents || [],
+        notes: action.notes,
+        created_at: action.createdAt.toISOString(),
+        updated_at: action.updatedAt.toISOString()
+      };
     } catch (error) {
       console.error('BankGuaranteeActionService.getActionById failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch action');

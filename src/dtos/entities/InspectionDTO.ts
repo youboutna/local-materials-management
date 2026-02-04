@@ -4,6 +4,9 @@
  */
 
 import { BaseEntityDTO } from '../shared';
+import { InspectionMeasurement, InspectionParticipant } from '@/domain/entities/Inspection';
+
+type ConformityStatus = 'conform' | 'non_conform' | 'partial_conform' | 'not_applicable';
 
 export interface InspectionDTO extends BaseEntityDTO {
   projectId: string;
@@ -96,4 +99,96 @@ export interface InspectionExecutionData {
     type: string;
     message: string;
   }>;
+}
+
+// Add inspection execution specific interfaces
+export interface AddMeasurementRequestDTO {
+  inspectionId: string;
+  measurement: Omit<InspectionMeasurement, 'id'>;
+}
+
+export interface AddParticipantRequestDTO {
+  inspectionId: string;
+  participant: Omit<InspectionParticipant, 'id'>;
+}
+
+export interface CompleteInspectionRequestDTO {
+  inspectionId: string;
+  finalData: {
+    overallConformity: ConformityStatus;
+    notes?: string;
+    documents?: string[];
+  };
+}
+
+export interface InspectionOperationResultDTO {
+  success: boolean;
+  error?: string;
+}
+
+export interface InspectionApprovalContext {
+  inspectionId: string;
+  projectId: string;
+  phaseId?: string | null;
+  approvalType: 'phase' | 'final' | 'quality';
+  requiredSignatures: number;
+  receivedSignatures: number;
+  nextActions?: InspectionAction[];
+}
+
+export interface InspectionAction {
+  type: 'signature' | 'document' | 'payment' | 'notification';
+  required: boolean;
+  completed: boolean;
+  deadline?: string;
+  assigneeId?: string;
+}
+
+export interface VerificationItemDTO {
+  id: string;
+  name: string;
+  title: string;
+  status: 'pending' | 'in_progress' | 'verified' | 'failed' | 'skipped';
+  verifiedBy?: string;
+  verifiedAt?: string;
+  notes?: string;
+}
+
+// Add specific document interface from InspectionService
+export interface InspectionDocumentDTO {
+  id: string;
+  type: string;
+  name: string;
+  url?: string;
+  uploadedAt?: string;
+  inspectionId: string;
+  size?: number;
+  uploadedBy?: string;
+}
+
+// Add execution data interface from InspectionService
+export interface InspectionExecutionDataDTO {
+  id: string;
+  status: string;
+  progressAtInspection?: number;
+  comments?: string;
+  documents: InspectionDocumentDTO[];
+  completedAt?: string;
+  completedBy?: string;
+  projectId?: string;
+  phaseId?: string;
+  stepId?: string;
+  inspector?: string;
+  date?: string;
+}
+
+// Add payment validation interface from InspectionService
+export interface InspectionPaymentValidationDTO {
+  status: string;
+  comments: string;
+  payment_type: string;
+  payment_status?: string;
+  project_id?: string;
+  inspection_id?: string;
+  rejection_notes?: string;
 }

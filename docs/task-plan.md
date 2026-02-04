@@ -4,7 +4,7 @@
 
 **Projet** : HadraTech-GPI (Infrastructure Réseau, bâtiment, géolocalisé)  
 **Architecture** : Hexagonale (Ports & Adapters) + Référentiel Métier  
-**Phase** : **Phase Finale - 98.8% Complète**  
+**Phase** : **Phase Finale - $number$% Complète**  
 **Rôle AGENT AI** : Architecte AI (explorer → analyser → concevoir)  
 
 ---
@@ -17,14 +17,74 @@ todo
 Mettre en œuvre, migrer ou refactoriser le système en respectant **strictement** :
 - l’architecture hexagonale
 - la séparation UI / Application / Domain / Infrastructure
-- le référentiel métier SOMELEC
+- le référentiel métier 
 - le typage fort et centralisé
-- l’absence totale de dépendances techniques dans le domaine
+- l’absence totale de dépendances techniques dans le domaine.
+
+**RÈGLES À ÉTABLIR** :
+
+1. BASE DE DONNÉES (PostgreSQL) : snake_case OBLIGATOIRE
+   - colonnes : project_name, created_at, kpi_score
+   - tables : project_details, material_sources
+
+2. DTOs (src/dtos/entities/* et src/dtos/workflows/*) : camelCase OBLIGATOIRE
+   - projectName, createdAt, kpiScore
+   - Les DTOs représentent les données pour l'application
+
+3. TRANSFORMERS (src/dtos/transforms/*) : 
+   - DOIVENT convertir snake_case ↔ camelCase
+   - Une méthode toModel() et fromModel()
+
+4. MODÈLES DOMAINE (src/domain/*) : camelCase
+   - Entities et Value Objects en camelCase
+
+5. SERVICES (src/application/*) : camelCase uniquement
+   - Ne jamais voir de snake_case dans les services
+
+6. UI Components (React)
+        ↓ (utilise)
+      HOOKS ←─────── Adaptateurs UI
+        ↓ (appelle)
+      PORTS (Interfaces)
+        ↓ (implémente)
+    SERVICES (Logique Métier)
+        ↓ (utilise)
+    DOMAINE (Entités)
+
+7. POUR LES SERVICES (src/application/*) :
+
+    1. VÉRIFIER qu'aucun attribut snake_case n'est utilisé
+    2. CORRIGER les imports/types qui référencent directement la DB
+    3. UTILISER uniquement les DTOs camelCase
+
+    POUR LES HOOKS :
+    1. Les hooks exposent uniquement du camelCase aux composants
+    2. La conversion se fait dans le hook via les transformers
+
+    EXEMPLE DE CORRECTION :
+    // AVANT (mauvais - mélange des conventions) :
+    const project = {
+    project_name: "Nom",  // snake_case dans le service
+    kpiScore: 85          // camelCase mélangé
+    };
+
+    // APRÈS (correct - camelCase uniquement) :
+    const project = {
+    projectName: "Nom",   // camelCase uniquement
+    kpiScore: 85
+    };
+
+❌ À éviter dans les hooks :
+
+    Définir des types/interfaces (c'est le rôle des DTOs)
+
+    Contenir la logique métier pure (c'est le rôle des services)
+
+    Stocker l'état métier persistant (c'est le rôle du domaine)
+---
 
 Ce plan est **opérationnel** et **séquentiel**.  
 Les étapes doivent être suivies **dans l’ordre**.
-
----
 
 ## 🧭 Phase 0 — Pré-requis (OBLIGATOIRE)
 

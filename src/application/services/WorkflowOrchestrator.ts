@@ -11,71 +11,22 @@ import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import { getCheckpointVerificationEngine } from './CheckpointVerificationEngine';
 import { AutomaticDecompteCalculator } from './AutomaticDecompteCalculator';
 import type { CheckpointDTO, AutomaticDecompteDTO } from '@/types/checkpoint-dto';
-
-// Service DTOs for data exchange
-export interface OnProgressUpdatedRequestDto {
-  phaseId: string;
-  newProgress: number;
-}
-
-export interface OnProgressUpdatedResponseDto {
-  success: boolean;
-  events: WorkflowEvent[];
-  error?: string;
-}
-
-export interface TriggerPaymentRequestDto {
-  phaseId: string;
-  amount: number;
-}
-
-export interface TriggerPaymentResponseDto {
-  success: boolean;
-  paymentId?: string;
-  error?: string;
-}
-
-export interface MilestoneData {
-  id: string;
-  phase_id: string;
-  trigger_progress: number;
-  status: string;
-}
-
-export interface CheckMilestoneThresholdsRequestDto {
-  phaseId: string;
-  progress: number;
-}
-
-export interface CheckMilestoneThresholdsResponseDto {
-  milestones: MilestoneData[];
-}
-
-export interface WorkflowStatusDto {
-  isProcessing: boolean;
-  lastEvent: WorkflowEvent | null;
-  canProceed: boolean;
-  nextAction: string;
-  metrics: {
-    pendingPayment: number;
-  };
-}
-
-export type WorkflowEvent = 
-  | { type: 'MILESTONE_VERIFIED'; payload: { milestoneId: string; phaseId: string } }
-  | { type: 'PROGRESS_UPDATED'; payload: { phaseId: string; progress: number } }
-  | { type: 'DECOMPTE_CALCULATED'; payload: { decompte: AutomaticDecompteDTO } }
-  | { type: 'PAYMENT_CREATED'; payload: { paymentId: string; amount: number } }
-  | { type: 'BUDGET_UPDATED'; payload: { remaining: number } }
-  | { type: 'VERIFICATION_FAILED'; payload: { reason: string; issues: string[] } };
-
-export type WorkflowEventHandler = (event: WorkflowEvent) => void;
+import {
+  OnProgressUpdatedRequestDTO,
+  OnProgressUpdatedResponseDTO,
+  TriggerPaymentRequestDTO,
+  TriggerPaymentResponseDTO,
+  CheckMilestoneThresholdsRequestDTO,
+  CheckMilestoneThresholdsResponseDTO,
+  WorkflowStatusDTO
+} from '@/dtos/entities/WorkflowDTO';
+import { WorkflowTransformer } from '@/dtos/transforms/WorkflowTransformer';
 
 // ============= ORCHESTRATOR =============
 
 export class WorkflowOrchestrator {
   private projectId: string;
-  private handlers: WorkflowEventHandler[] = [];
+  private handlers: WorkflowTransformer[] = [];
   private verificationEngine: ReturnType<typeof getCheckpointVerificationEngine>;
   private decompteCalculator: AutomaticDecompteCalculator;
   private paymentRepository: IPaymentRepository;
@@ -92,22 +43,22 @@ export class WorkflowOrchestrator {
   /**
    * Subscribe to workflow events
    */
-  subscribe(handler: WorkflowEventHandler): () => void {
+  subscribe(handler: WorkflowTransformer): () => void {
     this.handlers.push(handler);
     return () => {
       this.handlers = this.handlers.filter(h => h !== handler);
     };
   }
 
-  private emit(event: WorkflowEvent) {
+  private emit(event: WorkflowTransformer) {
     this.handlers.forEach(h => h(event));
   }
 
   /**
    * Workflow principal: Progression mise à jour → Vérification → Décompte → Paiement
    */
-  async onProgressUpdated(request: OnProgressUpdatedRequestDto): Promise<OnProgressUpdatedResponseDto> {
-    const events: WorkflowEvent[] = [];
+  async onProgressUpdated(request: OnProgressUpdatedRequestDTO): Promise<OnProgressUpdatedResponseDTO> {
+    const events: WorkflowTransformer[] = [];
 
     try {
       if (!request.phaseId || request.newProgress < 0 || request.newProgress > 100) {
@@ -115,7 +66,7 @@ export class WorkflowOrchestrator {
       }
 
       // 1. Emit progress update
-      const progressEvent: WorkflowEvent = {
+      const progressEvent: WorkflowTransformer = {
         type: 'PROGRESS_UPDATED',
         payload: { phaseId: request.phaseId, progress: request.newProgress },
       };
@@ -129,7 +80,7 @@ export class WorkflowOrchestrator {
       });
       
       for (const milestone of triggeredMilestones) {
-        const milestoneEvent: WorkflowEvent = {
+        const milestoneEvent: WorkflowTransformer = {
           type: 'MILESTONE_VERIFIED',
           payload: { milestoneId: milestone.id, phaseId: request.phaseId },
         };
@@ -145,7 +96,7 @@ export class WorkflowOrchestrator {
           projectId: '', // Will be determined by the calculator
           phaseId: request.phaseId
         });
-        const decompteEvent: WorkflowEvent = {
+        const decompteEvent: WorkflowTransformer = {
           type: 'DECOMPTE_CALCULATED',
           payload: { decompte },
         };
@@ -156,7 +107,7 @@ export class WorkflowOrchestrator {
       return { success: true, events };
 
     } catch (error) {
-      const failEvent: WorkflowEvent = {
+      const failEvent: WorkflowTransformer = {
         type: 'VERIFICATION_FAILED',
         payload: { 
           reason: error instanceof Error ? error.message : 'Unknown error',
@@ -177,7 +128,7 @@ export class WorkflowOrchestrator {
   /**
    * Déclenche le paiement après vérification
    */
-  async triggerPayment(request: TriggerPaymentRequestDto): Promise<TriggerPaymentResponseDto> {
+  async triggerPayment(request: TriggerPaymentRequestDTO): Promise<TriggerPaymentResponseDTO> {
     try {
       if (!request.phaseId || request.amount <= 0) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Invalid phase ID or amount');
@@ -202,7 +153,7 @@ export class WorkflowOrchestrator {
       const actualAmount = Math.min(request.amount, decompte.net_payable);
 
       // 3. Émettre l'événement de paiement
-      const paymentEvent: WorkflowEvent = {
+      const paymentEvent: WorkflowTransformer = {
         type: 'PAYMENT_CREATED',
         payload: { paymentId: mockPaymentId, amount: actualAmount },
       };
@@ -210,7 +161,7 @@ export class WorkflowOrchestrator {
 
       // 4. Mettre à jour le budget restant
       const remainingBudget = decompte.contract_amount - decompte.cumulative_amount;
-      const budgetEvent: WorkflowEvent = {
+      const budgetEvent: WorkflowTransformer = {
         type: 'BUDGET_UPDATED',
         payload: { remaining: remainingBudget },
       };
@@ -230,13 +181,13 @@ export class WorkflowOrchestrator {
   /**
    * Vérifie les jalons déclenchés par un seuil de progression
    */
-  private async checkMilestoneThresholds(request: CheckMilestoneThresholdsRequestDto): Promise<MilestoneData[]> {
+  private async checkMilestoneThresholds(request: CheckMilestoneThresholdsRequestDTO): Promise<CheckMilestoneThresholdsResponseDTO> {
     try {
       // For now, return mock data as milestone repository methods are not available
       // TODO: Implement proper milestone retrieval when repository supports it
       console.warn('WorkflowOrchestrator.checkMilestoneThresholds: Milestone repository methods not available');
       
-      return [];
+      return { milestones: [] };
     } catch (error) {
       console.error('WorkflowOrchestrator.checkMilestoneThresholds failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to check milestone thresholds');
@@ -253,7 +204,7 @@ export class WorkflowOrchestrator {
   /**
    * Get current workflow status
    */
-  getWorkflowStatus(): WorkflowStatusDto {
+  getWorkflowStatus(): WorkflowStatusDTO {
     return {
       isProcessing: this.handlers.length > 0,
       lastEvent: null, // Could track last event if needed

@@ -6,81 +6,43 @@
  */
 
 import { Project } from '@/domain/entities/Project';
-import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
-import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
-import { IRiskRepository } from '@/domain/repositories/IRiskRepository';
-import { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
+import { ProjectStatus } from '@/domain/entities/Project';
+import type { IProjectRepository } from '@/domain/repositories/IProjectRepository';
+import type { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
+import type { IRiskRepository } from '@/domain/repositories/IRiskRepository';
+import type { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
 import { ProjectTransformer } from '@/dtos/transforms';
-import { CreateProjectRequestDTO } from '@/dtos/entities/ProjectDTO';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { ProjectWorkflowDTO } from '@/dtos/workflows/ProjectWorkflowDTO';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { v4 as uuidv4 } from 'uuid';
+import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+import { Risk } from '@/domain/entities/Risk';
+import { MaterialDTO, MaterialCategory } from '@/dtos/entities/MaterialDTO';
+import { RiskStatus } from '@/domain/entities/Risk';
 
-export interface ProjectWorkflowStep {
-  stepNumber: number;
-  title: string;
-  description: string;
-  isRequired: boolean;
-  validationRules: string[];
-  relatedEntities: ('stakeholders' | 'phases' | 'risks' | 'materials' | 'documents' | 'inspections')[];
+export enum WorkflowMode {
+  CREATE = 'create',
+  EDIT = 'edit',
+  COMPLETE = 'complete',
+  CANCEL = 'cancel'
 }
 
-// Main workflow data interface
-export interface ProjectWorkflowData {
-  projectId?: string;
-  currentStep: number;
-  isDraft: boolean;
-  isComplete: boolean;
-  projectData: Partial<CreateProjectRequestDTO>;
-  relatedData: {
-    stakeholders?: unknown[];
-    phases?: unknown[];
-    risks?: unknown[];
-    materials?: unknown[];
-  };
-  metadata: {
-    lastSavedAt: string;
-    totalSteps: number;
-    completedSteps: number;
-    progressPercentage: number;
-    stepName?: string;
-  };
-}
-
-export interface WorkflowSaveResult {
-  success: boolean;
-  projectId?: string;
-  stepNumber: number;
-  data?: ProjectWorkflowData;
-  error?: {
-    code: string;
-    message: string;
-    details?: unknown;
-  };
-}
-
-export interface WorkflowValidationResult {
-  isValid: boolean;
-  errors: string[];
-  fieldErrors?: Record<string, string[]>;
+function isWorkflowMode(mode: string): mode is WorkflowMode {
+  return Object.values(WorkflowMode).includes(mode as WorkflowMode);
 }
 
 export class ProjectWorkflowService {
-  private projectRepository: IProjectRepository;
-  private phaseRepository: IPhaseRepository;
-  private riskRepository: IRiskRepository;
-  private stakeholderRepository: IProjectStakeholderRepository;
-
-  constructor() {
-    this.projectRepository = RepositoryFactory.getProjectRepository();
-    this.phaseRepository = RepositoryFactory.getPhaseRepository();
-    this.riskRepository = RepositoryFactory.getRiskRepository();
-    this.stakeholderRepository = RepositoryFactory.getProjectStakeholderRepository();
-  }
+  constructor(
+    private projectRepository: IProjectRepository,
+    private phaseRepository: IPhaseRepository,
+    private riskRepository: IRiskRepository,
+    private stakeholderRepository: IProjectStakeholderRepository
+  ) {}
 
   /**
    * Get workflow steps configuration
    */
-  getWorkflowSteps(): ProjectWorkflowStep[] {
+  getWorkflowSteps(): ProjectWorkflowDTO['steps'] {
     return [
       {
         stepNumber: 1,
@@ -140,21 +102,52 @@ export class ProjectWorkflowService {
       }
     ];
   }
+/**
+   * Initialize edit workflow context
+   */
+  async initializeEditWorkflow(projectId: string): Promise<EditWorkflowContextDTO> {
+    try {
+      // Load current project data
+      const project = await this.projectRepository.findById(projectId);
+      if (!project) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Project not found');
+      }
 
+      // Map project to form data
+      const formData = this.mapProjectToFormData(project);
+
+      return {
+        projectId,
+        currentStep: 1,
+        totalSteps: this.getEditWorkflowSteps().length,
+        isDraft: project.status === 'draft',
+        isComplete: false,
+        originalData: formData,
+        modifiedFields: []
+      };
+
+    } catch (error) {
+      console.error('ProjectEditWorkflowService.initializeEditWorkflow failed:', error);
+      throw new AppError(
+        `Failed to initialize edit workflow: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        ErrorCode.DATABASE_ERROR
+      );
+    }
+  }
   /**
    * Get a specific workflow step
    */
-  getWorkflowStep(stepNumber: number): ProjectWorkflowStep | undefined {
+  getWorkflowStep(stepNumber: number): ProjectWorkflowDTO['steps'][number] | undefined {
     return this.getWorkflowSteps().find(s => s.stepNumber === stepNumber);
   }
 
   /**
    * Validate step data
    */
-  validateStepData(stepNumber: number, data: Record<string, unknown>): WorkflowValidationResult {
+  private validateStepData(stepNumber: number, data: ProjectWorkflowDTO): ProjectWorkflowDTO['validationResult'] {
     const step = this.getWorkflowStep(stepNumber);
     if (!step) {
-      return { isValid: false, errors: [`Step ${stepNumber} not found`] };
+      return { success: false, error: { code: 'STEP_NOT_FOUND', message: `Step ${stepNumber} not found` } };
     }
 
     const errors: string[] = [];
@@ -164,24 +157,24 @@ export class ProjectWorkflowService {
     for (const rule of step.validationRules) {
       switch (rule) {
         case 'title_required':
-          if (!data.title) {
+          if (!data.project.title) {
             errors.push('Le titre est requis');
             fieldErrors.title = ['Le titre est requis'];
           }
           break;
         case 'budget_positive':
-          if (typeof data.budget === 'number' && data.budget < 0) {
+          if (typeof data.project.budget === 'number' && data.project.budget < 0) {
             errors.push('Le budget doit être positif');
             fieldErrors.budget = ['Le budget doit être positif'];
           }
           break;
         case 'manager_required':
-          if (!data.project_manager_id && !data.technical_manager_id) {
+          if (!data.project.project_manager_id && !data.project.technical_manager_id) {
             errors.push('Un responsable projet ou technique est requis');
           }
           break;
         case 'address_required':
-          if (!data.address && !data.location) {
+          if (!data.project.address && !data.project.location) {
             errors.push('L\'adresse est requise');
             fieldErrors.address = ['L\'adresse est requise'];
           }
@@ -190,8 +183,10 @@ export class ProjectWorkflowService {
     }
 
     return {
-      isValid: errors.length === 0,
-      errors,
+      success: errors.length === 0,
+      projectId: data.project.id,
+      nextStep: stepNumber + 1,
+      error: errors.length > 0 ? { code: 'VALIDATION_ERROR', message: errors.join(', ') } : undefined,
       fieldErrors: Object.keys(fieldErrors).length > 0 ? fieldErrors : undefined
     };
   }
@@ -199,119 +194,136 @@ export class ProjectWorkflowService {
   /**
    * Save workflow step data
    */
-  async saveStepData(
-    workflowData: ProjectWorkflowData
-  ): Promise<WorkflowSaveResult> {
+  private async saveStepData(stepNumber: number, data: ProjectWorkflowDTO): Promise<ProjectWorkflowDTO> {
     try {
-      const { currentStep, projectData, projectId } = workflowData;
-
       // Validate step data
-      const validation = this.validateStepData(currentStep, projectData as Record<string, unknown>);
-      if (!validation.isValid) {
-        return {
-          success: false,
-          stepNumber: currentStep,
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: validation.errors.join(', ')
-          }
-        };
+      const validation = this.validateStepData(stepNumber, data);
+      if (!validation.success) {
+        return { ...data, validationResult: validation };
       }
 
-      let savedProjectId = projectId;
+      let savedProjectId = data.project.id;
 
       // Create or update project based on step
-      if (currentStep === 1 && !projectId) {
+      if (stepNumber === 1 && !data.project.id) {
         // Create new project
         const newProject = await this.projectRepository.create({
-          title: projectData.title as string,
-          description: projectData.description as string || '',
+          title: data.project.title,
+          description: data.project.description,
           status: 'en attente',
-          location: projectData.location as string || '',
-          budget: (projectData as Record<string, unknown>).estimated_budget as number || projectData.budget as number || 0,
+          location: data.project.location,
+          budget: data.project.budget,
           progress: 0,
-          startDate: new Date((projectData as Record<string, unknown>).start_date as string || new Date().toISOString()),
-          endDate: new Date((projectData as Record<string, unknown>).end_date as string || new Date().toISOString()),
+          startDate: new Date(data.project.start_date),
+          endDate: new Date(data.project.end_date),
         });
         savedProjectId = newProject.id;
-      } else if (projectId) {
+      } else if (data.project.id) {
         // Update existing project
-        await this.projectRepository.update(projectId, {
-          title: projectData.title,
-          description: projectData.description,
+        await this.projectRepository.update(data.project.id, {
+          title: data.project.title,
+          description: data.project.description,
           updatedAt: new Date()
         });
       }
 
       return {
-        success: true,
-        projectId: savedProjectId,
-        stepNumber: currentStep,
-        data: {
-          ...workflowData,
-          projectId: savedProjectId,
-          metadata: {
-            ...workflowData.metadata,
-            lastSavedAt: new Date().toISOString()
-          }
+        ...data,
+        project: { ...data.project, id: savedProjectId },
+        metadata: {
+          ...data.metadata,
+          lastSavedAt: new Date().toISOString()
         }
       };
     } catch (error) {
       console.error('Error saving workflow step:', error);
       return {
-        success: false,
-        stepNumber: workflowData.currentStep,
-        error: {
-          code: 'SAVE_ERROR',
-          message: error instanceof Error ? error.message : 'Unknown error'
+        ...data,
+        validationResult: {
+          success: false,
+          projectId: data.project.id,
+          nextStep: stepNumber,
+          error: {
+            code: 'SAVE_ERROR',
+            message: error instanceof Error ? error.message : 'Unknown error'
+          }
         }
       };
     }
   }
 
   /**
+   * Save workflow data
+   */
+  async saveWorkflowData(data: ProjectWorkflowDTO): Promise<ProjectWorkflowDTO> {
+    // Ensure required fields are present
+    if (!data.project) {
+      throw new Error('Project data is required');
+    }
+
+    // Set default workflow properties if not provided
+    const workflowData: ProjectWorkflowDTO = {
+      ...data,
+      mode: data.mode || WorkflowMode.CREATE,
+      currentStep: data.currentStep || 0,
+      status: data.status || 'draft'
+    };
+
+    // Add type guard for workflow status
+    function isWorkflowStatus(status: string): status is WorkflowMode {
+      return Object.values(WorkflowMode).includes(status as WorkflowMode);
+    }
+
+    if (!isWorkflowStatus(workflowData.status)) {
+      throw new Error(`Invalid workflow status: ${workflowData.status}`);
+    }
+
+    // Save workflow step data
+    return this.saveStepData(workflowData.currentStep, workflowData);
+  }
+
+  /**
    * Complete the workflow and finalize project
    */
-  async completeWorkflow(
-    workflowData: ProjectWorkflowData
-  ): Promise<WorkflowSaveResult> {
+  async completeWorkflow(data: ProjectWorkflowDTO): Promise<ProjectWorkflowDTO> {
     try {
-      if (!workflowData.projectId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required to complete workflow');
+      // Validate workflow mode
+      if (!isWorkflowMode(data.status)) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, `Invalid workflow status: ${data.status}`);
       }
 
-      // Update project status to active
-      await this.projectRepository.update(workflowData.projectId, {
-        status: 'en cours',
-        updatedAt: new Date()
-      });
+      // Validate status transition
+      if (!isValidStatusTransition(data.status as WorkflowMode, WorkflowMode.COMPLETE)) {
+        throw new AppError(
+          ErrorCode.VALIDATION_ERROR,
+          `Invalid status transition from ${data.status} to complete`
+        );
+      }
+
+      // Validate all required steps are complete
+      const requiredSteps = this.getWorkflowSteps().filter(step => step.isRequired);
+      const completedSteps = data.completedSteps || [];
+      const missingSteps = requiredSteps.filter(
+        step => !completedSteps.includes(step.stepNumber)
+      );
+
+      if (missingSteps.length > 0) {
+        throw new AppError(
+          ErrorCode.VALIDATION_ERROR,
+          `Missing required steps: ${missingSteps.map(s => s.title).join(', ')}`
+        );
+      }
 
       return {
-        success: true,
-        projectId: workflowData.projectId,
-        stepNumber: 7,
-        data: {
-          ...workflowData,
-          isComplete: true,
-          isDraft: false,
-          metadata: {
-            ...workflowData.metadata,
-            lastSavedAt: new Date().toISOString(),
-            completedSteps: 7,
-            progressPercentage: 100
-          }
-        }
+        ...data,
+        status: 'completed',
+        completedAt: new Date().toISOString()
       };
     } catch (error) {
-      console.error('Error completing workflow:', error);
-      return {
-        success: false,
-        stepNumber: 7,
-        error: {
-          code: 'COMPLETION_ERROR',
-          message: error instanceof Error ? error.message : 'Unknown error'
-        }
-      };
+      console.error('ProjectWorkflowService.completeWorkflow failed:', error);
+      throw error instanceof AppError 
+        ? error 
+        : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to complete workflow');
     }
   }
 
@@ -329,10 +341,169 @@ export class ProjectWorkflowService {
     const step = this.getWorkflowStep(currentStep);
     if (!step) return false;
 
-    const validation = this.validateStepData(currentStep, stepData);
-    return validation.isValid;
+    const validation = this.validateStepData(currentStep, { project: stepData } as ProjectWorkflowDTO);
+    return validation.success;
+  }
+
+  /**
+   * Convert ProjectWorkflowDTO to ProjectDTO
+   */
+  private convertFormDataToProjectDTO(formData: ProjectWorkflowDTO): ProjectDTO {
+    return {
+      id: uuidv4(),
+      title: formData.project.title,
+      description: formData.project.description,
+      location: formData.project.location || '',
+      budget: formData.project.budget,
+      startDate: formData.project.start_date || new Date().toISOString(),
+      endDate: formData.project.end_date || '',
+      status: ProjectStatus.DRAFT,
+      thumbnail: '',
+      progress: 0,
+      teamSize: formData.project.team_size || 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+  }
+
+  /**
+   * Create project from form data
+   */
+  async createProject(data: ProjectWorkflowDTO): Promise<ProjectDTO> {
+    const projectDTO = this.convertFormDataToProjectDTO(data);
+    return await this.projectRepository.create(projectDTO);
+  }
+
+  /**
+   * Convert material data to MaterialDTO
+   */
+  private convertMaterialData(material: Partial<MaterialDTO>): MaterialDTO {
+    return {
+      id: material.id || uuidv4(),
+      name: material.name || '',
+      category: material.category || MaterialCategory.OTHER,
+      quantity: material.quantity || 0,
+      unit: material.unit || 'unit',
+      unitPrice: material.unitPrice || 0,
+      supplierId: material.supplierId || '',
+      specifications: material.specifications || ''
+    };
+  }
+
+  /**
+   * Save edit step-related data using hexagonal services
+   */
+  private async saveEditStepRelatedData(
+    stepNumber: number, 
+    data: Partial<ProjectWorkflowDTO>, 
+    projectId: string
+  ): Promise<void> {
+    switch (stepNumber) {
+      case 2: // Stakeholders
+        if (data.stakeholders?.length) {
+          const existing = await this.stakeholderRepository.findByProjectId(projectId);
+          await Promise.all(existing.map(s => this.stakeholderRepository.delete(s.id)));
+          
+          for (const s of data.stakeholders) {
+            await this.stakeholderRepository.create({
+              projectId,
+              stakeholderType: s.stakeholderType,
+              entityId: s.entityId,
+              role: s.role,
+              isPrimary: s.isPrimary || false,
+              isInternal: s.isInternal || false,
+              name: s.name,
+              email: s.email,
+              phone: s.phone,
+              organizationId: s.organizationId,
+              employeeId: s.employeeId
+            });
+          }
+        }
+        break;
+        
+      case 3: // Phases
+        if (data.phases?.length) {
+          const existing = await this.phaseRepository.getPhasesByProjectId(projectId);
+          await Promise.all(existing.map(p => this.phaseRepository.delete(p.id)));
+          
+          for (const p of data.phases) {
+            await this.phaseRepository.create({
+              projectId,
+              phaseName: p.name,
+              description: p.description,
+              status: 'pending',
+              progress: p.progress || 0,
+              startDate: p.startDate ? new Date(p.startDate) : null,
+              endDate: p.endDate ? new Date(p.endDate) : null
+            });
+          }
+        }
+        break;
+        
+      case 4: // Risks
+        if (data.risks?.length) {
+          const existing = await this.riskRepository.findByProjectId(projectId);
+          await Promise.all(existing.map(r => this.riskRepository.delete(r.id)));
+          
+          for (const r of data.risks) {
+            // Load project entity first
+            const project = await this.projectRepository.findById(projectId);
+            if (!project) {
+              throw new Error(`Project ${projectId} not found`);
+            }
+
+            const risk = new Risk(
+              uuidv4(), // id
+              project, // project reference
+              r.title, // title
+              r.description || '', // description
+              r.probability || 0.5, // probability
+              r.impact || 0.5, // impact
+              RiskStatus.Open, // status
+              [], // mitigations
+              [], // documents
+              [], // inspections
+              new Date(), // createdAt
+              new Date(), // updatedAt
+              [], // relatedRisks
+              [] // stakeholders
+            );
+            await this.riskRepository.save(risk);
+          }
+        }
+        break;
+    }
+  }
+
+  /**
+   * Get changed fields between original and current data
+   */
+  private getChangedFields<T extends Record<string, unknown>>(
+    originalData: T,
+    currentData: T
+  ): string[] {
+    const changes: string[] = [];
+    for (const key in currentData) {
+      if (key in originalData && originalData[key] !== currentData[key]) {
+        changes.push(key);
+      }
+    }
+    return changes;
   }
 }
 
-// Export singleton instance
-export const projectWorkflowService = new ProjectWorkflowService();
+// Export factory function instead of direct instance
+export function createProjectWorkflowService(
+  projectRepo: IProjectRepository,
+  phaseRepo: IPhaseRepository,
+  riskRepo: IRiskRepository,
+  stakeholderRepo: IProjectStakeholderRepository
+) {
+  return new ProjectWorkflowService(
+    projectRepo,
+    phaseRepo,
+    riskRepo,
+    stakeholderRepo
+  );
+}

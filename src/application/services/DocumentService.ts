@@ -3,56 +3,36 @@
  * Business logic for document management
  */
 
-import { Document as DocumentEntity, DocumentType } from '@/domain/entities/Document';
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { DocumentTransformer } from '@/dtos/transforms/DocumentTransformer';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { DocumentDTO, CreateDocumentDTO, UpdateDocumentDTO } from '@/dtos/entities/DocumentDTO';
-import { DocumentResponseDto } from '@/dtos/entities/DocumentResponseDto';
+import { DocumentDTO, CreateDocumentDTO, UpdateDocumentDTO, DocumentResponseDto, DocumentStatus, DocumentType } from '@/dtos/entities/DocumentDTO';
 
-// Ensure Document entity has required properties
-interface RepositoryDocument {
-  id: string;
-  title: string;
-  documentType: DocumentType;
-  projectId?: string;
-  phaseId?: string;
-  inspectionId?: string;
-  paymentId?: string;
-  supplierId?: string;
-  description?: string;
-  fileName?: string;
-  fileSize?: number;
-  fileUrl: string;
-  mimeType?: string;
-  status: string;
-  isInternalOnly: boolean;
-  isSharedWithSuppliers: boolean;
-  deadlineDate?: string;
-  assignedTo?: string;
-  metadata: Record<string, unknown>;
-  category?: string;
-  subcategory?: string;
-  createdAt: string;
-  updatedAt: string;
-  uploadedBy?: string;
-  tags: string[];
+function isDocumentType(type: string): type is DocumentType {
+  return Object.values(DocumentType).includes(type as DocumentType);
 }
 
-// Service DTOs for data exchange
-export interface DocumentSearchDto {
-  query: string;
-  projectId?: string;
-  tags?: string[];
-  documentType?: DocumentType;
-  status?: string;
+function isDocumentStatus(status: string): status is DocumentStatus {
+  return Object.values(DocumentStatus).includes(status as DocumentStatus);
+}
+
+// Add status transition validation
+function isValidDocumentStatusTransition(current: DocumentStatus, next: DocumentStatus): boolean {
+  const validTransitions: Record<DocumentStatus, DocumentStatus[]> = {
+    [DocumentStatus.DRAFT]: [DocumentStatus.PENDING_REVIEW, DocumentStatus.ARCHIVED],
+    [DocumentStatus.PENDING_REVIEW]: [DocumentStatus.APPROVED, DocumentStatus.REJECTED, DocumentStatus.ARCHIVED],
+    [DocumentStatus.APPROVED]: [DocumentStatus.PUBLISHED, DocumentStatus.ARCHIVED],
+    [DocumentStatus.REJECTED]: [DocumentStatus.DRAFT, DocumentStatus.ARCHIVED],
+    [DocumentStatus.PUBLISHED]: [DocumentStatus.ARCHIVED],
+    [DocumentStatus.ARCHIVED]: []
+  };
+  return validTransitions[current].includes(next);
 }
 
 export class DocumentService {
   constructor(
-    private documentRepository: IDocumentRepository = RepositoryFactory.getDocumentRepository(),
-    private documentTransformer: DocumentTransformer = new DocumentTransformer()
+    private documentRepository: IDocumentRepository,
+    private documentTransformer: DocumentTransformer
   ) {}
 
   /**
@@ -92,9 +72,8 @@ export class DocumentService {
   /**
    * Get project documents
    */
-  static async getProjectDocuments(projectId: string): Promise<DocumentDTO[]> {
-    const repo = RepositoryFactory.getDocumentRepository();
-    const documents = await repo.findByProjectId(projectId) as RepositoryDocument[];
+  async getProjectDocuments(projectId: string): Promise<DocumentDTO[]> {
+    const documents = await this.documentRepository.findByProjectId(projectId) as RepositoryDocument[];
     return documents.map(doc => ({
       ...doc,
       category: doc.category || 'general',
@@ -111,10 +90,28 @@ export class DocumentService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
       }
 
-      // For now, return empty array as inspection-specific repository is not available
-      // TODO: Implement proper inspection document retrieval when inspection repository is available
-      console.warn('DocumentService.getInspectionDocuments: Inspection-specific repository not available');
-      return [];
+      const documents = await this.documentRepository.findByInspectionId(inspectionId);
+      return documents.map(doc => {
+        return new DocumentResponseDto(
+          doc.id,
+          doc.title || '',
+          doc.description || undefined,
+          doc.documentType,
+          doc.status as DocumentStatus,
+          doc.fileName || undefined,
+          doc.fileUrl || undefined,
+          doc.fileSize || undefined,
+          doc.projectId || undefined,
+          doc.assignedTo || undefined,
+          doc.deadlineDate || undefined,
+          doc.tags,
+          doc.isInternalOnly,
+          doc.isSharedWithSuppliers,
+          doc.uploadedBy || undefined,
+          doc.createdAt,
+          doc.updatedAt
+        );
+      });
     } catch (error) {
       console.error('DocumentService.getInspectionDocuments failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get inspection documents');
@@ -130,10 +127,28 @@ export class DocumentService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Payment ID is required');
       }
 
-      // For now, return empty array as payment-specific repository is not available
-      // TODO: Implement proper payment document retrieval when payment repository is available
-      console.warn('DocumentService.getPaymentDocuments: Payment-specific repository not available');
-      return [];
+      const documents = await this.documentRepository.findByPaymentId(paymentId);
+      return documents.map(doc => {
+        return new DocumentResponseDto(
+          doc.id,
+          doc.title || '',
+          doc.description || undefined,
+          doc.documentType,
+          doc.status as DocumentStatus,
+          doc.fileName || undefined,
+          doc.fileUrl || undefined,
+          doc.fileSize || undefined,
+          doc.projectId || undefined,
+          doc.assignedTo || undefined,
+          doc.deadlineDate || undefined,
+          doc.tags,
+          doc.isInternalOnly,
+          doc.isSharedWithSuppliers,
+          doc.uploadedBy || undefined,
+          doc.createdAt,
+          doc.updatedAt
+        );
+      });
     } catch (error) {
       console.error('DocumentService.getPaymentDocuments failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get payment documents');
@@ -149,10 +164,28 @@ export class DocumentService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Guarantee ID is required');
       }
 
-      // For now, return null as bank guarantee-specific repository is not available
-      // TODO: Implement proper bank guarantee document retrieval when bank guarantee repository is available
-      console.warn('DocumentService.getBankGuaranteeProject: Bank guarantee-specific repository not available');
-      return null;
+      const document = await this.documentRepository.findByGuaranteeId(guaranteeId);
+      if (!document) return null;
+
+      return new DocumentResponseDto(
+        document.id,
+        document.title || '',
+        document.description || undefined,
+        document.documentType,
+        document.status as DocumentStatus,
+        document.fileName || undefined,
+        document.fileUrl || undefined,
+        document.fileSize || undefined,
+        document.projectId || undefined,
+        document.assignedTo || undefined,
+        document.deadlineDate || undefined,
+        document.tags,
+        document.isInternalOnly,
+        document.isSharedWithSuppliers,
+        document.uploadedBy || undefined,
+        document.createdAt,
+        document.updatedAt
+      );
     } catch (error) {
       console.error('DocumentService.getBankGuaranteeProject failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get bank guarantee project');
@@ -168,10 +201,28 @@ export class DocumentService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Insurance ID is required');
       }
 
-      // For now, return null as insurance-specific repository is not available
-      // TODO: Implement proper insurance document retrieval when insurance repository is available
-      console.warn('DocumentService.getInsuranceProject: Insurance-specific repository not available');
-      return null;
+      const document = await this.documentRepository.findByInsuranceId(insuranceId);
+      if (!document) return null;
+
+      return new DocumentResponseDto(
+        document.id,
+        document.title || '',
+        document.description || undefined,
+        document.documentType,
+        document.status as DocumentStatus,
+        document.fileName || undefined,
+        document.fileUrl || undefined,
+        document.fileSize || undefined,
+        document.projectId || undefined,
+        document.assignedTo || undefined,
+        document.deadlineDate || undefined,
+        document.tags,
+        document.isInternalOnly,
+        document.isSharedWithSuppliers,
+        document.uploadedBy || undefined,
+        document.createdAt,
+        document.updatedAt
+      );
     } catch (error) {
       console.error('DocumentService.getInsuranceProject failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get insurance project');
@@ -206,8 +257,24 @@ export class DocumentService {
    */
   async createDocument(data: CreateDocumentDTO): Promise<DocumentResponseDto> {
     try {
-      if (!data.title || !data.documentType) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Title and document type are required');
+      if (!data.title || data.title.trim().length === 0) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Title is required');
+      }
+
+      if (!data.documentType || !isDocumentType(data.documentType)) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, `Invalid document type: ${data.documentType}`);
+      }
+
+      if (data.status && !isDocumentStatus(data.status)) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, `Invalid document status: ${data.status}`);
+      }
+
+      // Validate document type/status combinations
+      if (data.status === DocumentStatus.PUBLISHED && data.documentType === DocumentType.PHOTO) {
+        throw new AppError(
+          ErrorCode.VALIDATION_ERROR,
+          'Photos cannot be published directly - must be approved first'
+        );
       }
 
       const documentEntity = this.documentTransformer.fromCreateDto(data);
@@ -232,6 +299,13 @@ export class DocumentService {
       const existing = await this.documentRepository.findById(id) as RepositoryDocument | null;
       if (!existing) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Document not found');
+      }
+
+      if (updates.status && !isValidDocumentStatusTransition(existing.status as DocumentStatus, updates.status as DocumentStatus)) {
+        throw new AppError(
+          ErrorCode.VALIDATION_ERROR, 
+          `Invalid status transition from ${existing.status} to ${updates.status}`
+        );
       }
 
       const updateEntity = this.documentTransformer.fromUpdateDto(updates);

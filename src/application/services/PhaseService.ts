@@ -5,36 +5,25 @@
 
 import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import { Phase, PhaseStep, PhaseTask, PhaseStatus } from '@/domain/entities/Phase';
-import { PhaseDTO, CreatePhaseRequestDto, UpdatePhaseRequestDto, PhaseTaskDTO, PhaseStepDTO } from '@/dtos/entities/PhaseDTO';
+import { PhaseDTO, CreatePhaseRequestDto, UpdatePhaseRequestDto, PhaseTaskDTO, PhaseStepDTO, PhaseMetricsDTO } from '@/dtos/entities/PhaseDTO';
 import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
-import { ConstructionPhase, ConstructionStage } from '@/types/project';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { Container } from 'typedi';
 
 // Service DTOs for data exchange
-export interface PhaseMetricsDTO {
-  totalSteps: number;
-  completedSteps: number;
-  totalTasks: number;
-  completedTasks: number;
-  overallProgress: number;
-  estimatedCompletionDate?: string;
-  budgetUtilization: number;
-  onTimeDelivery: number;
-}
 
 // Legacy interface - kept for backward compatibility
 export interface PhaseData {
   id: string;
-  phase?: ConstructionPhase;
-  stage?: ConstructionStage;
+  phase?: string;
+  stage?: string;
   customPhase?: CustomPhase;
   title: string;
   description: string;
   startDate: string;
   endDate: string;
   estimatedDuration: number;
-  status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
+  status: PhaseStatus;
   budget: number;
   actualCost: number;
   progress: number;
@@ -62,41 +51,70 @@ export interface CustomPhase {
   humanResources?: Array<{ roleId: string; quantity: number; role?: string }>;
   suppliers?: Array<{ supplierId: string; name?: string; contact?: string }>;
   location?: string;
-  status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
+  status: PhaseStatus;
   progress: number;
 }
 
+export interface PhaseDTOLegacy {
+  id: string;
+  project_id: string;
+  phase_name: string;
+  description: string;
+  status: string;
+  progress: number;
+  budget: number;
+  actual_cost: number;
+  start_date: string;
+  end_date: string;
+  created_at: string;
+  updated_at: string;
+  phase_type?: string;
+  construction_phase?: string;
+  construction_stage?: string;
+}
+
+// Add proper type guard for status fields
+function isPhaseStatus(status: string): status is PhaseStatus {
+  return ['pending', 'in_progress', 'completed', 'cancelled', 'approved', 'rejected', 'requires_changes'].includes(status);
+}
+
+// Add status transition validation
+function isValidPhaseStatusTransition(current: PhaseStatus, next: PhaseStatus): boolean {
+  const validTransitions: Record<PhaseStatus, PhaseStatus[]> = {
+    pending: ['in_progress', 'cancelled'],
+    in_progress: ['completed', 'cancelled', 'requires_changes'],
+    completed: ['approved', 'rejected'],
+    cancelled: [],
+    approved: [],
+    rejected: ['pending', 'requires_changes'],
+    requires_changes: ['pending', 'in_progress']
+  };
+  return validTransitions[current].includes(next);
+}
+
 export class PhaseService {
-  constructor(
-    private phaseRepository: IPhaseRepository = RepositoryFactory.getPhaseRepository(),
-    private phaseTransformer: PhaseTransformer = new PhaseTransformer()
-  ) {}
+  private phaseRepository: IPhaseRepository;
+  private phaseTransformer: PhaseTransformer;
+
+  constructor() {
+    this.phaseRepository = Container.get('IPhaseRepository');
+    this.phaseTransformer = Container.get('PhaseTransformer');
+  }
 
   /**
    * Create a new phase
    */
-  async createPhase(phaseData: PhaseDTOLegacy): Promise<PhaseDTO> {
+  async createPhase(phaseData: CreatePhaseRequestDto): Promise<PhaseDTO> {
     try {
       // Validate phase data
-      const validation = this.validatePhaseData(phaseData as unknown as CreatePhaseRequestDto);
+      const validation = this.validatePhaseData(phaseData);
       if (!validation.isValid) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, `Validation failed: ${validation.errors.join(', ')}`);
       }
 
-      // Convert PhaseDTOLegacy to CreatePhaseRequestDto
-      const createRequest: CreatePhaseRequestDto = {
-        project_id: phaseData.project_id || '',
-        phase_name: phaseData.phase_name || '',
-        description: phaseData.description || '',
-        status: phaseData.status as "approved" | "cancelled" | "completed" | "in_progress" | "pending" | "rejected" | "requires_changes",
-        progress: phaseData.progress || 0,
-        estimated_cost: Number(phaseData.budget || 0),
-        start_date: phaseData.start_date || '',
-        end_date: phaseData.end_date || '',
-        steps: [],
-      };
+      const status = phaseData.status;
 
-      const entity = this.phaseTransformer.toEntity(createRequest as unknown as PhaseDTOLegacy);
+      const entity = this.phaseTransformer.toEntity(phaseData);
       const createdEntity = await this.phaseRepository.create(entity);
       return this.convertLegacyToPhaseDTO(this.phaseTransformer.toDTO(createdEntity));
     } catch (error) {
@@ -148,13 +166,28 @@ export class PhaseService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID is required');
       }
 
+      const existingPhase = await this.phaseRepository.findById(id);
+      if (!existingPhase) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Phase not found');
+      }
+
+      // Validate status transition if status is being updated
+      if (data.status && !isValidPhaseStatusTransition(existingPhase.status, data.status)) {
+        throw new AppError(
+          ErrorCode.VALIDATION_ERROR, 
+          `Invalid status transition from ${existingPhase.status} to ${data.status}`
+        );
+      }
+
       // Validate update data
       const validation = this.validatePhaseData(data);
       if (!validation.isValid) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, `Validation failed: ${validation.errors.join(', ')}`);
       }
 
-      const updates = this.phaseTransformer.toEntity(data as unknown as PhaseDTOLegacy);
+      const status = data.status;
+
+      const updates = this.phaseTransformer.toEntity(data);
       const updatedEntity = await this.phaseRepository.update(id, updates);
       return this.convertLegacyToPhaseDTO(this.phaseTransformer.toDTO(updatedEntity));
     } catch (error) {
@@ -376,7 +409,7 @@ export class PhaseService {
         id: taskResult.id,
         name: taskResult.name,
         description: taskResult.description,
-        status: taskResult.status === 'blocked' ? 'delayed' : taskResult.status,
+        status: taskResult.status,
         progress: taskResult.progress,
         orderIndex: taskResult.orderIndex,
         assignedTo: taskResult.assignedTo?.map(emp => emp.id) || [],
@@ -424,15 +457,15 @@ export class PhaseService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID, Step ID and Task ID are required');
       }
 
-      if (!status) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Status is required');
-      }
-
       if (progress < 0 || progress > 100) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Progress must be between 0 and 100');
       }
 
-      const updatedPhase = await this.phaseRepository.updateTaskStatus(phaseId, stepId, taskId, status, progress);
+      if (!isPhaseStatus(status)) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Invalid phase status');
+      }
+
+      const updatedPhase = await this.phaseRepository.updateTaskStatus(phaseId, stepId, taskId, status as PhaseStatus, progress);
       return this.convertLegacyToPhaseDTO(this.phaseTransformer.toDTO(updatedPhase));
     } catch (error) {
       console.error('PhaseService.updateTaskStatus failed:', error);
@@ -462,32 +495,22 @@ export class PhaseService {
    * Convert PhaseDTOLegacy to PhaseDTO with missing properties
    */
   private convertLegacyToPhaseDTO(legacy: PhaseDTOLegacy): PhaseDTO {
+    assertPhaseStatus(legacy.status);
+    
     return {
-      id: legacy.id,
-      createdAt: legacy.created_at,
-      updatedAt: legacy.updated_at,
-      project_id: legacy.project_id,
-      phase_name: legacy.phase_name,
-      description: legacy.description || '',
-      construction_phase: legacy.construction_phase || null,
-      construction_stage: legacy.construction_stage || null,
-      status: legacy.status as 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'approved' | 'rejected' | 'requires_changes',
-      progress: legacy.progress || 0,
-      estimated_cost: legacy.budget || 0,
-      actual_cost: legacy.actual_cost || 0,
-      estimated_duration_days: 0, // Default value
-      start_date: legacy.start_date || '',
-      end_date: legacy.end_date || '',
-      order_index: 0, // Default value
-      steps: [], // Default empty array
-      dependencies: [], // Default empty array
-      milestones: [], // Default empty array
-      location: null,
-      notes: null,
-      weight: null,
-      created_by: null,
-      created_at: legacy.created_at,
-      updated_at: legacy.updated_at
+      id: legacy.id ?? '',
+      createdAt: legacy.created_at ?? '',
+      updatedAt: legacy.updated_at ?? '',
+      project_id: legacy.project_id ?? '',
+      phase_name: legacy.phase_name ?? '',
+      description: legacy.description ?? '',
+      status: legacy.status,
+      progress: legacy.progress ?? 0,
+      estimated_cost: legacy.budget ?? 0,
+      actual_cost: legacy.actual_cost ?? 0,
+      estimated_duration_days: 0,
+      start_date: legacy.start_date ?? '',
+      end_date: legacy.end_date ?? ''
     };
   }
 
@@ -495,9 +518,23 @@ export class PhaseService {
    * Validate phase data
    */
   validatePhaseData(data: CreatePhaseRequestDto | UpdatePhaseRequestDto): { isValid: boolean; errors: string[] } {
-    const dto = data as CreatePhaseRequestDto;
-    // Create transformer instance to use validate method
-    const transformer = new PhaseTransformer();
-    return transformer.validate(dto as unknown as PhaseDTOLegacy);
+    const errors: string[] = [];
+    
+    if ('name' in data && (!data.name || data.name.trim().length === 0)) {
+      errors.push('Phase name is required');
+    }
+
+    if ('status' in data && data.status && !isPhaseStatus(data.status)) {
+      errors.push('Invalid phase status');
+    }
+
+    if ('progress' in data && (data.progress < 0 || data.progress > 100)) {
+      errors.push('Progress must be between 0 and 100');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
   }
 }

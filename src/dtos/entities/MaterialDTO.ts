@@ -20,6 +20,7 @@ export interface MaterialDTO extends BaseEntityDTO {
   originLocation?: string;
   adresse?: string;
   forme?: string;
+  type: string; // Added missing property
 }
 
 export interface MaterialDetailsDTO extends MaterialDTO {

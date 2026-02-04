@@ -7,39 +7,8 @@
 import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
 import { Payment, PaymentStatus } from '@/domain/entities/Payment';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-
-export interface PaymentRequest {
-  id: string;
-  supplier_id: string;
-  project_id?: string;
-  amount: number;
-  description: string;
-  payment_reason: string;
-  supporting_documents: string[];
-  status: 'pending' | 'approved' | 'rejected' | 'processed';
-  requested_date: string;
-  notes?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface CreatePaymentRequestData {
-  supplier_id: string;
-  project_id?: string;
-  amount: number;
-  description: string;
-  payment_reason: string;
-  supporting_documents?: string[];
-  notes?: string;
-}
-
-export interface UpdatePaymentRequestData {
-  amount?: number;
-  description?: string;
-  payment_reason?: string;
-  status?: 'pending' | 'approved' | 'rejected' | 'processed';
-  notes?: string;
-}
+import { PaymentTransformer } from '@/dtos/transforms/PaymentTransformer';
+import { PaymentRequestDTO, CreatePaymentRequestDTO, UpdatePaymentRequestDTO } from '@/dtos/entities/PaymentDTO';
 
 export class PaymentRequestService {
   constructor(private paymentRepository: IPaymentRepository) {}
@@ -47,10 +16,10 @@ export class PaymentRequestService {
   /**
    * Get all payment requests
    */
-  async getAllPaymentRequests(): Promise<PaymentRequest[]> {
+  async getAllPaymentRequests(): Promise<PaymentRequestDTO[]> {
     try {
       const payments = await this.paymentRepository.findAll();
-      return payments.map(payment => this.mapToPaymentRequest(payment));
+      return payments.map(payment => PaymentTransformer.paymentToRequestDTO(payment));
     } catch (error) {
       console.error('PaymentRequestService.getAllPaymentRequests failed:', error);
       throw error;
@@ -60,10 +29,10 @@ export class PaymentRequestService {
   /**
    * Get payment requests by project
    */
-  async getPaymentRequestsByProject(projectId: string): Promise<PaymentRequest[]> {
+  async getPaymentRequestsByProject(projectId: string): Promise<PaymentRequestDTO[]> {
     try {
       const payments = await this.paymentRepository.findByProjectId(projectId);
-      return payments.map(payment => this.mapToPaymentRequest(payment));
+      return payments.map(payment => PaymentTransformer.paymentToRequestDTO(payment));
     } catch (error) {
       console.error('PaymentRequestService.getPaymentRequestsByProject failed:', error);
       throw error;
@@ -73,10 +42,10 @@ export class PaymentRequestService {
   /**
    * Get payment request by ID
    */
-  async getPaymentRequestById(id: string): Promise<PaymentRequest | null> {
+  async getPaymentRequestById(id: string): Promise<PaymentRequestDTO | null> {
     try {
       const payment = await this.paymentRepository.findById(id);
-      return payment ? this.mapToPaymentRequest(payment) : null;
+      return payment ? PaymentTransformer.paymentToRequestDTO(payment) : null;
     } catch (error) {
       console.error('PaymentRequestService.getPaymentRequestById failed:', error);
       throw error;
@@ -86,30 +55,19 @@ export class PaymentRequestService {
   /**
    * Create new payment request
    */
-  async createPaymentRequest(data: CreatePaymentRequestData): Promise<PaymentRequest> {
+  async createPaymentRequest(data: CreatePaymentRequestDTO): Promise<PaymentRequestDTO> {
     try {
-      // Create payment using repository's save method which expects proper data format
-      const paymentId = crypto.randomUUID();
-      const now = new Date().toISOString();
+      const paymentEntity = PaymentTransformer.requestDTOToPayment({
+        ...data,
+        id: crypto.randomUUID(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
       
-      // Save via repository and then fetch the created payment
-      const payment = await this.paymentRepository.findById(paymentId);
-      
-      // Return a mapped PaymentRequest directly
-      return {
-        id: paymentId,
-        supplier_id: data.supplier_id,
-        project_id: data.project_id || '',
-        amount: data.amount,
-        description: data.description,
-        payment_reason: data.payment_reason,
-        supporting_documents: data.supporting_documents || [],
-        status: 'pending',
-        requested_date: now,
-        notes: data.notes || '',
-        created_at: now,
-        updated_at: now
-      };
+      await this.paymentRepository.save(paymentEntity);
+      const created = await this.paymentRepository.findById(paymentEntity.id);
+      if (!created) throw new Error('Payment request not found after creation');
+      return PaymentTransformer.paymentToRequestDTO(created);
     } catch (error) {
       console.error('PaymentRequestService.createPaymentRequest failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create payment request');
@@ -119,21 +77,18 @@ export class PaymentRequestService {
   /**
    * Update payment request
    */
-  async updatePaymentRequest(id: string, data: UpdatePaymentRequestData): Promise<PaymentRequest> {
+  async updatePaymentRequest(id: string, data: UpdatePaymentRequestDTO): Promise<PaymentRequestDTO> {
     try {
-      const updateData = {
-        amount: data.amount,
-        description: data.description,
-        paymentReason: data.payment_reason,
+      const updates = {
+        ...data,
         status: this.mapStatus(data.status),
-        notes: data.notes,
         updatedAt: new Date().toISOString()
       };
-
-      await this.paymentRepository.update(id, updateData);
+      
+      await this.paymentRepository.update(id, updates);
       const updated = await this.paymentRepository.findById(id);
       if (!updated) throw new Error('Payment request not found after update');
-      return this.mapToPaymentRequest(updated);
+      return PaymentTransformer.paymentToRequestDTO(updated);
     } catch (error) {
       console.error('PaymentRequestService.updatePaymentRequest failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update payment request');
@@ -155,35 +110,15 @@ export class PaymentRequestService {
   /**
    * Get payment requests by status
    */
-  async getPaymentRequestsByStatus(status: string): Promise<PaymentRequest[]> {
+  async getPaymentRequestsByStatus(status: string): Promise<PaymentRequestDTO[]> {
     try {
-      const paymentStatus = this.mapStatus(status as any);
+      const paymentStatus = this.mapStatus(status);
       const payments = await this.paymentRepository.findByStatus(paymentStatus);
-      return payments.map(payment => this.mapToPaymentRequest(payment));
+      return payments.map(payment => PaymentTransformer.paymentToRequestDTO(payment));
     } catch (error) {
       console.error('PaymentRequestService.getPaymentRequestsByStatus failed:', error);
       throw error;
     }
-  }
-
-  /**
-   * Map repository entity to PaymentRequest interface
-   */
-  private mapToPaymentRequest(payment: Payment): PaymentRequest {
-    return {
-      id: payment.id,
-      supplier_id: payment.contractorName,
-      project_id: payment.project?.id || '',
-      amount: payment.amount,
-      description: '', // Payment entity doesn't have description
-      payment_reason: '', // Payment entity doesn't have paymentReason
-      supporting_documents: payment.documents?.map(d => d.url).filter((url): url is string => url !== undefined) || [],
-      status: this.mapStatusToRequestStatus(payment.status),
-      requested_date: payment.paymentDate,
-      notes: '', // Payment entity doesn't have notes
-      created_at: payment.createdAt,
-      updated_at: payment.updatedAt
-    };
   }
 
   /**

@@ -117,3 +117,63 @@ export interface TenderSummaryDTO {
   submissionCount: number;
   createdAt: string;
 }
+
+export interface GetAllTendersRequestDTO {
+  limit?: number;
+  offset?: number;
+}
+
+export interface GetTenderByIdRequestDTO {
+  id: string;
+}
+
+export interface GetTenderSubmissionsRequestDTO {
+  tenderId: string;
+}
+
+export interface GetTendersByStatusRequestDTO {
+  status: 'draft' | 'published' | 'closed' | 'awarded';
+}
+
+export interface SearchTendersRequestDTO {
+  searchTerm: string;
+}
+
+export interface GetPublishedTendersForSubmissionRequestDTO {
+  limit?: number;
+}
+
+export interface GetTendersByProjectRequestDTO {
+  projectId: string;
+}
+
+export interface GetTenderStatsRequestDTO {
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface TenderValidationResultDTO {
+  isValid: boolean;
+  errors: string[];
+}
+
+export interface TenderDocumentDTO {
+  id: string;
+  tenderId: string;
+  documentType: string;
+  fileName: string;
+  filePath: string;
+  fileSize: number;
+  mimeType: string;
+  uploadedAt: string;
+  uploadedBy: string;
+}
+
+export interface TenderSubmissionDTO {
+  id: string;
+  tenderId: string;
+  supplierId: string;
+  status: string;
+  submittedAt: string;
+  documents?: TenderDocumentDTO[];
+}

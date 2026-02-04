@@ -10,50 +10,19 @@ import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { NotificationService } from '@/application/services/NotificationService';
 import { InsuranceCertificateEntity } from '@/domain/entities/InsuranceCertificate.entity';
 import { InsuranceCertificateDTO } from '@/dtos/entities/InsuranceCertificateDTO';
-
-interface CreateInsuranceRequestDto {
-  project_id: string;
-  contractor_id: string;
-  insurance_type: 'liability' | 'property' | 'professional_indemnity' | 'workers_compensation';
-  provider: string;
-  policy_number: string;
-  coverage_amount: number;
-  start_date: string;
-  valid_until: string;
-  status: 'active' | 'expired' | 'pending';
-  documents?: string[];
-  notes?: string;
-}
-
-interface UpdateInsuranceRequestDto {
-  status?: 'active' | 'expired' | 'pending';
-  notes?: string;
-  documents?: string[];
-}
-
-interface InsuranceStatistics {
-  totalCertificates: number;
-  activeCertificates: number;
-  expiredCertificates: number;
-  expiringSoonCertificates: number;
-  totalCoverage: number;
-}
-
-interface InsuranceAlert {
-  certificateId: string;
-  projectId: string;
-  contractorId: string;
-  insuranceType: string;
-  provider: string;
-  expiryDate: string;
-  alertLevel: 'expired' | 'critical' | 'warning' | 'info';
-  daysUntilExpiry: number;
-}
+import {
+  InsuranceType,
+  InsuranceStatus,
+  CreateInsuranceRequestDto,
+  UpdateInsuranceRequestDto,
+  InsuranceStatistics,
+  InsuranceAlert
+} from '@/dtos/entities/InsuranceDTO';
 
 export class InsuranceService {
   constructor(
-    private insuranceRepository: IInsuranceRepository = RepositoryFactory.getInsuranceRepository(),
-    private notificationService: NotificationService = new NotificationService(RepositoryFactory.getNotificationRepository())
+    private insuranceRepository: IInsuranceRepository,
+    private notificationService: NotificationService
   ) {}
 
   private mapEntityToDTO(entity: InsuranceCertificateEntity): InsuranceCertificateDTO {
@@ -119,8 +88,8 @@ export class InsuranceService {
       const certificates = await this.getInsuranceCertificates(projectId);
       return {
         totalCertificates: certificates.length,
-        activeCertificates: certificates.filter(c => c.status === 'active').length,
-        expiredCertificates: certificates.filter(c => c.status === 'expired').length,
+        activeCertificates: certificates.filter(c => c.status === InsuranceStatus.ACTIVE).length,
+        expiredCertificates: certificates.filter(c => c.status === InsuranceStatus.EXPIRED).length,
         expiringSoonCertificates: certificates.filter(c => this.isExpiringSoon(c)).length,
         totalCoverage: certificates.reduce((sum, c) => sum + c.coverage_amount, 0)
       };
@@ -137,13 +106,46 @@ export class InsuranceService {
     return daysUntilExpiry <= daysThreshold && daysUntilExpiry > 0;
   }
 
-  validateInsuranceData(data: Partial<CreateInsuranceRequestDto>): { isValid: boolean; errors: string[] } {
-    const errors: string[] = [];
-    if (!data.project_id) errors.push('Project ID required');
-    if (!data.insurance_type) errors.push('Insurance type required');
-    if (!data.provider) errors.push('Provider required');
-    if (!data.policy_number) errors.push('Policy number required');
-    if (!data.coverage_amount || data.coverage_amount <= 0) errors.push('Coverage amount must be positive');
-    return { isValid: errors.length === 0, errors };
+  validateInsuranceData(data: Partial<CreateInsuranceRequestDto>): { isValid: boolean; errors: Record<string, string[]> } {
+    const errors: Record<string, string[]> = {};
+    
+    if (!data.project_id) errors.project_id = ['Project ID required'];
+    if (!data.contractor_id) errors.contractor_id = ['Contractor ID required'];
+    
+    if (!data.insurance_type || !Object.values(InsuranceType).includes(data.insurance_type)) {
+      errors.insurance_type = ['Valid insurance type required'];
+    }
+    
+    if (!data.provider || data.provider.trim().length === 0) errors.provider = ['Provider required'];
+    if (!data.policy_number || data.policy_number.trim().length === 0) errors.policy_number = ['Policy number required'];
+    
+    if (!data.coverage_amount || data.coverage_amount <= 0) {
+      errors.coverage_amount = ['Coverage amount must be positive'];
+    }
+    
+    if (!data.start_date || !this.isValidDate(data.start_date)) errors.start_date = ['Valid start date required'];
+    if (!data.valid_until || !this.isValidDate(data.valid_until)) errors.valid_until = ['Valid expiry date required'];
+    
+    if (data.status && !Object.values(InsuranceStatus).includes(data.status)) {
+      errors.status = ['Invalid status value'];
+    }
+    
+    return { isValid: Object.keys(errors).length === 0, errors };
+  }
+
+  private isValidDate(dateString: string): boolean {
+    return !isNaN(Date.parse(dateString));
+  }
+
+  private isValidStatusTransition(current: InsuranceStatus, next: InsuranceStatus): boolean {
+    const validTransitions: Record<InsuranceStatus, InsuranceStatus[]> = {
+      [InsuranceStatus.PENDING]: [InsuranceStatus.ACTIVE, InsuranceStatus.EXPIRED],
+      [InsuranceStatus.ACTIVE]: [InsuranceStatus.EXPIRED],
+      [InsuranceStatus.EXPIRED]: []
+    };
+    
+    if (!current || !next) return false;
+    
+    return validTransitions[current].includes(next);
   }
 }

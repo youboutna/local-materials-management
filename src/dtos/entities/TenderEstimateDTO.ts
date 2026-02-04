@@ -227,3 +227,20 @@ export interface TenderEstimateItemDifferenceDto {
   price_difference: number;
   price_difference_percentage: number;
 }
+
+// Validation-related DTOs
+export interface TenderEstimateBusinessRulesDTO {
+  requiresApproval: boolean;
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  recommendedValidityPeriod: number;
+}
+
+export interface TenderEstimatePermissionDTO {
+  userRole: string;
+  allowedActions: Array<'create' | 'submit' | 'review' | 'approve' | 'reject'>;
+}
+
+export interface TenderEstimateStatusTransitionDTO {
+  currentStatus: string;
+  validTransitions: string[];
+}

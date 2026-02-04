@@ -7,6 +7,7 @@ export interface NotificationDTO {
   id: string;
   recipient_id: string;
   title: string;
+  
   message: string;
   type: 'info' | 'success' | 'warning' | 'error' | 'system';
   read: boolean;

@@ -73,3 +73,39 @@ export interface TenderDocumentStatsDTO {
   pending: number;
   overdue: number;
 }
+
+// Add service-specific DTOs
+export interface GetTenderDocumentByIdRequestDTO {
+  id: string;
+}
+
+export interface GetProjectTenderDocumentsRequestDTO {
+  projectId: string;
+}
+
+export interface UpdateTenderDocumentRequestDTO {
+  id: string;
+  data: UpdateTenderDocumentDTO;
+}
+
+export interface DeleteTenderDocumentRequestDTO {
+  id: string;
+}
+
+export interface SubmitTenderDocumentRequestDTO {
+  id: string;
+}
+
+export interface ApproveTenderDocumentRequestDTO {
+  id: string;
+  notes?: string;
+}
+
+export interface RejectTenderDocumentRequestDTO {
+  id: string;
+  notes: string;
+}
+
+export interface GetProjectStatisticsRequestDTO {
+  projectId: string;
+}

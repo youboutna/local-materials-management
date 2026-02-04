@@ -5,84 +5,23 @@
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
+import { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-
-export interface ProjectStakeholder {
-  id: string;
-  project_id: string;
-  stakeholder_type: string;
-  stakeholder_entity_type: 'employee' | 'supplier';
-  employee_id?: string;
-  supplier_id?: string;
-  stakeholder_id?: string;
-  stakeholder_name?: string;
-  role?: string;
-  permissions?: string[];
-  contact_info?: Record<string, unknown>;
-  role_description?: string;
-  is_primary?: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-// Service DTOs for data exchange
-export interface CreateProjectStakeholderRequestDto {
-  project_id: string;
-  stakeholder_type: string;
-  stakeholder_entity_type: 'employee' | 'supplier';
-  employee_id?: string;
-  supplier_id?: string;
-  role_description?: string;
-  is_primary?: boolean;
-}
-
-export interface UpdateProjectStakeholderRequestDto {
-  stakeholder_type?: string;
-  stakeholder_entity_type?: 'employee' | 'supplier';
-  employee_id?: string;
-  supplier_id?: string;
-  role_description?: string;
-  is_primary?: boolean;
-}
-
-export interface StakeholderDelegationDto {
-  role: string;
-  employees: Array<{
-    id: string;
-    selected: boolean;
-    role_description?: string;
-    is_primary?: boolean;
-  }>;
-}
-
-export interface ExternalStakeholderDto {
-  id: string;
-  selected: boolean;
-  type?: string;
-  role_description?: string;
-  is_primary?: boolean;
-}
-
-export interface StakeholderInput {
-  id?: string;
-  type: string;
-  role: string;
-  name: string;
-  email: string;
-  phone?: string;
-  organization_id?: string;
-  employee_id?: string;
-  is_primary?: boolean;
-  is_internal?: boolean;
-}
-
-export interface CreateStakeholderInput extends StakeholderInput {
-  project_id: string;
-}
+import { 
+  ProjectStakeholderDTO,
+  CreateProjectStakeholderDTO,
+  UpdateProjectStakeholderDTO,
+  StakeholderDelegationDTO,
+  ExternalStakeholderDTO,
+  StakeholderInputDTO,
+  CreateStakeholderInputDTO,
+  StakeholderFormDataDTO
+} from '@/dtos/entities/ProjectStakeholderDTO';
 
 export class ProjectStakeholderService {
   constructor(
-    private projectRepository: IProjectRepository = RepositoryFactory.getProjectRepository() // Using project repository as placeholder
+    private projectRepository: IProjectRepository = RepositoryFactory.getProjectRepository(),
+    private projectStakeholderRepository: IProjectStakeholderRepository = RepositoryFactory.getProjectStakeholderRepository()
   ) {}
 
   /**
@@ -90,16 +29,16 @@ export class ProjectStakeholderService {
    */
   async createProjectStakeholders(
     projectId: string,
-    stakeholders: StakeholderInput[],
+    stakeholders: StakeholderInputDTO[],
     delegation: Record<string, unknown>
-  ): Promise<ProjectStakeholder[]> {
+  ): Promise<ProjectStakeholderDTO[]> {
     try {
-      const createdStakeholders: ProjectStakeholder[] = [];
+      const createdStakeholders: ProjectStakeholderDTO[] = [];
 
       for (const stakeholder of stakeholders) {
-        const createInput: CreateStakeholderInput = {
+        const createInput: CreateStakeholderInputDTO = {
           ...stakeholder,
-          project_id: projectId
+          projectId
         };
 
         const created = await this.createStakeholder(createInput);
@@ -116,17 +55,25 @@ export class ProjectStakeholderService {
   /**
    * Get all stakeholders for a project
    */
-  async getProjectStakeholders(projectId: string): Promise<ProjectStakeholder[]> {
+  async getProjectStakeholders(projectId: string): Promise<ProjectStakeholderDTO[]> {
     try {
       if (!projectId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
       }
 
-      // For now, return mock data as project stakeholder repository is not available
-      // TODO: Implement proper stakeholder retrieval when repository is available
-      console.warn('ProjectStakeholderService.getProjectStakeholders: Project stakeholder repository not available');
-
-      return [];
+      const stakeholders = await this.projectStakeholderRepository.findByProjectId(projectId);
+      return stakeholders.map(stakeholder => ({
+        id: stakeholder.id,
+        projectId: stakeholder.projectId,
+        stakeholderType: stakeholder.stakeholderType,
+        stakeholderEntityType: stakeholder.stakeholderEntityType,
+        employeeId: stakeholder.employeeId,
+        supplierId: stakeholder.supplierId,
+        roleDescription: stakeholder.roleDescription,
+        isPrimary: stakeholder.isPrimary,
+        createdAt: stakeholder.createdAt.toISOString(),
+        updatedAt: stakeholder.updatedAt.toISOString()
+      }));
     } catch (error) {
       console.error('ProjectStakeholderService.getProjectStakeholders failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get project stakeholders');
@@ -138,8 +85,8 @@ export class ProjectStakeholderService {
    */
   async updateProjectStakeholder(
     stakeholderId: string,
-    updates: UpdateProjectStakeholderRequestDto
-  ): Promise<ProjectStakeholder> {
+    updates: UpdateProjectStakeholderDTO
+  ): Promise<ProjectStakeholderDTO> {
     try {
       if (!stakeholderId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Stakeholder ID is required');
@@ -148,22 +95,18 @@ export class ProjectStakeholderService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Update data is required');
       }
 
-      // For now, return mock data as project stakeholder repository is not available
-      // TODO: Implement proper stakeholder update when repository is available
-      console.warn('ProjectStakeholderService.updateProjectStakeholder: Project stakeholder repository not available');
-
-      const now = new Date().toISOString();
+      const updatedStakeholder = await this.projectStakeholderRepository.update(stakeholderId, updates);
       return {
-        id: stakeholderId,
-        project_id: 'mock-project-id',
-        stakeholder_type: updates.stakeholder_type || 'supplier',
-        stakeholder_entity_type: updates.stakeholder_entity_type || 'supplier',
-        employee_id: updates.employee_id,
-        supplier_id: updates.supplier_id,
-        role_description: updates.role_description,
-        is_primary: updates.is_primary,
-        created_at: now,
-        updated_at: now
+        id: updatedStakeholder.id,
+        projectId: updatedStakeholder.projectId,
+        stakeholderType: updatedStakeholder.stakeholderType,
+        stakeholderEntityType: updatedStakeholder.stakeholderEntityType,
+        employeeId: updatedStakeholder.employeeId,
+        supplierId: updatedStakeholder.supplierId,
+        roleDescription: updatedStakeholder.roleDescription,
+        isPrimary: updatedStakeholder.isPrimary,
+        createdAt: updatedStakeholder.createdAt.toISOString(),
+        updatedAt: updatedStakeholder.updatedAt.toISOString()
       };
     } catch (error) {
       console.error('ProjectStakeholderService.updateProjectStakeholder failed:', error);
@@ -180,10 +123,7 @@ export class ProjectStakeholderService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Stakeholder ID is required');
       }
 
-      // For now, simulate deletion as project stakeholder repository is not available
-      // TODO: Implement proper stakeholder deletion when repository is available
-      console.warn('ProjectStakeholderService.deleteProjectStakeholder: Project stakeholder repository not available');
-      console.log(`Deleting stakeholder: ${stakeholderId}`);
+      await this.projectStakeholderRepository.delete(stakeholderId);
     } catch (error) {
       console.error('ProjectStakeholderService.deleteProjectStakeholder failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete project stakeholder');
@@ -196,7 +136,7 @@ export class ProjectStakeholderService {
   async getStakeholdersByType(
     projectId: string,
     stakeholderType: string
-  ): Promise<ProjectStakeholder[]> {
+  ): Promise<ProjectStakeholderDTO[]> {
     try {
       if (!projectId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
@@ -219,7 +159,7 @@ export class ProjectStakeholderService {
   /**
    * Get primary stakeholders for a project
    */
-  async getPrimaryStakeholders(projectId: string): Promise<ProjectStakeholder[]> {
+  async getPrimaryStakeholders(projectId: string): Promise<ProjectStakeholderDTO[]> {
     try {
       if (!projectId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
@@ -239,34 +179,39 @@ export class ProjectStakeholderService {
   /**
    * Add a single stakeholder
    */
-  async addStakeholder(request: CreateProjectStakeholderRequestDto): Promise<ProjectStakeholder> {
+  async addStakeholder(request: CreateProjectStakeholderDTO): Promise<ProjectStakeholderDTO> {
     try {
-      if (!request.project_id || !request.stakeholder_type || !request.stakeholder_entity_type) {
+      if (!request.projectId || !request.stakeholderType || !request.stakeholderEntityType) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID, stakeholder type, and entity type are required');
       }
-      if (request.stakeholder_entity_type === 'employee' && !request.employee_id) {
+      if (request.stakeholderEntityType === 'employee' && !request.employeeId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Employee ID is required for employee stakeholders');
       }
-      if (request.stakeholder_entity_type === 'supplier' && !request.supplier_id) {
+      if (request.stakeholderEntityType === 'supplier' && !request.supplierId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Supplier ID is required for supplier stakeholders');
       }
 
-      // For now, return mock data as project stakeholder repository is not available
-      // TODO: Implement proper stakeholder creation when repository is available
-      console.warn('ProjectStakeholderService.addStakeholder: Project stakeholder repository not available');
+      const createdStakeholder = await this.projectStakeholderRepository.create({
+        projectId: request.projectId,
+        stakeholderType: request.stakeholderType,
+        stakeholderEntityType: request.stakeholderEntityType,
+        employeeId: request.employeeId,
+        supplierId: request.supplierId,
+        roleDescription: request.roleDescription,
+        isPrimary: request.isPrimary
+      });
 
-      const now = new Date().toISOString();
       return {
-        id: crypto.randomUUID(),
-        project_id: request.project_id,
-        stakeholder_type: request.stakeholder_type,
-        stakeholder_entity_type: request.stakeholder_entity_type,
-        employee_id: request.employee_id,
-        supplier_id: request.supplier_id,
-        role_description: request.role_description,
-        is_primary: request.is_primary,
-        created_at: now,
-        updated_at: now
+        id: createdStakeholder.id,
+        projectId: createdStakeholder.projectId,
+        stakeholderType: createdStakeholder.stakeholderType,
+        stakeholderEntityType: createdStakeholder.stakeholderEntityType,
+        employeeId: createdStakeholder.employeeId,
+        supplierId: createdStakeholder.supplierId,
+        roleDescription: createdStakeholder.roleDescription,
+        isPrimary: createdStakeholder.isPrimary,
+        createdAt: createdStakeholder.createdAt.toISOString(),
+        updatedAt: createdStakeholder.updatedAt.toISOString()
       };
     } catch (error) {
       console.error('ProjectStakeholderService.addStakeholder failed:', error);
@@ -274,27 +219,27 @@ export class ProjectStakeholderService {
     }
   }
 
-  private async createStakeholder(stakeholder: CreateStakeholderInput): Promise<ProjectStakeholder> {
+  private async createStakeholder(stakeholder: CreateStakeholderInputDTO): Promise<ProjectStakeholderDTO> {
     // Implement stakeholder creation logic here
     // For now, return mock data
     const now = new Date().toISOString();
     return {
       id: crypto.randomUUID(),
-      project_id: stakeholder.project_id,
-      stakeholder_type: stakeholder.type,
-      stakeholder_entity_type: stakeholder.is_internal ? 'employee' : 'supplier',
-      employee_id: stakeholder.employee_id,
-      supplier_id: stakeholder.organization_id,
-      stakeholder_id: stakeholder.id,
-      stakeholder_name: stakeholder.name,
+      projectId: stakeholder.projectId,
+      stakeholderType: stakeholder.type,
+      stakeholderEntityType: stakeholder.isInternal ? 'employee' : 'supplier',
+      employeeId: stakeholder.employeeId,
+      supplierId: stakeholder.organizationId,
+      stakeholderId: stakeholder.id,
+      stakeholderName: stakeholder.name,
       role: stakeholder.role,
       permissions: ['view', 'comment'],
-      contact_info: {
+      contactInfo: {
         email: stakeholder.email,
         phone: stakeholder.phone
       },
-      created_at: now,
-      updated_at: now
+      createdAt: now,
+      updatedAt: now
     };
   }
 }

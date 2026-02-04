@@ -6,7 +6,7 @@
  */
 
 import { Supplier, SupplierCategory, SupplierStatus } from '@/domain/entities/Supplier';
-import { SupplierDTO, CreateSupplierDTO, UpdateSupplierDTO } from '@/dtos/entities/SupplierDTO';
+import { SupplierDTO, CreateSupplierDTO, UpdateSupplierDTO, SupplierSummaryDTO } from '@/dtos/entities/SupplierDTO';
 import { EntityToDTOMapper, ValidationResult } from '@/dtos/transforms/shared';
 
 // DTO legacy compatible avec le code existant
@@ -16,6 +16,15 @@ export interface SupplierLegacyDTO {
   contact_person?: string;
   email?: string;
   phone?: string;
+}
+
+export interface SearchSuppliersOptions {
+  limit?: number;
+}
+
+export interface SearchSuppliersResult {
+  suppliers: SupplierDTO[];
+  total: number;
 }
 
 export class SupplierTransformer implements EntityToDTOMapper<Supplier, SupplierDTO> {
@@ -220,5 +229,45 @@ export class SupplierTransformer implements EntityToDTOMapper<Supplier, Supplier
       row.created_at as string,
       row.updated_at as string
     );
+  }
+
+  /**
+   * Validate search options
+   */
+  static validateSearchOptions(options: SearchSuppliersOptions): ValidationResult {
+    const errors: string[] = [];
+    
+    if (options.limit && options.limit < 0) {
+      errors.push('Limit must be positive');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
+
+  /**
+   * Convert search results to DTO format
+   */
+  static toSearchResultDTO(entities: Supplier[], total: number): SearchSuppliersResult {
+    return {
+      suppliers: this.toDTOList(entities),
+      total
+    };
+  }
+
+  static toSummaryDTO(entity: Supplier): SupplierSummaryDTO {
+    return {
+      id: entity.id,
+      name: entity.name,
+      category: entity.category || undefined,
+      isActive: entity.status === 'active',
+      rating: entity.rating?.overall || undefined
+    };
+  }
+
+  static toSummaryDTOList(entities: Supplier[]): SupplierSummaryDTO[] {
+    return entities.map(entity => this.toSummaryDTO(entity));
   }
 }

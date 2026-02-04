@@ -9,6 +9,8 @@ import { toast } from '@/hooks/use-toast';
 import { ProjectWorkflowService } from '@/application/services/ProjectWorkflowService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { 
+  ProjectWorkflowDTO, 
+  WorkflowMode, 
   ProjectWorkflowData,
   WorkflowStateDTO,
   WorkflowValidationDTO,
@@ -29,24 +31,10 @@ import {
   StepProgressDTO,
   ValidationResult,
   SaveResult
-} from '@/dtos/transforms/ProjectWorkflowDTOs';
+} from '@/dtos/workflows/ProjectWorkflowDTO';
 import { StakeholderDTO } from '@/dtos/transforms/ProjectCreationWorkflowDTO';
 import { MaterialDTO as MaterialEntityDTO } from '@/dtos/entities/MaterialDTO';
-
-// ✅ Rule #4: Use centralized DTOs, no custom interfaces in hooks
-// Using StepRelatedDataDTO from ProjectWorkflowDTOs for consistency
-
-export interface WorkflowSaveResult {
-  success: boolean;
-  projectId?: string;
-  stepNumber: number;
-  data?: ProjectWorkflowData;
-  error?: {
-    code: string;
-    message: string;
-    details?: Record<string, unknown>;
-  };
-}
+import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 
 // Import the ProjectFormDataDTO from the transforms
 import { ProjectFormDataDTO } from '@/dtos/transforms/ProjectWorkflowDTOs';

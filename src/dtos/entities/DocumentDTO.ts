@@ -5,14 +5,24 @@
 
 import { BaseEntityDTO } from '../shared';
 
+// Add type guard for DocumentType
+export enum DocumentStatus {
+  DRAFT = 'draft',
+  PENDING_REVIEW = 'pending_review',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  PUBLISHED = 'published',
+  ARCHIVED = 'archived'
+}
 export interface DocumentDTO extends BaseEntityDTO {
   id: string;
+  name: string;
   projectId: string | null;
   phaseId: string | null;
   inspectionId: string | null;
   paymentId: string | null;
   supplierId: string | null;
-  documentType: string;
+  documentType: DocumentType;
   title: string | null;
   description: string | null;
   fileName: string | null;
@@ -33,6 +43,91 @@ export interface DocumentDTO extends BaseEntityDTO {
   metadata: Record<string, unknown> | null;
 }
 
+// 2. DTOs d'API (Adapter Layer)
+export class DocumentResponseDto {
+  constructor(
+    public id: string,
+    public title: string,
+    public description?: string,
+    public type: DocumentType,
+    public status: DocumentStatus,
+    public fileName?: string,
+    public fileUrl?: string,
+    public fileSize?: number,
+    public projectId?: string,
+    public assignedTo?: string,
+    public deadlineDate?: string,
+    public tags: string[],
+    public isInternalOnly: boolean,
+    public isSharedWithSuppliers: boolean,
+    public uploadedBy?: string,
+    public createdAt: string,
+    public updatedAt: string
+  ) {}
+}
+
+export class CreateDocumentRequestDto {
+  constructor(
+    public title: string,
+    public description?: string,
+    public type: DocumentType,
+    public projectId?: string,
+    public assignedTo?: string,
+    public deadlineDate?: string,
+    public tags?: string[],
+    public file?: any // Express.Multer.File
+  ) {}
+}
+
+export class UpdateDocumentRequestDto {
+  constructor(
+    public title?: string,
+    public description?: string,
+    public type?: DocumentType,
+    public status?: DocumentStatus,
+    public assignedTo?: string,
+    public deadlineDate?: string,
+    public tags?: string[]
+  ) {}
+}
+
+// Ensure Document entity has required properties
+interface RepositoryDocument {
+  id: string;
+  title: string;
+  documentType: DocumentType;
+  projectId?: string;
+  phaseId?: string;
+  inspectionId?: string;
+  paymentId?: string;
+  supplierId?: string;
+  description?: string;
+  fileName?: string;
+  fileSize?: number;
+  fileUrl: string;
+  mimeType?: string;
+  status: string;
+  isInternalOnly: boolean;
+  isSharedWithSuppliers: boolean;
+  deadlineDate?: string;
+  assignedTo?: string;
+  metadata: Record<string, unknown>;
+  category?: string;
+  subcategory?: string;
+  createdAt: string;
+  updatedAt: string;
+  uploadedBy?: string;
+  tags: string[];
+}
+
+// Service DTOs for data exchange
+export interface DocumentSearchDto {
+  query: string;
+  projectId?: string;
+  tags?: string[];
+  documentType?: DocumentType;
+  status?: string;
+}
 export interface DocumentDetailsDTO extends DocumentDTO {
   projectDetails?: {
     id: string;
@@ -132,26 +227,23 @@ export interface DocumentFilterDTO {
   isOverdue?: boolean;
   needsReview?: boolean;
 }
+// Convert document types to enum for better type safety
+export enum DocumentType {
+  CONTRACT = 'contract',
+  INVOICE = 'invoice',
+  REPORT = 'report',
+  PLAN = 'plan',
+  PERMIT = 'permit',
+  PV = 'pv',
+  PHOTO = 'photo',
+  CERTIFICATE = 'certificate',
+  SPECIFICATION = 'specification',
+  CORRESPONDENCE = 'correspondence',
+  OTHER = 'other'
+}
 
-export type DocumentType = 
-  | 'contract'
-  | 'invoice'
-  | 'report'
-  | 'plan'
-  | 'permit'
-  | 'pv'
-  | 'photo'
-  | 'certificate'
-  | 'specification'
-  | 'correspondence'
-  | 'other';
-
-export type DocumentStatus = 
-  | 'draft'
-  | 'pending_review'
-  | 'approved'
-  | 'rejected'
-  | 'archived';
+// Type alias that references the enum values
+export type DocumentTypeUnion = `${DocumentType}`;
 
 export interface DocumentUploadDTO {
   title: string;

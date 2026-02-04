@@ -97,6 +97,33 @@ export interface PaymentValidationDTO {
   optionalFields: string[];
 }
 
+export interface PaymentRequestDTO {
+  id: string;
+  supplierId: string;
+  projectId?: string;
+  amount: number;
+  description?: string;
+  paymentReason?: string;
+  status: 'pending' | 'approved' | 'rejected' | 'paid' | 'cancelled';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreatePaymentRequestDTO {
+  supplierId: string;
+  projectId?: string;
+  amount: number;
+  description?: string;
+  paymentReason?: string;
+}
+
+export interface UpdatePaymentRequestDTO {
+  amount?: number;
+  description?: string;
+  paymentReason?: string;
+  status?: 'pending' | 'approved' | 'rejected' | 'paid' | 'cancelled';
+}
+
 // Legacy compatibility types from transforms
 export interface PaymentDocumentDTO {
   id: string;
@@ -110,7 +137,7 @@ export interface PaymentDocumentDTO {
 }
 
 // Legacy request DTOs for backward compatibility
-export interface CreatePaymentRequestDTO {
+export interface LegacyCreatePaymentRequestDTO {
   projectId: string;
   phaseId?: string;
   milestoneId?: string;
@@ -135,7 +162,7 @@ export interface CreatePaymentRequestDTO {
   recipient_bank_info?: string;
 }
 
-export interface UpdatePaymentRequestDTO {
+export interface LegacyUpdatePaymentRequestDTO {
   title?: string;
   description?: string;
   amount?: number;

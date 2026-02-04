@@ -5,7 +5,6 @@
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { Material, MaterialCategory } from '@/domain/entities/Material';
 
 // Service DTOs for data exchange
@@ -76,10 +75,68 @@ interface MaterialWithPhase {
   updatedAt: string;
 }
 
+// Enhanced MaterialCategory enum with validation
+export enum MaterialCategory {
+  OTHER = 'other',
+  CONCRETE = 'concrete',
+  STEEL = 'steel',
+  WOOD = 'wood',
+  GLASS = 'glass',
+  PLASTIC = 'plastic'
+}
+
+// Enhanced type guard for MaterialCategory
+function isMaterialCategory(category: string): category is MaterialCategory {
+  return Object.values(MaterialCategory).includes(category as MaterialCategory);
+}
+
 export class MaterialService {
-  constructor(
-    private materialRepository: IMaterialRepository = RepositoryFactory.getMaterialRepository()
-  ) {}
+  constructor(private materialRepository: IMaterialRepository) {}
+
+  // Improved validateMaterialData method
+  private validateMaterialData(data: CreateMaterialDTO | UpdateMaterialDTO): void {
+    const errors: Record<string, string[]> = {};
+
+    if ('name' in data && (!data.name || data.name.trim().length === 0)) {
+      errors.name = ['Material name is required'];
+    }
+
+    if ('category' in data && data.category && !isMaterialCategory(data.category)) {
+      errors.category = [`Invalid material category. Valid values: ${Object.values(MaterialCategory).join(', ')}`];
+    }
+
+    if ('pricePerUnit' in data && data.pricePerUnit !== undefined) {
+      if (data.pricePerUnit < 0) {
+        errors.pricePerUnit = ['Price per unit must be non-negative'];
+      }
+      if (data.pricePerUnit > 1000000) {
+        errors.pricePerUnit = ['Price per unit exceeds maximum value (1,000,000)'];
+      }
+    }
+
+    if ('availableQuantity' in data && data.availableQuantity !== undefined) {
+      if (data.availableQuantity < 0) {
+        errors.availableQuantity = ['Available quantity must be non-negative'];
+      }
+      if (data.availableQuantity > 1000000) {
+        errors.availableQuantity = ['Available quantity exceeds maximum value (1,000,000)'];
+      }
+    }
+
+    if ('minStockLevel' in data && data.minStockLevel !== undefined) {
+      if (data.minStockLevel < 0) {
+        errors.minStockLevel = ['Minimum stock level must be non-negative'];
+      }
+      if (data.minStockLevel > 1000000) {
+        errors.minStockLevel = ['Minimum stock level exceeds maximum value (1,000,000)'];
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Material validation failed', errors);
+    }
+  }
+
   /**
    * Get materials by phase ID
    */
@@ -199,19 +256,7 @@ export class MaterialService {
    */
   async createMaterial(materialData: CreateMaterialDTO): Promise<MaterialDTO> {
     try {
-      // Validate required fields
-      if (!materialData.name || !materialData.category || !materialData.unit || !materialData.workspaceId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Missing required fields for material');
-      }
-
-      // Validate price and quantity
-      if (materialData.pricePerUnit < 0) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Price per unit must be non-negative');
-      }
-
-      if (materialData.availableQuantity < 0) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Available quantity must be non-negative');
-      }
+      this.validateMaterialData(materialData);
 
       // Generate ID first
       const createdId = `material_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -260,18 +305,11 @@ export class MaterialService {
    */
   async updateMaterial(id: string, updates: UpdateMaterialDTO): Promise<MaterialDTO> {
     try {
+      this.validateMaterialData(updates);
+
       const existing = await this.materialRepository.findById(id);
       if (!existing) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Material not found');
-      }
-
-      // Validate updates
-      if (updates.pricePerUnit !== undefined && updates.pricePerUnit < 0) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Price per unit must be non-negative');
-      }
-
-      if (updates.availableQuantity !== undefined && updates.availableQuantity < 0) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Available quantity must be non-negative');
       }
 
       // Update material through repository

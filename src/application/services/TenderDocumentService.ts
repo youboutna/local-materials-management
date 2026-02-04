@@ -14,44 +14,16 @@ import {
   UpdateTenderDocumentDTO,
   TenderDocumentResponseDTO,
   TenderDocumentListDTO,
-  TenderDocumentStatsDTO
+  TenderDocumentStatsDTO,
+  GetTenderDocumentByIdRequestDTO,
+  GetProjectTenderDocumentsRequestDTO,
+  UpdateTenderDocumentRequestDTO,
+  DeleteTenderDocumentRequestDTO,
+  SubmitTenderDocumentRequestDTO,
+  ApproveTenderDocumentRequestDTO,
+  RejectTenderDocumentRequestDTO,
+  GetProjectStatisticsRequestDTO
 } from '@/dtos/entities/TenderDocumentDTO';
-
-// Service DTOs for data exchange
-export interface GetTenderDocumentByIdRequestDto {
-  id: string;
-}
-
-export interface GetProjectTenderDocumentsRequestDto {
-  projectId: string;
-}
-
-export interface UpdateTenderDocumentRequestDto {
-  id: string;
-  data: UpdateTenderDocumentDTO;
-}
-
-export interface DeleteTenderDocumentRequestDto {
-  id: string;
-}
-
-export interface SubmitTenderDocumentRequestDto {
-  id: string;
-}
-
-export interface ApproveTenderDocumentRequestDto {
-  id: string;
-  notes?: string;
-}
-
-export interface RejectTenderDocumentRequestDto {
-  id: string;
-  notes: string;
-}
-
-export interface GetProjectStatisticsRequestDto {
-  projectId: string;
-}
 
 export class TenderDocumentService {
   constructor(
@@ -92,7 +64,7 @@ export class TenderDocumentService {
   /**
    * Get tender document by ID
    */
-  async getTenderDocumentById(request: GetTenderDocumentByIdRequestDto): Promise<TenderDocumentDTO | null> {
+  async getTenderDocumentById(request: GetTenderDocumentByIdRequestDTO): Promise<TenderDocumentDTO | null> {
     try {
       if (!request.id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender document ID is required');
@@ -114,7 +86,7 @@ export class TenderDocumentService {
   /**
    * Get all tender documents for a project
    */
-  async getProjectTenderDocuments(request: GetProjectTenderDocumentsRequestDto): Promise<TenderDocumentListDTO[]> {
+  async getProjectTenderDocuments(request: GetProjectTenderDocumentsRequestDTO): Promise<TenderDocumentListDTO[]> {
     try {
       if (!request.projectId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
@@ -133,7 +105,7 @@ export class TenderDocumentService {
   /**
    * Update tender document
    */
-  async updateTenderDocument(request: UpdateTenderDocumentRequestDto): Promise<TenderDocumentDTO> {
+  async updateTenderDocument(request: UpdateTenderDocumentRequestDTO): Promise<TenderDocumentDTO> {
     try {
       if (!request.id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender document ID is required');
@@ -165,7 +137,7 @@ export class TenderDocumentService {
   /**
    * Delete tender document
    */
-  async deleteTenderDocument(request: DeleteTenderDocumentRequestDto): Promise<void> {
+  async deleteTenderDocument(request: DeleteTenderDocumentRequestDTO): Promise<void> {
     try {
       if (!request.id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender document ID is required');
@@ -181,7 +153,7 @@ export class TenderDocumentService {
   /**
    * Submit tender document
    */
-  async submitTenderDocument(request: SubmitTenderDocumentRequestDto): Promise<TenderDocumentDTO> {
+  async submitTenderDocument(request: SubmitTenderDocumentRequestDTO): Promise<TenderDocumentDTO> {
     try {
       if (!request.id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender document ID is required');
@@ -212,7 +184,7 @@ export class TenderDocumentService {
   /**
    * Approve tender document
    */
-  async approveTenderDocument(request: ApproveTenderDocumentRequestDto): Promise<TenderDocumentDTO> {
+  async approveTenderDocument(request: ApproveTenderDocumentRequestDTO): Promise<TenderDocumentDTO> {
     try {
       if (!request.id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender document ID is required');
@@ -243,7 +215,7 @@ export class TenderDocumentService {
   /**
    * Reject tender document
    */
-  async rejectTenderDocument(request: RejectTenderDocumentRequestDto): Promise<TenderDocumentDTO> {
+  async rejectTenderDocument(request: RejectTenderDocumentRequestDTO): Promise<TenderDocumentDTO> {
     try {
       if (!request.id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender document ID is required');
@@ -277,7 +249,7 @@ export class TenderDocumentService {
   /**
    * Get project statistics
    */
-  async getProjectStatistics(request: GetProjectStatisticsRequestDto): Promise<TenderDocumentStatsDTO> {
+  async getProjectStatistics(request: GetProjectStatisticsRequestDTO): Promise<TenderDocumentStatsDTO> {
     try {
       if (!request.projectId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');

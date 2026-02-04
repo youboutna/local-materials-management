@@ -44,10 +44,14 @@ export class ArchitectureUpdateService {
       'src/hooks/hexagonal/useTaskAssignmentsHex.ts',
       
       // Services with unknown types
-      'src/services/ProjectFormService.ts',
+      'src/services/ProjectEditWorkflowService.ts',
       'src/services/workflowStepService.ts',
       'src/services/organizationalHierarchyService.ts',
       'src/services/supplierPaymentReportingService.ts',
+      
+      // New workflow services (replacing old services)
+      'src/application/services/ProjectCreationWorkflowService.ts',
+      'src/application/services/ProjectEditWorkflowService.ts',
       
       // Additional files that need type corrections
       'src/application/services/DataPersistenceValidationService.ts',
@@ -162,21 +166,13 @@ export class ArchitectureUpdateService {
 
     // Fix missing properties in DTOs
     if (updater.getContent().includes('SaveContextDTO') && !updater.getContent().includes('totalSteps: number')) {
-      updater.updateSection(
+      const content = updater.getContent();
+      const updatedContent = content.replace(
         /export interface SaveContextDTO \{([^}]*)\}/g,
-        (match, content) => {
-          if (!content.includes('totalSteps')) {
-            const hasCurrentStep = content.includes('currentStep');
-            if (hasCurrentStep) {
-              content = content.replace(/currentStep: number;?/, 'currentStep: number;\n  totalSteps: number;');
-            } else {
-              content = '  currentStep: number;\n  totalSteps: number;\n' + content;
-            }
-            changes.push('Added missing totalSteps property to SaveContextDTO');
-          }
-          return `export interface SaveContextDTO {${content}}`;
-        }
+        'export interface SaveContextDTO {$1\n  totalSteps: number;\n  currentStep: number;'
       );
+      updater.setContent(updatedContent);
+      changes.push('Added missing properties to SaveContextDTO');
     }
 
     // Fix ProjectFormDataDTO missing properties
@@ -325,6 +321,10 @@ class ContentUpdater {
     this.content = this.content.replace(section, newContent);
   }
 
+  setContent(newContent: string): void {
+    this.content = newContent;
+  }
+
   updateContent(changes: string[]): void {
     // Replace unknown types with specific types
     const unknownPatterns = [
@@ -372,7 +372,7 @@ class ContentUpdater {
     if (this.content.includes('SaveContextDTO') && !this.content.includes('totalSteps: number')) {
       this.updateSection(
         /export interface SaveContextDTO \{([^}]*)\}/g,
-        (match, content) => {
+        (match: string, content: string) => {
           if (!content.includes('totalSteps')) {
             const hasCurrentStep = content.includes('currentStep');
             if (hasCurrentStep) {

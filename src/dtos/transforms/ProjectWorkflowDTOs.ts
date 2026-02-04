@@ -65,7 +65,7 @@ export interface InspectionFormDataDTO {
   notes?: string;
 }
 
-// Re-export from ProjectFormService for consistency
+// Re-export from ProjectEditWorkflowService for consistency
 export interface ProjectFormDataDTO {
   title: string;
   description: string;
@@ -125,7 +125,7 @@ export interface ProjectFormDataDTO {
   shapeData?: Record<string, unknown>; // 🎨 UI state for map data (Rule #4 compliant)
 }
 
-export interface PhaseFormDataDTO {
+export interface PhaseData{
   id?: string;
   name: string;
   description: string;

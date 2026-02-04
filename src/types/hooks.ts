@@ -4,51 +4,39 @@
  * Following hexagonal architecture principles
  */
 
-// Suppliers
-export interface SupplierResponseDto {
-  id: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  nif?: string;
-  category: string;
-  status: string;
-  rating?: number;
-  contacts: any[];
-  isVerified: boolean;
-  verifiedAt?: string;
-  workspaceId: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { UserResponseDto } from '@/dtos/entities/EmployeeDTO';
+import { TaskAssignmentDTO } from '@/dtos/entities/TaskDTO';
+import { DocumentResponseDto } from '@/dtos/entities/DocumentDTO';
+import { ProjectResponseDto } from '@/dtos/entities/ProjectDTO';
+import { MaterialResponseDto } from '@/dtos/entities/MaterialDTO';
+import { InspectionResponseDto } from '@/dtos/entities/InspectionDTO';
+import { AuthResponseDto } from '@/dtos/entities/AuthDTO';
+import { StakeholderResponseDTO as SupplierResponseDto } from '@/dtos/entities/StakeholderDTO';
+
+type UseQueryOptions<T> = {
+  enabled?: boolean;
+  retry?: boolean;
+  staleTime?: number;
+  onSuccess?: (data: T) => void;
+  onError?: (error: Error) => void;
+};
+
+type UseMutationOptions<T, V> = {
+  onSuccess?: (data: T, variables: V) => void;
+  onError?: (error: Error, variables: V) => void;
+};
 
 export interface UseSuppliersHexResult {
   suppliers: SupplierResponseDto[];
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
-  createSupplier: (userData: any) => Promise<SupplierResponseDto>;
-  updateSupplier: (params: { id: string; updates: any }) => Promise<SupplierResponseDto>;
+  createSupplier: (userData: SupplierResponseDto) => Promise<SupplierResponseDto>;
+  updateSupplier: (params: { id: string; updates: SupplierResponseDto }) => Promise<SupplierResponseDto>;
   deleteSupplier: (id: string) => Promise<void>;
   isCreating: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
-}
-
-// Users
-export interface UserResponseDto {
-  id: string;
-  fullName: string | null;
-  phone: string | null;
-  nationalId: string | null;
-  avatarUrl: string | null;
-  email: string | null;
-  roles: string[];
-  primaryRole: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface UseUsersHexResult {
@@ -56,61 +44,25 @@ export interface UseUsersHexResult {
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
-  createUser: (userData: any) => Promise<UserResponseDto>;
-  updateUser: (params: { id: string; updates: any }) => Promise<UserResponseDto>;
+  createUser: (userData: UserResponseDto) => Promise<UserResponseDto>;
+  updateUser: (params: { id: string; updates: UserResponseDto }) => Promise<UserResponseDto>;
   toggleUserStatus: (id: string) => Promise<void>;
   isCreating: boolean;
   isUpdating: boolean;
   isToggling: boolean;
 }
 
-// Task Assignments
-export interface TaskAssignmentResponseDto {
-  id: string;
-  title: string;
-  description: string;
-  assignedTo: string;
-  assignedToName: string;
-  projectId: string;
-  projectName: string;
-  taskId: string;
-  taskTitle: string;
-  status: string;
-  priority: string;
-  dueDate: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface UseTaskAssignmentsHexResult {
-  taskAssignments: TaskAssignmentResponseDto[];
+  taskAssignments: TaskAssignmentDTO[];
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
-  createTaskAssignment: (data: any) => Promise<TaskAssignmentResponseDto>;
-  updateTaskAssignment: (params: { id: string; updates: any }) => Promise<TaskAssignmentResponseDto>;
+  createTaskAssignment: (data: TaskAssignmentDTO) => Promise<TaskAssignmentDTO>;
+  updateTaskAssignment: (params: { id: string; updates: TaskAssignmentDTO }) => Promise<TaskAssignmentDTO>;
   deleteTaskAssignment: (id: string) => Promise<void>;
   isCreating: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
-}
-
-// Documents
-export interface DocumentResponseDto {
-  id: string;
-  title: string;
-  description: string;
-  documentType: string;
-  projectId: string | null;
-  status: string;
-  fileUrl: string | null;
-  fileName: string | null;
-  fileSize: number | null;
-  mimeType: string | null;
-  uploadedBy: string;
-  createdAt: string;
-  updatedAt: string;
-  expiryDate?: string | null;
 }
 
 export interface UseDocumentsHexResult {
@@ -118,26 +70,12 @@ export interface UseDocumentsHexResult {
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
-  createDocument: (data: any) => Promise<DocumentResponseDto>;
-  updateDocument: (params: { id: string; updates: any }) => Promise<DocumentResponseDto>;
+  createDocument: (data: DocumentResponseDto) => Promise<DocumentResponseDto>;
+  updateDocument: (params: { id: string; updates: DocumentResponseDto }) => Promise<DocumentResponseDto>;
   deleteDocument: (id: string) => Promise<void>;
   isCreating: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
-}
-
-// Projects
-export interface ProjectResponseDto {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  startDate: string;
-  endDate: string;
-  budget: number;
-  progress: number;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface UseProjectsHexResult {
@@ -145,28 +83,12 @@ export interface UseProjectsHexResult {
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
-  createProject: (data: any) => Promise<ProjectResponseDto>;
-  updateProject: (params: { id: string; updates: any }) => Promise<ProjectResponseDto>;
+  createProject: (data: ProjectResponseDto) => Promise<ProjectResponseDto>;
+  updateProject: (params: { id: string; updates: ProjectResponseDto }) => Promise<ProjectResponseDto>;
   deleteProject: (id: string) => Promise<void>;
   isCreating: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
-}
-
-// Materials
-export interface MaterialResponseDto {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  unit: string;
-  unitPrice: number;
-  stock: number;
-  minStock: number;
-  projectId: string | null;
-  supplierId: string | null;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface UseMaterialsHexResult {
@@ -174,26 +96,12 @@ export interface UseMaterialsHexResult {
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
-  createMaterial: (data: any) => Promise<MaterialResponseDto>;
-  updateMaterial: (params: { id: string; updates: any }) => Promise<MaterialResponseDto>;
+  createMaterial: (data: MaterialResponseDto) => Promise<MaterialResponseDto>;
+  updateMaterial: (params: { id: string; updates: MaterialResponseDto }) => Promise<MaterialResponseDto>;
   deleteMaterial: (id: string) => Promise<void>;
   isCreating: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
-}
-
-// Inspections
-export interface InspectionResponseDto {
-  id: string;
-  title: string;
-  description: string;
-  projectId: string;
-  inspectionDate: string;
-  inspectorId: string;
-  status: string;
-  findings: string[];
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface UseInspectionsHexResult {
@@ -201,37 +109,19 @@ export interface UseInspectionsHexResult {
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
-  createInspection: (data: any) => Promise<InspectionResponseDto>;
-  updateInspection: (params: { id: string; updates: any }) => Promise<InspectionResponseDto>;
+  createInspection: (data: InspectionResponseDto) => Promise<InspectionResponseDto>;
+  updateInspection: (params: { id: string; updates: InspectionResponseDto }) => Promise<InspectionResponseDto>;
   deleteInspection: (id: string) => Promise<void>;
   isCreating: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
 }
 
-// Auth
-export interface AuthResponseDto {
-  user: {
-    id: string;
-    email: string;
-    user_metadata: {
-      full_name: string;
-      avatar_url: string;
-    };
-  };
-  session: {
-    access_token: string;
-    refresh_token: string;
-    expires_at: string;
-    user: any;
-  };
-}
-
 export interface UseAuthHexResult {
   user: AuthResponseDto['user'] | null;
   error: Error | null;
-  login: (credentials: any) => Promise<AuthResponseDto>;
-  register: (userData: any) => Promise<AuthResponseDto>;
+  login: (credentials: AuthResponseDto) => Promise<AuthResponseDto>;
+  register: (userData: AuthResponseDto) => Promise<AuthResponseDto>;
   logout: () => Promise<void>;
   isLoading: boolean;
 }

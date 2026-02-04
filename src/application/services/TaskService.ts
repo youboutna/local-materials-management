@@ -4,16 +4,28 @@
  */
 
 import { Task } from '@/domain/entities/Task';
-import { TaskStatus, TaskPriority } from '@/domain/types';
 import { ITaskRepository } from '@/domain/repositories';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+
+export enum TaskStatus {
+  PENDING = 'pending',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled'
+}
+
+export enum TaskPriority {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high'
+}
 
 export interface TaskDTO {
   id: string;
   title: string;
   description?: string | null;
-  status: string;
-  priority: string;
+  status: TaskStatus;
+  priority: TaskPriority;
   projectId?: string;
   phaseId?: string | null;
   assignedTo?: string[];
@@ -25,8 +37,8 @@ export interface TaskDTO {
 export interface CreateTaskDTO {
   title: string;
   description?: string;
-  status?: string;
-  priority?: string;
+  status?: TaskStatus;
+  priority?: TaskPriority;
   projectId?: string;
   phaseId?: string;
   assignedTo?: string[];
@@ -36,8 +48,8 @@ export interface CreateTaskDTO {
 export interface UpdateTaskDTO {
   title?: string;
   description?: string;
-  status?: string;
-  priority?: string;
+  status?: TaskStatus;
+  priority?: TaskPriority;
   projectId?: string;
   phaseId?: string;
   assignedTo?: string[];
@@ -70,7 +82,7 @@ export interface CreateTaskAssignmentRequestDto {
   assignedBy?: string;
   assigneeType?: 'employee' | 'supplier';
   assigneeEmail?: string;
-  priority?: 'low' | 'medium' | 'high';
+  priority?: TaskPriority;
   dueDate?: string;
 }
 
@@ -111,10 +123,27 @@ export class TaskService {
     };
   }
 
+  // Add type guards
+  private isTaskStatus(status: string): status is TaskStatus {
+    return Object.values(TaskStatus).includes(status as TaskStatus);
+  }
+
+  private isTaskPriority(priority: string): priority is TaskPriority {
+    return Object.values(TaskPriority).includes(priority as TaskPriority);
+  }
+
   async createTask(createDTO: CreateTaskDTO): Promise<TaskDTO> {
     try {
       if (!createDTO.title || createDTO.title.trim() === '') {
         throw new ValidationError('Task title is required', { title: ['Title is required'] });
+      }
+
+      if (createDTO.status && !this.isTaskStatus(createDTO.status)) {
+        throw new ValidationError('Invalid task status', { status: ['Invalid status value'] });
+      }
+
+      if (createDTO.priority && !this.isTaskPriority(createDTO.priority)) {
+        throw new ValidationError('Invalid task priority', { priority: ['Invalid priority value'] });
       }
 
       const task = Task.create({
@@ -122,7 +151,8 @@ export class TaskService {
         projectId: createDTO.projectId || '',
         title: createDTO.title,
         description: createDTO.description,
-        priority: (createDTO.priority as TaskPriority) || 'medium',
+        status: createDTO.status && this.isTaskStatus(createDTO.status) ? createDTO.status : TaskStatus.PENDING,
+        priority: createDTO.priority && this.isTaskPriority(createDTO.priority) ? createDTO.priority : TaskPriority.MEDIUM,
         assignedTo: createDTO.assignedTo || [],
         dueDate: createDTO.dueDate
       });
@@ -144,6 +174,14 @@ export class TaskService {
       const existingTask = await this.taskRepository.findById(id);
       if (!existingTask) {
         throw new TaskServiceError('Task not found', 'TASK_NOT_FOUND');
+      }
+
+      // Validate status transition if status is being updated
+      if (updateDTO.status && !this.isValidTaskStatusTransition(existingTask.status, updateDTO.status as TaskStatus)) {
+        throw new ValidationError(
+          `Invalid status transition from ${existingTask.status} to ${updateDTO.status}`,
+          { status: ['Invalid status transition'] }
+        );
       }
 
       // Create updated task using immutable pattern
@@ -306,7 +344,7 @@ export class TaskService {
         description: request.description,
         projectId: request.projectId,
         assignedTo: request.assignedTo ? [request.assignedTo] : [],
-        priority: request.priority || 'medium',
+        priority: request.priority || TaskPriority.MEDIUM,
         dueDate: request.dueDate
       };
 
@@ -437,6 +475,10 @@ export class TaskService {
       errors.assignedBy = ['Assigned by is required'];
     }
 
+    if (request.priority && !Object.values(TaskPriority).includes(request.priority as TaskPriority)) {
+      errors.priority = ['Invalid priority value'];
+    }
+
     if (Object.keys(errors).length > 0) {
       throw new ValidationError('Assignment validation failed', errors);
     }
@@ -444,5 +486,16 @@ export class TaskService {
 
   async getProjectPhases(projectId: string): Promise<TaskDTO[]> {
     return [];
+  }
+
+  // Add status transition validation
+  private isValidTaskStatusTransition(current: TaskStatus, next: TaskStatus): boolean {
+    const validTransitions: Record<TaskStatus, TaskStatus[]> = {
+      [TaskStatus.PENDING]: [TaskStatus.IN_PROGRESS, TaskStatus.CANCELLED],
+      [TaskStatus.IN_PROGRESS]: [TaskStatus.COMPLETED, TaskStatus.PENDING, TaskStatus.CANCELLED],
+      [TaskStatus.COMPLETED]: [],
+      [TaskStatus.CANCELLED]: []
+    };
+    return validTransitions[current].includes(next);
   }
 }

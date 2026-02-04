@@ -40,10 +40,12 @@ import {
   SelectValue,
 } from "../ui/select";
 
-// 🏗️ Hexagonal Architecture Imports
-import { useProjectWorkflowHex } from "@/hooks/hexagonal/useProjectWorkflowHex";
-import { ProjectService } from '@/application/services/ProjectService';
-import { ProjectFormService } from '@/application/services/ProjectFormService';
+// Import hexagonal services
+import {
+  ProjectWorkflowService,
+  type ProjectWorkflowData,
+  type EditWorkflowContext
+} from "../../application/services/ProjectWorkflowService";
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { CreateProjectRequestDTO } from "@/dtos/entities/ProjectDTO";
 
@@ -64,14 +66,12 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 }) => {
   // ⚡ Application Layer - Hook hexagonal pour la gestion du workflow
   const {
-    saveStep,
-    completeWorkflow,
-    getWorkflowProgress,
-    validateCurrentStep: hookValidateCurrentStep,
-  } = useProjectWorkflowHex();
-
-  // 🔧 Infrastructure Layer - Service hexagonal pour la gestion des projets
-  const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+    createProject,
+    validateWorkflow,
+    validateWorkflowStep,
+    isCreating,
+    isValidating
+  } = useProjectCreationHex();
 
   // 🎨 UI Layer - États locaux pour la présentation uniquement (Règle PROMPTS.md #5)
   const [currentStep, setCurrentStep] = useState(0);
@@ -161,7 +161,6 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     // 🚀 Delegate validation to service layer (hexagonal flow)
     const projectFormService = new ProjectFormService();
     const validation = projectFormService.validateStepData(flattenedProjectData, currentStep);
-    
     return {
       isValid: validation.isValid,
       errors: validation.errors
@@ -251,42 +250,32 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
   // 🎨 UI Layer - Manual step saving with validation (respect user workflow)
   const saveCurrentStep = async () => {
-    // 🚀 Use service validation (hexagonal flow)
-    const validation = validateStepData();
-    if (!validation.isValid) {
-      console.error('Validation failed:', validation.errors);
+    const workflowService = new ProjectWorkflowService(
+      RepositoryFactory.getProjectRepository(),
+      RepositoryFactory.getPhaseRepository(),
+      RepositoryFactory.getRiskRepository(),
+      RepositoryFactory.getStakeholderRepository()
+    );
+    
+    const result = await workflowService.saveEditStep(currentStep + 1, flattenedProjectData, {
+      projectId: '',
+      currentStep: currentStep + 1,
+      totalSteps: 10,
+      isDraft: true,
+      isComplete: false,
+      modifiedFields: []
+    });
+    
+    if (result.success) {
       toast({
-        title: "Erreur de validation",
-        description: validation.errors.join(', '),
-        variant: "destructive"
+        title: "Sauvegarde réussie",
+        description: `Étape ${currentStep + 1} sauvegardée avec succès`,
       });
-      return false;
-    }
-
-    try {
-      // 🎨 UI Layer - Delegate to service layer
-      const projectFormService = new ProjectFormService();
-      const result = await projectFormService.saveStep(currentStep, flattenedProjectData);
-      
-      if (result.success) {
-        toast({
-          title: "Sauvegarde réussie",
-          description: `Étape ${currentStep + 1} sauvegardée avec succès`,
-        });
-        return true;
-      } else {
-        toast({
-          title: "Erreur de sauvegarde",
-          description: result.error || "Échec de la sauvegarde",
-          variant: "destructive"
-        });
-        return false;
-      }
-    } catch (error) {
-      console.error('Save failed:', error);
+      return true;
+    } else {
       toast({
         title: "Erreur de sauvegarde",
-        description: error instanceof Error ? error.message : "Erreur inconnue",
+        description: result.error || "Échec de la sauvegarde",
         variant: "destructive"
       });
       return false;
@@ -336,12 +325,12 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           lastSavedAt: new Date().toISOString(),
           totalSteps: 7,
           completedSteps: currentStep + 1,
-          progressPercentage: getWorkflowProgress(),
+          progressPercentage: getStepProgress(),
           stepName: steps[currentStep]?.title || `Étape ${currentStep + 1}`,
         },
       };
 
-      await saveStep(workflowData);
+      await createProject(workflowData);
       console.log('Toutes les données du workflow sauvegardées');
       return true; // ✅ Success
     } catch (error) {
@@ -378,12 +367,23 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   };
 
   const handleSubmit = async () => {
-    // � Use service for final validation (hexagonal flow)
-    const projectFormService = new ProjectFormService();
-    const validation = projectFormService.validateStepData(flattenedProjectData, 7); // Final validation
+    const workflowService = new ProjectWorkflowService(
+      RepositoryFactory.getProjectRepository(),
+      RepositoryFactory.getPhaseRepository(),
+      RepositoryFactory.getRiskRepository(),
+      RepositoryFactory.getStakeholderRepository()
+    );
+    
+    const validation = await workflowService.validateEditStep(10, flattenedProjectData, {
+      projectId: '',
+      currentStep: 10,
+      totalSteps: 10,
+      isDraft: false,
+      isComplete: true,
+      modifiedFields: []
+    });
     
     if (!validation.isValid) {
-      console.error('Final validation failed:', validation.errors);
       toast({
         title: "Erreur de validation finale",
         description: "Veuillez compléter toutes les étapes requises avant de créer le projet: " + validation.errors.join(', '),
@@ -392,35 +392,21 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       return;
     }
 
-    try {
-      // 🎨 UI Layer - Delegate to service layer
-      const result = await projectFormService.completeProjectCreation(
-        '', // ID will be generated by service
-        flattenedProjectData
-      );
+    const result = await workflowService.completeEditWorkflow('');
+    
+    if (result.success) {
+      toast({
+        title: "Projet créé avec succès",
+        description: "Le projet a été créé et toutes les étapes sont complétées",
+      });
       
-      if (result.success) {
-        toast({
-          title: "Projet créé avec succès",
-          description: "Le projet a été créé et toutes les étapes sont complétées",
-        });
-        
-        // � Navigate to project detail
-        if (result.projectId) {
-          window.location.href = `/projects/${result.projectId}`;
-        }
-      } else {
-        toast({
-          title: "Erreur de création",
-          description: result.error || "Échec de la création du projet",
-          variant: "destructive"
-        });
+      if (result.projectId) {
+        window.location.href = `/projects/${result.projectId}`;
       }
-    } catch (error) {
-      console.error('Project creation failed:', error);
+    } else {
       toast({
         title: "Erreur de création",
-        description: error instanceof Error ? error.message : "Erreur inconnue",
+        description: result.error || "Échec de la création du projet",
         variant: "destructive"
       });
     }

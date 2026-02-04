@@ -29,15 +29,16 @@ export interface TaskDTO extends BaseEntityDTO {
 
 export interface TaskAssignmentDTO extends BaseEntityDTO {
   title: string;
-  description?: string;
-  assignedTo?: string;
-  assignedBy?: string;
+  description: string;
+  assignedTo: string;
+  assignedToName: string;
+  projectId: string;
+  projectName: string;
+  taskId: string;
+  taskTitle: string;
   status: string;
   priority: string;
-  dueDate?: string;
-  completionDate?: string;
-  notes?: string;
-  projectId: string;
+  dueDate: string;
 }
 
 export interface TaskSummaryDTO {

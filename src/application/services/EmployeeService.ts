@@ -7,28 +7,13 @@ import { IEmployeeRepository } from '@/domain/repositories/IEmployeeRepository';
 import { Employee } from '@/domain/entities/Employee';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-
-export interface SearchEmployeesOptions {
-  searchTerm?: string;
-  departmentFilter?: string[];
-  positionFilter?: string[];
-  isActive?: boolean;
-  limit?: number;
-}
-
-export interface SearchEmployeesResult {
-  employees: Employee[];
-  total: number;
-}
-
-export interface EmployeeDTO {
-  id: string;
-  name: string;
-  email: string | null;
-  position: string | null;
-  phase_id: string;
-  role: string;
-}
+import { 
+  EmployeeDTO,
+  SearchEmployeesOptions,
+  SearchEmployeesResult,
+  CreateEmployeeDTO,
+  UpdateEmployeeDTO
+} from '@/dtos/entities/EmployeeDTO';
 
 export class EmployeeService {
   constructor(private employeeRepository: IEmployeeRepository = RepositoryFactory.getEmployeeRepository()) {}
@@ -134,7 +119,7 @@ export class EmployeeService {
   /**
    * Create a new employee
    */
-  async createEmployee(employeeData: Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>): Promise<Employee> {
+  async createEmployee(employeeData: CreateEmployeeDTO): Promise<Employee> {
     try {
       const employee = new Employee(
         this.generateId(), // id
@@ -171,7 +156,7 @@ export class EmployeeService {
   /**
    * Update an existing employee
    */
-  async updateEmployee(id: string, updates: Partial<Employee>): Promise<Employee> {
+  async updateEmployee(id: string, updates: UpdateEmployeeDTO): Promise<Employee> {
     try {
       const existingEmployee = await this.employeeRepository.findById(id);
       if (!existingEmployee) {

@@ -44,7 +44,7 @@ interface CashFlowAnalysisDto {
     category: string;
   }>;
   netCashFlow: number;
-  cashFlowStatus: 'positive' | 'negative' | 'break_even';
+  cashFlowStatus: 'positive' | 'negative' | 'breakEven';
   workingCapital: number;
 }
 

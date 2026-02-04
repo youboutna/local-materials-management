@@ -10,49 +10,13 @@ import { MaterialService } from './MaterialService';
 import { EmployeeService } from './EmployeeService';
 import { SupplierService } from './SupplierService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-
-export interface ConsistencyReport {
-  timestamp: Date;
-  entity: string;
-  totalRecords: number;
-  consistentRecords: number;
-  inconsistentRecords: number;
-  consistencyScore: number;
-  issues: ConsistencyIssue[];
-  recommendations: string[];
-}
-
-export interface ConsistencyIssue {
-  severity: 'critical' | 'high' | 'medium' | 'low';
-  recordId: string;
-  field: string;
-  issue: string;
-  expectedValue: string | number;
-  actualValue: string | number;
-  suggestedFix: string;
-}
-
-export interface MonitoringMetrics {
-  overallConsistencyScore: number;
-  entityScores: Record<string, number>;
-  totalIssues: number;
-  criticalIssues: number;
-  highIssues: number;
-  mediumIssues: number;
-  lowIssues: number;
-  lastMonitored: Date;
-}
-
-export interface MonitoringReport {
-  summary: MonitoringMetrics;
-  reports: ConsistencyReport[];
-  recommendations: string[];
-  trends: {
-    improving: string[];
-    declining: string[];
-    stable: string[];
-  };
-}
+import { AppError, ErrorCode } from '@/utils/errorHandling';
+import {
+  ConsistencyReport,
+  ConsistencyIssue,
+  MonitoringMetrics,
+  MonitoringReport
+} from '@/dtos/entities/ConsistencyDTO';
 
 export class DataConsistencyMonitoringService {
   private projectService: ProjectService;

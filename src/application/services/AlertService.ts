@@ -15,10 +15,10 @@ export type { ProjectAlertDTO, CreateProjectAlertRequestDto, UpdateProjectAlertR
 
 // Validation utility
 const AlertValidation = {
-  validateCreate(data: CreateProjectAlertRequestDto): { isValid: boolean; errors: string[] } {
+validateCreate(data: CreateProjectAlertRequestDto): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
     
-    if (!data.project_id) errors.push('Project ID is required');
+    if (!data.projectId) errors.push('Project ID is required');
     if (!data.type) errors.push('Alert type is required');
     if (!data.severity) errors.push('Alert severity is required');
     if (!data.title) errors.push('Alert title is required');
@@ -281,7 +281,7 @@ export class AlertService {
    * Validate alert data (legacy method for compatibility)
    */
   validateAlertData(data: CreateProjectAlertRequestDto | UpdateProjectAlertRequestDto): { isValid: boolean; errors: string[] } {
-    if ('project_id' in data) {
+    if ('projectId' in data) {
       return AlertValidation.validateCreate(data as CreateProjectAlertRequestDto);
     }
     return AlertValidation.validateUpdate(data);

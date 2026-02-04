@@ -6,57 +6,22 @@
 import { Risk } from '@/domain/entities/Risk';
 import { RiskStatus, RiskLevel, RiskCategory } from '@/domain/entities/RiskTypesExport';
 import { IRiskRepository } from '@/domain/repositories/IRiskRepository';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { RiskTransformer } from '@/dtos/transforms/RiskTransformer';
+import { 
+  RiskDTO,
+  CreateRiskRequestDTO,
+  UpdateRiskRequestDTO,
+  RiskCategory,
+  RiskCategory,
+  RiskCategory,
+  RiskStatus
+} from '@/dtos/entities/RiskDTO';
 
-// Create array of categories for validation
-const RISK_CATEGORIES = ['technical', 'financial', 'operational', 'strategic', 'compliance', 'safety'] as const;
-
-export interface RiskDTO {
-  id?: string;
-  project_id?: string;
-  title: string;
-  description?: string;
-  probability: number; // 0-1
-  impact: number; // 0-1
-  status: RiskStatus;
-  category: RiskCategory;
-  mitigation_strategy?: string;
-  identified_by?: string;
-  identified_date?: string;
-  related_tasks?: string[];
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface CreateRiskRequest {
-  project_id: string;
-  title: string;
-  description?: string;
-  probability: number;
-  impact: number;
-  category: RiskCategory;
-  mitigation_strategy?: string;
-  identified_by?: string;
-}
-
-export interface UpdateRiskRequest {
-  title?: string;
-  description?: string;
-  probability?: number;
-  impact?: number;
-  status?: RiskStatus;
-  category?: RiskCategory;
-  mitigation_strategy?: string;
-  related_tasks?: string[];
-}
 
 export class RiskService {
   private riskRepository: IRiskRepository;
 
-  constructor() {
-    this.riskRepository = RepositoryFactory.getRiskRepository();
-  }
+  constructor(private riskRepository: IRiskRepository) {}
 
   /**
    * Obtenir tous les risques d'un projet
@@ -74,7 +39,7 @@ export class RiskService {
   /**
    * Créer un nouveau risque
    */
-  async createRisk(data: CreateRiskRequest): Promise<RiskDTO> {
+  async createRisk(data: CreateRiskRequestDTO): Promise<RiskDTO> {
     try {
       // Validation des données
       this.validateRiskData(data);
@@ -87,7 +52,7 @@ export class RiskService {
         data.description || null,
         data.probability,
         data.impact,
-        'identified', // Status par défaut
+        RiskStatus.IDENTIFIED, // Status par défaut
         data.category,
         data.mitigation_strategy || null,
         data.identified_by ? { id: data.identified_by, fullName: '' } : null,
@@ -110,11 +75,16 @@ export class RiskService {
   /**
    * Mettre à jour un risque
    */
-  async updateRisk(riskId: string, data: UpdateRiskRequest): Promise<RiskDTO> {
+  async updateRisk(riskId: string, data: UpdateRiskRequestDTO): Promise<RiskDTO> {
     try {
       const existingRisk = await this.riskRepository.findById(riskId);
       if (!existingRisk) {
         throw new Error('Risk not found');
+      }
+
+      // Validate status transition if status is being updated
+      if (data.status && !this.isValidStatusTransition(existingRisk.status as RiskStatus, data.status as RiskStatus)) {
+        throw new Error(`Invalid status transition from ${existingRisk.status} to ${data.status}`);
       }
 
       // Create updated risk with new values
@@ -183,10 +153,10 @@ export class RiskService {
       const stats = {
         total: risks.length,
         byStatus: {
-          identified: 0,
-          monitored: 0,
-          mitigated: 0,
-          resolved: 0
+          [RiskStatus.IDENTIFIED]: 0,
+          [RiskStatus.MONITORED]: 0,
+          [RiskStatus.MITIGATED]: 0,
+          [RiskStatus.RESOLVED]: 0
         } as Record<RiskStatus, number>,
         byLevel: {
           low: 0,
@@ -195,25 +165,25 @@ export class RiskService {
           critical: 0
         } as Record<RiskLevel, number>,
         byCategory: {
-          technical: 0,
-          financial: 0,
-          operational: 0,
-          strategic: 0,
-          compliance: 0,
-          safety: 0
+          [RiskCategory.TECHNICAL]: 0,
+          [RiskCategory.FINANCIAL]: 0,
+          [RiskCategory.OPERATIONAL]: 0,
+          [RiskCategory.STRATEGIC]: 0,
+          [RiskCategory.COMPLIANCE]: 0,
+          [RiskCategory.SAFETY]: 0
         } as Record<RiskCategory, number>
       };
 
       risks.forEach(risk => {
         // Compter par statut
-        stats.byStatus[risk.status]++;
+        stats.byStatus[risk.status as RiskStatus]++;
         
         // Compter par niveau
         const level = this.calculateRiskLevel(risk.probability, risk.impact);
         stats.byLevel[level]++;
         
         // Compter par catégorie
-        stats.byCategory[risk.category]++;
+        stats.byCategory[risk.category as RiskCategory]++;
       });
 
       return stats;
@@ -226,28 +196,32 @@ export class RiskService {
   /**
    * Valider les données d'un risque
    */
-  private validateRiskData(data: CreateRiskRequest): void {
-    if (!data.title || data.title.trim().length === 0) {
+  private validateRiskData(data: CreateRiskRequestDTO | UpdateRiskRequestDTO): void {
+    if ('title' in data && (!data.title || data.title.trim().length === 0)) {
       throw new Error('Risk title is required');
     }
 
-    if (data.probability < 0 || data.probability > 1) {
+    if ('probability' in data && (data.probability < 0 || data.probability > 1)) {
       throw new Error('Probability must be between 0 and 1');
     }
 
-    if (data.impact < 0 || data.impact > 1) {
+    if ('impact' in data && (data.impact < 0 || data.impact > 1)) {
       throw new Error('Impact must be between 0 and 1');
     }
 
-    if (!RISK_CATEGORIES.includes(data.category as any)) {
-      throw new Error('Invalid risk category');
+    if ('category' in data && !Object.values(RiskCategory).includes(data.category as RiskCategory)) {
+      throw new Error(`Invalid risk category: ${data.category}`);
+    }
+
+    if ('status' in data && data.status && !Object.values(RiskStatus).includes(data.status as RiskStatus)) {
+      throw new Error(`Invalid risk status: ${data.status}`);
     }
   }
 
   /**
    * Synchroniser les risques pour un projet (remplacer tous les risques)
    */
-  async syncProjectRisks(projectId: string, risks: CreateRiskRequest[]): Promise<RiskDTO[]> {
+  async syncProjectRisks(projectId: string, risks: CreateRiskRequestDTO[]): Promise<RiskDTO[]> {
     try {
       // Supprimer tous les risques existants
       const existingRisks = await this.getProjectRisks(projectId);
@@ -265,5 +239,18 @@ export class RiskService {
       console.error('Error syncing project risks:', error);
       throw new Error('Failed to sync project risks');
     }
+  }
+
+  /**
+   * Add status transition validation
+   */
+  private isValidStatusTransition(current: RiskStatus, next: RiskStatus): boolean {
+    const validTransitions: Record<RiskStatus, RiskStatus[]> = {
+      [RiskStatus.IDENTIFIED]: [RiskStatus.MONITORED, RiskStatus.MITIGATED, RiskStatus.RESOLVED],
+      [RiskStatus.MONITORED]: [RiskStatus.MITIGATED, RiskStatus.RESOLVED],
+      [RiskStatus.MITIGATED]: [RiskStatus.RESOLVED],
+      [RiskStatus.RESOLVED]: []
+    };
+    return validTransitions[current].includes(next);
   }
 }

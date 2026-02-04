@@ -6,6 +6,7 @@
 import { TaskAssignment } from '@/domain/entities/Workspace';
 import { ITaskAssignmentRepository } from '@/domain/repositories/ITaskAssignmentRepository';
 import { supabase } from '@/integrations/supabase/client';
+import { TaskAssignmentTransformer } from '@/dtos/transforms/TaskAssignmentTransformer';
 
 export class TaskAssignmentAdapter implements ITaskAssignmentRepository {
   /**
@@ -89,23 +90,8 @@ export class TaskAssignmentAdapter implements ITaskAssignmentRepository {
    */
   async update(id: string, updates: Partial<TaskAssignment>): Promise<TaskAssignment> {
     try {
-      const updateData: any = {
-        ...updates,
-        updated_at: new Date().toISOString()
-      };
-
-      // Map entity fields to database fields
-      if (updates.title) updateData.title = updates.title;
-      if (updates.description) updateData.description = updates.description;
-      if (updates.projectId) updateData.project_id = updates.projectId;
-      if (updates.assignedTo) updateData.assigned_to = updates.assignedTo;
-      if (updates.assignedBy) updateData.assigned_by = updates.assignedBy;
-      if (updates.assigneeType) updateData.assignee_type = updates.assigneeType;
-      if (updates.assigneeEmail) updateData.assignee_email = updates.assigneeEmail;
-      if (updates.status) updateData.status = updates.status;
-      if (updates.priority) updateData.priority = updates.priority;
-      if (updates.dueDate) updateData.due_date = updates.dueDate.toISOString();
-      if (updates.completedAt) updateData.completed_at = updates.completedAt.toISOString();
+      const updateData = TaskAssignmentTransformer.toRepository(updates);
+      updateData.updated_at = new Date().toISOString();
 
       const { data, error } = await supabase
         .from('task_assignments')
@@ -430,21 +416,22 @@ export class TaskAssignmentAdapter implements ITaskAssignmentRepository {
    * Map database row to TaskAssignment entity
    */
   private mapRowToEntity(row: any): TaskAssignment {
+    const dto = TaskAssignmentTransformer.fromRepository(row);
     return new TaskAssignment(
-      row.id,
-      row.title,
-      row.description,
-      row.project_id,
-      row.assigned_to,
-      row.assigned_by,
-      row.assignee_type,
-      row.assignee_email,
-      row.status,
-      row.priority,
-      row.due_date ? new Date(row.due_date) : undefined,
-      row.completed_at ? new Date(row.completed_at) : undefined,
-      new Date(row.created_at),
-      new Date(row.updated_at)
+      dto.id,
+      dto.title,
+      dto.description,
+      dto.projectId,
+      dto.assignedTo,
+      dto.assignedBy,
+      dto.assigneeType as 'supplier' | 'employee' | 'user' | undefined,
+      dto.assigneeEmail,
+      dto.status,
+      dto.priority,
+      dto.dueDate ? new Date(dto.dueDate) : undefined,
+      dto.completedAt ? new Date(dto.completedAt) : undefined,
+      new Date(dto.createdAt),
+      new Date(dto.updatedAt)
     );
   }
 }

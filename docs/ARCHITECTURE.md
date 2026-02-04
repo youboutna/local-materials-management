@@ -1,289 +1,419 @@
-# Architecture du Projet - État Actuel 29 Janvier 2026
 
-## Vue d'ensemble
+## 📚 **Principes Fondamentaux**
 
-Ce projet suit une **architecture hexagonale complète** avec séparation des responsabilités pour garantir la maintenabilité, la testabilité et la scalabilité.
-
-## 📊 **État de Migration Hexagonale**
-- **Progression globale** : 98.8% hexagonal ✅
-- **Services Application** : 57/57 créés (100%) ✅
-- **Hooks Hexagonaux** : 104/104 créés (100%) ✅
-- **Components React** : 386/386 fichiers (100%) ✅
-- **Appels directs Supabase** : 9 appels restants ⚠️
-
-## Structure des Couches Hexagonales
-
+### **1. Architecture Hexagonale (Ports & Adapters)**
 ```
-┌─────────────────────────────────────────┐
-│      Présentation (UI Layer)           │
-│  - Components React                    │
-│  - Hooks Hexagonaux                   │
-│  - États locaux et interactions UI     │
-└──────────────┬──────────────────────────┘
-               │
-┌──────────────▼──────────────────────────┐
-│       Application (Services)           │
-│  - 57 Services Application             │
-│  - Logique métier orchestrée          │
-│  - DTOs et Transformers               │
-└──────────────┬──────────────────────────┘
-               │
-┌──────────────▼──────────────────────────┐
-│         Domaine (Entités)              │
-│  - Entités pures avec logique métier   │
-│  - Interfaces Repository              │
-│  - Validation et règles métier        │
-└──────────────┬──────────────────────────┘
-               │
-┌──────────────▼──────────────────────────┐
-│    Infrastructure (Adapters)           │
-│  - Adapters Supabase                   │
-│  - ConfigurationService                │
-│  - Multi-providers Auth                │
-└─────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                    UI Layer                         │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │
+│  │ Components  │  │   Pages     │  │   Hooks     │  │
+│  └─────────────┘  └─────────────┘  └─────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+                           │
+┌─────────────────────────────────────────────────────────────┐
+│                Application Layer                         │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │
+│  │  Services   │  │ Transformers│  │ DTOs        │  │
+│  │             │  │/calculations│  │             │  │
+│  └─────────────┘  └─────────────┘  └─────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+                           │
+┌─────────────────────────────────────────────────────────────┐
+│                 Domain Layer                            │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │
+│  │  Entities   │  │ Repositories│  │  Events     │  │
+│  │  (Business) │  │ (Interfaces)│  │             │  │
+│  └─────────────┘  └─────────────┘  └─────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+                           │
+┌─────────────────────────────────────────────────────────────┐
+│              Infrastructure Layer                        │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │
+│  │  Database   │  │   External  │  │   Adapters  │  │
+│  │ (Supabase)  │  │   APIs      │  │             │  │
+│  └─────────────┘  └─────────────┘  └─────────────┘  │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## Modules Refactorisés
+### **2. Principes SOLID**
+- **S**ingle Responsibility : Une classe = une responsabilité
+- **O**pen/Closed : Ouvert à l'extension, fermé à la modification
+- **L**iskov Substitution : Les sous-classes peuvent remplacer leurs parents
+- **I**nterface Segregation : Interfaces spécifiques et petites
+- **D**ependency Inversion : Dépendre des abstractions, pas des implémentations
 
-✅ **TOUS les modules suivants ont été COMPLETEMENT refactorisés selon le pattern Repository → Service → Mapper → DTO**
+## 📁 **Structure des Répertoires**
 
-### 1. Projects ✅
-- **Entity**: `src/types/project.entity.ts` - `ProjectEntity`
-- **Repository**: `src/services/ProjectRepository.ts` - `ProjectRepository`
-- **Service**: `src/services/ProjectService.ts` - `ProjectService`
-- **Mapper**: `src/services/EntityToDTOMapper.ts` - `projectEntityToDTO`
-- **DTOs**: `src/types/project-dto.ts`
+### **src/application/** ⚡ **Logique Métier**
+```
+src/application/
+├── services/              # ✅ Services métier (Use Cases)
+│   ├── MaterialService.ts
+│   ├── ProjectService.ts
+│   └── InspectionService.ts
+└── dto/                  # ❌ À éviter (utiliser src/dtos/)
+    └── (déplacé vers src/dtos/entities/)
+```
 
-### 2. Inspections ✅
-- **Entity**: `src/types/inspection.entity.ts` - `InspectionEntity`
-- **Repository**: `src/services/InspectionRepository.ts` - `InspectionRepository`
-- **Service**: `src/services/InspectionService.ts` - `InspectionService`
-- **Mapper**: `src/services/EntityToDTOMapper.ts` - `inspectionEntityToDTOWithProject`
-- **DTOs**: `src/types/inspection.dto.ts`
+### **src/infrastructure/** 🔧 **Implémentations Techniques**
+```
+src/infrastructure/
+├── supabase/            # ✅ Adapters Supabase
+│   ├── adapters/
+│   │   ├── SupabaseMaterialAdapter.ts
+│   │   ├── SupabaseProjectAdapter.ts
+│   │   └── SupabaseInspectionAdapter.ts
+│   ├── RepositoryFactory.ts    # ✅ Factory avec injection
+│   └── client.ts            # ✅ Client Supabase
+├── external/             # ✅ APIs externes
+│   ├── weather/
+│   └── geolocation/
+└── storage/              # ✅ Stockage fichiers
+    └── fileStorage.ts
+```
 
-### 3. Tenders ✅
-- **Entity**: `src/types/tender.entity.ts` - `TenderEntity`, `TenderSubmissionEntity`
-- **Repository**: `src/services/TenderRepository.ts` - `TenderRepository`
-- **Service**: `src/services/TenderService.ts` - `TenderService`
-- **Submission Service**: `src/services/TenderSubmissionService.ts` - `TenderSubmissionService`
-- **Mapper**: `src/services/EntityToDTOMapper.ts` - `tenderEntityToDTO`, `tenderSubmissionEntityToDTO`
-- **DTOs**: `src/types/submission-dto.ts`
-- **Components Updated**: `EnhancedSupplierTenderPortal.tsx` utilise les services
+### **src/domain/** 🧠 **Cœur Métier Pur**
+```
+src/domain/
+├── entities/            # ✅ Entités métier pures
+│   ├── Material.ts
+│   ├── Project.ts
+│   └── Inspection.ts
+├── repositories/         # ✅ Interfaces (Ports)
+│   ├── IMaterialRepository.ts
+│   ├── IProjectRepository.ts
+│   └── IInspectionRepository.ts
+├── events/             # ✅ Événements métier
+│   ├── MaterialCreated.ts
+│   └── ProjectUpdated.ts
+└── value-objects/      # ✅ Objets de valeur
+    ├── Money.ts
+    └── Address.ts
+```
 
-### 4. Bank Guarantees ✅
-- **Entity**: `src/types/bankGuarantee.entity.ts` - `BankGuaranteeEntity`, `ProjectDelayEntity`
-- **Repository**: `src/services/BankGuaranteeRepository.ts` - `BankGuaranteeRepository`
-- **Service**: `src/services/BankGuaranteeService.ts` - `BankGuaranteeService`
-- **Components Updated**: `BankGuaranteeMonitor.tsx`, `AlertsDashboard.tsx`, `EnhancedPaymentBlockingInterface.tsx`
+### **src/dtos/** 📦 **Data Transfer Objects**
+```
+src/dtos/
+├── entities/            # ✅ DTOs centralisés par domaine
+│   ├── MaterialDTO.ts
+│   ├── ProjectDTO.ts
+│   └── InspectionDTO.ts
+├── transforms/          # ✅ Transformers (mappers)
+│   ├── materialTransform.ts
+│   ├── projectTransform.ts
+│   └── inspectionTransform.ts
+└── shared/             # ✅ DTOs partagés
+    ├── BaseEntityDTO.ts
+    └── LocationDTO.ts
+```
 
-### 5. Insurance ✅
-- **Entity**: `src/types/insurance.entity.ts` - `InsuranceCertificateEntity`, `InsuranceAlertEntity`
-- **Repository**: `src/services/InsuranceRepository.ts` - `InsuranceRepository`
-- **Service**: `src/services/InsuranceService.ts` - `InsuranceService`
-- **Utilities Updated**: `src/utils/insuranceAlertUtils.ts` utilise `InsuranceService`
+### **src/hooks/** 🎣 **Hooks React**
+```
+src/hooks/
+├── hexagonal/          # ✅ Hooks avec architecture
+│   ├── useMaterialsHex.ts
+│   ├── useProjectsHex.ts
+│   └── useInspectionsHex.ts
+└── ui/                # ✅ Hooks UI simples
+    ├── useModal.ts
+    └── useToast.ts
+```
 
-### 6. Materials ✅
-- **Entity**: `src/types/material.entity.ts` - `MaterialEntity`, `ProjectMaterialEntity`
-- **Repository**: `src/services/MaterialRepository.ts` - `MaterialRepository`
-- **Service**: `src/services/MaterialService.ts` - `MaterialService`
-- **Components Updated**: `ProjectMaterials.tsx` utilise `MaterialService`
+## 🔗 **Flux de Données**
 
-### 7. Notifications ✅
-- **Service**: `src/services/NotificationService.ts` - `NotificationService`
-- **Methods**: `createNotification`, `createBatchNotifications`, `createSupplierNotification`
-- **Components Updated**: TOUS les composants qui appelaient Supabase pour les notifications
-  - `TaskAssignments.tsx`
-  - `InspectionPaymentValidation.tsx`
-  - `ConsultantValidationPanel.tsx`
-  - `EnhancedDocumentSharing.tsx`
-  - `SupplierPaymentRequest.tsx`
+### **1. Lecture (Query)**
+```
+UI Component → useMaterialsHex() → MaterialService → IMaterialRepository → SupabaseMaterialAdapter → Supabase
+     ↓                    ↓                    ↓                      ↓                    ↓
+  React Query        Business Logic      Interface           Implementation     Database
+```
 
-## Conventions de Nommage
+### **2. Écriture (Command)**
+```
+UI Form → useMaterialsHex() → MaterialService → IMaterialRepository → SupabaseMaterialAdapter → Supabase
+   ↓         ↓                    ↓                    ↓                      ↓                    ↓
+  DTO    Validation + Use Case   Interface           Implementation     Database
+```
 
-### Entities
-- Suffixe: `Entity`
-- Exemple: `ProjectEntity`, `InspectionEntity`
-- Représentent les structures de données brutes de la base de données
+## 🎯 **Séparation des Responsabilités**
 
-### DTOs (Data Transfer Objects)
-- Pas de suffixe spécifique
-- Exemple: `Project`, `Inspection`
-- Représentent les données formatées pour l'UI
+### **UI Layer (src/components/, src/pages/)**
+- ✅ **Responsabilité** : Affichage et interaction utilisateur
+- ✅ **Dépendances** : Hooks React, composants UI
+- ❌ **Interdits** : Logique métier, appels directs API
 
-### Repositories
-- Suffixe: `Repository`
-- Pattern: Class statique avec méthodes CRUD
-- Exemple: `ProjectRepository.getById()`
+### **Application Layer (src/application/)**
+- ✅ **Responsabilité** : Cas d'usage métier, orchestration
+- ✅ **Dépendances** : Domain entities, repositories interfaces
+- ❌ **Interdits** : Logique UI, implémentations techniques
 
-### Services
-- Suffixe: `Service`
-- Contiennent la logique métier
-- Exemple: `ProjectService.createProject()`
+### **Domain Layer (src/domain/)**
+- ✅ **Responsabilité** : Règles métier, entités pures
+- ✅ **Dépendances** : Aucune (ou interfaces uniquement)
+- ❌ **Interdits** : Frameworks, bases de données, UI
 
-## Gestion des Erreurs
+### **Infrastructure Layer (src/infrastructure/)**
+- ✅ **Responsabilité** : Implémentations techniques
+- ✅ **Dépendances** : Frameworks, bases de données, APIs
+- ❌ **Interdits** : Logique métier, UI
 
-### AppError
-Classe centralisée pour toutes les erreurs applicatives :
+## 🔄 **Couplage Faible avec Supabase**
 
+### **1. Interface Repository (Domain)**
 ```typescript
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-
-throw new AppError(
-  ErrorCode.DATABASE_ERROR,
-  'Failed to fetch project',
-  originalError,
-  { projectId: '123' }
-);
+// src/domain/repositories/IMaterialRepository.ts
+export interface IMaterialRepository {
+  findById(id: string): Promise<Material | null>;
+  findAll(): Promise<Material[]>;
+  save(material: Material): Promise<void>;
+  update(id: string, data: Partial<Material>): Promise<void>;
+  delete(id: string): Promise<void>;
+}
 ```
 
-### Codes d'Erreur
-- `VALIDATION_ERROR`: Données invalides
-- `NOT_FOUND`: Ressource introuvable
-- `UNAUTHORIZED`: Authentification requise
-- `FORBIDDEN`: Accès interdit
-- `DATABASE_ERROR`: Erreur de base de données
-- `NETWORK_ERROR`: Erreur de connexion
-- `INTERNAL_ERROR`: Erreur interne
-- `BUSINESS_RULE_VIOLATION`: Règle métier violée
-- `INSUFFICIENT_PERMISSIONS`: Permissions insuffisantes
-
-### Utilitaires
-- `ErrorLogger.log()`: Logging structuré
-- `handleAsync()`: Wrapper pour gestion async
-- `validateRequired()`: Validation de champs requis
-- `retryOnError()`: Retry avec backoff exponentiel
-
-## Stratégies de Test
-
-### Tests Unitaires
-Location: `src/**/__tests__/*.test.ts`
-
+### **2. Adapter Supabase (Infrastructure)**
 ```typescript
-import { describe, it, expect, vi } from 'vitest';
-
-describe('RepositoryName', () => {
-  it('should perform operation', async () => {
-    // Arrange
-    const input = { ... };
-    
-    // Act
-    const result = await Repository.method(input);
-    
-    // Assert
-    expect(result).toBeDefined();
-  });
-});
+// src/infrastructure/supabase/adapters/SupabaseMaterialAdapter.ts
+export class SupabaseMaterialAdapter implements IMaterialRepository {
+  constructor(private transformer: MaterialTransformer) {}
+  
+  async findById(id: string): Promise<Material | null> {
+    const { data } = await supabase.from('materials').select('*').eq('id', id);
+    return data ? this.transformer.toEntity(data[0]) : null;
+  }
+}
 ```
 
-### Couverture de Tests
-- Repositories: CRUD operations + error handling
-- Services: Logique métier + transformations
-- Utilities: Fonctions pures + edge cases
-
-### Commandes
-```bash
-# Lancer les tests
-npm run test
-
-# Avec couverture
-npm run test:coverage
-
-# Mode watch
-npm run test:watch
-```
-
-## Best Practices
-
-### 1. Séparation des Responsabilités ⚠️ CRITIQUE
-- **Components**: Ne doivent JAMAIS appeler Supabase directement (sauf `auth.*` et `storage.*.getPublicUrl()`)
-- **Components**: Doivent TOUJOURS utiliser les Services
-- **Services**: Logique métier + orchestration des Repositories
-- **Repositories**: Accès données Supabase UNIQUEMENT
-- **Mappers**: Transformations Entity ↔ DTO
-
-**✅ CORRECT:**
+### **3. Factory avec Injection**
 ```typescript
-import { TenderService } from '@/services/TenderService';
-const tenders = await TenderService.getAllTenders();
+// src/infrastructure/supabase/RepositoryFactory.ts
+export class RepositoryFactory {
+  static getMaterialRepository(): IMaterialRepository {
+    return new SupabaseMaterialAdapter(materialTransformers);
+  }
+}
 ```
 
-**❌ INCORRECT:**
+### **4. Service Application**
 ```typescript
-import { supabase } from '@/integrations/supabase/client';
-const { data } = await supabase.from('tenders').select('*');
+// src/application/services/MaterialService.ts
+export class MaterialService {
+  constructor(
+    private materialRepository: IMaterialRepository, // Interface, pas implémentation
+    private transformer: MaterialTransformer
+  ) {}
+}
 ```
 
-### 2. Gestion d'Erreurs
-- Toujours utiliser `AppError` avec `ErrorCode` approprié
-- Logger les erreurs avec contexte métier via `ErrorLogger`
-- Fournir des messages utilisateur clairs et actionnables
-- Utiliser `handleAsync()` pour wrapper les opérations async
+## 🎨 **UI Propre et Navigabilité**
 
-**Exemple:**
+### **1. Composants React Standards**
 ```typescript
-try {
-  const result = await Repository.method();
-  return result;
-} catch (error) {
-  throw new AppError(
-    ErrorCode.DATABASE_ERROR,
-    'Message utilisateur clair',
-    error,
-    { contextData: '...' }
+// src/components/materials/MaterialList.tsx
+import { useMaterialsHex } from '@/hooks/hexagonal/useMaterialsHex';
+import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
+
+export function MaterialList() {
+  const { useAllMaterials } = useMaterialsHex();
+  const { data: materials, isLoading, error } = useAllMaterials();
+  
+  if (isLoading) return <MaterialListSkeleton />;
+  if (error) return <ErrorMessage error={error} />;
+  
+  return (
+    <div className="space-y-4">
+      {materials?.map(material => (
+        <MaterialCard key={material.id} material={material} />
+      ))}
+    </div>
   );
 }
 ```
 
-### 3. Type Safety
-- Utiliser des types stricts: **Entity** pour DB, **DTO** pour UI
-- JAMAIS de `any`, préférer `unknown` si vraiment nécessaire
-- Interfaces TypeScript pour tous les objets complexes
-- Mapper systématiquement: `Entity → DTO` via `EntityToDTOMapper`
+### **2. Hooks avec React Query**
+```typescript
+// src/hooks/hexagonal/useMaterialsHex.ts
+export function useMaterialsHex() {
+  const materialService = new MaterialService(
+    RepositoryFactory.getMaterialRepository(),
+    materialTransformers
+  );
+  
+  const useAllMaterials = () => {
+    return useQuery({
+      queryKey: ['materials'],
+      queryFn: () => materialService.getAllMaterials(),
+      staleTime: 5 * 60 * 1000,
+    });
+  };
+  
+  return { useAllMaterials };
+}
+```
 
-### 4. Async/Await
-- Toujours gérer les erreurs dans try/catch
-- Utiliser `handleAsync()` pour pattern cohérent
-- Valider les résultats des opérations async
-- Éviter les promesses non gérées
+### **3. Navigation Structurée**
+```
+src/pages/
+├── materials/
+│   ├── MaterialsPage.tsx      # Liste des matériaux
+│   ├── MaterialDetailPage.tsx # Détail d'un matériau
+│   └── MaterialCreatePage.tsx # Création matériau
+├── projects/
+│   ├── ProjectsPage.tsx
+│   ├── ProjectDetailPage.tsx
+│   └── ProjectCreatePage.tsx
+└── inspections/
+    ├── InspectionsPage.tsx
+    ├── InspectionDetailPage.tsx
+  # 🏗️ **Analyse des Composants Critiques - 39 Composants Principaux**
 
-### 5. Réutilisabilité
-- Mapper centralisé: `src/services/EntityToDTOMapper.ts`
-- Utilitaires partagés: `src/utils/`
-- Hooks React pour logique UI commune
-- Services réutilisables entre composants
-- Repositories atomiques et composables
+## 📊 **Analyse des Composants Critiques**
 
-## État de Migration Hexagonale
+### **1. Composants Critiques par Priorité**
 
-✅ **COMPLET À 98.8%** - Architecture hexagonale presque finalisée:
-- **57/57 Services Application** créés (100%) ✅
-- **104/104 Hooks Hexagonaux** créés (100%) ✅
-- **386/386 Components React** migrés (100%) ✅
-- **9 appels directs Supabase** restants (commentaires, URLs externes) ⚠️
 
-### **🎯 Accomplissements Récents**
-- **Architecture multi-providers auth** : Implémentée avec AuthManager ✅
-- **ConfigurationService centralisé** : Templates de déploiement ✅
-- **Risk Entity refactorisée** : Avec IProject/IEmployee ✅
-- **Placeholders éliminés** : Plus d'implémentations vides ✅
-- **OAuthConfigGuide & DeploymentSettings** : 100% hexagonaux ✅
+##### **Priorité MAXIMALE 🚨**
+1. **ProjectCreationWorkflow.tsx** : 16 types `any` (831 lignes)
+   - Problèmes : Logique métier dans composant, couplage services legacy
+   - Statut : Non hexagonal
+   - Plan : Migration complète vers architecture hexagonale
+   - DTOs requis : ProjectCreationDTO, StakeholderDTO, PhaseDTO, RiskDTO, ComplianceDTO
+   - Service requis : ProjectCreationService (remplace ProgressCalculationService)
+   - Hook requis : useProjectCreationHex
 
-### **🚨 Appels Restants (9 appels)**
-- **Components** : 4 appels (auth, commentaires, URLs externes)
-- **Hooks** : 5 appels (auth admin, commentaires documentation)
-- **Estimation finalisation** : 1-2 jours
+##### **Priorité HAUTE ⚠️**
+2. **EnhancedProjectEditForm.tsx** : 10 types `any` (765 lignes)
+   - Problèmes : Couplage services legacy, logique métier dans composant
+   - Statut : Partiellement hexagonal (useProjectMaterialsHex ✅)
+   - Plan : Migration partielle vers architecture hexagonale
+   - DTOs requis : ProjectEditDTO, ProjectDelegationDTO, ProjectStakeholderDTO
+   - Service requis : ProjectEditService (remplace ProgressCalculationService)
+   - Hook requis : useProjectEditHex
 
-## Prochaines Étapes
+3. **ProjectFileImporter.tsx** : 9 types `any` (949 lignes)
+   - Problèmes : Logique métier dans composant, types `any` pour import
+   - Statut : Non hexagonal
+   - Plan : Migration complète vers architecture hexagonale
+   - DTOs requis : ProjectImportDTO, ProjectFileDTO
+   - Service requis : ProjectImportService
+   - Hook requis : useProjectImportHex
 
-1. ✅ ~~Migration des modules vers l'architecture hexagonale~~ **TERMINÉ**
-2. ✅ ~~Refactoriser tous les composants pour utiliser les Services~~ **TERMINÉ**
-3. ✅ ~~Implémenter l'architecture multi-providers~~ **TERMINÉ**
-4. 🔄 Finaliser les 9 appels directs restants
-5. 🔄 Tests et validation complète
-6. 🔄 Documentation finale
+4. **ProjectExporter.tsx** : 9 types `any` (753 lignes)
+   - Problèmes : Logique métier dans composant, types `any` pour export
+   - Statut : Non hexagonal
+   - Plan : Migration complète vers architecture hexagonale
+   - DTOs requis : ProjectExportDTO, ProjectReportDTO
+   - Service requis : ProjectExportService
+   - Hook requis : useProjectExportHex
 
-## Architecture Cible
+5. **AdvancedProjectImporter.tsx** : 9 types `any` (import avancé)
+   - Problèmes : Logique métier dans composant, types `any` pour import
+   - Statut : Non hexagonal
+   - Plan : Migration complète vers architecture hexagonale
+   - DTOs requis : AdvancedProjectImportDTO
+   - Service requis : ProjectImportService (réutiliser)
+   - Hook requis : useAdvancedProjectImportHex
 
-- **Appels directs Supabase** : 0/9 🎯
-- **Architecture 100% hexagonale** : ✅ Objectif atteignable
-- **Production ready** : ✅ Prêt pour déploiement
+##### **Priorité MOYENNE 🔄**
+6. **ProjectCreate.tsx** : 1 type `any` (307 lignes)
+   - Problèmes : Couplage services legacy, appels Supabase directs
+   - Statut : Partiellement hexagonal (useProjectsHex ✅, PhaseService ✅)
+   - Plan : Migration partielle vers architecture hexagonale
+   - DTOs requis : ProjectCreateDTO, ProjectMaterialDTO
+   - Services requis : ProjectStakeholderService hexagonal, MaterialService
+   - Hook requis : useProjectCreateHex
+
+#### **📊 Statistiques Globales des Composants**
+- **Total composants analysés** : 386 fichiers TSX
+- **Types `any` identifiés** : 74 occurrences dans 39 composants
+- **Appels Supabase directs** : 9 appels dans 9 composants
+- **Services legacy identifiés** : ProgressCalculationService (7 composants), ProjectStakeholderService (6 composants)
+- **Services hexagonaux utilisés** : 35 composants utilisent déjà les services hexagonaux
+- **Composants 100% hexagonaux** : 347/386 (89.9%)
+
+#### **📋 Services Legacy à Migrer**
+- **ProgressCalculationService** : Utilisé dans 7 composants
+  - Composants affectés : ProjectCreationWorkflow.tsx, EnhancedProjectEditForm.tsx, etc.
+  - Plan : Créer ProjectCalculationService hexagonal
+- **ProjectStakeholderService** : Utilisé dans 6 composants
+  - Composants affectés : EnhancedProjectEditForm.tsx, ProjectCreate.tsx, etc.
+  - Plan : Créer ProjectStakeholderService hexagonal
+
+#### **Total Types `any` à Corriger**
+- **ProjectCreationWorkflow.tsx** : 16 types `any`
+- **EnhancedProjectEditForm.tsx** : 10 types `any`
+- **ProjectFileImporter.tsx** : 9 types `any`
+- **ProjectExporter.tsx** : 9 types `any`
+- **AdvancedProjectImporter.tsx** : 9 types `any`
+- **ProjectCreate.tsx** : 1 type `any`
+- **Autres composants** : 20 types `any` (29 composants)
+- **Total** : 74 types `any` à corriger
+
+### **🎯 Accomplissements Majeurs**
+- **Multi-Providers Authentication** : Terminé ✅
+  - AuthManager service centralisé
+  - Keycloak, Auth0, Database adapters
+  - useAuthSimple hook amélioré
+  - MultiProviderAuthContext contexte
+- **Configuration Centralisée** : Terminé ✅
+  - ConfigurationService avec templates
+  - useConfigurationHex hook principal
+  - useOAuthConfigHex hook spécialisé
+  - OAuthConfigGuide + DeploymentSettings refactorisés
+- **Migration Massive** : 90% des appels éliminés ✅
+  - 29 → 3 appels directs restants
+  - 16 composants critiques migrés
+  - Services centraux opérationnels
+- **Analyse Composants Critiques** : Terminé ✅
+  - ProjectCreationWorkflow.tsx analysé (16 types `any`)
+  - EnhancedProjectEditForm.tsx analysé (10 types `any`)
+  - Plans de migration détaillés créés
+
+### **📋 Prochaines Étapes (Final)**
+#### **Phase 1 : Composants Critiques (JOUR 1)**
+- **ProjectCreationWorkflow.tsx** - Priorité MAXIMALE 🚨
+  - 16 types `any` à corriger
+  - Migration complète vers hexagonal
+  - Création de ProjectCreationService et useProjectCreationHex
+- **EnhancedProjectEditForm.tsx** - Priorité ÉLEVÉE ⚠️
+  - 10 types `any` à corriger
+  - Migration partielle vers hexagonal
+  - Création de ProjectEditService et useProjectEditHex
+
+#### **Phase 2 : Composants Import/Export (JOUR 2)**
+- **ProjectFileImporter.tsx** - Priorité HAUTE 🚨
+  - 9 types `any` à corriger
+  - Migration complète vers hexagonal
+  - Création de ProjectImportService et useProjectImportHex
+- **ProjectExporter.tsx** - Priorité HAUTE 🚨
+  - 9 types `any` à corriger
+  - Migration complète vers hexagonal
+  - Création de ProjectExportService et useProjectExportHex
+- **AdvancedProjectImporter.tsx** - Priorité HAUTE 🚨
+  - 9 types `any` à corriger
+  - Migration complète vers hexagonal
+  - Utilisation de ProjectImportService
+
+#### **Phase 3 : Composants Secondaires (JOUR 3)**
+- **ProjectCreate.tsx** - Priorité MOYENNE ⚠️
+  - 1 type `any` à corriger
+  - Migration partielle vers hexagonal
+  - Création de ProjectCreateService et useProjectCreateHex
+- **29 autres composants** : 20 types `any` à corriger
+- **RiskAnalysisStep.tsx** - Appels Supabase directs
+- **ComplianceStep.tsx** - Appels Supabase directs
+- **ConstructionPhaseManager.tsx** - Services legacy
+
+#### **Phase 4 : Finalisation (JOUR 4)**
+1. **Nettoyer les 9 appels Supabase restants**
+2. **Migrer les services legacy restants**
+3. **Documentation finale** de l'architecture
+4. **Tests d'intégration** complets
+5. **Déploiement production** 🚀
+
+#### **🎯 Objectifs Finaux**
+- **Types `any` éliminés** : 74 au total (16 + 10 + 9 + 9 + 9 + 1 + 20)
+- **Architecture 100% hexagonale** : Respect des patterns
+- **Composants critiques migrés** : 39 composants principaux
+- **Services legacy migrés** : 2 services (ProgressCalculationService, ProjectStakeholderService)
+- **Production ready** : Prêt pour déploiement

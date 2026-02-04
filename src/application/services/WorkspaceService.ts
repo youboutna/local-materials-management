@@ -1,86 +1,45 @@
 /**
  * WorkspaceService - In-memory implementation
  * Uses local storage while database tables are pending migration
+ * TODO: Replace with RepositoryFactory pattern when workspace tables are available
  */
 
-import { supabase } from '@/integrations/supabase/client';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-
-export interface WorkspaceDTO {
-  id: string;
-  name: string;
-  location: string;
-  description?: string | null;
-  status: string;
-  contact_phone?: string | null;
-  contact_email?: string | null;
-  capacity?: number | null;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface CreateWorkspaceRequestDto {
-  name: string;
-  location: string;
-  description?: string | null;
-  status?: string;
-  contact_phone?: string | null;
-  contact_email?: string | null;
-  capacity?: number | null;
-}
-
-export interface UpdateWorkspaceRequestDto {
-  name?: string;
-  location?: string;
-  description?: string | null;
-  status?: string;
-  contact_phone?: string | null;
-  contact_email?: string | null;
-  capacity?: number | null;
-}
-
-// In-memory store
-const workspacesStore = new Map<string, WorkspaceDTO>();
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { 
+  WorkspaceDTO,
+  CreateWorkspaceRequestDTO,
+  UpdateWorkspaceRequestDTO
+} from '@/dtos/entities/WorkspaceDTO';
+import { WorkspaceTransformer } from '@/dtos/transforms/WorkspaceTransformer';
 
 export class WorkspaceService {
-  /**
-   * Create a new workspace
-   */
-  static async createWorkspace(workspaceData: CreateWorkspaceRequestDto): Promise<WorkspaceDTO> {
-    try {
-      const id = `ws_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const now = new Date().toISOString();
-      
-      const newWorkspace: WorkspaceDTO = {
-        id,
-        name: workspaceData.name,
-        location: workspaceData.location,
-        description: workspaceData.description || null,
-        status: workspaceData.status || 'active',
-        contact_phone: workspaceData.contact_phone || null,
-        contact_email: workspaceData.contact_email || null,
-        capacity: workspaceData.capacity || null,
-        created_at: now,
-        updated_at: now
-      };
-
-      workspacesStore.set(id, newWorkspace);
-      return newWorkspace;
-    } catch (error) {
-      console.error('Error creating workspace:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to create workspace: ${(error as Error).message}`);
-    }
-  }
+  private workspaceRepository = RepositoryFactory.getWorkspaceRepository();
 
   /**
    * Get a workspace by ID
    */
   static async getWorkspaceById(id: string): Promise<WorkspaceDTO | null> {
     try {
-      return workspacesStore.get(id) || null;
+      const workspace = await this.workspaceRepository.findById(id);
+      return WorkspaceTransformer.toDTO(workspace);
     } catch (error) {
       console.error('Error fetching workspace:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to fetch workspace: ${(error as Error).message}`);
+      throw new AppError(ErrorCode.NOT_FOUND, 'Workspace not found');
+    }
+  }
+
+  /**
+   * Create a new workspace
+   */
+  static async createWorkspace(workspaceData: CreateWorkspaceRequestDTO): Promise<WorkspaceDTO> {
+    try {
+      const workspaceDataTransformed = WorkspaceTransformer.fromCreateDTO(workspaceData);
+      const newWorkspace = await this.workspaceRepository.create(workspaceDataTransformed);
+      return WorkspaceTransformer.toDTO(newWorkspace);
+    } catch (error) {
+      console.error('Error creating workspace:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create workspace');
     }
   }
 
@@ -89,38 +48,25 @@ export class WorkspaceService {
    */
   static async getAllWorkspaces(): Promise<WorkspaceDTO[]> {
     try {
-      const workspaces: WorkspaceDTO[] = [];
-      workspacesStore.forEach((workspace) => {
-        workspaces.push(workspace);
-      });
-      return workspaces;
+      const workspaces = await this.workspaceRepository.findAll();
+      return workspaces.map(workspace => WorkspaceTransformer.toDTO(workspace));
     } catch (error) {
       console.error('Error fetching workspaces:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to fetch workspaces: ${(error as Error).message}`);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch workspaces');
     }
   }
 
   /**
    * Update a workspace
    */
-  static async updateWorkspace(id: string, updates: UpdateWorkspaceRequestDto): Promise<WorkspaceDTO> {
+  static async updateWorkspace(id: string, updates: UpdateWorkspaceRequestDTO): Promise<WorkspaceDTO> {
     try {
-      const existing = workspacesStore.get(id);
-      if (!existing) {
-        throw new AppError(ErrorCode.NOT_FOUND, 'Workspace not found');
-      }
-
-      const updatedWorkspace: WorkspaceDTO = {
-        ...existing,
-        ...updates,
-        updated_at: new Date().toISOString()
-      };
-
-      workspacesStore.set(id, updatedWorkspace);
-      return updatedWorkspace;
+      const updatesTransformed = WorkspaceTransformer.fromUpdateDTO(updates);
+      const workspace = await this.workspaceRepository.update(id, updatesTransformed);
+      return WorkspaceTransformer.toDTO(workspace);
     } catch (error) {
       console.error('Error updating workspace:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to update workspace: ${(error as Error).message}`);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update workspace');
     }
   }
 
@@ -129,10 +75,10 @@ export class WorkspaceService {
    */
   static async deleteWorkspace(id: string): Promise<void> {
     try {
-      workspacesStore.delete(id);
+      await this.workspaceRepository.delete(id);
     } catch (error) {
       console.error('Error deleting workspace:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to delete workspace: ${(error as Error).message}`);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete workspace');
     }
   }
 
@@ -141,16 +87,11 @@ export class WorkspaceService {
    */
   static async getWorkspacesByStatus(status: string): Promise<WorkspaceDTO[]> {
     try {
-      const workspaces: WorkspaceDTO[] = [];
-      workspacesStore.forEach((workspace) => {
-        if (workspace.status === status) {
-          workspaces.push(workspace);
-        }
-      });
-      return workspaces;
+      const workspaces = await this.workspaceRepository.findByStatus(status);
+      return workspaces.map(workspace => WorkspaceTransformer.toDTO(workspace));
     } catch (error) {
       console.error('Error fetching workspaces by status:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to fetch workspaces by status: ${(error as Error).message}`);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch workspaces by status');
     }
   }
 
@@ -159,17 +100,11 @@ export class WorkspaceService {
    */
   static async getWorkspacesByLocation(location: string): Promise<WorkspaceDTO[]> {
     try {
-      const workspaces: WorkspaceDTO[] = [];
-      const lowerLocation = location.toLowerCase();
-      workspacesStore.forEach((workspace) => {
-        if (workspace.location.toLowerCase().includes(lowerLocation)) {
-          workspaces.push(workspace);
-        }
-      });
-      return workspaces;
+      const workspaces = await this.workspaceRepository.findByLocation(location);
+      return workspaces.map(workspace => WorkspaceTransformer.toDTO(workspace));
     } catch (error) {
       console.error('Error fetching workspaces by location:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to fetch workspaces by location: ${(error as Error).message}`);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch workspaces by location');
     }
   }
 
@@ -202,7 +137,7 @@ export class WorkspaceService {
       return stats;
     } catch (error) {
       console.error('Error fetching workspace stats:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to fetch workspace stats: ${(error as Error).message}`);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch workspace stats');
     }
   }
 
@@ -220,14 +155,14 @@ export class WorkspaceService {
       );
     } catch (error) {
       console.error('Error searching workspaces:', error);
-      throw new Error(`Failed to search workspaces: ${(error as Error).message}`);
+      throw new Error('Failed to search workspaces');
     }
   }
 
   /**
    * Validate workspace data
    */
-  static validateWorkspaceData(data: CreateWorkspaceRequestDto | UpdateWorkspaceRequestDto): {
+  static validateWorkspaceData(data: CreateWorkspaceRequestDTO | UpdateWorkspaceRequestDTO): {
     isValid: boolean;
     errors: string[];
   } {
@@ -241,7 +176,7 @@ export class WorkspaceService {
       errors.push('Workspace location is required');
     }
 
-    if (data.contact_phone && !/^[\d\s\-\+\(\)]+$/.test(data.contact_phone)) {
+    if (data.contactPhone && !/^[\d\s\-\+\(\)]+$/.test(data.contactPhone)) {
       errors.push('Invalid phone number format');
     }
 

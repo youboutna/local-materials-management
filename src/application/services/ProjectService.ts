@@ -4,52 +4,19 @@
  * Clean separation between domain logic and infrastructure
  */
 
-import { Project } from '@/domain/entities/Project';
+import { Project, ProjectStatus } from '@/domain/entities/Project';
 import { ProjectStakeholderEntity, StakeholderType, StakeholderEntityType } from '@/domain/entities/ProjectStakeholder';
 import { IProjectRepository } from '@/domain/repositories';
 import { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { ProjectDTO, CreateProjectDTO, UpdateProjectDTO, ProjectSummaryDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
+import {
+  ProjectFormDataDTO,
+  ProjectAnalyticsDTO,
+  StakeholderDTO,
+  
+} from '@/dtos/entities/ProjectExtendedDTO';
 
-// Type pour le statut de projet
-type ProjectStatus = 'en cours' | 'terminé' | 'suspendu' | 'annulé';
-
-// Types pour les méthodes étendues
-export interface ProjectFormDataDTO {
-  title: string;
-  description: string;
-  location: string;
-  status: string;
-  progress: number;
-  budget: number;
-  start_date: string;
-  end_date: string;
-  team_size: number;
-}
-
-export interface ProjectAnalyticsDTO {
-  total_budget: number;
-  actual_cost: number;
-  budget_variance: number;
-  progress_percentage: number;
-  milestone_completion: number;
-  risk_score: number;
-  quality_score: number;
-  timeline_variance: number;
-  resource_utilization: number;
-}
-
-export interface StakeholderDTO {
-  id: string;
-  project_id: string;
-  stakeholder_type: 'employee' | 'external';
-  entity_id: string;
-  role: string;
-  is_primary: boolean;
-  name: string;
-  email?: string;
-  phone?: string;
-}
 
 /**
  * Custom error class for project operations
@@ -65,12 +32,9 @@ export class ProjectServiceError extends Error {
   }
 }
 
-/**
- * Validation error class
- */
-export class ValidationError extends ProjectServiceError {
-  constructor(message: string, public fieldErrors: Record<string, string[]>) {
-    super(message, 'VALIDATION_ERROR');
+export class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
     this.name = 'ValidationError';
   }
 }
@@ -115,7 +79,7 @@ export class ProjectService {
       const validation = this.validateProjectData(createDTO);
       
       if (!validation.isValid) {
-        throw new ValidationError('Project validation failed', validation.fieldErrors);
+        throw new ValidationError('Project validation failed');
       }
 
       const projectData: Partial<Project> = {
@@ -151,7 +115,7 @@ export class ProjectService {
       const validation = this.validateProjectData(updateDTO);
       
       if (!validation.isValid) {
-        throw new ValidationError('Project validation failed', validation.fieldErrors);
+        throw new ValidationError('Project validation failed');
       }
 
       const projectData: Partial<Project> = {};
@@ -482,14 +446,24 @@ export class ProjectService {
       
       return stakeholders.map(stakeholder => ({
         id: stakeholder.id,
-        project_id: stakeholder.projectId,
-        stakeholder_type: stakeholder.stakeholderEntityType === 'employee' ? 'employee' : 'external',
-        entity_id: stakeholder.employeeId || stakeholder.supplierId || '',
+        projectId: stakeholder.projectId,
+        stakeholderType: stakeholder.stakeholderEntityType === 'employee' ? 'employee' : 'external',
+        entityId: stakeholder.employeeId || stakeholder.supplierId || '',
         role: stakeholder.roleDescription || 'Unknown Role',
-        is_primary: stakeholder.isActive,
+        isPrimary: stakeholder.isActive,
+        isInternal: stakeholder.stakeholderEntityType === 'employee',
         name: stakeholder.externalName || stakeholder.getDisplayName(),
         email: stakeholder.externalEmail || undefined,
-        phone: stakeholder.externalPhone || undefined
+        phone: stakeholder.externalPhone || undefined,
+        organizationId: stakeholder.organizationId,
+        employeeId: stakeholder.employeeId,
+        responsibilities: stakeholder.responsibilities,
+        startDate: stakeholder.startDate,
+        endDate: stakeholder.endDate,
+        hourlyRate: stakeholder.hourlyRate,
+        contractType: stakeholder.contractType,
+        notes: stakeholder.notes,
+        isActive: stakeholder.isActive
       }));
     } catch (error) {
       console.error(`Failed to get stakeholders for project ${projectId}:`, error);
@@ -502,7 +476,7 @@ export class ProjectService {
   // ========================================
 
   /**
-   * WORKFLOW FORMULAIRE (remplace ProjectFormService)
+   * WORKFLOW FORMULAIRE (remplace ProjectEditWorkflowService)
    * Créer un projet depuis les données du formulaire
    */
   async createFromForm(formData: ProjectFormDataDTO): Promise<ProjectDTO> {
@@ -574,7 +548,7 @@ export class ProjectService {
    * WORKFLOW STAKEHOLDERS (remplace ProjectStakeholderService)
    * Ajouter des stakeholders à un projet
    */
-  async addStakeholders(projectId: string, stakeholders: Omit<StakeholderDTO, 'id' | 'project_id'>[]): Promise<StakeholderDTO[]> {
+  async addStakeholders(projectId: string, stakeholders: Omit<StakeholderDTO, 'id' | 'projectId'>[]): Promise<StakeholderDTO[]> {
     try {
       // Vérifier que le projet existe
       const project = await this.getProjectById(projectId);
@@ -592,21 +566,21 @@ export class ProjectService {
         // Créer les données pour le repository (interface ProjectStakeholder)
         const stakeholderData = {
           projectId: projectId,
-          stakeholderType: this.mapStakeholderType(stakeholder.stakeholder_type),
-          stakeholderEntityType: this.mapStakeholderEntityType(stakeholder.stakeholder_type),
-          employeeId: stakeholder.stakeholder_type === 'employee' ? stakeholder.entity_id : null,
-          supplierId: stakeholder.stakeholder_type === 'external' ? stakeholder.entity_id : null,
-          externalName: stakeholder.stakeholder_type === 'external' ? stakeholder.name : null,
+          stakeholderType: this.mapStakeholderType(stakeholder.stakeholderType),
+          stakeholderEntityType: this.mapStakeholderEntityType(stakeholder.stakeholderType),
+          employeeId: stakeholder.stakeholderType === 'employee' ? stakeholder.entityId : null,
+          supplierId: stakeholder.stakeholderType === 'external' ? stakeholder.entityId : null,
+          externalName: stakeholder.stakeholderType === 'external' ? stakeholder.name : null,
           externalEmail: stakeholder.email || null,
           externalPhone: stakeholder.phone || null,
           roleDescription: stakeholder.role,
-          responsibilities: null,
-          isActive: true,
-          startDate: new Date().toISOString(),
-          endDate: null,
-          hourlyRate: null,
-          contractType: null,
-          notes: null
+          responsibilities: stakeholder.responsibilities,
+          isActive: stakeholder.isActive,
+          startDate: stakeholder.startDate,
+          endDate: stakeholder.endDate,
+          hourlyRate: stakeholder.hourlyRate,
+          contractType: stakeholder.contractType,
+          notes: stakeholder.notes
         } as Omit<ProjectStakeholderEntity, 'id' | 'createdAt' | 'updatedAt'>;
 
         // Créer via repository
@@ -615,14 +589,24 @@ export class ProjectService {
         // Transformer Entity en DTO pour retour
         const createdDTO: StakeholderDTO = {
           id: created.id,
-          project_id: created.projectId,
-          stakeholder_type: stakeholder.stakeholder_type,
-          entity_id: stakeholder.entity_id,
+          projectId: created.projectId,
+          stakeholderType: stakeholder.stakeholderType,
+          entityId: stakeholder.entityId,
           role: stakeholder.role,
-          is_primary: stakeholder.is_primary,
+          isPrimary: stakeholder.isPrimary,
+          isInternal: stakeholder.isInternal,
           name: stakeholder.name,
           email: stakeholder.email,
-          phone: stakeholder.phone
+          phone: stakeholder.phone,
+          organizationId: stakeholder.organizationId,
+          employeeId: stakeholder.employeeId,
+          responsibilities: stakeholder.responsibilities,
+          startDate: stakeholder.startDate,
+          endDate: stakeholder.endDate,
+          hourlyRate: stakeholder.hourlyRate,
+          contractType: stakeholder.contractType,
+          notes: stakeholder.notes,
+          isActive: stakeholder.isActive
         };
         
         createdStakeholders.push(createdDTO);
@@ -684,7 +668,7 @@ export class ProjectService {
     }
 
     if (Object.keys(errors).length > 0) {
-      throw new ValidationError('Form validation failed', errors);
+      throw new ValidationError(`Form validation failed: ${JSON.stringify(errors)}`);
     }
   }
 

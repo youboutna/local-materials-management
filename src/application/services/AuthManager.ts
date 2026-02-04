@@ -5,53 +5,44 @@
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { AuthUser, AuthSession as BaseAuthSession, LoginCredentials, RegisterData } from '@/domain/repositories/IAuthRepository';
+import { AuthSession as BaseAuthSession } from '@/domain/repositories/IAuthRepository';
 import { getAppConfig, AuthProvider } from '@/config/app';
 import { AuthUserStatus } from '@/domain/entities/AuthUser';
 
-// Local types for AuthManager internal use
-export interface AuthCredentials {
-  email: string;
-  password: string;
-}
+// Import existing DTOs from entities instead of defining locally
+import { LoginData, RegisterData, LoginCredentials, AuthUser, AuthSession } from '@/dtos/entities/AuthDTO';
 
-export interface AuthResult {
+// Use existing DTOs for AuthManager internal operations
+export type AuthCredentials = LoginData;
+
+export type AuthResult = {
   success: boolean;
   user?: AuthUser;
   token?: string;
   error?: AuthErrorDTO;
-}
+};
 
-export interface AuthErrorDTO {
+export type AuthErrorDTO = {
   code: string;
   message: string;
-}
+};
 
-export interface AuthManagerConfig {
+export type AuthManagerConfig = {
   provider: AuthProvider;
   url?: string;
   clientId?: string;
   realm?: string;
   redirectUri?: string;
-}
+};
 
-interface SignInCredentials {
-  email: string;
-  password: string;
-}
+// Use existing DTOs for internal operations
+type SignInCredentials = LoginCredentials;
+type SignUpData = RegisterData;
 
-interface SignUpData {
-  email: string;
-  password: string;
-  name: string;
-}
-
-// Internal session type for AuthManager
-interface AuthManagerSession {
-  token: string;
-  refreshToken: string;
+// Internal session type for AuthManager - extends existing AuthSession
+type AuthManagerSession = Omit<AuthSession, 'user'> & {
   expiresAt: number;
-}
+};
 
 interface IAuthRepository {
   authenticate(provider: AuthProvider, credentials: AuthCredentials): Promise<AuthResult>;

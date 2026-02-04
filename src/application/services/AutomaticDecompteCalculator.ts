@@ -10,20 +10,22 @@
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
-import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
-import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
-import { IMilestoneRepository } from '@/domain/repositories/IMilestoneRepository';
-import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
-import {
+import { 
+  IProjectRepository,
+  IPaymentRepository,
+  IPhaseRepository,
+  IMilestoneRepository,
+  IInspectionRepository,
+  IDecompteRepository
+} from '@/domain/repositories';
+import { 
   AutomaticDecompteDTO,
   DecompteLineDTO,
-  DecompteStatus,
   PaymentType,
   DEFAULT_MAURITANIA_RULES,
   MauritaniaBusinessRulesDTO,
-} from '@/types/checkpoint-dto';
-import { MilestoneDTO } from '@/types/milestone-dto';
+} from '@/dtos/entities/DecompteDTO';
+import { MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
 
 // Service DTOs for data exchange
 export interface CalculateProjectDecompteRequestDto {
@@ -60,11 +62,12 @@ interface ProjectFinancials {
 }
 
 interface PhaseFinancials {
-  phaseId: string;
-  phaseName: string;
+  id: string;
+  name: string;
   estimatedCost: number;
-  progress: number;
   totalPaid: number;
+  progress: number;
+  remainingBudget: number;
 }
 
 interface VerifiedMilestone {
@@ -72,6 +75,8 @@ interface VerifiedMilestone {
   title: string;
   weight: number;
   completedDate: string;
+  phaseId: string;
+  phaseEstimatedCost: number;
   amount: number;
 }
 
@@ -80,11 +85,7 @@ interface VerifiedMilestone {
 export class AutomaticDecompteCalculator {
   private projectId: string;
   private rules: MauritaniaBusinessRulesDTO;
-  private projectRepository: IProjectRepository;
-  private paymentRepository: IPaymentRepository;
-  private phaseRepository: IPhaseRepository;
-  private milestoneRepository: unknown; // TODO: Replace with IMilestoneRepository when available
-  private inspectionRepository: IInspectionRepository;
+  private decompteRepository: IDecompteRepository;
 
   constructor(projectId: string, customRules?: Partial<MauritaniaBusinessRulesDTO>) {
     if (!projectId) {
@@ -93,12 +94,7 @@ export class AutomaticDecompteCalculator {
     
     this.projectId = projectId;
     this.rules = { ...DEFAULT_MAURITANIA_RULES, ...customRules };
-    this.projectRepository = RepositoryFactory.getProjectRepository();
-    this.paymentRepository = RepositoryFactory.getPaymentRepository();
-    this.phaseRepository = RepositoryFactory.getPhaseRepository();
-    // Use project repository as placeholder for milestone repository
-    this.milestoneRepository = this.projectRepository as unknown;
-    this.inspectionRepository = RepositoryFactory.getInspectionRepository();
+    this.decompteRepository = RepositoryFactory.getDecompteRepository();
   }
 
   /**
@@ -317,14 +313,32 @@ export class AutomaticDecompteCalculator {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
       }
 
-      // For now, return mock data as repository methods are not available
-      // TODO: Implement proper decompte generation check when repository supports it
-      console.warn('AutomaticDecompteCalculator.canGenerateDecompte: Repository methods not available');
+      const [projectFinancials, verifiedMilestones] = await Promise.all([
+        this.getProjectFinancials(projectId),
+        this.getVerifiedMilestones(projectId)
+      ]);
+
+      // Check if there are new verified milestones not yet included in decomptes
+      const previousDecomptes = await this.getPreviousDecomptes(projectId, phaseId);
+      const previousMilestoneIds = new Set(
+        previousDecomptes.flatMap(d => d.verified_milestones.map(m => m.milestone_id))
+      );
       
+      const hasNewMilestones = verifiedMilestones.some(m => !previousMilestoneIds.has(m.id));
+      
+      // Calculate suggested amount based on new milestones
+      const suggestedAmount = hasNewMilestones 
+        ? verifiedMilestones
+            .filter(m => !previousMilestoneIds.has(m.id))
+            .reduce((sum, m) => sum + m.amount, 0)
+        : 0;
+
       return {
-        allowed: true,
-        reason: 'Decompte generation is available',
-        suggestedAmount: 100000
+        allowed: hasNewMilestones,
+        reason: hasNewMilestones 
+          ? 'New verified milestones available for decompte' 
+          : 'No new verified milestones since last decompte',
+        suggestedAmount
       };
     } catch (error) {
       console.error('AutomaticDecompteCalculator.canGenerateDecompte failed:', error);
@@ -335,134 +349,27 @@ export class AutomaticDecompteCalculator {
   // ============= HELPERS PRIVÉS =============
 
   private async getProjectFinancials(projectId: string): Promise<ProjectFinancials> {
-    try {
-      // For now, return mock data as repository methods are not available
-      // TODO: Implement proper project financials retrieval when repository supports it
-      console.warn('AutomaticDecompteCalculator.getProjectFinancials: Repository methods not available');
-      
-      return {
-        budget: 1000000,
-        totalPaid: 250000,
-        totalRetentionHeld: 25000,
-        paymentCount: 3,
-        allowsInitialPayment: true,
-        initialPaymentPercentage: 10
-      };
-    } catch (error) {
-      console.error('AutomaticDecompteCalculator.getProjectFinancials failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get project financials');
-    }
+    return this.decompteRepository.getProjectFinancials(projectId);
   }
 
   private async getPhaseFinancials(projectId: string): Promise<PhaseFinancials[]> {
-    try {
-      // Get phases for the project
-      const phases = await this.phaseRepository.findByProjectId(projectId);
-      
-      if (!phases || phases.length === 0) {
-        return [];
-      }
-
-      // Transform phases to PhaseFinancials
-      return phases.map(phase => ({
-        phaseId: phase.id,
-        phaseName: (phase as unknown as { name?: string }).name || 'Phase sans nom',
-        estimatedCost: phase.estimatedCost || 0,
-        progress: phase.progress || 0,
-        totalPaid: 0 // This would come from payment records
-      }));
-    } catch (error) {
-      console.error('AutomaticDecompteCalculator.getPhaseFinancials failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get phase financials');
-    }
+    return this.decompteRepository.getPhaseFinancials(projectId);
   }
 
   private async getVerifiedMilestones(projectId: string): Promise<VerifiedMilestone[]> {
-    try {
-      // Get milestones for the project
-      const milestones = await (this.milestoneRepository as unknown as { findByProjectId: (id: string) => Promise<unknown[]> }).findByProjectId(projectId);
-      
-      if (!milestones || milestones.length === 0) {
-        return [];
-      }
-
-      // Filter completed milestones and transform to VerifiedMilestone
-      return milestones
-        .filter((m: unknown) => (m as { status?: string }).status === 'completed')
-        .map((milestone: unknown) => ({
-          id: (milestone as { id: string }).id,
-          title: (milestone as { title: string }).title,
-          weight: (milestone as { weight?: number }).weight || 0.1,
-          completedDate: (milestone as { completedDate?: string }).completedDate || new Date().toISOString(),
-          amount: ((milestone as { weight?: number }).weight || 0.1) * 100000 // This would be calculated based on phase budget
-        }));
-    } catch (error) {
-      console.error('AutomaticDecompteCalculator.getVerifiedMilestones failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get verified milestones');
-    }
+    return this.decompteRepository.getVerifiedMilestones(projectId);
   }
 
   private async getPreviousDecomptes(projectId: string, phaseId?: string): Promise<AutomaticDecompteDTO[]> {
-    try {
-      // For now, return mock data as repository methods are not available
-      // TODO: Implement proper previous decomptes retrieval when repository supports it
-      console.warn('AutomaticDecompteCalculator.getPreviousDecomptes: Repository methods not available');
-      
-      return [];
-    } catch (error) {
-      console.error('AutomaticDecompteCalculator.getPreviousDecomptes failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get previous decomptes');
-    }
+    return this.decompteRepository.getPreviousDecomptes(projectId, phaseId);
   }
 
   private async getPhaseData(phaseId: string): Promise<PhaseFinancials | null> {
-    try {
-      // For now, return mock data as repository methods are not available
-      // TODO: Implement proper phase data retrieval when repository supports it
-      console.warn('AutomaticDecompteCalculator.getPhaseData: Repository methods not available');
-      
-      return {
-        phaseId: phaseId,
-        phaseName: 'Phase 1',
-        estimatedCost: 500000,
-        progress: 60,
-        totalPaid: 150000
-      };
-    } catch (error) {
-      console.error('AutomaticDecompteCalculator.getPhaseData failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get phase data');
-    }
+    return this.decompteRepository.getPhaseData(phaseId);
   }
 
   private async getPhaseMilestones(phaseId: string): Promise<MilestoneDTO[]> {
-    try {
-      // For now, return mock data as repository methods are not available
-      // TODO: Implement proper phase milestones retrieval when repository supports it
-      console.warn('AutomaticDecompteCalculator.getPhaseMilestones: Repository methods not available');
-      
-      return [
-        {
-          id: 'milestone-1',
-          project_id: 'project-1',
-          phase_id: phaseId,
-          title: 'Foundation completed',
-          description: 'Foundation work completed',
-          target_date: new Date().toISOString(),
-          completed_date: new Date().toISOString(),
-          status: 'completed',
-          weight: 0.3,
-          type: 'checkpoint',
-          priority: 'normal',
-          is_on_critical_path: false,
-          is_from_template: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }
-      ];
-    } catch (error) {
-      console.error('AutomaticDecompteCalculator.getPhaseMilestones failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get phase milestones');
-    }
+    return this.decompteRepository.getPhaseMilestones(phaseId);
   }
 
   private calculateCurrentPeriodAmount(
