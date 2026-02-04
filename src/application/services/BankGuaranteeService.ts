@@ -17,10 +17,6 @@ import {
 /**
  * Bank Guarantee Service - Hexagonal Architecture
  * Handles all business logic related to bank guarantees
- * 
- * @example
- * const service = new BankGuaranteeService();
- * const guarantees = await service.getBankGuarantees({ projectId: '123', limit: 10 });
  */
 export class BankGuaranteeService {
   constructor(
@@ -54,20 +50,19 @@ export class BankGuaranteeService {
       }
       
       const created = await this.bankGuaranteeRepository.create({
-        projectId: guaranteeData.projectId,
-        contractorId: guaranteeData.contractorId,
-        guaranteeType: guaranteeData.guaranteeType,
-        guaranteeAmount: guaranteeData.amount,
-        issuingBank: guaranteeData.issuingBank,
-        bankName: guaranteeData.beneficiary,
-        guaranteeNumber: guaranteeData.guaranteeNumber,
-        issueDate: guaranteeData.issueDate,
-        expiryDate: guaranteeData.expiryDate,
+        project_id: guaranteeData.projectId,
+        contractor_id: guaranteeData.contractorId,
+        guarantee_type: guaranteeData.type,
+        guarantee_amount: guaranteeData.amount,
+        issuing_bank: guaranteeData.issuingBank,
+        guarantee_number: guaranteeData.number,
+        issue_date: guaranteeData.issueDate,
+        expiry_date: guaranteeData.expiryDate,
         status: 'pending',
         conditions: [],
         documents: [],
         currency: guaranteeData.currency || 'USD',
-        exchangeRate: guaranteeData.exchangeRate
+        exchange_rate: guaranteeData.exchangeRate
       });
       
       return this.mapToDTO(created);

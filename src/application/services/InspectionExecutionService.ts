@@ -72,6 +72,24 @@ export enum InspectionStatus {
   CANCELLED = 'cancelled'
 }
 
+// Status transition validation (moved outside class)
+function isValidInspectionStatusTransition(
+  current: InspectionStatus,
+  next: InspectionStatus
+): boolean {
+  const validTransitions: Record<InspectionStatus, InspectionStatus[]> = {
+    [InspectionStatus.PENDING]: [InspectionStatus.IN_PROGRESS, InspectionStatus.CANCELLED],
+    [InspectionStatus.IN_PROGRESS]: [InspectionStatus.COMPLETED, InspectionStatus.REQUIRES_REVIEW, InspectionStatus.CANCELLED],
+    [InspectionStatus.COMPLETED]: [InspectionStatus.APPROVED, InspectionStatus.REJECTED],
+    [InspectionStatus.REQUIRES_REVIEW]: [InspectionStatus.COMPLETED, InspectionStatus.REQUIRES_CHANGES],
+    [InspectionStatus.REQUIRES_CHANGES]: [InspectionStatus.IN_PROGRESS],
+    [InspectionStatus.APPROVED]: [],
+    [InspectionStatus.REJECTED]: [],
+    [InspectionStatus.CANCELLED]: []
+  };
+  return validTransitions[current]?.includes(next) ?? false;
+}
+
 export class InspectionExecutionService {
   constructor(
     private inspectionRepository: IInspectionRepository = RepositoryFactory.getInspectionRepository()
@@ -478,24 +496,6 @@ export class InspectionExecutionService {
     }
   }
 
-  // Update status transition validation with enum
-  function isValidInspectionStatusTransition(
-    current: InspectionStatus,
-    next: InspectionStatus
-  ): boolean {
-    const validTransitions: Record<InspectionStatus, InspectionStatus[]> = {
-      [InspectionStatus.PENDING]: [InspectionStatus.IN_PROGRESS, InspectionStatus.CANCELLED],
-      [InspectionStatus.IN_PROGRESS]: [InspectionStatus.COMPLETED, InspectionStatus.REQUIRES_REVIEW, InspectionStatus.CANCELLED],
-      [InspectionStatus.COMPLETED]: [InspectionStatus.APPROVED, InspectionStatus.REJECTED],
-      [InspectionStatus.REQUIRES_REVIEW]: [InspectionStatus.COMPLETED, InspectionStatus.REQUIRES_CHANGES],
-      [InspectionStatus.REQUIRES_CHANGES]: [InspectionStatus.IN_PROGRESS],
-      [InspectionStatus.APPROVED]: [],
-      [InspectionStatus.REJECTED]: [],
-      [InspectionStatus.CANCELLED]: []
-    };
-    return validTransitions[current]?.includes(next) ?? false;
-  }
-
   // Static methods for backward compatibility with existing components
   static async getExecutionData(inspectionId: string): Promise<InspectionExecutionData | null> {
     const service = new InspectionExecutionService();
@@ -507,17 +507,20 @@ export class InspectionExecutionService {
     return await service.getChecklistTemplate(inspectionType);
   }
 
-  static async startInspection(inspectionId: string, location?: { latitude: number; longitude: number; address?: string }): Promise<boolean> {
+  static async startInspectionStatic(inspectionId: string, location?: { latitude: number; longitude: number; address?: string }): Promise<boolean> {
     const service = new InspectionExecutionService();
-    const result = await service.startInspection({ inspectionId, location });
+    const result = await service.startInspection({ 
+      inspectionId, 
+      projectId: '', 
+      inspector: 'system',
+      location 
+    });
     return result.success;
   }
 
   static async updateExecutionData(inspectionId: string, data: Partial<InspectionExecutionData>): Promise<boolean> {
-    const service = new InspectionExecutionService();
     try {
       // For now, simulate update as repository doesn't support full execution data
-      // TODO: Implement proper update when repository supports execution data
       console.warn('InspectionExecutionService.updateExecutionData: Limited implementation');
       console.log(`Updating execution data for inspection: ${inspectionId}`);
       return true;
@@ -527,11 +530,9 @@ export class InspectionExecutionService {
     }
   }
 
-  static async uploadDocument(inspectionId: string, projectId: string, file: File): Promise<InspectionDocument | null> {
-    const service = new InspectionExecutionService();
+  static async uploadDocumentStatic(inspectionId: string, projectId: string, file: File): Promise<InspectionDocument | null> {
     try {
       // For now, simulate document upload
-      // TODO: Implement proper document upload when storage service is integrated
       console.warn('InspectionExecutionService.uploadDocument: Mock implementation');
       
       const document: InspectionDocument = {
@@ -539,8 +540,8 @@ export class InspectionExecutionService {
         name: file.name,
         type: file.type as "certificate" | "checklist" | "photo" | "report" | "scan",
         url: `mock-url/${file.name}`,
-        size: 0, // Mock size
-        mime_type: 'application/octet-stream', // Mock mime type
+        size: 0,
+        mime_type: 'application/octet-stream',
         uploaded_at: new Date().toISOString(),
         uploaded_by: 'system'
       };

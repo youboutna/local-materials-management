@@ -4,9 +4,10 @@
  */
 
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
+import { Document } from '@/domain/entities/Document';
 import { DocumentTransformer } from '@/dtos/transforms/DocumentTransformer';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { DocumentDTO, CreateDocumentDTO, UpdateDocumentDTO, DocumentResponseDto, DocumentStatus, DocumentType } from '@/dtos/entities/DocumentDTO';
+import { DocumentDTO, CreateDocumentDTO, UpdateDocumentDTO, DocumentStatus, DocumentType } from '@/dtos/entities/DocumentDTO';
 
 function isDocumentType(type: string): type is DocumentType {
   return Object.values(DocumentType).includes(type as DocumentType);
@@ -38,18 +39,18 @@ export class DocumentService {
   /**
    * Get documents by phase ID
    */
-  async getDocumentsByPhase(phaseId: string): Promise<DocumentResponseDto[]> {
+  async getDocumentsByPhase(phaseId: string): Promise<DocumentDTO[]> {
     try {
       if (!phaseId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID is required');
       }
 
-      const documents = await this.documentRepository.findAll() as RepositoryDocument[];
+      const documents = await this.documentRepository.findAll();
       const phaseDocuments = documents.filter(doc => 
         doc.phaseId === phaseId
       );
       
-      return phaseDocuments.map(doc => this.documentTransformer.toResponseDto(doc));
+      return phaseDocuments.map(doc => DocumentTransformer.toDTO(doc));
     } catch (error) {
       console.error('DocumentService.getDocumentsByPhase failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get documents by phase');
@@ -59,10 +60,10 @@ export class DocumentService {
   /**
    * Get all documents
    */
-  async getAllDocuments(): Promise<DocumentResponseDto[]> {
+  async getAllDocuments(): Promise<DocumentDTO[]> {
     try {
-      const documents = await this.documentRepository.findAll() as RepositoryDocument[];
-      return documents.map(doc => this.documentTransformer.toResponseDto(doc));
+      const documents = await this.documentRepository.findAll();
+      return documents.map(doc => DocumentTransformer.toDTO(doc));
     } catch (error) {
       console.error('DocumentService.getAllDocuments failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get all documents');
@@ -73,45 +74,21 @@ export class DocumentService {
    * Get project documents
    */
   async getProjectDocuments(projectId: string): Promise<DocumentDTO[]> {
-    const documents = await this.documentRepository.findByProjectId(projectId) as RepositoryDocument[];
-    return documents.map(doc => ({
-      ...doc,
-      category: doc.category || 'general',
-      subcategory: doc.subcategory || null
-    }));
+    const documents = await this.documentRepository.findByProjectId(projectId);
+    return documents.map(doc => DocumentTransformer.toDTO(doc));
   }
 
   /**
    * Get inspection documents
    */
-  async getInspectionDocuments(inspectionId: string): Promise<DocumentResponseDto[]> {
+  async getInspectionDocuments(inspectionId: string): Promise<DocumentDTO[]> {
     try {
       if (!inspectionId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
       }
 
       const documents = await this.documentRepository.findByInspectionId(inspectionId);
-      return documents.map(doc => {
-        return new DocumentResponseDto(
-          doc.id,
-          doc.title || '',
-          doc.description || undefined,
-          doc.documentType,
-          doc.status as DocumentStatus,
-          doc.fileName || undefined,
-          doc.fileUrl || undefined,
-          doc.fileSize || undefined,
-          doc.projectId || undefined,
-          doc.assignedTo || undefined,
-          doc.deadlineDate || undefined,
-          doc.tags,
-          doc.isInternalOnly,
-          doc.isSharedWithSuppliers,
-          doc.uploadedBy || undefined,
-          doc.createdAt,
-          doc.updatedAt
-        );
-      });
+      return documents.map(doc => DocumentTransformer.toDTO(doc));
     } catch (error) {
       console.error('DocumentService.getInspectionDocuments failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get inspection documents');
@@ -121,34 +98,14 @@ export class DocumentService {
   /**
    * Get payment documents
    */
-  async getPaymentDocuments(paymentId: string): Promise<DocumentResponseDto[]> {
+  async getPaymentDocuments(paymentId: string): Promise<DocumentDTO[]> {
     try {
       if (!paymentId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Payment ID is required');
       }
 
       const documents = await this.documentRepository.findByPaymentId(paymentId);
-      return documents.map(doc => {
-        return new DocumentResponseDto(
-          doc.id,
-          doc.title || '',
-          doc.description || undefined,
-          doc.documentType,
-          doc.status as DocumentStatus,
-          doc.fileName || undefined,
-          doc.fileUrl || undefined,
-          doc.fileSize || undefined,
-          doc.projectId || undefined,
-          doc.assignedTo || undefined,
-          doc.deadlineDate || undefined,
-          doc.tags,
-          doc.isInternalOnly,
-          doc.isSharedWithSuppliers,
-          doc.uploadedBy || undefined,
-          doc.createdAt,
-          doc.updatedAt
-        );
-      });
+      return documents.map(doc => DocumentTransformer.toDTO(doc));
     } catch (error) {
       console.error('DocumentService.getPaymentDocuments failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get payment documents');
@@ -158,7 +115,7 @@ export class DocumentService {
   /**
    * Get bank guarantee project
    */
-  async getBankGuaranteeProject(guaranteeId: string): Promise<DocumentResponseDto | null> {
+  async getBankGuaranteeProject(guaranteeId: string): Promise<DocumentDTO | null> {
     try {
       if (!guaranteeId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Guarantee ID is required');
@@ -167,25 +124,7 @@ export class DocumentService {
       const document = await this.documentRepository.findByGuaranteeId(guaranteeId);
       if (!document) return null;
 
-      return new DocumentResponseDto(
-        document.id,
-        document.title || '',
-        document.description || undefined,
-        document.documentType,
-        document.status as DocumentStatus,
-        document.fileName || undefined,
-        document.fileUrl || undefined,
-        document.fileSize || undefined,
-        document.projectId || undefined,
-        document.assignedTo || undefined,
-        document.deadlineDate || undefined,
-        document.tags,
-        document.isInternalOnly,
-        document.isSharedWithSuppliers,
-        document.uploadedBy || undefined,
-        document.createdAt,
-        document.updatedAt
-      );
+      return DocumentTransformer.toDTO(document);
     } catch (error) {
       console.error('DocumentService.getBankGuaranteeProject failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get bank guarantee project');
