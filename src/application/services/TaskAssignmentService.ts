@@ -57,9 +57,13 @@ export class TaskAssignmentService {
         request.taskData.assignedTo,
         request.assignedBy || request.taskData.assignedBy,
         (request.taskData.assigneeType as unknown) as 'supplier' | 'employee' | 'user' | undefined,
-        'pending',
-        (request.taskData.priority || 'medium') as 'low' | 'medium' | 'high' | 'urgent' | undefined,
+        undefined, // assigneeName
+        undefined, // assigneeEmail
+        'pending' as 'pending' | 'in_progress' | 'completed' | 'cancelled',
+        (request.taskData.priority || 'medium') as 'low' | 'medium' | 'high' | 'urgent',
         request.taskData.dueDate ? new Date(request.taskData.dueDate) : undefined,
+        undefined, // completedAt
+        undefined, // notes
         new Date(),
         new Date()
       );
@@ -117,7 +121,7 @@ export class TaskAssignmentService {
         ...request.updates,
         status: (request.updates.status || 'pending') as 'pending' | 'in_progress' | 'completed' | 'cancelled',
         priority: request.updates.priority as 'low' | 'medium' | 'high' | 'urgent' | undefined,
-        dueDate: request.updates.dueDate,
+        dueDate: request.updates.dueDate ? new Date(request.updates.dueDate) : undefined,
         updatedAt: new Date()
       };
 

@@ -78,36 +78,43 @@ export class TenderServiceLegacy {
         throw new AppError(ErrorCode.VALIDATION_ERROR, validation.errors.join(', '));
       }
 
-      const tenderNumber = request.tender_number || `AO-${Date.now()}`;
+      const tenderNumber = request.tenderNumber || `AO-${Date.now()}`;
       
-      const tenderData: TenderDTO = {
-        id: `tender_${Date.now()}`,
-        ...request,
-        tender_number: tenderNumber,
-        status: request.status || 'draft'
-      };
-
       // For now, return mock data as create method is not available in repository
       // TODO: Implement proper tender creation when repository supports it
       console.warn('TenderServiceLegacy.createTender: Create method not available in repository');
       
       const mockTender: TenderDTO = {
-        id: `tender_${Date.now()}`,
+        projectId: request.projectId || null,
         title: request.title,
-        description: request.description,
-        project_id: request.project_id || null,
-        tender_number: tenderNumber,
-        status: request.status || 'draft',
-        market_type: request.market_type,
-        financing_source: request.financing_source,
-        budget_min: request.budget_min,
-        budget_max: request.budget_max,
-        publication_date: request.publication_date,
-        deadline_date: request.deadline_date,
-        opening_date: request.opening_date,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
+        description: request.description || null,
+        tenderNumber: tenderNumber,
+        status: 'draft',
+        selectionMode: request.selectionMode || null,
+        marketType: request.marketType || null,
+        financingSource: null,
+        projectReference: null,
+        publicationDate: null,
+        deadlineDate: request.deadlineDate || null,
+        submissionDeadline: null,
+        launchDate: null,
+        attributionDate: null,
+        budgetMin: request.budgetMin || null,
+        budgetMax: request.budgetMax || null,
+        estimatedValue: null,
+        contractDuration: null,
+        evaluationCriteria: request.evaluationCriteria || [],
+        eligibilityRequirements: request.eligibilityRequirements || [],
+        evaluationDeadline: null,
+        awardCriteria: null,
+        currentPhase: null,
+        currentStage: null,
+        tenderCategory: request.tenderCategory || null,
+        procurementType: request.procurementType || null,
+        weight: null
+      } as TenderDTO & { id: string };
+      
+      return mockTender;
       
       return mockTender;
     } catch (error) {
@@ -139,23 +146,34 @@ export class TenderServiceLegacy {
       console.warn('TenderServiceLegacy.updateTender: Update method not available in repository');
       
       const mockTender: TenderDTO = {
-        id: request.id,
-        title: 'Updated Tender',
-        description: 'Updated Description',
-        project_id: null,
-        tender_number: 'AO-UPDATED',
-        status: 'draft',
-        market_type: 'Construction',
-        financing_source: 'Self-funded',
-        budget_min: 100000,
-        budget_max: 200000,
-        publication_date: new Date().toISOString(),
-        deadline_date: new Date().toISOString(),
-        opening_date: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        ...request.updates
-      };
+        projectId: null,
+        title: request.updates.title || 'Updated Tender',
+        description: request.updates.description || null,
+        tenderNumber: 'AO-UPDATED',
+        status: request.updates.status || 'draft',
+        selectionMode: request.updates.selectionMode || null,
+        marketType: request.updates.marketType || null,
+        financingSource: request.updates.financingSource || null,
+        projectReference: null,
+        publicationDate: request.updates.publicationDate || null,
+        deadlineDate: request.updates.deadlineDate || null,
+        submissionDeadline: null,
+        launchDate: null,
+        attributionDate: null,
+        budgetMin: request.updates.budgetMin || null,
+        budgetMax: request.updates.budgetMax || null,
+        estimatedValue: null,
+        contractDuration: null,
+        evaluationCriteria: request.updates.evaluationCriteria || [],
+        eligibilityRequirements: request.updates.eligibilityRequirements || [],
+        evaluationDeadline: null,
+        awardCriteria: null,
+        currentPhase: null,
+        currentStage: null,
+        tenderCategory: null,
+        procurementType: null,
+        weight: null
+      } as TenderDTO & { id: string };
       
       return mockTender;
     } catch (error) {
@@ -303,26 +321,26 @@ export class TenderServiceLegacy {
         byStatus[tender.status] = (byStatus[tender.status] || 0) + 1;
 
         // By market type
-        if (tender.market_type) {
-          byMarketType[tender.market_type] = (byMarketType[tender.market_type] || 0) + 1;
+        if (tender.marketType) {
+          byMarketType[tender.marketType] = (byMarketType[tender.marketType] || 0) + 1;
         }
 
         // By financing source
-        if (tender.financing_source) {
-          byFinancingSource[tender.financing_source] = (byFinancingSource[tender.financing_source] || 0) + 1;
+        if (tender.financingSource) {
+          byFinancingSource[tender.financingSource] = (byFinancingSource[tender.financingSource] || 0) + 1;
         }
 
         // Published this month
-        if (tender.publication_date) {
-          const pubDate = new Date(tender.publication_date);
+        if (tender.publicationDate) {
+          const pubDate = new Date(tender.publicationDate);
           if (pubDate >= startOfMonth && pubDate <= endOfMonth) {
             publishedThisMonth++;
           }
         }
 
         // Closing this month
-        if (tender.deadline_date) {
-          const deadlineDate = new Date(tender.deadline_date);
+        if (tender.deadlineDate) {
+          const deadlineDate = new Date(tender.deadlineDate);
           if (deadlineDate >= startOfMonth && deadlineDate <= endOfMonth) {
             closingThisMonth++;
           }
@@ -346,7 +364,7 @@ export class TenderServiceLegacy {
   /**
    * Validate tender data
    */
-  validateTenderData(data: TenderCreateDTO | Partial<TenderCreateDTO>): TenderValidationResultDTO {
+  validateTenderData(data: TenderCreateDTO | TenderUpdateDTO | Partial<TenderCreateDTO>): TenderValidationResultDTO {
     const errors: string[] = [];
 
     if (!data.title || data.title.trim().length === 0) {
@@ -357,20 +375,12 @@ export class TenderServiceLegacy {
       errors.push('Tender description is required');
     }
 
-    if (data.deadline_date && isNaN(new Date(data.deadline_date).getTime())) {
+    if (data.deadlineDate && isNaN(new Date(data.deadlineDate).getTime())) {
       errors.push('Invalid deadline date format');
     }
 
-    if (data.publication_date && isNaN(new Date(data.publication_date).getTime())) {
-      errors.push('Invalid publication date format');
-    }
-
-    if (data.budget_min && data.budget_max && data.budget_min > data.budget_max) {
+    if (data.budgetMin !== undefined && data.budgetMax !== undefined && data.budgetMin > data.budgetMax) {
       errors.push('Minimum budget cannot be greater than maximum budget');
-    }
-
-    if (data.status && !['draft', 'published', 'closed', 'awarded'].includes(data.status)) {
-      errors.push('Status must be one of: draft, published, closed, awarded');
     }
 
     return {
