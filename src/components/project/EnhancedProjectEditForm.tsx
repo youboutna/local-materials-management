@@ -1,6 +1,21 @@
+/**
+ * EnhancedProjectEditForm - Hexagonal Architecture Edit Form
+ * Following the 10-step flow:
+ * 1. UI Form → formData
+ * 2. Hook → Transformer.formToUpdateRequest(formData) → UpdateProjectDTO
+ * 3. Service → Entity conversion
+ * 4. Repository → Entity validation
+ * 5. Adapter → Transformer.toSupabase(entity) → snake_case data
+ * 6. Database → UPDATE
+ * 7. Adapter → Transformer.fromSupabase(row) → Entity
+ * 8. Service → Transformer.toDTO(entity) → ProjectDTO
+ * 9. Hook → Update state
+ * 10. UI → Render updated data
+ */
+
 import React, { useCallback, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "../../hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
@@ -12,161 +27,39 @@ import {
   Users,
   Layers,
   MapPin,
-  Clock,
+  AlertTriangle,
   CheckCircle,
   Edit2,
   Save,
-  AlertTriangle,
   FileCheck,
+  RotateCcw,
 } from "lucide-react";
 
-
-// Import hexagonal hooks
-import { useProjectEditWorkflowHex } from "../../hooks/hexagonal/useProjectEditWorkflowHex";
-import { usePaymentWorkflowHex } from "@/hooks/hexagonal";
+// Import hexagonal hook
+import { useProjectEditHex, ProjectEditFormData } from "../../hooks/hexagonal/useProjectEditHex";
 import { useProjectMaterialsHex } from "@/hooks/hexagonal";
-import { MaterialService } from "@/application/services/MaterialService";
+
+// Import transformer for UI conversions
+import { ProjectWorkflowTransforms } from "@/dtos/transforms/ProjectWorkflowTransforms";
 
 // Import workflow DTOs
-import { ProjectWorkflowData, StepRelatedDataDTO } from "@/dtos/workflows/ProjectWorkflowDTOs";
-import { PhaseWorkflowDTO } from "@/dtos/workflows/PhaseWorkflowDTO";
-
-// Import entity DTOs (following "similitude des voisins le plus proche")
-import { ProjectDTO, ProjectDTO } from '@/dtos/entities/ProjectDTO';
-import { MaterialDTO, MaterialCategory, MaterialStatus, MaterialUnit } from '@/dtos/entities/MaterialDTO';
-import { RiskDTO } from '@/dtos/entities/RiskDTO';
-import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
-import { StakeholderDTO } from '@/dtos/entities/StakeholderDTO';
+import { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
+import { PhaseDTO } from "@/dtos/entities/PhaseDTO";
 
 // Import step components
-
 import ProjectInfoStep from "./steps/ProjectInfoStep";
-
 import StakeholdersTeamStep from "./steps/StakeholdersTeamStep";
-
 import LocationStep from "./steps/LocationStep";
-
 import RiskAnalysisStep from "./steps/RiskAnalysisStep";
-
 import ComplianceStep from "./steps/ComplianceStep";
-
-import { PhaseDTO } from "@/dtos/entities";
-
-import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
-
 import ConstructionPhaseManager from "./ConstructionPhaseManager";
-import { SaveContextDTO } from "@/dtos/workflows/ProjectWorkflowDTOs";
-
-
 
 interface EnhancedProjectEditFormProps {
   initialData?: ProjectWorkflowData;
-  onSubmit: (data: ProjectWorkflowData) => Promise<void>;
+  onSubmit?: (data: ProjectWorkflowData) => Promise<void>;
   onFormDataChange?: (data: ProjectWorkflowData) => void;
   isSubmitting?: boolean;
 }
-
-// Unified FormServiceDTO for compatibility
-type UnifiedFormServiceDTO = ProjectWorkflowData & {
-  receptionStatus?: 'pending' | 'in_progress' | 'completed' | 'cancelled';
-  closureNotes?: string;
-};
-
-// Temporary PhaseData interface until ConstructionPhaseManager is fixed
-type PhaseData = PhaseDTO & {
-  materials: Array<{ materialId: string; quantity: number; name?: string }>;
-  humanResources: Array<{ roleId: string; quantity: number; role?: string }>;
-};
-
-// Transformer function to convert any phase data to PhaseData
-const transformProjectPhaseToPhaseData = (phases: PhaseDTO[]): PhaseData[] => {
-  return phases.map(phase => ({
-    ...phase,
-    materials: [],
-    humanResources: []
-  }));
-};
-
-// Transformer function to convert PhaseData to PhaseDTO for ProgressCalculationHexService
-const transformPhaseDataToPhaseDTO = (phases: PhaseData[], projectId: string): PhaseDTO[] => {
-  return phases.map(phase => ({
-    id: phase.id,
-    name: phase.title, // Utiliser title pour name
-    description: phase.description,
-    status: phase.status === 'not_started' ? 'pending' : 
-            phase.status === 'in_progress' ? 'in_progress' : 
-            phase.status === 'completed' ? 'completed' : 'cancelled',
-    phase_name: phase.title, // Utiliser title pour phase_name
-    projectId: projectId || '',
-    startDate: phase.startDate,
-    endDate: phase.endDate,
-    progress: phase.progress,
-    budget: phase.budget,
-    actualCost: phase.actualCost,
-    steps: [], // Empty steps for now - ProgressCalculationHexService mainly needs basic phase info
-    resources: {
-      employees: [],
-      contractors: [],
-      totalRequired: 0,
-      totalAssigned: 0,
-      skills: []
-    },
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }));
-};
-
-// Transformer function to convert SelectedMaterial to MaterialDTO using hook
-const transformSelectedMaterialsToFormData = async (selectedMaterials: Array<{materialId: string; quantity: number}>): Promise<MaterialDTO[]> => {
-  // For now, return basic structure - will be enhanced when materials are loaded
-  return selectedMaterials.map(selected => ({
-    id: selected.materialId,
-    name: `Material ${selected.materialId}`,
-    description: '',
-    type: 'raw_material',
-    category: MaterialCategory.RAW_MATERIAL,
-    status: MaterialStatus.AVAILABLE,
-    unit: MaterialUnit.PIECES,
-    quantity: selected.quantity,
-    pricePerUnit: 0,
-    totalValue: 0,
-    supplierId: '',
-    supplierName: '',
-    supplierCode: '',
-    weight: 0,
-    dimensions: undefined,
-    location: '',
-    storageLocation: '',
-    warehouseId: '',
-    aisle: '',
-    shelf: '',
-    bin: '',
-    quality: 'standard',
-    specifications: {},
-    technicalSpecs: {},
-    projectId: '',
-    phaseId: '',
-    taskId: '',
-    documents: [],
-    images: [],
-    certifications: [],
-    reorderLevel: 0,
-    reorderAt: 0,
-    expiryDate: '',
-    tags: [],
-    notes: '',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }));
-};
-
-// Transformer function to convert MaterialDTO to SelectedMaterial
-const transformFormDataToSelectedMaterials = (materials: MaterialDTO[]): Array<{materialId: string; quantity: number}> => {
-  return materials.map(material => ({
-    materialId: material.id || '',
-    quantity: material.quantity,
-  }));
-};
 
 const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
   initialData,
@@ -175,65 +68,47 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
   isSubmitting: externalIsSubmitting = false,
 }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { id: projectId } = useParams<{ id: string }>();
-  
+  const [currentStep, setCurrentStep] = useState(1);
+
+  // Step 1 & 9: Use hexagonal hook for data and state management
   const {
     formData,
-    phases: phasesData,
     updateFormData,
-    setPhases,
-    loadProjectData,
-    saveStep,
-    validateStep,
-    updateProgress,
-    completeWorkflow,
-    isSaving: isSavingFromHook,
-    isValidating,
-    isUpdatingProgress,
-    isCompleting,
-    workflowContext,
-    projectAnalytics,
-    isLoadingContext,
-    isLoadingAnalytics,
-    calculateProjectProgress,
-    validateWorkflowStep,
-    getWorkflowStepStatus,
-    detectChanges,
-    getProjectData,
-    updateProjectData,
-    validateStepData,
-    getWorkflowMetadata,
-    resetWorkflow,
-    getChangeHistory,
-    saveError,
-    validationError,
-    progressError,
-    completionError,
-    refetchContext,
-    refetchAnalytics,
-    formService,
-    progressService
-  } = useProjectEditWorkflowHex(projectId);
+    isLoading,
+    isSaving,
+    error,
+    saveProject,
+    refetch,
+    resetForm,
+    validateFormData,
+    uiState,
+    isDirty,
+  } = useProjectEditHex(projectId);
 
-  // Use hexagonal hook for materials
+  // Materials via hexagonal hook
   const { 
     selectedMaterials, 
     updateMaterials, 
     isLoading: isLoadingMaterials 
   } = useProjectMaterialsHex(projectId);
 
-  // Combine loading states
-  const combinedIsSubmitting = isSavingFromHook || externalIsSubmitting || isCompleting;
+  // Phases state
+  const [phases, setPhases] = useState<PhaseDTO[]>(formData?.phases || []);
 
-  // Step configuration aligned with workflow spec (7 steps)
-  const steps = [
+  // Combined loading/submitting states
+  const combinedIsSubmitting = isSaving || externalIsSubmitting;
+
+  // Step configuration (7 steps)
+  const steps = useMemo(() => [
     {
       id: 1,
       title: "Informations du projet",
       icon: Building,
       description: "Données de base du projet",
       color: "bg-blue-500",
-      isCompleted: () => formService.validateStep(1, formData),
+      isCompleted: () => !!(formData?.title && formData?.location),
     },
     {
       id: 2,
@@ -241,7 +116,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       icon: Users,
       description: "Configuration des acteurs",
       color: "bg-green-500",
-      isCompleted: () => formService.validateStep(2, formData),
+      isCompleted: () => !!(formData?.delegation && Object.keys(formData.delegation).length > 0),
     },
     {
       id: 3,
@@ -249,334 +124,163 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       icon: MapPin,
       description: "Géolocalisation et cartographie",
       color: "bg-cyan-500",
-      isCompleted: () => formService.validateStep(3, formData),
+      isCompleted: () => !!(formData?.coordinates?.latitude && formData?.coordinates?.longitude),
     },
     {
       id: 4,
-      title: "Planification/Execution & Phases",
+      title: "Planification & Phases",
       icon: Layers,
-      description:
-        "Phase → Step → Task (documents, ressources, inspections, garanties, paiements)",
+      description: "Phase → Step → Task",
       color: "bg-indigo-500",
-      isCompleted: () => formService.validateStep(4, formData),
+      isCompleted: () => phases.length > 0,
     },
     {
       id: 5,
       title: "Risques",
       icon: AlertTriangle,
-      description: "Gestion des risques globaux et des phases",
+      description: "Gestion des risques",
       color: "bg-red-500",
-      isCompleted: () => formService.validateStep(5, formData),
+      isCompleted: () => true, // Optional
     },
     {
       id: 6,
       title: "Conformité",
       icon: FileCheck,
-      description: "Vérification réglementaire et normes",
+      description: "Vérification réglementaire",
       color: "bg-amber-500",
-      isCompleted: () => formService.validateStep(6, formData),
+      isCompleted: () => true, // Optional
     },
     {
       id: 7,
       title: "Validation & Clôture",
       icon: CheckCircle,
-      description: "Réception définitive, solde, clôture",
+      description: "Réception définitive",
       color: "bg-teal-500",
-      isCompleted: () => formService.validateStep(7, formData),
+      isCompleted: () => formData?.status === "terminé",
     },
-  ];
+  ], [formData, phases]);
 
-  // Load project data using ProjectWorkflowService
-  const loadProjectData = useCallback(async () => {
-    if (
-      !projectId ||
-      workflowContext ||
-      (initialData && Object.keys(initialData).length > 0)
-    )
-      return;
+  // Step 1: Handle form field updates from UI
+  const handleFormUpdate = useCallback((updates: Partial<ProjectEditFormData>) => {
+    updateFormData(updates);
+    
+    // Notify parent if callback provided
+    if (onFormDataChange && formData) {
+      onFormDataChange({ ...formData, ...updates } as unknown as ProjectWorkflowData);
+    }
+  }, [updateFormData, formData, onFormDataChange]);
 
-    try {
-      const projectDetail = await formService.getProjectWithDetails(projectId);
+  // Step 2-8: Save current step
+  const handleSaveStep = useCallback(async () => {
+    if (!formData) return;
 
-      if (!projectDetail) {
-        console.warn(`Project with ID ${projectId} not found`);
-        setPhases([]);
-        return;
-      }
-
-      // Validate projectDetail structure before accessing properties
-      if (!projectDetail.id || !projectDetail.title) {
-        console.error('Invalid project data structure:', projectDetail);
-        toast({
-          title: "Erreur de données",
-          description: "Les données du projet sont incomplètes ou corrompues",
-          variant: "destructive",
-        });
-        setPhases([]);
-        return;
-      }
-
-      // Format the data for the form
-      const formattedData = {
-        title: projectDetail.title || '',
-        description: projectDetail.description || '',
-        location: projectDetail.location || '',
-        status: 'draft',
-        budget: projectDetail.budget || 0,
-        start_date: projectDetail.startDate || '',
-        end_date: projectDetail.endDate || '',
-        project_manager_id: projectDetail.projectResponsableId || '',
-        client_id: projectDetail.mainContractor || '',
-        progress: projectDetail.progress || 0,
-        team_size: projectDetail.teamSize || 0
-      };
-      
-      console.log('Project data loaded successfully:', {
-        projectId: projectDetail.id,
-        title: projectDetail.title,
-        managerId: projectDetail.projectResponsableId,
-        contractor: projectDetail.mainContractor
-      });
-      
-      updateFormData(formattedData);
-      setPhases(transformProjectPhaseToPhaseData(projectDetail.plannedPhases || []));
-    } catch (error) {
-      console.error("Error loading project data:", error);
+    // Validate current step
+    const validation = validateFormData(formData);
+    if (!validation.isValid) {
       toast({
-        title: "Erreur",
-        description: `Erreur lors du chargement des données du projet: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
+        title: "Validation échouée",
+        description: validation.errors.join(", "),
         variant: "destructive",
       });
-      setPhases([]);
+      return;
     }
-  }, [projectId, workflowContext, initialData, toast, formService, updateFormData, setPhases]);
 
-  // Load related data - now handled by ProjectWorkflowService above
-  const loadRelatedData = useCallback(async () => {
-    // Data is now loaded in loadProjectData via ProjectWorkflowService
-    return;
-  }, []);
-
-  // Load base data for dropdowns
-  const loadBaseData = useCallback(async () => {
-    try {
-      const data = await formService.loadBaseData();
-      // setBaseData(data);
-    } catch (error) {
-      console.error("Error loading base data:", error);
-    }
-  }, [formService]);
-
-  // Update form data helper
-  const updateFormDataHelper = (updates: Partial<ProjectDTO>) => {
-    updateFormData(updates);
-    if (onFormDataChange) {
-      onFormDataChange({ ...formData, ...updates });
-    }
-  };
-
-  // Add error state
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // Save handlers with distinct behavior
-  const handleSaveStepOnly = async () => {
-    try {
-      const validationErrors = formService.validateFormData(formData);
-      if (Object.keys(validationErrors).length > 0) {
-        setErrors(validationErrors);
-        return;
-      }
-      
-      if (!onSubmit) return;
-
-      const context: SaveContextDTO = {
-        currentStep: 1,
-        saveType: "step_only",
-        isDraft: true,
-        totalSteps: steps.length,
-      };
-
-      const processedData = formService.processFormDataForSave(
-        {
-          ...formData,
-          materials: await transformSelectedMaterialsToFormData(selectedMaterials),
-          phases: phasesData
-        },
-        context
-      );
-
-      await onSubmit(processedData as unknown as FormServiceDTO);
-
+    // Save via hook (steps 2-8 happen inside)
+    const result = await saveProject();
+    
+    if (result.success) {
       toast({
         title: "Étape sauvegardée",
-        description: "Les données de cette étape ont été sauvegardées.",
-      });
-      setErrors({}); // Clear errors on success
-    } catch (error) {
-      console.error("Error saving step:", error);
-      toast({
-        title: "Erreur",
-        description: "Erreur lors de la sauvegarde de l'étape.",
-        variant: "destructive",
+        description: `L'étape ${currentStep} a été sauvegardée.`,
       });
     }
-  };
+  }, [formData, validateFormData, saveProject, currentStep, toast]);
 
-  const handleSaveAndNext = async () => {
-    try {
-      const validationErrors = formService.validateFormData(formData);
-      if (Object.keys(validationErrors).length > 0) {
-        setErrors(validationErrors);
-        return;
-      }
-      
-      if (!onSubmit) return;
-
-      const context: SaveContextDTO = {
-        currentStep: 1,
-        saveType: "save_and_next",
-        isDraft: true,
-        totalSteps: steps.length,
-      };
-
-      const processedData = formService.processFormDataForSave(
-        {
-          ...formData,
-          materials: await transformSelectedMaterialsToFormData(selectedMaterials),
-          phases: phasesData
-        },
-        context
-      );
-
-      await onSubmit(processedData as unknown as FormServiceDTO);
-
-      // Move to next step if not at the end
-      if (1 < steps.length) {
-        // setCurrentStep(currentStep + 1);
-        toast({
-          title: "Étape sauvegardée",
-          description: `Passage à l'étape ${2}: ${steps[1]?.title}`,
-        });
-      } else {
-        toast({
-          title: "Toutes les étapes complétées",
-          description: "Vous avez terminé toutes les étapes du projet.",
-        });
-      }
-      setErrors({}); // Clear errors on success
-    } catch (error) {
-      console.error("Error saving step:", error);
-      toast({
-        title: "Erreur",
-        description: "Erreur lors de la sauvegarde.",
-        variant: "destructive",
-      });
+  // Save and go to next step
+  const handleSaveAndNext = useCallback(async () => {
+    await handleSaveStep();
+    
+    if (currentStep < steps.length) {
+      setCurrentStep(prev => prev + 1);
     }
-  };
+  }, [handleSaveStep, currentStep, steps.length]);
 
-  const handleSaveGlobalAndClose = async () => {
-    try {
-      const validationErrors = formService.validateFormData(formData);
-      if (Object.keys(validationErrors).length > 0) {
-        setErrors(validationErrors);
-        return;
-      }
-      
-      // Calculer la progression globale avant sauvegarde
-      const calculatedProgress = progressService.calculateProjectProgress(
-        phasesData
-      );
+  // Save all and close
+  const handleSaveAndClose = useCallback(async () => {
+    if (!formData) return;
 
-      const context: SaveContextDTO = {
-        currentStep: 1,
-        saveType: "global_and_close",
-        isDraft: false,
-        isComplete: true,
-        totalSteps: steps.length,
-      };
+    // Update phases in form data before final save
+    const dataWithPhases = { ...formData, phases };
+    updateFormData(dataWithPhases);
 
-      const processedData = formService.processFormDataForSave(
-        {
-          ...formData,
-          progress: calculatedProgress,
-          materials: await transformSelectedMaterialsToFormData(selectedMaterials),
-          phases: phasesData
-        },
-        context
-      );
-
-      await onSubmit(processedData as unknown as FormServiceDTO);
-
+    const result = await saveProject();
+    
+    if (result.success) {
       toast({
         title: "Projet sauvegardé",
-        description: "Toutes les modifications ont été sauvegardées.",
+        description: "Toutes les modifications ont été enregistrées.",
       });
-
-      // Navigate back or close form
-      window.history.back();
-      setErrors({}); // Clear errors on success
-    } catch (error) {
-      console.error("Error saving project:", error);
-      toast({
-        title: "Erreur",
-        description: "Erreur lors de la sauvegarde globale.",
-        variant: "destructive",
-      });
+      
+      // Navigate back
+      navigate(-1);
     }
-  };
+  }, [formData, phases, updateFormData, saveProject, toast, navigate]);
 
-  const renderStepContent = () => {
-    switch (1) {
-      case 1: // Informations du projet
+  // Render step content
+  const renderStepContent = useCallback(() => {
+    if (!formData) return null;
+
+    switch (currentStep) {
+      case 1:
         return (
           <ProjectInfoStep
-            formData={formData}
-            onUpdate={updateFormDataHelper}
+            formData={formData as any}
+            onUpdate={handleFormUpdate}
             isEditing={true}
             baseData={{}}
           />
         );
-      case 2: // Parties prenantes
+      case 2:
         return (
           <StakeholdersTeamStep
-            projectData={formData}
-            onUpdate={updateFormDataHelper}
+            projectData={formData as any}
+            onUpdate={handleFormUpdate}
             isEditing={true}
           />
         );
-      case 3: // Localisation
+      case 3:
         return (
           <LocationStep
-            formData={formData}
-            onUpdate={updateFormDataHelper}
+            formData={formData as any}
+            onUpdate={handleFormUpdate}
             isEditing={true}
           />
         );
-      case 4: // Planification & Phases (Phase → Step → Task)
+      case 4:
         return (
           <ConstructionPhaseManager 
-            phases={phasesData}
+            phases={phases}
             onChange={(updatedPhases: PhaseDTO[]) => setPhases(updatedPhases)}
             projectBudget={formData.budget || 0}
           />
         );
-      case 5: // Risques
+      case 5:
         return (
           <RiskAnalysisStep
-            formData={formData}
-            onUpdate={updateFormDataHelper}
+            formData={formData as any}
+            onUpdate={handleFormUpdate}
             isEditing={true}
           />
         );
-      case 6: // Conformité
+      case 6:
         return (
           <ComplianceStep
-            formData={formData}
-            onUpdate={updateFormDataHelper}
+            formData={formData as any}
+            onUpdate={handleFormUpdate}
             isEditing={true}
           />
         );
-      case 7: // Validation & Clôture
+      case 7:
         return (
           <Card>
             <CardHeader>
@@ -588,20 +292,20 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
             <CardContent className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Statut de Réception
+                  Statut du Projet
                 </label>
                 <select
                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary"
-                  value={formData.receptionStatus || ""}
-                  onChange={(e) =>
-                    updateFormDataHelper({ receptionStatus: e.target.value as 'pending' | 'in_progress' | 'completed' | 'cancelled' })
-                  }
+                  value={formData.status || ""}
+                  onChange={(e) => handleFormUpdate({ status: e.target.value })}
                 >
                   <option value="">Sélectionner</option>
-                  <option value="pending">En attente</option>
-                  <option value="in_progress">En cours</option>
-                  <option value="completed">Terminé</option>
-                  <option value="cancelled">Annulé</option>
+                  <option value="draft">Brouillon</option>
+                  <option value="en cours">En cours</option>
+                  <option value="en attente">En attente</option>
+                  <option value="terminé">Terminé</option>
+                  <option value="suspendu">Suspendu</option>
+                  <option value="annulé">Annulé</option>
                 </select>
               </div>
               <div>
@@ -611,10 +315,8 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
                 <textarea
                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary min-h-[100px]"
                   placeholder="Notes finales, observations, recommandations..."
-                  value={formData.closureNotes || ""}
-                  onChange={(e) =>
-                    updateFormDataHelper({ closureNotes: e.target.value })
-                  }
+                  value={(formData as any).closureNotes || ""}
+                  onChange={(e) => handleFormUpdate({ closureNotes: e.target.value } as any)}
                 />
               </div>
             </CardContent>
@@ -623,13 +325,14 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       default:
         return null;
     }
-  };
+  }, [formData, currentStep, handleFormUpdate, phases]);
 
   // Calculate overall progress
   const completedSteps = steps.filter((step) => step.isCompleted()).length;
   const overallProgress = (completedSteps / steps.length) * 100;
 
-  if (isLoadingContext || isLoadingAnalytics) {
+  // Loading state
+  if (isLoading || isLoadingMaterials) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
@@ -637,34 +340,23 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     );
   }
 
-  const [formData, setFormData] = useState<ProjectWorkflowDTO>(() => {
-    if (initialData) return initialData as ProjectWorkflowDTO;
-    
-    return {
-      title: '',
-      description: '',
-      location: '',
-      status: 'draft',
-      budget: 0,
-      start_date: '',
-      end_date: '',
-      project_manager_id: '',
-      client_id: '',
-      progress: 0,
-      team_size: 0,
-      receptionStatus: 'pending',
-      closureNotes: ''
-    };
-  });
+  // Error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Card className="p-6 text-center">
+          <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Erreur de chargement</h3>
+          <p className="text-muted-foreground mb-4">
+            {error instanceof Error ? error.message : "Une erreur est survenue"}
+          </p>
+          <Button onClick={() => refetch()}>Réessayer</Button>
+        </Card>
+      </div>
+    );
+  }
 
-  const updateFormData = (updates: Partial<ProjectDTO>) => {
-    const updatedData = { ...formData, ...updates };
-    setFormData(updatedData);
-    if (onFormDataChange) {
-      onFormDataChange(updatedData);
-    }
-  };
-
+  // Step 10: Render UI with updated data
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Progress Overview */}
@@ -673,10 +365,15 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">
               <Edit2 className="h-5 w-5" />
-              Édition du Projet: {formData.title || "Nouveau Projet"}
+              Édition du Projet: {formData?.title || "Nouveau Projet"}
+              {isDirty && (
+                <Badge variant="outline" className="ml-2 text-yellow-600 border-yellow-300">
+                  Non sauvegardé
+                </Badge>
+              )}
             </span>
             <Badge variant="outline" className="px-3 py-1">
-              Étape 1 / {steps.length}
+              Étape {currentStep} / {steps.length}
             </Badge>
           </CardTitle>
         </CardHeader>
@@ -710,13 +407,13 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
                   key={step.id}
                   className={cn(
                     "p-3 rounded-lg cursor-pointer transition-all duration-200",
-                    1 === step.id
+                    currentStep === step.id
                       ? "bg-primary text-primary-foreground shadow-md"
                       : step.isCompleted()
                       ? "bg-green-50 hover:bg-green-100 border border-green-200"
                       : "bg-gray-50 hover:bg-gray-100 border border-gray-200"
                   )}
-                  onClick={() => {}}
+                  onClick={() => setCurrentStep(step.id)}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -724,7 +421,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
                     <div
                       className={cn(
                         "p-2 rounded-full",
-                        1 === step.id
+                        currentStep === step.id
                           ? "bg-primary-foreground text-primary"
                           : step.isCompleted()
                           ? "bg-green-500 text-white"
@@ -755,7 +452,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
         {/* Main Content */}
         <div className="lg:col-span-3">
           <motion.div
-            key={1}
+            key={currentStep}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
@@ -771,30 +468,45 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    onClick={() => {}}
-                    disabled={combinedIsSubmitting}
+                    onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
+                    disabled={currentStep === 1 || combinedIsSubmitting}
                   >
                     Précédent
                   </Button>
+                  {isDirty && (
+                    <Button
+                      variant="ghost"
+                      onClick={resetForm}
+                      disabled={combinedIsSubmitting}
+                    >
+                      <RotateCcw className="h-4 w-4 mr-2" />
+                      Annuler
+                    </Button>
+                  )}
                 </div>
 
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    onClick={handleSaveStepOnly}
-                    disabled={combinedIsSubmitting}
+                    onClick={handleSaveStep}
+                    disabled={combinedIsSubmitting || !isDirty}
                   >
                     <Save className="h-4 w-4 mr-2" />
                     {combinedIsSubmitting ? "Sauvegarde..." : "Sauvegarder"}
                   </Button>
 
-                  <Button onClick={handleSaveAndNext} disabled={combinedIsSubmitting}>
-                    {combinedIsSubmitting ? "Sauvegarde..." : "Sauvegarder et suivant"}
-                  </Button>
+                  {currentStep < steps.length && (
+                    <Button 
+                      onClick={handleSaveAndNext} 
+                      disabled={combinedIsSubmitting}
+                    >
+                      {combinedIsSubmitting ? "Sauvegarde..." : "Sauvegarder et suivant"}
+                    </Button>
+                  )}
 
                   <Button
                     variant="default"
-                    onClick={handleSaveGlobalAndClose}
+                    onClick={handleSaveAndClose}
                     disabled={combinedIsSubmitting}
                     className="bg-green-600 hover:bg-green-700"
                   >
