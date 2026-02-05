@@ -28,7 +28,7 @@ export class ProjectAnalyticsService {
   /**
     * Convert InspectionDTO to Inspection type for ProjectDetailDTO
     */
-  private convertToInspection(inspection: InspectionDTO): Inspection {
+  private convertToInspection(inspection: InspectionDTO): any {
     return {
       id: inspection.id || '',
       projectId: inspection.projectId || '',
@@ -39,11 +39,11 @@ export class ProjectAnalyticsService {
       comments: (inspection as any).comments || null,
       createdAt: inspection.createdAt || new Date().toISOString(),
       updatedAt: inspection.updatedAt || new Date().toISOString(),
-      phaseId: inspection.phaseId,
+      phaseId: inspection.phaseId || null,
       documents: [],
-      issues: [],
-      recommendations: []
-    };
+      stepId: '',
+      progress: 0
+    } as any;
   }
 
   /**
