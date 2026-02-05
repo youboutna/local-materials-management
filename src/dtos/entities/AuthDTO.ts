@@ -40,6 +40,10 @@ export interface AuthUser {
   locked_until?: string;
   created_at: string;
   updated_at: string;
+  // Extended fields for compatibility
+  role?: string;
+  metadata?: Record<string, unknown>;
+  user_metadata?: Record<string, unknown>;
 }
 
 export interface AuthSession {
@@ -47,6 +51,7 @@ export interface AuthSession {
   refresh_token?: string;
   expires_at?: string;
   user: AuthUser;
+  provider?: string;
 }
 
 export type UnifiedUser = AuthUser;
@@ -56,9 +61,22 @@ export interface UnifiedAuthContextType {
   user: UnifiedUser | null;
   session: UnifiedSession | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  updateProfile: (data: Partial<UnifiedUser>) => Promise<void>;
+  isAuthenticated: boolean;
+  currentProvider: string;
+  supportedProviders: Array<{ value: string; label: string; description?: string }>;
+  switchProvider: (config: { provider: string }) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName: string, phone: string, nationalId: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithPhone: (phone: string) => Promise<{ success: boolean; error?: string }>;
+  verifyPhoneOTP: (phone: string, token: string) => Promise<void>;
+  signInWithNationalId: (nationalId: string, password: string) => Promise<void>;
+  isDevelopmentMode: boolean;
+  // Legacy compatibility
+  login?: (email: string, password: string) => Promise<void>;
+  logout?: () => Promise<void>;
+  updateProfile?: (data: Partial<UnifiedUser>) => Promise<void>;
 }
 
 export interface AuthResponse {

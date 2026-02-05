@@ -27,13 +27,33 @@ export class BankGuaranteeActionService {
   }
 
   /**
-   * Create action (simplified interface)
+   * Create action (simplified interface) - static method for backward compatibility
+   */
+  static async create(data: {
+    guarantee_id: string;
+    action_type: string;
+    title?: string;
+    description: string;
+    performed_by: string;
+    created_by?: string;
+    priority?: 'low' | 'medium' | 'high' | 'urgent';
+    metadata?: Record<string, unknown>;
+  }): Promise<BankGuaranteeActionDTO> {
+    const service = new BankGuaranteeActionService();
+    return service.createAction(data);
+  }
+
+  /**
+   * Create action (instance method)
    */
   async createAction(data: {
     guarantee_id: string;
     action_type: string;
+    title?: string;
     description: string;
     performed_by: string;
+    created_by?: string;
+    priority?: 'low' | 'medium' | 'high' | 'urgent';
     metadata?: Record<string, unknown>;
   }): Promise<BankGuaranteeActionDTO> {
     // First get the guarantee to validate it exists

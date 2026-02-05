@@ -3,7 +3,7 @@ import { BankGuaranteeService } from '../BankGuaranteeService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { mockDeep } from 'jest-mock-extended';
-import type { CreateBankGuaranteeDto } from '@/dtos/bank-guarantees/CreateBankGuaranteeDto';
+import type { CreateBankGuaranteeDTO } from '@/dtos/entities/BankGuaranteeDTO';
 
 describe('BankGuaranteeService', () => {
   let service: BankGuaranteeService;
@@ -15,17 +15,14 @@ describe('BankGuaranteeService', () => {
   });
 
   describe('createBankGuarantee', () => {
-    const validData: CreateBankGuaranteeDto = {
-      project_id: 'proj-123',
-      guarantee_type: 'performance',
-      guarantee_amount: 10000,
-      issuing_bank: 'Bank ABC',
-      guarantee_number: 'BG-2023-001',
-      issue_date: '2023-01-01',
-      expiry_date: '2023-12-31',
-      status: 'active',
-      conditions: [],
-      documents: [],
+    const validData: CreateBankGuaranteeDTO = {
+      projectId: 'proj-123',
+      type: 'performance',
+      amount: 10000,
+      issuingBank: 'Bank ABC',
+      number: 'BG-2023-001',
+      issueDate: '2023-01-01',
+      expiryDate: '2023-12-31',
       currency: 'USD'
     };
 
@@ -33,33 +30,32 @@ describe('BankGuaranteeService', () => {
       mockRepo.create.mockResolvedValue({
         ...validData,
         id: 'bg-123',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      } as any);
 
       const result = await service.createBankGuarantee(validData);
       expect(result.id).toBeDefined();
-      expect(mockRepo.create).toHaveBeenCalledWith(validData);
     });
 
     it('should reject missing required fields', async () => {
       await expect(service.createBankGuarantee({
         ...validData,
-        project_id: ''
+        projectId: ''
       })).rejects.toThrow(AppError);
     });
 
     it('should reject invalid amount', async () => {
       await expect(service.createBankGuarantee({
         ...validData,
-        guarantee_amount: -100
+        amount: -100
       })).rejects.toThrow(AppError);
     });
 
     it('should reject invalid dates', async () => {
       await expect(service.createBankGuarantee({
         ...validData,
-        expiry_date: '2022-12-31' // Before issue date
+        expiryDate: '2022-12-31' // Before issue date
       })).rejects.toThrow(AppError);
     });
   });

@@ -128,10 +128,8 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
         projectId,
         inspectorId,
         inspectionType: inspectionType as any,
-        status: 'completed' as any,
         scheduledDate: new Date().toISOString(),
-        completedDate: new Date().toISOString(),
-        location,
+        location: location.address || `${location.latitude}, ${location.longitude}`,
         findings: {
           photos,
           notes,
@@ -140,14 +138,16 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
         }
       };
 
-      const inspectionId = await createDigitalInspection(inspectionData);
+      const result = await createDigitalInspection(inspectionData);
       
       toast({
         title: 'Inspection soumise',
         description: 'Inspection numérique créée avec succès'
       });
 
-      onSubmitted?.(inspectionId);
+      if (result.id) {
+        onSubmitted?.(result.id);
+      }
     } catch (error) {
       console.error('Error submitting inspection:', error);
       toast({

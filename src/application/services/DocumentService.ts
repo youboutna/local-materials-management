@@ -71,6 +71,14 @@ export class DocumentService {
   }
 
   /**
+   * Static method for getting project documents (for backward compatibility)
+   */
+  static async getProjectDocuments(projectId: string): Promise<DocumentDTO[]> {
+    const service = new DocumentService();
+    return service.getProjectDocuments(projectId);
+  }
+
+  /**
    * Get documents by phase ID
    */
   async getDocumentsByPhase(phaseId: string): Promise<DocumentDTO[]> {

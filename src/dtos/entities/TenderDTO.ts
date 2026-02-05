@@ -177,3 +177,22 @@ export interface TenderSubmissionDTO {
   submittedAt: string;
   documents?: TenderDocumentDTO[];
 }
+
+// Tender document category types for UI
+export type TenderDocumentCategory = 'administrative' | 'technical' | 'financial';
+
+// Labels for tender documents
+export const TENDER_DOCUMENT_LABELS: Record<string, string> = {
+  'administrative': 'Document Administratif',
+  'technical': 'Document Technique',
+  'financial': 'Document Financier',
+  'legal': 'Document Légal',
+  'reference': 'Référence'
+};
+
+// Labels for tender categories
+export const TENDER_CATEGORY_LABELS: Record<TenderDocumentCategory, string> = {
+  'administrative': 'Documents Administratifs',
+  'technical': 'Documents Techniques',
+  'financial': 'Documents Financiers'
+};

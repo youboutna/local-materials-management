@@ -41,8 +41,8 @@ const RegionalDashboard = ({ projects, materials = [], workspaces = [] }: Region
         ? regionProjects.reduce((sum, project) => sum + project.progress, 0) / regionProjects.length
         : 0;
       
-      const activeProjects = regionProjects.filter(p => p.status === 'en cours').length;
-      const completedProjects = regionProjects.filter(p => p.status === 'terminé').length;
+      const activeProjects = regionProjects.filter(p => p.status === 'enCours' || p.status === 'active').length;
+      const completedProjects = regionProjects.filter(p => p.status === 'termine' || p.status === 'completed').length;
 
       return {
         region,

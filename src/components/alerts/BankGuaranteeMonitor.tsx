@@ -62,11 +62,14 @@ async function createBankGuaranteeAction(actionData: {
   recipientIds: string[];
   metadata: any;
 }): Promise<void> {
-  await BankGuaranteeActionService.createAction({
+  await BankGuaranteeActionService.create({
     guarantee_id: actionData.bankGuaranteeId,
     action_type: actionData.actionType,
+    title: actionData.message,
     description: actionData.message,
     performed_by: actionData.assigneeId,
+    created_by: actionData.assigneeId,
+    priority: actionData.priority as 'low' | 'medium' | 'high' | 'urgent',
     metadata: actionData.metadata
   });
 }
@@ -134,13 +137,14 @@ const BankGuaranteeMonitor: React.FC = () => {
         return;
       }
 
+      const bankName = guarantee.bank_name || guarantee.issuingBank || 'bank';
       const bankGuaranteeData = {
         projectId: delay.projectId,
-        contractorId: guarantee.contractor_id,
-        bankLiaisonEmail: `contact@${guarantee.bank_name
+        contractorId: guarantee.contractor_id || guarantee.contractorId,
+        bankLiaisonEmail: `contact@${bankName
           .toLowerCase()
           .replace(/\s+/g, "")}.mr`,
-        guaranteeAmount: guarantee.guarantee_amount,
+        guaranteeAmount: guarantee.guarantee_amount || guarantee.amount,
         delayPercentage: delay.delayPercentage,
         contractClause: "Article 15.3 - Garantie de bonne exécution",
       };

@@ -134,7 +134,7 @@ const TaskAssignmentsComponent = () => {
         notes: taskData.notes || undefined,
       };
       
-      return await taskService.createTaskAssignment(taskDTO, user?.id);
+      return await taskService.createTaskAssignment({ taskData: taskDTO, assignedBy: user?.id });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["task_assignments"] });
@@ -170,7 +170,7 @@ const TaskAssignmentsComponent = () => {
         notes: data.notes || undefined,
       };
 
-      return await taskService.updateTaskAssignment(id, taskDTO);
+      return await taskService.updateTaskAssignment({ id, updates: taskDTO });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["task_assignments"] });
@@ -189,7 +189,7 @@ const TaskAssignmentsComponent = () => {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const taskService = new TaskAssignmentService();
-      await taskService.deleteTaskAssignment(id);
+      await taskService.deleteTaskAssignment({ id });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["task_assignments"] });

@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import UserSelector from '@/components/selectors/UserSelector';
-import { EnhancedActionService, UnifiedActionRequest } from '@/application/services/enhancedActionService';
+import { EnhancedActionService, UnifiedActionRequest, EnhancedActionServiceStatic } from '@/application/services/enhancedActionService';
 
 const actionFormSchema = z.object({
   actionType: z.enum(['task_assignment', 'hierarchy_notification', 'sms', 'call', 'email', 'mail']),
@@ -129,7 +129,7 @@ const UniversalActionsInterface: React.FC<UniversalActionsInterfaceProps> = ({
         }
       };
 
-      const result = await EnhancedActionService.executeAction(actionRequest);
+      const result = await EnhancedActionServiceStatic.executeAction(actionRequest);
 
       if (result.success) {
         toast({
