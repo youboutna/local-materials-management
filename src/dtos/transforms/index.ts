@@ -35,5 +35,9 @@ export { TenderEstimateTransformer } from './TenderEstimateTransformer';
 export { AdvancedTenderEstimateTransformer } from './AdvancedTenderEstimateTransformer';
 export { InspectionPermissionDomainTransformer } from './InspectionPermissionDomainTransformer';
 
+// Workflow transformers
+export { ProjectWorkflowTransforms } from './ProjectWorkflowTransforms';
+export { WorkflowTransformer } from './WorkflowTransformer';
+
 // Shared utilities
 export * from './shared';
