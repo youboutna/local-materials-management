@@ -5,9 +5,14 @@
 
 import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import { Phase, PhaseStep, PhaseTask, PhaseStatus } from '@/domain/entities/Phase';
-import { PhaseDTO, CreatePhaseRequestDto, UpdatePhaseRequestDto, PhaseTaskDTO, PhaseStepDTO, PhaseMetricsDTO } from '@/dtos/entities/PhaseDTO';
-import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
+import { PhaseDTO, CreatePhaseDTO, UpdatePhaseDTO, PhaseStepDTO, PhaseMetricsDTO } from '@/dtos/entities/PhaseDTO';
+import { PhaseTransformer, CreatePhaseRequestDTO } from '@/dtos/transforms/PhaseTransformer';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+
+// Type alias for backward compatibility
+type CreatePhaseRequestDto = CreatePhaseRequestDTO;
+type UpdatePhaseRequestDto = UpdatePhaseDTO;
+type PhaseTaskDTO = PhaseStepDTO;
 
 // Service DTOs for data exchange
 

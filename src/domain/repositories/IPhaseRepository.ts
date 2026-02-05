@@ -32,6 +32,11 @@ export interface IPhaseRepository {
   findById(id: string): Promise<Phase | null>;
 
   /**
+   * Find all phases for a project (alias for getPhasesByProjectId)
+   */
+  findByProjectId(projectId: string): Promise<Phase[]>;
+
+  /**
    * Find all phases for a project
    */
   getPhasesByProjectId(projectId: string): Promise<Phase[]>;

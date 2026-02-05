@@ -3,6 +3,7 @@ import { IInspectionRepository } from '@/domain/repositories/IInspectionReposito
 import { Inspection, InspectionStatus } from '@/domain/entities/Inspection';
 import { AppError, ErrorLogger, ErrorCode } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { InspectionTransformer } from '@/dtos/transforms/InspectionTransformer';
 import { 
   InspectionDocumentDTO,
   InspectionExecutionDataDTO,
@@ -55,7 +56,7 @@ export class InspectionService {
   /**
    * Create inspection
    */
-  async createInspection(data: Omit<InspectionExecutionDataDTO, 'id'>): Promise<Inspection> {
+  async createInspection(data: Omit<InspectionExecutionDataDTO, 'id' | 'documents'>): Promise<Inspection> {
     try {
       const newInspection = Inspection.create({
         id: crypto.randomUUID(),
@@ -78,14 +79,38 @@ export class InspectionService {
   /**
    * Update inspection
    */
-  async updateInspection(id: string, updates: InspectionExecutionDataDTO): Promise<Inspection> {
+  async updateInspection(id: string, updates: Partial<InspectionExecutionDataDTO>): Promise<Inspection> {
     try {
       const existing = await this.repository.findById(id);
       if (!existing) {
         throw new AppError('NOT_FOUND' as ErrorCode, 'Inspection not found');
       }
-      await this.repository.update(id, updates as Record<string, unknown>);
-      return { ...existing, ...updates } as Inspection;
+      
+      // Convert DTO updates to domain entity partial
+      const entityUpdates: Partial<Inspection> = {
+        status: updates.status as InspectionStatus | undefined,
+        progressAtInspection: updates.progressAtInspection,
+        comments: updates.comments ?? null,
+        completedAt: updates.completedAt ?? undefined,
+        completedBy: updates.completedBy ?? undefined
+      };
+      
+      await this.repository.update(id, entityUpdates);
+      
+      // Return updated inspection using factory method
+      return Inspection.create({
+        id: existing.id,
+        projectId: existing.projectId,
+        phaseId: existing.phaseId ?? undefined,
+        stepId: existing.stepId ?? undefined,
+        inspector: existing.inspector,
+        date: existing.date,
+        status: (updates.status as InspectionStatus) || existing.status,
+        progressAtInspection: updates.progressAtInspection ?? existing.progressAtInspection,
+        comments: updates.comments ?? existing.comments ?? undefined,
+        completedAt: updates.completedAt ?? existing.completedAt ?? undefined,
+        completedBy: updates.completedBy ?? existing.completedBy ?? undefined
+      });
     } catch (error) {
       ErrorLogger.log(error as Error, 'InspectionService.updateInspection');
       throw error;
@@ -191,22 +216,34 @@ export class InspectionService {
   /**
    * Complete inspection
    */
-  async completeInspection(id: string, data: InspectionExecutionDataDTO): Promise<Inspection> {
+  async completeInspection(id: string, data: Partial<InspectionExecutionDataDTO>): Promise<Inspection> {
     try {
       const existingInspection = await this.repository.findById(id);
       if (!existingInspection) {
         throw new AppError('NOT_FOUND' as ErrorCode, 'Inspection not found');
       }
 
-      const updates: InspectionExecutionDataDTO = {
-        status: 'completed',
+      const updates: Partial<Inspection> = {
+        status: 'completed' as InspectionStatus,
         progressAtInspection: data.progressAtInspection,
-        comments: data.comments,
-        updatedAt: new Date().toISOString()
+        comments: data.comments ?? null,
+        completedAt: new Date().toISOString()
       };
 
-      await this.repository.update(id, updates as Record<string, unknown>);
-      return { ...existingInspection, ...updates } as Inspection;
+      await this.repository.update(id, updates);
+      
+      return Inspection.create({
+        id: existingInspection.id,
+        projectId: existingInspection.projectId,
+        phaseId: existingInspection.phaseId ?? undefined,
+        stepId: existingInspection.stepId ?? undefined,
+        inspector: existingInspection.inspector,
+        date: existingInspection.date,
+        status: 'completed',
+        progressAtInspection: data.progressAtInspection ?? existingInspection.progressAtInspection,
+        comments: data.comments ?? existingInspection.comments ?? undefined,
+        completedAt: new Date().toISOString()
+      });
     } catch (error) {
       ErrorLogger.log(error as Error, 'InspectionService.completeInspection');
       throw error;
@@ -216,21 +253,31 @@ export class InspectionService {
   /**
    * Cancel inspection
    */
-  async cancelInspection(id: string, data: InspectionExecutionDataDTO): Promise<Inspection> {
+  async cancelInspection(id: string, data: Partial<InspectionExecutionDataDTO>): Promise<Inspection> {
     try {
       const existingInspection = await this.repository.findById(id);
       if (!existingInspection) {
         throw new AppError('NOT_FOUND' as ErrorCode, 'Inspection not found');
       }
 
-      const updates: InspectionExecutionDataDTO = {
-        status: 'cancelled',
-        comments: data.comments,
-        updatedAt: new Date().toISOString()
+      const updates: Partial<Inspection> = {
+        status: 'cancelled' as InspectionStatus,
+        comments: data.comments ?? null
       };
 
-      await this.repository.update(id, updates as Record<string, unknown>);
-      return { ...existingInspection, ...updates } as Inspection;
+      await this.repository.update(id, updates);
+      
+      return Inspection.create({
+        id: existingInspection.id,
+        projectId: existingInspection.projectId,
+        phaseId: existingInspection.phaseId ?? undefined,
+        stepId: existingInspection.stepId ?? undefined,
+        inspector: existingInspection.inspector,
+        date: existingInspection.date,
+        status: 'cancelled',
+        progressAtInspection: existingInspection.progressAtInspection,
+        comments: data.comments ?? existingInspection.comments ?? undefined
+      });
     } catch (error) {
       ErrorLogger.log(error as Error, 'InspectionService.cancelInspection');
       throw error;
@@ -276,10 +323,6 @@ export class InspectionService {
 
       const uploadedDocuments: InspectionDocumentDTO[] = [];
       
-      // For now, simulate document upload as storage service is not available
-      // TODO: Implement proper document upload when storage service is available
-      console.warn('InspectionService.uploadDocuments: Storage service not available');
-      
       for (const file of files) {
         const document: InspectionDocumentDTO = {
           id: `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -321,10 +364,10 @@ export class InspectionService {
           uploadedAt: doc.uploadedAt,
           inspectionId: inspection.id
         })) || [],
-        completedAt: inspection.completedAt,
+        completedAt: inspection.completedAt ?? undefined,
         projectId: inspection.projectId,
-        phaseId: inspection.phaseId,
-        stepId: inspection.stepId,
+        phaseId: inspection.phaseId ?? undefined,
+        stepId: inspection.stepId ?? undefined,
         inspector: inspection.inspector,
         date: inspection.date
       };
@@ -343,16 +386,11 @@ export class InspectionService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
       }
 
-      const validStatus = ['scheduled', 'in_progress', 'completed', 'cancelled'].includes(data.status)
-        ? data.status as InspectionStatus
-        : 'scheduled';
-      
       await this.updateInspection(data.id, {
-        status: validStatus,
+        status: data.status,
         progressAtInspection: data.progressAtInspection,
-        comments: data.comments,
-        updatedAt: new Date().toISOString()
-      } as Record<string, unknown>);
+        comments: data.comments
+      });
       
       return {
         id: data.id,
@@ -383,13 +421,7 @@ export class InspectionService {
 
       return this.updateInspection(id, {
         status: data.status as InspectionStatus,
-        comments: data.comments,
-        // Add payment-related fields if they exist in the entity
-        ...(data.payment_type && { payment_type: data.payment_type }),
-        ...(data.payment_status && { payment_status: data.payment_status }),
-        ...(data.project_id && { project_id: data.project_id }),
-        ...(data.inspection_id && { inspection_id: data.inspection_id }),
-        ...(data.rejection_notes && { rejection_notes: data.rejection_notes }),
+        comments: data.comments
       });
     } catch (error) {
       console.error('InspectionService.updateInspectionPaymentValidation failed:', error);

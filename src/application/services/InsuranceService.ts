@@ -13,10 +13,10 @@ import { InsuranceCertificateDTO } from '@/dtos/entities/InsuranceCertificateDTO
 import {
   InsuranceType,
   InsuranceStatus,
-  CreateInsuranceRequestDto,
-  UpdateInsuranceRequestDto,
-  InsuranceStatistics,
-  InsuranceAlert
+  CreateInsuranceRequestDTO,
+  UpdateInsuranceRequestDTO,
+  InsuranceStatisticsDTO,
+  InsuranceAlertDTO
 } from '@/dtos/entities/InsuranceDTO';
 
 export class InsuranceService {
@@ -43,26 +43,29 @@ export class InsuranceService {
     };
   }
 
-  async detectExpiringInsurance(daysThreshold: number = 30): Promise<InsuranceAlert[]> {
+  async detectExpiringInsurance(daysThreshold: number = 30): Promise<InsuranceAlertDTO[]> {
     try {
       const expiringCerts = await this.insuranceRepository.getExpiringSoon(daysThreshold);
       return expiringCerts.map(cert => {
         const endDate = new Date(cert.valid_until);
         const today = new Date();
         const daysUntilExpiry = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        let alertLevel: InsuranceAlert['alertLevel'] = 'info';
+        let alertLevel: InsuranceAlertDTO['alertLevel'] = 'info';
         if (daysUntilExpiry <= 0) alertLevel = 'expired';
         else if (daysUntilExpiry <= 7) alertLevel = 'critical';
         else if (daysUntilExpiry <= 14) alertLevel = 'warning';
         return {
+          policyId: cert.id,
           certificateId: cert.id,
           projectId: cert.project_id,
           contractorId: cert.contractor_id,
-          insuranceType: cert.coverage_type,
-          provider: cert.insurance_company,
+          insuranceType: cert.coverage_type as InsuranceType,
+          insurerName: cert.insurance_company,
           expiryDate: cert.valid_until,
           alertLevel,
-          daysUntilExpiry
+          daysUntilExpiry,
+          message: `Insurance expires in ${daysUntilExpiry} days`,
+          acknowledged: false
         };
       });
     } catch (error) {
@@ -83,15 +86,26 @@ export class InsuranceService {
     }
   }
 
-  async getInsuranceStatistics(projectId: string): Promise<InsuranceStatistics> {
+  async getInsuranceStatistics(projectId: string): Promise<InsuranceStatisticsDTO> {
     try {
       const certificates = await this.getInsuranceCertificates(projectId);
       return {
-        totalCertificates: certificates.length,
-        activeCertificates: certificates.filter(c => c.status === InsuranceStatus.ACTIVE).length,
-        expiredCertificates: certificates.filter(c => c.status === InsuranceStatus.EXPIRED).length,
-        expiringSoonCertificates: certificates.filter(c => this.isExpiringSoon(c)).length,
-        totalCoverage: certificates.reduce((sum, c) => sum + c.coverage_amount, 0)
+        totalPolicies: certificates.length,
+        activePolicies: certificates.filter(c => c.status === InsuranceStatus.ACTIVE).length,
+        expiredPolicies: certificates.filter(c => c.status === InsuranceStatus.EXPIRED).length,
+        expiringSoonPolicies: certificates.filter(c => this.isExpiringSoon(c)).length,
+        totalCoverage: certificates.reduce((sum, c) => sum + c.coverage_amount, 0),
+        totalClaims: 0,
+        claimsPaid: 0,
+        claimsPending: 0,
+        liabilityCount: 0,
+        propertyCount: 0,
+        constructionAllRiskCount: 0,
+        professionalIndemnityCount: 0,
+        totalPremium: 0,
+        totalClaimsAmount: 0,
+        averageClaimAmount: 0,
+        claimsRatio: 0
       };
     } catch (error) {
       console.error('InsuranceService.getInsuranceStatistics failed:', error);
@@ -106,29 +120,23 @@ export class InsuranceService {
     return daysUntilExpiry <= daysThreshold && daysUntilExpiry > 0;
   }
 
-  validateInsuranceData(data: Partial<CreateInsuranceRequestDto>): { isValid: boolean; errors: Record<string, string[]> } {
+  validateInsuranceData(data: Partial<CreateInsuranceRequestDTO>): { isValid: boolean; errors: Record<string, string[]> } {
     const errors: Record<string, string[]> = {};
     
-    if (!data.project_id) errors.project_id = ['Project ID required'];
-    if (!data.contractor_id) errors.contractor_id = ['Contractor ID required'];
+    if (!data.projectId) errors.projectId = ['Project ID required'];
     
-    if (!data.insurance_type || !Object.values(InsuranceType).includes(data.insurance_type)) {
-      errors.insurance_type = ['Valid insurance type required'];
+    if (!data.insuranceType || !Object.values(InsuranceType).includes(data.insuranceType)) {
+      errors.insuranceType = ['Valid insurance type required'];
     }
     
-    if (!data.provider || data.provider.trim().length === 0) errors.provider = ['Provider required'];
-    if (!data.policy_number || data.policy_number.trim().length === 0) errors.policy_number = ['Policy number required'];
+    if (!data.insurerName || data.insurerName.trim().length === 0) errors.insurerName = ['Insurer name required'];
     
-    if (!data.coverage_amount || data.coverage_amount <= 0) {
-      errors.coverage_amount = ['Coverage amount must be positive'];
+    if (!data.insuredAmount || data.insuredAmount <= 0) {
+      errors.insuredAmount = ['Insured amount must be positive'];
     }
     
-    if (!data.start_date || !this.isValidDate(data.start_date)) errors.start_date = ['Valid start date required'];
-    if (!data.valid_until || !this.isValidDate(data.valid_until)) errors.valid_until = ['Valid expiry date required'];
-    
-    if (data.status && !Object.values(InsuranceStatus).includes(data.status)) {
-      errors.status = ['Invalid status value'];
-    }
+    if (!data.startDate || !this.isValidDate(data.startDate)) errors.startDate = ['Valid start date required'];
+    if (!data.endDate || !this.isValidDate(data.endDate)) errors.endDate = ['Valid end date required'];
     
     return { isValid: Object.keys(errors).length === 0, errors };
   }
@@ -139,13 +147,16 @@ export class InsuranceService {
 
   private isValidStatusTransition(current: InsuranceStatus, next: InsuranceStatus): boolean {
     const validTransitions: Record<InsuranceStatus, InsuranceStatus[]> = {
-      [InsuranceStatus.PENDING]: [InsuranceStatus.ACTIVE, InsuranceStatus.EXPIRED],
-      [InsuranceStatus.ACTIVE]: [InsuranceStatus.EXPIRED],
-      [InsuranceStatus.EXPIRED]: []
+      [InsuranceStatus.PENDING]: [InsuranceStatus.ACTIVE, InsuranceStatus.EXPIRED, InsuranceStatus.CANCELLED],
+      [InsuranceStatus.ACTIVE]: [InsuranceStatus.EXPIRED, InsuranceStatus.EXPIRING_SOON, InsuranceStatus.CANCELLED],
+      [InsuranceStatus.EXPIRING_SOON]: [InsuranceStatus.EXPIRED, InsuranceStatus.ACTIVE, InsuranceStatus.CANCELLED],
+      [InsuranceStatus.EXPIRED]: [],
+      [InsuranceStatus.CANCELLED]: [],
+      [InsuranceStatus.UNDER_REVIEW]: [InsuranceStatus.ACTIVE, InsuranceStatus.CANCELLED]
     };
     
     if (!current || !next) return false;
     
-    return validTransitions[current].includes(next);
+    return validTransitions[current]?.includes(next) ?? false;
   }
 }
