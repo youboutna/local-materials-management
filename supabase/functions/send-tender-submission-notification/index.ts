@@ -40,7 +40,7 @@ interface AdminEmailResult {
   reason?: Error;
 }
 
-const handler = async (req: Request): Promise<Response<SubmissionNotificationResponse>> => {
+const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -72,12 +72,14 @@ const handler = async (req: Request): Promise<Response<SubmissionNotificationRes
     });
 
     // Email to supplier (confirmation)
-    const supplierEmailResponse = await resend.emails.send({
+    const supplierEmailResult = await resend.emails.send({
       from: "Plateforme d'Appels d'Offres <onboarding@resend.dev>",
       to: [supplier_email],
       subject: `Confirmation de soumission - ${tender_title}`,
       html: supplierHtml,
-    }) as { id: string };
+    });
+    
+    const supplierEmailId = (supplierEmailResult as { id?: string })?.id || 'sent';
 
     console.log("Supplier email sent:", supplierEmailResponse);
 
@@ -104,7 +106,7 @@ const handler = async (req: Request): Promise<Response<SubmissionNotificationRes
 
     const response: SubmissionNotificationResponse = {
       success: true,
-      supplier_email_sent: supplierEmailResponse.id || 'sent',
+      supplier_email_sent: supplierEmailId,
       admin_emails_sent: adminEmailResults.filter(r => r.status === 'fulfilled').length,
       admin_emails_failed: adminEmailResults.filter(r => r.status === 'rejected').length
     };

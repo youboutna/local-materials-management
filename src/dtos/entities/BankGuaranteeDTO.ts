@@ -3,49 +3,55 @@
  * Centralized and standardized for hexagonal architecture
  */
 
-type BankGuaranteeType = 'performance' | 'payment' | 'advancePayment' | 'warranty' | 'retention';
-type BankGuaranteeStatus = 'active' | 'expired' | 'claimed' | 'cancelled' | 'pending';
+export type BankGuaranteeType = 'performance' | 'payment' | 'advancePayment' | 'advance_payment' | 'warranty' | 'retention';
+export type BankGuaranteeStatus = 'active' | 'expired' | 'claimed' | 'cancelled' | 'pending';
 
 export interface BankGuaranteeDTO {
   id: string;
   projectId: string;
+  project_id?: string;
   contractorId?: string;
+  contractor_id?: string;
   type: BankGuaranteeType;
+  guaranteeType?: BankGuaranteeType;
+  guarantee_type?: string;
   number: string;
+  guaranteeNumber?: string;
+  guarantee_number?: string;
   issuingBank: string;
+  issuing_bank?: string;
+  bank_name?: string;
   beneficiary?: string;
   issueDate: string;
+  issue_date?: string;
   expiryDate: string;
+  expiry_date?: string;
   amount: number;
+  guaranteeAmount?: number;
+  guarantee_amount?: number;
   currency: string;
   status: BankGuaranteeStatus;
   conditions?: string[];
   documents: string[];
+  actions?: BankGuaranteeActionDTO[];
   createdAt: string;
+  created_at?: string;
   updatedAt: string;
+  updated_at?: string;
 }
 
 export interface BankGuaranteeActionDTO {
   id: string;
   guaranteeId: string;
   type: 'notification' | 'claim' | 'renewal' | 'cancellation' | 'extension';
-  status: 'pending' | 'inProgress' | 'completed' | 'failed';
   performedBy: string;
+  performedAt?: string;
   dueDate?: string;
   completedAt?: string;
-  documents: string[];
+  documents?: string[];
   notes?: string;
-}
-
-export interface BankGuaranteeActionTemplateDTO {
-  id: string;
-  action_type: BankGuaranteeActionDTO['type'];
-  title_template: string;
-  description_template: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  default_due_days: number;
-  required_documents: string[];
-  is_active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CreateBankGuaranteeActionRequestDto {

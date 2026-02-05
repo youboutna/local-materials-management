@@ -220,29 +220,23 @@ export class TenderEstimateTransformer {
    * Transform comparison data to DTO
    */
   static toTenderEstimateComparisonDto(comparison: {
-    estimate_1: TenderEstimateDTO,
-    estimate_2: TenderEstimateDTO,
-    price_difference: number,
-    price_difference_percentage: number,
-    item_differences: {
+    estimate_1: TenderEstimateDTO;
+    estimate_2: TenderEstimateDTO;
+    price_difference: number;
+    price_difference_percentage: number;
+    item_differences: Array<{
       field: string;
       message: string;
       severity: "error" | "warning";
       recommendation?: string;
-    }[]
+    }>;
   }): TenderEstimateComparisonDto {
     return {
       original_estimate: comparison.estimate_1,
       revised_estimate: comparison.estimate_2,
-      differences: comparison.item_differences
-      item_differences: comparison.itemDifferences.map(diff => ({
-        item_code: diff.itemCode,
-        description: diff.description,
-        estimate_1_price: diff.estimate1Price,
-        estimate_2_price: diff.estimate2Price,
-        price_difference: diff.priceDifference,
-        price_difference_percentage: diff.priceDifferencePercentage
-      }))
+      differences: comparison.item_differences,
+      price_difference: comparison.price_difference,
+      price_difference_percentage: comparison.price_difference_percentage
     };
   }
 

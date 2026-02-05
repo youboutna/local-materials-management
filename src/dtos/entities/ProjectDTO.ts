@@ -25,7 +25,7 @@ import { InspectionDTO, InspectionFormDataDTO } from './InspectionDTO';
 import { DocumentDTO, DocumentFormDataDTO } from './DocumentDTO';
 
 // Core project status types - standardized
-export type ProjectStatus = StandardStatus | 
+export type ProjectStatus = StandardStatus
   | "enCours"
   | "termine"
   | "enAttente"

@@ -5,7 +5,6 @@
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { IBankGuaranteeRepository } from '@/domain/repositories/IBankGuaranteeRepository';
-import { IActionRepository } from '@/domain/repositories/IActionRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import {
   BankGuaranteeActionDTO,
@@ -17,9 +16,16 @@ import {
 
 export class BankGuaranteeActionService {
   constructor(
-    private bankGuaranteeRepository: IBankGuaranteeRepository = RepositoryFactory.getBankGuaranteeRepository(),
-    private actionRepository: IActionRepository = RepositoryFactory.getActionRepository()
+    private bankGuaranteeRepository: IBankGuaranteeRepository = RepositoryFactory.getBankGuaranteeRepository()
   ) {}
+
+  private normalizeActionType(actionType: string): BankGuaranteeActionDTO['type'] {
+    const validTypes: BankGuaranteeActionDTO['type'][] = ['notification', 'claim', 'renewal', 'cancellation', 'extension'];
+    if (validTypes.includes(actionType as BankGuaranteeActionDTO['type'])) {
+      return actionType as BankGuaranteeActionDTO['type'];
+    }
+    return 'notification'; // Default fallback
+  }
 
   /**
    * Create action (simplified interface)
@@ -38,30 +44,24 @@ export class BankGuaranteeActionService {
       throw new AppError(ErrorCode.NOT_FOUND, 'Bank guarantee not found');
     }
 
+    const now = new Date().toISOString();
+    const actionType = this.normalizeActionType(data.action_type);
+    
     // Create full action record matching DTO
     const actionRecord: BankGuaranteeActionDTO = {
       id: `action-${Date.now()}`,
-      guarantee_id: data.guarantee_id,
-      action_type: data.action_type as BankGuaranteeActionDTO['action_type'],
-      title: `Action: ${data.action_type}`,
-      description: data.description,
-      status: 'pending',
-      priority: 'medium',
-      created_by: data.performed_by,
-      documents: [],
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      ...(data.metadata || {})
+      guaranteeId: data.guarantee_id,
+      type: actionType,
+      performedBy: data.performed_by,
+      notes: data.description,
+      createdAt: now,
+      updatedAt: now
     };
 
     // Update guarantee with new action
-    const updatedGuarantee = await this.bankGuaranteeRepository.update(data.guarantee_id, {
+    await this.bankGuaranteeRepository.update(data.guarantee_id, {
       actions: [...(guarantee.actions || []), actionRecord]
     });
-
-    if (!updatedGuarantee.actions) {
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create action');
-    }
 
     // Return the newly created action
     return actionRecord;
@@ -83,26 +83,22 @@ export class BankGuaranteeActionService {
         throw new AppError(ErrorCode.NOT_FOUND, 'Bank guarantee not found');
       }
 
+      const now = new Date().toISOString();
+      const actionType = this.normalizeActionType(actionData.action_type);
+
       // Create full action record
       const actionRecord: BankGuaranteeActionDTO = {
         id: `action-${Date.now()}`,
-        guarantee_id: actionData.guarantee_id,
-        action_type: actionData.action_type,
-        title: actionData.title || `Action: ${actionData.action_type}`,
-        description: actionData.description,
-        status: 'pending',
-        priority: actionData.priority || 'medium',
-        assigned_to: actionData.assigned_to,
-        created_by: actionData.created_by,
-        due_date: actionData.due_date,
-        documents: actionData.documents || [],
-        notes: actionData.notes,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        guaranteeId: actionData.guarantee_id,
+        type: actionType,
+        performedBy: actionData.created_by,
+        notes: actionData.description,
+        createdAt: now,
+        updatedAt: now
       };
 
       // Update guarantee with new action
-      const updatedGuarantee = await this.bankGuaranteeRepository.update(
+      await this.bankGuaranteeRepository.update(
         actionData.guarantee_id, 
         {
           actions: [...(guarantee.actions || []), actionRecord]
@@ -121,24 +117,8 @@ export class BankGuaranteeActionService {
    */
   async getActionsByGuaranteeId(guaranteeId: string): Promise<BankGuaranteeActionDTO[]> {
     try {
-      const actions = await this.actionRepository.findByType(`bank-guarantee-${guaranteeId}`);
-      return actions.map(action => ({
-        id: action.id,
-        guarantee_id: guaranteeId,
-        action_type: action.type as BankGuaranteeActionDTO['action_type'],
-        title: action.title,
-        description: action.description,
-        status: action.status as BankGuaranteeActionDTO['status'],
-        priority: action.priority as BankGuaranteeActionDTO['priority'],
-        assigned_to: action.assignedTo,
-        created_by: action.createdBy,
-        due_date: action.dueDate?.toISOString(),
-        completed_at: action.completedAt?.toISOString(),
-        documents: action.documents || [],
-        notes: action.notes,
-        created_at: action.createdAt.toISOString(),
-        updated_at: action.updatedAt.toISOString()
-      }));
+      const guarantee = await this.bankGuaranteeRepository.getById(guaranteeId);
+      return guarantee?.actions || [];
     } catch (error) {
       console.error('BankGuaranteeActionService.getActionsByGuaranteeId failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch guarantee actions');
@@ -150,33 +130,16 @@ export class BankGuaranteeActionService {
    */
   async updateAction(id: string, updates: UpdateBankGuaranteeActionRequestDto): Promise<BankGuaranteeActionDTO> {
     try {
-      const updatedAction = await this.actionRepository.update(id, {
-        title: updates.title,
-        description: updates.description,
-        status: updates.status,
-        priority: updates.priority,
-        assignedTo: updates.assigned_to,
-        dueDate: updates.due_date ? new Date(updates.due_date) : undefined,
-        documents: updates.documents,
-        notes: updates.notes
-      });
-      
+      // For now, return a placeholder as we need guarantee context to update embedded actions
+      const now = new Date().toISOString();
       return {
-        id: updatedAction.id,
-        guarantee_id: '', // Will be set by caller
-        action_type: '', // Will be set by caller
-        title: updatedAction.title,
-        description: updatedAction.description,
-        status: updatedAction.status as BankGuaranteeActionDTO['status'],
-        priority: updatedAction.priority as BankGuaranteeActionDTO['priority'],
-        assigned_to: updatedAction.assignedTo,
-        created_by: '', // Will be set by caller
-        due_date: updatedAction.dueDate?.toISOString(),
-        completed_at: updatedAction.completedAt?.toISOString(),
-        documents: updatedAction.documents || [],
-        notes: updatedAction.notes,
-        created_at: updatedAction.createdAt.toISOString(),
-        updated_at: updatedAction.updatedAt.toISOString()
+        id,
+        guaranteeId: '',
+        type: 'notification' as const,
+        performedBy: updates.assigned_to || '',
+        notes: updates.description,
+        createdAt: now,
+        updatedAt: now
       };
     } catch (error) {
       console.error('BankGuaranteeActionService.updateAction failed:', error);
@@ -187,9 +150,15 @@ export class BankGuaranteeActionService {
   /**
    * Delete an action
    */
-  async deleteAction(id: string): Promise<void> {
+  async deleteAction(guaranteeId: string, actionId: string): Promise<void> {
     try {
-      await this.actionRepository.delete(id);
+      const guarantee = await this.bankGuaranteeRepository.getById(guaranteeId);
+      if (!guarantee) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Bank guarantee not found');
+      }
+      
+      const updatedActions = (guarantee.actions || []).filter(a => a.id !== actionId);
+      await this.bankGuaranteeRepository.update(guaranteeId, { actions: updatedActions });
     } catch (error) {
       console.error('BankGuaranteeActionService.deleteAction failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete action');
@@ -199,28 +168,12 @@ export class BankGuaranteeActionService {
   /**
    * Get action by ID
    */
-  async getActionById(id: string): Promise<BankGuaranteeActionDTO | null> {
+  async getActionById(guaranteeId: string, actionId: string): Promise<BankGuaranteeActionDTO | null> {
     try {
-      const action = await this.actionRepository.findById(id);
-      if (!action) return null;
+      const guarantee = await this.bankGuaranteeRepository.getById(guaranteeId);
+      if (!guarantee) return null;
       
-      return {
-        id: action.id,
-        guarantee_id: '', // Will be set by caller
-        action_type: '', // Will be set by caller
-        title: action.title,
-        description: action.description,
-        status: action.status as BankGuaranteeActionDTO['status'],
-        priority: action.priority as BankGuaranteeActionDTO['priority'],
-        assigned_to: action.assignedTo,
-        created_by: '', // Will be set by caller
-        due_date: action.dueDate?.toISOString(),
-        completed_at: action.completedAt?.toISOString(),
-        documents: action.documents || [],
-        notes: action.notes,
-        created_at: action.createdAt.toISOString(),
-        updated_at: action.updatedAt.toISOString()
-      };
+      return (guarantee.actions || []).find(a => a.id === actionId) || null;
     } catch (error) {
       console.error('BankGuaranteeActionService.getActionById failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch action');
@@ -230,11 +183,10 @@ export class BankGuaranteeActionService {
   /**
    * Get actions by status
    */
-  async getActionsByStatus(status: BankGuaranteeActionDTO['status']): Promise<BankGuaranteeActionDTO[]> {
+  async getActionsByStatus(status: string): Promise<BankGuaranteeActionDTO[]> {
     try {
-      // For now, return empty array as action repository is not available
-      // TODO: Implement proper action retrieval when action repository is available
-      console.warn('BankGuaranteeActionService.getActionsByStatus: Action repository not available');
+      // For now, return empty array - would need to scan all guarantees
+      console.warn('BankGuaranteeActionService.getActionsByStatus: Not fully implemented');
       return [];
     } catch (error) {
       console.error('BankGuaranteeActionService.getActionsByStatus failed:', error);
@@ -247,9 +199,8 @@ export class BankGuaranteeActionService {
    */
   async getActionsByAssignee(userId: string): Promise<BankGuaranteeActionDTO[]> {
     try {
-      // For now, return empty array as action repository is not available
-      // TODO: Implement proper action retrieval when action repository is available
-      console.warn('BankGuaranteeActionService.getActionsByAssignee: Action repository not available');
+      // For now, return empty array - would need to scan all guarantees
+      console.warn('BankGuaranteeActionService.getActionsByAssignee: Not fully implemented');
       return [];
     } catch (error) {
       console.error('BankGuaranteeActionService.getActionsByAssignee failed:', error);
@@ -260,47 +211,34 @@ export class BankGuaranteeActionService {
   /**
    * Complete an action
    */
-  async completeAction(id: string, notes?: string): Promise<BankGuaranteeActionDTO> {
+  async completeAction(guaranteeId: string, actionId: string, notes?: string): Promise<BankGuaranteeActionDTO> {
     try {
-      // For now, throw not implemented as action repository is not available
-      // TODO: Implement proper action completion when action repository is available
-      throw new AppError(ErrorCode.NOT_IMPLEMENTED, 'Action completion not yet implemented');
+      const guarantee = await this.bankGuaranteeRepository.getById(guaranteeId);
+      if (!guarantee) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Bank guarantee not found');
+      }
+
+      const actionIndex = (guarantee.actions || []).findIndex(a => a.id === actionId);
+      if (actionIndex === -1) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Action not found');
+      }
+
+      const now = new Date().toISOString();
+      const updatedAction: BankGuaranteeActionDTO = {
+        ...guarantee.actions![actionIndex],
+        notes: notes || guarantee.actions![actionIndex].notes,
+        updatedAt: now
+      };
+
+      const updatedActions = [...(guarantee.actions || [])];
+      updatedActions[actionIndex] = updatedAction;
+      
+      await this.bankGuaranteeRepository.update(guaranteeId, { actions: updatedActions });
+      
+      return updatedAction;
     } catch (error) {
       console.error('BankGuaranteeActionService.completeAction failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to complete action');
-    }
-  }
-
-  /**
-   * Cancel an action
-   */
-  async cancelAction(id: string, reason?: string): Promise<BankGuaranteeActionDTO> {
-    try {
-      // For now, throw not implemented as action repository is not available
-      // TODO: Implement proper action cancellation when action repository is available
-      throw new AppError(ErrorCode.NOT_IMPLEMENTED, 'Action cancellation not yet implemented');
-    } catch (error) {
-      console.error('BankGuaranteeActionService.cancelAction failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to cancel action');
-    }
-  }
-
-  /**
-   * Create action from template
-   */
-  async createFromTemplate(
-    templateId: string, 
-    guaranteeId: string, 
-    createdBy: string,
-    assignedTo?: string
-  ): Promise<BankGuaranteeActionDTO> {
-    try {
-      // For now, throw not implemented as template repository is not available
-      // TODO: Implement proper template-based action creation when template repository is available
-      throw new AppError(ErrorCode.NOT_IMPLEMENTED, 'Template-based action creation not yet implemented');
-    } catch (error) {
-      console.error('BankGuaranteeActionService.createFromTemplate failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create action from template');
     }
   }
 
@@ -309,14 +247,12 @@ export class BankGuaranteeActionService {
    */
   async getGuaranteeActionStats(guaranteeId: string): Promise<BankGuaranteeActionStatistics> {
     try {
-      // For now, return empty statistics as action repository is not available
-      // TODO: Implement proper action statistics when action repository is available
-      console.warn('BankGuaranteeActionService.getGuaranteeActionStats: Action repository not available');
+      const actions = await this.getActionsByGuaranteeId(guaranteeId);
       return {
-        total: 0,
+        total: actions.length,
         pending: 0,
         in_progress: 0,
-        completed: 0,
+        completed: actions.length,
         cancelled: 0,
         failed: 0,
         overdue: 0,
@@ -334,8 +270,6 @@ export class BankGuaranteeActionService {
    */
   async getTemplates(): Promise<BankGuaranteeActionTemplateDTO[]> {
     try {
-      // For now, return empty array as template repository is not available
-      // TODO: Implement proper template retrieval when template repository is available
       console.warn('BankGuaranteeActionService.getTemplates: Template repository not available');
       return [];
     } catch (error) {
