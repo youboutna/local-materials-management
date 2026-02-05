@@ -12,6 +12,7 @@ import type { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import type { IRiskRepository } from '@/domain/repositories/IRiskRepository';
 import type { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
 import { ProjectTransformer } from '@/dtos/transforms';
+import { ProjectWorkflowTransforms } from '@/dtos/transforms/ProjectWorkflowTransforms';
 
 // Import workflow DTOs (following "similitude des voisins le plus proche")
 import { 

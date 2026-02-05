@@ -6,8 +6,9 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { ProjectWorkflowService } from '@/application/services/ProjectWorkflowService';
+import { ProjectWorkflowService, createProjectWorkflowService } from '@/application/services/ProjectWorkflowService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { ProjectWorkflowTransforms } from '@/dtos/transforms/ProjectWorkflowTransforms';
 
 // Import workflow DTOs (following "similitude des voisins le plus proche")
 import { 
@@ -30,6 +31,14 @@ import {
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
 import { StakeholderDTO } from '@/dtos/entities/StakeholderDTO';
+
+// Workflow save result type
+interface WorkflowSaveResult {
+  success: boolean;
+  projectId: string;
+  stepNumber: number;
+  data: ProjectWorkflowData;
+}
 
 // Fonctions utilitaires pour le calcul de progression
 export function determineCurrentStep(formData: ProjectDTO): number {
