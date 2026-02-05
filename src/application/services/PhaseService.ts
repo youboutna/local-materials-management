@@ -8,7 +8,6 @@ import { Phase, PhaseStep, PhaseTask, PhaseStatus } from '@/domain/entities/Phas
 import { PhaseDTO, CreatePhaseRequestDto, UpdatePhaseRequestDto, PhaseTaskDTO, PhaseStepDTO, PhaseMetricsDTO } from '@/dtos/entities/PhaseDTO';
 import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { Container } from 'typedi';
 
 // Service DTOs for data exchange
 
@@ -96,9 +95,9 @@ export class PhaseService {
   private phaseRepository: IPhaseRepository;
   private phaseTransformer: PhaseTransformer;
 
-  constructor() {
-    this.phaseRepository = Container.get('IPhaseRepository');
-    this.phaseTransformer = Container.get('PhaseTransformer');
+  constructor(phaseRepository: IPhaseRepository, phaseTransformer: PhaseTransformer) {
+    this.phaseRepository = phaseRepository;
+    this.phaseTransformer = phaseTransformer;
   }
 
   /**
