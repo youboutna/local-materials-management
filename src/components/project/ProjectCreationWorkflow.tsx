@@ -43,6 +43,10 @@ import {
 // Import hexagonal hooks
 import { useProjectCreationHex } from "../../hooks/hexagonal/useProjectCreationHex";
 
+// Import ProjectWorkflowService and RepositoryFactory
+import { ProjectWorkflowService } from "@/application/services/ProjectWorkflowService";
+import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
+
 // Import workflow DTOs
 import { ProjectWorkflowData, StepRelatedDataDTO } from "@/dtos/workflows/ProjectWorkflowDTOs";
 import { PhaseWorkflowDTO } from "@/dtos/workflows/PhaseWorkflowDTO";
@@ -174,13 +178,25 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   // 🎨 UI Layer - Use service for validation (Rule #5 compliant)
   const validateStepData = useCallback((): { isValid: boolean; errors: string[] } => {
     // 🚀 Delegate validation to service layer (hexagonal flow)
-    const projectFormService = new ProjectFormService();
-    const validation = projectFormService.validateStepData(flattenedProjectData, currentStep);
+    const workflowService = new ProjectWorkflowService(
+      RepositoryFactory.getProjectRepository(),
+      RepositoryFactory.getPhaseRepository(),
+      RepositoryFactory.getRiskRepository(),
+      RepositoryFactory.getStakeholderRepository()
+    );
+    const validation = workflowService.validateStep(currentStep + 1, projectWorkflowData, {
+      projectId: projectWorkflowData.projectId || '',
+      currentStep: currentStep + 1,
+      totalSteps: steps.length,
+      isDraft: projectWorkflowData.isDraft,
+      isComplete: projectWorkflowData.isComplete,
+      modifiedFields: []
+    });
     return {
       isValid: validation.isValid,
-      errors: validation.errors
+      errors: validation.errors || []
     };
-  }, [flattenedProjectData, currentStep]);
+  }, [projectWorkflowData, currentStep, steps.length]);
 
   // Steps aligned with workflow specification (7 étapes critiques)
   // 🎨 UI Layer - Options de statut pour l'affichage (PROMPTS.md Rule #5)
