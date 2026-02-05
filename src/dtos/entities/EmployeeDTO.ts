@@ -283,15 +283,19 @@ export interface UpdateEmployeeDTO {
 }
 
 /**
- * Employee summary interface
+ * Employee summary interface (base)
  * Lightweight employee representation for lists
  */
-export interface EmployeeSummaryDTO extends BaseEntityDTO {
+export interface EmployeeSummaryDTOBase extends BaseEntityDTO {
   id: string;
   type: EmployeeType;
   role: EmployeeRole;
   department: EmployeeDepartment;
   status: EmployeeStatus;
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+}
 
 /**
  * Employee statistics interface
@@ -301,10 +305,10 @@ export interface EmployeeStatisticsDTO {
   totalEmployees: number;
   activeEmployees: number;
   inactiveEmployees: number;
-  byDepartment: Record<EmployeeDepartment, number>;
-  byRole: Record<EmployeeRole, number>;
-  byType: Record<EmployeeType, number>;
-  byStatus: Record<EmployeeStatus, number>;
+  byDepartment: Record<string, number>;
+  byRole: Record<string, number>;
+  byType: Record<string, number>;
+  byStatus: Record<string, number>;
   averageHourlyRate?: number;
   averagePerformanceRating?: number;
   totalProjects?: number;

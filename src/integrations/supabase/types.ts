@@ -5306,8 +5306,6 @@ export type Database = {
           total_materials_cost: number | null
           total_with_tax: number | null
           updated_at: string
-          discount_rate: number | null
-          discount_amount: number | null
         }
         Insert: {
           created_at?: string
@@ -5331,8 +5329,6 @@ export type Database = {
           total_materials_cost?: number | null
           total_with_tax?: number | null
           updated_at?: string
-          discount_rate?: number | null
-          discount_amount?: number | null
         }
         Update: {
           created_at?: string

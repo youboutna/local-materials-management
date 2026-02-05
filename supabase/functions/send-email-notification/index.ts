@@ -18,15 +18,7 @@ interface EmailNotificationRequest {
   metadata?: Record<string, unknown>;
 }
 
-interface ResendEmailResponse {
-  id: string;
-  from: string;
-  to: string[];
-  subject: string;
-  html: string;
-}
-
-const handler = async (req: Request): Promise<Response<ResendEmailResponse>> => {
+const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -44,18 +36,23 @@ const handler = async (req: Request): Promise<Response<ResendEmailResponse>> => 
 
     console.log("Sending email notification:", { to, subject, actionType, priority });
 
-    const priorityEmojis = {
+    const priorityEmojis: Record<string, string> = {
       low: "📧",
       medium: "⚠️",
       high: "🔴",
       urgent: "🚨"
     };
 
+    const dueDate = metadata?.dueDate;
+    const formattedDueDate = dueDate && typeof dueDate === 'string' 
+      ? new Date(dueDate).toLocaleDateString('fr-FR') 
+      : '';
+
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center;">
           <h1 style="margin: 0; font-size: 24px;">
-            ${priorityEmojis[priority]} ${subject}
+            ${priorityEmojis[priority] || "📧"} ${subject}
           </h1>
           <p style="margin: 10px 0 0 0; opacity: 0.9;">
             Priorité: ${priority.toUpperCase()} | Action: ${actionType}
@@ -73,9 +70,9 @@ const handler = async (req: Request): Promise<Response<ResendEmailResponse>> => 
               </div>
             ` : ''}
             
-            ${metadata?.dueDate ? `
+            ${formattedDueDate ? `
               <div style="margin-top: 10px; padding: 15px; background: #fff3e0; border-radius: 5px;">
-                <strong style="color: #f57c00;">Date d'échéance:</strong> ${new Date(metadata.dueDate).toLocaleDateString('fr-FR')}
+                <strong style="color: #f57c00;">Date d'échéance:</strong> ${formattedDueDate}
               </div>
             ` : ''}
           </div>
@@ -93,10 +90,10 @@ const handler = async (req: Request): Promise<Response<ResendEmailResponse>> => 
     const fromEmail: string = Deno.env.get("Deno_mail_from_notif") ?? "notifications@resend.dev";
     const defaultSubject: string = Deno.env.get("Deno_mail_default_subject") ?? "Notification";
 
-    const emailResponse: ResendEmailResponse = await resend.emails.send({
+    const emailResponse = await resend.emails.send({
       from: `${fromName} <${fromEmail}>`,
       to: [to],
-      subject: `${priorityEmojis[priority]} ${subject || defaultSubject}`,
+      subject: `${priorityEmojis[priority] || "📧"} ${subject || defaultSubject}`,
       html: emailHtml,
     });
 

@@ -103,7 +103,7 @@ export interface PhaseDTO extends BaseEntityDTO {
   deliverables?: string[];
   acceptanceCriteria?: string[];
   notes?: string;
-}  requiresEngineerApproval?: boolean;
+  requiresEngineerApproval?: boolean;
   
   // Location
   location?: {
@@ -121,9 +121,29 @@ export interface PhaseDTO extends BaseEntityDTO {
   
   // Metadata
   tags?: string[];
-  notes?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+// Base entity interface for DTO extensions
+export interface BaseEntityDTO {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Phase form data DTO for UI
+export interface PhaseFormDataDTO {
+  name: string;
+  description?: string;
+  type?: PhaseType;
+  status?: PhaseStatus;
+  priority?: PhasePriority;
+  startDate?: string;
+  endDate?: string;
+  budget?: number;
+  estimatedCost?: number;
+  steps?: PhaseStepDTO[];
 }
 
 /**
