@@ -370,21 +370,20 @@ class ContentUpdater {
 
     // Fix missing properties in DTOs
     if (this.content.includes('SaveContextDTO') && !this.content.includes('totalSteps: number')) {
-      this.updateSection(
+      const newContent = this.content.replace(
         /export interface SaveContextDTO \{([^}]*)\}/g,
         (match: string, content: string) => {
           if (!content.includes('totalSteps')) {
-            const hasCurrentStep = content.includes('currentStep');
-            if (hasCurrentStep) {
-              content = content.replace(/currentStep: number;?/, 'currentStep: number;\n  totalSteps: number;');
-            } else {
-              content = '  currentStep: number;\n  totalSteps: number;\n' + content;
-            }
-            changes.push('Added missing totalSteps property to SaveContextDTO');
+            const updatedContent = content.includes('currentStep')
+              ? content.replace(/currentStep: number;?/, 'currentStep: number;\n  totalSteps: number;')
+              : '  currentStep: number;\n  totalSteps: number;\n' + content;
+            return `export interface SaveContextDTO {${updatedContent}}`;
           }
-          return `export interface SaveContextDTO {${content}}`;
+          return match;
         }
       );
+      this.content = newContent;
+      changes.push('Added missing totalSteps property to SaveContextDTO');
     }
 
     // Fix ProjectDTO missing properties

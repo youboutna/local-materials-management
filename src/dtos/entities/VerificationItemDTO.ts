@@ -12,6 +12,7 @@ export type CheckpointCategory = 'inspection' | 'resource' | 'document' | 'servi
  */
 export interface VerificationItemDTO {
   id: string;
+  name?: string; // Optional name field for flexibility
   category: CheckpointCategory;
   title: string;
   description?: string;

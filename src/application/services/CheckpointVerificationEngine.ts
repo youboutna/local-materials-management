@@ -18,18 +18,8 @@ import {
   CheckpointDTO
 } from '@/dtos/entities/CheckpointDTO';
 import { CheckpointVerificationResultDTO } from '@/dtos/entities/CheckpointVerificationResultDTO';
-import {
-  VerificationStatus,
-  CheckpointCategory,
-  VerificationItemDTO,
-  VerifyCheckpointRequestDto,
-  VerifyCheckpointResponseDto,
-  VerifyInspectionsRequestDto,
-  VerifyDocumentsRequestDto,
-  VerifyApprovalsRequestDto,
-  VerifyResourcesRequestDto,
-  VerifyServiceFaitRequestDto
-} from '@/dtos/entities/CheckpointVerificationDTO';
+import { VerificationItemDTO, VerificationStatus, CheckpointCategory } from '@/dtos/entities/VerificationItemDTO';
+import { VerifyCheckpointRequestDto, VerifyCheckpointResponseDto, VerifyInspectionsRequestDto, VerifyDocumentsRequestDto, VerifyApprovalsRequestDto, VerifyResourcesRequestDto, VerifyServiceFaitRequestDto } from '@/dtos/entities/CheckpointVerificationDTO';
 import { DEFAULT_MAURITANIA_RULES } from '@/types/checkpoint-dto';
 
 // ============= ENGINE =============

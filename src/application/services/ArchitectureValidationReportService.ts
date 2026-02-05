@@ -228,27 +228,22 @@ export class ArchitectureValidationReportService {
    * Process consistency monitoring results
    */
   private static processConsistencyMonitoring(report: MonitoringReport): ConsistencyMonitoringSection {
-    const score = report.summary.overallConsistencyScore;
-    
-    const entityScoreValues = Object.values(report.summary.entityScores || {}) as number[];
-    const entityScoreKeys = Object.keys(report.summary.entityScores || {});
+    const score = report.checksPerformed > 0 ? ((report.checksPerformed - report.issuesFound) / report.checksPerformed) * 100 : 100;
     
     return {
       score,
-      totalRecords: entityScoreValues.reduce((sum, count) => sum + count, 0),
-      consistentRecords: entityScoreKeys.length > 0 
-        ? Math.round(entityScoreValues.reduce((sum, s) => sum + s, 0) / entityScoreKeys.length)
-        : 0,
-      inconsistentRecords: report.summary.totalIssues || 0,
-      entityScores: report.summary.entityScores || {},
-      criticalIssues: report.summary.criticalIssues || 0,
-      highIssues: report.summary.highIssues || 0,
-      trends: report.trends || {
+      totalRecords: report.checksPerformed,
+      consistentRecords: report.checksPerformed - report.issuesFound,
+      inconsistentRecords: report.issuesFound,
+      entityScores: {},
+      criticalIssues: report.criticalIssues,
+      highIssues: 0,
+      trends: {
         improving: [],
         declining: [],
         stable: []
       },
-      recommendations: report.recommendations || []
+      recommendations: []
     };
   }
 

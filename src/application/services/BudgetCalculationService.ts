@@ -7,7 +7,7 @@ import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { PaymentDTO } from '@/domain/dtos/PaymentDTO';
+import { PaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { BudgetCalculationDto, BudgetWarningDto } from '@/dtos/transforms/budgetTransform';
 
 interface BudgetCalculationParams {
@@ -223,10 +223,10 @@ export class BudgetCalculationService {
       const netCashFlow = totalInflows - totalOutflows;
 
       // Determine cash flow status
-      let cashFlowStatus: 'positive' | 'negative' | 'break_even';
+      let cashFlowStatus: 'positive' | 'negative' | 'breakEven';
       if (netCashFlow > 0) cashFlowStatus = 'positive';
       else if (netCashFlow < 0) cashFlowStatus = 'negative';
-      else cashFlowStatus = 'break_even';
+      else cashFlowStatus = 'breakEven';
 
       // Calculate working capital (simplified)
       const workingCapital = project.budget - totalOutflows;
