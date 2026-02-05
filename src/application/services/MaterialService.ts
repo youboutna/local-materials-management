@@ -61,9 +61,12 @@ interface MaterialWithPhase {
   updatedAt: string;
 }
 
+// Valid material categories
+const VALID_MATERIAL_CATEGORIES = ['building', 'electrical', 'plumbing', 'hvac', 'other'] as const;
+
 // Enhanced type guard for MaterialCategory
 function isMaterialCategory(category: string): category is MaterialCategory {
-  return Object.values(MaterialCategory).includes(category as MaterialCategory);
+  return VALID_MATERIAL_CATEGORIES.includes(category as any);
 }
 
 export class MaterialService {
@@ -77,9 +80,9 @@ export class MaterialService {
       errors.name = ['Material name is required'];
     }
 
-    if ('category' in data && data.category && !isMaterialCategory(data.category)) {
-      errors.category = [`Invalid material category. Valid values: ${Object.values(MaterialCategory).join(', ')}`];
-    }
+      if ('category' in data && data.category && !isMaterialCategory(data.category)) {
+        errors.category = [`Invalid material category. Valid values: ${VALID_MATERIAL_CATEGORIES.join(', ')}`];
+      }
 
     if ('pricePerUnit' in data && data.pricePerUnit !== undefined) {
       if (data.pricePerUnit < 0) {

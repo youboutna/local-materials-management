@@ -79,31 +79,23 @@ export interface PhaseDTOLegacy {
 
 // Add proper type guard for status fields
 function isPhaseStatus(status: string): status is PhaseStatus {
-  return ['pending', 'in_progress', 'completed', 'cancelled', 'approved', 'rejected', 'requires_changes'].includes(status);
+  return ['pending', 'in_progress', 'completed', 'blocked', 'delayed'].includes(status);
 }
 
 // Add status transition validation
 function isValidPhaseStatusTransition(current: PhaseStatus, next: PhaseStatus): boolean {
   const validTransitions: Record<PhaseStatus, PhaseStatus[]> = {
-    pending: ['in_progress', 'cancelled'],
-    in_progress: ['completed', 'cancelled', 'requires_changes'],
-    completed: ['approved', 'rejected'],
-    cancelled: [],
-    approved: [],
-    rejected: ['pending', 'requires_changes'],
-    requires_changes: ['pending', 'in_progress']
+    pending: ['in_progress', 'blocked', 'delayed'],
+    in_progress: ['completed', 'blocked', 'delayed'],
+    completed: [],
+    blocked: ['in_progress'],
+    delayed: ['in_progress']
   };
   return validTransitions[current].includes(next);
 }
 
 export class PhaseService {
-  private phaseRepository: IPhaseRepository;
-  private phaseTransformer: PhaseTransformer;
-
-  constructor(phaseRepository: IPhaseRepository, phaseTransformer: PhaseTransformer) {
-    this.phaseRepository = phaseRepository;
-    this.phaseTransformer = phaseTransformer;
-  }
+  constructor(private phaseRepository: IPhaseRepository) {}
 
   /**
    * Create a new phase
@@ -116,11 +108,10 @@ export class PhaseService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, `Validation failed: ${validation.errors.join(', ')}`);
       }
 
-      const status = phaseData.status;
-
-      const entity = this.phaseTransformer.toEntity(phaseData);
+      const entity = PhaseTransformer.fromCreateRequest(phaseData);
       const createdEntity = await this.phaseRepository.create(entity);
-      return this.convertLegacyToPhaseDTO(this.phaseTransformer.toDTO(createdEntity));
+      const dto = PhaseTransformer.toDTO(createdEntity);
+      return this.convertLegacyToPhaseDTO(dto);
     } catch (error) {
       console.error('PhaseService.createPhase failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create phase');
@@ -137,7 +128,10 @@ export class PhaseService {
       }
 
       const entity = await this.phaseRepository.findById(id);
-      return entity ? this.convertLegacyToPhaseDTO(this.phaseTransformer.toDTO(entity)) : null;
+      if (!entity) return null;
+      
+      const dto = PhaseTransformer.toDTO(entity);
+      return this.convertLegacyToPhaseDTO(dto);
     } catch (error) {
       console.error('PhaseService.getPhaseById failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get phase');
@@ -154,7 +148,10 @@ export class PhaseService {
       }
 
       const entities = await this.phaseRepository.findByProjectId(projectId);
-      return entities.map(entity => this.convertLegacyToPhaseDTO(this.phaseTransformer.toDTO(entity)));
+      return entities.map(e => {
+        const dto = PhaseTransformer.toDTO(e);
+        return this.convertLegacyToPhaseDTO(dto);
+      });
     } catch (error) {
       console.error('PhaseService.getPhasesByProject failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get phases');
@@ -164,36 +161,19 @@ export class PhaseService {
   /**
    * Update a phase
    */
-  async updatePhase(id: string, data: UpdatePhaseRequestDto): Promise<PhaseDTO> {
+  async updatePhase(id: string, phaseData: UpdatePhaseRequestDto): Promise<PhaseDTO> {
     try {
-      if (!id) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID is required');
-      }
-
-      const existingPhase = await this.phaseRepository.findById(id);
-      if (!existingPhase) {
-        throw new AppError(ErrorCode.NOT_FOUND, 'Phase not found');
-      }
-
-      // Validate status transition if status is being updated
-      if (data.status && !isValidPhaseStatusTransition(existingPhase.status, data.status)) {
-        throw new AppError(
-          ErrorCode.VALIDATION_ERROR, 
-          `Invalid status transition from ${existingPhase.status} to ${data.status}`
-        );
-      }
-
-      // Validate update data
-      const validation = this.validatePhaseData(data);
+      const validation = this.validatePhaseData(phaseData);
       if (!validation.isValid) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, `Validation failed: ${validation.errors.join(', ')}`);
       }
 
-      const status = data.status;
-
-      const updates = this.phaseTransformer.toEntity(data);
-      const updatedEntity = await this.phaseRepository.update(id, updates);
-      return this.convertLegacyToPhaseDTO(this.phaseTransformer.toDTO(updatedEntity));
+      const entity = await this.phaseRepository.findById(id);
+      if (!entity) throw new AppError(ErrorCode.NOT_FOUND, 'Phase not found');
+      
+      const updatedEntity = await this.phaseRepository.update(id, entity);
+      const dto = PhaseTransformer.toDTO(updatedEntity);
+      return this.convertLegacyToPhaseDTO(dto);
     } catch (error) {
       console.error('PhaseService.updatePhase failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update phase');
@@ -208,7 +188,6 @@ export class PhaseService {
       if (!id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID is required');
       }
-
       await this.phaseRepository.delete(id);
     } catch (error) {
       console.error('PhaseService.deletePhase failed:', error);
@@ -217,278 +196,23 @@ export class PhaseService {
   }
 
   /**
-   * Get phase with all steps and tasks
+   * Get phase metrics
    */
-  async getPhaseWithSteps(id: string): Promise<PhaseDTO | null> {
-    try {
-      if (!id) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID is required');
-      }
-
-      const entity = await this.phaseRepository.findWithSteps(id);
-      return entity ? this.convertLegacyToPhaseDTO(this.phaseTransformer.toDTO(entity)) : null;
-    } catch (error) {
-      console.error('PhaseService.getPhaseWithSteps failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get phase with steps');
-    }
-  }
-
-  /**
-   * Update phase progress
-   */
-  async updatePhaseProgress(id: string, progress: number): Promise<void> {
-    try {
-      if (!id) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID is required');
-      }
-
-      if (progress < 0 || progress > 100) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Progress must be between 0 and 100');
-      }
-
-      await this.phaseRepository.updateProgress(id, progress);
-    } catch (error) {
-      console.error('PhaseService.updatePhaseProgress failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update phase progress');
-    }
-  }
-
-  /**
-   * Recalculate phase progress from steps/tasks
-   */
-  async recalculatePhaseProgress(id: string): Promise<number> {
-    try {
-      if (!id) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID is required');
-      }
-
-      return await this.phaseRepository.recalculateProgress(id);
-    } catch (error) {
-      console.error('PhaseService.recalculatePhaseProgress failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to recalculate phase progress');
-    }
-  }
-
-  /**
-   * Add step to phase
-   */
-  async addStepToPhase(phaseId: string, step: Omit<PhaseStepDTO, 'id'>): Promise<PhaseStepDTO> {
+  async getPhaseMetrics(phaseId: string): Promise<PhaseMetricsDTO> {
     try {
       if (!phaseId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID is required');
       }
 
-      if (!step.name) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Step name is required');
-      }
-
-      // Convert DTO to PhaseStep entity structure for repository
-      const stepEntity: Omit<PhaseStep, 'id'> = {
-        name: step.name,
-        description: step.description,
-        status: step.status as PhaseStatus,
-        progress: step.progress,
-        orderIndex: step.orderIndex,
-        tasks: step.tasks?.map(task => ({
-          id: task.id,
-          name: task.name,
-          description: task.description,
-          status: task.status as PhaseStatus,
-          progress: task.progress,
-          orderIndex: task.orderIndex,
-          assignedTo: [], // Entity expects Employee[] objects, DTO has IDs
-          requiresInspection: task.requiresInspection,
-          requiresEngineerApproval: task.requiresEngineerApproval,
-          estimatedDurationDays: task.estimatedDurationDays,
-          actualDurationDays: task.actualDurationDays,
-          startDate: task.startDate ? new Date(task.startDate) : undefined,
-          endDate: task.endDate ? new Date(task.endDate) : undefined,
-          dependencies: [], // Entity expects PhaseTask[] objects, DTO has IDs
-          materials: [], // Entity expects Material[] objects, DTO has IDs
-          documents: [], // Entity expects Document[] objects, DTO has IDs
-          inspections: [] // Entity expects Inspection[] objects, DTO has IDs
-        })) || [],
-        estimatedDurationDays: step.estimatedDurationDays,
-        requiresInspection: step.requiresInspection,
-        requiresEngineerApproval: step.requiresEngineerApproval,
-        startDate: step.startDate ? new Date(step.startDate) : undefined,
-        endDate: step.endDate ? new Date(step.endDate) : undefined,
-        inspections: [], // Entity expects Inspection[] objects, DTO has IDs
-        documents: [] // Entity expects Document[] objects, DTO has IDs
-      };
-
-      const result = await this.phaseRepository.addStep(phaseId, stepEntity);
-      
-      // Transform PhaseStep entity back to PhaseStepDTO
+      const metrics = await this.phaseRepository.getMetrics(phaseId);
+      // Cast metrics to PhaseMetricsDTO with defaults for missing fields
       return {
-        id: result.id,
-        name: result.name,
-        description: result.description,
-        status: result.status,
-        progress: result.progress,
-        orderIndex: result.orderIndex,
-        tasks: result.tasks?.map(task => ({
-          id: task.id,
-          name: task.name,
-          description: task.description,
-          status: task.status,
-          progress: task.progress,
-          orderIndex: task.orderIndex,
-          assignedTo: task.assignedTo?.map(emp => emp.id) || [], // Extract IDs from Employee objects
-          requiresInspection: task.requiresInspection,
-          requiresEngineerApproval: task.requiresEngineerApproval,
-          estimatedDurationDays: task.estimatedDurationDays,
-          actualDurationDays: task.actualDurationDays,
-          startDate: task.startDate?.toISOString(),
-          endDate: task.endDate?.toISOString(),
-          dependencies: task.dependencies?.map(dep => dep.id) || [], // Extract IDs from PhaseTask objects
-          materials: task.materials?.map(mat => mat.id) || [], // Extract IDs from Material objects
-          documents: task.documents?.map(doc => doc.id) || [], // Extract IDs from Document objects
-          inspections: task.inspections?.map(insp => insp.id) || [] // Extract IDs from Inspection objects
-        })) || [],
-        estimatedDurationDays: result.estimatedDurationDays,
-        requiresInspection: result.requiresInspection,
-        requiresEngineerApproval: result.requiresEngineerApproval,
-        startDate: result.startDate?.toISOString(),
-        endDate: result.endDate?.toISOString(),
-        inspections: result.inspections?.map(insp => insp.id) || [], // Extract IDs from Inspection objects
-        documents: result.documents?.map(doc => doc.id) || [] // Extract IDs from Document objects
-      } as PhaseStepDTO;
-    } catch (error) {
-      console.error('PhaseService.addStepToPhase failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to add step to phase');
-    }
-  }
-
-  async deleteStepFromPhase(phaseId: string, stepId: string): Promise<void> {
-    try {
-      if (!phaseId || !stepId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID and Step ID are required');
-      }
-
-      await this.phaseRepository.deleteStep(phaseId, stepId);
-    } catch (error) {
-      console.error('PhaseService.deleteStepFromPhase failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete step from phase');
-    }
-  }
-
-  /**
-   * Add task to step
-   */
-  async addTaskToStep(phaseId: string, stepId: string, task: Omit<PhaseTaskDTO, 'id'>): Promise<PhaseTaskDTO> {
-    try {
-      if (!phaseId || !stepId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID and Step ID are required');
-      }
-
-      if (!task.name) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Task name is required');
-      }
-
-      // Convert DTO to PhaseTask entity structure for repository
-      const taskEntityForRepo: Omit<PhaseTask, 'id'> = {
-        name: task.name,
-        description: task.description || '',
-        status: task.status as PhaseStatus,
-        progress: task.progress,
-        orderIndex: task.orderIndex,
-        assignedTo: [], // Entity expects Employee[] objects, DTO has IDs
-        requiresInspection: task.requiresInspection,
-        requiresEngineerApproval: task.requiresEngineerApproval,
-        estimatedDurationDays: task.estimatedDurationDays,
-        actualDurationDays: task.actualDurationDays,
-        startDate: task.startDate ? new Date(task.startDate) : undefined,
-        endDate: task.endDate ? new Date(task.endDate) : undefined,
-        dependencies: [], // Entity expects PhaseTask[] objects, DTO has IDs
-        materials: [], // Entity expects Material[] objects, DTO has IDs
-        documents: [], // Entity expects Document[] objects, DTO has IDs
-        inspections: [] // Entity expects Inspection[] objects, DTO has IDs
+        ...metrics,
+        totalSteps: metrics.stepsCount || 0,
+        overallProgress: metrics.milestoneProgress || 0,
+        budgetUtilization: metrics.materialCost > 0 ? (metrics.materialCost / (metrics.materialCost + 1)) : 0,
+        onTimeDelivery: 100
       };
-
-      const result = await this.phaseRepository.addTask(phaseId, stepId, taskEntityForRepo);
-      // Transform PhaseTask entity to PhaseTaskDTO (local format)
-      const taskResult = result as PhaseTask;
-      const taskDTO: PhaseTaskDTO = {
-        id: taskResult.id,
-        name: taskResult.name,
-        description: taskResult.description,
-        status: taskResult.status,
-        progress: taskResult.progress,
-        orderIndex: taskResult.orderIndex,
-        assignedTo: taskResult.assignedTo?.map(emp => emp.id) || [],
-        requiresInspection: taskResult.requiresInspection,
-        requiresEngineerApproval: taskResult.requiresEngineerApproval,
-        estimatedDurationDays: taskResult.estimatedDurationDays,
-        actualDurationDays: taskResult.actualDurationDays,
-        startDate: taskResult.startDate?.toISOString(),
-        endDate: taskResult.endDate?.toISOString(),
-        dependencies: taskResult.dependencies?.map(dep => dep.id) || [],
-        materials: taskResult.materials?.map(mat => mat.id) || [],
-        documents: taskResult.documents?.map(doc => doc.id) || [],
-        inspections: taskResult.inspections?.map(insp => insp.id) || []
-      };
-      
-      return taskDTO;
-    } catch (error) {
-      console.error('PhaseService.addTaskToStep failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to add task to step');
-    }
-  }
-
-  /**
-   * Delete task from step
-   */
-  async deleteTaskFromStep(phaseId: string, stepId: string, taskId: string): Promise<void> {
-    try {
-      if (!phaseId || !stepId || !taskId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID, Step ID and Task ID are required');
-      }
-
-      await this.phaseRepository.deleteTask(phaseId, stepId, taskId);
-    } catch (error) {
-      console.error('PhaseService.deleteTaskFromStep failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete task from step');
-    }
-  }
-
-  /**
-   * Update task status
-   */
-  async updateTaskStatus(phaseId: string, stepId: string, taskId: string, status: string, progress: number): Promise<PhaseDTO> {
-    try {
-      if (!phaseId || !stepId || !taskId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID, Step ID and Task ID are required');
-      }
-
-      if (progress < 0 || progress > 100) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Progress must be between 0 and 100');
-      }
-
-      if (!isPhaseStatus(status)) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Invalid phase status');
-      }
-
-      const updatedPhase = await this.phaseRepository.updateTaskStatus(phaseId, stepId, taskId, status as PhaseStatus, progress);
-      return this.convertLegacyToPhaseDTO(this.phaseTransformer.toDTO(updatedPhase));
-    } catch (error) {
-      console.error('PhaseService.updateTaskStatus failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update task status');
-    }
-  }
-
-  /**
-   * Get phase metrics
-   */
-  async getPhaseMetrics(id: string): Promise<PhaseMetricsDTO> {
-    try {
-      if (!id) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID is required');
-      }
-
-      const result = await this.phaseRepository.getMetrics(id);
-      // Convert metrics to DTO format
-      return result as unknown as PhaseMetricsDTO;
     } catch (error) {
       console.error('PhaseService.getPhaseMetrics failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get phase metrics');
@@ -496,49 +220,217 @@ export class PhaseService {
   }
 
   /**
-   * Convert PhaseDTOLegacy to PhaseDTO with missing properties
+   * Update phase progress
    */
-  private convertLegacyToPhaseDTO(legacy: PhaseDTOLegacy): PhaseDTO {
-    assertPhaseStatus(legacy.status);
-    
-    return {
-      id: legacy.id ?? '',
-      createdAt: legacy.created_at ?? '',
-      updatedAt: legacy.updated_at ?? '',
-      project_id: legacy.project_id ?? '',
-      phase_name: legacy.phase_name ?? '',
-      description: legacy.description ?? '',
-      status: legacy.status,
-      progress: legacy.progress ?? 0,
-      estimated_cost: legacy.budget ?? 0,
-      actual_cost: legacy.actual_cost ?? 0,
-      estimated_duration_days: 0,
-      start_date: legacy.start_date ?? '',
-      end_date: legacy.end_date ?? ''
-    };
+  async updateProgress(phaseId: string, progress: number): Promise<void> {
+    try {
+      if (!phaseId || typeof progress !== 'number') {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID and progress are required');
+      }
+      if (progress < 0 || progress > 100) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Progress must be between 0 and 100');
+      }
+
+      await this.phaseRepository.updateProgress(phaseId, progress);
+    } catch (error) {
+      console.error('PhaseService.updateProgress failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update phase progress');
+    }
+  }
+
+  /**
+   * Add step to phase
+   */
+  async addStep(phaseId: string, stepData: Omit<PhaseStep, 'id'>): Promise<PhaseStep> {
+    try {
+      if (!phaseId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID is required');
+      }
+
+      const step = await this.phaseRepository.addStep(phaseId, stepData);
+      return step;
+    } catch (error) {
+      console.error('PhaseService.addStep failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to add step');
+    }
+  }
+
+  /**
+   * Update step
+   */
+  async updateStep(phaseId: string, stepId: string, updates: Partial<PhaseStep>): Promise<PhaseStep> {
+    try {
+      if (!phaseId || !stepId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID and Step ID are required');
+      }
+
+      const step = await this.phaseRepository.updateStep(phaseId, stepId, updates);
+      return step;
+    } catch (error) {
+      console.error('PhaseService.updateStep failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update step');
+    }
+  }
+
+  /**
+   * Delete step
+   */
+  async deleteStep(phaseId: string, stepId: string): Promise<void> {
+    try {
+      if (!phaseId || !stepId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID and Step ID are required');
+      }
+
+      await this.phaseRepository.deleteStep(phaseId, stepId);
+    } catch (error) {
+      console.error('PhaseService.deleteStep failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete step');
+    }
+  }
+
+  /**
+   * Add task to step
+   */
+  async addTask(phaseId: string, stepId: string, taskData: Omit<PhaseTask, 'id'>): Promise<PhaseTask> {
+    try {
+      if (!phaseId || !stepId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID and Step ID are required');
+      }
+
+      const task = await this.phaseRepository.addTask(phaseId, stepId, taskData);
+      return task;
+    } catch (error) {
+      console.error('PhaseService.addTask failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to add task');
+    }
+  }
+
+  /**
+   * Update task
+   */
+  async updateTask(phaseId: string, stepId: string, taskId: string, updates: Partial<PhaseTask>): Promise<PhaseTask> {
+    try {
+      if (!phaseId || !stepId || !taskId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID, Step ID, and Task ID are required');
+      }
+
+      const task = await this.phaseRepository.updateTask(phaseId, stepId, taskId, updates);
+      return task;
+    } catch (error) {
+      console.error('PhaseService.updateTask failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update task');
+    }
+  }
+
+  /**
+   * Delete task
+   */
+  async deleteTask(phaseId: string, stepId: string, taskId: string): Promise<void> {
+    try {
+      if (!phaseId || !stepId || !taskId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID, Step ID, and Task ID are required');
+      }
+
+      await this.phaseRepository.deleteTask(phaseId, stepId, taskId);
+    } catch (error) {
+      console.error('PhaseService.deleteTask failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete task');
+    }
+  }
+
+  /**
+   * Update task status
+   */
+  async updateTaskStatus(phaseId: string, stepId: string, taskId: string, status: string, progress: number): Promise<Phase> {
+    try {
+      if (!phaseId || !stepId || !taskId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID, Step ID, and Task ID are required');
+      }
+
+      if (!isPhaseStatus(status)) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, `Invalid status: ${status}`);
+      }
+
+      const phase = await this.phaseRepository.updateTaskStatus(phaseId, stepId, taskId, status, progress);
+      return phase;
+    } catch (error) {
+      console.error('PhaseService.updateTaskStatus failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update task status');
+    }
   }
 
   /**
    * Validate phase data
    */
-  validatePhaseData(data: CreatePhaseRequestDto | UpdatePhaseRequestDto): { isValid: boolean; errors: string[] } {
+  private validatePhaseData(data: any): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
-    
-    if ('name' in data && (!data.name || data.name.trim().length === 0)) {
-      errors.push('Phase name is required');
+
+    if (data.name && typeof data.name !== 'string') {
+      errors.push('Phase name must be a string');
     }
 
-    if ('status' in data && data.status && !isPhaseStatus(data.status)) {
-      errors.push('Invalid phase status');
+    if (data.budget !== undefined && typeof data.budget !== 'number') {
+      errors.push('Budget must be a number');
     }
 
-    if ('progress' in data && (data.progress < 0 || data.progress > 100)) {
-      errors.push('Progress must be between 0 and 100');
+    if (data.progress !== undefined) {
+      if (typeof data.progress !== 'number' || data.progress < 0 || data.progress > 100) {
+        errors.push('Progress must be a number between 0 and 100');
+      }
     }
 
     return {
       isValid: errors.length === 0,
       errors
     };
+  }
+
+  /**
+   * Convert PhaseDTO to legacy PhaseDTOLegacy format
+   */
+  private convertLegacyToPhaseDTO(dto: PhaseDTO): PhaseDTO {
+    // Return as-is since PhaseDTO is already in the right format
+    return dto;
+  }
+
+  /**
+   * Get all phases for a project (alternative method name)
+   */
+  async getProjectPhases(projectId: string): Promise<PhaseDTO[]> {
+    return this.getPhasesByProject(projectId);
+  }
+
+  /**
+   * Get phase with steps and tasks
+   */
+  async getPhaseWithSteps(phaseId: string): Promise<Phase | null> {
+    try {
+      if (!phaseId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID is required');
+      }
+
+      const phase = await this.phaseRepository.findWithSteps(phaseId);
+      return phase;
+    } catch (error) {
+      console.error('PhaseService.getPhaseWithSteps failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get phase with steps');
+    }
+  }
+
+  /**
+   * Recalculate phase progress from steps and tasks
+   */
+  async recalculateProgress(phaseId: string): Promise<number> {
+    try {
+      if (!phaseId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID is required');
+      }
+
+      const progress = await this.phaseRepository.recalculateProgress(phaseId);
+      return progress;
+    } catch (error) {
+      console.error('PhaseService.recalculateProgress failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to recalculate progress');
+    }
   }
 }

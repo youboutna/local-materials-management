@@ -26,19 +26,19 @@ export class ProjectAnalyticsService {
   ) {}
 
   /**
-   * Convert InspectionDTO to Inspection type for ProjectDetailDTO
-   */
+    * Convert InspectionDTO to Inspection type for ProjectDetailDTO
+    */
   private convertToInspection(inspection: InspectionDTO): Inspection {
     return {
-      id: inspection.id,
-      projectId: inspection.projectId,
-      inspector: inspection.inspector,
-      date: inspection.date,
-      status: inspection.status as InspectionStatus,
-      progressAtInspection: inspection.progressAtInspection,
-      comments: inspection.comments,
-      createdAt: inspection.createdAt,
-      updatedAt: inspection.updatedAt,
+      id: inspection.id || '',
+      projectId: inspection.projectId || '',
+      inspector: inspection.inspector || '',
+      date: inspection.createdAt || new Date().toISOString(),
+      status: (inspection.status as unknown as InspectionStatus) || 'pending',
+      progressAtInspection: inspection.progressAtInspection || 0,
+      comments: (inspection as any).comments || null,
+      createdAt: inspection.createdAt || new Date().toISOString(),
+      updatedAt: inspection.updatedAt || new Date().toISOString(),
       phaseId: inspection.phaseId,
       documents: [],
       issues: [],
@@ -72,12 +72,12 @@ export class ProjectAnalyticsService {
       // Build comprehensive project DTO for calculations
       const projectDetailDTO: ProjectDetailDTO = {
         id: projectData.project.id,
-        title: projectData.project.title,
+        title: projectData.project.title || '',
         description: projectData.project.description || '',
         location: projectData.project.location || '',
-        status: projectData.project.status || 'en cours',
-        progress: projectData.project.progress || 0,
-        budget: projectData.project.budget || 0,
+        status: (projectData.project.status as any) || 'en cours',
+        progress: projectData.project.progress ?? 0,
+        budget: projectData.project.budget ?? 0,
         startDate: projectData.project.startDate?.toISOString() || new Date().toISOString(),
         endDate: projectData.project.endDate?.toISOString(),
         thumbnail: projectData.project.thumbnail || '',
