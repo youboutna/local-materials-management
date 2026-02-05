@@ -281,32 +281,45 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
   // 🎨 UI Layer - Manual step saving with validation (respect user workflow)
   const saveCurrentStep = async () => {
-    const workflowService = new ProjectWorkflowService(
-      RepositoryFactory.getProjectRepository(),
-      RepositoryFactory.getPhaseRepository(),
-      RepositoryFactory.getRiskRepository(),
-      RepositoryFactory.getStakeholderRepository()
-    );
-    
-    const result = await workflowService.saveEditStep(currentStep + 1, flattenedProjectData, {
-      projectId: '',
-      currentStep: currentStep + 1,
-      totalSteps: 10,
-      isDraft: true,
-      isComplete: false,
-      modifiedFields: []
-    });
-    
-    if (result.success) {
+    try {
+      // Instantiate workflow service with repositories
+      const workflowService = new ProjectWorkflowService(
+        RepositoryFactory.getProjectRepository(),
+        RepositoryFactory.getPhaseRepository(),
+        RepositoryFactory.getRiskRepository(),
+        RepositoryFactory.getStakeholderRepository()
+      );
+      
+      // Convert component state to ProjectWorkflowDTO
+      const workflowDTO: ProjectWorkflowData = {
+        projectId: projectWorkflowData.projectId,
+        currentStep: currentStep + 1,
+        isDraft: projectWorkflowData.isDraft,
+        isComplete: projectWorkflowData.isComplete,
+        projectData: projectWorkflowData.projectData,
+        relatedData: projectWorkflowData.relatedData,
+        metadata: projectWorkflowData.metadata
+      };
+
+      // Save workflow data through service
+      await workflowService.saveWorkflowData({
+        project: projectWorkflowData.projectData,
+        currentStep: currentStep + 1,
+        status: projectWorkflowData.isDraft ? 'draft' : 'completed',
+        completedSteps: currentStep + 1,
+        mode: 'create'
+      } as any);
+      
       toast({
         title: "Sauvegarde réussie",
         description: `Étape ${currentStep + 1} sauvegardée avec succès`,
       });
       return true;
-    } else {
+    } catch (error) {
+      console.error('Step save error:', error);
       toast({
         title: "Erreur de sauvegarde",
-        description: result.error || "Échec de la sauvegarde",
+        description: error instanceof Error ? error.message : "Échec de la sauvegarde",
         variant: "destructive"
       });
       return false;
@@ -398,46 +411,57 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   };
 
   const handleSubmit = async () => {
-    const workflowService = new ProjectWorkflowService(
-      RepositoryFactory.getProjectRepository(),
-      RepositoryFactory.getPhaseRepository(),
-      RepositoryFactory.getRiskRepository(),
-      RepositoryFactory.getStakeholderRepository()
-    );
-    
-    const validation = await workflowService.validateEditStep(10, flattenedProjectData, {
-      projectId: '',
-      currentStep: 10,
-      totalSteps: 10,
-      isDraft: false,
-      isComplete: true,
-      modifiedFields: []
-    });
-    
-    if (!validation.isValid) {
-      toast({
-        title: "Erreur de validation finale",
-        description: "Veuillez compléter toutes les étapes requises avant de créer le projet: " + validation.errors.join(', '),
-        variant: "destructive"
+    try {
+      // Instantiate workflow service
+      const workflowService = new ProjectWorkflowService(
+        RepositoryFactory.getProjectRepository(),
+        RepositoryFactory.getPhaseRepository(),
+        RepositoryFactory.getRiskRepository(),
+        RepositoryFactory.getStakeholderRepository()
+      );
+      
+      // Validate current step before submitting
+      const validation = workflowService.validateStep(currentStep + 1, projectWorkflowData, {
+        projectId: projectWorkflowData.projectId || '',
+        currentStep: currentStep + 1,
+        totalSteps: steps.length,
+        isDraft: false,
+        isComplete: true,
+        modifiedFields: []
       });
-      return;
-    }
+      
+      if (!validation.isValid) {
+        toast({
+          title: "Erreur de validation",
+          description: "Veuillez compléter toutes les étapes requises: " + (validation.errors || []).join(', '),
+          variant: "destructive"
+        });
+        return;
+      }
 
-    const result = await workflowService.completeEditWorkflow('');
-    
-    if (result.success) {
+      // Complete the workflow
+      await workflowService.completeWorkflow({
+        project: projectWorkflowData.projectData,
+        currentStep: steps.length,
+        status: 'completed',
+        completedSteps: steps.length,
+        mode: 'create'
+      } as any);
+      
       toast({
         title: "Projet créé avec succès",
         description: "Le projet a été créé et toutes les étapes sont complétées",
       });
       
-      if (result.projectId) {
-        window.location.href = `/projects/${result.projectId}`;
+      // Redirect to project detail if projectId exists
+      if (projectWorkflowData.projectId) {
+        window.location.href = `/projects/${projectWorkflowData.projectId}`;
       }
-    } else {
+    } catch (error) {
+      console.error('Submission error:', error);
       toast({
         title: "Erreur de création",
-        description: result.error || "Échec de la création du projet",
+        description: error instanceof Error ? error.message : "Échec de la création du projet",
         variant: "destructive"
       });
     }
