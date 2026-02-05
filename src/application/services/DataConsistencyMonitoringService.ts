@@ -18,6 +18,14 @@ import {
   MonitoringReport
 } from '@/dtos/entities/ConsistencyDTO';
 
+export interface MonitoringReport {
+  timestamp: string;
+  checksPerformed: number;
+  issuesFound: number;
+  criticalIssues: number;
+  warnings: string[];
+}
+
 export class DataConsistencyMonitoringService {
   private projectService: ProjectService;
   private phaseService: PhaseService;

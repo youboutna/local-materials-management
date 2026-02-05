@@ -8,7 +8,6 @@ import { IBankGuaranteeRepository } from '@/domain/repositories/IBankGuaranteeRe
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import {
   BankGuaranteeActionDTO,
-  BankGuaranteeActionTemplateDTO,
   CreateBankGuaranteeActionRequestDto,
   UpdateBankGuaranteeActionRequestDto,
   BankGuaranteeActionStatistics
@@ -268,7 +267,7 @@ export class BankGuaranteeActionService {
   /**
    * Get all templates
    */
-  async getTemplates(): Promise<BankGuaranteeActionTemplateDTO[]> {
+  async getTemplates(): Promise<any[]> {
     try {
       console.warn('BankGuaranteeActionService.getTemplates: Template repository not available');
       return [];

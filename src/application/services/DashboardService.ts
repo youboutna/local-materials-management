@@ -7,7 +7,7 @@
 import { ProjectService } from './ProjectService';
 import { EmployeeService } from './EmployeeService';
 import { MaterialService } from './MaterialService';
-import { DocumentService, type DocumentResponseDto } from './DocumentService';
+import { DocumentService } from './DocumentService';
 import { PaymentRequestService } from './PaymentRequestService';
 import { InspectionService } from './InspectionService';
 import { SupplierService } from './SupplierService';
@@ -48,7 +48,7 @@ export class DashboardService {
   constructor() {
     this.projectService = new ProjectService(RepositoryFactory.getProjectRepository());
     this.employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
-    this.materialService = new MaterialService();
+    this.materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
     this.documentService = new DocumentService(RepositoryFactory.getDocumentRepository());
     this.paymentService = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
     this.inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());

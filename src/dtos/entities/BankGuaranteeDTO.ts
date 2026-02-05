@@ -3,7 +3,7 @@
  * Centralized and standardized for hexagonal architecture
  */
 
-export type BankGuaranteeType = 'performance' | 'payment' | 'advancePayment' | 'advance_payment' | 'warranty' | 'retention';
+export type BankGuaranteeType = 'performance' | 'payment' | 'advance_payment' | 'warranty' | 'retention';
 export type BankGuaranteeStatus = 'active' | 'expired' | 'claimed' | 'cancelled' | 'pending';
 
 export interface BankGuaranteeDTO {
@@ -97,6 +97,8 @@ export interface BankGuaranteeStatsDTO {
   claimed: number;
   cancelled: number;
   expiringSoonCount: number;
+  totalAmount?: number;
+  averageExpiryDays?: number;
 }
 
 export interface CreateBankGuaranteeDTO {
