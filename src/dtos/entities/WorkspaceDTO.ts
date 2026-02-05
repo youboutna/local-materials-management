@@ -6,6 +6,7 @@ export interface WorkspaceDTO {
   capacity?: number;
   contactPhone?: string;
   contactEmail?: string;
+  status?: 'active' | 'inactive';
   createdAt?: string;
   updatedAt?: string;
 }

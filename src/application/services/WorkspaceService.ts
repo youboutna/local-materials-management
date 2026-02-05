@@ -14,18 +14,21 @@ import {
 import { WorkspaceTransformer } from '@/dtos/transforms/WorkspaceTransformer';
 
 export class WorkspaceService {
-  private workspaceRepository = RepositoryFactory.getWorkspaceRepository();
+  private static workspaceRepository: any = null;
 
   /**
    * Get a workspace by ID
    */
   static async getWorkspaceById(id: string): Promise<WorkspaceDTO | null> {
     try {
+      if (!this.workspaceRepository) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Workspace repository not available');
+      }
       const workspace = await this.workspaceRepository.findById(id);
       return WorkspaceTransformer.toDTO(workspace);
     } catch (error) {
       console.error('Error fetching workspace:', error);
-      throw new AppError(ErrorCode.NOT_FOUND, 'Workspace not found');
+      throw error instanceof AppError ? error : new AppError(ErrorCode.NOT_FOUND, 'Workspace not found');
     }
   }
 
@@ -34,12 +37,15 @@ export class WorkspaceService {
    */
   static async createWorkspace(workspaceData: CreateWorkspaceRequestDTO): Promise<WorkspaceDTO> {
     try {
+      if (!this.workspaceRepository) {
+        throw new AppError(ErrorCode.INTERNAL_ERROR, 'Workspace repository not available');
+      }
       const workspaceDataTransformed = WorkspaceTransformer.fromCreateDTO(workspaceData);
       const newWorkspace = await this.workspaceRepository.create(workspaceDataTransformed);
       return WorkspaceTransformer.toDTO(newWorkspace);
     } catch (error) {
       console.error('Error creating workspace:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create workspace');
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create workspace');
     }
   }
 
