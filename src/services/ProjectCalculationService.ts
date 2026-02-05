@@ -1,5 +1,9 @@
 // Business logic and calculations service
-import { ProjectDetailDTO, TaskDTO, InspectionDTO, PaymentDTO, RiskDTO } from '@/types/dto';
+import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
+import { TaskDTO } from '@/dtos/entities/TaskDTO';
+import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
+import { PaymentDTO } from '@/dtos/entities/PaymentDTO';
+import { RiskDTO } from '@/dtos/entities/RiskDTO';
 import { EVMCalculations, ProgressAnalytics, BudgetAnalytics, TimelineAnalytics, QualityMetrics, RiskAnalytics, ProjectHealthScore } from '@/types/calculations';
 import { GanttChartData, PERTAnalysis, EVMData } from '@/types/project';
 

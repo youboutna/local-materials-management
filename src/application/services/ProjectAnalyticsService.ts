@@ -6,7 +6,7 @@
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { IProjectRepository, IInspectionRepository, IMilestoneRepository } from '@/domain/repositories';
-import { ProjectDetailDTO } from '@/types/dto';
+import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 import { 
   ProjectAnalyticsDTO,

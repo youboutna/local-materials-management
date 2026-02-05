@@ -13,7 +13,7 @@ import InteractiveProjectsList from "@/components/projects/InteractiveProjectsLi
 import EnhancedInteractiveMap from "@/components/projects/EnhancedInteractiveMap";
 import { useProjectsHex } from "@/hooks/hexagonal";
 import { usePagination } from "@/hooks/usePagination";
-import { ProjectData } from "@/types/project";
+import { ProjectData } from '@/dtos/entities/ProjectDTO';
 import { MapLocation } from "@/components/ProjectMap";
 import { useProjectsFilter } from "@/hooks/useProjectsFilter";
 import WaterfallProjectManager from "@/components/project/WaterfallProjectManager";

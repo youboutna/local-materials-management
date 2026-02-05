@@ -19,7 +19,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { ProjectData } from "@/types/project";
+import { ProjectData } from '@/dtos/entities/ProjectDTO';
 import StatusBadge from "@/components/StatusBadge";
 import { Checkbox } from "../ui/checkbox";
 

@@ -1,19 +1,296 @@
 /**
  * Document Data Transfer Objects
  * Centralized and standardized for hexagonal architecture
+ * Following clean code principles: camelCase only, no business logic
  */
 
 import { BaseEntityDTO } from '../shared';
 
-// Add type guard for DocumentType
+/**
+ * Document type enumeration
+ * Classification of document types
+ */
+export enum DocumentType {
+  CONTRACT = 'contract',
+  PLAN = 'plan',
+  SPECIFICATION = 'specification',
+  REPORT = 'report',
+  CERTIFICATE = 'certificate',
+  PERMIT = 'permit',
+  INVOICE = 'invoice',
+  RECEIPT = 'receipt',
+  MANUAL = 'manual',
+  POLICY = 'policy',
+  PROCEDURE = 'procedure',
+  DRAWING = 'drawing',
+  PHOTO = 'photo',
+  VIDEO = 'video',
+  BLUEPRINT = 'blueprint',
+  SCHEMA = 'schema',
+  CHECKLIST = 'checklist',
+  FORM = 'form',
+  TEMPLATE = 'template'
+}
+
+/**
+ * Document status enumeration
+ * Current state of document lifecycle
+ */
 export enum DocumentStatus {
   DRAFT = 'draft',
-  PENDING_REVIEW = 'pending_review',
+  PENDING_APPROVAL = 'pending_approval',
   APPROVED = 'approved',
   REJECTED = 'rejected',
-  PUBLISHED = 'published',
-  ARCHIVED = 'archived'
+  ARCHIVED = 'archived',
+  EXPIRED = 'expired',
+  DEPRECATED = 'deprecated'
 }
+
+/**
+ * Document priority enumeration
+ * Priority levels for documents
+ */
+export enum DocumentPriority {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  URGENT = 'urgent'
+}
+
+/**
+ * Main Document DTO
+ * Core document data structure
+ */
+export interface DocumentDTO extends BaseEntityDTO {
+  // Core identification
+  id: string;
+  name: string;
+  description?: string;
+  
+  // Classification
+  type: DocumentType;
+  status: DocumentStatus;
+  priority: DocumentPriority;
+  category?: string;
+  
+  // Content
+  content?: string;
+  summary?: string;
+  keywords?: string[];
+  
+  // File information
+  fileName?: string;
+  fileType?: string;
+  fileSize?: number;
+  mimeType?: string;
+  url?: string;
+  
+  // Versioning
+  version?: number;
+  isLatest?: boolean;
+  parentDocumentId?: string;
+  versionHistory?: Array<{
+    version: number;
+    createdBy: string; // Employee ID only for DTO
+    createdAt: string;
+    changeNotes?: string;
+  }>;
+  
+  // Access control
+  accessLevel?: 'public' | 'internal' | 'confidential' | 'restricted';
+  allowedRoles?: string[];
+  allowedUsers?: string[]; // User IDs only for DTO
+  
+  // Relationships
+  projectId?: string;
+  phaseId?: string;
+  taskId?: string;
+  inspectionId?: string;
+  riskId?: string;
+  relatedDocuments?: string[]; // Document IDs only for DTO
+  
+  // Metadata
+  tags?: string[];
+  notes?: string;
+  
+  // Form data fields (merged from DocumentFormDataDTO)
+  isRequired?: boolean;
+  uploadedBy?: string;
+  uploadedAt?: string;
+  
+  // System fields
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Document creation request interface
+ * Input for creating new documents
+ */
+export interface CreateDocumentDTO {
+  name: string;
+  description?: string;
+  type: DocumentType;
+  status?: DocumentStatus;
+  priority?: DocumentPriority;
+  category?: string;
+  content?: string;
+  summary?: string;
+  keywords?: string[];
+  fileName?: string;
+  fileType?: string;
+  fileSize?: number;
+  url?: string;
+  accessLevel?: 'public' | 'internal' | 'confidential' | 'restricted';
+  allowedRoles?: string[];
+  allowedUsers?: string[]; // User IDs only for DTO
+  parentDocumentId?: string;
+  version?: number;
+  isLatest?: boolean;
+  projectId?: string;
+  phaseId?: string;
+  taskId?: string;
+  inspectionId?: string;
+  riskId?: string;
+  relatedDocuments?: string[]; // Document IDs only for DTO
+  tags?: string[];
+  notes?: string;
+}
+
+/**
+ * Document update request interface
+ * Input for updating existing documents
+ */
+export interface UpdateDocumentDTO {
+  name?: string;
+  description?: string;
+  type?: DocumentType;
+  status?: DocumentStatus;
+  priority?: DocumentPriority;
+  category?: string;
+  content?: string;
+  summary?: string;
+  keywords?: string[];
+  fileName?: string;
+  fileType?: string;
+  fileSize?: number;
+  url?: string;
+  accessLevel?: 'public' | 'internal' | 'confidential' | 'restricted';
+  allowedRoles?: string[];
+  allowedUsers?: string[]; // User IDs only for DTO
+  parentDocumentId?: string;
+  version?: number;
+  isLatest?: boolean;
+  tags?: string[];
+  notes?: string;
+  
+  // Metadata
+  updatedBy?: string;
+  changeReason?: string;
+}
+
+/**
+ * Document summary interface
+ * Lightweight document representation for lists
+ */
+export interface DocumentSummaryDTO extends BaseEntityDTO {
+  id: string;
+  name: string;
+  type: DocumentType;
+  status: DocumentStatus;
+  priority: DocumentPriority;
+  category?: string;
+  fileSize?: number;
+  url?: string;
+  projectId?: string;
+  phaseId?: string;
+  taskId?: string;
+  isRequired?: boolean;
+  isOverdue?: boolean;
+  tags?: string[];
+  projectTitle?: string;
+  phaseName?: string;
+}
+
+/**
+ * Document statistics interface
+ * Performance metrics for document management
+ */
+export interface DocumentStatisticsDTO {
+  totalDocuments: number;
+  activeDocuments: number;
+  archivedDocuments: number;
+  expiredDocuments: number;
+  totalSize?: number;
+  averageFileSize?: number;
+  byType: Record<DocumentType, number>;
+  byStatus: Record<DocumentStatus, number>;
+  byPriority: Record<DocumentPriority, number>;
+  byCategory: Record<string, number>;
+  lastUpdated?: string;
+}
+
+/**
+ * Document version interface
+ * Version tracking data
+ */
+export interface DocumentVersionDTO {
+  id: string;
+  documentId: string;
+  version: number;
+  title: string;
+  description?: string;
+  changes?: string;
+  createdById?: string; // Employee ID only for DTO
+  createdAt: string;
+  isLatest?: boolean;
+  downloadCount?: number;
+  notes?: string;
+}
+
+/**
+ * Document access log interface
+ * Access tracking for documents
+ */
+export interface DocumentAccessLogDTO {
+  id: string;
+  documentId: string;
+  userId: string; // User ID only for DTO
+  action: 'viewed' | 'downloaded' | 'uploaded' | 'updated' | 'deleted' | 'shared' | 'approved' | 'rejected';
+  timestamp: string;
+  ipAddress?: string;
+  userAgent?: string;
+  notes?: string;
+  duration?: number; // in seconds
+}
+
+/**
+ * Document filter interface
+ * Filter criteria for document queries
+ */
+export interface DocumentFilterDTO {
+  projectId?: string;
+  phaseId?: string;
+  taskId?: string;
+  type?: DocumentType;
+  status?: DocumentStatus;
+  priority?: DocumentPriority;
+  category?: string;
+  searchQuery?: string;
+  tags?: string[];
+  isRequired?: boolean;
+  isOverdue?: boolean;
+  accessLevel?: 'public' | 'internal' | 'confidential' | 'restricted';
+  dateRange?: {
+    startDate?: string;
+    endDate?: string;
+  };
+  fileSizeRange?: {
+    min?: number;
+    max?: number;
+  };
+}
+
 export interface DocumentDTO extends BaseEntityDTO {
   id: string;
   name: string;

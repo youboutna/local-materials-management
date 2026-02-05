@@ -3,16 +3,18 @@
  * Converts between Domain Entities and DTOs
  */
 
-import { TenderEstimate, TenderEstimateItem } from '@/domain/repositories/ITenderEstimateRepository';
+import { TenderEstimate, TenderEstimateItem, CurrencyCode } from '@/domain/entities/TenderEstimate';
 import { 
-  TenderEstimateDTO, 
+  TenderEstimateDTO,
   TenderEstimateItemDTO,
   TenderEstimateStatsDto,
   TenderEstimateValidationDto,
   TenderEstimateComparisonDto,
-  TenderEstimateItemDifferenceDto,
   TenderEstimateValidationErrorDto,
-  TenderEstimateValidationWarningDto
+  TenderEstimateValidationWarningDto,
+  TenderEstimateRiskDto,
+  TenderEstimateMarginRulesDto,
+  EstimateTotalsDto
 } from '@/dtos/entities/TenderEstimateDTO';
 
 export class TenderEstimateTransformer {
@@ -22,16 +24,35 @@ export class TenderEstimateTransformer {
   static toTenderEstimateDTO(entity: TenderEstimate): TenderEstimateDTO {
     return {
       id: entity.id,
-      tender_id: entity.tender_id,
-      submitted_by: entity.submitted_by,
-      submission_date: entity.submission_date,
+      tender_id: entity.tenderId,
+      submitted_by: entity.submittedBy,
+      submission_date: entity.submissionDate,
       status: entity.status,
-      total_amount: entity.total_amount,
+      total_amount: entity.totalAmount,
       currency: entity.currency,
-      validity_period: entity.validity_period,
+      validity_period: entity.validityPeriod,
       notes: entity.notes,
-      created_at: entity.created_at,
-      updated_at: entity.updated_at
+      // Financial fields (Entity camelCase → DTO camelCase - PROMPTS.md Rule #3)
+      subtotal: entity.subtotal,
+      taxRate: entity.taxRate,
+      taxAmount: entity.taxAmount,
+      totalWithTax: entity.totalWithTax,
+      discountRate: entity.discountRate,
+      discountAmount: entity.discountAmount,
+      overheadPercentage: entity.overheadPercentage,
+      overheadAmount: entity.overheadAmount,
+      profitMarginPercentage: entity.profitMarginPercentage,
+      profitMarginAmount: entity.profitMarginAmount,
+      finalTotal: entity.finalTotal,
+      // Cost breakdown fields
+      totalMaterialsCost: entity.totalMaterialsCost,
+      totalLaborCost: entity.totalLaborCost,
+      totalEquipmentCost: entity.totalEquipmentCost,
+      // Business logic calculated fields
+      margin_rules: entity.marginRules || undefined,
+      risk_assessment: entity.riskAssessment || undefined,
+      created_at: entity.createdAt,
+      updated_at: entity.updatedAt
     };
   }
 
@@ -41,16 +62,36 @@ export class TenderEstimateTransformer {
   static toTenderEstimateEntity(dto: TenderEstimateDTO): TenderEstimate {
     return {
       id: dto.id,
-      tender_id: dto.tender_id,
-      submitted_by: dto.submitted_by,
-      submission_date: dto.submission_date,
+      tenderId: dto.tender_id,
       status: dto.status,
-      total_amount: dto.total_amount,
-      currency: dto.currency,
-      validity_period: dto.validity_period,
+      currency: dto.currency as CurrencyCode,
+      estimateType: dto.estimateType || 'standard',
+      totalAmount: dto.total_amount,
+      validityPeriod: dto.validity_period,
       notes: dto.notes,
-      created_at: dto.created_at,
-      updated_at: dto.updated_at
+      // Financial fields (DTO camelCase → Entity camelCase - PROMPTS.md Rule #3)
+      subtotal: dto.subtotal,
+      taxRate: dto.taxRate,
+      taxAmount: dto.taxAmount,
+      totalWithTax: dto.totalWithTax,
+      discountRate: dto.discountRate,
+      discountAmount: dto.discountAmount,
+      overheadPercentage: dto.overheadPercentage,
+      overheadAmount: dto.overheadAmount,
+      profitMarginPercentage: dto.profitMarginPercentage,
+      profitMarginAmount: dto.profitMarginAmount,
+      finalTotal: dto.finalTotal,
+      // Cost breakdown fields
+      totalMaterialsCost: dto.totalMaterialsCost,
+      totalLaborCost: dto.totalLaborCost,
+      totalEquipmentCost: dto.totalEquipmentCost,
+      // Business logic fields
+      marginRules: dto.margin_rules,
+      riskAssessment: dto.risk_assessment,
+      submittedBy: dto.submitted_by,
+      submissionDate: dto.submission_date,
+      createdAt: dto.created_at,
+      updatedAt: dto.updated_at
     };
   }
 
@@ -60,17 +101,23 @@ export class TenderEstimateTransformer {
   static toTenderEstimateItemDTO(entity: TenderEstimateItem): TenderEstimateItemDTO {
     return {
       id: entity.id,
-      estimate_id: entity.estimate_id,
-      item_code: entity.item_code,
+      estimate_id: entity.estimateId,
+      item_code: entity.itemCode,
       description: entity.description,
       unit: entity.unit,
       quantity: entity.quantity,
-      unit_price: entity.unit_price,
-      total_price: entity.total_price,
+      unit_price: entity.unitPrice,
+      total_price: entity.totalPrice,
       category: entity.category,
       specifications: entity.specifications,
-      created_at: entity.created_at,
-      updated_at: entity.updated_at
+      item_type: entity.itemType || 'material',
+      materialId: entity.materialId,
+      itemType: entity.itemType || 'material',
+      // Business logic calculated fields
+      margin_percentage: 0, // Default value since method doesn't exist
+      line_total: entity.totalPrice,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
   }
 
@@ -80,17 +127,17 @@ export class TenderEstimateTransformer {
   static toTenderEstimateItemEntity(dto: TenderEstimateItemDTO): TenderEstimateItem {
     return {
       id: dto.id,
-      estimate_id: dto.estimate_id,
-      item_code: dto.item_code,
+      estimateId: dto.estimate_id,
+      itemCode: dto.item_code,
       description: dto.description,
       unit: dto.unit,
       quantity: dto.quantity,
-      unit_price: dto.unit_price,
-      total_price: dto.total_price,
+      unitPrice: dto.unit_price,
+      totalPrice: dto.total_price,
       category: dto.category,
       specifications: dto.specifications,
-      created_at: dto.created_at,
-      updated_at: dto.updated_at
+      createdAt: dto.created_at,
+      updatedAt: dto.updated_at
     };
   }
 
@@ -125,26 +172,30 @@ export class TenderEstimateTransformer {
   /**
    * Transform stats data to DTO
    */
-  static toTenderEstimateStatsDTO(stats: {
-    totalEstimates: number;
-    estimatesByStatus: Record<string, number>;
-    totalValue: number;
-    averageAmount: number;
-    estimatesBySubmitter: Record<string, number>;
+  static toTenderEstimateStatsDto(stats: {
+    totalEstimates: number,
+    totalAmount: number,
+    averageAmount: number,
+    byStatus: Record<string, number>,
+    byCurrency: Record<string, number>,
+    totalValue: number,
+    recentEstimates: TenderEstimate[]
   }): TenderEstimateStatsDto {
     return {
       total_estimates: stats.totalEstimates,
-      estimates_by_status: stats.estimatesByStatus,
-      total_value: stats.totalValue,
+      total_amount: stats.totalAmount,
       average_amount: stats.averageAmount,
-      estimates_by_submitter: stats.estimatesBySubmitter
+      estimates_by_status: stats.byStatus,
+      estimates_by_currency: stats.byCurrency,
+      total_value: stats.totalValue,
+      recent_estimates: stats.recentEstimates
     };
   }
 
   /**
    * Transform validation result to DTO
    */
-  static toTenderEstimateValidationDTO(validation: {
+  static toTenderEstimateValidationDto(validation: {
     isValid: boolean;
     errors: Array<{ field: string; message: string }>;
     warnings: Array<{ field: string; message: string; recommendation?: string }>;
@@ -168,25 +219,22 @@ export class TenderEstimateTransformer {
   /**
    * Transform comparison data to DTO
    */
-  static toTenderEstimateComparisonDTO(comparison: {
-    estimate1: TenderEstimate;
-    estimate2: TenderEstimate;
-    priceDifference: number;
-    priceDifferencePercentage: number;
-    itemDifferences: Array<{
-      itemCode: string;
-      description: string;
-      estimate1Price: number;
-      estimate2Price: number;
-      priceDifference: number;
-      priceDifferencePercentage: number;
-    }>;
+  static toTenderEstimateComparisonDto(comparison: {
+    estimate_1: TenderEstimateDTO,
+    estimate_2: TenderEstimateDTO,
+    price_difference: number,
+    price_difference_percentage: number,
+    item_differences: {
+      field: string;
+      message: string;
+      severity: "error" | "warning";
+      recommendation?: string;
+    }[]
   }): TenderEstimateComparisonDto {
     return {
-      estimate_1: this.toTenderEstimateDTO(comparison.estimate1),
-      estimate_2: this.toTenderEstimateDTO(comparison.estimate2),
-      price_difference: comparison.priceDifference,
-      price_difference_percentage: comparison.priceDifferencePercentage,
+      original_estimate: comparison.estimate_1,
+      revised_estimate: comparison.estimate_2,
+      differences: comparison.item_differences
       item_differences: comparison.itemDifferences.map(diff => ({
         item_code: diff.itemCode,
         description: diff.description,

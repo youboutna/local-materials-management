@@ -5,7 +5,33 @@
  */
 import { supabase } from '@/integrations/supabase/client';
 import { IProjectFormRepository } from '@/domain/repositories/IProjectFormRepository';
-import { ProjectFormData } from '@/application/services/ProjectEditWorkflowService';
+
+// Import workflow DTOs (following "similitude des voisins le plus proche")
+import { 
+  ProjectWorkflowData,
+  StepRelatedDataDTO,
+  WorkflowMetadataDTO,
+  ValidationResult,
+  SaveResult,
+  SaveContextDTO,
+  WorkflowStep,
+  WorkflowTransition,
+  WorkflowState,
+  ProjectCreationWorkflowDTO,
+  ProjectValidationDTO,
+  StepProgressDTO
+} from '@/dtos/workflows/ProjectWorkflowDTOs';
+
+// Import entity DTOs (following "similitude des voisins le plus proche")
+import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
+import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
+import { RiskDTO } from '@/dtos/entities/RiskDTO';
+import { TaskDTO } from '@/dtos/entities/TaskDTO';
+import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
+import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
+import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
+
 import { Project } from '@/domain/entities';
 import { SupabaseProjectAdapter } from './SupabaseProjectAdapter';
 
@@ -17,31 +43,31 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
   }
 
   /**
-   * Convert form data to project entity format
+   * Convert workflow data to project entity format
    */
-  private formDataToProjectEntity(formData: ProjectFormData, step: number): any {
-    const entity: any = {};
+  private workflowDataToProjectEntity(workflowData: ProjectWorkflowData, step: number): unknown {
+    const entity: unknown = {};
     
     // Map based on step
     switch (step) {
       case 1:
-        entity.title = formData.title;
-        entity.description = formData.description;
-        entity.location = formData.location;
-        entity.status = 'draft';
+        (entity as any).title = workflowData.projectData.title;
+        (entity as any).description = workflowData.projectData.description;
+        (entity as any).location = workflowData.projectData.location;
+        (entity as any).status = 'draft';
         break;
       case 2:
-        entity.budget = formData.budget;
-        entity.start_date = formData.startDate;
-        entity.end_date = formData.endDate;
+        (entity as any).budget = workflowData.projectData.budget;
+        (entity as any).start_date = workflowData.projectData.startDate;
+        (entity as any).end_date = workflowData.projectData.endDate;
         break;
       case 3:
-        entity.team_size = formData.team_size;
-        entity.main_contractor = formData.main_contractor;
+        (entity as any).team_size = workflowData.projectData.teamSize;
+        (entity as any).main_contractor = workflowData.projectData.mainContractor;
         break;
       default:
         // Map all available fields
-        Object.assign(entity, formData);
+        Object.assign(entity, workflowData.projectData);
     }
     
     return entity;

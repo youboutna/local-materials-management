@@ -10,7 +10,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { MapLocation } from '@/components/ProjectMap';
-import { ProjectStatus } from '@/types/project';
+import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
 import { MAURITANIA_REGIONS } from '@/types/mauritania';
 import { MapPin, Filter } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';

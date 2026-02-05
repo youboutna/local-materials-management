@@ -3,9 +3,12 @@ import { MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import InteractiveMapGIS from '../../materials/InteractiveMapGIS';
 
+// Import entity DTOs (following "similitude des voisins le plus proche")
+import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
+
 interface LocationStepProps {
-  formData: any;
-  onUpdate: (data: any) => void;
+  formData: ProjectDTO;
+  onUpdate: (data: Partial<ProjectDTO>) => void;
   isEditing?: boolean;
 }
 

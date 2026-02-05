@@ -25,7 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { WorkflowPhase, WorkflowStage } from "@/types/workflow";
+import { WorkflowPhase, WorkflowStage } from "@/dtos/workflows/WorkflowDTO";
 import { useQuery } from "@tanstack/react-query";
 import { TenderService } from "@/application/services/TenderService";
 import { SubmissionSecretService } from "@/application/services/SubmissionSecretService";

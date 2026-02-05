@@ -15,7 +15,7 @@ import {
   DEFAULT_MAURITANIA_RULES,
   MauritaniaBusinessRulesDTO,
 } from '@/types/checkpoint-dto';
-import { MilestoneDTO } from '@/types/milestone-dto';
+import { MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
 
 // Import des repositories existants (via RepositoryFactory)
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';

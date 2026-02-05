@@ -23,11 +23,20 @@ import {
 
 // Import hexagonal hooks
 import { useProjectEditWorkflowHex } from "../../hooks/hexagonal/useProjectEditWorkflowHex";
-import { MaterialFormDataDTO, ProjectFormDataDTO, usePaymentWorkflowHex, type ProjectWorkflowData } from "@/hooks/hexagonal";
+import { usePaymentWorkflowHex } from "@/hooks/hexagonal";
 import { useProjectMaterialsHex } from "@/hooks/hexagonal";
 import { MaterialService } from "@/application/services/MaterialService";
-import { MaterialDTO } from "@/dtos/entities/MaterialDTO";
-// Import only MaterialFormDataDTO and PhaseFormDataDTO from ProjectWorkflowDTOs
+
+// Import workflow DTOs
+import { ProjectWorkflowData, StepRelatedDataDTO } from "@/dtos/workflows/ProjectWorkflowDTOs";
+import { PhaseWorkflowDTO } from "@/dtos/workflows/PhaseWorkflowDTO";
+
+// Import entity DTOs (following "similitude des voisins le plus proche")
+import { ProjectDTO, ProjectDTO } from '@/dtos/entities/ProjectDTO';
+import { MaterialDTO, MaterialCategory, MaterialStatus, MaterialUnit } from '@/dtos/entities/MaterialDTO';
+import { RiskDTO } from '@/dtos/entities/RiskDTO';
+import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
+import { StakeholderDTO } from '@/dtos/entities/StakeholderDTO';
 
 // Import step components
 
@@ -41,24 +50,24 @@ import RiskAnalysisStep from "./steps/RiskAnalysisStep";
 
 import ComplianceStep from "./steps/ComplianceStep";
 
-import { PhaseDTO, ProjectWorkflowDTO } from "@/dtos/entities";
+import { PhaseDTO } from "@/dtos/entities";
 
 import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
 
 import ConstructionPhaseManager from "./ConstructionPhaseManager";
-import { SaveContextDTO } from "@/application/services/ProjectFormService";
+import { SaveContextDTO } from "@/dtos/workflows/ProjectWorkflowDTOs";
 
 
 
 interface EnhancedProjectEditFormProps {
-  initialData?: ProjectWorkflowDTO;
-  onSubmit: (data: ProjectWorkflowDTO) => Promise<void>;
-  onFormDataChange?: (data: ProjectWorkflowDTO) => void;
+  initialData?: ProjectWorkflowData;
+  onSubmit: (data: ProjectWorkflowData) => Promise<void>;
+  onFormDataChange?: (data: ProjectWorkflowData) => void;
   isSubmitting?: boolean;
 }
 
 // Unified FormServiceDTO for compatibility
-type UnifiedFormServiceDTO = ProjectWorkflowDTO & {
+type UnifiedFormServiceDTO = ProjectWorkflowData & {
   receptionStatus?: 'pending' | 'in_progress' | 'completed' | 'cancelled';
   closureNotes?: string;
 };
@@ -107,22 +116,52 @@ const transformPhaseDataToPhaseDTO = (phases: PhaseData[], projectId: string): P
   }));
 };
 
-// Transformer function to convert SelectedMaterial to MaterialFormDataDTO using hook
-const transformSelectedMaterialsToFormData = async (selectedMaterials: Array<{materialId: string; quantity: number}>): Promise<MaterialFormDataDTO[]> => {
+// Transformer function to convert SelectedMaterial to MaterialDTO using hook
+const transformSelectedMaterialsToFormData = async (selectedMaterials: Array<{materialId: string; quantity: number}>): Promise<MaterialDTO[]> => {
   // For now, return basic structure - will be enhanced when materials are loaded
   return selectedMaterials.map(selected => ({
     id: selected.materialId,
     name: `Material ${selected.materialId}`,
-    type: 'raw' as const,
-    unit: 'unit',
+    description: '',
+    type: 'raw_material',
+    category: MaterialCategory.RAW_MATERIAL,
+    status: MaterialStatus.AVAILABLE,
+    unit: MaterialUnit.PIECES,
     quantity: selected.quantity,
-    unit_price: 0,
-    supplier_id: ''
+    pricePerUnit: 0,
+    totalValue: 0,
+    supplierId: '',
+    supplierName: '',
+    supplierCode: '',
+    weight: 0,
+    dimensions: undefined,
+    location: '',
+    storageLocation: '',
+    warehouseId: '',
+    aisle: '',
+    shelf: '',
+    bin: '',
+    quality: 'standard',
+    specifications: {},
+    technicalSpecs: {},
+    projectId: '',
+    phaseId: '',
+    taskId: '',
+    documents: [],
+    images: [],
+    certifications: [],
+    reorderLevel: 0,
+    reorderAt: 0,
+    expiryDate: '',
+    tags: [],
+    notes: '',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   }));
 };
 
-// Transformer function to convert MaterialFormDataDTO to SelectedMaterial
-const transformFormDataToSelectedMaterials = (materials: MaterialFormDataDTO[]): Array<{materialId: string; quantity: number}> => {
+// Transformer function to convert MaterialDTO to SelectedMaterial
+const transformFormDataToSelectedMaterials = (materials: MaterialDTO[]): Array<{materialId: string; quantity: number}> => {
   return materials.map(material => ({
     materialId: material.id || '',
     quantity: material.quantity,
@@ -329,7 +368,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
   }, [formService]);
 
   // Update form data helper
-  const updateFormDataHelper = (updates: Partial<ProjectFormDataDTO>) => {
+  const updateFormDataHelper = (updates: Partial<ProjectDTO>) => {
     updateFormData(updates);
     if (onFormDataChange) {
       onFormDataChange({ ...formData, ...updates });
@@ -618,7 +657,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     };
   });
 
-  const updateFormData = (updates: Partial<ProjectFormDataDTO>) => {
+  const updateFormData = (updates: Partial<ProjectDTO>) => {
     const updatedData = { ...formData, ...updates };
     setFormData(updatedData);
     if (onFormDataChange) {

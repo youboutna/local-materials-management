@@ -8,9 +8,13 @@ import { Progress } from '../../ui/progress';
 import { supabase } from '../../../integrations/supabase/client';
 import { useToast } from '../../../hooks/use-toast';
 
+// Import entity DTOs (following "similitude des voisins le plus proche")
+import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
+import { RiskDTO } from "@/dtos/entities/RiskDTO";
+
 interface RiskAnalysisStepProps {
-  formData: any;
-  onUpdate: (data: any) => void;
+  formData: ProjectDTO;
+  onUpdate: (data: Partial<ProjectDTO>) => void;
   isEditing?: boolean;
 }
 

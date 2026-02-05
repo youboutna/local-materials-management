@@ -14,7 +14,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { supabase } from '@/integrations/supabase/client';
 
-import type { AutomaticDecompteDTO, CheckpointVerificationResultDTO } from '@/types/checkpoint-dto';
+import type { AutomaticDecompteDTO, CheckpointVerificationResultDTO, MilestoneDTO } from '@/dtos/entities';
 
 
 

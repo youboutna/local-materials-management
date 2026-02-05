@@ -10,7 +10,7 @@ import {
   ProjectActionContext,
   PhaseSummary
 } from '@/application/services/CheckpointActionContextService';
-import { MilestoneSummaryDTO } from '@/types/milestone-dto';
+import { MilestoneSummaryDTO } from '@/dtos/entities/MilestoneDTO';
 
 /**
  * Hook pour récupérer le contexte complet du projet

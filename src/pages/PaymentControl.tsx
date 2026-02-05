@@ -20,7 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
 import { useProjectManager } from '@/hooks/useProjectManager';
 import { actionLabels } from '@/application/services/ProjectManagerService';
-import { EscalationRoles, ProjectData } from '@/types/project';
+import { EscalationRoles, ProjectData } from '@/dtos/entities/ProjectDTO';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { useProjectsHex, usePaymentBlocksHex, useNotificationsHex } from '@/hooks/hexagonal';
 

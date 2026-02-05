@@ -6,7 +6,7 @@ import TenderReportGenerator from './TenderReportGenerator';
 import InspectionReportGenerator from './InspectionReportGenerator';
 import SupplierPaymentReportGenerator from './SupplierPaymentReportGenerator';
 import { FileText, FileBarChart, CheckCircle, DollarSign } from 'lucide-react';
-import { ProjectData } from '@/types/project';
+import { ProjectData } from '@/dtos/entities/ProjectDTO';
 
 interface ReportManagerProps {
   data: {

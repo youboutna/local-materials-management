@@ -11,7 +11,7 @@ import {
   getMilestoneTemplates,
   getMilestoneTemplatesWithDefaults
 } from '@/config/referentials/milestones.referential';
-import { MilestoneTemplateDTO, MilestoneType, MilestonePriority } from '@/types/milestone-dto';
+import { MilestoneTemplateDTO, MilestoneType, MilestonePriority } from '@/dtos/entities/MilestoneDTO';
 
 export type MilestoneStatus = 
   | 'pending' 

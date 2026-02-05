@@ -12,7 +12,7 @@ import {
   ProjectAnalyticsDTO,
   FinancialMetricsDTO,
   RiskAssessmentDTO
-} from '@/types/reportTypes';
+} from '@/dtos/entities/ReportDTO';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import { ProjectDataCalculations } from '@/utils/projectDataCalculations';
 import { ProjectData } from '@/types/project';

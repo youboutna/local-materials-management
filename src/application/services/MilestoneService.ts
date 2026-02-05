@@ -12,14 +12,15 @@ import { IInspectionRepository } from '@/domain/repositories/IInspectionReposito
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { 
-  CriticalPathDTO,
-  MilestoneDTO,
-  MilestoneFormDTO,
-  MilestoneProgressDTO,
-  MilestoneSummaryDTO,
+  MilestoneDTO, 
+  MilestoneStatus, 
+  MilestoneType, 
   MilestonePriority,
-  MilestoneType
-} from '@/types/milestone-dto';
+  MilestoneProgressDTO,
+  CriticalPathDTO,
+  MilestoneSummaryDTO,
+  MilestoneFormDTO
+} from '@/dtos/entities/MilestoneDTO';
 import { getMilestoneTemplates } from '@/config/referentials/milestones.referential';
 import { addDays, differenceInDays, format, parseISO } from 'date-fns';
 

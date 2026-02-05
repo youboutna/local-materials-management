@@ -12,7 +12,7 @@ import { DocumentFormDataDTO } from '@/dtos/entities/DocumentDTO';
 import { EmployeeFormDataDTO } from '@/dtos/entities/EmployeeDTO';
 import { SupplierFormDataDTO } from '@/dtos/entities/SupplierDTO';
 import { StakeholderFormDataDTO } from '@/dtos/entities/StakeholderDTO';
-import { ProjectFormDataDTO } from '@/application/services/ProjectService';
+import { ProjectDTO } from '@/application/services/ProjectService';
 
 export interface ProjectWorkflowStepDTO {
   stepNumber: number;
@@ -28,7 +28,7 @@ export interface ProjectWorkflowDataDTO {
   currentStep: number;
   isDraft: boolean;
   isComplete: boolean;
-  projectData: Partial<ProjectFormDataDTO>;
+  projectData: Partial<ProjectDTO>;
   relatedData: {
     stakeholders?: unknown[];
     phases?: unknown[];
@@ -121,7 +121,7 @@ export interface EditWorkflowContextDTO {
   isDraft: boolean;
   isComplete: boolean;
   lastSavedAt?: string;
-  originalData?: ProjectFormDataDTO;
+  originalData?: ProjectDTO;
   modifiedFields: string[];
 }
 
@@ -135,7 +135,7 @@ export interface EditWorkflowResultDTO {
   changesSaved?: string[];
 }
 
-export interface ProjectEditWorkflowDataDTO extends ProjectFormDataDTO {
+export interface ProjectEditWorkflowDataDTO extends ProjectDTO {
   workflowContext?: EditWorkflowContextDTO;
   changes?: Record<string, { oldValue: unknown; newValue: unknown }>;
 }

@@ -16,7 +16,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { getGanttPertService, UnifiedPERTData } from '@/services/GanttPertDataService';
-import { ProjectDetailDTO } from '@/types/dto';
+import { ProjectDetailDTO, ProjectData } from '@/dtos/entities/ProjectDTO';
 import { useQuery } from '@tanstack/react-query';
 
 interface UnifiedPERTAnalysisProps {

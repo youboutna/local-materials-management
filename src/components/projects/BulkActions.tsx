@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Trash2, X } from "lucide-react";
-import { ProjectData } from "@/types/project";
+import { ProjectData } from '@/dtos/entities/ProjectDTO';
 
 interface BulkActionsProps {
   selectedProjects: Set<string>;

@@ -49,6 +49,18 @@ export interface AuthSession {
   user: AuthUser;
 }
 
+export type UnifiedUser = AuthUser;
+export type UnifiedSession = AuthSession;
+
+export interface UnifiedAuthContextType {
+  user: UnifiedUser | null;
+  session: UnifiedSession | null;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  updateProfile: (data: Partial<UnifiedUser>) => Promise<void>;
+}
+
 export interface AuthResponse {
   user: AuthUser | null;
   session: AuthSession | null;

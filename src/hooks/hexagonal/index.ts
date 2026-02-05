@@ -520,7 +520,7 @@ export type {
   StepProgressDTO,
   ValidationResult,
   SaveResult,
-  ProjectFormDataDTO,
+  ProjectDTO,
   StepRelatedDataDTO,
   WorkflowMetadataDTO,
   ComplianceDataDTO,
@@ -530,7 +530,7 @@ export type {
   EmployeeFormDataDTO,
   InspectionFormDataDTO,
   DocumentFormDataDTO
-} from '@/dtos/transforms/ProjectWorkflowDTOs';
+} from '@/dtos/workflows/ProjectWorkflowDTOs';
 
 // Additional type exports for components - aligned with useBankGuaranteesHex
 export type { MaterialDTO as MaterialOption } from '@/dtos/transforms';

@@ -3,7 +3,7 @@ import L from "leaflet";
 import React, { useEffect, useState } from "react";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import { ProjectData } from "@/types/project";
+import { ProjectData } from "@/dtos/entities/ProjectDTO";
 import { Badge } from "@/components/ui/badge";
 
 // Fix default marker icons

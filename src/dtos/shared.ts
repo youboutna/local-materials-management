@@ -8,6 +8,31 @@ export interface BaseEntityDTO {
   id: string;
   createdAt: string;
   updatedAt: string;
+  createdBy?: string;
+  updatedBy?: string;
+  version?: number;
+}
+
+// Base form interface for UI state management
+export interface BaseFormDTO<T> {
+  id?: string;
+  isDirty?: boolean;
+  isValid?: boolean;
+  validationErrors?: Record<string, string>;
+  lastSavedAt?: string;
+  [key: string]: unknown;
+}
+
+// UI state interface for entities
+export interface BaseUIState<T> {
+  entity: T;
+  formData: BaseFormDTO<T>;
+  isLoading: boolean;
+  isEditing: boolean;
+  isSaving: boolean;
+  errors: string[];
+  selectedTab?: string;
+  calculatedFields?: Record<string, unknown>;
 }
 
 // Common user/contact information
@@ -42,6 +67,10 @@ export enum Priority {
   HIGH = 'high',
   URGENT = 'urgent'
 }
+
+// Standardized status types for consistency
+export type StandardStatus = 'active' | 'inactive' | 'pending' | 'completed' | 'cancelled' | 'draft';
+export type StandardPriority = 'low' | 'medium' | 'high' | 'urgent';
 
 // Common pagination
 export interface PaginationDTO {

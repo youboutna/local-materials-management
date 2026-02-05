@@ -2,7 +2,7 @@
  * useProjectsFull - Extended project hooks with analytics
  */
 
-import { ProjectData } from '@/types/project';
+import { ProjectData } from '@/dtos/entities/ProjectDTO';
 
 export function useProjectsFull() {
   /**

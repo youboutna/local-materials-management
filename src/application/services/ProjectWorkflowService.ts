@@ -12,12 +12,41 @@ import type { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import type { IRiskRepository } from '@/domain/repositories/IRiskRepository';
 import type { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
 import { ProjectTransformer } from '@/dtos/transforms';
-import { ProjectWorkflowDTO } from '@/dtos/workflows/ProjectWorkflowDTO';
+
+// Import workflow DTOs (following "similitude des voisins le plus proche")
+import { 
+  ProjectWorkflowData, 
+  StepRelatedDataDTO, 
+  WorkflowMetadataDTO,
+  ComplianceDataDTO,
+  SaveContextDTO,
+  ValidationResult,
+  SaveResult,
+  WorkflowStep,
+  WorkflowTransition,
+  WorkflowState,
+  ProjectCreationWorkflowDTO,
+  WorkflowTemplateDTO,
+  WorkflowSessionDTO,
+  WorkflowAuditLogDTO,
+  WorkflowMetricsDTO,
+  ProjectValidationDTO,
+  StepProgressDTO
+} from '@/dtos/workflows/ProjectWorkflowDTOs';
+
+// Import entity DTOs (following "similitude des voisins le plus proche")
+import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
+import { MaterialDTO, MaterialCategory } from '@/dtos/entities/MaterialDTO';
+import { RiskDTO } from '@/dtos/entities/RiskDTO';
+import { TaskDTO } from '@/dtos/entities/TaskDTO';
+import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
+import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
+import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
+
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { v4 as uuidv4 } from 'uuid';
-import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { Risk } from '@/domain/entities/Risk';
-import { MaterialDTO, MaterialCategory } from '@/dtos/entities/MaterialDTO';
 import { RiskStatus } from '@/domain/entities/Risk';
 
 export enum WorkflowMode {
@@ -42,67 +71,103 @@ export class ProjectWorkflowService {
   /**
    * Get workflow steps configuration
    */
-  getWorkflowSteps(): ProjectWorkflowDTO['steps'] {
+  getWorkflowSteps(): WorkflowStep[] {
     return [
       {
-        stepNumber: 1,
+        id: 'project-info',
+        name: 'project_info',
         title: 'Informations du projet',
         description: 'Type, budget, dates, référence',
+        isCompleted: false,
         isRequired: true,
-        validationRules: ['title_required', 'budget_positive'],
-        relatedEntities: []
+        order: 1,
+        validation: {
+          rules: ['title_required', 'budget_positive'],
+          requiredFields: ['title', 'budget']
+        }
       },
       {
-        stepNumber: 2,
+        id: 'stakeholders',
+        name: 'stakeholders',
         title: 'Parties prenantes',
         description: 'Bailleurs, Ministères, Entreprises, Banques',
+        isCompleted: false,
         isRequired: true,
-        validationRules: ['manager_required'],
-        relatedEntities: ['stakeholders']
+        order: 2,
+        validation: {
+          rules: ['manager_required'],
+          requiredFields: ['project_manager_id']
+        }
       },
       {
-        stepNumber: 3,
+        id: 'location',
+        name: 'location',
         title: 'Localisation',
         description: 'Géolocalisation interactive',
+        isCompleted: false,
         isRequired: true,
-        validationRules: ['address_required'],
-        relatedEntities: []
+        order: 3,
+        validation: {
+          rules: ['address_required'],
+          requiredFields: ['location']
+        }
       },
       {
-        stepNumber: 4,
+        id: 'planning',
+        name: 'planning',
         title: 'Planification WBS',
         description: 'Phase → Step → Task',
+        isCompleted: false,
         isRequired: true,
-        validationRules: [],
-        relatedEntities: ['phases', 'materials']
+        order: 4,
+        validation: {
+          rules: [],
+          requiredFields: []
+        }
       },
       {
-        stepNumber: 5,
+        id: 'risks',
+        name: 'risks',
         title: 'Risques',
         description: 'Analyse et gestion des risques',
+        isCompleted: false,
         isRequired: false,
-        validationRules: [],
-        relatedEntities: ['risks']
+        order: 5,
+        validation: {
+          rules: [],
+          requiredFields: []
+        }
       },
       {
-        stepNumber: 6,
+        id: 'compliance',
+        name: 'compliance',
         title: 'Conformité',
         description: 'Standards SOMELEC et bailleurs',
+        isCompleted: false,
         isRequired: false,
-        validationRules: [],
-        relatedEntities: ['documents']
+        order: 6,
+        validation: {
+          rules: [],
+          requiredFields: []
+        }
       },
       {
-        stepNumber: 7,
+        id: 'validation',
+        name: 'validation',
         title: 'Validation',
         description: 'Réception définitive et clôture',
+        isCompleted: false,
         isRequired: true,
-        validationRules: ['all_required_complete'],
-        relatedEntities: []
+        order: 7,
+        validation: {
+          rules: ['final_validation_required'],
+          requiredFields: ['reception_status']
+        }
       }
     ];
   }
-/**
+
+  /**
    * Initialize edit workflow context
    */
   async initializeEditWorkflow(projectId: string): Promise<EditWorkflowContextDTO> {
@@ -137,8 +202,8 @@ export class ProjectWorkflowService {
   /**
    * Get a specific workflow step
    */
-  getWorkflowStep(stepNumber: number): ProjectWorkflowDTO['steps'][number] | undefined {
-    return this.getWorkflowSteps().find(s => s.stepNumber === stepNumber);
+  getWorkflowStep(order: number): WorkflowStep | undefined {
+    return this.getWorkflowSteps().find(s => s.order === order);
   }
 
   /**

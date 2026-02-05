@@ -11,7 +11,7 @@ import { AutomaticDecompteCalculator } from '@/application/services/AutomaticDec
 import { PaymentService } from '@/application/services/PaymentService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { toast } from '@/hooks/use-toast';
-import type { AutomaticDecompteDTO } from '@/types/checkpoint-dto';
+import { AutomaticDecompteDTO, CheckpointVerificationResultDTO } from '@/dtos/entities/CheckpointDTO';
 import type { CreatePaymentDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
 import type { MilestoneDTO } from '@/types/milestone-dto';
 

@@ -5,7 +5,7 @@
 
 import { useContext } from 'react';
 import { UnifiedAuthContext } from '@/contexts/UnifiedAuthContext';
-import { UnifiedAuthContextType } from '@/types/auth';
+import { UnifiedAuthContextType } from '@/dtos/entities/AuthDTO';
 
 // Hook for using the unified auth context
 export function useUnifiedAuth(): UnifiedAuthContextType {

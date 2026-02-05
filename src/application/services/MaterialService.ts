@@ -6,23 +6,9 @@
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
 import { Material, MaterialCategory } from '@/domain/entities/Material';
+import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
 
 // Service DTOs for data exchange
-export interface MaterialDTO {
-  id: string;
-  name: string;
-  description: string;
-  category: MaterialCategory;
-  unit: string;
-  pricePerUnit: number;
-  availableQuantity: number;
-  minStockLevel: number;
-  workspaceId: string;
-  supplierId?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface CreateMaterialDTO {
   name: string;
   description?: string;
@@ -73,16 +59,6 @@ interface MaterialWithPhase {
   supplierId?: string;
   createdAt: string;
   updatedAt: string;
-}
-
-// Enhanced MaterialCategory enum with validation
-export enum MaterialCategory {
-  OTHER = 'other',
-  CONCRETE = 'concrete',
-  STEEL = 'steel',
-  WOOD = 'wood',
-  GLASS = 'glass',
-  PLASTIC = 'plastic'
 }
 
 // Enhanced type guard for MaterialCategory

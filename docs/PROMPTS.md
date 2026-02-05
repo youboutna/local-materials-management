@@ -37,6 +37,9 @@ RÈGLES À ÉTABLIR :
 
 3. TRANSFORMERS (src/dtos/transforms/*) : 
    - DOIVENT convertir snake_case ↔ camelCase
+   -using UI Layer -> DTOs -> Application Layer -> Domain Model -> Infrastructure Layer -> DB
+              ↑                                      ↓
+              └─────────── DTOs ←──────────────┘
    - Une méthode toModel() et fromModel()
 
 4. MODÈLES DOMAINE (src/domain/*) : camelCase

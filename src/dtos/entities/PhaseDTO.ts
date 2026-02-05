@@ -9,84 +9,275 @@ export interface PhaseStepDTO {
   id: string;
   name: string;
   description: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'blocked' | 'delayed';
-  progress: number;
-  orderIndex: number;
-  tasks: PhaseTaskDTO[];
-  estimatedDurationDays?: number;
-  requiresInspection?: boolean;
-  requiresEngineerApproval?: boolean;
-  startDate?: string;
-  endDate?: string;
-  inspections?: string[]; // IDs only for DTO
-  documents?: string[]; // IDs only for DTO
 }
 
-export interface PhaseTaskDTO {
-  id: string;
-  name: string;
-  description: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'blocked' | 'delayed';
-  progress: number;
-  orderIndex: number;
-  assignedTo?: string[]; // Employee IDs only for DTO
-  requiresInspection?: boolean;
-  requiresEngineerApproval?: boolean;
-  estimatedDurationDays?: number;
-  actualDurationDays?: number;
-  startDate?: string;
-  endDate?: string;
-  dependencies?: string[]; // Task IDs only for DTO
-  materials?: string[]; // Material IDs only for DTO
-  documents?: string[]; // Document IDs only for DTO
-  inspections?: string[]; // Inspection IDs only for DTO
+/**
+ * Phase status enumeration
+ * Current state of phase execution
+ */
+export enum PhaseStatus {
+  PLANNING = 'planning',
+  ACTIVE = 'active',
+  COMPLETED = 'completed',
+  PAUSED = 'paused',
+  CANCELLED = 'cancelled'
 }
 
-export interface PhaseResourcesDTO {
-  employees: string[]; // Employee IDs only for DTO
-  contractors: string[]; // Supplier IDs only for DTO
-  totalRequired: number;
-  totalAssigned: number;
-  skills: string[];
+/**
+ * Phase priority enumeration
+ * Priority levels for phase execution
+ */
+export enum PhasePriority {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  URGENT = 'urgent'
 }
 
-export interface PhaseDTO {
+/**
+ * Phase type enumeration
+ * Classification of phase types
+ */
+export enum PhaseType {
+  FOUNDATION = 'foundation',
+  STRUCTURAL = 'structural',
+  EXCAVATION = 'excavation',
+  DEMOLITION = 'demolition',
+  FINISHING = 'finishing',
+  ELECTRICAL = 'electrical',
+  PLUMBING = 'plumbing',
+  HVAC = 'hvac',
+  ROOFING = 'roofing',
+  EXTERIOR = 'exterior',
+  INTERIOR = 'interior',
+  LANDSCAPING = 'landscaping'
+}
+
+/**
+ * Main Phase DTO
+ * Core phase data structure with merged form data
+ */
+export interface PhaseDTO extends BaseEntityDTO {
+  // Core identification
   id: string;
   name: string;
   description?: string;
-  status: 'planning' | 'active' | 'completed' | 'paused' | 'cancelled';
-  projectId: string;
+  
+  // Classification
+  type: PhaseType;
+  status: PhaseStatus;
+  priority: PhasePriority;
+  
+  // Progress tracking
+  progress: number; // 0-100
+  completionPercentage?: number;
+  
+  // Timeline
   startDate?: string;
   endDate?: string;
-  progress: number;
+  estimatedDuration?: number; // in days
+  actualDuration?: number; // in days
+  
+  // Financial
   budget?: number;
   estimatedCost?: number;
   actualCost?: number;
-  steps: PhaseStepDTO[];
-  resources: PhaseResourcesDTO;
+  
+  // Dependencies
+  dependencies?: string[]; // Phase IDs only for DTO
+  milestones?: string[]; // Milestone IDs only for DTO
+  
+  // Resources
+  assignedTo?: string[]; // Employee IDs only for DTO
+  resources?: {
+    employees?: string[]; // Employee IDs only for DTO
+    equipment?: string[]; // Equipment IDs only for DTO
+    materials?: string[]; // Material IDs only for DTO
+  };
+  
+  // Requirements
+  requiresInspection?: boolean;
+  
+  // Form data fields (merged from PhaseFormDataDTO)
+  steps?: PhaseStepDTO[];
+  deliverables?: string[];
+  acceptanceCriteria?: string[];
+  notes?: string;
+}  requiresEngineerApproval?: boolean;
+  
+  // Location
+  location?: {
+    address?: string;
+    city?: string;
+    country?: string;
+    coordinates?: {
+      lat: number;
+      lng: number;
+    };
+  };
+  
+  // Project relationship
+  projectId: string;
+  
+  // Metadata
+  tags?: string[];
+  notes?: string;
   createdAt: string;
   updatedAt: string;
 }
 
+/**
+ * Phase creation request interface
+ * Input for creating new phases
+ */
 export interface CreatePhaseDTO {
   name: string;
   description?: string;
-  status: 'planning' | 'active' | 'completed' | 'paused' | 'cancelled';
+  type: PhaseType;
+  priority?: PhasePriority;
   projectId: string;
   startDate?: string;
   endDate?: string;
   budget?: number;
+  estimatedCost?: number;
+  dependencies?: string[];
+  milestones?: string[];
+  assignedTo?: string[]; // Employee IDs only for DTO
+  resources?: {
+    employees?: string[]; // Employee IDs only for DTO
+    equipment?: string[]; // Equipment IDs only for DTO
+    materials?: string[]; // Material IDs only for DTO
+  };
+  requiresInspection?: boolean;
+  requiresEngineerApproval?: boolean;
+  location?: {
+    address?: string;
+    city?: string;
+    country?: string;
+    coordinates?: {
+      lat: number;
+      lng: number;
+    };
+  };
+  tags?: string[];
+  notes?: string;
+  documents?: string[]; // Document IDs only for DTO
+  inspections?: string[]; // Inspection IDs only for DTO
 }
 
+/**
+ * Phase update request interface
+ * Input for updating existing phases
+ */
 export interface UpdatePhaseDTO {
   name?: string;
   description?: string;
-  status?: 'planning' | 'active' | 'completed' | 'paused' | 'cancelled';
-  startDate?: string;
+  status?: PhaseStatus;
   endDate?: string;
   progress?: number;
-  budget?: number;
   actualCost?: number;
+  
+  // Resources
+  assignedTo?: string[]; // Employee IDs only for DTO
+  requiresInspection?: boolean;
+  requiresEngineerApproval?: boolean;
+  
+  // Dependencies
+  dependencies?: string[]; // Phase IDs only for DTO
+  materials?: string[]; // Material IDs only for DTO
+  documents?: string[]; // Document IDs only for DTO
+  inspections?: string[]; // Inspection IDs only for DTO
+  
+  // Metadata
+  updatedBy?: string;
+  changeReason?: string;
+}
+
+/**
+ * Phase summary interface
+ * Lightweight phase representation for lists
+ */
+export interface PhaseSummaryDTO extends BaseEntityDTO {
+  id: string;
+  name: string;
+  status: PhaseStatus;
+  progress: number;
+  projectId: string;
+  startDate?: string;
+  endDate?: string;
+  orderIndex: number;
+  taskCount?: number;
+  completedTasks?: number;
+  budgetUtilization?: number;
+  isOnTrack?: boolean;
+  priority?: PhasePriority;
+  lastActivity?: string;
+}
+
+/**
+ * Phase statistics interface
+ * Performance metrics for phase operations
+ */
+export interface PhaseStatisticsDTO {
+  totalPhases: number;
+  activePhases: number;
+  completedPhases: number;
+  averageCompletionTime?: number;
+  successRate: number;
+  totalBudget?: number;
+  totalActualCost?: number;
+  budgetVariance?: number;
+  lastUpdated?: string;
+}
+
+/**
+ * Phase milestone interface
+ * Key milestones within phase
+ */
+export interface PhaseMilestoneDTO {
+  id: string;
+  phaseId: string;
+  title: string;
+  description?: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'overdue';
+  targetDate?: string;
+  completedDate?: string;
+  progress?: number;
+  deliverables?: string[];
+  dependencies?: string[]; // Phase IDs only for DTO
+}
+
+/**
+ * Phase resource allocation interface
+ * Resource management for phases
+ */
+export interface PhaseResourceAllocationDTO {
+  phaseId: string;
+  resourceId: string;
+  resourceType: 'employee' | 'contractor' | 'equipment' | 'material';
+  allocationPercentage: number;
+  allocatedAt?: string;
+  allocatedBy?: string;
+  startDate?: string;
+  endDate?: string;
+  cost?: number;
+}
+
+/**
+ * Phase dependency interface
+ * Dependency relationships between phases
+ */
+export interface PhaseDependencyDTO {
+  id: string;
+  fromPhaseId: string;
+  toPhaseId: string;
+  dependencyType: 'finish_to_start' | 'resource_sharing' | 'sequential' | 'conditional';
+  description?: string;
+  isBlocking?: boolean;
+  minLagDays?: number;
+  maxLagDays?: number;
+  createdById?: string;
+  createdAt?: string;
 }
 
 export interface PhaseMetricsDTO {

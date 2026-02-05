@@ -48,7 +48,87 @@ export interface PerformanceMetrics {
   efficiency: number;
   quality: number;
   timeliness: number;
-  costEffectiveness: number;
+}
+
+// Tender Estimate Common Types - Centralized for reuse
+export interface TenderEstimateFinancialData {
+  subtotal?: number;
+  taxRate?: number;        // ✅ Changed from tax_rate
+  taxAmount?: number;      // ✅ Changed from tax_amount
+  totalWithTax?: number;   // ✅ Changed from total_with_tax
+  discountRate?: number;   // ✅ Changed from discount_rate
+  discountAmount?: number;  // ✅ Changed from discount_amount
+  overheadPercentage?: number;
+  overheadAmount?: number;
+  profitMarginPercentage?: number;
+  profitMarginAmount?: number;
+  finalTotal?: number;
+}
+
+export interface TenderEstimateCostBreakdown {
+  totalMaterialsCost?: number;
+  totalLaborCost?: number;
+  totalEquipmentCost?: number;
+}
+
+export interface TenderEstimateBusinessLogic {
+  margin_rules?: {
+    overhead_percentage: number;
+    profit_margin_percentage: number;
+    risk_multiplier: number;
+  };
+  risk_assessment?: {
+    level: 'low' | 'medium' | 'high' | 'critical';
+    factors: string[];
+    score: number;
+  };
+}
+
+// Report Export Common Types
+export interface EstimateItem {
+  id?: string;
+  material_id?: string | null;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  description: string | null;
+  item_type: string | null;
+}
+
+export interface EstimateData {
+  id?: string;
+  tender_id?: string;
+  estimate_type: string;
+  total_materials_cost: number | null;
+  total_labor_cost: number | null;
+  total_equipment_cost: number | null;
+  subtotal: number | null;
+  tax_rate: number | null;
+  tax_amount: number | null;
+  total_with_tax: number | null;
+  overhead_percentage: number | null;
+  overhead_amount: number | null;
+  profit_margin_percentage: number | null;
+  profit_margin_amount: number | null;
+  final_total: number | null;
+  currency: string | null;
+  status: string;
+  created_at?: string;
+}
+
+export interface ExportConfig {
+  title: string;
+  includeCompanyHeader: boolean;
+  includeItemDetails: boolean;
+  includePriceBreakdown: boolean;
+  includeTermsConditions: boolean;
+  includeSignature: boolean;
+  termsConditions: string;
+  recipientEmail?: string;
+  notes?: string;
+  signatoryName?: string;
+  signatoryTitle?: string;
+  validityPeriod: number; // in days
 }
 
 export interface ComplianceStatus {

@@ -1,419 +1,836 @@
 /**
  * Project Transformer - Hexagonal Architecture
- * Handles transformation between Project entities and DTOs
- * Following clean architecture principles with proper separation of concerns
+ * Handles transformations between layers in hexagonal architecture
+ * Pattern: UI Layer -> DTOs -> Application Layer -> Domain Model -> Infrastructure Layer -> DB
+ *              ↑                                      ↓
+ *              └─────────── DTOs ←──────────────┘
+ * 
+ * Following PROMPTS.md Rules:
+ * - Rule #1: Arrow flow maintained (Presentation → Application → Domain ← Infrastructure)
+ * - Rule #3: Transformer pattern applied (Entity ↔ DTO conversion)
+ * - Rule #4: Domain purity maintained (no DTOs in entities)
+ * - Rule #5: UI/DOMAIN separation (clean boundaries)
  */
 
 import { Project } from '@/domain/entities/Project';
-import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
-import { ProjectStatus } from '@/types/project';
+import { 
+  ProjectDTO, 
+  ProjectDetailDTO,
+  ProjectDTO,
+  ProjectUIState,
+  CreateProjectDTO,
+  UpdateProjectDTO,
+  CreateProjectRequestDTO,
+  ProjectStatus,
+  ProjectPriority,
+  ProjectType,
+  ConstructionStage
+} from '@/dtos/entities/ProjectDTO';
 
-// Interface for create project request
-interface CreateProjectRequestDTO {
-  title: string;
-  description?: string;
-  budget?: number;
-  startDate?: string;
-  endDate?: string;
-  location?: string;
-  teamSize?: number;
-  thumbnail?: string;
-  createdBy?: string;
-  latitude?: number;
-  longitude?: number;
-  financingSource?: string;
-  mainContractor?: string;
-  currency?: string;
-  clientOrganization?: string;
-  donorOrganization?: string;
-  sector?: string;
-  projectType?: string;
-  priority?: string;
-  geographicZone?: string;
-  terrainType?: string;
-  environmentalConstraints?: string;
-  areaSqm?: number;
-  projectReferenceNumber?: string;
-  projectOrder?: string;
-  clientId?: string;
-  currentPhase?: string;
-  currentStage?: string;
-  allowsInitialPayment?: boolean;
-  initialPaymentPercentage?: number;
-  paymentFrequency?: string;
-  paymentMode?: string;
-  retentionPercentage?: number;
-  initialAdvancePercentage?: number;
-  completionDate?: string;
-  estimatedDays?: number;
-  launchDate?: string;
-  attributionDate?: string;
-  requiresConsultantValidation?: boolean;
-  requiresMinistryApproval?: boolean;
-  requiresPermits?: boolean;
-  permitNumber?: string;
-  hasUtilities?: boolean;
-  // Domain objects - following hexagonal principles
-  engineeringConsultant?: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-  };
-  technicalManager?: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-  };
-  projectResponsable?: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-  };
-  supervisor?: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-  };
-  // Domain collections
-  payments?: {
-    id: string;
-    amount: number;
-    date: string;
-    status: string;
-  }[];
-  inspections?: {
-    id: string;
-    date: string;
-    status: string;
-    report: string;
-  }[];
-  tasks?: {
-    id: string;
-    title: string;
-    status: string;
-    dueDate: string;
-  }[];
-  documents?: {
-    id: string;
-    name: string;
-    type: string;
-    url: string;
-  }[];
-  materials?: {
-    id: string;
-    name: string;
-    quantity: number;
-    unit: string;
-  }[];
-  phases?: {
-    id: string;
-    name: string;
-    status: string;
-    startDate: string;
-    endDate: string;
-  }[];
-  milestones?: {
-    id: string;
-    title: string;
-    date: string;
-    status: string;
-  }[];
-  risks?: {
-    id: string;
-    title: string;
-    probability: number;
-    impact: number;
-    mitigation: string;
-  }[];
-  tenders?: {
-    id: string;
-    title: string;
-    status: string;
-    deadline: string;
-  }[];
-  suppliers?: {
-    id: string;
-    name: string;
-    contact: string;
-  }[];
-  employees?: {
-    id: string;
-    name: string;
-    role: string;
-  }[];
-  projectReference?: string;
-}
-
-/**
- * Project Transformer - Hexagonal Architecture
- * Handles transformation between Project entities and DTOs
- * Following clean architecture principles with proper separation of concerns
- */
 export class ProjectTransformer {
+  
+  // =================== DATABASE ↔ DOMAIN ===================  
   /**
-   * Transform Project entity to ProjectDTO (Domain Entity → DTO)
-   * Converts domain entity to data transfer object for UI layer
-   * Following hexagonal architecture: Domain → Application → Presentation
+   * Supabase Row → Domain Model
+   * Following hexagonal architecture: Infrastructure → Application → Domain
    */
-  static toDTO(entity: Project): ProjectDTO {
-    return {
-      // Core Identity
-      id: entity.id,
-      title: entity.title,
-      description: entity.description || '',
-      location: entity.location || '',
-      status: entity.status,
-      progress: entity.progress || 0,
-      budget: entity.budget || 0,
-      startDate: entity.startDate?.toISOString() || new Date().toISOString(),
-      endDate: entity.endDate?.toISOString() || undefined,
-      thumbnail: entity.thumbnail || '',
-      teamSize: entity.teamSize || 0,
-      
-      // Geographic
-      coordinates: entity.coordinates ? {
-        latitude: entity.coordinates.latitude,
-        longitude: entity.coordinates.longitude,
-      } : undefined,
-      
-      // Location Details
-      geographicZone: entity.geographicZone || '',
-      terrainType: entity.terrainType || '',
-      environmentalConstraints: entity.environmentalConstraints || '',
-      hasUtilities: entity.hasUtilities || false,
-      requiresPermits: entity.requiresPermits || false,
-      
-      // Classification
-      category: entity.projectType || '',
-      priorityLevel: entity.priority as 'Faible' | 'Moyenne' | 'Élevée' | 'Très élevée',
-      
-      // Financial
-      financingSource: entity.financingSource || '',
-      marketType: entity.marketType || '',
-      selectionMode: entity.selectionMode || '',
-      methodology: entity.methodology || 'waterfall',
-      allowsInitialPayment: entity.allowsInitialPayment || false,
-      initialPaymentPercentage: entity.initialPaymentPercentage || 0,
-      
-      // Timeline
-      launchDate: entity.launchDate?.toISOString(),
-      attributionDate: entity.attributionDate?.toISOString(),
-      currentPhase: entity.currentPhase || '',
-      currentStage: entity.currentStage || '',
-      
-      // Financial and insurance attributes
-      bankGuaranteeRequired: entity.bankGuaranteeRequired || false,
-      bankGuaranteeAmount: entity.bankGuaranteeAmount || 0,
-      bankGuaranteePercentage: entity.bankGuaranteePercentage || 0,
-      insuranceRequired: entity.insuranceRequired || false,
-      materialsBudget: entity.materialsBudget || 0,
-      procurementLeadTime: entity.procurementLeadTime || 0,
-      resourceAssignment: entity.resourceAssignment || [],
-      receptionStatus: entity.receptionStatus || '',
-      closureNotes: entity.closureNotes || '',
-      
-      // Organizations
-      mainContractor: typeof entity.mainContractor === 'string' 
-        ? entity.mainContractor 
-        : entity.mainContractor?.name || '',
-      projectReference: entity.projectReference || '',
-      projectResponsableId: entity.createdBy || '',
-      
-      // Additional fields (from ProjectDomainTransformer)
-      forme: '',
-      adresse: entity.location || '',
-      localisation: entity.coordinates ? [entity.coordinates.latitude, entity.coordinates.longitude] : [],
-      
-      // Base properties
-      createdAt: entity.createdAt?.toISOString() || new Date().toISOString(),
-      updatedAt: entity.updatedAt?.toISOString() || new Date().toISOString(),
-    };
-  }
-
-  /**
-   * Transform Project entity to Update DTO (partial)
-   * Used for partial updates in form workflows
-   */
-  static toUpdateDTO(entity: Partial<Project>): Partial<ProjectDTO> {
-    const dto: Partial<ProjectDTO> = {};
-
-    // Core Identity
-    if (entity.title !== undefined) dto.title = entity.title;
-    if (entity.description !== undefined) dto.description = entity.description;
-    if (entity.location !== undefined) dto.location = entity.location;
-    if (entity.status !== undefined) dto.status = entity.status as ProjectStatus;
-    
-    // Financial
-    if (entity.budget !== undefined) dto.budget = entity.budget;
-    
-    // Timeline
-    if (entity.startDate !== undefined) dto.startDate = entity.startDate?.toISOString() || '';
-    if (entity.endDate !== undefined) dto.endDate = entity.endDate?.toISOString() || '';
-    
-    // Geographic
-    if (entity.coordinates !== undefined) {
-      dto.coordinates = {
-        latitude: entity.coordinates.latitude,
-        longitude: entity.coordinates.longitude,
-      };
-    }
-    
-    // Location Details
-    if (entity.geographicZone !== undefined) dto.geographicZone = entity.geographicZone;
-    if (entity.terrainType !== undefined) dto.terrainType = entity.terrainType;
-    if (entity.environmentConstraints !== undefined) dto.environmentConstraints = entity.environmentalConstraints;
-    if (entity.hasUtilities !== undefined) dto.hasUtilities = entity.hasUtilities;
-    if (entity.requiresPermits !== undefined) dto.requiresPermits = entity.requiresPermits;
-    
-    // Classification
-    if (entity.projectType !== undefined) dto.category = entity.projectType;
-    if (entity.priority !== undefined) dto.priorityLevel = entity.priority as 'Faible' | 'Moyenne' | 'Élevée' | 'Très élevée';
-    
-    // Financial
-    if (entity.financingSource !== undefined) dto.financingSource = entity.financingSource;
-    if (entity.allowsInitialPayment !== undefined) dto.allowsInitialPayment = entity.allowsInitialPayment;
-    if (entity.initialPaymentPercentage !== undefined) dto.initialPaymentPercentage = entity.initialPaymentPercentage;
-    
-    // Timeline
-    if (entity.launchDate !== undefined) dto.launchDate = entity.launchDate?.toISOString();
-    if (entity.attributionDate !== undefined) dto.attributionDate = entity.attributionDate?.toISOString();
-    if (entity.currentPhase !== undefined) dto.currentPhase = entity.currentPhase;
-    if (entity.currentStage !== undefined) dto.currentStage = entity.currentStage;
-    
-    // Organizations
-    if (entity.mainContractor !== undefined) {
-      dto.mainContractor = typeof entity.mainContractor === 'string' 
-        ? entity.mainContractor 
-        : entity.mainContractor?.name || '';
-    }
-    if (entity.projectReference !== undefined) dto.projectReference = entity.projectReference;
-    
-    // Computed values
-    if (entity.progress !== undefined) dto.progress = entity.progress;
-    if (entity.teamSize !== undefined) dto.teamSize = entity.teamSize;
-
-    return dto;
-  }
-
-  /**
-   * Transform CreateProjectRequestDTO to Project entity
-   * Used for creating new projects from form data
-   */
-  static fromCreateDTOToEntity(dto: CreateProjectRequestDTO): Project {
+  static fromSupabase(row: Record<string, unknown>): Project {
     return new Project(
-      /* id */ '', // Will be set by repository
-      /* title */ dto.title || '',
-      /* description */ dto.description || '',
-      /* status */ 'planifié' as ProjectStatus, // Default status for new projects
-      /* progress */ 0,
-      /* budget */ dto.budget || 0,
-      /* startDate */ dto.startDate ? new Date(dto.startDate) : null,
-      /* endDate */ dto.endDate ? new Date(dto.endDate) : null,
-      /* location */ dto.location || '',
-      /* teamSize */ dto.teamSize || 0,
-      /* thumbnail */ dto.thumbnail || undefined,
-      /* createdBy */ dto.createdBy || '',
-      /* createdAt */ new Date(),
-      /* updatedAt */ new Date(),
-      /* coordinates */ dto.latitude && dto.longitude ? 
-        { latitude: dto.latitude, longitude: dto.longitude, isValid: true } : undefined,
-      /* financingSource */ dto.financingSource || '',
-      /* mainContractor */ dto.mainContractor || '',
-      /* currency */ 'MRU',
-      /* clientOrganization */ dto.clientOrganization || '',
-      /* donorOrganization */ dto.donorOrganization || '',
-      /* sector */ dto.sector || '',
-      /* projectType */ dto.projectType || '',
-      /* priority */ dto.priority || 'Moyenne',
-      /* geographicZone */ dto.geographicZone || '',
-      /* terrainType */ dto.terrainType || '',
-      /* environmentalConstraints */ dto.environmentalConstraints || '',
-      /* areaSqm */ dto.areaSqm || undefined,
-      /* projectReferenceNumber */ dto.projectReferenceNumber || '',
-      /* projectOrder */ dto.projectOrder || '',
-      /* clientId */ dto.clientId || '',
-      /* currentPhase */ dto.currentPhase || '',
-      /* currentStage */ dto.currentStage || '',
-      /* allowsInitialPayment */ dto.allowsInitialPayment || false,
-      /* initialPaymentPercentage */ dto.initialPaymentPercentage || 0,
-      /* paymentFrequency */ dto.paymentFrequency || '',
-      /* paymentMode */ dto.paymentMode || '',
-      /* retentionPercentage */ dto.retentionPercentage || 0,
-      /* initialAdvancePercentage */ dto.initialAdvancePercentage || 0,
-      /* completionDate */ dto.completionDate ? new Date(dto.completionDate) : undefined,
-      /* estimatedDays */ dto.estimatedDays || 0,
-      /* launchDate */ dto.launchDate ? new Date(dto.launchDate) : undefined,
-      /* attributionDate */ dto.attributionDate ? new Date(dto.attributionDate) : undefined,
-      /* requiresConsultantValidation */ dto.requiresConsultantValidation || false,
-      /* requiresMinistryApproval */ dto.requiresMinistryApproval || false,
-      /* requiresPermits */ dto.requiresPermits || false,
-      /* permitNumber */ dto.permitNumber || '',
-      /* hasUtilities */ dto.hasUtilities || false,
-      /* engineeringConsultant */ dto.engineeringConsultant || undefined,
-      /* technicalManager */ dto.technicalManager || undefined,
-      /* projectResponsable */ dto.projectResponsable || undefined,
-      /* supervisor */ dto.supervisor || undefined,
-      /* payments */ dto.payments || [],
-      /* inspections */ dto.inspections || [],
-      /* tasks */ dto.tasks || [],
-      /* documents */ dto.documents || [],
-      /* materials */ dto.materials || [],
-      /* phases */ dto.phases || [],
-      /* milestones */ dto.milestones || [],
-      /* risks */ dto.risks || [],
-      /* tenders */ dto.tenders || [],
-      /* suppliers */ dto.suppliers || [],
-      /* employees */ dto.employees || [],
-      /* projectReference */ dto.projectReference || ''
+      row.id as string,
+      row.title as string,
+      row.description as string,
+      row.status as ProjectStatus,
+      Number(row.progress) || 0,
+      Number(row.budget) || 0,
+      row.start_date as string ? new Date(row.start_date as string) : null,
+      row.end_date as string ? new Date(row.end_date as string) : null,
+      row.location as string,
+      Number(row.team_size) || 0,
+      row.thumbnail as string || undefined,
+      row.created_by as string || '',
+      row.created_at as string ? new Date(row.created_at as string) : new Date(),
+      row.updated_at as string ? new Date(row.updated_at as string) : new Date(),
+      // Coordinates
+      row.latitude && row.longitude ? {
+        latitude: Number(row.latitude),
+        longitude: Number(row.longitude),
+        isValid: true
+      } : undefined,
+      // Financial
+      row.financing_source as string || '',
+      row.main_contractor as string || '',
+      row.currency as string || 'MRU',
+      // Organization
+      row.client_organization as string || '',
+      row.donor_organization as string || '',
+      row.sector as string || '',
+      row.project_type as string || '',
+      row.priority as string || 'Moyenne',
+      // Location details
+      row.geographic_zone as string || '',
+      row.terrain_type as string || '',
+      row.environmental_constraints as string || '',
+      row.area_sqm ? Number(row.area_sqm) : undefined,
+      // Project details
+      row.project_reference_number as string || '',
+      row.project_order as string || '',
+      row.client_id as string || '',
+      row.current_phase as string || '',
+      row.current_stage as string || '',
+      // Payment settings
+      Boolean(row.allows_initial_payment),
+      Number(row.initial_payment_percentage) || 0,
+      row.payment_frequency as string || '',
+      row.payment_mode as string || '',
+      Number(row.retention_percentage) || 0,
+      Number(row.initial_advance_percentage) || 0,
+      // Timeline
+      row.completion_date as string ? new Date(row.completion_date as string) : undefined,
+      Number(row.estimated_days) || 0,
+      row.launch_date as string ? new Date(row.launch_date as string) : undefined,
+      row.attribution_date as string ? new Date(row.attribution_date as string) : undefined,
+      // Requirements
+      Boolean(row.requires_consultant_validation),
+      Boolean(row.requires_ministry_approval),
+      Boolean(row.requires_permits),
+      row.permit_number as string || '',
+      Boolean(row.has_utilities),
+      // Team members
+      row.engineering_consultant as string || undefined,
+      row.technical_manager as string || undefined,
+      row.project_responsable as string || undefined,
+      row.supervisor as string || undefined,
+      // Collections
+      Array.isArray(row.payments) ? row.payments : [],
+      Array.isArray(row.inspections) ? row.inspections : [],
+      Array.isArray(row.tasks) ? row.tasks : [],
+      Array.isArray(row.documents) ? row.documents : [],
+      Array.isArray(row.materials) ? row.materials : [],
+      Array.isArray(row.phases) ? row.phases : [],
+      Array.isArray(row.milestones) ? row.milestones : [],
+      Array.isArray(row.risks) ? row.risks : [],
+      Array.isArray(row.tenders) ? row.tenders : [],
+      Array.isArray(row.suppliers) ? row.suppliers : [],
+      Array.isArray(row.employees) ? row.employees : [],
+      row.project_reference as string || ''
     );
   }
 
   /**
-   * Transform Project entity to ProjectDTO (alias for toDTO)
-   * From ProjectDomainTransformer - maintained for compatibility
+   * Domain Model → Supabase Insert/Update Object
+   * Following hexagonal architecture: Domain → Application → Infrastructure
    */
-  static fromEntityToDTO(entity: Project): ProjectDTO {
-    return this.toDTO(entity);
+  static toSupabase(project: Project): Record<string, unknown> {
+    return {
+      id: project.id,
+      title: project.title,
+      description: project.description,
+      status: project.status,
+      progress: project.progress,
+      budget: project.budget,
+      start_date: project.startDate?.toISOString(),
+      end_date: project.endDate?.toISOString(),
+      location: project.location,
+      team_size: project.teamSize,
+      thumbnail: project.thumbnail,
+      created_by: project.createdBy,
+      created_at: project.createdAt?.toISOString(),
+      updated_at: project.updatedAt?.toISOString(),
+      // Coordinates
+      latitude: project.coordinates?.latitude,
+      longitude: project.coordinates?.longitude,
+      // Financial
+      financing_source: project.financingSource,
+      main_contractor: project.mainContractor,
+      currency: project.currency,
+      // Organization
+      client_organization: project.clientOrganization,
+      donor_organization: project.donorOrganization,
+      sector: project.sector,
+      project_type: project.projectType,
+      priority: project.priority,
+      // Location details
+      geographic_zone: project.geographicZone,
+      terrain_type: project.terrainType,
+      environmental_constraints: project.environmentalConstraints,
+      area_sqm: project.areaSqm,
+      // Project details
+      project_reference_number: project.projectReferenceNumber,
+      project_order: project.projectOrder,
+      client_id: project.clientId,
+      current_phase: project.currentPhase,
+      current_stage: project.currentStage,
+      // Payment settings
+      allows_initial_payment: project.allowsInitialPayment,
+      initial_payment_percentage: project.initialPaymentPercentage,
+      payment_frequency: project.paymentFrequency,
+      payment_mode: project.paymentMode,
+      retention_percentage: project.retentionPercentage,
+      initial_advance_percentage: project.initialAdvancePercentage,
+      // Timeline
+      completion_date: project.completionDate?.toISOString(),
+      estimated_days: project.estimatedDays,
+      launch_date: project.launchDate?.toISOString(),
+      attribution_date: project.attributionDate?.toISOString(),
+      // Requirements
+      requires_consultant_validation: project.requiresConsultantValidation,
+      requires_ministry_approval: project.requiresMinistryApproval,
+      requires_permits: project.requiresPermits,
+      permit_number: project.permitNumber,
+      has_utilities: project.hasUtilities,
+      // Team members
+      engineering_consultant: project.engineeringConsultant,
+      technical_manager: project.technicalManager,
+      project_responsable: project.projectResponsable,
+      supervisor: project.supervisor,
+      // Collections
+      payments: project.payments,
+      inspections: project.inspections,
+      tasks: project.tasks,
+      documents: project.documents,
+      materials: project.materials,
+      phases: project.phases,
+      milestones: project.milestones,
+      risks: project.risks,
+      tenders: project.tenders,
+      suppliers: project.suppliers,
+      employees: project.employees,
+      project_reference: project.projectReference
+    };
   }
 
   /**
-   * Transform ProjectDTO to Project entity (alias for fromDTO)
-   * From ProjectDomainTransformer - maintained for compatibility
+   * Create Request → Supabase Insert Object
+   * Following hexagonal architecture: UI → DTOs → Application → Infrastructure
    */
-  static toEntity(dto: ProjectDTO): Project {
-    return this.fromDTO(dto);
+  static createToSupabase(request: CreateProjectRequestDTO): Record<string, unknown> {
+    const now = new Date().toISOString();
+    
+    return {
+      title: request.title,
+      description: request.description,
+      status: 'planifie' as ProjectStatus,
+      progress: 0,
+      budget: request.budget || 0,
+      start_date: request.startDate || now,
+      end_date: request.endDate,
+      location: request.location || '',
+      team_size: request.teamSize || 0,
+      thumbnail: request.thumbnail,
+      created_by: request.createdBy,
+      created_at: now,
+      updated_at: now,
+      // Coordinates
+      latitude: request.latitude,
+      longitude: request.longitude,
+      // Financial
+      financing_source: request.financingSource,
+      main_contractor: request.mainContractor,
+      currency: request.currency || 'MRU',
+      // Organization
+      client_organization: request.clientOrganization,
+      donor_organization: request.donorOrganization,
+      sector: request.sector,
+      project_type: request.projectType,
+      priority: request.priority || 'Moyenne',
+      // Location details
+      geographic_zone: request.geographicZone,
+      terrain_type: request.terrainType,
+      environmental_constraints: request.environmentalConstraints,
+      area_sqm: request.areaSqm,
+      // Project details
+      project_reference_number: request.projectReferenceNumber,
+      project_order: request.projectOrder,
+      client_id: request.clientId,
+      current_phase: request.currentPhase,
+      current_stage: request.currentStage,
+      // Payment settings
+      allows_initial_payment: request.allowsInitialPayment,
+      initial_payment_percentage: request.initialPaymentPercentage,
+      payment_frequency: request.paymentFrequency,
+      payment_mode: request.paymentMode,
+      retention_percentage: request.retentionPercentage,
+      initial_advance_percentage: request.initialAdvancePercentage,
+      // Timeline
+      completion_date: request.completionDate,
+      estimated_days: request.estimatedDays,
+      launch_date: request.launchDate,
+      attribution_date: request.attributionDate,
+      // Requirements
+      requires_consultant_validation: request.requiresConsultantValidation,
+      requires_ministry_approval: request.requiresMinistryApproval,
+      requires_permits: request.requiresPermits,
+      permit_number: request.permitNumber,
+      has_utilities: request.hasUtilities,
+      // Team members
+      engineering_consultant: request.engineeringConsultant?.name,
+      technical_manager: request.technicalManager?.name,
+      project_responsable: request.projectResponsable?.name,
+      supervisor: request.supervisor?.name,
+      // Collections
+      payments: [],
+      inspections: [],
+      tasks: [],
+      documents: [],
+      materials: request.materials || [],
+      phases: request.phases || [],
+      milestones: request.milestones || [],
+      risks: request.risks || [],
+      tenders: request.tenders || [],
+      suppliers: request.suppliers || [],
+      employees: request.employees || [],
+      project_reference: request.projectReference
+    };
+  }
+
+  // =================== DOMAIN ↔ DTO ===================
+  
+  /**
+   * Domain Model → API Response DTO
+   * Following hexagonal architecture: Domain → Application → Presentation
+   */
+  static toDTO(project: Project): ProjectDTO {
+    return {
+      id: project.id,
+      title: project.title,
+      description: project.description,
+      status: project.status,
+      progress: project.progress,
+      location: project.location,
+      address: project.location,
+      latitude: project.coordinates?.latitude,
+      longitude: project.coordinates?.longitude,
+      geographicZone: project.geographicZone,
+      terrainType: project.terrainType,
+      startDate: project.startDate?.toISOString() || '',
+      endDate: project.endDate?.toISOString(),
+      estimatedDurationDays: project.estimatedDays,
+      budget: project.budget,
+      currency: project.currency,
+      totalSpent: 0, // Would be calculated from payments
+      remainingBudget: project.budget,
+      budgetUtilization: 0,
+      teamSize: project.teamSize,
+      projectManagerId: project.createdBy,
+      technicalManagerId: project.technicalManager?.id,
+      supervisorId: project.supervisor?.id,
+      clientId: project.clientId,
+      mainContractor: project.mainContractor ? {
+        id: project.mainContractor,
+        name: project.mainContractor,
+        contactPerson: '',
+        email: '',
+        phone: '',
+        address: '',
+        specialization: '',
+        rating: 0,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      } : undefined,
+      thumbnail: project.thumbnail,
+      currentPhase: project.currentPhase as any,
+      constructionStage: project.currentStage as ConstructionStage,
+      priority: project.priority as ProjectPriority,
+      projectType: project.projectType as ProjectType,
+      methodology: 'waterfall' as const,
+      createdAt: project.createdAt?.toISOString(),
+      updatedAt: project.updatedAt?.toISOString()
+    };
   }
 
   /**
-   * Transform Project entity to ProjectDTO (alias for toDTO)
-   * From ProjectDomainTransformer - maintained for compatibility
+   * API Response DTO → Domain Model
+   * Following hexagonal architecture: Presentation → Application → Domain
    */
-  static toResponseDto(entity: Project): ProjectDTO {
-    return this.toDTO(entity);
+  static fromDTO(dto: ProjectDTO): Project {
+    return this.fromSupabase(dto);
   }
 
+  /**
+   * Create Request DTO → Domain Model
+   * Following hexagonal architecture: UI → DTOs → Application → Domain
+   */
+  static fromCreateRequest(request: CreateProjectRequestDTO, id: string): Project {
+    return new Project(
+      id,
+      request.title,
+      request.description || '',
+      'planifie' as ProjectStatus,
+      0,
+      request.budget || 0,
+      request.startDate ? new Date(request.startDate) : null,
+      request.endDate ? new Date(request.endDate) : null,
+      request.location || '',
+      request.teamSize || 0,
+      request.thumbnail,
+      request.createdBy || '',
+      new Date(),
+      new Date(),
+      // Coordinates
+      request.latitude && request.longitude ? {
+        latitude: request.latitude,
+        longitude: request.longitude,
+        isValid: true
+      } : undefined,
+      // Financial
+      request.financingSource || '',
+      request.mainContractor || '',
+      request.currency || 'MRU',
+      // Organization
+      request.clientOrganization || '',
+      request.donorOrganization || '',
+      request.sector || '',
+      request.projectType || '',
+      request.priority || 'Moyenne',
+      // Location details
+      request.geographicZone || '',
+      request.terrainType || '',
+      request.environmentalConstraints || '',
+      request.areaSqm,
+      // Project details
+      request.projectReferenceNumber || '',
+      request.projectOrder || '',
+      request.clientId || '',
+      request.currentPhase || '',
+      request.currentStage || '',
+      // Payment settings
+      request.allowsInitialPayment || false,
+      request.initialPaymentPercentage || 0,
+      request.paymentFrequency || '',
+      request.paymentMode || '',
+      request.retentionPercentage || 0,
+      request.initialAdvancePercentage || 0,
+      // Timeline
+      request.completionDate ? new Date(request.completionDate) : undefined,
+      request.estimatedDays || 0,
+      request.launchDate ? new Date(request.launchDate) : undefined,
+      request.attributionDate ? new Date(request.attributionDate) : undefined,
+      // Requirements
+      request.requiresConsultantValidation || false,
+      request.requiresMinistryApproval || false,
+      request.requiresPermits || false,
+      request.permitNumber || '',
+      request.hasUtilities || false,
+      // Team members
+      request.engineeringConsultant,
+      request.technicalManager,
+      request.projectResponsable,
+      request.supervisor,
+      // Collections
+      [],
+      [],
+      [],
+      [],
+      request.materials || [],
+      request.phases || [],
+      request.milestones || [],
+      request.risks || [],
+      request.tenders || [],
+      request.suppliers || [],
+      request.employees || [],
+      request.projectReference || ''
+    );
+  }
+
+  /**
+   * Update Request DTO → Partial Domain Model
+   * Following hexagonal architecture: UI → DTOs → Application → Domain
+   */
+  static fromUpdateRequest(dto: UpdateProjectDTO): Partial<Project> {
+    // Note: Since Project properties are readonly, we return update data
+    // The service layer will handle creating a new Project instance with updates
+    return {
+      updatedAt: new Date().toISOString()
+    };
+  }
+
+  // =================== UI ↔ DTO ===================
+  
+  /**
+   * UI Form Data → Create Request DTO
+   * Following hexagonal architecture: UI → DTOs → Application
+   */
+  static formToCreateRequest(formData: Record<string, unknown>): CreateProjectRequestDTO {
+    return {
+      title: formData.title as string,
+      description: formData.description as string,
+      budget: Number(formData.budget) || 0,
+      startDate: formData.startDate as string,
+      endDate: formData.endDate as string,
+      location: formData.location as string,
+      teamSize: Number(formData.teamSize) || 0,
+      thumbnail: formData.thumbnail as string,
+      createdBy: formData.createdBy as string,
+      latitude: Number(formData.latitude) || undefined,
+      longitude: Number(formData.longitude) || undefined,
+      financingSource: formData.financingSource as string,
+      mainContractor: formData.mainContractor as string,
+      currency: formData.currency as string,
+      clientOrganization: formData.clientOrganization as string,
+      donorOrganization: formData.donorOrganization as string,
+      sector: formData.sector as string,
+      projectType: formData.projectType as string,
+      priority: formData.priority as string,
+      geographicZone: formData.geographicZone as string,
+      terrainType: formData.terrainType as string,
+      environmentalConstraints: formData.environmentalConstraints as string,
+      areaSqm: Number(formData.areaSqm) || undefined,
+      projectReferenceNumber: formData.projectReferenceNumber as string,
+      projectOrder: formData.projectOrder as string,
+      clientId: formData.clientId as string,
+      currentPhase: formData.currentPhase as string,
+      currentStage: formData.currentStage as string,
+      allowsInitialPayment: Boolean(formData.allowsInitialPayment),
+      initialPaymentPercentage: Number(formData.initialPaymentPercentage) || 0,
+      paymentFrequency: formData.paymentFrequency as string,
+      paymentMode: formData.paymentMode as string,
+      retentionPercentage: Number(formData.retentionPercentage) || 0,
+      initialAdvancePercentage: Number(formData.initialAdvancePercentage) || 0,
+      completionDate: formData.completionDate as string,
+      estimatedDays: Number(formData.estimatedDays) || 0,
+      launchDate: formData.launchDate as string,
+      attributionDate: formData.attributionDate as string,
+      requiresConsultantValidation: Boolean(formData.requiresConsultantValidation),
+      requiresMinistryApproval: Boolean(formData.requiresMinistryApproval),
+      requiresPermits: Boolean(formData.requiresPermits),
+      permitNumber: formData.permitNumber as string,
+      hasUtilities: Boolean(formData.hasUtilities),
+      engineeringConsultant: formData.engineeringConsultant as any,
+      technicalManager: formData.technicalManager as any,
+      projectResponsable: formData.projectResponsable as any,
+      supervisor: formData.supervisor as any,
+      materials: Array.isArray(formData.materials) ? formData.materials as any[] : [],
+      phases: Array.isArray(formData.phases) ? formData.phases as any[] : [],
+      milestones: Array.isArray(formData.milestones) ? formData.milestones as any[] : [],
+      risks: Array.isArray(formData.risks) ? formData.risks as any[] : [],
+      tenders: Array.isArray(formData.tenders) ? formData.tenders as any[] : [],
+      suppliers: Array.isArray(formData.suppliers) ? formData.suppliers as any[] : [],
+      employees: Array.isArray(formData.employees) ? formData.employees as any[] : [],
+      projectReference: formData.projectReference as string
+    };
+  }
+
+  /**
+   * Domain Model → UI View Model
+   * Following hexagonal architecture: Domain → Application → Presentation
+   */
+  static toUI(project: Project): ProjectUIState {
+    const dto = this.toDTO(project);
+    const today = new Date();
+    const startDate = project.startDate ? new Date(project.startDate) : today;
+    const endDate = project.endDate ? new Date(project.endDate) : today;
+    const daysRemaining = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysElapsed = Math.ceil((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    return {
+      // Base DTO data
+      id: dto.id,
+      title: dto.title,
+      description: dto.description,
+      status: dto.status,
+      progress: dto.progress,
+      location: dto.location,
+      startDate: dto.startDate,
+      endDate: dto.endDate,
+      budget: dto.budget,
+      teamSize: dto.teamSize,
+      thumbnail: dto.thumbnail,
+      createdAt: dto.createdAt,
+      updatedAt: dto.updatedAt,
+      
+      // Form data
+      formData: {
+        title: project.title,
+        description: project.description,
+        budget: project.budget,
+        startDate: project.startDate?.toISOString(),
+        endDate: project.endDate?.toISOString(),
+        location: project.location,
+        teamSize: project.teamSize,
+        thumbnail: project.thumbnail,
+        status: project.status,
+        priority: project.priority as ProjectPriority,
+        projectType: project.projectType as ProjectType,
+        // Add other form fields as needed
+      },
+      
+      // Calculated fields
+      calculatedFields: {
+        totalCost: project.budget,
+        completionPercentage: project.progress,
+        daysRemaining: daysRemaining,
+        riskScore: this.calculateRiskScore(project),
+        teamUtilization: project.teamSize > 0 ? (project.teamSize / 10) * 100 : 0 // Assuming 10 as optimal team size
+      },
+      
+      // UI-specific properties
+      formattedStartDate: startDate.toLocaleDateString(),
+      formattedEndDate: endDate.toLocaleDateString(),
+      formattedBudget: new Intl.NumberFormat('fr-MR', {
+        style: 'currency',
+        currency: project.currency
+      }).format(project.budget),
+      daysElapsed: daysElapsed,
+      totalDays: totalDays,
+      isOverdue: daysRemaining < 0 && project.status !== 'completed',
+      isOnTrack: project.progress >= (daysElapsed / totalDays) * 100,
+      statusColor: this.getStatusColor(project.status),
+      priorityColor: this.getPriorityColor(project.priority as ProjectPriority),
+      progressVariant: this.getProgressVariant(project.progress),
+      canEdit: ['planifie', 'enCours', 'enAttente'].includes(project.status),
+      canDelete: project.status === 'planifie',
+      canComplete: ['enCours', 'enInspection'].includes(project.status),
+      
+      // Visual indicators
+      badgeVariant: this.getBadgeVariant(project.status, daysRemaining),
+      icon: this.getStatusIcon(project.status),
+      healthIndicator: this.getHealthIndicator(project),
+      
+      // Loading and error states
+      loading: false,
+      error: null,
+      isDirty: false,
+      isValid: true,
+      touchedFields: new Set<string>(),
+      
+      // UI state management
+      expandedSections: new Set<string>(),
+      selectedTab: 'overview',
+      filters: {
+        status: 'all',
+        priority: 'all',
+        dateRange: null
+      },
+      
+      // Pagination and sorting
+      pagination: {
+        page: 1,
+        limit: 10,
+        total: 0
+      },
+      sorting: {
+        field: 'createdAt',
+        direction: 'desc'
+      }
+    };
+  }
+
+  /**
+   * UI Form Data → Update Request DTO
+   * Following hexagonal architecture: UI → DTOs → Application
+   */
+  static formToUpdateRequest(formData: Record<string, unknown>): UpdateProjectDTO {
+    return {
+      id: formData.id as string,
+      title: formData.title as string,
+      description: formData.description as string,
+      status: formData.status as ProjectStatus,
+      progress: Number(formData.progress) || 0,
+      budget: Number(formData.budget) || 0,
+      startDate: formData.startDate as string,
+      endDate: formData.endDate as string,
+      location: formData.location as string,
+      teamSize: Number(formData.teamSize) || 0,
+      thumbnail: formData.thumbnail as string,
+      priority: formData.priority as ProjectPriority,
+      projectType: formData.projectType as ProjectType,
+      geographicZone: formData.geographicZone as string,
+      terrainType: formData.terrainType as string,
+      environmentalConstraints: formData.environmentalConstraints as string,
+      // Add other updateable fields as needed
+    };
+  }
+
+  // =================== BATCH TRANSFORMATIONS ===================
+  
+  /**
+   * Multiple Supabase Rows → Domain Models
+   */
+  static manyFromSupabase(rows: Record<string, unknown>[]): Project[] {
+    return rows.map(row => this.fromSupabase(row));
+  }
+
+  /**
+   * Multiple Domain Models → DTOs
+   */
+  static manyToDTO(projects: Project[]): ProjectDTO[] {
+    return projects.map(project => this.toDTO(project));
+  }
+
+  /**
+   * Multiple Domain Models → UI View Models
+   */
+  static manyToUI(projects: Project[]): ProjectUIState[] {
+    return projects.map(project => this.toUI(project));
+  }
+
+  /**
+   * Multiple DTOs → Domain Models
+   */
+  static manyFromDTO(dtos: ProjectDTO[]): Project[] {
+    return dtos.map(dto => this.fromDTO(dto));
+  }
+
+  // =================== ENUM CONVERSIONS ===================
+  
+  private static getStatusColor(status: ProjectStatus): string {
+    const colors = {
+      'planifie': 'gray',
+      'enCours': 'blue',
+      'enAttente': 'orange',
+      'enInspection': 'purple',
+      'suspendu': 'red',
+      'annule': 'red',
+      'attribue': 'green',
+      'termine': 'green',
+      'enConception': 'blue',
+      'enConstruction': 'orange',
+      'enCloture': 'purple',
+      'enRetard': 'red'
+    };
+    return colors[status] || 'gray';
+  }
+
+  private static getPriorityColor(priority: ProjectPriority): string {
+    const colors = {
+      'low': 'gray',
+      'normal': 'blue',
+      'high': 'orange',
+      'critical': 'red'
+    };
+    return colors[priority] || 'gray';
+  }
+
+  private static getProgressVariant(progress: number): string {
+    if (progress >= 100) return 'success';
+    if (progress >= 75) return 'primary';
+    if (progress >= 50) return 'info';
+    if (progress >= 25) return 'warning';
+    return 'danger';
+  }
+
+  private static getBadgeVariant(status: ProjectStatus, daysRemaining: number): string {
+    if (status === 'termine') return 'success';
+    if (status === 'suspendu' || status === 'annule') return 'danger';
+    if (daysRemaining < 0 && status !== 'termine') return 'warning';
+    if (status === 'enCours') return 'primary';
+    if (status === 'enInspection') return 'purple';
+    return 'secondary';
+  }
+
+  private static getStatusIcon(status: ProjectStatus): string {
+    const icons = {
+      'planifie': 'calendar',
+      'enCours': 'play-circle',
+      'enAttente': 'pause-circle',
+      'enInspection': 'search',
+      'suspendu': 'pause',
+      'annule': 'x-circle',
+      'attribue': 'check-circle',
+      'termine': 'check-circle-2',
+      'enConception': 'pen-tool',
+      'enConstruction': 'hammer',
+      'enCloture': 'archive',
+      'enRetard': 'alert-circle'
+    };
+    return icons[status] || 'circle';
+  }
+
+  private static getHealthIndicator(project: Project): 'healthy' | 'warning' | 'critical' {
+    if (project.status === 'suspendu' || project.status === 'annule') return 'critical';
+    if (project.status === 'enRetard') return 'warning';
+    if (project.progress < 25 && project.startDate && new Date(project.startDate) < new Date()) return 'warning';
+    return 'healthy';
+  }
+
+  private static calculateRiskScore(project: Project): number {
+    let riskScore = 0;
+    
+    // Budget risk
+    if (project.budget > 1000000) riskScore += 20;
+    
+    // Timeline risk
+    if (project.startDate && project.endDate) {
+      const duration = project.endDate.getTime() - project.startDate.getTime();
+      const days = duration / (1000 * 60 * 60 * 24);
+      if (days > 365) riskScore += 20;
+    }
+    
+    // Progress risk
+    if (project.progress < 25) riskScore += 20;
+    
+    // Status risk
+    if (project.status === 'suspendu' || project.status === 'enRetard') riskScore += 30;
+    
+    return Math.min(100, riskScore);
+  }
+
+  // =================== SUMMARY TRANSFORMATIONS ===================
+  
+  /**
+   * Create summary object for lists
+   */
+  static toSummary(project: Project) {
+    const ui = this.toUI(project);
+    
+    return {
+      id: ui.id,
+      title: ui.title,
+      status: ui.status,
+      priority: project.priority,
+      location: ui.location,
+      startDate: ui.formattedStartDate,
+      endDate: ui.formattedEndDate,
+      progress: ui.progress,
+      budget: ui.formattedBudget,
+      teamSize: ui.teamSize,
+      daysRemaining: ui.daysRemaining,
+      badgeVariant: ui.badgeVariant,
+      statusColor: ui.statusColor,
+      healthIndicator: ui.healthIndicator,
+      isOverdue: ui.isOverdue
+    };
+  }
+
+  /**
+   * Create timeline item
+   */
+  static toTimelineItem(project: Project) {
+    const ui = this.toUI(project);
+    
+    return {
+      id: ui.id,
+      title: ui.title,
+      description: ui.description,
+      date: ui.formattedStartDate,
+      status: ui.status,
+      icon: ui.icon,
+      color: ui.statusColor,
+      progress: ui.progress,
+      budget: ui.formattedBudget,
+      location: ui.location
+    };
+  }
+
+  // =================== BUSINESS LOGIC HELPERS ===================
+  
   /**
    * Calculate project progress percentage
-   * Business logic method for progress calculation
    */
-  static calculateProjectProgress(project: ProjectDTO): number {
-    if (!project.progress) return 0;
+  static calculateProjectProgress(project: Project): number {
     return Math.min(100, Math.max(0, project.progress));
   }
 
   /**
    * Format project duration as human readable string
-   * Calculates duration between start and end dates
    */
-  static formatProjectDuration(startDate: string | undefined, endDate: string | undefined): string {
+  static formatProjectDuration(startDate: Date | null, endDate: Date | null): string {
     if (!startDate) return 'Non défini';
     
-    const start = new Date(startDate);
-    const end = endDate ? new Date(endDate) : new Date();
+    const start = startDate;
+    const end = endDate || new Date();
     
     if (isNaN(start.getTime())) return 'Date invalide';
     if (isNaN(end.getTime())) return 'Date invalide';
@@ -430,16 +847,15 @@ export class ProjectTransformer {
 
   /**
    * Calculate project efficiency based on budget and progress
-   * Business logic for efficiency calculation
    */
-  static calculateProjectEfficiency(project: ProjectDTO): number {
+  static calculateProjectEfficiency(project: Project): number {
     if (!project.budget || project.budget <= 0) return 0;
     
     const progress = project.progress || 0;
     const efficiency = progress / 100;
     
     // Add some business logic based on project status
-    if (project.status === 'completed') {
+    if (project.status === 'termine') {
       return Math.min(100, efficiency * 100);
     }
     
@@ -448,56 +864,12 @@ export class ProjectTransformer {
 
   /**
    * Calculate project risk level based on various factors
-   * Business logic for risk assessment
    */
-  static calculateProjectRisk(project: ProjectDTO): 'low' | 'medium' | 'high' {
-    let riskScore = 0;
+  static calculateProjectRisk(project: Project): 'low' | 'medium' | 'high' {
+    const riskScore = this.calculateRiskScore(project);
     
-    // Budget risk
-    if (project.budget && project.budget > 1000000) riskScore += 1;
-    
-    // Timeline risk
-    if (project.startDate && project.endDate) {
-      const duration = new Date(project.endDate).getTime() - new Date(project.startDate).getTime();
-      const days = duration / (1000 * 60 * 60 * 24);
-      if (days > 365) riskScore += 1;
-    }
-    
-    // Progress risk
-    if (project.progress && project.progress < 25) riskScore += 1;
-    
-    // Status risk
-    if (project.status === 'en retard' || project.status === 'suspendu') riskScore += 2;
-    
-    // Determine risk level
-    if (riskScore >= 3) return 'high';
-    if (riskScore >= 1) return 'medium';
+    if (riskScore >= 60) return 'high';
+    if (riskScore >= 30) return 'medium';
     return 'low';
-  }
-
-  /**
-   * Transform ProjectDTO to Project entity (Domain DTO → Entity)
-   * Converts ISO strings to Date objects
-   * Following hexagonal architecture: Presentation → Application → Domain
-   */
-  static fromDTO(dto: ProjectDTO): Project {
-    return new Project(
-      dto.id,
-      dto.title,
-      dto.description,
-      dto.status,
-      dto.progress,
-      dto.budget,
-      dto.startDate ? new Date(dto.startDate) : null,
-      dto.endDate ? new Date(dto.endDate) : null,
-      dto.location,
-      dto.coordinates ? {
-        latitude: dto.coordinates.latitude || 0,
-        longitude: dto.coordinates.longitude || 0,
-        isValid: true
-      } : undefined,
-      dto.teamSize,
-      dto.thumbnail
-    );
   }
 }

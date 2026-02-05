@@ -50,7 +50,7 @@ import {
   Supplier,
   SupplierNotification,
   DocumentWithViewStatus,
-} from "@/types/supplier";
+} from "@/dtos/entities/SupplierDTO";
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
 import SupplierPaymentRequest from "@/components/suppliers/SupplierPaymentRequest";

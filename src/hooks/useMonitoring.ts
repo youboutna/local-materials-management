@@ -1,6 +1,6 @@
 // useMonitoring.ts - Hook for centralized monitoring
 import { useState, useEffect, useCallback } from 'react';
-import { ProjectData, ActionLabels, EscalationRoles } from '@/types/project';
+import { ProjectData, ActionLabels, EscalationRoles } from '@/dtos/entities/ProjectDTO';
 import { MonitoringService, MonitoringConfiguration, MonitoringMetrics, defaultMonitoringConfig } from '@/services/MonitoringService';
 
 interface UseMonitoringResult {

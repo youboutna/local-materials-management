@@ -50,28 +50,28 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
 
   const [newItem, setNewItem] = useState<EstimateItem>({
     quantity: 0,
-    unit_price: 0,
-    total_price: 0,
+    unitPrice: 0,
+    totalPrice: 0,
     description: '',
-    item_type: 'material'
+    itemType: 'material'
   });
 
   const [estimateData, setEstimateData] = useState<Omit<TenderEstimate, 'id'>>({
-    tender_id: tenderId,
-    project_id: projectId,
-    estimate_type: 'quantitative',
-    total_materials_cost: 0,
-    total_labor_cost: 0,
-    total_equipment_cost: 0,
+    tenderId: tenderId,
+    projectId: projectId,
+    estimateType: 'quantitative',
+    totalMaterialsCost: 0,
+    totalLaborCost: 0,
+    totalEquipmentCost: 0,
     subtotal: 0,
-    tax_rate: 14,
-    tax_amount: 0,
-    total_with_tax: 0,
-    overhead_percentage: 15,
-    overhead_amount: 0,
-    profit_margin_percentage: 10,
-    profit_margin_amount: 0,
-    final_total: 0,
+    taxRate: 14,
+    taxAmount: 0,
+    totalWithTax: 0,
+    overheadPercentage: 15,
+    overheadAmount: 0,
+    profitMarginPercentage: 10,
+    profitMarginAmount: 0,
+    finalTotal: 0,
     currency: 'MRU',
     status: 'draft'
   });
@@ -116,10 +116,10 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
 
     try {
       const result = await uploadFile(file);
-      setSelectedFile(result.file);
+      setSelectedFile(result.fileName);
       toast({
-        title: "Fichier tÃ©lÃ©chargÃ©",
-        description: `${file.name} a Ã©tÃ© tÃ©lÃ©chargÃ© avec succÃ¨s`,
+        title: "Fichier téléchargé",
+        description: `${file.name} a été téléchargé avec succès`,
       });
     } catch (error) {
       toast({
@@ -231,7 +231,7 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
                     <CardContent className="p-4">
                       <h4 className="font-medium">{material.name}</h4>
                       <div className="text-sm text-muted-foreground">
-                        {material.price_per_unit} {material.unit} / unitÃ©
+                        {material.pricePerUnit} {material.unit} / unité
                       </div>
                     </CardContent>
                   </Card>
@@ -251,32 +251,32 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="tax_rate">Taux TVA (%)</Label>
+                <Label htmlFor="taxRate">Taux TVA (%)</Label>
                 <Input
-                  id="tax_rate"
+                  id="taxRate"
                   type="number"
-                  value={estimateData.tax_rate}
-                  onChange={(e) => setEstimateData(prev => ({ ...prev, tax_rate: parseFloat(e.target.value) || 0 }))}
+                  value={estimateData.taxRate}
+                  onChange={(e) => setEstimateData(prev => ({ ...prev, taxRate: parseFloat(e.target.value) || 0 }))}
                 />
               </div>
               <div>
-                <Label htmlFor="overhead_percentage">Pourcentage frais gÃ©nÃ©raux (%)</Label>
+                <Label htmlFor="overheadPercentage">Pourcentage frais gÃ©nÃ©raux (%)</Label>
                 <Input
-                  id="overhead_percentage"
+                  id="overheadPercentage"
                   type="number"
-                  value={estimateData.overhead_percentage}
-                  onChange={(e) => setEstimateData(prev => ({ ...prev, overhead_percentage: parseFloat(e.target.value) || 0 }))}
+                  value={estimateData.overheadPercentage}
+                  onChange={(e) => setEstimateData(prev => ({ ...prev, overheadPercentage: parseFloat(e.target.value) || 0 }))}
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="profit_margin_percentage">Marge bÃ©nÃ©ficiaire (%)</Label>
+                <Label htmlFor="profitMarginPercentage">Marge bÃ©nÃ©ficiaire (%)</Label>
                 <Input
-                  id="profit_margin_percentage"
+                  id="profitMarginPercentage"
                   type="number"
-                  value={estimateData.profit_margin_percentage}
-                  onChange={(e) => setEstimateData(prev => ({ ...prev, profit_margin_percentage: parseFloat(e.target.value) || 0 }))}
+                  value={estimateData.profitMarginPercentage}
+                  onChange={(e) => setEstimateData(prev => ({ ...prev, profitMarginPercentage: parseFloat(e.target.value) || 0 }))}
                 />
               </div>
               <div>

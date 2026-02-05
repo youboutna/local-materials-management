@@ -18,39 +18,46 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { NotificationService } from '@/application/services/NotificationService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { DevisPDFDocument } from './pdf/DevisPDFDocument';
-import { TenderEstimateDTO, TenderEstimateItemDTO, TenderDTO } from '@/dtos/reports/reportDTOs';
+import { TenderEstimateDTO, TenderEstimateItemDTO, TenderDTO } from '@/dtos/entities/TenderEstimateDTO';
+import { EstimateItem, EstimateData, ExportConfig } from '@/dtos/transforms/shared';
 
-interface EstimateItem {
-  id?: string;
-  material_id?: string | null;
-  quantity: number;
-  unit_price: number;
-  total_price: number;
-  description: string | null;
-  item_type: string | null;
-}
+// Mapping functions for type compatibility
+const mapTenderEstimateToEstimateData = (tenderEstimate: TenderEstimateDTO): EstimateData => {
+  const estimate = tenderEstimate as unknown as Record<string, unknown>;
+  return {
+    id: tenderEstimate.id,
+    tender_id: estimate.tender_id as string,
+    estimate_type: estimate.estimate_type as string || 'quantitative',
+    total_materials_cost: (estimate.total_materials_cost as number | null | undefined) || 0,
+    total_labor_cost: (estimate.total_labor_cost as number | null | undefined) || 0,
+    total_equipment_cost: (estimate.total_equipment_cost as number | null | undefined) || 0,
+    subtotal: (estimate.subtotal as number | null | undefined) || 0,
+    tax_rate: (estimate.tax_rate as number | null | undefined) || 0,
+    tax_amount: (estimate.tax_amount as number | null | undefined) || 0,
+    total_with_tax: (estimate.total_with_tax as number | null | undefined) || 0,
+    overhead_percentage: (estimate.overhead_percentage as number | null | undefined) || 0,
+    overhead_amount: (estimate.overhead_amount as number | null | undefined) || 0,
+    profit_margin_percentage: (estimate.profit_margin_percentage as number | null | undefined) || 0,
+    profit_margin_amount: (estimate.profit_margin_amount as number | null | undefined) || 0,
+    final_total: (estimate.final_total as number | null | undefined) || 0,
+    currency: tenderEstimate.currency || 'MRU',
+    status: tenderEstimate.status,
+    created_at: (estimate.created_at as string)
+  };
+};
 
-interface TenderEstimate {
-  id?: string;
-  tender_id: string;
-  project_id?: string | null;
-  estimate_type: string;
-  total_materials_cost: number | null;
-  total_labor_cost: number | null;
-  total_equipment_cost: number | null;
-  subtotal: number | null;
-  tax_rate: number | null;
-  tax_amount: number | null;
-  total_with_tax: number | null;
-  overhead_percentage: number | null;
-  overhead_amount: number | null;
-  profit_margin_percentage: number | null;
-  profit_margin_amount: number | null;
-  final_total: number | null;
-  currency: string | null;
-  status: string;
-  created_at?: string;
-}
+const mapTenderEstimateItemToEstimateItem = (item: TenderEstimateItemDTO): EstimateItem => {
+  const itemRecord = item as unknown as Record<string, unknown>;
+  return {
+    id: item.id,
+    material_id: (itemRecord.material_id as string | undefined) || '',
+    quantity: item.quantity,
+    unit_price: (itemRecord.unit_price as number),
+    total_price: (itemRecord.total_price as number),
+    description: item.description,
+    item_type: (itemRecord.item_type as string | undefined) || 'material'
+  };
+};
 
 interface QuantitativeEstimateExporterProps {
   estimate: TenderEstimateDTO;
@@ -63,21 +70,6 @@ interface QuantitativeEstimateExporterProps {
     email: string;
     logo?: string;
   };
-}
-
-interface ExportConfig {
-  title: string;
-  includeCompanyHeader: boolean;
-  includeItemDetails: boolean;
-  includePriceBreakdown: boolean;
-  includeTermsConditions: boolean;
-  includeSignature: boolean;
-  termsConditions: string;
-  recipientEmail?: string;
-  notes?: string;
-  signatoryName?: string;
-  signatoryTitle?: string;
-  validityPeriod: number; // in days
 }
 
 export function QuantitativeEstimateExporter({ 
@@ -201,10 +193,10 @@ export function QuantitativeEstimateExporter({
       .reduce((sum, item) => sum + (item.total_price || 0), 0);
 
     const subtotal = materialsCost + laborCost + equipmentCost + otherCost;
-    const taxAmount = subtotal * (estimate.tax_rate || 0) / 100;
+    const taxAmount = subtotal * (estimate.taxRate || 0) / 100;
     const totalWithTax = subtotal + taxAmount;
-    const overheadAmount = totalWithTax * (estimate.overhead_percentage || 0) / 100;
-    const profitAmount = (totalWithTax + overheadAmount) * (estimate.profit_margin_percentage || 0) / 100;
+    const overheadAmount = totalWithTax * (estimate.overheadPercentage || 0) / 100;
+    const profitAmount = (totalWithTax + overheadAmount) * (estimate.profitMarginPercentage || 0) / 100;
     const finalTotal = totalWithTax + overheadAmount + profitAmount;
 
     return {
@@ -400,8 +392,8 @@ export function QuantitativeEstimateExporter({
       // Create PDF document using @react-pdf/renderer
       const pdfDocument = (
         <DevisPDFDocument
-          estimate={estimate}
-          estimateItems={estimateItems}
+          estimate={mapTenderEstimateToEstimateData(estimate)}
+          estimateItems={estimateItems.map(mapTenderEstimateItemToEstimateItem)}
           tender={tender}
           config={exportConfig}
           company={company}

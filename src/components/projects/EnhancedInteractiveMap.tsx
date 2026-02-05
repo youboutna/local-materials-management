@@ -5,7 +5,7 @@ import { MapPin, Navigation, Layers } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { ProjectData } from '@/types/project';
+import { ProjectData } from '@/dtos/entities/ProjectDTO';
 
 // Fix default markers in Leaflet
 const DefaultIcon = L.icon({

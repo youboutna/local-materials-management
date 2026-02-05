@@ -12,11 +12,14 @@ import EmployeeSelector from "../../selectors/EmployeeSelector";
 import SimpleSupplierSelector from "../../selectors/SimpleSupplierSelector";
 import { Progress } from "@/components/ui/progress";
 
+// Import entity DTOs (following "similitude des voisins le plus proche")
+import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
+
 interface ProjectInfoStepProps {
-  formData: any;
-  onUpdate: (data: any) => void;
+  formData: ProjectDTO;
+  onUpdate: (data: Partial<ProjectDTO>) => void;
   isEditing?: boolean;
-  baseData?: any;
+  baseData?: Partial<ProjectDTO>;
 }
 
 const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({

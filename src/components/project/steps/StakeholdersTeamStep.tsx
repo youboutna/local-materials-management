@@ -26,13 +26,16 @@ import {
   SelectValue,
 } from "../../ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
-import { ProjectFormDataDTO } from "@/dtos/transforms/ProjectWorkflowDTOs";
+
+// Import entity DTOs (following "similitude des voisins le plus proche")
+import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
+import { StakeholderDTO } from "@/dtos/entities/StakeholderDTO";
 
 interface StakeholdersTeamStepProps {
-  projectData: ProjectFormDataDTO;
-  onUpdate: (data: Partial<ProjectFormDataDTO>) => void;
+  projectData: ProjectDTO;
+  onUpdate: (data: Partial<ProjectDTO>) => void;
   isEditing?: boolean;
-  baseData?: ProjectFormDataDTO;
+  baseData?: Partial<ProjectDTO>;
 }
 
 interface Stakeholder {

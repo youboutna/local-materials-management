@@ -3,41 +3,9 @@ import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { TenderEstimateService } from '@/application/services/TenderEstimateService';
 import { MaterialService } from '@/application/services/MaterialService';
 import { TenderEstimateDTO } from '@/dtos/entities/TenderEstimateDTO';
-import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
+import { EstimateItem, EstimateData } from '@/dtos/transforms/shared';
+import { TenderEstimate } from '@/domain/entities/TenderEstimate';
 import { toast } from '@/hooks/use-toast';
-
-export interface EstimateItem {
-  id?: string;
-  material_id?: string | null;
-  quantity: number;
-  unit_price: number;
-  total_price: number;
-  description: string | null;
-  item_type: string | null;
-}
-
-export interface TenderEstimate {
-  id?: string;
-  tender_id: string;
-  project_id?: string | null;
-  estimate_type: string;
-  total_materials_cost: number | null;
-  total_labor_cost: number | null;
-  total_equipment_cost: number | null;
-  subtotal: number | null;
-  tax_rate: number | null;
-  tax_amount: number | null;
-  total_with_tax: number | null;
-  overhead_percentage: number | null;
-  overhead_amount: number | null;
-  profit_margin_percentage: number | null;
-  profit_margin_amount: number | null;
-  final_total: number | null;
-  currency: string | null;
-  status: string;
-  created_at?: string;
-  updated_at?: string;
-}
 
 export const useTenderQuantitativeEstimateHex = (tenderId: string, projectId?: string) => {
   const queryClient = useQueryClient();
@@ -50,25 +18,25 @@ export const useTenderQuantitativeEstimateHex = (tenderId: string, projectId?: s
       const estimatesData = await tenderEstimateService.getTenderEstimatesByTender(tenderId);
       return estimatesData.map(estimate => ({
         id: estimate.id,
-        tender_id: estimate.tender_id,
-        project_id: projectId || null,
-        estimate_type: 'quantitative',
-        total_materials_cost: estimate.total_amount * 0.6, // Estimation
-        total_labor_cost: estimate.total_amount * 0.3, // Estimation
-        total_equipment_cost: estimate.total_amount * 0.1, // Estimation
+        tenderId: estimate.tender_id,
+        projectId: projectId || null,
+        estimateType: 'quantitative',
+        totalMaterialsCost: estimate.total_amount * 0.6, // Estimation
+        totalLaborCost: estimate.total_amount * 0.3, // Estimation
+        totalEquipmentCost: estimate.total_amount * 0.1, // Estimation
         subtotal: estimate.total_amount,
-        tax_rate: 20, // Par défaut
-        tax_amount: estimate.total_amount * 0.2,
-        total_with_tax: estimate.total_amount * 1.2,
-        overhead_percentage: 10, // Par défaut
-        overhead_amount: estimate.total_amount * 0.1,
-        profit_margin_percentage: 15, // Par défaut
-        profit_margin_amount: estimate.total_amount * 0.15,
-        final_total: estimate.total_amount * 1.45,
+        taxRate: 20, // Par défaut
+        taxAmount: estimate.total_amount * 0.2,
+        totalWithTax: estimate.total_amount * 1.2,
+        overheadPercentage: 10, // Par défaut
+        overheadAmount: estimate.total_amount * 0.1,
+        profitMarginPercentage: 15, // Par défaut
+        profitMarginAmount: estimate.total_amount * 0.15,
+        finalTotal: estimate.total_amount * 1.45,
         currency: estimate.currency,
         status: estimate.status,
-        created_at: estimate.created_at,
-        updated_at: estimate.updated_at
+        createdAt: estimate.created_at,
+        updatedAt: estimate.updated_at
       }));
     },
     enabled: !!tenderId,

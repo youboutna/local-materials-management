@@ -23,7 +23,7 @@ import {
 import { format, differenceInDays, addMonths, subMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { getGanttPertService, GanttPhaseData, GanttMilestoneData, UnifiedGanttData } from '@/services/GanttPertDataService';
-import { ProjectDetailDTO } from '@/types/dto';
+import { ProjectDetailDTO, ProjectData } from '@/dtos/entities/ProjectDTO';
 import { useQuery } from '@tanstack/react-query';
 
 interface UnifiedGanttChartProps {

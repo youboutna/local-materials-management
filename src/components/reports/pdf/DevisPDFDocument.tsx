@@ -3,6 +3,7 @@ import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { PDFDocument, PDFSection, PDFCard, PDFRow, PDFCol, PDFText, PDFTable } from './PDFDocument';
+import { EstimateItem, EstimateData, ExportConfig } from '@/dtos/transforms/shared';
 
 const styles = StyleSheet.create({
   grandTotal: {
@@ -53,55 +54,11 @@ const styles = StyleSheet.create({
   },
 });
 
-interface EstimateItem {
-  id?: string;
-  material_id?: string | null;
-  quantity: number;
-  unit_price: number;
-  total_price: number;
-  description: string | null;
-  item_type: string | null;
-}
-
-interface TenderEstimate {
-  id?: string;
-  tender_id: string;
-  project_id?: string | null;
-  estimate_type: string;
-  total_materials_cost: number | null;
-  total_labor_cost: number | null;
-  total_equipment_cost: number | null;
-  subtotal: number | null;
-  tax_rate: number | null;
-  tax_amount: number | null;
-  total_with_tax: number | null;
-  overhead_percentage: number | null;
-  overhead_amount: number | null;
-  profit_margin_percentage: number | null;
-  profit_margin_amount: number | null;
-  final_total: number | null;
-  currency: string | null;
-  status: string;
-  created_at?: string;
-}
-
 interface DevisPDFDocumentProps {
-  estimate: TenderEstimate;
+  estimate: EstimateData;
   estimateItems: EstimateItem[];
   tender: any;
-  config: {
-    title: string;
-    includeCompanyHeader: boolean;
-    includeItemDetails: boolean;
-    includePriceBreakdown: boolean;
-    includeTermsConditions: boolean;
-    includeSignature: boolean;
-    termsConditions: string;
-    notes?: string;
-    signatoryName?: string;
-    signatoryTitle?: string;
-    validityPeriod: number;
-  };
+  config?: Partial<ExportConfig>;
   company?: {
     name: string;
     address: string;
@@ -115,7 +72,7 @@ export function DevisPDFDocument({
   estimate,
   estimateItems,
   tender,
-  config,
+  config = {},
   company = {
     name: 'Votre Entreprise',
     address: '123 Rue Exemple, Nouakchott, Mauritanie',
@@ -123,8 +80,30 @@ export function DevisPDFDocument({
     email: 'contact@votreentreprise.mr'
   }
 }: DevisPDFDocumentProps) {
+  const defaultConfig: ExportConfig = {
+    title: `Devis Quantitatif Estimatif - ${tender?.title || tender?.projectReference || 'Appel d\'Offres'}`,
+    includeCompanyHeader: true,
+    includeItemDetails: true,
+    includePriceBreakdown: true,
+    includeTermsConditions: true,
+    includeSignature: false,
+    termsConditions: `CONDITIONS GÉNÉRALES:
+1. Validité de l'offre: 30 jours à compter de la date d'émission
+2. Délai de livraison: À définir selon cahier des charges
+3. Modalités de paiement: Selon contrat
+4. Prix fermes et définitifs, hors révision exceptionnelle
+5. Conformité aux normes et réglementations en vigueur`,
+    recipientEmail: '',
+    notes: '',
+    signatoryName: '',
+    signatoryTitle: 'Directeur Technique',
+    validityPeriod: 30
+  };
+
+  const finalConfig = { ...defaultConfig, ...config };
+
   const validUntilDate = format(
-    new Date(Date.now() + config.validityPeriod * 24 * 60 * 60 * 1000), 
+    new Date(Date.now() + finalConfig.validityPeriod * 24 * 60 * 60 * 1000), 
     'dd MMMM yyyy', 
     { locale: fr }
   );
@@ -171,9 +150,9 @@ export function DevisPDFDocument({
 
   return (
     <PDFDocument
-      title={config.title}
+      title={finalConfig.title}
       subtitle={`N° de référence: ${estimate.id || 'DRAFT'} | Valide jusqu'au: ${validUntilDate}`}
-      company={config.includeCompanyHeader ? company : undefined}
+      company={finalConfig.includeCompanyHeader ? company : undefined}
     >
       {/* Tender Information */}
       <PDFSection title="Informations Appel d'Offres" borderColor="#2563eb">
@@ -198,7 +177,7 @@ export function DevisPDFDocument({
       </PDFSection>
 
       {/* Detailed Items */}
-      {config.includeItemDetails && estimateItems.length > 0 && (
+      {finalConfig.includeItemDetails && estimateItems.length > 0 && (
         <PDFSection title="Détail des Postes" borderColor="#10b981">
           <PDFTable
             headers={['Description', 'Type', 'Qté', `P.U. (${estimate.currency})`, `Total (${estimate.currency})`]}
@@ -215,7 +194,7 @@ export function DevisPDFDocument({
       )}
 
       {/* Price Breakdown */}
-      {config.includePriceBreakdown && (
+      {finalConfig.includePriceBreakdown && (
         <PDFSection title="Récapitulatif Financier" borderColor="#3b82f6">
           <PDFCard>
             <PDFRow>
@@ -244,33 +223,33 @@ export function DevisPDFDocument({
       )}
 
       {/* Terms and Conditions */}
-      {config.includeTermsConditions && (
+      {finalConfig.includeTermsConditions && (
         <PDFSection title="Conditions Générales" borderColor="#f59e0b">
           <View style={styles.termsSection}>
-            <Text style={styles.termsText}>{config.termsConditions}</Text>
+            <Text style={styles.termsText}>{finalConfig.termsConditions}</Text>
           </View>
         </PDFSection>
       )}
 
       {/* Additional Notes */}
-      {config.notes && (
+      {finalConfig.notes && (
         <PDFSection title="Notes Complémentaires" borderColor="#ef4444">
           <PDFCard>
-            <Text style={{ fontSize: 11, lineHeight: 1.4 }}>{config.notes}</Text>
+            <Text style={{ fontSize: 11, lineHeight: 1.4 }}>{finalConfig.notes}</Text>
           </PDFCard>
         </PDFSection>
       )}
 
       {/* Signature Section */}
-      {config.includeSignature && config.signatoryName && (
+      {finalConfig.includeSignature && finalConfig.signatoryName && (
         <PDFSection title="Validation" borderColor="#6b7280">
           <View style={styles.signatureSection}>
             <View style={styles.signatureRow}>
               <View>
                 <Text style={{ fontSize: 12, color: '#6b7280' }}>Nom du signataire:</Text>
-                <Text style={{ fontSize: 14, fontWeight: 'bold', marginTop: 5 }}>{config.signatoryName}</Text>
-                {config.signatoryTitle && (
-                  <Text style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>{config.signatoryTitle}</Text>
+                <Text style={{ fontSize: 14, fontWeight: 'bold', marginTop: 5 }}>{finalConfig.signatoryName}</Text>
+                {finalConfig.signatoryTitle && (
+                  <Text style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>{finalConfig.signatoryTitle}</Text>
                 )}
               </View>
               <View style={styles.signatureBox}>

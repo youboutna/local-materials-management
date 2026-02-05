@@ -17,7 +17,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { ProjectWithPayments, InspectionStatus } from '@/types/project';
+import { ProjectWithPayments, InspectionStatus } from '@/dtos/entities/ProjectDTO';
 import { InspectionDialog } from '@/components/project/InspectionDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';

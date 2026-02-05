@@ -1,4 +1,4 @@
-import { EVMMetrics, PERTAnalysis, ProjectData } from '@/types/project';
+import { EVMMetrics, PERTAnalysis, ProjectData, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { ProjectReportDTO } from '@/types/reportTypes';
 import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import { format } from 'date-fns';
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
 interface CompactProjectPDFDocumentProps {
   projects: ProjectData[];
   reportTitle?: string;
-  enrichedDataMap?: Map<string, ProjectReportDTO>;
+  enrichedDataMap?: Map<string, ProjectDetailDTO>;
   evmMetricsMap?: Map<string, EVMMetrics>;
   pertAnalysisMap?: Map<string, PERTAnalysis>;
   includeCompanyHeader?: boolean;
@@ -650,9 +650,9 @@ export function CompactProjectPDFDocument({
         const evmMetrics = evmMetricsMap?.get(project.id);
         const pertAnalysis = pertAnalysisMap?.get(project.id);
         
-        const phases = enrichedData?.phases || [];
-        const risks = enrichedData?.riskAssessment?.risks || [];
-        const expenses = enrichedData?.phases?.filter((p: any) => p.actualCost > 0) || [];
+        const phases = enrichedData?.plannedPhases || [];
+        const risks = enrichedData?.risks || [];
+        const expenses = enrichedData?.expenses || [];
 
         return (
           <Page key={project.id} size="A4" style={styles.page}>
@@ -838,7 +838,7 @@ export function CompactProjectPDFDocument({
                     <View style={styles.conformityItem}>
                       <Text style={styles.conformityLabel}>Inspections</Text>
                       <Text style={[styles.conformityLabel, { fontWeight: 'bold' }]}>
-                        {enrichedData?.analytics?.onTimePerformance || 0}
+                        {enrichedData?.tasks?.length || 0}
                       </Text>
                     </View>
                     <View style={styles.conformityItem}>
@@ -1071,7 +1071,7 @@ export function CompactProjectPDFDocument({
 interface SingleCompactProjectPDFProps {
   project: ProjectData;
   reportTitle?: string;
-  enrichedData?: ProjectReportDTO;
+  enrichedData?: ProjectDetailDTO;
   evmMetrics?: EVMMetrics;
   pertAnalysis?: PERTAnalysis;
   includeCompanyHeader?: boolean;
@@ -1093,7 +1093,7 @@ export function SingleCompactProjectPDF({
   includeCompanyHeader = true,
   company,
 }: SingleCompactProjectPDFProps) {
-  const enrichedDataMap = new Map<string, ProjectReportDTO>();
+  const enrichedDataMap = new Map<string, ProjectDetailDTO>();
   const evmMetricsMap = new Map<string, EVMMetrics>();
   const pertAnalysisMap = new Map<string, PERTAnalysis>();
 

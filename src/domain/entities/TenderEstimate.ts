@@ -35,7 +35,9 @@ export class TenderEstimateItem implements ITenderEstimateItem {
     public unitPrice: number,
     public totalPrice: number,
     public category?: string,
-    public specifications?: string
+    public specifications?: string,
+    public materialId?: string,
+    public itemType?: string,
   ) {
     // Validation in constructor
     if (!id || id.trim().length === 0) {
@@ -117,6 +119,8 @@ export class TenderEstimate {
   private _taxRate?: number;
   private _totalWithTax?: number;
   private _finalTotal?: number;
+  private _discountRate?: number;
+  private _discountAmount?: number;
   
   // Cost breakdown - Matching DB structure
   private _totalMaterialsCost?: number;
@@ -152,6 +156,8 @@ export class TenderEstimate {
       taxRate?: number;
       totalWithTax?: number;
       finalTotal?: number;
+      discountRate?: number;
+      discountAmount?: number;
       totalMaterialsCost?: number;
       totalLaborCost?: number;
       totalEquipmentCost?: number;
@@ -177,6 +183,8 @@ export class TenderEstimate {
     this._taxRate = options.taxRate;
     this._totalWithTax = options.totalWithTax;
     this._finalTotal = options.finalTotal;
+    this._discountRate = options.discountRate;
+    this._discountAmount = options.discountAmount;
     
     // Cost breakdown
     this._totalMaterialsCost = options.totalMaterialsCost;
@@ -209,6 +217,8 @@ export class TenderEstimate {
   get taxRate(): number | undefined { return this._taxRate; }
   get totalWithTax(): number | undefined { return this._totalWithTax; }
   get finalTotal(): number | undefined { return this._finalTotal; }
+  get discountRate(): number | undefined { return this._discountRate; }
+  get discountAmount(): number | undefined { return this._discountAmount; }
   
   // Cost breakdown getters
   get totalMaterialsCost(): number | undefined { return this._totalMaterialsCost; }

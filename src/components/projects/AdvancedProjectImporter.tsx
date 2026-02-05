@@ -22,7 +22,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { ProjectService } from '@/application/services/ProjectService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { ProjectFormDTO } from '@/types/dto';
+import { ProjectFormDTO, ProjectData } from '@/dtos/entities/ProjectDTO';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ImportResult } from '@/types/project';
 import * as XLSX from 'xlsx';

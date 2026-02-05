@@ -10,12 +10,6 @@ import { IProjectRepository } from '@/domain/repositories';
 import { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { ProjectDTO, CreateProjectDTO, UpdateProjectDTO, ProjectSummaryDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
-import {
-  ProjectFormDataDTO,
-  ProjectAnalyticsDTO,
-  StakeholderDTO,
-  
-} from '@/dtos/entities/ProjectExtendedDTO';
 
 
 /**
@@ -479,7 +473,7 @@ export class ProjectService {
    * WORKFLOW FORMULAIRE (remplace ProjectEditWorkflowService)
    * Créer un projet depuis les données du formulaire
    */
-  async createFromForm(formData: ProjectFormDataDTO): Promise<ProjectDTO> {
+  async createFromForm(formData: ProjectDTO): Promise<ProjectDTO> {
     try {
       // Validation spécifique formulaire
       this.validateFormData(formData);
@@ -652,7 +646,7 @@ export class ProjectService {
   // MÉTHODES UTILITAIRES PRIVÉES
   // ========================================
 
-  private validateFormData(formData: ProjectFormDataDTO): void {
+  private validateFormData(formData: ProjectDTO): void {
     const errors: Record<string, string[]> = {};
 
     if (!formData.title || formData.title.trim().length === 0) {

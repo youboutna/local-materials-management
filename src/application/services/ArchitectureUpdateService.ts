@@ -175,12 +175,12 @@ export class ArchitectureUpdateService {
       changes.push('Added missing properties to SaveContextDTO');
     }
 
-    // Fix ProjectFormDataDTO missing properties
-    if (updater.getContent().includes('ProjectFormDataDTO')) {
+    // Fix ProjectDTO missing properties
+    if (updater.getContent().includes('ProjectDTO')) {
       const requiredProps = ['title', 'description', 'location', 'status', 'progress', 'budget', 'start_date', 'end_date', 'team_size'];
       requiredProps.forEach(prop => {
         if (!updater.getContent().includes(`${prop}:`)) {
-          changes.push(`Note: ProjectFormDataDTO may need ${prop} property`);
+          changes.push(`Note: ProjectDTO may need ${prop} property`);
         }
       });
     }
@@ -387,12 +387,12 @@ class ContentUpdater {
       );
     }
 
-    // Fix ProjectFormDataDTO missing properties
-    if (this.content.includes('ProjectFormDataDTO')) {
+    // Fix ProjectDTO missing properties
+    if (this.content.includes('ProjectDTO')) {
       const requiredProps = ['title', 'description', 'location', 'status', 'progress', 'budget', 'start_date', 'end_date', 'team_size'];
       requiredProps.forEach(prop => {
         if (!this.content.includes(`${prop}:`)) {
-          changes.push(`Note: ProjectFormDataDTO may need ${prop} property`);
+          changes.push(`Note: ProjectDTO may need ${prop} property`);
         }
       });
     }

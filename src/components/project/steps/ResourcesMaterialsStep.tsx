@@ -4,13 +4,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Package, FileText } from 'lucide-react';
 import MaterialFormSection from '@/components/MaterialFormSection';
 import ProjectDocumentUpload from '@/components/project/ProjectDocumentUpload';
-import { ProjectFormDataDTO } from '@/application/services/ProjectService';
+import { ProjectDTO } from '@/application/services/ProjectService';
 
 interface ResourcesMaterialsStepProps {
   selectedMaterials: Array<{ materialId: string; quantity: number }>;
   onMaterialsChange: (materials: Array<{ materialId: string; quantity: number }>) => void;
-  projectData?: ProjectFormDataDTO;
-  onUpdate?: (data: Partial<ProjectFormDataDTO>) => void;
+  projectData?: ProjectDTO;
+  onUpdate?: (data: Partial<ProjectDTO>) => void;
   isEditing?: boolean;
   currentPhaseId?: string;
   currentStepId?: string;

@@ -6,6 +6,7 @@
 import { TenderEstimate, TenderEstimateItem } from '@/domain/entities/TenderEstimate';
 import { ITenderEstimateRepository } from '@/domain/repositories/ITenderEstimateRepository';
 import { supabase } from '@/integrations/supabase/client';
+import { TenderEstimateFinancialData, TenderEstimateCostBreakdown } from '@/dtos/transforms/shared';
 
 export class TenderEstimateAdapter implements ITenderEstimateRepository {
   /**
@@ -26,6 +27,8 @@ export class TenderEstimateAdapter implements ITenderEstimateRepository {
           tax_rate: estimate.taxRate,
           tax_amount: estimate.taxAmount,
           total_with_tax: estimate.totalWithTax,
+          discount_rate: estimate.discountRate,    // ✅ Added discount field
+          discount_amount: estimate.discountAmount, // ✅ Added discount field
           overhead_percentage: estimate.overheadPercentage,
           overhead_amount: estimate.overheadAmount,
           profit_margin_percentage: estimate.profitMarginPercentage,
@@ -171,6 +174,8 @@ export class TenderEstimateAdapter implements ITenderEstimateRepository {
       if (updates.taxRate !== undefined) updateData.tax_rate = updates.taxRate;
       if (updates.taxAmount !== undefined) updateData.tax_amount = updates.taxAmount;
       if (updates.totalWithTax !== undefined) updateData.total_with_tax = updates.totalWithTax;
+      if (updates.discountRate !== undefined) updateData.discount_rate = updates.discountRate;    // ✅ Added discount field
+      if (updates.discountAmount !== undefined) updateData.discount_amount = updates.discountAmount; // ✅ Added discount field
       if (updates.overheadPercentage !== undefined) updateData.overhead_percentage = updates.overheadPercentage;
       if (updates.overheadAmount !== undefined) updateData.overhead_amount = updates.overheadAmount;
       if (updates.profitMarginPercentage !== undefined) updateData.profit_margin_percentage = updates.profitMarginPercentage;
@@ -355,24 +360,30 @@ export class TenderEstimateAdapter implements ITenderEstimateRepository {
     return new TenderEstimate(
       row.id,
       row.tender_id,
-      row.project_id,
-      row.estimate_type,
-      row.total_materials_cost || 0,
-      row.total_labor_cost || 0,
-      row.total_equipment_cost || 0,
-      row.subtotal || 0,
-      row.tax_rate || 0,
-      row.tax_amount || 0,
-      row.total_with_tax || 0,
-      row.overhead_percentage || 0,
-      row.overhead_amount || 0,
-      row.profit_margin_percentage || 0,
-      row.profit_margin_amount || 0,
-      row.final_total || 0,
-      row.currency || 'MRO',
       row.status || 'draft',
-      new Date(row.created_at),
-      new Date(row.updated_at)
+      row.currency || 'MRO',
+      row.estimate_type || 'standard',
+      row.created_at,
+      row.updated_at,
+      {
+        projectId: row.project_id,
+        submittedBy: row.submitted_by,
+        subtotal: row.subtotal || 0,
+        taxAmount: row.tax_amount || 0,
+        taxRate: row.tax_rate || 0,
+        totalWithTax: row.total_with_tax || 0,
+        finalTotal: row.final_total || 0,
+        discountRate: row.discount_rate || 0,
+        discountAmount: row.discount_amount || 0,
+        totalMaterialsCost: row.total_materials_cost || 0,
+        totalLaborCost: row.total_labor_cost || 0,
+        totalEquipmentCost: row.total_equipment_cost || 0,
+        overheadPercentage: row.overhead_percentage || 0,
+        overheadAmount: row.overhead_amount || 0,
+        profitMarginPercentage: row.profit_margin_percentage || 0,
+        profitMarginAmount: row.profit_margin_amount || 0,
+        items: [] // Items loaded separately
+      }
     );
   }
 
@@ -389,8 +400,9 @@ export class TenderEstimateAdapter implements ITenderEstimateRepository {
       row.total_price,
       row.description,
       row.item_type,
-      new Date(row.created_at),
-      new Date(row.updated_at)
+      row.specifications,
+      row.material_id, // Use material_id as materialId
+      row.item_type   // Use item_type as itemType
     );
   }
 }

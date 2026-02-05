@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
-import { ProjectData } from '@/types/project';
 import { ProjectService } from '@/application/services/ProjectService';
-import { ProjectFormDTO } from '@/types/dto';
+import { ProjectFormDTO, ProjectData, CreateProjectRequestDto, UpdateProjectRequestDto, LocationDTO } from '@/dtos/entities/ProjectDTO';
 import { RepositoryFactory } from '@/infrastructure/repository/RepositoryFactory';
 
 interface ProjectAnalytics {

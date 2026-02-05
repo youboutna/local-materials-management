@@ -13,7 +13,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { useSupplierInspections } from '@/hooks/useSupplierInspections';
-import { DocumentWithViewStatus, Supplier, SupplierNotification } from '@/types/supplier';
+import { DocumentWithViewStatus, Supplier, SupplierNotification } from '@/dtos/entities/SupplierDTO';
 import { CheckCircle, Clock, Download, Eye, FileText, LogIn, LogOut, MessageCircle, Plus, Send, Share2, Upload, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { 

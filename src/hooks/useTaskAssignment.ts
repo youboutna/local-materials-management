@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/use-auth';
 import { useNotifications } from '@/hooks/useNotifications';
-import { TaskType, NotificationMetadata } from '@/types/notification';
+import { TaskType, NotificationMetadata } from '@/dtos/entities/TaskDTO';
 import { toast } from '@/hooks/use-toast';
 
 export const useTaskAssignment = () => {

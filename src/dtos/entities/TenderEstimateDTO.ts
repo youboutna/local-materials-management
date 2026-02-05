@@ -3,6 +3,8 @@
  * Following hexagonal architecture principles
  */
 
+import { TenderEstimateFinancialData, TenderEstimateCostBreakdown, TenderEstimateBusinessLogic } from '@/dtos/transforms/shared';
+
 export interface TenderEstimateDTO {
   id: string;
   tender_id: string;
@@ -13,9 +15,51 @@ export interface TenderEstimateDTO {
   currency: string;
   validity_period: number; // in days
   notes?: string;
+  // Estimate type for compatibility with EstimateData
+  estimate_type: string;
+  // Snake_case properties for EstimateData compatibility
+  total_materials_cost?: number | null;
+  total_labor_cost?: number | null;
+  total_equipment_cost?: number | null;
+  subtotal?: number | null;
+  tax_rate?: number | null;
+  tax_amount?: number | null;
+  total_with_tax?: number | null;
+  overhead_percentage?: number | null;
+  overhead_amount?: number | null;
+  profit_margin_percentage?: number | null;
+  profit_margin_amount?: number | null;
+  final_total?: number | null;
+  // Financial calculation fields (camelCase - PROMPTS.md Rule #2)
+  taxRate?: number;        // ✅ Changed from tax_rate
+  taxAmount?: number;      // ✅ Changed from tax_amount
+  totalWithTax?: number;   // ✅ Changed from total_with_tax
+  discountRate?: number;   // ✅ Changed from discount_rate
+  discountAmount?: number;  // ✅ Changed from discount_amount
+  overheadPercentage?: number;
+  overheadAmount?: number;
+  profitMarginPercentage?: number;
+  profitMarginAmount?: number;
+  finalTotal?: number;
+  // Cost breakdown fields
+  totalMaterialsCost?: number;
+  totalLaborCost?: number;
+  totalEquipmentCost?: number;
+  // Business logic calculated fields
+  margin_rules?: {
+    overhead_percentage: number;
+    profit_margin_percentage: number;
+    risk_multiplier: number;
+  };
+  risk_assessment?: {
+    level: 'low' | 'medium' | 'high' | 'critical';
+    factors: string[];
+    score: number;
+  };
   created_at: string;
   updated_at: string;
 }
+
 
 export interface TenderEstimateItemDTO {
   id: string;
@@ -30,6 +74,11 @@ export interface TenderEstimateItemDTO {
   category?: string;
   specifications?: string;
   item_type?: string;
+  materialId?: string;  // ✅ Added for UI form support
+  itemType?: string;   // ✅ Added for UI form support
+  // Business logic calculated fields
+  margin_percentage?: number;
+  line_total?: number;
   created_at: string;
   updated_at: string;
 }
@@ -42,6 +91,22 @@ export interface CreateTenderEstimateRequestDto {
   currency: string;
   validity_period: number;
   notes?: string;
+  // Financial calculation fields (camelCase - PROMPTS.md Rule #2)
+  subtotal?: number;
+  taxRate?: number;        // ✅ Changed from tax_rate
+  taxAmount?: number;      // ✅ Changed from tax_amount
+  totalWithTax?: number;   // ✅ Changed from total_with_tax
+  discountRate?: number;   // ✅ Changed from discount_rate
+  discountAmount?: number;  // ✅ Changed from discount_amount
+  overheadPercentage?: number;
+  overheadAmount?: number;
+  profitMarginPercentage?: number;
+  profitMarginAmount?: number;
+  finalTotal?: number;
+  // Cost breakdown fields
+  totalMaterialsCost?: number;
+  totalLaborCost?: number;
+  totalEquipmentCost?: number;
   items?: CreateTenderEstimateItemRequestDto[];
 }
 
@@ -57,6 +122,8 @@ export interface CreateTenderEstimateItemRequestDto {
   category?: string;
   specifications?: string;
   item_type?: string;
+  materialId?: string;  // ✅ Added for UI form support
+  itemType?: string;   // ✅ Added for UI form support
 }
 
 export interface UpdateTenderEstimateRequestDto {
@@ -67,6 +134,22 @@ export interface UpdateTenderEstimateRequestDto {
   currency?: string;
   validity_period?: number;
   notes?: string;
+  // Financial calculation fields (camelCase - PROMPTS.md Rule #2)
+  subtotal?: number;
+  taxRate?: number;        // ✅ Changed from tax_rate
+  taxAmount?: number;      // ✅ Changed from tax_amount
+  totalWithTax?: number;   // ✅ Changed from total_with_tax
+  discountRate?: number;   // ✅ Changed from discount_rate
+  discountAmount?: number;  // ✅ Changed from discount_amount
+  overheadPercentage?: number;
+  overheadAmount?: number;
+  profitMarginPercentage?: number;
+  profitMarginAmount?: number;
+  finalTotal?: number;
+  // Cost breakdown fields
+  totalMaterialsCost?: number;
+  totalLaborCost?: number;
+  totalEquipmentCost?: number;
 }
 
 export interface UpdateTenderEstimateItemRequestDto {
@@ -124,17 +207,33 @@ export interface EstimateStatsDto {
 
 export interface EstimateTotalsDto {
   subtotal: number;
-  tax_amount: number;
-  total_with_tax: number;
-  final_total: number;
+  discountAmount: number;    // ✅ Changed from discount_amount
+  taxAmount: number;         // ✅ Changed from tax_amount
+  totalWithTax: number;      // ✅ Changed from total_with_tax
+  finalTotal: number;        // ✅ Changed from final_total
+}
+
+// Risk Assessment DTO
+export interface TenderEstimateRiskDto {
+  level: 'low' | 'medium' | 'high' | 'critical';
+  factors: string[];
+  score: number;
+}
+
+// Margin Rules DTO  
+export interface TenderEstimateMarginRulesDto {
+  overhead_percentage: number;
+  profit_margin_percentage: number;
+  risk_multiplier: number;
 }
 
 export interface TenderEstimateStatsDto {
   total_estimates: number;
   total_amount: number;
   average_amount: number;
-  by_status: Record<string, number>;
-  by_currency: Record<string, number>;
+  estimates_by_status: Record<string, number>;
+  estimates_by_currency: Record<string, number>;
+  total_value: number;
   recent_estimates: TenderEstimateDTO[];
 }
 

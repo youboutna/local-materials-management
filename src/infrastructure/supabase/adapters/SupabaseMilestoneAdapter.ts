@@ -6,7 +6,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { IMilestoneRepository, CreateMilestoneData, UpdateMilestoneData } from '@/domain/repositories/IMilestoneRepository';
-import { MilestoneDTO } from '@/types/milestone-dto';
+import { MilestoneDTO, MilestoneStatus, MilestoneType, MilestonePriority } from '@/dtos/entities/MilestoneDTO';
 
 export class SupabaseMilestoneAdapter implements IMilestoneRepository {
   /**

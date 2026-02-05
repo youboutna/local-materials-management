@@ -7,16 +7,40 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { useState, useCallback, useMemo } from 'react';
+
+// Import workflow DTOs (following "similitude des voisins le plus proche")
 import { 
-  ProjectWorkflowStepDTO,
-  ProjectWorkflowResultDTO,
-  ProjectWorkflowDTO,
-  WorkflowStatus,
-  ProjectWorkflowStep
-} from '@/dtos/workflows/ProjectWorkflowDTO';
+  ProjectWorkflowData,
+  StepRelatedDataDTO,
+  WorkflowMetadataDTO,
+  ValidationResult,
+  SaveResult,
+  SaveContextDTO,
+  WorkflowStep,
+  WorkflowTransition,
+  WorkflowState,
+  ProjectCreationWorkflowDTO,
+  ProjectValidationDTO,
+  StepProgressDTO
+} from '@/dtos/workflows/ProjectWorkflowDTOs';
+import { PhaseWorkflowDTO } from '@/dtos/workflows/PhaseWorkflowDTO';
+
+// Import entity DTOs (following "similitude des voisins le plus proche")
+import { ProjectDTO, ProjectDTO } from '@/dtos/entities/ProjectDTO';
+import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
+import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
+import { RiskDTO } from '@/dtos/entities/RiskDTO';
+import { TaskDTO } from '@/dtos/entities/TaskDTO';
+import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
+import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
+import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
+import { StakeholderDTO } from '@/dtos/entities/StakeholderDTO';
+
 import { PhaseDTO, ProgressCalculationHexService } from '@/application/services/ProgressCalculationHexService';
-import { ProjectFormDataDTO } from '@/application/services/ProjectFormService';
-import { ProjectWorkflowService } from '@/application/services/ProjectWorkflowService';
+import { ProjectWorkflowService, type EditWorkflowContext, type EditWorkflowResult } from '@/application/services/ProjectWorkflowService';
+
+// Types locaux pour compatibilité
+type ProjectEditWorkflowData = ProjectWorkflowData;
 
 // Types d'erreur locaux pour éviter les dépendances
 export enum ErrorCode {
@@ -60,10 +84,10 @@ export function useProjectEditWorkflowHex(projectId?: string) {
   const saveStepMutation = useMutation({
     mutationFn: ({ stepNumber, data, context }: { 
       stepNumber: number; 
-      data: Partial<ProjectEditWorkflowData>; 
+      data: Partial<ProjectWorkflowData>; 
       context: EditWorkflowContext 
-    }): Promise<EditWorkflowResult> => 
-      projectWorkflowService.saveEditStep(stepNumber, data, context),
+    }): Promise<SaveResult> => 
+      projectWorkflowService.saveStep(stepNumber, data, context),
     onSuccess: (result) => {
       if (result.success) {
         toast({
@@ -116,10 +140,10 @@ export function useProjectEditWorkflowHex(projectId?: string) {
   const validateStepMutation = useMutation({
     mutationFn: ({ stepNumber, data, context }: { 
       stepNumber: number; 
-      data: Partial<ProjectEditWorkflowData>; 
+      data: Partial<ProjectWorkflowData>; 
       context: EditWorkflowContext 
     }) => 
-      projectWorkflowService.validateEditStep(stepNumber, data, context),
+      projectWorkflowService.validateStep(stepNumber, data, context),
     onError: (error) => {
       console.error('Step validation failed:', error);
       toast({
@@ -208,9 +232,9 @@ export function useProjectEditWorkflowHex(projectId?: string) {
   };
 
   // Fonction pour valider une étape du workflow
-  const validateWorkflowStep = async (stepNumber: number, stepData: Partial<ProjectEditWorkflowData>, context: EditWorkflowContext): Promise<{ isValid: boolean; errors: string[]; warnings: string[] }> => {
+  const validateWorkflowStep = async (stepNumber: number, stepData: Partial<ProjectWorkflowData>, context: EditWorkflowContext): Promise<{ isValid: boolean; errors: string[]; warnings: string[] }> => {
     try {
-      const validation = await projectWorkflowService.validateEditStep(stepNumber, stepData, context);
+      const validation = await projectWorkflowService.validateStep(stepNumber, stepData, context);
       return validation;
     } catch (error) {
       console.error('Step validation failed:', error);
@@ -219,28 +243,28 @@ export function useProjectEditWorkflowHex(projectId?: string) {
   };
 
   // État du workflow
-  const getWorkflowStepStatus = (stepData: Partial<ProjectEditWorkflowData>, stepNumber: number): boolean => {
+  const getWorkflowStepStatus = (stepData: Partial<ProjectWorkflowData>, stepNumber: number): boolean => {
     const requiredFields = getRequiredFieldsForStep(stepNumber);
     
     return requiredFields.every(field => {
-      const value = stepData[field as keyof ProjectEditWorkflowData];
+      const value = stepData[field as keyof ProjectWorkflowData];
       return value !== undefined && value !== null && value !== '';
     });
   };
 
   // Fonction utilitaire pour obtenir les champs requis par étape
-  const getRequiredFieldsForStep = (stepNumber: number): (keyof ProjectEditWorkflowData)[] => {
+  const getRequiredFieldsForStep = (stepNumber: number): (keyof ProjectWorkflowData)[] => {
     switch (stepNumber) {
       case 1: // Informations du projet
-        return ['title', 'description', 'budget', 'start_date'];
+        return ['projectData'];
       case 2: // Parties prenantes
-        return ['stakeholders'];
+        return ['relatedData'];
       case 3: // Phases
-        return ['phases'];
+        return ['relatedData'];
       case 4: // Matériaux
         return []; // Optionnel
       case 5: // Risques
-        return ['risks'];
+        return ['relatedData'];
       case 6: // Garanties bancaires
         return []; // Optionnel
       case 7: // Assurances
@@ -257,11 +281,11 @@ export function useProjectEditWorkflowHex(projectId?: string) {
   };
 
   // Fonction pour détecter les changements
-  const detectChanges = (originalData: ProjectEditWorkflowData, currentData: Partial<ProjectEditWorkflowData>): string[] => {
+  const detectChanges = (originalData: ProjectWorkflowData, currentData: Partial<ProjectWorkflowData>): string[] => {
     const changes: string[] = [];
     
     for (const key in currentData) {
-      if (key in originalData && originalData[key as keyof ProjectEditWorkflowData] !== currentData[key]) {
+      if (key in originalData && originalData[key as keyof ProjectWorkflowData] !== currentData[key]) {
         changes.push(key);
       }
     }
@@ -270,14 +294,34 @@ export function useProjectEditWorkflowHex(projectId?: string) {
   };
 
   // Fonction pour obtenir les données du projet
-  const getProjectData = async (projectId: string): Promise<ProjectEditWorkflowData | null> => {
+  const getProjectData = async (projectId: string): Promise<ProjectWorkflowData | null> => {
     try {
       const project = await (projectWorkflowService as any).projectService.getProjectById(projectId);
       if (!project) return null;
       
-      // Map project to workflow data format using private method
-      const formData = (projectWorkflowService as any).mapProjectToFormData(project as unknown);
-      return formData as ProjectEditWorkflowData;
+      // Map project to workflow data format using transformers
+      const workflowData = {
+        projectId: project.id,
+        currentStep: 1,
+        isDraft: false,
+        isComplete: project.progress === 100,
+        projectData: project as ProjectDTO,
+        relatedData: {
+          phases: project.phases || [],
+          risks: project.risks || [],
+          materials: project.materials || [],
+          stakeholders: project.stakeholders || [],
+          tasks: project.tasks || [],
+          inspections: project.inspections || []
+        },
+        metadata: {
+          lastSavedAt: project.updatedAt || new Date().toISOString(),
+          totalSteps: 10,
+          completedSteps: Math.floor((project.progress || 0) / 10), // Approximate
+          progressPercentage: project.progress || 0
+        }
+      };
+      return workflowData as ProjectWorkflowData;
     } catch (error) {
       console.error('Failed to get project data:', error);
       return null;
@@ -285,19 +329,18 @@ export function useProjectEditWorkflowHex(projectId?: string) {
   };
 
   // Fonction pour mettre à jour les données du projet
-  const updateProjectData = async (projectId: string, data: Partial<ProjectEditWorkflowData>): Promise<EditWorkflowResult> => {
+  const updateProjectData = async (projectId: string, data: Partial<ProjectWorkflowData>): Promise<SaveResult> => {
     try {
       // Update project using unified ProjectService
-      await (projectWorkflowService as any).projectService.updateProject(projectId, data as ProjectFormDataDTO);
+      await (projectWorkflowService as { projectService: { updateProject: (id: string, data: ProjectDTO) => Promise<void> } }).projectService.updateProject(projectId, data.projectData as ProjectDTO);
       
       return {
         success: true,
-        projectId,
-        changesSaved: Object.keys(data)
+        data: data
       };
     } catch (error) {
       console.error('Failed to update project data:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'Unknown error', projectId };
+      return { success: false, errors: [error instanceof Error ? error.message : 'Unknown error'] };
     }
   };
 
@@ -305,14 +348,14 @@ export function useProjectEditWorkflowHex(projectId?: string) {
   const getChangeHistory = async (projectId: string): Promise<Array<{ field: string; oldValue: unknown; newValue: unknown; timestamp: string }>> => {
     try {
       // Simulate change history - in real implementation this would come from audit logs
-      const project = await (projectWorkflowService as any).projectService.getProjectById(projectId);
+      const project = await (projectWorkflowService as { projectService: { getProjectById: (id: string) => Promise<ProjectDTO | null> } }).projectService.getProjectById(projectId);
       if (!project) return [];
       
       // Return mock change history for now
       return [
         {
           field: 'last_updated',
-          oldValue: (project as any).updatedAt || '',
+          oldValue: (project as { updatedAt?: string }).updatedAt || '',
           newValue: new Date().toISOString(),
           timestamp: new Date().toISOString()
         }
@@ -324,17 +367,20 @@ export function useProjectEditWorkflowHex(projectId?: string) {
   };
 
   // Fonction pour valider les données d'une étape
-  const validateStepData = async (stepNumber: number, data: Partial<ProjectEditWorkflowData>): Promise<{ isValid: boolean; errors: string[]; warnings: string[] }> => {
+  const validateStepData = async (stepNumber: number, data: Partial<ProjectWorkflowData>): Promise<{ isValid: boolean; errors: string[]; warnings: string[] }> => {
     try {
-      const validation = await projectWorkflowService.validateEditStep(stepNumber, data, {
+      const validation = await projectWorkflowService.validateStep(stepNumber, data, {
         projectId: '',
         currentStep: stepNumber,
         totalSteps: 10,
         isDraft: true,
-        isComplete: false,
-        modifiedFields: []
+        isComplete: false
       });
-      return validation;
+      return {
+        isValid: validation.isValid,
+        errors: validation.errors || [],
+        warnings: validation.warnings || []
+      };
     } catch (error) {
       console.error('Failed to validate step data:', error);
       return { isValid: false, errors: ['Validation failed'], warnings: [] };
@@ -367,21 +413,21 @@ export function useProjectEditWorkflowHex(projectId?: string) {
     }
   };
 
-  const [formData, setFormData] = useState<ProjectFormDataDTO>({
+  const [formData, setFormData] = useState<ProjectDTO>({
     title: '',
     description: '',
     location: '',
-    status: 'draft',
+    status: 'enAttente',
     budget: 0,
-    start_date: '',
-    end_date: '',
-    team_size: 0,
+    startDate: '',
+    endDate: '',
+    teamSize: 0,
     progress: 0
   });
   
   const [phases, setPhases] = useState<PhaseDTO[]>([]);
   
-  const updateFormData = useCallback((updates: Partial<ProjectFormDataDTO>) => {
+  const updateFormData = useCallback((updates: Partial<ProjectDTO>) => {
     setFormData(prev => ({
       ...prev,
       ...updates
@@ -446,7 +492,7 @@ export function useProjectEditWorkflowHex(projectId?: string) {
 export function useProjectEditWorkflowStepsHex(projectId?: string) {
   const { validateStep, isValidating, workflowContext } = useProjectEditWorkflowHex(projectId);
   
-  const validateStepWithWarnings = async (stepNumber: number, stepData: Partial<ProjectEditWorkflowData>) => {
+  const validateStepWithWarnings = async (stepNumber: number, stepData: Partial<ProjectWorkflowData>) => {
     if (!workflowContext) {
       return { isValid: false, errors: ['Workflow non initialisé'], warnings: [] };
     }

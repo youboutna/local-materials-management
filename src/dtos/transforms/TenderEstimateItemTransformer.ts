@@ -24,6 +24,9 @@ export class TenderEstimateItemTransformer {
       category: entity.category,
       specifications: entity.specifications,
       item_type: 'material', // Default item type
+      // Business logic calculated fields
+      margin_percentage: entity.calculateMarginPercentage(),
+      line_total: entity.totalPrice,
       created_at: entity.createdAt,
       updated_at: entity.updatedAt
     };

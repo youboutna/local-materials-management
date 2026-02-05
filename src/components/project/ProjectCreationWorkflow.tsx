@@ -40,14 +40,19 @@ import {
   SelectValue,
 } from "../ui/select";
 
-// Import hexagonal services
-import {
-  ProjectWorkflowService,
-  type ProjectWorkflowData,
-  type EditWorkflowContext
-} from "../../application/services/ProjectWorkflowService";
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { CreateProjectRequestDTO } from "@/dtos/entities/ProjectDTO";
+// Import hexagonal hooks
+import { useProjectCreationHex } from "../../hooks/hexagonal/useProjectCreationHex";
+
+// Import workflow DTOs
+import { ProjectWorkflowData, StepRelatedDataDTO } from "@/dtos/workflows/ProjectWorkflowDTOs";
+import { PhaseWorkflowDTO } from "@/dtos/workflows/PhaseWorkflowDTO";
+
+// Import entity DTOs (following "similitude des voisins le plus proche")
+import { ProjectDTO, CreateProjectRequestDTO } from "@/dtos/entities/ProjectDTO";
+import { MaterialDTO, MaterialCategory, MaterialStatus, MaterialUnit } from "@/dtos/entities/MaterialDTO";
+import { RiskDTO } from "@/dtos/entities/RiskDTO";
+import { EmployeeDTO } from "@/dtos/entities/EmployeeDTO";
+import { PhaseDTO } from "@/dtos/entities/PhaseDTO";
 
 interface ProjectCreationWorkflowProps {
   onSubmit: (data: CreateProjectRequestDTO) => void;
@@ -70,62 +75,81 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     validateWorkflow,
     validateWorkflowStep,
     isCreating,
-    isValidating
+    isValidating,
+    prepareProjectData
   } = useProjectCreationHex();
 
   // 🎨 UI Layer - États locaux pour la présentation uniquement (Règle PROMPTS.md #5)
   const [currentStep, setCurrentStep] = useState(0);
 
-  // 🎨 UI Layer - Use basic object state (transformers removed)
-  // 🎨 UI Layer - Use basic object state with CreateProjectRequestDTO (no duplicate keys)
-  const [projectData, setProjectData] = useState<CreateProjectRequestDTO>(() => ({
-    title: "",
-    description: "",
-    location: "",
-    address: "",
-    latitude: 0,
-    longitude: 0,
-    budget: 0,
-    startDate: "",
-    endDate: "",
-    projectManagerId: "",
-    clientId: "",
-    status: "en attente",
-    priority: "Moyenne",
-    estimatedDuration: 0,
-    // Legacy snake_case for backward compatibility
-    start_date: "",
-    end_date: "",
-    project_manager_id: "",
-    client_id: "",
-    estimated_duration: 0,
-    // Additional fields
-    technical_manager_id: "",
-    supervisor_id: "",
-    client_name: "",
-    project_reference: "",
-    project_type: "",
-    sector: "",
-    permit_number: "",
-    payment_mode: "progressive",
-    payment_frequency: "monthly",
-    initial_advance: 20,
-    retention_percentage: 5,
-    currency: "MRU",
-    funding_source: "",
-    market_type: "",
-    selection_mode: "",
-    main_contractor: "",
-    // UI-specific fields
-    progress: 0,
-    thumbnail: "",
-    teamSize: 0,
-    reception_status: "",
-    closure_notes: "",
-    ...initialData
+  // 🎨 UI Layer - Use ProjectWorkflowData for workflow state management
+  const [projectWorkflowData, setProjectWorkflowData] = useState<ProjectWorkflowData>(() => ({
+    projectId: undefined,
+    currentStep: 1,
+    isDraft: true,
+    isComplete: false,
+    projectData: {
+      title: "",
+      description: "",
+      location: "",
+      address: "",
+      latitude: 0,
+      longitude: 0,
+      budget: 0,
+      startDate: "",
+      endDate: "",
+      projectManagerId: "",
+      clientId: "",
+      status: "enAttente" as const,
+      priority: "moyenne" as const,
+      progress: 0,
+      teamSize: 0
+    } as ProjectDTO,
+    relatedData: {
+      materials: [],
+      risks: [],
+      stakeholders: [],
+      phases: []
+    },
+    metadata: {
+      lastSavedAt: new Date().toISOString(),
+      totalSteps: 9,
+      completedSteps: 0,
+      progressPercentage: 0
+    }
   }));
 
-  // 🎨 UI Layer - États locaux pour les données associées (transformers removed)
+  // 🎨 UI Layer - Update handlers for workflow data
+  const updateProjectWorkflowData = useCallback((updates: Partial<ProjectWorkflowData>) => {
+    setProjectWorkflowData(prev => ({
+      ...prev,
+      ...updates
+    }));
+  }, []);
+
+  // 🎨 UI Layer - Update handlers for project data
+  const updateProjectData = useCallback((updates: Partial<ProjectDTO>) => {
+    setProjectWorkflowData(prev => ({
+      ...prev,
+      projectData: {
+        ...prev.projectData,
+        ...updates
+      }
+    }));
+  }, []);
+
+  // 🎨 UI Layer - Update handlers for related data
+  const updateRelatedData = useCallback((updates: Partial<StepRelatedDataDTO>) => {
+    setProjectWorkflowData(prev => ({
+      ...prev,
+      relatedData: {
+        ...prev.relatedData,
+        ...updates
+      }
+    }));
+  }, []);
+
+  // 🎨 UI Layer - États locaux pour les données associées
   const [stakeholders, setStakeholders] = useState<Array<{id: string; name: string; role: string; contact: string}>>([]);
   const [delegation, setDelegation] = useState({
     projectManager: "",
@@ -140,18 +164,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     shape: Coordinate[] | undefined;
     shapeType: 'polygon' | 'rectangle' | 'circle' | 'diamond' | undefined;
   } | null>(null);
-  const [phasesData, setPhasesData] = useState<Array<{id: string; name: string; status: string; progress: number}>>([]);
-  const [estimatedDuration, setEstimatedDuration] = useState(
-    projectData.estimatedDuration || ""
-  );
-
-  // 🎨 UI Layer - Update function for basic state (transformers removed)
-  const updateProjectData = useCallback((updates: Partial<CreateProjectRequestDTO>) => {
-    setProjectData((prev) => ({ ...prev, ...updates }));
-  }, []);
 
   // 🎨 UI Layer - Use project data directly (Rule #5 compliant)
-  const flattenedProjectData = useMemo(() => projectData, [projectData]);
+  const flattenedProjectData = useMemo(() => projectWorkflowData.projectData, [projectWorkflowData.projectData]);
 
   // 🔧 Memoize update functions to prevent unnecessary re-renders
   const memoizedUpdateProjectData = useMemo(() => updateProjectData, [updateProjectData]);

@@ -4,7 +4,7 @@ import EnhancedBankGuaranteeCrud from '@/components/alerts/EnhancedBankGuarantee
 import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
 import { useProjectManager } from '@/hooks/useProjectManager';
 import { actionLabels } from '@/application/services/ProjectManagerService';
-import { EscalationRoles, ProjectData } from '@/types/project';
+import { EscalationRoles, ProjectData } from '@/dtos/entities/ProjectDTO';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useProjectsHex, useBankGuaranteesHex } from '@/hooks/hexagonal';

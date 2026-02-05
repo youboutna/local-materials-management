@@ -7,7 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useMemo, useCallback } from 'react';
-import { PhaseDTO, PhaseStepDTO } from '@/types/phase-dto';
+import { PhaseDTO, PhaseStepDTO } from '@/dtos/entities/PhaseDTO';
 import { StepItem } from '@/types/unified-workflow';
 
 export type WorkflowStage = 

@@ -4,7 +4,7 @@
  * Following hexagonal architecture principles
  */
 
-import { MilestoneDTO } from '@/types/milestone-dto';
+import { MilestoneDTO, MilestoneStatus, MilestoneType, MilestonePriority } from '@/dtos/entities/MilestoneDTO';
 
 export interface CreateMilestoneData {
   project_id: string;

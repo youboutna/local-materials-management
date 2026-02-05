@@ -11,7 +11,7 @@ import {
   BarChart3, 
   Navigation
 } from 'lucide-react';
-import { ProjectData } from '@/types/project';
+import { ProjectData } from '@/dtos/entities/ProjectDTO';
 import { usePagination } from '@/hooks/usePagination';
 
 interface InteractiveProjectsListProps {

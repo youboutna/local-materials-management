@@ -4,118 +4,101 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { TenderService } from '@/application/services/TenderService';
-
-// Types
-export interface TenderEstimate {
-  id?: string;
-  tender_id: string;
-  project_id?: string | null;
-  estimate_type: string;
-  total_materials_cost: number | null;
-  total_labor_cost: number | null;
-  total_equipment_cost: number | null;
-  subtotal: number | null;
-  tax_rate: number | null;
-  tax_amount: number | null;
-  total_with_tax: number | null;
-  overhead_percentage: number | null;
-  overhead_amount: number | null;
-  profit_margin_percentage: number | null;
-  profit_margin_amount: number | null;
-  final_total: number | null;
-  currency: string | null;
-  status: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface EstimateItem {
-  id?: string;
-  material_id?: string | null;
-  quantity: number;
-  unit_price: number;
-  total_price: number;
-  description: string | null;
-  item_type: string | null;
-}
+import { TenderEstimateService } from '@/application/services/TenderEstimateService';
+import { MaterialService } from '@/application/services/MaterialService';
+import { TenderEstimate } from '@/domain/entities/TenderEstimate';
+import { TenderEstimateDTO, TenderEstimateItemDTO } from '@/dtos/entities/TenderEstimateDTO';
+import { EstimateItem, EstimateData } from '@/dtos/transforms/shared';
 
 // Hooks
 export function useTenderEstimatesHex(tenderId: string) {
+  const tenderEstimateService = new TenderEstimateService();
+
   return useQuery({
     queryKey: ['tender-estimates', tenderId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tender_estimates')
-        .select('*')
-        .eq('tender_id', tenderId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
+      return await tenderEstimateService.getTenderEstimatesByTender(tenderId);
     }
   });
 }
 
 export function useEstimateItemsHex(estimateId: string | null) {
+  const tenderEstimateService = new TenderEstimateService();
+
   return useQuery({
     queryKey: ['estimate-items', estimateId],
     queryFn: async () => {
       if (!estimateId) return [];
-
-      const { data, error } = await supabase
-        .from('tender_estimate_items')
-        .select(`
-          *,
-          material:materials(name, unit)
-        `)
-        .eq('estimate_id', estimateId);
-
-      if (error) throw error;
-      return data || [];
+      return await tenderEstimateService.getTenderEstimatesByTender(estimateId);
     },
     enabled: !!estimateId
   });
 }
 
 export function useMaterialsForEstimateHex() {
+  const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
+
   return useQuery({
     queryKey: ['materials'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('materials')
-        .select('id, name, price_per_unit, unit')
-        .order('name');
-
-      if (error) throw error;
-      return data || [];
+    queryFn: async (): Promise<TenderEstimateItemDTO[]> => {
+      const materials = await materialService.getAllMaterials();
+      // Transform MaterialDTO to TenderEstimateItemDTO for compatibility
+      return materials.map(material => ({
+        id: material.id,
+        estimate_id: '', // Will be set when used in estimate context
+        material_id: material.id,
+        item_code: material.name || '',
+        description: material.description || '',
+        unit: material.unit || '',
+        quantity: 0, // Will be set when used in estimate context
+        unit_price: material.pricePerUnit || 0,
+        total_price: 0, // Will be calculated when used in estimate context
+        category: material.category || '',
+        specifications: material.specifications || '',
+        item_type: 'material',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }));
     }
   });
 }
 
 export function useParsedInvoicesHex(tenderId: string) {
+  // This would need a ParsedInvoiceService, for now returning empty array
   return useQuery({
     queryKey: ['parsed-invoices', tenderId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('parsed_invoices')
-        .select('*')
-        .eq('tender_id', tenderId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
+      // TODO: Implement ParsedInvoiceService and use it here
+      return [];
     }
   });
 }
 
 export function useAddEstimateItemHex(estimateId: string | null) {
   const queryClient = useQueryClient();
-  const tenderService = new TenderService(RepositoryFactory.getTenderRepository());
+  const tenderEstimateService = new TenderEstimateService();
 
   return useMutation({
     mutationFn: async (item: EstimateItem & { estimate_id: string }) => {
-      return await tenderService.addEstimateItem(item);
+      // Transform EstimateItem to TenderEstimateItemDTO
+      const tenderEstimateItem: TenderEstimateItemDTO = {
+        id: '', // Will be generated by service
+        estimate_id: item.estimate_id,
+        material_id: item.material_id,
+        item_code: item.description || '',
+        description: item.description,
+        unit: item.unit || '',
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total_price: item.total_price,
+        category: item.item_type || 'material',
+        specifications: '',
+        item_type: item.item_type || 'material',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      return await tenderEstimateService.createTenderEstimateItem(tenderEstimateItem);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['estimate-items', estimateId] });
@@ -125,11 +108,12 @@ export function useAddEstimateItemHex(estimateId: string | null) {
 
 export function useCreateInvoiceHex(tenderId: string) {
   const queryClient = useQueryClient();
-  const tenderService = new TenderService(RepositoryFactory.getTenderRepository());
+  const tenderEstimateService = new TenderEstimateService();
 
   return useMutation({
     mutationFn: async () => {
-      return await tenderService.createInvoice(tenderId);
+      // TODO: Implement invoice creation in TenderEstimateService
+      throw new Error('Invoice creation not yet implemented');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['parsed-invoices', tenderId] });

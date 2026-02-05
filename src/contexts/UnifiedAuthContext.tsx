@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAppConfig, AuthProvider } from '@/config/app';
 import { getAuthManager, AuthManagerConfig } from '@/application/services/AuthManager';
-import { UnifiedUser, UnifiedSession, UnifiedAuthContextType, AuthUser } from '@/types/auth';
+import { UnifiedUser, UnifiedSession, UnifiedAuthContextType, AuthUser } from '@/dtos/entities/AuthDTO';
 
 const UnifiedAuthContext = createContext<UnifiedAuthContextType | undefined>(undefined);
 

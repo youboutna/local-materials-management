@@ -6,9 +6,9 @@
  * Architecture: Follows clean architecture with DTO pattern
  */
 
-import { ProjectDetailDTO } from '@/types/dto';
+import { ProjectDetailDTO, GanttChartData, PERTAnalysis } from '@/dtos/entities/ProjectDTO';
 import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
-import { GanttChartData, PERTAnalysis, PERTActivity } from '@/types/project';
+import { PERTActivity } from '@/types/project';
 
 export interface GanttPhaseData {
   id: string;
@@ -45,6 +45,7 @@ export interface UnifiedPERTData extends PERTAnalysis {
   projectDurationDays: number;
   standardDeviation: number;
   confidenceLevel95Days: number;
+  totalExpectedDuration: number; // Alias for expectedDuration
 }
 
 export class GanttPertDataService {
@@ -188,7 +189,9 @@ export class GanttPertDataService {
       expectedDurations,
       variances,
       criticalPath,
-      totalExpectedDuration,
+      expectedDuration: totalExpectedDuration, // Set the inherited property
+      variance: totalVariance, // Set the inherited property
+      totalExpectedDuration, // Keep the specific property for compatibility
       projectDurationDays: Math.round(totalExpectedDuration),
       standardDeviation: Math.round(totalStdDev * 10) / 10,
       confidenceLevel95Days: Math.round(confidenceLevel95Days)

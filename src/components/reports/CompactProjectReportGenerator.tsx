@@ -13,7 +13,7 @@ import { saveAs } from 'file-saver';
 import { Download, FileText, Loader2, MapPin } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { CompactProjectPDFDocument, SingleCompactProjectPDF } from './pdf/CompactProjectPDFDocument';
-import type { EVMMetrics, PERTAnalysis, ProjectData } from '@/types/project';
+import type { EVMMetrics, PERTAnalysis, ProjectData } from '@/dtos/entities/ProjectDTO';
 
 interface CompactProjectReportGeneratorProps {
   project?: ProjectData;

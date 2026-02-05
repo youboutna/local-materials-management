@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { InspectionDTO, CreateInspectionDTO, UpdateInspectionDTO } from '@/types/inspection.dto';
+import { InspectionDTO, CreateInspectionDTO, UpdateInspectionDTO } from '@/dtos/entities/InspectionDTO';
 import { InspectionService } from '@/application/services/InspectionService';
 import { supabase } from '@/integrations/supabase/client';
 

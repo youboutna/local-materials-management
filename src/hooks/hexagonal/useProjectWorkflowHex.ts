@@ -8,39 +8,31 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { ProjectWorkflowService } from '@/application/services/ProjectWorkflowService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+
+// Import workflow DTOs (following "similitude des voisins le plus proche")
 import { 
-  ProjectWorkflowDTO, 
-  WorkflowMode, 
   ProjectWorkflowData,
-  WorkflowStateDTO,
-  WorkflowValidationDTO,
-  WorkflowSaveContextDTO,
-  WorkflowTransitionDTO,
+  WorkflowState,
+  ValidationResult,
+  SaveResult,
+  SaveContextDTO,
+  WorkflowTransition,
   WorkflowAuditLogDTO,
   WorkflowMetricsDTO,
   WorkflowTemplateDTO,
   WorkflowSessionDTO,
   ProjectCreationWorkflowDTO,
-  ProjectBasicInfoDTO,
-  ProjectStakeholdersDTO,
-  ProjectLocationDTO,
-  ProjectPlanningDTO,
-  ProjectRisksDTO,
-  ProjectComplianceDTO,
- ProjectValidationDTO,
-  StepProgressDTO,
-  ValidationResult,
-  SaveResult
-} from '@/dtos/workflows/ProjectWorkflowDTO';
-import { StakeholderDTO } from '@/dtos/transforms/ProjectCreationWorkflowDTO';
-import { MaterialDTO as MaterialEntityDTO } from '@/dtos/entities/MaterialDTO';
-import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+  ProjectValidationDTO,
+  StepProgressDTO
+} from '@/dtos/workflows/ProjectWorkflowDTOs';
 
-// Import the ProjectFormDataDTO from the transforms
-import { ProjectFormDataDTO } from '@/dtos/transforms/ProjectWorkflowDTOs';
+// Import entity DTOs (following "similitude des voisins le plus proche")
+import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
+import { StakeholderDTO } from '@/dtos/entities/StakeholderDTO';
 
 // Fonctions utilitaires pour le calcul de progression
-export function determineCurrentStep(formData: ProjectFormDataDTO): number {
+export function determineCurrentStep(formData: ProjectDTO): number {
   // Logique pour déterminer l'étape actuelle basée sur les données du projet
   if (!formData.title || !formData.description) return 1;
   if (!formData.location) return 3;

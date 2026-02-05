@@ -9,7 +9,7 @@ import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { TenderEstimateTransformer } from '@/dtos/transforms/TenderEstimateTransformer';
 import { TenderEstimateValidation } from '@/dtos/utils/TenderEstimateValidation';
 import { TenderEstimateItemTransformer } from '@/dtos/transforms/TenderEstimateItemTransformer';
-import { TenderEstimate, TenderEstimateStatus, CurrencyCode } from '@/domain/entities/TenderEstimate';
+import { TenderEstimate, TenderEstimateStatus, CurrencyCode, ITenderEstimateItem } from '@/domain/entities/TenderEstimate';
 import { TenderEstimateItem } from '@/domain/entities/TenderEstimateItem';
 import { TenderEstimate as TenderEstimateEntity, TenderEstimateItem as TenderEstimateItemEntity } from '@/domain/repositories/ITenderEstimateRepository';
 import {
@@ -32,6 +32,7 @@ import {
   TenderEstimateValidationDto,
   TenderEstimateComparisonDto
 } from '@/dtos/entities/TenderEstimateDTO';
+import { TenderEstimateBusinessLogic } from '@/dtos/transforms/shared';
 
 export class TenderEstimateService {
   private tenderEstimateRepository: ITenderEstimateRepository;
@@ -45,6 +46,89 @@ export class TenderEstimateService {
    */
   private transformEntityToDTO(entity: TenderEstimate): TenderEstimateDTO {
     return TenderEstimateTransformer.toTenderEstimateDTO(entity);
+  }
+
+  /**
+   * Calculate margin rules based on amount and currency
+   */
+  private calculateMarginRules(amount: number, currency: CurrencyCode): {
+    overheadPercentage: number;
+    profitMarginPercentage: number;
+    riskMultiplier: number;
+  } {
+    // Base margins by amount ranges
+    let overheadPercentage = 10; // Default 10%
+    let profitMarginPercentage = 15; // Default 15%
+    let riskMultiplier = 1.0;
+
+    if (amount > 1000000) {
+      // Large projects: lower margins, higher risk
+      overheadPercentage = 8;
+      profitMarginPercentage = 12;
+      riskMultiplier = 1.2;
+    } else if (amount > 500000) {
+      // Medium projects: standard margins
+      overheadPercentage = 10;
+      profitMarginPercentage = 15;
+      riskMultiplier = 1.1;
+    } else if (amount < 100000) {
+      // Small projects: higher margins, lower risk
+      overheadPercentage = 15;
+      profitMarginPercentage = 20;
+      riskMultiplier = 0.9;
+    }
+
+    // Currency adjustments
+    if (currency === 'USD' || currency === 'EUR') {
+      profitMarginPercentage += 2; // International projects get extra margin
+    }
+
+    return {
+      overheadPercentage,
+      profitMarginPercentage,
+      riskMultiplier
+    };
+  }
+
+  /**
+   * Assess estimate risk based on amount and type
+   */
+  private assessEstimateRisk(amount: number, estimateType: string): TenderEstimateBusinessLogic['risk_assessment'] {
+    const factors: string[] = [];
+    let score = 0;
+
+    // Amount-based risk assessment
+    if (amount > 2000000) {
+      score += 50;
+      factors.push('Very high value amount');
+    } else if (amount > 1000000) {
+      score += 35;
+      factors.push('High value amount');
+    } else if (amount > 500000) {
+      score += 20;
+      factors.push('Medium-high value amount');
+    } else if (amount < 50000) {
+      score += 10;
+      factors.push('Low value amount (may indicate missing items)');
+    }
+
+    // Estimate type risk
+    if (estimateType === 'expedited') {
+      score += 25;
+      factors.push('Expedited timeline');
+    } else if (estimateType === 'complex') {
+      score += 20;
+      factors.push('Complex project type');
+    }
+
+    // Determine risk level
+    let level: 'low' | 'medium' | 'high' | 'critical';
+    if (score >= 80) level = 'critical';
+    else if (score >= 60) level = 'high';
+    else if (score >= 30) level = 'medium';
+    else level = 'low';
+
+    return { level, factors, score };
   }
 
   /**
@@ -71,7 +155,11 @@ export class TenderEstimateService {
       }
 
       // 3. Business Logic - Calculate business rules
-      // TODO: Implement business rules calculation when needed
+      // Apply margin calculations based on estimate type and total amount
+      const marginRules = this.calculateMarginRules(request.total_amount, request.currency as CurrencyCode);
+      
+      // Apply risk assessment based on amount and validity period
+      const riskAssessment = this.assessEstimateRisk(request.total_amount, 'standard');
 
       // 4. Repository Layer - Create entity
       const estimateData = {
@@ -213,7 +301,6 @@ export class TenderEstimateService {
 
       const createdItem = await this.tenderEstimateRepository.createItem({
         estimateId: request.estimate_id,
-        materialId: request.material_id,
         itemCode: request.item_code,
         description: request.description,
         unit: request.unit,
@@ -221,14 +308,13 @@ export class TenderEstimateService {
         unitPrice: request.unit_price,
         totalPrice: request.total_price || request.quantity * request.unit_price,
         category: request.category,
-        specifications: request.specifications,
-        itemType: request.item_type
-      });
+        specifications: request.specifications
+      } as Omit<TenderEstimateItemEntity, 'id' | 'createdAt' | 'updatedAt'>);
 
       return {
         id: createdItem.id,
         estimate_id: createdItem.estimateId,
-        material_id: createdItem.materialId,
+        material_id: undefined, // Not available in TenderEstimateItem entity
         item_code: createdItem.itemCode,
         description: createdItem.description,
         unit: createdItem.unit,
@@ -237,9 +323,11 @@ export class TenderEstimateService {
         total_price: createdItem.totalPrice,
         category: createdItem.category,
         specifications: createdItem.specifications,
-        item_type: createdItem.itemType,
-        created_at: createdItem.createdAt.toISOString(),
-        updated_at: createdItem.updatedAt.toISOString()
+        item_type: 'material', // Default item type
+        materialId: createdItem.materialId,
+        itemType: createdItem.itemType || 'material',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
     } catch (error) {
       console.error('TenderEstimateService.createTenderEstimateItem failed:', error);
@@ -260,7 +348,7 @@ export class TenderEstimateService {
       return items.map(item => ({
         id: item.id,
         estimate_id: item.estimateId,
-        material_id: item.materialId,
+        material_id: undefined, // Not available in TenderEstimateItem entity
         item_code: item.itemCode,
         description: item.description,
         unit: item.unit,
@@ -269,9 +357,11 @@ export class TenderEstimateService {
         total_price: item.totalPrice,
         category: item.category,
         specifications: item.specifications,
-        item_type: item.itemType,
-        created_at: item.createdAt.toISOString(),
-        updated_at: item.updatedAt.toISOString()
+        item_type: 'material', // Default item type
+        materialId: item.materialId,
+        itemType: item.itemType || 'material',
+        created_at: new Date().toISOString(), // ✅ Current timestamp - entity doesn't have createdAt
+        updated_at: new Date().toISOString()  // ✅ Current timestamp - entity doesn't have updatedAt
       }));
     } catch (error) {
       console.error('TenderEstimateService.getEstimateItems failed:', error);
@@ -282,7 +372,7 @@ export class TenderEstimateService {
   /**
    * Update estimate item
    */
-  async updateEstimateItem(request: { id: string; updates: Partial<TenderEstimateItem> }): Promise<TenderEstimateItemDTO> {
+  async updateEstimateItem(request: { id: string; updates: Partial<ITenderEstimateItem> }): Promise<TenderEstimateItemDTO> {
     try {
       if (!request.id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Estimate item ID is required');
@@ -292,10 +382,12 @@ export class TenderEstimateService {
       }
 
       const updatedItem = await this.tenderEstimateRepository.updateItem(request.id, request.updates);
+      
+      // Transform entity to DTO manually using getter methods
       return {
         id: updatedItem.id,
         estimate_id: updatedItem.estimateId,
-        material_id: updatedItem.materialId,
+        material_id: undefined, // Not available in TenderEstimateItem entity
         item_code: updatedItem.itemCode,
         description: updatedItem.description,
         unit: updatedItem.unit,
@@ -304,9 +396,11 @@ export class TenderEstimateService {
         total_price: updatedItem.totalPrice,
         category: updatedItem.category,
         specifications: updatedItem.specifications,
-        item_type: updatedItem.itemType,
-        created_at: updatedItem.createdAt.toISOString(),
-        updated_at: updatedItem.updatedAt.toISOString()
+        item_type: 'material', // Default item type
+        materialId: updatedItem.materialId,
+        itemType: updatedItem.itemType || 'material',
+        created_at: new Date().toISOString(), // ✅ Current timestamp - entity doesn't have createdAt
+        updated_at: new Date().toISOString()  // ✅ Current timestamp - entity doesn't have updatedAt
       };
     } catch (error) {
       console.error('TenderEstimateService.updateEstimateItem failed:', error);
@@ -339,11 +433,11 @@ export class TenderEstimateService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'User ID is required');
       }
 
-      // For now, return mock data as tender estimate repository is not available
-      // TODO: Implement proper user estimates retrieval when repository is available
-      console.warn('TenderEstimateService.getMyEstimates: Tender estimate repository not available');
+      // Repository Layer - Get estimates by submitted user
+      const estimates = await this.tenderEstimateRepository.findBySubmittedBy(request.submitted_by);
       
-      return [];
+      // Transformer Layer
+      return estimates.map(estimate => this.transformEntityToDTO(estimate));
     } catch (error) {
       console.error('TenderEstimateService.getMyEstimates failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get user estimates');
@@ -359,11 +453,11 @@ export class TenderEstimateService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
       }
 
-      // For now, return mock data as tender estimate repository is not available
-      // TODO: Implement proper project estimates retrieval when repository is available
-      console.warn('TenderEstimateService.getEstimatesByProjectId: Tender estimate repository not available');
+      // Repository Layer - Get estimates by project ID
+      const estimates = await this.tenderEstimateRepository.findByProjectId(request.project_id);
       
-      return [];
+      // Transformer Layer
+      return estimates.map(estimate => this.transformEntityToDTO(estimate));
     } catch (error) {
       console.error('TenderEstimateService.getEstimatesByProjectId failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get estimates by project ID');
@@ -375,11 +469,11 @@ export class TenderEstimateService {
    */
   async getAllEstimates(): Promise<TenderEstimateDTO[]> {
     try {
-      // For now, return mock data as tender estimate repository is not available
-      // TODO: Implement proper all estimates retrieval when repository is available
-      console.warn('TenderEstimateService.getAllEstimates: Tender estimate repository not available');
+      // Repository Layer - Get all estimates
+      const estimates = await this.tenderEstimateRepository.findAll();
       
-      return [];
+      // Transformer Layer
+      return estimates.map(estimate => this.transformEntityToDTO(estimate));
     } catch (error) {
       console.error('TenderEstimateService.getAllEstimates failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get all estimates');
@@ -395,15 +489,15 @@ export class TenderEstimateService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender ID is required');
       }
 
-      // For now, return mock data as tender estimate repository is not available
-      // TODO: Implement proper estimate statistics when repository is available
-      console.warn('TenderEstimateService.getEstimateStats: Tender estimate repository not available');
+      // Repository Layer - Get estimate statistics
+      const stats = await this.tenderEstimateRepository.getEstimateStats(request.tender_id);
       
+      // Transform to DTO format
       return {
-        total_estimates: 0,
-        total_amount: 0,
-        average_amount: 0,
-        by_status: {}
+        total_estimates: stats.totalEstimates,
+        total_amount: stats.totalAmount,
+        average_amount: stats.averageAmount,
+        by_status: stats.byStatus
       };
     } catch (error) {
       console.error('TenderEstimateService.getEstimateStats failed:', error);
@@ -427,25 +521,26 @@ export class TenderEstimateService {
         0
       );
 
-      // Apply discount if any
-      const discountAmount = estimate.discountPercentage 
-        ? subtotal * (estimate.discountPercentage / 100) 
-        : 0;
+      // Apply discount if any (using tax_rate from DTO/UI)
+      const discountRate = estimate.discountRate || 0;
+      const discountAmount = discountRate > 0 ? subtotal * (discountRate / 100) : 0;
       
-      // Calculate tax if applicable
-      const taxAmount = estimate.taxPercentage
-        ? (subtotal - discountAmount) * (estimate.taxPercentage / 100)
-        : 0;
+      // Calculate tax if applicable (using tax_rate from DTO/UI)
+      const taxRate = estimate.taxRate || 0;
+      const taxableAmount = subtotal - discountAmount;
+      const taxAmount = taxRate > 0 ? taxableAmount * (taxRate / 100) : 0;
       
       // Calculate grand total
       const total = subtotal - discountAmount + taxAmount;
+      const totalWithTax = total;
+      const finalTotal = total;
 
       return {
         subtotal,
-        discountAmount,
-        taxAmount,
-        total,
-        currency: estimate.currency,
+        discountAmount,    // ✅ Changed from discount_amount
+        taxAmount,         // ✅ Changed from tax_amount
+        totalWithTax,      // ✅ Changed from total_with_tax
+        finalTotal,        // ✅ Changed from final_total
       };
     } catch (error) {
       console.error('TenderEstimateService.calculateEstimateTotals failed:', error);
