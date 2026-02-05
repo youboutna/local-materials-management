@@ -11,7 +11,7 @@ import { DocumentService } from './DocumentService';
 import { PaymentRequestService } from './PaymentRequestService';
 import { InspectionService } from './InspectionService';
 import { SupplierService } from './SupplierService';
-import { RepositoryFactory } from '@/repositories/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import {
   MonitoringConfiguration,
   MonitoringMetrics,
@@ -92,26 +92,31 @@ export class DashboardService {
         suppliers: suppliersData.length
       });
 
-      // Calculate basic statistics
-      const activeProjects = projectsData.filter(p => 
-        p.status === 'in_progress' || String(p.status) === 'en cours'
-      ).length;
+      // Calculate basic statistics - handle various status formats
+      const activeProjects = projectsData.filter(p => {
+        const status = String(p.status);
+        return status === 'en cours' || status === 'in_progress';
+      }).length;
       const totalProjects = projectsData.length;
       const totalBudget = projectsData.reduce((sum, p) => sum + (p.budget || 0), 0);
 
-      // Status distribution
+      // Status distribution - use string comparison
       const statusColors: Record<string, string> = {
         'in_progress': '#3b82f6',
+        'en cours': '#3b82f6',
         'completed': '#10b981',
+        'terminé': '#10b981',
         'pending': '#f59e0b',
-        'cancelled': '#ef4444'
+        'en attente': '#f59e0b',
+        'cancelled': '#ef4444',
+        'annulé': '#ef4444'
       };
 
       const statusDistribution = [
-        { name: 'in_progress', value: projectsData.filter(p => p.status === 'in_progress').length, color: statusColors['in_progress'] },
-        { name: 'completed', value: projectsData.filter(p => p.status === 'completed').length, color: statusColors['completed'] },
-        { name: 'pending', value: projectsData.filter(p => p.status === 'pending').length, color: statusColors['pending'] },
-        { name: 'cancelled', value: projectsData.filter(p => p.status === 'cancelled').length, color: statusColors['cancelled'] },
+        { name: 'in_progress', value: projectsData.filter(p => String(p.status) === 'in_progress' || String(p.status) === 'en cours').length, color: statusColors['in_progress'] },
+        { name: 'completed', value: projectsData.filter(p => String(p.status) === 'completed' || String(p.status) === 'terminé').length, color: statusColors['completed'] },
+        { name: 'pending', value: projectsData.filter(p => String(p.status) === 'pending' || String(p.status) === 'en attente').length, color: statusColors['pending'] },
+        { name: 'cancelled', value: projectsData.filter(p => String(p.status) === 'cancelled' || String(p.status) === 'annulé').length, color: statusColors['cancelled'] },
       ];
 
       // Health distribution based on project progress

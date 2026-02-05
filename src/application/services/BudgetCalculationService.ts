@@ -147,8 +147,23 @@ export class BudgetCalculationService {
       const payments = await this.paymentRepository.findByProjectId(projectId);
       const paidPayments = payments.filter(p => p.status === 'paid' || p.status === 'completed');
 
-      // Calculate average monthly spend
-      const monthlySpend = this.calculateAverageSpend(paidPayments, period);
+      // Calculate average monthly spend - convert to PaymentDTO format
+      const paymentDTOs = paidPayments.map(p => ({
+        id: p.id,
+        projectId: (p as any).project?.id || '',
+        contractorId: '',
+        amount: p.amount,
+        paymentDate: p.paymentDate,
+        paymentMethod: p.paymentMethod || 'bank_transfer',
+        status: p.status,
+        progressAtPayment: p.progressAtPayment,
+        transactionId: p.transactionId || '',
+        contractorName: p.contractorName,
+        contractorContact: p.contractorContact,
+        createdAt: p.createdAt,
+        updatedAt: p.updatedAt
+      }));
+      const monthlySpend = this.calculateAverageSpend(paymentDTOs as any, period);
       
       // Generate projections
       const projectedCosts: Array<{ period: string; projectedCost: number; actualCost?: number; variance?: number }> = [];

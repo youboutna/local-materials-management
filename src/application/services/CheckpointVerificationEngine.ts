@@ -534,10 +534,13 @@ export class CheckpointVerificationEngine {
     timestamp: Date;
   }> {
     try {
-      const verifyResult = await this.verifyCheckpoint(checkpoint);
+      const verifyResult = await this.verifyCheckpoint({ checkpoint, projectId: this.projectId });
 
-      if (!verifyResult.isValid) {
-        return verifyResult;
+      const isValid = verifyResult.result?.can_proceed ?? false;
+      const issues = verifyResult.result?.blocking_issues ?? [];
+      
+      if (!isValid) {
+        return { isValid, issues, timestamp: new Date() };
       }
 
       // Récupérer le budget de la phase via le repository

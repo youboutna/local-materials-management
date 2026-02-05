@@ -153,7 +153,7 @@ export class DataConsistencyMonitoringService {
             severity: 'low',
             recordId: project.id,
             field: 'status',
-            issue: 'Invalid project status',
+            message: 'Invalid project status',
             expectedValue: validStatuses.join(' | '),
             actualValue: project.status,
             suggestedFix: 'Update project status to valid value'
@@ -166,7 +166,7 @@ export class DataConsistencyMonitoringService {
             severity: 'medium',
             recordId: project.id,
             field: 'progress',
-            issue: 'Progress value out of range',
+            message: 'Progress value out of range',
             expectedValue: '0-100',
             actualValue: project.progress,
             suggestedFix: 'Correct progress to be within 0-100'
@@ -179,7 +179,7 @@ export class DataConsistencyMonitoringService {
             severity: 'high',
             recordId: project.id,
             field: 'budget',
-            issue: 'Negative budget value',
+            message: 'Negative budget value',
             expectedValue: '>= 0',
             actualValue: project.budget,
             suggestedFix: 'Correct budget to be positive'
@@ -230,7 +230,7 @@ export class DataConsistencyMonitoringService {
             severity: 'low',
             recordId: phase.id,
             field: 'status',
-            issue: 'Invalid phase status',
+            message: 'Invalid phase status',
             expectedValue: validStatuses.join(' | '),
             actualValue: phase.status,
             suggestedFix: 'Update phase status to valid value'
@@ -243,7 +243,7 @@ export class DataConsistencyMonitoringService {
             severity: 'medium',
             recordId: phase.id,
             field: 'progress',
-            issue: 'Progress value out of range',
+            message: 'Progress value out of range',
             expectedValue: '0-100',
             actualValue: phase.progress,
             suggestedFix: 'Correct progress to be within 0-100'
@@ -285,27 +285,28 @@ export class DataConsistencyMonitoringService {
       for (const material of materials) {
         // Check unit consistency
         const validUnits = ['kg', 'm', 'l', 'pcs', 'm2', 'm3', 'unit'];
-        if (material.unit && !validUnits.includes(material.unit.toLowerCase())) {
+        if (material.unit && !validUnits.includes(String(material.unit).toLowerCase())) {
           issues.push({
             severity: 'low',
             recordId: material.id,
             field: 'unit',
-            issue: 'Non-standard material unit',
+            message: 'Non-standard material unit',
             expectedValue: validUnits.join(' | '),
-            actualValue: material.unit,
+            actualValue: String(material.unit),
             suggestedFix: 'Use standard unit'
           });
         }
 
-        // Check quantity is non-negative
-        if (material.availableQuantity < 0) {
+        // Check quantity is non-negative (use quantity instead of availableQuantity)
+        const quantity = material.quantity ?? 0;
+        if (quantity < 0) {
           issues.push({
             severity: 'high',
             recordId: material.id,
-            field: 'availableQuantity',
-            issue: 'Negative quantity',
+            field: 'quantity',
+            message: 'Negative quantity',
             expectedValue: '>= 0',
-            actualValue: material.availableQuantity,
+            actualValue: quantity,
             suggestedFix: 'Correct quantity to be non-negative'
           });
         }
@@ -316,7 +317,7 @@ export class DataConsistencyMonitoringService {
             severity: 'high',
             recordId: material.id,
             field: 'pricePerUnit',
-            issue: 'Negative price',
+            message: 'Negative price',
             expectedValue: '>= 0',
             actualValue: material.pricePerUnit,
             suggestedFix: 'Correct price to be non-negative'
@@ -362,7 +363,7 @@ export class DataConsistencyMonitoringService {
             severity: 'medium',
             recordId: employee.id,
             field: 'email',
-            issue: 'Invalid email format',
+            message: 'Invalid email format',
             expectedValue: 'Valid email',
             actualValue: employee.email,
             suggestedFix: 'Correct email format'
@@ -375,7 +376,7 @@ export class DataConsistencyMonitoringService {
             severity: 'low',
             recordId: employee.id,
             field: 'phone',
-            issue: 'Phone number too short',
+            message: 'Phone number too short',
             expectedValue: '>= 8 digits',
             actualValue: employee.phone,
             suggestedFix: 'Verify phone number'
@@ -421,7 +422,7 @@ export class DataConsistencyMonitoringService {
             severity: 'medium',
             recordId: supplier.id,
             field: 'email',
-            issue: 'Invalid email format',
+            message: 'Invalid email format',
             expectedValue: 'Valid email',
             actualValue: supplier.email,
             suggestedFix: 'Correct email format'
@@ -434,7 +435,7 @@ export class DataConsistencyMonitoringService {
             severity: 'low',
             recordId: supplier.id,
             field: 'contacts',
-            issue: 'No contacts defined',
+            message: 'No contacts defined',
             expectedValue: 'At least one contact',
             actualValue: 'No contacts',
             suggestedFix: 'Add supplier contacts'
@@ -448,7 +449,7 @@ export class DataConsistencyMonitoringService {
             severity: 'low',
             recordId: supplier.id,
             field: 'status',
-            issue: 'Invalid supplier status',
+            message: 'Invalid supplier status',
             expectedValue: validStatuses.join(' | '),
             actualValue: supplier.status,
             suggestedFix: 'Update supplier status to valid value'
@@ -492,7 +493,7 @@ export class DataConsistencyMonitoringService {
         severity: 'critical',
         recordId: 'unknown',
         field: 'monitoring',
-        issue: `Failed to monitor ${entity} consistency`,
+        message: `Failed to monitor ${entity} consistency`,
         expectedValue: 'Successful monitoring',
         actualValue: 'Error occurred',
         suggestedFix: 'Check monitoring service configuration'
@@ -507,13 +508,5 @@ export class DataConsistencyMonitoringService {
   private isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
-  }
-
-  /**
-   * Get monitoring metrics (current snapshot)
-   */
-  static async getMetrics(): Promise<MonitoringMetrics> {
-    const report = await DataConsistencyMonitoringService.generateMonitoringReport();
-    return report.summary;
   }
 }
