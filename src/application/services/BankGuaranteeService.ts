@@ -51,7 +51,6 @@ export class BankGuaranteeService {
       
       const created = await this.bankGuaranteeRepository.create({
         project_id: guaranteeData.projectId,
-        contractor_id: guaranteeData.contractorId,
         guarantee_type: guaranteeData.type,
         guarantee_amount: guaranteeData.amount,
         issuing_bank: guaranteeData.issuingBank,
@@ -62,7 +61,7 @@ export class BankGuaranteeService {
         conditions: [],
         documents: [],
         currency: guaranteeData.currency || 'USD',
-        exchange_rate: guaranteeData.exchangeRate
+        exchange_rate: 1.0
       });
       
       return this.mapToDTO(created);
@@ -139,11 +138,16 @@ export class BankGuaranteeService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Guarantee amount must be positive');
       }
 
-      // Convert updates to repository format
-      const repositoryUpdates = {
-        ...updates,
-        updated_at: new Date().toISOString()
-      };
+      // Convert updates to repository format with proper typing
+      const repositoryUpdates: Partial<import('@/dtos/bank-guarantees/UpdateBankGuaranteeDto').UpdateBankGuaranteeDto> = {};
+      if (updates.type !== undefined) repositoryUpdates.guarantee_type = updates.type;
+      if (updates.number !== undefined) repositoryUpdates.guarantee_number = updates.number;
+      if (updates.issuingBank !== undefined) repositoryUpdates.issuing_bank = updates.issuingBank;
+      if (updates.issueDate !== undefined) repositoryUpdates.issue_date = updates.issueDate;
+      if (updates.expiryDate !== undefined) repositoryUpdates.expiry_date = updates.expiryDate;
+      if (updates.amount !== undefined) repositoryUpdates.guarantee_amount = updates.amount;
+      if (updates.status !== undefined) repositoryUpdates.status = updates.status;
+      if (updates.currency !== undefined) repositoryUpdates.currency = updates.currency;
 
       const updated = await this.bankGuaranteeRepository.update(guaranteeId, repositoryUpdates);
       
@@ -313,23 +317,7 @@ export class BankGuaranteeService {
         return guarantee.status === 'active' && expiryDate <= expiryThreshold && expiryDate > currentDate;
       });
 
-      return expiringGuarantees.map(guarantee => ({
-        id: guarantee.id,
-        projectId: guarantee.projectId,
-        contractorId: guarantee.contractorId,
-        guaranteeType: guarantee.guaranteeType,
-        guaranteeNumber: guarantee.guaranteeNumber,
-        issuingBank: guarantee.issuingBank,
-        beneficiary: guarantee.beneficiary,
-        issueDate: guarantee.issueDate,
-        expiryDate: guarantee.expiryDate,
-        amount: guarantee.amount,
-        currency: guarantee.currency,
-        status: guarantee.status,
-        documents: guarantee.documents,
-        createdAt: guarantee.createdAt,
-        updatedAt: guarantee.updatedAt
-      }));
+      return expiringGuarantees.map(guarantee => this.mapToDTO(guarantee));
     } catch (error) {
       console.error('Error fetching expiring guarantees:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch expiring guarantees');
@@ -367,14 +355,15 @@ export class BankGuaranteeService {
         expired: 0,
         claimed: 0,
         cancelled: 0,
-        expiringSoonCount: 0
+        expiringSoonCount: 0,
+        totalAmount: 0
       };
 
       let totalExpiryDays = 0;
       const today = new Date();
 
       for (const guarantee of data) {
-        stats.totalAmount += guarantee.amount;
+        stats.totalAmount = (stats.totalAmount || 0) + guarantee.amount;
         
         // Calculate expiry days
         const expiryDate = new Date(guarantee.expiryDate);
@@ -422,20 +411,22 @@ export class BankGuaranteeService {
     
     return {
       id: repositoryResult.id,
-      projectId: repositoryResult.projectId,
-      contractorId: repositoryResult.contractorId || '',
-      guaranteeType: repositoryResult.guaranteeType,
-      guaranteeNumber: repositoryResult.guaranteeNumber,
-      issuingBank: repositoryResult.issuingBank,
-      beneficiary: repositoryResult.bankName || repositoryResult.issuingBank,
-      issueDate: repositoryResult.issueDate,
-      expiryDate: repositoryResult.expiryDate,
-      amount: repositoryResult.guaranteeAmount,
+      projectId: repositoryResult.projectId || repositoryResult.project_id || '',
+      contractorId: repositoryResult.contractorId || repositoryResult.contractor_id || '',
+      type: repositoryResult.type || repositoryResult.guaranteeType || repositoryResult.guarantee_type || 'performance',
+      guaranteeType: repositoryResult.type || repositoryResult.guaranteeType || repositoryResult.guarantee_type || 'performance',
+      number: repositoryResult.number || repositoryResult.guaranteeNumber || repositoryResult.guarantee_number || '',
+      guaranteeNumber: repositoryResult.number || repositoryResult.guaranteeNumber || repositoryResult.guarantee_number || '',
+      issuingBank: repositoryResult.issuingBank || repositoryResult.issuing_bank || repositoryResult.bankName || '',
+      beneficiary: repositoryResult.beneficiary || repositoryResult.bankName || repositoryResult.issuingBank || '',
+      issueDate: repositoryResult.issueDate || repositoryResult.issue_date || '',
+      expiryDate: repositoryResult.expiryDate || repositoryResult.expiry_date || '',
+      amount: repositoryResult.amount || repositoryResult.guaranteeAmount || repositoryResult.guarantee_amount || 0,
       currency: repositoryResult.currency || 'MRO',
-      status: repositoryResult.status,
+      status: repositoryResult.status || 'pending',
       documents: repositoryResult.documents || [],
-      createdAt: repositoryResult.createdAt,
-      updatedAt: repositoryResult.updatedAt
+      createdAt: repositoryResult.createdAt || repositoryResult.created_at || new Date().toISOString(),
+      updatedAt: repositoryResult.updatedAt || repositoryResult.updated_at || new Date().toISOString()
     };
   }
 

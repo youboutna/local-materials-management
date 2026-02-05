@@ -266,8 +266,8 @@ export class CheckpointActionContextService {
         date: (inspections[0] as InspectionData).date,
         status: (inspections[0] as InspectionData).status,
         inspector: (inspections[0] as InspectionData).inspector,
-        progressAtInspection: (inspections[0] as InspectionData).progress_at_inspection,
-        phaseId: (inspections[0] as InspectionData).phase_id
+        progressAtInspection: (inspections[0] as InspectionData).progressAtInspection,
+        phaseId: (inspections[0] as InspectionData).phaseId
       } : undefined;
 
       return {
@@ -278,12 +278,12 @@ export class CheckpointActionContextService {
           status: projectData.status,
           progress: projectData.progress,
           budget: projectData.budget,
-          startDate: projectData.start_date,
-          endDate: projectData.end_date || undefined,
-          mainContractor: projectData.main_contractor || undefined,
-          projectReference: projectData.project_reference || undefined,
-          allowsInitialPayment: projectData.allows_initial_payment ?? undefined,
-          initialPaymentPercentage: projectData.initial_payment_percentage ?? undefined
+          startDate: projectData.startDate,
+          endDate: projectData.endDate || undefined,
+          mainContractor: projectData.mainContractor || undefined,
+          projectReference: projectData.projectReference || undefined,
+          allowsInitialPayment: projectData.allowsInitialPayment ?? undefined,
+          initialPaymentPercentage: projectData.initialPaymentPercentage ?? undefined
         },
         phases: phaseSummaries,
         currentPhase,
@@ -321,8 +321,8 @@ export class CheckpointActionContextService {
           date: (inspections[0] as InspectionData).date,
           status: (inspections[0] as InspectionData).status,
           inspector: (inspections[0] as InspectionData).inspector,
-          progressAtInspection: (inspections[0] as InspectionData).progress_at_inspection,
-          phaseId: (inspections[0] as InspectionData).phase_id || undefined
+          progressAtInspection: (inspections[0] as InspectionData).progressAtInspection,
+          phaseId: (inspections[0] as InspectionData).phaseId || undefined
         } : undefined
       };
     } catch (error) {

@@ -16,7 +16,7 @@ import {
 
 import { DataPersistenceValidationService } from './DataPersistenceValidationService';
 import { WorkflowIntegrationTestService, IntegrationTestReport as ServiceIntegrationTestReport } from './WorkflowIntegrationTestService';
-import { DataConsistencyMonitoringService, MonitoringReport } from './DataConsistencyMonitoringService';
+import { DataConsistencyMonitoringService, MonitoringReport as ServiceMonitoringReport } from './DataConsistencyMonitoringService';
 
 export interface ArchitectureValidationReport {
   timestamp: Date;
@@ -227,23 +227,27 @@ export class ArchitectureValidationReportService {
   /**
    * Process consistency monitoring results
    */
-  private static processConsistencyMonitoring(report: MonitoringReport): ConsistencyMonitoringSection {
-    const score = report.checksPerformed > 0 ? ((report.checksPerformed - report.issuesFound) / report.checksPerformed) * 100 : 100;
+  private static processConsistencyMonitoring(report: ServiceMonitoringReport): ConsistencyMonitoringSection {
+    const checksPerformed = report.checksPerformed || 0;
+    const issuesFound = report.issuesFound || 0;
+    const criticalIssues = report.criticalIssues || 0;
+    
+    const score = checksPerformed > 0 ? ((checksPerformed - issuesFound) / checksPerformed) * 100 : 100;
     
     return {
       score,
-      totalRecords: report.checksPerformed,
-      consistentRecords: report.checksPerformed - report.issuesFound,
-      inconsistentRecords: report.issuesFound,
+      totalRecords: checksPerformed,
+      consistentRecords: checksPerformed - issuesFound,
+      inconsistentRecords: issuesFound,
       entityScores: {},
-      criticalIssues: report.criticalIssues,
+      criticalIssues: criticalIssues,
       highIssues: 0,
       trends: {
         improving: [],
         declining: [],
         stable: []
       },
-      recommendations: []
+      recommendations: report.warnings || []
     };
   }
 
