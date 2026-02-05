@@ -62,17 +62,14 @@ const LoadDataButton = ({
       for (const projectData of SAMPLE_PROJECTS) {
         try {
           await projectService.createProject({
-            title: projectData.title,
-            description: projectData.description,
-            location: projectData.location,
-            budget: projectData.estimated_budget,
-            startDate: projectData.start_date,
-            endDate: projectData.end_date,
-            status: "en cours" as const,
-            thumbnail: "",
-            progress: 0,
-            teamSize: 0
-          });
+             title: projectData.title,
+             description: projectData.description,
+             location: projectData.location,
+             budget: projectData.estimated_budget,
+             startDate: projectData.start_date,
+             endDate: projectData.end_date,
+             status: "enCours" as const
+           });
           importedCount++;
         } catch (error) {
           console.warn(`Failed to import project: ${projectData.title}`, error);

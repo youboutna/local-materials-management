@@ -147,9 +147,9 @@ export class WorkflowOrchestrator {
         };
         const decompte = await this.decompteCalculator.calculatePhaseDecompte(decompteRequest);
         const decompteEvent: WorkflowEvent = {
-          type: 'DECOMPTE_CALCULATED',
-          payload: { decompte },
-        };
+           type: 'DECOMPTE_CALCULATED',
+           payload: { decompte: decompte as any },
+         };
         events.push(decompteEvent);
         this.emit(decompteEvent);
       }
@@ -191,30 +191,33 @@ export class WorkflowOrchestrator {
         phaseId: request.phaseId
       };
       const decompte = await this.decompteCalculator.calculatePhaseDecompte(decompteRequest);
-      
-      if (decompte.net_payable <= 0) {
-        return { success: false, error: 'Aucun montant payable' };
-      }
+       
+       const netPayable = decompte.net_payable ?? 0;
+       if (netPayable <= 0) {
+         return { success: false, error: 'Aucun montant payable' };
+       }
 
-      // 2. Créer le paiement - real implementation using repository
-      const actualAmount = Math.min(request.amount, decompte.net_payable);
+       // 2. Créer le paiement - real implementation using repository
+       const actualAmount = Math.min(request.amount, netPayable);
       
       // Create payment entity and save to repository
-      // TODO: Implement proper payment entity creation when Payment entity is available
-      // For now, use repository directly with DTO
-      const paymentData = {
-        projectId: this.projectId,
-        phaseId: request.phaseId,
-        amount: actualAmount,
-        status: 'pending' as const,
-        createdAt: new Date().toISOString(),
-        paymentMethod: 'bank_transfer',
-        paymentDate: new Date().toISOString(),
-        transactionId: `txn_${Date.now()}`,
-        progressAtPayment: request.amount // Use amount as progress percentage for now
-      };
-      
-      const paymentDTO = await this.paymentService.createPayment(paymentData);
+       // Using repository pattern with required payment fields
+       const paymentData = {
+         projectId: this.projectId,
+         contractorId: request.contractorId || 'unknown',
+         contractorName: request.contractorName || 'Unknown Contractor',
+         contractorContact: request.contractorContact || '',
+         phaseId: request.phaseId,
+         amount: actualAmount,
+         status: 'pending' as const,
+         createdAt: new Date().toISOString(),
+         paymentMethod: 'bank_transfer',
+         paymentDate: new Date().toISOString(),
+         transactionId: `txn_${Date.now()}`,
+         progressAtPayment: request.amount
+       };
+       
+       const paymentDTO = await this.paymentService.createPayment(paymentData);
       const paymentId = paymentDTO.id;
 
       // 3. Émettre l'événement de paiement

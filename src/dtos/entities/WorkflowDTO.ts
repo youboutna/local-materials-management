@@ -39,6 +39,9 @@ export interface OnProgressUpdatedResponseDTO {
 export interface TriggerPaymentRequestDTO {
   phaseId: string;
   amount: number;
+  contractorId?: string;
+  contractorName?: string;
+  contractorContact?: string;
 }
 
 /**
