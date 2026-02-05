@@ -36,15 +36,15 @@ export function ProviderSwitcher({
   } = useUnifiedAuth();
   
   const [isSwitching, setIsSwitching] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState<AuthProvider>(currentProvider);
-  const [providerStatus, setProviderStatus] = useState<Record<AuthProvider, 'available' | 'unavailable' | 'error' | 'testing'>>({
+  const [selectedProvider, setSelectedProvider] = useState<string>(currentProvider || 'supabase');
+  const [providerStatus, setProviderStatus] = useState<Record<string, 'available' | 'unavailable' | 'error' | 'testing'>>({
     supabase: 'testing',
     keycloak: 'testing',
     auth0: 'testing',
     custom: 'testing'
   });
 
-  const handleSwitchProvider = async (provider: AuthProvider) => {
+  const handleSwitchProvider = async (provider: string) => {
     if (provider === currentProvider) return;
     
     setIsSwitching(true);
@@ -77,7 +77,7 @@ export function ProviderSwitcher({
     }
   };
 
-  const testProvider = async (provider: AuthProvider) => {
+  const testProvider = async (provider: string) => {
     setProviderStatus(prev => ({ ...prev, [provider]: 'testing' }));
     
     // Simulate provider test

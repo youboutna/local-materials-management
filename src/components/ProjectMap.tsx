@@ -105,19 +105,24 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
       const projectLocations: MapLocation[] = projects
         .filter(
           (project) =>
-            project.coordinates?.latitude && project.coordinates?.longitude
+            (project.latitude && project.longitude) ||
+            (project.coordinates && typeof project.coordinates === 'object' && 'latitude' in project.coordinates && 'longitude' in project.coordinates)
         )
-        .map((project) => ({
-          id: project.id,
-          name: project.title,
-          type: "project" as const,
-          latitude: project.coordinates!.latitude,
-          longitude: project.coordinates!.longitude,
-          status: project.status,
-          region: project.location,
-          startDate: project.startDate,
-          endDate: project.endDate,
-        }));
+        .map((project) => {
+          const lat = project.latitude || (project.coordinates as { latitude: number; longitude: number } | undefined)?.latitude || 0;
+          const lng = project.longitude || (project.coordinates as { latitude: number; longitude: number } | undefined)?.longitude || 0;
+          return {
+            id: project.id,
+            name: project.title,
+            type: "project" as const,
+            latitude: lat,
+            longitude: lng,
+            status: project.status,
+            region: project.location,
+            startDate: project.startDate,
+            endDate: project.endDate,
+          };
+        });
       setMapLocations(projectLocations);
     }
   }, [projects, locations]);

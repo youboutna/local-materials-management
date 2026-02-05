@@ -25,7 +25,7 @@ export interface InspectionData {
     photos: string[];
     notes: string;
     defects: string[];
-    complianceChecks: Array<{ item: string; status: 'pass' | 'fail' }>;
+    complianceChecks: Array<{ item: string; status: 'pass' | 'fail'; standard?: string }>;
   };
 }
 
@@ -47,13 +47,21 @@ export interface InspectionFinding {
   photoUrls?: string[];
 }
 
-export const MANDATORY_INSPECTION_FIELDS = {
-  projectId: 'Project ID is required',
-  inspectorId: 'Inspector ID is required',
-  inspectionType: 'Inspection type is required',
-  scheduledDate: 'Scheduled date is required',
-  location: 'Location is required'
+export const MANDATORY_INSPECTION_FIELDS: Record<string, string[]> = {
+  structural: ['foundation_check', 'beam_alignment', 'load_capacity'],
+  electrical: ['wiring_safety', 'grounding', 'circuit_load'],
+  plumbing: ['pipe_integrity', 'water_pressure', 'drainage'],
+  safety: ['fire_exits', 'equipment_check', 'signage'],
+  general: ['site_cleanliness', 'documentation', 'progress_verification']
 };
+
+/**
+ * Create a digital inspection - exported function for backward compatibility
+ */
+export async function createDigitalInspection(data: Omit<InspectionData, 'id' | 'status'>): Promise<InspectionData> {
+  const service = new InspectionMonitoringService();
+  return service.createDigitalInspection(data);
+}
 
 export class InspectionMonitoringService {
   private inspectionRepository: IInspectionRepository;

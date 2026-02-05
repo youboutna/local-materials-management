@@ -187,6 +187,58 @@ export class EnhancedActionService {
   }
 }
 
+// Unified action request type for backward compatibility
+export interface UnifiedActionRequest {
+  actionType: string;
+  title: string;
+  message: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  assigneeId?: string;
+  recipientIds: string[];
+  dueDate?: string;
+  escalationLevel?: string;
+  entityType: string;
+  entityId: string;
+  projectId?: string;
+  contractorId?: string;
+  metadata?: Record<string, unknown>;
+}
+
+// Static execution result
+export interface ActionExecutionResult {
+  success: boolean;
+  notificationsSent: number;
+  error?: string;
+}
+
+// Static methods namespace for backward compatibility
+export const EnhancedActionServiceStatic = {
+  async executeAction(request: UnifiedActionRequest): Promise<ActionExecutionResult> {
+    const service = new EnhancedActionService();
+    try {
+      await service.createInsuranceAction({
+        insuranceId: request.entityId,
+        projectId: request.projectId,
+        contractorId: request.contractorId,
+        actionType: request.actionType as any,
+        title: request.title,
+        message: request.message,
+        priority: (request.priority === 'urgent' ? 'high' : request.priority) as any,
+        assigneeId: request.assigneeId,
+        recipientIds: request.recipientIds,
+        metadata: request.metadata
+      });
+      return { success: true, notificationsSent: request.recipientIds.length };
+    } catch (error: any) {
+      console.error('EnhancedActionService.executeAction failed:', error);
+      return { success: false, notificationsSent: 0, error: error.message };
+    }
+  }
+};
+
+// Attach static method to class for backward compatibility
+(EnhancedActionService as any).executeAction = EnhancedActionServiceStatic.executeAction;
+
 // Export a singleton instance for backward compatibility
 const enhancedActionService = new EnhancedActionService();
 

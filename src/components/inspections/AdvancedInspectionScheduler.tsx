@@ -265,7 +265,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
           recipient_id: selectedProject.contractor_contact,
           title: 'Inspection Programmée',
           message: `Une inspection ${INSPECTION_TYPES.find(t => t.value === inspectionType)?.label} a été programmée pour le projet "${selectedProject.title}" le ${new Date(inspectionDate).toLocaleDateString('fr-FR')}.`,
-          type: 'inspection_required',
+          type: 'info',
           related_id: selectedProject.id,
           metadata: {
             project_id: selectedProject.id,
