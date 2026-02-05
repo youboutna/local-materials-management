@@ -10,7 +10,9 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Eye, Shield, AlertTriangle, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { InsuranceService, InsuranceCertificate, CreateInsuranceData, UpdateInsuranceData } from '@/application/services/InsuranceService';
+import { InsuranceService } from '@/application/services/InsuranceService';
+import type { InsuranceCertificateEntity as InsuranceCertificate } from '@/domain/entities/InsuranceCertificate.entity';
+import type { CreateInsuranceCertificateDTO as CreateInsuranceData, UpdateInsuranceCertificateDTO as UpdateInsuranceData } from '@/dtos/entities/InsuranceDTO';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 

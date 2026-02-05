@@ -150,7 +150,8 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
       return;
     }
 
-    const success = await InspectionExecutionService.startInspection(inspection.id, location);
+    const inspectionService = new InspectionExecutionService(RepositoryFactory.getInspectionExecutionRepository());
+    const success = await inspectionService.startInspection(inspection.id, location);
     if (success) {
       setIsStarted(true);
       toast.success('Inspection démarrée');
