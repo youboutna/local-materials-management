@@ -128,7 +128,7 @@ export const useDocumentCreate = () => {
     RepositoryFactory.getDocumentRepository()
   );
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async (documentData: CreateDocumentRequestDto) => {
       return await documentService.createDocument(documentData);
     },
@@ -141,6 +141,16 @@ export const useDocumentCreate = () => {
       toast.error('Erreur lors de la création du document');
     }
   });
+
+  return {
+    createDocument: mutation,
+    mutate: mutation.mutate,
+    mutateAsync: mutation.mutateAsync,
+    isCreating: mutation.isPending,
+    isPending: mutation.isPending,
+    isError: mutation.isError,
+    error: mutation.error
+  };
 };
 
 export const useDocumentUpdate = () => {

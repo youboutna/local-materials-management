@@ -5,7 +5,6 @@
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { IInsuranceRepository } from '@/domain/repositories/IInsuranceRepository';
-import { INotificationRepository } from '@/domain/repositories/INotificationRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { NotificationService } from '@/application/services/NotificationService';
 import { InsuranceCertificateEntity } from '@/domain/entities/InsuranceCertificate.entity';
@@ -19,11 +18,21 @@ import {
   InsuranceAlertDTO
 } from '@/dtos/entities/InsuranceDTO';
 
+// Status and type constants for validation
+const INSURANCE_STATUSES = ['active', 'expired', 'expiring_soon', 'missing', 'pending'] as const;
+const INSURANCE_TYPES = ['responsabilite_civile', 'decennale', 'vehicules', 'materiel', 'tous_risques'] as const;
+
 export class InsuranceService {
+  private insuranceRepository: IInsuranceRepository;
+  private notificationService: NotificationService;
+  
   constructor(
-    private insuranceRepository: IInsuranceRepository,
-    private notificationService: NotificationService
-  ) {}
+    insuranceRepository?: IInsuranceRepository,
+    notificationService?: NotificationService
+  ) {
+    this.insuranceRepository = insuranceRepository || RepositoryFactory.getInsuranceRepository();
+    this.notificationService = notificationService || new NotificationService();
+  }
 
   private mapEntityToDTO(entity: InsuranceCertificateEntity): InsuranceCertificateDTO {
     return {
@@ -34,10 +43,10 @@ export class InsuranceService {
       insurance_company: entity.insurance_company,
       policy_number: entity.policy_number,
       coverage_amount: entity.coverage_amount,
-      coverage_type: entity.coverage_type,
+      coverage_type: entity.coverage_type as any,
       valid_from: entity.valid_from,
       valid_until: entity.valid_until,
-      status: entity.status,
+      status: entity.status as any,
       created_at: entity.created_at,
       updated_at: entity.updated_at
     };
@@ -50,22 +59,33 @@ export class InsuranceService {
         const endDate = new Date(cert.valid_until);
         const today = new Date();
         const daysUntilExpiry = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        let alertLevel: InsuranceAlertDTO['alertLevel'] = 'info';
-        if (daysUntilExpiry <= 0) alertLevel = 'expired';
-        else if (daysUntilExpiry <= 7) alertLevel = 'critical';
-        else if (daysUntilExpiry <= 14) alertLevel = 'warning';
+        
+        let alertType: InsuranceAlertDTO['type'] = 'expiring';
+        let severity: InsuranceAlertDTO['severity'] = 'medium';
+        
+        if (daysUntilExpiry <= 0) {
+          alertType = 'expired';
+          severity = 'critical';
+        } else if (daysUntilExpiry <= 7) {
+          severity = 'high';
+        } else if (daysUntilExpiry <= 14) {
+          severity = 'medium';
+        } else {
+          severity = 'low';
+        }
+        
         return {
-          policyId: cert.id,
+          id: `alert-${cert.id}`,
           certificateId: cert.id,
+          type: alertType,
+          severity,
+          message: daysUntilExpiry <= 0 
+            ? `Insurance has expired` 
+            : `Insurance expires in ${daysUntilExpiry} days`,
+          daysUntilExpiry,
           projectId: cert.project_id,
           contractorId: cert.contractor_id,
-          insuranceType: cert.coverage_type as InsuranceType,
-          insurerName: cert.insurance_company,
-          expiryDate: cert.valid_until,
-          alertLevel,
-          daysUntilExpiry,
-          message: `Insurance expires in ${daysUntilExpiry} days`,
-          acknowledged: false
+          createdAt: new Date().toISOString()
         };
       });
     } catch (error) {
@@ -89,23 +109,40 @@ export class InsuranceService {
   async getInsuranceStatistics(projectId: string): Promise<InsuranceStatisticsDTO> {
     try {
       const certificates = await this.getInsuranceCertificates(projectId);
+      
+      const byType: Record<string, number> = {};
+      const byStatus: Record<string, number> = {};
+      
+      let totalCoverageAmount = 0;
+      let activeCertificates = 0;
+      let expiredCertificates = 0;
+      let expiringSoonCertificates = 0;
+      
+      for (const cert of certificates) {
+        totalCoverageAmount += cert.coverage_amount || 0;
+        
+        // Count by type
+        const type = cert.coverage_type || 'unknown';
+        byType[type] = (byType[type] || 0) + 1;
+        
+        // Count by status
+        const status = cert.status || 'unknown';
+        byStatus[status] = (byStatus[status] || 0) + 1;
+        
+        if (status === 'active') activeCertificates++;
+        else if (status === 'expired') expiredCertificates++;
+        
+        if (this.isExpiringSoon(cert)) expiringSoonCertificates++;
+      }
+      
       return {
-        totalPolicies: certificates.length,
-        activePolicies: certificates.filter(c => c.status === InsuranceStatus.ACTIVE).length,
-        expiredPolicies: certificates.filter(c => c.status === InsuranceStatus.EXPIRED).length,
-        expiringSoonPolicies: certificates.filter(c => this.isExpiringSoon(c)).length,
-        totalCoverage: certificates.reduce((sum, c) => sum + c.coverage_amount, 0),
-        totalClaims: 0,
-        claimsPaid: 0,
-        claimsPending: 0,
-        liabilityCount: 0,
-        propertyCount: 0,
-        constructionAllRiskCount: 0,
-        professionalIndemnityCount: 0,
-        totalPremium: 0,
-        totalClaimsAmount: 0,
-        averageClaimAmount: 0,
-        claimsRatio: 0
+        totalCertificates: certificates.length,
+        activeCertificates,
+        expiredCertificates,
+        expiringSoonCertificates,
+        totalCoverageAmount,
+        byType,
+        byStatus
       };
     } catch (error) {
       console.error('InsuranceService.getInsuranceStatistics failed:', error);
@@ -114,7 +151,10 @@ export class InsuranceService {
   }
 
   isExpiringSoon(certificate: InsuranceCertificateDTO, daysThreshold: number = 30): boolean {
-    const endDate = new Date(certificate.valid_until);
+    const validUntil = certificate.valid_until;
+    if (!validUntil) return false;
+    
+    const endDate = new Date(validUntil);
     const today = new Date();
     const daysUntilExpiry = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     return daysUntilExpiry <= daysThreshold && daysUntilExpiry > 0;
@@ -125,18 +165,20 @@ export class InsuranceService {
     
     if (!data.projectId) errors.projectId = ['Project ID required'];
     
-    if (!data.insuranceType || !Object.values(InsuranceType).includes(data.insuranceType)) {
+    if (!data.insuranceType || !INSURANCE_TYPES.includes(data.insuranceType as any)) {
       errors.insuranceType = ['Valid insurance type required'];
     }
     
-    if (!data.insurerName || data.insurerName.trim().length === 0) errors.insurerName = ['Insurer name required'];
-    
-    if (!data.insuredAmount || data.insuredAmount <= 0) {
-      errors.insuredAmount = ['Insured amount must be positive'];
+    if (!data.insuranceCompany || data.insuranceCompany.trim().length === 0) {
+      errors.insuranceCompany = ['Insurance company required'];
     }
     
-    if (!data.startDate || !this.isValidDate(data.startDate)) errors.startDate = ['Valid start date required'];
-    if (!data.endDate || !this.isValidDate(data.endDate)) errors.endDate = ['Valid end date required'];
+    if (!data.coverageAmount || data.coverageAmount <= 0) {
+      errors.coverageAmount = ['Coverage amount must be positive'];
+    }
+    
+    if (!data.validFrom || !this.isValidDate(data.validFrom)) errors.validFrom = ['Valid start date required'];
+    if (!data.validUntil || !this.isValidDate(data.validUntil)) errors.validUntil = ['Valid end date required'];
     
     return { isValid: Object.keys(errors).length === 0, errors };
   }
@@ -146,17 +188,32 @@ export class InsuranceService {
   }
 
   private isValidStatusTransition(current: InsuranceStatus, next: InsuranceStatus): boolean {
-    const validTransitions: Record<InsuranceStatus, InsuranceStatus[]> = {
-      [InsuranceStatus.PENDING]: [InsuranceStatus.ACTIVE, InsuranceStatus.EXPIRED, InsuranceStatus.CANCELLED],
-      [InsuranceStatus.ACTIVE]: [InsuranceStatus.EXPIRED, InsuranceStatus.EXPIRING_SOON, InsuranceStatus.CANCELLED],
-      [InsuranceStatus.EXPIRING_SOON]: [InsuranceStatus.EXPIRED, InsuranceStatus.ACTIVE, InsuranceStatus.CANCELLED],
-      [InsuranceStatus.EXPIRED]: [],
-      [InsuranceStatus.CANCELLED]: [],
-      [InsuranceStatus.UNDER_REVIEW]: [InsuranceStatus.ACTIVE, InsuranceStatus.CANCELLED]
+    const validTransitions: Record<string, string[]> = {
+      pending: ['active', 'expired'],
+      active: ['expired', 'expiring_soon'],
+      expiring_soon: ['expired', 'active'],
+      expired: [],
+      missing: ['active', 'pending']
     };
     
     if (!current || !next) return false;
     
     return validTransitions[current]?.includes(next) ?? false;
+  }
+  
+  // Static method wrappers for backward compatibility
+  static async detectExpiringInsurance(daysThreshold: number = 30): Promise<InsuranceAlertDTO[]> {
+    const service = new InsuranceService();
+    return service.detectExpiringInsurance(daysThreshold);
+  }
+  
+  static async getInsuranceCertificates(projectId?: string): Promise<InsuranceCertificateDTO[]> {
+    const service = new InsuranceService();
+    return service.getInsuranceCertificates(projectId);
+  }
+  
+  static async getInsuranceStatistics(projectId: string): Promise<InsuranceStatisticsDTO> {
+    const service = new InsuranceService();
+    return service.getInsuranceStatistics(projectId);
   }
 }
