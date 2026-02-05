@@ -158,20 +158,25 @@ export class PaymentService {
         throw new AppError(ErrorCode.NOT_FOUND, 'Payment not found');
       }
 
-      // Validate status transition if status is being updated
-      if (data.status && !isValidPaymentStatusTransition(
-        existingPayment.status as PaymentStatusEnum,
-        data.status as unknown as PaymentStatusEnum
-      )) {
-        throw new AppError(
-          ErrorCode.VALIDATION_ERROR,
-          `Invalid status transition from ${existingPayment.status} to ${data.status}`
-        );
-      }
-
       // Transform update data to partial entity
       const updateData: Partial<Payment> = {
-        ...data,
+        projectId: data.projectId,
+        contractorId: data.contractorId,
+        contractorName: data.contractorName,
+        contractorContact: data.contractorContact,
+        amount: data.amount,
+        paymentMethod: (data.paymentMethod as any) || existingPayment.paymentMethod,
+        paymentDate: data.paymentDate,
+        transactionId: data.transactionId,
+        progressAtPayment: data.progressAtPayment,
+        inspectionId: data.inspectionId,
+        phaseId: data.phaseId,
+        bankName: data.bankName,
+        accountNumber: data.accountNumber,
+        checkNumber: data.checkNumber,
+        mobileNumber: data.mobileNumber,
+        mobileOperator: data.mobileOperator,
+        receiverName: data.receiverName,
         updatedAt: new Date().toISOString()
       };
       
@@ -216,9 +221,9 @@ export class PaymentService {
   /**
    * Get payments by status
    */
-  async getPaymentsByStatus(status: PaymentStatusEnum | string): Promise<PaymentDTO[]> {
+   async getPaymentsByStatus(status: PaymentStatusEnum | string): Promise<PaymentDTO[]> {
     try {
-      const payments = await this.paymentRepository.findByStatus(status as string);
+      const payments = await this.paymentRepository.findByStatus(status as PaymentStatusEnum);
       return payments.map(payment => PaymentTransformer.toDTO(payment));
     } catch (error) {
       console.error('[PaymentService] Error fetching payments by status:', error);
