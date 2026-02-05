@@ -54,15 +54,14 @@ export class RiskService {
         data.description || null,
         data.probability,
         data.impact,
-        DomainRiskStatus.Open,
+        'open' as DomainRiskStatus,
         data.category as any || 'technical',
         data.mitigation_strategy || null,
         data.identified_by ? { id: data.identified_by, fullName: '' } as any : null,
         new Date().toISOString(),
         [],
-        [],
-        new Date(),
-        new Date()
+        new Date().toISOString(),
+        new Date().toISOString()
       );
 
       await this.riskRepository.save(risk);
