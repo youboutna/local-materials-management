@@ -4,10 +4,11 @@
  */
 
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
-import { Document } from '@/domain/entities/Document';
+import { Document, DocumentStatus as DomainDocumentStatus } from '@/domain/entities/Document';
 import { DocumentTransformer } from '@/dtos/transforms/DocumentTransformer';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { DocumentDTO, CreateDocumentDTO, UpdateDocumentDTO, DocumentStatus, DocumentType } from '@/dtos/entities/DocumentDTO';
+import { DocumentDTO, CreateDocumentDTO, UpdateDocumentDTO, DocumentStatus, DocumentType, DocumentResponseDto } from '@/dtos/entities/DocumentDTO';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 function isDocumentType(type: string): type is DocumentType {
   return Object.values(DocumentType).includes(type as DocumentType);
@@ -20,21 +21,54 @@ function isDocumentStatus(status: string): status is DocumentStatus {
 // Add status transition validation
 function isValidDocumentStatusTransition(current: DocumentStatus, next: DocumentStatus): boolean {
   const validTransitions: Record<DocumentStatus, DocumentStatus[]> = {
-    [DocumentStatus.DRAFT]: [DocumentStatus.PENDING_REVIEW, DocumentStatus.ARCHIVED],
-    [DocumentStatus.PENDING_REVIEW]: [DocumentStatus.APPROVED, DocumentStatus.REJECTED, DocumentStatus.ARCHIVED],
-    [DocumentStatus.APPROVED]: [DocumentStatus.PUBLISHED, DocumentStatus.ARCHIVED],
+    [DocumentStatus.DRAFT]: [DocumentStatus.PENDING_APPROVAL, DocumentStatus.ARCHIVED],
+    [DocumentStatus.PENDING_APPROVAL]: [DocumentStatus.APPROVED, DocumentStatus.REJECTED, DocumentStatus.ARCHIVED],
+    [DocumentStatus.APPROVED]: [DocumentStatus.ARCHIVED, DocumentStatus.DEPRECATED],
     [DocumentStatus.REJECTED]: [DocumentStatus.DRAFT, DocumentStatus.ARCHIVED],
-    [DocumentStatus.PUBLISHED]: [DocumentStatus.ARCHIVED],
-    [DocumentStatus.ARCHIVED]: []
+    [DocumentStatus.ARCHIVED]: [],
+    [DocumentStatus.EXPIRED]: [DocumentStatus.ARCHIVED],
+    [DocumentStatus.DEPRECATED]: [DocumentStatus.ARCHIVED]
   };
-  return validTransitions[current].includes(next);
+  return validTransitions[current]?.includes(next) ?? false;
+}
+
+// Ensure Document entity has required properties
+interface RepositoryDocument {
+  id: string;
+  title: string;
+  documentType: DocumentType;
+  projectId?: string | null;
+  phaseId?: string | null;
+  inspectionId?: string | null;
+  paymentId?: string | null;
+  supplierId?: string | null;
+  description?: string | null;
+  fileName?: string | null;
+  fileSize?: number | null;
+  fileUrl?: string | null;
+  mimeType?: string | null;
+  status: string;
+  isInternalOnly: boolean;
+  isSharedWithSuppliers: boolean;
+  deadlineDate?: string | null;
+  assignedTo?: string | null;
+  metadata?: Record<string, unknown> | null;
+  category?: string | null;
+  subcategory?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  uploadedBy?: string | null;
+  tags: string[];
 }
 
 export class DocumentService {
-  constructor(
-    private documentRepository: IDocumentRepository,
-    private documentTransformer: DocumentTransformer
-  ) {}
+  private documentRepository: IDocumentRepository;
+  private documentTransformer: DocumentTransformer;
+
+  constructor(documentRepository?: IDocumentRepository, documentTransformer?: DocumentTransformer) {
+    this.documentRepository = documentRepository || RepositoryFactory.getDocumentRepository();
+    this.documentTransformer = documentTransformer || new DocumentTransformer();
+  }
 
   /**
    * Get documents by phase ID
@@ -45,12 +79,8 @@ export class DocumentService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID is required');
       }
 
-      const documents = await this.documentRepository.findAll();
-      const phaseDocuments = documents.filter(doc => 
-        doc.phaseId === phaseId
-      );
-      
-      return phaseDocuments.map(doc => DocumentTransformer.toDTO(doc));
+      const documents = await this.documentRepository.findByPhaseId(phaseId);
+      return documents.map(doc => DocumentTransformer.toDTO(doc));
     } catch (error) {
       console.error('DocumentService.getDocumentsByPhase failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get documents by phase');
@@ -113,65 +143,57 @@ export class DocumentService {
   }
 
   /**
-   * Get bank guarantee project
+   * Get bank guarantee documents
    */
-  async getBankGuaranteeProject(guaranteeId: string): Promise<DocumentDTO | null> {
+  async getBankGuaranteeDocuments(guaranteeId: string): Promise<DocumentDTO | null> {
     try {
       if (!guaranteeId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Guarantee ID is required');
       }
 
-      const document = await this.documentRepository.findByGuaranteeId(guaranteeId);
+      // Search for documents with guarantee reference in tags or metadata
+      const allDocuments = await this.documentRepository.findAll();
+      const document = allDocuments.find(doc => 
+        doc.tags?.includes(`guarantee:${guaranteeId}`) ||
+        (doc as any).metadata?.guaranteeId === guaranteeId
+      );
+      
       if (!document) return null;
-
       return DocumentTransformer.toDTO(document);
     } catch (error) {
-      console.error('DocumentService.getBankGuaranteeProject failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get bank guarantee project');
+      console.error('DocumentService.getBankGuaranteeDocuments failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get bank guarantee documents');
     }
   }
 
   /**
-   * Get insurance project
+   * Get insurance documents
    */
-  async getInsuranceProject(insuranceId: string): Promise<DocumentResponseDto | null> {
+  async getInsuranceDocuments(insuranceId: string): Promise<DocumentDTO | null> {
     try {
       if (!insuranceId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Insurance ID is required');
       }
 
-      const document = await this.documentRepository.findByInsuranceId(insuranceId);
-      if (!document) return null;
-
-      return new DocumentResponseDto(
-        document.id,
-        document.title || '',
-        document.description || undefined,
-        document.documentType,
-        document.status as DocumentStatus,
-        document.fileName || undefined,
-        document.fileUrl || undefined,
-        document.fileSize || undefined,
-        document.projectId || undefined,
-        document.assignedTo || undefined,
-        document.deadlineDate || undefined,
-        document.tags,
-        document.isInternalOnly,
-        document.isSharedWithSuppliers,
-        document.uploadedBy || undefined,
-        document.createdAt,
-        document.updatedAt
+      // Search for documents with insurance reference in tags or metadata
+      const allDocuments = await this.documentRepository.findAll();
+      const document = allDocuments.find(doc => 
+        doc.tags?.includes(`insurance:${insuranceId}`) ||
+        (doc as any).metadata?.insuranceId === insuranceId
       );
+      
+      if (!document) return null;
+      return DocumentTransformer.toDTO(document);
     } catch (error) {
-      console.error('DocumentService.getInsuranceProject failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get insurance project');
+      console.error('DocumentService.getInsuranceDocuments failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get insurance documents');
     }
   }
 
   /**
    * Get project documents by tags
    */
-  async getProjectDocumentsByTags(projectId: string, tags: string[]): Promise<DocumentResponseDto[]> {
+  async getProjectDocumentsByTags(projectId: string, tags: string[]): Promise<DocumentDTO[]> {
     try {
       if (!projectId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
@@ -181,10 +203,10 @@ export class DocumentService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tags are required');
       }
 
-      // For now, return empty array as tag-based repository is not available
-      // TODO: Implement proper tag-based document retrieval when repository supports it
-      console.warn('DocumentService.getProjectDocumentsByTags: Tag-based repository not available');
-      return [];
+      const documents = await this.documentRepository.findByTags(tags);
+      return documents
+        .filter(doc => doc.projectId === projectId)
+        .map(doc => DocumentTransformer.toDTO(doc));
     } catch (error) {
       console.error('DocumentService.getProjectDocumentsByTags failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get project documents by tags');
@@ -194,7 +216,7 @@ export class DocumentService {
   /**
    * Create document
    */
-  async createDocument(data: CreateDocumentDTO): Promise<DocumentResponseDto> {
+  async createDocument(data: CreateDocumentDTO): Promise<DocumentDTO> {
     try {
       if (!data.title || data.title.trim().length === 0) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Title is required');
@@ -208,18 +230,10 @@ export class DocumentService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, `Invalid document status: ${data.status}`);
       }
 
-      // Validate document type/status combinations
-      if (data.status === DocumentStatus.PUBLISHED && data.documentType === DocumentType.PHOTO) {
-        throw new AppError(
-          ErrorCode.VALIDATION_ERROR,
-          'Photos cannot be published directly - must be approved first'
-        );
-      }
-
-      const documentEntity = this.documentTransformer.fromCreateDto(data);
-      const createdDocument = await this.documentRepository.save(documentEntity);
+      const documentEntity = DocumentTransformer.fromCreateDTOToEntity(data as any);
+      await this.documentRepository.save(documentEntity as any);
       
-      return this.documentTransformer.toResponseDto(createdDocument);
+      return DocumentTransformer.toDTO(documentEntity);
     } catch (error) {
       console.error('DocumentService.createDocument failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create document');
@@ -229,34 +243,37 @@ export class DocumentService {
   /**
    * Update document
    */
-  async updateDocument(id: string, updates: UpdateDocumentDTO): Promise<DocumentResponseDto | null> {
+  async updateDocument(id: string, updates: UpdateDocumentDTO): Promise<DocumentDTO | null> {
     try {
       if (!id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Document ID is required');
       }
 
-      const existing = await this.documentRepository.findById(id) as RepositoryDocument | null;
+      const existing = await this.documentRepository.findById(id);
       if (!existing) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Document not found');
       }
 
-      if (updates.status && !isValidDocumentStatusTransition(existing.status as DocumentStatus, updates.status as DocumentStatus)) {
+      const existingStatus = existing.status as unknown as DocumentStatus;
+      const newStatus = updates.status as unknown as DocumentStatus;
+      
+      if (updates.status && !isValidDocumentStatusTransition(existingStatus, newStatus)) {
         throw new AppError(
           ErrorCode.VALIDATION_ERROR, 
           `Invalid status transition from ${existing.status} to ${updates.status}`
         );
       }
 
-      const updateEntity = this.documentTransformer.fromUpdateDto(updates);
-      await this.documentRepository.update(id, updateEntity);
+      const updateEntity = DocumentTransformer.fromUpdateDTOToEntity(updates as any);
+      await this.documentRepository.update(id, updateEntity as any);
       
-      const updatedDocument = await this.documentRepository.findById(id) as RepositoryDocument | null;
+      const updatedDocument = await this.documentRepository.findById(id);
       
       if (!updatedDocument) {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to retrieve updated document');
       }
 
-      return this.documentTransformer.toResponseDto(updatedDocument);
+      return DocumentTransformer.toDTO(updatedDocument);
     } catch (error) {
       console.error('DocumentService.updateDocument failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update document');
@@ -272,7 +289,7 @@ export class DocumentService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Document ID is required');
       }
 
-      const existing = await this.documentRepository.findById(id) as RepositoryDocument | null;
+      const existing = await this.documentRepository.findById(id);
       if (!existing) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Document not found');
       }

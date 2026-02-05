@@ -34,14 +34,7 @@ export class EmployeeService {
       // In a real implementation, this would query phase_assignments table
       const activeEmployees = allEmployees.filter(employee => employee.isActive);
       
-      return activeEmployees.map(employee => ({
-        id: employee.id,
-        name: employee.fullName,
-        email: employee.email,
-        position: employee.position,
-        phase_id: phaseId,
-        role: employee.role.name || 'employee'
-      }));
+      return activeEmployees.map(employee => this.employeeToDTO(employee));
     } catch (error) {
       console.error('EmployeeService.getEmployeesByPhase failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get employees by phase');
@@ -64,7 +57,8 @@ export class EmployeeService {
         employees = employees.slice(0, options.limit);
       }
 
-      return { employees, total: employees.length };
+      const employeeDTOs = employees.map(emp => this.employeeToDTO(emp));
+      return { employees: employeeDTOs, total: employees.length };
     } catch (error) {
       console.error('EmployeeService.searchEmployees failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to search employees');
@@ -107,9 +101,10 @@ export class EmployeeService {
     }
   }
 
-  async getAllEmployees(): Promise<Employee[]> {
+  async getAllEmployees(): Promise<EmployeeDTO[]> {
     try {
-      return await this.employeeRepository.findAll();
+      const employees = await this.employeeRepository.findAll();
+      return employees.map(emp => this.employeeToDTO(emp));
     } catch (error) {
       console.error('EmployeeService.getAllEmployees failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get all employees');
@@ -124,23 +119,23 @@ export class EmployeeService {
       const employee = new Employee(
         this.generateId(), // id
         this.generateEmployeeId(), // employeeId
-        employeeData.fullName,
-        employeeData.email,
-        employeeData.phone,
-        employeeData.position,
-        employeeData.department,
-        employeeData.role,
-        employeeData.hireDate,
-        employeeData.salary,
-        employeeData.isActive,
-        employeeData.user,
-        employeeData.manager,
-        employeeData.superior,
-        employeeData.directReports || [],
-        employeeData.managedProjects || [],
-        employeeData.teamMembers || [],
+        employeeData.fullName || `${employeeData.firstName} ${employeeData.lastName}`,
+        employeeData.email || null,
+        employeeData.phone || null,
+        employeeData.position || null,
+        employeeData.department as any || null,
+        employeeData.role as any || { name: 'employee', permissions: [] },
+        employeeData.hireDate || null,
+        employeeData.salary || null,
+        employeeData.isActive !== undefined ? employeeData.isActive : true,
+        null, // user
+        null, // manager
+        null, // superior
+        [], // directReports
+        [], // managedProjects
+        [], // teamMembers
         employeeData.skills || [],
-        employeeData.certifications || [],
+        (employeeData.certifications || []).map(c => ({ name: c, issuedDate: new Date().toISOString() })) as any,
         new Date().toISOString(), // createdAt
         new Date().toISOString()  // updatedAt
       );
@@ -163,7 +158,18 @@ export class EmployeeService {
         throw new AppError(ErrorCode.NOT_FOUND, 'Employee not found');
       }
 
-      await this.employeeRepository.update(id, updates);
+      // Convert UpdateEmployeeDTO to Partial<Employee>
+      const employeeUpdates: Partial<Employee> = {
+        fullName: updates.fullName,
+        email: updates.email,
+        phone: updates.phone,
+        position: updates.position,
+        department: updates.department as any,
+        isActive: updates.isActive,
+        skills: updates.skills
+      };
+
+      await this.employeeRepository.update(id, employeeUpdates as any);
       
       // Return updated employee
       const updatedEmployee = await this.employeeRepository.findById(id);
@@ -193,6 +199,31 @@ export class EmployeeService {
       console.error('EmployeeService.deleteEmployee failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete employee');
     }
+  }
+
+  /**
+   * Convert Employee entity to EmployeeDTO
+   */
+  private employeeToDTO(employee: Employee): EmployeeDTO {
+    return {
+      id: employee.id,
+      employeeId: employee.employeeId,
+      firstName: employee.fullName?.split(' ')[0] || '',
+      lastName: employee.fullName?.split(' ').slice(1).join(' ') || '',
+      fullName: employee.fullName,
+      email: employee.email || '',
+      phone: employee.phone || '',
+      position: employee.position || '',
+      department: (employee.department as any) || 'engineering',
+      role: (employee.role?.name as any) || 'employee',
+      type: 'full_time' as any,
+      status: (employee.isActive ? 'active' : 'inactive') as any,
+      salary: employee.salary || 0,
+      skills: employee.skills || [],
+      certifications: (employee.certifications || []).map(c => typeof c === 'string' ? c : (c as any).name || ''),
+      createdAt: employee.createdAt,
+      updatedAt: employee.updatedAt
+    };
   }
 
   /**

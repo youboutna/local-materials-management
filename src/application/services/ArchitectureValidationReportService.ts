@@ -151,7 +151,9 @@ export class ArchitectureValidationReportService {
         validatedEntities: persistenceReport.summary.passedValidations,
         testedWorkflows: integrationReport.summary.totalTests,
         passedTests: integrationReport.summary.passedTests,
-        consistencyScore: consistencyReport.summary.overallConsistencyScore
+        consistencyScore: consistencyReport.checksPerformed > 0 
+          ? ((consistencyReport.checksPerformed - consistencyReport.issuesFound) / consistencyReport.checksPerformed) * 100 
+          : 100
       };
 
       return {

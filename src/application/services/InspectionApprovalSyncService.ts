@@ -29,9 +29,21 @@ export interface InspectionApprovalContext {
   validationDate?: string;
   approvedBy?: string;
   notes?: string;
-  checklistItems?: InspectionChecklistItem[];
-  nonConformities?: InspectionNonConformity[];
-  nextActions?: InspectionAction[];
+  checklistItems?: Array<{
+    id: string;
+    name: string;
+    status: 'passed' | 'failed' | 'na';
+  }>;
+  nonConformities?: Array<{
+    id: string;
+    description: string;
+    severity: string;
+  }>;
+  nextActions?: Array<{
+    id: string;
+    description: string;
+    dueDate: string;
+  }>;
 }
 
 export interface SyncResult {

@@ -10,16 +10,30 @@ import { MaterialService } from './MaterialService';
 import { EmployeeService } from './EmployeeService';
 import { SupplierService } from './SupplierService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import {
-  DataValidationResultDTO,
-  DataValidationIssueDTO,
-  PersistenceMetricsDTO
-} from '@/dtos/entities/DataValidationDTO';
-import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
-import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
-import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
-import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
-import { SupplierDTO } from '@/dtos/entities/SupplierDTO';
+import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
+
+// Local type definitions
+export interface DataValidationIssueDTO {
+  severity: 'error' | 'warning' | 'info';
+  field: string;
+  message: string;
+}
+
+export interface PersistenceMetricsDTO {
+  totalEntities: number;
+  validEntities: number;
+  invalidEntities: number;
+  dataIntegrityScore: number;
+  lastValidated: Date;
+}
+
+export interface DataValidationResultDTO {
+  isValid: boolean;
+  entity: string;
+  entityId: string;
+  issues: DataValidationIssueDTO[];
+  metrics: PersistenceMetricsDTO;
+}
 
 export class DataPersistenceValidationService {
   private projectService: ProjectService;
@@ -30,7 +44,7 @@ export class DataPersistenceValidationService {
 
   constructor() {
     this.projectService = new ProjectService(RepositoryFactory.getProjectRepository());
-    this.phaseService = new PhaseService(RepositoryFactory.getPhaseRepository());
+    this.phaseService = new PhaseService(RepositoryFactory.getPhaseRepository(), new PhaseTransformer());
     this.materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
     this.employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
     this.supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
@@ -285,11 +299,12 @@ export class DataPersistenceValidationService {
           });
         }
 
-        // Validate quantity
-        if (material.availableQuantity < 0) {
+        // Validate quantity (use quantity field instead of availableQuantity)
+        const quantity = material.quantity ?? 0;
+        if (quantity < 0) {
           issues.push({
             severity: 'error',
-            field: 'availableQuantity',
+            field: 'quantity',
             message: 'Quantity cannot be negative'
           });
         }
