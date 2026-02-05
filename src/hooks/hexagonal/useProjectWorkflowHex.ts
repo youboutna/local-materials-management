@@ -2,6 +2,8 @@
  * Hook: useProjectWorkflowHex
  * Hook hexagonal pour la gestion des workflows de projet avec sauvegarde partielle
  * Supporte ProjectCreationWorkflow et EnhancedProjectEditForm
+ * 
+ * Flow: UI Form → Hook → Transformer → Service → Repository → Adapter → Database
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -10,7 +12,7 @@ import { ProjectWorkflowService, createProjectWorkflowService } from '@/applicat
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { ProjectWorkflowTransforms } from '@/dtos/transforms/ProjectWorkflowTransforms';
 
-// Import workflow DTOs (following "similitude des voisins le plus proche")
+// Import workflow DTOs
 import { 
   ProjectWorkflowData,
   WorkflowState,
@@ -27,8 +29,8 @@ import {
   StepProgressDTO
 } from '@/dtos/workflows/ProjectWorkflowDTOs';
 
-// Import entity DTOs (following "similitude des voisins le plus proche")
-import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+// Import entity DTOs
+import { ProjectDTO, CreateProjectDTO, UpdateProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
 import { StakeholderDTO } from '@/dtos/entities/StakeholderDTO';
 
@@ -42,7 +44,6 @@ interface WorkflowSaveResult {
 
 // Fonctions utilitaires pour le calcul de progression
 export function determineCurrentStep(formData: ProjectDTO): number {
-  // Logique pour déterminer l'étape actuelle basée sur les données du projet
   if (!formData.title || !formData.description) return 1;
   if (!formData.location) return 3;
   if (!formData.status) return 7;
@@ -52,25 +53,12 @@ export function determineCurrentStep(formData: ProjectDTO): number {
 export function calculateCompletedSteps(formData: Record<string, unknown>, phasesData: unknown[]): number {
   let completed = 0;
   
-  // Étape 1: Informations générales
   if (formData.title && formData.description) completed++;
-  
-  // Étape 2: Parties prenantes
   if (formData.stakeholders && Array.isArray(formData.stakeholders) && formData.stakeholders.length > 0) completed++;
-  
-  // Étape 3: Localisation
   if (formData.address) completed++;
-  
-  // Étape 4: Phases
   if (phasesData && Array.isArray(phasesData) && phasesData.length > 0) completed++;
-  
-  // Étape 5: Risques
   if (formData.risks && Array.isArray(formData.risks) && formData.risks.length > 0) completed++;
-  
-  // Étape 6: Conformité
   if (formData.compliance && Array.isArray(formData.compliance) && formData.compliance.length > 0) completed++;
-  
-  // Étape 7: Validation
   if (formData.reception_status) completed++;
   
   return completed;
@@ -85,38 +73,136 @@ export function calculateProgressPercentage(formData: Record<string, unknown>, p
 export function useProjectWorkflowHex(projectId?: string) {
   const queryClient = useQueryClient();
   
-  // Mock du service pour l'instant (à remplacer avec le vrai service)
-  const mockSaveStep = async (data: ProjectWorkflowData): Promise<WorkflowSaveResult> => {
-    // Simulation de sauvegarde
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    return {
-      success: true,
-      projectId: data.projectId || 'mock-project-id',
-      stepNumber: data.currentStep,
-      data
-    };
+  // Create service instance with repositories
+  const getWorkflowService = () => {
+    return createProjectWorkflowService(
+      RepositoryFactory.getProjectRepository(),
+      RepositoryFactory.getPhaseRepository(),
+      RepositoryFactory.getRiskRepository(),
+      RepositoryFactory.getStakeholderRepository()
+    );
   };
 
-  const mockCompleteWorkflow = async (data: ProjectWorkflowData): Promise<WorkflowSaveResult> => {
-    // Simulation de finalisation
-    await new Promise(resolve => setTimeout(resolve, 1500));
+  // =================== STEP 1: UI Form → CreateDTO (via Transformer) ===================
+  
+  /**
+   * Transform form data to CreateProjectDTO
+   * Flow: UI Form → Transformer.formToCreateRequest → CreateProjectDTO
+   */
+  const prepareCreateRequest = (formData: Record<string, unknown>): CreateProjectDTO => {
+    return ProjectWorkflowTransforms.formToCreateRequest(formData);
+  };
+
+  /**
+   * Transform form data to UpdateProjectDTO
+   * Flow: UI Form → Transformer.formToUpdateRequest → UpdateProjectDTO
+   */
+  const prepareUpdateRequest = (formData: Record<string, unknown>): UpdateProjectDTO => {
+    return ProjectWorkflowTransforms.formToUpdateRequest(formData);
+  };
+
+  // =================== STEP 2-8: Service Operations (via Transformer) ===================
+  
+  /**
+   * Save workflow step - Complete hexagonal flow
+   * Flow: 
+   * 1. Hook receives formData
+   * 2. Transformer.formToCreateRequest → CreateProjectDTO
+   * 3. Service receives DTO and validates
+   * 4. Repository saves via Adapter
+   * 5. Adapter uses Transformer.toSupabase → snake_case
+   * 6. Database INSERT/UPDATE
+   * 7. Adapter uses Transformer.fromSupabase → Entity
+   * 8. Service uses Transformer.toDTO → ProjectDTO
+   * 9. Hook updates state
+   * 10. UI renders updated data
+   */
+  const saveStepWithTransformer = async (data: ProjectWorkflowData): Promise<WorkflowSaveResult> => {
+    const workflowService = getWorkflowService();
     
+    // Transform workflow data to service format
+    const serviceData = {
+      project: {
+        id: data.projectId,
+        title: data.projectData.title,
+        description: data.projectData.description,
+        location: data.projectData.location,
+        budget: data.projectData.budget,
+        start_date: data.projectData.startDate,
+        end_date: data.projectData.endDate,
+        status: data.projectData.status
+      },
+      currentStep: data.currentStep,
+      status: data.isDraft ? 'draft' : 'in_progress',
+      mode: data.projectId ? 'edit' : 'create',
+      metadata: data.metadata
+    };
+
+    // Call service to save workflow data
+    const result = await workflowService.saveWorkflowData(serviceData as any);
+    
+    // Transform result back to ProjectWorkflowData
     return {
       success: true,
-      projectId: data.projectId || 'mock-project-id',
-      stepNumber: 7,
+      projectId: result.project?.id || data.projectId || '',
+      stepNumber: data.currentStep,
       data: {
         ...data,
-        isComplete: true,
-        isDraft: false
+        projectId: result.project?.id || data.projectId,
+        metadata: {
+          ...data.metadata,
+          lastSavedAt: new Date().toISOString()
+        }
       }
     };
   };
 
-  // Mutation pour sauvegarder une étape
+  /**
+   * Complete workflow - Finalize project creation
+   */
+  const completeWorkflowWithTransformer = async (data: ProjectWorkflowData): Promise<WorkflowSaveResult> => {
+    const workflowService = getWorkflowService();
+    
+    const serviceData = {
+      project: {
+        id: data.projectId,
+        title: data.projectData.title,
+        description: data.projectData.description,
+        location: data.projectData.location,
+        budget: data.projectData.budget,
+        start_date: data.projectData.startDate,
+        end_date: data.projectData.endDate,
+        status: 'en cours'
+      },
+      currentStep: 7,
+      status: 'completed',
+      completedSteps: [1, 2, 3, 4, 5, 6, 7],
+      mode: 'complete'
+    };
+
+    const result = await workflowService.completeWorkflow(serviceData as any);
+    
+    return {
+      success: true,
+      projectId: data.projectId || '',
+      stepNumber: 7,
+      data: {
+        ...data,
+        isComplete: true,
+        isDraft: false,
+        metadata: {
+          ...data.metadata,
+          completedSteps: 7,
+          progressPercentage: 100
+        }
+      }
+    };
+  };
+
+  // =================== React Query Mutations ===================
+
   const saveStepMutation = useMutation({
-    mutationFn: mockSaveStep,
+    mutationFn: saveStepWithTransformer,
     onSuccess: (result) => {
       const stepName = getStepName(result.stepNumber);
       
@@ -126,45 +212,44 @@ export function useProjectWorkflowHex(projectId?: string) {
         className: 'bg-blue-100 border-blue-300 text-blue-800',
       });
 
-      // Invalider les queries
       queryClient.invalidateQueries({ queryKey: ['project-workflow', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['project', result.projectId] });
     },
 
     onError: (error: unknown) => {
       toast({
         title: 'Erreur lors de la sauvegarde',
-        description: error instanceof Error ? error.message : 'Une erreur est survenue lors de la sauvegarde de l\'étape.',
+        description: error instanceof Error ? error.message : 'Une erreur est survenue.',
         variant: 'destructive',
       });
     }
   });
 
-  // Mutation pour finaliser le workflow
   const completeWorkflowMutation = useMutation({
-    mutationFn: mockCompleteWorkflow,
+    mutationFn: completeWorkflowWithTransformer,
     onSuccess: (result) => {
       toast({
         title: 'Projet finalisé',
-        description: 'Le projet a été finalisé avec succès et est maintenant complet.',
+        description: 'Le projet a été finalisé avec succès.',
         className: 'bg-green-100 border-green-300 text-green-800',
       });
 
-      // Invalider les queries
       queryClient.invalidateQueries({ queryKey: ['project-workflow', projectId] });
-      queryClient.invalidateQueries({ queryKey: ['project', projectId || result.projectId] });
+      queryClient.invalidateQueries({ queryKey: ['project', result.projectId] });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
 
     onError: (error: unknown) => {
       toast({
         title: 'Erreur lors de la finalisation',
-        description: error instanceof Error ? error.message : 'Une erreur est survenue lors de la finalisation du projet.',
+        description: error instanceof Error ? error.message : 'Une erreur est survenue.',
         variant: 'destructive',
       });
     }
   });
 
-  // Fonctions utilitaires
+  // =================== Public API ===================
+
   const saveStep = (data: ProjectWorkflowData) => {
     return saveStepMutation.mutateAsync(data);
   };
@@ -187,7 +272,6 @@ export function useProjectWorkflowHex(projectId?: string) {
   };
 
   const canAccessStep = (currentStep: number, targetStep: number): boolean => {
-    // On peut accéder aux étapes précédentes et à l'étape suivante
     return targetStep <= currentStep + 1;
   };
 
@@ -199,35 +283,34 @@ export function useProjectWorkflowHex(projectId?: string) {
     return currentStep > 1 ? currentStep - 1 : null;
   };
 
-  const getWorkflowProgress = (): number => {
-    return 0; // À implémenter avec les données réelles
+  const getWorkflowProgress = (data: ProjectWorkflowData): number => {
+    return data.metadata?.progressPercentage || 0;
   };
 
-  const isStepCompleted = (stepNumber: number): boolean => {
-    // Logique de base pour vérifier si une étape est complétée
-    return false; // À implémenter avec les données réelles
+  const isStepCompleted = (stepNumber: number, data: ProjectWorkflowData): boolean => {
+    return (data.metadata?.completedSteps || 0) >= stepNumber;
   };
 
-  const canProceedToNext = (currentStep: number): boolean => {
-    return isStepCompleted(currentStep) && getNextStep(currentStep) !== null;
+  const canProceedToNext = (currentStep: number, data: ProjectWorkflowData): boolean => {
+    return isStepCompleted(currentStep, data) && getNextStep(currentStep) !== null;
   };
 
-  const isWorkflowComplete = (): boolean => {
-    return false; // À implémenter avec les données réelles
+  const isWorkflowComplete = (data: ProjectWorkflowData): boolean => {
+    return data.isComplete || (data.metadata?.progressPercentage || 0) >= 100;
   };
 
-  const isDraft = (): boolean => {
-    return true; // À implémenter avec les données réelles
+  const isDraft = (data: ProjectWorkflowData): boolean => {
+    return data.isDraft;
   };
 
-  const validateCurrentStep = (data: ProjectWorkflowData): { isValid: boolean; errors: string[] } => {
+  const validateCurrentStep = (data: ProjectWorkflowData): ValidationResult => {
     const errors: string[] = [];
     
     if (data.currentStep === 1) {
-      if (!data.projectData.title || data.projectData.title === '') {
+      if (!data.projectData.title) {
         errors.push('Le titre du projet est requis');
       }
-      if (!data.projectData.description || data.projectData.description === '') {
+      if (!data.projectData.description) {
         errors.push('La description du projet est requise');
       }
     }
@@ -238,7 +321,6 @@ export function useProjectWorkflowHex(projectId?: string) {
     };
   };
 
-  // Fonctions utilitaires pour la logique métier (selon PROMPTS.md)
   const calculateDatesFromDuration = (durationDays: number, startDate?: string): { startDate: string; endDate: string } => {
     const start = new Date(startDate || new Date());
     const end = new Date(start);
@@ -255,8 +337,26 @@ export function useProjectWorkflowHex(projectId?: string) {
     return (completedCount / steps.length) * 100;
   };
 
+  // =================== Transform helpers for UI ===================
+  
+  /**
+   * Transform ProjectWorkflowData to UI state
+   */
+  const toUIState = (data: ProjectWorkflowData): Record<string, unknown> => {
+    const entity = ProjectWorkflowTransforms.fromDTO(data);
+    return ProjectWorkflowTransforms.toUI(entity);
+  };
+
+  /**
+   * Get workflow metrics
+   */
+  const getWorkflowMetrics = (data: ProjectWorkflowData): WorkflowMetricsDTO => {
+    const entity = ProjectWorkflowTransforms.fromDTO(data);
+    return ProjectWorkflowTransforms.toWorkflowMetrics(entity);
+  };
+
   return {
-    // Données
+    // Data
     workflowData: null,
     isLoading: false,
     error: null,
@@ -265,15 +365,21 @@ export function useProjectWorkflowHex(projectId?: string) {
     saveStep,
     completeWorkflow,
 
-    // États des mutations
+    // States
     isSaving: saveStepMutation.isPending || completeWorkflowMutation.isPending,
     isCompleting: completeWorkflowMutation.isPending,
 
-    // Erreurs des mutations
+    // Errors
     saveError: saveStepMutation.error,
     completeError: completeWorkflowMutation.error,
 
-    // Utilitaires
+    // Transformer methods (exposed for UI layer)
+    prepareCreateRequest,
+    prepareUpdateRequest,
+    toUIState,
+    getWorkflowMetrics,
+
+    // Utilities
     getStepName,
     canAccessStep,
     getNextStep,

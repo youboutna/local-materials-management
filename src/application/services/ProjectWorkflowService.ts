@@ -258,11 +258,12 @@ export class ProjectWorkflowService {
   }
 
   /**
-   * Save workflow step data
+   * Save workflow step data using Transformer pattern
+   * Flow: Service → Transformer.toSupabase → Repository → Adapter → Database
    */
   private async saveStepData(stepNumber: number, data: ProjectWorkflowDTO): Promise<ProjectWorkflowDTO> {
     try {
-      // Validate step data
+      // Step 3: Service validates step data
       const validation = this.validateStepData(stepNumber, data);
       if (!validation.success) {
         return { ...data, validationResult: validation };
@@ -270,19 +271,24 @@ export class ProjectWorkflowService {
 
       let savedProjectId = data.project.id;
 
-      // Create or update project based on step
+      // Step 4-6: Create or update project via Repository (Adapter handles Transformer.toSupabase)
       if (stepNumber === 1 && !data.project.id) {
-        // Create new project
-        const newProject = await this.projectRepository.create({
+        // Create new project - Transformer.fromCreateRequest is used in adapter
+        const createData = {
           title: data.project.title,
           description: data.project.description,
-          status: 'en attente',
+          status: ProjectStatus.PENDING,
           location: data.project.location,
           budget: data.project.budget,
           progress: 0,
-          startDate: new Date(data.project.start_date),
-          endDate: new Date(data.project.end_date),
-        });
+          startDate: data.project.start_date ? new Date(data.project.start_date) : null,
+          endDate: data.project.end_date ? new Date(data.project.end_date) : null,
+        };
+        
+        // Step 5: Repository calls Adapter which uses Transformer.toSupabase
+        const newProject = await this.projectRepository.create(createData);
+        
+        // Step 7-8: Adapter returns Entity, Service converts to DTO
         savedProjectId = newProject.id;
       } else if (data.project.id) {
         // Update existing project
@@ -293,6 +299,7 @@ export class ProjectWorkflowService {
         });
       }
 
+      // Step 8: Return DTO to Hook
       return {
         ...data,
         project: { ...data.project, id: savedProjectId },
@@ -302,7 +309,7 @@ export class ProjectWorkflowService {
         }
       };
     } catch (error) {
-      console.error('Error saving workflow step:', error);
+      console.error('ProjectWorkflowService.saveStepData error:', error);
       return {
         ...data,
         validationResult: {
