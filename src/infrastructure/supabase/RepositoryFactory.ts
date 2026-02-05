@@ -611,4 +611,22 @@ export class RepositoryFactory {
   static getDataSource(): 'supabase' | 'java_api' | 'prisma' | 'localStorage' | 'postgis' {
     return currentDataSource;
   }
+
+  /**
+   * Get Workspace Repository instance
+   * Lazy loaded for memory efficiency
+   * NOTE: WorkspaceRepository not yet implemented
+   */
+  static getWorkspaceRepository(): IWorkspaceRepository {
+    throw new Error('WorkspaceRepository not yet implemented. Use local state management until database table is available');
+  }
+
+  /**
+   * Get Submission Secret Repository instance
+   * Lazy loaded for memory efficiency
+   * NOTE: SubmissionSecretRepository not yet implemented
+   */
+  static getSubmissionSecretRepository(): any {
+    throw new Error('SubmissionSecretRepository not yet implemented');
+  }
 }

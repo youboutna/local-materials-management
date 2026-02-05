@@ -88,7 +88,7 @@ export class WorkflowOrchestrator {
     this.projectRepository = RepositoryFactory.getProjectRepository();
     this.milestoneRepository = RepositoryFactory.getMilestoneRepository();
     this.phaseRepository = RepositoryFactory.getPhaseRepository();
-    this.paymentService = new PaymentService();
+    this.paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
   }
 
   /**
@@ -225,7 +225,7 @@ export class WorkflowOrchestrator {
       this.emit(paymentEvent);
 
       // 4. Mettre à jour le budget restant
-      const remainingBudget = decompte.contract_amount - decompte.cumulative_amount;
+      const remainingBudget = (decompte.contract_amount || 0) - (decompte.cumulative_amount || 0);
       const budgetEvent: WorkflowEvent = {
         type: 'BUDGET_UPDATED',
         payload: { remaining: remainingBudget },
@@ -253,7 +253,7 @@ export class WorkflowOrchestrator {
     try {
       // Get all milestones for the project
       const milestoneDTOs = await this.milestoneRepository.findByProjectId(this.projectId);
-      const allMilestones = MilestoneTransformer.fromDTOs(milestoneDTOs);
+      const allMilestones = milestoneDTOs.map(dto => MilestoneTransformer.fromDTO(dto));
       
       // Filter milestones for this phase
       const phaseMilestones = allMilestones.filter(milestone => 
@@ -550,7 +550,7 @@ export class WorkflowOrchestrator {
       
       // Validate milestone completion prerequisites
       const milestoneDTOs = await this.milestoneRepository.findByProjectId(this.projectId);
-      const milestones = MilestoneTransformer.fromDTOs(milestoneDTOs);
+      const milestones = milestoneDTOs.map(dto => MilestoneTransformer.fromDTO(dto));
       const incompleteMilestones = milestones.filter(m => !m.isCompleted() && m.configuration.isCritical);
       if (incompleteMilestones.length > 0) {
         issues.push(`${incompleteMilestones.length} critical milestones are not completed`);
@@ -592,7 +592,7 @@ export class WorkflowOrchestrator {
       ]);
       
       // Transform DTOs to domain entities
-      const milestones = MilestoneTransformer.fromDTOs(milestoneDTOs);
+      const milestones = milestoneDTOs.map(dto => MilestoneTransformer.fromDTO(dto));
       const payments = paymentDTOs.map(paymentDTO => PaymentTransformer.toDomain(paymentDTO));
       
       // Calculate real metrics
@@ -605,7 +605,7 @@ export class WorkflowOrchestrator {
       
       if (phaseId) {
         phaseMilestones = milestones.filter(m => this.isMilestoneForPhase(m, phaseId));
-        phasePayments = payments.filter(p => p.phaseId === phaseId);
+        phasePayments = payments.filter(p => (p as any).phaseId === phaseId);
       }
       
       // Create synthetic events from real data
