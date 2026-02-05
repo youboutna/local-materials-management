@@ -25,7 +25,7 @@ const SuppliersManagement = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<SupplierMgmtFormData>({
     name: '',
-    contact_person: '',
+    contactPerson: '',
     email: '',
     phone: '',
     address: '',
@@ -43,7 +43,7 @@ const SuppliersManagement = () => {
   const resetForm = () => {
     setFormData({
       name: '',
-      contact_person: '',
+      contactPerson: '',
       email: '',
       phone: '',
       address: '',
@@ -86,7 +86,7 @@ const SuppliersManagement = () => {
 }) => {
     setFormData({
       name: supplier.name || '',
-      contact_person: supplier.contacts?.[0]?.name || '',
+      contactPerson: supplier.contacts?.[0]?.name || '',
       email: supplier.email || '',
       phone: supplier.phone || '',
       address: supplier.address || '',
@@ -158,8 +158,8 @@ const SuppliersManagement = () => {
                 <div>
                   <label className="text-sm font-medium">Personne de contact</label>
                   <Input
-                    value={formData.contact_person}
-                    onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
+                    value={formData.contactPerson}
+                    onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
                   />
                 </div>
                 <div>

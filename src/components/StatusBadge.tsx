@@ -10,49 +10,56 @@ interface StatusBadgeProps {
 }
 
 const getStatusConfig = (status: StatusType) => {
-  switch (status) {
-    case 'en cours':
-      return {
-        bgColor: 'bg-blue-50',
-        textColor: 'text-blue-700',
-        borderColor: 'border-blue-200',
-        dotColor: 'bg-blue-500',
-      };
-    case 'terminé':
-      return {
-        bgColor: 'bg-green-50',
-        textColor: 'text-green-700',
-        borderColor: 'border-green-200',
-        dotColor: 'bg-green-500',
-      };
-    case 'en attente':
-      return {
-        bgColor: 'bg-amber-50',
-        textColor: 'text-amber-700',
-        borderColor: 'border-amber-200',
-        dotColor: 'bg-amber-500',
-      };
-    case 'en inspection':
-      return {
-        bgColor: 'bg-yellow-50',
-        textColor: 'text-yellow-700',
-        borderColor: 'border-yellow-200',
-        dotColor: 'bg-yellow-500',
-      };
-    case 'suspendu':
-      return {
-        bgColor: 'bg-purple-50',
-        textColor: 'text-purple-700',
-        borderColor: 'border-purple-200',
-        dotColor: 'bg-purple-500',
-      };
-    case 'annulé':
-      return {
-        bgColor: 'bg-red-50',
-        textColor: 'text-red-700',
-        borderColor: 'border-red-200',
-        dotColor: 'bg-red-500',
-      };
+   const statusValue = status?.toLowerCase() || '';
+   
+   switch (statusValue) {
+     case 'en cours':
+     case 'encours':
+       return {
+         bgColor: 'bg-blue-50',
+         textColor: 'text-blue-700',
+         borderColor: 'border-blue-200',
+         dotColor: 'bg-blue-500',
+       };
+     case 'terminé':
+     case 'termine':
+       return {
+         bgColor: 'bg-green-50',
+         textColor: 'text-green-700',
+         borderColor: 'border-green-200',
+         dotColor: 'bg-green-500',
+       };
+     case 'en attente':
+     case 'en_attente':
+       return {
+         bgColor: 'bg-amber-50',
+         textColor: 'text-amber-700',
+         borderColor: 'border-amber-200',
+         dotColor: 'bg-amber-500',
+       };
+     case 'en inspection':
+     case 'en_inspection':
+       return {
+         bgColor: 'bg-yellow-50',
+         textColor: 'text-yellow-700',
+         borderColor: 'border-yellow-200',
+         dotColor: 'bg-yellow-500',
+       };
+     case 'suspendu':
+       return {
+         bgColor: 'bg-purple-50',
+         textColor: 'text-purple-700',
+         borderColor: 'border-purple-200',
+         dotColor: 'bg-purple-500',
+       };
+     case 'annulé':
+     case 'annule':
+       return {
+         bgColor: 'bg-red-50',
+         textColor: 'text-red-700',
+         borderColor: 'border-red-200',
+         dotColor: 'bg-red-500',
+       };
     // Inspection statuses
     case 'approuvée':
       return {

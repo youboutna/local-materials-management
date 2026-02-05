@@ -3,12 +3,12 @@ import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { ProjectData } from '@/dtos/entities/ProjectDTO';
-import { MAURITANIA_REGIONS } from '@/types/mauritania';
-import { MapPin, Building2, TrendingUp, Users } from 'lucide-react';
+import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
+import { MAURITANIA_REGIONS } from "@/types/mauritania";
+import { MapPin, Building2, TrendingUp, Users } from "lucide-react";
 
 interface RegionalDashboardProps {
-  projects: ProjectData[];
+  projects: ProjectDTO[];
   materials?: any[];
   workspaces?: any[];
 }
