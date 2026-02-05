@@ -7,9 +7,10 @@
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
+import { Inspection, InspectionStatus as DomainInspectionStatus } from '@/domain/entities/Inspection';
 import { NotificationService } from './NotificationService';
 
-export type InspectionStatus = 'scheduled' | 'in_progress' | 'completed' | 'approved' | 'rejected' | 'pending';
+export type InspectionStatus = 'scheduled' | 'in_progress' | 'completed' | 'approved' | 'rejected' | 'pending' | 'requested' | 'requires_changes' | 'cancelled';
 
 export interface InspectionData {
   id?: string;
@@ -29,7 +30,7 @@ export interface InspectionData {
 }
 
 export interface InspectionUpdates {
-  status: 'pending' | 'in_progress' | 'completed' | 'rejected';
+  status: InspectionStatus;
   completedDate?: string;
   notes?: string;
   inspectorId?: string;
@@ -44,12 +45,6 @@ export interface InspectionFinding {
   createdAt: string;
   updatedAt?: string;
   photoUrls?: string[];
-}
-
-export interface InspectionUpdateData {
-  status: InspectionStatus;
-  completedDate?: string;
-  comments?: string;
 }
 
 export const MANDATORY_INSPECTION_FIELDS = {
@@ -140,17 +135,20 @@ export class InspectionMonitoringService {
         throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
       }
 
-      const updates: InspectionUpdateData = { status };
+      // Build updates compatible with Inspection entity
+      const updates: Record<string, unknown> = { 
+        status: status as DomainInspectionStatus 
+      };
       
       if (status === 'approved' || status === 'rejected' || status === 'completed') {
-        updates.completedDate = new Date().toISOString();
+        updates.completedAt = new Date().toISOString();
       }
       
-      if (findings) {
+      if (findings?.notes) {
         updates.comments = findings.notes;
       }
 
-      await this.inspectionRepository.update(id, updates);
+      await this.inspectionRepository.update(id, updates as Partial<Inspection>);
 
       return {
         id: inspection.id,
