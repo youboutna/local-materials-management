@@ -519,6 +519,18 @@ export class InspectionExecutionService {
     } catch (error) {
       console.error('Failed to upload document:', error);
       return null;
-    }
-  }
 }
+
+
+// Static method wrappers for backward compatibility
+(InspectionExecutionService as any).startInspection = function(inspectionId: string, location: any) {
+  return new InspectionExecutionService(RepositoryFactory.getInspectionExecutionRepository()).startInspection(inspectionId, location);
+};
+
+(InspectionExecutionService as any).uploadDocument = function(inspectionId: string, document: any) {
+  return new InspectionExecutionService(RepositoryFactory.getInspectionExecutionRepository()).uploadDocument(inspectionId, document);
+};
+
+(InspectionExecutionService as any).getInspectionExecution = function(inspectionId: string) {
+  return new InspectionExecutionService(RepositoryFactory.getInspectionExecutionRepository()).getInspectionExecution(inspectionId);
+};
