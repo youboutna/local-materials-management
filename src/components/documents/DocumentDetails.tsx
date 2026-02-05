@@ -104,8 +104,15 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
 
   const handleDownload = async () => {
     try {
-      // ✅ PRIORITY: camelCase first, snake_case fallback
-      const result = await downloadFile(document.fileUrl || document.file_url, document.fileName || document.file_name);
+      // ✅ PRIORITY: camelCase first, snake_case fallback with null safety
+      const fileUrl = document.fileUrl || document.file_url || '';
+      const fileName = document.fileName || document.file_name || 'document';
+      
+      if (!fileUrl) {
+        throw new Error('No file URL available');
+      }
+      
+      const result = await downloadFile(fileUrl, fileName);
       
       if (result.success) {
         toast({
@@ -266,7 +273,7 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
     );
   };
 
-  const IconComponent = getDocumentIcon(document.document_type);
+  const IconComponent = getDocumentIcon(document.document_type || 'other');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -293,11 +300,11 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
           <TabsContent value="details" className="space-y-6 overflow-y-auto max-h-[60vh]">
             {/* Status and Type */}
             <div className="flex items-center justify-between">
-              <Badge className={getStatusColor(document.status)}>
-                {getStatusLabel(document.status)}
+              <Badge className={getStatusColor(document.status || 'draft')}>
+                {getStatusLabel(document.status || 'draft')}
               </Badge>
-              <span className="text-sm text-gray-600">
-                {getDocumentTypeLabel(document.document_type)}
+              <span className="text-sm text-muted-foreground">
+                {getDocumentTypeLabel(document.document_type || 'other')}
               </span>
             </div>
 
@@ -345,13 +352,13 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
                     <Calendar className="h-4 w-4 text-gray-400" />
                     <span className="text-gray-600">Créé le:</span>
                     <span className="font-medium">
-                      {new Date(document.created_at).toLocaleDateString('fr-FR', {
+                      {document.created_at ? new Date(document.created_at).toLocaleDateString('fr-FR', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric',
                         hour: '2-digit',
                         minute: '2-digit'
-                      })}
+                      }) : 'Non disponible'}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">

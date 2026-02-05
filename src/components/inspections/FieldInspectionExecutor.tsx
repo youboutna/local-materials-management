@@ -112,7 +112,8 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
   useEffect(() => {
     if (!executionData.checklist?.length && !isStarted) {
       const defaultChecklist = InspectionExecutionService.getDefaultChecklist(inspectionType);
-      setExecutionData(prev => ({ ...prev, checklist: defaultChecklist }));
+      // Note: getDefaultChecklist returns ChecklistItem[] synchronously
+      setExecutionData(prev => ({ ...prev, checklist: defaultChecklist as any }));
     }
   }, [inspectionType, isStarted]);
 
@@ -150,12 +151,17 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
       return;
     }
 
-    const inspectionService = new InspectionExecutionService(RepositoryFactory.getInspectionExecutionRepository());
-    const success = await inspectionService.startInspection(inspection.id, location);
-    if (success) {
-      setIsStarted(true);
-      toast.success('Inspection démarrée');
-    } else {
+    try {
+      const inspectionService = new InspectionExecutionService();
+      const success = await InspectionExecutionService.startInspectionStatic(inspection.id, location);
+      if (success) {
+        setIsStarted(true);
+        toast.success('Inspection démarrée');
+      } else {
+        toast.error('Erreur lors du démarrage');
+      }
+    } catch (error) {
+      console.error('Start inspection error:', error);
       toast.error('Erreur lors du démarrage');
     }
   };

@@ -519,18 +519,21 @@ export class InspectionExecutionService {
     } catch (error) {
       console.error('Failed to upload document:', error);
       return null;
+    }
+  }
 }
 
-
 // Static method wrappers for backward compatibility
-(InspectionExecutionService as any).startInspection = function(inspectionId: string, location: any) {
-  return new InspectionExecutionService(RepositoryFactory.getInspectionExecutionRepository()).startInspection(inspectionId, location);
+(InspectionExecutionService as any).uploadDocument = async function(
+  inspectionId: string, 
+  projectId: string, 
+  file: File, 
+  location?: { latitude: number; longitude: number }
+): Promise<any> {
+  return InspectionExecutionService.uploadDocumentStatic(inspectionId, projectId, file);
 };
 
-(InspectionExecutionService as any).uploadDocument = function(inspectionId: string, document: any) {
-  return new InspectionExecutionService(RepositoryFactory.getInspectionExecutionRepository()).uploadDocument(inspectionId, document);
-};
-
-(InspectionExecutionService as any).getInspectionExecution = function(inspectionId: string) {
-  return new InspectionExecutionService(RepositoryFactory.getInspectionExecutionRepository()).getInspectionExecution(inspectionId);
+(InspectionExecutionService as any).getInspectionExecution = async function(inspectionId: string): Promise<any> {
+  const data = await InspectionExecutionService.getExecutionData(inspectionId);
+  return data;
 };

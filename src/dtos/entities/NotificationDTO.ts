@@ -28,6 +28,9 @@ export interface CreateNotificationRequestDTO {
   expires_at?: string;
   action_url?: string;
   metadata?: Record<string, any>;
+  // Legacy fields for backward compatibility
+  related_id?: string;
+  read?: boolean;
 }
 
 export interface UpdateNotificationRequestDTO {
