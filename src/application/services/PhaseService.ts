@@ -108,7 +108,7 @@ export class PhaseService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, `Validation failed: ${validation.errors.join(', ')}`);
       }
 
-      const entity = PhaseTransformer.fromCreateRequest(phaseData);
+      const entity = PhaseTransformer.fromCreateRequest(phaseData, crypto.randomUUID());
       const createdEntity = await this.phaseRepository.create(entity);
       const dto = PhaseTransformer.toDTO(createdEntity);
       return this.convertLegacyToPhaseDTO(dto);

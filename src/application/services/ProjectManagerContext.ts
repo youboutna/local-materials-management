@@ -1,5 +1,30 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { ProjectManagerState, ProjectAlert, AlertType, AlertSeverity, ProjectStats } from './projectManagerWithActions';
+
+// Types for ProjectManager
+export type AlertType = 'budget_alert' | 'schedule_alert' | 'quality_alert' | 'risk_alert';
+export type AlertSeverity = 'low' | 'medium' | 'high' | 'critical';
+
+export interface ProjectAlert {
+  id: string;
+  type: AlertType;
+  severity: AlertSeverity;
+  message: string;
+  timestamp: string;
+  acknowledged?: boolean;
+}
+
+export interface ProjectStats {
+  totalAlerts: number;
+  criticalAlerts: number;
+  activeRisks: number;
+  overdueTasks: number;
+}
+
+export interface ProjectManagerState {
+  alerts: ProjectAlert[];
+  stats: ProjectStats;
+  lastUpdated: string;
+}
 
 interface ProjectManager {
   getAlertsByType: (type: AlertType) => ProjectAlert[];
@@ -43,7 +68,8 @@ export const ProjectManagerProvider: React.FC<ProjectManagerProviderProps> = ({ 
   const [state, setState] = React.useState<ProjectManagerState>(manager.getState());
 
   const runChecks = React.useCallback(() => {
-    const newState = manager.runChecks();
+    manager.runChecks();
+    const newState = manager.getState();
     setState(newState);
   }, [manager]);
 

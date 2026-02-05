@@ -10,6 +10,7 @@ import { IProjectRepository } from '@/domain/repositories';
 import { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { ProjectDTO, CreateProjectDTO, UpdateProjectDTO, ProjectSummaryDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
+import { ProjectAnalyticsDTO } from '@/dtos/entities/ProjectAnalyticsDTO';
 
 
 /**
@@ -43,26 +44,28 @@ export class ProjectService {
   ) {}
 
   // Helper method to transform Project to ProjectDTO
-  private toDTO(project: Project): ProjectDTO {
+  private toDTO(project: Project): any {
+    const status = (project.status as unknown as ProjectStatus) || 'enCours';
     return {
       id: project.id,
       title: project.title,
       description: project.description || '',
       location: project.location || '',
-      status: project.status,
-      progress: project.progress,
+      status: status,
+      progress: project.progress || 0,
       budget: project.budget,
       startDate: project.startDate?.toISOString?.() || '',
-      endDate: project.endDate?.toISOString?.() || undefined,
+      endDate: project.endDate?.toISOString?.(),
       teamSize: project.teamSize || 0,
       thumbnail: project.thumbnail || '',
+      currency: 'XOF',
       coordinates: project.coordinates ? {
         latitude: project.coordinates.latitude,
         longitude: project.coordinates.longitude
       } : undefined,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
-    };
+    } as any;
   }
 
   /**
@@ -81,7 +84,6 @@ export class ProjectService {
         description: createDTO.description,
         location: createDTO.location,
         status: createDTO.status as ProjectStatus,
-        progress: createDTO.progress || 0,
         budget: createDTO.budget,
         startDate: createDTO.startDate ? new Date(createDTO.startDate) : null,
         endDate: createDTO.endDate ? new Date(createDTO.endDate) : null,
@@ -102,8 +104,8 @@ export class ProjectService {
   }
 
   /**
-   * Update an existing project with validation
-   */
+    * Update an existing project with validation
+    */
   async updateProject(id: string, updateDTO: UpdateProjectDTO): Promise<ProjectDTO> {
     try {
       const validation = this.validateProjectData(updateDTO);
@@ -113,19 +115,15 @@ export class ProjectService {
       }
 
       const projectData: Partial<Project> = {};
-      if (updateDTO.title !== undefined) projectData.title = updateDTO.title;
-      if (updateDTO.description !== undefined) projectData.description = updateDTO.description;
-      if (updateDTO.location !== undefined) projectData.location = updateDTO.location;
-      if (updateDTO.status !== undefined) projectData.status = updateDTO.status;
-      if (updateDTO.progress !== undefined) projectData.progress = updateDTO.progress;
-      if (updateDTO.budget !== undefined) projectData.budget = updateDTO.budget;
-      if (updateDTO.startDate !== undefined) projectData.startDate = new Date(updateDTO.startDate);
-      if (updateDTO.endDate !== undefined) projectData.endDate = new Date(updateDTO.endDate);
-      if (updateDTO.teamSize !== undefined) projectData.teamSize = updateDTO.teamSize;
-      if (updateDTO.thumbnail !== undefined) {
-        // thumbnail is read-only in the domain entity, so we skip it for now
-        // TODO: Implement thumbnail update when domain entity supports it
-      }
+      if (updateDTO.title !== undefined && updateDTO.title !== null) projectData.title = updateDTO.title as string;
+      if (updateDTO.description !== undefined && updateDTO.description !== null) projectData.description = updateDTO.description as string;
+      if (updateDTO.location !== undefined && updateDTO.location !== null) projectData.location = updateDTO.location as string;
+      if (updateDTO.status !== undefined && updateDTO.status !== null) projectData.status = updateDTO.status as ProjectStatus;
+      if (updateDTO.progress !== undefined && updateDTO.progress !== null) projectData.progress = updateDTO.progress as number;
+      if (updateDTO.budget !== undefined && updateDTO.budget !== null) projectData.budget = updateDTO.budget as number;
+      if (updateDTO.startDate !== undefined && updateDTO.startDate !== null) projectData.startDate = new Date(updateDTO.startDate as string);
+      if (updateDTO.endDate !== undefined && updateDTO.endDate !== null) projectData.endDate = new Date(updateDTO.endDate as string);
+      if (updateDTO.teamSize !== undefined && updateDTO.teamSize !== null) projectData.teamSize = updateDTO.teamSize as number;
 
       const project = await this.projectRepository.update(id, projectData);
       return this.toDTO(project);
