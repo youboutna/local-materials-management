@@ -11,12 +11,29 @@ import { EmployeeService } from './EmployeeService';
 import { SupplierService } from './SupplierService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import {
-  ConsistencyReport,
-  ConsistencyIssue,
-  MonitoringMetrics,
-  MonitoringReport
-} from '@/dtos/entities/ConsistencyDTO';
+import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
+
+// Local type definitions that match what this service needs
+export interface ConsistencyIssue {
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  recordId: string;
+  field: string;
+  message: string;
+  expectedValue: string | number | boolean | Date;
+  actualValue: string | number | boolean | Date;
+  suggestedFix: string;
+}
+
+export interface ConsistencyReport {
+  timestamp: Date;
+  entity: string;
+  totalRecords: number;
+  consistentRecords: number;
+  inconsistentRecords: number;
+  consistencyScore: number;
+  issues: ConsistencyIssue[];
+  recommendations: string[];
+}
 
 export interface MonitoringReport {
   timestamp: string;
@@ -35,7 +52,7 @@ export class DataConsistencyMonitoringService {
 
   constructor() {
     this.projectService = new ProjectService(RepositoryFactory.getProjectRepository());
-    this.phaseService = new PhaseService(RepositoryFactory.getPhaseRepository());
+    this.phaseService = new PhaseService(RepositoryFactory.getPhaseRepository(), new PhaseTransformer());
     this.materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
     this.employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
     this.supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
@@ -80,61 +97,41 @@ export class DataConsistencyMonitoringService {
    * Generate complete monitoring report
    */
   static async generateMonitoringReport(): Promise<MonitoringReport> {
-    const service = new DataConsistencyMonitoringService();
     const reports = await DataConsistencyMonitoringService.monitorAllDataConsistency();
     
     // Calculate overall metrics
-    const entityScores: Record<string, number> = {};
     let totalIssues = 0;
     let criticalIssues = 0;
-    let highIssues = 0;
-    let mediumIssues = 0;
-    let lowIssues = 0;
+    const warnings: string[] = [];
 
     for (const report of reports) {
-      entityScores[report.entity] = report.consistencyScore;
       totalIssues += report.issues.length;
       criticalIssues += report.issues.filter(i => i.severity === 'critical').length;
-      highIssues += report.issues.filter(i => i.severity === 'high').length;
-      mediumIssues += report.issues.filter(i => i.severity === 'medium').length;
-      lowIssues += report.issues.filter(i => i.severity === 'low').length;
+      
+      // Add high priority issues as warnings
+      const highIssues = report.issues.filter(i => i.severity === 'high');
+      for (const issue of highIssues) {
+        warnings.push(`${report.entity}: ${issue.message}`);
+      }
     }
 
-    const scoreValues = Object.values(entityScores);
-    const overallConsistencyScore = scoreValues.length > 0 
-      ? scoreValues.reduce((sum, s) => sum + s, 0) / scoreValues.length 
-      : 100;
+    // Calculate total checks performed
+    const checksPerformed = reports.reduce((sum, r) => sum + r.totalRecords, 0);
 
     // Generate recommendations
-    const recommendations: string[] = [];
     if (criticalIssues > 0) {
-      recommendations.push('Address critical data consistency issues immediately');
+      warnings.push('Address critical data consistency issues immediately');
     }
-    if (highIssues > 0) {
-      recommendations.push('Review and fix high priority consistency issues');
-    }
-    if (overallConsistencyScore < 80) {
-      recommendations.push('Improve overall data quality - score below threshold');
+    if (totalIssues > 10) {
+      warnings.push('Improve overall data quality - high number of issues found');
     }
 
     return {
-      summary: {
-        overallConsistencyScore,
-        entityScores,
-        totalIssues,
-        criticalIssues,
-        highIssues,
-        mediumIssues,
-        lowIssues,
-        lastMonitored: new Date()
-      },
-      reports,
-      recommendations,
-      trends: {
-        improving: scoreValues.filter(s => s > 90).length > 0 ? ['Projects', 'Materials'] : [],
-        declining: scoreValues.filter(s => s < 70).length > 0 ? ['Phases'] : [],
-        stable: ['Employees', 'Suppliers']
-      }
+      timestamp: new Date().toISOString(),
+      checksPerformed,
+      issuesFound: totalIssues,
+      criticalIssues,
+      warnings
     };
   }
 

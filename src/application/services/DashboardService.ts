@@ -49,7 +49,7 @@ export class DashboardService {
     this.projectService = new ProjectService(RepositoryFactory.getProjectRepository());
     this.employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
     this.materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
-    this.documentService = new DocumentService(RepositoryFactory.getDocumentRepository());
+    this.documentService = new DocumentService();
     this.paymentService = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
     this.inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
     this.supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
@@ -93,23 +93,25 @@ export class DashboardService {
       });
 
       // Calculate basic statistics
-      const activeProjects = projectsData.filter(p => p.status === 'en cours').length;
+      const activeProjects = projectsData.filter(p => 
+        p.status === 'in_progress' || String(p.status) === 'en cours'
+      ).length;
       const totalProjects = projectsData.length;
       const totalBudget = projectsData.reduce((sum, p) => sum + (p.budget || 0), 0);
 
       // Status distribution
-      const statusColors = {
-        'en cours': '#3b82f6',
-        'terminé': '#10b981',
-        'en attente': '#f59e0b',
-        'annulé': '#ef4444'
+      const statusColors: Record<string, string> = {
+        'in_progress': '#3b82f6',
+        'completed': '#10b981',
+        'pending': '#f59e0b',
+        'cancelled': '#ef4444'
       };
 
       const statusDistribution = [
-        { name: 'en cours', value: projectsData.filter(p => p.status === 'en cours').length, color: statusColors['en cours'] },
-        { name: 'terminé', value: projectsData.filter(p => p.status === 'terminé').length, color: statusColors['terminé'] },
-        { name: 'en attente', value: projectsData.filter(p => p.status === 'en attente').length, color: statusColors['en attente'] },
-        { name: 'annulé', value: projectsData.filter(p => p.status === 'annulé').length, color: statusColors['annulé'] },
+        { name: 'in_progress', value: projectsData.filter(p => p.status === 'in_progress').length, color: statusColors['in_progress'] },
+        { name: 'completed', value: projectsData.filter(p => p.status === 'completed').length, color: statusColors['completed'] },
+        { name: 'pending', value: projectsData.filter(p => p.status === 'pending').length, color: statusColors['pending'] },
+        { name: 'cancelled', value: projectsData.filter(p => p.status === 'cancelled').length, color: statusColors['cancelled'] },
       ];
 
       // Health distribution based on project progress
@@ -142,7 +144,7 @@ export class DashboardService {
         : 0;
 
       // Budget utilization
-      const totalExpenses = paymentsData.filter(p => p.status === 'approved' || p.status === 'processed').reduce((sum, p) => sum + p.amount, 0);
+      const totalExpenses = paymentsData.filter(p => p.status === 'approved' || p.status === 'paid').reduce((sum, p) => sum + p.amount, 0);
       const budgetUtilization = totalBudget > 0 ? (totalExpenses / totalBudget) * 100 : 0;
 
       // Risk metrics
@@ -163,25 +165,25 @@ export class DashboardService {
         healthDistribution,
         performanceMetrics: {
           averageProjectHealth,
-          averageMaterialEfficiency: materialsData.length > 0 ? materialsData.reduce((sum, m) => sum + (m.availableQuantity || 0), 0) / materialsData.length : 0,
-          averagePaymentEfficiency: paymentsData.length > 0 ? paymentsData.filter(p => p.status === 'processed').length / paymentsData.length * 100 : 0,
+          averageMaterialEfficiency: materialsData.length > 0 ? materialsData.reduce((sum, m) => sum + (m.quantity || 0), 0) / materialsData.length : 0,
+          averagePaymentEfficiency: paymentsData.length > 0 ? paymentsData.filter(p => p.status === 'paid').length / paymentsData.length * 100 : 0,
           averageInspectionCompliance: inspectionsData.length > 0 ? inspectionsData.filter(i => i.status === 'completed').length / inspectionsData.length * 100 : 0,
           averageEmployeeProductivity: employeesData.length > 0 ? employeesData.reduce((sum, e) => sum + (String(e.role) === 'project_manager' ? 1 : 0), 0) / employeesData.length * 100 : 0,
           averageSupplierReliability: suppliersData.length > 0 ? suppliersData.filter(s => s.isActive).length / suppliersData.length * 100 : 0,
-          averageDocumentCompliance: documentsData.length > 0 ? documentsData.filter(d => d.status === 'validated').length / documentsData.length * 100 : 0,
+          averageDocumentCompliance: documentsData.length > 0 ? documentsData.filter(d => d.status === 'approved').length / documentsData.length * 100 : 0,
         },
         financialMetrics: {
           totalRevenue: totalBudget,
-          totalExpenses: paymentsData.filter(p => p.status === 'approved' || p.status === 'processed').reduce((sum, p) => sum + p.amount, 0),
-          profitMargin: totalBudget > 0 ? ((totalBudget - paymentsData.filter(p => p.status === 'approved' || p.status === 'processed').reduce((sum, p) => sum + p.amount, 0)) / totalBudget) * 100 : 0,
-          cashFlow: paymentsData.filter(p => p.status === 'processed').reduce((sum, p) => sum + p.amount, 0) - paymentsData.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0),
+          totalExpenses: paymentsData.filter(p => p.status === 'approved' || p.status === 'paid').reduce((sum, p) => sum + p.amount, 0),
+          profitMargin: totalBudget > 0 ? ((totalBudget - paymentsData.filter(p => p.status === 'approved' || p.status === 'paid').reduce((sum, p) => sum + p.amount, 0)) / totalBudget) * 100 : 0,
+          cashFlow: paymentsData.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0) - paymentsData.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0),
           budgetUtilization,
         },
         riskMetrics: {
           highRiskProjects,
-          highRiskMaterials: materialsData.filter(m => m.availableQuantity <= 5).length, // Low stock materials
+          highRiskMaterials: materialsData.filter(m => (m.quantity || 0) <= 5).length, // Low stock materials
           overduePayments: paymentsData.filter(p => {
-            const paymentDate = new Date(p.requested_date);
+            const paymentDate = new Date(p.createdAt || new Date());
             const daysOverdue = Math.floor((Date.now() - paymentDate.getTime()) / (1000 * 60 * 60 * 24));
             return p.status === 'pending' && daysOverdue > 30;
           }).length,
@@ -193,10 +195,8 @@ export class DashboardService {
           overloadedEmployees: employeesData.filter(e => String(e.role) === 'project_manager').length, // Managers as proxy for workload
           unreliableSuppliers: suppliersData.filter(s => !s.isActive).length,
           expiredDocuments: documentsData.filter(d => {
-            if (d.expiryDate) {
-              return new Date(d.expiryDate) < new Date();
-            }
-            return false;
+            // Check if document status indicates expiration
+            return d.status === 'expired';
           }).length,
         },
       };

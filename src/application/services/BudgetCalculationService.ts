@@ -401,8 +401,9 @@ export class BudgetCalculationService {
 
     const now = new Date();
     const filteredPayments = payments.filter(payment => {
-      const paymentDate = new Date(payment.date);
-      // Filter logic based on period
+      const paymentDate = new Date(payment.paymentDate);
+      // Filter logic based on period - include all for now
+      return paymentDate <= now;
     });
 
     if (filteredPayments.length === 0) return 0;

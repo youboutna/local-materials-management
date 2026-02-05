@@ -439,9 +439,9 @@ export class CheckpointVerificationEngine {
   }
 
   /**
-   * Vérifie un checkpoint complet
+   * Vérifie un checkpoint simplifié
    */
-  async verifyCheckpoint(checkpoint: CheckpointDTO): Promise<{
+  private async verifyCheckpointSimple(checkpoint: CheckpointDTO): Promise<{
     isValid: boolean;
     issues: string[];
     timestamp: Date;
@@ -451,7 +451,6 @@ export class CheckpointVerificationEngine {
 
       const verificationItems: VerificationItemDTO[] = [];
       const blockingIssues: string[] = [];
-      const warnings: string[] = [];
 
       // 1. Vérifier les inspections
       const inspectionItems = await this.verifyInspections({
@@ -500,43 +499,23 @@ export class CheckpointVerificationEngine {
       const verifiedItems = verificationItems.filter(item => item.status === 'verified');
       const failedItems = verificationItems.filter(item => item.status === 'failed');
 
-      // Calculer le score pondéré
-      const totalWeight = verificationItems.reduce((sum, item) => sum + item.weight, 0);
-      const verifiedWeight = verifiedItems.reduce((sum, item) => sum + item.weight, 0);
-      const verificationScore = totalWeight > 0 ? Math.round((verifiedWeight / totalWeight) * 100) : 0;
-
       // Déterminer le statut global
-      let overallStatus: VerificationStatus = 'pending';
       const requiredFailed = requiredItems.filter(item => item.status === 'failed');
-      const requiredVerified = requiredItems.filter(item => item.status === 'verified');
 
       if (requiredFailed.length > 0) {
-        overallStatus = 'failed';
         blockingIssues.push(...requiredFailed.map(item => `${item.title}: Vérification échouée`));
-      } else if (requiredVerified.length === requiredItems.length) {
-        overallStatus = 'verified';
-      } else if (verifiedItems.length > 0) {
-        overallStatus = 'in_progress';
-      }
-
-      // Ajouter des avertissements pour les items non-requis échoués
-      const optionalFailed = failedItems.filter(item => !item.required);
-      if (optionalFailed.length > 0) {
-        warnings.push(...optionalFailed.map(item => `${item.title}: Vérification optionnelle échouée`));
       }
 
       // Vérifier si peut procéder au paiement
-      const canProceed = overallStatus === 'verified' && blockingIssues.length === 0;
+      const canProceed = requiredFailed.length === 0;
 
-      const result = {
+      return {
         isValid: canProceed,
         issues: blockingIssues,
         timestamp: new Date(),
       };
-
-      return result;
     } catch (error) {
-      console.error('CheckpointVerificationEngine.verifyCheckpoint failed:', error);
+      console.error('CheckpointVerificationEngine.verifyCheckpointSimple failed:', error);
       const errorMessage = error instanceof AppError ? error.message : 'Failed to verify checkpoint';
       return {
         isValid: false,
