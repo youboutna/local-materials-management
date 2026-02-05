@@ -52,7 +52,7 @@ export class DataConsistencyMonitoringService {
 
   constructor() {
     this.projectService = new ProjectService(RepositoryFactory.getProjectRepository());
-    this.phaseService = new PhaseService(RepositoryFactory.getPhaseRepository(), new PhaseTransformer());
+    this.phaseService = new PhaseService(RepositoryFactory.getPhaseRepository());
     this.materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
     this.employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
     this.supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
