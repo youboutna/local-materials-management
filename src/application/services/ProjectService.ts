@@ -1,22 +1,31 @@
 /**
  * Project Service - Hexagonal Architecture
- * Business logic layer with use cases
- * Clean separation between domain logic and infrastructure
+ * 
+ * Business use cases layer following the pattern:
+ * constructor(private repository: IEntityRepository) {}
+ * 
+ * async create(request: CreateEntityDTO): Promise<EntityDTO>
+ * async findById(id: string): Promise<EntityDTO | null>
+ * async findAll(): Promise<EntityDTO[]>
+ * async update(id: string, request: UpdateEntityDTO): Promise<EntityDTO | null>
+ * async delete(id: string): Promise<boolean>
  */
 
 import { Project, ProjectStatus } from '@/domain/entities/Project';
-import { ProjectStakeholderEntity, StakeholderType, StakeholderEntityType } from '@/domain/entities/ProjectStakeholder';
-import { IProjectRepository } from '@/domain/repositories';
+import { IProjectRepository, ProjectSummary } from '@/domain/repositories/IProjectRepository';
 import { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { ProjectDTO, CreateProjectDTO, UpdateProjectDTO, ProjectSummaryDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
-import { ProjectAnalyticsDTO } from '@/dtos/entities/ProjectAnalyticsDTO';
+import { 
+  ProjectDTO, 
+  CreateProjectDTO, 
+  UpdateProjectDTO, 
+  ProjectSummaryDTO, 
+  ProjectDetailDTO 
+} from '@/dtos/entities/ProjectDTO';
 import { StakeholderDTO } from '@/dtos/entities/StakeholderDTO';
+import { ProjectTransformer } from '@/dtos/transforms/ProjectTransformer';
 
+// =================== ERROR CLASSES ===================
 
-/**
- * Custom error class for project operations
- */
 export class ProjectServiceError extends Error {
   constructor(
     message: string,
@@ -35,138 +44,105 @@ export class ValidationError extends Error {
   }
 }
 
-/**
- * Project Service - Use Cases Implementation
- */
+// =================== SERVICE IMPLEMENTATION ===================
+
 export class ProjectService {
   constructor(
     private projectRepository: IProjectRepository,
     private stakeholderRepository?: IProjectStakeholderRepository
   ) {}
 
-  // Helper method to transform Project to ProjectDTO
-  private toDTO(project: Project): any {
-    const status = (project.status as unknown as ProjectStatus) || 'enCours';
-    return {
-      id: project.id,
-      title: project.title,
-      description: project.description || '',
-      location: project.location || '',
-      status: status,
-      progress: project.progress || 0,
-      budget: project.budget,
-      startDate: project.startDate?.toISOString?.() || '',
-      endDate: project.endDate?.toISOString?.(),
-      teamSize: project.teamSize || 0,
-      thumbnail: project.thumbnail || '',
-      currency: 'XOF',
-      coordinates: project.coordinates ? {
-        latitude: project.coordinates.latitude,
-        longitude: project.coordinates.longitude
-      } : undefined,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    } as any;
-  }
+  // =================== CORE CRUD OPERATIONS ===================
 
   /**
-   * Create a new project with validation
+   * Create a new project
+   * Flow: CreateDTO → Domain Entity → Repository → DTO
    */
-  async createProject(createDTO: CreateProjectDTO): Promise<ProjectDTO> {
+  async create(request: CreateProjectDTO): Promise<ProjectDTO> {
     try {
-      const validation = this.validateProjectData(createDTO);
+      this.validateCreateRequest(request);
       
-      if (!validation.isValid) {
-        throw new ValidationError('Project validation failed');
-      }
-
       const projectData: Partial<Project> = {
-        title: createDTO.title,
-        description: createDTO.description,
-        location: createDTO.location,
-        status: createDTO.status as ProjectStatus,
-        budget: createDTO.budget,
-        startDate: createDTO.startDate ? new Date(createDTO.startDate) : null,
-        endDate: createDTO.endDate ? new Date(createDTO.endDate) : null,
-        teamSize: createDTO.teamSize,
-        thumbnail: createDTO.thumbnail
+        title: request.title,
+        description: request.description,
+        location: request.location,
+        status: 'planifié' as ProjectStatus,
+        budget: request.budget,
+        progress: 0,
+        startDate: request.startDate ? new Date(request.startDate) : null,
+        endDate: request.endDate ? new Date(request.endDate) : null,
+        teamSize: request.teamSize,
+        thumbnail: request.thumbnail,
       };
 
       const project = await this.projectRepository.create(projectData);
-      return this.toDTO(project);
+      return ProjectTransformer.toDTO(project);
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       throw new ProjectServiceError(
         `Failed to create project: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'CREATE_PROJECT_ERROR',
-        error as Record<string, unknown>
+        'CREATE_ERROR'
       );
     }
   }
 
   /**
-    * Update an existing project with validation
-    */
-  async updateProject(id: string, updateDTO: UpdateProjectDTO): Promise<ProjectDTO> {
-    try {
-      const validation = this.validateProjectData(updateDTO);
-      
-      if (!validation.isValid) {
-        throw new ValidationError('Project validation failed');
-      }
-
-      const projectData: Partial<Project> = {};
-      if (updateDTO.title !== undefined && updateDTO.title !== null) projectData.title = updateDTO.title as string;
-      if (updateDTO.description !== undefined && updateDTO.description !== null) projectData.description = updateDTO.description as string;
-      if (updateDTO.location !== undefined && updateDTO.location !== null) projectData.location = updateDTO.location as string;
-      if (updateDTO.status !== undefined && updateDTO.status !== null) projectData.status = updateDTO.status as ProjectStatus;
-      if (updateDTO.progress !== undefined && updateDTO.progress !== null) projectData.progress = updateDTO.progress as number;
-      if (updateDTO.budget !== undefined && updateDTO.budget !== null) projectData.budget = updateDTO.budget as number;
-      if (updateDTO.startDate !== undefined && updateDTO.startDate !== null) projectData.startDate = new Date(updateDTO.startDate as string);
-      if (updateDTO.endDate !== undefined && updateDTO.endDate !== null) projectData.endDate = new Date(updateDTO.endDate as string);
-      if (updateDTO.teamSize !== undefined && updateDTO.teamSize !== null) projectData.teamSize = updateDTO.teamSize as number;
-
-      const project = await this.projectRepository.update(id, projectData);
-      return this.toDTO(project);
-    } catch (error) {
-      if (error instanceof ValidationError) throw error;
-      throw new ProjectServiceError(
-        `Failed to update project: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'UPDATE_PROJECT_ERROR',
-        error as Record<string, unknown>
-      );
-    }
-  }
-
-  /**
-   * Get project by ID
+   * Find project by ID
+   * Flow: Repository → Domain Entity → DTO
    */
-  async getProjectById(id: string): Promise<ProjectDTO | null> {
+  async findById(id: string): Promise<ProjectDTO | null> {
     try {
       const project = await this.projectRepository.findById(id);
       if (!project) return null;
-      return this.toDTO(project);
+      return ProjectTransformer.toDTO(project);
     } catch (error) {
       throw new ProjectServiceError(
-        `Failed to get project: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'GET_PROJECT_ERROR',
-        error as Record<string, unknown>
+        `Failed to find project: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'FIND_ERROR'
       );
     }
   }
 
   /**
-   * Get all projects
+   * Find all projects
+   * Flow: Repository → Domain Entities → DTOs
    */
-  async getAllProjects(): Promise<ProjectDTO[]> {
+  async findAll(): Promise<ProjectDTO[]> {
     try {
       const projects = await this.projectRepository.findAll();
-      return projects.map(project => this.toDTO(project));
+      return ProjectTransformer.manyToDTO(projects);
     } catch (error) {
       throw new ProjectServiceError(
-        `Failed to get all projects: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'GET_ALL_PROJECTS_ERROR',
-        error as Record<string, unknown>
+        `Failed to find projects: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'FIND_ALL_ERROR'
+      );
+    }
+  }
+
+  /**
+   * Update an existing project
+   * Flow: UpdateDTO → Repository → Domain Entity → DTO
+   */
+  async update(id: string, request: UpdateProjectDTO): Promise<ProjectDTO | null> {
+    try {
+      const projectData: Partial<Project> = {};
+      
+      if (request.title !== undefined && request.title !== null) projectData.title = String(request.title);
+      if (request.description !== undefined && request.description !== null) projectData.description = String(request.description);
+      if (request.location !== undefined && request.location !== null) projectData.location = String(request.location);
+      if (request.status !== undefined && request.status !== null) projectData.status = request.status as unknown as ProjectStatus;
+      if (request.progress !== undefined && request.progress !== null) projectData.progress = Number(request.progress);
+      if (request.budget !== undefined && request.budget !== null) projectData.budget = Number(request.budget);
+      if (request.startDate !== undefined && request.startDate !== null) projectData.startDate = new Date(String(request.startDate));
+      if (request.endDate !== undefined && request.endDate !== null) projectData.endDate = new Date(String(request.endDate));
+      if (request.teamSize !== undefined && request.teamSize !== null) projectData.teamSize = Number(request.teamSize);
+
+      const project = await this.projectRepository.update(id, projectData);
+      return ProjectTransformer.toDTO(project);
+    } catch (error) {
+      throw new ProjectServiceError(
+        `Failed to update project: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'UPDATE_ERROR'
       );
     }
   }
@@ -174,17 +150,43 @@ export class ProjectService {
   /**
    * Delete a project
    */
-  async deleteProject(id: string): Promise<void> {
+  async delete(id: string): Promise<boolean> {
     try {
       await this.projectRepository.delete(id);
+      return true;
     } catch (error) {
       throw new ProjectServiceError(
         `Failed to delete project: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'DELETE_PROJECT_ERROR',
-        error as Record<string, unknown>
+        'DELETE_ERROR'
       );
     }
   }
+
+  // =================== LEGACY ALIASES (for backward compatibility) ===================
+
+  async createProject(dto: CreateProjectDTO): Promise<ProjectDTO> {
+    return this.create(dto);
+  }
+
+  async getProjectById(id: string): Promise<ProjectDTO | null> {
+    return this.findById(id);
+  }
+
+  async getAllProjects(): Promise<ProjectDTO[]> {
+    return this.findAll();
+  }
+
+  async updateProject(id: string, dto: UpdateProjectDTO): Promise<ProjectDTO> {
+    const result = await this.update(id, dto);
+    if (!result) throw new ProjectServiceError('Project not found', 'NOT_FOUND');
+    return result;
+  }
+
+  async deleteProject(id: string): Promise<void> {
+    await this.delete(id);
+  }
+
+  // =================== SPECIALIZED QUERIES ===================
 
   /**
    * Get active projects only
@@ -192,12 +194,11 @@ export class ProjectService {
   async getActiveProjects(): Promise<ProjectDTO[]> {
     try {
       const projects = await this.projectRepository.findActiveProjects();
-      return projects.map(project => this.toDTO(project));
+      return ProjectTransformer.manyToDTO(projects);
     } catch (error) {
       throw new ProjectServiceError(
         `Failed to get active projects: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'GET_ACTIVE_PROJECTS_ERROR',
-        error as Record<string, unknown>
+        'GET_ACTIVE_ERROR'
       );
     }
   }
@@ -208,13 +209,12 @@ export class ProjectService {
   async getProjectsByStatus(status: string): Promise<ProjectDTO[]> {
     try {
       const allProjects = await this.projectRepository.findAll();
-      const projects = allProjects.filter(p => p.status === status);
-      return projects.map(project => this.toDTO(project));
+      const filtered = allProjects.filter(p => p.status === status);
+      return ProjectTransformer.manyToDTO(filtered);
     } catch (error) {
       throw new ProjectServiceError(
         `Failed to get projects by status: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'GET_PROJECTS_BY_STATUS_ERROR',
-        error as Record<string, unknown>
+        'GET_BY_STATUS_ERROR'
       );
     }
   }
@@ -227,32 +227,19 @@ export class ProjectService {
       const summary = await this.projectRepository.findSummary(id);
       if (!summary) return null;
 
-      return {
-        id: summary.id,
-        title: summary.title,
-        status: (summary.status as string) as any,
-        progress: summary.progress,
+      const project = await this.projectRepository.findById(id);
+      if (!project) return null;
+
+      return ProjectTransformer.toSummaryDTO(project, {
         phasesCount: summary.phasesCount,
         tasksCount: summary.tasksCount,
         inspectionsCount: summary.inspectionsCount,
         paymentsCount: summary.paymentsCount,
-        risksCount: 0,
-        lastActivity: undefined,
-        createdAt: '',
-        updatedAt: '',
-        description: '',
-        location: '',
-        budget: 0,
-        startDate: '',
-        teamSize: 0,
-        thumbnail: '',
-        currency: 'XOF'
-      };
+      });
     } catch (error) {
       throw new ProjectServiceError(
         `Failed to get project summary: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'GET_PROJECT_SUMMARY_ERROR',
-        error as Record<string, unknown>
+        'GET_SUMMARY_ERROR'
       );
     }
   }
@@ -262,33 +249,23 @@ export class ProjectService {
    */
   async getProjectWithDetails(id: string): Promise<ProjectDetailDTO | null> {
     try {
-      const projectWithRelated = await this.projectRepository.findWithRelatedData(id);
-      if (!projectWithRelated || !projectWithRelated.project) return null;
+      const data = await this.projectRepository.findWithRelatedData(id);
+      if (!data.project) return null;
 
-      const projectDTO = this.toDTO(projectWithRelated.project);
-      
-      // Cast methodology to the union type or use undefined
-      const methodology = projectDTO.methodology;
-      const validMethodology: 'waterfall' | 'agile' | 'hybrid' | undefined = 
-        methodology === 'waterfall' || methodology === 'agile' || methodology === 'hybrid' 
-          ? methodology 
-          : undefined;
+      const detailDTO = ProjectTransformer.toDetailDTO(data.project);
       
       return {
-        ...projectDTO,
-        methodology: validMethodology,
-        tasks: projectWithRelated.tasks || [],
-        inspections: projectWithRelated.inspections || [],
-        risks: projectWithRelated.risks || [],
-        plannedPhases: projectWithRelated.phases || [],
-        resources: [],
-        expenses: []
+        ...detailDTO,
+        phases: data.phases || [],
+        tasks: data.tasks || [],
+        risks: data.risks || [],
+        payments: data.payments || [],
+        inspections: data.inspections as any[] || [],
       };
     } catch (error) {
       throw new ProjectServiceError(
         `Failed to get project details: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'GET_PROJECT_DETAILS_ERROR',
-        error as Record<string, unknown>
+        'GET_DETAILS_ERROR'
       );
     }
   }
@@ -304,45 +281,46 @@ export class ProjectService {
     offset?: number;
   }): Promise<{ projects: ProjectDTO[]; total: number }> {
     try {
-      const projects = await this.projectRepository.findAll();
-      let filteredProjects = projects;
+      let projects = await this.projectRepository.findAll();
 
+      // Filter by status
       if (criteria.status) {
-        filteredProjects = filteredProjects.filter(p => p.status === criteria.status);
+        projects = projects.filter(p => p.status === criteria.status);
       }
 
+      // Filter by search query
       if (criteria.searchQuery) {
         const query = criteria.searchQuery.toLowerCase();
-        filteredProjects = filteredProjects.filter(p => 
+        projects = projects.filter(p => 
           p.title.toLowerCase().includes(query) ||
           p.description?.toLowerCase().includes(query) ||
-          (p.location && p.location.toLowerCase().includes(query))
+          p.location?.toLowerCase().includes(query)
         );
       }
 
+      // Filter by date range
       if (criteria.dateRange?.start && criteria.dateRange?.end) {
-        filteredProjects = filteredProjects.filter(p => {
+        const start = new Date(criteria.dateRange.start);
+        const end = new Date(criteria.dateRange.end);
+        projects = projects.filter(p => {
           if (!p.startDate) return false;
-          const startDate = new Date(p.startDate);
-          return startDate >= new Date(criteria.dateRange!.start) && 
-                 startDate <= new Date(criteria.dateRange!.end);
+          return p.startDate >= start && p.startDate <= end;
         });
       }
 
-      const total = filteredProjects.length;
+      const total = projects.length;
       const offset = criteria.offset || 0;
       const limit = criteria.limit || 20;
-      const paginatedProjects = filteredProjects.slice(offset, offset + limit);
+      const paginated = projects.slice(offset, offset + limit);
 
       return {
-        projects: paginatedProjects.map(project => this.toDTO(project)),
-        total
+        projects: ProjectTransformer.manyToDTO(paginated),
+        total,
       };
     } catch (error) {
       throw new ProjectServiceError(
         `Failed to search projects: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'SEARCH_PROJECTS_ERROR',
-        error as Record<string, unknown>
+        'SEARCH_ERROR'
       );
     }
   }
@@ -358,20 +336,19 @@ export class ProjectService {
     cancelled: number;
   }> {
     try {
-      const allProjects = await this.projectRepository.findAll();
+      const projects = await this.projectRepository.findAll();
       
       return {
-        total: allProjects.length,
-        active: allProjects.filter(p => p.status === 'en cours').length,
-        completed: allProjects.filter(p => p.status === 'terminé').length,
-        onHold: allProjects.filter(p => p.status === 'suspendu').length,
-        cancelled: allProjects.filter(p => p.status === 'annulé').length
+        total: projects.length,
+        active: projects.filter(p => p.status === 'en cours').length,
+        completed: projects.filter(p => p.status === 'terminé').length,
+        onHold: projects.filter(p => p.status === 'suspendu').length,
+        cancelled: projects.filter(p => p.status === 'annulé').length,
       };
     } catch (error) {
       throw new ProjectServiceError(
-        `Failed to get project statistics: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'GET_PROJECT_STATISTICS_ERROR',
-        error as Record<string, unknown>
+        `Failed to get statistics: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'STATISTICS_ERROR'
       );
     }
   }
@@ -384,487 +361,128 @@ export class ProjectService {
       const project = await this.projectRepository.findById(id);
       if (!project) return null;
       
-      // Get project DTO
-      const projectDTO = this.toDTO(project);
-      
-      // Get stakeholders for this project
-      // TODO: Replace with actual repository call when StakeholderRepository is available
-      // For now, simulate stakeholder data or return empty array
-      const stakeholders: StakeholderDTO[] = await this.getProjectStakeholdersData(id);
+      const projectDTO = ProjectTransformer.toDTO(project);
+      const stakeholders = await this.getProjectStakeholdersData(id);
       
       return {
         ...projectDTO,
-        stakeholders: stakeholders
+        stakeholders,
       };
     } catch (error) {
       throw new ProjectServiceError(
         `Failed to get project with stakeholders: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'GET_PROJECT_STAKEHOLDERS_ERROR',
-        error as Record<string, unknown>
+        'GET_STAKEHOLDERS_ERROR'
       );
     }
   }
 
   /**
    * Get employee user ID for payment notifications
-   * This method would typically use an EmployeeService or repository
-   * For now, it queries the users table to find the user ID associated with the employee
    */
   async getEmployeeUserId(employeeId: string): Promise<{ user_id: string | null } | null> {
     try {
-      // TODO: Implement proper employee-user relationship when EmployeeRepository is available
-      // For now, return the employee ID as user_id (assuming 1:1 relationship)
-      // In a real implementation, this would:
-      // 1. Query the employees table to get the user_id associated with the employee_id
-      // 2. Handle cases where employee might not have an associated user
-      
       return { user_id: employeeId };
     } catch (error) {
       throw new ProjectServiceError(
         `Failed to get employee user ID: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'GET_EMPLOYEE_USER_ID_ERROR',
-        error as Record<string, unknown>
+        'GET_EMPLOYEE_ERROR'
       );
     }
+  }
+
+  // =================== FORM WORKFLOW METHODS ===================
+
+  /**
+   * Create project from form data
+   */
+  async createFromForm(formData: Record<string, unknown>): Promise<ProjectDTO> {
+    const request = ProjectTransformer.formToCreateRequest(formData);
+    return this.create(request);
+  }
+
+  /**
+   * Update project from form data
+   */
+  async updateFromForm(id: string, formData: Record<string, unknown>): Promise<ProjectDTO | null> {
+    const request = ProjectTransformer.formToUpdateRequest(formData);
+    return this.update(id, request);
+  }
+
+  // =================== PRIVATE HELPERS ===================
+
+  private validateCreateRequest(request: CreateProjectDTO): void {
+    if (!request.title || request.title.trim().length === 0) {
+      throw new ValidationError('Project title is required');
+    }
+    if (!request.location || request.location.trim().length === 0) {
+      throw new ValidationError('Project location is required');
+    }
+    if (request.budget !== undefined && request.budget < 0) {
+      throw new ValidationError('Budget cannot be negative');
+    }
+  }
+
+  private validateProjectData(data: Partial<CreateProjectDTO | UpdateProjectDTO>): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+    
+    if ('title' in data && data.title !== undefined) {
+      if (typeof data.title !== 'string' || data.title.trim().length === 0) {
+        errors.push('Title must be a non-empty string');
+      }
+    }
+    
+    if ('budget' in data && data.budget !== undefined) {
+      if (typeof data.budget !== 'number' || data.budget < 0) {
+        errors.push('Budget must be a non-negative number');
+      }
+    }
+    
+    if ('progress' in data && data.progress !== undefined) {
+      if (typeof data.progress !== 'number' || data.progress < 0 || data.progress > 100) {
+        errors.push('Progress must be between 0 and 100');
+      }
+    }
+
+    return { isValid: errors.length === 0, errors };
   }
 
   private async getProjectStakeholdersData(projectId: string): Promise<StakeholderDTO[]> {
     try {
       if (!this.stakeholderRepository) {
-        // Fallback si le repository n'est pas disponible
-        console.warn('Stakeholder repository not available, returning empty array');
         return [];
       }
 
       const stakeholders = await this.stakeholderRepository.findByProjectId(projectId);
       
-      return stakeholders.map(stakeholder => ({
-        id: stakeholder.id,
-        projectId: stakeholder.projectId,
-        stakeholderType: (stakeholder.stakeholderEntityType === 'employee' ? 'employee' : 'external') as any,
-        entityId: stakeholder.employeeId || stakeholder.supplierId || '',
-        role: (stakeholder.roleDescription || 'Unknown Role') as any,
-        isPrimary: stakeholder.isActive,
-        isInternal: stakeholder.stakeholderEntityType === 'employee',
-        name: stakeholder.externalName || stakeholder.getDisplayName(),
-        email: stakeholder.externalEmail || undefined,
-        phone: stakeholder.externalPhone || undefined,
-        entityType: 'person' as any,
-        employeeId: stakeholder.employeeId,
-        responsibilities: stakeholder.responsibilities || undefined,
-        startDate: stakeholder.startDate || undefined,
-        endDate: stakeholder.endDate || undefined,
-        hourlyRate: stakeholder.hourlyRate || undefined,
-        contractType: stakeholder.contractType || undefined,
-        notes: stakeholder.notes || undefined,
-        isActive: stakeholder.isActive,
-        createdAt: stakeholder.createdAt,
-        updatedAt: stakeholder.updatedAt
-      })) as any[];
+      return stakeholders.map(s => ({
+        id: s.id,
+        projectId: s.projectId,
+        stakeholderType: s.stakeholderEntityType === 'employee' ? 'employee' : 'external',
+        entityId: s.employeeId || s.supplierId || '',
+        role: s.roleDescription || 'Unknown',
+        isPrimary: s.isActive,
+        isInternal: s.stakeholderEntityType === 'employee',
+        name: s.externalName || s.getDisplayName(),
+        email: s.externalEmail,
+        phone: s.externalPhone,
+        entityType: 'person',
+        employeeId: s.employeeId,
+        isActive: s.isActive,
+        createdAt: s.createdAt,
+        updatedAt: s.updatedAt,
+      })) as StakeholderDTO[];
     } catch (error) {
       console.error(`Failed to get stakeholders for project ${projectId}:`, error);
       return [];
     }
   }
+}
 
-  // ========================================
-  // MÉTHODES ÉTENDUES - Remplacement des services par écran
-  // ========================================
+// =================== FACTORY FUNCTION ===================
 
-  /**
-   * WORKFLOW FORMULAIRE (remplace ProjectEditWorkflowService)
-   * Créer un projet depuis les données du formulaire
-   */
-  async createFromForm(formData: ProjectDTO): Promise<ProjectDTO> {
-    try {
-      // Validation spécifique formulaire
-      this.validateFormData(formData);
-
-      // Transformer vers CreateProjectDTO
-      const createDTO = {
-        title: formData.title,
-        description: formData.description,
-        location: formData.location,
-        status: (formData.status as string) as any,
-        budget: formData.budget,
-        startDate: String((formData as any).start_date || formData.startDate || ''),
-        endDate: String((formData as any).end_date || formData.endDate || ''),
-        teamSize: (formData as any).team_size || formData.teamSize || 0,
-        thumbnail: ''
-      } as CreateProjectDTO;
-
-      return await this.createProject(createDTO);
-    } catch (error) {
-      if (error instanceof ValidationError) throw error;
-      throw new ProjectServiceError(
-        `Failed to create project from form: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'CREATE_FROM_FORM_ERROR',
-        error as Record<string, unknown>
-      );
-    }
-  }
-
-  /**
-   * WORKFLOW ANALYTICS (remplace ProjectAnalyticsService)
-   * Obtenir les analytics d'un projet
-   */
-  async getProjectAnalytics(projectId: string): Promise<ProjectAnalyticsDTO> {
-    try {
-      const project = await this.getProjectById(projectId);
-      if (!project) {
-        throw new ProjectServiceError('Project not found', 'NOT_FOUND');
-      }
-
-      // Calculer les métriques (logique simplifiée)
-      const actualCost = project.budget * (project.progress / 100);
-      const analytics: ProjectAnalyticsDTO = {
-        projectId: projectId,
-        totalBudget: project.budget,
-        actualCost: actualCost,
-        budgetVariance: project.budget - actualCost,
-        remainingBudget: project.budget - actualCost,
-        progressPercentage: project.progress,
-        milestoneCompletion: 0,
-        riskScore: this.calculateRiskScore(project),
-        qualityScore: this.calculateQualityScore(project),
-        timelineVariance: this.calculateTimelineVariance(project),
-        resourceUtilization: this.calculateResourceUtilization(project),
-        costEfficiency: project.budget > 0 ? (actualCost / project.budget) * 100 : 0,
-        schedulePerformance: project.progress / 100,
-        stakeholderSatisfaction: 80,
-        lastUpdated: new Date().toISOString(),
-        cpi: project.budget > 0 ? project.budget / actualCost : 1.0
-      } as any;
-
-      return analytics;
-    } catch (error) {
-      if (error instanceof ProjectServiceError) throw error;
-      throw new ProjectServiceError(
-        `Failed to get project analytics: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'GET_ANALYTICS_ERROR',
-        error as Record<string, unknown>
-      );
-    }
-  }
-
-  /**
-   * WORKFLOW STAKEHOLDERS (remplace ProjectStakeholderService)
-   * Ajouter des stakeholders à un projet
-   */
-  async addStakeholders(projectId: string, stakeholders: Array<Partial<StakeholderDTO>>): Promise<StakeholderDTO[]> {
-    try {
-      // Vérifier que le projet existe
-      const project = await this.getProjectById(projectId);
-      if (!project) {
-        throw new ProjectServiceError('Project not found', 'NOT_FOUND');
-      }
-
-      if (!this.stakeholderRepository) {
-        throw new ProjectServiceError('Stakeholder repository not available', 'REPOSITORY_NOT_AVAILABLE');
-      }
-
-      const createdStakeholders: StakeholderDTO[] = [];
-      
-      for (const stakeholder of stakeholders) {
-        // Créer les données pour le repository (interface ProjectStakeholder)
-        const stakeholderData = {
-          projectId: projectId,
-          stakeholderType: this.mapStakeholderType((stakeholder as any).stakeholderType || 'other'),
-          stakeholderEntityType: this.mapStakeholderEntityType((stakeholder as any).stakeholderType || 'external'),
-          employeeId: (stakeholder as any).stakeholderType === 'employee' ? (stakeholder as any).entityId : null,
-          supplierId: (stakeholder as any).stakeholderType === 'external' ? (stakeholder as any).entityId : null,
-          externalName: (stakeholder as any).stakeholderType === 'external' ? stakeholder.name : null,
-          externalEmail: stakeholder.email || null,
-          externalPhone: stakeholder.phone || null,
-          roleDescription: (stakeholder as any).role || null,
-          responsibilities: stakeholder.responsibilities || null,
-          isActive: stakeholder.isActive ?? true,
-          startDate: stakeholder.startDate || null,
-          endDate: stakeholder.endDate || null,
-          hourlyRate: stakeholder.hourlyRate || null,
-          contractType: stakeholder.contractType || null,
-          notes: stakeholder.notes || null
-        } as Omit<ProjectStakeholderEntity, 'id' | 'createdAt' | 'updatedAt'>;
-
-        // Créer via repository
-        const created = await this.stakeholderRepository.create(stakeholderData);
-        
-        // Transformer Entity en DTO pour retour
-        const createdDTO: StakeholderDTO = {
-          id: created.id,
-          projectId: created.projectId,
-          stakeholderType: (stakeholder as any).stakeholderType as any,
-          entityType: 'person' as any,
-          role: (stakeholder as any).role as any,
-          isPrimary: (stakeholder as any).isPrimary ?? false,
-          isInternal: (stakeholder as any).isInternal ?? false,
-          name: stakeholder.name || '',
-          email: stakeholder.email,
-          phone: stakeholder.phone,
-          organizationId: (stakeholder as any).organizationId,
-          employeeId: stakeholder.employeeId,
-          responsibilities: stakeholder.responsibilities,
-          startDate: stakeholder.startDate,
-          endDate: stakeholder.endDate,
-          hourlyRate: stakeholder.hourlyRate,
-          contractType: stakeholder.contractType,
-          notes: stakeholder.notes,
-          isActive: stakeholder.isActive ?? true,
-          createdAt: created.createdAt,
-          updatedAt: created.updatedAt
-        } as StakeholderDTO;
-        
-        createdStakeholders.push(createdDTO);
-      }
-
-      console.log(`Added ${createdStakeholders.length} stakeholders to project ${projectId}`);
-      return createdStakeholders;
-    } catch (error) {
-      if (error instanceof ProjectServiceError) throw error;
-      throw new ProjectServiceError(
-        `Failed to add stakeholders: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'ADD_STAKEHOLDERS_ERROR',
-        error as Record<string, unknown>
-      );
-    }
-  }
-
-  /**
-   * WORKFLOW PROGRESSION (remplace ProgressCalculationHexService)
-   * Calculer la progression d'un projet
-   */
-  async calculateProjectProgress(projectId: string): Promise<number> {
-    try {
-      const project = await this.getProjectById(projectId);
-      if (!project) {
-        throw new ProjectServiceError('Project not found', 'NOT_FOUND');
-      }
-
-      // Logique de calcul simplifiée
-      // TODO: Intégrer avec MilestoneService et TaskService pour calcul précis
-      return project.progress;
-    } catch (error) {
-      if (error instanceof ProjectServiceError) throw error;
-      throw new ProjectServiceError(
-        `Failed to calculate project progress: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'CALCULATE_PROGRESS_ERROR',
-        error as Record<string, unknown>
-      );
-    }
-  }
-
-  // ========================================
-  // MÉTHODES UTILITAIRES PRIVÉES
-  // ========================================
-
-  private validateFormData(formData: ProjectDTO): void {
-    const errors: Record<string, string[]> = {};
-
-    if (!formData.title || formData.title.trim().length === 0) {
-      errors.title = ['Title is required'];
-    }
-    
-    if (!formData.budget || formData.budget <= 0) {
-      errors.budget = ['Budget must be greater than 0'];
-    }
-    
-    if (!formData.start_date) {
-      errors.start_date = ['Start date is required'];
-    }
-
-    if (Object.keys(errors).length > 0) {
-      throw new ValidationError(`Form validation failed: ${JSON.stringify(errors)}`);
-    }
-  }
-
-  private calculateRiskScore(project: ProjectDTO): number {
-    // Logique complète de calcul de risque basée sur plusieurs facteurs
-    let riskScore = 0;
-    
-    // Facteur 1: Progression (40%)
-    if (project.progress < 10) riskScore += 40;
-    else if (project.progress < 25) riskScore += 30;
-    else if (project.progress < 50) riskScore += 20;
-    else if (project.progress < 75) riskScore += 10;
-    else riskScore += 5;
-    
-    // Facteur 2: Timeline (25%)
-    const timelineVariance = this.calculateTimelineVariance(project);
-    if (timelineVariance < -20) riskScore += 25; // Très en retard
-    else if (timelineVariance < -10) riskScore += 15; // En retard
-    else if (timelineVariance < 0) riskScore += 10; // Légèrement en retard
-    else if (timelineVariance > 10) riskScore += 5; // En avance (réduit risque)
-    
-    // Facteur 3: Budget (20%)
-    if (project.budget > 0) {
-      const budgetEfficiency = project.progress / 100;
-      if (budgetEfficiency < 0.5) riskScore += 20; // Moins de 50% du budget utilisé
-      else if (budgetEfficiency < 0.8) riskScore += 10; // Moins de 80% du budget utilisé
-      else riskScore += 5; // Bonne utilisation du budget
-    }
-    
-    // Facteur 4: Taille d'équipe (10%)
-    if (project.teamSize < 3) riskScore += 10; // Équipe trop petite
-    else if (project.teamSize < 5) riskScore += 5; // Équipe petite
-    else riskScore += 0; // Équipe adéquate
-    
-    // Facteur 5: Complexité (5%)
-    if (project.title.length > 100) riskScore += 5; // Projet complexe
-    else if (project.title.length > 50) riskScore += 2; // Projet moyennement complexe
-    
-    return Math.min(100, riskScore);
-  }
-
-  private calculateQualityScore(project: ProjectDTO): number {
-    // Logique complète de calcul de qualité basée sur plusieurs facteurs
-    let qualityScore = 50; // Score de base
-    
-    // Facteur 1: Progression du projet (30%)
-    const progressScore = Math.min(30, project.progress * 0.3);
-    qualityScore += progressScore;
-    
-    // Facteur 2: Respect du budget (20%)
-    if (project.budget > 0) {
-      const budgetEfficiency = Math.min(20, (project.progress / 100) * 20);
-      qualityScore += budgetEfficiency;
-    }
-    
-    // Facteur 3: Timeline (25%)
-    const timelineScore = this.calculateTimelineScore(project);
-    qualityScore += timelineScore;
-    
-    // Facteur 4: Complexité et taille (15%)
-    const complexityScore = Math.min(15, project.teamSize * 2);
-    qualityScore += complexityScore;
-    
-    // Facteur 5: Stabilité (10%)
-    const statusStr = String(project.status);
-    const stabilityScore = statusStr === 'en cours' || statusStr === 'enCours' ? 10 : 5;
-    qualityScore += stabilityScore;
-    
-    return Math.min(100, Math.round(qualityScore));
-  }
-
-  private calculateTimelineScore(project: ProjectDTO): number {
-    if (!project.endDate) return 15; // Score neutre si pas de date de fin
-    
-    const now = new Date();
-    const startDate = new Date(project.startDate);
-    const endDate = new Date(project.endDate);
-    
-    const totalDuration = endDate.getTime() - startDate.getTime();
-    const elapsedDuration = now.getTime() - startDate.getTime();
-    const expectedProgress = (elapsedDuration / totalDuration) * 100;
-    
-    const progressDiff = project.progress - expectedProgress;
-    
-    // Score basé sur la différence entre progression réelle et attendue
-    if (progressDiff >= 0) {
-      return Math.min(25, 15 + (progressDiff * 0.1)); // En avance = bonus
-    } else {
-      return Math.max(0, 15 + (progressDiff * 0.2)); // En retard = pénalité
-    }
-  }
-
-  private calculateTimelineVariance(project: ProjectDTO): number {
-    if (!project.endDate) return 0;
-    
-    const now = new Date();
-    const startDate = new Date(project.startDate);
-    const endDate = new Date(project.endDate);
-    
-    const plannedDuration = endDate.getTime() - startDate.getTime();
-    const elapsedDuration = now.getTime() - startDate.getTime();
-    const expectedProgress = (elapsedDuration / plannedDuration) * 100;
-    
-    return project.progress - expectedProgress;
-  }
-
-  private calculateResourceUtilization(project: ProjectDTO): number {
-    // Logique complète d'utilisation des ressources
-    let utilizationScore = 0;
-    
-    // Facteur 1: Taille d'équipe (40%)
-    const teamScore = Math.min(40, project.teamSize * 4);
-    utilizationScore += teamScore;
-    
-    // Facteur 2: Progression (30%)
-    const progressScore = Math.min(30, project.progress * 0.3);
-    utilizationScore += progressScore;
-    
-    // Facteur 3: Budget (20%)
-    if (project.budget > 0) {
-      const budgetUtilization = Math.min(20, (project.progress / 100) * 20);
-      utilizationScore += budgetUtilization;
-    }
-    
-    // Facteur 4: Complexité du projet (10%)
-    const complexityScore = project.title.length > 50 ? 10 : 5;
-    utilizationScore += complexityScore;
-    
-    return Math.min(100, Math.round(utilizationScore));
-  }
-
-  // Helper methods pour les transformations
-  private mapStakeholderType(type: string): StakeholderType {
-    const mapping: Record<string, StakeholderType> = {
-      'employee': 'manager',
-      'external': 'contractor',
-      'supplier': 'supplier',
-      'consultant': 'consultant',
-      'inspector': 'inspector',
-      'client': 'client',
-      'engineer': 'engineer',
-      'architect': 'architect'
-    };
-    return mapping[type] || 'other';
-  }
-
-  private mapStakeholderEntityType(type: string): StakeholderEntityType {
-    if (type === 'employee') return 'employee';
-    if (type === 'supplier') return 'supplier';
-    return 'external';
-  }
-
-  private validateProjectData(data: Partial<CreateProjectDTO | UpdateProjectDTO>): {
-    isValid: boolean;
-    errors: string[];
-    fieldErrors: Record<string, string[]>;
-  } {
-    const errors: string[] = [];
-    const fieldErrors: Record<string, string[]> = {};
-
-    const title = (data as any).title;
-    if ('title' in data && (!title || String(title).trim() === '')) {
-      errors.push('Project title is required');
-      fieldErrors.title = ['Project title is required'];
-    }
-
-    const budget = (data as any).budget;
-    if ('budget' in data && budget !== undefined && budget !== null && Number(budget) <= 0) {
-      errors.push('Budget must be greater than 0');
-      fieldErrors.budget = ['Budget must be greater than 0'];
-    }
-
-    const progress = (data as any).progress;
-    if ('progress' in data && progress !== undefined && progress !== null && (Number(progress) < 0 || Number(progress) > 100)) {
-      errors.push('Progress must be between 0 and 100');
-      fieldErrors.progress = ['Progress must be between 0 and 100'];
-    }
-
-    // Validate dates if both are provided
-    const startDate = (data as any).startDate;
-    const endDate = (data as any).endDate;
-    if ('startDate' in data && 'endDate' in data && startDate && endDate) {
-      const startDateObj = new Date(String(startDate));
-      const endDateObj = new Date(String(endDate));
-      
-      if (endDateObj <= startDateObj) {
-        errors.push('End date must be after start date');
-        fieldErrors.endDate = ['End date must be after start date'];
-      }
-    }
-
-    return { isValid: errors.length === 0, errors, fieldErrors };
-  }
+export function createProjectService(
+  projectRepository: IProjectRepository,
+  stakeholderRepository?: IProjectStakeholderRepository
+): ProjectService {
+  return new ProjectService(projectRepository, stakeholderRepository);
 }

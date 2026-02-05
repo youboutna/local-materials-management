@@ -11,8 +11,6 @@ import { TaskAssignmentTransformer } from '@/dtos/transforms/TaskAssignmentTrans
 
 import {
   TaskAssignmentDTO,
-  CreateTaskAssignmentRequestDTO,
-  UpdateTaskAssignmentRequestDTO,
   TaskAssignmentFiltersDTO,
   CreateTaskAssignmentWithAssignerRequestDTO,
   GetTaskAssignmentByIdRequestDTO,
@@ -58,9 +56,9 @@ export class TaskAssignmentService {
         request.taskData.projectId,
         request.taskData.assignedTo,
         request.assignedBy || request.taskData.assignedBy,
-        request.taskData.assigneeType as 'supplier' | 'employee' | 'user' | undefined,
-        'pending' as 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'new',
-        request.taskData.priority as 'low' | 'medium' | 'high' | undefined || 'medium',
+        (request.taskData.assigneeType as unknown) as 'supplier' | 'employee' | 'user' | undefined,
+        'pending',
+        (request.taskData.priority || 'medium') as 'low' | 'medium' | 'high' | 'urgent' | undefined,
         request.taskData.dueDate ? new Date(request.taskData.dueDate) : undefined,
         new Date(),
         new Date()
@@ -117,9 +115,9 @@ export class TaskAssignmentService {
 
       const updates: Partial<WorkspaceTaskAssignment> = {
         ...request.updates,
-        status: request.updates.status as 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'new',
+        status: (request.updates.status || 'pending') as 'pending' | 'in_progress' | 'completed' | 'cancelled',
         priority: request.updates.priority as 'low' | 'medium' | 'high' | 'urgent' | undefined,
-        dueDate: request.updates.dueDate ? new Date(request.updates.dueDate) : undefined,
+        dueDate: request.updates.dueDate,
         updatedAt: new Date()
       };
 
@@ -253,9 +251,9 @@ export class TaskAssignmentService {
       
       return {
         total: 0,
-        byStatus: {},
-        byPriority: {},
-        byAssigneeType: {},
+        byStatus: { pending: 0, in_progress: 0, completed: 0, cancelled: 0, accepted: 0, assigned: 0, rejected: 0 } as any,
+        byPriority: { low: 0, medium: 0, high: 0, urgent: 0 } as any,
+        byAssigneeType: { individual: 0, team: 0, consultant: 0, reviewer: 0, approver: 0 } as any,
         overdue: 0,
         dueSoon: 0
       };
@@ -268,7 +266,7 @@ export class TaskAssignmentService {
   /**
    * Validate task assignment data
    */
-  validateTaskAssignmentData(data: CreateTaskAssignmentRequestDTO | UpdateTaskAssignmentRequestDTO): TaskAssignmentValidationResultDTO {
+  validateTaskAssignmentData(data: Record<string, unknown>): TaskAssignmentValidationResultDTO {
     const errors: string[] = [];
     if ('title' in data && !data.title) {
       errors.push('Title is required');

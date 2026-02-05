@@ -212,7 +212,7 @@ export class StakeholderService {
       }
 
       // Validate role if provided
-      if (data.role && !isValidStakeholderRole(data.type, data.role)) {
+      if (data.role && data.type && !isValidStakeholderRole(data.type, data.role)) {
         return {
           success: false,
           error: {
@@ -220,7 +220,7 @@ export class StakeholderService {
             message: 'Invalid role for stakeholder type',
             details: { 
               role: [`Invalid role '${data.role}' for type '${data.type}'`],
-              validRoles: StakeholderRoles[data.type]
+              validRoles: data.type ? [...(StakeholderRoles[data.type] || [])] : []
             }
           }
         };

@@ -112,8 +112,8 @@ export class TaskService {
       id: task.id,
       title: task.title,
       description: task.description,
-      status: task.status,
-      priority: task.priority,
+      status: (task.status as unknown as TaskStatus) || TaskStatus.PENDING,
+      priority: (task.priority as unknown as TaskPriority) || TaskPriority.MEDIUM,
       projectId: task.projectId,
       phaseId: task.phaseId,
       assignedTo: task.assignedTo,
@@ -151,8 +151,8 @@ export class TaskService {
         projectId: createDTO.projectId || '',
         title: createDTO.title,
         description: createDTO.description,
-        status: createDTO.status && this.isTaskStatus(createDTO.status) ? createDTO.status : TaskStatus.PENDING,
-        priority: createDTO.priority && this.isTaskPriority(createDTO.priority) ? createDTO.priority : TaskPriority.MEDIUM,
+        status: createDTO.status ? String(createDTO.status) as any : 'pending' as any,
+        priority: createDTO.priority ? String(createDTO.priority) as any : 'medium' as any,
         assignedTo: createDTO.assignedTo || [],
         dueDate: createDTO.dueDate
       });
@@ -177,7 +177,7 @@ export class TaskService {
       }
 
       // Validate status transition if status is being updated
-      if (updateDTO.status && !this.isValidTaskStatusTransition(existingTask.status, updateDTO.status as TaskStatus)) {
+      if (updateDTO.status && !this.isValidTaskStatusTransition(String(existingTask.status) as any, String(updateDTO.status) as any)) {
         throw new ValidationError(
           `Invalid status transition from ${existingTask.status} to ${updateDTO.status}`,
           { status: ['Invalid status transition'] }
@@ -185,7 +185,7 @@ export class TaskService {
       }
 
       // Create updated task using immutable pattern
-      const updatedTask = existingTask.withStatus((updateDTO.status as TaskStatus) ?? existingTask.status)
+      const updatedTask = existingTask.withStatus(String(updateDTO.status ?? existingTask.status) as any)
         .withProgress(existingTask.progress);
       
       // Return DTO after update
@@ -416,7 +416,7 @@ export class TaskService {
     try {
       // Mettre à jour la tâche
       const updateData: UpdateTaskDTO = {
-        status: status
+        status: status as any
       };
 
       await this.updateTask(assignmentId, updateData);
