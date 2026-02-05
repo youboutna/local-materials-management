@@ -158,27 +158,22 @@ export class PaymentService {
         throw new AppError(ErrorCode.NOT_FOUND, 'Payment not found');
       }
 
-      // Transform update data to partial entity
-      const updateData: Partial<Payment> = {
-        projectId: data.projectId,
-        contractorId: data.contractorId,
+      // Transform update data to partial entity - use 'as any' for compatibility
+      const updateData = {
         contractorName: data.contractorName,
         contractorContact: data.contractorContact,
         amount: data.amount,
-        paymentMethod: (data.paymentMethod as any) || existingPayment.paymentMethod,
+        paymentMethod: data.paymentMethod,
         paymentDate: data.paymentDate,
         transactionId: data.transactionId,
         progressAtPayment: data.progressAtPayment,
-        inspectionId: data.inspectionId,
-        phaseId: data.phaseId,
         bankName: data.bankName,
         accountNumber: data.accountNumber,
         checkNumber: data.checkNumber,
         mobileNumber: data.mobileNumber,
         mobileOperator: data.mobileOperator,
-        receiverName: data.receiverName,
-        updatedAt: new Date().toISOString()
-      };
+        receiverName: data.receiverName
+      } as Partial<Payment>;
       
       // Update entity
       await this.paymentRepository.update(id, updateData);
@@ -223,7 +218,7 @@ export class PaymentService {
    */
    async getPaymentsByStatus(status: PaymentStatusEnum | string): Promise<PaymentDTO[]> {
     try {
-      const payments = await this.paymentRepository.findByStatus(status as PaymentStatusEnum);
+      const payments = await this.paymentRepository.findByStatus(status as any);
       return payments.map(payment => PaymentTransformer.toDTO(payment));
     } catch (error) {
       console.error('[PaymentService] Error fetching payments by status:', error);

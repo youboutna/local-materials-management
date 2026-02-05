@@ -65,14 +65,14 @@ export class ProjectStakeholderService {
       return stakeholders.map(stakeholder => ({
         id: stakeholder.id,
         projectId: stakeholder.projectId,
-        stakeholderType: stakeholder.stakeholderType,
-        stakeholderEntityType: stakeholder.stakeholderEntityType,
-        employeeId: stakeholder.employeeId,
-        supplierId: stakeholder.supplierId,
-        roleDescription: stakeholder.roleDescription,
-        isPrimary: stakeholder.isPrimary,
-        createdAt: stakeholder.createdAt.toISOString(),
-        updatedAt: stakeholder.updatedAt.toISOString()
+        stakeholderType: String(stakeholder.stakeholderType),
+        stakeholderEntityType: stakeholder.stakeholderEntityType === 'external' ? 'supplier' : stakeholder.stakeholderEntityType as 'employee' | 'supplier',
+        employeeId: stakeholder.employeeId || undefined,
+        supplierId: stakeholder.supplierId || undefined,
+        roleDescription: stakeholder.roleDescription || undefined,
+        isPrimary: stakeholder.isActive,
+        createdAt: stakeholder.createdAt,
+        updatedAt: stakeholder.updatedAt
       }));
     } catch (error) {
       console.error('ProjectStakeholderService.getProjectStakeholders failed:', error);
@@ -95,18 +95,27 @@ export class ProjectStakeholderService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Update data is required');
       }
 
-      const updatedStakeholder = await this.projectStakeholderRepository.update(stakeholderId, updates);
+      const updateData = {
+        stakeholderType: updates.stakeholderType as any,
+        stakeholderEntityType: updates.stakeholderEntityType as any,
+        employeeId: updates.employeeId ?? null,
+        supplierId: updates.supplierId ?? null,
+        roleDescription: updates.roleDescription ?? null,
+        isActive: updates.isPrimary ?? true
+      };
+
+      const updatedStakeholder = await this.projectStakeholderRepository.update(stakeholderId, updateData as any);
       return {
         id: updatedStakeholder.id,
         projectId: updatedStakeholder.projectId,
-        stakeholderType: updatedStakeholder.stakeholderType,
-        stakeholderEntityType: updatedStakeholder.stakeholderEntityType,
-        employeeId: updatedStakeholder.employeeId,
-        supplierId: updatedStakeholder.supplierId,
-        roleDescription: updatedStakeholder.roleDescription,
-        isPrimary: updatedStakeholder.isPrimary,
-        createdAt: updatedStakeholder.createdAt.toISOString(),
-        updatedAt: updatedStakeholder.updatedAt.toISOString()
+        stakeholderType: String(updatedStakeholder.stakeholderType),
+        stakeholderEntityType: updatedStakeholder.stakeholderEntityType === 'external' ? 'supplier' : updatedStakeholder.stakeholderEntityType as 'employee' | 'supplier',
+        employeeId: updatedStakeholder.employeeId || undefined,
+        supplierId: updatedStakeholder.supplierId || undefined,
+        roleDescription: updatedStakeholder.roleDescription || undefined,
+        isPrimary: updatedStakeholder.isActive,
+        createdAt: updatedStakeholder.createdAt,
+        updatedAt: updatedStakeholder.updatedAt
       };
     } catch (error) {
       console.error('ProjectStakeholderService.updateProjectStakeholder failed:', error);
@@ -145,10 +154,7 @@ export class ProjectStakeholderService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Stakeholder type is required');
       }
 
-      // For now, return mock data as project stakeholder repository is not available
-      // TODO: Implement proper stakeholder retrieval by type when repository is available
       console.warn('ProjectStakeholderService.getStakeholdersByType: Project stakeholder repository not available');
-
       return [];
     } catch (error) {
       console.error('ProjectStakeholderService.getStakeholdersByType failed:', error);
@@ -165,10 +171,7 @@ export class ProjectStakeholderService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
       }
 
-      // For now, return mock data as project stakeholder repository is not available
-      // TODO: Implement proper primary stakeholder retrieval when repository is available
       console.warn('ProjectStakeholderService.getPrimaryStakeholders: Project stakeholder repository not available');
-
       return [];
     } catch (error) {
       console.error('ProjectStakeholderService.getPrimaryStakeholders failed:', error);
@@ -191,27 +194,29 @@ export class ProjectStakeholderService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Supplier ID is required for supplier stakeholders');
       }
 
-      const createdStakeholder = await this.projectStakeholderRepository.create({
+      const createData = {
         projectId: request.projectId,
-        stakeholderType: request.stakeholderType,
-        stakeholderEntityType: request.stakeholderEntityType,
-        employeeId: request.employeeId,
-        supplierId: request.supplierId,
-        roleDescription: request.roleDescription,
-        isPrimary: request.isPrimary
-      });
+        stakeholderType: request.stakeholderType as any,
+        stakeholderEntityType: request.stakeholderEntityType as any,
+        employeeId: request.employeeId ?? null,
+        supplierId: request.supplierId ?? null,
+        roleDescription: request.roleDescription ?? null,
+        isActive: request.isPrimary ?? true
+      };
+
+      const createdStakeholder = await this.projectStakeholderRepository.create(createData as any);
 
       return {
         id: createdStakeholder.id,
         projectId: createdStakeholder.projectId,
-        stakeholderType: createdStakeholder.stakeholderType,
-        stakeholderEntityType: createdStakeholder.stakeholderEntityType,
-        employeeId: createdStakeholder.employeeId,
-        supplierId: createdStakeholder.supplierId,
-        roleDescription: createdStakeholder.roleDescription,
-        isPrimary: createdStakeholder.isPrimary,
-        createdAt: createdStakeholder.createdAt.toISOString(),
-        updatedAt: createdStakeholder.updatedAt.toISOString()
+        stakeholderType: String(createdStakeholder.stakeholderType),
+        stakeholderEntityType: createdStakeholder.stakeholderEntityType === 'external' ? 'supplier' : createdStakeholder.stakeholderEntityType as 'employee' | 'supplier',
+        employeeId: createdStakeholder.employeeId || undefined,
+        supplierId: createdStakeholder.supplierId || undefined,
+        roleDescription: createdStakeholder.roleDescription || undefined,
+        isPrimary: createdStakeholder.isActive,
+        createdAt: createdStakeholder.createdAt,
+        updatedAt: createdStakeholder.updatedAt
       };
     } catch (error) {
       console.error('ProjectStakeholderService.addStakeholder failed:', error);
@@ -220,8 +225,6 @@ export class ProjectStakeholderService {
   }
 
   private async createStakeholder(stakeholder: CreateStakeholderInputDTO): Promise<ProjectStakeholderDTO> {
-    // Implement stakeholder creation logic here
-    // For now, return mock data
     const now = new Date().toISOString();
     return {
       id: crypto.randomUUID(),

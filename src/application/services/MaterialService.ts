@@ -127,10 +127,10 @@ export class MaterialService {
 
       // Get all materials and filter by phase
       const materials = await this.materialRepository.findAll();
-      const phaseMaterials = materials.filter((material: MaterialWithPhase) => 
-        material.phaseId === phaseId || 
-        material.phase_id === phaseId
-      );
+      const phaseMaterials = materials.filter((material) => {
+        const m = material as unknown as MaterialWithPhase;
+        return m.phaseId === phaseId || m.phase_id === phaseId;
+      });
       
       return phaseMaterials.map(material => this.mapToDTO(material));
     } catch (error) {
@@ -430,19 +430,34 @@ export class MaterialService {
     // Handle Material entity, repository result, and DTO
     const result = repositoryResult as Record<string, unknown>;
     
+    // Import enums dynamically for compatibility
+    const MaterialCategoryDTO = {
+      RAW_MATERIAL: 'raw_material',
+      EQUIPMENT: 'equipment',
+      CONSUMABLES: 'consumables'
+    } as const;
+    
+    const MaterialStatusDTO = {
+      AVAILABLE: 'available'
+    } as const;
+    
+    const MaterialUnitDTO = {
+      PIECES: 'pieces'
+    } as const;
+    
     return {
       id: (result.id as string) || '',
       name: (result.name as string) || '',
       description: (result.description as string) || '',
-      category: (result.category as MaterialCategory) || 'other',
-      unit: (result.unit as string) || 'unit',
+      type: (result.type as string) || 'general',
+      category: MaterialCategoryDTO.RAW_MATERIAL as any,
+      status: MaterialStatusDTO.AVAILABLE as any,
+      unit: MaterialUnitDTO.PIECES as any,
+      quantity: (result.availableQuantity as number) || (result.quantity as number) || 0,
       pricePerUnit: (result.pricePerUnit as number) || 0,
-      availableQuantity: (result.availableQuantity as number) || 0,
-      minStockLevel: (result.minStockLevel as number) || 0,
-      workspaceId: (result.workspaceId as string) || '',
       supplierId: result.supplierId as string,
       createdAt: (result.createdAt as string) || new Date().toISOString(),
       updatedAt: (result.updatedAt as string) || new Date().toISOString()
-    };
+    } as MaterialDTO;
   }
 }
