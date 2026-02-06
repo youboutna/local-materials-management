@@ -541,6 +541,45 @@ export type { PhaseDTO as ProjectPhase } from '@/dtos/transforms';
 export type { TaskDTO as ProjectTask } from '@/dtos/transforms';
 export type { EmployeeDTO as Employee } from '@/dtos/entities';
 
+// Selector option types for components
+export interface EmployeeOption {
+  id: string;
+  label: string;
+  value: string;
+  fullName?: string;
+  email?: string;
+  department?: string;
+  position?: string;
+}
+
+export interface ProjectOption {
+  id: string;
+  label: string;
+  value: string;
+  title?: string;
+  status?: string;
+  progress?: number;
+}
+
+export interface Inspector {
+  id: string;
+  name: string;
+  email?: string;
+  role?: string;
+  department?: string;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  role?: string;
+  avatar?: string;
+  createdAt?: string;
+}
+
 // Form data types
 export interface ProjectTaskFormData {
   title: string;

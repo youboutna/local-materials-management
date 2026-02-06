@@ -1,8 +1,15 @@
-import { EVMMetrics, PERTAnalysis, ProjectData, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
+import { EVMMetrics, PERTAnalysis, ProjectDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { ProjectReportDTO } from '@/types/reportTypes';
 import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+
+// Local type for PDF rendering - compatible with both ProjectDTO and ProjectData
+type ProjectData = ProjectDTO & {
+  resources?: Array<{ type?: string; name?: string }>;
+  contacts?: Array<{ role?: string; name?: string }>;
+  stakeholders?: Array<{ role?: string; organization?: string }>;
+};
 
 // Register fonts
 Font.register({
@@ -568,6 +575,22 @@ export function CompactProjectPDFDocument({
     return `Phase ${completed}/${phases.length}`;
   };
 
+  // Helper function to get PERT expected duration safely
+  const getPertExpectedDuration = (pert: any): number => {
+    if (!pert) return 0;
+    return pert.totalExpectedDuration || pert.expectedDuration || 0;
+  };
+
+  // Helper function to get PERT total variance safely
+  const getPertTotalVariance = (pert: any): number => {
+    if (!pert) return 0;
+    if (typeof pert.variance === 'number') return pert.variance;
+    if (pert.variances && typeof pert.variances === 'object') {
+      return Object.values(pert.variances as Record<string, number>).reduce((sum: number, v: number) => sum + (v || 0), 0);
+    }
+    return 0;
+  };
+
   // Helper function to render street map
   const renderStreetMap = (project: ProjectData) => {
     const hasCoordinates = project.coordinates?.latitude && project.coordinates?.longitude;
@@ -706,7 +729,7 @@ export function CompactProjectPDFDocument({
                 <View style={[styles.progressFill, { width: `${project.progress || 0}%` }]} />
               </View>
               <Text style={styles.progressText}>
-                Progression: {project.progress || 0}% | Équipe: {project.resources?.filter(r => r.type === 'human').length || 0} personnes
+                Progression: {project.progress || 0}% | Équipe: {Array.isArray(project.resources) ? project.resources.filter((r: any) => r.type === 'human').length : 0} personnes
               </Text>
             </View>
 
@@ -731,13 +754,13 @@ export function CompactProjectPDFDocument({
                     <View style={{ marginBottom: 3 }}>
                       <Text style={{ fontSize: 6, color: colors.muted }}>Contractant principal</Text>
                       <Text style={{ fontSize: 7, color: colors.dark }}>
-                        {project.contacts?.find(c => c.role === 'contractor')?.name || project.contacts?.[0]?.name || 'Non défini'}
+                        {Array.isArray(project.contacts) ? (project.contacts.find((c: any) => c.role === 'contractor')?.name || project.contacts[0]?.name || 'Non défini') : 'Non défini'}
                       </Text>
                     </View>
                     <View>
                       <Text style={{ fontSize: 6, color: colors.muted }}>Source de financement</Text>
                       <Text style={{ fontSize: 7, color: colors.dark }}>
-                        {project.stakeholders?.find(s => s.role === 'bailleur')?.organization || 'Non définie'}
+                        {Array.isArray(project.stakeholders) ? (project.stakeholders.find((s: any) => s.role === 'bailleur')?.organization || 'Non définie') : 'Non définie'}
                       </Text>
                     </View>
                   </View>
@@ -765,7 +788,7 @@ export function CompactProjectPDFDocument({
                           {phase.budget ? ((phase.actualCost || 0) / phase.budget * 100).toFixed(0) : 0}%
                         </Text>
                         <Text style={[styles.tableCell, { width: '25%' }]}>
-                          {project.contacts?.find(c => c.role === 'contractor')?.name?.substring(0, 15) || project.contacts?.[0]?.name?.substring(0, 15) || '-'}
+                          {Array.isArray(project.contacts) ? (project.contacts.find((c: any) => c.role === 'contractor')?.name?.substring(0, 15) || project.contacts[0]?.name?.substring(0, 15) || '-') : '-'}
                         </Text>
                       </View>
                     ))}
@@ -989,19 +1012,19 @@ export function CompactProjectPDFDocument({
                 <View style={styles.evmItem}>
                   <Text style={styles.evmLabel}>Durée attendue</Text>
                   <Text style={styles.evmValue}>
-                    {formatDecimal(pertAnalysis?.totalExpectedDuration || 0)} j
+                    {formatDecimal(getPertExpectedDuration(pertAnalysis))} j
                   </Text>
                 </View>
                 <View style={styles.evmItem}>
                   <Text style={styles.evmLabel}>Variance totale</Text>
                   <Text style={styles.evmValue}>
-                    {formatDecimal(Object.values(pertAnalysis?.variances || {}).reduce((sum, v) => sum + v, 0))}
+                    {formatDecimal(getPertTotalVariance(pertAnalysis))}
                   </Text>
                 </View>
                 <View style={styles.evmItem}>
                   <Text style={styles.evmLabel}>Écart-type</Text>
                   <Text style={styles.evmValue}>
-                    {formatDecimal(Math.sqrt(Object.values(pertAnalysis?.variances || {}).reduce((sum, v) => sum + v, 0)))}
+                    {formatDecimal(Math.sqrt(getPertTotalVariance(pertAnalysis)))}
                   </Text>
                 </View>
                 <View style={styles.evmItem}>
@@ -1015,13 +1038,13 @@ export function CompactProjectPDFDocument({
                 <View style={styles.evmItem}>
                   <Text style={styles.evmLabel}>Prob. 95%</Text>
                   <Text style={styles.evmValue}>
-                    {formatDecimal((pertAnalysis?.totalExpectedDuration || 0) + 1.65 * Math.sqrt(Object.values(pertAnalysis?.variances || {}).reduce((sum, v) => sum + v, 0)))} j
+                    {formatDecimal(getPertExpectedDuration(pertAnalysis) + 1.65 * Math.sqrt(getPertTotalVariance(pertAnalysis)))} j
                   </Text>
                 </View>
                 <View style={styles.evmItem}>
                   <Text style={styles.evmLabel}>Prob. 99%</Text>
                   <Text style={styles.evmValue}>
-                    {formatDecimal((pertAnalysis?.totalExpectedDuration || 0) + 2.33 * Math.sqrt(Object.values(pertAnalysis?.variances || {}).reduce((sum, v) => sum + v, 0)))} j
+                    {formatDecimal(getPertExpectedDuration(pertAnalysis) + 2.33 * Math.sqrt(getPertTotalVariance(pertAnalysis)))} j
                   </Text>
                 </View>
                 <View style={styles.evmItem}>
@@ -1043,8 +1066,8 @@ export function CompactProjectPDFDocument({
               </View>
               <View style={styles.footerItem}>
                 <Text style={styles.footerLabel}>Durée PERT:</Text>
-                <Text style={[styles.footerValue, { color: pertAnalysis?.totalExpectedDuration && pertAnalysis.totalExpectedDuration > 0 ? colors.primary : colors.muted }]}>
-                  {formatDecimal(pertAnalysis?.totalExpectedDuration || 0)} jours
+                <Text style={[styles.footerValue, { color: getPertExpectedDuration(pertAnalysis) > 0 ? colors.primary : colors.muted }]}>
+                  {formatDecimal(getPertExpectedDuration(pertAnalysis))} jours
                 </Text>
               </View>
               <View style={styles.footerItem}>

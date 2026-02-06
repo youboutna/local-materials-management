@@ -39,12 +39,14 @@ interface PertAnalysis {
   standardDeviation?: number;
 }
 
-// Alias for backward compatibility
-type ProjectData = ProjectDTO;
+// Alias for backward compatibility - flexible interface for report generator
+type ProjectData = ProjectDTO & {
+  description: string;
+};
 
 interface CompactProjectReportGeneratorProps {
-  project?: ProjectData;
-  projects?: ProjectData[];
+  project?: ProjectDTO;
+  projects?: ProjectDTO[];
   onClose?: () => void;
   useDirectData?: boolean;
 }
@@ -125,10 +127,10 @@ export function CompactProjectReportGenerator({
               standardDeviation: 0
             };
             
-            // Create ProjectDetailDTO
-            const projectDetailDTO: ProjectDetailDTO = {
-              id: project.id,
-              title: project.title,
+            // Create ProjectDetailDTO with all required properties
+            const projectDetailDTO = {
+              id: project.id || '',
+              title: project.title || '',
               description: project.description || '',
               location: project.location || '',
               status: project.status || 'en cours',
@@ -142,50 +144,68 @@ export function CompactProjectReportGenerator({
               createdAt: project.createdAt || new Date().toISOString(),
               updatedAt: project.updatedAt || new Date().toISOString(),
               currency: project.currency || 'MRU',
+              // Required arrays for ProjectDetailDTO
+              phases: (project as any).phases || [],
               tasks: (project as any).tasks || [],
               risks: (project as any).risks || [],
+              milestones: (project as any).milestones || [],
+              payments: (project as any).payments || [],
+              materials: (project as any).materials || [],
+              stakeholders: (project as any).stakeholders || [],
+              insurancePolicies: (project as any).insurancePolicies || [],
+              insuranceCertificates: (project as any).insuranceCertificates || [],
+              alerts: (project as any).alerts || [],
+              tenders: (project as any).tenders || [],
+              plannedPhases: (project as any).plannedPhases || [],
+              constructionMilestones: (project as any).constructionMilestones || [],
+              expenses: (project as any).expenses || [],
               resources: (project as any).resources || [],
               inspections: (project as any).inspections || [],
-              plannedPhases: (project as any).phases || [],
-              expenses: (project as any).expenses || [],
-              alerts: (project as any).alerts || [],
-              insurancePolicies: (project as any).insurancePolicies || [],
               methodology: (project as any).methodology || 'hybrid',
               ganttChart: (project as any).ganttChart,
               pertAnalysis: (project as any).pertAnalysis,
               earnedValueManagement: (project as any).earnedValueManagement
-            };
+            } as ProjectDetailDTO;
             
             setSingleEnrichedData(projectDetailDTO);
             setSingleEvmMetrics(evmMetrics);
             setSinglePertAnalysis(pertAnalysis);
           } else {
             // Use ReportingService for comprehensive report
-            const completeReport = await reportingService.generateCompleteProjectReport({ project });
+            const completeReport = await reportingService.generateCompleteProjectReport({ project: project as any });
             const reportProject = completeReport.reportDTO.project || {};
             
-            // Convert ProjectData to ProjectDetailDTO
-            const projectDetailFromService: ProjectDetailDTO = {
+            // Convert ProjectData to ProjectDetailDTO with all required arrays
+            const projectDetailFromService = {
               ...reportProject,
-              id: project.id,
-              title: project.title,
+              id: project.id || '',
+              title: project.title || '',
               currency: project.currency || 'MRU',
               teamSize: project.teamSize || 0,
               createdAt: project.createdAt || new Date().toISOString(),
               updatedAt: project.updatedAt || new Date().toISOString(),
+              // Required arrays
+              phases: (reportProject as any).phases || [],
               tasks: (reportProject as any).tasks || [],
               risks: (reportProject as any).risks || [],
+              milestones: (reportProject as any).milestones || [],
+              payments: (reportProject as any).payments || [],
+              materials: (reportProject as any).materials || [],
+              stakeholders: (reportProject as any).stakeholders || [],
+              insurancePolicies: (reportProject as any).insurancePolicies || [],
+              insuranceCertificates: (reportProject as any).insuranceCertificates || [],
+              alerts: (reportProject as any).alerts || [],
+              tenders: (reportProject as any).tenders || [],
+              plannedPhases: (reportProject as any).plannedPhases || [],
+              constructionMilestones: (reportProject as any).constructionMilestones || [],
+              expenses: (reportProject as any).expenses || [],
               resources: (reportProject as any).resources || [],
               inspections: (reportProject as any).inspections || [],
-              plannedPhases: (reportProject as any).phases || [],
-              expenses: (reportProject as any).expenses || [],
-              alerts: (reportProject as any).alerts || [],
-              insurancePolicies: (reportProject as any).insurancePolicies || [],
               methodology: (reportProject as any).methodology || 'hybrid',
               ganttChart: (reportProject as any).ganttChart,
               pertAnalysis: (reportProject as any).pertAnalysis,
               earnedValueManagement: (reportProject as any).earnedValueManagement
-            };
+            } as ProjectDetailDTO;
             setSingleEnrichedData(projectDetailFromService);
             
             const evmMetricsResult = ReportCalculations.calculateEVMMetrics(
@@ -212,31 +232,40 @@ export function CompactProjectReportGenerator({
           
           for (const proj of projectList) {
             try {
-              const completeReport = await reportingService.generateCompleteProjectReport({ project: proj });
+              const completeReport = await reportingService.generateCompleteProjectReport({ project: proj as any });
               const reportProject = completeReport.reportDTO.project || {};
               
-              // Convert ProjectData to ProjectDetailDTO
-              const projectDetailFromService: ProjectDetailDTO = {
+              // Convert ProjectData to ProjectDetailDTO with all required arrays
+              const projectDetailFromService = {
                 ...reportProject,
-                id: proj.id,
-                title: proj.title,
+                id: proj.id || '',
+                title: proj.title || '',
                 currency: proj.currency || 'MRU',
                 teamSize: proj.teamSize || 0,
                 createdAt: proj.createdAt || new Date().toISOString(),
                 updatedAt: proj.updatedAt || new Date().toISOString(),
+                // Required arrays
+                phases: (reportProject as any).phases || [],
                 tasks: (reportProject as any).tasks || [],
                 risks: (reportProject as any).risks || [],
+                milestones: (reportProject as any).milestones || [],
+                payments: (reportProject as any).payments || [],
+                materials: (reportProject as any).materials || [],
+                stakeholders: (reportProject as any).stakeholders || [],
+                insurancePolicies: (reportProject as any).insurancePolicies || [],
+                insuranceCertificates: (reportProject as any).insuranceCertificates || [],
+                alerts: (reportProject as any).alerts || [],
+                tenders: (reportProject as any).tenders || [],
+                plannedPhases: (reportProject as any).plannedPhases || [],
+                constructionMilestones: (reportProject as any).constructionMilestones || [],
+                expenses: (reportProject as any).expenses || [],
                 resources: (reportProject as any).resources || [],
                 inspections: (reportProject as any).inspections || [],
-                plannedPhases: (reportProject as any).phases || [],
-                expenses: (reportProject as any).expenses || [],
-                alerts: (reportProject as any).alerts || [],
-                insurancePolicies: (reportProject as any).insurancePolicies || [],
                 methodology: (reportProject as any).methodology || 'hybrid',
                 ganttChart: (reportProject as any).ganttChart,
                 pertAnalysis: (reportProject as any).pertAnalysis,
                 earnedValueManagement: (reportProject as any).earnedValueManagement
-              };
+              } as ProjectDetailDTO;
               enrichedMap.set(proj.id, projectDetailFromService);
               
               const evmMetricsResult = ReportCalculations.calculateEVMMetrics(
