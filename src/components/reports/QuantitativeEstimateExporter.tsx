@@ -18,7 +18,8 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { NotificationService } from '@/application/services/NotificationService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { DevisPDFDocument } from './pdf/DevisPDFDocument';
-import { TenderEstimateDTO, TenderEstimateItemDTO, TenderDTO } from '@/dtos/entities/TenderEstimateDTO';
+import { TenderEstimateDTO, TenderEstimateItemDTO } from '@/dtos/entities/TenderEstimateDTO';
+import { TenderDTO } from '@/dtos/entities/TenderDTO';
 import { EstimateItem, EstimateData, ExportConfig } from '@/dtos/transforms/shared';
 
 // Mapping functions for type compatibility

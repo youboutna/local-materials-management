@@ -132,12 +132,12 @@ const ProjectExporter = () => {
             // Statistics
             tasksCount: detail?.tasks?.length || 0,
             completedTasksCount: detail?.tasks?.filter((t: any) => t.status === 'completed').length || 0,
-            phasesCount: detail?.plannedPhases?.length || 0,
-            inspectionsCount: detail?.inspections?.length || 0,
-            risksCount: detail?.risks?.length || 0,
-            resourcesCount: detail?.resources?.length || 0,
-            expensesCount: detail?.expenses?.length || 0,
-            alertsCount: detail?.alerts?.length || 0,
+            phasesCount: Array.isArray(detail?.plannedPhases) ? detail.plannedPhases.length : 0,
+            inspectionsCount: Array.isArray(detail?.inspections) ? detail.inspections.length : 0,
+            risksCount: Array.isArray(detail?.risks) ? detail.risks.length : 0,
+            resourcesCount: Array.isArray(detail?.resources) ? detail.resources.length : 0,
+            expensesCount: Array.isArray(detail?.expenses) ? detail.expenses.length : 0,
+            alertsCount: Array.isArray(detail?.alerts) ? detail.alerts.length : 0,
             
             // Related data arrays
             phases: detail?.plannedPhases || [],
@@ -383,7 +383,8 @@ const ProjectExporter = () => {
     // Resources sheet
     const allResources: any[] = [];
     data.forEach(project => {
-      project.resources?.forEach((resource: any) => {
+      const projectResources = Array.isArray(project.resources) ? project.resources : [];
+      projectResources.forEach((resource: any) => {
         allResources.push({
           projectId: project.id,
           project: project.title,
@@ -406,11 +407,10 @@ const ProjectExporter = () => {
     // Contacts/Stakeholders sheet
     const allContacts: any[] = [];
     data.forEach(project => {
-      // Merge contacts and stakeholders
-      const projectContacts = [
-        ...(project.contacts || []),
-        ...(project.stakeholders || [])
-      ];
+      // Merge contacts and stakeholders with array safety
+      const contacts = Array.isArray(project.contacts) ? project.contacts : [];
+      const stakeholders = Array.isArray(project.stakeholders) ? project.stakeholders : [];
+      const projectContacts = [...contacts, ...stakeholders];
       
       projectContacts.forEach((contact: any) => {
         allContacts.push({
@@ -495,11 +495,11 @@ const ProjectExporter = () => {
       projectReference: project.projectReference,
       mainContractor: project.mainContractor,
       tasksCount: project.tasks?.length || 0,
-      phasesCount: project.phases?.length || 0,
-      inspectionsCount: project.inspections?.length || 0,
-      risksCount: project.risks?.length || 0,
-      resourcesCount: project.resources?.length || 0,
-      expensesCount: project.expenses?.length || 0
+      phasesCount: Array.isArray(project.phases) ? project.phases.length : 0,
+      inspectionsCount: Array.isArray(project.inspections) ? project.inspections.length : 0,
+      risksCount: Array.isArray(project.risks) ? project.risks.length : 0,
+      resourcesCount: Array.isArray(project.resources) ? project.resources.length : 0,
+      expensesCount: Array.isArray(project.expenses) ? project.expenses.length : 0
     }));
     
     const headers = Object.keys(flatData[0] || {});

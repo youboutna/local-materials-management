@@ -119,10 +119,10 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
         ${ReportFormatting.generatePaginatedTable(
           [reportData.inspection],
           [
-            { label: 'ID Inspection', render: (item) => item.id, width: '25%' },
-            { label: 'Type', render: (item) => item.inspection_type || 'Non spécifié', width: '25%' },
-            { label: 'Date', render: (item) => item.inspection_date ? format(new Date(item.inspection_date), 'dd/MM/yyyy') : 'Non défini', width: '25%' },
-            { label: 'Statut', render: (item) => ReportFormatting.generateStatusBadge(item.status || 'En attente'), width: '25%' }
+            { label: 'ID Inspection', render: (item: any) => item.id, width: '25%' },
+            { label: 'Type', render: (item: any) => item.type || item.inspection_type || 'Non spécifié', width: '25%' },
+            { label: 'Date', render: (item: any) => (item.scheduledDate || item.inspection_date) ? format(new Date(item.scheduledDate || item.inspection_date), 'dd/MM/yyyy') : 'Non défini', width: '25%' },
+            { label: 'Statut', render: (item: any) => ReportFormatting.generateStatusBadge(item.status || 'En attente'), width: '25%' }
           ],
           { pageSize: 10, includeHeaders: true },
           'Détails de l\'Inspection'
@@ -208,14 +208,14 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
                     reportData.inspection.status === 'failed' || reportData.inspection.status === 'requires_changes' ? 'Inspection Échouée - Actions Requises' :
                     'Inspection en Cours'}
                 </h3>
-                <p style="margin: 5px 0 0 0; color: #6b7280;">Progression: ${reportData.inspection.progress_at_inspection || 0}%</p>
+                <p style="margin: 5px 0 0 0; color: #6b7280;">Progression: ${(reportData.inspection as any).progressAtInspection || (reportData.inspection as any).progress_at_inspection || 0}%</p>
               </div>
             </div>
             
-            ${reportData.inspection.comments ? `
+            ${(reportData.inspection as any).comments || (reportData.inspection as any).notes ? `
             <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6;">
               <h4 style="margin: 0 0 10px 0; color: #1e40af;">Notes de l'inspecteur:</h4>
-              <p style="margin: 0; line-height: 1.6; color: #374151;">${reportData.inspection.comments}</p>
+              <p style="margin: 0; line-height: 1.6; color: #374151;">${(reportData.inspection as any).comments || (reportData.inspection as any).notes}</p>
             </div>
             ` : ''}
           </div>
@@ -346,8 +346,8 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
           <h2>Rapport d'inspection: ${reportConfig.title}</h2>
           <p>Bonjour,</p>
           <p>Veuillez trouver ci-joint le rapport d'inspection pour l'inspection <strong>${inspection.id}</strong>.</p>
-          <p><strong>Date d'inspection:</strong> ${inspection.inspection_date ? format(new Date(inspection.inspection_date), 'dd/MM/yyyy') : 'N/A'}</p>
-          <p><strong>Type d'inspection:</strong> ${inspection.inspection_type || 'Non spécifié'}</p>
+          <p><strong>Date d'inspection:</strong> ${(inspection as any).scheduledDate || (inspection as any).inspection_date ? format(new Date((inspection as any).scheduledDate || (inspection as any).inspection_date), 'dd/MM/yyyy') : 'N/A'}</p>
+          <p><strong>Type d'inspection:</strong> ${(inspection as any).type || (inspection as any).inspection_type || 'Non spécifié'}</p>
           <p><strong>Statut:</strong> ${inspection.status || 'En attente'}</p>
           <p>Ce rapport a été généré automatiquement par le système.</p>
           <br>
@@ -501,12 +501,12 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
         {/* Inspection Status */}
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">Statut de l'inspection:</span>
-          <Badge variant="secondary" className={getInspectionStatusColor(inspection.status)}>
+          <Badge variant="secondary" className={getInspectionStatusColor(inspection.status as string)}>
             {inspection.status || 'En attente'}
           </Badge>
-          {inspection.progress_at_inspection && (
+          {((inspection as any).progressAtInspection || (inspection as any).progress_at_inspection) && (
             <span className="text-sm text-muted-foreground">
-              Progression: {inspection.progress_at_inspection}%
+              Progression: {(inspection as any).progressAtInspection || (inspection as any).progress_at_inspection}%
             </span>
           )}
         </div>
