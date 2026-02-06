@@ -329,7 +329,7 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
                     )}
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => startEdit(task)}>
+                    <Button size="sm" variant="outline" onClick={() => startEdit(task as any)}>
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button

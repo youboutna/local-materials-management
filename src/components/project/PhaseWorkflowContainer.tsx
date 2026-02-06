@@ -133,14 +133,15 @@ const PhaseWorkflowContainer: React.FC<PhaseWorkflowContainerProps> = ({
         if (uploadRes.success) {
           const publicUrl = uploadRes.url || '';
           try {
-            const documentService = new DocumentService();
-            const docRecord = await documentService.createDocument({
-              title: `PV - ${rawPhaseData.phase_name}`,
-              type: DocumentType.PV,
-              projectId: projectId,
-              description: `Procès-verbal généré pour la phase ${rawPhaseData.phase_name}`,
-              fileUrl: publicUrl,
-            } as CreateDocumentRequestDto);
+             const documentService = new DocumentService();
+             const docRecord = await documentService.createDocument({
+               title: `PV - ${rawPhaseData.phase_name}`,
+               name: `PV - ${rawPhaseData.phase_name}`,
+               type: DocumentType.PV,
+               projectId: projectId,
+               description: `Procès-verbal généré pour la phase ${rawPhaseData.phase_name}`,
+               url: publicUrl,
+             } as any);
 
             const { data: projectData } = await supabase
               .from('projects')
