@@ -23,7 +23,7 @@ import {
   Image,
   FileBarChart,
 } from "lucide-react";
-import { useProjectDocumentsHex } from "@/hooks/hexagonal";
+import { useDocumentsHex } from "@/hooks/hexagonal";
 import { toast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -55,7 +55,7 @@ interface ProjectDocumentsProps {
 const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
   const { t } = useLanguage();
 
-  const { documents: rawDocuments, loading, refetch: fetchDocuments } = useProjectDocumentsHex(projectId);
+  const { documents: rawDocuments, isLoading: loading, refetch: fetchDocuments } = useDocumentsHex({ projectId });
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
@@ -126,16 +126,15 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
     }
 
     try {
-      const { DocumentService } = await import('@/services/DocumentService');
-      await DocumentService.createDocument({
+      const { DocumentService } = await import('@/application/services/DocumentService');
+      await new DocumentService().createDocument({
         title: uploadData.file.name,
         description: uploadData.description,
-        document_type: uploadData.document_type as any,
-        file_name: uploadData.file.name,
-        mime_type: uploadData.file.type,
-        file_size: uploadData.file.size,
-        project_id: projectId,
-        status: "draft",
+        documentType: uploadData.document_type as any,
+        fileName: uploadData.file.name,
+        mimeType: uploadData.file.type,
+        fileSize: uploadData.file.size,
+        projectId: projectId,
       });
 
       toast({
@@ -164,8 +163,8 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
     if (!confirm(t("confirm.delete_document"))) return;
 
     try {
-      const { DocumentService } = await import('@/services/DocumentService');
-      await DocumentService.deleteDocument(documentId);
+      const { DocumentService } = await import('@/application/services/DocumentService');
+      await new DocumentService().deleteDocument(documentId);
       toast({
         title: t("success.title"),
         description: t("success.delete_document"),

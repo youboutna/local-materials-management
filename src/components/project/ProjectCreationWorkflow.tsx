@@ -57,7 +57,7 @@ import { ProjectDTO, CreateProjectDTO } from "@/dtos/entities/ProjectDTO";
 import { MaterialDTO, MaterialCategory, MaterialStatus, MaterialUnit } from "@/dtos/entities/MaterialDTO";
 import { RiskDTO } from "@/dtos/entities/RiskDTO";
 import { EmployeeDTO } from "@/dtos/entities/EmployeeDTO";
-import { PhaseDTO } from "@/dtos/entities/PhaseDTO";
+import { PhaseDTO, PhaseType, PhaseStatus, PhasePriority } from "@/dtos/entities/PhaseDTO";
 
 interface ProjectCreationWorkflowProps {
   onSubmit: (data: CreateProjectDTO) => void;
@@ -502,13 +502,45 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
              />
            )}
 
-           {currentStep === 3 && (
-             <ConstructionPhaseManager
-               projectId={projectWorkflowData.projectId || ''}
-               phases={projectWorkflowData.relatedData?.phases || []}
-               onPhasesChange={(phases) => updateRelatedData({ phases })}
-             />
-           )}
+            {currentStep === 3 && (
+              <ConstructionPhaseManager
+                projectId={projectWorkflowData.projectId || ''}
+                phases={(projectWorkflowData.relatedData?.phases || []).map(p => ({
+                  id: p.id,
+                  title: p.name || p.type || 'Phase',
+                  description: p.description || '',
+                  startDate: p.startDate || '',
+                  endDate: p.endDate || '',
+                  estimatedDuration: 0,
+                  status: (p.status as 'not_started' | 'in_progress' | 'completed' | 'delayed') || 'not_started',
+                  budget: 0,
+                  actualCost: 0,
+                  progress: p.progress || 0,
+                  materials: [],
+                  humanResources: [],
+                  suppliers: [],
+                  location: ''
+                }))}
+                onChange={(phases) => updateRelatedData({ 
+                  phases: phases.map(p => ({
+                    id: p.id,
+                    projectId: projectWorkflowData.projectId || '',
+                    name: p.title,
+                    type: PhaseType.STRUCTURAL,
+                    description: p.description,
+                    startDate: p.startDate,
+                    endDate: p.endDate,
+                    status: p.status === 'not_started' ? PhaseStatus.PLANNING : 
+                            p.status === 'in_progress' ? PhaseStatus.ACTIVE : 
+                            p.status === 'completed' ? PhaseStatus.COMPLETED : PhaseStatus.PLANNING,
+                    progress: p.progress,
+                    priority: PhasePriority.MEDIUM,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                  }))
+                })}
+              />
+            )}
 
            {currentStep === 4 && (
              <RiskAnalysisStep
