@@ -661,3 +661,26 @@ export class WorkflowOrchestrator {
     }
   }
 }
+
+// ============= FACTORY FUNCTION =============
+
+/**
+ * Factory function to get a WorkflowOrchestrator instance
+ * Uses singleton pattern per projectId for efficiency
+ */
+const orchestratorCache = new Map<string, WorkflowOrchestrator>();
+
+export function getWorkflowOrchestrator(projectId: string): WorkflowOrchestrator {
+  if (!orchestratorCache.has(projectId)) {
+    orchestratorCache.set(projectId, new WorkflowOrchestrator(projectId));
+  }
+  return orchestratorCache.get(projectId)!;
+}
+
+/**
+ * Clear orchestrator cache (useful for testing or cleanup)
+ */
+export function clearOrchestratorCache(): void {
+  orchestratorCache.forEach(orch => orch.dispose());
+  orchestratorCache.clear();
+}

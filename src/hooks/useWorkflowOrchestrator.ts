@@ -88,7 +88,7 @@ export function useWorkflowOrchestrator(projectId: string | undefined): UseWorkf
     setState(prev => ({ ...prev, isProcessing: true }));
     
     try {
-      const result = await orchestrator.onProgressUpdated(phaseId, progress);
+      const result = await orchestrator.onProgressUpdated({ phaseId, newProgress: progress });
       
       if (!result.success) {
         toast.error('Erreur workflow', { description: result.error });
@@ -108,7 +108,7 @@ export function useWorkflowOrchestrator(projectId: string | undefined): UseWorkf
     setState(prev => ({ ...prev, isProcessing: true }));
     
     try {
-      const result = await orchestrator.triggerPayment(phaseId, amount);
+      const result = await orchestrator.triggerPayment({ phaseId, amount });
       
       if (!result.success) {
         toast.error('Erreur paiement', { description: result.error });
@@ -122,7 +122,7 @@ export function useWorkflowOrchestrator(projectId: string | undefined): UseWorkf
     if (!orchestrator) return;
 
     try {
-      const status = orchestrator.getWorkflowStatus();
+      const status = await orchestrator.getWorkflowStatus(phaseId);
       
       setState(prev => ({
         ...prev,
