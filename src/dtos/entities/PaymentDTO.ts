@@ -122,6 +122,7 @@ export interface UpdatePaymentRequestDTO {
   description?: string;
   paymentReason?: string;
   status?: 'pending' | 'approved' | 'rejected' | 'paid' | 'cancelled';
+  notes?: string;
 }
 
 // Legacy compatibility types from transforms

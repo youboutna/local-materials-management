@@ -28,7 +28,7 @@ import {
 import React, { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { usePaymentCrud } from '@/hooks/hexagonal';
-import type { PaymentDTO } from '@/dtos/transforms/PaymentDomainTransformer';
+import type { PaymentDTO } from '@/dtos/entities/PaymentDTO';
 
 interface PaymentCrudProps {
   projectId?: string;

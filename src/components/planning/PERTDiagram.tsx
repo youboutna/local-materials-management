@@ -70,7 +70,7 @@ const PERTDiagram: React.FC<PERTDiagramProps> = ({
     );
   }
 
-  if (!data || data.activities.length === 0) {
+  if (!data || !data.activities || data.activities.length === 0) {
     return (
       <Card>
         <CardContent className="p-8 text-center">
@@ -140,7 +140,7 @@ const PERTDiagram: React.FC<PERTDiagramProps> = ({
               <AlertTriangle className="h-4 w-4" />
               <span className="text-xs font-medium uppercase">Chemin critique</span>
             </div>
-            <p className="text-2xl font-bold">{data.criticalPath.length}</p>
+            <p className="text-2xl font-bold">{data.criticalPath?.length || 0}</p>
             <p className="text-xs text-muted-foreground mt-1">
               Activités sans marge
             </p>
@@ -161,9 +161,9 @@ const PERTDiagram: React.FC<PERTDiagramProps> = ({
                 <TableHead className="text-right">Distribution</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
-              {data.activities.slice(0, compact ? 5 : undefined).map((activity, idx) => {
-                const isCritical = data.criticalPath.includes(activity.name);
+             <TableBody>
+              {(data.activities || []).slice(0, compact ? 5 : undefined).map((activity, idx) => {
+                const isCritical = (data.criticalPath || []).includes(activity.name);
                 const variancePercent = activity.mostLikely > 0 
                   ? (activity.standardDeviation / activity.mostLikely) * 100 
                   : 0;

@@ -106,25 +106,25 @@ const SystemHealthOverview: React.FC = () => {
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Performance HTTP</CardTitle>
             <Activity className={`h-4 w-4 ${
-              stats.http.status === 'active' ? 'text-green-600' : 
-              stats.http.status === 'warning' ? 'text-yellow-600' : 'text-red-600'
+              stats.http?.status === 'active' ? 'text-green-600' : 
+              stats.http?.status === 'warning' ? 'text-yellow-600' : 'text-red-600'
             }`} />
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Temps de réponse</span>
-                <span>{formatMetric(stats.http.responseTime, 'time')}</span>
+                <span>{stats.http?.responseTime ? formatMetric(stats.http.responseTime, 'time') : '-'}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Taux d'erreur</span>
-                <span>{formatMetric(stats.http.errorRate, 'percentage')}</span>
+                <span>{stats.http?.errorRate ? formatMetric(stats.http.errorRate, 'percentage') : '-'}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Disponibilité</span>
-                <span>{formatMetric(stats.http.uptime, 'percentage')}</span>
+                <span>{stats.http?.uptime ? formatMetric(stats.http.uptime, 'percentage') : '-'}</span>
               </div>
-              <Progress value={stats.http.uptime} className="mt-2" />
+              {stats.http?.uptime && <Progress value={stats.http.uptime} className="mt-2" />}
             </div>
           </CardContent>
         </Card>
