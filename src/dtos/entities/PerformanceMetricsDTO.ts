@@ -18,6 +18,12 @@ export interface PerformanceMetricsDTO {
   timestamp: string;
   responseTime?: number;
   errorRate?: number;
+  http?: {
+    status: 'active' | 'warning' | 'critical';
+    responseTime: number;
+    errorRate: number;
+    uptime: number;
+  };
 }
 
 export interface PerformanceAlertDTO {

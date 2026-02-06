@@ -450,7 +450,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">
-                        {getDocumentTypeLabel(doc.document_type)}
+                        {getDocumentTypeLabel(doc.document_type || 'other')}
                       </Badge>
                     </TableCell>
                     <TableCell>{doc.supplier_name || '-'}</TableCell>

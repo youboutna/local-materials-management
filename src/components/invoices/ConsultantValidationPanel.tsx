@@ -167,7 +167,11 @@ export function ConsultantValidationPanel() {
         const fileName = `service-fait-${invoiceId}-${Date.now()}.${fileExt}`;
         const filePath = `progress-invoices/${fileName}`;
 
-        const uploadResult = await storageService.uploadFile(serviceFaitFile);
+        const uploadResult = await storageService.uploadFile({
+          bucket: 'documents',
+          path: filePath,
+          file: serviceFaitFile
+        });
         // StorageService throws exceptions on error, so if we get here it succeeded
 
         serviceFaitDocumentId = `doc-${Date.now()}`;

@@ -164,7 +164,8 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                   isOverLimit && "border-2 border-destructive/30"
                 )}>
                   {columnTasks.map((task: KanbanTask) => {
-                    const daysRemaining = task.dueDate ? getDaysRemaining(task.dueDate) : null;
+                    const dueDate = task.due_date || task.dueDate;
+                    const daysRemaining = dueDate ? getDaysRemaining(dueDate) : null;
                     const isOverdue = daysRemaining !== null && daysRemaining < 0;
                     const isDueSoon = daysRemaining !== null && daysRemaining <= 3 && daysRemaining >= 0;
                     
@@ -182,72 +183,72 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                         )}
                       >
                         {/* Priority & Tags */}
-                        <div className="flex items-center gap-1 mb-2">
-                          <Badge className={cn("text-xs h-5", getPriorityColor(task.priority))}>
-                            {getPriorityIcon(task.priority)}
-                            {task.priority}
-                          </Badge>
-                          {task.tags?.slice(0, 2).map(tag => (
-                            <Badge key={tag} variant="outline" className="text-xs h-5">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
+                         <div className="flex items-center gap-1 mb-2">
+                           <Badge className={cn("text-xs h-5", getPriorityColor(task.priority))}>
+                             {getPriorityIcon(task.priority)}
+                             {task.priority}
+                           </Badge>
+                           {(task.tags || [])?.slice(0, 2).map(tag => (
+                             <Badge key={tag} variant="outline" className="text-xs h-5">
+                               {tag}
+                             </Badge>
+                           ))}
+                         </div>
 
                         {/* Title */}
                         <h4 className="font-medium text-sm line-clamp-2 mb-2">
                           {task.title}
                         </h4>
 
-                        {/* Progress */}
-                        {task.progress !== undefined && task.progress > 0 && (
-                          <div className="mb-2">
-                            <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                              <span>Progression</span>
-                              <span>{task.progress}%</span>
-                            </div>
-                            <Progress value={task.progress} className="h-1" />
-                          </div>
-                        )}
+                         {/* Progress */}
+                         {(task.progress || 0) > 0 && (
+                           <div className="mb-2">
+                             <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                               <span>Progression</span>
+                               <span>{task.progress}%</span>
+                             </div>
+                             <Progress value={task.progress || 0} className="h-1" />
+                           </div>
+                         )}
 
-                        {/* Footer */}
-                        <div className="flex items-center justify-between mt-2 pt-2 border-t">
-                          {/* Assignee */}
-                          {task.assignee ? (
-                            <div className="flex items-center gap-1.5">
-                              <Avatar className="h-5 w-5">
-                                <AvatarFallback className="text-xs bg-primary/10">
-                                  {task.assignee.substring(0, 2).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="text-xs text-muted-foreground truncate max-w-[80px]">
-                                {task.assignee}
-                              </span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <User className="h-3 w-3" />
-                              Non assigné
-                            </div>
-                          )}
+                         {/* Footer */}
+                         <div className="flex items-center justify-between mt-2 pt-2 border-t">
+                           {/* Assignee */}
+                           {(task.assigned_to || task.assignee) ? (
+                             <div className="flex items-center gap-1.5">
+                               <Avatar className="h-5 w-5">
+                                 <AvatarFallback className="text-xs bg-primary/10">
+                                   {(task.assigned_to || task.assignee)?.substring(0, 2).toUpperCase()}
+                                 </AvatarFallback>
+                               </Avatar>
+                               <span className="text-xs text-muted-foreground truncate max-w-[80px]">
+                                 {task.assigned_to || task.assignee}
+                               </span>
+                             </div>
+                           ) : (
+                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                               <User className="h-3 w-3" />
+                               Non assigné
+                             </div>
+                           )}
 
-                          {/* Due Date */}
-                          {task.dueDate && (
-                            <div className={cn(
-                              "flex items-center gap-1 text-xs",
-                              isOverdue && "text-destructive",
-                              isDueSoon && "text-amber-600",
-                              !isOverdue && !isDueSoon && "text-muted-foreground"
-                            )}>
-                              <Calendar className="h-3 w-3" />
-                              {isOverdue ? (
-                                <span>En retard ({Math.abs(daysRemaining!)}j)</span>
-                              ) : isDueSoon ? (
-                                <span>Dans {daysRemaining}j</span>
-                              ) : (
-                                <span>{format(parseISO(task.dueDate), 'd MMM', { locale: fr })}</span>
-                              )}
-                            </div>
+                           {/* Due Date */}
+                           {dueDate && (
+                             <div className={cn(
+                               "flex items-center gap-1 text-xs",
+                               isOverdue && "text-destructive",
+                               isDueSoon && "text-amber-600",
+                               !isOverdue && !isDueSoon && "text-muted-foreground"
+                             )}>
+                               <Calendar className="h-3 w-3" />
+                               {isOverdue ? (
+                                 <span>En retard ({Math.abs(daysRemaining!)}j)</span>
+                               ) : isDueSoon ? (
+                                 <span>Dans {daysRemaining}j</span>
+                               ) : (
+                                 <span>{format(parseISO(dueDate), 'd MMM', { locale: fr })}</span>
+                               )}
+                             </div>
                           )}
                         </div>
                       </div>
