@@ -75,7 +75,7 @@ const TenderProjectPhases: React.FC<TenderProjectPhasesProps> = ({
 
   const getOverallProgress = () => {
     if (phases.length === 0) return 0;
-    return Math.round(phases.reduce((sum, p) => sum + p.progress, 0) / phases.length);
+    return Math.round(phases.reduce((sum, p) => sum + (p.progress ?? 0), 0) / phases.length);
   };
 
   const handlePhaseClick = (phaseId: string) => {

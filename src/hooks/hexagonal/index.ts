@@ -695,3 +695,47 @@ export {
 export { 
   MilestoneService
 } from '@/application/services/MilestoneService';
+
+// Re-export Tender types for TenderCrud component
+export type { TenderDTO as Tender } from '@/dtos/entities/TenderDTO';
+export type { ProjectDTO as Project } from '@/dtos/entities/ProjectDTO';
+
+// Tender form data type for compatibility
+export interface TenderFormData {
+  title: string;
+  description: string;
+  project_id: string;
+  launch_date: string;
+  attribution_date: string;
+  deadline_date: string;
+  submission_deadline: string;
+  evaluation_deadline: string;
+  selection_mode: string;
+  market_type: string;
+  financing_source: string;
+  project_reference: string;
+  current_phase: string;
+  current_stage: string;
+  procurement_type: string;
+  estimated_value: string;
+  status: 'draft' | 'published' | 'closed' | 'awarded';
+}
+
+// Project phase type for tender
+export interface ProjectPhaseForTender {
+  id: string;
+  name: string;
+  description?: string;
+  status: string;
+  progress?: number;
+  startDate?: string;
+  endDate?: string;
+  budget?: number;
+  teamSize?: number;
+  steps: Array<{
+    id: string;
+    name: string;
+    order: number;
+    status: string;
+  }>;
+}

@@ -308,4 +308,53 @@ export class DocumentService {
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete document');
     }
   }
+
+  /**
+   * Upload document with file
+   */
+  async uploadDocument(data: { 
+    title: string; 
+    file: File; 
+    type: DocumentType; 
+    projectId?: string; 
+    description?: string;
+  }, uploadedBy: string): Promise<{ url: string; id: string }> {
+    try {
+      // Create document record with all required fields
+      const documentData: CreateDocumentDTO = {
+        title: data.title,
+        documentType: data.type,
+        projectId: data.projectId ?? null,
+        phaseId: null,
+        inspectionId: null,
+        paymentId: null,
+        supplierId: null,
+        description: data.description ?? null,
+        fileName: data.file.name,
+        fileSize: data.file.size,
+        fileUrl: null,
+        mimeType: data.file.type,
+        uploadedBy: uploadedBy ?? null,
+        status: DocumentStatus.DRAFT,
+        isInternalOnly: false,
+        isSharedWithSuppliers: false,
+        deadlineDate: null,
+        assignedTo: null,
+        category: null,
+        subcategory: null,
+        metadata: null,
+        tags: []
+      };
+
+      const createdDoc = await this.createDocument(documentData);
+      
+      return {
+        url: createdDoc.fileUrl || '',
+        id: createdDoc.id
+      };
+    } catch (error) {
+      console.error('DocumentService.uploadDocument failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to upload document');
+    }
+  }
 }

@@ -18,6 +18,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/hexagonal';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TenderEvaluationPanelProps {
   tenderId: string;
@@ -94,7 +95,10 @@ const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
       const updateData: any = { [field]: value };
       
       if (field === 'status' && value !== 'submitted') {
-        updateData.reviewer_id = (await getUser()).data.user?.id;
+        const currentUser = await supabase.auth.getUser();
+        if (currentUser.data?.user?.id) {
+          updateData.reviewer_id = currentUser.data.user.id;
+        }
         updateData.reviewed_at = new Date().toISOString();
       }
 
@@ -183,7 +187,7 @@ const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
           <CardContent className="h-full overflow-y-auto">
             <div className="space-y-3">
               {submissions
-                .filter(sub => verifiedSubmissions.length === 0 || verifiedSubmissions.includes(sub.id))
+                .filter(sub => !verifiedSubmissions || verifiedSubmissions.length === 0 || verifiedSubmissions.includes(sub.id))
                 .map((submission) => (
                 <div
                   key={submission.id}

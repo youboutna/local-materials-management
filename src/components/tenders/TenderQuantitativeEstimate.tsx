@@ -116,7 +116,7 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
 
     try {
       const result = await uploadFile(file);
-      setSelectedFile(result.fileName);
+      setSelectedFile(result.fileName || null);
       toast({
         title: "Fichier téléchargé",
         description: `${file.name} a été téléchargé avec succès`,
