@@ -486,54 +486,22 @@ export class InspectionExecutionService {
       inspectionId, 
       projectId: '', 
       inspector: 'system',
-      location 
+      location
     });
     return result.success;
   }
 
-  static async updateExecutionData(inspectionId: string, data: Partial<InspectionExecutionData>): Promise<boolean> {
-    try {
-      console.log(`Updating execution data for inspection: ${inspectionId}`);
-      return true;
-    } catch (error) {
-      console.error('Failed to update execution data:', error);
-      return false;
-    }
-  }
-
-  static async uploadDocumentStatic(inspectionId: string, projectId: string, file: File): Promise<InspectionDocument | null> {
-    try {
-      const document: InspectionDocument = {
-        id: `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+  static async uploadDocument(inspectionId: string, file: File, documentType: string): Promise<any> {
+    const service = new InspectionExecutionService();
+    return service.uploadDocument({ 
+      inspectionId, 
+      document: { 
+        title: file.name, 
+        fileUrl: '', 
+        documentType: documentType as any,
         name: file.name,
-        type: 'report',
-        url: `mock-url/${file.name}`,
-        size: file.size || 0,
-        mime_type: file.type || 'application/octet-stream',
-        uploaded_at: new Date().toISOString(),
-        uploaded_by: 'system'
-      };
-      
-      console.log(`Document uploaded: ${file.name} for inspection: ${inspectionId}`);
-      return document;
-    } catch (error) {
-      console.error('Failed to upload document:', error);
-      return null;
-    }
+        type: documentType as any
+      } as CreateDocumentDTO
+    });
   }
 }
-
-// Static method wrappers for backward compatibility
-(InspectionExecutionService as any).uploadDocument = async function(
-  inspectionId: string, 
-  projectId: string, 
-  file: File, 
-  location?: { latitude: number; longitude: number }
-): Promise<any> {
-  return InspectionExecutionService.uploadDocumentStatic(inspectionId, projectId, file);
-};
-
-(InspectionExecutionService as any).getInspectionExecution = async function(inspectionId: string): Promise<any> {
-  const data = await InspectionExecutionService.getExecutionData(inspectionId);
-  return data;
-};

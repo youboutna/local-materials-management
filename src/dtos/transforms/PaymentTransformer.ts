@@ -402,8 +402,15 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
    * Convert DTO to domain entity (alias for toEntity)
    * Rule #3: from dtos->DB
    */
-  static toDomain(dto: PaymentDTO): Payment {
-    return this.toEntity(dto);
+  static toDomain(dto: PaymentDTO | any): Payment {
+    // Handle both camelCase and snake_case properties from DTO
+    // Note: Payment domain entity may use different property names
+    const payload = {
+      ...dto,
+      projectId: dto.projectId || dto.project_id || (dto.project && typeof dto.project === 'object' ? dto.project.id : ''),
+      contractorId: dto.contractorId || dto.contractor_id || '',
+    };
+    return this.toEntity(payload);
   }
 
   /**

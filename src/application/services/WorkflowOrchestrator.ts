@@ -596,7 +596,15 @@ export class WorkflowOrchestrator {
       
       // Transform DTOs to domain entities
       const milestones = milestoneDTOs.map(dto => MilestoneTransformer.fromDTO(dto));
-      const payments = paymentDTOs.map(paymentDTO => PaymentTransformer.toDomain(paymentDTO));
+      const payments = paymentDTOs.map(paymentDTO => {
+        // Ensure PaymentDTO has required fields for domain transformation
+        const dtoWithDefaults: any = {
+          ...paymentDTO,
+          projectId: paymentDTO.projectId || paymentDTO.project_id,
+          contractorId: paymentDTO.contractorId || paymentDTO.contractor_id,
+        };
+        return PaymentTransformer.toDomain(dtoWithDefaults);
+      });
       
       // Calculate real metrics
       const completedMilestones = milestones.filter(m => m.isCompleted()).length;
