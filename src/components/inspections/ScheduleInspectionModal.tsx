@@ -171,10 +171,10 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
         return;
       }
 
-      const result = await schedulingService.checkInspectorAvailability(
-        selectedInspectorId,
-        scheduledDate
-      );
+      const result = await schedulingService.checkInspectorAvailability({
+        inspectorId: selectedInspectorId,
+        date: scheduledDate
+      });
 
       if (!result) {
         setAvailabilityWarning('Inspecteur non disponible à cette date');

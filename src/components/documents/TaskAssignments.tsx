@@ -32,7 +32,6 @@ import {
   Filter,
   Bell,
 } from "lucide-react";
-import { TaskAssignmentDTO } from '@/dtos/transforms/shared';
 import type { Database } from "@/integrations/supabase/types";
 import { useLanguage } from "@/contexts/LanguageContext";
 import UserSelector from '@/components/selectors/UserSelector';
@@ -48,6 +47,21 @@ import {
 
 type Project = { id: string; title: string };
 
+// Local form data type
+interface TaskFormData {
+  title: string;
+  description: string;
+  project_id: string;
+  assigned_to: string;
+  assignee_type: "supplier" | "employee" | "user" | "";
+  assignee_name: string;
+  assignee_email: string;
+  due_date: string;
+  priority: string;
+  status: string;
+  notes: string;
+}
+
 const TaskAssignmentsComponent = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -55,12 +69,12 @@ const TaskAssignmentsComponent = () => {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [filterAssignee, setFilterAssignee] = useState<string>("all");
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<TaskFormData>({
     title: "",
     description: "",
     project_id: "",
     assigned_to: "",
-    assignee_type: "" as "supplier" | "employee" | "user" | "",
+    assignee_type: "",
     assignee_name: "",
     assignee_email: "",
     due_date: "",
@@ -99,7 +113,7 @@ const TaskAssignmentsComponent = () => {
         if (needsUpdate) {
           return {
             ...prev,
-            assignee_type: assigneeDetails.type,
+            assignee_type: assigneeDetails.type as any,
             assignee_name: assigneeDetails.name,
             assignee_email: assigneeDetails.email,
           };
@@ -118,23 +132,25 @@ const TaskAssignmentsComponent = () => {
   }, {} as Record<string, string>) || {};
 
   const createMutation = useMutation({
-    mutationFn: async (taskData: typeof formData) => {
+    mutationFn: async (taskData: TaskFormData) => {
       const taskService = new TaskAssignmentService();
-      const taskDTO = {
-        title: taskData.title,
-        description: taskData.description,
-        project_id: taskData.project_id || undefined,
-        assignee_type: taskData.assignee_type || undefined,
-        assignee_name: taskData.assignee_name || undefined,
-        assignee_email: taskData.assignee_email || undefined,
-        assigned_to: taskData.assigned_to || undefined,
-        due_date: taskData.due_date || undefined,
-        priority: taskData.priority as "low" | "medium" | "high" | "urgent",
-        status: taskData.status as "pending" | "in_progress" | "completed" | "cancelled",
-        notes: taskData.notes || undefined,
-      };
       
-      return await taskService.createTaskAssignment({ taskData: taskDTO, assignedBy: user?.id });
+      // Build proper DTO for service
+      return await taskService.createTaskAssignment({ 
+        taskData: {
+          taskId: crypto.randomUUID(),
+          projectId: taskData.project_id || '',
+          assignedTo: taskData.assigned_to || '',
+          assignedBy: user?.id || '',
+          assigneeType: (taskData.assignee_type || 'user') as any,
+          title: taskData.title,
+          description: taskData.description || undefined,
+          priority: taskData.priority as any,
+          dueDate: taskData.due_date || undefined,
+          assignmentNotes: taskData.notes || undefined,
+        }, 
+        assignedBy: user?.id 
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["task_assignments"] });
@@ -154,23 +170,20 @@ const TaskAssignmentsComponent = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: typeof formData }) => {
+    mutationFn: async ({ id, data }: { id: string; data: TaskFormData }) => {
       const taskService = new TaskAssignmentService();
-      const taskDTO = {
-        title: data.title,
-        description: data.description,
-        project_id: data.project_id || undefined,
-        assignee_type: data.assignee_type || undefined,
-        assignee_name: data.assignee_name || undefined,
-        assignee_email: data.assignee_email || undefined,
-        assigned_to: data.assigned_to || undefined,
-        due_date: data.due_date || undefined,
-        priority: data.priority as "low" | "medium" | "high" | "urgent",
-        status: data.status as "pending" | "in_progress" | "completed" | "cancelled",
-        notes: data.notes || undefined,
-      };
-
-      return await taskService.updateTaskAssignment({ id, updates: taskDTO });
+      
+      // Build proper update DTO
+      return await taskService.updateTaskAssignment({ 
+        id, 
+        updates: {
+          priority: data.priority as any,
+          status: data.status as any,
+          dueDate: data.due_date || undefined,
+          assignmentNotes: data.notes || undefined,
+          progress: 0,
+        }
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["task_assignments"] });
@@ -232,19 +245,18 @@ const TaskAssignmentsComponent = () => {
   };
 
   const handleEdit = (task: any) => {
-    const taskDTO = task as TaskAssignmentDTO;
     setFormData({
       title: task.title || "",
       description: task.description || "",
-      project_id: task.project_id || "",
-      assigned_to: task.assigned_to || "",
-      assignee_type: (task.assignee_type as any) || "",
-      assignee_name: task.assignee_name || "",
-      assignee_email: task.assignee_email || "",
-      due_date: task.due_date || "",
+      project_id: task.project_id || task.projectId || "",
+      assigned_to: task.assigned_to || task.assignedTo || "",
+      assignee_type: (task.assignee_type || task.assigneeType || "") as any,
+      assignee_name: task.assignee_name || task.assigneeName || "",
+      assignee_email: task.assignee_email || task.assigneeEmail || "",
+      due_date: task.due_date || task.dueDate || "",
       priority: task.priority || "medium",
       status: task.status || "pending",
-      notes: task.notes || "",
+      notes: task.notes || task.assignmentNotes || "",
     });
     setEditingId(task.id);
     setIsCreating(true);
@@ -286,12 +298,14 @@ const TaskAssignmentsComponent = () => {
   };
 
   const getAssigneeName = (task: any) => {
-    const taskDTO = task as TaskAssignmentDTO;
-    if (task.assignee_name) {
-      return `${task.assignee_name}${task.assignee_type ? ` (${task.assignee_type})` : ''}`;
+    const name = task.assignee_name || task.assigneeName;
+    const type = task.assignee_type || task.assigneeType;
+    if (name) {
+      return `${name}${type ? ` (${type})` : ''}`;
     }
-    if (!task.assigned_to) return t("task.unassigned") || "Non assigné";
-    return task.assigned_to;
+    const assignedTo = task.assigned_to || task.assignedTo;
+    if (!assignedTo) return t("task.unassigned") || "Non assigné";
+    return assignedTo;
   };
 
   // Pagination
@@ -519,21 +533,21 @@ const TaskAssignmentsComponent = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="notes">Notes</Label>
-                  <Input
+                  <Textarea
                     id="notes"
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    placeholder="Notes additionnelles..."
+                    rows={2}
                   />
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                  {editingId ? "Mettre à jour" : "Créer"}
-                </Button>
+              <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={resetForm}>
                   Annuler
+                </Button>
+                <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                  {editingId ? "Mettre à jour" : "Créer"}
                 </Button>
               </div>
             </form>
@@ -541,62 +555,52 @@ const TaskAssignmentsComponent = () => {
         </Card>
       )}
 
-      {/* Tasks List */}
+      {/* Tasks Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {(paginatedTasks as TaskAssignment[]).map((task) => (
+        {paginatedTasks.map((task: any) => (
           <Card key={task.id} className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-2">
-              <div className="flex items-start justify-between gap-2">
-                <CardTitle className="text-base line-clamp-2">{task.title}</CardTitle>
-                <div className="flex gap-1 flex-shrink-0">
+              <div className="flex items-start justify-between">
+                <CardTitle className="text-lg line-clamp-1">{task.title}</CardTitle>
+                <div className="flex gap-1">
                   <Button
+                    size="sm"
                     variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
                     onClick={() => handleEdit(task)}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
                   <Button
+                    size="sm"
                     variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-destructive"
                     onClick={() => deleteMutation.mutate(task.id)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
+              <CardDescription className="line-clamp-2">
+                {task.description || "Aucune description"}
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {task.description && (
-                <p className="text-sm text-muted-foreground line-clamp-2">{task.description}</p>
-              )}
-              
+            <CardContent className="space-y-2">
               <div className="flex flex-wrap gap-2">
-                <Badge className={getPriorityColor(task.priority || 'medium')}>
+                <Badge className={getPriorityColor(task.priority)}>
                   {task.priority}
                 </Badge>
-                <Badge className={getStatusColor(task.status || 'pending')}>
+                <Badge className={getStatusColor(task.status)}>
                   {task.status}
                 </Badge>
               </div>
-
-              <div className="space-y-1 text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <User className="h-3.5 w-3.5" />
+              <div className="text-sm text-muted-foreground space-y-1">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
                   <span className="truncate">{getAssigneeName(task)}</span>
                 </div>
-                {task.dueDate && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Calendar className="h-3.5 w-3.5" />
-                    <span>{new Date(task.dueDate).toLocaleDateString('fr-FR')}</span>
-                  </div>
-                )}
-                {task.projectId && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <ClipboardList className="h-3.5 w-3.5" />
-                    <span className="truncate">{getProjectTitle(task.projectId)}</span>
+                {(task.due_date || task.dueDate) && (
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    <span>{new Date(task.due_date || task.dueDate).toLocaleDateString('fr-FR')}</span>
                   </div>
                 )}
               </div>
@@ -607,15 +611,21 @@ const TaskAssignmentsComponent = () => {
 
       {tasks?.length === 0 && (
         <Card>
-          <CardContent className="text-center py-8">
-            <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">Aucune tâche trouvée</p>
+          <CardContent className="text-center py-12">
+            <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">Aucune tâche</h3>
+            <p className="text-muted-foreground mb-4">
+              Commencez par créer une nouvelle tâche.
+            </p>
+            <Button onClick={() => setIsCreating(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Créer une tâche
+            </Button>
           </CardContent>
         </Card>
       )}
 
-      {/* Pagination */}
-      {(tasks?.length || 0) > 12 && (
+      {tasks && tasks.length > 0 && (
         <PaginationControls
           currentPage={currentPage}
           totalPages={totalPages}

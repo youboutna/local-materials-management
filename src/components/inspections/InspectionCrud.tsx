@@ -31,18 +31,17 @@ const InspectionCrud: React.FC = () => {
   const { toast } = useToast();
 
   const [formData, setFormData] = useState<InspectionFormData>({
-    projectId: '', // ✅ CAMELCASE: Primary field
+    projectId: '',
     inspector: '',
     date: '',
     status: 'scheduled',
-    progressAtInspection: 0, // ✅ CAMELCASE: Primary field
+    progressAtInspection: 0,
     comments: '',
-    phaseId: '', // ✅ CAMELCASE: Primary field
-    
+    phaseId: '',
     // Legacy snake_case for backward compatibility
-    project_id: '', // Legacy snake_case for backward compatibility
-    progress_at_inspection: 0, // Legacy snake_case for backward compatibility
-    phase_id: '' // Legacy snake_case for backward compatibility
+    project_id: '',
+    progress_at_inspection: 0,
+    phase_id: ''
   });
 
   // Hexagonal hooks
@@ -66,33 +65,51 @@ const InspectionCrud: React.FC = () => {
 
   const resetForm = () => {
     setFormData({
-      projectId: '', // ✅ CAMELCASE: Primary field
+      projectId: '',
       inspector: '',
       date: '',
       status: 'scheduled',
-      progressAtInspection: 0, // ✅ CAMELCASE: Primary field
+      progressAtInspection: 0,
       comments: '',
-      phaseId: '', // ✅ CAMELCASE: Primary field
-      
-      // Legacy snake_case for backward compatibility
-      project_id: '', // Legacy snake_case for backward compatibility
-      progress_at_inspection: 0, // Legacy snake_case for backward compatibility
-      phase_id: '' // Legacy snake_case for backward compatibility
+      phaseId: '',
+      project_id: '',
+      progress_at_inspection: 0,
+      phase_id: ''
     });
     setSelectedInspection(null);
     setIsEditing(false);
     setIsViewMode(false);
   };
 
+  // Helper to get values with dual-casing support
+  const getProjectId = (inspection: InspectionRow): string => {
+    return inspection.projectId || (inspection as any).project_id || '';
+  };
+  
+  const getProgress = (inspection: InspectionRow): number => {
+    return inspection.progressAtInspection ?? (inspection as any).progress_at_inspection ?? 0;
+  };
+  
+  const getPhaseId = (inspection: InspectionRow): string => {
+    return inspection.phaseId || (inspection as any).phase_id || '';
+  };
+
   const openEditForm = (inspection: InspectionRow) => {
+    const projectId = getProjectId(inspection);
+    const progress = getProgress(inspection);
+    const phaseId = getPhaseId(inspection);
+    
     setFormData({
-      projectId: inspection.projectId || inspection.project_id, // ✅ PRIORITY: camelCase first
+      projectId: projectId,
       inspector: inspection.inspector,
       date: inspection.date ? new Date(inspection.date).toISOString().split('T')[0] : '',
       status: inspection.status,
-      progressAtInspection: inspection.progressAtInspection || inspection.progress_at_inspection || 0, // ✅ PRIORITY: camelCase first
+      progressAtInspection: progress,
       comments: inspection.comments || '',
-      phaseId: inspection.phaseId || inspection.phase_id || '' // ✅ PRIORITY: camelCase first
+      phaseId: phaseId,
+      project_id: projectId,
+      progress_at_inspection: progress,
+      phase_id: phaseId
     });
     setSelectedInspection(inspection);
     setIsEditing(true);
@@ -101,14 +118,21 @@ const InspectionCrud: React.FC = () => {
   };
 
   const openViewForm = (inspection: InspectionRow) => {
+    const projectId = getProjectId(inspection);
+    const progress = getProgress(inspection);
+    const phaseId = getPhaseId(inspection);
+    
     setFormData({
-      projectId: inspection.projectId || inspection.project_id, // ✅ PRIORITY: camelCase first
+      projectId: projectId,
       inspector: inspection.inspector,
       date: inspection.date ? new Date(inspection.date).toISOString().split('T')[0] : '',
       status: inspection.status,
-      progressAtInspection: inspection.progressAtInspection || inspection.progress_at_inspection || 0, // ✅ PRIORITY: camelCase first
+      progressAtInspection: progress,
       comments: inspection.comments || '',
-      phaseId: inspection.phaseId || inspection.phase_id || '' // ✅ PRIORITY: camelCase first
+      phaseId: phaseId,
+      project_id: projectId,
+      progress_at_inspection: progress,
+      phase_id: phaseId
     });
     setSelectedInspection(inspection);
     setIsEditing(false);
@@ -167,11 +191,11 @@ const InspectionCrud: React.FC = () => {
               <div>
                 <Label>Projet</Label>
                 <ProjectSelector
-                  value={formData.projectId || formData.project_id} // ✅ PRIORITY: camelCase first
+                  value={formData.projectId || formData.project_id || ''}
                   onChange={(value) => setFormData(prev => ({ 
                     ...prev, 
-                    projectId: value || '', // ✅ CAMELCASE: Update primary field
-                    project_id: value || '' // ✅ LEGACY: Update fallback field
+                    projectId: value || '',
+                    project_id: value || ''
                   }))}
                   disabled={isViewMode}
                 />
@@ -226,11 +250,11 @@ const InspectionCrud: React.FC = () => {
                   type="number"
                   min={0}
                   max={100}
-                  value={formData.progressAtInspection || formData.progress_at_inspection} // ✅ PRIORITY: camelCase first
+                  value={formData.progressAtInspection || formData.progress_at_inspection || 0}
                   onChange={(e) => setFormData(prev => ({ 
                     ...prev, 
-                    progressAtInspection: parseInt(e.target.value) || 0, // ✅ CAMELCASE: Update primary field
-                    progress_at_inspection: parseInt(e.target.value) || 0 // ✅ LEGACY: Update fallback field
+                    progressAtInspection: parseInt(e.target.value) || 0,
+                    progress_at_inspection: parseInt(e.target.value) || 0
                   }))}
                   disabled={isViewMode}
                 />
@@ -279,9 +303,12 @@ const InspectionCrud: React.FC = () => {
             <TableBody>
               {inspections.map((inspection) => {
                 const statusConfig = getStatusConfig(inspection.status);
+                const projectId = getProjectId(inspection);
+                const progress = getProgress(inspection);
+                
                 return (
                   <TableRow key={inspection.id}>
-                    <TableCell>{inspection.projectId || inspection.project_id}</TableCell> {/* ✅ PRIORITY: camelCase first */}
+                    <TableCell>{projectId}</TableCell>
                     <TableCell>{inspection.inspector}</TableCell>
                     <TableCell>
                       {inspection.date && new Date(inspection.date).toLocaleDateString('fr-FR')}
@@ -291,7 +318,7 @@ const InspectionCrud: React.FC = () => {
                         {statusConfig.label}
                       </Badge>
                     </TableCell>
-                    <TableCell>{inspection.progressAtInspection || inspection.progress_at_inspection}%</TableCell> {/* ✅ PRIORITY: camelCase first */}
+                    <TableCell>{progress}%</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <Button size="sm" variant="outline" onClick={() => openViewForm(inspection)}>

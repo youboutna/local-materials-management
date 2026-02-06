@@ -11,26 +11,28 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { Plus, Eye, Edit, Trash2, CheckCircle, AlertCircle, Clock, FileText, ExternalLink, Download } from 'lucide-react';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
-import SupplierSelector from '@/components/suppliers/SupplierSelector';
-import UserSelector from '@/components/selectors/UserSelector';
-import DocumentViewer from '@/components/documents/DocumentViewer';
-import DocumentSection from '@/components/common/DocumentSection';
 import { format } from 'date-fns';
 import { useEnhancedInspectionCrudHex } from '@/hooks/hexagonal';
+import type { InspectionStatus } from '@/domain/entities/Inspection';
 
 // Local interfaces matching snake_case from database
 interface LocalInspectionDTO {
   id: string;
-  project_id: string;
-  date: string;
+  project_id?: string;
+  projectId?: string;
+  date?: string;
   status: string;
   inspector: string;
-  progress_at_inspection: number;
+  progress_at_inspection?: number;
+  progressAtInspection?: number;
   comments?: string | null;
   phase_id?: string | null;
+  phaseId?: string | null;
   documents?: any;
   created_at?: string;
+  createdAt?: string;
   updated_at?: string;
+  updatedAt?: string;
 }
 
 interface LocalInspectionFormData {
@@ -99,14 +101,19 @@ const EnhancedInspectionCrud = () => {
   };
 
   const openEditForm = (inspection: LocalInspectionDTO) => {
+    const projectId = inspection.project_id || inspection.projectId || '';
+    const date = inspection.date ? new Date(inspection.date).toISOString().split('T')[0] : '';
+    const progress = inspection.progress_at_inspection ?? inspection.progressAtInspection ?? 0;
+    const phaseId = inspection.phase_id || inspection.phaseId || '';
+    
     setFormData({
-      project_id: inspection.project_id,
+      project_id: projectId,
       inspector: inspection.inspector,
-      date: inspection.date ? new Date(inspection.date).toISOString().split('T')[0] : '',
+      date: date,
       status: inspection.status,
-      progress_at_inspection: inspection.progress_at_inspection || 0,
+      progress_at_inspection: progress,
       comments: inspection.comments || '',
-      phase_id: inspection.phase_id || '',
+      phase_id: phaseId,
     });
     setSelectedInspection(inspection);
     setIsEditing(true);
@@ -115,14 +122,19 @@ const EnhancedInspectionCrud = () => {
   };
 
   const openViewForm = (inspection: LocalInspectionDTO) => {
+    const projectId = inspection.project_id || inspection.projectId || '';
+    const date = inspection.date ? new Date(inspection.date).toISOString().split('T')[0] : '';
+    const progress = inspection.progress_at_inspection ?? inspection.progressAtInspection ?? 0;
+    const phaseId = inspection.phase_id || inspection.phaseId || '';
+    
     setFormData({
-      project_id: inspection.project_id,
+      project_id: projectId,
       inspector: inspection.inspector,
-      date: inspection.date ? new Date(inspection.date).toISOString().split('T')[0] : '',
+      date: date,
       status: inspection.status,
-      progress_at_inspection: inspection.progress_at_inspection || 0,
+      progress_at_inspection: progress,
       comments: inspection.comments || '',
-      phase_id: inspection.phase_id || '',
+      phase_id: phaseId,
     });
     setSelectedInspection(inspection);
     setIsEditing(false);
@@ -135,17 +147,17 @@ const EnhancedInspectionCrud = () => {
     
     try {
       const inspectionData = {
-        project_id: formData.project_id,
+        projectId: formData.project_id,
         inspector: formData.inspector,
         date: formData.date,
-        status: formData.status,
-        progress_at_inspection: formData.progress_at_inspection,
+        status: formData.status as InspectionStatus,
+        progressAtInspection: formData.progress_at_inspection,
         comments: formData.comments,
-        phase_id: formData.phase_id || undefined,
+        phaseId: formData.phase_id || undefined,
       };
 
       if (isEditing && selectedInspection) {
-        await updateInspection(selectedInspection.id, inspectionData);
+        await updateInspection(selectedInspection.id, inspectionData as any);
       } else {
         await createInspection(inspectionData as any);
       }
@@ -171,8 +183,23 @@ const EnhancedInspectionCrud = () => {
     setUploadedDocuments(documents);
   };
 
-  // Cast inspections to local type
-  const typedInspections = (inspections || []) as LocalInspectionDTO[];
+  // Cast inspections to local type with dual-casing support
+  const typedInspections: LocalInspectionDTO[] = (inspections || []).map((insp: any) => ({
+    id: insp.id,
+    project_id: insp.project_id || insp.projectId,
+    projectId: insp.projectId || insp.project_id,
+    date: insp.date,
+    status: insp.status,
+    inspector: insp.inspector,
+    progress_at_inspection: insp.progress_at_inspection ?? insp.progressAtInspection,
+    progressAtInspection: insp.progressAtInspection ?? insp.progress_at_inspection,
+    comments: insp.comments,
+    phase_id: insp.phase_id || insp.phaseId,
+    phaseId: insp.phaseId || insp.phase_id,
+    documents: insp.documents,
+    created_at: insp.created_at || insp.createdAt,
+    updated_at: insp.updated_at || insp.updatedAt,
+  }));
 
   return (
     <Card>
@@ -307,9 +334,12 @@ const EnhancedInspectionCrud = () => {
             <TableBody>
               {typedInspections.map((inspection) => {
                 const statusConfig = getStatusConfig(inspection.status);
+                const projectId = inspection.project_id || inspection.projectId || '';
+                const progress = inspection.progress_at_inspection ?? inspection.progressAtInspection ?? 0;
+                
                 return (
                   <TableRow key={inspection.id}>
-                    <TableCell>{inspection.project_id}</TableCell>
+                    <TableCell>{projectId}</TableCell>
                     <TableCell>{inspection.inspector}</TableCell>
                     <TableCell>
                       {inspection.date && format(new Date(inspection.date), 'dd/MM/yyyy')}
@@ -320,7 +350,7 @@ const EnhancedInspectionCrud = () => {
                         {statusConfig.label}
                       </Badge>
                     </TableCell>
-                    <TableCell>{inspection.progress_at_inspection}%</TableCell>
+                    <TableCell>{progress}%</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <Button size="sm" variant="outline" onClick={() => openViewForm(inspection)}>

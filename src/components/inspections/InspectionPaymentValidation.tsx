@@ -90,7 +90,9 @@ const InspectionPaymentValidation: React.FC = () => {
     queryFn: async (): Promise<InspectionData | null> => {
       if (!inspectionId) return null;
       
-      const inspectionData = await InspectionService.getInspectionById(inspectionId);
+      // Create service instance and get inspection
+      const inspectionService = new InspectionService();
+      const inspectionData = await inspectionService.getInspectionById(inspectionId);
       
       if (!inspectionData) {
         console.warn(`[InspectionPaymentValidation] Inspection not found: ${inspectionId}`);
@@ -102,7 +104,9 @@ const InspectionPaymentValidation: React.FC = () => {
         return null;
       }
       
-      const paymentRequest = await SupplierPaymentService.getPendingPaymentRequestByInspectionId(inspectionId);
+      // Check for pending payment request
+      const paymentService = new SupplierPaymentService();
+      const paymentRequest = await paymentService.getPendingPaymentRequestByInspectionId({ inspectionId });
       
       if (!paymentRequest) {
         console.warn(`[InspectionPaymentValidation] No pending payment request found for inspection: ${inspectionId}`);
@@ -156,14 +160,11 @@ const InspectionPaymentValidation: React.FC = () => {
     mutationFn: async (data: { status: string; comments: string; payment_status?: PaymentStatus; payment_type: PaymentType }) => {
       if (!inspectionId) throw new Error('Inspection ID missing');
 
-      await InspectionService.updateInspectionPaymentValidation(inspectionId, {
-        status: data.status,
+      // Use service instance to update
+      const inspectionService = new InspectionService();
+      await inspectionService.updateInspection(inspectionId, {
+        status: data.status as any,
         comments: data.comments,
-        payment_type: data.payment_type,
-        payment_status: data.payment_status,
-        project_id: projectId,
-        inspection_id: inspectionId,
-        rejection_notes: data.comments
       });
 
       // Determine beneficiary based on payment type
@@ -180,7 +181,6 @@ const InspectionPaymentValidation: React.FC = () => {
         );
         
         if (engineer?.employeeId) {
-          // Use employee repository to get user ID
           const employeeRepo = RepositoryFactory.getEmployeeRepository();
           const employeeData = await employeeRepo.findById(engineer.employeeId);
           beneficiaryUserId = (employeeData as any)?.userId || null;
@@ -447,60 +447,50 @@ const InspectionPaymentValidation: React.FC = () => {
 
               {paymentStatus !== 'approved' && (
                 <div>
-                  <Label htmlFor="rejectionNotes">Notes de rejet *</Label>
+                  <Label htmlFor="rejectionNotes">Notes de rejet</Label>
                   <Textarea
                     id="rejectionNotes"
                     value={rejectionNotes}
                     onChange={(e) => setRejectionNotes(e.target.value)}
-                    placeholder="Expliquez la raison du rejet..."
+                    placeholder="Veuillez expliquer la raison du rejet..."
                     rows={4}
                   />
                 </div>
               )}
 
-              <Button
-                onClick={handleValidatePayment}
-                disabled={updateInspectionMutation.isPending}
-                className="w-full"
-              >
-                {updateInspectionMutation.isPending ? 'Traitement...' : 'Valider la décision'}
-              </Button>
+              <div className="flex justify-end">
+                <Button onClick={handleValidatePayment} disabled={updateInspectionMutation.isPending}>
+                  {updateInspectionMutation.isPending ? 'Enregistrement...' : 'Valider la décision'}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Summary Sidebar */}
+        {/* Sidebar */}
         <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                Résumé du projet
+                Intervenants
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label className="text-muted-foreground">Budget</Label>
-                <p className="font-medium text-lg">{(project?.budget || 0).toLocaleString()} MRU</p>
-              </div>
-              <div>
-                <Label className="text-muted-foreground">Progression</Label>
-                <p className="font-medium text-lg">{project?.progress || 0}%</p>
-              </div>
-              <div>
-                <Label className="text-muted-foreground">Parties prenantes</Label>
-                <div className="mt-2 space-y-2">
-                  {project?.stakeholders?.map((s: Stakeholder, index: number) => (
-                    <div key={s.id || index} className="text-sm">
-                      <span className="font-medium">{s.name || 'N/A'}</span>
-                      <span className="text-muted-foreground ml-2">({s.stakeholderType || s.stakeholderEntityType})</span>
-                    </div>
+            <CardContent>
+              {project?.stakeholders && project.stakeholders.length > 0 ? (
+                <ul className="space-y-2">
+                  {project.stakeholders.map((stakeholder) => (
+                    <li key={stakeholder.id} className="text-sm">
+                      <span className="font-medium">{stakeholder.name}</span>
+                      <span className="text-muted-foreground ml-2">
+                        ({stakeholder.stakeholderType || stakeholder.stakeholderEntityType})
+                      </span>
+                    </li>
                   ))}
-                  {(!project?.stakeholders || project.stakeholders.length === 0) && (
-                    <p className="text-muted-foreground text-sm">Aucune partie prenante</p>
-                  )}
-                </div>
-              </div>
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">Aucun intervenant</p>
+              )}
             </CardContent>
           </Card>
         </div>

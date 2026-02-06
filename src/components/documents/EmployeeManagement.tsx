@@ -1,5 +1,6 @@
 /**
  * EmployeeManagement - MIGRATED TO HEXAGONAL ARCHITECTURE
+ * Uses database Row types directly for compatibility
  */
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,11 +21,24 @@ import {
   useCreateEmployee,
   useUpdateEmployee,
   useDeleteEmployee,
-  EmployeeFormData
 } from '@/hooks/hexagonal';
 import type { Database } from '@/integrations/supabase/types';
 
 type Employee = Database['public']['Tables']['employees']['Row'];
+
+// Form data interface matching snake_case database schema
+interface EmployeeFormData {
+  employee_id: string;
+  full_name: string;
+  position: string;
+  department: string;
+  phone: string;
+  email: string;
+  hire_date: string;
+  salary: number;
+  skills: string[];
+  is_active: boolean;
+}
 
 const EmployeeManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -85,10 +99,37 @@ const EmployeeManagement = () => {
     e.preventDefault();
     try {
       if (editingEmployee) {
-        await updateMutation.mutateAsync({ id: editingEmployee.id, data: formData });
+        // Transform form data to update DTO format
+        await updateMutation.mutateAsync({ 
+          id: editingEmployee.id, 
+          data: {
+            fullName: formData.full_name,
+            position: formData.position || null,
+            department: formData.department || null,
+            phone: formData.phone || null,
+            email: formData.email || null,
+            isActive: formData.is_active
+          } as any
+        });
         toast({ title: t('common.success'), description: t('documents.employee.updated_successfully') });
       } else {
-        await createMutation.mutateAsync(formData);
+        // Transform form data to create DTO format
+        await createMutation.mutateAsync({
+          employeeId: formData.employee_id,
+          fullName: formData.full_name,
+          position: formData.position || null,
+          department: formData.department || null,
+          phone: formData.phone || null,
+          email: formData.email || null,
+          hireDate: formData.hire_date || null,
+          isActive: formData.is_active,
+          salary: formData.salary || null,
+          skills: formData.skills.length > 0 ? formData.skills : null,
+          certifications: null,
+          managerId: null,
+          superiorId: null,
+          userId: null
+        } as any);
         toast({ title: t('common.success'), description: t('documents.employee.created_successfully') });
       }
       setShowCreateDialog(false);
@@ -296,21 +337,21 @@ const EmployeeManagement = () => {
           </div>
 
           <div className="space-y-4">
-            {paginatedEmployees.map((employee) => (
+            {paginatedEmployees.map((employee: any) => (
               <Card key={employee.id} className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-4">
                       <div>
-                        <h3 className="font-medium">{employee.full_name}</h3>
-                        <p className="text-sm text-gray-500">{t('documents.employee.id_label')}: {employee.employee_id}</p>
+                        <h3 className="font-medium">{employee.fullName || employee.full_name}</h3>
+                        <p className="text-sm text-muted-foreground">{t('documents.employee.id_label')}: {employee.employeeId || employee.employee_id}</p>
                       </div>
                       <div>
                         <p className="text-sm">{employee.position}</p>
-                        <p className="text-sm text-gray-500">{employee.department}</p>
+                        <p className="text-sm text-muted-foreground">{employee.department}</p>
                       </div>
-                      <Badge variant={employee.is_active ? "default" : "secondary"}>
-                        {employee.is_active ? t('documents.employee.active') : t('documents.employee.inactive')}
+                      <Badge variant={(employee.isActive ?? employee.is_active) ? "default" : "secondary"}>
+                        {(employee.isActive ?? employee.is_active) ? t('documents.employee.active') : t('documents.employee.inactive')}
                       </Badge>
                     </div>
                   </div>
@@ -318,7 +359,7 @@ const EmployeeManagement = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleEdit(employee)}
+                      onClick={() => handleEdit(employee as any)}
                     >
                       <Edit className="h-4 w-4" />
                       {t('common.edit')}
@@ -327,7 +368,7 @@ const EmployeeManagement = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => handleDelete(employee.id)}
-                      className="text-red-600 hover:text-red-700"
+                      className="text-destructive hover:text-destructive"
                       disabled={deleteMutation.isPending}
                     >
                       <Trash2 className="h-4 w-4" />
