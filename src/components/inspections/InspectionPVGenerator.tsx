@@ -6,13 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
-  FileText, Download, Send, CheckCircle, AlertTriangle, Eye, Loader2,
+  FileText, Download, Send, CheckCircle, AlertTriangle, Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PVGeneratorService } from '@/application/services/PVGeneratorService';
-import { InspectionExecutionService } from '@/application/services/InspectionExecutionService';
 import { GeneratedPV, PVType } from '@/types/inspection-execution';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -49,12 +47,11 @@ const InspectionPVGenerator: React.FC<InspectionPVGeneratorProps> = ({
   React.useEffect(() => {
     const checkReadiness = async () => {
       try {
-        const data = await InspectionExecutionService.getInspectionExecution(inspection.id);
-        if (data) {
-          // Simple readiness check
+        // Simple readiness check based on inspection data
+        if (inspection && inspection.id) {
           setReadinessCheck({ isReady: true, missing: [] });
         } else {
-          setReadinessCheck({ isReady: false, missing: ['Données d\'exécution non trouvées'] });
+          setReadinessCheck({ isReady: false, missing: ['Données d\'inspection non trouvées'] });
         }
       } catch (error) {
         setReadinessCheck({ isReady: false, missing: ['Erreur lors de la vérification'] });
@@ -68,12 +65,12 @@ const InspectionPVGenerator: React.FC<InspectionPVGeneratorProps> = ({
     setIsGenerating(true);
     try {
       const pvService = new PVGeneratorService();
-      const pv = await pvService.generatePV(inspection.id, pvType);
-      if (pv) {
-        setGeneratedPV(pv);
+      const result = await pvService.generatePV({ inspectionId: inspection.id, pvType });
+      if (result.success && result.pv) {
+        setGeneratedPV(result.pv);
         toast.success('PV généré avec succès');
       } else {
-        toast.error('Erreur lors de la génération du PV');
+        toast.error(result.error || 'Erreur lors de la génération du PV');
       }
     } catch (error) {
       console.error('Error generating PV:', error);
@@ -106,12 +103,10 @@ const InspectionPVGenerator: React.FC<InspectionPVGeneratorProps> = ({
 
     setIsDownloading(true);
     try {
-      const pvService = new PVGeneratorService();
-      const savedPV = await pvService.getPVById(generatedPV.id);
-
-      if (savedPV && savedPV.pdf_url) {
+      // PV is already generated, just notify
+      if (generatedPV.pdf_url) {
         toast.success('PV sauvegardé dans les documents');
-        onGenerated?.(savedPV, savedPV.pdf_url);
+        onGenerated?.(generatedPV, generatedPV.pdf_url);
       } else {
         toast.error('Erreur lors de la sauvegarde');
       }

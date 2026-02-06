@@ -11,30 +11,59 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Edit, Trash2, Eye, Shield, AlertTriangle, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { InsuranceService } from '@/application/services/InsuranceService';
-import type { InsuranceCertificateEntity as InsuranceCertificate } from '@/domain/entities/InsuranceCertificate.entity';
-import type { CreateInsuranceCertificateDTO as CreateInsuranceData, UpdateInsuranceCertificateDTO as UpdateInsuranceData } from '@/dtos/entities/InsuranceDTO';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 
+// Local form data interface matching component needs
+interface InsuranceFormData {
+  project_id: string;
+  contractor_id: string;
+  contractor_name: string;
+  coverage_type: string;
+  insurance_company: string;
+  policy_number: string;
+  coverage_amount: number;
+  valid_from: string;
+  valid_until: string;
+  status: string;
+  notes: string;
+}
+
+// Local certificate type for display
+interface LocalInsuranceCertificate {
+  id: string;
+  project_id: string;
+  contractor_id: string;
+  contractor_name: string;
+  coverage_type: string;
+  insurance_company: string;
+  policy_number: string;
+  coverage_amount: number;
+  valid_from: string;
+  valid_until: string;
+  status: string;
+  notes?: string;
+}
+
 const InsuranceCrud: React.FC = () => {
-  const [certificates, setCertificates] = useState<InsuranceCertificate[]>([]);
-  const [selectedCertificate, setSelectedCertificate] = useState<InsuranceCertificate | null>(null);
+  const [certificates, setCertificates] = useState<LocalInsuranceCertificate[]>([]);
+  const [selectedCertificate, setSelectedCertificate] = useState<LocalInsuranceCertificate | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isViewMode, setIsViewMode] = useState(false);
   const { toast } = useToast();
 
-  const [formData, setFormData] = useState<CreateInsuranceData>({
+  const [formData, setFormData] = useState<InsuranceFormData>({
     project_id: '',
     contractor_id: '',
-    insurance_type: '',
-    provider: '',
+    contractor_name: '',
+    coverage_type: '',
+    insurance_company: '',
     policy_number: '',
     coverage_amount: 0,
-    start_date: '',
+    valid_from: '',
     valid_until: '',
     status: 'active',
-    documents: [],
     notes: ''
   });
 
@@ -57,14 +86,14 @@ const InsuranceCrud: React.FC = () => {
     setFormData({
       project_id: '',
       contractor_id: '',
-      insurance_type: '',
-      provider: '',
+      contractor_name: '',
+      coverage_type: '',
+      insurance_company: '',
       policy_number: '',
       coverage_amount: 0,
-      start_date: '',
+      valid_from: '',
       valid_until: '',
       status: 'active',
-      documents: [],
       notes: ''
     });
   };
@@ -76,19 +105,19 @@ const InsuranceCrud: React.FC = () => {
     setIsFormOpen(true);
   };
 
-  const openEditForm = (certificate: InsuranceCertificate) => {
+  const openEditForm = (certificate: LocalInsuranceCertificate) => {
     setFormData({
       project_id: certificate.project_id,
       contractor_id: certificate.contractor_id,
-      insurance_type: certificate.insurance_type,
-      provider: certificate.provider,
+      contractor_name: certificate.contractor_name,
+      coverage_type: certificate.coverage_type,
+      insurance_company: certificate.insurance_company,
       policy_number: certificate.policy_number,
       coverage_amount: certificate.coverage_amount,
-      start_date: certificate.start_date,
+      valid_from: certificate.valid_from,
       valid_until: certificate.valid_until,
       status: certificate.status,
-      documents: certificate.documents,
-      notes: '' // notes field doesn't exist in InsuranceCertificate interface
+      notes: certificate.notes || ''
     });
     setSelectedCertificate(certificate);
     setIsEditing(true);
@@ -96,19 +125,19 @@ const InsuranceCrud: React.FC = () => {
     setIsFormOpen(true);
   };
 
-  const openViewForm = (certificate: InsuranceCertificate) => {
+  const openViewForm = (certificate: LocalInsuranceCertificate) => {
     setFormData({
       project_id: certificate.project_id,
       contractor_id: certificate.contractor_id,
-      insurance_type: certificate.insurance_type,
-      provider: certificate.provider,
+      contractor_name: certificate.contractor_name,
+      coverage_type: certificate.coverage_type,
+      insurance_company: certificate.insurance_company,
       policy_number: certificate.policy_number,
       coverage_amount: certificate.coverage_amount,
-      start_date: certificate.start_date,
+      valid_from: certificate.valid_from,
       valid_until: certificate.valid_until,
       status: certificate.status,
-      documents: certificate.documents,
-      notes: '' // notes field doesn't exist in InsuranceCertificate interface
+      notes: certificate.notes || ''
     });
     setSelectedCertificate(certificate);
     setIsViewMode(true);
@@ -122,24 +151,22 @@ const InsuranceCrud: React.FC = () => {
       const insuranceService = new InsuranceService();
       
       if (isEditing && selectedCertificate) {
-        // Update insurance certificate using InsuranceService
         await insuranceService.updateInsuranceCertificate(selectedCertificate.id, {
-          status: formData.status,
+          status: formData.status as any,
           notes: formData.notes
         });
       } else {
-        // Create new insurance certificate using InsuranceService
         await insuranceService.createInsuranceCertificate({
-          project_id: formData.project_id,
-          contractor_id: formData.contractor_id,
-          insurance_type: formData.insurance_type,
-          provider: formData.provider,
-          policy_number: formData.policy_number,
-          coverage_amount: formData.coverage_amount,
-          start_date: formData.start_date,
-          valid_until: formData.valid_until,
-          status: formData.status,
-          documents: formData.documents,
+          projectId: formData.project_id,
+          contractorId: formData.contractor_id,
+          contractorName: formData.contractor_name,
+          insuranceType: formData.coverage_type,
+          insuranceCompany: formData.insurance_company,
+          policyNumber: formData.policy_number,
+          coverageAmount: formData.coverage_amount,
+          validFrom: formData.valid_from,
+          validUntil: formData.valid_until,
+          status: formData.status as any,
           notes: formData.notes
         });
       }
@@ -240,7 +267,7 @@ const InsuranceCrud: React.FC = () => {
                   <SupplierSelector
                     value={{ 
                       id: formData.contractor_id,
-                      name: '', // contractor_name doesn't exist in CreateInsuranceData
+                      name: formData.contractor_name,
                       contact: '',
                       leadTime: 0
                     }}
@@ -253,11 +280,11 @@ const InsuranceCrud: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="provider">Compagnie d'assurance *</Label>
+                  <Label htmlFor="insurance_company">Compagnie d'assurance *</Label>
                   <Input
-                    id="provider"
-                    value={formData.provider}
-                    onChange={(e) => setFormData(prev => ({ ...prev, provider: e.target.value }))}
+                    id="insurance_company"
+                    value={formData.insurance_company}
+                    onChange={(e) => setFormData(prev => ({ ...prev, insurance_company: e.target.value }))}
                     required
                     disabled={isViewMode}
                     placeholder="Nom de la compagnie"
@@ -279,10 +306,10 @@ const InsuranceCrud: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="insurance_type">Type de couverture *</Label>
+                  <Label htmlFor="coverage_type">Type de couverture *</Label>
                   <Select 
-                    value={formData.insurance_type} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, insurance_type: value }))}
+                    value={formData.coverage_type} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, coverage_type: value }))}
                     disabled={isViewMode}
                   >
                     <SelectTrigger>
@@ -316,7 +343,7 @@ const InsuranceCrud: React.FC = () => {
                   <Label htmlFor="status">Statut</Label>
                   <Select 
                     value={formData.status} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as 'active' | 'expired' | 'pending' }))}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
                     disabled={isViewMode}
                   >
                     <SelectTrigger>
@@ -335,12 +362,12 @@ const InsuranceCrud: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="start_date">Date de début *</Label>
+                  <Label htmlFor="valid_from">Date de début *</Label>
                   <Input
-                    id="start_date"
+                    id="valid_from"
                     type="date"
-                    value={formData.start_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
+                    value={formData.valid_from}
+                    onChange={(e) => setFormData(prev => ({ ...prev, valid_from: e.target.value }))}
                     required
                     disabled={isViewMode}
                   />
@@ -356,15 +383,6 @@ const InsuranceCrud: React.FC = () => {
                     required
                     disabled={isViewMode}
                   />
-                </div>
-              </div>
-
-              <div>
-                <Label>Documents</Label>
-                <div className="mt-2">
-                  <p className="text-sm text-muted-foreground">
-                    Les documents seront gérés via le système de gestion des documents
-                  </p>
                 </div>
               </div>
 
@@ -419,9 +437,9 @@ const InsuranceCrud: React.FC = () => {
                   <TableCell className="font-medium">
                     {certificate.project_id}
                   </TableCell>
-                  <TableCell>{certificate.contractor_id}</TableCell>
+                  <TableCell>{certificate.contractor_name || certificate.contractor_id}</TableCell>
                   <TableCell>
-                    {coverageTypes.find(t => t.value === certificate.insurance_type)?.label}
+                    {coverageTypes.find(t => t.value === certificate.coverage_type)?.label || certificate.coverage_type}
                   </TableCell>
                   <TableCell>{certificate.policy_number}</TableCell>
                   <TableCell>
@@ -437,30 +455,29 @@ const InsuranceCrud: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Badge className={getStatusColor(certificate.status)}>
-                      {statusOptions.find(s => s.value === certificate.status)?.label}
+                      {statusOptions.find(s => s.value === certificate.status)?.label || certificate.status}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Button
                         size="sm"
-                        variant="ghost"
+                        variant="outline"
                         onClick={() => openViewForm(certificate)}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button
                         size="sm"
-                        variant="ghost"
+                        variant="outline"
                         onClick={() => openEditForm(certificate)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button
                         size="sm"
-                        variant="ghost"
+                        variant="outline"
                         onClick={() => handleDelete(certificate.id)}
-                        className="text-red-600 hover:text-red-700"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -470,8 +487,8 @@ const InsuranceCrud: React.FC = () => {
               ))}
               {certificates.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                    Aucun certificat d'assurance trouvé
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    Aucun certificat d'assurance enregistré
                   </TableCell>
                 </TableRow>
               )}

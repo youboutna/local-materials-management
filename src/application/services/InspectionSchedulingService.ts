@@ -92,6 +92,21 @@ export class InspectionSchedulingService {
   constructor(
     private inspectionRepository: IInspectionRepository = RepositoryFactory.getInspectionRepository()
   ) {}
+
+  /**
+   * Check inspector availability
+   */
+  async checkInspectorAvailability(request: CheckInspectorAvailabilityRequestDto): Promise<boolean> {
+    try {
+      // Simple availability check - always return true for now
+      console.log(`[InspectionSchedulingService] Checking availability for inspector ${request.inspectorId} on ${request.date}`);
+      return true;
+    } catch (error) {
+      console.error('Error checking inspector availability:', error);
+      return false;
+    }
+  }
+
   /**
    * Schedule an inspection
    */
@@ -133,27 +148,6 @@ export class InspectionSchedulingService {
     } catch (error) {
       console.error('InspectionSchedulingService.getAvailableInspectors failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get available inspectors');
-    }
-  }
-
-  /**
-   * Check inspector availability
-   */
-  async checkInspectorAvailability(request: CheckInspectorAvailabilityRequestDto): Promise<boolean> {
-    try {
-      if (!request.inspectorId || !request.date) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspector ID and date are required');
-      }
-
-      // For now, return true as inspector repository is not available
-      // TODO: Implement proper availability check when inspector repository is available
-      console.warn('InspectionSchedulingService.checkInspectorAvailability: Inspector repository not available');
-      console.log(`Checking availability for inspector: ${request.inspectorId} on ${request.date}`);
-      
-      return true;
-    } catch (error) {
-      console.error('InspectionSchedulingService.checkInspectorAvailability failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to check inspector availability');
     }
   }
 
