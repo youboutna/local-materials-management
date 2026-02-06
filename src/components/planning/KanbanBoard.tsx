@@ -163,7 +163,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                   "bg-muted/30 p-2 rounded-b-lg min-h-[400px] space-y-2",
                   isOverLimit && "border-2 border-destructive/30"
                 )}>
-                  {columnTasks.map((task: KanbanTask) => {
+                  {columnTasks.map((task) => {
                     const dueDate = task.due_date || task.dueDate;
                     const daysRemaining = dueDate ? getDaysRemaining(dueDate) : null;
                     const isOverdue = daysRemaining !== null && daysRemaining < 0;

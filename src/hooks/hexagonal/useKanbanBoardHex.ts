@@ -13,10 +13,14 @@ export interface KanbanTask {
   status: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
   assignee?: string;
+  assigned_to?: string;
   dueDate?: string;
+  due_date?: string;
   progress?: number;
   phase?: string;
   tags?: string[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Hook: Kanban board tasks with drag & drop support

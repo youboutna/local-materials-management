@@ -178,18 +178,24 @@ const EnhancedPaymentBlockingInterface = () => {
       setLoading(true);
       // Use PaymentBlockingService to validate payment eligibility
       const service = new PaymentBlockingService();
-      const result = await service.validatePaymentEligibility(
-        values.projectId,
-        values.contractorId || '',
-        parseFloat(values.amount) || 0
-      );
-      setValidationResult(result || {
-        canProceed: false,
-        blockingReasons: [],
-        warningReasons: [],
-        projectId: values.projectId,
-        contractorId: values.contractorId || ''
-      });
+      const eligibilityResult = await service.validatePaymentEligibility(values.projectId);
+      
+      // Transform to local PaymentValidationResult format
+      const result: PaymentValidationResult = {
+        canProceed: eligibilityResult.canProceed,
+        blockingReasons: (eligibilityResult.blockingReasons || []).map(r => ({
+          reason: r.type,
+          description: r.description,
+          severity: 'blocking' as const
+        })),
+        warningReasons: (eligibilityResult.warningReasons || []).map(r => ({
+          reason: r.type,
+          description: r.description,
+          severity: 'warning' as const
+        }))
+      };
+      
+      setValidationResult(result);
 
       if (result.canProceed) {
         toast({
@@ -220,15 +226,9 @@ const EnhancedPaymentBlockingInterface = () => {
   ) => {
     try {
       setLoading(true);
-      // Use PaymentBlockingService to attempt payment
+      // Use PaymentBlockingService to process payment
       const service = new PaymentBlockingService();
-      const attemptPaymentMethod = (service.attemptPayment || service.validatePaymentEligibility).bind(service);
-      const result = await attemptPaymentMethod(
-        values.projectId,
-        values.contractorId || '',
-        parseFloat(values.amount) || 0,
-        values as any
-      );
+      const result = await service.processPayment(values.projectId);
 
       if (result.success) {
         toast({
@@ -242,7 +242,7 @@ const EnhancedPaymentBlockingInterface = () => {
       } else {
         toast({
           title: t('common.error'),
-          description: "Le paiement n'a pas pu être traité",
+          description: result.error || "Le paiement n'a pas pu être traité",
           variant: "destructive"
         });
       }

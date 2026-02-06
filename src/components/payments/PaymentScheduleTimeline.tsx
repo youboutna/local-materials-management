@@ -21,7 +21,21 @@ import {
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { usePaymentSchedule, PaymentMilestone } from '@/hooks/hexagonal';
+import { usePaymentsHex } from '@/hooks/hexagonal';
+
+// Define PaymentMilestone interface locally since hook doesn't export it
+interface PaymentMilestone {
+  id: string;
+  title: string;
+  dueDate: string;
+  amount: number;
+  status: 'pending' | 'paid' | 'approved' | 'overdue' | 'blocked' | 'completed';
+  progressRequired: number;
+  currentProgress: number;
+  phaseName?: string;
+  penaltyAccrued?: number;
+  penaltyRate?: number;
+}
 
 interface PaymentScheduleTimelineProps {
   projectId: string;
@@ -36,17 +50,29 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
   onPaymentClick,
   onInitiatePayment
 }) => {
-  const { data, isLoading } = usePaymentSchedule(projectId, projectBudget);
+  const { payments: rawPayments, isLoading } = usePaymentsHex();
 
-  const payments = data?.payments || [];
-  const totalAmount = data?.totalAmount || 0;
-  const paidAmount = data?.paidAmount || 0;
-  const overdueAmount = data?.overdueAmount || 0;
-  const totalPenalties = data?.totalPenalties || 0;
+  // Transform payments to PaymentMilestone format
+  const payments: PaymentMilestone[] = (rawPayments || []).map(p => ({
+    id: p.id,
+    title: `Paiement ${p.transactionId || p.id.slice(0, 8)}`,
+    dueDate: p.paymentDate || new Date().toISOString(),
+    amount: p.amount || 0,
+    status: 'pending' as const,
+    progressRequired: p.progressAtPayment || 0,
+    currentProgress: p.progressAtPayment || 0,
+    phaseName: undefined
+  }));
+  
+  const totalAmount = projectBudget || payments.reduce((sum, p) => sum + p.amount, 0);
+  const paidAmount = payments.filter(p => p.status === 'paid' || p.status === 'completed').reduce((sum, p) => sum + p.amount, 0);
+  const overdueAmount = payments.filter(p => p.status === 'overdue').reduce((sum, p) => sum + p.amount, 0);
+  const totalPenalties = 0;
 
   const getStatusInfo = (payment: PaymentMilestone) => {
     switch (payment.status) {
       case 'paid':
+      case 'completed':
         return { icon: CheckCircle, color: 'text-success', bgColor: 'bg-success/10', label: 'Payé' };
       case 'approved':
         return { icon: Clock, color: 'text-blue-500', bgColor: 'bg-blue-500/10', label: 'Approuvé' };
@@ -54,6 +80,7 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
         return { icon: AlertTriangle, color: 'text-destructive', bgColor: 'bg-destructive/10', label: 'En retard' };
       case 'blocked':
         return { icon: Bell, color: 'text-amber-500', bgColor: 'bg-amber-500/10', label: 'Bloqué' };
+      case 'pending':
       default:
         return { icon: Clock, color: 'text-muted-foreground', bgColor: 'bg-muted', label: 'En attente' };
     }

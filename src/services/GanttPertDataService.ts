@@ -41,11 +41,13 @@ export interface UnifiedGanttData {
 }
 
 export interface UnifiedPERTData extends PERTAnalysis {
+  activities: PERTActivity[];
   milestoneActivities: PERTActivity[];
   projectDurationDays: number;
   standardDeviation: number;
   confidenceLevel95Days: number;
   totalExpectedDuration: number; // Alias for expectedDuration
+  criticalPath: string[];
 }
 
 export class GanttPertDataService {

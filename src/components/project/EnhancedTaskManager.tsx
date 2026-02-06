@@ -21,10 +21,11 @@ import {
   useCreateProjectTask,
   useUpdateProjectTask,
   useDeleteProjectTask,
-  type ProjectTaskFormData,
-  type ProjectTask,
-  type ProjectPhase
-} from '@/hooks/hexagonal'
+  ProjectTaskFormData,
+  ProjectTask,
+  ProjectPhase as TaskProjectPhase
+} from '@/hooks/hexagonal/useEnhancedTasksHex';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Task {
   id: string;

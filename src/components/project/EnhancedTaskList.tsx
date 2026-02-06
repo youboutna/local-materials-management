@@ -21,7 +21,7 @@ import {
   ProjectTaskFormData,
   ProjectTask,
   ProjectPhase
-} from '@/hooks/hexagonal';
+} from '@/hooks/hexagonal/useEnhancedTasksHex';
 
 interface EnhancedTaskListProps {
   projectId: string;

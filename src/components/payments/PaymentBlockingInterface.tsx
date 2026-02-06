@@ -102,8 +102,8 @@ const PaymentBlockingInterface = () => {
         });
 
         // Load recent blocked payments using existing service function
-        const recentBlocks = await getPaymentBlockHistory(5);
-        setBlockHistory(recentBlocks.map(block => ({
+        const recentBlocks = await getPaymentBlockHistory();
+        setBlockHistory(recentBlocks.slice(0, 5).map(block => ({
           id: block.id,
           projectId: block.project_id || '',
           contractorId: block.contractor_id || '',

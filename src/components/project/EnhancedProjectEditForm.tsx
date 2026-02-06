@@ -226,6 +226,12 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     }
   }, [formData, phases, updateFormData, saveProject, toast, navigate]);
 
+  // Adapter to convert ProjectEditFormData updates to ProjectDTO format
+  const handleFormUpdateAdapter = useCallback((data: Partial<any>) => {
+    // Convert incoming data to ProjectEditFormData format
+    handleFormUpdate(data as Partial<ProjectEditFormData>);
+  }, [handleFormUpdate]);
+
   // Render step content
   const renderStepContent = useCallback(() => {
     if (!formData) return null;
@@ -235,7 +241,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
         return (
           <ProjectInfoStep
             formData={formData as any}
-            onUpdate={handleFormUpdate}
+            onUpdate={handleFormUpdateAdapter}
             isEditing={true}
             baseData={{}}
           />
@@ -244,7 +250,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
         return (
           <StakeholdersTeamStep
             projectData={formData as any}
-            onUpdate={handleFormUpdate}
+            onUpdate={handleFormUpdateAdapter}
             isEditing={true}
           />
         );
@@ -252,15 +258,15 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
         return (
           <LocationStep
             formData={formData as any}
-            onUpdate={handleFormUpdate}
+            onUpdate={handleFormUpdateAdapter}
             isEditing={true}
           />
         );
       case 4:
         return (
           <ConstructionPhaseManager 
-            phases={phases}
-            onChange={(updatedPhases: PhaseDTO[]) => setPhases(updatedPhases)}
+            phases={phases as unknown as any[]}
+            onChange={(updatedPhases) => setPhases(updatedPhases as unknown as PhaseDTO[])}
             projectBudget={formData.budget || 0}
           />
         );
@@ -268,7 +274,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
         return (
           <RiskAnalysisStep
             formData={formData as any}
-            onUpdate={handleFormUpdate}
+            onUpdate={handleFormUpdateAdapter}
             isEditing={true}
           />
         );
@@ -276,7 +282,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
         return (
           <ComplianceStep
             formData={formData as any}
-            onUpdate={handleFormUpdate}
+            onUpdate={handleFormUpdateAdapter}
             isEditing={true}
           />
         );
