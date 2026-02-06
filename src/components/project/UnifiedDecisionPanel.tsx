@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { DocumentService, DocumentCreateDTO } from '@/services/DocumentService';
-import { MilestoneService } from '@/services/MilestoneService';
+import { DocumentService } from '@/application/services/DocumentService';
+import { MilestoneService } from '@/application/services/MilestoneService';
 import { DecisionNode } from '@/types/unified-workflow';
 import { useAuth } from '@/contexts/use-auth';
 
@@ -52,29 +52,25 @@ const UnifiedDecisionPanel: React.FC<UnifiedDecisionPanelProps> = ({ decisionNod
     window.open(url, '_blank');
   };
 
-  const handleCreateDocument = async () => {
-    try {
-      const payload: DocumentCreateDTO = {
-        title: `Document - ${node.name}`,
-        description: node.description || '',
-        document_type: 'milestone_note',
-        file_name: '',
-        mime_type: 'application/pdf',
-        file_size: 0,
-        project_id: projectId || '' ,
-        status: 'active'
-      };
-      const created = await DocumentService.createDocument(payload);
-      // refresh local documents
-      if (projectId) {
-        const docs = await DocumentService.getProjectDocuments(projectId);
-        setDocuments(docs || []);
-      }
-      if (onActionComplete) onActionComplete(created);
-    } catch (err) {
-      console.error('createDocument error', err);
-    }
-  };
+   const handleCreateDocument = async () => {
+     try {
+       const payload: any = {
+         name: `Document - ${node.name}`,
+         description: node.description || undefined,
+         type: 'report',
+         projectId: projectId,
+       };
+       const created = await new DocumentService().createDocument(payload);
+       // refresh local documents
+       if (projectId) {
+         const docs = await DocumentService.getProjectDocuments(projectId);
+         setDocuments(docs || []);
+       }
+       if (onActionComplete) onActionComplete(created);
+     } catch (err) {
+       console.error('createDocument error', err);
+     }
+   };
 
   const handleTriggerMilestone = async (action?: { id: string; label: string; action?: string }) => {
     try {

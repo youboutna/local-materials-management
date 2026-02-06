@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { DocumentService } from "@/application/services/DocumentService";
 
 interface ProjectDocument {
   id: string;
@@ -126,28 +127,18 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
     }
 
     try {
-      const { DocumentService } = await import('@/application/services/DocumentService');
-      await new DocumentService().createDocument({
+      const documentService = new DocumentService();
+      await documentService.createDocument({
         name: uploadData.file.name,
-        description: uploadData.description,
+        description: uploadData.description || undefined,
         type: uploadData.document_type as any,
-        fileName: uploadData.file.name,
-        mimeType: uploadData.file.type,
-        fileSize: uploadData.file.size,
-        projectId: projectId,
         status: 'draft' as any,
         priority: 'medium' as any,
-        isRequired: false,
-        paymentId: null,
-        supplierId: null,
-        phaseId: null,
-        taskId: null,
-        inspectionId: null,
-        riskId: null,
-        accessLevel: 'internal',
-        version: 1,
-        isLatest: true,
         category: 'general',
+        fileName: uploadData.file.name,
+        fileType: uploadData.file.type,
+        fileSize: uploadData.file.size,
+        projectId: projectId,
         tags: [],
       });
 
@@ -177,8 +168,8 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
     if (!confirm(t("confirm.delete_document"))) return;
 
     try {
-      const { DocumentService } = await import('@/application/services/DocumentService');
-      await new DocumentService().deleteDocument(documentId);
+      const documentService = new DocumentService();
+      await documentService.deleteDocument(documentId);
       toast({
         title: t("success.title"),
         description: t("success.delete_document"),

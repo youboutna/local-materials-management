@@ -45,23 +45,20 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
       const projectMaterials = await new MaterialService(null as any).getProjectMaterials(projectId);
       
       // Transform the data to match our interface
-      const transformedMaterials: ProjectMaterial[] = projectMaterials.map(item => ({
-        id: item.id,
-        quantity: item.quantity,
-        material: {
-          id: item.materialId,
-          name: `Material ${item.materialId}`,
-          description: '',
-          category: '',
-          unit: '',
-          pricePerUnit: item.unitPrice,
-          supplierId: '',
-          unit: item.materials.unit || '',
-          price_per_unit: item.materials.unit_price || 0,
-          origin_location: undefined,
-          image: undefined
-        }
-      }));
+       const transformedMaterials: ProjectMaterial[] = projectMaterials.map(item => ({
+         id: item.id,
+         quantity: item.quantity,
+         material: {
+           id: item.materialId,
+           name: `Material ${item.materialId}`,
+           description: '',
+           category: '',
+           unit: '',
+           price_per_unit: item.unitPrice || 0,
+           origin_location: undefined,
+           image: undefined
+         }
+       }));
       
       setMaterials(transformedMaterials);
     } catch (error) {
