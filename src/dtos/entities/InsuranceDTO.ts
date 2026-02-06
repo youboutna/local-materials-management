@@ -63,10 +63,12 @@ export interface CreateInsuranceRequestDTO {
   coverageType?: string;
   validFrom: string;
   validUntil: string;
+  status?: InsuranceStatus | string;
   notes?: string;
 }
 
 export interface UpdateInsuranceRequestDTO {
+  contractorName?: string;
   insuranceType?: InsuranceType | string;
   insuranceCompany?: string;
   policyNumber?: string;

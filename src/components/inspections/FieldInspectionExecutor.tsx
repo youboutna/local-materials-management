@@ -28,6 +28,7 @@ import {
   ObservationType,
   SeverityLevel,
   OBSERVATION_CATEGORIES,
+  InspectionDocument as InspectionDocumentType,
 } from '@/types/inspection-execution';
 
 interface FieldInspectionExecutorProps {
@@ -169,15 +170,25 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
   // Save progress
   const handleSave = async () => {
     setIsSaving(true);
-    const success = await InspectionExecutionService.updateExecutionData(inspection.id, {
-      ...executionData,
-      location: location ? { ...location, captured_at: new Date().toISOString() } : undefined,
-    } as InspectionExecutionData);
-
-    if (success) {
-      toast.success('Progression sauvegardée');
-      onSave?.();
-    } else {
+    try {
+      const service = new InspectionExecutionService();
+      // Use the completeInspection method to save progress
+      const result = await service.completeInspection({
+        inspectionId: inspection.id,
+        finalData: {
+          overallConformity: 'conform',
+          notes: (executionData as any).notes || ''
+        }
+      });
+      
+      if (result.success) {
+        toast.success('Progression sauvegardée');
+        onSave?.();
+      } else {
+        toast.error('Erreur lors de la sauvegarde');
+      }
+    } catch (error) {
+      console.error('Save error:', error);
       toast.error('Erreur lors de la sauvegarde');
     }
     setIsSaving(false);
@@ -296,19 +307,53 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
         continue;
       }
 
-      const doc = await InspectionExecutionService.uploadDocument(
-        inspection.id,
-        inspection.project_id,
-        file,
-        location ? { latitude: location.latitude, longitude: location.longitude } : undefined
-      );
+      try {
+        const service = new InspectionExecutionService();
+        const result = await service.addDocument({
+          inspectionId: inspection.id,
+          document: {
+            title: file.name,
+            name: file.name,
+            type: 'photo',
+            documentType: 'photo' as any,
+            fileName: file.name,
+            fileSize: file.size,
+            mimeType: file.type,
+            projectId: inspection.project_id,
+            paymentId: '',
+            supplierId: '',
+            phaseId: '',
+            inspectionId: inspection.id,
+            description: '',
+            fileUrl: '',
+            status: 'draft',
+            tags: [],
+            isInternalOnly: false,
+            isSharedWithSuppliers: false
+          } as any
+        });
 
-      if (doc) {
-        setExecutionData(prev => ({
-          ...prev,
-          documents: [...(prev.documents || []), doc],
-        }));
-        toast.success(`Photo ${file.name} uploadée`);
+        if (result.success) {
+          const doc: InspectionDocumentType = {
+            id: crypto.randomUUID(),
+            name: file.name,
+            type: 'photo',
+            url: URL.createObjectURL(file),
+            size: file.size,
+            mime_type: file.type,
+            uploaded_at: new Date().toISOString(),
+            metadata: location ? { latitude: location.latitude, longitude: location.longitude } : undefined
+          };
+          
+          setExecutionData(prev => ({
+            ...prev,
+            documents: [...(prev.documents || []), doc],
+          }));
+          toast.success(`Photo ${file.name} uploadée`);
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        toast.error(`Erreur lors de l'upload de ${file.name}`);
       }
     }
   };

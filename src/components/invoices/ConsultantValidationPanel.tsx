@@ -86,25 +86,40 @@ export function ConsultantValidationPanel() {
       if (error) throw error;
       
       // Transform data to match ProgressInvoice interface
-      const transformedData = data.map(invoice => ({
+      const transformedData = data.map((invoice: any) => ({
         id: invoice.id,
-        // ✅ PRIORITY: camelCase first, snake_case fallback
-        invoiceNumber: invoice.invoice_number || invoice.invoiceNumber || '',
-        invoiceType: invoice.invoice_type || invoice.invoiceType || 'progress',
-        progressPercentage: invoice.progress_percentage || invoice.progressPercentage || 0,
-        previousProgress: invoice.previous_progress || invoice.previousProgress || 0,
-        totalContractAmount: invoice.total_contract_amount || invoice.totalContractAmount || 0,
-        invoiceAmount: invoice.invoice_amount || invoice.invoiceAmount || 0,
-        workDescription: invoice.work_description || invoice.workDescription || '',
+        // Use snake_case from database, map to camelCase
+        invoiceNumber: invoice.invoice_number || '',
+        invoice_number: invoice.invoice_number || '',
+        invoiceType: invoice.invoice_type || 'progress',
+        invoice_type: invoice.invoice_type || 'progress',
+        progressPercentage: invoice.progress_percentage || 0,
+        progress_percentage: invoice.progress_percentage || 0,
+        previousProgress: invoice.previous_progress || 0,
+        previous_progress: invoice.previous_progress || 0,
+        totalContractAmount: invoice.total_contract_amount || 0,
+        total_contract_amount: invoice.total_contract_amount || 0,
+        invoiceAmount: invoice.invoice_amount || 0,
+        invoice_amount: invoice.invoice_amount || 0,
+        workDescription: invoice.work_description || '',
+        work_description: invoice.work_description || '',
         status: invoice.status || 'draft',
-        submittedAt: invoice.submitted_at || invoice.submittedAt || '',
-        projectId: invoice.project_id || invoice.projectId || '',
-        inspectionId: invoice.inspection_id || invoice.inspectionId || '',
-        supportingDocuments: invoice.supporting_documents || invoice.supportingDocuments || [],
+        submittedAt: invoice.submitted_at || '',
+        submitted_at: invoice.submitted_at || '',
+        projectId: invoice.project_id || '',
+        project_id: invoice.project_id || '',
+        inspectionId: invoice.inspection_id || '',
+        inspection_id: invoice.inspection_id || '',
+        supportingDocuments: invoice.supporting_documents || [],
+        supporting_documents: invoice.supporting_documents || [],
         submitted_by: invoice.submitted_by || '',
         created_at: invoice.created_at || '',
         updated_at: invoice.updated_at || '',
-        projects: invoice.projects
+        projects: invoice.projects ? {
+          title: invoice.projects.title || '',
+          projectType: invoice.projects.project_type || '',
+          fundingSource: invoice.projects.funding_source || ''
+        } : undefined
       } as ProgressInvoice));
       
       setInvoices(transformedData);
@@ -152,7 +167,7 @@ export function ConsultantValidationPanel() {
         const fileName = `service-fait-${invoiceId}-${Date.now()}.${fileExt}`;
         const filePath = `progress-invoices/${fileName}`;
 
-        const uploadResult = await storageService.uploadFile('documents', filePath, serviceFaitFile);
+        const uploadResult = await storageService.uploadFile(serviceFaitFile);
         // StorageService throws exceptions on error, so if we get here it succeeded
 
         serviceFaitDocumentId = `doc-${Date.now()}`;
@@ -313,7 +328,7 @@ export function ConsultantValidationPanel() {
                     <div>
                       <p className="font-medium">{invoice.projects?.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        {invoice.projects?.projectType || invoice.projects?.project_type}
+                        {invoice.projects?.projectType}
                       </p>
                     </div>
                   </TableCell>
@@ -330,15 +345,15 @@ export function ConsultantValidationPanel() {
                   </TableCell>
                   <TableCell>
                     <div>
-                      <p className="font-medium">{(invoice.invoiceAmount || invoice.invoice_amount).toLocaleString('fr-FR')} MRU</p>
+                      <p className="font-medium">{((invoice.invoiceAmount || invoice.invoice_amount) ?? 0).toLocaleString('fr-FR')} MRU</p>
                       <p className="text-xs text-muted-foreground">
-                        Total: {(invoice.totalContractAmount || invoice.total_contract_amount).toLocaleString('fr-FR')} MRU
+                        Total: {((invoice.totalContractAmount || invoice.total_contract_amount) ?? 0).toLocaleString('fr-FR')} MRU
                       </p>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div>
-                      <p className="font-medium">{new Date(invoice.submittedAt || invoice.submitted_at).toLocaleDateString('fr-FR')}</p>
+                      <p className="font-medium">{new Date(invoice.submittedAt || invoice.submitted_at || '').toLocaleDateString('fr-FR')}</p>
                       <p className="text-xs text-muted-foreground">
                         {invoice.invoiceNumber || invoice.invoice_number}
                       </p>
@@ -346,7 +361,7 @@ export function ConsultantValidationPanel() {
                   </TableCell>
                   <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                   <TableCell>
-                    {invoice.projects?.project_type === 'infrastructure' && !canValidateInfrastructure ? (
+                    {invoice.projects?.projectType === 'infrastructure' && !canValidateInfrastructure ? (
                       <Badge variant="outline" className="text-muted-foreground">
                         Accès limité
                       </Badge>
@@ -374,9 +389,9 @@ export function ConsultantValidationPanel() {
                           <Alert>
                             <AlertTriangle className="h-4 w-4" />
                             <AlertDescription>
-                              Type de projet: <strong>{invoice.projects?.project_type}</strong>
-                              {invoice.projects?.funding_source && (
-                                <> • Financement: {invoice.projects.funding_source}</>
+                              Type de projet: <strong>{invoice.projects?.projectType}</strong>
+                              {invoice.projects?.fundingSource && (
+                                <> • Financement: {invoice.projects.fundingSource}</>
                               )}
                             </AlertDescription>
                           </Alert>
@@ -392,10 +407,10 @@ export function ConsultantValidationPanel() {
                             <div>
                               <p className="text-sm font-medium">Montant</p>
                               <p className="text-2xl font-bold">
-                                {invoice.invoice_amount.toLocaleString('fr-FR')} MRU
+                                {(invoice.invoice_amount ?? 0).toLocaleString('fr-FR')} MRU
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                / {invoice.total_contract_amount.toLocaleString('fr-FR')} MRU
+                                / {(invoice.total_contract_amount ?? 0).toLocaleString('fr-FR')} MRU
                               </p>
                             </div>
                           </div>
@@ -407,11 +422,11 @@ export function ConsultantValidationPanel() {
                             </p>
                           </div>
 
-                          {invoice.supporting_documents?.length > 0 && (
+                          {(invoice.supporting_documents?.length ?? 0) > 0 && (
                             <div>
                               <p className="text-sm font-medium mb-2">Documents justificatifs</p>
                               <div className="space-y-1">
-                                {invoice.supporting_documents.map((doc, index) => (
+                                {(invoice.supporting_documents ?? []).map((doc, index) => (
                                   <a
                                     key={index}
                                     href={doc}

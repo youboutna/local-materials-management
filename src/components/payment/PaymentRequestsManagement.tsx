@@ -65,8 +65,8 @@ export const PaymentRequestsManagement: React.FC = () => {
       const enrichedRequests = await Promise.all(
         requests.map(async (request) => {
           const [supplierData, projectData] = await Promise.all([
-            supplierService.getSupplierById(request.supplier_id),
-            request.project_id ? projectService.getProjectById(request.project_id) : Promise.resolve(null)
+            supplierService.getSupplierById(request.supplierId || (request as any).supplier_id),
+            request.projectId || (request as any).project_id ? projectService.getProjectById(request.projectId || (request as any).project_id) : Promise.resolve(null)
           ]);
           
           return {
@@ -84,7 +84,7 @@ export const PaymentRequestsManagement: React.FC = () => {
         })
       );
 
-      return enrichedRequests as PaymentRequest[];
+      return enrichedRequests as unknown as PaymentRequest[];
     },
   });
 
