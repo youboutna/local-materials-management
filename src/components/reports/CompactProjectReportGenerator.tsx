@@ -6,14 +6,41 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { ReportingService } from '@/application/services/ReportingService';
 import { ProjectAnalyticsService } from '@/application/services/ProjectAnalyticsService';
-import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
+import { ProjectDetailDTO, ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import { pdf } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver';
 import { Download, FileText, Loader2, MapPin } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { CompactProjectPDFDocument, SingleCompactProjectPDF } from './pdf/CompactProjectPDFDocument';
-import type { EVMMetrics, PERTAnalysis, ProjectData } from '@/dtos/entities/ProjectDTO';
+
+// Local type aliases for report generation
+interface EVMMetrics {
+  schedulePerformanceIndex: number;
+  costPerformanceIndex: number;
+  earnedValue: number;
+  plannedValue: number;
+  actualCost: number;
+  budgetAtCompletion: number;
+  estimateAtCompletion: number;
+  estimateToComplete: number;
+  varianceAtCompletion: number;
+  scheduleVariance: number;
+  costVariance: number;
+}
+
+interface PertAnalysis {
+  expectedDuration: number;
+  variance: number;
+  optimisticEstimate?: number;
+  mostLikelyEstimate?: number;
+  pessimisticEstimate?: number;
+  expectedTime?: number;
+  standardDeviation?: number;
+}
+
+// Alias for backward compatibility
+type ProjectData = ProjectDTO;
 
 interface CompactProjectReportGeneratorProps {
   project?: ProjectData;
@@ -35,15 +62,18 @@ export function CompactProjectReportGenerator({
   // Data maps for multiple projects
   const [enrichedDataMap, setEnrichedDataMap] = useState<Map<string, ProjectDetailDTO>>(new Map());
   const [evmMetricsMap, setEvmMetricsMap] = useState<Map<string, EVMMetrics>>(new Map());
-  const [pertAnalysisMap, setPertAnalysisMap] = useState<Map<string, PERTAnalysis>>(new Map());
+  const [pertAnalysisMap, setPertAnalysisMap] = useState<Map<string, PertAnalysis>>(new Map());
   
   // Single project data
   const [singleEnrichedData, setSingleEnrichedData] = useState<ProjectDetailDTO | null>(null);
   const [singleEvmMetrics, setSingleEvmMetrics] = useState<EVMMetrics | null>(null);
-  const [singlePertAnalysis, setSinglePertAnalysis] = useState<PERTAnalysis | null>(null);
+  const [singlePertAnalysis, setSinglePertAnalysis] = useState<PertAnalysis | null>(null);
 
   const projectList = useMemo(() => projects || (project ? [project] : []), [projects, project]);
   const isSingleProject = !projects && project;
+
+  // Create service instance
+  const reportingService = useMemo(() => new ReportingService(), []);
 
   useEffect(() => {
     const loadData = async () => {
@@ -59,29 +89,40 @@ export function CompactProjectReportGenerator({
             const analyticsService = new ProjectAnalyticsService();
             const comprehensiveAnalytics = await analyticsService.getProjectAnalytics(project.id);
             
+            // Safely extract analytics values
+            const analytics = comprehensiveAnalytics || {};
+            const totalBudget = (analytics as any).total_budget || project.budget || 0;
+            const progressPercentage = (analytics as any).progress_percentage || project.progress || 0;
+            const actualCostValue = (analytics as any).actual_cost || 0;
+            const schedulePerformance = (analytics as any).schedule_performance || 1.0;
+            const costEfficiency = (analytics as any).cost_efficiency || 1.0;
+            const budgetVariance = (analytics as any).budget_variance || 0;
+            const timelineVariance = (analytics as any).timeline_variance || 0;
+            
             // Calculs EVM basés sur les données réelles du service
             const evmMetrics: EVMMetrics = {
-              schedulePerformanceIndex: comprehensiveAnalytics.schedule_performance || 1.0,
-              costPerformanceIndex: comprehensiveAnalytics.cost_efficiency || 1.0,
-              earnedValue: comprehensiveAnalytics.total_budget * (comprehensiveAnalytics.progress_percentage / 100),
-              plannedValue: comprehensiveAnalytics.total_budget * (comprehensiveAnalytics.progress_percentage / 100),
-              actualCost: comprehensiveAnalytics.actual_cost,
-              budgetAtCompletion: comprehensiveAnalytics.total_budget,
-              estimateAtCompletion: comprehensiveAnalytics.actual_cost + (comprehensiveAnalytics.total_budget - comprehensiveAnalytics.actual_cost),
-              estimateToComplete: comprehensiveAnalytics.total_budget - comprehensiveAnalytics.actual_cost,
-              varianceAtCompletion: comprehensiveAnalytics.budget_variance,
-              scheduleVariance: comprehensiveAnalytics.timeline_variance || 0,
-              costVariance: comprehensiveAnalytics.budget_variance || 0
+              schedulePerformanceIndex: schedulePerformance,
+              costPerformanceIndex: costEfficiency,
+              earnedValue: totalBudget * (progressPercentage / 100),
+              plannedValue: totalBudget * (progressPercentage / 100),
+              actualCost: actualCostValue,
+              budgetAtCompletion: totalBudget,
+              estimateAtCompletion: actualCostValue + (totalBudget - actualCostValue),
+              estimateToComplete: totalBudget - actualCostValue,
+              varianceAtCompletion: budgetVariance,
+              scheduleVariance: timelineVariance,
+              costVariance: budgetVariance
             };
             
             // Create PERT analysis
-            const pertAnalysis: PERTAnalysis = {
+            const pertAnalysis: PertAnalysis = {
+              expectedDuration: 0,
+              variance: 0,
               optimisticEstimate: 0,
               mostLikelyEstimate: 0,
               pessimisticEstimate: 0,
               expectedTime: 0,
-              standardDeviation: 0,
-              variance: 0
+              standardDeviation: 0
             };
             
             // Create ProjectDetailDTO
@@ -98,20 +139,21 @@ export function CompactProjectReportGenerator({
               thumbnail: project.thumbnail || '',
               teamSize: project.teamSize || 0,
               coordinates: project.coordinates,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-              tasks: project.tasks || [],
-              risks: project.risks || [],
-              resources: project.resources || [],
-              inspections: project.inspections || [],
-              plannedPhases: project.phases || [],
-              expenses: project.expenses || [],
-              alerts: project.alerts || [],
-              insurancePolicies: project.insurancePolicies || [],
-              methodology: project.methodology || 'hybrid',
-              ganttChart: project.ganttChart,
-              pertAnalysis: project.pertAnalysis,
-              earnedValueManagement: project.earnedValueManagement
+              createdAt: project.createdAt || new Date().toISOString(),
+              updatedAt: project.updatedAt || new Date().toISOString(),
+              currency: project.currency || 'MRU',
+              tasks: (project as any).tasks || [],
+              risks: (project as any).risks || [],
+              resources: (project as any).resources || [],
+              inspections: (project as any).inspections || [],
+              plannedPhases: (project as any).phases || [],
+              expenses: (project as any).expenses || [],
+              alerts: (project as any).alerts || [],
+              insurancePolicies: (project as any).insurancePolicies || [],
+              methodology: (project as any).methodology || 'hybrid',
+              ganttChart: (project as any).ganttChart,
+              pertAnalysis: (project as any).pertAnalysis,
+              earnedValueManagement: (project as any).earnedValueManagement
             };
             
             setSingleEnrichedData(projectDetailDTO);
@@ -119,33 +161,46 @@ export function CompactProjectReportGenerator({
             setSinglePertAnalysis(pertAnalysis);
           } else {
             // Use ReportingService for comprehensive report
-            const completeReport = await ReportingService.generateCompleteProjectReport(project);
+            const completeReport = await reportingService.generateCompleteProjectReport({ project });
+            const reportProject = completeReport.reportDTO.project || {};
+            
             // Convert ProjectData to ProjectDetailDTO
             const projectDetailFromService: ProjectDetailDTO = {
-              ...completeReport.reportDTO.project,
-              tasks: completeReport.reportDTO.project.tasks || [],
-              risks: completeReport.reportDTO.project.risks || [],
-              resources: completeReport.reportDTO.project.resources || [],
-              inspections: completeReport.reportDTO.project.inspections || [],
-              plannedPhases: completeReport.reportDTO.project.phases || [],
-              expenses: completeReport.reportDTO.project.expenses || [],
-              alerts: completeReport.reportDTO.project.alerts || [],
-              insurancePolicies: completeReport.reportDTO.project.insurancePolicies || [],
-              methodology: completeReport.reportDTO.project.methodology || 'hybrid',
-              ganttChart: completeReport.reportDTO.project.ganttChart,
-              pertAnalysis: completeReport.reportDTO.project.pertAnalysis,
-              earnedValueManagement: completeReport.reportDTO.project.earnedValueManagement
+              ...reportProject,
+              id: project.id,
+              title: project.title,
+              currency: project.currency || 'MRU',
+              teamSize: project.teamSize || 0,
+              createdAt: project.createdAt || new Date().toISOString(),
+              updatedAt: project.updatedAt || new Date().toISOString(),
+              tasks: (reportProject as any).tasks || [],
+              risks: (reportProject as any).risks || [],
+              resources: (reportProject as any).resources || [],
+              inspections: (reportProject as any).inspections || [],
+              plannedPhases: (reportProject as any).phases || [],
+              expenses: (reportProject as any).expenses || [],
+              alerts: (reportProject as any).alerts || [],
+              insurancePolicies: (reportProject as any).insurancePolicies || [],
+              methodology: (reportProject as any).methodology || 'hybrid',
+              ganttChart: (reportProject as any).ganttChart,
+              pertAnalysis: (reportProject as any).pertAnalysis,
+              earnedValueManagement: (reportProject as any).earnedValueManagement
             };
             setSingleEnrichedData(projectDetailFromService);
             
             const evmMetricsResult = ReportCalculations.calculateEVMMetrics(
-              project,
+              project as any,
               completeReport.costCalculation.actualCost
             );
-            setSingleEvmMetrics(evmMetricsResult);
+            setSingleEvmMetrics(evmMetricsResult as EVMMetrics);
             
-            const pertResult = ReportCalculations.calculatePERTAnalysis(project);
-            setSinglePertAnalysis(pertResult);
+            const pertResult = ReportCalculations.calculatePERTAnalysis(project as any);
+            // Map PERT result to our interface
+            setSinglePertAnalysis({
+              expectedDuration: (pertResult as any).totalExpectedDuration || (pertResult as any).expectedDuration || 0,
+              variance: (pertResult as any).totalVariance || (pertResult as any).variance || 0,
+              ...pertResult
+            });
           }
           
           setReportTitle(`Rapport - ${project.title}`);
@@ -153,37 +208,49 @@ export function CompactProjectReportGenerator({
           // Load multiple projects data
           const enrichedMap = new Map<string, ProjectDetailDTO>();
           const evmMap = new Map<string, EVMMetrics>();
-          const pertMap = new Map<string, PERTAnalysis>();
+          const pertMap = new Map<string, PertAnalysis>();
           
           for (const proj of projectList) {
             try {
-              const completeReport = await ReportingService.generateCompleteProjectReport(proj);
+              const completeReport = await reportingService.generateCompleteProjectReport({ project: proj });
+              const reportProject = completeReport.reportDTO.project || {};
+              
               // Convert ProjectData to ProjectDetailDTO
               const projectDetailFromService: ProjectDetailDTO = {
-                ...completeReport.reportDTO.project,
-                tasks: completeReport.reportDTO.project.tasks || [],
-                risks: completeReport.reportDTO.project.risks || [],
-                resources: completeReport.reportDTO.project.resources || [],
-                inspections: completeReport.reportDTO.project.inspections || [],
-                plannedPhases: completeReport.reportDTO.project.phases || [],
-                expenses: completeReport.reportDTO.project.expenses || [],
-                alerts: completeReport.reportDTO.project.alerts || [],
-                insurancePolicies: completeReport.reportDTO.project.insurancePolicies || [],
-                methodology: completeReport.reportDTO.project.methodology || 'hybrid',
-                ganttChart: completeReport.reportDTO.project.ganttChart,
-                pertAnalysis: completeReport.reportDTO.project.pertAnalysis,
-                earnedValueManagement: completeReport.reportDTO.project.earnedValueManagement
+                ...reportProject,
+                id: proj.id,
+                title: proj.title,
+                currency: proj.currency || 'MRU',
+                teamSize: proj.teamSize || 0,
+                createdAt: proj.createdAt || new Date().toISOString(),
+                updatedAt: proj.updatedAt || new Date().toISOString(),
+                tasks: (reportProject as any).tasks || [],
+                risks: (reportProject as any).risks || [],
+                resources: (reportProject as any).resources || [],
+                inspections: (reportProject as any).inspections || [],
+                plannedPhases: (reportProject as any).phases || [],
+                expenses: (reportProject as any).expenses || [],
+                alerts: (reportProject as any).alerts || [],
+                insurancePolicies: (reportProject as any).insurancePolicies || [],
+                methodology: (reportProject as any).methodology || 'hybrid',
+                ganttChart: (reportProject as any).ganttChart,
+                pertAnalysis: (reportProject as any).pertAnalysis,
+                earnedValueManagement: (reportProject as any).earnedValueManagement
               };
               enrichedMap.set(proj.id, projectDetailFromService);
               
               const evmMetricsResult = ReportCalculations.calculateEVMMetrics(
-                proj,
+                proj as any,
                 completeReport.costCalculation.actualCost
               );
-              evmMap.set(proj.id, evmMetricsResult);
+              evmMap.set(proj.id, evmMetricsResult as EVMMetrics);
               
-              const pertResult = ReportCalculations.calculatePERTAnalysis(proj);
-              pertMap.set(proj.id, pertResult);
+              const pertResult = ReportCalculations.calculatePERTAnalysis(proj as any);
+              pertMap.set(proj.id, {
+                expectedDuration: (pertResult as any).totalExpectedDuration || (pertResult as any).expectedDuration || 0,
+                variance: (pertResult as any).totalVariance || (pertResult as any).variance || 0,
+                ...pertResult
+              });
             } catch (error) {
               console.error(`Failed to load data for project ${proj.id}:`, error);
             }
@@ -206,7 +273,7 @@ export function CompactProjectReportGenerator({
     };
 
     loadData();
-  }, [project, projects, isSingleProject, projectList.length, toast, useDirectData, projectList]);
+  }, [project, projects, isSingleProject, projectList.length, toast, useDirectData, projectList, reportingService]);
 
   const generatePDF = async () => {
     if (projectList.length === 0) {
@@ -223,10 +290,10 @@ export function CompactProjectReportGenerator({
       if (isSingleProject && singleEnrichedData && singleEvmMetrics && singlePertAnalysis) {
         const blob = await pdf(
           <SingleCompactProjectPDF 
-            project={project}
+            project={project as any}
             enrichedData={singleEnrichedData}
-            evmMetrics={singleEvmMetrics}
-            pertAnalysis={singlePertAnalysis}
+            evmMetrics={singleEvmMetrics as any}
+            pertAnalysis={singlePertAnalysis as any}
             reportTitle={reportTitle}
           />
         ).toBlob();
@@ -247,7 +314,7 @@ export function CompactProjectReportGenerator({
         
         const blob = await pdf(
           <CompactProjectPDFDocument 
-            projects={projectsData}
+            projects={projectsData as any}
             reportTitle={reportTitle}
           />
         ).toBlob();

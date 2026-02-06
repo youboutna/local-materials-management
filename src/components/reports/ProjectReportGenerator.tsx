@@ -14,7 +14,7 @@ import { ReportCalculations } from '@/utils/reportCalculations';
 import { pdf } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver';
 import { CheckSquare, Download, FileText, Loader2, Mail, Square } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { ProjectPDFDocument } from './pdf/ProjectPDFDocument';
 
 interface ProjectReportGeneratorProps {
@@ -87,9 +87,12 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
     notes: '',
   });
 
-  // Generate complete project report using EnhancedReportingService
+  // Create ReportingService instance
+  const reportingServiceInstance = useMemo(() => new ReportingService(), []);
+
+  // Generate complete project report using ReportingService
   const generateCompleteReport = async (project: ProjectData) => {
-    return await EnhancedReportingService.generateCompleteProjectReport(project);
+    return await reportingServiceInstance.generateCompleteProjectReport({ project });
   };
 
   // Load all report data on component mount
