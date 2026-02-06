@@ -80,8 +80,8 @@ export class ParsedInvoiceEntity implements ParsedInvoice {
   }
 
   hasErrors(): boolean {
-    return (this.parsingErrors && this.parsingErrors.length > 0) ||
-           (this.validationErrors && this.validationErrors.length > 0);
+    return Boolean(this.parsingErrors && this.parsingErrors.length > 0) ||
+           Boolean(this.validationErrors && this.validationErrors.length > 0);
   }
 
   canBeValidated(): boolean {

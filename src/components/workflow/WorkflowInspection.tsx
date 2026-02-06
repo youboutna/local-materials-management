@@ -17,15 +17,33 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { ProjectWithPayments, InspectionStatus } from '@/dtos/entities/ProjectDTO';
 import { InspectionDialog } from '@/components/project/InspectionDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 
+// Local type for inspection status with all needed values
+type InspectionStatus = 'pending' | 'approved' | 'rejected' | 'requires_changes';
+
+// Type alias for local project with payments
+interface LocalProjectWithPayments {
+  id: string;
+  title: string;
+  status: string;
+  progress: number;
+  inspections?: Array<{
+    id: string;
+    date: string;
+    status: string;
+    inspector: string;
+    progress_at_inspection: number;
+    comments?: string;
+  }>;
+}
+
 interface WorkflowInspectionProps {
-  project: ProjectWithPayments;
+  project: LocalProjectWithPayments;
   onInspectionUpdate?: () => void;
 }
 
@@ -82,19 +100,19 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
         if (latestInspection.status === 'approved') {
           // If progress reaches 100%, mark project as completed
           if (newProgress >= 100) {
-            newStatus = 'terminé';
+            newStatus = 'termine';
           } else {
-            newStatus = 'en cours';
+            newStatus = 'enCours';
           }
         } else if (latestInspection.status === 'requires_changes') {
           // For inspections requiring changes, set status to inspection
-          newStatus = 'en inspection';
+          newStatus = 'enInspection';
         } else if (latestInspection.status === 'rejected') {
           // For rejected inspections, set status to suspended
           newStatus = 'suspendu';
         } else if (latestInspection.status === 'pending') {
           // For pending inspections, set status to inspection
-          newStatus = 'en inspection';
+          newStatus = 'enInspection';
         }
 
         console.log('Updating project with:', { 
@@ -117,13 +135,6 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
         if (updateError) {
           throw updateError;
         }
-
-        const statusMessages = {
-          'approved': 'approuvée',
-          'rejected': 'rejetée',
-          'requires_changes': 'nécessitant des modifications',
-          'pending': 'en attente'
-        };
 
         const progressSource = relevantInspections && relevantInspections.length > 0 
           ? `basée sur la dernière inspection ${(relevantInspections[0] as any).status === 'approved' ? 'approuvée' : 'nécessitant des modifications'}`
@@ -207,7 +218,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
               Suivi des Inspections
             </Button>
             <InspectionDialog 
-              project={project} 
+              project={project as any} 
               onInspectionCreated={handleInspectionCreated}
             />
           </div>
@@ -237,7 +248,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
               {t('inspection.dialog.description').replace('{project}', project.title)}
             </p>
             <InspectionDialog 
-              project={project} 
+              project={project as any} 
               onInspectionCreated={handleInspectionCreated}
             />
           </div>

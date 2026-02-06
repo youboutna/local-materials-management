@@ -7,10 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { useUsersHex, useUserCreate, useUserUpdate, useUserToggleStatus } from '@/hooks/hexagonal';
+import { useUserCreate, useUserUpdate, useUserToggleStatus } from '@/hooks/hexagonal';
 import { useRoleManagement } from '@/hooks/useUserRoles';
 import RoleBadge, { RoleType } from '@/components/RoleBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UserProfile {
   id: string;
@@ -41,9 +42,9 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
   const { toast } = useToast();
   const { assignRole, removeRole } = useRoleManagement();
   const { t } = useLanguage();
-  const { createUser } = useUserCreate();
-  const { updateUser } = useUserUpdate();
-  const { toggleUserStatus } = useUserToggleStatus();
+  const createUserMutation = useUserCreate();
+  const updateUserMutation = useUserUpdate();
+  const toggleStatusMutation = useUserToggleStatus();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     full_name: user?.full_name || '',
@@ -76,18 +77,21 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
 
         // Create user with hexagonal architecture
         const userData = {
-          fullName: formData.full_name,
           email: formData.email,
+          password: formData.password,
+          full_name: formData.full_name,
+          fullName: formData.full_name,
           phone: formData.phone,
           nationalId: formData.national_id,
+          national_id: formData.national_id,
           isActive: formData.is_active
         };
 
-        const result = await createUser.mutateAsync(userData);
+        const result = await createUserMutation.mutateAsync(userData as any);
         
         // Assign role if needed
         if (selectedRole && selectedRole !== 'viewer') {
-          await assignRole.mutateAsync({ userId: result.id, role: selectedRole });
+          await assignRole.mutateAsync({ userId: result.id, roleName: selectedRole });
         }
 
         toast({
@@ -387,8 +391,8 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
                 <Input
                   id="newPassword"
                   type="password"
-                  value={formData.newPassword || ''}
-                  onChange={(e) => setFormData(prev => ({...prev, newPassword: e.target.value}))}
+                  value={formData.new_password || ''}
+                  onChange={(e) => setFormData(prev => ({...prev, new_password: e.target.value}))}
                   placeholder="Laisser vide pour ne pas changer"
                 />
               </div>

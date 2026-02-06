@@ -124,7 +124,7 @@ export class Phase {
   }
 
   getStepsProgress(): number {
-    if (this.steps.length === 0) return this.progress;
+    if (this.steps.length === 0) return this.progress ?? 0;
     return (this.getCompletedStepsCount() / this.steps.length) * 100;
   }
 
@@ -163,15 +163,15 @@ export class Phase {
 
   // ============= Factory Methods =============
 
-  static create(data: Partial<Phase>): Phase {
+  static create(data: Partial<Phase> & { name?: string }): Phase {
     return new Phase(
       data.id || crypto.randomUUID(),
       data.projectId || '',
       data.phaseName || data.name || '',
       data.description || null,
       data.status || 'pending',
-      data.progress || 0,
-      data.orderIndex || 0,
+      data.progress ?? 0,
+      data.orderIndex ?? 0,
       data.startDate || null,
       data.endDate || null,
       data.estimatedCost || null,

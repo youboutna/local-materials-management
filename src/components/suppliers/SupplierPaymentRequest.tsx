@@ -131,16 +131,14 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
     if (!file) return;
 
     try {
-      // Use DocumentService instead of direct Supabase calls
-      const documentData: CreateDocumentRequestDto = {
+      // Use DocumentService uploadDocument method
+      const uploadedDocument = await documentService.uploadDocument({
         title: file.name,
         file: file,
         type: 'supporting_document' as any,
         projectId: projectId || undefined,
         description: 'Document support pour demande de paiement',
-      };
-
-      const uploadedDocument = await documentService.uploadDocument(documentData, user?.id || 'anonymous');
+      }, user?.id || 'anonymous');
       
       setUploadedDocuments(prev => [...prev, uploadedDocument.url || '']);
       toast({
