@@ -130,7 +130,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
           values.message,
           'payment_action',
           paymentId,
-          actionMetadata
+          actionMetadata as unknown as Record<string, unknown>
         );
       }
 

@@ -13,12 +13,12 @@ import { toast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2, AlertTriangle, Shield, Target, TrendingUp, User, Calendar, Building, AlertCircle } from 'lucide-react';
 import { 
   useEnhancedRiskManagerHex,
-  type ProjectRisk,
-  type RiskFormData,
-  type ProjectPhase,
-  type Employee,
-  type Supplier
-} from '@/hooks/hexagonal'
+  ProjectRisk,
+  RiskFormData,
+  ProjectPhase,
+  Employee,
+  Supplier
+} from '@/hooks/hexagonal/useEnhancedRiskManagerHex';
 
 interface EnhancedRiskManagerProps {
   projectId: string;
