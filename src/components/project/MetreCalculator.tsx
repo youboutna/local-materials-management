@@ -11,8 +11,10 @@ import { Calculator, Plus, Trash2, Save, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import { calculateQuantity } from '@/types/quantityTakeoff';
+import { supabase } from '@/integrations/supabase/client';
 
-interface Material {
+// Local Material interface for UI usage
+interface LocalMaterial {
   id: string;
   name: string;
   unit: string;
@@ -43,7 +45,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
   projectBudget,
   onCalculationsChange
 }) => {
-  const [materials, setMaterials] = useState<Material[]>([]);
+  const [materials, setMaterials] = useState<LocalMaterial[]>([]);
   const [calculations, setCalculations] = useState<QuantityCalculation[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('automatic');
@@ -82,8 +84,16 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
   const fetchMaterials = async () => {
     try {
       const materialRepository = RepositoryFactory.getMaterialRepository();
-      const materials = await materialRepository.findAll();
-      setMaterials(materials);
+      const domainMaterials = await materialRepository.findAll();
+      // Map domain entities to local UI format
+      const mappedMaterials: LocalMaterial[] = domainMaterials.map(m => ({
+        id: m.id,
+        name: m.name,
+        unit: m.unit,
+        category: m.category,
+        price_per_unit: m.pricePerUnit ?? 0
+      }));
+      setMaterials(mappedMaterials);
     } catch (error) {
       console.error('Error fetching materials:', error);
       toast({
@@ -96,18 +106,23 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
 
   const fetchExistingCalculations = async () => {
     try {
-      const materialRepository = RepositoryFactory.getMaterialRepository();
-      const calculations = await materialRepository.findAll({ project_id: projectId });
+      // Fetch from quantity_takeoffs table
+      const { data, error } = await supabase
+        .from('quantity_takeoffs')
+        .select('*')
+        .eq('project_id', projectId);
       
-      const formattedCalculations: QuantityCalculation[] = calculations.map(item => ({
+      if (error) throw error;
+      
+      const formattedCalculations: QuantityCalculation[] = (data || []).map((item: any) => ({
         id: item.id,
         materialId: item.material_id,
         elementType: item.element_type,
         unit: item.unit as 'm³' | 'm²' | 'm' | 'unité',
-        length: item.length,
+        length: item.length || 0,
         width: item.width || undefined,
         height: item.height || undefined,
-        quantity: item.quantity,
+        quantity: item.quantity || 0,
         note: item.note || undefined
       }));
 
@@ -157,8 +172,10 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
     setLoading(true);
     try {
       // First, delete existing calculations for this project
-      const quantityTakeoffRepository = RepositoryFactory.getQuantityTakeoffRepository();
-      await quantityTakeoffRepository.deleteByProjectId(projectId);
+      await supabase
+        .from('quantity_takeoffs')
+        .delete()
+        .eq('project_id', projectId);
 
       // Then insert the new calculations
       const calculationsToSave = calculations.map(calc => ({
@@ -173,7 +190,13 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
         note: calc.note || null
       }));
 
-      await quantityTakeoffRepository.createMany(calculationsToSave);
+      if (calculationsToSave.length > 0) {
+        const { error } = await supabase
+          .from('quantity_takeoffs')
+          .insert(calculationsToSave);
+        
+        if (error) throw error;
+      }
 
       toast({
         title: "Métrés sauvegardés",
@@ -198,7 +221,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
     try {
       // Get project materials
       const materialRepository = RepositoryFactory.getMaterialRepository();
-      const projectMaterials = await materialRepository.findAll({ project_id: projectId });
+      const projectMaterials = await materialRepository.findAll();
 
       // Generate automatic calculations based on material categories and quantities
       const autoCalculations: QuantityCalculation[] = projectMaterials.map(pm => {
@@ -206,24 +229,24 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
         let elementType = 'Autre';
         let unit: 'm³' | 'm²' | 'm' | 'unité' = 'unité';
         let length = pm.availableQuantity || 0;
-        let width, height;
+        let width: number | undefined, height: number | undefined;
 
         // Determine element type and dimensions based on material category
         if (material.category.toLowerCase().includes('béton')) {
           elementType = 'Dalle';
           unit = 'm³';
-          length = Math.cbrt(pm.quantity); // Approximate cube root for volume
+          length = Math.cbrt(pm.availableQuantity || 1);
           width = length;
           height = length;
         } else if (material.category.toLowerCase().includes('acier') || material.category.toLowerCase().includes('fer')) {
           elementType = 'Poutre';
           unit = 'm';
-          length = pm.quantity;
+          length = pm.availableQuantity || 0;
         } else if (material.category.toLowerCase().includes('brique') || material.category.toLowerCase().includes('parpaing')) {
           elementType = 'Mur';
           unit = 'm²';
-          length = Math.sqrt(pm.quantity);
-          width = Math.sqrt(pm.quantity);
+          length = Math.sqrt(pm.availableQuantity || 1);
+          width = Math.sqrt(pm.availableQuantity || 1);
         }
 
         return {
@@ -464,10 +487,15 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
                           const material = materials.find(m => m.id === calc.materialId);
                           const cost = material ? calc.quantity * material.price_per_unit : 0;
                           return (
-                            <div className="flex justify-between">
-                              <span>Coût estimé:</span>
-                              <span className="font-medium">{cost.toLocaleString('fr-FR')} MRU</span>
-                            </div>
+                            <>
+                              <span className="font-medium">Coût estimé: </span>
+                              {cost.toLocaleString('fr-FR')} MRU
+                              {material && (
+                                <span className="text-green-600 ml-2">
+                                  ({calc.quantity.toFixed(2)} × {material.price_per_unit.toLocaleString('fr-FR')} MRU)
+                                </span>
+                              )}
+                            </>
                           );
                         })()}
                       </div>
@@ -477,8 +505,8 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
               </Card>
             ))}
 
-            {/* Save Button */}
-            <div className="flex justify-end gap-2">
+            {/* Save button */}
+            <div className="flex justify-end gap-2 pt-4">
               <Button onClick={saveCalculations} disabled={loading}>
                 <Save className="mr-2 h-4 w-4" />
                 {loading ? 'Sauvegarde...' : 'Sauvegarder les métrés'}
@@ -488,10 +516,9 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
         )}
 
         {calculations.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-muted-foreground">
             <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Aucun calcul de métré disponible</p>
-            <p className="text-sm">Utilisez le calcul automatique ou ajoutez des calculs manuels</p>
+            <p>Aucun calcul de métré. Utilisez le calcul automatique ou ajoutez des calculs manuels.</p>
           </div>
         )}
       </CardContent>

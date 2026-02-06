@@ -20,13 +20,58 @@ interface InspectionsListProps {
   projectId: string;
 }
 
+// Local inspection document interface
+interface InspectionDocument {
+  name: string;
+  url: string;
+}
+
+// Local inspection UI type with dual-casing support
+interface InspectionUIData {
+  id: string;
+  date: string;
+  inspector: string;
+  status: string;
+  comments?: string;
+  progressAtInspection?: number;
+  progress_at_inspection?: number;
+  documents?: InspectionDocument[] | string[];
+}
+
+// Helper to map status to StatusType
+const mapStatus = (status: string): StatusType => {
+  const statusMap: Record<string, StatusType> = {
+    'approved': 'approuvée',
+    'completed': 'termine',
+    'in_progress': 'enCours',
+    'pending': 'enAttente',
+    'scheduled': 'enAttente',
+    'rejected': 'rejetée',
+    'cancelled': 'annule',
+    'requires_changes': 'enAttente'
+  };
+  return statusMap[status] || (status as StatusType);
+};
+
 export const InspectionsList = ({ projectId }: InspectionsListProps) => {
-  const [selectedInspection, setSelectedInspection] = useState<InspectionData | null>(null);
+  const [selectedInspection, setSelectedInspection] = useState<InspectionUIData | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const { toast } = useToast();
 
   // Use hexagonal hook
-  const { data: inspections = [], isLoading: loading } = useInspectionsListHex(projectId);
+  const { data: rawInspections = [], isLoading: loading } = useInspectionsListHex(projectId);
+  
+  // Map to UI format with dual-casing support
+  const inspections: InspectionUIData[] = rawInspections.map((i: any) => ({
+    id: i.id,
+    date: i.date,
+    inspector: i.inspector,
+    status: i.status,
+    comments: i.comments,
+    progressAtInspection: i.progressAtInspection ?? i.progress_at_inspection,
+    progress_at_inspection: i.progress_at_inspection ?? i.progressAtInspection,
+    documents: i.documents
+  }));
 
   const {
     currentData: paginatedInspections,
@@ -40,7 +85,7 @@ export const InspectionsList = ({ projectId }: InspectionsListProps) => {
     itemsPerPage: 10
   });
 
-  const handleViewDetails = (inspection: InspectionData) => {
+  const handleViewDetails = (inspection: InspectionUIData) => {
     setSelectedInspection(inspection);
     setShowDetails(true);
   };
@@ -81,7 +126,7 @@ export const InspectionsList = ({ projectId }: InspectionsListProps) => {
                         <span>{inspection.inspector}</span>
                       </div>
                     </div>
-                    <StatusBadge status={inspection.status} />
+                    <StatusBadge status={mapStatus(inspection.status)} />
                   </div>
                   
                   <div className="flex justify-between items-center mt-4 pt-3 border-t">
@@ -134,7 +179,7 @@ export const InspectionsList = ({ projectId }: InspectionsListProps) => {
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <span>{new Date(selectedInspection.date).toLocaleDateString()}</span>
                   </div>
-                  <StatusBadge status={selectedInspection.status} />
+                  <StatusBadge status={mapStatus(selectedInspection.status)} />
                 </div>
                 
                 <div>
@@ -148,7 +193,9 @@ export const InspectionsList = ({ projectId }: InspectionsListProps) => {
                 <div>
                   <h4 className="font-medium mb-2">Progression au moment de l'inspection</h4>
                   <div className="bg-muted rounded-md p-4 text-center">
-                    <span className="text-2xl font-bold">{selectedInspection.progress_at_inspection}%</span>
+                    <span className="text-2xl font-bold">
+                      {selectedInspection.progressAtInspection ?? selectedInspection.progress_at_inspection ?? 0}%
+                    </span>
                   </div>
                 </div>
                 
@@ -167,19 +214,22 @@ export const InspectionsList = ({ projectId }: InspectionsListProps) => {
                   <div>
                     <h4 className="font-medium mb-2">Documents</h4>
                     <div className="space-y-2">
-                      {selectedInspection.documents.map((doc, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-md">
-                          <div className="flex items-center gap-2">
-                            <FileText className="h-4 w-4 text-muted-foreground" />
-                            <span>{doc.name}</span>
+                      {selectedInspection.documents.map((doc, index) => {
+                        const docData = typeof doc === 'string' ? { name: doc, url: doc } : doc;
+                        return (
+                          <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-md">
+                            <div className="flex items-center gap-2">
+                              <FileText className="h-4 w-4 text-muted-foreground" />
+                              <span>{docData.name}</span>
+                            </div>
+                            <Button size="sm" variant="outline" asChild>
+                              <a href={docData.url} target="_blank" rel="noopener noreferrer">
+                                Voir
+                              </a>
+                            </Button>
                           </div>
-                          <Button size="sm" variant="outline" asChild>
-                            <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                              Voir
-                            </a>
-                          </Button>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}

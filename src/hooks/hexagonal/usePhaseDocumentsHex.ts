@@ -11,6 +11,7 @@ type DocumentRow = Database['public']['Tables']['documents']['Row'];
 
 export interface UsePhaseDocumentsResult {
   documents: DocumentRow[];
+  data: DocumentRow[]; // Alias for documents
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
@@ -44,6 +45,7 @@ export function usePhaseDocuments(phaseId: string): UsePhaseDocumentsResult {
 
   return {
     documents,
+    data: documents, // Alias for documents
     isLoading,
     error,
     refetch,

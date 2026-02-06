@@ -150,12 +150,16 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
   };
 
   const startEdit = (task: PhaseTask) => {
+    // Support both camelCase and snake_case
+    const dueDate = (task as any).dueDate || (task as any).due_date || '';
+    const assignedTo = (task as any).assignedTo || (task as any).assigned_to;
     setFormData({
       title: task.title || '',
       description: task.description || '',
       priority: task.priority || 'medium',
       status: task.status || 'pending',
-      due_date: task.due_date || '',
+      due_date: dueDate,
+      assigned_to: assignedTo,
     });
     setEditingId(task.id);
     setIsCreating(true);
@@ -348,17 +352,17 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
                     {task.status === 'completed' ? 'Terminée' : 
                      task.status === 'in_progress' ? 'En cours' : 'En attente'}
                   </Badge>
-                  {task.due_date && (
+                  {((task as any).dueDate || (task as any).due_date) && (
                     <Badge variant="outline" className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      {new Date(task.due_date).toLocaleDateString()}
+                      {new Date((task as any).dueDate || (task as any).due_date).toLocaleDateString()}
                     </Badge>
                   )}
                 </div>
 
-                {task.assigned_to && (
+                {((task as any).assignedTo || (task as any).assigned_to) && (
                   <p className="text-xs text-muted-foreground">
-                    Assigné à: {task.assigned_to}
+                    Assigné à: {(task as any).assignedTo || (task as any).assigned_to}
                   </p>
                 )}
                 

@@ -28,7 +28,20 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { ElectricSpinner } from "../loading-page";
-import { useComplianceHex, ComplianceItem } from "@/hooks/hexagonal";
+import { useComplianceHex } from "@/hooks/hexagonal";
+
+// Define ComplianceItem locally
+interface ComplianceItem {
+  id: string;
+  category: 'regulatory' | 'financial' | 'technical' | 'environmental';
+  title: string;
+  description?: string;
+  status: 'pending' | 'in_review' | 'compliant' | 'non_compliant';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  deadline?: string;
+  responsiblePerson?: string;
+  notes?: string;
+}
 
 interface PhaseComplianceProps {
   phaseId: string;

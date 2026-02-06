@@ -4,8 +4,9 @@ import { usePhaseWorkflow } from '@/hooks/usePhaseWorkflow';
 import { useCreateProjectPayment } from '@/hooks/useProjectPayments';
 import { generatePVPDF } from '@/lib/pvGenerator';
 import { StorageFactory } from '@/services/storage/StorageFactory';
-import { DocumentService, CreateDocumentRequestDto } from '@/application/services/DocumentService';
+import { DocumentService } from '@/application/services/DocumentService';
 import { DocumentType } from '@/domain/entities/Document';
+import type { CreateDocumentRequestDto } from '@/dtos/entities/DocumentDTO';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -135,7 +136,7 @@ const PhaseWorkflowContainer: React.FC<PhaseWorkflowContainerProps> = ({
             const documentService = new DocumentService();
             const docRecord = await documentService.createDocument({
               title: `PV - ${rawPhaseData.phase_name}`,
-              type: DocumentType.pv,
+              type: DocumentType.PV,
               projectId: projectId,
               description: `Procès-verbal généré pour la phase ${rawPhaseData.phase_name}`,
               fileUrl: publicUrl,

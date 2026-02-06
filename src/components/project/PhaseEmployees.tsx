@@ -64,11 +64,17 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
     queryKey: ['suppliers'],
     queryFn: async () => {
       const { SupplierService } = await import('@/application/services/SupplierService');
-      const { SupplierTransformer } = await import('@/dtos/transforms/SupplierTransformer');
       const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
       const result = await supplierService.searchSuppliers({ isActive: true });
-      // Transformer les entités en DTOs legacy compatibles
-      return SupplierTransformer.toDTOList(result.suppliers);
+      // Map to UI compatible format with dual-casing
+      return result.suppliers.map((s: any) => ({
+        id: s.id,
+        name: s.name,
+        email: s.email,
+        phone: s.phone,
+        contactPerson: s.contactPerson || s.contact_person,
+        contact_person: s.contact_person || s.contactPerson
+      }));
     },
   });
 
@@ -272,13 +278,14 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                       id="supplier_select"
                       value={formData.employee_name}
                       onChange={e => {
-                        const supplier = suppliersList?.find(s => s.name === e.target.value);
+                        const supplier = suppliersList?.find((s: any) => s.name === e.target.value);
                         setSelectedSupplierId(supplier?.id || null);
+                        const contactPerson = supplier?.contactPerson || supplier?.contact_person;
                         setFormData({
                           ...formData,
                           employee_name: supplier?.name || e.target.value,
                           employee_role: 'Consultant externe',
-                          employee_contact: supplier?.contact_person || supplier?.email || supplier?.phone || '',
+                          employee_contact: contactPerson || supplier?.email || supplier?.phone || '',
                         });
                       }}
                       required={memberType === 'supplier'}
@@ -286,8 +293,8 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                       disabled={memberType !== 'supplier'}
                     />
                     <datalist id="supplier-list">
-                      {suppliersList?.map(s => (
-                        <option key={s.id} value={s.name} label={s.contact_person || ''} />
+                      {suppliersList?.map((s: any) => (
+                        <option key={s.id} value={s.name} label={s.contactPerson || s.contact_person || ''} />
                       ))}
                     </datalist>
                   </div>

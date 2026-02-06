@@ -135,10 +135,11 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
   });
 
   // Load stakeholders for the project
+  const stakeholderService = React.useMemo(() => new ProjectStakeholderService(), []);
   const { data: projectStakeholders } = useQuery({
     queryKey: ['project-stakeholders', projectId],
     queryFn: async () => {
-      return await ProjectStakeholderService.getProjectStakeholders(projectId);
+      return await stakeholderService.getProjectStakeholders(projectId);
     },
     enabled: !!projectId && projectId !== 'new-project',
   });
@@ -204,12 +205,16 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
 
       if (error) throw error;
 
-      // Update stakeholders
-      await ProjectStakeholderService.updateProjectStakeholders(
-        projectId,
-        stakeholders.filter(s => s.stakeholder_entity_type === 'supplier'),
-        teamDelegation
-      );
+      // Update stakeholders using service instance
+      for (const s of stakeholders.filter(s => s.stakeholder_entity_type === 'supplier')) {
+        if (s.id) {
+          await stakeholderService.updateProjectStakeholder(s.id, {
+            stakeholderType: s.stakeholder_type,
+            stakeholderEntityType: s.stakeholder_entity_type as 'employee' | 'supplier',
+            roleDescription: s.role_description ?? undefined
+          });
+        }
+      }
 
       toast({
         title: "Délégation sauvegardée",
