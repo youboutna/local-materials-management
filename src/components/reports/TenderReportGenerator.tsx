@@ -47,8 +47,10 @@ interface LocalTenderReportConfig {
 
 const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, onClose }) => {
   const { toast } = useToast();
-  const { invokeFunction } = useNotifications();
+  const notifications = useNotifications();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [signature, setSignature] = useState<string | null>(null);
   const [reportConfig, setReportConfig] = useState<LocalTenderReportConfig>({
     title: '',
     includeSections: {
@@ -57,11 +59,6 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
       suppliers: true,
       documents: true,
       evaluation: true,
-    includeExecutiveSummary: true,
-    includeFinancialAnalysis: true,
-    includeTechnicalDetails: true,
-    includeRiskAssessment: true,
-    includeRecommendations: true,
       timeline: true,
       signatures: false,
     },
@@ -214,7 +211,7 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
                 ${reportConfig.signatoryTitle ? `<p style="margin: 5px 0; color: #6b7280;">${reportConfig.signatoryTitle}</p>` : ''}
               </div>
               <div style="border: 1px dashed #d1d5db; padding: 15px; text-align: center; min-height: 80px; display: flex; align-items: center; justify-content: center;">
-                ${signature ? `<img src="${signature}" style="max-width: 150px; max-height: 60px;" alt="Signature" />` : '<p style="margin: 0; color: #9ca3af;">Signature requis</p>'}
+                ${reportConfig.requireSignature && signature ? `<img src="${signature}" style="max-width: 150px; max-height: 60px;" alt="Signature" />` : '<p style="margin: 0; color: #9ca3af;">Signature requis</p>'}
               </div>
             </div>
             <div style="margin-top: 15px; text-align: right;">
@@ -481,8 +478,8 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
 
         {/* Action Buttons */}
         <div className="flex gap-3 pt-4 border-t">
-          <Button onClick={handleDownload} disabled={loading} className="flex-1">
-            {loading ? (
+          <Button onClick={handleDownload} disabled={isGenerating} className="flex-1">
+            {isGenerating ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
               <Download className="h-4 w-4 mr-2" />
@@ -492,11 +489,11 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
           
           <Button 
             onClick={handleSendEmail} 
-            disabled={loading || !reportConfig.recipientEmail}
+            disabled={isGenerating || !reportConfig.recipientEmail}
             variant="outline"
             className="flex-1"
           >
-            {loading ? (
+            {isGenerating ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
               <Mail className="h-4 w-4 mr-2" />

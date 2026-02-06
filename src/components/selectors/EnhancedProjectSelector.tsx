@@ -6,12 +6,22 @@ import { Building2, Search, Calendar, FileText, Loader2, MapPin, DollarSign } fr
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useDebounce } from '@/hooks/useDebounce';
-import { useProjectsSelector, useProjectTenders, type ProjectOption } from '@/hooks/hexagonal'
+import { useProjectsSelector, useProjectTenders } from '@/hooks/hexagonal'
 import { cn } from '@/lib/utils';
+
+// Local type for project options from selector
+interface ProjectOption {
+  id: string;
+  title: string;
+  status?: string;
+  progress?: number;
+  budget?: number;
+  location?: string;
+}
 
 interface EnhancedProjectSelectorProps {
   value?: string;
-  onChange: (projectId: string | undefined, project?: ProjectOption) => void;
+  onChange: (projectId: string | undefined, project?: any) => void;
   placeholder?: string;
   label?: string;
   required?: boolean;
@@ -52,8 +62,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
   });
 
   const { data: tenders = [], isLoading: tendersLoading } = useProjectTenders(
-    showTenderReference && value ? value : undefined,
-    { enabled: !!value && showTenderReference }
+    showTenderReference && value ? value : undefined
   );
 
   const selectedProject = useMemo(() => 

@@ -86,11 +86,22 @@ export interface GanttChartData {
 
 // PERT Analysis
 export interface PertAnalysis {
-  activities: TaskDTO[];
-  criticalPath: string[];
+  activities?: TaskDTO[];
+  criticalPath?: string[];
   expectedDuration: number;
   variance: number;
+  // Alias for backward compatibility
+  totalExpectedDuration?: number;
+  variances?: Record<string, number>;
+  // Additional PERT fields
+  optimisticEstimate?: number;
+  mostLikelyEstimate?: number;
+  pessimisticEstimate?: number;
+  standardDeviation?: number;
 }
+
+// Alias for PERT Analysis
+export type PERTAnalysis = PertAnalysis;
 
 // Earned Value Management Data
 export interface EvmData {
@@ -101,7 +112,15 @@ export interface EvmData {
   costVariance: number;
   schedulePerformanceIndex: number;
   costPerformanceIndex: number;
+  // Extended EVM fields
+  budgetAtCompletion?: number;
+  estimateAtCompletion?: number;
+  estimateToComplete?: number;
+  varianceAtCompletion?: number;
 }
+
+// Alias for EVM Metrics
+export type EVMMetrics = EvmData;
 
 // Main Project DTO
 export interface ProjectDTO extends BaseEntityDTO {

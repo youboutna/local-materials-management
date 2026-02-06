@@ -4,11 +4,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Building2, Search, Calendar } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { useProjectsSelector, ProjectOption } from '@/hooks/hexagonal'
+import { useProjectsSelector } from '@/hooks/hexagonal'
 
+// Local type for project options from selector
+interface ProjectOption {
+  id: string;
+  title: string;
+  status?: string | null;
+  progress?: number;
+  budget?: number;
+  location?: string;
+}
 interface ProjectSelectorProps {
   value?: string;
-  onChange: (projectId: string | undefined, project?: ProjectOption) => void;
+  onChange: (projectId: string | undefined, project?: any) => void;
   placeholder?: string;
   label?: string;
   required?: boolean;

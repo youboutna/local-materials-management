@@ -6,11 +6,11 @@ import TenderReportGenerator from './TenderReportGenerator';
 import InspectionReportGenerator from './InspectionReportGenerator';
 import SupplierPaymentReportGenerator from './SupplierPaymentReportGenerator';
 import { FileText, FileBarChart, CheckCircle, DollarSign } from 'lucide-react';
-import { ProjectData } from '@/dtos/entities/ProjectDTO';
+import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 
 interface ReportManagerProps {
   data: {
-    project?: ProjectData;
+    project?: ProjectDTO;
     tender?: any;
     inspection?: any;
     supplier?: any;
@@ -57,7 +57,7 @@ export function ReportManager({ data, reportType }: ReportManagerProps) {
       case 'project':
         return data.project ? (
           <ProjectReportGenerator 
-            project={data.project} 
+            project={data.project as any}
             onClose={() => setIsOpen(false)} 
           />
         ) : null;
