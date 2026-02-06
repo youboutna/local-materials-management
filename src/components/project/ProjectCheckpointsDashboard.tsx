@@ -159,7 +159,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
                   : 'bg-amber-50 text-amber-700 border-amber-200'
               )}
             >
-              Score: {projectVerification.verificationScore}%
+              Score: {(projectVerification as any).verificationScore ?? 0}%
             </Badge>
           </div>
         </CardHeader>
@@ -210,35 +210,35 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
           <div className="grid grid-cols-4 gap-3 mb-4">
             <div className={cn(
               'p-3 rounded-lg border flex items-center gap-2',
-              projectVerification.inspectionVerified ? 'bg-green-50 border-green-200' : 'bg-muted/30'
+              (projectVerification as any).inspectionVerified ? 'bg-green-50 border-green-200' : 'bg-muted/30'
             )}>
-              <ClipboardCheck className={cn('h-4 w-4', projectVerification.inspectionVerified ? 'text-green-600' : 'text-muted-foreground')} />
+              <ClipboardCheck className={cn('h-4 w-4', (projectVerification as any).inspectionVerified ? 'text-green-600' : 'text-muted-foreground')} />
               <span className="text-sm">Inspections</span>
-              {projectVerification.inspectionVerified && <CheckCircle className="h-3 w-3 text-green-600 ml-auto" />}
+              {(projectVerification as any).inspectionVerified && <CheckCircle className="h-3 w-3 text-green-600 ml-auto" />}
             </div>
             <div className={cn(
               'p-3 rounded-lg border flex items-center gap-2',
-              projectVerification.documentVerified ? 'bg-green-50 border-green-200' : 'bg-muted/30'
+              (projectVerification as any).documentVerified ? 'bg-green-50 border-green-200' : 'bg-muted/30'
             )}>
-              <FileCheck className={cn('h-4 w-4', projectVerification.documentVerified ? 'text-green-600' : 'text-muted-foreground')} />
+              <FileCheck className={cn('h-4 w-4', (projectVerification as any).documentVerified ? 'text-green-600' : 'text-muted-foreground')} />
               <span className="text-sm">Documents</span>
-              {projectVerification.documentVerified && <CheckCircle className="h-3 w-3 text-green-600 ml-auto" />}
+              {(projectVerification as any).documentVerified && <CheckCircle className="h-3 w-3 text-green-600 ml-auto" />}
             </div>
             <div className={cn(
               'p-3 rounded-lg border flex items-center gap-2',
-              projectVerification.approvalVerified ? 'bg-green-50 border-green-200' : 'bg-muted/30'
+              (projectVerification as any).approvalVerified ? 'bg-green-50 border-green-200' : 'bg-muted/30'
             )}>
-              <Shield className={cn('h-4 w-4', projectVerification.approvalVerified ? 'text-green-600' : 'text-muted-foreground')} />
+              <Shield className={cn('h-4 w-4', (projectVerification as any).approvalVerified ? 'text-green-600' : 'text-muted-foreground')} />
               <span className="text-sm">Approbations</span>
-              {projectVerification.approvalVerified && <CheckCircle className="h-3 w-3 text-green-600 ml-auto" />}
+              {(projectVerification as any).approvalVerified && <CheckCircle className="h-3 w-3 text-green-600 ml-auto" />}
             </div>
             <div className={cn(
               'p-3 rounded-lg border flex items-center gap-2',
-              projectVerification.pvVerified ? 'bg-green-50 border-green-200' : 'bg-muted/30'
+              (projectVerification as any).pvVerified ? 'bg-green-50 border-green-200' : 'bg-muted/30'
             )}>
-              <FileCheck className={cn('h-4 w-4', projectVerification.pvVerified ? 'text-green-600' : 'text-muted-foreground')} />
+              <FileCheck className={cn('h-4 w-4', (projectVerification as any).pvVerified ? 'text-green-600' : 'text-muted-foreground')} />
               <span className="text-sm">PV Service Fait</span>
-              {projectVerification.pvVerified && <CheckCircle className="h-3 w-3 text-green-600 ml-auto" />}
+              {(projectVerification as any).pvVerified && <CheckCircle className="h-3 w-3 text-green-600 ml-auto" />}
             </div>
           </div>
 
@@ -283,9 +283,11 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {phases.map((phase) => {
+            {phases.map((phase: any) => {
               const phaseVerif = phaseVerifications.get(phase.id);
               const phaseDecompte = phaseDecomptes.get(phase.id);
+              const phaseName = phase.phaseName || phase.phase_name || 'Phase';
+              const estCost = phase.estimatedCost ?? phase.estimated_cost ?? 0;
               
               return (
                 <div 
@@ -295,7 +297,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{phase.phase_name}</span>
+                      <span className="font-medium">{phaseName}</span>
                       <Badge variant="outline" className="text-xs">
                         {phase.progress || 0}%
                       </Badge>
@@ -320,7 +322,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
                   </div>
                   <Progress value={phase.progress || 0} className="h-1" />
                   <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                    <span>Budget: {formatCurrency(phase.estimated_cost || 0)}</span>
+                    <span>Budget: {formatCurrency(estCost)}</span>
                     <span>Payé: {formatCurrency(phaseDecompte?.totalAlreadyPaid || 0)}</span>
                     <span>Retenu: {formatCurrency(phaseDecompte?.retentionAmount || 0)}</span>
                   </div>

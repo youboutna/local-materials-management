@@ -37,25 +37,19 @@ interface ProjectMetrics {
 
 
 interface ProjectCheckpoint {
-
   id: string;
-
   phase_id: string;
-
+  phase_name?: string;
+  phaseName?: string;
+  estimated_cost?: number;
+  estimatedCost?: number;
   status: 'pending' | 'completed';
-
   progress: number;
-
   documents: {
-
     id: string;
-
     type: string;
-
     url: string;
-
   }[];
-
 }
 
 
@@ -73,19 +67,17 @@ interface InspectionResult {
 
 
 interface ProjectVerificationSummary {
-
   allVerified: boolean;
-
   hasCompletedInspection: boolean;
-
   hasDocuments: boolean;
-
   hasPV: boolean;
-
   budgetConsumed: number;
-
   paymentsMade: number;
-
+  verificationScore?: number;
+  inspectionVerified?: boolean;
+  documentVerified?: boolean;
+  approvalVerified?: boolean;
+  pvVerified?: boolean;
 }
 
 

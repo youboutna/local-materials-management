@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from '@/hooks/use-toast';
 import { Plus, FileText, Download, Eye, Trash2 } from 'lucide-react';
 import PhaseDocumentUpload from './phases/PhaseDocumentUpload';
-import { usePhaseDocuments, useDocumentDelete } from '@/hooks/hexagonal'
+import { usePhaseDocuments, useDocumentDelete } from '@/hooks/hexagonal';
 
 interface PhaseDocumentsProps {
   phaseId: string;
@@ -21,22 +21,20 @@ const PhaseDocuments: React.FC<PhaseDocumentsProps> = ({ phaseId, projectId, pha
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: documents, isLoading } = usePhaseDocuments(phaseId);
+  const { documents, isLoading } = usePhaseDocuments(phaseId);
   const deleteDocumentMutation = useDocumentDelete();
 
   const handleDelete = (id: string) => {
-    deleteDocumentMutation.mutate(
-      { id, phaseId },
-      {
-        onSuccess: () => {
-          toast({ title: 'Document supprimÃ© avec succÃ¨s' });
-        }
+    deleteDocumentMutation.mutate(id, {
+      onSuccess: () => {
+        toast({ title: 'Document supprimé avec succès' });
+        queryClient.invalidateQueries({ queryKey: ['documents', 'phase', phaseId] });
       }
-    );
+    });
   };
 
   const handleDocumentUploaded = () => {
-    queryClient.invalidateQueries({ queryKey: ['phase-documents', phaseId] });
+    queryClient.invalidateQueries({ queryKey: ['documents', 'phase', phaseId] });
     setIsAdding(false);
   };
 
@@ -87,7 +85,7 @@ const PhaseDocuments: React.FC<PhaseDocumentsProps> = ({ phaseId, projectId, pha
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Ajouter un document Ã  la phase</DialogTitle>
+                <DialogTitle>Ajouter un document à la phase</DialogTitle>
               </DialogHeader>
               <PhaseDocumentUpload
                 projectId={projectId}
@@ -158,7 +156,7 @@ const PhaseDocuments: React.FC<PhaseDocumentsProps> = ({ phaseId, projectId, pha
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">Aucun document assignÃ© Ã  cette phase.</p>
+          <p className="text-sm text-muted-foreground">Aucun document assigné à cette phase.</p>
         )}
       </CardContent>
     </Card>

@@ -89,8 +89,10 @@ interface TaskDependency {
 interface ProjectPhase {
   id: string;
   phase_name: string;
+  phaseName?: string;
   status: string;
   construction_phase?: string;
+  constructionPhase?: string;
 }
 
 interface Supplier {
@@ -356,8 +358,9 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   // Get context-aware assignment options based on phase
   const getAssignmentOptions = () => {
     const selectedPhaseData = phases.find(p => p.id === formData.phase_id);
-    const isConstructionPhase = selectedPhaseData?.construction_phase && 
-      ['foundation', 'structure', 'finishing', 'utilities'].includes(selectedPhaseData.construction_phase);
+    const constructionPhase = (selectedPhaseData as any)?.constructionPhase || (selectedPhaseData as any)?.construction_phase;
+    const isConstructionPhase = constructionPhase && 
+      ['foundation', 'structure', 'finishing', 'utilities'].includes(constructionPhase);
     
     const options = [
       { category: 'EmployÃ©s internes', items: employees.map(emp => ({ 

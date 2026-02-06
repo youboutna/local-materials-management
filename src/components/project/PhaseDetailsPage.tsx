@@ -43,6 +43,24 @@ import PhaseInspections from "./PhaseInspections";
 import PhasePayments from "./PhasePayments";
 import ScheduleInspectionModal from "@/components/inspections/ScheduleInspectionModal";
 
+// Local UI type for phase with dual-casing support
+interface PhaseUI {
+  id: string;
+  phaseName?: string;
+  phase_name?: string;
+  description?: string;
+  startDate?: string;
+  start_date?: string;
+  endDate?: string;
+  end_date?: string;
+  estimatedCost?: number;
+  estimated_cost?: number;
+  status?: string;
+  progress?: number;
+  steps?: any[];
+  milestones?: any[];
+}
+
 const PhaseDetailsPage: React.FC = () => {
   const { projectId, phaseId } = useParams<{ projectId: string; phaseId: string }>();
   const navigate = useNavigate();
@@ -67,7 +85,28 @@ const PhaseDetailsPage: React.FC = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [inspectionContext, setInspectionContext] = useState<{ stepId?: string; milestoneId?: string }>({});
 
-  const { phase, isLoading, error, metrics, updatePhase, isUpdating } = usePhaseDetails(phaseId);
+  const { phase: rawPhase, isLoading, error, metrics, updatePhase, isUpdating } = usePhaseDetails(phaseId);
+
+  // Map raw phase to UI format with dual-casing support
+  const phase: PhaseUI | null = rawPhase ? {
+    id: rawPhase.id,
+    phaseName: (rawPhase as any).phaseName || (rawPhase as any).phase_name,
+    phase_name: (rawPhase as any).phase_name || (rawPhase as any).phaseName,
+    description: rawPhase.description,
+    startDate: (rawPhase as any).startDate || (rawPhase as any).start_date,
+    start_date: (rawPhase as any).start_date || (rawPhase as any).startDate,
+    endDate: (rawPhase as any).endDate || (rawPhase as any).end_date,
+    end_date: (rawPhase as any).end_date || (rawPhase as any).endDate,
+    estimatedCost: (rawPhase as any).estimatedCost ?? (rawPhase as any).estimated_cost,
+    estimated_cost: (rawPhase as any).estimated_cost ?? (rawPhase as any).estimatedCost,
+    status: rawPhase.status,
+    progress: rawPhase.progress,
+    steps: rawPhase.steps,
+    milestones: (rawPhase as any).milestones
+  } : null;
+
+  const phaseName = phase?.phaseName || phase?.phase_name || 'Phase';
+  const estimatedCost = phase?.estimatedCost ?? phase?.estimated_cost ?? 0;
 
   const {
     workflowMetrics,
@@ -75,7 +114,7 @@ const PhaseDetailsPage: React.FC = () => {
     payments,
     latestApprovedInspection,
     refetch: refetchWorkflow,
-  } = usePhaseWorkflow(projectId || '', phaseId || '', phase);
+  } = usePhaseWorkflow(projectId || '', phaseId || '', rawPhase);
 
   // Workflow orchestrator for automatic verification and payments
   const { 
@@ -102,11 +141,11 @@ const PhaseDetailsPage: React.FC = () => {
   useEffect(() => {
     if (phase) {
       setEditForm({
-        phase_name: phase.phase_name,
+        phase_name: phaseName,
         description: phase.description,
-        start_date: phase.start_date,
-        end_date: phase.end_date,
-        estimated_cost: phase.estimated_cost,
+        start_date: phase.startDate || phase.start_date,
+        end_date: phase.endDate || phase.end_date,
+        estimated_cost: estimatedCost,
         status: phase.status,
         progress: phase.progress,
       });
@@ -158,7 +197,7 @@ const PhaseDetailsPage: React.FC = () => {
   }, [phase]);
 
   const hasMilestones = useMemo(() => {
-    return ((phase as any)?.milestones?.length || 0) > 0;
+    return (phase?.milestones?.length || 0) > 0;
   }, [phase]);
 
   const canRequestPayment = useMemo(() => {
@@ -169,7 +208,7 @@ const PhaseDetailsPage: React.FC = () => {
 
   // Calcul des métriques pour PhaseHeader
   const phaseMetrics = useMemo(() => {
-    const milestones = (phase as any)?.milestones || [];
+    const milestones = phase?.milestones || [];
     return {
       stepsCount: phase?.steps?.length || 0,
       completedSteps: phase?.steps?.filter((s: any) => s.status === 'completed').length || 0,
@@ -202,17 +241,26 @@ const PhaseDetailsPage: React.FC = () => {
     );
   }
 
+  // Create compatible phase object for child components
+  const phaseForComponents = {
+    ...rawPhase,
+    phase_name: phaseName,
+    start_date: phase.startDate || phase.start_date,
+    end_date: phase.endDate || phase.end_date,
+    estimated_cost: estimatedCost
+  } as any;
+
   return (
     <div className="container mx-auto mt-14 py-6 space-y-6">
       {/* Breadcrumb hiérarchique */}
       <PhaseBreadcrumb
         project={{ id: projectId || '', title: 'Projet' }}
-        phase={phase}
+        phase={phaseForComponents}
       />
 
       {/* Header Phase avec KPIs et actions */}
       <PhaseHeader
-        phase={phase}
+        phase={phaseForComponents}
         metrics={phaseMetrics}
         onEdit={() => setIsEditing(true)}
         onScheduleInspection={() => handleScheduleInspection()}
@@ -239,7 +287,7 @@ const PhaseDetailsPage: React.FC = () => {
           {/* Affichage conditionnel : Avec étapes OU avec jalons directs */}
           {hasSteps ? (
             <PhaseWithStepsView
-              phase={phase}
+              phase={phaseForComponents}
               projectId={projectId}
               onStepClick={(step) => console.log('Navigate to step:', step)}
               onScheduleInspection={(stepId) => handleScheduleInspection(stepId)}
@@ -248,7 +296,7 @@ const PhaseDetailsPage: React.FC = () => {
             />
           ) : hasMilestones ? (
             <PhaseWithDirectMilestonesView
-              phase={phase}
+              phase={phaseForComponents}
               projectId={projectId}
               onScheduleInspection={(milestoneId) => handleScheduleInspection(undefined, milestoneId)}
               onRequestPayment={(milestoneId) => handleRequestPayment(undefined, milestoneId)}
@@ -307,7 +355,7 @@ const PhaseDetailsPage: React.FC = () => {
 
           {/* Workflow unifié avec timeline intégrée */}
           <UnifiedCascadeWorkflow
-            phase={phase}
+            phase={phaseForComponents}
             projectProgress={projectProgress}
             workflowMetrics={workflowMetrics}
             steps={phase.steps}
@@ -391,7 +439,7 @@ const PhaseDetailsPage: React.FC = () => {
         setEditForm={setEditForm}
         onSave={handleSave}
         isUpdating={isUpdating}
-        phaseName={phase.phase_name}
+        phaseName={phaseName}
         completionValidation={{ 
           canComplete: true, 
           pendingCheckpoints: [], 
@@ -412,7 +460,7 @@ const PhaseDetailsPage: React.FC = () => {
         onOpenChange={setShowScheduleModal}
         projectId={projectId || ''}
         phaseId={phaseId}
-        phaseName={phase?.phase_name}
+        phaseName={phaseName}
         onSuccess={handleInspectionScheduled}
       />
 
@@ -423,7 +471,7 @@ const PhaseDetailsPage: React.FC = () => {
         projectId={projectId || ''}
         phaseId={phaseId}
         inspectionId={latestApprovedInspection?.id}
-        suggestedAmount={phase.estimated_cost || 0}
+        suggestedAmount={estimatedCost}
         initiatorRole="project_manager"
         onSuccess={() => {
           refreshAll();
