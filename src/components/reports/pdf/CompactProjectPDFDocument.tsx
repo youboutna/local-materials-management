@@ -1,5 +1,5 @@
 import { EVMMetrics, PERTAnalysis, ProjectDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
-import { ProjectReportDTO } from '@/types/reportTypes';
+import { ProjectReportDTO } from '@/dtos/entities/ProjectReportDTO';
 import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';

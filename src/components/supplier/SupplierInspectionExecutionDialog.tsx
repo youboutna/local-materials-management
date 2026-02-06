@@ -17,7 +17,7 @@ import { DocumentService } from '@/application/services/DocumentService';
 import { StorageFactory } from '@/services/storage/StorageFactory';
 import { InspectionService } from '@/application/services/InspectionService';
 import { generatePVPDF } from '@/lib/pvGenerator';
-import { InspectionDTO } from '@/types/inspection.dto';
+import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 import { Upload, FileText, X, CheckCircle } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { SupplierPaymentService } from '@/services/SupplierPaymentService';

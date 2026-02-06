@@ -15,9 +15,10 @@ import {
 } from '@/dtos/entities/ReportDTO';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import { ProjectDataCalculations } from '@/utils/projectDataCalculations';
-import { ProjectData } from '@/types/project';
+import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { Database } from '@/integrations/supabase/types';
 import { Project } from '@/domain/entities/Project';
+import { ProjectTransformer } from '@/dtos/transforms';
 import { ProjectTransformer } from '@/dtos/transforms';
 
 // Types officiels Supabase pour les tables utilisées
@@ -33,7 +34,7 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
    * Transform project data for reporting
    * Following hexagonal architecture: Adapter → Entity → Transformer → DTO
    */
-  async transformProjectForReport(project: ProjectData): Promise<ProjectReportDTO> {
+  async transformProjectForReport(project: ProjectDetailDTO): Promise<ProjectReportDTO> {
     try {
       // 1. Convert ProjectData to Project entity (Domain)
       const projectEntity = this.createProjectEntity(project);

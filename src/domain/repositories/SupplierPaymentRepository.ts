@@ -1,6 +1,6 @@
 // Repository for Supplier Payment Requests
 import { supabase } from '@/integrations/supabase/client';
-import { SupplierPaymentRequestEntity } from '@/types/supplierPayment.entity';
+import { SupplierPaymentRequestEntity } from '@/dtos/entities/TenderDTO';
 
 export class SupplierPaymentRepository {
   /**

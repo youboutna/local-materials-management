@@ -47,8 +47,8 @@ const mockPhases: Phase[] = allPhasesData.map((mock: MockPhase) => {
     mock.dependencies,
     mock.assignedTo,
     mock.createdBy,
-    mock.createdAt, // created_at
-    mock.updatedAt  // updated_at
+    mock.createdAt, // ✅ SNAKE_CASE: created_at in DB
+    mock.updatedAt  // ✅ SNAKE_CASE: updated_at in DB
   );
 });
 

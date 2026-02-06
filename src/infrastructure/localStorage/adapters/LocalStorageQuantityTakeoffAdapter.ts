@@ -49,8 +49,8 @@ const mockQuantityTakeoffs: QuantityTakeoff[] = allQuantityTakeoffsData.map((moc
     mock.approvedBy,
     mock.approvedDate,
     mock.createdBy,
-    mock.createdAt, // created_at
-    mock.updatedAt  // updated_at
+    mock.createdAt, // ✅ SNAKE_CASE: created_at in DB
+    mock.updatedAt  // ✅ SNAKE_CASE: updated_at in DB
   );
 });
 

@@ -220,7 +220,7 @@ const TenderListPaginated: React.FC<TenderListPaginatedProps> = ({
 
                 <div className="flex justify-between items-center pt-2">
                   <span className="text-xs text-muted-foreground">
-                    Créé le {new Date(tender.created_at).toLocaleDateString('fr-FR')}
+                    Créé le {tender.created_at ? new Date(tender.created_at).toLocaleDateString('fr-FR') : 'N/A'}
                   </span>
                   <Button size="sm" variant="outline" className="flex items-center gap-2">
                     <Eye className="h-4 w-4" />

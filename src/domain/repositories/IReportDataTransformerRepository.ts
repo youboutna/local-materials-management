@@ -2,7 +2,7 @@
  * Report Data Transformer Repository Interface
  * Defines the contract for report data transformation operations
  */
-import { ProjectData } from '@/types/project';
+import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { 
   ProjectReportDTO,
   EnhancedPhaseDTO,

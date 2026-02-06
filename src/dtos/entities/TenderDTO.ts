@@ -4,7 +4,16 @@
  */
 
 import { BaseEntityDTO } from './BaseEntityDTO';
-import { TenderStatus, SelectionMode, MarketType, EvaluationCriteria } from '@/domain/entities/Tender';
+import { 
+  TenderStatus, 
+  SelectionMode, 
+  MarketType, 
+  EvaluationCriteria, 
+  TenderSubmissionStatus, 
+  TenderCategory, 
+  TenderDocumentType, 
+  TenderProcurementType 
+} from '@/domain/entities/Tender';
 
 export interface TenderDTO extends BaseEntityDTO {
   // Basic Information
@@ -42,11 +51,20 @@ export interface TenderDTO extends BaseEntityDTO {
   // Workflow Information
   currentPhase: number | null;
   currentStage: string | null;
-  tenderCategory: string | null;
+  tenderCategory: TenderCategory | null;
   
   // Additional Fields
-  procurementType: string | null;
+  procurementType: TenderProcurementType | null;
   weight: number | null;
+}
+
+export interface TenderSubmissionDTO {
+  id: string;
+  tenderId: string;
+  supplierId: string;
+  status: TenderSubmissionStatus;
+  submittedAt: string;
+  documents?: TenderDocumentDTO[];
 }
 
 export interface TenderCreateDTO {
@@ -61,8 +79,8 @@ export interface TenderCreateDTO {
   budgetMax?: number;
   evaluationCriteria?: EvaluationCriteria[];
   eligibilityRequirements?: string[];
-  procurementType?: string;
-  tenderCategory?: string;
+  procurementType?: TenderProcurementType;
+  tenderCategory?: TenderCategory;
 }
 
 export interface TenderUpdateDTO {
@@ -88,8 +106,8 @@ export interface TenderUpdateDTO {
   awardCriteria?: string;
   currentPhase?: number;
   currentStage?: string;
-  tenderCategory?: string;
-  procurementType?: string;
+  tenderCategory?: TenderCategory;
+  procurementType?: TenderProcurementType;
   weight?: number;
 }
 

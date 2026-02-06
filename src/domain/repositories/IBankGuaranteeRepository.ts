@@ -3,7 +3,7 @@
  * Defines contract for bank guarantee data operations
  */
 
-import { BankGuaranteeDto } from '@/dtos/bank-guarantees/BankGuaranteeDto';
+import { BankGuaranteeDTO } from '@/dtos/entities/BankGuaranteeDTO';
 import { CreateBankGuaranteeDto } from '@/dtos/bank-guarantees/CreateBankGuaranteeDto';
 import { UpdateBankGuaranteeDto } from '@/dtos/bank-guarantees/UpdateBankGuaranteeDto';
 

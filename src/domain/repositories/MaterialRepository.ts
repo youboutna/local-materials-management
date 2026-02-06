@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { MaterialEntity, ProjectMaterialEntity } from '@/types/material.entity';
+import { MaterialEntity, ProjectMaterialEntity } from '@/dtos/entities/MaterialDTO';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export class MaterialRepository {

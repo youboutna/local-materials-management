@@ -368,12 +368,6 @@ export class UpdateDocumentRequestDto {
     public type?: DocumentType,
     public status?: DocumentStatus,
     public assignedTo?: string,
-    public deadlineDate?: string,
-    public tags?: string[]
-  ) {}
-}
-
-// Ensure Document entity has required properties
 interface RepositoryDocument {
   id: string;
   title: string;

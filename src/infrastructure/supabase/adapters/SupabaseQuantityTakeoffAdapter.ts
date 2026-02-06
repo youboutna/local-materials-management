@@ -4,7 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { QuantityTakeoffWithDetails } from '@/types/quantityTakeoff';
+import { QuantityTakeoffWithDetails } from '@/dtos/entities/ProjectDTO';
 import { IQuantityTakeoffRepository } from '@/domain/repositories/IQuantityTakeoffRepository';
 
 export class SupabaseQuantityTakeoffAdapter implements IQuantityTakeoffRepository {

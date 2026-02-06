@@ -1,5 +1,6 @@
 // Repository interface for Task entity
-import { Task, TaskStatus, TaskPriority } from '../entities/Task';
+import { Task } from '../entities/Task';
+import { TaskStatus, TaskPriority } from '../types/TaskTypes';
 
 export interface ITaskRepository {
   // CRUD operations

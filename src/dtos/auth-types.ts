@@ -1,4 +1,6 @@
 // Auth credentials DTO
+import { UserDTO } from './entities/UserDTO';
+
 export interface AuthCredentials {
   email: string;
   password: string;

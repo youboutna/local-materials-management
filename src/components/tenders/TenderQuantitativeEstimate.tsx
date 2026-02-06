@@ -197,15 +197,15 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <span className="text-muted-foreground">Total matÃ©riaux:</span>
-                          <span className="font-medium">{estimate.total_materials_cost?.toLocaleString()} MRU</span>
+                          <span className="font-medium">{estimate.totalMaterialsCost?.toLocaleString()} MRU</span>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Total main d'Å“uvre:</span>
-                          <span className="font-medium">{estimate.total_labor_cost?.toLocaleString()} MRU</span>
+                          <span className="font-medium">{estimate.totalLaborCost?.toLocaleString()} MRU</span>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Total Ã©quipement:</span>
-                          <span className="font-medium">{estimate.total_equipment_cost?.toLocaleString()} MRU</span>
+                          <span className="font-medium">{estimate.totalEquipmentCost?.toLocaleString()} MRU</span>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Sous-total:</span>

@@ -1,6 +1,6 @@
 // Repository pattern for Tender CRUD operations
 import { supabase } from '@/integrations/supabase/client';
-import { TenderEntity, TenderSubmissionEntity } from '@/types/tender.entity';
+import { TenderEntity, TenderSubmissionEntity } from '@/dtos/entities/TenderDTO';
 
 export class TenderRepository {
   // ============= Tender CRUD =============
@@ -130,7 +130,7 @@ export class TenderRepository {
       .order('submission_date', { ascending: false });
     
     if (error) throw error;
-    return (data || []) as TenderSubmissionEntity[];
+    return data as unknown as TenderSubmissionEntity[];
   }
 
   /**
@@ -144,7 +144,7 @@ export class TenderRepository {
       .maybeSingle();
     
     if (error) throw error;
-    return data as TenderSubmissionEntity | null;
+    return data as unknown as TenderSubmissionEntity | null;
   }
 
   /**
@@ -165,7 +165,7 @@ export class TenderRepository {
       .single();
     
     if (error) throw error;
-    return data as TenderSubmissionEntity;
+    return data as unknown as TenderSubmissionEntity;
   }
 
   /**
@@ -180,7 +180,7 @@ export class TenderRepository {
       .single();
     
     if (error) throw error;
-    return data as TenderSubmissionEntity;
+    return data as unknown as TenderSubmissionEntity;
   }
 
   /**

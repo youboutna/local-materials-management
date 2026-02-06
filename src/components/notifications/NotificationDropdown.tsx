@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, Eye, EyeOff, CheckCheck } from 'lucide-react';
@@ -15,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useNotifications } from '@/hooks/useNotifications';
 import { getTaskLink, getPriorityColor, getNotificationLink } from '@/utils/notificationUtils';
-import { NotificationType } from '@/types/notification';
+import { NotificationType } from '@/dtos/entities/ProjectReportDTO';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAuth } from '@/contexts/use-auth';

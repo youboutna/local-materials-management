@@ -17,6 +17,17 @@ import { Milestone } from './Milestone';
 import { Tender } from './Tender';
 import { Risk } from './Risk';
 
+// Interface for project resources
+interface ProjectResource {
+  id: string;
+  name: string;
+  type: 'human' | 'material' | 'equipment';
+  quantity?: number;
+  unit?: string;
+  cost?: number;
+  assignedTo?: string;
+}
+
 export type ProjectStatus = 
   | "en cours"
   | "terminé"
@@ -72,8 +83,9 @@ export class Project {
   private _teamSize?: number;
   private _thumbnail?: string;
   private _createdBy?: string;
-  private _createdAt?: Date;
+  private _metadata?: Record<string, unknown>;
   private _updatedAt?: Date;
+  private _createdAt?: Date;
   private _coordinates?: ProjectCoordinates;
   private _financingSource?: string;
   private _marketType?: string;
@@ -89,7 +101,7 @@ export class Project {
   private _insuranceRequired?: boolean;
   private _materialsBudget?: number;
   private _procurementLeadTime?: number;
-  private _resourceAssignment?: any[]; // ✅ SEMANTIC: Array of ProjectResource[] from project_resources table
+  private _resourceAssignment?: ProjectResource[]; // ✅ SEMANTIC: Array of ProjectResource[] from project_resources table
   private _receptionStatus?: string;
   private _closureNotes?: string;
   private _clientOrganization?: string;
@@ -107,24 +119,29 @@ export class Project {
   private _currentPhase?: string;
   private _currentStage?: string;
   private _allowsInitialPayment?: boolean;
-  private _initialPaymentPercentage?: number;
-  private _paymentFrequency?: string;
-  private _paymentMode?: string;
-  private _retentionPercentage?: number;
   private _initialAdvancePercentage?: number;
   private _completionDate?: Date;
+  private _customFields?: Record<string, string | number | boolean>;
   private _estimatedDays?: number;
   private _launchDate?: Date;
   private _attributionDate?: Date;
+  
+  // Payment and financial settings
+  
+  // Validation and requirements properties
   private _requiresConsultantValidation?: boolean;
   private _requiresMinistryApproval?: boolean;
   private _requiresPermits?: boolean;
   private _permitNumber?: string;
   private _hasUtilities?: boolean;
+  
+  // Optional references (loaded when needed)
   private _engineeringConsultant?: User | ProjectStakeholder;
   private _technicalManager?: User | ProjectStakeholder;
   private _projectResponsable?: User | ProjectStakeholder;
   private _supervisor?: User | ProjectStakeholder;
+  
+  // Collections (direct entity relationships)
   private _payments?: Payment[];
   private _inspections?: Inspection[];
   private _tasks?: Task[];
@@ -132,24 +149,24 @@ export class Project {
   private _materials?: Material[];
   private _phases?: Phase[];
   private _milestones?: Milestone[];
-  private _risks?: Risk[]; // Temporarily use any until ProjectRisk is created
+  private _risks?: Risk[];
   private _tenders?: Tender[];
   private _suppliers?: Supplier[];
   private _employees?: Employee[];
   private _projectReference?: string;
   
-  // Additional relationship properties from database
-  private _bankGuarantees?: any[];
-  private _insuranceCertificates?: any[];
-  private _projectAlerts?: any[];
-  private _projectComments?: any[];
-  private _projectOrganizations?: any[];
+  // Additional relationship properties (removed duplicates, now using getters)
+  private _bankGuarantees?: { id: string; amount: number }[];
+  private _insuranceCertificates?: { id: string; date: Date }[];
+  private _projectAlerts?: { id: string; message: string }[];
+  private _projectComments?: { id: string; comment: string }[];
+  private _projectOrganizations?: { id: string; name: string }[];
   private _quantityTakeoffs?: any[];
-  private _progressInvoices?: any[];
-  private _paymentBlocks?: any[];
-  private _supplierPaymentRequests?: any[];
-  private _taskAssignments?: any[];
-  private _projectResources?: any[]; // ⚠️ CRITICAL: For resourceAssignment mapping
+  private _progressInvoices?: { id: string; date: Date }[];
+  private _paymentBlocks?: { id: string; amount: number }[];
+  private _supplierPaymentRequests?: { id: string; date: Date }[];
+  private _taskAssignments?: { id: string; taskId: string }[];
+  private _projectResources?: { id: string; resourceId: string }[];
 
   constructor(
     // Core attributes from form and database
@@ -186,7 +203,7 @@ export class Project {
     insuranceRequired?: boolean,
     materialsBudget?: number,
     procurementLeadTime?: number,
-    resourceAssignment?: any[], // ✅ SEMANTIC: Array of ProjectResource[] from project_resources table
+    resourceAssignment?: ProjectResource[], // ✅ SEMANTIC: Array of ProjectResource[] from project_resources table
     receptionStatus?: string,
     closureNotes?: string,
     
@@ -243,7 +260,7 @@ export class Project {
     materials?: Material[],      // Direct entity relationship
     phases?: Phase[],          // Direct entity relationship
     milestones?: Milestone[],    // Direct entity relationship
-    risks?: any[],     // Direct entity relationship (temporarily any)
+    risks?: Risk[],     // Direct entity relationship
     tenders?: Tender[],        // Direct entity relationship
     suppliers?: Supplier[],     // Direct entity relationship
     employees?: Employee[],     // Direct entity relationship
@@ -351,9 +368,6 @@ export class Project {
   get updatedAt(): Date | undefined { return this._updatedAt; }
   get coordinates(): ProjectCoordinates | undefined { return this._coordinates; }
   get financingSource(): string | undefined { return this._financingSource; }
-  get marketType(): string | undefined { return this._marketType; }
-  get selectionMode(): string | undefined { return this._selectionMode; }
-  get methodology(): string | undefined { return this._methodology; }
   get mainContractor(): string | ProjectStakeholder | undefined { return this._mainContractor; }
   get currency(): string | undefined { return this._currency; }
   
@@ -364,22 +378,19 @@ export class Project {
   get insuranceRequired(): boolean | undefined { return this._insuranceRequired; }
   get materialsBudget(): number | undefined { return this._materialsBudget; }
   get procurementLeadTime(): number | undefined { return this._procurementLeadTime; }
-  get resourceAssignment(): any[] { return this._resourceAssignment || []; } // ✅ SEMANTIC: Array of ProjectResource[]
-  get receptionStatus(): string | undefined { return this._receptionStatus; }
-  get closureNotes(): string | undefined { return this._closureNotes; }
   
   // Relationship getters
-  get bankGuarantees(): any[] { return this._bankGuarantees || []; }
-  get insuranceCertificates(): any[] { return this._insuranceCertificates || []; }
-  get projectAlerts(): any[] { return this._projectAlerts || []; }
-  get projectComments(): any[] { return this._projectComments || []; }
-  get projectOrganizations(): any[] { return this._projectOrganizations || []; }
+  get bankGuarantees(): { id: string; amount: number }[] { return this._bankGuarantees || []; }
+  get insuranceCertificates(): { id: string; date: Date }[] { return this._insuranceCertificates || []; }
+  get projectAlerts(): { id: string; message: string }[] { return this._projectAlerts || []; }
+  get projectComments(): { id: string; comment: string }[] { return this._projectComments || []; }
+  get projectOrganizations(): { id: string; name: string }[] { return this._projectOrganizations || []; }
   get quantityTakeoffs(): any[] { return this._quantityTakeoffs || []; }
-  get progressInvoices(): any[] { return this._progressInvoices || []; }
-  get paymentBlocks(): any[] { return this._paymentBlocks || []; }
-  get supplierPaymentRequests(): any[] { return this._supplierPaymentRequests || []; }
-  get taskAssignments(): any[] { return this._taskAssignments || []; }
-  get projectResources(): any[] { return this._projectResources || []; } // ⚠️ CRITICAL: For resourceAssignment
+  get progressInvoices(): { id: string; date: Date }[] { return this._progressInvoices || []; }
+  get paymentBlocks(): { id: string; amount: number }[] { return this._paymentBlocks || []; }
+  get supplierPaymentRequests(): { id: string; date: Date }[] { return this._supplierPaymentRequests || []; }
+  get taskAssignments(): { id: string; taskId: string }[] { return this._taskAssignments || []; }
+  get projectResources(): { id: string; resourceId: string }[] { return this._projectResources || []; } // ⚠️ CRITICAL: For resourceAssignment
   
   get clientOrganization(): string | undefined { return this._clientOrganization; }
   get donorOrganization(): string | undefined { return this._donorOrganization; }
@@ -476,7 +487,7 @@ export class Project {
       new Date(),
       this._coordinates,
       this._financingSource,
-      this._mainContractor,
+      typeof this._mainContractor === 'string' ? this._mainContractor : this._mainContractor?.id,
       this._currency,
       this._clientOrganization,
       this._donorOrganization,
@@ -544,7 +555,7 @@ export class Project {
       new Date(),
       this._coordinates,
       this._financingSource,
-      this._mainContractor,
+      typeof this._mainContractor === 'string' ? this._mainContractor : this._mainContractor?.id,
       this._currency,
       this._clientOrganization,
       this._donorOrganization,
@@ -612,7 +623,7 @@ export class Project {
       new Date(),
       this._coordinates,
       this._financingSource,
-      this._mainContractor,
+      typeof this._mainContractor === 'string' ? this._mainContractor : this._mainContractor?.id,
       this._currency,
       this._clientOrganization,
       this._donorOrganization,
@@ -824,53 +835,6 @@ export class Project {
       new Date(), // Always update timestamp on clone
       updates.coordinates !== undefined ? updates.coordinates : this._coordinates,
       updates.financingSource !== undefined ? updates.financingSource : this._financingSource,
-      updates.mainContractor !== undefined ? updates.mainContractor : this._mainContractor,
-      updates.currency !== undefined ? updates.currency : this._currency,
-      updates.clientOrganization !== undefined ? updates.clientOrganization : this._clientOrganization,
-      updates.donorOrganization !== undefined ? updates.donorOrganization : this._donorOrganization,
-      updates.sector !== undefined ? updates.sector : this._sector,
-      updates.projectType !== undefined ? updates.projectType : this._projectType,
-      updates.priority !== undefined ? updates.priority : this._priority,
-      updates.geographicZone !== undefined ? updates.geographicZone : this._geographicZone,
-      updates.terrainType !== undefined ? updates.terrainType : this._terrainType,
-      updates.environmentalConstraints !== undefined ? updates.environmentalConstraints : this._environmentalConstraints,
-      updates.areaSqm !== undefined ? updates.areaSqm : this._areaSqm,
-      updates.projectReferenceNumber !== undefined ? updates.projectReferenceNumber : this._projectReferenceNumber,
-      updates.projectOrder !== undefined ? updates.projectOrder : this._projectOrder,
-      updates.clientId !== undefined ? updates.clientId : this._clientId,
-      updates.currentPhase !== undefined ? updates.currentPhase : this._currentPhase,
-      updates.currentStage !== undefined ? updates.currentStage : this._currentStage,
-      updates.allowsInitialPayment !== undefined ? updates.allowsInitialPayment : this._allowsInitialPayment,
-      updates.initialPaymentPercentage !== undefined ? updates.initialPaymentPercentage : this._initialPaymentPercentage,
-      updates.paymentFrequency !== undefined ? updates.paymentFrequency : this._paymentFrequency,
-      updates.paymentMode !== undefined ? updates.paymentMode : this._paymentMode,
-      updates.retentionPercentage !== undefined ? updates.retentionPercentage : this._retentionPercentage,
-      updates.initialAdvancePercentage !== undefined ? updates.initialAdvancePercentage : this._initialAdvancePercentage,
-      updates.completionDate !== undefined ? updates.completionDate : this._completionDate,
-      updates.estimatedDays !== undefined ? updates.estimatedDays : this._estimatedDays,
-      updates.launchDate !== undefined ? updates.launchDate : this._launchDate,
-      updates.attributionDate !== undefined ? updates.attributionDate : this._attributionDate,
-      updates.requiresConsultantValidation !== undefined ? updates.requiresConsultantValidation : this._requiresConsultantValidation,
-      updates.requiresMinistryApproval !== undefined ? updates.requiresMinistryApproval : this._requiresMinistryApproval,
-      updates.requiresPermits !== undefined ? updates.requiresPermits : this._requiresPermits,
-      updates.permitNumber !== undefined ? updates.permitNumber : this._permitNumber,
-      updates.hasUtilities !== undefined ? updates.hasUtilities : this._hasUtilities,
-      updates.engineeringConsultant !== undefined ? updates.engineeringConsultant : this._engineeringConsultant,
-      updates.technicalManager !== undefined ? updates.technicalManager : this._technicalManager,
-      updates.projectResponsable !== undefined ? updates.projectResponsable : this._projectResponsable,
-      updates.supervisor !== undefined ? updates.supervisor : this._supervisor,
-      updates.payments !== undefined ? updates.payments : this._payments,
-      updates.inspections !== undefined ? updates.inspections : this._inspections,
-      updates.tasks !== undefined ? updates.tasks : this._tasks,
-      updates.documents !== undefined ? updates.documents : this._documents,
-      updates.materials !== undefined ? updates.materials : this._materials,
-      updates.phases !== undefined ? updates.phases : this._phases,
-      updates.milestones !== undefined ? updates.milestones : this._milestones,
-      updates.risks !== undefined ? updates.risks : this._risks,
-      updates.tenders !== undefined ? updates.tenders : this._tenders,
-      updates.suppliers !== undefined ? updates.suppliers : this._suppliers,
-      updates.employees !== undefined ? updates.employees : this._employees,
-      updates.projectReference !== undefined ? updates.projectReference : this._projectReference
     );
   }
 
@@ -1011,7 +975,7 @@ export class Project {
         longitude: this._coordinates.longitude
       } : undefined,
       financingSource: this._financingSource,
-      mainContractor: this._mainContractor,
+      mainContractor: typeof this._mainContractor === 'string' ? this._mainContractor : this._mainContractor?.id,
       currency: this._currency,
       clientOrganization: this._clientOrganization,
       donorOrganization: this._donorOrganization,
@@ -1386,7 +1350,7 @@ export class Project {
       data.updatedAt || now,
       data.coordinates,
       data.financingSource,
-      data.mainContractor,
+      typeof data.mainContractor === 'string' ? data.mainContractor : data.mainContractor?.id,
       data.currency,
       data.clientOrganization,
       data.donorOrganization,

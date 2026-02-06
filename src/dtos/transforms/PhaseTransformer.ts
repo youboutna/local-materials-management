@@ -16,7 +16,7 @@ import { Phase, PhaseStatus, PhaseType } from '@/domain/entities/Phase';
 import { 
   PhaseDTO, 
   PhaseFormDataDTO,
-  PhaseUIState,
+  PhaseFormDTO,
   CreatePhaseDTO,
   UpdatePhaseDTO,
   PhaseSummaryDTO,

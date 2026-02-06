@@ -8,8 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { ReportingService } from '@/application/services/ReportingService';
-import { EVMMetrics, PERTAnalysis, ProjectData } from '@/types/project';
-import { CostCalculation, ProjectReportDTO, ReportData } from '@/types/reportTypes';
+import { EVMMetrics, PERTAnalysis, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
+import { CostCalculation, ProjectReportDTO, ReportData } from '@/dtos/entities/ProjectReportDTO';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import { pdf } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver';

@@ -25,7 +25,7 @@ export interface VerifyCheckpointRequestDto {
 }
 
 export interface VerifyCheckpointResponseDto {
-  result: CheckpointVerificationResultDTO;
+  result: CheckpointVerificationResult;
   errors?: string[];
 }
 
@@ -53,4 +53,31 @@ export interface VerifyResourcesRequestDto {
 export interface VerifyServiceFaitRequestDto {
   checkpointId: string;
   projectId: string;
+}
+
+export interface CheckpointVerificationResult {
+  id: string;
+  checkpointId: string;
+  projectId: string;
+  verified: boolean;
+  verifiedAt?: string;
+  verifiedBy?: string;
+  notes?: string;
+  documents?: string[];
+  status: 'pending' | 'verified' | 'rejected';
+}
+
+export interface CreateCheckpointVerificationDto {
+  checkpointId: string;
+  projectId: string;
+  verifiedBy: string;
+  notes?: string;
+  documents?: string[];
+}
+
+export interface UpdateCheckpointVerificationDto {
+  verified?: boolean;
+  notes?: string;
+  documents?: string[];
+  status?: 'pending' | 'verified' | 'rejected';
 }

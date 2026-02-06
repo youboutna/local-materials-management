@@ -1,10 +1,28 @@
 /**
  * Domain Entities Index
- * Export all domain entities from a single entry point
+ * Central export point for all domain entities and interfaces
+ * Following hexagonal architecture principles
  */
 
-export { Project, type ProjectStatus, type ProjectCoordinates } from './Project';
-export { Phase, type PhaseStatus, type PhaseStep, type PhaseTask } from './Phase';
+// ============================================================================
+// CORE PROJECT ENTITIES
+// ============================================================================
+
+export { Project, type ProjectStatus, type ProjectCoordinates, type ProjectStakeholder } from './Project';
+export { Phase, type PhaseStatus, type PhaseStep, type PhaseTask, type PhaseResources } from './Phase';
+export { Task } from './Task';
+export type { TaskStatus, TaskPriority } from '../types/TaskTypes';
+export { Milestone, type MilestoneDependency, type MilestoneDeliverable, type MilestoneConfiguration } from './Milestone';
+
+// ============================================================================
+// ORGANIZATIONAL ENTITIES
+// ============================================================================
+
+export { Employee } from './Employee';
+export type { EmployeeRole, Department, Permission } from './Employee';
+export { User, type UserRoleType, type AuthSession, type UserProfile } from './User';
+export { UserRole } from './UserRole';
+export { Position, type PositionPermissions } from './Position';
 export { 
   ProjectHierarchy, 
   type HierarchyMember, 
@@ -12,22 +30,120 @@ export {
   type EscalationRoles,
   type EscalationLevel 
 } from './Hierarchy';
+export { Stakeholder, type StakeholderType, type StakeholderContact, type StakeholderOrganization } from './Stakeholder';
+export { ProjectStakeholder as DomainProjectStakeholder, type StakeholderType as DomainStakeholderType } from './ProjectStakeholder';
 
-// Exporter Task et ses types associés
-export { Task } from './Task';
-export type { TaskStatus, TaskPriority } from '../types/TaskTypes';
+// ============================================================================
+// BUSINESS ENTITIES
+// ============================================================================
 
-// Additional entities
-export { Inspection, type InspectionStatus, type InspectionDocument } from './Inspection';
-export { Payment, type PaymentStatus, type PaymentMethod, type PaymentDocument } from './Payment';
+export { Tender, type EvaluationCriteria } from './Tender';
+export type { TenderStatus, SelectionMode, MarketType } from './Tender';
+export { TenderEstimate, type ITenderEstimateItem, type TenderEstimateRisk, type TenderEstimateMetrics, type CurrencyCode } from './TenderEstimate';
+export { TenderEstimateItem, type TenderEstimateItemData } from './TenderEstimateItem';
+export { TenderSubmission } from './TenderSubmission';
+export { Supplier, type SupplierStatus, type SupplierCategory, type SupplierContact, type SupplierRating } from './Supplier';
 export { Material, type MaterialCategory } from './Material';
-export { Employee } from './Employee';
-export type { EmployeeRole, Department, Permission } from './Employee';
-export { UserRole } from './UserRole';
-export { Position, type PositionPermissions } from './Position';
-export { Certification } from './Certification';
 export { Risk } from './Risk';
 export type { RiskStatus, RiskLevel, RiskCategory } from './RiskTypesExport';
-export { Tender, type TenderStatus, type SelectionMode, type MarketType, type EvaluationCriteria } from './Tender';
-export { Supplier, type SupplierStatus, type SupplierCategory, type SupplierContact, type SupplierRating } from './Supplier';
+export type { IProject, IEmployee } from './Risk';
+
+// ============================================================================
+// PROJECT MANAGEMENT INTERFACES
+// ============================================================================
+
+export interface GanttChartData {
+  tasks: Array<{
+    id: string;
+    name: string;
+    startDate: string;
+    endDate: string;
+    progress: number;
+    dependencies: string[];
+    assignee?: string;
+    status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
+  }>;
+  milestones: Array<{
+    id: string;
+    name: string;
+    date: string;
+    status: 'pending' | 'completed' | 'overdue';
+    progress?: number;
+  }>;
+  phases: Array<{
+    id: string;
+    name: string;
+    startDate: string;
+    endDate: string;
+    progress: number;
+    status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
+  }>;
+  criticalPath: string[];
+  baselineStartDate: string;
+  baselineEndDate: string;
+  actualStartDate: string;
+  actualEndDate: string;
+}
+
+export interface PERTAnalysis {
+  projectId: string;
+  activities: Array<{
+    id: string;
+    name: string;
+    duration: number;
+    earliestStart: number;
+    latestFinish: number;
+    slack: number;
+    predecessors: string[];
+    successors: string[];
+    critical: boolean;
+  }>;
+  expectedDuration: number;
+  variance: number;
+  standardDeviation: number;
+  confidenceLevel: number;
+  riskAssessment: 'low' | 'medium' | 'high';
+  lastCalculated: string;
+}
+
+// ============================================================================
+// FINANCIAL & DOCUMENT ENTITIES
+// ============================================================================
+
+export { Payment, type PaymentStatus, type PaymentMethod } from './Payment';
+export { ParsedInvoice, type InvoiceType } from './ParsedInvoice';
 export { Document, type DocumentType, type DocumentStatus } from './Document';
+export { Certification } from './Certification';
+export { InsuranceCertificateEntity } from './InsuranceCertificate.entity';
+
+// ============================================================================
+// INSPECTION & QUALITY ENTITIES
+// ============================================================================
+
+export { Inspection, type InspectionStatus } from './Inspection';
+export type { InspectionDocument as InspectionDocumentType } from './Inspection';
+export type { PaymentDocument as PaymentDocumentType } from './Payment';
+
+// ============================================================================
+// TEMPLATES & WORKFLOW ENTITIES
+// ============================================================================
+
+export { TemplatePhase } from './Template';
+export type { TemplateMetadata, ValidationResult } from './Template';
+export { SubmissionSecret } from './SubmissionSecret';
+
+// ============================================================================
+// MONITORING & PERFORMANCE ENTITIES
+// ============================================================================
+
+export { PerformanceMonitoring } from './PerformanceMonitoring';
+export type { DatabaseMetrics, PerformanceMetrics } from './PerformanceMonitoring';
+export { Workspace, type ProjectAlert, type Action, type ITaskAssignment } from './Workspace';
+
+// ============================================================================
+// LEGACY COMPATIBILITY EXPORTS
+// ============================================================================
+
+// Re-export for backward compatibility
+export type { ProjectCoordinates as Coordinates } from './Project';
+export type { PhaseResources as Resources } from './Phase';

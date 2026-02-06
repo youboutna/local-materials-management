@@ -111,11 +111,11 @@ export class TemplatePhase {
     public readonly id: string,
     public readonly code: string,
     public readonly label: MultiLanguageLabel,
-    public readonly description?: MultiLanguageLabel,
     public readonly steps: TemplateStep[],
     public readonly order: number,
-    public readonly dependencies?: string[], // Phase dependencies
-    public readonly isRequired: boolean = true
+    public readonly isRequired: boolean = true,
+    public readonly description?: MultiLanguageLabel,
+    public readonly dependencies?: string[] // Phase dependencies
   ) {}
 
   getEstimatedDuration(): number {

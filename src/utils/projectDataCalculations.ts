@@ -1,4 +1,4 @@
-import { ProjectData } from '@/types/project';
+import { ProjectDetailDTO, GanttChartData, PERTAnalysis } from '@/dtos/entities/ProjectDTO';
 import { ProjectService } from '../application/services/ProjectService';
 import { RepositoryFactory } from '../infrastructure/supabase/RepositoryFactory';
 import { PhaseService } from '../application/services/PhaseService';

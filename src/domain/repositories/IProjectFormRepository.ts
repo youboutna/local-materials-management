@@ -2,7 +2,18 @@
  * Project Form Repository Interface
  * Defines the contract for project form operations
  */
-import { ProjectFormData } from '@/application/services/ProjectEditWorkflowService';
+
+// Define types locally since the service doesn't exist yet
+export interface ProjectFormData {
+  id: string;
+  title: string;
+  description?: string;
+  projectId?: string;
+  status: 'draft' | 'published' | 'archived';
+  createdAt: string;
+  updatedAt: string;
+  formData: Record<string, any>;
+}
 
 export interface SaveContext {
   step: number;

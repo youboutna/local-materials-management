@@ -5,10 +5,38 @@
  * Rule #4: No DTOs in entities, proper type separation
  */
 
+/**
+ * Task within a workflow step (from referential)
+ * Distinct from TaskDTO which represents assigned tasks (task_assignments table)
+ */
+export interface PhaseTaskDTO {
+  id: string;
+  name: string;
+  description?: string;
+  status: PhaseStatus;
+  progress: number;
+  estimated_duration_days?: number;
+  actual_duration_days?: number;
+  start_date?: string;
+  end_date?: string;
+  assigned_to?: string[];
+  dependencies?: string[];
+  weight?: number;
+  order_index: number;
+}
+
 export interface PhaseStepDTO {
   id: string;
   name: string;
-  description: string;
+  description?: string;
+  status: PhaseStatus;
+  progress: number;
+  estimated_duration_days?: number;
+  actual_duration_days?: number;
+  start_date?: string;
+  end_date?: string;
+  order_index: number;
+  tasks: PhaseTaskDTO[];
 }
 
 /**
@@ -16,10 +44,10 @@ export interface PhaseStepDTO {
  * Current state of phase execution
  */
 export enum PhaseStatus {
-  PLANNING = 'planning',
-  ACTIVE = 'active',
+  PENDING = 'pending',
+  IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed',
-  PAUSED = 'paused',
+  DELAYED = 'delayed',
   CANCELLED = 'cancelled'
 }
 
@@ -370,4 +398,36 @@ export interface PhaseDTOLegacy {
   phase_type?: string;
   construction_phase?: string;
   construction_stage?: string;
+}
+
+/**
+ * Form data for creating/updating phases
+ */
+export interface PhaseFormDTO {
+  phase_name: string;
+  description?: string;
+  construction_phase?: string;
+  construction_stage?: string;
+  estimated_cost?: number;
+  estimated_duration_days?: number;
+  start_date?: string;
+  end_date?: string;
+  order_index?: number;
+  steps?: PhaseStepFormDTO[];
+}
+
+export interface PhaseStepFormDTO {
+  name: string;
+  description?: string;
+  estimated_duration_days?: number;
+  order_index?: number;
+  tasks?: PhaseTaskFormDTO[];
+}
+
+export interface PhaseTaskFormDTO {
+  name: string;
+  description?: string;
+  estimated_duration_days?: number;
+  assigned_to?: string[];
+  order_index?: number;
 }

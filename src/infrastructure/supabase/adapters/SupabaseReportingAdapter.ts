@@ -1,6 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { IReportingRepository } from '@/domain/repositories/IReportingRepository';
-import { ProjectData } from '@/types/project';
+import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import { ProjectDataCalculations } from '@/utils/projectDataCalculations';
 import { ProjectReportDTO } from '@/types/reportTypes';

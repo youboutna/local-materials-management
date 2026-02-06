@@ -48,13 +48,51 @@ export interface AuthUser {
 
 export interface AuthSession {
   access_token: string;
-  refresh_token?: string;
-  expires_at?: string;
   user: AuthUser;
-  provider?: string;
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: number;
+  expiresIn?: number;
+  tokenType: string;
 }
 
-// UnifiedUser and UnifiedSession - extended with optional fields for UI compatibility
+export interface AuthState {
+  user: AuthUser | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+  permissions: string[];
+  lastActivity?: string;
+}
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  role: string;
+  department?: string;
+  bio?: string;
+  phone?: string;
+  location?: string;
+  website?: string;
+  joinedAt: string;
+  lastLogin?: string;
+  preferences?: Record<string, unknown>;
+  isActive: boolean;
+}
+
+export interface UserRoleType {
+  id: string;
+  name: string;
+  description?: string;
+  permissions: string[];
+  isActive: boolean;
+  level: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface UnifiedUser {
   id: string;
   email: string;

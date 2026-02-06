@@ -22,6 +22,36 @@ export type MarketType =
   | 'services' 
   | 'intellectual_services';
 
+export type TenderSubmissionStatus = 
+  | 'draft' 
+  | 'submitted' 
+  | 'under_review' 
+  | 'accepted' 
+  | 'rejected' 
+  | 'withdrawn';
+
+export type TenderCategory = 
+  | 'works' 
+  | 'supplies' 
+  | 'services' 
+  | 'consulting' 
+  | 'maintenance';
+
+export type TenderDocumentType = 
+  | 'technical_specification' 
+  | 'financial_document' 
+  | 'legal_document' 
+  | 'insurance_document' 
+  | 'qualification_document' 
+  | 'other';
+
+export type TenderProcurementType = 
+  | 'open' 
+  | 'limited' 
+  | 'direct' 
+  | 'negotiated' 
+  | 'framework';
+
 export interface EvaluationCriteria {
   name: string;
   weight: number;

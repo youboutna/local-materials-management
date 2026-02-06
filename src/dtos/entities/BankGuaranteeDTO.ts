@@ -44,6 +44,7 @@ export interface BankGuaranteeActionDTO {
   id: string;
   guaranteeId: string;
   type: 'notification' | 'claim' | 'renewal' | 'cancellation' | 'extension';
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'failed';
   performedBy: string;
   performedAt?: string;
   dueDate?: string;

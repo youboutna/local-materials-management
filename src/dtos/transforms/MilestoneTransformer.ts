@@ -22,6 +22,7 @@ import {
 import { 
   MilestoneDTO, 
   MilestoneFormDTO,
+  MilestoneTemplateDTO,
   MilestoneStatus as DTOStatus,
   MilestoneType,
   MilestonePriority as DTOPriority

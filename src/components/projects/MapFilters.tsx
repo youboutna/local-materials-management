@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -11,7 +10,7 @@ import {
 } from '@/components/ui/select';
 import { MapLocation } from '@/components/ProjectMap';
 import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
-import { MAURITANIA_REGIONS } from '@/types/mauritania';
+import { MAURITANIA_REGIONS } from '@/dtos/entities/ProjectReportDTO';
 import { MapPin, Filter } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 

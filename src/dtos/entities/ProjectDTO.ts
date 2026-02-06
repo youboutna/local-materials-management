@@ -4,10 +4,24 @@
  */
 
 
-import { ConstructionPhase } from '@/types/project';
 import { BaseEntityDTO, BaseFormDTO, BaseUIState, StandardStatus, StandardPriority, LocationDTO } from '../shared';
 import { PerformanceMetricsDTO } from '../transforms';
 import { InsuranceCertificateDTO } from './InsuranceCertificateDTO';
+
+// Construction phase types
+export type ConstructionPhase =
+  | "pre_construction"
+  | "site_preparation"
+  | "foundation"
+  | "structure"
+  | "exterior"
+  | "interior"
+  | "mechanical"
+  | "electrical"
+  | "plumbing"
+  | "finishing"
+  | "post_construction"
+  | "handover";
 import { InsurancePolicyDTO } from './InsuranceDTO';
 import { MaterialDTO, MaterialFormDataDTO } from './MaterialDTO';
 import { MilestoneDTO } from './MilestoneDTO';
@@ -23,6 +37,7 @@ import { TenderDTO } from './TenderDTO';
 import { EmployeeDTO, EmployeeFormDataDTO } from './EmployeeDTO';
 import { InspectionDTO, InspectionFormDataDTO } from './InspectionDTO';
 import { DocumentDTO, DocumentFormDataDTO } from './DocumentDTO';
+import { GanttChartData, PERTAnalysis } from '@/domain/entities';
 
 // Core project status types - standardized
 export type ProjectStatus = StandardStatus

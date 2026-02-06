@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ProjectService } from '@/application/services/ProjectService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { CreateProjectDTO, ProjectStatus } from "@/dtos/entities/ProjectDTO";
-import { ImportOptions, ImportResult } from "@/types/project";
+import { ImportOptions, ImportResult } from "@/dtos/entities/ProjectReportDTO";
 import {
   AlertTriangle,
   CheckCircle,

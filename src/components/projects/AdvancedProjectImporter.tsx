@@ -29,7 +29,7 @@ interface ProjectFormDTO extends Partial<CreateProjectDTO> {
   coordinates?: { latitude: number; longitude: number };
 }
 import { useLanguage } from '@/contexts/LanguageContext';
-import { ImportResult } from '@/types/project';
+import { ImportResult } from '@/dtos/entities/ProjectReportDTO';
 import * as XLSX from 'xlsx';
 
 type ImportMode = 'create' | 'update' | 'patch';
