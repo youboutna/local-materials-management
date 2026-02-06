@@ -42,8 +42,8 @@ export function useQuantityTakeoffsHex(projectId: string) {
     },
   });
 
-  // Helper functions using service
-  const getTotalQuantityByUnit = async (unit: string): Promise<number> => {
+  // Helper functions using local data (synchronous)
+  const getTotalQuantityByUnit = (unit: string): number => {
     if (!quantityTakeoffs) return 0;
     return quantityTakeoffs
       .filter(qt => qt.material?.unit === unit)

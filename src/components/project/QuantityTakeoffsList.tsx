@@ -103,12 +103,15 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
             <div>
               <h5 className="font-medium">Total par unitÃ©</h5>
               <div className="space-y-2">
-                {['m', 'mÂ²', 'mÂ³', 'kg', 't', 'ml'].map((unit) => (
-                  <div key={unit} className="flex justify-between">
-                    <span className="text-sm">{unit}:</span>
-                    <span className="font-medium">{getTotalQuantityByUnit(unit)}</span>
-                  </div>
-                ))}
+                {['m', 'm²', 'm³', 'kg', 't', 'ml'].map((unit) => {
+                  const quantity = getTotalQuantityByUnit(unit);
+                  return (
+                    <div key={unit} className="flex justify-between">
+                      <span className="text-sm">{unit}:</span>
+                      <span className="font-medium">{quantity}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
             
@@ -125,7 +128,7 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
             totalPages={totalPages}
             totalItems={totalItems}
             itemsPerPage={itemsPerPage}
-            goToPage={goToPage}
+            onPageChange={goToPage}
           />
         </div>
       </CardContent>

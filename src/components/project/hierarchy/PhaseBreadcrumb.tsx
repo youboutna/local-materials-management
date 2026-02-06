@@ -14,7 +14,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Building, Flag, FolderKanban, ChevronLeft, ChevronRight } from "lucide-react";
-import { useProjectHex } from "@/hooks/hexagonal";
+import { useProjectById } from "@/hooks/hexagonal";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -56,8 +56,9 @@ export const PhaseBreadcrumb: React.FC<PhaseBreadcrumbProps> = ({
   const navigate = useNavigate();
   
   // Charger le projet dynamiquement si le titre n'est pas fourni
-  const { project: loadedProject, loading: projectLoading } = useProjectHex(
-    project?.id && !project?.title && !project?.name ? project.id : undefined
+  const needToLoadProject = project?.id && !project?.title && !project?.name;
+  const { data: loadedProject, isLoading: projectLoading } = useProjectById(
+    needToLoadProject ? project.id : ''
   );
   
   // Utiliser le titre chargé ou celui fourni

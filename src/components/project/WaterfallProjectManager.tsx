@@ -32,7 +32,14 @@ const defaultRoles: EscalationRoles = {
   level4: 'Comité juridique'
 };
 
-const actionLabels: ActionLabels = {
+// Action labels compatible with projectManagerWithActions.ActionLabels
+const actionLabels = {
+  budget: 'Budget',
+  timeline: 'Calendrier',
+  quality: 'Qualité',
+  resource: 'Ressources',
+  risk: 'Risques',
+  compliance: 'Conformité',
   task_assignment: 'Assigner une tâche',
   hierarchy_notification: 'Notifier la hiérarchie',
   sms: 'Envoyer SMS',
@@ -49,7 +56,7 @@ const actionLabels: ActionLabels = {
 
 const WaterfallProjectManager = () => {
   const [activeTab, setActiveTab] = useState('gantt');
-  const { projects, loading } = useProjects();
+  const { projects, isLoading: loading } = useProjects();
   const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
   const [phases, setPhases] = useState<any[]>([]);
   const [milestones, setMilestones] = useState<any[]>([]);

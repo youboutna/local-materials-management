@@ -129,17 +129,28 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
     try {
       const documentService = new DocumentService();
       await documentService.createDocument({
-        name: uploadData.file.name,
-        description: uploadData.description || undefined,
-        type: uploadData.document_type as any,
+        projectId: projectId || null,
+        phaseId: null,
+        inspectionId: null,
+        paymentId: null,
+        supplierId: null,
+        title: uploadData.file.name,
+        description: uploadData.description || null,
+        documentType: uploadData.document_type as any,
         status: 'draft' as any,
-        priority: 'medium' as any,
-        category: 'general',
         fileName: uploadData.file.name,
-        fileType: uploadData.file.type,
+        fileUrl: null,
         fileSize: uploadData.file.size,
-        projectId: projectId,
+        mimeType: uploadData.file.type,
         tags: [],
+        isInternalOnly: false,
+        isSharedWithSuppliers: false,
+        deadlineDate: null,
+        assignedTo: null,
+        uploadedBy: null,
+        category: 'general',
+        subcategory: null,
+        metadata: null,
       });
 
       toast({

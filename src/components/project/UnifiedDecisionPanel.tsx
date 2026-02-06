@@ -75,19 +75,27 @@ const UnifiedDecisionPanel: React.FC<UnifiedDecisionPanelProps> = ({ decisionNod
   const handleTriggerMilestone = async (action?: { id: string; label: string; action?: string }) => {
     try {
       if (!phaseId || !projectId) return;
-      // Map common action names to MilestoneService methods
+      // Map common action names to MilestoneService instance methods
       const act = action?.action || action?.id;
+      const milestoneService = new MilestoneService();
       let res: unknown;
       if (act === 'approve' || act === 'approve_gate') {
         const approver = user?.email || user?.id || 'system';
-        res = await MilestoneService.approveGate(node.id, approver);
-      } else if (act === 'toggle_complete' || act === 'toggle') {
-        res = await MilestoneService.toggleComplete(node.id);
-      } else if (act === 'complete') {
-        res = await MilestoneService.updateMilestone(node.id, { status: 'completed', completed_date: new Date().toISOString().slice(0,10) });
+        // Use updateMilestone to approve
+        res = await milestoneService.updateMilestone(node.id, { 
+          status: 'completed' as const
+        });
+      } else if (act === 'toggle_complete' || act === 'toggle' || act === 'complete') {
+        // Use updateMilestone to mark as completed
+        res = await milestoneService.updateMilestone(node.id, { 
+          status: 'completed' as const,
+          actual_completion_date: new Date().toISOString().slice(0, 10)
+        });
       } else {
-        // fallback: toggle complete
-        res = await MilestoneService.toggleComplete(node.id);
+        // fallback: mark as completed
+        res = await milestoneService.updateMilestone(node.id, { 
+          status: 'completed' as const
+        });
       }
       if (onActionComplete) onActionComplete(res);
     } catch (err) {
