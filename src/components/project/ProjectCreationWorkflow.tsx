@@ -178,7 +178,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       icon: Building,
       description: "Type, budget, dates, référence",
       color: "bg-blue-500",
-      isCompleted: (data: CreateProjectDTO) =>
+      isCompleted: (data: ProjectDTO | CreateProjectDTO) =>
         Boolean(
           data.title &&
           data.description &&
@@ -194,7 +194,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       description:
         "Bailleurs, Ministères, Entreprises, Banques, Bureau conseil",
       color: "bg-green-500",
-      isCompleted: (data: CreateProjectDTO) =>
+      isCompleted: (data: ProjectDTO | CreateProjectDTO) =>
         Boolean(data.projectManagerId),
     },
     {
@@ -203,7 +203,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       icon: MapPin,
       description: "Géolocalisation interactive (Maps/Leaflet)",
       color: "bg-cyan-500",
-      isCompleted: (data: CreateProjectDTO) =>
+      isCompleted: (data: ProjectDTO | CreateProjectDTO) =>
         Boolean(data.address && (data.latitude || data.longitude)),
     },
     {
@@ -213,7 +213,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       description:
         "Phase → Step → Task avec documents, ressources, inspections",
       color: "bg-indigo-500",
-      isCompleted: (data: CreateProjectDTO) => Boolean(projectWorkflowData.relatedData?.phases && projectWorkflowData.relatedData.phases.length > 0),
+      isCompleted: (data: ProjectDTO | CreateProjectDTO) => Boolean(projectWorkflowData.relatedData?.phases && projectWorkflowData.relatedData.phases.length > 0),
     },
     {
       id: 5,
@@ -221,7 +221,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       icon: AlertTriangle,
       description: "Analyse et gestion des risques",
       color: "bg-red-500",
-      isCompleted: (data: CreateProjectDTO) => Boolean(projectWorkflowData.relatedData?.risks && projectWorkflowData.relatedData.risks.length >= 0),
+      isCompleted: (data: ProjectDTO | CreateProjectDTO) => Boolean(projectWorkflowData.relatedData?.risks && projectWorkflowData.relatedData.risks.length >= 0),
     },
     {
       id: 6,
@@ -229,7 +229,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       icon: FileCheck,
       description: "Standards SOMELEC et bailleurs (BM, BAD, BID, AFD)",
       color: "bg-amber-500",
-      isCompleted: (data: CreateProjectDTO) => true,
+      isCompleted: (data: ProjectDTO | CreateProjectDTO) => true,
     },
     {
       id: 7,
@@ -237,7 +237,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       icon: CheckCircle,
       description: "Réception définitive et clôture",
       color: "bg-teal-500",
-      isCompleted: (data: CreateProjectDTO) => true,
+      isCompleted: (data: ProjectDTO | CreateProjectDTO) => true,
     },
   ];
 
@@ -265,7 +265,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
       // Save workflow data through service
       await workflowService.saveWorkflowData({
-        project: projectWorkflowData.projectData,
+        project: { ...projectWorkflowData.projectData, description: projectWorkflowData.projectData.description || '' },
         currentStep: currentStep + 1,
         status: projectWorkflowData.isDraft ? 'draft' : 'completed',
         completedSteps: currentStep + 1,
@@ -352,6 +352,12 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
   const handleSubmit = async () => {
     try {
+      // Ensure description is provided for CreateProjectDTO
+      const projectDataWithDescription = {
+        ...projectWorkflowData.projectData,
+        description: projectWorkflowData.projectData.description || 'No description provided'
+      };
+      
       // Instantiate workflow service
       const workflowService = new ProjectWorkflowService(
         RepositoryFactory.getProjectRepository(),
@@ -363,7 +369,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       // Skip validation for now - simplify submission
       // Complete the workflow
       await workflowService.completeWorkflow({
-        project: projectWorkflowData.projectData,
+        project: projectDataWithDescription,
         currentStep: steps.length,
         status: 'completed',
         completedSteps: steps.length,
@@ -471,45 +477,52 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
             </div>
           )}
 
-          {currentStep === 1 && (
-            <StakeholdersTeamStep
-              projectId={projectWorkflowData.projectId || ''}
-              onUpdate={(stakeholders) => updateRelatedData({ stakeholders })}
-            />
-          )}
+           {currentStep === 1 && (
+             <StakeholdersTeamStep
+               projectData={projectWorkflowData.projectData}
+               onUpdate={(data) => updateProjectData(data)}
+             />
+           )}
 
-          {currentStep === 2 && (
-            <InteractiveMapGIS
-              onLocationChange={(coord) => 
-                updateProjectData({ 
-                  latitude: coord.lat, 
-                  longitude: coord.lng 
-                })
-              }
-            />
-          )}
+           {currentStep === 2 && (
+             <InteractiveMapGIS
+               value={{
+                 coordinates: projectWorkflowData.projectData.latitude && projectWorkflowData.projectData.longitude 
+                   ? { lat: projectWorkflowData.projectData.latitude, lng: projectWorkflowData.projectData.longitude }
+                   : undefined
+               }}
+               onChange={(data) => {
+                 if (data.coordinates) {
+                   updateProjectData({ 
+                     latitude: data.coordinates.lat, 
+                     longitude: data.coordinates.lng
+                   });
+                 }
+               }}
+             />
+           )}
 
-          {currentStep === 3 && (
-            <ConstructionPhaseManager
-              projectId={projectWorkflowData.projectId || ''}
-              phases={projectWorkflowData.relatedData?.phases || []}
-              onPhasesChange={(phases) => updateRelatedData({ phases })}
-            />
-          )}
+           {currentStep === 3 && (
+             <ConstructionPhaseManager
+               projectId={projectWorkflowData.projectId || ''}
+               phases={projectWorkflowData.relatedData?.phases || []}
+               onPhasesChange={(phases) => updateRelatedData({ phases })}
+             />
+           )}
 
-          {currentStep === 4 && (
-            <RiskAnalysisStep
-              projectId={projectWorkflowData.projectId || ''}
-              onRisksChange={(risks) => updateRelatedData({ risks })}
-            />
-          )}
+           {currentStep === 4 && (
+             <RiskAnalysisStep
+               formData={projectWorkflowData.projectData}
+               onUpdate={(data) => updateProjectData(data)}
+             />
+           )}
 
-          {currentStep === 5 && (
-            <ComplianceStep
-              projectId={projectWorkflowData.projectId || ''}
-              onComplianceChange={() => {}}
-            />
-          )}
+           {currentStep === 5 && (
+             <ComplianceStep
+               formData={projectWorkflowData.projectData}
+               onUpdate={(data) => updateProjectData(data)}
+             />
+           )}
 
           {currentStep === 6 && (
             <div className="space-y-4">

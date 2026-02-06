@@ -22,7 +22,7 @@ import { ProjectAnalyticsService } from '@/application/services/ProjectAnalytics
 import { ProjectService } from '@/application/services/ProjectService';
 import { MilestoneService } from '@/application/services/MilestoneService';
 import { RepositoryFactory } from '@/repositories/RepositoryFactory';
-import { ProjectDetailDTO, ProjectSummaryDTO } from "@/types/dto";
+import { ProjectDetailDTO, ProjectSummaryDTO } from "@/dtos/entities/ProjectDTO";
 import { Dialog, DialogContent, DialogTrigger } from "@radix-ui/react-dialog";
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -140,10 +140,6 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     enabled: !!projectId,
     retry: 1,
     staleTime: 30_000,
-    onError: (error) => {
-      console.error("🚫 Query error:", error);
-      setError(error?.message || "Failed to load project");
-    },
   });
 
   // Fetch detailed project data (includes plannedPhases, tasks, risks, inspections, etc.)
@@ -186,28 +182,28 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         analyticsService.getProjectCostAnalysis(projectDetail.id)
       ]);
 
-      // Combine all data into the expected format
-      return {
-        ...analytics,
-        // Add missing properties from metrics
-        completedTasks: metrics.completed_tasks,
-        delayedTasks: metrics.overdue_tasks,
-        totalTasks: metrics.total_tasks,
-        pendingTasks: metrics.pending_tasks,
-        totalMilestones: metrics.total_milestones,
-        completedMilestones: metrics.completed_milestones,
-        totalRisks: metrics.total_risks,
-        highRisks: metrics.high_risks,
-        mediumRisks: metrics.medium_risks,
-        lowRisks: metrics.low_risks,
-        totalIssues: metrics.total_issues,
-        openIssues: metrics.open_issues,
-        resolvedIssues: metrics.resolved_issues,
-        criticalIssues: metrics.open_issues, // Using open_issues as critical issues
-        // Add properties from cost analysis
-        budgetUtilization: (costAnalysis.actual_cost / costAnalysis.total_budget) * 100,
-        remainingBudget: costAnalysis.remaining_budget,
-        cpi: costAnalysis.cost_performance_index,
+       // Combine all data into the expected format
+       return {
+         ...analytics,
+         // Add missing properties from metrics (camelCase)
+         completedTasks: metrics?.completedTasks || metrics?.completed_tasks,
+         delayedTasks: metrics?.overdueTasks || metrics?.overdue_tasks,
+         totalTasks: metrics?.totalTasks || metrics?.total_tasks,
+         pendingTasks: metrics?.pendingTasks || metrics?.pending_tasks,
+         totalMilestones: metrics?.totalMilestones || metrics?.total_milestones,
+         completedMilestones: metrics?.completedMilestones || metrics?.completed_milestones,
+         totalRisks: metrics?.totalRisks || metrics?.total_risks,
+         highRisks: metrics?.highRisks || metrics?.high_risks,
+         mediumRisks: metrics?.mediumRisks || metrics?.medium_risks,
+         lowRisks: metrics?.lowRisks || metrics?.low_risks,
+         totalIssues: metrics?.totalIssues || metrics?.total_issues,
+         openIssues: metrics?.openIssues || metrics?.open_issues,
+         resolvedIssues: metrics?.resolvedIssues || metrics?.resolved_issues,
+         criticalIssues: metrics?.openIssues || metrics?.open_issues,
+         // Add properties from cost analysis
+         budgetUtilization: (costAnalysis?.actual_cost || 0) / (costAnalysis?.total_budget || 1) * 100,
+         remainingBudget: costAnalysis?.remaining_budget || 0,
+         cpi: costAnalysis?.cost_performance_index,
         earnedValue: costAnalysis.actual_cost,
         costVariance: costAnalysis.cost_variance,
         // Add calculated properties
