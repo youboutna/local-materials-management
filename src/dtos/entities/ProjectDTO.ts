@@ -121,6 +121,11 @@ export interface ProjectDTO extends BaseEntityDTO {
   longitude?: number;
   geographicZone?: string;
   terrainType?: string;
+  // Backward compatibility - coordinates object
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
   
   // Timeline
   startDate: string;
@@ -377,6 +382,16 @@ export interface CreateProjectDTO {
   projectReference?: string;
   methodology?: "waterfall" | "agile" | "hybrid";
   estimatedDurationDays?: number;
+  
+  // Extended fields for backward compatibility
+  financingSource?: string;
+  marketType?: string;
+  selectionMode?: string;
+  launchDate?: string;
+  attributionDate?: string;
+  mainContractor?: string;
+  allowsInitialPayment?: boolean;
+  initialPaymentPercentage?: number;
 }
 
 // Update Project DTO - standardized pattern  

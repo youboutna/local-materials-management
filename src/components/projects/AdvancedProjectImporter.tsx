@@ -22,7 +22,12 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { ProjectService } from '@/application/services/ProjectService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { ProjectFormDTO, ProjectData } from '@/dtos/entities/ProjectDTO';
+import { CreateProjectDTO, ProjectStatus } from '@/dtos/entities/ProjectDTO';
+
+// Local type for import form data (subset of CreateProjectDTO)
+interface ProjectFormDTO extends Partial<CreateProjectDTO> {
+  coordinates?: { latitude: number; longitude: number };
+}
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ImportResult } from '@/types/project';
 import * as XLSX from 'xlsx';
@@ -282,31 +287,25 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
     }
   };
 
-  const transformToProjectData = (item: any): ProjectFormDTO => {
+  const transformToProjectData = (item: any): CreateProjectDTO => {
     return {
       title: item.title || item.nom || item.name || t('projects.import.defaultTitle'),
       description: item.description || item.desc || '',
       location: item.location || item.lieu || item.localisation || '',
+      status: (item.status || 'enCours') as ProjectStatus,
       budget: parseFloat(item.budget || item.cout || item.montant || item.totalCost || '0'),
       startDate: item.startDate || item.dateDebut || item.start_date || new Date().toISOString().split('T')[0],
       endDate: item.endDate || item.dateFin || item.end_date,
       teamSize: parseInt(item.teamSize || item.equipe || item.team_size || '1'),
-      coordinates: item.coordinates || (item.latitude && item.longitude ? {
-        latitude: parseFloat(item.latitude),
-        longitude: parseFloat(item.longitude)
-      } : undefined),
+      latitude: item.latitude ? parseFloat(item.latitude) : undefined,
+      longitude: item.longitude ? parseFloat(item.longitude) : undefined,
       
       // Project details
       financingSource: item.financingSource || item.sourceFinancement || item.financing_source,
       marketType: item.marketType || item.typeMarche || item.market_type,
       selectionMode: item.selectionMode || item.modeSelection || item.selection_mode,
-      launchDate: item.launchDate || item.dateLancement || item.launch_date,
-      attributionDate: item.attributionDate || item.dateAttribution || item.attribution_date,
       projectReference: item.projectReference || item.project_reference || item.reference,
-      mainContractor: item.mainContractor || item.main_contractor || item.contractor,
-      allowsInitialPayment: item.allowsInitialPayment || item.allows_initial_payment || false,
-      initialPaymentPercentage: parseFloat(item.initialPaymentPercentage || item.initial_payment_percentage || '0'),
-      projectResponsableId: item.projectResponsableId || item.project_responsable_id
+      projectManagerId: item.projectResponsableId || item.project_responsable_id
     };
   };
 
@@ -346,18 +345,18 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
               console.log(`${importMode === 'update' ? 'Updating' : 'Patching'} project:`, projectData.title);
               
               if (importMode === 'update') {
-                await projectService.updateProject(projectId, projectData);
+                await projectService.updateProject(projectId, { id: projectId, ...projectData } as any);
               } else {
-                const fieldsToUpdate: Partial<ProjectFormDTO> = {};
+                const fieldsToUpdate: Record<string, any> = { id: projectId };
                 Object.keys(rawData[i]).forEach(key => {
                   if (rawData[i][key] !== undefined && rawData[i][key] !== null && rawData[i][key] !== '') {
-                    const value = projectData[key as keyof ProjectFormDTO];
+                    const value = (projectData as any)[key];
                     if (value !== undefined) {
-                      (fieldsToUpdate as any)[key] = value;
+                      fieldsToUpdate[key] = value;
                     }
                   }
                 });
-                await projectService.updateProject(projectId, fieldsToUpdate);
+                await projectService.updateProject(projectId, fieldsToUpdate as any);
               }
               updatedCount++;
             } else {

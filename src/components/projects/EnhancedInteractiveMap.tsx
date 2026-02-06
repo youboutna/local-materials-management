@@ -5,7 +5,10 @@ import { MapPin, Navigation, Layers } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { ProjectData } from '@/dtos/entities/ProjectDTO';
+import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+
+// Local type alias for project with coordinates
+type ProjectData = ProjectDTO;
 
 // Fix default markers in Leaflet
 const DefaultIcon = L.icon({

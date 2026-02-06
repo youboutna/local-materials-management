@@ -47,26 +47,37 @@ interface TeamMember {
   availability: string;
 }
 
-interface ExtendedProjectData extends ProjectDTO {
+interface ExtendedProjectData extends Partial<ProjectDTO> {
   compliance?: any[];
   engineeringConsultant?: string;
   generalContractor?: string;
   specializedSubcontractors?: string[];
   mainSuppliers?: string[];
+  employees?: any[];
+  suppliers?: any[];
+  // Legacy snake_case for DB compatibility
+  project_manager_id?: string;
+  technical_manager_id?: string;
+  contractors?: {
+    engineeringConsultant?: string;
+    generalContractor?: string;
+    specializedSubcontractors?: string;
+    mainSuppliers?: string;
+  };
 }
 
 interface StakeholdersTeamStepProps {
   projectData: ExtendedProjectData;
   onUpdate: (data: Partial<ExtendedProjectData>) => void;
   isEditing?: boolean;
-  baseData?: Partial<ExtendedProjectData>;
+  baseData?: ExtendedProjectData;
 }
 
 const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
   projectData,
   onUpdate,
   isEditing = false,
-  baseData = {},
+  baseData = {} as ExtendedProjectData,
 }) => {
   const [stakeholders, setStakeholders] = useState<Stakeholder[]>(
     []
@@ -267,10 +278,10 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                           <EmployeeSelector
                             label="Chef de projet *"
                             value={
-                              projectData.project_manager_id ?? ""
+                              String(projectData.project_manager_id || projectData.projectManagerId || "")
                             }
                             onChange={(value) => {
-                              onUpdate({ project_manager_id: value });
+                              onUpdate({ project_manager_id: value, projectManagerId: value });
                             }}
                             placeholder="Sélectionner le chef de projet"
                             departmentFilter={["management", "engineering"]}
@@ -282,10 +293,10 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                           <EmployeeSelector
                             label="Responsable technique *"
                             value={
-                              projectData.technical_manager_id ?? ""
+                              String(projectData.technical_manager_id || projectData.technicalManagerId || "")
                             }
                             onChange={(value) => {
-                              onUpdate({ technical_manager_id: value });
+                              onUpdate({ technical_manager_id: value, technicalManagerId: value });
                             }}
                             placeholder="Sélectionner le responsable technique"
                             departmentFilter={["engineering", "technical"]}
@@ -646,13 +657,13 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                 <div>
                   <SimpleSupplierSelector
                     label="Bureau d'études"
-                    value={projectData.contractors?.engineeringConsultant || ""}
+                    value={projectData.contractors?.engineeringConsultant || projectData.engineeringConsultant || ""}
                     onChange={(value) => {
                       const updatedContractors = {
-                        ...projectData.contractors,
+                        ...(projectData.contractors || {}),
                         engineeringConsultant: value,
                       };
-                      onUpdate({ contractors: updatedContractors });
+                      onUpdate({ contractors: updatedContractors, engineeringConsultant: value });
                     }}
                     placeholder="Sélectionner le bureau d'études"
                   />
@@ -660,13 +671,13 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                 <div>
                   <SimpleSupplierSelector
                     label="Entrepreneur général"
-                    value={projectData.contractors?.generalContractor || ""}
+                    value={projectData.contractors?.generalContractor || projectData.generalContractor || ""}
                     onChange={(value) => {
                       const updatedContractors = {
-                        ...projectData.contractors,
+                        ...(projectData.contractors || {}),
                         generalContractor: value,
                       };
-                      onUpdate({ contractors: updatedContractors });
+                      onUpdate({ contractors: updatedContractors, generalContractor: value });
                     }}
                     placeholder="Sélectionner l'entrepreneur général"
                   />
@@ -683,11 +694,14 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent min-h-[100px]"
                     placeholder="Liste des sous-traitants spécialisés requis"
                     value={
-                      projectData.contractors?.specializedSubcontractors || ""
+                      projectData.contractors?.specializedSubcontractors || 
+                      (Array.isArray(projectData.specializedSubcontractors) 
+                        ? projectData.specializedSubcontractors.join(", ") 
+                        : "")
                     }
                     onChange={(e) => {
                       const updatedContractors = {
-                        ...projectData.contractors,
+                        ...(projectData.contractors || {}),
                         specializedSubcontractors: e.target.value,
                       };
                       onUpdate({ contractors: updatedContractors });
@@ -700,10 +714,15 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                     id="mainSuppliers"
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent min-h-[100px]"
                     placeholder="Liste des fournisseurs de matériaux principaux"
-                    value={projectData.contractors?.mainSuppliers || ""}
+                    value={
+                      projectData.contractors?.mainSuppliers || 
+                      (Array.isArray(projectData.mainSuppliers) 
+                        ? projectData.mainSuppliers.join(", ") 
+                        : "")
+                    }
                     onChange={(e) => {
                       const updatedContractors = {
-                        ...projectData.contractors,
+                        ...(projectData.contractors || {}),
                         mainSuppliers: e.target.value,
                       };
                       onUpdate({ contractors: updatedContractors });
