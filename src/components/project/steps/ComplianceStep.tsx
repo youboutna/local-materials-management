@@ -12,12 +12,6 @@ import { useToast } from '../../../hooks/use-toast';
 // Import entity DTOs (following "similitude des voisins le plus proche")
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
 
-interface ComplianceStepProps {
-  formData: ProjectDTO;
-  onUpdate: (data: Partial<ProjectDTO>) => void;
-  isEditing?: boolean;
-}
-
 interface ComplianceItem {
   id: string;
   type: 'regulatory' | 'insurance' | 'bank_guarantee' | 'technical' | 'environmental';
@@ -29,6 +23,12 @@ interface ComplianceItem {
   responsible: string;
   documents: string[];
   notes?: string;
+}
+
+interface ComplianceStepProps {
+  formData: ProjectDTO & { compliance?: ComplianceItem[] };
+  onUpdate: (data: Partial<ProjectDTO>) => void;
+  isEditing?: boolean;
 }
 
 const ComplianceStep: React.FC<ComplianceStepProps> = ({

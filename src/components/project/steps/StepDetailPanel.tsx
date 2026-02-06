@@ -316,22 +316,25 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {step.tasks.map((task, index) => (
-                    <div 
-                      key={task.id || index}
-                      className="flex items-center gap-3 p-2 rounded-md border hover:bg-muted/50"
-                    >
-                      <div className={cn(
-                        'w-2 h-2 rounded-full',
-                        task.status === 'completed' ? 'bg-success' : 
-                        task.status === 'in_progress' ? 'bg-info' : 'bg-muted'
-                      )} />
-                      <span className="flex-1 text-sm">{task.name}</span>
-                      <Badge variant="outline" className="text-xs">
-                        {task.status || 'pending'}
-                      </Badge>
-                    </div>
-                  ))}
+                  {step.tasks.map((taskItem, index) => {
+                    const task = taskItem as any;
+                    return (
+                      <div 
+                        key={task?.id || index}
+                        className="flex items-center gap-3 p-2 rounded-md border hover:bg-muted/50"
+                      >
+                        <div className={cn(
+                          'w-2 h-2 rounded-full',
+                          task?.status === 'completed' ? 'bg-success' : 
+                          task?.status === 'in_progress' ? 'bg-info' : 'bg-muted'
+                        )} />
+                        <span className="flex-1 text-sm">{task?.name || 'Unnamed Task'}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {task?.status || 'pending'}
+                        </Badge>
+                      </div>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>

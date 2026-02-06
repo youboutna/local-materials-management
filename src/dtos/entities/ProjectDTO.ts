@@ -535,3 +535,10 @@ interface CreateProjectRequestDTO {
   }[];
   projectReference?: string;
 }
+
+// ============= TYPE ALIASES FOR BACKWARD COMPATIBILITY =============
+// These types are re-exported from ProjectDTO for compatibility with legacy imports
+export type ProjectFormDTO = ProjectDTO;
+export type ProjectData = ProjectDTO;
+export type EVMMetrics = EvmData;
+export type PERTAnalysis = PertAnalysis;

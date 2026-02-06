@@ -31,13 +31,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
 import { StakeholderDTO } from "@/dtos/entities/StakeholderDTO";
 
-interface StakeholdersTeamStepProps {
-  projectData: ProjectDTO;
-  onUpdate: (data: Partial<ProjectDTO>) => void;
-  isEditing?: boolean;
-  baseData?: Partial<ProjectDTO>;
-}
-
 interface Stakeholder {
   id: string;
   type: "employee" | "external";
@@ -52,6 +45,21 @@ interface TeamMember {
   position: string;
   responsibilities: string;
   availability: string;
+}
+
+interface ExtendedProjectData extends ProjectDTO {
+  compliance?: any[];
+  engineeringConsultant?: string;
+  generalContractor?: string;
+  specializedSubcontractors?: string[];
+  mainSuppliers?: string[];
+}
+
+interface StakeholdersTeamStepProps {
+  projectData: ExtendedProjectData;
+  onUpdate: (data: Partial<ExtendedProjectData>) => void;
+  isEditing?: boolean;
+  baseData?: Partial<ExtendedProjectData>;
 }
 
 const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({

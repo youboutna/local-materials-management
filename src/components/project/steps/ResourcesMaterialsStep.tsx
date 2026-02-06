@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Package, FileText } from 'lucide-react';
 import MaterialFormSection from '@/components/MaterialFormSection';
 import ProjectDocumentUpload from '@/components/project/ProjectDocumentUpload';
-import { ProjectDTO } from '@/application/services/ProjectService';
+import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 
 interface ResourcesMaterialsStepProps {
   selectedMaterials: Array<{ materialId: string; quantity: number }>;

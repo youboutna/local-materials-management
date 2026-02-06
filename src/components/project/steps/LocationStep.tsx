@@ -6,8 +6,22 @@ import InteractiveMapGIS from '../../materials/InteractiveMapGIS';
 // Import entity DTOs (following "similitude des voisins le plus proche")
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
 
+interface MapData {
+  center?: { latitude: number; longitude: number };
+  address?: string;
+  polygonCoordinates?: Array<{ latitude: number; longitude: number }>;
+  [key: string]: any;
+}
+
 interface LocationStepProps {
-  formData: ProjectDTO;
+  formData: ProjectDTO & { 
+    facilitiesLocation?: MapData;
+    geographic_zone?: string;
+    terrain_type?: string;
+    environmental_constraints?: string;
+    has_utilities?: boolean;
+    requires_permits?: boolean;
+  };
   onUpdate: (data: Partial<ProjectDTO>) => void;
   isEditing?: boolean;
 }
@@ -90,53 +104,53 @@ const LocationStep: React.FC<LocationStepProps> = ({
 
           <div>
             <label className="block text-sm font-medium mb-2">Contraintes environnementales</label>
-            <textarea 
-              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent min-h-[100px]"
-              placeholder="Décrivez les contraintes environnementales, réglementaires ou géographiques spécifiques au site"
-              value={formData.environmental_constraints || ''}
-              onChange={(e) => onUpdate({ environmental_constraints: e.target.value })}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center space-x-3">
-              <input 
-                type="checkbox" 
-                id="hasUtilities"
-                className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                checked={formData.has_utilities || false}
-                onChange={(e) => onUpdate({ has_utilities: e.target.checked })}
+              <textarea 
+                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent min-h-[100px]"
+                placeholder="Décrivez les contraintes environnementales, réglementaires ou géographiques spécifiques au site"
+                value={(formData as any).environmental_constraints || ''}
+                onChange={(e) => onUpdate({ environmental_constraints: e.target.value } as any)}
               />
-              <label htmlFor="hasUtilities" className="text-sm font-medium">
-                Raccordements aux réseaux disponibles
-              </label>
             </div>
-            <div className="flex items-center space-x-3">
-              <input 
-                type="checkbox" 
-                id="requiresPermits"
-                className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                checked={formData.requires_permits || false}
-                onChange={(e) => onUpdate({ requires_permits: e.target.checked })}
-              />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center space-x-3">
+                <input 
+                  type="checkbox" 
+                  id="hasUtilities"
+                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                  checked={(formData as any).has_utilities || false}
+                  onChange={(e) => onUpdate({ has_utilities: e.target.checked } as any)}
+                />
+                <label htmlFor="hasUtilities" className="text-sm font-medium">
+                  Raccordements aux réseaux disponibles
+                </label>
+              </div>
+              <div className="flex items-center space-x-3">
+                <input 
+                  type="checkbox" 
+                  id="requiresPermits"
+                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                  checked={(formData as any).requires_permits || false}
+                  onChange={(e) => onUpdate({ requires_permits: e.target.checked } as any)}
+                />
               <label htmlFor="requiresPermits" className="text-sm font-medium">
                 Permis spéciaux requis
               </label>
             </div>
           </div>
 
-          {formData.facilitiesLocation && (
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="text-md font-medium mb-2">Informations de localisation</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                {formData.facilitiesLocation.center && (
-                  <>
-                    <span>Latitude: {formData.facilitiesLocation.center.lat.toFixed(6)}</span>
-                    <span>Longitude: {formData.facilitiesLocation.center.lng.toFixed(6)}</span>
-                  </>
-                )}
-                {formData.facilitiesLocation.address && (
-                  <span className="col-span-2">Adresse: {formData.facilitiesLocation.address}</span>
+           {formData.facilitiesLocation && (
+             <div className="bg-muted p-4 rounded-lg">
+               <h4 className="text-md font-medium mb-2">Informations de localisation</h4>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                 {formData.facilitiesLocation?.center && (
+                   <>
+                     <span>Latitude: {(formData.facilitiesLocation.center.latitude || 0).toFixed(6)}</span>
+                     <span>Longitude: {(formData.facilitiesLocation.center.longitude || 0).toFixed(6)}</span>
+                   </>
+                 )}
+                 {formData.facilitiesLocation?.address && (
+                   <span className="col-span-2">Adresse: {formData.facilitiesLocation.address}</span>
                 )}
               </div>
             </div>
