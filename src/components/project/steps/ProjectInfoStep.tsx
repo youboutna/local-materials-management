@@ -13,10 +13,17 @@ import SimpleSupplierSelector from "../../selectors/SimpleSupplierSelector";
 import { Progress } from "@/components/ui/progress";
 
 // Import entity DTOs (following "similitude des voisins le plus proche")
-import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
+import { ProjectDTO, ProjectStatus } from "@/dtos/entities/ProjectDTO";
 
 interface ProjectInfoStepProps {
-  formData: ProjectDTO;
+  formData: ProjectDTO & {
+    project_reference?: string;
+    team_lead?: string;
+    technical_responsible?: string;
+    site_manager?: string;
+    primary_supplier?: string;
+    budget_approved?: boolean;
+  };
   onUpdate: (data: Partial<ProjectDTO>) => void;
   isEditing?: boolean;
   baseData?: Partial<ProjectDTO>;
@@ -141,13 +148,13 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 }
               />
             </div>
-            <div>
+             <div>
               <label className="block text-sm font-medium mb-2">
                 Type de marché *
               </label>
               <Select
-                value={formData.market_type ?? undefined}
-                onValueChange={(value) => onUpdate({ market_type: value })}
+                value={(formData as any).market_type ?? ''}
+                onValueChange={(value) => onUpdate({ market_type: value } as any)}
               >
                 <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                   <SelectValue placeholder="Sélectionner le type de marché" />
