@@ -87,12 +87,12 @@ export function NotificationDropdown() {
                         {notification.title}
                       </h4>
                       <div className="flex items-center gap-1 ml-2">
-                        {notification.metadata?.priority && (
+                        {(notification.metadata as any)?.priority && (
                           <Badge 
                             variant="outline" 
-                            className={`text-xs ${getPriorityColor(notification.metadata.priority)}`}
+                            className={`text-xs ${getPriorityColor(String((notification.metadata as any).priority))}`}
                           >
-                            {notification.metadata.priority}
+                            {String((notification.metadata as any).priority)}
                           </Badge>
                         )}
                         {!notification.read && (
@@ -103,9 +103,9 @@ export function NotificationDropdown() {
                     <p className="text-xs text-muted-foreground line-clamp-2 mb-1">
                       {notification.message}
                     </p>
-                    {notification.metadata?.documents && notification.metadata.documents.length > 0 && (
+                    {(notification.metadata as any)?.documents && ((notification.metadata as any).documents as any[])?.length > 0 && (
                       <div className="mt-2 space-y-1">
-                        {notification.metadata.documents.slice(0, 3).map((d: any, i: number) => (
+                        {((notification.metadata as any).documents as any[]).slice(0, 3).map((d: any, i: number) => (
                           <a
                             key={i}
                             href={d.file_url || d.fileUrl || d.url}
@@ -125,9 +125,9 @@ export function NotificationDropdown() {
                           locale: fr 
                         })}
                       </span>
-                      {notification.metadata?.task_type && (
+                      {(notification.metadata as any)?.task_type && (
                         <Badge variant="secondary" className="text-xs">
-                          {notification.metadata.task_type}
+                          {String((notification.metadata as any).task_type)}
                         </Badge>
                       )}
                     </div>

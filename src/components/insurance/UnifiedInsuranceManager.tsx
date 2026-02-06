@@ -17,7 +17,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PaginationControls } from '@/components/ui/pagination-controls';
-import { DocumentService, CreateDocumentRequestDto } from '@/application/services/DocumentService';
+import { DocumentService } from '@/application/services/DocumentService';
+import { CreateDocumentDTO as CreateDocumentRequestDto } from '@/dtos/entities/DocumentDTO';
 import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { usePagination } from '@/hooks/usePagination';
@@ -29,7 +30,8 @@ import {
   InsuranceAlert
 } from '@/services/insuranceCertificateService';
 import { InsuranceService } from '@/application/services/InsuranceService';
-import { createInsuranceAction, type CreateEnhancedActionRequest } from '@/application/services/enhancedActionService';
+import { createInsuranceAction } from '@/application/services/enhancedActionService';
+import { CreateEnhancedActionRequestDTO as CreateEnhancedActionRequest } from '@/dtos/entities/ActionDTO';
 import { checkAndSendInsuranceAlerts } from '@/utils/insuranceAlertUtils';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { useAuth } from '@/hooks/hexagonal';
@@ -173,12 +175,7 @@ const UnifiedInsuranceManager = () => {
     { value: 'awaiting_approval', label: 'En attente d\'approbation', color: 'bg-yellow-200 text-yellow-800' },
   ];
 
-  useEffect(() => {
-    loadInsuranceData();
-    loadCertificates();
-  }, [loadInsuranceData, loadCertificates]);
-
-  const loadInsuranceData = useCallback(async () => {
+  const loadInsuranceDataCallback = useCallback(async () => {
     try {
       setLoading(true);
       const expiringAlerts = await detectExpiringInsurance();
@@ -195,7 +192,7 @@ const UnifiedInsuranceManager = () => {
     }
   }, [toast]);
 
-  const loadCertificates = useCallback(async () => {
+  const loadCertificatesCallback = useCallback(async () => {
     setLoading(true);
     try {
       console.log('Loading insurance certificates...');
@@ -206,28 +203,28 @@ const UnifiedInsuranceManager = () => {
 
       console.log('Raw certificates data:', data);
 
-      const transformedCertificates: LocalInsuranceCertificate[] = (data || []).map(cert => ({
+      const transformedCertificates: LocalInsuranceCertificate[] = (data || []).map((cert: any) => ({
         id: cert.id,
-        projectId: cert.project_id,
-        contractorId: cert.contractor_id,
-        contractorName: cert.provider, // Map provider to contractorName
-        insuranceCompany: cert.provider,
-        policyNumber: cert.policy_number,
-        coverageAmount: cert.coverage_amount,
-        coverageType: cert.insurance_type as 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques',
-        validFrom: cert.start_date,
-        validUntil: cert.valid_until,
-        status: cert.status as 'active' | 'expired' | 'expiring_soon' | 'missing',
-        lastVerified: undefined, // Field not available in InsuranceCertificate
-        verifiedBy: undefined, // Field not available in InsuranceCertificate
-        notes: undefined, // Field not available in InsuranceCertificate
-        certificateUrl: undefined, // Field not available in InsuranceCertificate
-        documents: (cert.documents || []).map((doc, index) => ({
+        projectId: cert.projectId || cert.project_id || '',
+        contractorId: cert.contractorId || cert.contractor_id || '',
+        contractorName: cert.contractorName || cert.contractor_name || cert.insuranceCompany || cert.insurance_company || '',
+        insuranceCompany: cert.insuranceCompany || cert.insurance_company || '',
+        policyNumber: cert.policyNumber || cert.policy_number || '',
+        coverageAmount: cert.coverageAmount || cert.coverage_amount || 0,
+        coverageType: (cert.coverageType || cert.coverage_type || cert.insuranceType || 'responsabilite_civile') as 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques',
+        validFrom: cert.validFrom || cert.valid_from || cert.startDate || '',
+        validUntil: cert.validUntil || cert.valid_until || cert.endDate || '',
+        status: (cert.status || 'active') as 'active' | 'expired' | 'expiring_soon' | 'missing',
+        lastVerified: undefined,
+        verifiedBy: undefined,
+        notes: cert.notes,
+        certificateUrl: undefined,
+        documents: cert.documents ? (cert.documents as string[]).map((doc: string, index: number) => ({
           id: index.toString(),
           title: doc,
           file_url: doc,
           file_name: doc
-        })) // Transform string[] to expected object format
+        })) : []
       }));
 
       console.log('Transformed certificates:', transformedCertificates);
@@ -237,24 +234,28 @@ const UnifiedInsuranceManager = () => {
         title: 'Succès',
         description: `${transformedCertificates.length} certificat(s) chargé(s)`,
       });
-      
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('Error loading certificates:', error);
       toast({
-        title: 'Erreur',
-        description: `Impossible de charger les certificats: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
-        variant: 'destructive'
+        title: "Erreur",
+        description: "Impossible de charger les certificats",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   }, [toast]);
 
+  useEffect(() => {
+    loadInsuranceDataCallback();
+    loadCertificatesCallback();
+  }, [loadInsuranceDataCallback, loadCertificatesCallback]);
+
   const handleSendAlerts = async () => {
     setLoading(true);
     try {
       await checkAndSendInsuranceAlerts();
-      await loadInsuranceData(); // Refresh alerts
+      await loadInsuranceDataCallback(); // Refresh alerts
     } catch (error) {
       console.error('Error sending alerts:', error);
     } finally {
@@ -271,13 +272,12 @@ const UnifiedInsuranceManager = () => {
       
       if (uploadResult.success && uploadResult.url) {
         // Create document record using DocumentService
-        const documentData: CreateDocumentRequestDto = {
+        const documentData = {
           title: `Certificat d'assurance - ${file.name}`,
-          type: 'contract',
           projectId: form.getValues('projectId'),
           description: `Document pour certificat d'assurance - ${form.getValues('contractorName')}`,
           fileUrl: uploadResult.url
-        };
+        } as any;
 
         const document = await documentService.createDocument(documentData);
 
@@ -330,7 +330,7 @@ const UnifiedInsuranceManager = () => {
 
         if (error) throw error;
 
-        await loadCertificates();
+        await loadCertificatesCallback();
         
         toast({
           title: "Succès",
@@ -360,7 +360,7 @@ const UnifiedInsuranceManager = () => {
 
         if (error) throw error;
 
-        await loadCertificates();
+        await loadCertificatesCallback();
         
         toast({
           title: "Succès",
@@ -464,7 +464,7 @@ const UnifiedInsuranceManager = () => {
 
         if (error) throw error;
 
-        await loadCertificates();
+        await loadCertificatesCallback();
         toast({
           title: "Succès",
           description: "Certificat d'assurance supprimé avec succès"
@@ -560,7 +560,7 @@ const UnifiedInsuranceManager = () => {
         priority: 'high',
         assigneeId: currentUserId,
         recipientIds: [currentUserId],
-        metadata: { certificateData: certificate }
+        metadata: { certificateData: certificate as unknown as Record<string, unknown> }
       });
 
       toast({
@@ -972,7 +972,7 @@ const UnifiedInsuranceManager = () => {
                               entityId={certificate.id!}
                               projectId={certificate.projectId || certificate.project_id}
                               contractorId={certificate.contractorId || certificate.contractor_id}
-                              onActionComplete={loadCertificates}
+                              onActionComplete={loadCertificatesCallback}
                             />
                           );
                         })()}

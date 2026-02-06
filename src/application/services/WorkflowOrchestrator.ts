@@ -600,8 +600,8 @@ export class WorkflowOrchestrator {
         // Ensure PaymentDTO has required fields for domain transformation
         const dtoWithDefaults: any = {
           ...paymentDTO,
-          projectId: paymentDTO.projectId || paymentDTO.project_id,
-          contractorId: paymentDTO.contractorId || paymentDTO.contractor_id,
+          projectId: paymentDTO.project?.id || (paymentDTO as any).project_id || '',
+          contractorId: (paymentDTO as any).contractor?.id || '',
         };
         return PaymentTransformer.toDomain(dtoWithDefaults);
       });

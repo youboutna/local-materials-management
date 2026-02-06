@@ -166,7 +166,6 @@ const InsuranceCrud: React.FC = () => {
           coverageAmount: formData.coverage_amount,
           validFrom: formData.valid_from,
           validUntil: formData.valid_until,
-          status: formData.status as any,
           notes: formData.notes
         });
       }

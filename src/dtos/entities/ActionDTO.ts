@@ -14,6 +14,7 @@ export interface ActionMetadataDTO {
   requiredSkills?: string[];
   location?: string;
   budget?: number;
+  certificateData?: Record<string, unknown>;
 }
 
 export interface EnhancedActionDTO {
