@@ -182,41 +182,55 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         analyticsService.getProjectCostAnalysis(projectDetail.id)
       ]);
 
-       // Combine all data into the expected format
+       // Type the responses safely
+       const typedMetrics = (metrics || {}) as { totalMilestones?: number; completedMilestones?: number; overdueTasks?: number };
+       const typedAnalytics = (analytics || {}) as Record<string, number>;
+       const typedCostAnalysis = (costAnalysis || {}) as Record<string, number>;
+       
+       // Combine all data into the expected format (camelCase only)
        return {
-         ...analytics,
-         // Add missing properties from metrics (camelCase)
-         completedTasks: metrics?.completedTasks || metrics?.completed_tasks,
-         delayedTasks: metrics?.overdueTasks || metrics?.overdue_tasks,
-         totalTasks: metrics?.totalTasks || metrics?.total_tasks,
-         pendingTasks: metrics?.pendingTasks || metrics?.pending_tasks,
-         totalMilestones: metrics?.totalMilestones || metrics?.total_milestones,
-         completedMilestones: metrics?.completedMilestones || metrics?.completed_milestones,
-         totalRisks: metrics?.totalRisks || metrics?.total_risks,
-         highRisks: metrics?.highRisks || metrics?.high_risks,
-         mediumRisks: metrics?.mediumRisks || metrics?.medium_risks,
-         lowRisks: metrics?.lowRisks || metrics?.low_risks,
-         totalIssues: metrics?.totalIssues || metrics?.total_issues,
-         openIssues: metrics?.openIssues || metrics?.open_issues,
-         resolvedIssues: metrics?.resolvedIssues || metrics?.resolved_issues,
-         criticalIssues: metrics?.openIssues || metrics?.open_issues,
-         // Add properties from cost analysis
-         budgetUtilization: (costAnalysis?.actual_cost || 0) / (costAnalysis?.total_budget || 1) * 100,
-         remainingBudget: costAnalysis?.remaining_budget || 0,
-         cpi: costAnalysis?.cost_performance_index,
-        earnedValue: costAnalysis.actual_cost,
-        costVariance: costAnalysis.cost_variance,
-        // Add calculated properties
-        spi: analytics.schedule_performance / 100, // Convert to decimal
-        inspectionPassRate: analytics.quality_score,
-        healthScore: Math.round(
-          (analytics.progress_percentage + analytics.quality_score + analytics.schedule_performance) / 3
-        ),
-        remainingDays: Math.max(0, 30), // Mock calculation
-        elapsedDays: 45, // Mock calculation
-        overallProgress: analytics.progress_percentage,
-        scheduleVariance: analytics.timeline_variance
-      };
+         // Core progress metrics
+         completedTasks: typedMetrics.completedMilestones || 0,
+         delayedTasks: typedMetrics.overdueTasks || 0,
+         totalTasks: typedMetrics.totalMilestones || 0,
+         pendingTasks: 0,
+         totalMilestones: typedMetrics.totalMilestones || 0,
+         completedMilestones: typedMetrics.completedMilestones || 0,
+         totalRisks: 0,
+         highRisks: 0,
+         mediumRisks: 0,
+         lowRisks: 0,
+         totalIssues: 0,
+         openIssues: 0,
+         resolvedIssues: 0,
+         criticalIssues: 0,
+         // Cost analysis (camelCase)
+         budgetUtilization: (typedCostAnalysis.actual_cost || 0) / (typedCostAnalysis.total_budget || 1) * 100,
+         remainingBudget: typedCostAnalysis.remaining_budget || 0,
+         actualCost: typedCostAnalysis.actual_cost || 0,
+         totalBudget: typedCostAnalysis.total_budget || 0,
+         cpi: typedCostAnalysis.cost_performance_index || 0,
+         earnedValue: typedCostAnalysis.actual_cost || 0,
+         costVariance: typedCostAnalysis.cost_variance || 0,
+         // Performance metrics (camelCase)
+         progressPercentage: typedAnalytics.progress_percentage || 0,
+         milestoneCompletion: typedAnalytics.milestone_completion || 0,
+         schedulePerformance: typedAnalytics.schedule_performance || 0,
+         costEfficiency: typedAnalytics.cost_efficiency || 0,
+         qualityScore: typedAnalytics.quality_score || 0,
+         riskScore: typedAnalytics.risk_score || 0,
+         spi: (typedAnalytics.schedule_performance || 0) / 100,
+         inspectionPassRate: typedAnalytics.quality_score || 0,
+         healthScore: Math.round(
+           ((typedAnalytics.progress_percentage || 0) + 
+            (typedAnalytics.quality_score || 0) + 
+            (typedAnalytics.schedule_performance || 0)) / 3
+         ),
+         remainingDays: Math.max(0, 30),
+         elapsedDays: 45,
+         overallProgress: typedAnalytics.progress_percentage || 0,
+         scheduleVariance: typedAnalytics.timeline_variance || 0
+       };
     },
     enabled: !!projectId && !!projectDetail,
     staleTime: 30_000,
@@ -262,12 +276,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     staleTime: 30_000,
   });
 
-  // Milestone count for dashboard
+  // Milestone count for dashboard - use instance method
+  const milestoneServiceInstance = new MilestoneService();
   const { data: milestoneProgress } = useQuery({
     queryKey: ["milestone-progress", projectId],
     queryFn: async () => {
       if (!projectId) return null;
-      return await MilestoneService.getMilestoneProgress(projectId);
+      return await milestoneServiceInstance.getMilestoneProgress(projectId);
     },
     enabled: !!projectId,
     staleTime: 30_000,
@@ -311,17 +326,14 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       return { currentPhase: null, currentStage: null };
     }
 
-    // Find the first phase that is "in_progress"
+    // Find the first phase that is "in_progress" - use name property from PhaseDTO
     const inProgressPhase = phasesSource.find(
-      (p: any) => p.status === "in_progress"
+      (p: any) => p.status === "in_progress" || p.status === "active"
     );
     if (inProgressPhase) {
       return {
-        currentPhase:
-          inProgressPhase.phase_name ||
-          inProgressPhase.construction_phase ||
-          inProgressPhase.name,
-        currentStage: inProgressPhase.construction_stage || null,
+        currentPhase: inProgressPhase.name || inProgressPhase.type,
+        currentStage: null,
       };
     }
 
@@ -330,27 +342,21 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       (p: any) =>
         p.status === "pending" ||
         p.status === "not_started" ||
-        p.status === "planned"
+        p.status === "planned" ||
+        p.status === "planning"
     );
     if (pendingPhase) {
       return {
-        currentPhase:
-          pendingPhase.phase_name ||
-          pendingPhase.construction_phase ||
-          pendingPhase.name,
-        currentStage: pendingPhase.construction_stage || null,
+        currentPhase: pendingPhase.name || pendingPhase.type,
+        currentStage: null,
       };
     }
 
     // All phases completed - show last one
     const lastPhase = phasesSource[phasesSource.length - 1];
     return {
-      currentPhase:
-        lastPhase?.phase_name ||
-        lastPhase?.construction_phase ||
-        lastPhase?.name ||
-        null,
-      currentStage: lastPhase?.construction_stage || null,
+      currentPhase: lastPhase?.name || lastPhase?.type || null,
+      currentStage: null,
     };
   }, [phasesSource]);
 
@@ -378,7 +384,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       if (!projectDetail) return;
       
       // Use real resources from projectDetail instead of mock data
-      const realResources = projectDetail.resources || [];
+      const realResources = Array.isArray(projectDetail.resources) ? projectDetail.resources : [];
       
       // Transform real resources to the expected format
       const allResources = realResources.map((resource: any) => ({
@@ -394,9 +400,9 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       }));
       
       // Add project manager if exists and not already included
-      if (projectDetail.projectResponsableId && !allResources.find(r => r.id.includes('manager'))) {
-        // Try to get real manager data from contacts or stakeholders
-        const managerContact = projectDetail.contacts?.find((c: any) => 
+      const contactsArray = Array.isArray(projectDetail.contacts) ? projectDetail.contacts : [];
+      if (projectDetail.projectResponsableId && !allResources.find((r: any) => r.id.includes('manager'))) {
+        const managerContact = contactsArray.find((c: any) => 
           c.role === 'project_manager' || c.role === 'chef de projet'
         );
         
@@ -414,9 +420,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       }
       
       // Add main contractor if exists and not already included
-      if (projectDetail.mainContractor && !allResources.find(r => r.id.includes('contractor'))) {
-        // Try to get real contractor data from contacts or stakeholders
-        const contractorContact = projectDetail.contacts?.find((c: any) => 
+      if (projectDetail.mainContractor && !allResources.find((r: any) => r.id.includes('contractor'))) {
+        const contractorContact = contactsArray.find((c: any) => 
           c.role === 'contractor' || c.role === 'contractant principal'
         );
         
@@ -437,8 +442,23 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     };
     if (projectDetail) {
       computeResources();
-      setTasks(tasksSource);
-      setRisks(risksSource);
+      // Transform tasks to expected format
+      const transformedTasks = tasksSource.map((t: any) => ({
+        id: t.id,
+        name: t.title || t.name || 'Task',
+        status: t.status || 'pending',
+        progress: t.progress
+      }));
+      setTasks(transformedTasks);
+      // Transform risks to expected format
+      const transformedRisks = risksSource.map((r: any) => ({
+        id: r.id,
+        title: r.title || r.name || 'Risk',
+        description: r.description || '',
+        probability: typeof r.probability === 'number' ? r.probability : 0,
+        impact: typeof r.impact === 'number' ? r.impact : 0
+      }));
+      setRisks(transformedRisks);
     }
   }, [projectDetail, risksSource, tasksSource, t]);
 
@@ -504,8 +524,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       contacts: projectDetail?.mainContractor
         ? [
             {
-              id: `contractor-${projectDetail.mainContractor.replace(/\s+/g, '-').toLowerCase()}`,
-              name: projectDetail.mainContractor,
+              id: `contractor-${String(projectDetail.mainContractor).replace(/\s+/g, '-').toLowerCase()}`,
+              name: String(projectDetail.mainContractor),
               role: "contractor",
               email: "",
               isPrimary: true,
@@ -1007,13 +1027,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   <div>
                     <p className="text-sm font-medium">Jalons</p>
                     <p className="text-lg font-bold">
-                      {milestoneProgress?.total_milestones || 0}
+                      {typeof milestoneProgress === 'number' ? milestoneProgress : 0}
                     </p>
-                    {milestoneProgress && milestoneProgress.total_milestones > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        {milestoneProgress.completed_milestones}/{milestoneProgress.total_milestones} terminés
-                      </p>
-                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Progression: {typeof milestoneProgress === 'number' ? milestoneProgress : 0}%
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -1245,9 +1263,9 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                             <p className="text-2xl font-bold">
                               {pertAnalysis.variances
                                 ? Math.sqrt(
-                                    Object.values(pertAnalysis.variances).reduce(
+                                    (Object.values(pertAnalysis.variances) as number[]).reduce(
                                       (sum: number, variance: number) =>
-                                        sum + variance,
+                                        sum + (variance || 0),
                                       0
                                     )
                                   ).toFixed(1)
@@ -1289,8 +1307,6 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         <TabsContent value="risks" className="mt-6">
           <EnhancedRiskManager
             projectId={projectId!}
-            risks={risks}
-            setRisks={setRisks}
             phases={computedPhases}
           />
         </TabsContent>
@@ -1314,16 +1330,16 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {project.allowsInitialPayment && (
+                {(project as any).allowsInitialPayment && (
                   <div className="p-4 border rounded-lg bg-green-50">
                     <h4 className="font-medium">Avance initiale autorisée</h4>
                     <p className="text-sm text-muted-foreground">
-                      {project.initialPaymentPercentage}% du montant total
+                      {(project as any).initialPaymentPercentage}% du montant total
                     </p>
                     <p className="font-semibold text-green-700">
                       {(
-                        ((project.budget || 0) *
-                          (project.initialPaymentPercentage || 0)) /
+                        (((project as any).budget || 0) *
+                          ((project as any).initialPaymentPercentage || 0)) /
                         100
                       ).toLocaleString()}{" "}
                       MRU
@@ -1395,7 +1411,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                           Progression
                         </p>
                         <p className="text-2xl font-bold">
-                          {kpiMetrics.progress_percentage}% ({kpiMetrics.milestone_completion}% jalons)
+                          {kpiMetrics.progressPercentage}% ({kpiMetrics.milestoneCompletion}% jalons)
                         </p>
                       </div>
                       <TrendingUp className="h-8 w-8 text-primary" />
@@ -1416,7 +1432,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                           Utilisation Budget
                         </p>
                         <p className="text-2xl font-bold">
-                          {((kpiMetrics.actual_cost / kpiMetrics.total_budget) * 100).toFixed(1)}%
+                          {((kpiMetrics.actualCost / (kpiMetrics.totalBudget || 1)) * 100).toFixed(1)}%
                         </p>
                       </div>
                       <DollarSign className="h-8 w-8 text-green-600" />
@@ -1436,19 +1452,19 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                           CPI (Coût)
                         </p>
                         <p className="text-2xl font-bold">
-                          {kpiMetrics.cost_efficiency.toFixed(2)}
+                          {kpiMetrics.costEfficiency.toFixed(2)}
                         </p>
                       </div>
                       <TrendingUp
                         className={`h-8 w-8 ${
-                          kpiMetrics.cost_efficiency >= 1
+                          kpiMetrics.costEfficiency >= 1
                             ? "text-green-600"
                             : "text-red-600"
                         }`}
                       />
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">
-                      {kpiMetrics.cost_efficiency >= 1
+                      {kpiMetrics.costEfficiency >= 1
                         ? "En dessous du budget"
                         : "Au-dessus du budget"}
                     </p>
@@ -1464,19 +1480,19 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                           SPI (Planning)
                         </p>
                         <p className="text-2xl font-bold">
-                          {kpiMetrics.schedule_performance.toFixed(2)}
+                          {kpiMetrics.schedulePerformance.toFixed(2)}
                         </p>
                       </div>
                       <Calendar
                         className={`h-8 w-8 ${
-                          kpiMetrics.schedule_performance >= 1
+                          kpiMetrics.schedulePerformance >= 1
                             ? "text-green-600"
                             : "text-orange-600"
                         }`}
                       />
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">
-                      {kpiMetrics.schedule_performance >= 1 ? "En avance" : "En retard"}
+                      {kpiMetrics.schedulePerformance >= 1 ? "En avance" : "En retard"}
                     </p>
                   </CardContent>
                 </Card>
@@ -1490,13 +1506,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                           Qualité
                         </p>
                         <p className="text-2xl font-bold">
-                          {kpiMetrics.quality_score.toFixed(0)}%
+                          {kpiMetrics.qualityScore.toFixed(0)}%
                         </p>
                       </div>
                       <CheckCircle className="h-8 w-8 text-green-600" />
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">
-                      {kpiMetrics.risk_score} incidents critiques
+                      {kpiMetrics.riskScore} incidents critiques
                     </p>
                   </CardContent>
                 </Card>
@@ -1510,13 +1526,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                           Risques
                         </p>
                         <p className="text-2xl font-bold">
-                          {kpiMetrics.risk_score}
+                          {kpiMetrics.riskScore}
                         </p>
                       </div>
                       <AlertTriangle className="h-8 w-8 text-red-600" />
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">
-                      {Math.round(kpiMetrics.risk_score * 0.3)} risques élevés
+                      {Math.round(kpiMetrics.riskScore * 0.3)} risques élevés
                     </p>
                   </CardContent>
                 </Card>
@@ -1530,14 +1546,14 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                           Santé Globale
                         </p>
                         <p className="text-2xl font-bold">
-                          {Math.round((kpiMetrics.quality_score + kpiMetrics.schedule_performance + kpiMetrics.cost_efficiency) / 3)}
+                          {Math.round((kpiMetrics.qualityScore + kpiMetrics.schedulePerformance + kpiMetrics.costEfficiency) / 3)}
                         </p>
                       </div>
                       <Target
                         className={`h-8 w-8 ${
-                          Math.round((kpiMetrics.quality_score + kpiMetrics.schedule_performance + kpiMetrics.cost_efficiency) / 3) >= 80
+                          Math.round((kpiMetrics.qualityScore + kpiMetrics.schedulePerformance + kpiMetrics.costEfficiency) / 3) >= 80
                             ? "text-green-600"
-                            : Math.round((kpiMetrics.quality_score + kpiMetrics.schedule_performance + kpiMetrics.cost_efficiency) / 3) >= 60
+                            : Math.round((kpiMetrics.qualityScore + kpiMetrics.schedulePerformance + kpiMetrics.costEfficiency) / 3) >= 60
                             ? "text-orange-600"
                             : "text-red-600"
                         }`}
@@ -1558,13 +1574,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                           Délai
                         </p>
                         <p className="text-2xl font-bold">
-                          {Math.round(kpiMetrics.schedule_performance * 3)}j
+                          {Math.round(kpiMetrics.schedulePerformance * 3)}j
                         </p>
                       </div>
                       <Clock className="h-8 w-8 text-blue-600" />
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">
-                      {Math.round((100 - kpiMetrics.schedule_performance) * 2)}j écoulés
+                      {Math.round((100 - kpiMetrics.schedulePerformance) * 2)}j écoulés
                     </p>
                   </CardContent>
                 </Card>
@@ -1581,23 +1597,23 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                       <div className="flex justify-between">
                         <span className="text-sm">Valeur acquise</span>
                         <span className="font-semibold">
-                          {kpiMetrics.actual_cost.toLocaleString()} MRU
+                          {kpiMetrics.actualCost.toLocaleString()} MRU
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm">Variance coût</span>
                         <span
                           className={`font-semibold ${
-                            kpiMetrics.budget_variance >= 0
+                            kpiMetrics.costVariance >= 0
                               ? "text-green-600"
                               : "text-red-600"
                           }`}
                         >
-                          {kpiMetrics.budget_variance.toLocaleString()} MRU
+                          {kpiMetrics.costVariance.toLocaleString()} MRU
                         </span>
                       </div>
                       <Progress
-                        value={(kpiMetrics.actual_cost / kpiMetrics.total_budget) * 100}
+                        value={(kpiMetrics.actualCost / (kpiMetrics.totalBudget || 1)) * 100}
                         className="mt-2"
                       />
                     </div>
@@ -1614,22 +1630,22 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                         <span className="text-sm">Variance planning</span>
                         <span
                           className={`font-semibold ${
-                            kpiMetrics.timeline_variance >= 0
+                            kpiMetrics.scheduleVariance >= 0
                               ? "text-green-600"
                               : "text-orange-600"
                           }`}
                         >
-                          {Math.abs(kpiMetrics.timeline_variance).toFixed(1)} jours
+                          {Math.abs(kpiMetrics.scheduleVariance).toFixed(1)} jours
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm">Tâches en retard</span>
                         <span className="font-semibold text-red-600">
-                          {Math.round(kpiMetrics.risk_score * 0.2)}
+                          {Math.round(kpiMetrics.riskScore * 0.2)}
                         </span>
                       </div>
                       <Progress
-                        value={kpiMetrics.progress_percentage}
+                        value={kpiMetrics.progressPercentage}
                         className="mt-2"
                       />
                     </div>
@@ -1873,10 +1889,10 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             description="Carte interactive avec outils GIS"
             allowPolygon={true}
             value={{
-              coordinates: project.coordinates?.latitude && project.coordinates?.longitude
+              coordinates: (project as any).coordinates?.latitude && (project as any).coordinates?.longitude
                 ? {
-                    lat: project.coordinates.latitude,
-                    lng: project.coordinates.longitude,
+                    lat: (project as any).coordinates.latitude,
+                    lng: (project as any).coordinates.longitude,
                   }
                 : undefined,
               polygon: Array.isArray((project as any).localisation)
