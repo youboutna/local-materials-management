@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,14 +12,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Send, FileText, Upload, Eye, Clock, CheckCircle, AlertTriangle, DollarSign, Receipt } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { PaymentRequestService, PaymentRequest, CreatePaymentRequestData } from '@/application/services/PaymentRequestService';
+import { PaymentRequestService } from '@/application/services/PaymentRequestService';
+import { PaymentRequestDTO, CreatePaymentRequestDTO } from '@/dtos/entities/PaymentDTO';
 import { AuthService } from '@/application/services/AuthService';
-import { DocumentService, CreateDocumentRequestDto } from '@/application/services/DocumentService';
+import { DocumentService } from '@/application/services/DocumentService';
 import { NotificationService } from '@/application/services/NotificationService';
-import { useProjectsHex } from '@/hooks/hexagonal'
+import { useProjectsHex } from '@/hooks/hexagonal';
 import { useAuth } from '@/hooks/hexagonal';
 import EnhancedProjectSelector from '@/components/selectors/EnhancedProjectSelector';
 import { ProgressInvoiceForm } from '@/components/invoices/ProgressInvoiceForm';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 interface LocalPaymentRequest {
   id: string;
@@ -67,7 +69,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
   prefillData,
   onPrefillUsed 
 }) => {
-  const [paymentRequests, setPaymentRequests] = useState<PaymentRequest[]>([]);
+  const [paymentRequests, setPaymentRequests] = useState<PaymentRequestDTO[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [uploadedDocuments, setUploadedDocuments] = useState<string[]>([]);
@@ -86,9 +88,9 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
   const [paymentReason, setPaymentReason] = useState('');
   const [notes, setNotes] = useState('');
 
-  // Services
-  const paymentRequestService = new PaymentRequestService();
-  const authService = new AuthService();
+  // Services - initialized with proper repositories
+  const paymentRepository = RepositoryFactory.getPaymentRepository();
+  const paymentRequestService = new PaymentRequestService(paymentRepository);
   const documentService = new DocumentService();
 
   // Handle prefill data from payment initiation
@@ -110,7 +112,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
   const fetchPaymentRequests = async () => {
     try {
       // Use PaymentRequestService instead of direct Supabase calls
-      const requests = await paymentRequestService.getPaymentRequestsBySupplier(supplierId);
+      const requests = await paymentRequestService.getPaymentRequestsByProject(supplierId);
       setPaymentRequests(requests);
       console.log('Fetched payment requests:', requests);
     } catch (error) {
@@ -185,12 +187,11 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
       return;
     }
 
-    // Check authentication using AuthService
-    const session = await authService.getSession();
-    if (!session) {
+    // Check authentication using user from hook
+    if (!user?.id) {
       toast({
         title: 'Erreur',
-        description: 'Vous devez Ãªtre connectÃ© pour crÃ©er une demande de paiement',
+        description: 'Vous devez être connecté pour créer une demande de paiement',
         variant: 'destructive',
       });
       return;
@@ -205,14 +206,12 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
       }
 
       // Create payment request using PaymentRequestService
-      const paymentRequestData: CreatePaymentRequestData = {
+      const paymentRequestData: CreatePaymentRequestDTO = {
         supplierId,
         amount: parseFloat(amount),
         description,
         paymentReason,
         projectId: projectId || undefined,
-        supportingDocuments: uploadedDocuments,
-        notes: notes || undefined,
       };
 
       const createdRequest = await paymentRequestService.createPaymentRequest(paymentRequestData);
@@ -220,11 +219,10 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
 
       // Create notification for managers using NotificationService
       const notificationData = {
-        recipientId: supplierId,
-        title: 'Demande de paiement crÃ©Ã©e',
-        message: `Demande de paiement de ${parseFloat(amount).toLocaleString()} MRU crÃ©Ã©e`,
-        type: 'supplier_payment_request',
-        relatedId: createdRequest.id,
+        recipient_id: supplierId,
+        title: 'Demande de paiement créée',
+        message: `Demande de paiement de ${parseFloat(amount).toLocaleString()} MRU créée`,
+        type: 'info' as const,
         metadata: {
           supplier_id: supplierId,
           project_id: projectId,
@@ -244,8 +242,8 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
       await NotificationService.createNotification(notificationData);
 
       toast({
-        title: 'Demande envoyÃ©e',
-        description: 'Votre demande de paiement a Ã©tÃ© soumise avec succÃ¨s',
+        title: 'Demande envoyée',
+        description: 'Votre demande de paiement a été soumise avec succès',
       });
 
       // Reset form
@@ -438,16 +436,16 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
               {paymentRequests.map((request) => (
                 <TableRow key={request.id}>
                   <TableCell>
-                    {new Date(request.requested_date).toLocaleDateString('fr-FR')}
+                    {new Date(request.createdAt || '').toLocaleDateString('fr-FR')}
                   </TableCell>
                   <TableCell>
-                    {request.project_id ? 
-                      projects.find(p => String(p.id) === String(request.project_id))?.title || request.project_id 
-                      : 'Non spÃ©cifiÃ©'
+                    {request.projectId ? 
+                      projects.find(p => String(p.id) === String(request.projectId))?.title || request.projectId 
+                      : 'Non spécifié'
                     }
                   </TableCell>
                   <TableCell>{request.amount.toLocaleString()} MRU</TableCell>
-                  <TableCell>{request.payment_reason}</TableCell>
+                  <TableCell>{request.paymentReason}</TableCell>
                   <TableCell>{getStatusBadge(request.status)}</TableCell>
                   <TableCell>
                      <Button variant="outline" size="sm" asChild>

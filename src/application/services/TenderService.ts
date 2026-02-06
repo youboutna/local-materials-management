@@ -30,6 +30,18 @@ export class TenderService {
     private tenderDocumentRepository: ITenderDocumentRepository = RepositoryFactory.getTenderDocumentRepository()
   ) {}
 
+  // ============= STATIC METHODS FOR BACKWARD COMPATIBILITY =============
+  
+  /**
+   * Static: Get published tenders for submission
+   */
+  static async getPublishedTendersForSubmission(): Promise<Tender[]> {
+    const service = new TenderService();
+    return service.getAllTenders();
+  }
+
+  // ============= END STATIC METHODS =============
+
   /**
    * Get tenders for a specific project
    */

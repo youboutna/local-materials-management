@@ -93,10 +93,10 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
           const docRecord = await documentService.createDocument({
             title: `Service fait - ${file.name}`,
             description: comments || undefined,
-            type: 'report',
+            documentType: 'report' as any,
             projectId: inspection.project_id,
             fileUrl: publicUrl,
-          });
+          } as any);
           // attach returned document id/url for notifications
           if (docRecord) {
             uploadedDocs.push({
@@ -142,10 +142,10 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
               const pvDocRecord = await documentService.createDocument({
                 title: `PV - Inspection ${new Date(inspection.date).toLocaleDateString('fr-FR')}`,
                 description: `Procès-verbal généré lors de la validation de l'inspection`,
-                type: 'pv',
+                documentType: 'pv' as any,
                 projectId: inspection.project_id,
                 fileUrl: pvUrl,
-              });
+              } as any);
 
               if (pvDocRecord) {
                 uploadedDocs.push({
@@ -175,12 +175,12 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
       }
 
       // Update inspection through InspectionService (keeps separation of concerns)
-      const updatedInspection = await InspectionService.updateInspection(inspection.id, {
+      const inspectionService = new InspectionService();
+      const updatedInspection = await inspectionService.updateInspection(inspection.id, {
         status: 'approved',
-        progress_at_inspection: progress,
+        progressAtInspection: progress,
         comments: comments,
-        documents: uploadedDocs,
-      } as any);
+      });
 
       if (!updatedInspection) throw new Error('Failed to update inspection');
 

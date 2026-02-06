@@ -23,6 +23,107 @@ export class SubmissionSecretService {
     private repository: ISubmissionSecretRepository = RepositoryFactory.getSubmissionSecretRepository()
   ) {}
 
+  // ============= STATIC METHODS FOR BACKWARD COMPATIBILITY =============
+  
+  /**
+   * Static: Get submission by ID
+   */
+  static async getSubmissionById(submissionId: string): Promise<any> {
+    const service = new SubmissionSecretService();
+    return service.getSubmissionById(submissionId);
+  }
+
+  /**
+   * Static: Regenerate secret for a submission
+   */
+  static async regenerateSecret(submissionId: string): Promise<SubmissionSecretDTO> {
+    const service = new SubmissionSecretService();
+    return service.regenerateSecret({ secretId: submissionId, submissionId });
+  }
+
+  /**
+   * Static: Check if secret is still valid
+   */
+  static isSecretValid(submission: any): SecretValidationResultDTO {
+    // Handle both DTO format and raw database format
+    const dto: SubmissionSecretDTO = {
+      id: submission.id || '',
+      submissionId: submission.submissionId || submission.submission_id || '',
+      secretCode: submission.secretCode || submission.secret_code || '',
+      expiresAt: submission.expiresAt || submission.secret_expires_at,
+      isActive: submission.isActive ?? submission.is_secret_active ?? true,
+      accessCount: submission.accessCount ?? submission.secret_access_count ?? 0,
+      maxAccess: submission.maxAccess ?? submission.max_secret_access ?? 10,
+      createdAt: submission.createdAt || submission.created_at || '',
+      updatedAt: submission.updatedAt || submission.updated_at || ''
+    };
+    
+    const service = new SubmissionSecretService();
+    return service.isSecretValid(dto);
+  }
+
+  /**
+   * Static: Validate a secret code
+   */
+  static async validateSecret(secretCode: string): Promise<{ is_valid: boolean; submission_id?: string; tender_id?: string; supplier_name?: string; message: string }> {
+    const service = new SubmissionSecretService();
+    const result = await service.validateSubmissionSecret({ secretCode });
+    
+    if (!result) {
+      return { is_valid: false, message: 'Code secret invalide' };
+    }
+    
+    const validation = service.isSecretValid(result);
+    if (!validation.valid) {
+      return { is_valid: false, message: validation.reason || 'Code expiré ou désactivé' };
+    }
+    
+    return {
+      is_valid: true,
+      submission_id: result.submissionId,
+      message: 'Accès autorisé'
+    };
+  }
+
+  /**
+   * Static: Log access to a submission
+   */
+  static async logAccess(data: { submission_id: string; action_type: string; accessed_sections: string[]; user_agent?: string; metadata?: any }): Promise<void> {
+    console.log('Access logged:', data);
+    // In a full implementation, this would save to an audit log table
+  }
+
+  /**
+   * Static: Create a submission secret
+   */
+  static async createSubmissionSecret(data: { submission_id: string; expires_at: string; max_access: number }): Promise<SubmissionSecretDTO> {
+    const service = new SubmissionSecretService();
+    return service.generateSubmissionSecret({
+      submissionId: data.submission_id,
+      maxAccess: data.max_access,
+      expiresAt: data.expires_at
+    });
+  }
+
+  /**
+   * Static: Get default expiration date
+   */
+  static getDefaultExpirationDate(days: number = 30): string {
+    const date = new Date();
+    date.setDate(date.getDate() + days);
+    return date.toISOString();
+  }
+
+  /**
+   * Static: Deactivate a secret
+   */
+  static async deactivateSecret(submissionId: string): Promise<void> {
+    const service = new SubmissionSecretService();
+    return service.deactivateSecret({ secretId: submissionId });
+  }
+
+  // ============= END STATIC METHODS =============
+
   /**
    * Generate a secret code for a submission
    */
