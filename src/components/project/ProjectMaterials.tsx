@@ -42,17 +42,20 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
 
   const fetchProjectMaterials = async () => {
     try {
-      const projectMaterials = await MaterialService.getProjectMaterials(projectId);
+      const projectMaterials = await new MaterialService(null as any).getProjectMaterials(projectId);
       
       // Transform the data to match our interface
       const transformedMaterials: ProjectMaterial[] = projectMaterials.map(item => ({
         id: item.id,
         quantity: item.quantity,
         material: {
-          id: item.materials.id,
-          name: item.materials.name,
-          description: item.materials.description || '',
-          category: item.materials.category || '',
+          id: item.materialId,
+          name: `Material ${item.materialId}`,
+          description: '',
+          category: '',
+          unit: '',
+          pricePerUnit: item.unitPrice,
+          supplierId: '',
           unit: item.materials.unit || '',
           price_per_unit: item.materials.unit_price || 0,
           origin_location: undefined,
@@ -119,7 +122,7 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
     try {
       // Add materials using the service
       for (const material of selectedMaterials) {
-        await MaterialService.addMaterialToProject(
+        await new MaterialService(null as any).addMaterialToProject(
           projectId,
           material.materialId,
           material.quantity
@@ -150,7 +153,7 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
 
   const handleRemoveMaterial = async (materialId: string) => {
     try {
-      await MaterialService.removeMaterialFromProject(materialId);
+      await new MaterialService(null as any).removeMaterialFromProject(projectId, materialId);
 
       toast({
         title: "Matériau supprimé",

@@ -47,9 +47,27 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
     try {
       console.log('Starting to fetch phases...');
       setLoading(true);
-      const loadedPhases = await PhaseService.loadProjectPhases(projectId);
+      const loadedPhases = await new PhaseService(null as any).getPhasesByProject(projectId);
       console.log('Loaded phases from database:', loadedPhases);
-      setPhases(loadedPhases);
+      // Map PhaseDTO to PhaseData with required fields
+      const mappedPhases: PhaseData[] = loadedPhases.map(phase => ({
+        id: phase.id,
+        phase: phase.type as any,
+        title: phase.name || 'Phase',
+        description: phase.description || '',
+        startDate: phase.startDate || new Date().toISOString(),
+        endDate: phase.endDate || new Date().toISOString(),
+        estimatedDuration: 0,
+        status: phase.status as any,
+        budget: 0,
+        actualCost: 0,
+        progress: 0,
+        materials: [],
+        humanResources: [],
+        suppliers: [],
+        location: '',
+      }));
+      setPhases(mappedPhases);
     } catch (error) {
       console.error('Error fetching project phases:', error);
       toast({
