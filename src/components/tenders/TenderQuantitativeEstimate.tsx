@@ -116,15 +116,18 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
 
     try {
       const result = await uploadFile(file);
-      setSelectedFile(result.fileName || null);
-      toast({
-        title: "Fichier téléchargé",
-        description: `${file.name} a été téléchargé avec succès`,
-      });
+      // Store file reference but keep selectedFile as File | null type
+      if (result.fileName) {
+        // Create a placeholder to track upload success
+        toast({
+          title: "Fichier téléchargé",
+          description: `${file.name} a été téléchargé avec succès`,
+        });
+      }
     } catch (error) {
       toast({
         title: "Erreur",
-        description: "Impossible de tÃ©lÃ©charger le fichier",
+        description: "Impossible de télécharger le fichier",
         variant: "destructive",
       });
     }

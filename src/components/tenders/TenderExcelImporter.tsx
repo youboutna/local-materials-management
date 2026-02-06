@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/hexagonal';
+import { supabase } from '@/integrations/supabase/client';
 import * as XLSX from 'xlsx';
 
 interface ImportedTender {
@@ -157,9 +158,9 @@ const TenderExcelImporter: React.FC = () => {
     if (!preview.length) return;
 
     // Check authentication first
-    const { data: { user }, error: authError } = await getUser();
+    const user = await getUser();
     
-    if (authError || !user) {
+    if (!user) {
       toast({
         title: 'Authentification requise',
         description: 'Vous devez être connecté pour importer des appels d\'offres.',

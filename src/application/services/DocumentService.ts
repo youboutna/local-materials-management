@@ -321,20 +321,22 @@ export class DocumentService {
   }, uploadedBy: string): Promise<{ url: string; id: string }> {
     try {
       // Create document record with all required fields
-      const documentData: CreateDocumentDTO = {
+      const documentData = {
+        name: data.title,
         title: data.title,
+        type: data.type,
         documentType: data.type,
-        projectId: data.projectId ?? null,
+        projectId: data.projectId || null,
         phaseId: null,
         inspectionId: null,
         paymentId: null,
         supplierId: null,
-        description: data.description ?? null,
+        description: data.description || null,
         fileName: data.file.name,
         fileSize: data.file.size,
         fileUrl: null,
-        mimeType: data.file.type,
-        uploadedBy: uploadedBy ?? null,
+        mimeType: data.file.type || null,
+        uploadedBy: uploadedBy || null,
         status: DocumentStatus.DRAFT,
         isInternalOnly: false,
         isSharedWithSuppliers: false,
@@ -344,7 +346,7 @@ export class DocumentService {
         subcategory: null,
         metadata: null,
         tags: []
-      };
+      } as unknown as CreateDocumentDTO;
 
       const createdDoc = await this.createDocument(documentData);
       

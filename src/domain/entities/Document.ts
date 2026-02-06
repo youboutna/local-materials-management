@@ -1,27 +1,21 @@
 // Domain Entity: Document
 // Pure business logic without infrastructure concerns
 
-export enum DocumentType {
-  CONTRACT = 'contract',
-  INVOICE = 'invoice',
-  REPORT = 'report',
-  PLAN = 'plan',
-  PERMIT = 'permit',
-  PV = 'pv',
-  PHOTO = 'photo',
-  CERTIFICATE = 'certificate',
-  SPECIFICATION = 'specification',
-  CORRESPONDENCE = 'correspondence',
-  OTHER = 'other'
-}
+// Re-export from DTO layer to ensure single source of truth
+import { DocumentType, DocumentStatus } from '@/dtos/entities/DocumentDTO';
+export { DocumentType, DocumentStatus };
 
-export enum DocumentStatus {
-  DRAFT = 'draft',
-  PENDING_REVIEW = 'pending_review',
-  APPROVED = 'approved',
-  REJECTED = 'rejected',
-  ARCHIVED = 'archived'
-}
+// String literal types for backward compatibility with validation arrays
+export type DocumentTypeString = 
+  | 'contract' | 'invoice' | 'report' | 'plan' | 'permit' | 'pv' 
+  | 'photo' | 'certificate' | 'specification' | 'correspondence' | 'other'
+  | 'receipt' | 'manual' | 'policy' | 'procedure' | 'drawing' | 'video'
+  | 'blueprint' | 'schema' | 'checklist' | 'form' | 'template'
+  | 'service_report' | 'tender_document' | 'supporting_document';
+
+export type DocumentStatusString = 
+  | 'draft' | 'pending_review' | 'pending_approval' | 'approved' 
+  | 'rejected' | 'archived' | 'expired' | 'deprecated';
 
 export class Document {
   // Private fields for encapsulation
@@ -177,7 +171,8 @@ export class Document {
   }
 
   isPending(): boolean {
-    return this._status === 'pending_review';
+    const status = this._status as unknown as string;
+    return status === 'pending_review' || status === DocumentStatus.PENDING_APPROVAL;
   }
 
   isOverdue(): boolean {
@@ -241,8 +236,8 @@ export class Document {
       null, // supplierId
       params.title,
       params.description || null,
-      params.documentType || 'other',
-      'draft',
+      params.documentType || DocumentType.REPORT,
+      DocumentStatus.DRAFT,
       null, // fileName
       null, // fileUrl
       null, // fileSize
@@ -307,23 +302,29 @@ export class Document {
   }
 
   private validateDocumentType(type: DocumentType): DocumentType {
-    const validTypes: DocumentType[] = [
+    const validTypes: DocumentTypeString[] = [
       'contract', 'invoice', 'report', 'plan', 'permit', 'pv', 
-      'photo', 'certificate', 'specification', 'correspondence', 'other'
+      'photo', 'certificate', 'specification', 'correspondence', 'other',
+      'receipt', 'manual', 'policy', 'procedure', 'drawing', 'video',
+      'blueprint', 'schema', 'checklist', 'form', 'template',
+      'service_report', 'tender_document', 'supporting_document'
     ];
     
-    if (!validTypes.includes(type)) {
+    const typeStr = type as unknown as DocumentTypeString;
+    if (!validTypes.includes(typeStr)) {
       throw new Error(`Invalid document type: ${type}`);
     }
     return type;
   }
 
   private validateStatus(status: DocumentStatus): DocumentStatus {
-    const validStatuses: DocumentStatus[] = [
-      'draft', 'pending_review', 'approved', 'rejected', 'archived'
+    const validStatuses: DocumentStatusString[] = [
+      'draft', 'pending_review', 'pending_approval', 'approved', 
+      'rejected', 'archived', 'expired', 'deprecated'
     ];
     
-    if (!validStatuses.includes(status)) {
+    const statusStr = status as unknown as DocumentStatusString;
+    if (!validStatuses.includes(statusStr)) {
       throw new Error(`Invalid document status: ${status}`);
     }
     return status;

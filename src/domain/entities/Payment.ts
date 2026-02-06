@@ -273,20 +273,18 @@ export class Payment {
       params.paymentMethod,
       'requested',
       params.progressAtPayment || 0,
-      null,
+      null, // transactionId
       params.contractorName,
       params.contractorContact,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      [],
-      new Date().toISOString(),
-      new Date().toISOString()
+      null, // bankName
+      null, // accountNumber
+      null, // checkNumber
+      null, // mobileNumber
+      null, // mobileOperator
+      null, // receiverName
+      [],   // documents
+      new Date().toISOString(), // createdAt
+      new Date().toISOString()  // updatedAt
     );
   }
 

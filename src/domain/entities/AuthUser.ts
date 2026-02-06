@@ -26,7 +26,7 @@ export class AuthUser {
   private readonly _metadata: Record<string, any>;
   private readonly _createdAt: Date;
   private _updatedAt: Date;
-  private readonly _lastLoginAt?: Date;
+  private _lastLoginAt?: Date;
 
   constructor(
     id: string,

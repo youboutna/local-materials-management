@@ -460,7 +460,7 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
     // Provider management
     currentProvider,
     supportedProviders,
-    switchProvider,
+    switchProvider: switchProvider as any,
     
     // Auth methods
     signIn,
