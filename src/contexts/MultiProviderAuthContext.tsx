@@ -6,10 +6,10 @@
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
-import { createContext, ReactNode, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, ReactNode, useEffect, useState, useCallback } from 'react';
 import { getAuthManager, AuthManagerConfig } from '@/application/services/AuthManager';
 import { AuthProvider } from '@/config/app';
-import { AuthUser, AuthSession, LoginCredentials, RegisterData } from '@/domain/repositories/IAuthRepository';
+import { AuthUser, AuthSession } from '@/dtos/entities/AuthDTO';
 
 type MultiProviderAuthContextType = {
   user: AuthUser | null;
@@ -29,7 +29,7 @@ type MultiProviderAuthContextType = {
   isDevelopmentMode: boolean;
 };
 
-const MultiProviderAuthContext = createContext<MultiProviderAuthContextType | undefined>(undefined);
+export const MultiProviderAuthContext = createContext<MultiProviderAuthContextType | undefined>(undefined);
 
 export function MultiProviderAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -45,13 +45,24 @@ export function MultiProviderAuthProvider({ children }: { children: ReactNode })
   const loadInitialSession = useCallback(async () => {
     try {
       const result = await authManager.getCurrentSession();
+      const userResult = await authManager.getCurrentUser();
       
-      if (result.error) {
-        console.error('❌ Error loading initial session:', result.error);
-      } else {
-        console.log('✅ Initial session loaded:', result.session?.user?.email || 'no session');
-        setSession(result.session);
-        setUser(result.session?.user || null);
+      if (result && result.session) {
+        // Create an AuthSession from AuthManagerSession
+        const authSession: AuthSession = {
+          access_token: '',  // AuthManagerSession doesn't expose token directly
+          expires_at: result.session.expiresAt ? new Date(result.session.expiresAt).toISOString() : undefined,
+          user: userResult.user || {
+            id: '',
+            email: '',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          },
+          provider: currentProvider
+        };
+        setSession(authSession);
+        setUser(userResult.user);
+        console.log('✅ Initial session loaded:', userResult.user?.email || 'no session');
       }
       
       setLoading(false);
@@ -59,7 +70,7 @@ export function MultiProviderAuthProvider({ children }: { children: ReactNode })
       console.error('❌ Error loading initial session:', error);
       setLoading(false);
     }
-  }, [authManager]);
+  }, [authManager, currentProvider]);
 
   useEffect(() => {
     console.log('🔧 Setting up multi-provider auth state listener...');
@@ -78,33 +89,23 @@ export function MultiProviderAuthProvider({ children }: { children: ReactNode })
       
       const result = await authManager.signIn({ email: email.trim(), password });
       
-      if (result.error) {
-        console.error('❌ Sign in error:', result.error);
-        let errorMessage = result.error.message;
-        
-        if (result.error.message === 'Invalid login credentials') {
-          errorMessage = "Email ou mot de passe incorrect. Vérifiez vos identifiants.";
-        } else if (result.error.message.includes('Email not confirmed')) {
-          errorMessage = "Veuillez confirmer votre email avant de vous connecter.";
-        }
-        
+      if (!result) {
         toast({
           title: t('common.error'),
-          description: errorMessage,
+          description: "Une erreur est survenue lors de la connexion.",
           variant: "destructive"
         });
-        throw result.error;
+        throw new Error('Sign in failed');
       }
       
-      if (result.session) {
-        setSession(result.session);
-        setUser(result.session.user);
-        console.log('✅ Sign in successful:', result.session.user.email);
-        toast({
-          title: t('common.success'),
-          description: "Bienvenue sur la plateforme.",
-        });
-      }
+      // Refresh session after sign in
+      await loadInitialSession();
+      
+      console.log('✅ Sign in successful');
+      toast({
+        title: t('common.success'),
+        description: "Bienvenue sur la plateforme.",
+      });
     } catch (error) {
       console.error('Sign in error:', error);
       throw error;
@@ -199,7 +200,6 @@ export function MultiProviderAuthProvider({ children }: { children: ReactNode })
       console.log('🔍 Attempting Google sign in...');
       
       // TODO: Implement Google OAuth based on current provider
-      // For now, this is a placeholder
       toast({
         title: t('common.info'),
         description: "Google sign in will be available in the next update.",
@@ -218,8 +218,6 @@ export function MultiProviderAuthProvider({ children }: { children: ReactNode })
       setLoading(true);
       console.log('📱 Attempting phone sign in...');
       
-      // TODO: Implement phone authentication based on current provider
-      // For now, this is a placeholder
       toast({
         title: t('common.info'),
         description: "Phone sign in will be available in the next update.",
@@ -240,8 +238,6 @@ export function MultiProviderAuthProvider({ children }: { children: ReactNode })
       setLoading(true);
       console.log('🔢 Verifying phone OTP...');
       
-      // TODO: Implement OTP verification based on current provider
-      // For now, this is a placeholder
       toast({
         title: t('common.info'),
         description: "OTP verification will be available in the next update.",
@@ -260,8 +256,6 @@ export function MultiProviderAuthProvider({ children }: { children: ReactNode })
       setLoading(true);
       console.log('🆔 Attempting national ID sign in...');
       
-      // TODO: Implement national ID authentication based on current provider
-      // For now, this is a placeholder
       toast({
         title: t('common.info'),
         description: "National ID sign in will be available in the next update.",
@@ -330,5 +324,3 @@ export function MultiProviderAuthProvider({ children }: { children: ReactNode })
     </MultiProviderAuthContext.Provider>
   );
 }
-
-export { MultiProviderAuthProvider, MultiProviderAuthContext };

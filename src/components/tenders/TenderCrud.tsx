@@ -27,10 +27,30 @@ import {
   useProjectsForTenders,
   useTenderMutation,
   useDeleteTender,
-  type Tender,
-  type Project,
-  type TenderFormData
+  TenderFormData
 } from '@/hooks/hexagonal'
+import { TenderDTO } from '@/dtos/entities/TenderDTO';
+import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+
+// Local type aliases for backward compatibility
+type Tender = TenderDTO & {
+  // Legacy snake_case properties for backward compatibility
+  project_id?: string;
+  launch_date?: string;
+  attribution_date?: string;
+  deadline_date?: string;
+  submission_deadline?: string;
+  evaluation_deadline?: string;
+  selection_mode?: string;
+  market_type?: string;
+  financing_source?: string;
+  project_reference?: string;
+  current_phase?: string;
+  current_stage?: string;
+  procurement_type?: string;
+  estimated_value?: number;
+};
+type Project = ProjectDTO;
 
 interface TenderCrudProps {
   onTenderSelect?: (tender: Tender) => void;
@@ -165,21 +185,21 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
     setFormData({
       title: tender.title || '',
       description: tender.description || '',
-      project_id: tender.project_id || '',
-      launch_date: toInputDateTime(tender.launch_date),
-      attribution_date: toInputDateTime(tender.attribution_date),
-      deadline_date: toInputDateTime(tender.deadline_date),
-      submission_deadline: toInputDateTime(tender.submission_deadline),
-      evaluation_deadline: toInputDateTime(tender.evaluation_deadline),
-      selection_mode: tender.selection_mode || '',
-      market_type: tender.market_type || '',
-      financing_source: tender.financing_source || '',
-      project_reference: tender.project_reference || '',
-      current_phase: tender.current_phase || '',
-      current_stage: tender.current_stage || '',
-      procurement_type: tender.procurement_type || '',
-      estimated_value: tender.estimated_value?.toString() || '',
-      status: tender.status
+      project_id: tender.projectId || tender.project_id || '',
+      launch_date: toInputDateTime(tender.launchDate || tender.launch_date),
+      attribution_date: toInputDateTime(tender.attributionDate || tender.attribution_date),
+      deadline_date: toInputDateTime(tender.deadlineDate || tender.deadline_date),
+      submission_deadline: toInputDateTime(tender.submissionDeadline || tender.submission_deadline),
+      evaluation_deadline: toInputDateTime(tender.evaluationDeadline || tender.evaluation_deadline),
+      selection_mode: tender.selectionMode || tender.selection_mode || '',
+      market_type: tender.marketType || tender.market_type || '',
+      financing_source: tender.financingSource || tender.financing_source || '',
+      project_reference: tender.projectReference || tender.project_reference || '',
+      current_phase: tender.currentPhase?.toString() || tender.current_phase || '',
+      current_stage: tender.currentStage || tender.current_stage || '',
+      procurement_type: tender.procurementType || tender.procurement_type || '',
+      estimated_value: (tender.estimatedValue || tender.estimated_value)?.toString() || '',
+      status: (tender.status === 'cancelled' ? 'closed' : tender.status) as 'draft' | 'published' | 'closed' | 'awarded'
     });
     setIsDialogOpen(true);
   };
@@ -263,7 +283,7 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => openEditDialog(tender)}>
+                    <Button size="sm" variant="outline" onClick={() => openEditDialog(tender as unknown as Tender)}>
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => handleDelete(tender.id)}>
@@ -436,12 +456,15 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
       </Dialog>
 
       <ProcurementStepSelector
-        open={isProcurementWorkflowSelectorOpen}
-        onOpenChange={setIsProcurementWorkflowSelectorOpen}
-        selectedSteps={selectedProcurementSteps}
-        onPhaseSelect={handleSelectProcurementPhase}
-        onStageSelect={handleSelectProcurementStage}
-        onDocumentSelect={handleStepDocumentSelection}
+        isOpen={isProcurementWorkflowSelectorOpen}
+        onClose={() => setIsProcurementWorkflowSelectorOpen(false)}
+        onSelectStep={(phase, stage, selectedDocuments) => {
+          handleSelectProcurementStage(phase, stage);
+          if (selectedDocuments) {
+            handleStepDocumentSelection(phase, stage.value, selectedDocuments);
+          }
+        }}
+        existingSteps={selectedProcurementSteps}
       />
     </Card>
   );

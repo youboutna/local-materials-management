@@ -27,8 +27,10 @@ export interface UseTenderByIdHexResult {
 export interface ProjectPhaseForTender {
   id: string;
   name: string;
+  description?: string;
   order: number;
   status: string;
+  progress?: number;
   startDate?: string;
   endDate?: string;
   budget?: number;

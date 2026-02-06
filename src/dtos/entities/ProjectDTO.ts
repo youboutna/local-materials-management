@@ -576,3 +576,19 @@ export type ProjectFormDTO = ProjectDTO;
 export type ProjectData = ProjectDTO;
 export type EVMMetrics = EvmData;
 export type PERTAnalysis = PertAnalysis;
+
+// Inspection status for workflow components
+export type InspectionStatus = 'pending' | 'scheduled' | 'in_progress' | 'completed' | 'approved' | 'rejected';
+
+// Project with payments for workflow inspection
+export interface ProjectWithPayments extends ProjectDTO {
+  inspections?: Array<{
+    id: string;
+    date: string;
+    status: InspectionStatus;
+    inspector?: string;
+    progress_at_inspection?: number;
+    comments?: string;
+  }>;
+  payments?: PaymentDTO[];
+}

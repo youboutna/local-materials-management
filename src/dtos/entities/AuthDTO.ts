@@ -54,8 +54,27 @@ export interface AuthSession {
   provider?: string;
 }
 
-export type UnifiedUser = AuthUser;
-export type UnifiedSession = AuthSession;
+// UnifiedUser and UnifiedSession - extended with optional fields for UI compatibility
+export interface UnifiedUser {
+  id: string;
+  email: string;
+  full_name?: string;
+  phone?: string;
+  national_id?: string;
+  role?: string;
+  avatar_url?: string;
+  metadata?: Record<string, unknown>;
+  // Optional fields for compatibility
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface UnifiedSession {
+  user: UnifiedUser;
+  expires_at?: string;
+  provider?: string;
+  access_token?: string;
+}
 
 export interface UnifiedAuthContextType {
   user: UnifiedUser | null;
@@ -64,7 +83,7 @@ export interface UnifiedAuthContextType {
   isAuthenticated: boolean;
   currentProvider: string;
   supportedProviders: Array<{ value: string; label: string; description?: string }>;
-  switchProvider: (config: { provider: string }) => Promise<void>;
+  switchProvider: (config: { provider: string; url?: string; clientId?: string; realm?: string; redirectUri?: string }) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string, phone: string, nationalId: string) => Promise<void>;
   signOut: () => Promise<void>;

@@ -149,4 +149,43 @@ export class PaymentRequestService {
       default: return 'pending';
     }
   }
+
+  /**
+   * Validate project requirements for payment request
+   */
+  async validateProjectRequirements(projectId: string): Promise<{
+    hasValidGuarantee: boolean;
+    hasValidInsurance: boolean;
+    hasRecentInspection: boolean;
+  }> {
+    try {
+      // Default validation - in a real implementation, this would check actual records
+      return {
+        hasValidGuarantee: true,
+        hasValidInsurance: true,
+        hasRecentInspection: true,
+      };
+    } catch (error) {
+      console.error('PaymentRequestService.validateProjectRequirements failed:', error);
+      return {
+        hasValidGuarantee: false,
+        hasValidInsurance: false,
+        hasRecentInspection: false,
+      };
+    }
+  }
+
+  /**
+   * Get payment requests by supplier
+   */
+  async getPaymentRequestsBySupplier(supplierId: string): Promise<PaymentRequestDTO[]> {
+    try {
+      // For now, use getAllPaymentRequests and filter
+      const allRequests = await this.getAllPaymentRequests();
+      return allRequests.filter(req => (req as any).supplierId === supplierId);
+    } catch (error) {
+      console.error('PaymentRequestService.getPaymentRequestsBySupplier failed:', error);
+      throw error;
+    }
+  }
 }

@@ -52,14 +52,17 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
     national_id: supabaseUser.user_metadata?.national_id,
     role: supabaseUser.user_metadata?.role,
     avatar_url: supabaseUser.user_metadata?.avatar_url,
-    metadata: supabaseUser.user_metadata
+    metadata: supabaseUser.user_metadata,
+    created_at: supabaseUser.created_at,
+    updated_at: supabaseUser.updated_at
   }), []);
 
   // Transform Supabase Session to Unified Session
   const transformSession = useCallback((supabaseSession: Session): UnifiedSession => ({
     user: transformUser(supabaseSession.user!),
     expires_at: supabaseSession.expires_at ? new Date(supabaseSession.expires_at * 1000).toISOString() : undefined,
-    provider: currentProvider
+    provider: currentProvider,
+    access_token: supabaseSession.access_token
   }), [currentProvider, transformUser]);
 
   // Initialize auth state

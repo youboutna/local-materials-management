@@ -157,10 +157,10 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
     }
   };
 
-  const validatePaymentRequest = async (projectId: string): Promise<ValidationResult> => {
+  const validatePaymentRequest = async (projectIdToValidate: string): Promise<ValidationResult> => {
     try {
-      // Use PaymentRequestService for validation instead of direct Supabase calls
-      const validation = await paymentRequestService.validateProjectRequirements(projectId);
+      // Use PaymentRequestService for validation
+      const validation = await paymentRequestService.validateProjectRequirements(projectIdToValidate);
       return {
         hasValidGuarantee: validation.hasValidGuarantee,
         hasValidInsurance: validation.hasValidInsurance,
