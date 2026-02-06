@@ -6,11 +6,16 @@ import MaterialFormSection from '@/components/MaterialFormSection';
 import ProjectDocumentUpload from '@/components/project/ProjectDocumentUpload';
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 
+// Extended form data interface for resource step with snake_case fields
+interface ResourcesFormData extends Partial<ProjectDTO> {
+  team_size?: number;
+}
+
 interface ResourcesMaterialsStepProps {
   selectedMaterials: Array<{ materialId: string; quantity: number }>;
   onMaterialsChange: (materials: Array<{ materialId: string; quantity: number }>) => void;
-  projectData?: ProjectDTO;
-  onUpdate?: (data: Partial<ProjectDTO>) => void;
+  projectData?: ResourcesFormData;
+  onUpdate?: (data: Partial<ResourcesFormData>) => void;
   isEditing?: boolean;
   currentPhaseId?: string;
   currentStepId?: string;
@@ -120,8 +125,8 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
                   type="number" 
                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="Nombre de jours"
-                  value={projectData?.team_size || 0}
-                  onChange={(e) => onUpdate?.({ team_size: parseInt(e.target.value) })}
+                  value={String(projectData?.team_size || projectData?.teamSize || 0)}
+                  onChange={(e) => onUpdate?.({ team_size: parseInt(e.target.value), teamSize: parseInt(e.target.value) })}
                 />
               </div>
             </div>

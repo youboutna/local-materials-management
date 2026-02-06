@@ -1,5 +1,5 @@
 import React from "react";
-import { ProjectData } from "@/dtos/entities/ProjectDTO";
+import { ProjectDTO, ProjectStatus } from "@/dtos/entities/ProjectDTO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,9 +7,14 @@ import { MapPin, Calendar, Users, DollarSign } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface ProjectsGridProps {
-  projects: ProjectData[];
+  projects: ProjectDTO[];
   isLoading?: boolean;
 }
+
+// Helper to check if status is "en cours" (legacy or camelCase)
+const isActiveStatus = (status: string): boolean => {
+  return status === "en cours" || status === "enCours" || status === "active";
+};
 
 const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects, isLoading }) => {
   if (isLoading) {
@@ -46,7 +51,7 @@ const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects, isLoading }) => {
                 </CardTitle>
                 <Badge
                   variant={
-                    project.status === "en cours" ? "default" : "secondary"
+                    isActiveStatus(project.status) ? "default" : "secondary"
                   }
                   className="flex-shrink-0 whitespace-nowrap"
                 >

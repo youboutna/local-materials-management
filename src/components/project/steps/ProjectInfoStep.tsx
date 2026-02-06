@@ -15,18 +15,30 @@ import { Progress } from "@/components/ui/progress";
 // Import entity DTOs (following "similitude des voisins le plus proche")
 import { ProjectDTO, ProjectStatus } from "@/dtos/entities/ProjectDTO";
 
+// Extended form data interface with snake_case legacy fields for DB compatibility
+interface ProjectFormData extends Partial<ProjectDTO> {
+  // Legacy snake_case fields (for backward compatibility)
+  project_reference?: string;
+  team_lead?: string;
+  technical_responsible?: string;
+  site_manager?: string;
+  primary_supplier?: string;
+  budget_approved?: boolean;
+  market_type?: string;
+  selection_mode?: string;
+  financing_source?: string;
+  start_date?: string;
+  end_date?: string;
+  team_size?: number;
+  allows_initial_payment?: boolean;
+  initial_payment_percentage?: number;
+}
+
 interface ProjectInfoStepProps {
-  formData: ProjectDTO & {
-    project_reference?: string;
-    team_lead?: string;
-    technical_responsible?: string;
-    site_manager?: string;
-    primary_supplier?: string;
-    budget_approved?: boolean;
-  };
-  onUpdate: (data: Partial<ProjectDTO>) => void;
+  formData: ProjectFormData;
+  onUpdate: (data: Partial<ProjectFormData>) => void;
   isEditing?: boolean;
-  baseData?: Partial<ProjectDTO>;
+  baseData?: Partial<ProjectFormData>;
 }
 
 const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
@@ -35,13 +47,13 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
   isEditing = false,
   baseData = {},
 }) => {
-  const statusOptions = [
-    { value: "en cours", label: "En cours" },
-    { value: "terminé", label: "Terminé" },
-    { value: "en attente", label: "En attente" },
-    { value: "suspendu", label: "Suspendu" },
-    { value: "annulé", label: "Annulé" },
-  ] as const;
+  const statusOptions: Array<{ value: ProjectStatus; label: string }> = [
+    { value: "enCours" as ProjectStatus, label: "En cours" },
+    { value: "termine" as ProjectStatus, label: "Terminé" },
+    { value: "enAttente" as ProjectStatus, label: "En attente" },
+    { value: "suspendu" as ProjectStatus, label: "Suspendu" },
+    { value: "annule" as ProjectStatus, label: "Annulé" },
+  ];
   return (
     <Card>
       <CardHeader>
@@ -197,8 +209,8 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 Mode de sélection
               </label>
               <Select
-                value={formData.selection_mode ?? undefined}
-                onValueChange={(value) => onUpdate({ selection_mode: value })}
+                value={formData.selection_mode || formData.selectionMode || ""}
+                onValueChange={(value) => onUpdate({ selection_mode: value, selectionMode: value })}
               >
                 <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                   <SelectValue placeholder="Sélectionner le mode" />
@@ -227,8 +239,8 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 Source de financement
               </label>
               <Select
-                value={formData.financing_source ?? undefined}
-                onValueChange={(value) => onUpdate({ financing_source: value })}
+                value={formData.financing_source || formData.financingSource || ""}
+                onValueChange={(value) => onUpdate({ financing_source: value, financingSource: value })}
               >
                 <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                   <SelectValue placeholder="Sélectionner la source" />
@@ -265,7 +277,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
               <input
                 type="date"
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                value={formData.start_date || formData.startDate || ""}
+                value={String(formData.start_date || formData.startDate || "")}
                 onChange={(e) =>
                   onUpdate({
                     start_date: e.target.value,
@@ -281,7 +293,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
               <input
                 type="date"
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                value={formData.end_date || formData.endDate || ""}
+                value={String(formData.end_date || formData.endDate || "")}
                 onChange={(e) =>
                   onUpdate({
                     end_date: e.target.value,
@@ -302,10 +314,14 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="10"
                 min="1"
-                value={formData.team_size || ""}
+                value={formData.team_size || formData.teamSize || ""}
                 onChange={(e) =>
                   onUpdate({
                     team_size:
+                      e.target.value === ""
+                        ? undefined
+                        : parseInt(e.target.value),
+                    teamSize:
                       e.target.value === ""
                         ? undefined
                         : parseInt(e.target.value),
@@ -318,26 +334,23 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 Statut du projet
               </label>
               <Select
-                value={formData.status || "en cours"}
-                onValueChange={(value) => onUpdate({ status: value })}
+                value={formData.status || "enCours"}
+                onValueChange={(value) => onUpdate({ status: value as ProjectStatus })}
               >
                 <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                   <SelectValue placeholder="Sélectionner le statut" />
                 </SelectTrigger>
                 <SelectContent side="bottom" align="start">
-                  {/* <SelectItem value="planning" className="cursor-pointer">
-                    En planification
-                  </SelectItem> */}
-                  <SelectItem value="en cours" className="cursor-pointer">
+                  <SelectItem value="enCours" className="cursor-pointer">
                     En cours
                   </SelectItem>
                   <SelectItem value="suspendu" className="cursor-pointer">
                     Suspendu
                   </SelectItem>
-                  <SelectItem value="terminé" className="cursor-pointer">
+                  <SelectItem value="termine" className="cursor-pointer">
                     Terminé
                   </SelectItem>
-                  <SelectItem value="annulé" className="cursor-pointer">
+                  <SelectItem value="annule" className="cursor-pointer">
                     Annulé
                   </SelectItem>
                 </SelectContent>
@@ -350,7 +363,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
               type="checkbox"
               id="allowsInitialPayment"
               className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-              checked={formData.allows_initial_payment || false}
+              checked={Boolean(formData.allows_initial_payment)}
               onChange={(e) =>
                 onUpdate({ allows_initial_payment: e.target.checked })
               }
@@ -363,7 +376,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
             </label>
           </div>
 
-          {formData.allows_initial_payment && (
+          {Boolean(formData.allows_initial_payment) && (
             <div>
               <label className="block text-sm font-medium mb-2">
                 Pourcentage de paiement initial (%)
@@ -374,7 +387,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 placeholder="15"
                 min="0"
                 max="100"
-                value={formData.initial_payment_percentage || ""}
+                value={String(formData.initial_payment_percentage || "")}
                 onChange={(e) =>
                   onUpdate({
                     initial_payment_percentage:

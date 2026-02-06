@@ -418,7 +418,7 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
             <CardContent>
               {step.documents && step.documents.length > 0 ? (
                 <div className="space-y-2">
-                  {step.documents.map((doc, index) => (
+                  {(step.documents as Array<{ id?: string; name?: string; title?: string }>).map((doc, index) => (
                     <div 
                       key={doc.id || index}
                       className="flex items-center gap-3 p-2 rounded-md border hover:bg-muted/50"

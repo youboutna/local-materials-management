@@ -8,7 +8,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { ProjectService } from '@/application/services/ProjectService';
-import { ProjectFormDTO } from "@/types/dto";
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { CreateProjectDTO, ProjectStatus } from "@/dtos/entities/ProjectDTO";
 import { ImportOptions, ImportResult } from "@/types/project";
 import {
   AlertTriangle,
@@ -23,6 +24,13 @@ import React, { useRef, useState } from "react";
 import * as XLSX from "xlsx";
 
 type ImportMode = "create" | "update" | "patch";
+
+// Local type for import form data
+interface ImportProjectData extends Partial<CreateProjectDTO> {
+  id?: string;
+  phases?: any[];
+  plannedPhases?: any[];
+}
 
 const IMPORT_OPTIONS: ImportOptions = {
   maxFileSize: 10 * 1024 * 1024, // 10MB
@@ -49,7 +57,7 @@ export default function ProjectFileImporter({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
-  const projectService = new ProjectService();
+  const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return "0 Bytes";
@@ -172,13 +180,15 @@ export default function ProjectFileImporter({
     }
   };
 
-  const transformToProjectData = (item: any): ProjectFormDTO => {
+  const transformToProjectData = (item: any): ImportProjectData => {
     // Map des statuts vers les valeurs autorisées
-    const statusMap: { [key: string]: string } = {
-      "en construction": "en cours",
-      "en clôture": "en cours",
-      "en conception": "en attente",
-      planifié: "en attente",
+    const statusMap: { [key: string]: ProjectStatus } = {
+      "en construction": "enCours",
+      "en clôture": "enCours",
+      "en conception": "enAttente",
+      planifié: "enAttente",
+      "en cours": "enCours",
+      "en attente": "enAttente",
     };
 
     const rawStatus = item.status || "en cours";
