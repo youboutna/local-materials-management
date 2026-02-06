@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { InspectionService } from '@/application/services/InspectionService';
 
-interface AuditEntry {
+export interface AuditEntry {
   id: string;
   date: string;
   status: string;
