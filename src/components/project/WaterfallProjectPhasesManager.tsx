@@ -36,7 +36,7 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
   onProjectChange
 }) => {
   const [activeTab, setActiveTab] = useState('phases');
-  const { projects, loading } = useProjects();
+  const { projects, isLoading: loading } = useProjects();
   const [phases, setPhases] = useState<any[]>([]);
   const [milestones, setMilestones] = useState<any[]>([]);
   const [isEditingPhase, setIsEditingPhase] = useState(false);

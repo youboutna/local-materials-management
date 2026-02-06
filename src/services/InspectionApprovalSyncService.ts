@@ -424,3 +424,4 @@ export class InspectionApprovalSyncService {
 }
 
 export const inspectionApprovalSyncService = new InspectionApprovalSyncService();
+export const getInspectionApprovalSyncService = () => inspectionApprovalSyncService;

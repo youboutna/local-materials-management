@@ -155,7 +155,7 @@ export function PaymentFormWithContext({
             recipient_id: contractorId,
             title: 'Paiement effectué',
             message: `Un paiement de ${amount.toLocaleString()} MRU a été effectué par ${paymentMethodLabel} - Projet: ${context?.project.title || projectId}`,
-            type: 'payment_processed',
+            type: 'success',
             related_id: projectId,
             metadata: {
               project_id: projectId,

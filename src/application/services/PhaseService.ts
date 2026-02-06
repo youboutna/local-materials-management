@@ -15,6 +15,8 @@ type UpdatePhaseRequestDto = UpdatePhaseDTO;
 type PhaseTaskDTO = PhaseStepDTO;
 
 // Service DTOs for data exchange
+// Local PhaseStatus that includes 'not_started' for UI compatibility
+export type LocalPhaseStatus = 'pending' | 'in_progress' | 'completed' | 'blocked' | 'delayed' | 'not_started';
 
 // Legacy interface - kept for backward compatibility
 export interface PhaseData {
@@ -27,7 +29,7 @@ export interface PhaseData {
   startDate: string;
   endDate: string;
   estimatedDuration: number;
-  status: PhaseStatus;
+  status: LocalPhaseStatus;
   budget: number;
   actualCost: number;
   progress: number;
@@ -55,7 +57,7 @@ export interface CustomPhase {
   humanResources?: Array<{ roleId: string; quantity: number; role?: string }>;
   suppliers?: Array<{ supplierId: string; name?: string; contact?: string }>;
   location?: string;
-  status: PhaseStatus;
+  status: LocalPhaseStatus;
   progress: number;
 }
 

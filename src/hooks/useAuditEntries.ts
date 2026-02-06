@@ -20,6 +20,10 @@ export interface AuditEntry {
   createdAt?: string;
   created_at?: string;
   comments?: string | null;
+  // Additional fields for backward compatibility
+  summary?: string;
+  message?: string;
+  action?: string;
 }
 
 const fetchAuditEntries = async (
