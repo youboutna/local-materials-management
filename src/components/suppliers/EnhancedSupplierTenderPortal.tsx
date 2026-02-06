@@ -14,6 +14,7 @@ import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { useAuth } from '@/hooks/hexagonal';
 import { TenderService } from '@/application/services/TenderService';
 import { TenderSubmissionService, UploadedDocument } from '@/services/TenderSubmissionService';
+import { supabase } from '@/integrations/supabase/client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Calculator,
@@ -121,6 +122,7 @@ const EnhancedSupplierTenderPortal = () => {
   const [submissionStep, setSubmissionStep] = useState<SubmissionStep>('idle');
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const [submissionError, setSubmissionError] = useState<string>('');
+  const [uploading, setUploading] = useState(false);
   const [submissionData, setSubmissionData] = useState({
     notes: ''
   });
@@ -144,7 +146,12 @@ const EnhancedSupplierTenderPortal = () => {
   const { data: publicTenders, isLoading } = useQuery({
     queryKey: ['public-tenders'],
     queryFn: async () => {
-      return await TenderService.getPublishedTendersForSubmission() as PublicTender[];
+      const tenders = await TenderService.getPublishedTendersForSubmission();
+      return tenders.map(t => ({
+        ...t,
+        created_at: t.createdAt || new Date().toISOString(),
+        updated_at: t.updatedAt || new Date().toISOString()
+      })) as unknown as PublicTender[];
     }
   });
 
@@ -174,12 +181,12 @@ const EnhancedSupplierTenderPortal = () => {
     queryFn: async () => {
       if (!selectedTender?.id) return null;
       
-      const { data: user } = await getUser();
-      if (!user.user) return null;
+      const user = await getUser();
+      if (!user?.id) return null;
 
       return await TenderSubmissionService.getUserSubmission(
         selectedTender.id,
-        user.user.id
+        user.id
       );
     },
     enabled: !!selectedTender?.id
@@ -208,14 +215,14 @@ const EnhancedSupplierTenderPortal = () => {
         }
       }
       
-      const { data: user } = await getUser();
-      if (!user.user) throw new Error('Utilisateur non connecté');
+      const user = await getUser();
+      if (!user?.id) throw new Error('Utilisateur non connecté');
 
       // Get user profile for supplier info
       const { data: profile } = await supabase
         .from('profiles')
         .select('full_name')
-        .eq('id', user.user.id)
+        .eq('id', user.id)
         .single();
 
       // Prepare documents for upload
@@ -232,9 +239,9 @@ const EnhancedSupplierTenderPortal = () => {
       return await TenderSubmissionService.createSubmissionWithDocuments(
         {
           tender_id: selectedTender.id,
-          user_id: user.user.id,
+          user_id: user.id,
           supplier_name: profile?.full_name || 'Fournisseur',
-          supplier_email: user.user.email || '',
+          supplier_email: user.email || '',
           submission_date: new Date().toISOString(),
           status: 'submitted'
         },

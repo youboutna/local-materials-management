@@ -17,6 +17,18 @@ export class InspectionService {
     this.repository = repository || RepositoryFactory.getInspectionRepository();
   }
 
+  // ============= STATIC METHODS FOR BACKWARD COMPATIBILITY =============
+  
+  /**
+   * Static: Update inspection
+   */
+  static async updateInspection(id: string, updates: Partial<InspectionExecutionDataDTO>): Promise<Inspection> {
+    const service = new InspectionService();
+    return service.updateInspection(id, updates);
+  }
+
+  // ============= END STATIC METHODS =============
+
   /**
    * Get all inspections
    */

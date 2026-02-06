@@ -29,7 +29,12 @@ export enum DocumentType {
   SCHEMA = 'schema',
   CHECKLIST = 'checklist',
   FORM = 'form',
-  TEMPLATE = 'template'
+  TEMPLATE = 'template',
+  // Additional types for inspection and tender workflows
+  PV = 'pv',
+  SERVICE_REPORT = 'service_report',
+  TENDER_DOCUMENT = 'tender_document',
+  SUPPORTING_DOCUMENT = 'supporting_document'
 }
 
 /**

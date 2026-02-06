@@ -279,11 +279,11 @@ const SupplierSubmissionDashboard = () => {
                                   {submission.tender?.title || 'Appel d\'offres'}
                                 </h4>
                                 <p className="text-sm text-muted-foreground mb-2">
-                                  {submission.supplier_name}
+                                  {submission.supplierName}
                                 </p>
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                   <Calendar className="h-3 w-3" />
-                                  Soumis {formatDistanceToNow(new Date(submission.submission_date), { addSuffix: true, locale: fr })}
+                                  Soumis {submission.submissionDate ? formatDistanceToNow(new Date(submission.submissionDate), { addSuffix: true, locale: fr }) : 'récemment'}
                                 </div>
                               </div>
                               <Badge className={getStatusColor(submission.status)}>
@@ -338,13 +338,13 @@ const SupplierSubmissionDashboard = () => {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Date:</span>
-                          <span>{new Date(selectedSubmission.submission_date).toLocaleDateString('fr-FR')}</span>
+                          <span>{selectedSubmission.submissionDate ? new Date(selectedSubmission.submissionDate).toLocaleDateString('fr-FR') : 'N/A'}</span>
                         </div>
-                        {selectedSubmission.secret_code && (
+                        {selectedSubmission.secretCode && (
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Code secret:</span>
                             <code className="px-2 py-1 bg-muted rounded text-xs font-mono">
-                              {selectedSubmission.secret_code}
+                              {selectedSubmission.secretCode}
                             </code>
                           </div>
                         )}
@@ -361,7 +361,7 @@ const SupplierSubmissionDashboard = () => {
                             <div key={doc.id} className="border rounded-lg p-3 hover:bg-muted/50 transition-colors">
                               <div className="flex items-start justify-between mb-2">
                                 <div className="flex-1">
-                                  <p className="text-sm font-medium">{doc.document?.title || doc.document?.file_name}</p>
+                                  <p className="text-sm font-medium">{doc.document?.title || doc.document?.fileName}</p>
                                   <p className="text-xs text-muted-foreground capitalize">{doc.category} - {doc.subcategory}</p>
                                 </div>
                                 {validation && (
@@ -377,10 +377,10 @@ const SupplierSubmissionDashboard = () => {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => doc.document?.file_url && handleDownloadDocument(doc.document.file_url, doc.document.file_name)}
+                                  onClick={() => doc.document?.fileUrl && handleDownloadDocument(doc.document.fileUrl, doc.document.fileName || 'document')}
                                 >
                                   <Download className="h-3 w-3 mr-1" />
-                                  TÃ©lÃ©charger
+                                  Télécharger
                                 </Button>
                               </div>
                             </div>
