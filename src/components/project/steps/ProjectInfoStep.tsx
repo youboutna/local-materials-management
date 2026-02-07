@@ -15,30 +15,11 @@ import { Progress } from "@/components/ui/progress";
 // Import entity DTOs (following "similitude des voisins le plus proche")
 import { ProjectDTO, ProjectStatus } from "@/dtos/entities/ProjectDTO";
 
-// Extended form data interface with snake_case legacy fields for DB compatibility
-interface ProjectFormData extends Partial<ProjectDTO> {
-  // Legacy snake_case fields (for backward compatibility)
-  project_reference?: string;
-  team_lead?: string;
-  technical_responsible?: string;
-  site_manager?: string;
-  primary_supplier?: string;
-  budget_approved?: boolean;
-  market_type?: string;
-  selection_mode?: string;
-  financing_source?: string;
-  start_date?: string;
-  end_date?: string;
-  team_size?: number;
-  allows_initial_payment?: boolean;
-  initial_payment_percentage?: number;
-}
-
 interface ProjectInfoStepProps {
-  formData: ProjectFormData;
-  onUpdate: (data: Partial<ProjectFormData>) => void;
+  formData: Partial<ProjectDTO>;
+  onUpdate: (data: Partial<ProjectDTO>) => void;
   isEditing?: boolean;
-  baseData?: Partial<ProjectFormData>;
+  baseData?: Partial<ProjectDTO>;
 }
 
 const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
@@ -86,9 +67,9 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 type="text"
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="REF-2025-001"
-                value={formData.project_reference || ""}
+                value={formData.projectReference || ""}
                 onChange={(e) =>
-                  onUpdate({ project_reference: e.target.value })
+                  onUpdate({ projectReference: e.target.value })
                 }
               />
             </div>
@@ -165,8 +146,8 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 Type de marché *
               </label>
               <Select
-                value={(formData as any).market_type ?? ''}
-                onValueChange={(value) => onUpdate({ market_type: value } as any)}
+                value={formData.marketType ?? ''}
+                onValueChange={(value) => onUpdate({ marketType: value })}
               >
                 <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                   <SelectValue placeholder="Sélectionner le type de marché" />
@@ -209,8 +190,8 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 Mode de sélection
               </label>
               <Select
-                value={formData.selection_mode || formData.selectionMode || ""}
-                onValueChange={(value) => onUpdate({ selection_mode: value, selectionMode: value })}
+                value={formData.selectionMode || ""}
+                onValueChange={(value) => onUpdate({ selectionMode: value })}
               >
                 <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                   <SelectValue placeholder="Sélectionner le mode" />
@@ -239,8 +220,8 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 Source de financement
               </label>
               <Select
-                value={formData.financing_source || formData.financingSource || ""}
-                onValueChange={(value) => onUpdate({ financing_source: value, financingSource: value })}
+                value={formData.financingSource || ""}
+                onValueChange={(value) => onUpdate({ financingSource: value })}
               >
                 <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                   <SelectValue placeholder="Sélectionner la source" />
@@ -277,10 +258,9 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
               <input
                 type="date"
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                value={String(formData.start_date || formData.startDate || "")}
+                value={String(formData.startDate || "")}
                 onChange={(e) =>
                   onUpdate({
-                    start_date: e.target.value,
                     startDate: e.target.value,
                   })
                 }
@@ -293,10 +273,9 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
               <input
                 type="date"
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                value={String(formData.end_date || formData.endDate || "")}
+                value={String(formData.endDate || "")}
                 onChange={(e) =>
                   onUpdate({
-                    end_date: e.target.value,
                     endDate: e.target.value,
                   })
                 }
@@ -314,13 +293,9 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="10"
                 min="1"
-                value={formData.team_size || formData.teamSize || ""}
+                value={formData.teamSize || ""}
                 onChange={(e) =>
                   onUpdate({
-                    team_size:
-                      e.target.value === ""
-                        ? undefined
-                        : parseInt(e.target.value),
                     teamSize:
                       e.target.value === ""
                         ? undefined
@@ -363,9 +338,9 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
               type="checkbox"
               id="allowsInitialPayment"
               className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-              checked={Boolean(formData.allows_initial_payment)}
+              checked={Boolean(formData.allowsInitialPayment)}
               onChange={(e) =>
-                onUpdate({ allows_initial_payment: e.target.checked })
+                onUpdate({ allowsInitialPayment: e.target.checked })
               }
             />
             <label
@@ -376,7 +351,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
             </label>
           </div>
 
-          {Boolean(formData.allows_initial_payment) && (
+          {Boolean(formData.allowsInitialPayment) && (
             <div>
               <label className="block text-sm font-medium mb-2">
                 Pourcentage de paiement initial (%)
@@ -387,10 +362,10 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 placeholder="15"
                 min="0"
                 max="100"
-                value={String(formData.initial_payment_percentage || "")}
+                value={String(formData.initialPaymentPercentage || "")}
                 onChange={(e) =>
                   onUpdate({
-                    initial_payment_percentage:
+                    initialPaymentPercentage:
                       e.target.value === ""
                         ? undefined
                         : parseFloat(e.target.value),

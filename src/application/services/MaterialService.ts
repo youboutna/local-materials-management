@@ -62,11 +62,11 @@ interface MaterialWithPhase {
 }
 
 // Valid material categories
-const VALID_MATERIAL_CATEGORIES = ['building', 'electrical', 'plumbing', 'hvac', 'other'] as const;
+const VALID_MATERIAL_CATEGORIES = ['construction', 'building', 'pierre', 'electrical', 'plumbing', 'finishing', 'equipment', 'safety', 'tools', 'other'] as const;
 
 // Enhanced type guard for MaterialCategory
-function isMaterialCategory(category: string): category is MaterialCategory {
-  return VALID_MATERIAL_CATEGORIES.includes(category as any);
+function isMaterialCategory(category: string): category is 'construction' | 'building' | 'pierre' | 'electrical' | 'plumbing' | 'finishing' | 'equipment' | 'safety' | 'tools' | 'other' {
+  return VALID_MATERIAL_CATEGORIES.includes(category as MaterialCategory);
 }
 
 export class MaterialService {
@@ -450,9 +450,9 @@ export class MaterialService {
       name: (result.name as string) || '',
       description: (result.description as string) || '',
       type: (result.type as string) || 'general',
-      category: MaterialCategoryDTO.RAW_MATERIAL as any,
-      status: MaterialStatusDTO.AVAILABLE as any,
-      unit: MaterialUnitDTO.PIECES as any,
+      category: MaterialCategoryDTO.RAW_MATERIAL,
+      status: MaterialStatusDTO.AVAILABLE,
+      unit: MaterialUnitDTO.PIECES,
       quantity: (result.availableQuantity as number) || (result.quantity as number) || 0,
       pricePerUnit: (result.pricePerUnit as number) || 0,
       supplierId: result.supplierId as string,

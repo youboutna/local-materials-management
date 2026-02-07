@@ -1,7 +1,7 @@
 /**
  * Service: ProjectWorkflowService
  * Gère les workflows de création et modification de projets
- * SIMPLIFIED VERSION - Using 'any' to bypass strict type checks during migration
+ * Following hexagonal architecture and PROMPT.md rules
  */
 
 import { Project } from '@/domain/entities/Project';
@@ -9,11 +9,12 @@ import type { IProjectRepository } from '@/domain/repositories/IProjectRepositor
 import type { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import type { IRiskRepository } from '@/domain/repositories/IRiskRepository';
 import type { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
-import { WorkflowStep } from '@/dtos/workflows/ProjectWorkflowDTOs';
-import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+import { WorkflowStep, WorkflowState, WorkflowTransition, ProjectWorkflowData } from '@/dtos/workflows/ProjectWorkflowDTOs';
+import { ProjectDTO, CreateProjectDTO, UpdateProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { v4 as uuidv4 } from 'uuid';
 import { Risk, RiskStatus } from '@/domain/entities/Risk';
+import { ProjectTransformer } from '@/dtos/transforms/ProjectTransformer';
 
 export enum WorkflowMode {
   CREATE = 'create',
@@ -50,43 +51,103 @@ export class ProjectWorkflowService {
     return this.getWorkflowSteps().find(s => s.order === order);
   }
 
-  async initializeEditWorkflow(projectId: string): Promise<any> {
+  async initializeEditWorkflow(projectId: string): Promise<WorkflowState> {
     try {
       const project = await this.projectRepository.findById(projectId);
       if (!project) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Project not found');
       }
+      
+      const projectDTO = ProjectTransformer.toDTO(project);
+      
       return {
-        projectId,
-        currentStep: 1,
-        totalSteps: this.getWorkflowSteps().length,
-        isDraft: String(project.status) === 'draft',
-        isComplete: false,
-        originalData: project,
-        modifiedFields: []
+        currentStep: 'project-info',
+        completedSteps: [],
+        availableTransitions: this.getAvailableTransitions('project-info'),
+        validation: {
+          isValid: true,
+          errors: []
+        }
       };
     } catch (error) {
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to initialize workflow');
     }
   }
 
-  async saveWorkflowData(data: any): Promise<any> {
-    const projectData = data.projectData || data.project || data;
-    let savedProjectId = projectData?.id || data.projectId;
+  async saveWorkflowData(data: ProjectWorkflowData): Promise<ProjectWorkflowData> {
+    try {
+      const projectData = data.projectData;
+      let savedProjectId = projectData?.id;
 
-    if (!savedProjectId && projectData?.title) {
-      const newProject = await this.projectRepository.create({
-        title: projectData.title,
-        description: projectData.description,
-        status: 'planifie' as any,
-        location: projectData.location,
-        budget: projectData.budget,
-        progress: 0
-      });
-      savedProjectId = newProject.id;
+      if (!savedProjectId && projectData?.title) {
+        // Create new project with all fields
+        const createRequest: CreateProjectDTO = {
+          title: projectData.title,
+          description: projectData.description || '',
+          location: projectData.location || '',
+          budget: projectData.budget || 0,
+          startDate: projectData.startDate || new Date().toISOString().split('T')[0],
+          endDate: projectData.endDate,
+          status: "planifié" as const,
+          thumbnail: projectData.thumbnail || '',
+          progress: 0,
+          teamSize: projectData.teamSize || 1,
+          // Additional fields for complete database storage
+          financingSource: projectData.financingSource,
+          marketType: projectData.marketType,
+          selectionMode: projectData.selectionMode,
+          projectReference: projectData.projectReference,
+          mainContractor: projectData.mainContractor,
+          allowsInitialPayment: projectData.allowsInitialPayment,
+          initialPaymentPercentage: projectData.initialPaymentPercentage,
+          currentPhase: projectData.currentPhase,
+          currentStage: projectData.currentStage,
+          coordinates: projectData.coordinates
+        };
+
+        const projectEntity = ProjectTransformer.fromCreateDTOToEntity(createRequest);
+        const createdProject = await this.projectRepository.create(projectEntity);
+        savedProjectId = createdProject.id;
+      } else if (savedProjectId) {
+        // Update existing project with all fields
+        const updateRequest: UpdateProjectDTO = {
+          id: savedProjectId,
+          title: projectData.title,
+          description: projectData.description,
+          location: projectData.location,
+          budget: projectData.budget,
+          startDate: projectData.startDate,
+          endDate: projectData.endDate,
+          teamSize: projectData.teamSize,
+          thumbnail: projectData.thumbnail,
+          // Additional fields for complete database storage
+          financingSource: projectData.financingSource,
+          marketType: projectData.marketType,
+          selectionMode: projectData.selectionMode,
+          projectReference: projectData.projectReference,
+          mainContractor: projectData.mainContractor,
+          allowsInitialPayment: projectData.allowsInitialPayment,
+          initialPaymentPercentage: projectData.initialPaymentPercentage,
+          currentPhase: projectData.currentPhase,
+          currentStage: projectData.currentStage,
+          coordinates: projectData.coordinates
+        };
+
+        const projectEntity = ProjectTransformer.fromUpdateDTOToEntity(updateRequest);
+        await this.projectRepository.update(savedProjectId, projectEntity);
+      }
+
+      return {
+        ...data,
+        projectId: savedProjectId,
+        metadata: {
+          ...data.metadata,
+          lastSavedAt: new Date().toISOString()
+        }
+      };
+    } catch (error) {
+      throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to save workflow data');
     }
-
-    return { ...data, projectId: savedProjectId, metadata: { lastSavedAt: new Date().toISOString() } };
   }
 
   async completeWorkflow(data: any): Promise<any> {
@@ -97,35 +158,59 @@ export class ProjectWorkflowService {
     return Math.round((completedSteps / totalSteps) * 100);
   }
 
-  canProceedToNextStep(currentStep: number, stepData: any): boolean {
+  canProceedToNextStep(currentStep: number, stepData: ProjectWorkflowData): boolean {
     return true;
   }
 
-  async createProject(data: any): Promise<ProjectDTO> {
-    const projectData = data.projectData || data.project || data;
-    const created = await this.projectRepository.create({
+  private getAvailableTransitions(currentStepId: string): WorkflowTransition[] {
+    const steps = this.getWorkflowSteps();
+    const currentStep = steps.find(s => s.id === currentStepId);
+    
+    if (!currentStep) return [];
+    
+    const nextStep = steps.find(s => s.order === currentStep.order + 1);
+    
+    if (!nextStep) return [];
+    
+    return [{
+      fromStep: currentStepId,
+      toStep: nextStep.id,
+      condition: 'step_completed',
+      action: 'proceed_to_next'
+    }];
+  }
+
+  async createProject(data: ProjectWorkflowData): Promise<ProjectDTO> {
+    const projectData = data.projectData;
+    
+    // Create project entity with all fields for complete database storage
+    const projectEntity: Partial<Project> = {
       title: projectData?.title || 'New Project',
       description: projectData?.description,
-      status: 'planifie' as any,
+      status: 'planifié' as any,
       location: projectData?.location,
       budget: projectData?.budget || 0,
-      progress: 0
-    });
-    return {
-      id: created.id,
-      title: created.title,
-      description: created.description || '',
-      location: created.location || '',
-      budget: created.budget || 0,
-      status: 'planifie' as any,
       progress: 0,
-      startDate: new Date().toISOString(),
-      teamSize: 0,
-      thumbnail: '',
-      currency: 'XOF',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      startDate: projectData?.startDate ? new Date(projectData.startDate) : null,
+      endDate: projectData?.endDate ? new Date(projectData.endDate) : null,
+      teamSize: projectData?.teamSize || 1,
+      thumbnail: projectData?.thumbnail,
+      // Additional fields for complete database storage
+      financingSource: projectData?.financingSource,
+      marketType: projectData?.marketType,
+      selectionMode: projectData?.selectionMode,
+      projectReferenceNumber: projectData?.projectReference,
+      mainContractor: typeof projectData?.mainContractor === 'string' 
+        ? projectData.mainContractor 
+        : projectData?.mainContractor?.name || '',
+      allowsInitialPayment: projectData?.allowsInitialPayment,
+      initialAdvancePercentage: projectData?.initialPaymentPercentage,
+      currentPhase: projectData?.currentPhase,
+      currentStage: projectData?.currentStage
     };
+
+    const created = await this.projectRepository.create(projectEntity);
+    return ProjectTransformer.toDTO(created);
   }
 }
 

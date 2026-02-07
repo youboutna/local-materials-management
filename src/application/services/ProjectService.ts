@@ -11,7 +11,7 @@
  * async delete(id: string): Promise<boolean>
  */
 
-import { Project, ProjectStatus } from '@/domain/entities/Project';
+import { Project, ProjectStatus, ProjectCoordinates } from '@/domain/entities/Project';
 import { IProjectRepository, ProjectSummary } from '@/domain/repositories/IProjectRepository';
 import { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
 import { 
@@ -127,6 +127,7 @@ export class ProjectService {
     try {
       const projectData: Partial<Project> = {};
       
+      // Basic fields
       if (request.title !== undefined && request.title !== null) projectData.title = String(request.title);
       if (request.description !== undefined && request.description !== null) projectData.description = String(request.description);
       if (request.location !== undefined && request.location !== null) projectData.location = String(request.location);
@@ -136,6 +137,33 @@ export class ProjectService {
       if (request.startDate !== undefined && request.startDate !== null) projectData.startDate = new Date(String(request.startDate));
       if (request.endDate !== undefined && request.endDate !== null) projectData.endDate = new Date(String(request.endDate));
       if (request.teamSize !== undefined && request.teamSize !== null) projectData.teamSize = Number(request.teamSize);
+      
+      // Additional fields from form (using correct DTO field names)
+      if (request.thumbnail !== undefined && request.thumbnail !== null) projectData.thumbnail = String(request.thumbnail);
+      if (request.financingSource !== undefined && request.financingSource !== null) projectData.financingSource = String(request.financingSource);
+      if (request.marketType !== undefined && request.marketType !== null) projectData.marketType = String(request.marketType);
+      if (request.selectionMode !== undefined && request.selectionMode !== null) projectData.selectionMode = String(request.selectionMode);
+      if (request.projectReference !== undefined && request.projectReference !== null) projectData.projectReferenceNumber = String(request.projectReference);
+      if (request.mainContractor !== undefined && request.mainContractor !== null) projectData.mainContractor = String(request.mainContractor);
+      if (request.currentPhase !== undefined && request.currentPhase !== null) projectData.currentPhase = String(request.currentPhase);
+      if (request.currentStage !== undefined && request.currentStage !== null) projectData.currentStage = String(request.currentStage);
+      
+      // Handle coordinates (create new ProjectCoordinates object for the entity)
+      if (request.coordinates !== undefined && request.coordinates !== null) {
+        if (typeof request.coordinates === 'object' && request.coordinates.latitude && request.coordinates.longitude) {
+          // Create a new ProjectCoordinates instance
+          projectData.coordinates = new ProjectCoordinates(
+            Number(request.coordinates.latitude),
+            Number(request.coordinates.longitude)
+          );
+        }
+      } else if (request.latitude !== undefined && request.longitude !== undefined) {
+        // Handle individual latitude/longitude fields
+        projectData.coordinates = new ProjectCoordinates(
+          Number(request.latitude),
+          Number(request.longitude)
+        );
+      }
 
       const project = await this.projectRepository.update(id, projectData);
       return ProjectTransformer.toDTO(project);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,45 +26,22 @@ import {
   AlertCircle,
   Flag,
   Zap,
-  ClipboardCheck
+  ClipboardCheck,
+  Clock
 } from 'lucide-react';
-import { ConstructionPhase, ConstructionStage } from '@/types/project';
+import { ConstructionPhase, ConstructionStage, ProcurementPhase, ProcurementStage, CustomPhase, PhaseData } from '@/dtos/entities/PhaseDTO';
+import { GeneratedMilestoneDTO } from '@/dtos/entities/MilestoneDTO';
 import { useAuth } from '@/contexts/use-auth';
 import { toast } from '@/hooks/use-toast';
 import { DEV_MODE } from '@/config/constants';
 import { ReferentialType } from '@/config/referentials';
-import { referentialService } from '@/services/ReferentialService';
-import { getPhaseGeneratorService, GeneratedPhaseData } from '@/services/PhaseGeneratorService';
-import { getMilestoneGeneratorService, GeneratedMilestoneDTO } from '@/services/MilestoneGeneratorService';
+import { useConstructionPhaseHex } from '@/hooks/hexagonal/useConstructionPhaseHex';
+import { PhaseService } from '@/application/services/PhaseService';
+import { MilestoneService } from '@/application/services/MilestoneService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { referentialService } from '@/application/services/ReferentialService';
 
-// Define types for procurement phases and stages
-export type ProcurementPhase =
-  | 'planification'
-  | 'publicite'
-  | 'reception_analyse'
-  | 'attribution'
-  | 'controle_regulation';
-
-export type ProcurementStage =
-  | 'estimation_ressources'
-  | 'planification_achats'
-  | 'modalites_planification'
-  | 'publication_portail'
-  | 'diffusion_journaux'
-  | 'inscription_candidats'
-  | 'notification_opportunites'
-  | 'soumission_dossiers'
-  | 'analyse_cpmp'
-  | 'assistance_sous_commission'
-  | 'evaluation_conformite'
-  | 'selection_prix'
-  | 'choix_economique'
-  | 'publication_attribution'
-  | 'signature_marche'
-  | 'controle_cncmp'
-  | 'verification_regulier'
-  | 'regulation_armp'
-  | 'commission_disciplinaire';
+// Define types for procurement phases and stages - now imported from DTOs
 
 // Mauritanian public procurement workflow stages mapping
 export const PROCUREMENT_STAGES: {
@@ -153,58 +130,6 @@ const PROCUREMENT_PHASE_LABELS: { [key in ProcurementPhase]: string } = {
   controle_regulation: 'Contrôle & Régulation'
 };
 
-interface CustomPhase {
-  id: string;
-  name: string;
-  number: number;
-  customStages: Array<{
-    id: string;
-    name: string;
-    order: number;
-    tasks?: Array<{
-      id: string;
-      name: string;
-      description?: string;
-      estimatedDurationDays: number;
-      requiresInspection?: boolean;
-      requiresEngineerApproval?: boolean;
-      status: string;
-    }>;
-  }>;
-  description?: string;
-  startDate?: string;
-  endDate?: string;
-  budget?: number;
-  materials?: Array<{ materialId: string; quantity: number; name?: string }>;
-  humanResources?: Array<{ roleId: string; quantity: number; role?: string }>;
-  suppliers?: Array<{ supplierId: string; name?: string; contact?: string }>;
-  milestones?: GeneratedMilestoneDTO[];
-  location?: string;
-  status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
-  progress: number;
-}
-
-interface PhaseData {
-  id: string;
-  phase?: ConstructionPhase;
-  stage?: ConstructionStage;
-  customPhase?: CustomPhase;
-  title: string;
-  description: string;
-  startDate: string;
-  endDate: string;
-  estimatedDuration: number;
-  status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
-  budget: number;
-  actualCost: number;
-  progress: number;
-  materials: Array<{ materialId: string; quantity: number; name?: string }>;
-  humanResources: Array<{ roleId: string; quantity: number; role?: string }>;
-  suppliers: Array<{ supplierId: string; name?: string; contact?: string }>;
-  location: string;
-  notes?: string;
-}
-
 interface ConstructionPhaseManagerProps {
   phases: PhaseData[];
   onChange: (phases: PhaseData[]) => void;
@@ -222,17 +147,25 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 }) => {
   const navigate = useNavigate();
   const { id: paramProjectId } = useParams<{ id: string }>();
-  const projectId = propProjectId || paramProjectId;
   const { user, loading: authLoading } = useAuth();
+  
+  // Use hexagonal hook for construction phase management
+  const constructionPhaseHook = useConstructionPhaseHex(paramProjectId);
+
+  // Merge with existing phases
+  const allPhases = [...constructionPhaseHook.phases, ...phases];
+  
   const [isAddingPhase, setIsAddingPhase] = useState(false);
+  const [isGeneratingFromReferential, setIsGeneratingFromReferential] = useState(false);
+  const [selectedReferential, setSelectedReferential] = useState<ReferentialType | null>(null);
+  const projectId = propProjectId || paramProjectId;
   const [editingPhase, setEditingPhase] = useState<PhaseData | null>(null);
   const [phaseType, setPhaseType] = useState<'standard' | 'custom' | 'procurement'>('standard');
-  const [selectedReferential, setSelectedReferential] = useState<ReferentialType | null>(referentialType || null);
   const [generateMilestones, setGenerateMilestones] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   
-  const phaseGeneratorService = getPhaseGeneratorService();
-  const milestoneGeneratorService = getMilestoneGeneratorService();
+  const phaseService = useMemo(() => new PhaseService(RepositoryFactory.getPhaseRepository()), []);
+  const milestoneService = useMemo(() => new MilestoneService(RepositoryFactory.getMilestoneRepository()), []);
 
   // Authentication check - same as project forms
   const checkAuthenticationAndProceed = (action: () => void, actionName: string) => {
@@ -402,9 +335,9 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
       
       try {
         // Get summary first
-        const summary = phaseGeneratorService.getGenerationSummary(selectedReferential);
+        const summary = await referentialService.getPhasesForReferential(selectedReferential!);
         
-        if (summary.totalPhases === 0) {
+        if (summary.length === 0) {
           toast({
             title: "Aucune phase",
             description: "Ce référentiel ne contient pas de phases configurées",
@@ -414,7 +347,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
           return;
         }
 
-        const referentialPhases = referentialService.getPhasesForReferential(selectedReferential);
+        const referentialPhases = summary;
         
         // Generate phases with their steps, tasks and milestones
         const newPhases: PhaseData[] = [];
@@ -457,15 +390,14 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
           const phaseId = `ref-${Date.now()}-${phaseIndex}`;
           
           // Generate milestones for this phase if enabled
-          let phaseMilestones: GeneratedMilestoneDTO[] = [];
+          let phaseMilestones: any[] = [];
           if (generateMilestones) {
-            phaseMilestones = milestoneGeneratorService.generateMilestonesForPhase({
-              referentialType: selectedReferential,
-              phaseCode: refPhase.code,
-              phaseStartDate: startDate.toISOString().split('T')[0],
-              projectId: projectId || 'temp',
-              phaseId
-            });
+            phaseMilestones = await milestoneService.generateFromReferential(
+              projectId || 'temp',
+              phaseId,
+              refPhase.id,
+              startDate.toISOString().split('T')[0]
+            );
             totalMilestones += phaseMilestones.length;
           }
           
@@ -507,7 +439,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
             startDate: startDate.toISOString().split('T')[0],
             endDate: endDate.toISOString().split('T')[0],
             estimatedDuration: phaseDuration,
-            status: 'not_started' as const,
+            status: 'not_started',
             budget: Math.floor(projectBudget / referentialPhases.length),
             actualCost: 0,
             progress: 0,
@@ -525,7 +457,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
               startDate: startDate.toISOString().split('T')[0],
               endDate: endDate.toISOString().split('T')[0],
               budget: Math.floor(projectBudget / referentialPhases.length),
-              status: 'not_started',
+              status: 'planned',
               progress: 0,
               // Store milestones metadata for later persistence
               milestones: phaseMilestones as any
@@ -571,13 +503,51 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
     }, 'générer les phases');
   };
 
-  // Get generation preview
-  const getGenerationPreview = () => {
-    if (!selectedReferential) return null;
-    return phaseGeneratorService.getGenerationSummary(selectedReferential);
-  };
+  const [generationPreview, setGenerationPreview] = useState<any>(null);
+  const [referentialOptions, setReferentialOptions] = useState<any[]>([]);
+  const [generationSummary, setGenerationSummary] = useState<any>(null);
 
-  const generationPreview = getGenerationPreview();
+  // Load referential options when component mounts
+  useEffect(() => {
+    const loadReferentialOptions = async () => {
+      try {
+        const options = await referentialService.getReferentialOptions();
+        setReferentialOptions(options);
+      } catch (error) {
+        console.error('Error loading referential options:', error);
+        setReferentialOptions([]);
+      }
+    };
+
+    loadReferentialOptions();
+  }, [referentialService]);
+
+  // Load generation preview and referential options when referential changes
+  useEffect(() => {
+    const loadPreview = async () => {
+      if (!selectedReferential) {
+        setGenerationPreview(null);
+        setGenerationSummary(null);
+        return;
+      }
+      try {
+        const [preview, options, summary] = await Promise.all([
+          referentialService.getPhasesForReferential(selectedReferential),
+          referentialService.getReferentialOptions(),
+          phaseService.getGenerationSummary(selectedReferential)
+        ]);
+        setGenerationPreview(preview);
+        setReferentialOptions(options);
+        setGenerationSummary(summary);
+      } catch (error) {
+        console.error('Error loading generation preview:', error);
+        setGenerationPreview(null);
+        setGenerationSummary(null);
+      }
+    };
+
+    loadPreview();
+  }, [selectedReferential, phaseService, referentialService]);
 
   return (
     <Card>
@@ -640,7 +610,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
                     <SelectValue placeholder="Sélectionner un référentiel" />
                   </SelectTrigger>
                   <SelectContent>
-                    {referentialService.getReferentialOptions().map(option => (
+                    {referentialOptions.map(option => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
                       </SelectItem>
@@ -673,29 +643,29 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
             </div>
             
             {/* Generation preview */}
-            {generationPreview && selectedReferential && (
+            {generationSummary && selectedReferential && (
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Building className="h-4 w-4" />
-                  {generationPreview.totalPhases} phases
+                  {generationSummary.totalPhases} phases
                 </span>
                 <span className="flex items-center gap-1">
                   <ClipboardCheck className="h-4 w-4" />
-                  {generationPreview.totalSteps} étapes
+                  {generationSummary.totalSteps} étapes
                 </span>
                 <span className="flex items-center gap-1">
                   <Package className="h-4 w-4" />
-                  {generationPreview.totalTasks} tâches
+                  {generationSummary.totalTasks} tâches
                 </span>
                 {generateMilestones && (
                   <span className="flex items-center gap-1 text-primary font-medium">
                     <Flag className="h-4 w-4" />
-                    {generationPreview.totalMilestones} jalons
+                    {generationSummary.totalMilestones} jalons
                   </span>
                 )}
                 <span className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  ~{generationPreview.estimatedDurationDays} jours
+                  <Clock className="h-4 w-4" />
+                  {generationSummary.estimatedDurationDays} jours
                 </span>
               </div>
             )}

@@ -13,6 +13,7 @@ import {
   CreateBankGuaranteeDTO,
   GetBankGuaranteesOptionsDTO
 } from '@/dtos/entities/BankGuaranteeDTO';
+import { BankGuaranteeDto } from '@/dtos/bank-guarantees/BankGuaranteeDto';
 
 /**
  * Bank Guarantee Service - Hexagonal Architecture
@@ -404,7 +405,7 @@ export class BankGuaranteeService {
   /**
    * Map repository result to DTO
    */
-  private mapToDTO(repositoryResult: any): BankGuaranteeDTO {
+  private mapToDTO(repositoryResult: BankGuaranteeDto): BankGuaranteeDTO {
     if (!repositoryResult) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Invalid repository result');
     }
@@ -437,10 +438,30 @@ export class BankGuaranteeService {
     if (error instanceof AppError) return error;
     
     console.error('BankGuaranteeService error:', error);
-    return new AppError(
-      ErrorCode.INTERNAL_ERROR, 
-      defaultMessage,
-      error instanceof Error ? error : undefined
-    );
+    return new AppError(ErrorCode.INTERNAL_ERROR, defaultMessage);
   }
+
+  /**
+   * Detect projects with delays
+   * TODO: Implement actual delay detection logic
+   */
+  async detectProjectDelays(): Promise<ProjectDelay[]> {
+    try {
+      // For now, return empty array as placeholder
+      // TODO: Implement delay detection using ProjectService and progress calculations
+      return [];
+    } catch (error) {
+      throw this.normalizeError(error, 'Failed to detect project delays');
+    }
+  }
+}
+
+// Interface for project delay detection
+export interface ProjectDelay {
+  projectId: string;
+  projectName: string;
+  delayPercentage: number;
+  delayDays: number;
+  originalEndDate: string;
+  currentEndDate: string;
 }

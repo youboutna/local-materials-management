@@ -3,13 +3,8 @@
  * Provides payment validation and blocking operations via services
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  validatePaymentEligibility, 
-  attemptPayment, 
-  getPaymentBlockHistory 
-} from '@/services/paymentBlockingService';
-import { detectProjectDelays } from '@/services/BankGuaranteeService';
-import { supabase } from '@/integrations/supabase/client';
+import { PaymentValidationService } from '@/application/services/PaymentValidationService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { toast } from '@/hooks/use-toast';
 
 export interface PaymentStats {
@@ -19,172 +14,142 @@ export interface PaymentStats {
   missingDocuments: number;
 }
 
-async function getBlockedPaymentsCount(): Promise<number> {
-  try {
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-
-    const { data, error } = await supabase
-      .from('payment_blocks')
-      .select('id', { count: 'exact' })
-      .is('resolved_at', null)
-      .gte('blocked_at', startOfMonth.toISOString());
-
-    if (error) throw error;
-    return data?.length || 0;
-  } catch (error) {
-    console.error('Error getting blocked payments count:', error);
-    return 0;
-  }
-}
-
-async function getExpiredInsurancesCount(): Promise<number> {
-  try {
-    const { data, error } = await supabase
-      .from('insurance_certificates')
-      .select('contractor_id', { count: 'exact' })
-      .lt('valid_until', new Date().toISOString());
-
-    if (error) throw error;
-    return data?.length || 0;
-  } catch (error) {
-    console.error('Error getting expired insurances count:', error);
-    return 0;
-  }
-}
-
-async function getMissingDocumentsCount(): Promise<number> {
-  try {
-    const { data, error } = await supabase
-      .from('documents')
-      .select('project_id', { count: 'exact' })
-      .eq('status', 'draft')
-      .eq('document_type', 'contract');
-
-    if (error) throw error;
-    return data?.length || 0;
-  } catch (error) {
-    console.error('Error getting missing documents count:', error);
-    return 0;
-  }
-}
-
-async function getRecentPaymentBlocks(): Promise<any[]> {
-  try {
-    const { data, error } = await supabase
-      .from('payment_blocks')
-      .select('*')
-      .order('blocked_at', { ascending: false })
-      .limit(50);
-
-    if (error) throw error;
-    return data || [];
-  } catch (error) {
-    console.error('Error getting recent payment blocks:', error);
-    return [];
-  }
-}
-
 export function usePaymentValidationHex() {
   const queryClient = useQueryClient();
+  
+  // Initialize service with repositories
+  const paymentValidationService = new PaymentValidationService(
+    RepositoryFactory.getPaymentBlockingRepository(),
+    RepositoryFactory.getBankGuaranteeRepository(),
+    RepositoryFactory.getInsuranceRepository(),
+    RepositoryFactory.getDocumentRepository()
+  );
 
-  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
-    queryKey: ['payment-validation-stats-hex'],
+  // Get payment statistics
+  const {
+    data: paymentStats,
+    isLoading: statsLoading,
+    error: statsError,
+    refetch: refetchStats
+  } = useQuery({
+    queryKey: ['payment-stats'],
     queryFn: async () => {
-      const [blockedPayments, expiredInsurances, delayedProjects, missingDocuments] = await Promise.all([
-        getBlockedPaymentsCount(),
-        getExpiredInsurancesCount(),
-        detectProjectDelays().then(delays => delays.filter(p => p.delayPercentage >= 20).length),
-        getMissingDocumentsCount(),
-      ]);
-
-      return {
-        blockedPayments,
-        expiredInsurances,
-        delayedProjects,
-        missingDocuments,
-      } as PaymentStats;
+      return await paymentValidationService.getPaymentStats();
     },
-    staleTime: 30_000,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const { data: recentBlocks = [], isLoading: blocksLoading } = useQuery({
-    queryKey: ['payment-blocks-recent-hex'],
-    queryFn: getRecentPaymentBlocks,
-    staleTime: 30_000,
-  });
-
+  // Validate payment for a project
   const validatePaymentMutation = useMutation({
-    mutationFn: async ({ projectId, contractorId, amount }: { 
-      projectId: string; 
-      contractorId: string; 
-      amount: number 
-    }) => {
-      return await validatePaymentEligibility(projectId, contractorId, amount);
+    mutationFn: async (projectId: string) => {
+      return await paymentValidationService.validatePayment(projectId);
     },
     onSuccess: (result) => {
-      if (result.canProceed) {
-        toast({ title: 'Succès', description: 'Le paiement peut être traité' });
-      } else {
-        toast({
-          title: 'Blocage détecté',
-          description: `${result.blockingReasons.length} problème(s) détecté(s)`,
-          variant: 'destructive',
-        });
-      }
-    },
-    onError: (error) => {
-      console.error('Error validating payment:', error);
       toast({
-        title: 'Erreur',
-        description: 'Erreur lors de la validation du paiement',
-        variant: 'destructive',
+        title: "Validation Complete",
+        description: result.canPay 
+          ? "Payment can be processed" 
+          : `Payment blocked: ${result.blockingReasons.join(', ')}`,
+        variant: result.canPay ? "default" : "destructive",
       });
     },
+    onError: (error: Error) => {
+      toast({
+        title: "Validation Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   });
 
-  const processPaymentMutation = useMutation({
-    mutationFn: async ({ projectId, contractorId, amount, metadata }: { 
-      projectId: string; 
-      contractorId: string; 
-      amount: number;
-      metadata: any;
-    }) => {
-      return await attemptPayment(projectId, contractorId, amount, metadata);
+  // Get blocked payments count
+  const {
+    data: blockedPaymentsCount,
+    isLoading: blockedLoading,
+    error: blockedError
+  } = useQuery({
+    queryKey: ['blocked-payments-count'],
+    queryFn: async () => {
+      return await paymentValidationService.getBlockedPaymentsCount();
     },
-    onSuccess: (result) => {
-      if (result.success) {
-        toast({ title: 'Succès', description: 'Paiement traité avec succès' });
-        queryClient.invalidateQueries({ queryKey: ['payment-blocks-recent-hex'] });
-        queryClient.invalidateQueries({ queryKey: ['payment-validation-stats-hex'] });
-      } else {
-        toast({
-          title: 'Erreur',
-          description: "Le paiement n'a pas pu être traité",
-          variant: 'destructive',
-        });
-      }
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Get expired insurances count
+  const {
+    data: expiredInsurancesCount,
+    isLoading: expiredLoading,
+    error: expiredError
+  } = useQuery({
+    queryKey: ['expired-insurances-count'],
+    queryFn: async () => {
+      return await paymentValidationService.getExpiredInsurancesCount();
     },
-    onError: (error) => {
-      console.error('Error processing payment:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Erreur lors du traitement du paiement',
-        variant: 'destructive',
-      });
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Get missing documents count
+  const {
+    data: missingDocumentsCount,
+    isLoading: missingLoading,
+    error: missingError
+  } = useQuery({
+    queryKey: ['missing-documents-count'],
+    queryFn: async () => {
+      return await paymentValidationService.getMissingDocumentsCount();
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Get delayed projects count
+  const {
+    data: delayedProjectsCount,
+    isLoading: delayedLoading,
+    error: delayedError
+  } = useQuery({
+    queryKey: ['delayed-projects-count'],
+    queryFn: async () => {
+      return await paymentValidationService.getDelayedProjectsCount();
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   return {
-    stats: stats || { blockedPayments: 0, expiredInsurances: 0, delayedProjects: 0, missingDocuments: 0 },
-    recentBlocks,
-    isLoading: statsLoading || blocksLoading,
+    // Data
+    paymentStats: paymentStats || {
+      blockedPayments: 0,
+      expiredInsurances: 0,
+      delayedProjects: 0,
+      missingDocuments: 0
+    },
+    blockedPaymentsCount: blockedPaymentsCount || 0,
+    expiredInsurancesCount: expiredInsurancesCount || 0,
+    missingDocumentsCount: missingDocumentsCount || 0,
+    delayedProjectsCount: delayedProjectsCount || 0,
+    
+    // Loading states
+    isLoading: statsLoading || blockedLoading || expiredLoading || missingLoading || delayedLoading,
+    statsLoading,
+    blockedLoading,
+    expiredLoading,
+    missingLoading,
+    delayedLoading,
+    
+    // Error states
+    error: statsError || blockedError || expiredError || missingError || delayedError,
+    statsError,
+    blockedError,
+    expiredError,
+    missingError,
+    delayedError,
+    
+    // Actions
+    validatePayment: validatePaymentMutation.mutate,
     refetchStats,
-    validatePayment: validatePaymentMutation.mutateAsync,
-    processPayment: processPaymentMutation.mutateAsync,
-    isValidating: validatePaymentMutation.isPending,
-    isProcessing: processPaymentMutation.isPending,
+    
+    // Mutation states
+    isValidationLoading: validatePaymentMutation.isPending,
+    validationError: validatePaymentMutation.error
   };
 }
 

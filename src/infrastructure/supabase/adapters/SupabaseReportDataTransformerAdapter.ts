@@ -19,7 +19,6 @@ import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { Database } from '@/integrations/supabase/types';
 import { Project } from '@/domain/entities/Project';
 import { ProjectTransformer } from '@/dtos/transforms';
-import { ProjectTransformer } from '@/dtos/transforms';
 
 // Types officiels Supabase pour les tables utilisées
 type ProjectPhaseRow = Database['public']['Tables']['project_phases']['Row'];

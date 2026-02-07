@@ -8,6 +8,7 @@ import { Phase, PhaseStep, PhaseTask, PhaseStatus } from '@/domain/entities/Phas
 import { PhaseDTO, CreatePhaseDTO, UpdatePhaseDTO, PhaseStepDTO, PhaseMetricsDTO } from '@/dtos/entities/PhaseDTO';
 import { PhaseTransformer, CreatePhaseRequestDTO } from '@/dtos/transforms/PhaseTransformer';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { referentialService } from './ReferentialService';
 
 // Type alias for backward compatibility
 type CreatePhaseRequestDto = CreatePhaseRequestDTO;
@@ -400,6 +401,165 @@ export class PhaseService {
    */
   async getProjectPhases(projectId: string): Promise<PhaseDTO[]> {
     return this.getPhasesByProject(projectId);
+  }
+
+  /**
+   * Get generation summary for a referential
+   * Returns counts of phases, steps, tasks, milestones, and estimated duration
+   */
+  async getGenerationSummary(referentialType: string): Promise<{
+    totalPhases: number;
+    totalSteps: number;
+    totalTasks: number;
+    totalMilestones: number;
+    estimatedDurationDays: number;
+  }> {
+    try {
+      const phases = await referentialService.getPhasesForReferential(referentialType as any);
+      let totalSteps = 0;
+      let totalTasks = 0;
+      let totalMilestones = 0;
+      let estimatedDurationDays = 0;
+
+      for (const phase of phases) {
+        totalSteps += phase.steps.length;
+        
+        for (const step of phase.steps) {
+          totalTasks += step.tasks.length;
+          for (const task of step.tasks) {
+            estimatedDurationDays += task.estimated_duration_days || 7;
+          }
+        }
+
+        // Count milestones (simplified - would need MilestoneService integration)
+        totalMilestones += Math.floor(phase.steps.length / 2); // Estimate
+      }
+
+      return {
+        totalPhases: phases.length,
+        totalSteps,
+        totalTasks,
+        totalMilestones,
+        estimatedDurationDays
+      };
+    } catch (error) {
+      throw this.normalizeError(error, 'Failed to get generation summary');
+    }
+  }
+
+  /**
+   * Generate phases from referential for a project
+   * Creates complete project structure with phases, steps, tasks, and milestones
+   */
+  async generateFromReferential(
+    projectId: string,
+    referentialType: string,
+    projectStartDate: string,
+    projectBudget?: number
+  ): Promise<PhaseData[]> {
+    try {
+      const phases = await referentialService.getPhasesForReferential(referentialType as any);
+      if (phases.length === 0) {
+        return [];
+      }
+
+      const generatedPhases: PhaseData[] = [];
+      let cumulativeStartDays = 0;
+      const projectStart = new Date(projectStartDate);
+      const budgetPerPhase = projectBudget ? projectBudget / phases.length : 0;
+
+      for (let i = 0; i < phases.length; i++) {
+        const phase = phases[i];
+        const phaseId = `phase-${Date.now()}-${i}`;
+        
+        // Calculate phase duration from steps and tasks
+        const { steps, totalDuration } = this.generateStepsFromPhase(phase.steps, phaseId);
+        
+        // Calculate dates
+        const phaseStartDate = new Date(projectStart);
+        phaseStartDate.setDate(phaseStartDate.getDate() + cumulativeStartDays);
+        const phaseEndDate = new Date(phaseStartDate);
+        phaseEndDate.setDate(phaseEndDate.getDate() + totalDuration);
+
+        generatedPhases.push({
+          id: phaseId,
+          phase: phase.id,
+          stage: '',
+          title: phase.label,
+          description: phase.description || '',
+          startDate: phaseStartDate.toISOString().split('T')[0],
+          endDate: phaseEndDate.toISOString().split('T')[0],
+          estimatedDuration: totalDuration,
+          status: 'not_started',
+          budget: budgetPerPhase,
+          progress: 0,
+          order: i + 1,
+          steps: steps.map(step => ({
+            id: step.id,
+            name: step.label,
+            description: step.description || '',
+            order: step.order_index,
+            tasks: step.tasks.map(task => ({
+              id: task.id,
+              name: task.label,
+              description: task.description || '',
+              order: task.order_index,
+              estimatedDurationDays: task.estimated_duration_days || 7,
+              requiresInspection: false,
+              assignedTo: [],
+              status: 'pending'
+            }))
+          }))
+        });
+
+        cumulativeStartDays += totalDuration + 1; // Add 1 day buffer between phases
+      }
+
+      return generatedPhases;
+    } catch (error) {
+      throw this.normalizeError(error, 'Failed to generate phases from referential');
+    }
+  }
+
+  /**
+   * Generate steps from phase steps
+   */
+  private generateStepsFromPhase(phaseSteps: any[], phaseId: string): {
+    steps: any[];
+    totalDuration: number;
+  } {
+    const steps = [];
+    let totalDuration = 0;
+
+    for (const step of phaseSteps) {
+      const stepDuration = step.tasks.reduce((sum: number, task: any) => {
+        return sum + (task.estimated_duration_days || 7);
+      }, 14); // Base step duration + task durations
+
+      steps.push({
+        id: `step-${phaseId}-${step.id}`,
+        stepCode: step.id,
+        name: step.label,
+        description: step.description || '',
+        order: step.order_index,
+        tasks: step.tasks,
+        estimatedDuration: stepDuration
+      });
+
+      totalDuration += stepDuration;
+    }
+
+    return { steps, totalDuration };
+  }
+
+  /**
+   * Normalize error
+   */
+  private normalizeError(error: unknown, defaultMessage: string): AppError {
+    if (error instanceof AppError) return error;
+    
+    console.error('PhaseService error:', error);
+    return new AppError(ErrorCode.INTERNAL_ERROR, defaultMessage);
   }
 
   /**

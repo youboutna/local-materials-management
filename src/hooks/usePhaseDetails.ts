@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PhaseService, PhaseData } from '@/application/services/PhaseService';
-import { WorkflowPhaseService } from '@/services/WorkflowPhaseService';
-import { referentialService } from '@/services/ReferentialService';
+import { referentialService } from '@/application/services/ReferentialService';
 import { PhaseDTO, PhaseStatus, PhaseStepDTO, PhaseTaskDTO } from '@/dtos/entities/PhaseDTO';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';

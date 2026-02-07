@@ -218,7 +218,7 @@ export class PaymentService {
    */
    async getPaymentsByStatus(status: PaymentStatusEnum | string): Promise<PaymentDTO[]> {
     try {
-      const payments = await this.paymentRepository.findByStatus(status as any);
+      const payments = await this.paymentRepository.findByStatus(status as PaymentStatusEnum.PENDING);
       return payments.map(payment => PaymentTransformer.toDTO(payment));
     } catch (error) {
       console.error('[PaymentService] Error fetching payments by status:', error);

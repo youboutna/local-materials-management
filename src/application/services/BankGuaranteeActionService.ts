@@ -290,7 +290,7 @@ export class BankGuaranteeActionService {
   /**
    * Get all templates
    */
-  async getTemplates(): Promise<any[]> {
+  async getTemplates(): Promise<unknown[]> {
     try {
       console.warn('BankGuaranteeActionService.getTemplates: Template repository not available');
       return [];

@@ -163,7 +163,7 @@ export class DocumentService {
       const allDocuments = await this.documentRepository.findAll();
       const document = allDocuments.find(doc => 
         doc.tags?.includes(`guarantee:${guaranteeId}`) ||
-        (doc as any).metadata?.guaranteeId === guaranteeId
+        (doc as { metadata?: { guaranteeId?: string } }).metadata?.guaranteeId === guaranteeId
       );
       
       if (!document) return null;
@@ -187,7 +187,7 @@ export class DocumentService {
       const allDocuments = await this.documentRepository.findAll();
       const document = allDocuments.find(doc => 
         doc.tags?.includes(`insurance:${insuranceId}`) ||
-        (doc as any).metadata?.insuranceId === insuranceId
+        (doc as { metadata?: { insuranceId?: string } }).metadata?.insuranceId === insuranceId
       );
       
       if (!document) return null;
@@ -238,8 +238,8 @@ export class DocumentService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, `Invalid document status: ${data.status}`);
       }
 
-      const documentEntity = DocumentTransformer.fromCreateDTOToEntity(data as any);
-      await this.documentRepository.save(documentEntity as any);
+      const documentEntity = DocumentTransformer.fromCreateDTOToEntity(data);
+      await this.documentRepository.save(documentEntity);
       
       return DocumentTransformer.toDTO(documentEntity);
     } catch (error) {
@@ -272,8 +272,8 @@ export class DocumentService {
         );
       }
 
-      const updateEntity = DocumentTransformer.fromUpdateDTOToEntity(updates as any);
-      await this.documentRepository.update(id, updateEntity as any);
+      const updateEntity = DocumentTransformer.fromUpdateDTOToEntity(updates);
+      await this.documentRepository.update(id, updateEntity);
       
       const updatedDocument = await this.documentRepository.findById(id);
       

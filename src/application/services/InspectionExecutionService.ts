@@ -491,16 +491,16 @@ export class InspectionExecutionService {
     return result.success;
   }
 
-  static async uploadDocument(inspectionId: string, file: File, documentType: string): Promise<any> {
+  static async uploadDocument(inspectionId: string, file: File, documentType: string): Promise<{ success: boolean; documentId?: string }> {
     const service = new InspectionExecutionService();
     return service.uploadDocument({ 
       inspectionId, 
       document: { 
         title: file.name, 
         fileUrl: '', 
-        documentType: documentType as any,
+        documentType: documentType,
         name: file.name,
-        type: documentType as any
+        type: documentType
       } as CreateDocumentDTO
     });
   }

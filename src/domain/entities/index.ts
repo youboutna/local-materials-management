@@ -31,7 +31,7 @@ export {
   type EscalationLevel 
 } from './Hierarchy';
 export { Stakeholder, type StakeholderType, type StakeholderContact, type StakeholderOrganization } from './Stakeholder';
-export { ProjectStakeholder as DomainProjectStakeholder, type StakeholderType as DomainStakeholderType } from './ProjectStakeholder';
+export { ProjectStakeholderEntity as DomainProjectStakeholder, type StakeholderType as DomainStakeholderType } from './ProjectStakeholder';
 
 // ============================================================================
 // BUSINESS ENTITIES
@@ -111,10 +111,9 @@ export interface PERTAnalysis {
 // ============================================================================
 
 export { Payment, type PaymentStatus, type PaymentMethod } from './Payment';
-export { ParsedInvoice, type InvoiceType } from './ParsedInvoice';
+export { ParsedInvoiceEntity as ParsedInvoice, type InvoiceType } from './ParsedInvoice';
 export { Document, type DocumentType, type DocumentStatus } from './Document';
 export { Certification } from './Certification';
-export { InsuranceCertificateEntity } from './InsuranceCertificate.entity';
 
 // ============================================================================
 // INSPECTION & QUALITY ENTITIES
@@ -136,9 +135,8 @@ export { SubmissionSecret } from './SubmissionSecret';
 // MONITORING & PERFORMANCE ENTITIES
 // ============================================================================
 
-export { PerformanceMonitoring } from './PerformanceMonitoring';
 export type { DatabaseMetrics, PerformanceMetrics } from './PerformanceMonitoring';
-export { Workspace, type ProjectAlert, type Action, type ITaskAssignment } from './Workspace';
+export type { Workspace, ProjectAlert, Action, ITaskAssignment } from './Workspace';
 
 // ============================================================================
 // LEGACY COMPATIBILITY EXPORTS

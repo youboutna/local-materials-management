@@ -228,3 +228,23 @@ export const MILESTONE_PRIORITIES: Record<MilestonePriority, { label: string; co
   normal: { label: 'Normale', color: 'default' },
   low: { label: 'Basse', color: 'secondary' }
 };
+
+/**
+ * Generated Milestone DTO
+ * Used for milestone generation from templates
+ */
+export interface GeneratedMilestoneDTO {
+  title: string;
+  description?: string;
+  target_date: string;
+  type: 'gate' | 'deliverable' | 'checkpoint' | 'event';
+  priority: 'critical' | 'high' | 'normal' | 'low';
+  weight: number;
+  deliverables?: string[];
+  dependencies?: string[];
+  phase_id: string;
+  requiresInspection?: boolean;
+  inspectionType?: string;
+  templateId?: string;
+  phaseCode?: string;
+}

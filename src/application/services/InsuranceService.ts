@@ -43,10 +43,10 @@ export class InsuranceService {
       insurance_company: entity.insurance_company,
       policy_number: entity.policy_number,
       coverage_amount: entity.coverage_amount,
-      coverage_type: entity.coverage_type as any,
+      coverage_type: entity.coverage_type,
       valid_from: entity.valid_from,
       valid_until: entity.valid_until,
-      status: entity.status as any,
+      status: entity.status,
       created_at: entity.created_at,
       updated_at: entity.updated_at
     };
@@ -165,7 +165,7 @@ export class InsuranceService {
     
     if (!data.projectId) errors.projectId = ['Project ID required'];
     
-    if (!data.insuranceType || !INSURANCE_TYPES.includes(data.insuranceType as any)) {
+    if (!data.insuranceType || !INSURANCE_TYPES.includes(data.insuranceType as InsuranceType)) {
       errors.insuranceType = ['Valid insurance type required'];
     }
     
@@ -254,10 +254,10 @@ export class InsuranceService {
         insurance_company: data.insuranceCompany || '',
         policy_number: data.policyNumber || '',
         coverage_amount: data.coverageAmount || 0,
-        coverage_type: (data.insuranceType as any) || 'responsabilite_civile',
+        coverage_type: (data.insuranceType as InsuranceType) || 'responsabilite_civile',
         valid_from: data.validFrom || '',
         valid_until: data.validUntil || '',
-        status: (data.status as any) || 'active'
+        status: (data.status as InsuranceStatus) || 'active'
       };
     } catch (error) {
       console.error('InsuranceService.updateInsuranceCertificate failed:', error);

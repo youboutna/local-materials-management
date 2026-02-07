@@ -67,11 +67,11 @@ export class DataConsistencyMonitoringService {
 
     try {
       // Monitor Projects consistency
-      const projectReport = await service.monitorProjectConsistency() as any;
+      const projectReport = await service.monitorProjectConsistency();
       reports.push(projectReport);
 
       // Monitor Phases consistency
-      const phaseReport = await service.monitorPhaseConsistency() as any;
+      const phaseReport = await service.monitorPhaseConsistency();
       reports.push(phaseReport);
 
       // Monitor Materials consistency

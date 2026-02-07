@@ -237,7 +237,14 @@ export class SupabaseProjectAdapter implements IProjectRepository {
       teamSize: data.team_size,
       thumbnail: data.thumbnail,
       financingSource: data.financing_source,
+      marketType: data.market_type,
+      selectionMode: data.selection_mode,
+      projectReferenceNumber: data.project_reference,
       mainContractor: data.main_contractor,
+      allowsInitialPayment: data.allows_initial_payment,
+      initialAdvancePercentage: data.initial_payment_percentage,
+      currentPhase: data.current_phase,
+      currentStage: data.current_stage,
     });
   }
 
@@ -267,7 +274,14 @@ export class SupabaseProjectAdapter implements IProjectRepository {
     if (project.teamSize !== undefined) entity.team_size = project.teamSize;
     if (project.thumbnail !== undefined) entity.thumbnail = project.thumbnail;
     if (project.financingSource !== undefined) entity.financing_source = project.financingSource;
+    if ((project as any).marketType !== undefined) entity.market_type = (project as any).marketType;
+    if ((project as any).selectionMode !== undefined) entity.selection_mode = (project as any).selectionMode;
+    if ((project as any).projectReferenceNumber !== undefined) entity.project_reference = (project as any).projectReferenceNumber;
     if (project.mainContractor !== undefined) entity.main_contractor = project.mainContractor;
+    if ((project as any).allowsInitialPayment !== undefined) entity.allows_initial_payment = (project as any).allowsInitialPayment;
+    if ((project as any).initialAdvancePercentage !== undefined) entity.initial_payment_percentage = (project as any).initialAdvancePercentage;
+    if ((project as any).currentPhase !== undefined) entity.current_phase = (project as any).currentPhase;
+    if ((project as any).currentStage !== undefined) entity.current_stage = (project as any).currentStage;
 
     return entity;
   }

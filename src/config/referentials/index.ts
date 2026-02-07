@@ -8,7 +8,7 @@ import { distributionRuraleReferential } from './distribution-rurale.referential
 import { mauritanianPublicProcurementReferential } from './mauritanian-public-procurement.referential';
 import { pndsReferential } from './pnds.referential';
 import { sdauReferential } from './snat-nouakchot.referential';
-import { MultiLanguageLabel, ProjectReferential, somelecReferential } from './somelec.referential';
+import { MultiLanguageLabel, ProjectReferential, somelecReferential, ReferentialPhase, ReferentialStep, ReferentialTask } from './somelec.referential';
 
 export type ReferentialType = 
   | 'SOMELEC_INFRA' 
@@ -94,7 +94,31 @@ export const getPhasesForReferential = (referentialCode: ReferentialType, langua
  * Export types and interfaces
  */
 export { customStandardReferential, distributionRuraleReferential, mauritanianPublicProcurementReferential, pndsReferential, sdauReferential, somelecReferential };
-export type { MultiLanguageLabel, ProjectReferential };
+export type { MultiLanguageLabel, ProjectReferential, ReferentialPhase, ReferentialStep, ReferentialTask };
+
+// DTO type aliases for backward compatibility
+export type ReferentialDTO = ProjectReferential;
+export type ReferentialPhaseDTO = {
+  code: string;
+  label: string;
+  description?: string;
+  order: number;
+  steps: ReferentialStepDTO[];
+};
+export type ReferentialStepDTO = {
+  code: string;
+  label: string;
+  order: number;
+  tasks: ReferentialTaskDTO[];
+};
+export type ReferentialTaskDTO = {
+  code: string;
+  label: string;
+  description?: string;
+  requiresInspection: boolean;
+  requiresEngineerApproval: boolean;
+  estimatedDurationDays?: number;
+};
 
 // NOTE: Do not re-export `ReferentialService` here to avoid circular
 // dependencies with `src/services/ReferentialService.ts` which imports

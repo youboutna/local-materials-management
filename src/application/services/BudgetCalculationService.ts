@@ -150,7 +150,7 @@ export class BudgetCalculationService {
       // Calculate average monthly spend - convert to PaymentDTO format
       const paymentDTOs = paidPayments.map(p => ({
         id: p.id,
-        projectId: (p as any).project?.id || '',
+        projectId: p.project?.id || '',
         contractorId: '',
         amount: p.amount,
         paymentDate: p.paymentDate,
@@ -163,7 +163,7 @@ export class BudgetCalculationService {
         createdAt: p.createdAt,
         updatedAt: p.updatedAt
       }));
-      const monthlySpend = this.calculateAverageSpend(paymentDTOs as any, period);
+      const monthlySpend = this.calculateAverageSpend(paymentDTOs as PaymentDTO[], period);
       
       // Generate projections
       const projectedCosts: Array<{ period: string; projectedCost: number; actualCost?: number; variance?: number }> = [];

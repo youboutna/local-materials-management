@@ -19,7 +19,8 @@ import {
   MilestoneProgressDTO,
   CriticalPathDTO,
   MilestoneSummaryDTO,
-  MilestoneFormDTO
+  MilestoneFormDTO,
+  MilestoneTemplateDTO
 } from '@/dtos/entities/MilestoneDTO';
 import { getMilestoneTemplates } from '@/config/referentials/milestones.referential';
 import { addDays, differenceInDays, format, parseISO } from 'date-fns';
@@ -88,7 +89,7 @@ export interface MilestoneStatsDto {
 
 export class MilestoneService {
   constructor(
-    private milestoneRepository: IMilestoneRepository = RepositoryFactory.getPhaseRepository() as unknown as IMilestoneRepository,
+    private milestoneRepository: IMilestoneRepository = RepositoryFactory.getMilestoneRepository(),
     private projectRepository: IProjectRepository = RepositoryFactory.getProjectRepository(),
     private phaseRepository: IPhaseRepository = RepositoryFactory.getPhaseRepository(),
     private materialRepository: IMaterialRepository = RepositoryFactory.getMaterialRepository(),
@@ -105,7 +106,7 @@ export class MilestoneService {
       }
 
       // Get milestones from repository
-      const milestones = await (this.milestoneRepository as unknown as { findByProjectId: (id: string) => Promise<unknown[]> }).findByProjectId(projectId);
+      const milestones = await this.milestoneRepository.findByProjectId(projectId);
       
       if (!milestones || milestones.length === 0) {
         return [];
@@ -1145,50 +1146,110 @@ export class MilestoneService {
   async generateFromReferential(
     projectId: string,
     phaseId: string,
-    constructionPhase: string,
+    phaseCode: string,
     phaseStartDate: string
   ): Promise<MilestoneDTO[]> {
     try {
-      const templates = getMilestoneTemplates(constructionPhase);
+      // Get milestone templates for the phase
+      const templates = await this.getMilestoneTemplatesForPhase(phaseCode);
       
       if (templates.length === 0) {
-        console.log(`No milestone templates for phase: ${constructionPhase}`);
         return [];
       }
 
-      const startDate = parseISO(phaseStartDate);
+      const startDate = new Date(phaseStartDate);
       const milestones: MilestoneDTO[] = [];
 
       for (const template of templates) {
-        const createData = {
-          project_id: projectId,
-          phase_id: phaseId,
+        const targetDate = new Date(startDate);
+        targetDate.setDate(targetDate.getDate() + template.relative_offset_days);
+
+        const milestoneData: CreateMilestoneDTO = {
+          projectId,
+          phaseId,
           title: template.name,
-          description: template.description,
-          target_date: format(addDays(startDate, template.relative_offset_days), 'yyyy-MM-dd'),
-          status: 'pending' as const,
-          progress: 0,
-          priority: this.transformPriorityFromForm(template.priority),
-          deliverables: template.deliverables || [],
-          dependencies: template.predecessor_ids || []
+          description: template.description || '',
+          targetDate: targetDate.toISOString().split('T')[0],
+          type: template.type,
+          priority: template.priority,
+          weight: template.weight,
+          isCritical: template.is_critical,
+          tags: template.tags,
+          dependencies: template.predecessor_ids,
+          deliverables: template.deliverables,
+          approvalRequirements: template.approval_requirements
         };
 
-        const milestone = await this.createMilestone(createData);
-        milestones.push({
-          ...this.transformToMilestoneDTO(milestone),
-          is_from_template: true
-        });
+        const milestone = await this.createMilestone(milestoneData);
+        milestones.push(milestone);
       }
 
       return milestones;
     } catch (error) {
-      console.error('MilestoneService.generateFromReferential failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to generate milestones from referential');
+      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to generate milestones for phase: ${phaseCode}`);
     }
   }
 
   /**
-   * Delete template milestones for a phase
+   * Get milestone templates for a phase
+   */
+  private async getMilestoneTemplatesForPhase(phaseCode: string): Promise<MilestoneTemplateDTO[]> {
+    try {
+      // For now, return basic templates - this would be enhanced with actual template logic
+      const baseTemplates: MilestoneTemplateDTO[] = [
+        {
+          id: `template-${phaseCode}-start`,
+          name: 'Début de phase',
+          description: 'Démarrage officiel de la phase',
+          relative_offset_days: 0,
+          weight: 0.1,
+          is_critical: true,
+          type: 'event',
+          priority: 'high',
+          tags: ['start', 'phase'],
+          predecessor_ids: [],
+          deliverables: ['Plan de phase validé'],
+          approval_requirements: ['Validation chef de projet']
+        },
+        {
+          id: `template-${phaseCode}-mid`,
+          name: 'Contrôle intermédiaire',
+          description: 'Vérification de l\'avancement',
+          relative_offset_days: 14,
+          weight: 0.3,
+          is_critical: false,
+          type: 'checkpoint',
+          priority: 'normal',
+          tags: ['review', 'progress'],
+          predecessor_ids: [`template-${phaseCode}-start`],
+          deliverables: ['Rapport d\'avancement'],
+          approval_requirements: []
+        },
+        {
+          id: `template-${phaseCode}-end`,
+          name: 'Fin de phase',
+          description: 'Clôture et validation de la phase',
+          relative_offset_days: 28,
+          weight: 0.6,
+          is_critical: true,
+          type: 'gate',
+          priority: 'high',
+          tags: ['end', 'validation'],
+          predecessor_ids: [`template-${phaseCode}-mid`],
+          deliverables: ['Livraison de phase', 'Rapport final'],
+          approval_requirements: ['Validation client', 'Validation technique']
+        }
+      ];
+
+      return baseTemplates;
+    } catch (error) {
+      console.error('Error getting milestone templates:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Delete template milestones
    */
   async deleteTemplateMilestones(phaseId: string): Promise<void> {
     try {

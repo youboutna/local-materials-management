@@ -6,6 +6,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { ProjectWorkflowService, type ProjectCreationWorkflowData, type WorkflowResult } from '@/application/services/ProjectWorkflowService';
+import { ReferentialService } from '@/application/services/ReferentialService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 // Import workflow DTOs (following "similitude des voisins le plus proche")
 import { 
@@ -60,10 +61,46 @@ export function useProjectCreationHex() {
     RepositoryFactory.getStakeholderRepository()
   );
 
-  // Mutation pour créer un projet
+  // Mutation pour créer un projet avec validation référentielle
   const createProjectMutation = useMutation({
-    mutationFn: (data: ProjectWorkflowData): Promise<SaveResult> => 
-      projectCreationService.saveStep(1, data, projectCreationService.initializeWorkflow('creation')),
+    mutationFn: async (data: ProjectWorkflowData): Promise<SaveResult> => {
+      try {
+        // Initialize referential service
+        const referentialService = ReferentialService.getInstance();
+        
+        // Validate project referential if exists (graceful handling)
+        if (data.projectData.projectReference) {
+          try {
+            const referential = await referentialService.getReferential(data.projectData.projectReference as any);
+            if (!referential) {
+              console.warn(`⚠️ Referential ${data.projectData.projectReference} not found, proceeding with default validation`);
+              // Continue with creation but log warning - don't block the operation
+              toast({
+                title: "Attention",
+                description: `Le référentiel ${data.projectData.projectReference} n'existe pas. Le projet sera créé avec les paramètres par défaut.`,
+                variant: "default",
+              });
+            } else {
+              console.log('✅ Project referential validated:', referential.code);
+            }
+          } catch (error) {
+            console.warn('⚠️ Referential validation failed, proceeding with creation:', error);
+            // Continue with creation but show warning
+            toast({
+              title: "Attention", 
+              description: `Erreur de validation du référentiel. Le projet sera créé avec les paramètres par défaut.`,
+              variant: "default",
+            });
+          }
+        }
+
+        // Save project with validated data
+        return projectCreationService.saveStep(1, data, projectCreationService.initializeWorkflow('creation'));
+      } catch (error) {
+        console.error('❌ Project creation error:', error);
+        throw error;
+      }
+    },
     onSuccess: (result) => {
       if (result.success && result.projectId) {
         toast({
@@ -91,7 +128,7 @@ export function useProjectCreationHex() {
             errorMessage = 'Erreur de base de données. Veuillez réessayer plus tard.';
             break;
           case ErrorCode.INTERNAL_ERROR:
-            errorMessage = 'Erreur interne du serveur. Veuillez contacter l\'administrateur.';
+            errorMessage = 'Erreur interne. Veuillez contacter le support technique.';
             break;
           default:
             errorMessage = error.message;

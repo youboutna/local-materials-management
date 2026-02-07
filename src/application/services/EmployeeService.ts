@@ -12,7 +12,11 @@ import {
   SearchEmployeesOptions,
   SearchEmployeesResult,
   CreateEmployeeDTO,
-  UpdateEmployeeDTO
+  UpdateEmployeeDTO,
+  EmployeeDepartment,
+  EmployeeRole,
+  EmployeeType,
+  EmployeeStatus
 } from '@/dtos/entities/EmployeeDTO';
 
 export class EmployeeService {
@@ -123,8 +127,8 @@ export class EmployeeService {
         employeeData.email || null,
         employeeData.phone || null,
         employeeData.position || null,
-        employeeData.department as any || null,
-        employeeData.role as any || { name: 'employee', permissions: [] },
+        employeeData.department || null,
+        employeeData.role || { name: 'employee', permissions: [] },
         employeeData.hireDate || null,
         employeeData.salary || null,
         employeeData.isActive !== undefined ? employeeData.isActive : true,
@@ -135,7 +139,7 @@ export class EmployeeService {
         [], // managedProjects
         [], // teamMembers
         employeeData.skills || [],
-        (employeeData.certifications || []).map(c => ({ name: c, issuedDate: new Date().toISOString() })) as any,
+        (employeeData.certifications || []).map(c => ({ name: c, issuedDate: new Date().toISOString() })),
         new Date().toISOString(), // createdAt
         new Date().toISOString()  // updatedAt
       );
@@ -164,12 +168,12 @@ export class EmployeeService {
         email: updates.email,
         phone: updates.phone,
         position: updates.position,
-        department: updates.department as any,
+        department: updates.department || null,
         isActive: updates.isActive,
         skills: updates.skills
       };
 
-      await this.employeeRepository.update(id, employeeUpdates as any);
+      await this.employeeRepository.update(id, employeeUpdates);
       
       // Return updated employee
       const updatedEmployee = await this.employeeRepository.findById(id);
@@ -214,13 +218,13 @@ export class EmployeeService {
       email: employee.email || '',
       phone: employee.phone || '',
       position: employee.position || '',
-      department: (employee.department as any) || 'engineering',
-      role: (employee.role?.name as any) || 'employee',
-      type: 'full_time' as any,
-      status: (employee.isActive ? 'active' : 'inactive') as any,
+      department: (employee.department as string) || 'engineering',
+      role: (employee.role?.name as string) || 'employee',
+      type: EmployeeType.FULL_TIME,
+      status: employee.isActive ? EmployeeStatus.ACTIVE : EmployeeStatus.INACTIVE,
       salary: employee.salary || 0,
       skills: employee.skills || [],
-      certifications: (employee.certifications || []).map(c => typeof c === 'string' ? c : (c as any).name || ''),
+      certifications: (employee.certifications || []).map(c => typeof c === 'string' ? c : c.name || ''),
       createdAt: employee.createdAt,
       updatedAt: employee.updatedAt
     };

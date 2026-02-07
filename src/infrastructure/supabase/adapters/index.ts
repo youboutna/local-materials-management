@@ -7,6 +7,7 @@
 export { SupabaseMaterialAdapter } from './SupabaseMaterialAdapter';
 export { SupabaseProjectAdapter } from './SupabaseProjectAdapter';
 export { SupabasePhaseAdapter } from './SupabasePhaseAdapter';
+export { ConstructionPhaseAdapter } from './ConstructionPhaseAdapter';
 export { SupabaseInspectionAdapter } from './SupabaseInspectionAdapter';
 export { SupabasePaymentAdapter } from './SupabasePaymentAdapter';
 export { SupabaseTaskAdapter } from './SupabaseTaskAdapter';
@@ -43,6 +44,7 @@ export { SupabaseInspectionPermissionAdapter } from './SupabaseInspectionPermiss
 export { SupabaseTenderDocumentAdapter } from './SupabaseTenderDocumentAdapter';
 export { SupabaseAlertRepository } from './SupabaseAlertRepository';
 export { SupabaseMilestoneAdapter } from './SupabaseMilestoneAdapter';
+export { SupabaseProjectStakeholderAdapter } from './SupabaseProjectStakeholderAdapter';
 export { SupabaseSupplierPaymentAdapter } from './SupabaseSupplierPaymentAdapter';
 export { SupabaseMonitoringAlertAdapter } from './SupabaseMonitoringAlertAdapter';
 

@@ -48,7 +48,7 @@ import {
   IWorkspaceRepository,
   IProjectStakeholderRepository,
   IProjectAlertRepository,
-  IDecompteRepository,
+  IConstructionPhaseRepository,
   ITenderEstimateRepository,
   IPaymentBlockingRepository
 } from '@/domain/repositories';
@@ -88,7 +88,9 @@ import {
   TenderEstimateAdapter,
   PaymentBlockingAdapter,
   TaskAssignmentAdapter,
-  SupabaseMilestoneAdapter
+  SupabaseMilestoneAdapter,
+  ConstructionPhaseAdapter,
+  SupabaseProjectStakeholderAdapter
 } from './adapters';
 
 /**
@@ -134,6 +136,7 @@ interface RepositoryRegistry {
   inspectionPermissionRepository?: IInspectionPermissionRepository;
   alertRepository?: IAlertRepository;
   milestoneRepository?: IMilestoneRepository;
+  constructionPhaseRepository?: IConstructionPhaseRepository;
 }
 
 /**
@@ -531,9 +534,7 @@ export class RepositoryFactory {
    */
   static getProjectStakeholderRepository(): IProjectStakeholderRepository {
     if (!repositoryRegistry.projectStakeholderRepository) {
-      // TODO: Create SupabaseProjectStakeholderAdapter when available
-      // For now, use ProjectAdapter as stakeholders are handled through project repository
-      repositoryRegistry.projectStakeholderRepository = new SupabaseProjectAdapter() as any;
+      repositoryRegistry.projectStakeholderRepository = new SupabaseProjectStakeholderAdapter();
     }
     return repositoryRegistry.projectStakeholderRepository!;
   }
@@ -619,6 +620,17 @@ export class RepositoryFactory {
    */
   static getWorkspaceRepository(): IWorkspaceRepository {
     throw new Error('WorkspaceRepository not yet implemented. Use local state management until database table is available');
+  }
+
+  /**
+   * Get Construction Phase Repository instance
+   * Lazy loaded for memory efficiency
+   */
+  static getConstructionPhaseRepository(): IConstructionPhaseRepository {
+    if (!repositoryRegistry.constructionPhaseRepository) {
+      repositoryRegistry.constructionPhaseRepository = new ConstructionPhaseAdapter();
+    }
+    return repositoryRegistry.constructionPhaseRepository;
   }
 
   /**

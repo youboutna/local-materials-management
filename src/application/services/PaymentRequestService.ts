@@ -182,7 +182,7 @@ export class PaymentRequestService {
     try {
       // For now, use getAllPaymentRequests and filter
       const allRequests = await this.getAllPaymentRequests();
-      return allRequests.filter(req => (req as any).supplierId === supplierId);
+      return allRequests.filter(req => req.supplierId === supplierId);
     } catch (error) {
       console.error('PaymentRequestService.getPaymentRequestsBySupplier failed:', error);
       throw error;
