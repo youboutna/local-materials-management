@@ -368,7 +368,13 @@ export class UpdateDocumentRequestDto {
     public type?: DocumentType,
     public status?: DocumentStatus,
     public assignedTo?: string,
-interface RepositoryDocument {
+    public deadlineDate?: string,
+    public tags?: string[]
+  ) {}
+}
+
+// Repository document interface for internal use
+export interface RepositoryDocument {
   id: string;
   title: string;
   documentType: DocumentType;

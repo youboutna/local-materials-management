@@ -28,6 +28,8 @@ export interface AlertData {
   actionProof?: ActionProofData[];
   deadline?: string;
   recurrence?: number;
+  // Status from monitoring_alerts table
+  status?: string;
 }
 
 export interface ActionProofData {

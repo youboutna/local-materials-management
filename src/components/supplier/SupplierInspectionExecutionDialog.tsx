@@ -37,8 +37,8 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
   onInspectionCompleted,
   supplierId
 }) => {
-  const [progress, setProgress] = useState(inspection?.progress_at_inspection || 0);
-  const [comments, setComments] = useState(inspection?.comments || '');
+  const [progress, setProgress] = useState(inspection?.progressAtInspection || inspection?.progress_at_inspection || 0);
+  const [comments, setComments] = useState(inspection?.inspectorComments || (inspection as any)?.comments || '');
   const [documents, setDocuments] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createPaymentRequest, setCreatePaymentRequest] = useState(true);
@@ -81,7 +81,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
       for (const file of documents) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${inspection.id}_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const destPath = `inspections/${inspection.project_id}/${fileName}`;
+        const destPath = `inspections/${inspection.projectId || (inspection as any).project_id}/${fileName}`;
 
         const uploadRes = await storage.upload(file, destPath);
         if (!uploadRes.success) throw new Error(uploadRes.error || 'Upload failed');
