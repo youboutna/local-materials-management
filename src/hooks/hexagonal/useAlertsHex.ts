@@ -1,27 +1,18 @@
 /**
- * Alerts Hook - Enhanced with real Supabase data
- * Following hexagonal architecture: Hook → Adapter → Supabase
+ * Alerts Hook - Enhanced with Hexagonal Architecture
+ * Following pattern: Hook → Service → Adapter → Supabase
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { Json } from "@/integrations/supabase/types";
+import { MonitoringAlertService, getMonitoringAlertService, MonitoringAlertStats } from "@/application/services/MonitoringAlertService";
 
 // Re-export AlertData type for compatibility
 export type { AlertData } from "@/dtos/entities";
 import { AlertData } from "@/dtos/entities";
 
-// Stats interface for dashboard
-export interface AlertStats {
-  total: number;
-  critical: number;
-  high: number;
-  medium: number;
-  low: number;
-  acknowledged: number;
-  pending: number;
-}
+// Stats interface for dashboard (re-export for backward compatibility)
+export type AlertStats = MonitoringAlertStats;
 
 // Enhanced result type with all needed properties
 export interface AlertError extends Error {
@@ -81,109 +72,15 @@ export interface UseAlertsHexResult {
   generateAlertReport: (alert: AlertData) => AlertReport;
 }
 
-// Database row interface for type safety
-interface AlertDatabaseRow {
-  id: string;
-  alert_type: string;
-  priority: string;
-  title: string;
-  description: string | null;
-  station_id: string | null;
-  status: string;
-  created_at: string;
-  resolved_by: string | null;
-  resolved_at: string | null;
-  resolution_notes: string | null;
-  metadata: Json | null;
-  assigned_to: string | null;
-  updated_at: string;
-}
-
 /**
- * Fetch alerts from monitoring_alerts table
- */
-async function fetchAlertsFromSupabase(): Promise<AlertData[]> {
-  const { data, error } = await supabase
-    .from('monitoring_alerts')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching alerts:', error);
-    throw new Error('Failed to fetch alerts');
-  }
-
-  // Map database rows to AlertData type
-  return (data || []).map((row: AlertDatabaseRow) => ({
-    id: row.id,
-    type: mapAlertType(row.alert_type),
-    severity: mapPriorityToSeverity(row.priority),
-    title: row.title,
-    message: row.description || '',
-    projectId: row.station_id || '',
-    relatedEntityId: row.id,
-    source: 'notification' as const,
-    timestamp: row.created_at,
-    triggerDate: row.created_at,
-    acknowledged: row.status === 'acknowledged' || row.status === 'resolved',
-    acknowledgedBy: row.resolved_by || undefined,
-    acknowledgedAt: row.resolved_at || undefined,
-    actionRequired: row.status === 'active' || row.status === 'pending',
-    actionTaken: row.resolution_notes || undefined,
-    actionTakenBy: row.resolved_by || undefined,
-    actionTakenAt: row.resolved_at || undefined,
-    status: row.status
-  }));
-}
-
-function mapAlertType(dbType: string): AlertData['type'] {
-  const typeMap: Record<string, AlertData['type']> = {
-    'insurance': 'insurance_expiry',
-    'delay': 'project_delay',
-    'inspection': 'inspection_issue',
-    'financial': 'financial_risk',
-    'guarantee': 'bank_guarantee',
-    'payment': 'payment_blocked',
-    'compliance': 'compliance_violation',
-    'delivery': 'delivery',
-    'deadline': 'deadline',
-    'quality': 'quality'
-  };
-  return typeMap[dbType] || 'project_delay';
-}
-
-function mapPriorityToSeverity(priority: string): AlertData['severity'] {
-  const severityMap: Record<string, AlertData['severity']> = {
-    'critical': 'critical',
-    'high': 'high',
-    'medium': 'medium',
-    'low': 'low'
-  };
-  return severityMap[priority] || 'medium';
-}
-
-/**
- * Calculate stats from alerts
- */
-function calculateStats(alerts: AlertData[]): AlertStats {
-  return {
-    total: alerts.length,
-    critical: alerts.filter(a => a.severity === 'critical').length,
-    high: alerts.filter(a => a.severity === 'high').length,
-    medium: alerts.filter(a => a.severity === 'medium').length,
-    low: alerts.filter(a => a.severity === 'low').length,
-    acknowledged: alerts.filter(a => a.acknowledged).length,
-    pending: alerts.filter(a => !a.acknowledged).length
-  };
-}
-
-/**
- * Enhanced hook for alerts management with real Supabase data
+ * Enhanced hook for alerts management with Hexagonal Architecture
+ * Uses MonitoringAlertService for data access
  */
 export function useAlertsHex(): UseAlertsHexResult {
   const queryClient = useQueryClient();
+  const alertService = getMonitoringAlertService();
 
-  // Query for alerts list from Supabase
+  // Query for alerts list using service
   const {
     data: alerts = [],
     isLoading,
@@ -191,46 +88,23 @@ export function useAlertsHex(): UseAlertsHexResult {
     refetch
   } = useQuery({
     queryKey: ['alerts'],
-    queryFn: fetchAlertsFromSupabase,
+    queryFn: () => alertService.getAllAlerts(),
     retry: 3,
     retryDelay: 1000,
     staleTime: 30000
   });
 
-  // Calculate stats from real data
-  const stats = calculateStats(alerts);
+  // Calculate stats from real data using service
+  const stats = alertService.calculateStats(alerts);
 
-  // Filter alerts by type
+  // Filter alerts by type using service
   const filterAlertsByType = (type: string): AlertData[] => {
-    if (type === 'all') return alerts;
-    return alerts.filter(alert => {
-      if (type === 'delay') return alert.type === 'project_delay';
-      if (type === 'payment') return alert.type === 'payment_blocked' || alert.type === 'financial_risk';
-      if (type === 'inspection') return alert.type === 'inspection_issue' || alert.type === 'inspection_overdue';
-      if (type === 'guarantee') return alert.type === 'bank_guarantee';
-      return true;
-    });
+    return alertService.filterByType(alerts, type);
   };
 
   // Create alert mutation
   const createAlertMutation = useMutation({
-    mutationFn: async (alertData: Partial<AlertData>) => {
-      const { data, error } = await supabase
-        .from('monitoring_alerts')
-        .insert({
-          title: alertData.title || 'New Alert',
-          description: alertData.message,
-          alert_type: alertData.type || 'general',
-          priority: alertData.severity || 'medium',
-          status: 'active',
-          station_id: alertData.projectId
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
+    mutationFn: (alertData: Partial<AlertData>) => alertService.createAlert(alertData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alerts'] });
       toast.success("L'alerte a été créée avec succès.");
@@ -243,19 +117,8 @@ export function useAlertsHex(): UseAlertsHexResult {
 
   // Update alert mutation
   const updateAlertMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<AlertData> }) => {
-      const { error } = await supabase
-        .from('monitoring_alerts')
-        .update({
-          title: data.title,
-          description: data.message,
-          priority: data.severity,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id);
-
-      if (error) throw error;
-    },
+    mutationFn: ({ id, data }: { id: string; data: Partial<AlertData> }) => 
+      alertService.updateAlert(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alerts'] });
       toast.success("L'alerte a été mise à jour.");
@@ -268,14 +131,7 @@ export function useAlertsHex(): UseAlertsHexResult {
 
   // Delete alert mutation
   const deleteAlertMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('monitoring_alerts')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => alertService.deleteAlert(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alerts'] });
       toast.success("L'alerte a été supprimée.");
@@ -288,17 +144,7 @@ export function useAlertsHex(): UseAlertsHexResult {
 
   // Acknowledge alert mutation
   const acknowledgeAlertMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('monitoring_alerts')
-        .update({
-          status: 'acknowledged',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id);
-
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => alertService.acknowledgeAlert(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alerts'] });
       toast.success("L'alerte a été marquée comme reconnue.");
@@ -311,18 +157,7 @@ export function useAlertsHex(): UseAlertsHexResult {
 
   // Resolve alert mutation
   const resolveAlertMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('monitoring_alerts')
-        .update({
-          status: 'resolved',
-          resolved_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id);
-
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => alertService.resolveAlert(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alerts'] });
       toast.success("L'alerte a été résolue.");
@@ -363,11 +198,11 @@ export function useAlertsHex(): UseAlertsHexResult {
     totalAlerts: stats.total,
     criticalAlerts: stats.critical,
     trends: [],
-    averageResolutionTime: 24 // Mock data
+    averageResolutionTime: 24 // Mock data - to be implemented with real analytics
   });
 
   const validateAlertWithReferential = async (alert: AlertData, referentialType: string): Promise<ValidationResult> => {
-    // Mock validation logic
+    // Validation logic can be extended based on referential type
     return { isValid: true, errors: [], warnings: [] };
   };
 
@@ -385,7 +220,7 @@ export function useAlertsHex(): UseAlertsHexResult {
     alerts,
     isLoading,
     loading: isLoading, // Alias for compatibility
-    error,
+    error: error as AlertError | null,
     stats,
     refetch,
     filterAlertsByType,
