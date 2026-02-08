@@ -248,8 +248,8 @@ export class SupabaseProjectAdapter implements IProjectRepository {
     });
   }
 
-  private mapToEntity(project: Partial<Project>): any {
-    const entity: any = {};
+  private mapToEntity(project: Partial<Project>): Record<string, unknown> {
+    const entity: Record<string, unknown> = {};
 
     if (project.title !== undefined) entity.title = project.title;
     if (project.description !== undefined) entity.description = project.description;
@@ -274,14 +274,13 @@ export class SupabaseProjectAdapter implements IProjectRepository {
     if (project.teamSize !== undefined) entity.team_size = project.teamSize;
     if (project.thumbnail !== undefined) entity.thumbnail = project.thumbnail;
     if (project.financingSource !== undefined) entity.financing_source = project.financingSource;
-    if ((project as any).marketType !== undefined) entity.market_type = (project as any).marketType;
-    if ((project as any).selectionMode !== undefined) entity.selection_mode = (project as any).selectionMode;
-    if ((project as any).projectReferenceNumber !== undefined) entity.project_reference = (project as any).projectReferenceNumber;
-    if (project.mainContractor !== undefined) entity.main_contractor = project.mainContractor;
-    if ((project as any).allowsInitialPayment !== undefined) entity.allows_initial_payment = (project as any).allowsInitialPayment;
-    if ((project as any).initialAdvancePercentage !== undefined) entity.initial_payment_percentage = (project as any).initialAdvancePercentage;
-    if ((project as any).currentPhase !== undefined) entity.current_phase = (project as any).currentPhase;
-    if ((project as any).currentStage !== undefined) entity.current_stage = (project as any).currentStage;
+    if (project.marketType !== undefined) entity.market_type = project.marketType;
+    if (project.selectionMode !== undefined) entity.selection_mode = project.selectionMode;
+    if (project.projectReferenceNumber !== undefined) entity.project_reference = project.projectReferenceNumber;
+    if (project.mainContractor !== undefined) entity.main_contractor = typeof project.mainContractor === 'string' ? project.mainContractor : project.mainContractor?.name;
+    if (project.allowsInitialPayment !== undefined) entity.allows_initial_payment = project.allowsInitialPayment;
+    if (project.currentPhase !== undefined) entity.current_phase = project.currentPhase;
+    if (project.currentStage !== undefined) entity.current_stage = project.currentStage;
 
     return entity;
   }

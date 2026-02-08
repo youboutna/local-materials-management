@@ -226,17 +226,10 @@ export class MilestoneService {
    */
   private async getDeliverablesProgress(milestoneId: string): Promise<number> {
     try {
-      const deliverables = await (this.documentRepository as unknown as { 
-        getDeliverablesByMilestone: (id: string) => Promise<unknown[]> 
-      }).getDeliverablesByMilestone(milestoneId);
-      
-      if (!deliverables || deliverables.length === 0) return 0;
-      
-      const completedDeliverables = deliverables.filter((d: unknown) => 
-        (d as { status: string }).status === 'completed'
-      );
-      
-      return (completedDeliverables.length / deliverables.length) * 100;
+      // TODO: Implement proper deliverable tracking when repository supports it
+      // For now, return default progress as deliverables are not linked to milestones
+      console.log(`Deliverables progress for milestone ${milestoneId}: Not implemented, returning 0`);
+      return 0;
     } catch (error) {
       console.error('MilestoneService.getDeliverablesProgress failed:', error);
       return 0;
@@ -248,17 +241,10 @@ export class MilestoneService {
    */
   private async getInspectionsProgress(milestoneId: string): Promise<number> {
     try {
-      const inspections = await (this.inspectionRepository as unknown as { 
-        getByMilestone: (id: string) => Promise<unknown[]> 
-      }).getByMilestone(milestoneId);
-      
-      if (!inspections || inspections.length === 0) return 0;
-      
-      const completedInspections = inspections.filter((i: unknown) => 
-        (i as { status: string }).status === 'approved'
-      );
-      
-      return (completedInspections.length / inspections.length) * 100;
+      // TODO: Implement proper inspection tracking when repository supports it
+      // For now, return default progress as inspections are not linked to milestones
+      console.log(`Inspections progress for milestone ${milestoneId}: Not implemented, returning 0`);
+      return 0;
     } catch (error) {
       console.error('MilestoneService.getInspectionsProgress failed:', error);
       return 0;
@@ -270,17 +256,10 @@ export class MilestoneService {
    */
   private async getMaterialsProgress(milestoneId: string): Promise<number> {
     try {
-      const materials = await (this.materialRepository as unknown as { 
-        getByMilestone: (id: string) => Promise<unknown[]> 
-      }).getByMilestone(milestoneId);
-      
-      if (!materials || materials.length === 0) return 0;
-      
-      const usedMaterials = materials.filter((m: unknown) => 
-        (m as { status: string }).status === 'delivered'
-      );
-      
-      return (usedMaterials.length / materials.length) * 100;
+      // TODO: Implement proper material tracking when repository supports it
+      // For now, return default progress as materials are not linked to milestones
+      console.log(`Materials progress for milestone ${milestoneId}: Not implemented, returning 0`);
+      return 0;
     } catch (error) {
       console.error('MilestoneService.getMaterialsProgress failed:', error);
       return 0;

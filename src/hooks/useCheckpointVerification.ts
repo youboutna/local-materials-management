@@ -12,6 +12,7 @@ import { PaymentService } from '@/application/services/PaymentService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { toast } from '@/hooks/use-toast';
 import { AutomaticDecompteDTO, CheckpointVerificationResultDTO } from '@/dtos/entities/CheckpointDTO';
+import { CalculatePhaseDecompteRequestDto } from '@/dtos/entities/DecompteDTO';
 import type { CreatePaymentDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
 import type { MilestoneDTO } from '@/types/milestone-dto';
 
@@ -103,7 +104,7 @@ export function useCheckpointVerification({
         return [];
       }
     },
-    enabled: !!projectId,
+    enabled: !!projectId && !!phaseId,
     staleTime: 30_000,
   });
 
@@ -113,6 +114,11 @@ export function useCheckpointVerification({
     queryFn: async (): Promise<AutomaticDecompteDTO | null> => {
       if (!phaseId) {
         console.warn('Phase ID is required for decompte calculation');
+        return null;
+      }
+      
+      if (!projectId) {
+        console.warn('Project ID is required for decompte calculation');
         return null;
       }
       
@@ -127,13 +133,16 @@ export function useCheckpointVerification({
         });
 
         const calculator = new AutomaticDecompteCalculator(projectId);
-        return await calculator.calculatePhaseDecompte(phaseId);
+        return await calculator.calculatePhaseDecompte({
+          projectId,
+          phaseId
+        });
       } catch (error) {
         console.error('AutomaticDecompteCalculator.calculatePhaseDecompte failed:', error);
         return null;
       }
     },
-    enabled: !!phaseId,
+    enabled: !!projectId && !!phaseId,
     staleTime: 30_000,
     retry: (failureCount, error) => {
       // Don't retry on "Phase ID is required" errors

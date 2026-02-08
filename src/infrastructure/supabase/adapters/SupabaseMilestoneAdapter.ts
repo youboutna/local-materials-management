@@ -38,7 +38,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
   async findByProjectId(projectId: string): Promise<MilestoneDTO[]> {
     try {
       const { data, error } = await supabase
-        .from('project_milestones')
+        .from('enhanced_project_milestones')
         .select('*')
         .eq('project_id', projectId)
         .order('target_date', { ascending: true });
@@ -61,7 +61,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
   async findByPhaseId(phaseId: string): Promise<MilestoneDTO[]> {
     try {
       const { data, error } = await supabase
-        .from('project_milestones')
+        .from('enhanced_project_milestones')
         .select('*')
         .eq('phase_id', phaseId)
         .order('target_date', { ascending: true });

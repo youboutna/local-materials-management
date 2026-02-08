@@ -14,12 +14,9 @@ import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
 import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
 import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
-import {
-  CheckpointDTO
-} from '@/dtos/entities/CheckpointDTO';
-import { CheckpointVerificationResultDTO } from '@/dtos/entities/CheckpointVerificationResultDTO';
-import { VerificationItemDTO, VerificationStatus } from '@/dtos/entities/VerificationItemDTO';
-import { CheckpointCategory } from '@/dtos/entities/CheckpointDTO';
+import { CheckpointDTO, CheckpointVerificationResultDTO } from '@/dtos/entities/CheckpointDTO';
+import { CheckpointVerificationResult } from '@/dtos/entities/CheckpointVerificationDTO';
+import { CheckpointCategory, VerificationStatus, VerificationItemDTO } from '@/types/checkpoint-dto';
 import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { DEFAULT_MAURITANIA_RULES } from '@/dtos/entities/VerificationItemDTO';
 import { VerifyCheckpointRequestDto, VerifyCheckpointResponseDto, VerifyInspectionsRequestDto, VerifyDocumentsRequestDto, VerifyApprovalsRequestDto, VerifyResourcesRequestDto, VerifyServiceFaitRequestDto } from '@/dtos/entities/CheckpointVerificationDTO';
@@ -52,7 +49,10 @@ export class CheckpointVerificationEngine {
   /**
    * Vérifie un checkpoint complet
    */
-  async verifyCheckpoint(request: VerifyCheckpointRequestDto): Promise<VerifyCheckpointResponseDto> {
+  async verifyCheckpoint(request: VerifyCheckpointRequestDto): Promise<{
+    result: CheckpointVerificationResult;
+    errors?: string[];
+  }> {
     try {
       if (!request.checkpoint) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Checkpoint is required');
@@ -117,17 +117,15 @@ export class CheckpointVerificationEngine {
       const verificationScore = totalWeight > 0 ? Math.round((verifiedWeight / totalWeight) * 100) : 0;
 
       // Déterminer le statut global
-      let overallStatus: VerificationStatus = 'pending';
+      let overallStatus: 'pending' | 'verified' | 'rejected' = 'pending';
       const requiredFailed = requiredItems.filter(item => item.status === 'failed');
       const requiredVerified = requiredItems.filter(item => item.status === 'verified');
 
       if (requiredFailed.length > 0) {
-        overallStatus = 'failed';
+        overallStatus = 'rejected';
         blockingIssues.push(...requiredFailed.map(item => `${item.title}: Vérification échouée`));
       } else if (requiredVerified.length === requiredItems.length) {
         overallStatus = 'verified';
-      } else if (verifiedItems.length > 0) {
-        overallStatus = 'in_progress';
       }
 
       // Ajouter des avertissements pour les items non-requis échoués
@@ -139,19 +137,14 @@ export class CheckpointVerificationEngine {
       // Vérifier si peut procéder au paiement
       const canProceed = overallStatus === 'verified' && blockingIssues.length === 0;
 
-      const result: CheckpointVerificationResultDTO = {
-        checkpoint_id: request.checkpoint.id,
-        milestone_id: request.checkpoint.milestone_id,
-        overall_status: overallStatus,
-        verification_score: verificationScore,
-        verification_items: verificationItems,
-        required_items_count: requiredItems.length,
-        verified_items_count: verifiedItems.length,
-        failed_items_count: failedItems.length,
-        blocking_issues: blockingIssues,
-        warnings,
-        can_proceed: canProceed,
-        verified_at: overallStatus === 'verified' ? new Date().toISOString() : undefined,
+      const result: CheckpointVerificationResult = {
+        id: `verify-${Date.now()}`,
+        checkpointId: request.checkpoint.id,
+        projectId: request.projectId || this.projectId,
+        verified: overallStatus === 'verified',
+        verifiedAt: overallStatus === 'verified' ? new Date().toISOString() : undefined,
+        notes: warnings.length > 0 ? warnings.join('; ') : undefined,
+        status: overallStatus
       };
 
       return { result };
@@ -159,7 +152,7 @@ export class CheckpointVerificationEngine {
       console.error('CheckpointVerificationEngine.verifyCheckpoint failed:', error);
       const errorMessage = error instanceof AppError ? error.message : 'Failed to verify checkpoint';
       return {
-        result: {} as CheckpointVerificationResultDTO,
+        result: {} as CheckpointVerificationResult,
         errors: [errorMessage]
       };
     }
@@ -380,25 +373,17 @@ export class CheckpointVerificationEngine {
   /**
    * Vérifie si un paiement peut être déclenché
    */
-  async canTriggerPayment(checkpoint: CheckpointDTO): Promise<{
+  async checkPaymentEligibility(checkpoint: CheckpointDTO): Promise<{
     allowed: boolean;
     reason: string;
     maxAmount: number;
   }> {
-    if (!checkpoint.triggers_payment) {
+    const verifyResult = await this.verifyCheckpoint({ checkpoint, projectId: this.projectId });
+
+    if (!verifyResult.result.verified) {
       return {
         allowed: false,
         reason: 'Ce checkpoint ne déclenche pas de paiement',
-        maxAmount: 0,
-      };
-    }
-
-    const verifyResult = await this.verifyCheckpoint({ checkpoint, projectId: this.projectId });
-
-    if (!verifyResult.result.can_proceed) {
-      return {
-        allowed: false,
-        reason: verifyResult.result.blocking_issues?.join(', ') || 'Vérifications incomplètes',
         maxAmount: 0,
       };
     }
@@ -538,8 +523,8 @@ export class CheckpointVerificationEngine {
     try {
       const verifyResult = await this.verifyCheckpoint({ checkpoint, projectId: this.projectId });
 
-      const isValid = verifyResult.result?.can_proceed ?? false;
-      const issues = verifyResult.result?.blocking_issues ?? [];
+      const isValid = verifyResult.result?.verified ?? false;
+      const issues = verifyResult.result?.notes ? [verifyResult.result.notes] : [];
       
       if (!isValid) {
         return { isValid, issues, timestamp: new Date() };

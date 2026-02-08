@@ -421,7 +421,21 @@ export class ProjectWorkflowTransforms {
       budget: formData.budget as number,
       startDate: formData.startDate as string,
       endDate: formData.endDate as string,
-      status: formData.status as string
+      status: formData.status as string,
+      progress: formData.progress as number,
+      thumbnail: formData.thumbnail as string,
+      teamSize: formData.teamSize as number,
+      financingSource: formData.financing_source as string,
+      marketType: formData.market_type as string,
+      selectionMode: formData.selection_mode as string,
+      projectReference: formData.project_reference as string,
+      mainContractor: formData.main_contractor as string,
+      engineeringConsultant: formData.engineering_consultant as string,
+      allowsInitialPayment: formData.allows_initial_payment as boolean,
+      initialPaymentPercentage: formData.initial_payment_percentage as number,
+      currentPhase: formData.current_phase as string,
+      currentStage: formData.current_stage as string,
+      coordinates: formData.coordinates as { latitude: number; longitude: number }
     };
   }
 

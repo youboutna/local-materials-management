@@ -7,8 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { PhaseService, PhaseData } from "@/application/services/PhaseService";
-import { supabase } from '@/integrations/supabase/client';
+import { usePhaseDetails } from '@/hooks/usePhaseDetails';
+import { PhaseDTO } from "@/dtos/entities/PhaseDTO";
 import PhaseTasks from '@/components/project/PhaseTasks';
 import PhaseMaterials from '@/components/project/PhaseMaterials';
 import PhaseEmployees from '@/components/project/PhaseEmployees';
@@ -39,100 +39,37 @@ const PhaseDetail: React.FC = () => {
   const { projectId, phaseId } = useParams<{ projectId: string; phaseId: string }>();
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const [phase, setPhase] = useState<PhaseData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [actualCost, setActualCost] = useState<number>(0);
-  const [materialsCount, setMaterialsCount] = useState<number>(0);
-  const [employeesCount, setEmployeesCount] = useState<number>(0);
+  const [activeTab, setActiveTab] = useState('overview');
 
-  // Function to calculate actual costs and counts from database
-  const calculatePhaseMetrics = async (phaseId: string) => {
-    try {
-      // Calculate actual cost from materials
-      const { data: materialData, error: materialError } = await supabase
-        .from('project_materials')
-        .select(`
-          quantity,
-          material:materials(price_per_unit)
-        `)
-        .eq('phase_id', phaseId);
+  // 🎨 UI Layer - Use hexagonal hook (Rule #1 & #5 compliant)
+  const {
+    phase,
+    loading,
+    error,
+    metrics,
+    metricsLoading,
+    updatePhase,
+    updatePhaseAsync,
+    isUpdating,
+    updateTaskStatus,
+    // Step operations
+    addStep,
+    updateStep,
+    deleteStep,
+    // Task operations
+    addTask,
+    updateTask,
+    deleteTask,
+    getWorkflowHierarchy,
+    refetch
+  } = usePhaseDetails(phaseId);
 
-      if (materialError) throw materialError;
-
-      const materialCost = materialData?.reduce((sum, pm) => 
-        sum + (pm.quantity * (pm.material?.price_per_unit || 0)), 0
-      ) || 0;
-
-      // Calculate cost from employees
-      const { data: employeeData, error: employeeError } = await supabase
-        .from('phase_employees')
-        .select('*')
-        .eq('phase_id', phaseId);
-
-      if (employeeError) throw employeeError;
-
-      const employeeCost = employeeData?.reduce((sum, emp) => {
-        const dailyRate = emp.daily_rate || 0;
-        const startDate = emp.start_date ? new Date(emp.start_date) : null;
-        const endDate = emp.end_date ? new Date(emp.end_date) : null;
-        
-        if (startDate && endDate) {
-          const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          return sum + (dailyRate * diffDays);
-        }
-        return sum;
-      }, 0) || 0;
-
-      setActualCost(materialCost + employeeCost);
-      setMaterialsCount(materialData?.length || 0);
-      setEmployeesCount(employeeData?.length || 0);
-
-    } catch (error) {
-      console.error('Error calculating phase metrics:', error);
-    }
-  };
-
-  useEffect(() => {
-    const loadPhase = async () => {
-      if (!projectId || !phaseId) return;
-      
-      try {
-        setLoading(true);
-        const phases = await PhaseService.loadProjectPhases(projectId);
-        const foundPhase = phases.find(p => p.id === phaseId);
-        
-        if (foundPhase) {
-          setPhase(foundPhase);
-          // Calculate actual metrics from database
-          await calculatePhaseMetrics(phaseId);
-        } else {
-          toast({
-            title: "Erreur",
-            description: "Phase non trouvée",
-            variant: "destructive",
-          });
-          navigate(`/projects/${projectId}`);
-        }
-      } catch (error) {
-        console.error('Error loading phase:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger la phase",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadPhase();
-  }, [projectId, phaseId, navigate]);
-
+  // 🎨 UI Layer - Presentation logic only
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return 'bg-green-100 text-green-800 border-green-200';
       case 'in_progress': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'delayed': return 'bg-red-100 text-red-800 border-red-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }

@@ -21,7 +21,8 @@ import { Banknote } from "lucide-react";
 import InitiatePaymentModal from "@/components/payment/InitiatePaymentModal";
 
 // Hooks
-import { usePhaseDetails } from "@/hooks/usePhaseDetails";
+import { PhaseDTO, PhaseMilestoneDTO, PhaseStepDTO, PhaseStatus } from '@/dtos/entities/PhaseDTO';
+import { usePhaseDetails } from '@/hooks/usePhaseDetails';
 import { usePhaseWorkflow } from "@/hooks/usePhaseWorkflow";
 import { useWorkflowOrchestrator } from "@/hooks/useWorkflowOrchestrator";
 
@@ -43,22 +44,20 @@ import PhaseInspections from "./PhaseInspections";
 import PhasePayments from "./PhasePayments";
 import ScheduleInspectionModal from "@/components/inspections/ScheduleInspectionModal";
 
-// Local UI type for phase with dual-casing support
-interface PhaseUI {
+// Phase UI interface for component layer with proper DTO support
+// This interface represents the phase data structure needed by the UI layer
+// It bridges between raw data from services and the UI display requirements
+interface PhaseUIData {
   id: string;
-  phaseName?: string;
-  phase_name?: string;
-  description?: string;
-  startDate?: string;
-  start_date?: string;
-  endDate?: string;
-  end_date?: string;
-  estimatedCost?: number;
-  estimated_cost?: number;
-  status?: string;
-  progress?: number;
-  steps?: any[];
-  milestones?: any[];
+  name: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  estimatedCost: number;
+  status: PhaseStatus;
+  progress: number;
+  steps?: PhaseStepDTO[];
+  milestones?: PhaseMilestoneDTO[];
 }
 
 const PhaseDetailsPage: React.FC = () => {
@@ -80,33 +79,32 @@ const PhaseDetailsPage: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState("hierarchy");
   const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState<any>({});
+  const [editForm, setEditForm] = useState<Partial<PhaseDTO>>({});
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [inspectionContext, setInspectionContext] = useState<{ stepId?: string; milestoneId?: string }>({});
+  const [inspectionContext, setInspectionContext] = useState({});
 
   const { phase: rawPhase, isLoading, error, metrics, updatePhase, isUpdating } = usePhaseDetails(phaseId);
 
   // Map raw phase to UI format with dual-casing support
-  const phase: PhaseUI | null = rawPhase ? {
-    id: rawPhase.id,
-    phaseName: (rawPhase as any).phaseName || (rawPhase as any).phase_name,
-    phase_name: (rawPhase as any).phase_name || (rawPhase as any).phaseName,
-    description: rawPhase.description,
-    startDate: (rawPhase as any).startDate || (rawPhase as any).start_date,
-    start_date: (rawPhase as any).start_date || (rawPhase as any).startDate,
-    endDate: (rawPhase as any).endDate || (rawPhase as any).end_date,
-    end_date: (rawPhase as any).end_date || (rawPhase as any).endDate,
-    estimatedCost: (rawPhase as any).estimatedCost ?? (rawPhase as any).estimated_cost,
-    estimated_cost: (rawPhase as any).estimated_cost ?? (rawPhase as any).estimatedCost,
-    status: rawPhase.status,
-    progress: rawPhase.progress,
-    steps: rawPhase.steps,
-    milestones: (rawPhase as any).milestones
-  } : null;
+  const phase: PhaseUIData | null = useMemo(() => {
+    if (!rawPhase) return null;
+    return {
+      id: rawPhase.id,
+      name: rawPhase.name,
+      description: rawPhase.description,
+      startDate: rawPhase.startDate,
+      endDate: rawPhase.endDate,
+      estimatedCost: rawPhase.estimatedCost || rawPhase.estimated_cost || 0,
+      status: rawPhase.status,
+      progress: rawPhase.progress,
+      steps: rawPhase.steps,
+      milestones: rawPhase.milestones
+    };
+  }, [rawPhase]);
 
-  const phaseName = phase?.phaseName || phase?.phase_name || 'Phase';
-  const estimatedCost = phase?.estimatedCost ?? phase?.estimated_cost ?? 0;
+  const phaseName = phase?.phaseName || 'Phase';
+  const estimatedCost = phase?.estimatedCost || 0;
 
   const {
     workflowMetrics,
@@ -141,13 +139,13 @@ const PhaseDetailsPage: React.FC = () => {
   useEffect(() => {
     if (phase) {
       setEditForm({
-        phase_name: phaseName,
+        name: phase.name,
         description: phase.description,
-        start_date: phase.startDate || phase.start_date,
-        end_date: phase.endDate || phase.end_date,
-        estimated_cost: estimatedCost,
+        startDate: phase.startDate,
+        endDate: phase.endDate,
+        estimatedCost: estimatedCost,
         status: phase.status,
-        progress: phase.progress,
+        progress: phase.progress
       });
     }
   }, [phase]);
@@ -208,7 +206,7 @@ const PhaseDetailsPage: React.FC = () => {
 
   // Calcul des métriques pour PhaseHeader
   const phaseMetrics = useMemo(() => {
-    const milestones = phase?.milestones || [];
+    const milestones = Array.isArray(phase?.milestones) ? phase.milestones : [];
     return {
       stepsCount: phase?.steps?.length || 0,
       completedSteps: phase?.steps?.filter((s: any) => s.status === 'completed').length || 0,
@@ -244,11 +242,12 @@ const PhaseDetailsPage: React.FC = () => {
   // Create compatible phase object for child components
   const phaseForComponents = {
     ...rawPhase,
-    phase_name: phaseName,
-    start_date: phase.startDate || phase.start_date,
-    end_date: phase.endDate || phase.end_date,
-    estimated_cost: estimatedCost
-  } as any;
+    name: phaseName,
+    startDate: phase.startDate,
+    endDate: phase.endDate,
+    estimatedCost: estimatedCost,
+    projectId: projectId
+  };
 
   return (
     <div className="container mx-auto mt-14 py-6 space-y-6">

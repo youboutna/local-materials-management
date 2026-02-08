@@ -41,8 +41,8 @@ import {
   SelectValue,
 } from "../ui/select";
 
-// Import hexagonal hooks
-import { useProjectCreationHex } from "../../hooks/hexagonal/useProjectCreationHex";
+// Import unified workflow hook
+import { useUnifiedProjectWorkflow } from "../../hooks/hexagonal/useUnifiedProjectWorkflow";
 
 // Import ProjectWorkflowService and RepositoryFactory
 import { ProjectWorkflowService } from "@/application/services/ProjectWorkflowService";
@@ -74,15 +74,22 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   onMaterialsChange,
   initialData,
 }) => {
-  // ⚡ Application Layer - Hook hexagonal pour la gestion du workflow
+  // ⚡ Application Layer - Hook unified workflow
   const {
-    createProject,
-    validateWorkflow,
-    validateWorkflowStep,
-    isCreating,
-    isValidating,
-    prepareProjectData
-  } = useProjectCreationHex();
+    workflowState,
+    formData,
+    currentStepInfo,
+    isStepCompleted,
+    progressPercentage,
+    isLoading,
+    error,
+    updateFormData,
+    nextStep,
+    previousStep,
+    saveCurrentStep,
+    validateCurrentStep,
+    workflowSteps
+  } = useUnifiedProjectWorkflow('creation');
 
   // 🎨 UI Layer - États locaux pour la présentation uniquement (Règle PROMPTS.md #5)
   const [currentStep, setCurrentStep] = useState(0);

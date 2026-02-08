@@ -233,12 +233,12 @@ const UnifiedCascadeWorkflow: React.FC<UnifiedCascadeWorkflowProps> = ({
 
       {/* Timeline intégrée Étapes + Jalons */}
       <IntegratedWorkflowTimeline
-        projectId={phase.project_id}
+        projectId={phase.projectId}
         phaseId={phase.id}
-        phaseName={phase.phase_name}
+        phaseName={phase.name}
         steps={phaseSteps}
-        phaseStartDate={phase.start_date}
-        phaseEndDate={phase.end_date}
+        phaseStartDate={phase.startDate}
+        phaseEndDate={phase.endDate}
         onStepClick={(step) => setSelectedStep(step)}
         onMilestoneClick={(id) => onMilestoneAction?.('edit', { id })}
       />

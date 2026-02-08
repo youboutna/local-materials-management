@@ -67,7 +67,7 @@ export const PhaseWithDirectMilestonesView: React.FC<PhaseWithDirectMilestonesVi
   onAddMilestone,
   className,
 }) => {
-  const milestones = phase.milestones || [];
+  const milestones = Array.isArray(phase.milestones) ? phase.milestones : [];
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [filterType, setFilterType] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);

@@ -13,7 +13,6 @@ import {
   CreateBankGuaranteeDTO,
   GetBankGuaranteesOptionsDTO
 } from '@/dtos/entities/BankGuaranteeDTO';
-import { BankGuaranteeDto } from '@/dtos/bank-guarantees/BankGuaranteeDto';
 
 /**
  * Bank Guarantee Service - Hexagonal Architecture
@@ -405,7 +404,7 @@ export class BankGuaranteeService {
   /**
    * Map repository result to DTO
    */
-  private mapToDTO(repositoryResult: BankGuaranteeDto): BankGuaranteeDTO {
+  private mapToDTO(repositoryResult: BankGuaranteeDTO): BankGuaranteeDTO {
     if (!repositoryResult) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Invalid repository result');
     }
@@ -418,9 +417,10 @@ export class BankGuaranteeService {
       guaranteeType: repositoryResult.type || repositoryResult.guaranteeType || repositoryResult.guarantee_type || 'performance',
       number: repositoryResult.number || repositoryResult.guaranteeNumber || repositoryResult.guarantee_number || '',
       guaranteeNumber: repositoryResult.number || repositoryResult.guaranteeNumber || repositoryResult.guarantee_number || '',
-      issuingBank: repositoryResult.issuingBank || repositoryResult.issuing_bank || repositoryResult.bankName || '',
-      beneficiary: repositoryResult.beneficiary || repositoryResult.bankName || repositoryResult.issuingBank || '',
-      issueDate: repositoryResult.issueDate || repositoryResult.issue_date || '',
+      issuingBank: repositoryResult.issuingBank || repositoryResult.issuing_bank || repositoryResult.bank_name || '',
+      beneficiary: repositoryResult.beneficiary || repositoryResult.bank_name || '',
+      bank_name: repositoryResult.bank_name || '',
+      issueDate: repositoryResult.issueDate || repositoryResult.issue_date || new Date().toISOString().split('T')[0],
       expiryDate: repositoryResult.expiryDate || repositoryResult.expiry_date || '',
       amount: repositoryResult.amount || repositoryResult.guaranteeAmount || repositoryResult.guarantee_amount || 0,
       currency: repositoryResult.currency || 'MRO',

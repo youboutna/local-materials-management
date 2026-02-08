@@ -18,6 +18,7 @@ import {
   EmployeeType,
   EmployeeStatus
 } from '@/dtos/entities/EmployeeDTO';
+import { EmployeeTransformer } from '@/dtos/transforms/EmployeeTransformer';
 
 export class EmployeeService {
   constructor(private employeeRepository: IEmployeeRepository = RepositoryFactory.getEmployeeRepository()) {}
@@ -118,17 +119,17 @@ export class EmployeeService {
   /**
    * Create a new employee
    */
-  async createEmployee(employeeData: CreateEmployeeDTO): Promise<Employee> {
+  async createEmployee(employeeData: CreateEmployeeDTO): Promise<EmployeeDTO> {
     try {
       const employee = new Employee(
-        this.generateId(), // id
-        this.generateEmployeeId(), // employeeId
+        this.generateId(),
+        this.generateEmployeeId(),
         employeeData.fullName || `${employeeData.firstName} ${employeeData.lastName}`,
         employeeData.email || null,
         employeeData.phone || null,
         employeeData.position || null,
-        employeeData.department || null,
-        employeeData.role || { name: 'employee', permissions: [] },
+        employeeData.department as any || null,
+        employeeData.role as any || { name: 'employee', permissions: [] },
         employeeData.hireDate || null,
         employeeData.salary || null,
         employeeData.isActive !== undefined ? employeeData.isActive : true,
@@ -139,23 +140,30 @@ export class EmployeeService {
         [], // managedProjects
         [], // teamMembers
         employeeData.skills || [],
-        (employeeData.certifications || []).map(c => ({ name: c, issuedDate: new Date().toISOString() })),
+        (employeeData.certifications || []).map(c => ({ 
+        id: '',
+        name: c, 
+        issuedBy: 'system',
+        expiryDate: new Date().toISOString(),
+        employeeId: this.generateId()
+      } as any)),
         new Date().toISOString(), // createdAt
         new Date().toISOString()  // updatedAt
       );
       
       await this.employeeRepository.save(employee);
-      return employee;
+      
+      return EmployeeTransformer.toDTO(employee);
     } catch (error) {
       console.error('EmployeeService.createEmployee failed:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create employee');
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create employee');
     }
   }
 
   /**
    * Update an existing employee
    */
-  async updateEmployee(id: string, updates: UpdateEmployeeDTO): Promise<Employee> {
+  async updateEmployee(id: string, updates: UpdateEmployeeDTO): Promise<EmployeeDTO> {
     try {
       const existingEmployee = await this.employeeRepository.findById(id);
       if (!existingEmployee) {

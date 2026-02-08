@@ -35,8 +35,8 @@ import {
   RotateCcw,
 } from "lucide-react";
 
-// Import hexagonal hook
-import { useProjectEditHex, ProjectEditFormData } from "../../hooks/hexagonal/useProjectEditHex";
+// Import unified workflow hook
+import { useUnifiedProjectWorkflow } from "../../hooks/hexagonal/useUnifiedProjectWorkflow";
 import { useProjectMaterialsHex } from "@/hooks/hexagonal";
 
 // Import transformer for UI conversions
@@ -50,8 +50,9 @@ import { PhaseDTO } from "@/dtos/entities/PhaseDTO";
 import ProjectInfoStep from "./steps/ProjectInfoStep";
 import StakeholdersTeamStep from "./steps/StakeholdersTeamStep";
 import LocationStep from "./steps/LocationStep";
-import RiskAnalysisStep from "./steps/RiskAnalysisStep";
-import ComplianceStep from "./steps/ComplianceStep";
+import { RiskAnalysisStep } from './steps/RiskAnalysisStep';
+import { ComplianceStep } from './steps/ComplianceStep';
+import { EnhancedValidationStep } from './steps/EnhancedValidationStep';
 import ConstructionPhaseManager from "./ConstructionPhaseManager";
 
 interface EnhancedProjectEditFormProps {
@@ -72,20 +73,22 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
   const { id: projectId } = useParams<{ id: string }>();
   const [currentStep, setCurrentStep] = useState(1);
 
-  // Step 1 & 9: Use hexagonal hook for data and state management
+  // Unified workflow hook
   const {
+    workflowState,
     formData,
-    updateFormData,
+    currentStepInfo,
+    isStepCompleted,
+    progressPercentage,
     isLoading,
-    isSaving,
     error,
-    saveProject,
-    refetch,
-    resetForm,
-    validateFormData,
-    uiState,
-    isDirty,
-  } = useProjectEditHex(projectId);
+    updateFormData,
+    nextStep,
+    previousStep,
+    saveCurrentStep,
+    validateCurrentStep,
+    workflowSteps
+  } = useUnifiedProjectWorkflow('edit', projectId);
 
   // Materials via hexagonal hook
   const { 
@@ -288,45 +291,11 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
         );
       case 7:
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-teal-500" />
-                Validation et Conformité Finale
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Statut du Projet
-                </label>
-                <select
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary"
-                  value={formData.status || ""}
-                  onChange={(e) => handleFormUpdate({ status: e.target.value })}
-                >
-                  <option value="">Sélectionner</option>
-                  <option value="draft">Brouillon</option>
-                  <option value="en cours">En cours</option>
-                  <option value="en attente">En attente</option>
-                  <option value="terminé">Terminé</option>
-                  <option value="suspendu">Suspendu</option>
-                  <option value="annulé">Annulé</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Notes de Clôture
-                </label>
-                <textarea
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary min-h-[100px]"
-                  placeholder="Notes finales, observations, recommandations..."
-                  value={(formData as any).closureNotes || ""}
-                  onChange={(e) => handleFormUpdate({ closureNotes: e.target.value } as any)}
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <EnhancedValidationStep
+            formData={formData}
+            onUpdate={handleFormUpdateAdapter}
+            isEditing={true}
+          />
         );
       default:
         return null;

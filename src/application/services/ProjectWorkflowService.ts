@@ -12,13 +12,43 @@ import type { IProjectRepository } from '@/domain/repositories/IProjectRepositor
 import type { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import type { IRiskRepository } from '@/domain/repositories/IRiskRepository';
 import type { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
+import type { IMilestoneRepository } from '@/domain/repositories/IMilestoneRepository';
+import type { ITaskRepository } from '@/domain/repositories/ITaskRepository';
+import type { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
+import type { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
+import type { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
+import type { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
+import type { IEmployeeRepository } from '@/domain/repositories/IEmployeeRepository';
+import type { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
+import type { IReceptionRepository } from '@/domain/repositories/IReceptionRepository';
 import { WorkflowStep, WorkflowState, WorkflowTransition, ProjectWorkflowData, ValidationResult, SaveResult } from '@/dtos/workflows/ProjectWorkflowDTOs';
 import { ProjectDTO, CreateProjectDTO, UpdateProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { PhaseDTO, PhaseStatus, PhaseType, PhasePriority } from '@/dtos/entities/PhaseDTO';
-import { RiskStatus } from '@/dtos/entities/RiskDTO';
+import { RiskDTO, RiskStatus } from '@/dtos/entities/RiskDTO';
+import { MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
+import { TaskDTO } from '@/dtos/entities/TaskDTO';
+import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
+import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
+import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
+import { PaymentDTO } from '@/dtos/entities/PaymentDTO';
+import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
+import { SupplierDTO } from '@/dtos/entities/SupplierDTO';
+import { ReferentialService } from '@/application/services/ReferentialService';
+import { PhaseService } from '@/application/services/PhaseService';
+import { MilestoneService } from '@/application/services/MilestoneService';
+import { TaskService } from '@/application/services/TaskService';
+import { MaterialService } from '@/application/services/MaterialService';
+import { InspectionService } from '@/application/services/InspectionService';
+import { DocumentService } from '@/application/services/DocumentService';
+import { PaymentService } from '@/application/services/PaymentService';
+import { EmployeeService } from '@/application/services/EmployeeService';
+import { SupplierService } from '@/application/services/SupplierService';
+import { ReceptionService } from '@/application/services/ReceptionService';
+import { BankGuaranteeService } from '@/application/services/BankGuaranteeService';
+import { InsuranceService } from '@/application/services/InsuranceService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { ProjectTransformer } from '@/dtos/transforms/ProjectTransformer';
-import { ReferentialService, ProjectPhaseDTO } from './ReferentialService';
 import { ReferentialType } from '@/config/referentials';
 
 export enum WorkflowMode {
@@ -43,14 +73,51 @@ export interface WorkflowResult {
 
 export class ProjectWorkflowService {
   private referentialService: ReferentialService;
+  
+  // Additional services for comprehensive project management (optional)
+  private phaseService: PhaseService;
+  private milestoneService?: MilestoneService;
+  private taskService?: TaskService;
+  private materialService?: MaterialService;
+  private inspectionService?: InspectionService;
+  private documentService?: DocumentService;
+  private paymentService?: PaymentService;
+  private employeeService?: EmployeeService;
+  private supplierService?: SupplierService;
+  private receptionService?: ReceptionService;
+  private bankGuaranteeService: BankGuaranteeService;
+  private insuranceService: InsuranceService;
 
   constructor(
     private projectRepository: IProjectRepository,
     private phaseRepository: IPhaseRepository,
     private riskRepository: IRiskRepository,
-    private stakeholderRepository: IProjectStakeholderRepository
+    private stakeholderRepository: IProjectStakeholderRepository,
+    private milestoneRepository?: IMilestoneRepository,
+    private taskRepository?: ITaskRepository,
+    private materialRepository?: IMaterialRepository,
+    private inspectionRepository?: IInspectionRepository,
+    private documentRepository?: IDocumentRepository,
+    private paymentRepository?: IPaymentRepository,
+    private employeeRepository?: IEmployeeRepository,
+    private supplierRepository?: ISupplierRepository,
+    private receptionRepository?: IReceptionRepository
   ) {
     this.referentialService = ReferentialService.getInstance();
+    
+    // Initialize additional services
+    this.phaseService = new PhaseService(phaseRepository);
+    this.milestoneService = milestoneRepository ? new MilestoneService(milestoneRepository) : undefined;
+    this.taskService = taskRepository ? new TaskService(taskRepository) : undefined;
+    this.materialService = materialRepository ? new MaterialService(materialRepository) : undefined;
+    this.inspectionService = inspectionRepository ? new InspectionService(inspectionRepository) : undefined;
+    this.documentService = documentRepository ? new DocumentService(documentRepository) : undefined;
+    this.paymentService = paymentRepository ? new PaymentService(paymentRepository) : undefined;
+    this.employeeService = employeeRepository ? new EmployeeService(employeeRepository) : undefined;
+    this.supplierService = supplierRepository ? new SupplierService(supplierRepository) : undefined;
+    this.receptionService = receptionRepository ? new ReceptionService(receptionRepository, documentRepository || RepositoryFactory.getDocumentRepository(), inspectionRepository || RepositoryFactory.getInspectionRepository(), employeeRepository || RepositoryFactory.getEmployeeRepository()) : undefined;
+    this.bankGuaranteeService = new BankGuaranteeService(RepositoryFactory.getBankGuaranteeRepository());
+    this.insuranceService = new InsuranceService(RepositoryFactory.getInsuranceRepository());
   }
 
   // =================== WORKFLOW INITIALIZATION ===================
@@ -292,6 +359,106 @@ export class ProjectWorkflowService {
         await this.riskRepository.save(riskEntity as any);
       }
     }
+
+    // Save milestones if provided
+    if (relatedData.milestones && relatedData.milestones.length > 0 && this.milestoneService) {
+      for (const milestone of relatedData.milestones) {
+        await this.milestoneService.createMilestone({
+          ...milestone,
+          projectId
+        } as any);
+      }
+    }
+
+    // Save tasks if provided
+    if (relatedData.tasks && relatedData.tasks.length > 0 && this.taskService) {
+      for (const task of relatedData.tasks) {
+        await this.taskService.createTask({
+          ...task,
+          projectId
+        } as any);
+      }
+    }
+
+    // Save materials if provided
+    if (relatedData.materials && relatedData.materials.length > 0 && this.materialService) {
+      for (const material of relatedData.materials) {
+        await this.materialService.createMaterial({
+          ...material,
+          projectId
+        } as any);
+      }
+    }
+
+    // Save inspections if provided
+    if (relatedData.inspections && relatedData.inspections.length > 0 && this.inspectionService) {
+      for (const inspection of relatedData.inspections) {
+        await this.inspectionService.createInspection({
+          ...inspection,
+          projectId
+        } as any);
+      }
+    }
+
+    // Save documents if provided
+    if (relatedData.documents && relatedData.documents.length > 0 && this.documentService) {
+      for (const document of relatedData.documents) {
+        await this.documentService.createDocument({
+          ...document,
+          projectId
+        } as any);
+      }
+    }
+
+    // Save payments if provided
+    if (relatedData.payments && relatedData.payments.length > 0 && this.paymentService) {
+      for (const payment of relatedData.payments) {
+        await this.paymentService.createPayment({
+          ...payment,
+          projectId
+        } as any);
+      }
+    }
+
+    // Save stakeholders if provided
+    if (relatedData.stakeholders && relatedData.stakeholders.length > 0) {
+      for (const stakeholder of relatedData.stakeholders) {
+        await this.stakeholderRepository.create({
+          ...stakeholder,
+          projectId
+        } as any);
+      }
+    }
+
+    // Save bank guarantees if provided
+    if (relatedData.bankGuarantees && relatedData.bankGuarantees.length > 0) {
+      for (const guarantee of relatedData.bankGuarantees) {
+        await this.bankGuaranteeService.createBankGuarantee({
+          ...guarantee,
+          projectId
+        } as any);
+      }
+    }
+
+    // Save insurance certificates if provided
+    if (relatedData.insuranceCertificates && relatedData.insuranceCertificates.length > 0) {
+      for (const certificate of relatedData.insuranceCertificates) {
+        await this.insuranceService.createInsuranceCertificate({
+          ...certificate,
+          projectId
+        } as any);
+      }
+    }
+
+    // Save receptions if provided
+    if (relatedData.receptions && relatedData.receptions.length > 0 && this.receptionService) {
+      for (const reception of relatedData.receptions) {
+        await this.receptionService.createReception({
+          ...reception,
+          projectId
+        } as any);
+      }
+    }
   }
 
   // =================== REFERENTIAL INTEGRATION ===================
@@ -323,6 +490,7 @@ export class ProjectWorkflowService {
           type: PhaseType.STRUCTURAL,
           priority: PhasePriority.MEDIUM,
           progress: 0,
+          orderIndex: phaseData.phase_number, // Store referential order
           startDate: phaseData.start_date || undefined,
           endDate: phaseData.end_date || undefined,
           createdAt: new Date().toISOString(),
@@ -438,7 +606,30 @@ export function createProjectWorkflowService(
   projectRepo: IProjectRepository,
   phaseRepo: IPhaseRepository,
   riskRepo: IRiskRepository,
-  stakeholderRepo: IProjectStakeholderRepository
+  stakeholderRepo: IProjectStakeholderRepository,
+  milestoneRepo?: IMilestoneRepository,
+  taskRepo?: ITaskRepository,
+  materialRepo?: IMaterialRepository,
+  inspectionRepo?: IInspectionRepository,
+  documentRepo?: IDocumentRepository,
+  paymentRepo?: IPaymentRepository,
+  employeeRepo?: IEmployeeRepository,
+  supplierRepo?: ISupplierRepository,
+  receptionRepo?: IReceptionRepository
 ) {
-  return new ProjectWorkflowService(projectRepo, phaseRepo, riskRepo, stakeholderRepo);
+  return new ProjectWorkflowService(
+    projectRepo, 
+    phaseRepo, 
+    riskRepo, 
+    stakeholderRepo,
+    milestoneRepo,
+    taskRepo,
+    materialRepo,
+    inspectionRepo,
+    documentRepo,
+    paymentRepo,
+    employeeRepo,
+    supplierRepo,
+    receptionRepo
+  );
 }

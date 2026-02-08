@@ -368,6 +368,9 @@ export class Project {
   get updatedAt(): Date | undefined { return this._updatedAt; }
   get coordinates(): ProjectCoordinates | undefined { return this._coordinates; }
   get financingSource(): string | undefined { return this._financingSource; }
+  get marketType(): string | undefined { return this._marketType; }
+  get selectionMode(): string | undefined { return this._selectionMode; }
+  get methodology(): string | undefined { return this._methodology; }
   get mainContractor(): string | ProjectStakeholder | undefined { return this._mainContractor; }
   get currency(): string | undefined { return this._currency; }
   

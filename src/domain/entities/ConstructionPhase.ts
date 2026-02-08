@@ -8,6 +8,7 @@ import { Material } from './Material';
 import { Employee } from './Employee';
 import { Supplier } from './Supplier';
 import { Milestone } from './Milestone';
+import { PhaseStepDTO, PhaseTaskDTO } from '@/types/phase-dto';
 
 export type ConstructionPhaseStatus = 'not_started' | 'in_progress' | 'completed' | 'delayed' | 'blocked';
 
@@ -45,6 +46,7 @@ export interface ConstructionPhaseEntity {
   
   // Relationships
   milestones?: Milestone[];
+  steps?: PhaseStepDTO[]; // Steps from referential with nested tasks
   
   // Metadata
   createdAt: Date;
@@ -73,6 +75,7 @@ export class ConstructionPhase {
     public location?: string,
     public notes?: string,
     public milestones: Milestone[] = [],
+    public steps: PhaseStepDTO[] = [], // Steps from referential with nested tasks
     public createdAt: Date = new Date(),
     public updatedAt: Date = new Date()
   ) {}
@@ -172,6 +175,7 @@ export class ConstructionPhase {
       dto.location,
       dto.notes,
       dto.milestones || [],
+      dto.steps || [], // Steps from referential
       dto.createdAt ? new Date(dto.createdAt) : new Date(),
       dto.updatedAt ? new Date(dto.updatedAt) : new Date()
     );
@@ -199,6 +203,7 @@ export class ConstructionPhase {
       location: this.location,
       notes: this.notes,
       milestones: this.milestones,
+      steps: this.steps, // Include steps from referential
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString()
     };

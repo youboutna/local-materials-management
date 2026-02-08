@@ -95,6 +95,7 @@ export interface PhaseDTO extends BaseEntityDTO {
   type: PhaseType;
   status: PhaseStatus;
   priority: PhasePriority;
+  orderIndex?: number; // Order from referential
   
   // Progress tracking
   progress: number; // 0-100

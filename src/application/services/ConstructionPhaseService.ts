@@ -9,6 +9,9 @@ import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { IConstructionPhaseRepository } from '@/domain/repositories/IConstructionPhaseRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { PhaseDTO, PhaseTaskDTO, PhaseStepDTO } from '@/types/phase-dto';
+import { ReferentialService } from './ReferentialService';
+import { ReferentialType } from '@/config/referentials';
+import { ConstructionPhaseTransformer } from '@/dtos/transforms/ConstructionPhaseTransformer';
 
 /**
  * Construction Phase Service
@@ -16,15 +19,17 @@ import { PhaseDTO, PhaseTaskDTO, PhaseStepDTO } from '@/types/phase-dto';
  */
 export class ConstructionPhaseService {
   private repository: IConstructionPhaseRepository;
+  private referentialService: ReferentialService;
 
   constructor(repository?: IConstructionPhaseRepository) {
     this.repository = repository || RepositoryFactory.getConstructionPhaseRepository();
+    this.referentialService = ReferentialService.getInstance();
   }
 
   /**
    * Create a new construction phase
    */
-  async createConstructionPhase(phaseData: PhaseData, projectId: string): Promise<ConstructionPhase> {
+  async createConstructionPhase(phaseData: PhaseDTO, projectId: string): Promise<ConstructionPhaseEntity> {
     try {
       // Validate input data
       const validation = this.validatePhaseData(phaseData);
@@ -32,16 +37,16 @@ export class ConstructionPhaseService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, validation.errors.join(', '));
       }
 
-      // Create domain entity from DTO
-      const constructionPhase = ConstructionPhase.fromDTO({
+      // Create domain entity from DTO using transformer
+      const phaseEntity = ConstructionPhaseTransformer.toEntity({
         ...phaseData,
-        projectId,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        project_id: projectId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       });
 
       // Save to repository
-      const savedPhase = await this.repository.create(constructionPhase);
+      const savedPhase = await this.repository.create(phaseEntity);
       
       return savedPhase;
     } catch (error) {
@@ -53,7 +58,7 @@ export class ConstructionPhaseService {
   /**
    * Update an existing construction phase
    */
-  async updateConstructionPhase(id: string, phaseData: Partial<PhaseData>): Promise<ConstructionPhase> {
+  async updateConstructionPhase(id: string, phaseData: Partial<PhaseDTO>): Promise<ConstructionPhase> {
     try {
       // Get existing phase
       const existingPhase = await this.repository.findById(id);
@@ -62,7 +67,7 @@ export class ConstructionPhaseService {
       }
 
       // Validate update data
-      const validation = this.validatePhaseData(phaseData as PhaseData);
+      const validation = this.validatePhaseData(phaseData);
       if (!validation.isValid) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, validation.errors.join(', '));
       }
@@ -85,9 +90,34 @@ export class ConstructionPhaseService {
   }
 
   /**
+   * Update an existing construction phase
+   */
+  async updatePhase(phaseId: string, phaseData: Partial<PhaseDTO>): Promise<ConstructionPhaseEntity> {
+    try {
+      // Get existing phase
+      const existingPhase = await this.repository.findById(phaseId);
+      if (!existingPhase) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Phase not found');
+      }
+
+      // Convert to DTO, update, and convert back using transformer
+      const existingDTO = ConstructionPhaseTransformer.toDTO(existingPhase);
+      const updatedDTO = { ...existingDTO, ...phaseData, updated_at: new Date().toISOString() };
+      const updatedEntity = ConstructionPhaseTransformer.toEntity(updatedDTO);
+
+      // Save to repository
+      const savedPhase = await this.repository.update(phaseId, updatedEntity);
+      return savedPhase;
+    } catch (error) {
+      console.error('ConstructionPhaseService.updatePhase failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update construction phase');
+    }
+  }
+
+  /**
    * Get a construction phase by ID
    */
-  async getConstructionPhase(id: string): Promise<ConstructionPhase | null> {
+  async getConstructionPhase(id: string): Promise<ConstructionPhaseEntity | null> {
     try {
       return await this.repository.findById(id);
     } catch (error) {
@@ -99,28 +129,23 @@ export class ConstructionPhaseService {
   /**
    * Get all construction phases for a project
    */
-  async getProjectConstructionPhases(projectId: string): Promise<ConstructionPhase[]> {
+  async getPhasesByProject(projectId: string): Promise<ConstructionPhaseEntity[]> {
     try {
       return await this.repository.findByProjectId(projectId);
     } catch (error) {
-      console.error('ConstructionPhaseService.getProjectConstructionPhases failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get project construction phases');
+      console.error('ConstructionPhaseService.getPhasesByProject failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get construction phases');
     }
   }
 
   /**
    * Delete a construction phase
    */
-  async deleteConstructionPhase(id: string): Promise<void> {
+  async deletePhase(id: string): Promise<void> {
     try {
-      const existingPhase = await this.repository.findById(id);
-      if (!existingPhase) {
-        throw new AppError(ErrorCode.NOT_FOUND, 'Construction phase not found');
-      }
-
       await this.repository.delete(id);
     } catch (error) {
-      console.error('ConstructionPhaseService.deleteConstructionPhase failed:', error);
+      console.error('ConstructionPhaseService.deletePhase failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete construction phase');
     }
   }
@@ -197,40 +222,168 @@ export class ConstructionPhaseService {
   }
 
   /**
-   * Convert domain entity to DTO
+   * Create phases from referential
+   */
+  async createPhasesFromReferential(projectId: string, referentialCode: ReferentialType): Promise<ConstructionPhase[]> {
+    try {
+      // Get referential phases with proper type casting
+      const referentialPhases = await this.referentialService.convertToProjectPhases(referentialCode, projectId);
+      
+      const createdPhases: ConstructionPhase[] = [];
+      
+      for (const phaseData of referentialPhases) {
+        // Convert referential phase to domain entity with steps from referential
+        const phaseEntity = ConstructionPhase.fromDTO({
+          id: `phase-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          projectId,
+          name: phaseData.name,
+          description: phaseData.description,
+          estimatedDuration: this.calculatePhaseDuration(phaseData.phases?.steps || []),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          steps: this.convertReferentialSteps(phaseData.phases?.steps || [])
+        });
+
+        // Save to repository
+        const savedPhase = await this.repository.create(phaseEntity);
+        createdPhases.push(savedPhase);
+      }
+      
+      return createdPhases;
+    } catch (error) {
+      console.error('ConstructionPhaseService.createPhasesFromReferential failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create phases from referential');
+    }
+  }
+
+  /**
+   * Convert referential steps to PhaseStepDTO format
+   */
+  private convertReferentialSteps(referentialSteps: Array<{
+    step_id: string;
+    name: string;
+    description?: string;
+    order_index: number;
+    tasks: Array<{
+      task_id: string;
+      name: string;
+      description?: string;
+      order_index: number;
+      estimated_duration_days?: number;
+    }>;
+  }>): PhaseStepDTO[] {
+    return referentialSteps.map((step, index) => ({
+      id: step.step_id,
+      name: step.name,
+      description: step.description || '',
+      status: 'pending' as const,
+      progress: 0,
+      estimated_duration_days: this.calculateStepDuration(step.tasks || []),
+      actual_duration_days: 0,
+      start_date: undefined,
+      end_date: undefined,
+      order_index: step.order_index,
+      tasks: this.convertReferentialTasks(step.tasks || [])
+    }));
+  }
+
+  /**
+   * Convert referential tasks to PhaseTaskDTO format
+   */
+  private convertReferentialTasks(referentialTasks: Array<{
+    task_id: string;
+    name: string;
+    description?: string;
+    order_index: number;
+    estimated_duration_days?: number;
+  }>): PhaseTaskDTO[] {
+    return referentialTasks.map((task, index) => ({
+      id: task.task_id,
+      name: task.name,
+      description: task.description || '',
+      status: 'pending' as const,
+      progress: 0,
+      estimated_duration_days: task.estimated_duration_days || 0,
+      actual_duration_days: 0,
+      start_date: undefined,
+      end_date: undefined,
+      assigned_to: [],
+      dependencies: [],
+      weight: 1,
+      order_index: task.order_index
+    }));
+  }
+
+  /**
+   * Calculate step duration based on tasks
+   */
+  private calculateStepDuration(tasks: Array<{
+    estimated_duration_days?: number;
+  }>): number {
+    return tasks.reduce((total, task) => total + (task.estimated_duration_days || 0), 0);
+  }
+
+  /**
+   * Calculate phase duration based on steps
+   */
+  private calculatePhaseDuration(steps: Array<{
+    tasks: Array<{
+      estimated_duration_days?: number;
+    }>;
+  }>): number {
+    return steps.reduce((total, step) => total + this.calculateStepDuration(step.tasks || []), 0);
+  }
+
+  /**
+   * Update phase steps progress
+   */
+  async updatePhaseStepsProgress(phaseId: string, stepUpdates: Array<{ stepId: string; progress: number; status?: 'pending' | 'in_progress' | 'completed' | 'cancelled' }>): Promise<ConstructionPhaseEntity> {
+    try {
+      // Get existing phase
+      const phase = await this.repository.findById(phaseId);
+      if (!phase) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Phase not found');
+      }
+
+      // Update steps progress
+      if (phase.steps) {
+        phase.steps = phase.steps.map(step => {
+          const update = stepUpdates.find(u => u.stepId === step.id);
+          if (update) {
+            return {
+              ...step,
+              progress: update.progress,
+              status: update.status || step.status
+            };
+          }
+          return step;
+        });
+
+        // Update overall phase progress based on steps
+        const totalSteps = phase.steps.length;
+        const completedSteps = phase.steps.filter(s => s.progress >= 100).length;
+        phase.progress = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
+        
+        if (phase.progress >= 100) {
+          phase.status = 'completed';
+        } else if (phase.progress > 0) {
+          phase.status = 'in_progress';
+        }
+      }
+
+      // Save updated phase
+      const updatedPhase = await this.repository.update(phaseId, phase);
+      return updatedPhase;
+    } catch (error) {
+      console.error('ConstructionPhaseService.updatePhaseStepsProgress failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update phase steps progress');
+    }
+  }
+
+  /**
+   * Convert domain entity to DTO using transformer
    */
   toDTO(phase: ConstructionPhaseEntity): PhaseDTO {
-    return {
-      id: phase.id,
-      project_id: phase.projectId,
-      phase_name: phase.name,
-      phase: phase.type,
-      construction_phase: phase.type,
-      construction_stage: phase.stage,
-      description: phase.description || '',
-      status: phase.status as PhaseDTO['status'],
-      progress: phase.progress,
-      estimated_cost: phase.budget || 0,
-      actual_cost: phase.actualCost || 0,
-      estimated_duration_days: phase.estimatedDuration,
-      actual_duration_days: phase.actualDuration,
-      materials: phase.materials.map(m => ({
-        materialId: m.id,
-        quantity: m.quantity || 1
-      })),
-      steps: phase.steps?.map(s => ({
-        stepId: s.id,
-        name: s.name,
-        description: s.description,
-        status: s.status,
-        order_index: s.orderIndex
-      })) || [],
-      tasks: phase.humanResources.map(e => ({
-        taskId: e.id,
-        name: e.name,
-        roleId: e.id,
-        role: e.role || undefined
-      }))
-    };
+    return ConstructionPhaseTransformer.toDTO(phase);
   }
 }

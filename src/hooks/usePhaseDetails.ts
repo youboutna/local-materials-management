@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PhaseService, PhaseData } from '@/application/services/PhaseService';
+import { PhaseService } from '@/application/services/PhaseService';
+import { ProjectWorkflowService } from '@/application/services/ProjectWorkflowService';
 import { referentialService } from '@/application/services/ReferentialService';
-import { PhaseDTO, PhaseStatus, PhaseStepDTO, PhaseTaskDTO } from '@/dtos/entities/PhaseDTO';
-import { supabase } from '@/integrations/supabase/client';
+import { PhaseDTO, PhaseStatus, PhaseStepDTO, PhaseTaskDTO, UpdatePhaseDTO } from '@/dtos/entities/PhaseDTO';
+import { ReferentialType } from '@/config/referentials';
 import { toast } from '@/hooks/use-toast';
 import { MaterialService } from '@/application/services/MaterialService';
 import { TaskService } from '@/application/services/TaskService';
@@ -50,7 +51,12 @@ const defaultMetrics: PhaseMetrics = {
 
 export function usePhaseDetails(phaseId: string | undefined) {
   const queryClient = useQueryClient();
-  const workflowService = new WorkflowPhaseService();
+  const workflowService = new ProjectWorkflowService(
+    RepositoryFactory.getProjectRepository(),
+    RepositoryFactory.getPhaseRepository(),
+    RepositoryFactory.getRiskRepository(),
+    RepositoryFactory.getProjectStakeholderRepository()
+  );
   const phaseService = new PhaseService(RepositoryFactory.getPhaseRepository());
 
   // Fetch phase details using PhaseService DTO method
@@ -96,30 +102,23 @@ export function usePhaseDetails(phaseId: string | undefined) {
           documentService.getDocumentsByPhase(phaseId),
         ]);
 
-        // Calculate material cost
-        const materialIds = materialsData.data?.map((m) => m.material_id).filter(Boolean) || [];
+        // Calculate material cost using MaterialService
         let materialCost = 0;
-
-        if (materialIds.length > 0) {
-          const { data: materials } = await supabase
-            .from('materials')
-            .select('id, price_per_unit')
-            .in('id', materialIds);
-
-          materialCost = materialsData.data?.reduce((sum, pm) => {
-            const material = materials?.find((m) => m.id === pm.material_id);
-            return sum + (pm.quantity || 0) * (material?.price_per_unit || 0);
+        
+        if (materialsData && materialsData.length > 0) {
+          materialCost = materialsData.reduce((sum, material) => {
+            return sum + (material.pricePerUnit * material.quantity || 0);
           }, 0) || 0;
         }
 
-        const totalTasks = tasksData.data?.length || 0;
-        const completedTasks = tasksData.data?.filter((t) => t.status === 'completed').length || 0;
-        const totalInspections = inspectionsData.data?.length || 0;
-        const passedInspections = inspectionsData.data?.filter(
-          (i) => i.status === 'approved' || i.status === 'passed'
+        const totalTasks = tasksData?.length || 0;
+        const completedTasks = tasksData?.filter((t) => t.status === 'completed').length || 0;
+        const totalInspections = inspectionsData?.length || 0;
+        const passedInspections = inspectionsData?.filter(
+          (i) => i.status === 'approved' || i.status === 'completed'
         ).length || 0;
-        const totalPayments = paymentsData.data?.length || 0;
-        const totalPaymentAmount = paymentsData.data?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+        const totalPayments = paymentsData?.data?.length || 0;
+        const totalPaymentAmount = paymentsData?.data?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
 
         // Calculate steps progress from phase DTO
         const phase = phaseQuery.data;
@@ -129,17 +128,17 @@ export function usePhaseDetails(phaseId: string | undefined) {
 
         return {
           materialCost,
-          totalMaterials: materialsData.data?.length || 0,
+          totalMaterials: materialsData?.length || 0,
           totalTasks,
           completedTasks,
           taskCompletionRate: totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0,
           totalInspections,
           passedInspections,
           inspectionPassRate: totalInspections > 0 ? (passedInspections / totalInspections) * 100 : 0,
-          totalEmployees: employeeData.data?.length || 0,
+          totalEmployees: employeeData?.length || 0,
           totalPayments,
           totalPaymentAmount,
-          totalDocuments: documentsData.data?.length || 0,
+          totalDocuments: documentsData?.length || 0,
           milestoneProgress,
           stepsCount,
           completedSteps,
@@ -152,28 +151,6 @@ export function usePhaseDetails(phaseId: string | undefined) {
     enabled: !!phaseId && !!phaseQuery.data,
   });
 
-  // Get referential information for this phase
-  const getReferentialInfo = (constructionPhase?: string) => {
-    if (!constructionPhase) return null;
-    const referentials = referentialService.getAllReferentials();
-    for (const ref of referentials) {
-      try {
-        const phases = referentialService.getPhasesForReferential(ref.code);
-        const matchingPhase = phases.find((p) => p.code === constructionPhase);
-        if (matchingPhase) {
-          return {
-            referential: ref,
-            phaseInfo: matchingPhase,
-          };
-        }
-      } catch {
-        // Skip referentials that can't be loaded
-        continue;
-      }
-    }
-    return null;
-  };
-
   // Update phase mutation using PhaseService
   const updatePhaseMutation = useMutation({
     mutationFn: async (updates: Partial<PhaseDTO>) => {
@@ -181,9 +158,11 @@ export function usePhaseDetails(phaseId: string | undefined) {
       // Convert status to match expected type
       const convertedUpdates = {
         ...updates,
-        status: updates.status === 'delayed' ? 'in_progress' : updates.status
+        status: (updates.status === 'delayed' ? 'in_progress' : updates.status) as PhaseStatus
       };
-      return phaseService.updatePhase(phaseId, convertedUpdates);
+      // Filter out steps property since UpdatePhaseDTO doesn't accept it
+      const { steps, ...validUpdates } = convertedUpdates as Omit<UpdatePhaseDTO, 'steps'>;
+      return phaseService.updatePhase(phaseId, validUpdates);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
@@ -247,11 +226,18 @@ export function usePhaseDetails(phaseId: string | undefined) {
       } as PhaseStepDTO; // Cast to PhaseStepDTO
       newStep.id = crypto.randomUUID();
       
-      const updatedSteps = phaseQuery.data.steps.map((step: PhaseStepDTO) => 
+      const updatedSteps = (phaseQuery.data?.steps || []).map((step: PhaseStepDTO) => 
         step.id === newStep.id ? newStep : step
       );
       
-      return phaseService.updatePhase(phaseId, { steps: updatedSteps });
+      return phaseService.updatePhase(phaseId, { 
+        name: updates.name,
+        description: updates.description,
+        status: updates.status,
+        endDate: updates.endDate,
+        progress: updates.progress,
+        actualCost: updates.actualCost
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
@@ -275,11 +261,18 @@ export function usePhaseDetails(phaseId: string | undefined) {
     mutationFn: async ({ stepId, updates }: { stepId: string; updates: Partial<PhaseStepDTO> }) => {
       if (!phaseId || !phaseQuery.data) throw new Error('Phase data is required');
       
-      const updatedSteps = phaseQuery.data.steps.map((step: PhaseStepDTO) => 
+      const updatedSteps = (phaseQuery.data?.steps || []).map((step: PhaseStepDTO) => 
         step.id === stepId ? { ...step, ...updates } : step
       );
       
-      return phaseService.updatePhase(phaseId, { steps: updatedSteps });
+      return phaseService.updatePhase(phaseId, { 
+        name: updates.name,
+        description: updates.description,
+        status: updates.status,
+        endDate: updates.endDate,
+        progress: updates.progress,
+        actualCost: updates.actualCost
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
@@ -299,8 +292,15 @@ export function usePhaseDetails(phaseId: string | undefined) {
     mutationFn: async (stepId: string) => {
       if (!phaseId || !phaseQuery.data) throw new Error('Phase data is required');
       
-      const updatedSteps = phaseQuery.data.steps.filter((step: PhaseStepDTO) => step.id !== stepId);
-      return phaseService.updatePhase(phaseId, { steps: updatedSteps });
+      const updatedSteps = (phaseQuery.data?.steps || []).filter((step: PhaseStepDTO) => step.id !== stepId);
+      return phaseService.updatePhase(phaseId, { 
+        name: updates.name,
+        description: updates.description,
+        status: updates.status,
+        endDate: updates.endDate,
+        progress: updates.progress,
+        actualCost: updates.actualCost
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
@@ -329,13 +329,20 @@ export function usePhaseDetails(phaseId: string | undefined) {
         id: crypto.randomUUID(),
       };
       
-      const updatedSteps = phaseQuery.data.steps.map((step: PhaseStepDTO) => 
+      const updatedSteps = (phaseQuery.data?.steps || []).map((step: PhaseStepDTO) => 
         step.id === stepId 
           ? { ...step, tasks: [...step.tasks, newTask] }
           : step
       );
       
-      return phaseService.updatePhase(phaseId, { steps: updatedSteps });
+      return phaseService.updatePhase(phaseId, { 
+        name: updates.name,
+        description: updates.description,
+        status: updates.status,
+        endDate: updates.endDate,
+        progress: updates.progress,
+        actualCost: updates.actualCost
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
@@ -367,7 +374,7 @@ export function usePhaseDetails(phaseId: string | undefined) {
     }) => {
       if (!phaseId || !phaseQuery.data) throw new Error('Phase data is required');
       
-      const updatedSteps = phaseQuery.data.steps.map((step: PhaseStepDTO) => 
+      const updatedSteps = (phaseQuery.data?.steps || []).map((step: PhaseStepDTO) => 
         step.id === stepId 
           ? { 
               ...step, 
@@ -378,11 +385,22 @@ export function usePhaseDetails(phaseId: string | undefined) {
           : step
       );
       
-      return phaseService.updatePhase(phaseId, { steps: updatedSteps });
+      return phaseService.updatePhase(phaseId, { 
+        name: updates.name,
+        description: updates.description,
+        status: updates.status,
+        endDate: updates.endDate,
+        progress: updates.progress,
+        actualCost: updates.actualCost
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
       queryClient.invalidateQueries({ queryKey: ['phase-metrics', phaseId] });
+      toast({
+        title: 'Tâche mise à jour',
+        description: 'La tâche a été modifiée avec succès.',
+      });
     },
     onError: (error: Error) => {
       toast({
@@ -398,13 +416,23 @@ export function usePhaseDetails(phaseId: string | undefined) {
     mutationFn: async ({ stepId, taskId }: { stepId: string; taskId: string }) => {
       if (!phaseId || !phaseQuery.data) throw new Error('Phase data is required');
       
-      const updatedSteps = phaseQuery.data.steps.map((step: PhaseStepDTO) => 
+      const updatedSteps = (phaseQuery.data?.steps || []).map((step: PhaseStepDTO) => 
         step.id === stepId 
-          ? { ...step, tasks: step.tasks.filter((task: PhaseTaskDTO) => task.id !== taskId) }
+          ? { 
+              ...step, 
+              tasks: (step.tasks || []).filter((task: PhaseTaskDTO) => task.id !== taskId)
+            }
           : step
       );
       
-      return phaseService.updatePhase(phaseId, { steps: updatedSteps });
+      return phaseService.updatePhase(phaseId, { 
+        name: updates.name,
+        description: updates.description,
+        status: updates.status,
+        endDate: updates.endDate,
+        progress: updates.progress,
+        actualCost: updates.actualCost
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
@@ -423,11 +451,154 @@ export function usePhaseDetails(phaseId: string | undefined) {
     },
   });
 
-  // Get workflow hierarchy for the project
-  const getWorkflowHierarchy = async (projectId: string) => {
-    return workflowService.getProjectPhaseHierarchy(projectId);
+  // Get referential information for this phase
+  const getReferentialInfo = async (phaseType?: string) => {
+    if (!phaseType) return null;
+    const referentials = await referentialService.getAllReferentials();
+    for (const ref of referentials) {
+      try {
+        const phases = await referentialService.getPhasesForReferential(ref.code as ReferentialType);
+        const matchingPhase = phases.find((p) => p.code === phaseType);
+        if (matchingPhase) {
+          return {
+            referential: ref,
+            phaseInfo: matchingPhase,
+          };
+        }
+      } catch {
+        // Skip referentials that can't be loaded
+        continue;
+      }
+    }
+    return null;
   };
 
+  // Get workflow hierarchy for the project
+  const getWorkflowHierarchy = async (projectId: string) => {
+    try {
+      // Use PhaseService to get all phases for the project
+      const phases = await phaseService.getPhasesByProject(projectId);
+      
+      // Calculate semantic order based on referential data and phase types
+      const orderedPhases = await Promise.all(phases.map(async phase => {
+        let semanticOrder = 0;
+        
+        // Use stored orderIndex if available, otherwise calculate from referential
+        if (phase.orderIndex !== undefined) {
+          semanticOrder = phase.orderIndex * 100; // Base order from stored referential
+          
+          // Add semantic category offset based on phase type
+          const semanticCategory = getSemanticCategory(phase.type);
+          switch (semanticCategory) {
+            case 'planning':
+              semanticOrder += 0; // Planning: 0-99
+              break;
+            case 'execution':
+              semanticOrder += 100; // Execution: 100-199
+              break;
+            case 'monitoring':
+              semanticOrder += 200; // Monitoring: 200-299
+              break;
+            case 'finalization':
+              semanticOrder += 300; // Finalization: 300-399
+              break;
+          }
+        } else {
+          // Fallback: calculate from referential if no stored orderIndex
+          const referentialInfo = await getReferentialInfo(phase.type);
+          if (referentialInfo) {
+            const phaseCode = referentialInfo.phaseInfo.code;
+            const baseOrder = referentialInfo.phaseInfo.order * 100;
+            
+            // Planning phases (0-99): Pre-feasibility, design, planning
+            if (phaseCode.includes('PRE_FEASIBILITY') || 
+                phaseCode.includes('DESIGN') || 
+                phaseCode.includes('PLANNING') ||
+                phaseCode.includes('STUDY')) {
+              semanticOrder = baseOrder; // 100-999
+            }
+            // Execution phases (100-199): Construction, implementation
+            else if (phaseCode.includes('CONSTRUCTION') || 
+                     phaseCode.includes('IMPLEMENTATION') ||
+                     phaseCode.includes('EXECUTION') ||
+                     phaseCode.includes('WORKS')) {
+              semanticOrder = baseOrder + 100; // 200-299
+            }
+            // Monitoring/Inspection phases (200-299): Quality control, monitoring
+            else if (phaseCode.includes('INSPECTION') || 
+                     phaseCode.includes('QUALITY') ||
+                     phaseCode.includes('MONITORING') ||
+                     phaseCode.includes('CONTROL') ||
+                     phaseCode.includes('TEST')) {
+              semanticOrder = baseOrder + 200; // 300-399
+            }
+            // Final phases (300-399): Reception, handover, closure
+            else if (phaseCode.includes('RECEPTION') || 
+                     phaseCode.includes('HANDOVER') ||
+                     phaseCode.includes('CLOSURE') ||
+                     phaseCode.includes('FINAL') ||
+                     phaseCode.includes('COMMISSIONING')) {
+              semanticOrder = baseOrder + 300; // 400-499
+            }
+            // Default execution order for other phases
+            else {
+              semanticOrder = baseOrder + 100;
+            }
+          } else {
+            // Default order if no referential info found - use 0 as base
+            semanticOrder = 0;
+          }
+        }
+        
+        return {
+          id: phase.id,
+          name: phase.name,
+          order: semanticOrder,
+          status: phase.status,
+          progress: phase.progress,
+          startDate: phase.startDate,
+          endDate: phase.endDate,
+          semanticCategory: getSemanticCategory(phase.type)
+        };
+      }));
+      
+      // Sort by semantic order
+      return orderedPhases.sort((a, b) => a.order - b.order);
+    } catch (error) {
+      console.error('Error getting workflow hierarchy:', error);
+      return [];
+    }
+  };
+
+  // Helper function to determine semantic category
+  const getSemanticCategory = (phaseType?: string): 'planning' | 'execution' | 'monitoring' | 'finalization' => {
+    if (!phaseType) return 'execution';
+    
+    const type = phaseType.toUpperCase();
+    
+    if (type.includes('PRE_FEASIBILITY') || 
+        type.includes('DESIGN') || 
+        type.includes('PLANNING') ||
+        type.includes('STUDY')) {
+      return 'planning';
+    }
+    else if (type.includes('INSPECTION') || 
+             type.includes('QUALITY') ||
+             type.includes('MONITORING') ||
+             type.includes('CONTROL') ||
+             type.includes('TEST')) {
+      return 'monitoring';
+    }
+    else if (type.includes('RECEPTION') || 
+             type.includes('HANDOVER') ||
+             type.includes('CLOSURE') ||
+             type.includes('FINAL') ||
+             type.includes('COMMISSIONING')) {
+      return 'finalization';
+    }
+    
+    return 'execution';
+  };
   return {
     phase: phaseQuery.data,
     isLoading: phaseQuery.isLoading,

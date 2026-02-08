@@ -143,7 +143,7 @@ export class ProjectService {
       if (request.financingSource !== undefined && request.financingSource !== null) projectData.financingSource = String(request.financingSource);
       if (request.marketType !== undefined && request.marketType !== null) projectData.marketType = String(request.marketType);
       if (request.selectionMode !== undefined && request.selectionMode !== null) projectData.selectionMode = String(request.selectionMode);
-      if (request.projectReference !== undefined && request.projectReference !== null) projectData.projectReferenceNumber = String(request.projectReference);
+      if (request.projectReference !== undefined && request.projectReference !== null) projectData.projectReference = String(request.projectReference);
       if (request.mainContractor !== undefined && request.mainContractor !== null) projectData.mainContractor = String(request.mainContractor);
       if (request.currentPhase !== undefined && request.currentPhase !== null) projectData.currentPhase = String(request.currentPhase);
       if (request.currentStage !== undefined && request.currentStage !== null) projectData.currentStage = String(request.currentStage);
