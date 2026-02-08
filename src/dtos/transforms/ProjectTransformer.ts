@@ -177,6 +177,53 @@ export class ProjectTransformer {
   }
 
   /**
+   * CreateProjectDTO → Partial<Project> (Entity)
+   * For repository create operations
+   */
+  static fromCreateDTOToEntity(dto: CreateProjectDTO): Partial<Project> {
+    const coordinates = dto.latitude && dto.longitude
+      ? new ProjectCoordinates(dto.latitude, dto.longitude)
+      : undefined;
+
+    return {
+      title: dto.title,
+      description: dto.description || '',
+      status: (dto.status as unknown as ProjectStatus) || 'planifié',
+      progress: 0,
+      budget: dto.budget || 0,
+      startDate: dto.startDate ? new Date(dto.startDate) : null,
+      endDate: dto.endDate ? new Date(dto.endDate) : null,
+      location: dto.location,
+      coordinates,
+      teamSize: dto.teamSize || 0,
+      thumbnail: dto.thumbnail,
+      currency: dto.currency || 'XOF',
+      createdBy: dto.createdBy,
+    } as Partial<Project>;
+  }
+
+  /**
+   * UpdateProjectDTO → Partial<Project> (Entity)
+   * For repository update operations
+   */
+  static fromUpdateDTOToEntity(dto: UpdateProjectDTO): Partial<Project> {
+    const updates: Partial<Project> = {};
+    
+    if (dto.title !== undefined) updates.title = dto.title;
+    if (dto.description !== undefined) updates.description = dto.description;
+    if (dto.status !== undefined) updates.status = dto.status as unknown as ProjectStatus;
+    if (dto.budget !== undefined) updates.budget = dto.budget;
+    if (dto.progress !== undefined) updates.progress = dto.progress;
+    if (dto.startDate !== undefined) updates.startDate = new Date(dto.startDate);
+    if (dto.endDate !== undefined) updates.endDate = new Date(dto.endDate);
+    if (dto.location !== undefined) updates.location = dto.location;
+    if (dto.teamSize !== undefined) updates.teamSize = dto.teamSize;
+    if (dto.thumbnail !== undefined) updates.thumbnail = dto.thumbnail;
+    
+    return updates;
+  }
+
+  /**
    * UI Form Data → Update Request DTO
    * Transforms form submission data to API update request
    */
