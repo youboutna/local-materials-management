@@ -21,8 +21,37 @@ import {
   ReferentialPhaseDTO,
   ReferentialStepDTO,
   ReferentialTaskDTO
-
 } from '@/config/referentials';
+
+import { AppError, ErrorCode } from '@/utils/errorHandling';
+
+// Project Phase DTO for database operations
+export interface ProjectPhaseDTO {
+  project_id: string;
+  name: string;
+  description: string;
+  phase_number: number;
+  start_date: string | null;
+  end_date: string | null;
+  status: 'not_started' | 'in_progress' | 'completed' | 'on_hold';
+  phases: {
+    referential_code: string;
+    phase_id: string;
+    steps: Array<{
+      step_id: string;
+      name: string;
+      description?: string;
+      order_index: number;
+      tasks: Array<{
+        task_id: string;
+        name: string;
+        description?: string;
+        order_index: number;
+        estimated_duration_days?: number;
+      }>;
+    }>;
+  };
+}
 
 export class ReferentialService {
   private static instance: ReferentialService;
