@@ -14,12 +14,15 @@ import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
 import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
 import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
-import { CheckpointDTO, CheckpointVerificationResultDTO } from '@/dtos/entities/CheckpointDTO';
-import { CheckpointVerificationResult } from '@/dtos/entities/CheckpointVerificationDTO';
-import { CheckpointCategory, VerificationStatus, VerificationItemDTO } from '@/types/checkpoint-dto';
+import { CheckpointDTO } from '@/dtos/entities/CheckpointDTO';
+import { CheckpointVerificationResultDTO } from '@/dtos/entities/CheckpointVerificationResultDTO';
+import { CheckpointVerificationResult, VerifyCheckpointRequestDto, VerifyCheckpointResponseDto, VerifyInspectionsRequestDto, VerifyDocumentsRequestDto, VerifyApprovalsRequestDto, VerifyResourcesRequestDto, VerifyServiceFaitRequestDto } from '@/dtos/entities/CheckpointVerificationDTO';
+import { VerificationItemDTO } from '@/dtos/entities/VerificationItemDTO';
 import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { DEFAULT_MAURITANIA_RULES } from '@/dtos/entities/VerificationItemDTO';
-import { VerifyCheckpointRequestDto, VerifyCheckpointResponseDto, VerifyInspectionsRequestDto, VerifyDocumentsRequestDto, VerifyApprovalsRequestDto, VerifyResourcesRequestDto, VerifyServiceFaitRequestDto } from '@/dtos/entities/CheckpointVerificationDTO';
+
+// Import types from DTOs to avoid mismatch
+import { CheckpointCategory, VerificationStatus } from '@/dtos/entities/VerificationItemDTO';
 
 // ============= ENGINE =============
 

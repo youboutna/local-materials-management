@@ -8,7 +8,7 @@ import { ConstructionPhaseEntity, ConstructionPhase } from '@/domain/entities/Co
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { IConstructionPhaseRepository } from '@/domain/repositories/IConstructionPhaseRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { PhaseDTO, PhaseTaskDTO, PhaseStepDTO } from '@/types/phase-dto';
+import { PhaseDTO, PhaseTaskDTO, PhaseStepDTO } from '@/dtos/entities/PhaseDTO';
 import { ReferentialService } from './ReferentialService';
 import { ReferentialType } from '@/config/referentials';
 import { ConstructionPhaseTransformer } from '@/dtos/transforms/ConstructionPhaseTransformer';
@@ -185,7 +185,7 @@ export class ConstructionPhaseService {
   /**
    * Validate phase data
    */
-  private validatePhaseData(phaseData: Partial<PhaseData>): { isValid: boolean; errors: string[] } {
+  private validatePhaseData(phaseData: Partial<PhaseDTO>): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
 
     // Required fields

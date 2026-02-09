@@ -28,20 +28,9 @@ interface ProjectResource {
   assignedTo?: string;
 }
 
-export type ProjectStatus = 
-  | "en cours"
-  | "terminé"
-  | "en attente"
-  | "en inspection"
-  | "suspendu"
-  | "annulé"
-  | "attribué"
-  | "planifié"
-  | "pré-qualification"
-  | "en conception"
-  | "en construction"
-  | "en clôture"
-  | "en retard";
+// Re-export ProjectStatus from DTO for type alignment
+import { ProjectStatus as DTOProjectStatus } from '@/dtos/entities/ProjectDTO';
+export type ProjectStatus = DTOProjectStatus;
 
 // Interface commune pour les références de projet (Employee ou Supplier)
 export interface ProjectStakeholder {

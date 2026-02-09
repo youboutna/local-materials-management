@@ -176,20 +176,20 @@ export class EmployeeService {
         email: updates.email,
         phone: updates.phone,
         position: updates.position,
-        department: updates.department || null,
+        department: updates.department as unknown as Employee['department'] || null,
         isActive: updates.isActive,
         skills: updates.skills
       };
 
       await this.employeeRepository.update(id, employeeUpdates);
       
-      // Return updated employee
+      // Return updated employee - convert to DTO
       const updatedEmployee = await this.employeeRepository.findById(id);
       if (!updatedEmployee) {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to retrieve updated employee');
       }
       
-      return updatedEmployee;
+      return this.employeeToDTO(updatedEmployee);
     } catch (error) {
       console.error('EmployeeService.updateEmployee failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update employee');
@@ -226,8 +226,8 @@ export class EmployeeService {
       email: employee.email || '',
       phone: employee.phone || '',
       position: employee.position || '',
-      department: (employee.department as string) || 'engineering',
-      role: (employee.role?.name as string) || 'employee',
+      department: ((employee.department as string) || 'engineering') as EmployeeDepartment,
+      role: ((employee.role?.name as string) || 'employee') as EmployeeRole,
       type: EmployeeType.FULL_TIME,
       status: employee.isActive ? EmployeeStatus.ACTIVE : EmployeeStatus.INACTIVE,
       salary: employee.salary || 0,

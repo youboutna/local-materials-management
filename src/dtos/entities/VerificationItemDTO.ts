@@ -5,7 +5,7 @@
  */
 
 export type VerificationStatus = 'pending' | 'in_progress' | 'verified' | 'failed' | 'skipped';
-export type CheckpointCategory = 'inspection' | 'resource' | 'document' | 'service_fait' | 'approval';
+export type CheckpointCategory = 'inspection' | 'resource' | 'document' | 'service_fait' | 'approval' | 'material' | 'payment' | 'pv';
 
 /**
  * Item de vérification individuel
