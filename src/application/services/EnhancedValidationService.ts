@@ -4,11 +4,9 @@
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { IValidationRepository } from '@/domain/repositories/IValidationRepository';
+// Use available repository interfaces
 import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import { IRiskRepository } from '@/domain/repositories/IRiskRepository';
-import { IComplianceRepository } from '@/domain/repositories/IComplianceRepository';
-import { IReceptionRepository } from '@/domain/repositories/IReceptionRepository';
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
@@ -92,15 +90,22 @@ export interface ValidationCriteria {
 }
 
 export class EnhancedValidationService {
+  private projectRepository: IProjectRepository;
+  private riskRepository: IRiskRepository;
+  private inspectionRepository: IInspectionRepository;
+  private documentRepository: IDocumentRepository;
+
   constructor(
-    private validationRepository: IValidationRepository,
-    private projectRepository: IProjectRepository,
-    private riskRepository: IRiskRepository,
-    private complianceRepository: IComplianceRepository,
-    private receptionRepository: IReceptionRepository,
-    private inspectionRepository: IInspectionRepository,
-    private documentRepository: IDocumentRepository
-  ) {}
+    projectRepository: IProjectRepository,
+    riskRepository: IRiskRepository,
+    inspectionRepository: IInspectionRepository,
+    documentRepository: IDocumentRepository
+  ) {
+    this.projectRepository = projectRepository;
+    this.riskRepository = riskRepository;
+    this.inspectionRepository = inspectionRepository;
+    this.documentRepository = documentRepository;
+  }
 
   // =================== COMPREHENSIVE PROJECT VALIDATION ===================
 

@@ -218,7 +218,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
         field.id === fieldId 
           ? { ...field, status: validationResult.isValid ? 'completed' : 'failed', lastUpdated: new Date().toISOString() }
           : field
-      }));
+      ));
 
       toast({
         title: "Validation terminée",
@@ -303,7 +303,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
             <CardContent className="space-y-4">
               <div>
                 <Label htmlFor="project-status">Statut du Projet</Label>
-                <Select value={formData.status || ""} onValueChange={(value) => onUpdate({ status: value })>
+                <Select value={formData.status || ""} onValueChange={(value) => onUpdate({ status: value })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner le statut" />
                   </SelectTrigger>

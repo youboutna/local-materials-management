@@ -1,173 +1,291 @@
-# **PROMPTS.md - Snippets de Prompts pour AI Paiprogramming Code**
+# **PROMPTS.md - Architecture Hexagonale Migration Guide**
 
-## **🚀 DÉMARRAGE DE SESSION - 25 JANVIER 2026**
+## **🚀 ÉTAT DE LA MIGRATION - 9 FÉVRIER 2026**
 
-### **Prompt : Démarrer la journée Architecture Hexagonale**
+### **Statistiques de Progression**
 ```
-@CONTEXT.md @ARCHITECTURE.md @task-plan.md
-Bonjour agent AI ! Nous sommes en phase finale de l'Architecture Hexagonale du projet HadraTech-GPI.
-
-📊 **ÉTAT ACTUEL - date** :
-- **Services Application** : $number créés ($number%) ✅
-- **Hooks Hexagonaux** : $number créés ($number%) ✅
-- **Components React** : $number fichiers ($number%) ✅
-- **Appels directs Supabase** :$number appels restants ⚠️
-- **Progression globale** : $number% hexagonal ✅
-- **Architecture multi-providers auth** : Implémentée ✅
-
-🎯 **OBJECTIF FINAL** :
-- **Appels directs Supabase** : $number 🎯
-- **Architecture $number% hexagonale** : 🎯
-- **Finalisation** : $number jours pour terminer la migration
-
-Architecture quasi-terminée - Prêt pour finalisation !
+📊 **MÉTRIQUES DE MIGRATION** :
+- **Routes P0 Migrated** : 4/4 ✅ (Projects, ProjectEdit, ProjectDetail, PhaseDetails)
+- **Services Application** : ~35 créés (85%) ✅
+- **Hooks Hexagonaux** : ~20 créés (80%) ✅
+- **Adapters Infrastructure** : ~15 créés (70%) ✅
+- **Appels directs Supabase** : ~20 restants dans composants/hooks ⚠️
+- **Progression globale** : ~75% hexagonal ✅
 ```
 
+### **Routes P0 (Priorité Maximale)**
+| Route | Composant | Status |
+|-------|-----------|--------|
+| `/projects/create` | ProjectCreationWorkflow | ✅ Migré |
+| `/projects/:id/edit` | EnhancedProjectEditForm | ✅ Migré |
+| `/projects/:id` | ProjectDetailByDTO | ✅ Migré |
+| `/projects/:projectId/phases/:phaseId` | PhaseDetailsPage | ✅ Migré |
 
-## **🎮 MANUEL DE JEU POUR AI-AGENT**
-RÈGLES À ÉTABLIR :
+---
 
-1. BASE DE DONNÉES (PostgreSQL) : snake_case OBLIGATOIRE
-   - colonnes : project_name, created_at, kpi_score
-   - tables : project_details, material_sources
+## **🎮 RÈGLES D'ARCHITECTURE**
 
-2. DTOs (src/dtos/entities/* et src/dtos/workflows/*) : camelCase OBLIGATOIRE
-   - projectName, createdAt, kpiScore
-   - Les DTOs représentent les données pour l'application
-
-3. TRANSFORMERS (src/dtos/transforms/*) : 
-   - DOIVENT convertir snake_case ↔ camelCase
-   -using UI Layer -> DTOs -> Application Layer -> Domain Model -> Infrastructure Layer -> DB
-              ↑                                      ↓
-              └─────────── DTOs ←──────────────┘
-   - Une méthode toModel() et fromModel()
-
-4. MODÈLES DOMAINE (src/domain/*) : camelCase
-   - Entities et Value Objects en camelCase
-
-5. SERVICES (src/application/*) : camelCase uniquement
-   - Ne jamais voir de snake_case dans les services
-
-6. UI Components (React)
-        ↓ (utilise)
-      HOOKS ←─────── Adaptateurs UI
-        ↓ (appelle)
-      PORTS (Interfaces)
-        ↓ (implémente)
-    SERVICES (Logique Métier)
-        ↓ (utilise)
-    DOMAINE (Entités)
-
-
-### **RÈGLE DU JEU #1 : LA FLÈCHE SACRÉE**
+### **RÈGLE #1 : LA FLÈCHE SACRÉE - Flow de Données**
 ```
-TU PEUX : Présentation → Application → Domaine ← Infrastructure
-TU NE PEUX PAS : Domaine → Infrastructure (direct)
-TU NE PEUX PAS : Infrastructure → Présentation (direct)
-
-❌ À éviter dans les hooks :
-
-    Définir des types/interfaces (c'est le rôle des DTOs)
-
-    Contenir la logique métier pure (c'est le rôle des services)
-
-    Stocker l'état métier persistant (c'est le rôle du domaine)
-
-Pense à une rivière qui coule :
-  🏔️ Source (UI) → ⛰️ Montagne (App) → 🌊 Lac (Domaine) ← 💧 Affluent (Infra)
+UI Component → Transformer → DTO (camelCase) → Service → Domain ← Adapter(snake_case) → DB
+     ↑                                                                  ↓
+     └──────────────────────── Transformer ←────────────────────────────┘
 ```
 
-### **RÈGLE DU JEU #2 : LES RÔLES IMMUABLES**
+### **RÈGLE #2 : CONVENTIONS DE CASING**
+
+| Couche | Convention | Exemple |
+|--------|------------|---------|
+| Database (PostgreSQL) | `snake_case` | `project_name`, `created_at` |
+| DTOs (src/dtos/*) | `camelCase` | `projectName`, `createdAt` |
+| Domain Entities | `camelCase` | `Project`, `Phase` |
+| Services (src/application/*) | `camelCase` | `getProjectById()` |
+| Transformers | Bidirectional | `toDTO()`, `fromSupabase()` |
+
+### **RÈGLE #3 : STRUCTURE DES FICHIERS**
+
 ```
-🧠 DOMAINE : Le sage qui sait
-  → Il VALIDE, il CALCULE, il DÉCIDE
-  → Il ne sait pas COMMENT on le sauvegarde
-
-⚡ APPLICATION : Le messager intelligent
-  → Il COORDONNE, il TRANSFORME, il TRANSMET
-  → Il ne contient pas la VÉRITÉ métier
-
-🔧 INFRASTRUCTURE : Le traducteur fidèle
-  → Il ÉCOUTE, il TRADUIT, il PERSISTE
-  → Il n'invente pas de règles
-
-🎨 PRÉSENTATION : L'interprète gracieux
-  → Il AFFICHE, il INTERAGIT, il DÉLÈGUE
-  → Il ne fait pas de logique métier
-  → ✅ **PEUT CONTENIR** : Attributs UI, états locaux, calculs d'affichage
-  → ✅ **PEUT CONTENIR** : Logique de présentation, formatage, validation UI
-  → 🔍 **EN MIGRATION** : Chercher dans les dépendances existantes
-    → `/src/types/*` : Types et interfaces legacy
-    → `/src/utils/*` : Fonctions utilitaires et helpers
-    → `/src/services/*` : Services legacy à réutiliser
-```
-
-### **RÈGLE DU JEU #4 : LA PURETÉ DES ENTITÉS**
-```
-🧠 DOMAINE : Le temple de la pureté
-  → ✅ Champs simples : string, number, boolean, Date
-  → ✅ Références par ID : managerId, primaryContactId
-  → ✅ Types énumérés : Status, Category
-  → ✅ Objets complexes : rating: SupplierRating, contacts: SupplierContact[]
-  → ✅ Collections d'entités : employees: Employee[], phases: Phase[]
-  → ❌ DTOs de mapping : interfaces pour échanges API/UI
-  → ❌ Types any : Record<string, any>
-
-📦 DTO : Le marché des échanges
-  → ✅ Interfaces complexes : SupplierRating, SupplierContact
-  → ✅ Collections d'objets : contacts: SupplierContact[]
-  → ✅ Structures de mapping : pour API/UI
-  → ✅ Transformations : Entity ↔ DTO
-
-🔄 TRANSFORMERS : Les traducteurs sacrés
-  → ✅ Convertissent entités ↔ DTOs
-  → ✅ Font le pont entre Domaine et DTOs
-  → ✅ Maintiennent la cohérence des types
+src/
+├── application/
+│   └── services/           # Business logic orchestration
+│       ├── ProjectService.ts
+│       ├── ProjectWorkflowService.ts
+│       └── ProjectAnalyticsService.ts
+├── domain/
+│   ├── entities/           # Pure domain objects
+│   │   └── Project.ts
+│   └── repositories/       # Port interfaces (contracts)
+│       └── IProjectRepository.ts
+├── dtos/
+│   ├── entities/           # Data Transfer Objects
+│   │   └── ProjectDTO.ts
+│   ├── workflows/          # Workflow-specific DTOs
+│   │   └── ProjectWorkflowDTOs.ts
+│   └── transforms/         # Mappers between layers
+│       └── ProjectTransformer.ts
+├── infrastructure/
+│   └── supabase/
+│       └── adapters/       # Repository implementations
+│           └── SupabaseProjectAdapter.ts
+├── hooks/
+│   └── hexagonal/          # React hooks using services
+│       └── useProjectsHex.ts
+└── config/
+    └── referentials/       # Business rules & templates
+        └── somelec/
 ```
 
-### **🚨 ANTI-PATTERNS À ÉVITER**
-```
-❌ DTOs dans l'entité :
-export interface SupplierAPIDTO { ... }  // 🚨 INTERDIT - DTO de mapping
+### **RÈGLE #4 : TRANSFORMER METHODS**
 
-✅ Interfaces de domaine :
-export interface Supplier {
-  id: string;
-  name: string;
-  rating: SupplierRating;        // ✅ Objet complexe du domaine
-  contacts: SupplierContact[];    // ✅ Collection du domaine
-}
-
-✅ **NOUVEAU** : Interfaces UI/Presentation :
-export interface SupplierUIState {
-  supplier: Supplier;            // Entité du domaine
-  isEditing: boolean;           // 🎨 État UI local
-  selectedTab: string;          // 🎨 Attribut de présentation
-  calculatedScore: number;       // 🎨 Calcul d'affichage
-  formattedRating: string;      // 🎨 Formatage pour l'UI
+```typescript
+// Standard transformer methods
+class ProjectTransformer {
+  static fromSupabase(row: DatabaseRow): Project;     // DB → Domain
+  static toSupabase(entity: Project): DatabaseRow;    // Domain → DB
+  static toDTO(entity: Project): ProjectDTO;          // Domain → DTO
+  static fromDTO(dto: ProjectDTO): Project;           // DTO → Domain
+  static formToCreateRequest(form: FormData): CreateProjectDTO;  // UI → DTO
+  static toUI(entity: Project): UIState;              // Domain → UI
 }
 ```
 
-### **🎨 RÈGLE #5 : LA SÉPARATION UI/DOMAINE**
-```
-🧠 DOMAINE : Pureté absolue
-  → ✅ Entités avec logique métier pure
-  → ✅ Calculs business rules
-  → ✅ Validation métier
-  → ❌ État UI, formatage, logique de présentation
+---
 
-🎨 UI/PRÉSENTATION : Flexibilité contrôlée
-  → ✅ État local : loading, editing, selected
-  → ✅ Calculs d'affichage : formattedDate, calculatedScore
-  → ✅ Logique de présentation : showErrors, validation UI
-  → ✅ Attributs UI : className, styles, animations
-  → ✅ Dépendances UI : toast notifications, routing
+## **🔧 MIGRATION CHECKLIST**
 
-🔧 TRANSFORMERS : Pont intelligent
-  → ✅ Entity → UIState (avec calculs)
-  → ✅ UIState → Entity (pour sauvegarde)
-  → ✅ Formatage : date → formattedDate
-  → ✅ Calculs : rating → calculatedScore
+### **1. Vérifier l'Hexagonalité**
+- [ ] Zéro `supabase.from()` dans components/hooks
+- [ ] Zéro imports de `@/services/*` legacy
+- [ ] Zéro imports de `@/types/*` (utiliser `@/dtos/*`)
+- [ ] Tous les appels DB dans adapters uniquement
+
+### **2. Appliquer la Validation Référentielle**
+- [ ] Utiliser `src/config/referentials/*` pour les templates
+- [ ] Valider les inputs via schémas référentiels
+- [ ] Générer les phases depuis les référentiels SOMELEC
+
+### **3. Enrichir les Couches**
+- [ ] Domain entities avec logique métier pure
+- [ ] Repository interfaces (ports) dans domain/
+- [ ] Services orchestrant la logique
+- [ ] Transformers pour mapping bidirectionnel
+- [ ] Adapters implémentant les ports
+
+### **4. Conventions de Casing**
+- [ ] Services: camelCase uniquement
+- [ ] Transformers: handle snake_case ↔ camelCase
+- [ ] DTOs: camelCase avec BaseEntityDTO
+
+### **5. Persistance avec Repository Pattern**
+- [ ] Adapters avec transactions ACID
+- [ ] Error handling via AppError
+- [ ] Logging des opérations critiques
+
+---
+
+## **📋 ERREURS CONNUES À CORRIGER**
+
+### **Services Application**
+| Fichier | Erreur | Solution |
+|---------|--------|----------|
+| `CheckpointVerificationEngine.ts` | Missing exports | Import depuis fichiers corrects |
+| `ConstructionPhaseService.ts` | Type mismatches | Aligner ConstructionPhase types |
+| `EmployeeService.ts` | Enum mismatches | Utiliser EmployeeDepartment du DTO |
+| `EnhancedValidationService.ts` | ProjectStatus mismatch | Re-exporter depuis DTO |
+
+### **Composants UI**
+| Fichier | Erreur | Solution |
+|---------|--------|----------|
+| `EnhancedValidationStep.tsx` | Syntax errors | Fixed ✅ |
+| `WorkflowInspection.tsx` | Status strings | Utiliser types locaux |
+| `UserManagementDialog.tsx` | Hook structure | Fixed ✅ |
+
+---
+
+## **🎯 PATTERNS RECOMMANDÉS**
+
+### **Pattern 1: Hook Hexagonal**
+```typescript
+// ✅ Correct - Via Service
+export function useProjectsHex() {
+  const service = new ProjectService(RepositoryFactory.getProjectRepository());
+  
+  return useQuery({
+    queryKey: ['projects'],
+    queryFn: () => service.getAllProjects()
+  });
+}
+
+// ❌ Incorrect - Direct Supabase
+export function useProjects() {
+  return useQuery({
+    queryKey: ['projects'],
+    queryFn: () => supabase.from('projects').select('*') // INTERDIT!
+  });
+}
 ```
-## **🎯 MANTRA SACRÉ**
-> **"Les entités peuvent contenir des objets et collections métier. Les DTOs sont réservés aux échanges API/UI. Les transformers font le pont. Les composants UI peuvent avoir des états et calculs de présentation."**
+
+### **Pattern 2: Dual-Casing Support (Migration)**
+```typescript
+// UI Component avec support legacy
+const phase: PhaseUIData = {
+  name: rawPhase.name,
+  estimatedCost: rawPhase.estimatedCost || rawPhase.estimated_cost || 0,
+  startDate: rawPhase.startDate || rawPhase.start_date,
+};
+```
+
+### **Pattern 3: Service avec Transformer**
+```typescript
+class ProjectService {
+  async createProject(dto: CreateProjectDTO): Promise<ProjectDTO> {
+    // 1. DTO → Domain Entity
+    const entity = ProjectTransformer.fromDTO(dto);
+    
+    // 2. Business validation
+    entity.validate();
+    
+    // 3. Domain → DB format
+    const dbRecord = ProjectTransformer.toSupabase(entity);
+    
+    // 4. Persist via repository
+    await this.repository.save(dbRecord);
+    
+    // 5. Return DTO
+    return ProjectTransformer.toDTO(entity);
+  }
+}
+```
+
+---
+
+## **📁 FICHIERS RÉFÉRENTIELS CLÉS**
+
+### **Configuration**
+- `src/config/referentials/somelec/` - Templates phases SOMELEC
+- `src/config/constants.ts` - Constantes globales
+
+### **DTOs Core**
+- `src/dtos/entities/ProjectDTO.ts` - Project DTO principal
+- `src/dtos/entities/PhaseDTO.ts` - Phase avec Steps/Milestones
+- `src/dtos/workflows/ProjectWorkflowDTOs.ts` - Workflow state
+
+### **Services Core**
+- `src/application/services/ProjectService.ts` - CRUD Projects
+- `src/application/services/ProjectWorkflowService.ts` - Workflows P0
+- `src/application/services/ReferentialService.ts` - Templates
+
+### **Hooks Hexagonaux**
+- `src/hooks/hexagonal/useProjectsHex.ts` - Liste projects
+- `src/hooks/hexagonal/useProjectWorkflowHex.ts` - Creation workflow
+- `src/hooks/hexagonal/useProjectEditHex.ts` - Edition workflow
+
+---
+
+## **🚨 ANTI-PATTERNS À ÉVITER**
+
+```typescript
+// ❌ Import direct Supabase dans composant
+import { supabase } from '@/integrations/supabase/client';
+
+// ❌ Types legacy
+import { Project } from '@/types/project';
+
+// ❌ Services legacy
+import { ProjectService } from '@/services/ProjectService';
+
+// ❌ Snake_case dans services
+const project_data = await service.get_project_by_id(id);
+
+// ❌ Any types
+const data: any = await repository.find(id);
+```
+
+---
+
+## **✅ PATTERNS CORRECTS**
+
+```typescript
+// ✅ Import via hooks hexagonaux
+import { useProjectsHex } from '@/hooks/hexagonal';
+
+// ✅ DTOs standardisés
+import { ProjectDTO, CreateProjectDTO } from '@/dtos/entities/ProjectDTO';
+
+// ✅ Services application
+import { ProjectService } from '@/application/services/ProjectService';
+
+// ✅ CamelCase dans services
+const projectData = await service.getProjectById(id);
+
+// ✅ Types stricts
+const data: ProjectDTO = await repository.find(id);
+```
+
+---
+
+## **📊 ROUTES APPLICATION (App.tsx)**
+
+### **Routes Publiques**
+- `/` - Index
+- `/auth` - Authentication
+- `/contact`, `/terms`, `/policy` - Pages info
+- `/supplier-*` - Portails fournisseurs
+
+### **Routes Protégées - P0**
+- `/projects` - Liste projets
+- `/projects/create` - Création projet (Workflow)
+- `/projects/:id` - Détail projet
+- `/projects/:id/edit` - Edition projet (Workflow)
+- `/projects/:projectId/phases/:phaseId` - Détail phase
+
+### **Routes Protégées - Secondaires**
+- `/materials/*` - Gestion matériaux
+- `/documents` - Gestion documents
+- `/tasks/*` - Gestion tâches
+- `/employees` - Gestion employés
+- `/users` - Admin utilisateurs
+- `/inspections/*` - Inspections
+- `/tender-*` - Appels d'offres
+- `/suppliers` - Fournisseurs
+- `/*-monitor` - Tableaux de bord monitoring

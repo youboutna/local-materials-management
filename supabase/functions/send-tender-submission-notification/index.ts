@@ -81,7 +81,7 @@ const handler = async (req: Request): Promise<Response> => {
     
     const supplierEmailId = (supplierEmailResult as { id?: string })?.id || 'sent';
 
-    console.log("Supplier email sent:", supplierEmailResponse);
+    console.log("Supplier email sent:", supplierEmailResult);
 
     // Render admin notification email
     const adminHtml = renderAdminNotificationEmail({
