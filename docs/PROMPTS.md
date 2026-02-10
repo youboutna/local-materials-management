@@ -32,6 +32,42 @@ UI Component → Transformer → DTO (camelCase) → Service → Domain ← Adap
      └──────────────────────── Transformer ←────────────────────────────┘
 ```
 
+
+ Bonnes Pratiques d'Architecture Hexagonale
+📋 Rôles de Chaque Couche
+1. domain entities (domain/*)
+Rôle : Entités métier
+Responsabilité : Définir la structure des données métier
+Usage : Utilisés par les services et les adapters, mapping avec DB voir /integrations/supabase/types.ts
+2. DTOs (/dtos/entities/, /dtos/workflows/)
+Rôle : Types de transfert de données entre couches
+Responsabilité : Définir la structure des données échangées
+Usage : Utilisés par les transformers et services
+3. Transformers (/dtos/transforms/)
+Rôle : Conversion entre entités domaine et DTOs
+Responsabilité : Mapper les données entre couches
+Usage : Utilisés par les services pour les conversions
+4. Services et Référentiels (/application/services/,config/referentials/)
+Rôle : Logique métier et accès aux données référentielles
+Responsabilité : Fournir les données métier centralisées
+Usage : Utilisés par les composants UI
+5. UI Components (/components/)
+Rôle : Présentation et interaction utilisateur
+Responsabilité : Utiliser les types existants, pas en redéfinir
+Usage : Importer depuis DTOs et services
+6. Adapters (/infrastructure/supabase/adapters/)
+Rôle : Implémentations techniques
+Responsabilité : Implémenter les ports
+Usage : Utilisés par les services
+7. Hooks (/hooks/hexagonal/)
+Rôle : Logique métier et accès aux données référentielles
+Responsabilité : Fournir les données métier centralisées
+Usage : Utilisés par les composants UI
+8. Repository (/domain/repositories/)
+Rôle : Interface pour accéder aux données
+Responsabilité : Définir les contrats pour les données
+Usage : Utilisés par les services
+
 ### **RÈGLE #2 : CONVENTIONS DE CASING**
 
 | Couche | Convention | Exemple |

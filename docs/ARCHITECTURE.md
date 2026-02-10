@@ -49,7 +49,7 @@
 ### **src/application/** ⚡ **Logique Métier**
 ```
 src/application/
-├── services/              # ✅ Services métier (Use Cases)
+├── services/              # ✅ Services métier 
 │   ├── MaterialService.ts
 │   ├── ProjectService.ts
 │   └── InspectionService.ts
