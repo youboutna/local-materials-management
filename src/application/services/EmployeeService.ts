@@ -130,9 +130,9 @@ export class EmployeeService {
         employeeData.position || null,
         employeeData.department as any || null,
         employeeData.role as any || { name: 'employee', permissions: [] },
-        employeeData.hireDate || null,
+        employeeData.startDate || null,
         employeeData.salary || null,
-        employeeData.isActive !== undefined ? employeeData.isActive : true,
+        employeeData.status !== EmployeeStatus.INACTIVE,
         null, // user
         null, // manager
         null, // superior
@@ -177,7 +177,7 @@ export class EmployeeService {
         phone: updates.phone,
         position: updates.position,
         department: updates.department as unknown as Employee['department'] || null,
-        isActive: updates.isActive,
+        isActive: updates.status ? updates.status !== EmployeeStatus.INACTIVE : undefined,
         skills: updates.skills
       };
 

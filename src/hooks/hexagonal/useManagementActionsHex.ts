@@ -1,7 +1,10 @@
 // Hook hexagonal pour les actions de gestion
+// Uses services instead of direct Supabase access
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { InspectionService } from '@/application/services/InspectionService';
+import { ProjectService } from '@/application/services/ProjectService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface ActionItem {
   id: string;
@@ -24,92 +27,46 @@ export interface ActionItem {
 async function fetchManagementActions(): Promise<ActionItem[]> {
   const actions: ActionItem[] = [];
 
-  // Parallel fetches for efficiency
-  const [
-    { data: pendingInspections },
-    { data: paymentRequests },
-    { data: overdueInspections },
-    { data: projectsWithBudgetIssues },
-    { data: newProjects }
-  ] = await Promise.all([
-    supabase
-      .from('inspections')
-      .select(`id, date, inspector, progress_at_inspection, project_id, status, projects (id, title)`)
-      .in('status', ['in_progress', 'scheduled'])
-      .order('date', { ascending: true })
-      .limit(5),
-    supabase
-      .from('supplier_payment_requests')
-      .select(`id, amount, requested_date, project_id, status, supplier_id, projects (id, title)`)
-      .eq('status', 'pending')
-      .order('requested_date', { ascending: true })
-      .limit(5),
-    supabase
-      .from('inspections')
-      .select(`id, date, inspector, project_id, projects (id, title)`)
-      .lt('date', new Date().toISOString())
-      .eq('status', 'pending')
-      .order('date', { ascending: true })
-      .limit(3),
-    supabase
-      .from('projects')
-      .select('id, title, budget, progress')
-      .gt('progress', 80)
-      .limit(2),
-    supabase
-      .from('projects')
-      .select('id, title, start_date')
-      .eq('progress', 0)
-      .gte('start_date', new Date().toISOString())
-      .limit(2)
-  ]);
+  try {
+    const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
 
-  // Process pending inspections
-  if (pendingInspections) {
+    // Fetch inspections and projects in parallel
+    const [allInspections, allProjects] = await Promise.all([
+      InspectionService.getAllInspections(),
+      projectService.getAllProjects(),
+    ]);
+
+    // Process pending/in-progress inspections
+    const pendingInspections = allInspections
+      .filter(i => ['in_progress', 'scheduled'].includes(i.status))
+      .slice(0, 5);
+
     pendingInspections.forEach(inspection => {
       actions.push({
         id: `inspection-payment-${inspection.id}`,
         title: 'Validation paiement inspection',
-        description: `Inspection à ${inspection.progress_at_inspection}% - ${inspection.inspector}`,
+        description: `Inspection à ${inspection.progressAtInspection || 0}% - ${inspection.inspector}`,
         type: 'approval',
         priority: inspection.status === 'in_progress' ? 'high' : 'medium',
         status: 'pending',
         urgency: inspection.status === 'in_progress' ? 'high' : 'medium',
         category: 'approval',
         createdAt: new Date().toISOString(),
-        projectId: inspection.project_id || '',
-        projectName: inspection.project_title || '',
+        projectId: inspection.projectId || '',
+        projectName: '',
         inspectionId: inspection.id,
-        dueDate: new Date(inspection.date)
+        dueDate: new Date(inspection.date),
       });
     });
-  }
 
-  // Process payment requests
-  if (paymentRequests) {
-    paymentRequests.forEach(request => {
-      actions.push({
-        id: `payment-request-${request.id}`,
-        title: 'Demande de paiement fournisseur',
-        description: `Montant: ${request.amount.toLocaleString()} MRU - ${request.supplier_id || 'Fournisseur inconnu'}`,
-        type: 'approval',
-        priority: request.amount > 100000 ? 'high' : 'medium',
-        status: 'pending',
-        urgency: request.amount > 100000 ? 'critical' : 'high',
-        category: 'approval',
-        createdAt: new Date().toISOString(),
-        projectId: request.project_id || '',
-        projectName: request.project_title || '',
-        paymentId: request.id,
-        dueDate: new Date(request.requested_date)
-      });
-    });
-  }
+    // Overdue inspections
+    const now = new Date();
+    const overdueInspections = allInspections
+      .filter(i => i.status === 'pending' && new Date(i.date) < now)
+      .slice(0, 3);
 
-  // Process overdue inspections
-  if (overdueInspections) {
     overdueInspections.forEach(inspection => {
-      const daysPast = Math.floor((Date.now() - new Date(inspection.date).getTime()) / (1000 * 60 * 60 * 24));
+      const daysPast = Math.floor((now.getTime() - new Date(inspection.date).getTime()) / (1000 * 60 * 60 * 24));
       actions.push({
         id: `inspection-${inspection.id}`,
         title: 'Inspection en retard',
@@ -120,16 +77,18 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
         urgency: daysPast > 7 ? 'high' : 'medium',
         category: 'task',
         createdAt: new Date().toISOString(),
-        projectId: inspection.project_id || '',
-        projectName: inspection.project_title || '',
-        dueDate: new Date(inspection.date)
+        projectId: inspection.projectId || '',
+        projectName: '',
+        dueDate: new Date(inspection.date),
       });
     });
-  }
 
-  // Process budget issues
-  if (projectsWithBudgetIssues) {
-    projectsWithBudgetIssues.forEach(project => {
+    // Projects with high progress needing budget review
+    const highProgressProjects = allProjects
+      .filter(p => (p.progress || 0) > 80)
+      .slice(0, 2);
+
+    highProgressProjects.forEach(project => {
       actions.push({
         id: `budget-${project.id}`,
         title: 'Revue budgétaire',
@@ -142,13 +101,15 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
         createdAt: new Date().toISOString(),
         projectId: project.id,
         projectName: project.title,
-        dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
+        dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
       });
     });
-  }
 
-  // Process new projects
-  if (newProjects) {
+    // New projects needing team assignment
+    const newProjects = allProjects
+      .filter(p => (p.progress || 0) === 0 && p.startDate && new Date(p.startDate) >= now)
+      .slice(0, 2);
+
     newProjects.forEach(project => {
       actions.push({
         id: `team-${project.id}`,
@@ -162,9 +123,11 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
         createdAt: new Date().toISOString(),
         projectId: project.id,
         projectName: project.title,
-        dueDate: new Date(project.start_date)
+        dueDate: project.startDate ? new Date(project.startDate) : undefined,
       });
     });
+  } catch (error) {
+    console.error('Error fetching management actions:', error);
   }
 
   return actions;

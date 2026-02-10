@@ -330,124 +330,63 @@ export class MonitoringDashboardService {
         openTasks: 0,
         overdueTasks: 0
       };
-} catch (error) {
-  if (error instanceof ValidationError || error instanceof MonitoringServiceError) {
-    throw error;
-  }
-  throw new MonitoringServiceError(
-    `Failed to get comprehensive monitoring: ${error instanceof Error ? error.message : 'Unknown error'}`,
-    'GET_COMPREHENSIVE_MONITORING_FAILED'
-  );
-}
+    }
 
-// =================== PRIVATE HELPER METHODS ===================
+    const filteredProjects = this.filterProjects(projects, filters);
 
-private getDefaultFilters(): ExtendedMonitoringFiltersDTO {
-  const now = new Date();
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-  
-  return {
-    dateRange: {
-      start: thirtyDaysAgo.toISOString(),
-      end: new Date().toISOString()
+    const activeProjects = filteredProjects.filter(p => 
+      ['en_cours', 'en_construction', 'en_inspection', 'en_attente'].includes(p.status)
+    ).length;
+    const completedProjects = filteredProjects.filter(p => p.status === 'termine').length;
+    const atRiskProjects = filteredProjects.filter(p => 
+      (p.progress || 0) < 50 && p.status !== 'termine'
+    ).length;
+    const delayedProjects = filteredProjects.filter(p => {
+      if (!p.endDate) return false;
+      return new Date(p.endDate) < new Date() && p.status !== 'termine';
+    }).length;
 
-private async calculateMonitoringOverview(projects: ProjectDTO[], filters?: ExtendedMonitoringFiltersDTO): Promise<MonitoringOverviewDTO> {
-  if (!projects || projects.length === 0) {
+    const totalBudget = filteredProjects.reduce((sum, p) => sum + (p.budget || 0), 0);
+    const spentBudget = await this.calculateActualSpending(filteredProjects.map(p => p.id));
+    const budgetUtilization = totalBudget > 0 ? (spentBudget / totalBudget) * 100 : 0;
+    const teamSize = filteredProjects.reduce((sum, p) => sum + (p.teamSize || 0), 0);
+    const openTasks = await this.calculateOpenTasks(filteredProjects.map(p => p.id));
+    const overdueTasks = await this.calculateOverdueTasks(filteredProjects.map(p => p.id));
+    const healthScore = this.calculateOverallHealthScore(filteredProjects);
+    const riskLevel = this.calculateOverallRiskLevel(filteredProjects);
+
     return {
-      totalProjects: 0,
-      activeProjects: 0,
-      completedProjects: 0,
-      atRiskProjects: 0,
-      delayedProjects: 0,
-      totalBudget: 0,
-      spentBudget: 0,
-      budgetUtilization: 0,
-      healthScore: 100,
-      riskLevel: 'low' as const,
-      teamSize: 0,
-      openTasks: 0,
-      overdueTasks: 0
+      totalProjects: filteredProjects.length,
+      activeProjects,
+      completedProjects,
+      atRiskProjects,
+      delayedProjects,
+      totalBudget,
+      spentBudget,
+      budgetUtilization,
+      healthScore,
+      riskLevel,
+      teamSize,
+      openTasks,
+      overdueTasks
     };
-  }
-
-  const filteredProjects = this.filterProjects(projects, filters);
-
-  // Calculate actual metrics from project data
-  const activeProjects = filteredProjects.filter(p => 
-    ['en_cours', 'en_construction', 'en_inspection', 'en_attente'].includes(p.status)
-  ).length;
-
-  const completedProjects = filteredProjects.filter(p => p.status === 'termine').length;
-
-  const atRiskProjects = filteredProjects.filter(p => 
-    (p.progress || 0) < 50 && p.status !== 'termine'
-  ).length;
-
-  const delayedProjects = filteredProjects.filter(p => {
-    if (!p.endDate) return false;
-    return new Date(p.endDate) < new Date() && p.status !== 'termine';
-  }).length;
-
-  // Get budget data from projects
-  const totalBudget = filteredProjects.reduce((sum, p) => sum + (p.budget || 0), 0);
-  
-  // Get actual spending data from payment repository
-  const spentBudget = await this.calculateActualSpending(filteredProjects.map(p => p.id));
-
-  const budgetUtilization = totalBudget > 0 ? (spentBudget / totalBudget) * 100 : 0;
-
-  // Get team size from projects
-  const teamSize = filteredProjects.reduce((sum, p) => sum + (p.teamSize || 0), 0);
-
-  // Get task data from task repository
-  const openTasks = await this.calculateOpenTasks(filteredProjects.map(p => p.id));
-  const overdueTasks = await this.calculateOverdueTasks(filteredProjects.map(p => p.id));
-
-  // Calculate overall health score based on project metrics
-  const healthScore = this.calculateOverallHealthScore(filteredProjects);
-  const riskLevel = this.calculateOverallRiskLevel(filteredProjects);
-
-  return {
-    totalProjects: filteredProjects.length,
-    activeProjects,
-    completedProjects,
-    atRiskProjects,
-    delayedProjects,
-    totalBudget,
-    spentBudget,
-    budgetUtilization,
-    healthScore,
-    riskLevel,
-    teamSize,
-    openTasks,
-    overdueTasks
-  };
-    
-    if (healthScore >= 80) return 'faible';
-    if (healthScore >= 60) return 'moyen';
-    if (healthScore >= 40) return 'eleve';
-    return 'critique';
   }
 
   private calculateBudgetUtilization(project: ProjectDTO): number {
     if (!project.budget || project.budget === 0) return 0;
-    // Placeholder calculation - would need actual spending data
-    return (project.progress || 0) * 0.9; // Assume 90% of progress equals budget spent
+    return (project.progress || 0) * 0.9;
   }
 
   private getUpcomingDeadlines(project: ProjectDTO): string[] {
     const deadlines: string[] = [];
-    
     if (project.endDate) {
       const endDate = new Date(project.endDate);
       const now = new Date();
       const daysUntilEnd = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      
       if (daysUntilEnd > 0 && daysUntilEnd <= 30) {
         deadlines.push(project.endDate);
       }
     }
-    
     return deadlines;
   }
 }

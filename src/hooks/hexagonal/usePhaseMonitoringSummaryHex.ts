@@ -1,8 +1,11 @@
 // Hook hexagonal pour les résumés de monitoring de phase
-// Centralise les données pour PhaseMonitoringDashboard et UnifiedPhaseMonitoring
+// Uses services instead of direct Supabase access
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { PhaseService } from '@/application/services/PhaseService';
+import { InspectionService } from '@/application/services/InspectionService';
+import { PaymentService } from '@/application/services/PaymentService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface TasksSummary {
   total: number;
@@ -31,46 +34,41 @@ export interface PhaseMonitoringSummary {
 }
 
 async function fetchTasksSummary(phaseId: string): Promise<TasksSummary> {
-  const { data } = await supabase
-    .from('task_assignments')
-    .select('status')
-    .eq('phase_id', phaseId);
-
-  const total = data?.length || 0;
-  const completed = data?.filter(t => t.status === 'completed').length || 0;
-  const inProgress = data?.filter(t => t.status === 'in_progress').length || 0;
-  const pending = data?.filter(t => t.status === 'pending').length || 0;
-
-  return { total, completed, inProgress, pending };
+  try {
+    const phaseService = new PhaseService(RepositoryFactory.getPhaseRepository());
+    const tasks = await phaseService.getPhaseTasksSummary(phaseId);
+    return tasks || { total: 0, completed: 0, inProgress: 0, pending: 0 };
+  } catch {
+    return { total: 0, completed: 0, inProgress: 0, pending: 0 };
+  }
 }
 
 async function fetchInspectionsSummary(phaseId: string): Promise<InspectionsSummary> {
-  const { data } = await supabase
-    .from('inspections')
-    .select('status, progress_at_inspection')
-    .eq('phase_id', phaseId);
-
-  const total = data?.length || 0;
-  const approved = data?.filter(i => i.status === 'approved').length || 0;
-  const pending = data?.filter(i => i.status === 'pending' || i.status === 'scheduled').length || 0;
-  const rejected = data?.filter(i => i.status === 'rejected').length || 0;
-  const avgProgress = total > 0
-    ? Math.round(data!.reduce((sum, i) => sum + (i.progress_at_inspection || 0), 0) / total)
-    : 0;
-
-  return { total, approved, pending, rejected, avgProgress };
+  try {
+    const inspections = await InspectionService.getInspectionsByPhase(phaseId);
+    const total = inspections.length;
+    const approved = inspections.filter(i => i.status === 'approved').length;
+    const pending = inspections.filter(i => i.status === 'pending' || i.status === 'scheduled').length;
+    const rejected = inspections.filter(i => i.status === 'rejected').length;
+    const avgProgress = total > 0
+      ? Math.round(inspections.reduce((sum, i) => sum + (i.progressAtInspection || 0), 0) / total)
+      : 0;
+    return { total, approved, pending, rejected, avgProgress };
+  } catch {
+    return { total: 0, approved: 0, pending: 0, rejected: 0, avgProgress: 0 };
+  }
 }
 
 async function fetchPaymentsSummary(phaseId: string): Promise<PaymentsSummary> {
-  const { data } = await supabase
-    .from('payments')
-    .select('amount')
-    .eq('phase_id', phaseId);
-
-  const total = data?.length || 0;
-  const totalAmount = data?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
-
-  return { total, totalAmount };
+  try {
+    const service = new PaymentService(RepositoryFactory.getPaymentRepository());
+    const payments = await service.getPaymentsByPhase(phaseId);
+    const total = payments.length;
+    const totalAmount = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+    return { total, totalAmount };
+  } catch {
+    return { total: 0, totalAmount: 0 };
+  }
 }
 
 export function useTasksSummaryHex(phaseId: string) {

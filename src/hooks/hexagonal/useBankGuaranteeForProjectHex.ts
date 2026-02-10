@@ -1,9 +1,10 @@
 /**
  * Hexagonal Hook: useBankGuaranteesMonitorHex
- * Provides bank guarantees monitoring via services
+ * Uses BankGuaranteeService instead of direct Supabase access
  */
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+import { BankGuaranteeService } from '@/application/services/BankGuaranteeService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface BankGuaranteeData {
   projectId: string;
@@ -15,10 +16,7 @@ export interface BankGuaranteeData {
 }
 
 async function fetchBankGuaranteeForProject(projectId: string): Promise<BankGuaranteeData | null> {
-  // Validate projectId to prevent UUID errors
   if (!projectId || projectId.trim() === '') {
-    console.warn('fetchBankGuaranteeForProject: Invalid projectId provided, returning default data');
-    // Return default data structure instead of null to maintain functionality
     return {
       projectId: '',
       contractorId: '',
@@ -29,14 +27,32 @@ async function fetchBankGuaranteeForProject(projectId: string): Promise<BankGuar
     };
   }
 
-  const { data: guarantee, error } = await supabase
-    .from('bank_guarantees')
-    .select('*')
-    .eq('project_id', projectId)
-    .eq('status', 'active')
-    .single();
+  try {
+    const service = new BankGuaranteeService(RepositoryFactory.getBankGuaranteeRepository());
+    const guarantee = await service.getActiveGuaranteeForProject(projectId);
 
-  if (error || !guarantee) {
+    if (!guarantee) {
+      return {
+        projectId,
+        contractorId: '',
+        bankLiaisonEmail: '',
+        guaranteeAmount: 0,
+        delayPercentage: 0,
+        contractClause: 'Article 15.3 - Garantie de bonne exécution',
+      };
+    }
+
+    return {
+      projectId,
+      contractorId: guarantee.contractorId || '',
+      bankLiaisonEmail: guarantee.bankName 
+        ? `contact@${guarantee.bankName.toLowerCase().replace(/\s+/g, '')}.mr`
+        : '',
+      guaranteeAmount: guarantee.guaranteeAmount || 0,
+      delayPercentage: 0,
+      contractClause: 'Article 15.3 - Garantie de bonne exécution',
+    };
+  } catch {
     return {
       projectId,
       contractorId: '',
@@ -46,36 +62,17 @@ async function fetchBankGuaranteeForProject(projectId: string): Promise<BankGuar
       contractClause: 'Article 15.3 - Garantie de bonne exécution',
     };
   }
-
-  return {
-    projectId,
-    contractorId: guarantee.contractor_id,
-    bankLiaisonEmail: `contact@${guarantee.bank_name.toLowerCase().replace(/\s+/g, '')}.mr`,
-    guaranteeAmount: guarantee.guarantee_amount,
-    delayPercentage: 0,
-    contractClause: 'Article 15.3 - Garantie de bonne exécution',
-  };
 }
 
 export function useBankGuaranteeForProjectHex(projectId: string) {
-  const {
-    data: guarantee,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
+  const { data: guarantee, isLoading, error, refetch } = useQuery({
     queryKey: ['bank-guarantee-project-hex', projectId],
     queryFn: () => fetchBankGuaranteeForProject(projectId),
     enabled: !!projectId,
     staleTime: 30_000,
   });
 
-  return {
-    guarantee,
-    isLoading,
-    error,
-    refetch,
-  };
+  return { guarantee, isLoading, error, refetch };
 }
 
 export default useBankGuaranteeForProjectHex;

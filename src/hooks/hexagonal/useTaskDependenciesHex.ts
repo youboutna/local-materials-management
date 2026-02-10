@@ -1,17 +1,18 @@
 /**
  * Hexagonal hook for task dependencies
- * Centralizes task dependency queries
+ * Uses TaskService/adapter instead of direct Supabase access
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { TaskService } from '@/application/services/TaskService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface TaskDependency {
   id: string;
-  task_id: string;
-  depends_on_task_id: string;
-  dependency_type: string | null;
-  lag_days: number | null;
+  taskId: string;
+  dependsOnTaskId: string;
+  dependencyType: string | null;
+  lagDays: number | null;
 }
 
 // Hook: Fetch task dependencies for given tasks
@@ -21,13 +22,8 @@ export function useTaskDependenciesHex(taskIds: string[]) {
     queryFn: async (): Promise<TaskDependency[]> => {
       if (!taskIds || taskIds.length === 0) return [];
       
-      const { data, error } = await supabase
-        .from('task_dependencies')
-        .select('*')
-        .in('task_id', taskIds);
-      
-      if (error) throw error;
-      return data || [];
+      const service = new TaskService(RepositoryFactory.getTaskRepository());
+      return await service.getTaskDependencies(taskIds);
     },
     enabled: !!taskIds && taskIds.length > 0,
   });
