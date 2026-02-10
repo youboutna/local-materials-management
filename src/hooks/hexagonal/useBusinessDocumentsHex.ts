@@ -1,11 +1,13 @@
 /**
  * Hexagonal hook for Business Documents operations
+ * Uses DocumentService + StorageService instead of direct Supabase access
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { StorageService } from '@/application/services/StorageService';
 import { AuthService } from '@/application/services/AuthService';
-import { supabase } from '@/integrations/supabase/client';
+import { DocumentService } from '@/application/services/DocumentService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface BusinessDocumentFormData {
   title: string;
@@ -23,6 +25,8 @@ export function useUploadBusinessDocument() {
 
   return useMutation({
     mutationFn: async (formData: BusinessDocumentFormData & { projectId?: string }) => {
+      if (!formData.file) throw new Error('File is required');
+
       // Upload file
       const fileExt = formData.file.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
@@ -41,28 +45,25 @@ export function useUploadBusinessDocument() {
       const user = await authService.getCurrentUser();
       if (!user) throw new Error('User not authenticated');
 
-      // Save document record
-      const { error: docError } = await supabase
-        .from('documents')
-        .insert({
-          title: formData.title,
-          description: formData.description,
-          file_name: formData.file.name,
-          file_url: publicUrl,
-          file_size: formData.file.size,
-          mime_type: formData.file.type,
-          project_id: formData.projectId,
-          uploaded_by: user.id,
-          metadata: {
-            amount: formData.amount,
-            supplier: formData.supplier,
-            invoice_date: formData.invoice_date,
-            due_date: formData.due_date,
-          },
-          document_type: 'business_document',
-        });
-
-      if (docError) throw docError;
+      // Save document record via service
+      const docService = new DocumentService(RepositoryFactory.getDocumentRepository());
+      await docService.createDocument({
+        title: formData.title,
+        description: formData.description,
+        fileName: formData.file.name,
+        fileUrl: publicUrl,
+        fileSize: formData.file.size,
+        mimeType: formData.file.type,
+        projectId: formData.projectId,
+        uploadedBy: user.id,
+        documentType: 'other',
+        metadata: {
+          amount: formData.amount,
+          supplier: formData.supplier,
+          invoice_date: formData.invoice_date,
+          due_date: formData.due_date,
+        },
+      });
 
       return { success: true, url: publicUrl };
     },

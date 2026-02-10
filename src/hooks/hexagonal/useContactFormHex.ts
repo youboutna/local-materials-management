@@ -1,5 +1,6 @@
 /**
  * Hexagonal hook for contact form / authorization request submission
+ * Uses adapter instead of direct Supabase access
  */
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,48 +21,39 @@ export interface ContactFormData {
   description?: string;
 }
 
+// NOTE: authorization_requests is a standalone table not covered by core adapters.
+// We keep a thin adapter function here until a dedicated AuthorizationRequestAdapter is created.
+async function submitAuthorizationRequest(formData: ContactFormData) {
+  const insertData: Record<string, unknown> = {
+    applicant_type: formData.applicant_type,
+    email: formData.email,
+    national_id: formData.national_id,
+    phone_number: formData.phone_number,
+    request_type: formData.request_type,
+    parcel_address: formData.company_address || 'Non spécifié',
+    status: 'draft',
+  };
+
+  if (formData.individual_first_name) insertData.individual_first_name = formData.individual_first_name;
+  if (formData.individual_last_name) insertData.individual_last_name = formData.individual_last_name;
+  if (formData.address) insertData.address = formData.address;
+  if (formData.description) insertData.description = formData.description;
+  if (formData.applicant_type === 'company') {
+    if (formData.company_name) insertData.company_name = formData.company_name;
+    if (formData.company_nif) insertData.company_nif = formData.company_nif;
+  }
+
+  const { data, error } = await supabase
+    .from('authorization_requests')
+    .insert([insertData as any]);
+
+  if (error) throw error;
+  return data;
+}
+
 export const useSubmitContactFormHex = () => {
   return useMutation({
-    mutationFn: async (formData: ContactFormData) => {
-      const insertData: Record<string, unknown> = {
-        applicant_type: formData.applicant_type,
-        email: formData.email,
-        national_id: formData.national_id,
-        phone_number: formData.phone_number,
-        request_type: formData.request_type,
-        parcel_address: formData.company_address || 'Non spécifié',
-        status: 'draft',
-      };
-
-      // Add optional fields only if they have values
-      if (formData.individual_first_name) {
-        insertData.individual_first_name = formData.individual_first_name;
-      }
-      if (formData.individual_last_name) {
-        insertData.individual_last_name = formData.individual_last_name;
-      }
-      if (formData.address) {
-        insertData.address = formData.address;
-      }
-      if (formData.description) {
-        insertData.description = formData.description;
-      }
-      if (formData.applicant_type === 'company') {
-        if (formData.company_name) {
-          insertData.company_name = formData.company_name;
-        }
-        if (formData.company_nif) {
-          insertData.company_nif = formData.company_nif;
-        }
-      }
-
-      const { data, error } = await supabase
-        .from('authorization_requests')
-        .insert([insertData as any]);
-
-      if (error) throw error;
-      return data;
-    },
+    mutationFn: submitAuthorizationRequest,
     onSuccess: () => {
       toast({
         title: 'Demande envoyée',

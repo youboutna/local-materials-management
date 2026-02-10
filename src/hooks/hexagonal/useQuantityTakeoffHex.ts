@@ -1,22 +1,26 @@
 /**
  * Hexagonal hooks for Quantity Takeoff
+ * Uses QuantityTakeoffService/adapter instead of direct Supabase access
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { QuantityTakeoffService } from '@/application/services/QuantityTakeoffService';
+import { MaterialService } from '@/application/services/MaterialService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 // Hook: Fetch materials for quantity takeoff
 export function useMaterialsForTakeoff() {
   return useQuery({
     queryKey: ['materials'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('materials')
-        .select('id, name, unit, category')
-        .order('name');
-      
-      if (error) throw error;
-      return data || [];
+      const service = new MaterialService(RepositoryFactory.getMaterialRepository());
+      const materials = await service.getAllMaterials();
+      return materials.map(m => ({
+        id: m.id,
+        name: m.name,
+        unit: m.unit,
+        category: m.category,
+      }));
     }
   });
 }
@@ -36,23 +40,18 @@ export function useCreateQuantityTakeoff(projectId: string) {
       note?: string;
       quantity: number;
     }) => {
-      const submitData = {
-        material_id: data.material_id,
-        element_type: data.element_type,
+      const service = new QuantityTakeoffService(RepositoryFactory.getQuantityTakeoffRepository());
+      await service.create({
+        materialId: data.material_id,
+        elementType: data.element_type,
         unit: data.unit,
         length: data.length,
         width: data.width ?? 0,
         height: data.height ?? 0,
         note: data.note ?? '',
         quantity: data.quantity,
-        project_id: projectId
-      };
-
-      const { error } = await supabase
-        .from('quantity_takeoffs')
-        .insert(submitData);
-
-      if (error) throw error;
+        projectId,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quantity-takeoffs', projectId] });

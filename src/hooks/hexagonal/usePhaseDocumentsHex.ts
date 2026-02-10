@@ -1,17 +1,29 @@
 /**
  * Hexagonal Hook for Phase Documents Management
- * Wraps existing document hooks with phase-specific functionality
+ * Uses DocumentService instead of direct Supabase access
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/integrations/supabase/types';
+import { DocumentService } from '@/application/services/DocumentService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
-type DocumentRow = Database['public']['Tables']['documents']['Row'];
+export interface PhaseDocument {
+  id: string;
+  title: string;
+  description: string | null;
+  fileUrl: string | null;
+  fileName: string | null;
+  fileSize: number | null;
+  mimeType: string | null;
+  status: string;
+  documentType: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface UsePhaseDocumentsResult {
-  documents: DocumentRow[];
-  data: DocumentRow[]; // Alias for documents
+  documents: PhaseDocument[];
+  data: PhaseDocument[];
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
@@ -28,24 +40,31 @@ export function usePhaseDocuments(phaseId: string): UsePhaseDocumentsResult {
     refetch
   } = useQuery({
     queryKey: ['documents', 'phase', phaseId],
-    queryFn: async (): Promise<DocumentRow[]> => {
+    queryFn: async (): Promise<PhaseDocument[]> => {
       if (!phaseId) return [];
       
-      const { data, error } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('phase_id', phaseId)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
+      const service = new DocumentService(RepositoryFactory.getDocumentRepository());
+      const docs = await service.getDocumentsByPhase(phaseId);
+      return docs.map(d => ({
+        id: d.id,
+        title: d.title,
+        description: d.description ?? null,
+        fileUrl: d.fileUrl ?? null,
+        fileName: d.fileName ?? null,
+        fileSize: d.fileSize ?? null,
+        mimeType: d.mimeType ?? null,
+        status: d.status ?? 'draft',
+        documentType: d.documentType ?? 'other',
+        createdAt: d.createdAt,
+        updatedAt: d.updatedAt,
+      }));
     },
     enabled: !!phaseId,
   });
 
   return {
     documents,
-    data: documents, // Alias for documents
+    data: documents,
     isLoading,
     error,
     refetch,
