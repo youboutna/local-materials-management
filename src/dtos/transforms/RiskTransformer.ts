@@ -6,7 +6,7 @@
 
 import { Risk } from '@/domain/entities/Risk';
 import { RiskStatus, RiskLevel, RiskCategory, RISK_STATUS_VALUES, RISK_CATEGORY_VALUES } from '@/domain/entities/RiskTypesExport';
-import { RiskDTO, CreateRiskRequest, UpdateRiskRequest } from '@/application/services/RiskService';
+import { RiskDTO } from '@/dtos/entities/RiskDTO';
 
 export class RiskTransformer {
   /**
@@ -105,6 +105,40 @@ export class RiskTransformer {
    */
   static toEntityList(dtos: RiskDTO[]): Risk[] {
     return dtos.map(dto => this.toEntity(dto));
+  }
+
+  /**
+   * Transformer DTO vers format base de données (snake_case)
+   */
+  static toDatabaseFormat(dto: RiskDTO): any {
+    return {
+      ...dto,
+      // Convert camelCase to snake_case for database
+      review_date: dto.reviewDate,
+      timeline_impact: dto.timelineImpact,
+      // Keep existing fields as is
+      owner_id: dto.owner,
+      project_id: dto.projectId,
+      created_at: dto.createdAt,
+      updated_at: dto.updatedAt
+    };
+  }
+
+  /**
+   * Transformer format base de données vers DTO (snake_case ↔ camelCase)
+   */
+  static fromDatabaseFormat(dbRow: any): RiskDTO {
+    return {
+      ...dbRow,
+      // Convert snake_case to camelCase for DTO
+      reviewDate: dbRow.review_date,
+      timelineImpact: dbRow.timeline_impact,
+      // Keep existing fields as is
+      projectId: dbRow.project_id,
+      owner: dbRow.owner_id,
+      createdAt: dbRow.created_at,
+      updatedAt: dbRow.updated_at
+    };
   }
 
   /**

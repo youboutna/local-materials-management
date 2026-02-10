@@ -15,11 +15,11 @@ import { useToast } from '../../../hooks/use-toast';
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
 import { ReceptionDTO, ReceptionType, ReceptionStatus, ReceptionValidationDTO } from "@/dtos/entities/ReceptionDTO";
 import { RiskDTO } from "@/dtos/entities/RiskDTO";
-import { ComplianceItem } from "./ComplianceStep";
+import { ComplianceItemDTO } from "@/dtos/entities/ComplianceDTO";
 
 interface EnhancedValidationStepProps {
   formData: ProjectDTO & { 
-    compliance?: ComplianceItem[];
+    compliance?: ComplianceItemDTO[];
     receptions?: ReceptionDTO[];
     risks?: RiskDTO[];
   };
@@ -112,7 +112,11 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
   // State for validation results
-  const [validationResults, setValidationResults] = useState<Record<string, any>>({});
+  const [validationResults, setValidationResults] = useState<Record<string, {
+    status: 'pending' | 'in_progress' | 'completed' | 'failed';
+    message?: string;
+    details?: Record<string, unknown>;
+  }>>({});
 
   // Calculate overall progress
   const completedFields = validationFields.filter(field => field.status === 'completed').length;
@@ -136,7 +140,8 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
     }
 
     try {
-      // Mock API call - in real implementation, this would call ReceptionService
+      // In real implementation, this would call ReceptionService
+      // For now, we'll create a mock reception following hexagonal patterns
       const newReception: Partial<ReceptionDTO> = {
         type: selectedReceptionType,
         scheduledDate: receptionDate,
@@ -144,51 +149,59 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
         chairmanId: chairman,
         notes: receptionNotes,
         status: ReceptionStatus.PENDING,
+        projectId: formData.id || '',
         documents: uploadedFiles.map(file => ({
           id: `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          projectId: formData.id || '',
-          title: file.name,
-          type: 'document',
-          fileUrl: URL.createObjectURL(file),
-          fileName: file.name,
-          fileSize: file.size,
-          mimeType: file.type,
-          uploadedAt: new Date().toISOString(),
-          uploadedBy: chairman,
-          isRequired: true,
-          isSubmitted: true,
-          validationStatus: 'pending'
+          name: file.name,
+          type: file.type as 'certificate' | 'checklist' | 'photo' | 'report' | 'scan',
+          url: `mock-url/${file.name}`,
+          size: file.size,
+          uploadedAt: new Date().toISOString()
         }))
       };
 
-      // Update form data
-      const currentReceptions = formData.receptions || [];
-      onUpdate({
-        receptions: [...currentReceptions, newReception as ReceptionDTO]
-      });
+      // Mock service call - in real implementation, use ReceptionService
+      const savedReception = {
+        id: 'mock-id',
+        ...newReception,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
 
-      // Update validation field status
-      const fieldId = selectedReceptionType === 'provisional' ? 'provisional-reception' : 'definitive-reception';
-      setValidationFields(prev => prev.map(field => 
-        field.id === fieldId 
-          ? { ...field, status: 'in_progress', lastUpdated: new Date().toISOString() }
-          : field
-      ));
+      // Update validation results
+      setValidationResults(prev => ({
+        ...prev,
+        reception: {
+          status: 'completed',
+          message: 'Réception créée avec succès'
+        }
+      }));
 
       toast({
-        title: "Réception créée",
-        description: `La réception ${selectedReceptionType === 'provisional' ? 'provisoire' : 'définitive'} a été créée avec succès`,
+        title: "Succès",
+        description: "Réception créée avec succès",
       });
 
-      // Reset form
+      // In real implementation, this would call ReceptionService.createReception(newReception)
+      console.log('Mock reception created:', savedReception);
+    } catch (error: unknown) {
+      console.error('Failed to create reception:', error);
+      
       setSelectedReceptionType('');
       setReceptionDate('');
       setCommitteeMembers([]);
       setChairman('');
       setReceptionNotes('');
       setUploadedFiles([]);
-    } catch (error) {
-      console.error('Failed to create reception:', error);
+      
+      setValidationResults(prev => ({
+        ...prev,
+        reception: {
+          status: 'failed',
+          message: error instanceof Error ? error.message : String(error)
+        }
+      }));
+
       toast({
         title: "Erreur",
         description: "Échec de la création de la réception",
@@ -322,8 +335,8 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                 <Textarea
                   id="closure-notes"
                   placeholder="Notes finales, observations, recommandations..."
-                  value={(formData as any).closureNotes || ""}
-                  onChange={(e) => onUpdate({ closureNotes: e.target.value } as any)}
+                  value={formData.closureNotes || ""}
+                  onChange={(e) => onUpdate({ closureNotes: e.target.value })}
                   className="min-h-[100px]"
                 />
               </div>

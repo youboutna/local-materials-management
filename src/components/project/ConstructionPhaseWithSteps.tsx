@@ -9,16 +9,15 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useConstructionPhaseWithSteps } from '@/hooks/hexagonal/useConstructionPhaseWithSteps';
-import { ReferentialType } from '@/config/referentials';
-import { ConstructionPhase } from '@/domain/entities/ConstructionPhase';
-import { PhaseStepDTO, PhaseTaskDTO } from '@/types/phase-dto';
+import { usePhaseManagement } from '@/hooks/usePhaseManagement';
+import { Phase } from '@/domain/entities/Phase';
+import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { toast } from '@/hooks/use-toast';
 
 interface ConstructionPhaseWithStepsProps {
   projectId: string;
   referentialCode?: ReferentialType;
-  onPhaseUpdate?: (phase: ConstructionPhase) => void;
+  onPhaseUpdate?: (phase: Phase) => void;
 }
 
 export function ConstructionPhaseWithSteps({ 
@@ -161,7 +160,7 @@ export function ConstructionPhaseWithSteps({
           >
             <CardHeader className="pb-3">
               <div className="flex justify-between items-start">
-                <CardTitle className="text-lg">{phase.name}</CardTitle>
+                <CardTitle className="text-lg">{phase.phaseName}</CardTitle>
                 <Badge className={getPhaseStatusColor(phase.status)}>
                   {phase.status}
                 </Badge>
@@ -223,7 +222,7 @@ export function ConstructionPhaseWithSteps({
                         </div>
                         <div className="text-sm text-gray-600">
                           <p>Tasks: {step.tasks?.length || 0}</p>
-                          <p>Duration: {step.estimated_duration_days} days</p>
+                          <p>Duration: {step.estimatedDurationDays} days</p>
                         </div>
                         <div className="flex space-x-2">
                           <Button

@@ -11,7 +11,7 @@
  * async delete(id: string): Promise<boolean>
  */
 
-import { Project, ProjectStatus, ProjectCoordinates } from '@/domain/entities/Project';
+import { Project, ProjectCoordinates } from '@/domain/entities/Project';
 import { IProjectRepository, ProjectSummary } from '@/domain/repositories/IProjectRepository';
 import { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
 import { 
@@ -19,10 +19,17 @@ import {
   CreateProjectDTO, 
   UpdateProjectDTO, 
   ProjectSummaryDTO, 
-  ProjectDetailDTO 
+  ProjectDetailDTO,
+  ProjectStatus as ProjectStatusEnum,
+  PROJECT_STATUS_LABELS,
+  PROJECT_STATUS_CATEGORIES,
+  PROJECT_STATUS_TRANSITIONS
 } from '@/dtos/entities/ProjectDTO';
 import { StakeholderDTO } from '@/dtos/entities/StakeholderDTO';
 import { ProjectTransformer } from '@/dtos/transforms/ProjectTransformer';
+
+// Type alias for clarity
+type ProjectStatus = ProjectStatusEnum;
 
 // =================== ERROR CLASSES ===================
 
@@ -66,14 +73,49 @@ export class ProjectService {
         title: request.title,
         description: request.description,
         location: request.location,
-        status: 'planifié' as ProjectStatus,
+        status: request.status || ProjectStatus.EN_ATTENTE,
         budget: request.budget,
         progress: 0,
         startDate: request.startDate ? new Date(request.startDate) : null,
         endDate: request.endDate ? new Date(request.endDate) : null,
-        teamSize: request.teamSize,
+        teamSize: request.teamSize || 0,
         thumbnail: request.thumbnail,
+        // Additional fields from CreateProjectDTO
+        address: request.address,
+        latitude: request.latitude,
+        longitude: request.longitude,
+        geographicZone: request.geographicZone,
+        terrainType: request.terrainType,
+        category: request.category,
+        subCategory: request.subCategory,
+        priorityLevel: request.priorityLevel,
+        riskLevel: request.riskLevel,
+        projectManagerId: request.projectManagerId,
+        clientId: request.clientId,
+        workspaceId: request.workspaceId,
+        createdBy: request.createdBy,
+        projectReference: request.projectReference,
+        methodology: request.methodology,
+        estimatedDurationDays: request.estimatedDurationDays,
+        financingSource: request.financingSource,
+        marketType: request.marketType,
+        selectionMode: request.selectionMode,
+        launchDate: request.launchDate ? new Date(request.launchDate) : undefined,
+        attributionDate: request.attributionDate ? new Date(request.attributionDate) : undefined,
+        mainContractor: request.mainContractor,
+        allowsInitialPayment: request.allowsInitialPayment,
+        initialPaymentPercentage: request.initialPaymentPercentage,
+        currency: request.currency || 'EUR'
       };
+
+      // Handle coordinates if provided
+      if (request.latitude && request.longitude) {
+        const coordinates = new ProjectCoordinates(
+          Number(request.latitude),
+          Number(request.longitude)
+        );
+        (projectData as any).coordinates = coordinates;
+      }
 
       const project = await this.projectRepository.create(projectData);
       return ProjectTransformer.toDTO(project);
@@ -127,11 +169,11 @@ export class ProjectService {
     try {
       const projectData: Partial<Project> = {};
       
-      // Basic fields
+      // Basic fields with proper type handling
       if (request.title !== undefined && request.title !== null) projectData.title = String(request.title);
       if (request.description !== undefined && request.description !== null) projectData.description = String(request.description);
       if (request.location !== undefined && request.location !== null) projectData.location = String(request.location);
-      if (request.status !== undefined && request.status !== null) projectData.status = request.status as unknown as ProjectStatus;
+      if (request.status !== undefined && request.status !== null) projectData.status = request.status as ProjectStatus;
       if (request.progress !== undefined && request.progress !== null) projectData.progress = Number(request.progress);
       if (request.budget !== undefined && request.budget !== null) projectData.budget = Number(request.budget);
       if (request.startDate !== undefined && request.startDate !== null) projectData.startDate = new Date(String(request.startDate));
@@ -164,6 +206,9 @@ export class ProjectService {
           Number(request.longitude)
         );
       }
+
+      // Add timestamp for update
+      (projectData as any).updatedAt = new Date();
 
       const project = await this.projectRepository.update(id, projectData);
       return ProjectTransformer.toDTO(project);
@@ -232,9 +277,9 @@ export class ProjectService {
   }
 
   /**
-   * Get projects by status
+   * Get projects by status (enhanced with new ProjectStatus enum)
    */
-  async getProjectsByStatus(status: string): Promise<ProjectDTO[]> {
+  async getProjectsByStatus(status: ProjectStatus): Promise<ProjectDTO[]> {
     try {
       const allProjects = await this.projectRepository.findAll();
       const filtered = allProjects.filter(p => p.status === status);
@@ -245,6 +290,135 @@ export class ProjectService {
         'GET_BY_STATUS_ERROR'
       );
     }
+  }
+
+  /**
+   * Update project status with business logic validation
+   */
+  async updateProjectStatus(id: string, newStatus: ProjectStatus, reason?: string): Promise<ProjectDTO | null> {
+    try {
+      const project = await this.projectRepository.findById(id);
+      if (!project) {
+        throw new ProjectServiceError(
+          'Project not found',
+          'PROJECT_NOT_FOUND'
+        );
+      }
+
+      // Validate status transition
+      const currentStatus = project.status as ProjectStatus;
+      if (!this.isValidStatusTransition(currentStatus, newStatus)) {
+        throw new ProjectServiceError(
+          `Invalid status transition from ${PROJECT_STATUS_LABELS[currentStatus]} to ${PROJECT_STATUS_LABELS[newStatus]}`,
+          'INVALID_STATUS_TRANSITION'
+        );
+      }
+
+      // Update project with new status
+      const updateData: UpdateProjectDTO = {
+        id,
+        status: newStatus,
+        updatedAt: new Date().toISOString()
+      };
+
+      const updatedProject = await this.update(id, updateData);
+      
+      // Log status change if reason provided
+      if (reason) {
+        console.log(`Project ${id} status changed from ${PROJECT_STATUS_LABELS[currentStatus]} to ${PROJECT_STATUS_LABELS[newStatus]}. Reason: ${reason}`);
+      }
+
+      return updatedProject;
+    } catch (error) {
+      if (error instanceof ProjectServiceError) {
+        throw error;
+      }
+      throw new ProjectServiceError(
+        `Failed to update project status: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'UPDATE_STATUS_ERROR'
+      );
+    }
+  }
+
+  /**
+   * Get projects by status category
+   */
+  async getProjectsByCategory(category: keyof typeof PROJECT_STATUS_CATEGORIES): Promise<ProjectDTO[]> {
+    try {
+      const statusInCategory = PROJECT_STATUS_CATEGORIES[category];
+      const allProjects = await this.projectRepository.findAll();
+      const filtered = allProjects.filter(p => 
+        statusInCategory.includes(p.status as ProjectStatus)
+      );
+      return ProjectTransformer.manyToDTO(filtered);
+    } catch (error) {
+      throw new ProjectServiceError(
+        `Failed to get projects by category: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'GET_BY_CATEGORY_ERROR'
+      );
+    }
+  }
+
+  /**
+   * Get available status transitions for a project
+   */
+  async getAvailableStatusTransitions(id: string): Promise<ProjectStatus[]> {
+    try {
+      const project = await this.projectRepository.findById(id);
+      if (!project) {
+        throw new ProjectServiceError(
+          'Project not found',
+          'PROJECT_NOT_FOUND'
+        );
+      }
+
+      const currentStatus = project.status as ProjectStatus;
+      return PROJECT_STATUS_TRANSITIONS[currentStatus] || [];
+    } catch (error) {
+      if (error instanceof ProjectServiceError) {
+        throw error;
+      }
+      throw new ProjectServiceError(
+        `Failed to get available status transitions: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'GET_TRANSITIONS_ERROR'
+      );
+    }
+  }
+
+  async getStatusStatistics(): Promise<Record<ProjectStatus, number>> {
+    try {
+      const allProjects = await this.projectRepository.findAll();
+      const statistics: Record<string, number> = {};
+      
+      // Initialize all statuses with 0
+      Object.keys(ProjectStatusEnum).forEach(statusKey => {
+        const status = ProjectStatusEnum[statusKey as keyof typeof ProjectStatusEnum];
+        statistics[status] = 0;
+      });
+      
+      // Count projects by status
+      allProjects.forEach(project => {
+        const status = project.status as ProjectStatusEnum;
+        if (statistics[status] !== undefined) {
+          statistics[status]++;
+        }
+      });
+      
+      return statistics as Record<ProjectStatus, number>;
+    } catch (error) {
+      throw new ProjectServiceError(
+        `Failed to get status statistics: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'GET_STATISTICS_ERROR'
+      );
+    }
+  }
+
+  /**
+   * Validate status transition according to business rules
+   */
+  private isValidStatusTransition(currentStatus: ProjectStatus, newStatus: ProjectStatus): boolean {
+    const allowedTransitions = PROJECT_STATUS_TRANSITIONS[currentStatus] || [];
+    return allowedTransitions.includes(newStatus);
   }
 
   /**

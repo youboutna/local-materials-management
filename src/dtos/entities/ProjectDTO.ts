@@ -27,7 +27,7 @@ import { MaterialDTO, MaterialFormDataDTO } from './MaterialDTO';
 import { MilestoneDTO } from './MilestoneDTO';
 import { NotificationDTO } from './NotificationDTO';
 import { PaymentDTO } from './PaymentDTO';
-import { PhaseDTO, PhaseFormDataDTO } from './PhaseDTO';
+import { PhaseDTO, PhaseFormDataDTO, PhaseType, PhaseStatus, PhasePriority } from './PhaseDTO';
 import { ProjectAnalyticsDTO } from './ProjectAnalyticsDTO';
 import { RiskDTO, RiskFormDataDTO } from './RiskDTO';
 import { StakeholderDTO } from './StakeholderDTO';
@@ -39,8 +39,54 @@ import { InspectionDTO, InspectionFormDataDTO } from './InspectionDTO';
 import { DocumentDTO, DocumentFormDataDTO } from './DocumentDTO';
 import { GanttChartData, PERTAnalysis } from '@/domain/entities';
 
-// Core project status types - standardized
-export type ProjectStatus = StandardStatus
+// Core project status types - standardized and comprehensive
+export enum ProjectStatus {
+  // Initial states
+  DRAFT = 'draft',
+  PLANNED = 'planned',
+  PRE_QUALIFICATION = 'pre_qualification',
+  
+  // Active states
+  EN_ATTENTE = 'en_attente',
+  EN_CONCEPTION = 'en_conception',
+  PLANIFIE = 'planifie_v2',
+  ATTRIBUE = 'attribue_v2',
+  EN_COURS = 'en_cours_v2',
+  EN_CONSTRUCTION = 'en_construction_v2',
+  
+  // Review states
+  EN_INSPECTION = 'en_inspection_v2',
+  EN_REVIEW = 'en_review',
+  
+  // Completion states
+  TERMINE = 'termine_v2',
+  EN_CLOTURE = 'en_cloture_v2',
+  COMPLETED = 'completed',
+  
+  // Problem states
+  SUSPENDU = 'suspendu_v2',
+  EN_RETARD = 'en_retard_v2',
+  ANNULE = 'annule_v2',
+  CANCELLED = 'cancelled',
+  
+  // Legacy compatibility (exact same values as before)
+  EN_COURS_LEGACY = 'enCours',
+  TERMINE_LEGACY = 'termine',
+  EN_ATTENTE_LEGACY = 'enAttente',
+  EN_INSPECTION_LEGACY = 'enInspection',
+  SUSPENDU_LEGACY = 'suspendu',
+  ANNULE_LEGACY = 'annule',
+  ATTRIBUE_LEGACY = 'attribue',
+  PLANIFIE_LEGACY = 'planifie',
+  PRE_QUALIFICATION_LEGACY = 'preQualification',
+  EN_CONCEPTION_LEGACY = 'enConception',
+  EN_CONSTRUCTION_LEGACY = 'enConstruction',
+  EN_CLOTURE_LEGACY = 'enCloture',
+  EN_RETARD_LEGACY = 'enRetard'
+}
+
+// Legacy type for backward compatibility
+type LegacyProjectStatus = StandardStatus
   | "enCours"
   | "termine"
   | "enAttente"
@@ -54,6 +100,90 @@ export type ProjectStatus = StandardStatus
   | "enConstruction"
   | "enCloture"
   | "enRetard";
+
+// Unified project status type for new development
+export type ProjectStatusType = ProjectStatus;
+
+// Project status labels for UI display (Rule #4: Centralized DTOs)
+export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
+  [ProjectStatus.DRAFT]: 'Brouillon',
+  [ProjectStatus.PLANNED]: 'Planifié',
+  [ProjectStatus.PRE_QUALIFICATION]: 'Pré-qualification',
+  [ProjectStatus.EN_ATTENTE]: 'En attente',
+  [ProjectStatus.EN_CONCEPTION]: 'En conception',
+  [ProjectStatus.PLANIFIE]: 'Planifié',
+  [ProjectStatus.ATTRIBUE]: 'Attribué',
+  [ProjectStatus.EN_COURS]: 'En cours',
+  [ProjectStatus.EN_CONSTRUCTION]: 'En construction',
+  [ProjectStatus.EN_INSPECTION]: 'En inspection',
+  [ProjectStatus.EN_REVIEW]: 'En révision',
+  [ProjectStatus.TERMINE]: 'Terminé',
+  [ProjectStatus.EN_CLOTURE]: 'En clôture',
+  [ProjectStatus.COMPLETED]: 'Complété',
+  [ProjectStatus.SUSPENDU]: 'Suspendu',
+  [ProjectStatus.EN_RETARD]: 'En retard',
+  [ProjectStatus.ANNULE]: 'Annulé',
+  [ProjectStatus.CANCELLED]: 'Annulé',
+  // Legacy labels for backward compatibility
+  [ProjectStatus.EN_COURS_LEGACY]: 'En cours',
+  [ProjectStatus.TERMINE_LEGACY]: 'Terminé',
+  [ProjectStatus.EN_ATTENTE_LEGACY]: 'En attente',
+  [ProjectStatus.EN_INSPECTION_LEGACY]: 'En inspection',
+  [ProjectStatus.SUSPENDU_LEGACY]: 'Suspendu',
+  [ProjectStatus.ANNULE_LEGACY]: 'Annulé',
+  [ProjectStatus.ATTRIBUE_LEGACY]: 'Attribué',
+  [ProjectStatus.PLANIFIE_LEGACY]: 'Planifié',
+  [ProjectStatus.PRE_QUALIFICATION_LEGACY]: 'Pré-qualification',
+  [ProjectStatus.EN_CONCEPTION_LEGACY]: 'En conception',
+  [ProjectStatus.EN_CONSTRUCTION_LEGACY]: 'En construction',
+  [ProjectStatus.EN_CLOTURE_LEGACY]: 'En clôture',
+  [ProjectStatus.EN_RETARD_LEGACY]: 'En retard'
+};
+
+// Project status categories for business logic
+export const PROJECT_STATUS_CATEGORIES = {
+  INITIAL: [ProjectStatus.DRAFT, ProjectStatus.PLANNED, ProjectStatus.PRE_QUALIFICATION],
+  ACTIVE: [ProjectStatus.EN_ATTENTE, ProjectStatus.EN_CONCEPTION, ProjectStatus.PLANIFIE, ProjectStatus.ATTRIBUE, ProjectStatus.EN_COURS, ProjectStatus.EN_CONSTRUCTION],
+  REVIEW: [ProjectStatus.EN_INSPECTION, ProjectStatus.EN_REVIEW],
+  COMPLETED: [ProjectStatus.TERMINE, ProjectStatus.EN_CLOTURE, ProjectStatus.COMPLETED],
+  PROBLEM: [ProjectStatus.SUSPENDU, ProjectStatus.EN_RETARD, ProjectStatus.ANNULE, ProjectStatus.CANCELLED]
+} as const;
+
+// Project status transitions (allowed state changes)
+export const PROJECT_STATUS_TRANSITIONS: Record<ProjectStatus, ProjectStatus[]> = {
+  [ProjectStatus.DRAFT]: [ProjectStatus.PLANNED, ProjectStatus.CANCELLED],
+  [ProjectStatus.PLANNED]: [ProjectStatus.PRE_QUALIFICATION, ProjectStatus.EN_ATTENTE, ProjectStatus.CANCELLED],
+  [ProjectStatus.PRE_QUALIFICATION]: [ProjectStatus.ATTRIBUE, ProjectStatus.EN_ATTENTE, ProjectStatus.ANNULE],
+  [ProjectStatus.EN_ATTENTE]: [ProjectStatus.EN_CONCEPTION, ProjectStatus.PLANIFIE, ProjectStatus.EN_COURS, ProjectStatus.ANNULE],
+  [ProjectStatus.EN_CONCEPTION]: [ProjectStatus.PLANIFIE, ProjectStatus.EN_COURS, ProjectStatus.ANNULE],
+  [ProjectStatus.PLANIFIE]: [ProjectStatus.ATTRIBUE, ProjectStatus.EN_COURS, ProjectStatus.ANNULE],
+  [ProjectStatus.ATTRIBUE]: [ProjectStatus.EN_COURS, ProjectStatus.EN_CONSTRUCTION, ProjectStatus.ANNULE],
+  [ProjectStatus.EN_COURS]: [ProjectStatus.EN_CONSTRUCTION, ProjectStatus.EN_INSPECTION, ProjectStatus.SUSPENDU, ProjectStatus.EN_RETARD, ProjectStatus.ANNULE],
+  [ProjectStatus.EN_CONSTRUCTION]: [ProjectStatus.EN_INSPECTION, ProjectStatus.EN_REVIEW, ProjectStatus.SUSPENDU, ProjectStatus.EN_RETARD, ProjectStatus.ANNULE],
+  [ProjectStatus.EN_INSPECTION]: [ProjectStatus.EN_REVIEW, ProjectStatus.TERMINE, ProjectStatus.EN_CLOTURE, ProjectStatus.SUSPENDU, ProjectStatus.EN_RETARD],
+  [ProjectStatus.EN_REVIEW]: [ProjectStatus.TERMINE, ProjectStatus.EN_CLOTURE, ProjectStatus.SUSPENDU, ProjectStatus.EN_RETARD],
+  [ProjectStatus.TERMINE]: [ProjectStatus.EN_CLOTURE, ProjectStatus.COMPLETED],
+  [ProjectStatus.EN_CLOTURE]: [ProjectStatus.COMPLETED],
+  [ProjectStatus.COMPLETED]: [],
+  [ProjectStatus.SUSPENDU]: [ProjectStatus.EN_COURS, ProjectStatus.EN_RETARD, ProjectStatus.ANNULE],
+  [ProjectStatus.EN_RETARD]: [ProjectStatus.EN_COURS, ProjectStatus.SUSPENDU, ProjectStatus.ANNULE],
+  [ProjectStatus.ANNULE]: [],
+  [ProjectStatus.CANCELLED]: [],
+  // Legacy transitions
+  [ProjectStatus.EN_COURS_LEGACY]: [ProjectStatus.TERMINE_LEGACY, ProjectStatus.SUSPENDU_LEGACY, ProjectStatus.ANNULE_LEGACY],
+  [ProjectStatus.TERMINE_LEGACY]: [ProjectStatus.EN_CLOTURE_LEGACY],
+  [ProjectStatus.EN_ATTENTE_LEGACY]: [ProjectStatus.EN_COURS_LEGACY, ProjectStatus.ANNULE_LEGACY],
+  [ProjectStatus.EN_INSPECTION_LEGACY]: [ProjectStatus.TERMINE_LEGACY, ProjectStatus.SUSPENDU_LEGACY],
+  [ProjectStatus.SUSPENDU_LEGACY]: [ProjectStatus.EN_COURS_LEGACY, ProjectStatus.ANNULE_LEGACY],
+  [ProjectStatus.ANNULE_LEGACY]: [],
+  [ProjectStatus.ATTRIBUE_LEGACY]: [ProjectStatus.EN_COURS_LEGACY],
+  [ProjectStatus.PLANIFIE_LEGACY]: [ProjectStatus.EN_COURS_LEGACY],
+  [ProjectStatus.PRE_QUALIFICATION_LEGACY]: [ProjectStatus.ATTRIBUE_LEGACY],
+  [ProjectStatus.EN_CONCEPTION_LEGACY]: [ProjectStatus.EN_COURS_LEGACY],
+  [ProjectStatus.EN_CONSTRUCTION_LEGACY]: [ProjectStatus.EN_INSPECTION_LEGACY],
+  [ProjectStatus.EN_CLOTURE_LEGACY]: [ProjectStatus.TERMINE_LEGACY],
+  [ProjectStatus.EN_RETARD_LEGACY]: [ProjectStatus.EN_COURS_LEGACY, ProjectStatus.SUSPENDU_LEGACY]
+};
 
 // Project priority types - standardized
 export type ProjectPriority = StandardPriority;
@@ -91,8 +221,33 @@ export type ProjectAlert = NotificationDTO & {
   resolvedAt?: string;
 };
 
+// Resource allocation DTOs
+export interface ResourceAssignmentDTO {
+  id: string;
+  resourceId: string;
+  resourceType: 'employee' | 'equipment' | 'material';
+  projectId: string;
+  assignedTo: string;
+  startDate: string;
+  endDate?: string;
+  quantity?: number;
+  cost?: number;
+}
+
+export interface TeamAllocationDTO {
+  id: string;
+  teamId: string;
+  projectId: string;
+  role: string;
+  members: string[];
+  capacity: number;
+  allocated: number;
+  startDate: string;
+  endDate?: string;
+}
+
 // Gantt Chart Data
-export interface GanttChartData {
+export interface ProjectGanttChartData {
   phases: PhaseDTO[];
   milestones: MilestoneDTO[];
   tasks: TaskDTO[];
@@ -100,14 +255,11 @@ export interface GanttChartData {
 }
 
 // PERT Analysis
-export interface PertAnalysis {
+export interface ProjectPertAnalysis {
   activities?: TaskDTO[];
   criticalPath?: string[];
   expectedDuration: number;
   variance: number;
-  // Alias for backward compatibility
-  totalExpectedDuration?: number;
-  variances?: Record<string, number>;
   // Additional PERT fields
   optimisticEstimate?: number;
   mostLikelyEstimate?: number;
@@ -115,11 +267,8 @@ export interface PertAnalysis {
   standardDeviation?: number;
 }
 
-// Alias for PERT Analysis
-export type PERTAnalysis = PertAnalysis;
-
 // Earned Value Management Data
-export interface EvmData {
+export interface ProjectEvmData {
   plannedValue: number;
   earnedValue: number;
   actualCost: number;
@@ -133,9 +282,6 @@ export interface EvmData {
   estimateToComplete?: number;
   varianceAtCompletion?: number;
 }
-
-// Alias for EVM Metrics
-export type EVMMetrics = EvmData;
 
 // Main Project DTO
 export interface ProjectDTO extends BaseEntityDTO {
@@ -179,13 +325,13 @@ export interface ProjectDTO extends BaseEntityDTO {
   technicalManagerId?: string;
   supervisorId?: string;
   clientId?: string;
-  mainContractor?: SupplierDTO;
+  mainContractor?: string; // Simplified to string for DTO
   
   // Visual
   thumbnail?: string;
   
   // Construction details
-  currentPhase?: ConstructionPhase;
+  currentPhase?: string; // Simplified to string
   currentStage?: ConstructionStage;
   methodology?: "waterfall" | "agile" | "hybrid";
   
@@ -243,9 +389,9 @@ export interface ProjectDTO extends BaseEntityDTO {
   activeTeamMembers?: number;
   
   // Analytics
-  ganttChart?: GanttChartData;
-  pertAnalysis?: PertAnalysis;
-  earnedValueManagement?: EvmData;
+  ganttChart?: ProjectGanttChartData;
+  pertAnalysis?: ProjectPertAnalysis;
+  earnedValueManagement?: ProjectEvmData;
   projectAnalytics?: ProjectAnalyticsDTO;
   performanceMetrics?: PerformanceMetricsDTO;
 }
@@ -278,8 +424,6 @@ export interface ProjectDetailDTO extends ProjectDTO {
   payments: PaymentDTO[];
   materials: MaterialDTO[];
   stakeholders: StakeholderDTO[];
-  insurancePolicies: InsurancePolicyDTO[];
-  insuranceCertificates: InsuranceCertificateDTO[];
   alerts: ProjectAlert[];
   
   // Construction details
@@ -301,11 +445,11 @@ export interface ProjectDetailDTO extends ProjectDTO {
   };
   
   // Resource allocation
-  resourceAssignment?: any[];
-  teamAllocations?: any[];
+  resourceAssignment?: ResourceAssignmentDTO[];
+  teamAllocations?: TeamAllocationDTO[];
   
-  // Documents (simplified - would be DocumentDTO)
-  documents?: any[];
+  // Documents
+  documents?: DocumentDTO[];
 }
 
 // Project List Item for compact views
@@ -332,11 +476,54 @@ export interface ProjectListItemDTO extends BaseEntityDTO {
 }
 
 // Project Form Data DTO - extends BaseFormDTO for UI state management
-export interface ProjectDTO extends BaseFormDTO<ProjectDTO> {
+export interface ProjectFormDataDTO extends BaseFormDTO<ProjectDTO> {
   // Core project data
   title: string;
   description?: string;
   location?: string;
+  status?: ProjectStatus;
+  budget?: number;
+  startDate?: string;
+  endDate?: string;
+  
+  // Form-specific fields
+  projectManagerId?: string;
+  clientId?: string;
+  teamSize?: number;
+  currency?: string;
+  category?: string;
+  subCategory?: string;
+  priorityLevel?: "faible" | "moyenne" | "elevee" | "tresElevee";
+  riskLevel?: "faible" | "moyen" | "eleve" | "critique";
+  methodology?: "waterfall" | "agile" | "hybrid";
+  
+  // Additional fields
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  geographicZone?: string;
+  terrainType?: string;
+  estimatedDurationDays?: number;
+  projectReference?: string;
+  selectionMode?: string;
+  financingSource?: string;
+  marketType?: string;
+  launchDate?: string;
+  attributionDate?: string;
+  mainContractor?: string;
+  allowsInitialPayment?: boolean;
+  initialPaymentPercentage?: number;
+  thumbnail?: string;
+  workspaceId?: string;
+  createdBy?: string;
+}
+
+// Project UI State for form management
+export interface ProjectUIState {
+  // Core project data
+  formData: ProjectFormDataDTO;
+  
+  // Additional UI-specific fields
   startDate?: string;
   endDate?: string;
   budget?: number;
@@ -362,13 +549,13 @@ export interface ProjectDTO extends BaseFormDTO<ProjectDTO> {
   };
   
   // Collections for form management
-  phases?: PhaseFormDataDTO[];
-  risks?: RiskFormDataDTO[];
-  materials?: MaterialFormDataDTO[];
-  stakeholders?: EmployeeFormDataDTO[];
-  tasks?: TaskFormDataDTO[];
-  inspections?: InspectionFormDataDTO[];
-  documents?: DocumentFormDataDTO[];
+  phases?: PhaseDTO[];
+  risks?: RiskDTO[];
+  materials?: MaterialDTO[];
+  stakeholders?: StakeholderDTO[];
+  tasks?: TaskDTO[];
+  inspections?: InspectionDTO[];
+  documents?: DocumentDTO[];
   
   // Metadata
   metadata?: {
@@ -589,8 +776,8 @@ interface CreateProjectRequestDTO {
 // These types are re-exported from ProjectDTO for compatibility with legacy imports
 export type ProjectFormDTO = ProjectDTO;
 export type ProjectData = ProjectDTO;
-export type EVMMetrics = EvmData;
-export type PERTAnalysis = PertAnalysis;
+export type ProjectEVMMetrics = ProjectEvmData;
+export type ProjectPERTAnalysis = ProjectPertAnalysis;
 
 // Inspection status for workflow components
 export type InspectionStatus = 'pending' | 'scheduled' | 'in_progress' | 'completed' | 'approved' | 'rejected';

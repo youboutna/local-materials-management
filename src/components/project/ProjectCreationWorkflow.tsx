@@ -22,14 +22,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 // Import step components
 import InteractiveMapGIS from "../materials/InteractiveMapGIS";
-
-// Define Coordinate interface locally since it's not exported
-interface Coordinate {
-  lat: number;
-  lng: number;
-}
 import ConstructionPhaseManager from "./ConstructionPhaseManager";
-import ComplianceStep from "./steps/ComplianceStep";
+import EnhancedComplianceStep from "./steps/EnhancedComplianceStep";
 import ResourcesMaterialsStep from "./steps/ResourcesMaterialsStep";
 import RiskAnalysisStep from "./steps/RiskAnalysisStep";
 import StakeholdersTeamStep from "./steps/StakeholdersTeamStep";
@@ -52,20 +46,24 @@ import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
 import { ProjectWorkflowData, StepRelatedDataDTO } from "@/dtos/workflows/ProjectWorkflowDTOs";
 import { PhaseWorkflowDTO } from "@/dtos/workflows/PhaseWorkflowDTO";
 
-// Import entity DTOs (following "similitude des voisins le plus proche")
-import { ProjectDTO, CreateProjectDTO } from "@/dtos/entities/ProjectDTO";
+// Import entity DTOs (following PROMPTS.md Rule #4: No type redefinition)
+import { ProjectDTO, ProjectStatus } from '@/dtos/entities/ProjectDTO';
+import { ComplianceItemDTO } from '@/dtos/entities/ComplianceDTO';
 import { MaterialDTO, MaterialCategory, MaterialStatus, MaterialUnit } from "@/dtos/entities/MaterialDTO";
 import { RiskDTO } from "@/dtos/entities/RiskDTO";
 import { EmployeeDTO } from "@/dtos/entities/EmployeeDTO";
 import { PhaseDTO, PhaseType, PhaseStatus, PhasePriority } from "@/dtos/entities/PhaseDTO";
+import { LocationDTO } from "@/dtos/shared";
+import { generatePhaseTypeFromReferentialPhase, generateDynamicPhaseType } from '@/utils/phaseTypeGenerator';
+import ProjectInfoStep from "./steps/ProjectInfoStep";
 
 interface ProjectCreationWorkflowProps {
-  onSubmit: (data: CreateProjectDTO) => void;
+  onSubmit: (data: ProjectWorkflowData) => void;
   selectedMaterials: Array<{ materialId: string; quantity: number }>;
   onMaterialsChange: (
     materials: Array<{ materialId: string; quantity: number }>
   ) => void;
-  initialData?: CreateProjectDTO;
+  initialData?: ProjectWorkflowData;
 }
 
 const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
@@ -74,7 +72,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   onMaterialsChange,
   initialData,
 }) => {
-  // ⚡ Application Layer - Hook unified workflow
+  // ⚡ Application Layer - Use unified workflow hook for all state management (Rule #5)
   const {
     workflowState,
     formData,
@@ -91,93 +89,27 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     workflowSteps
   } = useUnifiedProjectWorkflow('creation');
 
-  // 🎨 UI Layer - États locaux pour la présentation uniquement (Règle PROMPTS.md #5)
+  // 🎨 UI Layer - Only UI-specific state (Rule #5)
   const [currentStep, setCurrentStep] = useState(0);
 
-  // 🎨 UI Layer - Use ProjectWorkflowData for workflow state management
-  const [projectWorkflowData, setProjectWorkflowData] = useState<ProjectWorkflowData>(() => ({
-    projectId: undefined,
-    currentStep: 1,
-    isDraft: true,
-    isComplete: false,
-    projectData: {
-      id: uuidv4(),
-      title: "",
-      description: "",
-      location: "",
-      address: "",
-      latitude: 0,
-      longitude: 0,
-      budget: 0,
-      currency: "USD",
-      startDate: "",
-      endDate: "",
-      projectManagerId: "",
-      clientId: "",
-      status: "enAttente",
-      priority: "moyenne",
-      progress: 0,
-      teamSize: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    } as any,
-    relatedData: {
-      materials: [],
-      risks: [],
-      stakeholders: [],
-      phases: []
-    },
-    metadata: {
-      lastSavedAt: new Date().toISOString(),
-      totalSteps: 9,
-      completedSteps: 0,
-      progressPercentage: 0
-    }
-  }));
+  // 🎨 UI Layer - Use unified workflow data (Rule #5: UI Layer Separation)
+  const projectData = formData?.projectData;
+  const relatedData = formData?.relatedData;
 
-  // 🎨 UI Layer - Update handlers for workflow data
-  const updateProjectWorkflowData = useCallback((updates: Partial<ProjectWorkflowData>) => {
-    setProjectWorkflowData(prev => ({
-      ...prev,
-      ...updates
-    }));
-  }, []);
-
-  // 🎨 UI Layer - Update handlers for project data
-  const updateProjectData = useCallback((updates: Partial<ProjectDTO>) => {
-    setProjectWorkflowData(prev => ({
-      ...prev,
-      projectData: {
-        ...prev.projectData,
-        ...updates
-      }
-    }));
-  }, []);
-
-  // 🎨 UI Layer - Update handlers for related data
-  const updateRelatedData = useCallback((updates: Partial<StepRelatedDataDTO>) => {
-    setProjectWorkflowData(prev => ({
-      ...prev,
-      relatedData: {
-        ...prev.relatedData,
-        ...updates
-      }
-    }));
-  }, []);
-
-  // 🎨 UI Layer - Memoized update handlers
-  const memoizedUpdateProjectData = useMemo(() => updateProjectData, [updateProjectData]);
-
-  // 🎨 UI Layer - Use service for validation (Rule #5 compliant)
-  const validateStepData = useCallback((): { isValid: boolean; errors: string[] } => {
-    // Temporarily skip validation - will be implemented via ProjectWorkflowService
+  // 🎨 UI Layer - Use unified workflow validation (Rule #5 compliant)
+  const validateStepData = useCallback(async (): Promise<{ isValid: boolean; errors: string[] }> => {
+    if (!formData) return { isValid: false, errors: ['No form data available'] };
+    
+    // Use unified workflow validation
+    const validation = await validateCurrentStep();
     return {
-      isValid: true,
-      errors: []
+      isValid: validation.isValid,
+      errors: validation.errors
     };
-  }, [projectWorkflowData, currentStep]);
+  }, [formData, validateCurrentStep]);
 
   // Steps aligned with workflow specification (7 étapes critiques)
+  // ✅ Using centralized DTOs and proper validation (Rule #4)
   const steps = [
     {
       id: 1,
@@ -185,14 +117,16 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       icon: Building,
       description: "Type, budget, dates, référence",
       color: "bg-blue-500",
-      isCompleted: (data: ProjectDTO | CreateProjectDTO) =>
-        Boolean(
-          data.title &&
-          data.description &&
-          (data.budget || 0) > 0 &&
-          data.startDate &&
-          data.endDate
-        ),
+      isCompleted: () => {
+        if (!projectData) return false;
+        return Boolean(
+          projectData.title &&
+          projectData.description &&
+          (projectData.budget || 0) > 0 &&
+          projectData.startDate &&
+          projectData.endDate
+        );
+      },
     },
     {
       id: 2,
@@ -201,8 +135,10 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       description:
         "Bailleurs, Ministères, Entreprises, Banques, Bureau conseil",
       color: "bg-green-500",
-      isCompleted: (data: ProjectDTO | CreateProjectDTO) =>
-        Boolean(data.projectManagerId),
+      isCompleted: () => {
+        if (!projectData) return false;
+        return Boolean(projectData.projectManagerId);
+      },
     },
     {
       id: 3,
@@ -210,8 +146,10 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       icon: MapPin,
       description: "Géolocalisation interactive (Maps/Leaflet)",
       color: "bg-cyan-500",
-      isCompleted: (data: ProjectDTO | CreateProjectDTO) =>
-        Boolean(data.address && (data.latitude || data.longitude)),
+      isCompleted: () => {
+        if (!projectData) return false;
+        return Boolean(projectData.address && (projectData.latitude || projectData.longitude));
+      },
     },
     {
       id: 4,
@@ -220,7 +158,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       description:
         "Phase → Step → Task avec documents, ressources, inspections",
       color: "bg-indigo-500",
-      isCompleted: (data: ProjectDTO | CreateProjectDTO) => Boolean(projectWorkflowData.relatedData?.phases && projectWorkflowData.relatedData.phases.length > 0),
+      isCompleted: () => Boolean(relatedData?.phases && relatedData.phases.length > 0),
     },
     {
       id: 5,
@@ -228,15 +166,15 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       icon: AlertTriangle,
       description: "Analyse et gestion des risques",
       color: "bg-red-500",
-      isCompleted: (data: ProjectDTO | CreateProjectDTO) => Boolean(projectWorkflowData.relatedData?.risks && projectWorkflowData.relatedData.risks.length >= 0),
+      isCompleted: () => Boolean(relatedData?.risks && relatedData.risks.length >= 0),
     },
     {
       id: 6,
       title: "Conformité",
       icon: FileCheck,
-      description: "Standards SOMELEC et bailleurs (BM, BAD, BID, AFD)",
+      description: "Standards Entreprise et bailleurs (BM, BAD, BID, AFD)",
       color: "bg-amber-500",
-      isCompleted: (data: ProjectDTO | CreateProjectDTO) => true,
+      isCompleted: () => true,
     },
     {
       id: 7,
@@ -244,58 +182,11 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       icon: CheckCircle,
       description: "Réception définitive et clôture",
       color: "bg-teal-500",
-      isCompleted: (data: ProjectDTO | CreateProjectDTO) => true,
+      isCompleted: () => true,
     },
   ];
 
-  // 🎨 UI Layer - Manual step saving with validation (respect user workflow)
-  const saveCurrentStep = async () => {
-    try {
-      // Instantiate workflow service with repositories
-      const workflowService = new ProjectWorkflowService(
-        RepositoryFactory.getProjectRepository(),
-        RepositoryFactory.getPhaseRepository(),
-        RepositoryFactory.getRiskRepository(),
-        RepositoryFactory.getStakeholderRepository()
-      );
-      
-      // Convert component state to ProjectWorkflowDTO
-      const workflowDTO: ProjectWorkflowData = {
-        projectId: projectWorkflowData.projectId,
-        currentStep: currentStep + 1,
-        isDraft: projectWorkflowData.isDraft,
-        isComplete: projectWorkflowData.isComplete,
-        projectData: projectWorkflowData.projectData,
-        relatedData: projectWorkflowData.relatedData,
-        metadata: projectWorkflowData.metadata
-      };
-
-      // Save workflow data through service
-      await workflowService.saveWorkflowData({
-        project: { ...projectWorkflowData.projectData, description: projectWorkflowData.projectData.description || '' },
-        currentStep: currentStep + 1,
-        status: projectWorkflowData.isDraft ? 'draft' : 'completed',
-        completedSteps: currentStep + 1,
-        mode: 'create'
-      } as any);
-      
-      toast({
-        title: "Sauvegarde réussie",
-        description: `Étape ${currentStep + 1} sauvegardée avec succès`,
-      });
-      return true;
-    } catch (error) {
-      console.error('Step save error:', error);
-      toast({
-        title: "Erreur de sauvegarde",
-        description: error instanceof Error ? error.message : "Échec de la sauvegarde",
-        variant: "destructive"
-      });
-      return false;
-    }
-  };
-
-  // 🎨 UI Layer - Save and proceed to next step with error handling
+  // 🎨 UI Layer - Save and proceed to next step using unified workflow (Rule #5)
   const saveAndNextStep = async () => {
     // Validate current step before proceeding
     if (!canProceedNext()) {
@@ -303,9 +194,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       return; // 🚫 Do not proceed if validation fails
     }
 
-    // Attempt to save current step
-    const saveSuccess = await saveCurrentStep();
-    if (!saveSuccess) {
+    // Attempt to save current step using unified workflow
+    const result = await saveCurrentStep();
+    if (!result?.success) {
       console.error('Échec de la sauvegarde, passage à l\'étape suivante annulé');
       return; // 🚫 Do not proceed if save fails
     }
@@ -314,83 +205,91 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     nextStep();
   };
 
-  // 🎨 UI Layer - Save all workflow data with error handling
-  const saveAllData = async () => {
-    try {
-      const workflowData: ProjectWorkflowData = {
-        ...projectWorkflowData,
-        currentStep: currentStep + 1
-      };
+  // 🎨 UI Layer - Save all workflow data using unified workflow (Rule #5)
+  const saveAllData = async (): Promise<boolean> => {
+    if (!formData) {
+      console.error('No form data available');
+      return false;
+    }
 
-      await createProject(workflowData);
-      console.log('Toutes les données du workflow sauvegardées');
-      return true; // ✅ Success
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde complète:', error);
-      // 🚫 Flash saving prevented - do not commit on error
+    // Use the unified workflow hook's save functionality (Rule #5: UI Layer Separation)
+    const result = await saveCurrentStep();
+    if (!result?.success) {
+      // Type-safe error handling for SaveResult interface
+      let errorMessage = 'Failed to save workflow data';
+      
+      // Check if result has errors array (SaveResult interface)
+      if ('errors' in result && Array.isArray(result.errors) && result.errors.length > 0) {
+        errorMessage = result.errors.join(', ');
+      }
+      // Check if result has message property (fallback error object)
+      else if ('message' in result && typeof result.message === 'string') {
+        errorMessage = result.message;
+      }
+      
+      console.error('Erreur lors de la sauvegarde complète:', errorMessage);
       return false; // ❌ Failed
     }
+
+    console.log('Toutes les données du workflow sauvegardées');
+    return true; // ✅ Success
   };
 
-  const getStepProgress = () => {
+  const getStepProgress = (): number => {
+    if (!projectData) return 0;
     const completedCount = steps.filter((step) =>
-      step.isCompleted(projectWorkflowData.projectData)
+      step.isCompleted()
     ).length;
     return (completedCount / steps.length) * 100;
   };
 
-  const nextStep = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
-  const prevStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  const canProceedNext = () => {
+  const canProceedNext = (): boolean => {
     const step = steps[currentStep];
     // ✅ Use project data for validation (consistent with step validation)
-    return step ? step.isCompleted(projectWorkflowData.projectData) : false;
+    return step ? step.isCompleted() : false;
   };
 
   const handleSubmit = async () => {
     try {
-      // Ensure description is provided for CreateProjectDTO
-      const projectDataWithDescription = {
-        ...projectWorkflowData.projectData,
-        description: projectWorkflowData.projectData.description || 'No description provided'
+      if (!formData) {
+        throw new Error('No form data available');
+      }
+
+      // Use the unified workflow hook for final submission (Rule #5: UI Layer Separation)
+      // Update form data with completion status
+      const finalWorkflowData: Partial<ProjectWorkflowData> = {
+        ...formData,
+        currentStep: steps.length,
+        isComplete: true,
+        isDraft: false,
+        metadata: {
+          ...formData.metadata,
+          totalSteps: steps.length,
+          completedSteps: steps.length,
+          progressPercentage: 100,
+          lastSavedAt: new Date().toISOString()
+        }
       };
       
-      // Instantiate workflow service
-      const workflowService = new ProjectWorkflowService(
-        RepositoryFactory.getProjectRepository(),
-        RepositoryFactory.getPhaseRepository(),
-        RepositoryFactory.getRiskRepository(),
-        RepositoryFactory.getStakeholderRepository()
-      );
+      // Submit through the unified workflow system
+      await updateFormData(finalWorkflowData);
+      const result = await saveCurrentStep();
       
-      // Skip validation for now - simplify submission
-      // Complete the workflow
-      await workflowService.completeWorkflow({
-        project: projectDataWithDescription,
-        currentStep: steps.length,
-        status: 'completed',
-        completedSteps: steps.length,
-        mode: 'create'
-      } as any);
+      if (!result?.success) {
+        throw new Error(result.errors?.join(', ') || 'Failed to complete project creation');
+      }
       
       toast({
         title: "Projet créé avec succès",
         description: "Le projet a été créé et toutes les étapes sont complétées",
       });
       
+      // Call the onSubmit prop with the complete workflow data
+      onSubmit(finalWorkflowData as ProjectWorkflowData);
+      
       // Redirect to project detail if projectId exists
-      if (projectWorkflowData.projectId) {
-        window.location.href = `/projects/${projectWorkflowData.projectId}`;
+      if (formData.projectId) {
+        window.location.href = `/projects/${formData.projectId}`;
       }
     } catch (error) {
       console.error('Submission error:', error);
@@ -447,119 +346,110 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
         </CardHeader>
         <CardContent className="space-y-6">
           {currentStep === 0 && (
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Titre du projet"
-                value={projectWorkflowData.projectData.title}
-                onChange={(e) => updateProjectData({ title: e.target.value })}
-                className="w-full px-3 py-2 border rounded-md"
-              />
-              <textarea
-                placeholder="Description"
-                value={projectWorkflowData.projectData.description}
-                onChange={(e) => updateProjectData({ description: e.target.value })}
-                className="w-full px-3 py-2 border rounded-md"
-                rows={3}
-              />
-              <input
-                type="number"
-                placeholder="Budget"
-                value={projectWorkflowData.projectData.budget}
-                onChange={(e) => updateProjectData({ budget: parseFloat(e.target.value) })}
-                className="w-full px-3 py-2 border rounded-md"
-              />
-              <input
-                type="date"
-                value={projectWorkflowData.projectData.startDate}
-                onChange={(e) => updateProjectData({ startDate: e.target.value })}
-                className="w-full px-3 py-2 border rounded-md"
-              />
-              <input
-                type="date"
-                value={projectWorkflowData.projectData.endDate}
-                onChange={(e) => updateProjectData({ endDate: e.target.value })}
-                className="w-full px-3 py-2 border rounded-md"
-              />
-            </div>
+            <ProjectInfoStep
+              mode="create"
+              workflowData={formData}
+              onStepComplete={(stepData) => {
+                // Step 1 manages CRUD service adapters and initiates status/progress
+                updateFormData({ 
+                  projectData: {
+                    ...formData?.projectData,
+                    ...stepData.projectData,
+                    status: ProjectStatus.EN_ATTENTE,
+                    progress: 0
+                  }
+                });
+              }}
+            />
           )}
 
-           {currentStep === 1 && (
-             <StakeholdersTeamStep
-               projectData={projectWorkflowData.projectData}
-               onUpdate={(data) => updateProjectData(data)}
-             />
-           )}
+        {currentStep === 1 && (
+          <StakeholdersTeamStep
+            workflowData={formData}
+            onStepComplete={(stepData) => {
+              updateFormData({ 
+                relatedData: {
+                  ...formData?.relatedData,
+                  stakeholders: stepData.stakeholders
+                }
+              });
+            }}
+          />
+        )}
 
-           {currentStep === 2 && (
-             <InteractiveMapGIS
-               value={{
-                 coordinates: projectWorkflowData.projectData.latitude && projectWorkflowData.projectData.longitude 
-                   ? { lat: projectWorkflowData.projectData.latitude, lng: projectWorkflowData.projectData.longitude }
-                   : undefined
-               }}
-               onChange={(data) => {
-                 if (data.coordinates) {
-                   updateProjectData({ 
-                     latitude: data.coordinates.lat, 
-                     longitude: data.coordinates.lng
-                   });
-                 }
-               }}
-             />
-           )}
+        {currentStep === 2 && (
+          <InteractiveMapGIS
+            value={{
+              coordinates: formData?.projectData?.latitude && formData?.projectData?.longitude 
+                ? { lat: formData?.projectData.latitude, lng: formData?.projectData.longitude }
+                : undefined
+            }}
+            onChange={(data) => {
+              if (data.coordinates) {
+                updateFormData({
+                  projectData: {
+                    ...(formData?.projectData || {}),
+                    id: formData?.projectData?.id || uuidv4(), // Ensure we always have an ID
+                    createdAt: formData?.projectData?.createdAt || new Date().toISOString(), // Default now
+                    updatedAt: formData?.projectData?.updatedAt || new Date().toISOString(), // Default now
+                    title: formData?.projectData?.title || '', // Default empty string
+                    description: formData?.projectData?.description || '', // Default empty string
+                    status: formData?.projectData?.status || ProjectStatus.DRAFT, // Default status
+                    progress: formData?.projectData?.progress || 0, // Default progress
+                    location: formData?.projectData?.location || '', // Default empty string
+                    startDate: formData?.projectData?.startDate || new Date().toISOString().split('T')[0], // Default today
+                    budget: formData?.projectData?.budget || 0, // Default budget
+                    currency: formData?.projectData?.currency || 'MRO', // Default currency
+                    teamSize: formData?.projectData?.teamSize || 0, // Default team size
+                    latitude: data.coordinates.lat,
+                    longitude: data.coordinates.lng
+                  }
+                });
+              }
+            }}
+          />
+        )}
 
-            {currentStep === 3 && (
-              <ConstructionPhaseManager
-                projectId={projectWorkflowData.projectId || ''}
-                phases={(projectWorkflowData.relatedData?.phases || []).map(p => ({
-                  id: p.id,
-                  title: p.name || p.type || 'Phase',
-                  description: p.description || '',
-                  startDate: p.startDate || '',
-                  endDate: p.endDate || '',
-                  estimatedDuration: 0,
-                  status: (p.status as 'not_started' | 'in_progress' | 'completed' | 'delayed') || 'not_started',
-                  budget: 0,
-                  actualCost: 0,
-                  progress: p.progress || 0,
-                  materials: [],
-                  humanResources: [],
-                  suppliers: [],
-                  location: ''
-                }))}
-                onChange={(phases) => updateRelatedData({ 
-                  phases: phases.map(p => ({
-                    id: p.id,
-                    projectId: projectWorkflowData.projectId || '',
-                    name: p.title,
-                    type: PhaseType.STRUCTURAL,
-                    description: p.description,
-                    startDate: p.startDate,
-                    endDate: p.endDate,
-                    status: p.status === 'not_started' ? PhaseStatus.PLANNING : 
-                            p.status === 'in_progress' ? PhaseStatus.ACTIVE : 
-                            p.status === 'completed' ? PhaseStatus.COMPLETED : PhaseStatus.PLANNING,
-                    progress: p.progress,
-                    priority: PhasePriority.MEDIUM,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                  }))
-                })}
-              />
-            )}
+        {currentStep === 3 && (
+          <ConstructionPhaseManager
+            projectId={formData?.projectId || ''}
+            workflowData={formData}
+            onStepComplete={(stepData) => {
+              updateFormData({
+                relatedData: {
+                  ...formData?.relatedData,
+                  phases: stepData.phases
+                }
+              });
+            }}
+          />
+        )}
 
            {currentStep === 4 && (
              <RiskAnalysisStep
-               formData={projectWorkflowData.projectData}
-               onUpdate={(data) => updateProjectData(data)}
+               workflowData={formData}
+               onStepComplete={(stepData) => {
+                 updateFormData({ 
+                   relatedData: {
+                     ...formData?.relatedData,
+                     risks: stepData.risks
+                   }
+                 });
+               }}
              />
            )}
 
            {currentStep === 5 && (
-             <ComplianceStep
-               formData={projectWorkflowData.projectData}
-               onUpdate={(data) => updateProjectData(data)}
+             <EnhancedComplianceStep
+               workflowData={formData}
+               onStepComplete={(stepData) => {
+                 updateFormData({ 
+                   relatedData: {
+                     ...formData?.relatedData,
+                     compliance: stepData.compliance
+                   }
+                 });
+               }}
              />
            )}
 
@@ -568,9 +458,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
               <h3 className="font-semibold">Résumé du Projet</h3>
               <Card>
                 <CardContent className="pt-6 space-y-2">
-                  <p><strong>Titre:</strong> {projectWorkflowData.projectData.title}</p>
-                  <p><strong>Budget:</strong> ${projectWorkflowData.projectData.budget}</p>
-                  <p><strong>Dates:</strong> {projectWorkflowData.projectData.startDate} à {projectWorkflowData.projectData.endDate}</p>
+                  <p><strong>Titre:</strong> {formData?.projectData?.title}</p>
+                  <p><strong>Budget:</strong> ${formData?.projectData?.budget || 0}</p>
+                  <p><strong>Dates:</strong> {formData?.projectData?.startDate || 'Non défini'} à {formData?.projectData?.endDate || 'Non défini'}</p>
                 </CardContent>
               </Card>
             </div>
@@ -582,7 +472,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       <div className="flex justify-between">
         <Button
           variant="outline"
-          onClick={prevStep}
+          onClick={previousStep}
           disabled={currentStep === 0}
         >
           <ChevronLeft className="h-4 w-4 mr-2" />
@@ -590,14 +480,14 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
         </Button>
 
         <div className="flex gap-2">
-          <Button variant="secondary" onClick={saveCurrentStep}>
+          <Button variant="secondary" onClick={() => saveCurrentStep()}>
             <Save className="h-4 w-4 mr-2" />
             Sauvegarder
           </Button>
           {currentStep === steps.length - 1 ? (
-            <Button onClick={handleSubmit} disabled={isCreating}>
+            <Button onClick={handleSubmit} disabled={isLoading}>
               <CheckCircle className="h-4 w-4 mr-2" />
-              {isCreating ? 'Création en cours...' : 'Créer le Projet'}
+              {isLoading ? 'Création en cours...' : 'Créer le Projet'}
             </Button>
           ) : (
             <Button onClick={saveAndNextStep}>

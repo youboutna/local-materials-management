@@ -29,19 +29,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { ElectricSpinner } from "../loading-page";
 import { useComplianceHex } from "@/hooks/hexagonal";
-
-// Define ComplianceItem locally
-interface ComplianceItem {
-  id: string;
-  category: 'regulatory' | 'financial' | 'technical' | 'environmental';
-  title: string;
-  description?: string;
-  status: 'pending' | 'in_review' | 'compliant' | 'non_compliant';
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  deadline?: string;
-  responsiblePerson?: string;
-  notes?: string;
-}
+import { ComplianceItemDTO, ComplianceType, ComplianceStatus, CompliancePriority } from "@/dtos/entities/ComplianceDTO";
 
 interface PhaseComplianceProps {
   phaseId: string;
@@ -61,16 +49,16 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
   } = useComplianceHex(phaseId, projectId);
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<ComplianceItem | null>(null);
+  const [editingItem, setEditingItem] = useState<ComplianceItemDTO | null>(null);
 
   const [formData, setFormData] = useState({
-    category: "regulatory" as ComplianceItem['category'],
+    category: "regulatory" as ComplianceType,
     title: "",
     description: "",
-    status: "pending" as ComplianceItem['status'],
-    priority: "medium" as ComplianceItem['priority'],
+    status: "pending" as ComplianceStatus,
+    priority: "medium" as CompliancePriority,
     deadline: "",
-    responsible_person: "",
+    responsiblePerson: "",
     notes: "",
   });
 
@@ -114,16 +102,16 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
     }
   };
 
-  const handleEdit = (item: ComplianceItem) => {
+  const handleEdit = (item: ComplianceItemDTO) => {
     setEditingItem(item);
     setFormData({
-      category: item.category,
+      category: item.type,
       title: item.title,
       description: item.description || "",
       status: item.status,
       priority: item.priority,
       deadline: item.deadline ? item.deadline.split("T")[0] : "",
-      responsible_person: item.responsiblePerson || "",
+      responsiblePerson: item.responsible || "",
       notes: item.notes || "",
     });
     setIsDialogOpen(true);
@@ -216,7 +204,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
                   <Label htmlFor="category">Catégorie</Label>
                   <Select
                     value={formData.category}
-                    onValueChange={(value: any) =>
+                    onValueChange={(value: ComplianceType) =>
                       setFormData({ ...formData, category: value })
                     }
                   >
@@ -237,7 +225,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
                   <Label htmlFor="priority">Priorité</Label>
                   <Select
                     value={formData.priority}
-                    onValueChange={(value: any) =>
+                    onValueChange={(value: CompliancePriority) =>
                       setFormData({ ...formData, priority: value })
                     }
                   >
@@ -280,7 +268,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
                   <Label htmlFor="status">Statut</Label>
                   <Select
                     value={formData.status}
-                    onValueChange={(value: any) =>
+                    onValueChange={(value: ComplianceStatus) =>
                       setFormData({ ...formData, status: value })
                     }
                   >

@@ -20,6 +20,7 @@ export * from './InspectionDTO';
 export * from './RiskDTO';
 export * from './StakeholderDTO';
 export * from './TenderDTO';
+export * from './ComplianceDTO';
 
 // Extended Entity DTOs
 export * from './TenderEstimateDTO';
@@ -49,7 +50,6 @@ export * from './CheckpointVerificationResultDTO';
 export * from './MauritaniaBusinessRulesDTO';
 export * from './NotificationDTO';
 export * from './PaymentBlockingDTO';
-export * from './InsuranceCertificateDTO';
 export * from './ContractDTO';
 export * from './ProjectCreationDTO';
 export * from './ProjectImportDTO';

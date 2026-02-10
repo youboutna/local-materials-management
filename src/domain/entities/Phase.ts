@@ -1,56 +1,58 @@
 /**
  * Phase Domain Entity
  * Represents a construction phase with business logic
+ * Following hexagonal architecture principles
  * Based on project_phases Supabase table
- * Following hexagonal architecture - direct entity relationships
  */
 
 import { Material } from './Material';
 import { Supplier } from './Supplier';
+import { Employee } from './Employee';
 import { Milestone } from './Milestone';
 import { Inspection } from './Inspection';
 import { Document } from './Document';
-import { Employee } from './Employee';
 
-export type PhaseStatus = 'pending' | 'in_progress' | 'completed' | 'blocked' | 'delayed';
-export type PhaseType = 'preparation' | 'execution' | 'completion' | 'validation';
-
+// Types locaux pour éviter les dépendances cycliques
 export interface PhaseStep {
   id: string;
   name: string;
-  description: string;
-  status: PhaseStatus;
+  description?: string;
+  status: string;
   progress: number;
-  orderIndex: number;
+  estimated_duration_days?: number;
+  actual_duration_days?: number;
+  start_date?: string;
+  end_date?: string;
+  order_index: number;
   tasks: PhaseTask[];
-  estimatedDurationDays?: number;
-  requiresInspection?: boolean;
-  requiresEngineerApproval?: boolean;
-  startDate?: Date;
-  endDate?: Date;
-  inspections?: Inspection[];
-  documents?: Document[];
 }
 
 export interface PhaseTask {
   id: string;
   name: string;
-  description: string;
-  status: PhaseStatus;
+  description?: string;
+  status: string;
   progress: number;
-  orderIndex: number;
-  assignedTo?: Employee[];
-  requiresInspection?: boolean;
-  requiresEngineerApproval?: boolean;
-  estimatedDurationDays?: number;
-  actualDurationDays?: number;
-  startDate?: Date;
-  endDate?: Date;
-  dependencies?: PhaseTask[];
-  materials?: Material[];
-  documents?: Document[];
-  inspections?: Inspection[];
+  estimated_duration_days?: number;
+  actual_duration_days?: number;
+  start_date?: string;
+  end_date?: string;
+  assigned_to?: string[];
+  dependencies?: string[];
+  weight?: number;
+  order_index: number;
 }
+
+// Types depuis les DTOs pour centralisation
+export type PhaseStatus = 'pending' | 'in_progress' | 'completed' | 'blocked' | 'delayed' | 'not_started';
+export type PhaseType = 'preparation' | 'execution' | 'completion' | 'validation' | 
+  'foundation' | 'structural' | 'excavation' | 'demolition' | 'finishing' | 
+  'electrical' | 'plumbing' | 'hvac' | 'roofing' | 'exterior' | 'interior' | 'landscaping';
+export type PhasePriority = 'low' | 'medium' | 'high' | 'urgent';
+
+// Types construction depuis les DTOs pour éviter la redéfinition
+export type ConstructionPhase = 'pre_construction' | 'site_preparation' | 'foundation' | 'framing' | 'structural_work' | 'finishing' | 'post_construction' | 'handover';
+export type ConstructionStage = 'planning_design' | 'permits_approvals' | 'site_clearing' | 'excavation' | 'foundation_work' | 'structural_framing' | 'roofing' | 'electrical_plumbing' | 'interior_finishing' | 'exterior_finishing' | 'final_inspection' | 'handover_complete';
 
 export interface PhaseResources {
   employees: Employee[];
@@ -61,31 +63,93 @@ export interface PhaseResources {
   dailyCost: number;
 }
 
-export class Phase {
+export interface IPhase {
+  // Core identification
+  readonly id: string;
+  readonly projectId: string;
+  readonly phaseName: string;
+  readonly description: string | null;
+  
+  // Classification
+  readonly status: string; // From Supabase: string (not enum)
+  readonly progress: number | null;
+  readonly orderIndex: number | null;
+  readonly phaseType: string; // From Supabase: phase_type
+  
+  // Timeline
+  readonly startDate: string | null;
+  readonly endDate: string | null;
+  readonly estimatedDuration: number | null;
+  readonly actualDuration: number | null;
+  
+  // Financial
+  readonly estimatedCost: number | null;
+  readonly actualCost: number | null;
+  
+  // Construction fields (from Supabase)
+  readonly constructionPhase: string | null;
+  readonly constructionStage: string | null;
+  
+  // Dependencies and milestones
+  readonly dependencies: string[] | null; // From Supabase: Json | null
+  readonly milestones: string[] | null; // From Supabase: Json | null
+  
+  // Resources
+  readonly humanResources: {
+    employees: Employee[];
+    contractors: Supplier[];
+    totalRequired: number;
+    totalAssigned: number;
+    skills: string[];
+    dailyCost: number;
+  } | null; // Json Supabase: Json | null
+  readonly materials: Material[] | null; // From Supabase: Json | null
+  readonly suppliers: Supplier[] | null; // From Supabase: Json | null
+  readonly location: string | null;
+  
+  // Additional fields (from Supabase)
+  readonly customPhaseData: Record<string, unknown> | null;
+  readonly notes: string | null;
+  readonly weight: number | null;
+  readonly createdBy: string | null;
+  
+  // Metadata
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export class Phase implements IPhase {
   constructor(
     public readonly id: string,
     public readonly projectId: string,
     public readonly phaseName: string,
     public readonly description: string | null,
-    public readonly status: PhaseStatus,
+    public readonly status: string, // From Supabase: string (not enum)
     public readonly progress: number | null,
     public readonly orderIndex: number | null,
-    public readonly startDate: Date | null,
-    public readonly endDate: Date | null,
+    public readonly phaseType: string, // From Supabase: phase_type
+    public readonly startDate: string | null,
+    public readonly endDate: string | null,
+    public readonly estimatedDuration: number | null,
+    public readonly actualDuration: number | null,
     public readonly estimatedCost: number | null,
     public readonly actualCost: number | null,
-    public readonly estimatedDuration: number | null,
-    public readonly constructionPhase: string | null,
-    public readonly constructionStage: string | null,
-    public readonly phaseType: PhaseType,
+    public readonly constructionPhase: string | null, // From Supabase
+    public readonly constructionStage: string | null, // From Supabase
+    public readonly dependencies: string[] | null, // From Supabase: Json | null
+    public readonly milestones: string[] | null, // From Supabase: Json | null
+    public readonly humanResources: {
+      employees: Employee[];
+      contractors: Supplier[];
+      totalRequired: number;
+      totalAssigned: number;
+      skills: string[];
+      dailyCost: number;
+    } | null, // From Supabase: Json | null
+    public readonly materials: Material[] | null, // From Supabase: Json | null
+    public readonly suppliers: Supplier[] | null, // From Supabase: Json | null
     public readonly location: string | null,
     public readonly customPhaseData: Record<string, unknown> | null,
-    public readonly dependencies: Phase[], // Direct entity relationship
-    public readonly milestones: Milestone[], // Direct entity relationship
-    public readonly materials: Material[], // Direct entity relationship
-    public readonly suppliers: Supplier[], // Direct entity relationship
-    public readonly humanResources: PhaseResources | null,
-    public readonly steps: PhaseStep[], // Direct entity relationship
     public readonly notes: string | null,
     public readonly weight: number | null,
     public readonly createdBy: string | null,
@@ -115,18 +179,51 @@ export class Phase {
     return this.status === 'blocked' || this.status === 'delayed';
   }
 
-  hasSteps(): boolean {
-    return this.steps.length > 0;
+  // Construction-specific business logic
+  canStartConstruction(): boolean {
+    return this.status === 'not_started' && (this.materials ? this.materials.length > 0 : false);
   }
 
-  getCompletedStepsCount(): number {
-    return this.steps.filter(s => s.status === 'completed').length;
+  canCompleteConstruction(): boolean {
+    return (this.progress || 0) >= 100 && (this.materials ? this.materials.length > 0 : false);
   }
 
-  getStepsProgress(): number {
-    if (this.steps.length === 0) return this.progress ?? 0;
-    return (this.getCompletedStepsCount() / this.steps.length) * 100;
+  updateConstructionProgress(newProgress: number): Phase {
+    if (newProgress < 0 || newProgress > 100) {
+      throw new Error('Progress must be between 0 and 100');
+    }
+    
+    let newStatus = this.status;
+    if (newProgress >= 100) {
+      newStatus = 'completed';
+    } else if (newProgress > 0) {
+      newStatus = 'in_progress';
+    }
+    
+    return this.withStatus(newStatus).withProgress(newProgress);
   }
+
+  calculateActualCost(): number {
+    const materialsCost = this.materials?.reduce((total, material) => 
+      total + (material.pricePerUnit * material.availableQuantity), 0) || 0;
+    
+    const humanResourcesCost = this.humanResources ? 
+      this.humanResources.employees.reduce((total, employee) => 
+        total + (employee.salary || 0), 0) : 0;
+    
+    return materialsCost + humanResourcesCost;
+  }
+
+  isOverBudget(): boolean {
+    return this.estimatedCost ? (this.actualCost || 0) > this.estimatedCost : false;
+  }
+
+  getDurationVariance(): number {
+    return this.actualDuration ? this.actualDuration - (this.estimatedDuration || 0) : 0;
+  }
+
+  // Note: hasSteps() and getCompletedStepsCount() removed as 'steps' no longer exists in interface
+  // Steps are now handled as separate entities with their own lifecycle
 
   getBudgetVariance(): number {
     return (this.estimatedCost || 0) - (this.actualCost || 0);
@@ -143,22 +240,34 @@ export class Phase {
   getDaysRemaining(): number {
     if (!this.endDate) return 0;
     const now = new Date();
-    const diffTime = this.endDate!.getTime() - now.getTime();
+    const diffTime = new Date(this.endDate).getTime() - now.getTime();
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }
 
-  requiresInspection(): boolean {
-    return this.steps.some(step => 
-      step.requiresInspection || 
-      step.tasks.some(task => task.requiresInspection)
-    );
-  }
+  // Note: requiresInspection() and requiresEngineerApproval() removed as 'steps' no longer exists
+  // These methods would need to be implemented at the service level with proper data access
 
-  requiresEngineerApproval(): boolean {
-    return this.steps.some(step => 
-      step.requiresEngineerApproval || 
-      step.tasks.some(task => task.requiresEngineerApproval)
-    );
+  // ============= Validation Methods =============
+
+  validate(): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+    
+    if (!this.phaseName || this.phaseName.trim().length === 0) {
+      errors.push('Phase name is required');
+    }
+    
+    if (this.estimatedDuration !== null && this.estimatedDuration <= 0) {
+      errors.push('Estimated duration must be greater than 0');
+    }
+    
+    if (this.progress !== null && (this.progress < 0 || this.progress > 100)) {
+      errors.push('Progress must be between 0 and 100');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
   }
 
   // ============= Factory Methods =============
@@ -172,22 +281,22 @@ export class Phase {
       data.status || 'pending',
       data.progress ?? 0,
       data.orderIndex ?? 0,
+      data.phaseType || '',
       data.startDate || null,
       data.endDate || null,
+      data.estimatedDuration || null,
+      data.actualDuration || null,
       data.estimatedCost || null,
       data.actualCost || null,
-      data.estimatedDuration || null,
       data.constructionPhase || null,
       data.constructionStage || null,
-      data.phaseType || 'execution',
+      data.dependencies || null,
+      data.milestones || null,
+      data.humanResources || null,
+      data.materials || null,
+      data.suppliers || null,
       data.location || null,
       data.customPhaseData || null,
-      data.dependencies || [],
-      data.milestones || [],
-      data.materials || [],
-      data.suppliers || [],
-      data.humanResources || null,
-      data.steps || [],
       data.notes || null,
       data.weight || null,
       data.createdBy || null,
@@ -198,7 +307,7 @@ export class Phase {
 
   // ============= Immutable Updates =============
 
-  withStatus(status: PhaseStatus): Phase {
+  withStatus(status: string): Phase {
     return new Phase(
       this.id,
       this.projectId,
@@ -207,22 +316,22 @@ export class Phase {
       status,
       this.progress,
       this.orderIndex,
+      this.phaseType,
       this.startDate,
       this.endDate,
+      this.estimatedDuration,
+      this.actualDuration,
       this.estimatedCost,
       this.actualCost,
-      this.estimatedDuration,
       this.constructionPhase,
       this.constructionStage,
-      this.phaseType,
-      this.location,
-      this.customPhaseData,
       this.dependencies,
       this.milestones,
+      this.humanResources,
       this.materials,
       this.suppliers,
-      this.humanResources,
-      this.steps,
+      this.location,
+      this.customPhaseData,
       this.notes,
       this.weight,
       this.createdBy,
@@ -240,22 +349,22 @@ export class Phase {
       this.status,
       Math.max(0, Math.min(100, progress)),
       this.orderIndex,
+      this.phaseType,
       this.startDate,
       this.endDate,
+      this.estimatedDuration,
+      this.actualDuration,
       this.estimatedCost,
       this.actualCost,
-      this.estimatedDuration,
       this.constructionPhase,
       this.constructionStage,
-      this.phaseType,
-      this.location,
-      this.customPhaseData,
       this.dependencies,
       this.milestones,
+      this.humanResources,
       this.materials,
       this.suppliers,
-      this.humanResources,
-      this.steps,
+      this.location,
+      this.customPhaseData,
       this.notes,
       this.weight,
       this.createdBy,
@@ -275,22 +384,22 @@ export class Phase {
       status: this.status,
       progress: this.progress,
       orderIndex: this.orderIndex,
-      startDate: this.startDate?.toISOString() || null,
-      endDate: this.endDate?.toISOString() || null,
+      phaseType: this.phaseType,
+      startDate: this.startDate,
+      endDate: this.endDate,
+      estimatedDuration: this.estimatedDuration,
+      actualDuration: this.actualDuration,
       estimatedCost: this.estimatedCost,
       actualCost: this.actualCost,
-      estimatedDuration: this.estimatedDuration,
       constructionPhase: this.constructionPhase,
       constructionStage: this.constructionStage,
-      phaseType: this.phaseType,
-      location: this.location,
-      customPhaseData: this.customPhaseData,
       dependencies: this.dependencies,
       milestones: this.milestones,
+      humanResources: this.humanResources,
       materials: this.materials,
       suppliers: this.suppliers,
-      humanResources: this.humanResources,
-      steps: this.steps,
+      location: this.location,
+      customPhaseData: this.customPhaseData,
       notes: this.notes,
       weight: this.weight,
       createdBy: this.createdBy,

@@ -33,7 +33,6 @@ import {
   IUserRepository,
   IPVGeneratorRepository,
   IBankGuaranteeRepository,
-  IBankGuaranteeActionRepository,
   IInsuranceRepository,
   IAuthRepository,
   IStorageRepository,
@@ -45,12 +44,14 @@ import {
   IMilestoneRepository,
   ITaskAssignmentRepository,
   IPerformanceMonitoringRepository,
+  IMonitoringRepository,
   IWorkspaceRepository,
   IProjectStakeholderRepository,
   IProjectAlertRepository,
   IConstructionPhaseRepository,
   ITenderEstimateRepository,
-  IPaymentBlockingRepository
+  IPaymentBlockingRepository,
+  IComplianceRepository
 } from '@/domain/repositories';
 
 import {
@@ -89,8 +90,10 @@ import {
   PaymentBlockingAdapter,
   TaskAssignmentAdapter,
   SupabaseMilestoneAdapter,
-  ConstructionPhaseAdapter,
-  SupabaseProjectStakeholderAdapter
+  SupabaseProjectStakeholderAdapter,
+  SupabaseComplianceAdapter,
+  SupabaseMonitoringAdapter,
+  SupabaseStakeholderAdapter
 } from './adapters';
 
 /**
@@ -111,18 +114,7 @@ interface RepositoryRegistry {
   tenderRepository?: ITenderRepository;
   tenderEstimateRepository?: ITenderEstimateRepository;
   paymentBlockingRepository?: IPaymentBlockingRepository;
-  taskAssignmentRepository?: ITaskAssignmentRepository;
-  supplierRepository?: ISupplierRepository;
-  documentRepository?: IDocumentRepository;
-  quantityTakeoffRepository?: IQuantityTakeoffRepository;
-  inspectionExecutionRepository?: IInspectionExecutionRepository;
-  inspectionPaymentValidationRepository?: IInspectionPaymentValidationRepository;
-  reportDataTransformerRepository?: IReportDataTransformerRepository;
-  loadDataRepository?: ILoadDataRepository;
-  reportingRepository?: IReportingRepository;
-  projectFormRepository?: IProjectFormRepository;
-  projectStakeholderRepository?: IProjectStakeholderRepository;
-  stakeholderRepository?: any; // TODO: Create proper IStakeholderRepository
+  stakeholderRepository?: IProjectStakeholderRepository;
   userRepository?: IUserRepository;
   pvGeneratorRepository?: IPVGeneratorRepository;
   bankGuaranteeRepository?: IBankGuaranteeRepository;
@@ -137,6 +129,8 @@ interface RepositoryRegistry {
   alertRepository?: IAlertRepository;
   milestoneRepository?: IMilestoneRepository;
   constructionPhaseRepository?: IConstructionPhaseRepository;
+  complianceRepository?: IComplianceRepository;
+  monitoringRepository?: IMonitoringRepository;
 }
 
 /**
@@ -543,11 +537,9 @@ export class RepositoryFactory {
    * Get Stakeholder Repository instance
    * Lazy loaded for memory efficiency
    */
-  static getStakeholderRepository(): any {
+  static getStakeholderRepository(): IStakeholderRepository {
     if (!repositoryRegistry.stakeholderRepository) {
-      // TODO: Create proper SupabaseStakeholderAdapter
-      // For now, use ProjectAdapter as temporary solution
-      repositoryRegistry.stakeholderRepository = new SupabaseProjectAdapter();
+      repositoryRegistry.stakeholderRepository = new SupabaseStakeholderAdapter();
     }
     return repositoryRegistry.stakeholderRepository!;
   }
@@ -597,13 +589,42 @@ export class RepositoryFactory {
   }
 
   /**
-   * Set the data source for repositories
+   * Get Compliance Repository instance
+   * Lazy loaded for memory efficiency
+   */
+  static getComplianceRepository(): IComplianceRepository {
+    if (!repositoryRegistry.complianceRepository) {
+      repositoryRegistry.complianceRepository = new SupabaseComplianceAdapter();
+    }
+    return repositoryRegistry.complianceRepository;
+  }
+
+  /**
+   * Set data source for repositories
    * This allows switching between different backend implementations
    */
   static setDataSource(source: 'supabase' | 'java_api' | 'prisma' | 'localStorage' | 'postgis'): void {
     currentDataSource = source;
     // Reset all repositories to force re-instantiation with new data source
-    RepositoryFactory.reset();
+    repositoryRegistry.reportDataTransformerRepository = undefined;
+    repositoryRegistry.projectFormRepository = undefined;
+    repositoryRegistry.tenderRepository = undefined;
+    repositoryRegistry.tenderEstimateRepository = undefined;
+    repositoryRegistry.paymentBlockingRepository = undefined;
+    repositoryRegistry.taskAssignmentRepository = undefined;
+    repositoryRegistry.supplierRepository = undefined;
+    repositoryRegistry.userRepository = undefined;
+    repositoryRegistry.authRepository = undefined;
+    repositoryRegistry.storageRepository = undefined;
+    repositoryRegistry.parsedInvoiceRepository = undefined;
+    repositoryRegistry.notificationRepository = undefined;
+    repositoryRegistry.projectStakeholderRepository = undefined;
+    repositoryRegistry.stakeholderRepository = undefined;
+    repositoryRegistry.alertRepository = undefined;
+    repositoryRegistry.inspectionPermissionRepository = undefined;
+    repositoryRegistry.tenderDocumentRepository = undefined;
+    repositoryRegistry.milestoneRepository = undefined;
+    repositoryRegistry.complianceRepository = undefined;
   }
 
   /**
@@ -614,24 +635,21 @@ export class RepositoryFactory {
   }
 
   /**
-   * Get Workspace Repository instance
+   * Get Monitoring Repository instance
    * Lazy loaded for memory efficiency
-   * NOTE: WorkspaceRepository not yet implemented
    */
-  static getWorkspaceRepository(): IWorkspaceRepository {
-    throw new Error('WorkspaceRepository not yet implemented. Use local state management until database table is available');
+  static getMonitoringRepository(): IMonitoringRepository {
+    if (!repositoryRegistry.monitoringRepository) {
+      repositoryRegistry.monitoringRepository = new SupabaseMonitoringAdapter();
+    }
+    return repositoryRegistry.monitoringRepository;
   }
 
   /**
-   * Get Construction Phase Repository instance
-   * Lazy loaded for memory efficiency
-   */
-  static getConstructionPhaseRepository(): IConstructionPhaseRepository {
-    if (!repositoryRegistry.constructionPhaseRepository) {
-      repositoryRegistry.constructionPhaseRepository = new ConstructionPhaseAdapter();
-    }
-    return repositoryRegistry.constructionPhaseRepository;
+   * Get Workspace Repository instance
+    throw new Error('WorkspaceRepository not yet implemented. Use local state management until database table is available');
   }
+
 
   /**
    * Get Submission Secret Repository instance

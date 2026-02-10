@@ -7,7 +7,6 @@
 export { SupabaseMaterialAdapter } from './SupabaseMaterialAdapter';
 export { SupabaseProjectAdapter } from './SupabaseProjectAdapter';
 export { SupabasePhaseAdapter } from './SupabasePhaseAdapter';
-export { ConstructionPhaseAdapter } from './ConstructionPhaseAdapter';
 export { SupabaseInspectionAdapter } from './SupabaseInspectionAdapter';
 export { SupabasePaymentAdapter } from './SupabasePaymentAdapter';
 export { SupabaseTaskAdapter } from './SupabaseTaskAdapter';
@@ -34,6 +33,8 @@ export { PaymentBlockingAdapter } from './PaymentBlockingAdapter';
 export { TaskAssignmentAdapter } from './TaskAssignmentAdapter';
 export { SupabaseNotificationAdapter } from './SupabaseNotificationAdapter';
 export { SupabaseInsuranceAdapter } from './SupabaseInsuranceAdapter';
+export { SupabaseComplianceAdapter } from './SupabaseComplianceAdapter';
+export { SupabaseMonitoringAdapter } from './SupabaseMonitoringAdapter';
 
 // Additional adapters
 export { PVGeneratorAdapter } from './PVGeneratorAdapter';
@@ -45,6 +46,7 @@ export { SupabaseTenderDocumentAdapter } from './SupabaseTenderDocumentAdapter';
 export { SupabaseAlertRepository } from './SupabaseAlertRepository';
 export { SupabaseMilestoneAdapter } from './SupabaseMilestoneAdapter';
 export { SupabaseProjectStakeholderAdapter } from './SupabaseProjectStakeholderAdapter';
+export { SupabaseStakeholderAdapter } from './SupabaseStakeholderAdapter';
 export { SupabaseSupplierPaymentAdapter } from './SupabaseSupplierPaymentAdapter';
 export { SupabaseMonitoringAlertAdapter } from './SupabaseMonitoringAlertAdapter';
 

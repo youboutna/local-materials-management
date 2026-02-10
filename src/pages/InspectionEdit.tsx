@@ -23,13 +23,19 @@ const InspectionEdit = () => {
   const { updateInspection } = useInspectionsHex();
 
   const [formData, setFormData] = useState({
-    project_id: '',
+    projectId: '',
     inspector: '',
     date: '',
     status: 'scheduled',
-    progress_at_inspection: 0,
+    progressAtInspection: 0,
     comments: ''
   });
+  
+  // Legacy snake_case aliases for backward compatibility (PROMPTS.md Pattern 2)
+  const formDataLegacy = {
+    project_id: formData.projectId,
+    progress_at_inspection: formData.progressAtInspection,
+  };
 
   const statusOptions = [
     { value: 'scheduled', label: t('inspection.status.scheduled'), icon: Clock },
@@ -43,11 +49,11 @@ const InspectionEdit = () => {
   useEffect(() => {
     if (inspection) {
       setFormData({
-        project_id: inspection.projectId,
+        projectId: inspection.projectId,
         inspector: inspection.inspector,
         date: new Date(inspection.date).toISOString().split('T')[0],
         status: inspection.status,
-        progress_at_inspection: inspection.progressAtInspection || 0,
+        progressAtInspection: inspection.progressAtInspection || 0,
         comments: inspection.comments || ''
       });
     }
@@ -136,8 +142,8 @@ const InspectionEdit = () => {
               <div>
                 <Label htmlFor="project">{t('inspection.common.project_label')}</Label>
                 <ProjectSelector
-                  value={formData.project_id}
-                  onChange={(value) => setFormData(prev => ({ ...prev, project_id: value || '' }))}
+                  value={formData.projectId}
+                  onChange={(value) => setFormData(prev => ({ ...prev, projectId: value || '' }))}
                   disabled
                 />
               </div>

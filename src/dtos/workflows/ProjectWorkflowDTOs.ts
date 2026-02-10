@@ -12,6 +12,9 @@ import { TaskDTO } from '../entities/TaskDTO';
 import { EmployeeDTO } from '../entities/EmployeeDTO';
 import { InspectionDTO } from '../entities/InspectionDTO';
 import { DocumentDTO } from '../entities/DocumentDTO';
+import { InsuranceCertificateDTO } from '../entities/InsuranceDTO';
+import { BankGuaranteeDTO } from '../entities/BankGuaranteeDTO';
+import { ComplianceItemDTO } from '../entities/ComplianceDTO';
 
 export interface ProjectWorkflowData {
   projectId?: string;
@@ -42,9 +45,9 @@ export interface StepRelatedDataDTO {
 }
 
 export interface ComplianceDataDTO {
-  regulations: string[];
-  certifications: string[];
-  standards: string[];
+  regulations: ComplianceItemDTO[];
+  certifications: InsuranceCertificateDTO[];
+  standards: BankGuaranteeDTO[];
   status: 'pending' | 'in_progress' | 'completed' | 'failed';
   documents: DocumentDTO[];
 }

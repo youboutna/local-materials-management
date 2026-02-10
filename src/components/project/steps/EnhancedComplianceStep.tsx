@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { FileCheck, Shield, AlertCircle, CheckCircle, Upload, Calendar, Users, Building, FileText } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { FileCheck, Shield, AlertCircle, CheckCircle, Upload, Calendar, Users, Building, FileText, Plus, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 import { Button } from '../../ui/button';
@@ -13,296 +13,113 @@ import { useToast } from '../../../hooks/use-toast';
 
 // Import DTOs and services for hexagonal architecture
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
+import { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
+import { ComplianceItemDTO, ComplianceDocumentDTO, ComplianceNoteDTO, ComplianceAuditEntryDTO, ComplianceType, ComplianceStatus, CompliancePriority, ComplianceLevel, ComplianceRiskLevel } from "@/dtos/entities/ComplianceDTO";
+import { ComplianceDataDTO } from "@/dtos/workflows/ProjectWorkflowDTOs";
 import { ComplianceService } from "@/application/services/ComplianceService";
 import { BankGuaranteeService } from "@/application/services/BankGuaranteeService";
 import { InsuranceService } from "@/application/services/InsuranceService";
 import { DocumentService } from "@/application/services/DocumentService";
 import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
+import { BankGuaranteeDTO } from "@/dtos/entities/BankGuaranteeDTO";
+import { InsuranceCertificateDTO } from "@/dtos/entities/InsuranceDTO";
+import { DocumentDTO } from "@/dtos/entities/DocumentDTO";
+import { PhaseDTO } from "@/dtos/entities/PhaseDTO";
+import { RiskDTO } from "@/dtos/entities/RiskDTO";
+import { MaterialDTO } from "@/dtos/entities/MaterialDTO";
 
 interface EnhancedComplianceStepProps {
-  formData: ProjectDTO & { compliance?: EnhancedComplianceItem[] };
-  onUpdate: (data: Partial<ProjectDTO>) => void;
+  workflowData: ProjectWorkflowData | null;
+  onStepComplete: (stepData: { compliance: ComplianceDataDTO, relatedData: StepRelatedDataDTO }) => void;
   isEditing?: boolean;
-}
-
-interface EnhancedComplianceItem {
-  id: string;
-  type: 'regulatory' | 'insurance' | 'bank_guarantee' | 'technical' | 'environmental' | 'health_safety' | 'quality' | 'financial' | 'data_protection' | 'labor_law' | 'procurement';
-  title: string;
-  description: string;
-  status: 'pending' | 'in_progress' | 'approved' | 'rejected' | 'requires_action';
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  deadline?: string;
-  responsible: string;
-  documents: ComplianceDocument[];
-  notes?: string;
-  validationRules: ComplianceValidationRule[];
-  auditTrail: ComplianceAuditEntry[];
-  category: string;
-  subcategory?: string;
-  complianceLevel: 'partial' | 'full' | 'exceeded';
-  lastReviewed: string;
-  nextReview: string;
-  externalReferences: string[];
-  riskLevel: 'low' | 'medium' | 'high' | 'critical';
-  mitigationRequired: boolean;
-  mitigationPlan?: string;
-}
-
-interface ComplianceDocument {
-  id: string;
-  type: string;
-  title: string;
-  status: 'pending' | 'approved' | 'rejected' | 'expired';
-  expiryDate?: string;
-  validationRequired: boolean;
-  validatedBy?: string;
-  validatedAt?: string;
-  fileUrl?: string;
-  uploadedAt: string;
-  uploadedBy: string;
-}
-
-interface ComplianceValidationRule {
-  id: string;
-  name: string;
-  description: string;
-  required: boolean;
-  validationType: 'document' | 'inspection' | 'certification' | 'review';
-  frequency: 'once' | 'monthly' | 'quarterly' | 'annually';
-  lastValidated?: string;
-  nextDue: string;
-  status: 'pending' | 'valid' | 'expired' | 'failed';
-}
-
-interface ComplianceAuditEntry {
-  id: string;
-  timestamp: string;
-  action: string;
-  performedBy: string;
-  details: string;
-  previousStatus?: string;
-  newStatus?: string;
-  documents?: string[];
+  mode?: 'create' | 'edit';
 }
 
 const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
-  formData,
-  onUpdate,
-  isEditing = false
+  workflowData,
+  onStepComplete,
+  isEditing = false,
+  mode = 'create'
 }) => {
+  const projectData = workflowData?.projectData || {} as ProjectDTO;
+  const existingCompliance = workflowData?.relatedData?.compliance || {
+    regulations: [],
+    certifications: [],
+    standards: [],
+    status: 'pending' as const,
+    documents: []
+  };
   const { toast } = useToast();
   
-  // Initialize services with hexagonal architecture
-  const complianceService = new ComplianceService(RepositoryFactory.getComplianceRepository());
-  const bankGuaranteeService = new BankGuaranteeService(RepositoryFactory.getBankGuaranteeRepository());
-  const insuranceService = new InsuranceService(RepositoryFactory.getInsuranceRepository());
-  const documentService = new DocumentService(RepositoryFactory.getDocumentRepository());
+  // Initialize services with proper hexagonal architecture
+  const complianceService = useMemo(() => new ComplianceService(RepositoryFactory.getComplianceRepository()), []);
+  const bankGuaranteeService = useMemo(() => new BankGuaranteeService(RepositoryFactory.getBankGuaranteeRepository()), []);
+  const insuranceService = useMemo(() => new InsuranceService(RepositoryFactory.getInsuranceRepository()), []);
+  const documentService = useMemo(() => new DocumentService(RepositoryFactory.getDocumentRepository()), []);
   
-  const [complianceItems, setComplianceItems] = useState<EnhancedComplianceItem[]>(formData.compliance || []);
-  const [bankGuarantees, setBankGuarantees] = useState<any[]>([]);
-  const [insurancePolicies, setInsurancePolicies] = useState<any[]>([]);
-  const [documents, setDocuments] = useState<any[]>([]);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newComplianceItem, setNewComplianceItem] = useState<Partial<EnhancedComplianceItem>>({
-    type: 'regulatory',
-    status: 'pending',
-    priority: 'medium',
-    complianceLevel: 'partial',
-    riskLevel: 'medium',
-    mitigationRequired: false
-  });
+  // State for aggregated compliance data (READ-ONLY VIEW)
+  const [complianceItems, setComplianceItems] = useState<ComplianceItemDTO[]>(existingCompliance.regulations || []);
+  const [bankGuarantees, setBankGuarantees] = useState<BankGuaranteeDTO[]>([]);
+  const [insurancePolicies, setInsurancePolicies] = useState<InsuranceCertificateDTO[]>([]);
+  const [documents, setDocuments] = useState<DocumentDTO[]>([]);
 
-  useEffect(() => {
-    if (formData.id && formData.id !== 'new-project') {
-      loadComplianceData();
-    }
-  }, [formData.id]);
-
-  useEffect(() => {
-    // Update form data when compliance items change
-    onUpdate({
-      compliance: complianceItems
-    });
-  }, [complianceItems, onUpdate]);
-
-  const loadComplianceData = async () => {
+  // Load compliance data from various sources (aggregation view)
+  const loadComplianceData = useCallback(async () => {
     try {
-      // Load bank guarantees using service
-      const guaranteesData = await bankGuaranteeService.getBankGuaranteesByProject(formData.id || '');
+      // Load bank guarantees using service - Correct method name
+      const guaranteesData = await bankGuaranteeService.getByProjectId(projectData.id || '');
       setBankGuarantees(guaranteesData);
 
-      // Load insurance policies using service
-      const policiesData = await insuranceService.getInsurancePoliciesByProject(formData.id || '');
+      // Load insurance policies using service - Correct method name
+      const policiesData = await insuranceService.getInsuranceCertificates(projectData.id || '');
       setInsurancePolicies(policiesData);
 
       // Load documents using service
-      const documentsData = await documentService.getDocumentsByProject(formData.id || '');
+      const documentsData = await documentService.getDocumentsByPhase(projectData.id);
       setDocuments(documentsData);
 
       // Load compliance items using service
-      const complianceData = await complianceService.getComplianceByProject(formData.id || '');
+      const complianceData = await complianceService.getComplianceByProject(projectData.id || '');
       setComplianceItems(complianceData);
     } catch (error) {
-      console.error('Failed to load compliance data:', error);
+      console.error('Failed to load compliance data:', error instanceof Error ? error.message : String(error));
     }
-  };
+  }, [projectData.id, bankGuaranteeService, insuranceService, documentService, complianceService]);
 
-  const handleAddComplianceItem = async () => {
-    if (!newComplianceItem.title || !newComplianceItem.description) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez remplir tous les champs obligatoires",
-        variant: "destructive",
-      });
-      return;
+  useEffect(() => {
+    if (projectData.id && projectData.id !== 'new-project') {
+      loadComplianceData();
     }
+  }, [projectData.id, loadComplianceData]);
 
-    const complianceItem: EnhancedComplianceItem = {
-      id: `compliance-${Date.now()}`,
-      title: newComplianceItem.title!,
-      description: newComplianceItem.description!,
-      type: newComplianceItem.type!,
-      status: newComplianceItem.status!,
-      priority: newComplianceItem.priority!,
-      deadline: newComplianceItem.deadline,
-      responsible: newComplianceItem.responsible || '',
-      documents: [],
-      notes: newComplianceItem.notes,
-      validationRules: [],
-      auditTrail: [{
-        id: `audit-${Date.now()}`,
-        timestamp: new Date().toISOString(),
-        action: 'created',
-        performedBy: 'system',
-        details: 'Compliance item created'
-      }],
-      category: getCategoryName(newComplianceItem.type!),
-      complianceLevel: newComplianceItem.complianceLevel!,
-      lastReviewed: new Date().toISOString().split('T')[0],
-      nextReview: calculateNextReview(newComplianceItem.type!),
-      externalReferences: [],
-      riskLevel: newComplianceItem.riskLevel!,
-      mitigationRequired: newComplianceItem.mitigationRequired!,
-      mitigationPlan: newComplianceItem.mitigationPlan
-    };
-
-    try {
-      // Save to database using service
-      await complianceService.createComplianceItem({
-        projectId: formData.id || '',
-        title: complianceItem.title,
-        description: complianceItem.description,
-        type: complianceItem.type,
-        status: complianceItem.status,
-        priority: complianceItem.priority,
-        deadline: complianceItem.deadline,
-        responsible: complianceItem.responsible,
-        notes: complianceItem.notes,
-        category: complianceItem.category,
-        complianceLevel: complianceItem.complianceLevel,
-        riskLevel: complianceItem.riskLevel,
-        mitigationRequired: complianceItem.mitigationRequired,
-        mitigationPlan: complianceItem.mitigationPlan
-      });
-
-      setComplianceItems([...complianceItems, complianceItem]);
-      setNewComplianceItem({
-        type: 'regulatory',
-        status: 'pending',
-        priority: 'medium',
-        complianceLevel: 'partial',
-        riskLevel: 'medium',
-        mitigationRequired: false
-      });
-      setShowAddForm(false);
-
-      toast({
-        title: "Élément de Conformité Ajouté",
-        description: "L'élément de conformité a été ajouté avec succès",
-      });
-    } catch (error) {
-      console.error('Failed to create compliance item:', error);
-      toast({
-        title: "Erreur",
-        description: "Échec de l'ajout de l'élément de conformité",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleUpdateComplianceItem = async (itemId: string, updates: Partial<EnhancedComplianceItem>) => {
-    try {
-      // Update in database using service
-      await complianceService.updateComplianceItem(itemId, {
-        title: updates.title,
-        description: updates.description,
-        status: updates.status,
-        priority: updates.priority,
-        deadline: updates.deadline,
-        responsible: updates.responsible,
-        notes: updates.notes,
-        complianceLevel: updates.complianceLevel,
-        riskLevel: updates.riskLevel,
-        mitigationRequired: updates.mitigationRequired,
-        mitigationPlan: updates.mitigationPlan
-      });
-
-      setComplianceItems(complianceItems.map(item => {
-        if (item.id === itemId) {
-          return {
-            ...item,
-            ...updates,
-            auditTrail: [
-              ...item.auditTrail,
-              {
-                id: `audit-${Date.now()}`,
-                timestamp: new Date().toISOString(),
-                action: 'updated',
-                performedBy: 'system',
-                details: 'Compliance item updated'
-              }
-            ]
-          };
+  useEffect(() => {
+    // Update form data when compliance items change
+    if (onStepComplete) {
+      onStepComplete({
+        compliance: {
+          regulations: complianceItems,
+          certifications: insurancePolicies,
+          standards: bankGuarantees,
+          status: 'pending' as const,
+          documents: documents
         }
-        return item;
-      }));
-
-      toast({
-        title: "Élément de Conformité Mis à Jour",
-        description: "L'élément de conformité a été mis à jour avec succès",
-      });
-    } catch (error) {
-      console.error('Failed to update compliance item:', error);
-      toast({
-        title: "Erreur",
-        description: "Échec de la mise à jour de l'élément de conformité",
-        variant: "destructive",
       });
     }
-  };
+  }, [complianceItems, insurancePolicies, bankGuarantees, documents, onStepComplete]);
 
-  const handleDeleteComplianceItem = async (itemId: string) => {
-    try {
-      // Delete from database using service
-      await complianceService.deleteComplianceItem(itemId);
-      
-      setComplianceItems(complianceItems.filter(item => item.id !== itemId));
-      toast({
-        title: "Élément de Conformité Supprimé",
-        description: "L'élément de conformité a été supprimé avec succès",
-      });
-    } catch (error) {
-      console.error('Failed to delete compliance item:', error);
-      toast({
-        title: "Erreur",
-        description: "Échec de la suppression de l'élément de conformité",
-        variant: "destructive",
-      });
-    }
-  };
+  // Memoized filtered compliance items to avoid repeated filtering
+  const regulatoryItems = useMemo(() => 
+    complianceItems.filter(item => item.type === 'regulatory'),
+    [complianceItems]
+  );
 
-  function getCategoryName(type: string): string {
+  const completedItems = useMemo(() => 
+    complianceItems.filter(item => item.status === 'approved'),
+    [complianceItems]
+  );
+
+  // Helper functions for display
+  const getCategoryName = (type: string): string => {
     const categories: Record<string, string> = {
       'regulatory': 'Réglementaire',
       'insurance': 'Assurance',
@@ -313,388 +130,329 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
       'quality': 'Qualité',
       'financial': 'Financier',
       'data_protection': 'Protection des Données',
-      'labor_law': 'Droit du Travail',
-      'procurement': 'Approvisionnement'
+      'contractual': 'Contractuel',
+      'operational': 'Opérationnel'
     };
     return categories[type] || type;
-  }
+  };
 
-  function calculateNextReview(type: string): string {
-    const now = new Date();
-    const frequencies: Record<string, number> = {
-      'regulatory': 365, // 1 year
-      'insurance': 365,
-      'bank_guarantee': 180, // 6 months
-      'technical': 90, // 3 months
-      'environmental': 180,
-      'health_safety': 90,
-      'quality': 90,
-      'financial': 90,
-      'data_protection': 180,
-      'labor_law': 365,
-      'procurement': 180
-    };
-    
-    const days = frequencies[type] || 365;
-    const nextReview = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
-    return nextReview.toISOString().split('T')[0];
-  }
-
-  // Calculate compliance statistics
-  const totalItems = complianceItems.length;
-  const approvedItems = complianceItems.filter(item => item.status === 'approved').length;
-  const pendingItems = complianceItems.filter(item => item.status === 'pending').length;
-  const criticalItems = complianceItems.filter(item => item.priority === 'critical').length;
-  const overdueItems = complianceItems.filter(item => 
-    item.deadline && new Date(item.deadline) < new Date() && item.status !== 'approved'
-  ).length;
-
-  const overallComplianceScore = totalItems > 0 ? Math.round((approvedItems / totalItems) * 100) : 0;
-
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): string => {
     switch (status) {
-      case 'approved': return 'bg-green-500';
-      case 'in_progress': return 'bg-blue-500';
-      case 'rejected': return 'bg-red-500';
-      case 'requires_action': return 'bg-orange-500';
-      default: return 'bg-gray-500';
+      case 'approved': return 'text-green-600 bg-green-100';
+      case 'pending': return 'text-yellow-600 bg-yellow-100';
+      case 'rejected': return 'text-red-600 bg-red-100';
+      case 'in_review': return 'text-blue-600 bg-blue-100';
+      default: return 'text-gray-600 bg-gray-100';
     }
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority: string): string => {
     switch (priority) {
-      case 'critical': return 'bg-red-500';
-      case 'high': return 'bg-orange-500';
-      case 'medium': return 'bg-yellow-500';
-      case 'low': return 'bg-green-500';
-      default: return 'bg-gray-500';
+      case 'high': return 'text-red-600 bg-red-100';
+      case 'medium': return 'text-yellow-600 bg-yellow-100';
+      case 'low': return 'text-green-600 bg-green-100';
+      default: return 'text-gray-600 bg-gray-100';
     }
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'regulatory': return <Building className="h-4 w-4" />;
-      case 'insurance': return <Shield className="h-4 w-4" />;
-      case 'bank_guarantee': return <FileText className="h-4 w-4" />;
-      case 'technical': return <FileCheck className="h-4 w-4" />;
-      default: return <FileCheck className="h-4 w-4" />;
-    }
+  const calculateComplianceProgress = () => {
+    if (complianceItems.length === 0) return 0;
+    return (completedItems.length / complianceItems.length) * 100;
+  };
+
+  const getSafeAttribute = (obj: Record<string, unknown>, camelKey: string, snakeKey: string, fallback: unknown = ''): unknown => {
+    return obj?.[camelKey] ?? obj?.[snakeKey] ?? fallback;
+  };
+
+  // Navigation to specialized UIs for adding items (as per requirement)
+  const navigateToDocumentUI = () => {
+    // This would navigate to document upload UI
+    toast({
+      title: "Navigation",
+      description: "Redirection vers l'interface de gestion des documents",
+    });
+  };
+
+  const navigateToInsuranceUI = () => {
+    // This would navigate to insurance certificate UI
+    toast({
+      title: "Navigation", 
+      description: "Redirection vers l'interface de gestion des assurances",
+    });
+  };
+
+  const navigateToBankGuaranteeUI = () => {
+    // This would navigate to bank guarantee UI
+    toast({
+      title: "Navigation",
+      description: "Redirection vers l'interface de gestion des garanties bancaires",
+    });
   };
 
   return (
     <div className="space-y-6">
-      {/* Compliance Statistics */}
+      {/* Header with progress overview */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-blue-500" />
-            Conformité Réglementaire
+            <Shield className="h-5 w-5" />
+            Vue d'Ensemble de la Conformité
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-500">{overallComplianceScore}%</div>
-              <div className="text-sm text-gray-500">Score Global</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-500">{approvedItems}</div>
-              <div className="text-sm text-gray-500">Approuvés</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-yellow-500">{pendingItems}</div>
-              <div className="text-sm text-gray-500">En Attente</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-red-500">{criticalItems}</div>
-              <div className="text-sm text-gray-500">Critiques</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-orange-500">{overdueItems}</div>
-              <div className="text-sm text-gray-500">En Retard</div>
-            </div>
-          </div>
-
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Éléments de Conformité</h3>
-            <Button onClick={() => setShowAddForm(!showAddForm)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Ajouter un Élément
-            </Button>
-          </div>
-
-          {/* Add Compliance Item Form */}
-          {showAddForm && (
-            <Card className="mb-4">
-              <CardHeader>
-                <CardTitle className="text-lg">Nouvel Élément de Conformité</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="compliance-title">Titre</Label>
-                    <Input
-                      id="compliance-title"
-                      value={newComplianceItem.title || ''}
-                      onChange={(e) => setNewComplianceItem({ ...newComplianceItem, title: e.target.value })}
-                      placeholder="Titre de l'élément de conformité"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="compliance-type">Type</Label>
-                    <Select value={newComplianceItem.type} onValueChange={(value) => setNewComplianceItem({ ...newComplianceItem, type: value as any })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="regulatory">Réglementaire</SelectItem>
-                        <SelectItem value="insurance">Assurance</SelectItem>
-                        <SelectItem value="bank_guarantee">Garantie Bancaire</SelectItem>
-                        <SelectItem value="technical">Technique</SelectItem>
-                        <SelectItem value="environmental">Environnemental</SelectItem>
-                        <SelectItem value="health_safety">Santé et Sécurité</SelectItem>
-                        <SelectItem value="quality">Qualité</SelectItem>
-                        <SelectItem value="financial">Financier</SelectItem>
-                        <SelectItem value="data_protection">Protection des Données</SelectItem>
-                        <SelectItem value="labor_law">Droit du Travail</SelectItem>
-                        <SelectItem value="procurement">Approvisionnement</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="compliance-description">Description</Label>
-                  <Textarea
-                    id="compliance-description"
-                    value={newComplianceItem.description || ''}
-                    onChange={(e) => setNewComplianceItem({ ...newComplianceItem, description: e.target.value })}
-                    placeholder="Description détaillée de l'exigence de conformité"
-                    className="min-h-[80px]"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="compliance-priority">Priorité</Label>
-                    <Select value={newComplianceItem.priority} onValueChange={(value) => setNewComplianceItem({ ...newComplianceItem, priority: value as any })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner une priorité" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Faible</SelectItem>
-                        <SelectItem value="medium">Moyenne</SelectItem>
-                        <SelectItem value="high">Élevée</SelectItem>
-                        <SelectItem value="critical">Critique</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="compliance-deadline">Date Limite</Label>
-                    <Input
-                      id="compliance-deadline"
-                      type="date"
-                      value={newComplianceItem.deadline || ''}
-                      onChange={(e) => setNewComplianceItem({ ...newComplianceItem, deadline: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="compliance-responsible">Responsable</Label>
-                    <Input
-                      id="compliance-responsible"
-                      value={newComplianceItem.responsible || ''}
-                      onChange={(e) => setNewComplianceItem({ ...newComplianceItem, responsible: e.target.value })}
-                      placeholder="Nom du responsable"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button onClick={handleAddComplianceItem}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Ajouter l'Élément
-                  </Button>
-                  <Button variant="outline" onClick={() => setShowAddForm(false)}>
-                    Annuler
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Compliance Items List */}
           <div className="space-y-4">
-            {complianceItems.map((item) => (
-              <Card key={item.id}>
-                <CardContent className="pt-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        {getTypeIcon(item.type)}
-                        <h4 className="font-semibold text-lg">{item.title}</h4>
-                      </div>
-                      <p className="text-gray-600 text-sm">{item.description}</p>
-                      <div className="flex gap-2 mt-2">
-                        <Badge className={getStatusColor(item.status)}>
-                          {item.status}
-                        </Badge>
-                        <Badge className={getPriorityColor(item.priority)}>
-                          {item.priority.toUpperCase()}
-                        </Badge>
-                        <Badge variant="outline">
-                          {item.category}
-                        </Badge>
-                      </div>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteComplianceItem(item.id)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <div className="font-medium">Niveau de Conformité</div>
-                      <div className="flex items-center gap-2">
-                        <Progress value={item.complianceLevel === 'full' ? 100 : item.complianceLevel === 'partial' ? 50 : 75} className="h-2 flex-1" />
-                        <span>{item.complianceLevel}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="font-medium">Risque</div>
-                      <Badge className={getPriorityColor(item.riskLevel)} variant="outline">
-                        {item.riskLevel}
-                      </Badge>
-                    </div>
-                    <div>
-                      <div className="font-medium">Date Limite</div>
-                      <div className={item.deadline && new Date(item.deadline) < new Date() ? 'text-red-500' : ''}>
-                        {item.deadline || 'Non définie'}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="font-medium">Responsable</div>
-                      <div>{item.responsible || 'Non assigné'}</div>
-                    </div>
-                  </div>
-
-                  {item.notes && (
-                    <div className="mt-4">
-                      <div className="font-medium text-sm">Notes</div>
-                      <p className="text-sm text-gray-600">{item.notes}</p>
-                    </div>
-                  )}
-
-                  {item.mitigationRequired && item.mitigationPlan && (
-                    <div className="mt-4 p-3 bg-yellow-50 rounded-lg">
-                      <div className="font-medium text-sm text-yellow-800">Plan de Mitigation Requis</div>
-                      <p className="text-sm text-yellow-700">{item.mitigationPlan}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Progression Générale</span>
+              <span className="text-2xl font-bold">{calculateComplianceProgress().toFixed(1)}%</span>
+            </div>
+            <Progress value={calculateComplianceProgress()} className="w-full" />
           </div>
         </CardContent>
       </Card>
 
-      {/* Bank Guarantees and Insurance Tabs */}
-      <Tabs defaultValue="guarantees" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="guarantees">Garanties Bancaires</TabsTrigger>
-          <TabsTrigger value="insurance">Assurances</TabsTrigger>
+      {/* Aggregated Data Display */}
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="overview">Vue d'Ensemble</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="insurance">Assurances</TabsTrigger>
+          <TabsTrigger value="bank-guarantees">Garanties</TabsTrigger>
+          <TabsTrigger value="regulatory">Réglementaire</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="guarantees" className="space-y-4">
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Quick Stats Cards */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Documents</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{documents.length}</div>
+                <p className="text-sm text-gray-600">Documents chargés</p>
+                <Button onClick={navigateToDocumentUI} className="mt-2 w-full" variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter des Documents
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Assurances</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{insurancePolicies.length}</div>
+                <p className="text-sm text-gray-600">Polices d'assurance</p>
+                <Button onClick={navigateToInsuranceUI} className="mt-2 w-full" variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter des Assurances
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Garanties Bancaires</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{bankGuarantees.length}</div>
+                <p className="text-sm text-gray-600">Garanties actives</p>
+                <Button onClick={navigateToBankGuaranteeUI} className="mt-2 w-full" variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter des Garanties
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Éléments Réglementaires</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{regulatoryItems.length}</div>
+                <p className="text-sm text-gray-600">Exigences réglementaires</p>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Documents Tab */}
+        <TabsContent value="documents" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Garanties Bancaires
+                Documents du Projet ({documents.length})
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {bankGuarantees.length > 0 ? (
-                <div className="space-y-2">
-                  {bankGuarantees.map((guarantee) => (
-                    <div key={guarantee.id} className="flex justify-between items-center p-3 border rounded">
+              {documents.length === 0 ? (
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <p className="text-gray-600">Aucun document trouvé</p>
+                  <Button onClick={navigateToDocumentUI} className="mt-4">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Ajouter des Documents
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {documents.map((doc) => (
+                    <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
-                        <h4 className="font-medium">{guarantee.type}</h4>
-                        <p className="text-sm text-gray-500">Montant: {guarantee.amount}</p>
+                        <h4 className="font-medium">{getSafeAttribute(doc, 'name', 'name', 'Sans nom') as string}</h4>
+                        <p className="text-sm text-gray-600">
+                          {getSafeAttribute(doc, 'description', 'description', 'Sans description') as string}
+                        </p>
                       </div>
-                      <Badge variant={guarantee.status === 'active' ? 'default' : 'secondary'}>
-                        {guarantee.status}
+                      <Badge className={getStatusColor(getSafeAttribute(doc, 'status', 'status', 'unknown') as string)}>
+                        {getSafeAttribute(doc, 'status', 'status', 'Inconnu') as string}
                       </Badge>
                     </div>
                   ))}
                 </div>
-              ) : (
-                <p className="text-gray-500">Aucune garantie bancaire enregistrée</p>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* Insurance Tab */}
         <TabsContent value="insurance" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5" />
-                Polices d'Assurance
+                Assurances ({insurancePolicies.length})
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {insurancePolicies.length > 0 ? (
-                <div className="space-y-2">
+              {insurancePolicies.length === 0 ? (
+                <div className="text-center py-8">
+                  <Shield className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <p className="text-gray-600">Aucune assurance trouvée</p>
+                  <Button onClick={navigateToInsuranceUI} className="mt-4">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Ajouter des Assurances
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
                   {insurancePolicies.map((policy) => (
-                    <div key={policy.id} className="flex justify-between items-center p-3 border rounded">
+                    <div key={policy.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
-                        <h4 className="font-medium">{policy.type}</h4>
-                        <p className="text-sm text-gray-500">Fournisseur: {policy.provider}</p>
+                        <h4 className="font-medium">{policy.insuranceCompany || policy.insurance_company || 'Compagnie inconnue'}</h4>
+                        <p className="text-sm text-gray-600">
+                          {policy.insuranceType || policy.insurance_type || 'Type inconnu'} - {policy.policyNumber || policy.policy_number || 'N° inconnu'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Valide jusqu'au: {new Date(policy.validUntil || policy.valid_until || new Date().toISOString()).toLocaleDateString()}
+                        </p>
                       </div>
-                      <Badge variant={policy.status === 'active' ? 'default' : 'secondary'}>
-                        {policy.status}
+                      <Badge className={getStatusColor(policy.status || policy.status || 'unknown')}>
+                        {policy.status || policy.status || 'Inconnu'}
                       </Badge>
                     </div>
                   ))}
                 </div>
-              ) : (
-                <p className="text-gray-500">Aucune police d'assurance enregistrée</p>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="documents" className="space-y-4">
+        {/* Bank Guarantees Tab */}
+        <TabsContent value="bank-guarantees" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <FileCheck className="h-5 w-5" />
-                Documents de Conformité
+                <Building className="h-5 w-5" />
+                Garanties Bancaires ({bankGuarantees.length})
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {documents.length > 0 ? (
-                <div className="space-y-2">
-                  {documents.map((doc) => (
-                    <div key={doc.id} className="flex justify-between items-center p-3 border rounded">
+              {bankGuarantees.length === 0 ? (
+                <div className="text-center py-8">
+                  <Building className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <p className="text-gray-600">Aucune garantie bancaire trouvée</p>
+                  <Button onClick={navigateToBankGuaranteeUI} className="mt-4">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Ajouter des Garanties
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {bankGuarantees.map((guarantee) => (
+                    <div key={guarantee.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
-                        <h4 className="font-medium">{doc.title}</h4>
-                        <p className="text-sm text-gray-500">Type: {doc.type}</p>
+                        <h4 className="font-medium">{guarantee.guarantor || guarantee.guarantor || 'Garant inconnu'}</h4>
+                        <p className="text-sm text-gray-600">
+                          {guarantee.guaranteeType || guarantee.guarantee_type || 'Type inconnu'} - {guarantee.coverageAmount || guarantee.coverage_amount || 0?.toLocaleString()}€
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Valide jusqu'au: {new Date(guarantee.validUntil || guarantee.valid_until || new Date().toISOString()).toLocaleDateString()}
+                        </p>
                       </div>
-                      <Badge variant={doc.status === 'approved' ? 'default' : 'secondary'}>
-                        {doc.status}
+                      <Badge className={getStatusColor(guarantee.status || guarantee.status || 'unknown')}>
+                        {guarantee.status || guarantee.status || 'Inconnu'}
                       </Badge>
                     </div>
                   ))}
                 </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Regulatory Compliance Tab */}
+        <TabsContent value="regulatory" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileCheck className="h-5 w-5" />
+                Conformité Réglementaire ({regulatoryItems.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {regulatoryItems.length === 0 ? (
+                <div className="text-center py-8">
+                  <FileCheck className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <p className="text-gray-600">Aucun élément réglementaire trouvé</p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Les éléments réglementaires sont gérés via leurs interfaces spécialisées respectives.
+                  </p>
+                </div>
               ) : (
-                <p className="text-gray-500">Aucun document de conformité téléchargé</p>
+                <div className="space-y-3">
+                  {regulatoryItems.map((item) => (
+                    <div key={item.id} className="border rounded-lg p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <h4 className="font-medium">{item.title}</h4>
+                          <Badge className={`${getPriorityColor(item.priority)} ml-2`}>
+                            {item.priority}
+                          </Badge>
+                        </div>
+                        <Badge className={getStatusColor(item.status)}>
+                          {item.status}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2">{item.description}</p>
+                      {item.deadline && (
+                        <p className="text-xs text-gray-500">
+                          <Calendar className="h-3 w-3 inline mr-1" />
+                          Échéance: {new Date(item.deadline).toLocaleDateString()}
+                        </p>
+                      )}
+                      {item.responsible && (
+                        <p className="text-xs text-gray-500">
+                          <Users className="h-3 w-3 inline mr-1" />
+                          Responsable: {item.responsible}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
             </CardContent>
           </Card>

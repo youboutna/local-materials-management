@@ -96,14 +96,14 @@ export class ProjectTransformer {
   
   /**
    * Domain Entity → DTO
-   * For API responses and UI consumption
+   * Converts domain entity to DTO for API responses
    */
   static toDTO(project: Project): ProjectDTO {
     return {
       id: project.id,
       title: project.title,
       description: project.description,
-      status: project.status as any,
+      status: project.status,
       progress: project.progress,
       location: project.location || '',
       latitude: project.coordinates?.latitude,
@@ -111,11 +111,64 @@ export class ProjectTransformer {
       startDate: project.startDate?.toISOString() || '',
       endDate: project.endDate?.toISOString(),
       budget: project.budget,
-      currency: project.currency || 'XOF',
+      currency: project.currency || 'EUR',
       teamSize: project.teamSize || 0,
       thumbnail: project.thumbnail,
       createdAt: project.createdAt?.toISOString(),
       updatedAt: project.updatedAt?.toISOString(),
+      address: undefined, 
+      geographicZone: undefined,
+      terrainType: undefined,
+      category: undefined,
+      subCategory: undefined,
+      priorityLevel: undefined,
+      riskLevel: undefined,
+      projectManagerId: undefined,
+      technicalManagerId: undefined,
+      supervisorId: undefined,
+      clientId: undefined,
+      mainContractor: undefined,
+      currentPhase: undefined,
+      currentStage: undefined,
+      methodology: undefined,
+      projectReference: undefined,
+      selectionMode: undefined,
+      financingSource: project.financingSource,
+      marketType: project.marketType,
+      requiresPermits: undefined,
+      permitNumber: undefined,
+      environmentalImpact: undefined,
+      environmentalConstraints: undefined,
+      insuranceRequired: undefined,
+      bankGuaranteeRequired: undefined,
+      bankGuaranteeAmount: undefined,
+      hasUtilities: undefined,
+      areaSqm: undefined,
+      siteDetails: undefined,
+      workspaceId: undefined,
+      createdBy: undefined,
+      taskCount: undefined,
+      completedTasks: undefined,
+      overdueTasks: undefined,
+      riskCount: undefined,
+      highRiskCount: undefined,
+      inspectionCount: undefined,
+      passedInspections: undefined,
+      failedInspections: undefined,
+      paymentCount: undefined,
+      paidAmount: undefined,
+      pendingPayments: undefined,
+      phaseCount: undefined,
+      completedPhases: undefined,
+      activePhases: undefined,
+      isOnTrack: undefined,
+      scheduleVariance: undefined,
+      activeTeamMembers: undefined,
+      ganttChart: undefined,
+      pertAnalysis: undefined,
+      earnedValueManagement: undefined,
+      projectAnalytics: undefined,
+      performanceMetrics: undefined
     };
   }
 
@@ -132,7 +185,7 @@ export class ProjectTransformer {
       id: dto.id,
       title: dto.title,
       description: dto.description || '',
-      status: (dto.status as unknown as ProjectStatus) || 'planifié',
+      status: dto.status,
       progress: dto.progress || 0,
       budget: dto.budget || 0,
       startDate: dto.startDate ? new Date(dto.startDate) : null,
@@ -141,7 +194,10 @@ export class ProjectTransformer {
       coordinates,
       teamSize: dto.teamSize || 0,
       thumbnail: dto.thumbnail,
-      currency: dto.currency || 'XOF',
+      currency: dto.currency || 'EUR',
+      // Additional fields that exist in domain entity
+      financingSource: dto.financingSource,
+      marketType: dto.marketType,
     });
   }
 

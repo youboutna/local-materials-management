@@ -3,25 +3,12 @@ import { MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import InteractiveMapGIS from '../../materials/InteractiveMapGIS';
 
-// Import entity DTOs (following "similitude des voisins le plus proche")
+// Import entity DTOs (following PROMPTS.md Rule #4: No type redefinition)
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
-
-interface MapData {
-  center?: { latitude: number; longitude: number };
-  address?: string;
-  polygonCoordinates?: Array<{ latitude: number; longitude: number }>;
-  [key: string]: any;
-}
+import { LocationDTO } from "@/dtos/shared";
 
 interface LocationStepProps {
-  formData: ProjectDTO & { 
-    facilitiesLocation?: MapData;
-    geographic_zone?: string;
-    terrain_type?: string;
-    environmental_constraints?: string;
-    has_utilities?: boolean;
-    requires_permits?: boolean;
-  };
+  formData: ProjectDTO;
   onUpdate: (data: Partial<ProjectDTO>) => void;
   isEditing?: boolean;
 }

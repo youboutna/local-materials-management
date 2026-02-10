@@ -1,24 +1,26 @@
-export interface CreateBankGuaranteeDto {
+import { BaseEntityDTO } from '../shared';
+
+export interface CreateBankGuaranteeDto extends BaseEntityDTO {
   /** Project ID this guarantee belongs to */
-  project_id: string;
+  projectId: string;
   
   /** Type of bank guarantee */
-  guarantee_type: 'performance' | 'payment' | 'advance_payment' | 'warranty' | 'retention';
+  guaranteeType: 'performance' | 'payment' | 'advance_payment' | 'warranty' | 'retention';
   
   /** Guaranteed amount */
-  guarantee_amount: number;
+  guaranteeAmount: number;
   
   /** Bank issuing the guarantee */
-  issuing_bank: string;
+  issuingBank: string;
   
   /** Unique guarantee reference number */
-  guarantee_number: string;
+  guaranteeNumber: string;
   
   /** Date when guarantee was issued */
-  issue_date: string;
+  issueDate: string;
   
   /** Expiry date of the guarantee */
-  expiry_date: string;
+  expiryDate: string;
   
   /** Current status */
   status?: 'active' | 'expired' | 'cancelled' | 'claimed' | 'pending';
@@ -28,6 +30,15 @@ export interface CreateBankGuaranteeDto {
   
   /** Related document IDs */
   documents?: string[];
+  
+  // Legacy snake_case aliases for backward compatibility (PROMPTS.md Pattern 2)
+  project_id?: string;
+  guarantee_type?: string;
+  guarantee_amount?: number;
+  issuing_bank?: string;
+  guarantee_number?: string;
+  issue_date?: string;
+  expiry_date?: string;
   
   /** Currency code (e.g. USD, EUR) */
   currency?: string;

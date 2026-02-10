@@ -54,6 +54,9 @@ export { InsuranceRepository } from './InsuranceRepository';
 export type { IAuthRepository } from './IAuthRepository';
 export type { IStorageRepository } from './IStorageRepository';
 export type { INotificationRepository } from './INotificationRepository';
+export type { IComplianceRepository } from './IComplianceRepository';
+export type { IAlertRepository } from './IAlertRepository';
+export type { IConstructionPhaseRepository } from './IConstructionPhaseRepository';
 
 // Repository Implementations (migrated from services)
 export * from './MaterialRepository';

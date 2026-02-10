@@ -5,154 +5,156 @@ import { Button } from '../../ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { Badge } from '../../ui/badge';
 import { Progress } from '../../ui/progress';
-import { supabase } from '../../../integrations/supabase/client';
 import { useToast } from '../../../hooks/use-toast';
 
 // Import entity DTOs (following "similitude des voisins le plus proche")
-import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
-import { RiskDTO } from "@/dtos/entities/RiskDTO";
+import { ProjectDTO, } from "@/dtos/entities/ProjectDTO";
+import { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
+import { RiskDTO, RiskCategory, RiskStatus, RiskProbability, RiskImpact, CreateRiskDTO, UpdateRiskDTO, RISK_CATEGORY_LABELS, PROBABILITY_LABELS, IMPACT_LABELS } from "@/dtos/entities/RiskDTO";
+import { EmployeeDTO } from "@/dtos/entities/EmployeeDTO";
+
+// Import hexagonal hook for employees (Rule #5: UI Layer Separation)
+import { useActiveEmployeesHex } from "@/hooks/hexagonal/useActiveEmployeesHex";
 
 interface RiskAnalysisStepProps {
-  formData: ProjectDTO;
-  onUpdate: (data: Partial<ProjectDTO>) => void;
+  workflowData: ProjectWorkflowData | null;
+  onStepComplete: (stepData: { risks: RiskDTO[] }) => void;
   isEditing?: boolean;
+  mode?: 'create' | 'edit';
 }
 
-interface ProjectRisk {
-  id: string;
-  title: string;
-  description: string;
-  category: 'technical' | 'financial' | 'environmental' | 'regulatory' | 'operational' | 'security';
-  probability: number; // 1-5 scale
-  impact: number; // 1-5 scale
-  riskScore: number; // probability * impact
-  mitigationPlan: string;
-  contingencyPlan: string;
-  status: 'identified' | 'assessed' | 'mitigated' | 'monitoring' | 'closed';
-  owner: string;
-  reviewDate?: string;
-  costs?: number;
-  timeline_impact?: number;
-}
+// Use existing RiskDTO instead of redefining RiskDTO (following PROMPTS.md Rule #4)
 
 const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
-  formData,
-  onUpdate,
-  isEditing = false
+  workflowData,
+  onStepComplete,
+  isEditing = false,
+  mode = isEditing ? 'edit' : 'create',
 }) => {
+  const projectData = workflowData?.projectData || {} as ProjectDTO;
+  const existingRisks = workflowData?.relatedData?.risks || [];
   const { toast } = useToast();
-  const [risks, setRisks] = useState<ProjectRisk[]>(formData.risks || []);
-  const [employees, setEmployees] = useState<any[]>([]);
+  const [risks, setRisks] = useState<RiskDTO[]>(existingRisks || []);
+  
+  // Use hexagonal hook for employees (Rule #5: UI Layer Separation)
+  const { data: employees = [], isLoading: employeesLoading, error: employeesError } = useActiveEmployeesHex();
 
-  useEffect(() => {
-    loadEmployees();
-  }, []);
+  // Remove local definitions - use centralized DTO mappings (Rule #4: No type redefinition)
 
-  const loadEmployees = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('employees')
-        .select('id, full_name, position')
-        .eq('is_active', true)
-        .order('full_name');
+  const addRisk = () => {
+    const newRisk: CreateRiskDTO = {
+      title: '',
+      description: '',
+      category: RiskCategory.TECHNICAL,
+      probability: 0.6, // 0.0-1.0 scale
+      impact: 0.6, // 0.0-1.0 scale
+      mitigationStrategy: '',
+      mitigationPlan: '',
+      assignedTo: '',
+      owner: '', // Primary risk owner
+      projectId: formData.id,
+      // Additional UI fields
+      reviewDate: '',
+      costs: 0,
+      timelineImpact: 0
+    };
+    
+    // Call the appropriate callback based on mode
+    if (mode === 'create' && onRiskCreate) {
+      onRiskCreate(newRisk);
+    } else {
+      // Fallback to local state management for backward compatibility
+      const riskDTO: RiskDTO = {
+        id: Date.now().toString(),
+        ...newRisk,
+        status: RiskStatus.IDENTIFIED,
+        riskScore: newRisk.probability * newRisk.impact,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
       
-      if (error) throw error;
-      setEmployees(data || []);
-    } catch (error) {
-      console.error('Error loading employees:', error);
+      const updatedRisks = [...risks, riskDTO];
+      setRisks(updatedRisks);
+      onUpdate({ risks: updatedRisks });
     }
   };
 
-  const riskCategories = [
-    { value: 'technical', label: 'Technique', color: 'bg-blue-100 text-blue-800' },
-    { value: 'financial', label: 'Financier', color: 'bg-green-100 text-green-800' },
-    { value: 'environmental', label: 'Environnemental', color: 'bg-emerald-100 text-emerald-800' },
-    { value: 'regulatory', label: 'Réglementaire', color: 'bg-purple-100 text-purple-800' },
-    { value: 'operational', label: 'Opérationnel', color: 'bg-orange-100 text-orange-800' },
-    { value: 'security', label: 'Sécurité', color: 'bg-red-100 text-red-800' }
-  ];
-
-  const probabilityLabels = {
-    1: 'Très faible (0-10%)',
-    2: 'Faible (11-30%)', 
-    3: 'Moyenne (31-50%)',
-    4: 'Élevée (51-80%)',
-    5: 'Très élevée (81-100%)'
-  };
-
-  const impactLabels = {
-    1: 'Négligeable',
-    2: 'Mineur',
-    3: 'Modéré', 
-    4: 'Majeur',
-    5: 'Critique'
-  };
-
-  const addRisk = () => {
-    const newRisk: ProjectRisk = {
-      id: Date.now().toString(),
-      title: '',
-      description: '',
-      category: 'technical',
-      probability: 3,
-      impact: 3,
-      riskScore: 9,
-      mitigationPlan: '',
-      contingencyPlan: '',
-      status: 'identified',
-      owner: ''
-    };
-    
-    const updatedRisks = [...risks, newRisk];
-    setRisks(updatedRisks);
-    onUpdate({ risks: updatedRisks });
-  };
-
-  const updateRisk = (id: string, updates: Partial<ProjectRisk>) => {
-    const updatedRisks = risks.map(risk => {
-      if (risk.id === id) {
-        const updated = { ...risk, ...updates };
-        // Recalculate risk score if probability or impact changed
-        if (updates.probability !== undefined || updates.impact !== undefined) {
-          updated.riskScore = updated.probability * updated.impact;
+  const updateRisk = (id: string, updates: Partial<RiskDTO>) => {
+    // Call the appropriate callback based on mode
+    if (mode === 'edit' && onRiskUpdate) {
+      const updateData: UpdateRiskDTO = {
+        ...updates,
+        // Ensure all required fields are properly typed
+        title: updates.title,
+        description: updates.description,
+        category: updates.category,
+        probability: updates.probability,
+        impact: updates.impact,
+        mitigationStrategy: updates.mitigationStrategy,
+        mitigationPlan: updates.mitigationPlan,
+        owner: updates.owner,
+        reviewDate: updates.reviewDate,
+        costs: updates.costs,
+        timelineImpact: updates.timelineImpact
+      };
+      
+      onRiskUpdate(id, updateData);
+    } else {
+      // Fallback to local state management for backward compatibility
+      const updatedRisks = risks.map(risk => {
+        if (risk.id === id) {
+          const updated = { ...risk, ...updates };
+          // Recalculate risk score if probability or impact changed
+          if (updates.probability !== undefined || updates.impact !== undefined) {
+            updated.riskScore = (updated.probability || 0) * (updated.impact || 0);
+          }
+          return updated;
         }
-        return updated;
-      }
-      return risk;
-    });
-    setRisks(updatedRisks);
-    onUpdate({ risks: updatedRisks });
+        return risk;
+      });
+      
+      setRisks(updatedRisks);
+      onUpdate({ risks: updatedRisks });
+    }
   };
 
   const removeRisk = (id: string) => {
-    const updatedRisks = risks.filter(risk => risk.id !== id);
-    setRisks(updatedRisks);
-    onUpdate({ risks: updatedRisks });
+    // Call the appropriate callback based on mode
+    if (mode === 'edit' && onRiskDelete) {
+      onRiskDelete(id);
+    } else {
+      // Fallback to local state management for backward compatibility
+      const updatedRisks = risks.filter(risk => risk.id !== id);
+      setRisks(updatedRisks);
+      onUpdate({ risks: updatedRisks });
+    }
   };
 
-  const getRiskScoreColor = (score: number) => {
-    if (score <= 5) return 'bg-green-500';
-    if (score <= 10) return 'bg-yellow-500';
-    if (score <= 15) return 'bg-orange-500';
+  const getRiskScoreColor = (score: number | undefined) => {
+    const safeScore = score || 0;
+    if (safeScore <= 5) return 'bg-green-500';
+    if (safeScore <= 10) return 'bg-yellow-500';
+    if (safeScore <= 15) return 'bg-orange-500';
     return 'bg-red-500';
   };
 
-  const getRiskScoreLabel = (score: number) => {
-    if (score <= 5) return 'Faible';
-    if (score <= 10) return 'Modéré';
-    if (score <= 15) return 'Élevé';
+  const getRiskScoreLabel = (score: number | undefined) => {
+    const safeScore = score || 0;
+    if (safeScore <= 5) return 'Faible';
+    if (safeScore <= 10) return 'Modéré';
+    if (safeScore <= 15) return 'Élevé';
     return 'Critique';
   };
 
   const getCategoryColor = (category: string) => {
-    return riskCategories.find(cat => cat.value === category)?.color || 'bg-gray-100 text-gray-800';
+    return RISK_CATEGORY_LABELS[category as RiskCategory]?.color || 'bg-gray-100 text-gray-800';
   };
 
   const calculateRiskMetrics = () => {
     const totalRisks = risks.length;
-    const highRisks = risks.filter(r => r.riskScore > 15).length;
+    const highRisks = risks.filter(r => (r.riskScore || 0) > 15).length;
     const mitigatedRisks = risks.filter(r => r.status === 'mitigated').length;
-    const averageScore = totalRisks > 0 ? risks.reduce((sum, r) => sum + r.riskScore, 0) / totalRisks : 0;
+    const averageScore = totalRisks > 0 ? risks.reduce((sum, r) => sum + (r.riskScore || 0), 0) / totalRisks : 0;
     
     return { totalRisks, highRisks, mitigatedRisks, averageScore };
   };
@@ -238,9 +240,9 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {riskCategories.map(cat => (
-                              <SelectItem key={cat.value} value={cat.value}>
-                                {cat.label}
+                            {Object.entries(RISK_CATEGORY_LABELS).map(([key, value]) => (
+                              <SelectItem key={key} value={key}>
+                                {value.label}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -269,7 +271,7 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {Object.entries(probabilityLabels).map(([value, label]) => (
+                            {Object.entries(PROBABILITY_LABELS).map(([value, label]) => (
                               <SelectItem key={value} value={value}>
                                 {value} - {label}
                               </SelectItem>
@@ -288,7 +290,7 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {Object.entries(impactLabels).map(([value, label]) => (
+                            {Object.entries(IMPACT_LABELS).map(([value, label]) => (
                               <SelectItem key={value} value={value}>
                                 {value} - {label}
                               </SelectItem>
@@ -386,21 +388,21 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
                           type="number"
                           placeholder="0"
                           className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent"
-                          value={risk.timeline_impact || ''}
-                          onChange={(e) => updateRisk(risk.id, { timeline_impact: parseInt(e.target.value) })}
+                          value={risk.timelineImpact || ''}
+                          onChange={(e) => updateRisk(risk.id, { timelineImpact: parseInt(e.target.value) })}
                         />
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2">
                       <Badge className={getCategoryColor(risk.category)}>
-                        {riskCategories.find(cat => cat.value === risk.category)?.label}
+                        {RISK_CATEGORY_LABELS[risk.category as RiskCategory]?.label}
                       </Badge>
                       
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium">Score de risque:</span>
                         <div className={`px-2 py-1 rounded text-white text-sm font-medium ${getRiskScoreColor(risk.riskScore)}`}>
-                          {risk.riskScore} - {getRiskScoreLabel(risk.riskScore)}
+                          {risk.riskScore || 0} - {getRiskScoreLabel(risk.riskScore)}
                         </div>
                       </div>
                     </div>

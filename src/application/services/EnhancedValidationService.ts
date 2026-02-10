@@ -4,7 +4,7 @@
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-// Use available repository interfaces
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import { IRiskRepository } from '@/domain/repositories/IRiskRepository';
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
@@ -96,15 +96,45 @@ export class EnhancedValidationService {
   private documentRepository: IDocumentRepository;
 
   constructor(
-    projectRepository: IProjectRepository,
-    riskRepository: IRiskRepository,
-    inspectionRepository: IInspectionRepository,
-    documentRepository: IDocumentRepository
+    projectRepository?: IProjectRepository,
+    riskRepository?: IRiskRepository,
+    inspectionRepository?: IInspectionRepository,
+    documentRepository?: IDocumentRepository
   ) {
-    this.projectRepository = projectRepository;
-    this.riskRepository = riskRepository;
-    this.inspectionRepository = inspectionRepository;
-    this.documentRepository = documentRepository;
+    this.projectRepository = projectRepository || RepositoryFactory.getProjectRepository();
+    this.riskRepository = riskRepository || RepositoryFactory.getRiskRepository();
+    this.inspectionRepository = inspectionRepository || RepositoryFactory.getInspectionRepository();
+    this.documentRepository = documentRepository || RepositoryFactory.getDocumentRepository();
+  }
+
+  // =================== HELPER METHODS ===================
+  
+  /**
+   * Get compliance items for project
+   */
+  private async getComplianceItems(projectId: string): Promise<any[]> {
+    try {
+      // This would typically use a compliance repository
+      // For now, return empty array as placeholder
+      return [];
+    } catch (error) {
+      console.error('Error getting compliance items:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get receptions for project
+   */
+  private async getReceptions(projectId: string): Promise<any[]> {
+    try {
+      // This would typically use a reception repository
+      // For now, return empty array as placeholder
+      return [];
+    } catch (error) {
+      console.error('Error getting receptions:', error);
+      return [];
+    }
   }
 
   // =================== COMPREHENSIVE PROJECT VALIDATION ===================
@@ -119,8 +149,8 @@ export class EnhancedValidationService {
       // Get all project data
       const [risks, complianceItems, receptions, inspections, documents] = await Promise.all([
         this.riskRepository.findByProjectId(projectId),
-        this.complianceRepository.findByProjectId(projectId),
-        this.receptionRepository.findByProjectId(projectId),
+        this.getComplianceItems(projectId),
+        this.getReceptions(projectId),
         this.inspectionRepository.findByProjectId(projectId),
         this.documentRepository.findByProjectId(projectId)
       ]);

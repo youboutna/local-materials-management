@@ -31,6 +31,22 @@ export interface BankGuaranteeFormData {
   supporting_documents?: string[]; // Legacy: supporting documents
 }
 
+interface SupabaseBankGuarantee {
+  id: string;
+  project_id: string;
+  contractor_id: string;
+  bank_name: string;
+  guarantee_amount: number;
+  guarantee_type: string;
+  issue_date: string;
+  expiry_date: string;
+  status: string;
+  phase_id?: string;
+  created_at: string;
+  updated_at: string;
+  released_at?: string;
+}
+
 export interface BankGuaranteeRow {
   id: string;
   projectId: string; // ✅ CAMELCASE: Instead of project_id
@@ -77,7 +93,7 @@ export function useBankGuaranteesList() {
       if (error) throw error;
       
       // ✅ TRANSFORM: Map snake_case database fields to camelCase
-      return (data || []).map(item => ({
+      return (data || []).map((item: SupabaseBankGuarantee) => ({
         id: item.id,
         projectId: item.project_id, // ✅ CAMELCASE: From project_id
         contractorId: item.contractor_id, // ✅ CAMELCASE: From contractor_id
@@ -86,11 +102,10 @@ export function useBankGuaranteesList() {
         guaranteeType: item.guarantee_type, // ✅ CAMELCASE: From guarantee_type
         issueDate: item.issue_date, // ✅ CAMELCASE: From issue_date
         expiryDate: item.expiry_date, // ✅ CAMELCASE: From expiry_date
-        status: item.status,
-        phaseId: item.phase_id, // ✅ CAMELCASE: From phase_id
+        phaseId: item.phase_id || null, // ✅ CAMELCASE: From phase_id (nullable)
         createdAt: item.created_at, // ✅ CAMELCASE: From created_at
         updatedAt: item.updated_at, // ✅ CAMELCASE: From updated_at
-        releasedAt: item.released_at, // ✅ CAMELCASE: From released_at
+        releasedAt: item.released_at || null, // ✅ CAMELCASE: From released_at (nullable)
         
         // Legacy snake_case for backward compatibility
         project_id: item.project_id,
@@ -100,8 +115,7 @@ export function useBankGuaranteesList() {
         guarantee_type: item.guarantee_type,
         issue_date: item.issue_date,
         expiry_date: item.expiry_date,
-        status: item.status,
-        phase_id: item.phase_id,
+        phase_id: item.phase_id || null,
         created_at: item.created_at,
         updated_at: item.updated_at,
         released_at: item.released_at,

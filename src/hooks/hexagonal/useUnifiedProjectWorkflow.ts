@@ -11,15 +11,9 @@ import { ProjectWorkflowService } from '@/application/services/ProjectWorkflowSe
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { ProjectWorkflowTransforms } from '@/dtos/transforms/ProjectWorkflowTransforms';
 
-// Types for unified workflow
-export interface UnifiedProjectWorkflowData {
-  projectData: Record<string, unknown>;
-  phases?: any[];
-  stakeholders?: any[];
-  risks?: any[];
-  materials?: any[];
-  compliance?: any;
-}
+// Import centralized DTOs (following PROMPTS.md Rule #4: No type redefinition)
+import { ProjectWorkflowData, StepRelatedDataDTO } from '@/dtos/workflows/ProjectWorkflowDTOs';
+import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 
 export interface UnifiedWorkflowState {
   mode: 'creation' | 'edit';
@@ -65,9 +59,9 @@ export function useUnifiedProjectWorkflow(mode: 'creation' | 'edit', projectId?:
     isLoading: false
   });
 
-  // Form data state
-  const [formData, setFormData] = useState<UnifiedProjectWorkflowData | null>(null);
-  const [originalData, setOriginalData] = useState<UnifiedProjectWorkflowData | null>(null);
+  // Form data state - using centralized ProjectWorkflowData (following PROMPTS.md Rule #4)
+  const [formData, setFormData] = useState<ProjectWorkflowData | null>(null);
+  const [originalData, setOriginalData] = useState<ProjectWorkflowData | null>(null);
 
   // Get workflow steps
   const { data: workflowSteps } = useQuery({
@@ -101,7 +95,7 @@ export function useUnifiedProjectWorkflow(mode: 'creation' | 'edit', projectId?:
 
   // Save workflow step mutation
   const saveStepMutation = useMutation({
-    mutationFn: async (stepData: UnifiedProjectWorkflowData): Promise<SaveResult> => {
+    mutationFn: async (stepData: ProjectWorkflowData): Promise<SaveResult> => {
       if (!workflowState.projectId && mode === 'creation') {
         // Creation mode - save new project
         const result = await workflowService.saveStep(workflowState.currentStep, stepData, { mode: 'creation' });
@@ -152,7 +146,7 @@ export function useUnifiedProjectWorkflow(mode: 'creation' | 'edit', projectId?:
 
   // Validate step mutation
   const validateStepMutation = useMutation({
-    mutationFn: async (stepData: UnifiedProjectWorkflowData) => {
+    mutationFn: async (stepData: ProjectWorkflowData) => {
       return await workflowService.validateStep(workflowState.currentStep, stepData, {
         mode,
         projectId: workflowState.projectId
@@ -164,7 +158,7 @@ export function useUnifiedProjectWorkflow(mode: 'creation' | 'edit', projectId?:
   });
 
   // Update form data
-  const updateFormData = useCallback((updates: Partial<UnifiedProjectWorkflowData>) => {
+  const updateFormData = useCallback((updates: Partial<ProjectWorkflowData>) => {
     setFormData(prev => {
       if (!prev) return prev;
       const newData = { ...prev, ...updates };

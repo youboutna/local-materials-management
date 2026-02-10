@@ -432,3 +432,135 @@ export interface PhaseTaskFormDTO {
   assigned_to?: string[];
   order_index?: number;
 }
+
+// Enhanced resource types for UI display with semantic search support
+export interface EnhancedEmployeeResource {
+  id: string;
+  employeeId: string;
+  name: string;
+  position?: string;
+  department?: string;
+  email?: string;
+  phone?: string;
+  quantity: number;
+  role?: string;
+  isActive?: boolean;
+}
+
+export interface EnhancedMaterialResource {
+  id: string;
+  materialId: string;
+  name: string;
+  description?: string;
+  category?: string;
+  unit: string;
+  pricePerUnit?: number;
+  availableQuantity?: number;
+  quantity: number;
+  sku?: string;
+  isActive?: boolean;
+}
+
+export interface EnhancedSupplierResource {
+  id: string;
+  supplierId: string;
+  name: string;
+  contact?: {
+    name: string;
+    email: string;
+    phone?: string;
+    role?: string;
+  };
+  category?: string;
+  status?: string;
+  rating?: {
+    quality: number;
+    delivery: number;
+    price: number;
+    communication: number;
+    overall: number;
+  };
+  isActive?: boolean;
+}
+
+// Enhanced PhaseData for UI with enriched resources
+export interface EnhancedPhaseData {
+  // Core PhaseData properties
+  id: string;
+  phase?: string;
+  stage?: string;
+  customPhase?: CustomPhase;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  estimatedDuration: number;
+  status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
+  budget: number;
+  actualCost: number;
+  progress: number;
+  location: string;
+  notes?: string;
+  
+  // Enhanced resources with full details from other entities
+  humanResources?: EnhancedEmployeeResource[];
+  materials?: EnhancedMaterialResource[];
+  suppliers?: EnhancedSupplierResource[];
+  
+  // Search and display metadata
+  searchableText?: string; // Combined text for semantic search
+  displayInfo?: {
+    employeeNames: string[];
+    materialNames: string[];
+    supplierNames: string[];
+    locationText: string;
+    fullDescription: string;
+  };
+}
+
+// Phase search input for semantic search across entities
+export interface PhaseSearchInput {
+  query?: string;
+  status?: string;
+  type?: string;
+  // Search across related entities
+  employeeName?: string; // Search by employee name, not just ID
+  materialName?: string; // Search by material name, not just ID
+  supplierName?: string; // Search by supplier name, not just ID
+  location?: string;
+  dateRange?: {
+    start?: string;
+    end?: string;
+  };
+  budgetRange?: {
+    min?: number;
+    max?: number;
+  };
+}
+
+// Phase search result with semantic matching
+export interface PhaseSearchResult {
+  phase: EnhancedPhaseData;
+  relevanceScore: number;
+  matchedFields: string[];
+  highlights: {
+    employeeNames?: string[];
+    materialNames?: string[];
+    supplierNames?: string[];
+    description?: string[];
+    location?: string[];
+  };
+}
+
+// Resource enrichment for data transformation
+export interface ResourceEnrichment {
+  employeeIds: string[];
+  materialIds: string[];
+  supplierIds: string[];
+}
+
+export interface EnrichedResources {
+  employees: EnhancedEmployeeResource[];
+  materials: EnhancedMaterialResource[];
+  suppliers: EnhancedSupplierResource[];
+}

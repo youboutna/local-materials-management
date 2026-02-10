@@ -12,38 +12,21 @@ import {
   UpdateStakeholderRequestDTO, 
   StakeholderResponseDTO,
   StakeholderServiceResult,
-  StakeholderListResult
+  StakeholderListResult,
+  StakeholderType,
+  StakeholderRole
 } from '@/dtos/entities/StakeholderDTO';
 import { StakeholderTransformer } from '@/dtos/transforms/StakeholderTransformer';
 
-export enum StakeholderType {
-  CLIENT = 'client',
-  SUPPLIER = 'supplier',
-  CONTRACTOR = 'contractor',
-  REGULATOR = 'regulator',
-  OTHER = 'other'
-}
-
 const StakeholderRoles = {
-  [StakeholderType.CLIENT]: ['owner', 'representative', 'manager'],
-  [StakeholderType.SUPPLIER]: ['material', 'equipment', 'service'],
-  [StakeholderType.CONTRACTOR]: ['general', 'specialized', 'subcontractor'],
-  [StakeholderType.REGULATOR]: ['government', 'safety', 'environmental'],
-  [StakeholderType.OTHER]: ['community', 'media', 'other']
+  [StakeholderType.EMPLOYEE]: ['project_manager', 'team_lead', 'developer', 'analyst'],
+  [StakeholderType.EXTERNAL]: ['consultant', 'contractor', 'vendor', 'partner'],
+  [StakeholderType.CLIENT]: ['owner', 'representative', 'manager', 'contact'],
+  [StakeholderType.VENDOR]: ['supplier', 'material_provider', 'service_provider'],
+  [StakeholderType.PARTNER]: ['strategic_partner', 'operational_partner'],
+  [StakeholderType.REGULATOR]: ['inspector', 'auditor', 'compliance_officer'],
+  [StakeholderType.INVESTOR]: ['investor', 'funder', 'sponsor']
 } as const;
-
-// Enhanced type definitions for stakeholder roles
-type StakeholderRoleMap = {
-  [StakeholderType.CLIENT]: 'owner' | 'representative' | 'manager';
-  [StakeholderType.SUPPLIER]: 'material' | 'equipment' | 'service';
-  [StakeholderType.CONTRACTOR]: 'general' | 'specialized' | 'subcontractor';
-  [StakeholderType.REGULATOR]: 'government' | 'safety' | 'environmental';
-  [StakeholderType.OTHER]: 'community' | 'media' | 'other';
-};
-
-type StakeholderRole<T extends StakeholderType> = T extends keyof StakeholderRoleMap 
-  ? StakeholderRoleMap[T] 
-  : never;
 
 export class StakeholderService {
   constructor(private stakeholderRepository: IStakeholderRepository) {}

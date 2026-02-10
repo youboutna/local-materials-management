@@ -10,6 +10,7 @@ export interface ActiveEmployee {
   id: string;
   full_name: string;
   position?: string | null;
+  department?: string | null; // Added department property for UI filtering
 }
 
 // Hook: Fetch active employees for task assignment
@@ -19,7 +20,7 @@ export function useActiveEmployeesHex() {
     queryFn: async (): Promise<ActiveEmployee[]> => {
       const { data, error } = await supabase
         .from('employees')
-        .select('id, full_name, position')
+        .select('id, full_name, position, department')
         .eq('is_active', true)
         .order('full_name', { ascending: true });
       

@@ -136,7 +136,6 @@ export { usePhaseDocuments } from './usePhaseDocumentsHex';
 export { 
   useBankGuaranteesHex, 
   useInsurancesHex, 
-  useNotificationsHex, 
   usePaymentBlocksHex 
 } from './useMonitoringHex';
 export { useComplianceHex } from './useComplianceHex';
@@ -415,6 +414,11 @@ export {
   actionFormSchema,
   type PaymentControlActionsProps
 } from './usePaymentControlActionsHex';
+export { usePaymentControlHex } from './usePaymentControlHex';
+
+// Notifications
+export { useNotificationsHex } from './useNotificationsHex';
+
 export type { 
   ActionFormData,
   ActionMetadata

@@ -13,14 +13,16 @@
  * 10. UI → Render updated data
  */
 
-import React, { useCallback, useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "@/hooks/use-toast";
+import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "../../hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
+import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
 import {
   Building,
@@ -45,15 +47,16 @@ import { ProjectWorkflowTransforms } from "@/dtos/transforms/ProjectWorkflowTran
 // Import workflow DTOs
 import { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
 import { PhaseDTO } from "@/dtos/entities/PhaseDTO";
+import { ProjectDTO, ProjectStatus, ProjectPriority } from "@/dtos/entities/ProjectDTO";
 
 // Import step components
 import ProjectInfoStep from "./steps/ProjectInfoStep";
 import StakeholdersTeamStep from "./steps/StakeholdersTeamStep";
 import LocationStep from "./steps/LocationStep";
-import { RiskAnalysisStep } from './steps/RiskAnalysisStep';
-import { ComplianceStep } from './steps/ComplianceStep';
-import { EnhancedValidationStep } from './steps/EnhancedValidationStep';
 import ConstructionPhaseManager from "./ConstructionPhaseManager";
+import EnhancedComplianceStep from "./steps/EnhancedComplianceStep";
+import EnhancedValidationStep from "./steps/EnhancedValidationStep";
+import RiskAnalysisStep from "./steps/RiskAnalysisStep";
 
 interface EnhancedProjectEditFormProps {
   initialData?: ProjectWorkflowData;
@@ -72,6 +75,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
   const navigate = useNavigate();
   const { id: projectId } = useParams<{ id: string }>();
   const [currentStep, setCurrentStep] = useState(1);
+  const queryClient = useQueryClient();
 
   // Unified workflow hook
   const {
@@ -100,8 +104,16 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
   // Phases state
   const [phases, setPhases] = useState<PhaseDTO[]>(formData?.phases || []);
 
+  // Reset form function
+  const resetForm = useCallback(() => {
+    if (initialData) {
+      updateFormData(initialData);
+    }
+    setCurrentStep(1);
+  }, [initialData, updateFormData]);
+
   // Combined loading/submitting states
-  const combinedIsSubmitting = isSaving || externalIsSubmitting;
+  const combinedIsSubmitting = isLoading || externalIsSubmitting;
 
   // Step configuration (7 steps)
   const steps = useMemo(() => [
@@ -111,7 +123,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       icon: Building,
       description: "Données de base du projet",
       color: "bg-blue-500",
-      isCompleted: () => !!(formData?.title && formData?.location),
+      isCompleted: () => !!(formData?.projectData?.title && formData?.projectData?.location),
     },
     {
       id: 2,
@@ -119,7 +131,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       icon: Users,
       description: "Configuration des acteurs",
       color: "bg-green-500",
-      isCompleted: () => !!(formData?.delegation && Object.keys(formData.delegation).length > 0),
+      isCompleted: () => !!(formData?.relatedData?.stakeholders&& Object.keys(formData?.projectData?.relatedData?.stakeholders).length > 0),
     },
     {
       id: 3,
@@ -127,7 +139,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       icon: MapPin,
       description: "Géolocalisation et cartographie",
       color: "bg-cyan-500",
-      isCompleted: () => !!(formData?.coordinates?.latitude && formData?.coordinates?.longitude),
+      isCompleted: () => !!(formData?.projectData?.coordinates?.latitude && formData?.projectData?.coordinates?.longitude),
     },
     {
       id: 4,
@@ -159,17 +171,17 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       icon: CheckCircle,
       description: "Réception définitive",
       color: "bg-teal-500",
-      isCompleted: () => formData?.status === "terminé",
+      isCompleted: () => formData?.projectData?.status === "termine",
     },
   ], [formData, phases]);
 
   // Step 1: Handle form field updates from UI
-  const handleFormUpdate = useCallback((updates: Partial<ProjectEditFormData>) => {
+  const handleFormUpdate = useCallback((updates: Partial<ProjectWorkflowData>) => {
     updateFormData(updates);
     
     // Notify parent if callback provided
     if (onFormDataChange && formData) {
-      onFormDataChange({ ...formData, ...updates } as unknown as ProjectWorkflowData);
+      onFormDataChange({ ...formData, ...updates });
     }
   }, [updateFormData, formData, onFormDataChange]);
 
@@ -178,7 +190,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     if (!formData) return;
 
     // Validate current step
-    const validation = validateFormData(formData);
+    const validation = await validateCurrentStep();
     if (!validation.isValid) {
       toast({
         title: "Validation échouée",
@@ -189,15 +201,15 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     }
 
     // Save via hook (steps 2-8 happen inside)
-    const result = await saveProject();
+    const result = await saveCurrentStep();
     
-    if (result.success) {
+    if (result && result.success) {
       toast({
         title: "Étape sauvegardée",
         description: `L'étape ${currentStep} a été sauvegardée.`,
       });
     }
-  }, [formData, validateFormData, saveProject, currentStep, toast]);
+  }, [formData, validateCurrentStep, currentStep, toast, saveCurrentStep]);
 
   // Save and go to next step
   const handleSaveAndNext = useCallback(async () => {
@@ -216,9 +228,9 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     const dataWithPhases = { ...formData, phases };
     updateFormData(dataWithPhases);
 
-    const result = await saveProject();
+    const result = await saveCurrentStep();
     
-    if (result.success) {
+    if (result && result.success) {
       toast({
         title: "Projet sauvegardé",
         description: "Toutes les modifications ont été enregistrées.",
@@ -227,13 +239,46 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       // Navigate back
       navigate(-1);
     }
-  }, [formData, phases, updateFormData, saveProject, toast, navigate]);
+  }, [formData, phases, updateFormData, saveCurrentStep, toast, navigate]);
 
-  // Adapter to convert ProjectEditFormData updates to ProjectDTO format
-  const handleFormUpdateAdapter = useCallback((data: Partial<any>) => {
-    // Convert incoming data to ProjectEditFormData format
-    handleFormUpdate(data as Partial<ProjectEditFormData>);
-  }, [handleFormUpdate]);
+  // Adapter to convert step updates to ProjectWorkflowData format for step components
+  const handleFormUpdateAdapter = useCallback((data: Partial<ProjectDTO> | { relatedData?: Record<string, unknown> }) => {
+    // Convert incoming data to ProjectWorkflowData format
+    if ('relatedData' in data) {
+      // Handle relatedData updates (for steps that manage related entities)
+      const updatedWorkflowData: Partial<ProjectWorkflowData> = {
+        relatedData: {
+          ...formData?.relatedData,
+          ...(data as { relatedData?: Record<string, unknown> }).relatedData
+        }
+      };
+      handleFormUpdate(updatedWorkflowData);
+    } else {
+      // Handle projectData updates (for steps that manage project fields)
+      const projectDataUpdate = data as Partial<ProjectDTO>;
+      const updatedWorkflowData: Partial<ProjectWorkflowData> = {
+        projectData: { 
+          ...formData?.projectData, 
+          ...projectDataUpdate,
+          // Ensure required fields are always properly typed (required by ProjectDTO)
+          id: projectDataUpdate.id || formData?.projectData?.id || projectId || '',
+          title: projectDataUpdate.title || formData?.projectData?.title || '',
+          description: projectDataUpdate.description || formData?.projectData?.description || '',
+          status: projectDataUpdate.status || formData?.projectData?.status || ProjectStatus.EN_COURS,
+          progress: projectDataUpdate.progress ?? formData?.projectData?.progress ?? 0,
+          location: projectDataUpdate.location || formData?.projectData?.location || '',
+          startDate: projectDataUpdate.startDate || formData?.projectData?.startDate || new Date().toISOString(),
+          budget: projectDataUpdate.budget ?? formData?.projectData?.budget ?? 0,
+          currency: projectDataUpdate.currency || formData?.projectData?.currency || 'MRO',
+          teamSize: projectDataUpdate.teamSize ?? formData?.projectData?.teamSize ?? 0,
+          // BaseEntityDTO required fields
+          createdAt: projectDataUpdate.createdAt || formData?.projectData?.createdAt || new Date().toISOString(),
+          updatedAt: projectDataUpdate.updatedAt || formData?.projectData?.updatedAt || new Date().toISOString()
+        }
+      };
+      handleFormUpdate(updatedWorkflowData);
+    }
+  }, [handleFormUpdate, formData, projectId]);
 
   // Render step content
   const renderStepContent = useCallback(() => {
@@ -243,24 +288,23 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       case 1:
         return (
           <ProjectInfoStep
-            formData={formData as any}
-            onUpdate={handleFormUpdateAdapter}
+            workflowData={formData}
+            onStepComplete={(stepData) => handleFormUpdateAdapter({ projectData: stepData.projectData })}
             isEditing={true}
-            baseData={{}}
           />
         );
       case 2:
         return (
           <StakeholdersTeamStep
-            projectData={formData as any}
-            onUpdate={handleFormUpdateAdapter}
+            workflowData={formData}
+            onStepComplete={(stepData) => handleFormUpdateAdapter({ relatedData: { stakeholders: stepData.stakeholders } })}
             isEditing={true}
           />
         );
       case 3:
         return (
           <LocationStep
-            formData={formData as any}
+            formData={formData.projectData}
             onUpdate={handleFormUpdateAdapter}
             isEditing={true}
           />
@@ -268,31 +312,31 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       case 4:
         return (
           <ConstructionPhaseManager 
-            phases={phases as unknown as any[]}
-            onChange={(updatedPhases) => setPhases(updatedPhases as unknown as PhaseDTO[])}
-            projectBudget={formData.budget || 0}
+            workflowData={formData}
+            onStepComplete={(stepData) => handleFormUpdateAdapter({ relatedData: { phases: stepData.phases } })}
+            projectBudget={formData.projectData?.budget || 0}
           />
         );
       case 5:
         return (
           <RiskAnalysisStep
-            formData={formData as any}
-            onUpdate={handleFormUpdateAdapter}
+            workflowData={formData}
+            onStepComplete={(stepData) => handleFormUpdateAdapter({ relatedData: { risks: stepData.risks } })}
             isEditing={true}
           />
         );
       case 6:
         return (
-          <ComplianceStep
-            formData={formData as any}
-            onUpdate={handleFormUpdateAdapter}
+          <EnhancedComplianceStep
+            workflowData={formData}
+            onStepComplete={(stepData) => handleFormUpdateAdapter({ relatedData: { compliance: stepData.compliance } })}
             isEditing={true}
           />
         );
       case 7:
         return (
           <EnhancedValidationStep
-            formData={formData}
+            formData={formData.projectData}
             onUpdate={handleFormUpdateAdapter}
             isEditing={true}
           />
@@ -300,7 +344,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       default:
         return null;
     }
-  }, [formData, currentStep, handleFormUpdate, phases]);
+  }, [formData, currentStep, handleFormUpdateAdapter]);
 
   // Calculate overall progress
   const completedSteps = steps.filter((step) => step.isCompleted()).length;
@@ -325,7 +369,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
           <p className="text-muted-foreground mb-4">
             {error instanceof Error ? error.message : "Une erreur est survenue"}
           </p>
-          <Button onClick={() => refetch()}>Réessayer</Button>
+          <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['project-workflow-data'] })}>Réessayer</Button>
         </Card>
       </div>
     );
@@ -340,8 +384,8 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">
               <Edit2 className="h-5 w-5" />
-              Édition du Projet: {formData?.title || "Nouveau Projet"}
-              {isDirty && (
+              Édition du Projet: {formData?.projectData.title || "Nouveau Projet"}
+              {workflowState?.isDirty && (
                 <Badge variant="outline" className="ml-2 text-yellow-600 border-yellow-300">
                   Non sauvegardé
                 </Badge>
@@ -448,7 +492,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
                   >
                     Précédent
                   </Button>
-                  {isDirty && (
+                  {workflowState?.isDirty && (
                     <Button
                       variant="ghost"
                       onClick={resetForm}
@@ -464,7 +508,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
                   <Button
                     variant="outline"
                     onClick={handleSaveStep}
-                    disabled={combinedIsSubmitting || !isDirty}
+                    disabled={combinedIsSubmitting || !workflowState?.isDirty}
                   >
                     <Save className="h-4 w-4 mr-2" />
                     {combinedIsSubmitting ? "Sauvegarde..." : "Sauvegarder"}

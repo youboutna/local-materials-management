@@ -67,6 +67,43 @@ export enum RiskImpact {
 }
 
 /**
+ * UI Label mappings for risk categories
+ * Used by components for display purposes
+ */
+export const RISK_CATEGORY_LABELS = {
+  [RiskCategory.TECHNICAL]: { label: 'Technique', color: 'bg-blue-100 text-blue-800' },
+  [RiskCategory.FINANCIAL]: { label: 'Financier', color: 'bg-green-100 text-green-800' },
+  [RiskCategory.OPERATIONAL]: { label: 'Opérationnel', color: 'bg-orange-100 text-orange-800' },
+  [RiskCategory.STRATEGIC]: { label: 'Stratégique', color: 'bg-indigo-100 text-indigo-800' },
+  [RiskCategory.COMPLIANCE]: { label: 'Conformité', color: 'bg-purple-100 text-purple-800' },
+  [RiskCategory.SAFETY]: { label: 'Sécurité', color: 'bg-red-100 text-red-800' }
+} as const;
+
+/**
+ * UI Label mappings for probability levels
+ * Used by components for display purposes
+ */
+export const PROBABILITY_LABELS = {
+  [RiskProbability.VERY_LOW]: 'Très faible',
+  [RiskProbability.LOW]: 'Faible',
+  [RiskProbability.MEDIUM]: 'Moyen',
+  [RiskProbability.HIGH]: 'Élevé',
+  [RiskProbability.VERY_HIGH]: 'Très élevé'
+} as const;
+
+/**
+ * UI Label mappings for impact levels
+ * Used by components for display purposes
+ */
+export const IMPACT_LABELS = {
+  [RiskImpact.VERY_LOW]: 'Négligeable',
+  [RiskImpact.LOW]: 'Mineur',
+  [RiskImpact.MEDIUM]: 'Modéré',
+  [RiskImpact.HIGH]: 'Majeur',
+  [RiskImpact.VERY_HIGH]: 'Critique'
+} as const;
+
+/**
  * Main Risk DTO
  * Core risk data structure
  */
@@ -107,6 +144,11 @@ export interface RiskDTO extends BaseEntityDTO {
   monitoringPlan?: string;
   reviewFrequency?: string;
   
+  // Additional UI fields
+  reviewDate?: string; // Date for risk review
+  costs?: number; // Estimated costs for risk
+  timelineImpact?: number; // Timeline impact in days
+  
   resolutionDate?: string;
   
   // Relationships
@@ -117,7 +159,8 @@ export interface RiskDTO extends BaseEntityDTO {
   
   // Assignment
   assignedTo?: string; // Employee ID only for DTO
-  reviewer?: string; // Employee ID only for DTO
+  reviewer?: string; // Employee ID only for DTO - legacy
+  owner?: string; // Employee ID only for DTO - primary risk owner
   
   // Documentation
   documents?: string[]; // Document IDs only for DTO
@@ -144,6 +187,7 @@ export interface CreateRiskDTO {
   mitigationPlan?: string;
   assignedTo?: string; // Employee ID only for DTO
   reviewer?: string; // Employee ID only for DTO
+  owner?: string; // Employee ID only for DTO - primary risk owner
   projectId?: string;
   phaseId?: string;
   taskId?: string;
@@ -152,6 +196,10 @@ export interface CreateRiskDTO {
   attachments?: string[]; // Document IDs only for DTO
   tags?: string[];
   notes?: string;
+  // Additional UI fields
+  reviewDate?: string; // Date for risk review
+  costs?: number; // Estimated costs for risk
+  timelineImpact?: number; // Timeline impact in days
 }
 
 /**
@@ -173,6 +221,7 @@ export interface UpdateRiskDTO {
   mitigationCost?: number;
   mitigationOwner?: string; // Employee ID only for DTO
   reviewer?: string; // Employee ID only for DTO
+  owner?: string; // Employee ID only for DTO - primary risk owner
   identifiedDate?: string;
   assessmentDate?: string;
   nextReviewDate?: string;
@@ -183,7 +232,10 @@ export interface UpdateRiskDTO {
   attachments?: string[]; // Document IDs only for DTO
   tags?: string[];
   notes?: string;
-  
+  // Additional UI fields
+  reviewDate?: string; // Date for risk review
+  costs?: number; // Estimated costs for risk
+  timelineImpact?: number; // Timeline impact in days
   // Metadata
   updatedBy?: string;
   changeReason?: string;

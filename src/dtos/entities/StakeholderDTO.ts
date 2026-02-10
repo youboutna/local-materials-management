@@ -76,11 +76,14 @@ export interface StakeholderDTO extends BaseEntityDTO {
   organizationId?: string;
   employeeId?: string;
   department?: string;
+  position?: string; // Added for UI needs
+  organization?: string; // Added for UI needs
   
   // Responsibilities and scope
   responsibilities?: string[];
   scope?: string;
   influence?: 'low' | 'medium' | 'high' | 'critical';
+  accessLevel?: 'read' | 'write' | 'admin'; // Added for UI needs
   
   // Contract and engagement
   contractType?: string;
@@ -98,6 +101,14 @@ export interface StakeholderDTO extends BaseEntityDTO {
   engagementLevel?: 'low' | 'medium' | 'high';
   lastContactDate?: string;
   
+  // Contact information (structured)
+  contact?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    position?: string;
+  }; // Added for UI needs
+  
   // Metadata
   notes?: string;
   tags?: string[];
@@ -110,6 +121,7 @@ export interface StakeholderDTO extends BaseEntityDTO {
  * Input for creating new stakeholders
  */
 export interface CreateStakeholderDTO {
+  id?: string; // Added missing field for component usage
   name: string;
   email?: string;
   phone?: string;
@@ -122,9 +134,12 @@ export interface CreateStakeholderDTO {
   organizationId?: string;
   employeeId?: string;
   department?: string;
+  position?: string; // Added for UI needs
+  organization?: string; // Added for UI needs
   responsibilities?: string[];
   scope?: string;
   influence?: 'low' | 'medium' | 'high' | 'critical';
+  accessLevel?: 'read' | 'write' | 'admin'; // Added for UI needs
   contractType?: string;
   startDate?: string;
   endDate?: string;
@@ -134,6 +149,15 @@ export interface CreateStakeholderDTO {
   communicationFrequency?: 'daily' | 'weekly' | 'monthly' | 'as_needed';
   notes?: string;
   tags?: string[];
+  isActive?: boolean; // Added missing field
+  
+  // Contact information (structured)
+  contact?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    position?: string;
+  }; // Added for UI needs
 }
 
 /**
@@ -149,10 +173,17 @@ export interface UpdateStakeholderDTO {
   role?: StakeholderRole;
   isPrimary?: boolean;
   isInternal?: boolean;
+  organizationId?: string;
+  employeeId?: string;
+  department?: string;
+  position?: string; // Added for UI needs
+  organization?: string; // Added for UI needs
   responsibilities?: string[];
   scope?: string;
   influence?: 'low' | 'medium' | 'high' | 'critical';
+  accessLevel?: 'read' | 'write' | 'admin'; // Added for UI needs
   contractType?: string;
+  startDate?: string;
   endDate?: string;
   hourlyRate?: number;
   budgetAllocation?: number;
@@ -166,6 +197,15 @@ export interface UpdateStakeholderDTO {
   // Metadata
   updatedBy?: string;
   changeReason?: string;
+  isActive?: boolean; // Added missing field
+  
+  // Contact information (structured)
+  contact?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    position?: string;
+  }; // Added for UI needs
 }
 
 /**
@@ -234,10 +274,6 @@ export interface ProjectWithStakeholdersDTO extends BaseEntityDTO {
   budget: number;
   stakeholders: StakeholderDTO[];
 }
-
-export type CreateStakeholderDTO = Omit<StakeholderDTO, 'id' | 'createdAt' | 'updatedAt'>;
-
-export type UpdateStakeholderDTO = Partial<CreateStakeholderDTO>;
 
 export interface StakeholderFilterDTO {
   projectId?: string;

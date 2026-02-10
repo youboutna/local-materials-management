@@ -12,29 +12,47 @@ import EmployeeSelector from "../../selectors/EmployeeSelector";
 import SimpleSupplierSelector from "../../selectors/SimpleSupplierSelector";
 import { Progress } from "@/components/ui/progress";
 
-// Import entity DTOs (following "similitude des voisins le plus proche")
-import { ProjectDTO, ProjectStatus } from "@/dtos/entities/ProjectDTO";
+// Import entity DTOs (following PROMPTS.md Rule #4: No type redefinition)
+import { ProjectDTO, ProjectStatus, CreateProjectDTO, UpdateProjectDTO, PROJECT_STATUS_LABELS } from "@/dtos/entities/ProjectDTO";
+import { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
 
 interface ProjectInfoStepProps {
-  formData: Partial<ProjectDTO>;
-  onUpdate: (data: Partial<ProjectDTO>) => void;
+  workflowData: ProjectWorkflowData | null;
+  onStepComplete: (stepData: { projectData: ProjectDTO }) => void;
   isEditing?: boolean;
-  baseData?: Partial<ProjectDTO>;
+  mode?: 'create' | 'edit';
 }
 
 const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
-  formData,
-  onUpdate,
+  workflowData,
+  onStepComplete,
   isEditing = false,
-  baseData = {},
+  mode = isEditing ? 'edit' : 'create',
 }) => {
-  const statusOptions: Array<{ value: ProjectStatus; label: string }> = [
-    { value: "enCours" as ProjectStatus, label: "En cours" },
-    { value: "termine" as ProjectStatus, label: "Terminé" },
-    { value: "enAttente" as ProjectStatus, label: "En attente" },
-    { value: "suspendu" as ProjectStatus, label: "Suspendu" },
-    { value: "annule" as ProjectStatus, label: "Annulé" },
-  ];
+  const projectData = workflowData?.projectData || {} as ProjectDTO;
+  
+  // 🎨 UI Layer - Simple update handler for workflow (Rule #5)
+  const handleUpdate = (updates: Partial<ProjectDTO>) => {
+    // Merge updates with existing project data
+    const updatedProjectData: ProjectDTO = {
+      ...projectData,
+      ...updates,
+      id: projectData.id || '',
+      createdAt: projectData.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Update local state if needed
+    if (onStepComplete) {
+      onStepComplete({ projectData: updatedProjectData });
+    }
+  };
+
+  // ✅ Using centralized status labels (Rule #4: Centralized DTOs)
+  const statusOptions = Object.entries(PROJECT_STATUS_LABELS).map(([value, label]) => ({
+    value: value as ProjectStatus,
+    label
+  }));
   return (
     <Card>
       <CardHeader>
@@ -55,8 +73,8 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="Nom du projet de construction"
                 required
-                value={formData.title || ""}
-                onChange={(e) => onUpdate({ title: e.target.value })}
+                value={projectData.title || ""}
+                onChange={(e) => handleUpdate({ title: e.target.value })}
               />
             </div>
             <div>
@@ -67,9 +85,9 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 type="text"
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="REF-2025-001"
-                value={formData.projectReference || ""}
+                value={projectData.projectReference || ""}
                 onChange={(e) =>
-                  onUpdate({ projectReference: e.target.value })
+                  handleUpdate({ projectReference: e.target.value })
                 }
               />
             </div>
@@ -83,11 +101,11 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
               {/* Progress Bar */}
               <div className="flex items-center gap-3 mb-2">
                 <Progress
-                  value={formData.progress || 0}
+                  value={projectData.progress || 0}
                   className="flex-1 h-2"
                 />
                 <span className="text-sm font-medium w-12 text-right">
-                  {formData.progress || 0}%
+                  {projectData.progress || 0}%
                 </span>
               </div>
 
@@ -99,9 +117,9 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 min={0}
                 max={100}
                 required
-                value={formData.progress || ""}
+                value={projectData.progress || ""}
                 onChange={(e) =>
-                  onUpdate({ progress: parseInt(e.target.value) || 0 })
+                  handleUpdate({ progress: parseInt(e.target.value) || 0 })
                 }
               />
             </div>
@@ -115,8 +133,8 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
               className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent min-h-[120px]"
               placeholder="Description complète du projet, objectifs et spécifications techniques"
               required
-              value={formData.description || ""}
-              onChange={(e) => onUpdate({ description: e.target.value })}
+              value={projectData.description || ""}
+              onChange={(e) => handleUpdate({ description: e.target.value })}
             />
           </div>
 
@@ -130,9 +148,9 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="1000000"
                 required
-                value={formData.budget || ""}
+                value={projectData.budget || ""}
                 onChange={(e) =>
-                  onUpdate({
+                  handleUpdate({
                     budget:
                       e.target.value === ""
                         ? undefined
@@ -141,13 +159,16 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 }
               />
             </div>
-             <div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
               <label className="block text-sm font-medium mb-2">
                 Type de marché *
               </label>
               <Select
-                value={formData.marketType ?? ''}
-                onValueChange={(value) => onUpdate({ marketType: value })}
+                value={projectData.marketType ?? ''}
+                onValueChange={(value) => handleUpdate({ marketType: value })}
               >
                 <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                   <SelectValue placeholder="Sélectionner le type de marché" />
@@ -171,17 +192,17 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 </SelectContent>
               </Select>
             </div>
-            {/* <div>
+            <div>
               <EmployeeSelector
                 label="Chef de projet"
-                value={formData.project_responsable_id || ""}
+                value={projectData.projectManagerId || ""}
                 onChange={(employeeId) =>
-                  onUpdate({ project_responsable_id: employeeId })
+                  handleUpdate({ projectManagerId: employeeId })
                 }
                 placeholder="Sélectionner le chef de projet"
                 departmentFilter={["management", "engineering"]}
               />
-            </div> */}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -190,8 +211,8 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 Mode de sélection
               </label>
               <Select
-                value={formData.selectionMode || ""}
-                onValueChange={(value) => onUpdate({ selectionMode: value })}
+                value={projectData.selectionMode || ""}
+                onValueChange={(value) => handleUpdate({ selectionMode: value })}
               >
                 <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                   <SelectValue placeholder="Sélectionner le mode" />
@@ -220,8 +241,8 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 Source de financement
               </label>
               <Select
-                value={formData.financingSource || ""}
-                onValueChange={(value) => onUpdate({ financingSource: value })}
+                value={projectData.financingSource || ""}
+                onValueChange={(value) => handleUpdate({ financingSource: value })}
               >
                 <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                   <SelectValue placeholder="Sélectionner la source" />
@@ -258,9 +279,9 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
               <input
                 type="date"
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                value={String(formData.startDate || "")}
+                value={String(projectData.startDate || "")}
                 onChange={(e) =>
-                  onUpdate({
+                  handleUpdate({
                     startDate: e.target.value,
                   })
                 }
@@ -273,9 +294,9 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
               <input
                 type="date"
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                value={String(formData.endDate || "")}
+                value={String(projectData.endDate || "")}
                 onChange={(e) =>
-                  onUpdate({
+                  handleUpdate({
                     endDate: e.target.value,
                   })
                 }
@@ -293,13 +314,13 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="10"
                 min="1"
-                value={formData.teamSize || ""}
+                value={projectData.teamSize || ""}
                 onChange={(e) =>
-                  onUpdate({
+                  handleUpdate({
                     teamSize:
                       e.target.value === ""
                         ? undefined
-                        : parseInt(e.target.value),
+                        : parseInt(e.target.value)
                   })
                 }
               />
@@ -309,25 +330,18 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 Statut du projet
               </label>
               <Select
-                value={formData.status || "enCours"}
-                onValueChange={(value) => onUpdate({ status: value as ProjectStatus })}
+                value={projectData.status || ProjectStatus.EN_ATTENTE}
+                onValueChange={(value) => handleUpdate({ status: value as ProjectStatus })}
               >
                 <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                   <SelectValue placeholder="Sélectionner le statut" />
                 </SelectTrigger>
                 <SelectContent side="bottom" align="start">
-                  <SelectItem value="enCours" className="cursor-pointer">
-                    En cours
-                  </SelectItem>
-                  <SelectItem value="suspendu" className="cursor-pointer">
-                    Suspendu
-                  </SelectItem>
-                  <SelectItem value="termine" className="cursor-pointer">
-                    Terminé
-                  </SelectItem>
-                  <SelectItem value="annule" className="cursor-pointer">
-                    Annulé
-                  </SelectItem>
+                  {statusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value} className="cursor-pointer">
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -338,9 +352,9 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
               type="checkbox"
               id="allowsInitialPayment"
               className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-              checked={Boolean(formData.allowsInitialPayment)}
+              checked={Boolean(projectData.allowsInitialPayment)}
               onChange={(e) =>
-                onUpdate({ allowsInitialPayment: e.target.checked })
+                handleUpdate({ allowsInitialPayment: e.target.checked })
               }
             />
             <label
@@ -351,7 +365,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
             </label>
           </div>
 
-          {Boolean(formData.allowsInitialPayment) && (
+          {Boolean(projectData.allowsInitialPayment) && (
             <div>
               <label className="block text-sm font-medium mb-2">
                 Pourcentage de paiement initial (%)
@@ -364,11 +378,11 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 max="100"
                 value={String(formData.initialPaymentPercentage || "")}
                 onChange={(e) =>
-                  onUpdate({
+                  handleUpdate({
                     initialPaymentPercentage:
                       e.target.value === ""
                         ? undefined
-                        : parseFloat(e.target.value),
+                        : parseFloat(e.target.value)
                   })
                 }
               />

@@ -1,4 +1,7 @@
-import { useStakeholdersHex } from "@/hooks/hexagonal";
+import { useStakeholdersHex } from "@/hooks/hexagonal/useStakeholdersHex";
+import { useActiveEmployeesHex } from "@/hooks/hexagonal/useActiveEmployeesHex";
+import { useSuppliersHex } from "@/hooks/hexagonal/useSuppliersHex";
+
 import {
   Briefcase,
   Building2,
@@ -27,196 +30,289 @@ import {
 } from "../../ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
 
-// Import entity DTOs (following "similitude des voisins le plus proche")
+// Import entity DTOs (following PROMPTS.md Rule #4: No type redefinition)
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
-import { StakeholderDTO } from "@/dtos/entities/StakeholderDTO";
+import { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
+import { StakeholderDTO, CreateStakeholderDTO, UpdateStakeholderDTO, StakeholderType, StakeholderEntityType, StakeholderRole } from "@/dtos/entities/StakeholderDTO";
+import { EmployeeDTO, CreateEmployeeDTO, UpdateEmployeeDTO, EmployeeDepartment, EmployeeType, EmployeeStatus } from "@/dtos/entities/EmployeeDTO";
+import { EmployeeRole } from "@/dtos/entities/EmployeeDTO";
+import { SupplierDTO } from "@/dtos/entities/SupplierDTO";
 
-interface Stakeholder {
-  id: string;
-  type: "employee" | "external";
-  entityId: string;
-  role: string;
-  isPrimary: boolean;
-}
-
-interface TeamMember {
-  id: string;
-  employeeId: string;
-  position: string;
-  responsibilities: string;
-  availability: string;
-}
-
-interface ExtendedProjectData extends Partial<ProjectDTO> {
-  compliance?: any[];
-  engineeringConsultant?: string;
-  generalContractor?: string;
-  specializedSubcontractors?: string[];
-  mainSuppliers?: string[];
-  employees?: any[];
-  suppliers?: any[];
-  // Legacy snake_case for DB compatibility
-  project_manager_id?: string;
-  technical_manager_id?: string;
-  contractors?: {
-    engineeringConsultant?: string;
-    generalContractor?: string;
-    specializedSubcontractors?: string;
-    mainSuppliers?: string;
-  };
-}
+// Import role referentials from config (following PROMPTS.md Rule #3: Proper file structure)
+import { 
+  internalStakeholderRoles, 
+  externalStakeholderRoles, 
+  teamPositions,
+  getRoleOptions,
+  getTeamPositionOptions
+} from "@/config/referentials/stakeholderRoles";
 
 interface StakeholdersTeamStepProps {
-  projectData: ExtendedProjectData;
-  onUpdate: (data: Partial<ExtendedProjectData>) => void;
+  workflowData: ProjectWorkflowData | null;
+  onStepComplete: (stepData: { stakeholders: EmployeeDTO[] }) => void;
   isEditing?: boolean;
-  baseData?: ExtendedProjectData;
+  mode?: "create" | "edit";
 }
 
 const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
-  projectData,
-  onUpdate,
+  workflowData,
+  onStepComplete,
   isEditing = false,
-  baseData = {} as ExtendedProjectData,
+  mode = isEditing ? "edit" : "create",
 }) => {
-  const [stakeholders, setStakeholders] = useState<Stakeholder[]>(
-    []
+  const projectData = workflowData?.projectData || {} as ProjectDTO;
+  const existingStakeholders = workflowData?.relatedData?.stakeholders || [];
+  // Use hexagonal hooks for proper architecture
+  const { stakeholders: hexStakeholders, isLoading: stakeholdersLoading } = useStakeholdersHex(
+    projectData.id
   );
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(
-    []
+  const { data: employees = [], isLoading: employeesLoading } = useActiveEmployeesHex();
+  const { suppliers, isLoading: suppliersLoading } = useSuppliersHex();
+
+  const [localStakeholders, setLocalStakeholders] = useState<StakeholderDTO[]>(
+    projectData.stakeholders || []
   );
-  const [newStakeholder, setNewStakeholder] = useState<Partial<Stakeholder>>(
+  const [teamMembers, setTeamMembers] = useState<EmployeeDTO[]>([]);
+  const [newStakeholder, setNewStakeholder] = useState<Partial<StakeholderDTO>>(
     {}
   );
-  const [newTeamMember, setNewTeamMember] = useState<Partial<TeamMember>>({});
+  const [newTeamMember, setNewTeamMember] = useState<Partial<EmployeeDTO>>({});
 
-  // Use hexagonal hook for stakeholders
-  const { stakeholders: hexStakeholders, isLoading: stakeholdersLoading } = useStakeholdersHex();
+  // Enhanced handlers for both create and edit workflows
+  const handleStakeholderUpdate = (updates: Partial<StakeholderDTO>) => {
+    if (mode === "edit" && onStakeholderUpdate) {
+      // For edit mode, build UpdateStakeholderDTO
+      const updateData: UpdateStakeholderDTO = {
+        name: updates.name,
+        email: updates.email,
+        phone: updates.phone,
+        stakeholderType: updates.stakeholderType,
+        role: updates.role,
+        organizationId: updates.organizationId,
+        employeeId: updates.employeeId,
+        isPrimary: updates.isPrimary,
+        contact: updates.contact,
+        organization: updates.organization,
+        responsibilities: updates.responsibilities,
+        accessLevel: updates.accessLevel,
+        startDate: updates.startDate,
+        endDate: updates.endDate,
+        hourlyRate: updates.hourlyRate,
+        contractType: updates.contractType,
+        notes: updates.notes,
+        isActive: updates.isActive,
+        position: updates.position, // Added missing field
+      };
 
-  // Use database data from baseData or hexagonal hooks
-  const dbEmployees = baseData?.employees || [];
-  const dbSuppliers = baseData?.suppliers || [];
-
-  const [employees, setEmployees] = useState<Array<{
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-    position: string;
-  }>>([]);
-
-  const [suppliers, setSuppliers] = useState<Array<{
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    specialty: string;
-  }>>([]);
-
-  // Predefined roles and positions
-  const internalStakeholderRoles = [
-    "Responsable financier",
-    "Responsable achats",
-    "Responsable logistique",
-    "Responsable HSE",
-    "Coordonnateur sécurité",
-    "Gestionnaire contrats",
-    "Contrôleur de gestion",
-    "Autres",
-  ];
-
-  const externalStakeholderRoles = [
-    "Ingénieur conseil",
-    "Fournisseur matériaux",
-    "Entrepreneur / Contractant",
-    "Bureau de contrôle",
-    "Architecte",
-    "Bureau d'études",
-    "Ministère (tutelle)",
-    "Banque / Bailleur de fonds",
-    "Assureur",
-    "Organisme certification",
-    "Autres",
-  ];
-
-  const teamPositions = [
-    "Chef de projet",
-    "Ingénieur principal",
-    "Architecte projet",
-    "Coordonnateur technique",
-    "Responsable qualité",
-    "Coordonnateur sécurité",
-    "Gestionnaire contrats",
-    "Superviseur travaux",
-    "Technicien spécialisé",
-    "Assistant projet",
-  ];
-
-  // CRUD Operations
-  const addStakeholder = () => {
-    if (
-      !newStakeholder.type ||
-      !newStakeholder.entityId ||
-      !newStakeholder.role
-    )
-      return;
-
-    const stakeholder: Stakeholder = {
-      id: Date.now().toString(),
-      type: newStakeholder.type,
-      entityId: newStakeholder.entityId,
-      role: newStakeholder.role,
-      isPrimary: newStakeholder.isPrimary || false,
-    };
-
-    const updatedStakeholders = [...stakeholders, stakeholder];
-    setStakeholders(updatedStakeholders);
-    setNewStakeholder({});
-    // TODO: Update parent component when type issues are resolved
-  };
-
-  const removeStakeholder = (id: string) => {
-    const updatedStakeholders = stakeholders.filter((s) => s.id !== id);
-    setStakeholders(updatedStakeholders);
-    // TODO: Update parent component when type issues are resolved
-  };
-
-  const addTeamMember = () => {
-    if (!newTeamMember.employeeId || !newTeamMember.position) return;
-
-    const teamMember: TeamMember = {
-      id: Date.now().toString(),
-      employeeId: newTeamMember.employeeId,
-      position: newTeamMember.position,
-      responsibilities: newTeamMember.responsibilities || "",
-      availability: newTeamMember.availability || "full-time",
-    };
-
-    const updatedTeamMembers = [...teamMembers, teamMember];
-    setTeamMembers(updatedTeamMembers);
-    setNewTeamMember({});
-    // TODO: Update parent component when type issues are resolved
-  };
-
-  const removeTeamMember = (id: string) => {
-    const updatedTeamMembers = teamMembers.filter((t) => t.id !== id);
-    setTeamMembers(updatedTeamMembers);
-    // TODO: Update parent component when type issues are resolved
-  };
-
-  const getEntityName = (stakeholder: Stakeholder) => {
-    if (stakeholder.type === "employee") {
-      const employee = employees.find((e) => e.id === stakeholder.entityId);
-      return employee?.name || "Employé inconnu";
+      onStakeholderUpdate(updates.id || "", updateData);
     } else {
-      const supplier = suppliers.find((s) => s.id === stakeholder.entityId);
-      return supplier?.name || "Fournisseur inconnu";
+      // Fallback to local state management
+      const updatedStakeholders = localStakeholders.map((s) =>
+        s.id === updates.id ? { ...s, ...updates } : s
+      );
+      setLocalStakeholders(updatedStakeholders);
+      onUpdate({ stakeholders: updatedStakeholders });
+    }
+  };
+
+  const handleStakeholderCreate = (stakeholderData: CreateStakeholderDTO) => {
+    if (mode === "create" && onStakeholderCreate) {
+      onStakeholderCreate(stakeholderData);
+    } else {
+      // Fallback to local state management
+      const newStakeholder: StakeholderDTO = {
+        id: Date.now().toString(),
+        ...stakeholderData,
+        isPrimary: stakeholderData.isPrimary || false, // ✅ Ensure boolean type
+        isInternal: stakeholderData.isInternal || false, // ✅ Ensure boolean type
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        isActive: true, // Add missing required property
+      };
+
+      const updatedStakeholders = [...localStakeholders, newStakeholder];
+      setLocalStakeholders(updatedStakeholders);
+      onUpdate({ stakeholders: updatedStakeholders });
+    }
+  };
+
+  const handleStakeholderDelete = (stakeholderId: string) => {
+    if (mode === "edit" && onStakeholderDelete) {
+      onStakeholderDelete(stakeholderId);
+    } else {
+      // Fallback to local state management
+      const updatedStakeholders = localStakeholders.filter((s) => s.id !== stakeholderId);
+      setLocalStakeholders(updatedStakeholders);
+      onUpdate({ stakeholders: updatedStakeholders });
+    }
+  };
+
+  // Enhanced team member handlers
+  const handleTeamMemberCreate = (teamMemberData: CreateEmployeeDTO) => {
+    if (mode === "create" && onTeamMemberCreate) {
+      onTeamMemberCreate(teamMemberData);
+    } else {
+      // Fallback to local state management
+      const newTeamMember: EmployeeDTO = {
+        id: Date.now().toString(),
+        ...teamMemberData,
+        startDate: new Date().toISOString(), // Use correct field name
+        department: EmployeeDepartment.ENGINEERING, // Use existing enum value
+        salary: 0,
+        isActive: true, // This is valid since isActive is optional in EmployeeDTO
+        createdAt: new Date().toISOString(), // Required by EmployeeDTO
+        updatedAt: new Date().toISOString(), // Required by EmployeeDTO
+      };
+
+      const updatedTeamMembers = [...teamMembers, newTeamMember];
+      setTeamMembers(updatedTeamMembers);
+      onUpdate({ teamMembers: updatedTeamMembers });
+    }
+  };
+
+  const handleTeamMemberUpdate = (teamMemberId: string, updates: UpdateEmployeeDTO) => {
+    if (mode === "edit" && onTeamMemberUpdate) {
+      onTeamMemberUpdate(teamMemberId, updates);
+    } else {
+      // Fallback to local state management
+      const updatedTeamMembers = teamMembers.map((t) =>
+        t.id === teamMemberId ? { ...t, ...updates } : t
+      );
+      setTeamMembers(updatedTeamMembers);
+      onUpdate({ teamMembers: updatedTeamMembers });
+    }
+  };
+
+  const handleTeamMemberDelete = (teamMemberId: string) => {
+    if (mode === "edit" && onTeamMemberDelete) {
+      onTeamMemberDelete(teamMemberId);
+    } else {
+      // Fallback to local state management
+      const updatedTeamMembers = teamMembers.filter((t) => t.id !== teamMemberId);
+      setTeamMembers(updatedTeamMembers);
+      onUpdate({ teamMembers: updatedTeamMembers });
+    }
+  };
+
+  // Helper functions using service layer validation
+  const getStakeholdersByType = (type: StakeholderType) => {
+    return localStakeholders.filter((s) => s.stakeholderType === type);
+  };
+
+  const getTeamMembers = () => {
+    return employees.filter((e) => e.department === "project_team");
+  };
+
+  const getEntityName = (stakeholder: StakeholderDTO) => {
+    if (stakeholder.stakeholderType === StakeholderType.EMPLOYEE) {
+      const employee = employees.find((e) => e.id === stakeholder.employeeId);
+      return employee?.full_name || "Employé inconnu";
+    } else {
+      // ✅ Use organizationId for suppliers/external entities
+      const supplier = suppliers.find((s) => s.id === stakeholder.organizationId);
+      return supplier?.name || stakeholder.organization || "Entité inconnue";
     }
   };
 
   const getEmployeeName = (employeeId: string) => {
     const employee = employees.find((e) => e.id === employeeId);
-    return employee?.name || "Employé inconnu";
+    return employee?.full_name || "Employé inconnu";
+  };
+
+  // Enhanced stakeholder creation with proper validation and type safety
+  const addStakeholder = () => {
+    // ✅ Enhanced validation with clear error messages
+    const validationErrors: string[] = [];
+    
+    if (!newStakeholder.stakeholderType) {
+      validationErrors.push("Le type de partie prenante est requis");
+    }
+    
+    if (!newStakeholder.employeeId && !newStakeholder.organizationId) {
+      validationErrors.push("L'ID de l'entité est requis");
+    }
+    
+    if (!newStakeholder.role) {
+      validationErrors.push("Le rôle est requis");
+    }
+
+    if (validationErrors.length > 0) {
+      console.error("Validation errors:", validationErrors);
+      return;
+    }
+
+    const stakeholderData: CreateStakeholderDTO = {
+      name: newStakeholder.name || "",
+      stakeholderType: newStakeholder.stakeholderType as StakeholderType,
+      entityType: newStakeholder.stakeholderType === StakeholderType.EMPLOYEE 
+        ? StakeholderEntityType.PERSON 
+        : StakeholderEntityType.ORGANIZATION, // ✅ Proper enum usage
+      role: newStakeholder.role as StakeholderRole, // ✅ Proper enum casting
+      projectId: projectData.id,
+      organizationId: newStakeholder.organizationId,
+      employeeId: newStakeholder.employeeId,
+      isPrimary: newStakeholder.isPrimary || false,
+      contact: {
+        name: newStakeholder.name || "",
+        email: newStakeholder.email || "",
+        phone: newStakeholder.phone,
+        position: newStakeholder.position,
+      },
+      organization: newStakeholder.organization,
+      responsibilities: newStakeholder.responsibilities || [],
+      accessLevel: newStakeholder.accessLevel as 'read' | 'write' | 'admin' || "read",
+      startDate: newStakeholder.startDate,
+      endDate: newStakeholder.endDate,
+      hourlyRate: newStakeholder.hourlyRate,
+      contractType: newStakeholder.contractType,
+      notes: newStakeholder.notes,
+      isActive: newStakeholder.isActive !== false,
+    };
+
+    handleStakeholderCreate(stakeholderData);
+    setNewStakeholder({});
+    onUpdate({ stakeholders: [...localStakeholders, stakeholderData] });
+  };
+
+  const removeStakeholder = (id: string) => {
+    const updatedStakeholders = localStakeholders.filter((s) => s.id !== id);
+    setLocalStakeholders(updatedStakeholders);
+    onUpdate({ stakeholders: updatedStakeholders });
+  };
+
+  const addTeamMember = () => {
+    if (!newTeamMember.employeeId || !newTeamMember.position) return;
+
+    const teamMemberData: CreateEmployeeDTO = {
+      firstName: newTeamMember.firstName || "Team",
+      lastName: newTeamMember.lastName || "Member",
+      type: EmployeeType.FULL_TIME, // ✅ Required enum
+      role: "specialist" as EmployeeRole.SPECIALIST, // ✅ Required enum using string literal
+      department: EmployeeDepartment.PROJECT_MANAGEMENT, // ✅ Required enum
+      status: EmployeeStatus.ACTIVE, // ✅ Required enum
+      employeeId: newTeamMember.employeeId,
+      position: newTeamMember.position,
+      startDate: new Date().toISOString(), // ✅ Correct property name
+      salary: 0,
+      // Note: id and isActive are not part of CreateEmployeeDTO interface
+    };
+
+    const updatedTeamMembers = [...teamMembers, {
+      ...teamMemberData,
+      id: Date.now().toString(), // Generate temporary ID
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      isActive: true, // Add missing required property
+    } as EmployeeDTO];
+    setTeamMembers(updatedTeamMembers);
+    setNewTeamMember({});
+    onUpdate({ teamMembers: updatedTeamMembers });
+  };
+
+  const removeTeamMember = (id: string) => {
+    const updatedTeamMembers = teamMembers.filter((t) => t.id !== id);
+    setTeamMembers(updatedTeamMembers);
+    onUpdate({ teamMembers: updatedTeamMembers });
   };
 
   return (
@@ -252,386 +348,133 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                 </p>
               </div>
 
-              <Tabs defaultValue="internal" className="space-y-4">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="internal">
-                    <UserCheck className="h-4 w-4 mr-2" />
-                    Parties Internes
-                  </TabsTrigger>
-                  <TabsTrigger value="external">
-                    <Building2 className="h-4 w-4 mr-2" />
-                    Parties Externes
-                  </TabsTrigger>
-                </TabsList>
-
-                {/* Internal Stakeholders */}
-                <TabsContent value="internal" className="space-y-4">
-                  <div className="border rounded-lg p-4 bg-muted/30">
-                    <h4 className="font-medium mb-3 flex items-center gap-2">
-                      <UserCheck className="h-4 w-4" />
-                      Ajouter un employé CONFIGCOMPANY
-                    </h4>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Chef de projet */}
-                        <div>
-                          <EmployeeSelector
-                            label="Chef de projet *"
-                            value={
-                              String(projectData.project_manager_id || projectData.projectManagerId || "")
-                            }
-                            onChange={(value) => {
-                              onUpdate({ project_manager_id: value, projectManagerId: value });
-                            }}
-                            placeholder="Sélectionner le chef de projet"
-                            departmentFilter={["management", "engineering"]}
-                          />
-                        </div>
-
-                        {/* Responsable technique */}
-                        <div>
-                          <EmployeeSelector
-                            label="Responsable technique *"
-                            value={
-                              String(projectData.technical_manager_id || projectData.technicalManagerId || "")
-                            }
-                            onChange={(value) => {
-                              onUpdate({ technical_manager_id: value, technicalManagerId: value });
-                            }}
-                            placeholder="Sélectionner le responsable technique"
-                            departmentFilter={["engineering", "technical"]}
-                          />
-                        </div>
-
-                        <div>
-                          <EmployeeSelector
-                            label="Employé"
-                            value={newStakeholder.entityId ?? ""}
-                            onChange={(value) =>
-                              setNewStakeholder({
-                                ...newStakeholder,
-                                type: "employee",
-                                entityId: value,
-                              })
-                            }
-                            placeholder="Sélectionner un employé"
-                          />
-                        </div>
-                        <div>
-                          <Label>Rôle / Responsabilité</Label>
-                          <Select
-                            value={newStakeholder.role || ""}
-                            onValueChange={(value) =>
-                              setNewStakeholder({
-                                ...newStakeholder,
-                                role: value,
-                              })
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Sélectionner le rôle" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-background border shadow-lg z-50 max-h-60 overflow-y-auto">
-                              {internalStakeholderRoles.map((role) => (
-                                <SelectItem key={role} value={role}>
-                                  {role}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <Button
-                        onClick={addStakeholder}
-                        className="w-full"
-                        disabled={
-                          !newStakeholder.entityId || !newStakeholder.role
-                        }
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Ajouter l'employé comme partie prenante
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* List of internal stakeholders */}
-                  {stakeholders.filter((s) => s.type === "employee").length >
-                    0 && (
-                    <div className="space-y-2">
-                      <h5 className="font-medium text-sm">
-                        Employés CONFIGCOMPANY (
-                        {
-                          stakeholders.filter((s) => s.type === "employee")
-                            .length
-                        }
-                        )
-                      </h5>
-                      {stakeholders
-                        .filter((s) => s.type === "employee")
-                        .map((stakeholder) => (
-                          <div
-                            key={stakeholder.id}
-                            className="flex items-center justify-between p-3 border rounded-lg bg-card hover:bg-accent/50 transition-colors"
-                          >
-                            <div className="flex items-center gap-3">
-                              <User className="h-4 w-4 text-blue-500" />
-                              <div>
-                                <div className="font-medium">
-                                  {getEntityName(stakeholder)}
-                                </div>
-                                <div className="text-sm text-muted-foreground">
-                                  {stakeholder.role}
-                                </div>
-                              </div>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeStakeholder(stakeholder.id)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                    </div>
-                  )}
-                </TabsContent>
-
-                {/* External Stakeholders */}
-                <TabsContent value="external" className="space-y-4">
-                  <div className="border rounded-lg p-4 bg-muted/30">
-                    <h4 className="font-medium mb-3 flex items-center gap-2">
-                      <Building2 className="h-4 w-4" />
-                      Ajouter une organisation externe
-                    </h4>
-                    <p className="text-xs text-muted-foreground mb-4">
-                      Ingénieur conseil, fournisseurs, contractants, ministères,
-                      banques, bailleurs de fonds
-                    </p>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <SimpleSupplierSelector
-                            label="Organisation / Fournisseur"
-                            value={newStakeholder.entityId || ""}
-                            onChange={(value) =>
-                              setNewStakeholder({
-                                ...newStakeholder,
-                                type: "external",
-                                entityId: value,
-                              })
-                            }
-                            placeholder="Sélectionner une organisation"
-                          />
-                        </div>
-                        <div>
-                          <Label>Rôle / Type</Label>
-                          <Select
-                            value={newStakeholder.role || ""}
-                            onValueChange={(value) =>
-                              setNewStakeholder({
-                                ...newStakeholder,
-                                role: value,
-                              })
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Sélectionner le rôle" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-background border shadow-lg z-50 max-h-60 overflow-y-auto">
-                              {externalStakeholderRoles.map((role) => (
-                                <SelectItem key={role} value={role}>
-                                  {role}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <Button
-                        onClick={addStakeholder}
-                        className="w-full"
-                        disabled={
-                          !newStakeholder.entityId || !newStakeholder.role
-                        }
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Ajouter l'organisation comme partie prenante
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* List of external stakeholders */}
-                  {stakeholders.filter((s) => s.type === "external").length >
-                    0 && (
-                    <div className="space-y-2">
-                      <h5 className="font-medium text-sm">
-                        Organisations externes (
-                        {
-                          stakeholders.filter((s) => s.type === "external")
-                            .length
-                        }
-                        )
-                      </h5>
-                      {stakeholders
-                        .filter((s) => s.type === "external")
-                        .map((stakeholder) => (
-                          <div
-                            key={stakeholder.id}
-                            className="flex items-center justify-between p-3 border rounded-lg bg-card hover:bg-accent/50 transition-colors"
-                          >
-                            <div className="flex items-center gap-3">
-                              <Building2 className="h-4 w-4 text-orange-500" />
-                              <div>
-                                <div className="font-medium">
-                                  {getEntityName(stakeholder)}
-                                </div>
-                                <Badge
-                                  variant="outline"
-                                  className="text-xs mt-1"
-                                >
-                                  {stakeholder.role}
-                                </Badge>
-                              </div>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeStakeholder(stakeholder.id)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                    </div>
-                  )}
-                </TabsContent>
-              </Tabs>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="team" className="space-y-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Équipe du projet</h3>
-
-              <div className="border-t pt-4">
-                <h4 className="font-medium mb-4">Ajouter un membre d'équipe</h4>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <EmployeeSelector
-                        label="Employé"
-                        value={newTeamMember.employeeId ?? ""}
-                        onChange={(value) =>
-                          setNewTeamMember({
-                            ...newTeamMember,
-                            employeeId: value,
-                          })
-                        }
-                        placeholder="Sélectionner un employé"
-                      />
-                    </div>
-                    <div>
-                      <Label>Position dans le projet</Label>
-                      <Select
-                        value={newTeamMember.position || ""}
-                        onValueChange={(value) =>
-                          setNewTeamMember({
-                            ...newTeamMember,
-                            position: value,
-                          })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Position" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border shadow-lg z-50 max-h-60 overflow-y-auto">
-                          {teamPositions.map((position) => (
-                            <SelectItem key={position} value={position}>
-                              {position}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label>Responsabilités</Label>
-                      <Input
-                        placeholder="Responsabilités spécifiques"
-                        value={newTeamMember.responsibilities || ""}
-                        onChange={(e) =>
-                          setNewTeamMember({
-                            ...newTeamMember,
-                            responsibilities: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <Label>Disponibilité</Label>
-                      <Select
-                        value={newTeamMember.availability || "full-time"}
-                        onValueChange={(value) =>
-                          setNewTeamMember({
-                            ...newTeamMember,
-                            availability: value,
-                          })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border shadow-lg z-50">
-                          <SelectItem value="full-time">Temps plein</SelectItem>
-                          <SelectItem value="part-time">
-                            Temps partiel
+              <div className="border rounded-lg p-4 bg-muted/30">
+                <h4 className="font-medium mb-4">Ajouter une partie prenante</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="block text-sm font-medium mb-2">
+                      Type de partie prenante
+                    </Label>
+                    <Select
+                      value={newStakeholder?.stakeholderType || ""}
+                      onValueChange={(value) =>
+                        setNewStakeholder({ ...newStakeholder, stakeholderType: value as StakeholderType })
+                      }
+                    >
+                      <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <SelectValue placeholder="Sélectionner le type" />
+                      </SelectTrigger>
+                      <SelectContent side="bottom" align="start">
+                        {Object.values(StakeholderType).map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
                           </SelectItem>
-                          <SelectItem value="on-demand">Sur demande</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <div className="flex justify-end">
-                    <Button onClick={addTeamMember}>
+                  
+                  <div className="flex justify-end mt-4">
+                    <Button
+                      onClick={addStakeholder}
+                      disabled={stakeholdersLoading}
+                    >
                       <Plus className="h-4 w-4 mr-2" />
-                      Ajouter à l'équipe
+                      Ajouter
                     </Button>
                   </div>
                 </div>
               </div>
 
-              {teamMembers.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="font-medium">Membres de l'équipe</h4>
-                  {teamMembers.map((member) => (
-                    <div
-                      key={member.id}
-                      className="flex items-center justify-between p-3 border rounded-lg"
-                    >
+              {/* Stakeholders List */}
+              <div className="space-y-4">
+                {localStakeholders.map((stakeholder) => (
+                  <div key={stakeholder.id} className="border rounded-lg p-4 bg-card">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <UserCheck className="h-4 w-4 text-green-500" />
-                        <div>
-                          <div className="font-medium">
-                            {getEmployeeName(member.employeeId)}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {member.position}
-                          </div>
-                          {member.responsibilities && (
-                            <div className="text-xs text-gray-400">
-                              {member.responsibilities}
-                            </div>
-                          )}
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Users className="h-5 w-5 text-primary" />
                         </div>
-                        <Badge variant="outline" className="text-xs">
-                          {member.availability === "full-time"
-                            ? "Temps plein"
-                            : member.availability === "part-time"
-                            ? "Temps partiel"
-                            : "Sur demande"}
+                        <div>
+                          <h4 className="font-medium">{stakeholder.name}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {stakeholder.role} • {getEntityName(stakeholder)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={stakeholder.isActive ? "default" : "secondary"}>
+                          {stakeholder.isActive ? "Actif" : "Inactif"}
                         </Badge>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeStakeholder(stakeholder.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="team" className="space-y-6">
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold">Équipe Projet</h3>
+                <p className="text-sm text-muted-foreground">
+                  Configuration des membres de l'équipe projet et rôles associés
+                </p>
+              </div>
+
+              <div className="border rounded-lg p-4 bg-muted/30">
+                <h4 className="font-medium mb-4">Ajouter un membre d'équipe</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <EmployeeSelector
+                      value={newTeamMember.employeeId || ""}
+                      onChange={(value) =>
+                        setNewTeamMember({ ...newTeamMember, employeeId: value })
+                      }
+                      placeholder="Sélectionner un employé"
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      placeholder="Position/Rôle"
+                      value={newTeamMember.position || ""}
+                      onChange={(e) =>
+                        setNewTeamMember({ ...newTeamMember, position: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end mt-4">
+                  <Button onClick={addTeamMember} disabled={employeesLoading}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Ajouter
+                  </Button>
+                </div>
+              </div>
+
+              {/* Team Members List */}
+              <div className="space-y-4">
+                {teamMembers.map((member) => (
+                  <div key={member.id} className="border rounded-lg p-4 bg-card">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                          <User className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium">{member.full_name}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {member.position}
+                          </p>
+                        </div>
                       </div>
                       <Button
                         variant="outline"
@@ -641,159 +484,45 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                ))}
+              </div>
             </div>
           </TabsContent>
 
           <TabsContent value="contractors" className="space-y-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">
-                Contractants et fournisseurs
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <SimpleSupplierSelector
-                    label="Bureau d'études"
-                    value={projectData.contractors?.engineeringConsultant || projectData.engineeringConsultant || ""}
-                    onChange={(value) => {
-                      const updatedContractors = {
-                        ...(projectData.contractors || {}),
-                        engineeringConsultant: value,
-                      };
-                      onUpdate({ contractors: updatedContractors, engineeringConsultant: value });
-                    }}
-                    placeholder="Sélectionner le bureau d'études"
-                  />
-                </div>
-                <div>
-                  <SimpleSupplierSelector
-                    label="Entrepreneur général"
-                    value={projectData.contractors?.generalContractor || projectData.generalContractor || ""}
-                    onChange={(value) => {
-                      const updatedContractors = {
-                        ...(projectData.contractors || {}),
-                        generalContractor: value,
-                      };
-                      onUpdate({ contractors: updatedContractors, generalContractor: value });
-                    }}
-                    placeholder="Sélectionner l'entrepreneur général"
-                  />
-                </div>
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold">Contractants</h3>
+                <p className="text-sm text-muted-foreground">
+                  Gestion des contractants et sous-traitants
+                </p>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="specializedSubcontractors">
-                    Sous-traitants spécialisés
-                  </Label>
-                  <textarea
-                    id="specializedSubcontractors"
-                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent min-h-[100px]"
-                    placeholder="Liste des sous-traitants spécialisés requis"
-                    value={
-                      projectData.contractors?.specializedSubcontractors || 
-                      (Array.isArray(projectData.specializedSubcontractors) 
-                        ? projectData.specializedSubcontractors.join(", ") 
-                        : "")
-                    }
-                    onChange={(e) => {
-                      const updatedContractors = {
-                        ...(projectData.contractors || {}),
-                        specializedSubcontractors: e.target.value,
-                      };
-                      onUpdate({ contractors: updatedContractors });
-                    }}
+              
+              <div className="border rounded-lg p-4 bg-muted/30">
+                <h4 className="font-medium mb-4">Ajouter un contractant</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <SimpleSupplierSelector
+                    label="Contractant"
+                    value=""
+                    onChange={() => {}}
+                    placeholder="Sélectionner un contractant"
                   />
-                </div>
-                <div>
-                  <Label htmlFor="mainSuppliers">Fournisseurs principaux</Label>
-                  <textarea
-                    id="mainSuppliers"
-                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent min-h-[100px]"
-                    placeholder="Liste des fournisseurs de matériaux principaux"
-                    value={
-                      projectData.contractors?.mainSuppliers || 
-                      (Array.isArray(projectData.mainSuppliers) 
-                        ? projectData.mainSuppliers.join(", ") 
-                        : "")
-                    }
-                    onChange={(e) => {
-                      const updatedContractors = {
-                        ...(projectData.contractors || {}),
-                        mainSuppliers: e.target.value,
-                      };
-                      onUpdate({ contractors: updatedContractors });
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <Briefcase className="h-5 w-5 text-blue-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-blue-800">Information</h4>
-                    <p className="text-sm text-blue-700 mt-1">
-                      Les contractants sélectionnés seront automatiquement liés
-                      aux garanties bancaires, certificats d'assurance et autres
-                      documents contractuels du projet.
-                    </p>
-                  </div>
                 </div>
               </div>
             </div>
           </TabsContent>
 
           <TabsContent value="documents" className="space-y-6">
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold">
-                  Documents des Parties Prenantes
-                </h3>
+                <h3 className="text-lg font-semibold">Documents</h3>
                 <p className="text-sm text-muted-foreground">
-                  Conventions, contrats, documents de référence associés aux
-                  acteurs du projet
+                  Documents requis pour les parties prenantes
                 </p>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="p-4 border-dashed">
-                  <div className="flex flex-col items-center justify-center text-center space-y-3">
-                    <FileText className="h-8 w-8 text-muted-foreground" />
-                    <div>
-                      <h4 className="font-medium">Conventions & Contrats</h4>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Contrats entrepreneurs, conventions ingénieur conseil
-                      </p>
-                    </div>
-                    <Button variant="outline" size="sm" className="mt-2">
-                      <Upload className="h-4 w-4 mr-2" />
-                      Joindre documents
-                    </Button>
-                  </div>
-                </Card>
-
-                <Card className="p-4 border-dashed">
-                  <div className="flex flex-col items-center justify-center text-center space-y-3">
-                    <FileText className="h-8 w-8 text-muted-foreground" />
-                    <div>
-                      <h4 className="font-medium">Documents de référence</h4>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Accords cadres, protocoles, notes de service
-                      </p>
-                    </div>
-                    <Button variant="outline" size="sm" className="mt-2">
-                      <Upload className="h-4 w-4 mr-2" />
-                      Joindre documents
-                    </Button>
-                  </div>
-                </Card>
-              </div>
-
-              <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+              
+              <div className="border rounded-lg p-4 bg-amber-50 border-amber-200">
                 <div className="flex items-start gap-3">
                   <FileText className="h-5 w-5 text-amber-600 mt-0.5" />
                   <div>

@@ -1,5 +1,5 @@
 // components/project/TaskList.tsx
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -7,14 +7,46 @@ import { Progress } from '@/components/ui/progress';
 import { Plus, Calendar, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+import { TaskDTO } from '@/dtos/entities/TaskDTO';
+
+import { TaskStatus } from '@/dtos/entities/TaskDTO';
+
 interface TaskListProps {
-  tasks: any[];
+  tasks: TaskDTO[];
   projectId: string;
 }
 
 const TaskList: React.FC<TaskListProps> = ({ tasks, projectId }) => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<'all' | 'completed' | 'in_progress' | 'not_started'>('all');
+
+  // Memoized task counts to avoid repeated filtering
+  const taskCounts = useMemo(() => {
+    let inProgress = 0;
+    let completed = 0;
+    let notStarted = 0;
+
+    tasks.forEach(task => {
+      switch (task.status) {
+        case TaskStatus.IN_PROGRESS:
+          inProgress++;
+          break;
+        case TaskStatus.COMPLETED:
+          completed++;
+          break;
+        case TaskStatus.NOT_STARTED:
+          notStarted++;
+          break;
+      }
+    });
+
+    return {
+      total: tasks.length,
+      inProgress,
+      completed,
+      notStarted
+    };
+  }, [tasks]);
 
   const filteredTasks = tasks.filter(task => {
     if (filter === 'all') return true;
@@ -47,28 +79,28 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, projectId }) => {
           size="sm"
           onClick={() => setFilter('all')}
         >
-          Toutes ({tasks.length})
+          Toutes ({taskCounts.total})
         </Button>
         <Button 
           variant={filter === 'in_progress' ? 'default' : 'outline'} 
           size="sm"
           onClick={() => setFilter('in_progress')}
         >
-          En cours ({tasks.filter(t => t.status === 'in_progress').length})
+          En cours ({taskCounts.inProgress})
         </Button>
         <Button 
           variant={filter === 'completed' ? 'default' : 'outline'} 
           size="sm"
           onClick={() => setFilter('completed')}
         >
-          Terminées ({tasks.filter(t => t.status === 'completed').length})
+          Terminées ({taskCounts.completed})
         </Button>
         <Button 
           variant={filter === 'not_started' ? 'default' : 'outline'} 
           size="sm"
           onClick={() => setFilter('not_started')}
         >
-          Non débutées ({tasks.filter(t => t.status === 'not_started').length})
+          Non débutées ({taskCounts.notStarted})
         </Button>
       </div>
 

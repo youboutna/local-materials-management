@@ -38,7 +38,7 @@ interface Milestone {
   status: string;
   due_date?: string;
   completed_date?: string;
-  documents?: any[];
+  documents?: unknown[];
 }
 
 interface PhaseWithDirectMilestonesViewProps {
@@ -67,24 +67,53 @@ export const PhaseWithDirectMilestonesView: React.FC<PhaseWithDirectMilestonesVi
   onAddMilestone,
   className,
 }) => {
-  const milestones = Array.isArray(phase.milestones) ? phase.milestones : [];
+  const milestones = useMemo(() => 
+    Array.isArray(phase.milestones) ? phase.milestones : [], 
+    [phase.milestones]
+  );
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [filterType, setFilterType] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
 
-  // Stats par type
+  // Stats par type - Optimized to avoid repeated filtering
   const stats = useMemo(() => {
     const byType = {
-      inspection: milestones.filter(m => m.type === "inspection").length,
-      payment: milestones.filter(m => m.type === "payment" || m.type === "paiement").length,
-      validation: milestones.filter(m => m.type === "validation").length,
-      other: milestones.filter(m => !["inspection", "payment", "paiement", "validation"].includes(m.type || "")).length,
+      inspection: 0,
+      payment: 0,
+      validation: 0,
+      other: 0,
     };
     const byStatus = {
-      completed: milestones.filter(m => m.status === "completed").length,
-      in_progress: milestones.filter(m => m.status === "in_progress").length,
-      pending: milestones.filter(m => m.status === "pending").length,
+      completed: 0,
+      in_progress: 0,
+      pending: 0,
     };
+
+    // Single loop to calculate all stats
+    milestones.forEach(milestone => {
+      // Count by type
+      const type = milestone.type || "";
+      if (type === "inspection") {
+        byType.inspection++;
+      } else if (type === "payment" || type === "paiement") {
+        byType.payment++;
+      } else if (type === "validation") {
+        byType.validation++;
+      } else {
+        byType.other++;
+      }
+
+      // Count by status
+      const status = milestone.status;
+      if (status === "completed") {
+        byStatus.completed++;
+      } else if (status === "in_progress") {
+        byStatus.in_progress++;
+      } else if (status === "pending") {
+        byStatus.pending++;
+      }
+    });
+
     return { byType, byStatus };
   }, [milestones]);
 

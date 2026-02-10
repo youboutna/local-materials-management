@@ -55,7 +55,6 @@ const Projects: React.FC = () => {
     })) || []
   , [projectsKey]);
   
-  const [originalMapLocations, setOriginalMapLocations] = useState<MapLocation[]>([]);
   const [filteredMapLocations, setFilteredMapLocations] = useState<MapLocation[]>([]);
   const [interactiveFilteredProjects, setInteractiveFilteredProjects] = useState<ProjectData[]>([]);
 
@@ -78,8 +77,6 @@ const Projects: React.FC = () => {
     availableRegions,
     performSearch,
   } = useProjectsFilter(projects || []);
-  // Supprimer la dépendance circulaire - utiliser searchQuery directement au lieu de localSearchQuery
-  // const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
 
   // Pagination for projects
   const {
@@ -128,56 +125,60 @@ const Projects: React.FC = () => {
     }
   };
 
+  // Memoized location conversion to avoid repeated filtering
+  const originalMapLocations = React.useMemo(() => {
+    if (!projects) return [];
+    
+    return projects
+      .filter(
+        (project) =>
+          project.coordinates?.latitude && project.coordinates?.longitude
+      )
+      .map((project) => ({
+        id: project.id,
+        name: project.title,
+        type: "project" as const,
+        latitude: project.coordinates!.latitude,
+        longitude: project.coordinates!.longitude,
+        status: project.status,
+        region: project.location,
+        startDate: project.startDate,
+        endDate: project.endDate,
+      }));
+  }, [projects]);
+
   // Initialize locations when projects load
   useEffect(() => {
-    if (projects) {
-      // Convert projects to map locations
-      const locations: MapLocation[] = projects
-        .filter(
-          (project) =>
-            project.coordinates?.latitude && project.coordinates?.longitude
-        )
-        .map((project) => ({
-          id: project.id,
-          name: project.title,
-          type: "project" as const,
-          latitude: project.coordinates!.latitude,
-          longitude: project.coordinates!.longitude,
-          status: project.status,
-          region: project.location,
-          startDate: project.startDate,
-          endDate: project.endDate,
-        }));
+    console.log("Projects initialized - Total locations:", originalMapLocations.length);
+    setFilteredMapLocations(originalMapLocations);
+  }, [originalMapLocations]);
 
-      console.log("Projects initialized - Total locations:", locations.length);
-      setOriginalMapLocations(locations);
-      setFilteredMapLocations(locations);
-    }
-  }, [projects]);
+  // Memoized filtered locations to avoid repeated calculations
+  const filteredMapLocationsFromProjects = React.useMemo(() => {
+    if (!filteredProjects) return [];
+    
+    return filteredProjects
+      .filter(
+        (project) =>
+          project.coordinates?.latitude && project.coordinates?.longitude
+      )
+      .map((project) => ({
+        id: project.id,
+        name: project.title,
+        type: "project" as const,
+        latitude: project.coordinates!.latitude,
+        longitude: project.coordinates!.longitude,
+        status: project.status,
+        region: project.location,
+        startDate: project.startDate,
+        endDate: project.endDate,
+      }));
+  }, [filteredProjects]);
 
   // Update map locations when filtered projects change
   useEffect(() => {
-    if (filteredProjects) {
-      const filteredLocations: MapLocation[] = filteredProjects
-        .filter(
-          (project) =>
-            project.coordinates?.latitude && project.coordinates?.longitude
-        )
-        .map((project) => ({
-          id: project.id,
-          name: project.title,
-          type: "project" as const,
-          latitude: project.coordinates!.latitude,
-          longitude: project.coordinates!.longitude,
-          status: project.status,
-          region: project.location,
-          startDate: project.startDate,
-          endDate: project.endDate,
-        }));
-
-      setFilteredMapLocations(filteredLocations);
-    }
-  }, [filteredProjects]);
+    setFilteredMapLocations(filteredMapLocationsFromProjects);
+  }, [filteredMapLocationsFromProjects]);
 
   const handleReset = () => {
     setSearchQuery("");

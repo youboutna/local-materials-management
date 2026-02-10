@@ -6,10 +6,11 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from '@/hooks/use-toast';
-import { ConstructionPhaseService } from '@/application/services/ConstructionPhaseService';
+import { PhaseService } from '@/application/services/PhaseService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { PhaseData } from '@/dtos/entities/PhaseDTO';
-import { ConstructionPhase } from '@/domain/entities/ConstructionPhase';
+import { PhaseData, PhaseDTO } from '@/dtos/entities/PhaseDTO';
+import { ConstructionPhase } from '@/domain/entities/Phase';
+import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
 
 /**
  * Hook for construction phase management
@@ -17,12 +18,12 @@ import { ConstructionPhase } from '@/domain/entities/ConstructionPhase';
  */
 export function useConstructionPhaseHex(projectId?: string) {
   // Initialize service with repository
-  const constructionPhaseService = useMemo(() => 
-    new ConstructionPhaseService(RepositoryFactory.getConstructionPhaseRepository())
+  const phaseService = useMemo(() => 
+    new PhaseService(RepositoryFactory.getPhaseRepository())
   , []);
 
   // State management
-  const [phases, setPhases] = useState<PhaseData[]>([]);
+  const [phases, setPhases] = useState<(PhaseData | PhaseDTO)[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,11 +41,11 @@ export function useConstructionPhaseHex(projectId?: string) {
       setLoading(true);
       setError(null);
       
-      const constructionPhases = await constructionPhaseService.getProjectConstructionPhases(projectId);
+      const constructionPhases = await phaseService.getPhasesByProject(projectId);
       
-      // Convert domain entities to DTOs for UI
+      // Convert domain entities to DTOs for UI using PhaseTransformer
       const phaseDTOs = constructionPhases.map(phase => 
-        constructionPhaseService.toDTO(phase)
+        PhaseTransformer.toDTO(phase)
       );
       
       setPhases(phaseDTOs);
@@ -63,7 +64,7 @@ export function useConstructionPhaseHex(projectId?: string) {
   /**
    * Create a new construction phase
    */
-  const createConstructionPhase = async (phaseData: PhaseData) => {
+  const createConstructionPhase = async (phaseData: PhaseDTO) => {
     if (!projectId) {
       toast({
         title: "Error",
@@ -77,10 +78,10 @@ export function useConstructionPhaseHex(projectId?: string) {
       setLoading(true);
       setError(null);
       
-      const newPhase = await constructionPhaseService.createConstructionPhase(phaseData, projectId);
+      const newPhase = await phaseService.createPhase(phaseData, projectId);
       
       // Convert domain entity back to DTO for UI
-      const phaseDTO = constructionPhaseService.toDTO(newPhase);
+      const phaseDTO = PhaseTransformer.toDTO(newPhase);
       
       setPhases(prev => [...prev, phaseDTO]);
       
@@ -104,18 +105,18 @@ export function useConstructionPhaseHex(projectId?: string) {
   /**
    * Update an existing construction phase
    */
-  const updateConstructionPhase = async (id: string, phaseData: Partial<PhaseData>) => {
+  const updateConstructionPhase = async (id: string, phaseData: Partial<PhaseDTO>) => {
     try {
       setLoading(true);
       setError(null);
       
-      const updatedPhase = await constructionPhaseService.updateConstructionPhase(id, phaseData);
+      const updatedPhase = await phaseService.updatePhase(id, phaseData);
       
-      // Convert domain entity back to DTO for UI
-      const phaseDTO = constructionPhaseService.toDTO(updatedPhase);
+      // Convert domain entity back to DTO for UI using PhaseTransformer
+      const phaseDTO = PhaseTransformer.toDTO(updatedPhase);
       
       setPhases(prev => prev.map(phase => 
-        phase.id === id ? phaseDTO : phase
+        phase.id === id ? phaseDTO as PhaseData : phase
       ));
       
       toast({
@@ -143,7 +144,7 @@ export function useConstructionPhaseHex(projectId?: string) {
       setLoading(true);
       setError(null);
       
-      await constructionPhaseService.deleteConstructionPhase(id);
+      await phaseService.deletePhase(id);
       
       setPhases(prev => prev.filter(phase => phase.id !== id));
       
@@ -171,7 +172,7 @@ export function useConstructionPhaseHex(projectId?: string) {
     if (!projectId) return null;
     
     try {
-      return await constructionPhaseService.getPhaseProgressSummary(projectId);
+      return await phaseService.getPhasesByProject(projectId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to get progress summary');
       toast({
@@ -186,7 +187,17 @@ export function useConstructionPhaseHex(projectId?: string) {
   /**
    * Create phase from template (referential)
    */
-  const createPhaseFromTemplate = async (templateData: any) => {
+  const createPhaseFromTemplate = async (templateData: { 
+    label?: string; 
+    description?: string; 
+    estimatedDuration?: number; 
+    budget?: number; 
+    materials?: unknown[]; 
+    humanResources?: unknown[]; 
+    suppliers?: unknown[]; 
+    location?: string; 
+    code?: string 
+  }) => {
     if (!projectId) {
       toast({
         title: "Error",
@@ -200,29 +211,25 @@ export function useConstructionPhaseHex(projectId?: string) {
       setLoading(true);
       setError(null);
       
-      // Convert template to PhaseData structure
-      const phaseData: PhaseData = {
+      // Convert template to PhaseDTO structure
+      const phaseData: PhaseDTO = {
         id: Date.now().toString(),
-        title: templateData.label || 'New Phase',
+        name: templateData.label || 'New Phase',
         description: templateData.description || '',
+        projectId: projectId || '',
         startDate: new Date().toISOString().split('T')[0],
         endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         estimatedDuration: templateData.estimatedDuration || 30,
-        status: 'not_started',
+        status: 'not_started' as any, // Cast to any for now
         budget: templateData.budget || 0,
         actualCost: 0,
-        progress: 0,
-        materials: templateData.materials || [],
-        humanResources: templateData.humanResources || [],
-        suppliers: templateData.suppliers || [],
-        location: templateData.location || '',
-        notes: `Created from template: ${templateData.code || 'Unknown'}`
+        progress: 0
       };
       
-      const newPhase = await constructionPhaseService.createConstructionPhase(phaseData, projectId);
+      const newPhase = await phaseService.createPhase(phaseData, projectId);
       
       // Convert domain entity back to DTO for UI
-      const phaseDTO = constructionPhaseService.toDTO(newPhase);
+      const phaseDTO = phaseService.toDTO(newPhase);
       
       setPhases(prev => [...prev, phaseDTO]);
       

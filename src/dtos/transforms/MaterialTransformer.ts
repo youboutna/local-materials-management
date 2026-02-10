@@ -127,8 +127,24 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
   }
 
   /**
-   * Transform Material entity to MaterialDTO (Domain Entity → DTO)
-   * Converts domain entity to data transfer object for UI layer
+   * Safely convert a value to ISO string
+   * Handles Date objects, string dates, and undefined/null values
+   */
+  private static safeToISOString(date: Date | string | null | undefined): string | undefined {
+    if (!date) return undefined;
+    if (date instanceof Date) {
+      return date.toISOString();
+    }
+    if (typeof date === 'string') {
+      const parsedDate = new Date(date);
+      return isNaN(parsedDate.getTime()) ? undefined : parsedDate.toISOString();
+    }
+    return undefined;
+  }
+
+  /**
+   * Transform Material entity to MaterialDTO (Domain → DTO)
+   * Converts domain entity to data transfer object
    * Following hexagonal architecture: Domain → Application → Presentation
    */
   static toDTO(entity: Material): MaterialDTO {
@@ -186,8 +202,8 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
       storageConditions: entity.storageConditions || '',
       
       // Metadata
-      createdAt: entity.createdAt?.toISOString() || new Date().toISOString(),
-      updatedAt: entity.updatedAt?.toISOString() || new Date().toISOString(),
+      createdAt: this.safeToISOString(entity.createdAt) || new Date().toISOString(),
+      updatedAt: this.safeToISOString(entity.updatedAt) || new Date().toISOString(),
     };
   }
 

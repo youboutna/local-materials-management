@@ -82,6 +82,7 @@ export interface EmployeeDTO extends BaseEntityDTO {
   fullName?: string;
   email?: string;
   phone?: string;
+  isActive?:boolean;
 
   // Classification
   type: EmployeeType;
@@ -96,7 +97,6 @@ export interface EmployeeDTO extends BaseEntityDTO {
   startDate?: string;
   endDate?: string;
   probationEndDate?: string;
-
   // Financial
   salary?: number;
   hourlyRate?: number;
@@ -118,6 +118,7 @@ export interface EmployeeDTO extends BaseEntityDTO {
     position: string;
     duration: number; // in months
     description?: string;
+    isActive?: boolean;
   }>;
 
   // Project assignments
@@ -402,54 +403,13 @@ export interface EmployeeDetailsDTO extends EmployeeDTO {
     averageCompletionTime: number;
     qualityScore: number;
   };
-  documents?: Array<{
+  // Detailed documents with metadata (inherits basic documents from EmployeeDTO)
+  documentDetails?: Array<{
     id: string;
     name: string;
     type: string;
     uploadedAt: string;
   }>;
-}
-
-export interface EmployeeSummaryDTO {
-  id: string;
-  employeeId: string;
-  fullName: string;
-  position?: string;
-  department?: string;
-  isActive: boolean;
-  projectCount?: number;
-  taskCount?: number;
-  averagePerformance?: number;
-}
-
-export interface CreateEmployeeDTO {
-  employeeId: string;
-  fullName: string;
-  email: string | null;
-  phone: string | null;
-  position: string | null;
-  department: string | null;
-  hireDate: string | null;
-  isActive: boolean;
-  salary: number | null;
-  skills: string[] | null;
-  certifications: Record<string, unknown> | null;
-  managerId: string | null;
-  superiorId: string | null;
-  userId: string | null;
-}
-
-export interface UpdateEmployeeDTO extends Partial<CreateEmployeeDTO> {
-  isActive?: boolean;
-}
-
-export interface EmployeeFilterDTO {
-  department?: string;
-  position?: string;
-  isActive?: boolean;
-  skills?: string[];
-  managerId?: string;
-  searchQuery?: string;
 }
 
 // Add search-related interfaces
@@ -467,9 +427,8 @@ export interface SearchEmployeesResult {
   total: number;
 }
 
-// Legacy compatibility types from transforms
-export type EmployeeDepartment = 'engineering' | 'construction' | 'quality' | 'administration' | 'finance' | 'procurement';
-export type EmployeePosition = 'engineer' | 'technician' | 'manager' | 'supervisor' | 'inspector' | 'analyst';
+// Legacy compatibility types from transforms (avoid conflicts with enum)
+export type EmployeeDepartmentLegacy = 'engineering' | 'construction' | 'quality' | 'administration' | 'finance' | 'procurement';
 
 // Legacy request DTOs for backward compatibility
 export interface CreateEmployeeRequestDTO {

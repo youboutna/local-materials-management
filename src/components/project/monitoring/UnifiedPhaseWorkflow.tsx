@@ -261,18 +261,60 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
     }
   });
 
-  // Summary stats
-  const stats = useMemo(() => ({
-    totalMilestones: milestones.length,
-    completedMilestones: milestones.filter(m => m.status === 'completed').length,
-    totalInspections: inspections.length,
-    approvedInspections: inspections.filter(i => i.status === 'approved').length,
-    pendingInspections: inspections.filter(i => ['pending', 'in_progress', 'scheduled'].includes(i.status)).length,
-    totalPayments: payments.length,
-    totalPaid: payments.reduce((sum, p) => sum + (p.amount || 0), 0),
-    totalStages: stages.length,
-    completedStages: stages.filter(s => s.status === 'completed').length
-  }), [milestones, inspections, payments, stages]);
+  // Summary stats - Optimized to avoid repeated filtering
+  const stats = useMemo(() => {
+    let completedMilestones = 0;
+    let approvedInspections = 0;
+    let pendingInspections = 0;
+    let completedStages = 0;
+    let totalPaid = 0;
+
+    // Single loop for milestones
+    milestones.forEach(m => {
+      if (m.status === 'completed') {
+        completedMilestones++;
+      }
+    });
+
+    // Single loop for inspections
+    inspections.forEach(i => {
+      if (i.status === 'approved') {
+        approvedInspections++;
+      } else if (['pending', 'in_progress', 'scheduled'].includes(i.status)) {
+        pendingInspections++;
+      }
+    });
+
+    // Single loop for payments
+    payments.forEach(p => {
+      totalPaid += (p.amount || 0);
+    });
+
+    // Single loop for stages
+    stages.forEach(s => {
+      if (s.status === 'completed') {
+        completedStages++;
+      }
+    });
+
+    return {
+      totalMilestones: milestones.length,
+      completedMilestones,
+      totalInspections: inspections.length,
+      approvedInspections,
+      pendingInspections,
+      totalPayments: payments.length,
+      totalPaid,
+      totalStages: stages.length,
+      completedStages
+    };
+  }, [milestones, inspections, payments, stages]);
+
+  // Memoized filtered milestones for gates and checkpoints
+  const gateCheckpoints = useMemo(() => 
+    milestones.filter(m => m.type === 'gate' || m.type === 'checkpoint'),
+    [milestones]
+  );
 
   if (milestonesLoading || inspectionsLoading) {
     return (
@@ -422,15 +464,14 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {milestones.filter(m => m.type === 'gate' || m.type === 'checkpoint').length === 0 ? (
+              {gateCheckpoints.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Target className="h-10 w-10 mx-auto mb-3 opacity-30" />
                   <p>Aucun point de contrôle défini</p>
                   <p className="text-xs">Créez des jalons de type "Checkpoint" ou "Porte" pour activer le workflow</p>
                 </div>
               ) : (
-                milestones
-                  .filter(m => m.type === 'gate' || m.type === 'checkpoint')
+                gateCheckpoints
                   .map(milestone => {
                     const status = getMilestoneWorkflowStatus(milestone);
                     const StatusIcon = status.icon;

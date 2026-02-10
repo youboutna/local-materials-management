@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,9 +20,11 @@ import { useToast } from '@/hooks/use-toast';
 import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
 import { useProjectManager } from '@/hooks/useProjectManager';
 import { actionLabels } from '@/application/services/ProjectManagerService';
-import { EscalationRoles, ProjectData } from '@/dtos/entities/ProjectDTO';
+import { EscalationRoles } from '@/domain/entities/Hierarchy';
+import { ProjectData } from '@/types/project';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
-import { useProjectsHex, usePaymentBlocksHex, useNotificationsHex } from '@/hooks/hexagonal';
+import { useProjectsHex, usePaymentControlHex, useNotificationsHex } from '@/hooks/hexagonal';
+import { useAuthUserHex } from '@/hooks/hexagonal/useAuthUserHex';
 
 interface NotificationData {
   id: string;
@@ -31,13 +33,14 @@ interface NotificationData {
   type: string;
   read: boolean;
   created_at: string;
-  metadata: any;
+  metadata: Record<string, unknown>;
 }
 
 // Component to render payment control actions with real data
 const PaymentControlActionsContainer = () => {
+  const { userId } = useAuthUserHex();
   const { data } = useProjectManager();
-  const { blocks: pendingPayments } = usePaymentBlocksHex();
+  const { dashboard, blockPayment, approvePayment, rejectPayment } = usePaymentControlHex(userId || 'default-user');
 
   // Get blocking reasons from project manager alerts
   const getBlockingReasons = (paymentId: string) => {
@@ -55,7 +58,7 @@ const PaymentControlActionsContainer = () => {
 
   return (
     <div className="space-y-4">
-        {pendingPayments.filter(p => !p.resolvedAt).slice(0, 3).map((payment) => (
+        {dashboard?.payments.filter(p => !p.resolvedAt).slice(0, 3).map((payment) => (
           <PaymentControlActions
             key={payment.id}
             paymentId={payment.id}
@@ -65,107 +68,48 @@ const PaymentControlActionsContainer = () => {
             blockingReasons={getBlockingReasons(payment.id)}
           />
         ))}
-      {pendingPayments.length === 0 && (
-        <div className="text-center py-8 text-muted-foreground">
-          <CheckCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p>Aucun paiement en attente de validation</p>
-        </div>
-      )}
+        {(!dashboard || dashboard.payments.length === 0) && (
+          <div className="text-center py-8 text-muted-foreground">
+            <CheckCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>Aucun paiement en attente de validation</p>
+          </div>
+        )}
     </div>
   );
 };
 
 // Main content component
 const PaymentControlContent = () => {
-  const [supabaseClient, setSupabaseClient] = useState<any>(null);
-  const [paymentNotifications, setPaymentNotifications] = useState<NotificationData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { unreadCount } = useNotifications();
   const { toast } = useToast();
   const { hasAnyRole } = useCurrentUserRoles();
+  
+  // Use hexagonal notifications hook instead of direct Supabase calls
+  const { 
+    notifications: allNotifications, 
+    isLoading, 
+    error,
+    markAsRead,
+    getUnreadCount
+  } = useNotificationsHex();
+  
+  // Get unread count
+  const [unreadCount, setUnreadCount] = useState(0);
+  
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      const count = await getUnreadCount();
+      setUnreadCount(count);
+    };
+    fetchUnreadCount();
+  }, [allNotifications, getUnreadCount]);
+  
+  // Filter payment notifications
+  const paymentNotifications = allNotifications.filter(n => 
+    ['payment_due', 'payment_completed', 'payment_failed', 'payment_pending', 'payment_blocked', 'payment_warning'].includes(n.type)
+  ).slice(0, 10);
 
   // Check if user has permission to access payment control
   const canAccessPaymentControl = hasAnyRole(['admin', 'director', 'manager', 'agent']);
-
-  useEffect(() => {
-    const initSupabase = async () => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      setSupabaseClient(supabase);
-    };
-    initSupabase();
-  }, []);
-
-  useEffect(() => {
-    if (!supabaseClient) return;
-    
-    fetchPaymentNotifications();
-    // Set up real-time listener for payment notifications
-    const channel = supabaseClient
-      .channel('payment-notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
-          filter: 'type=in.(payment_due,payment_completed,payment_failed,payment_pending,payment_blocked,payment_warning)',
-        },
-        () => {
-          fetchPaymentNotifications();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabaseClient.removeChannel(channel);
-    };
-  }, [supabaseClient]);
-
-  const fetchPaymentNotifications = async () => {
-    if (!supabaseClient) return;
-    
-    try {
-      setLoading(true);
-      const { data, error } = await supabaseClient
-        .from('notifications')
-        .select('*')
-        .in('type', ['payment_due', 'payment_completed', 'payment_failed', 'payment_pending', 'payment_blocked', 'payment_warning'])
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-      setPaymentNotifications(data || []);
-    } catch (error) {
-      console.error('Error fetching payment notifications:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les notifications de paiement",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const markAsRead = async (notificationId: string) => {
-    if (!supabaseClient) return;
-    
-    try {
-      const { error } = await supabaseClient
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', notificationId);
-
-      if (error) throw error;
-      
-      // Update local state
-      setPaymentNotifications(prev => 
-        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
-      );
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-    }
-  };
 
   const getPaymentStatusIcon = (type: string) => {
     switch (type) {
@@ -331,7 +275,7 @@ const PaymentControlContent = () => {
 // Main component with ProjectManager provider
 const PaymentControlPage = () => {
   const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
-  const [projectHierarchy, setProjectHierarchy] = useState<any[]>([]);
+  const [projectHierarchy, setProjectHierarchy] = useState<Array<{id: string, name: string, level: number}>>([]);
   
   // Use hexagonal hooks
   const { projects, isLoading: projectsLoading } = useProjectsHex();
