@@ -683,187 +683,6 @@ export type Database = {
           },
         ]
       }
-    compliance_items: {
-      Row: {
-        id: string;
-        type: 'regulatory' | 'insurance' | 'bank_guarantee' | 'technical' | 'environmental';
-        title: string;
-        description: string;
-        status: 'pending' | 'in_progress' | 'approved' | 'rejected';
-        priority: 'low' | 'medium' | 'high' | 'critical';
-        deadline?: string | null;
-        responsible: string;
-        project_id: string;
-        bank_guarantee_id?: string | null;
-        created_at: string;
-        updated_at: string;
-      },
-      Insert: {
-        id?: string;
-        type: 'regulatory' | 'insurance' | 'bank_guarantee' | 'technical' | 'environmental';
-        title: string;
-        description: string;
-        status?: 'pending' | 'in_progress' | 'approved' | 'rejected';
-        priority?: 'low' | 'medium' | 'high' | 'critical';
-        deadline?: string | null;
-        responsible: string;
-        project_id: string;
-        bank_guarantee_id?: string | null;
-        created_at?: string;
-        updated_at?: string;
-      },
-      Update: {
-        id?: string;
-        type?: 'regulatory' | 'insurance' | 'bank_guarantee' | 'technical' | 'environmental';
-        title?: string;
-        description?: string;
-        status?: 'pending' | 'in_progress' | 'approved' | 'rejected';
-        priority?: 'low' | 'medium' | 'high' | 'critical';
-        deadline?: string | null;
-        responsible?: string;
-        project_id?: string;
-        bank_guarantee_id?: string | null;
-        created_at?: string;
-        updated_at?: string;
-      },
-      Relationships: [
-        {
-          foreignKeyName: "fk_compliance_items_project"
-          columns: ["project_id"]
-          isOneToOne: false
-          referencedRelation: "projects"
-          referencedColumns: ["id"]
-        },
-        {
-          foreignKeyName: "fk_compliance_items_bank_guarantee"
-          columns: ["bank_guarantee_id"]
-          isOneToOne: false
-          referencedRelation: "bank_guarantees"
-          referencedColumns: ["id"]
-        }
-      ]
-    },
-    
-    compliance_documents: {
-      Row: {
-        id: string;
-        compliance_item_id: string;
-        document_id: string;
-        category: string;
-        subcategory?: string | null;
-        is_required?: boolean | null;
-        created_at: string;
-      },
-      Insert: {
-        id?: string;
-        compliance_item_id: string;
-        document_id: string;
-        category: string;
-        subcategory?: string | null;
-        is_required?: boolean | null;
-        created_at?: string;
-      },
-      Update: {
-        id?: string;
-        compliance_item_id?: string;
-        document_id?: string;
-        category?: string;
-        subcategory?: string | null;
-        is_required?: boolean | null;
-        created_at?: string;
-      },
-      Relationships: [
-        {
-          foreignKeyName: "fk_compliance_documents_item"
-          columns: ["compliance_item_id"]
-          isOneToOne: false
-          referencedRelation: "compliance_items"
-          referencedColumns: ["id"]
-        },
-        {
-          foreignKeyName: "fk_compliance_documents_document"
-          columns: ["document_id"]
-          isOneToOne: false
-          referencedRelation: "documents"
-          referencedColumns: ["id"]
-        }
-      ]
-    },
-    
-    compliance_notes: {
-      Row: {
-        id: string;
-        compliance_item_id: string;
-        note: string;
-        created_by: string;
-        created_at: string;
-      },
-      Insert: {
-        id?: string;
-        compliance_item_id: string;
-        note: string;
-        created_by: string;
-        created_at?: string;
-      },
-      Update: {
-        id?: string;
-        compliance_item_id?: string;
-        note?: string;
-        created_by?: string;
-        created_at?: string;
-      },
-      Relationships: [
-        {
-          foreignKeyName: "fk_compliance_notes_item"
-          columns: ["compliance_item_id"]
-          isOneToOne: false
-          referencedRelation: "compliance_items"
-          referencedColumns: ["id"]
-        }
-      ]
-    },
-    
-    compliance_audit_log: {
-      Row: {
-        id: string;
-        compliance_item_id: string;
-        field_name: string;
-        old_value?: string | null;
-        new_value?: string | null;
-        changed_by: string;
-        changed_at: string;
-      },
-      Insert: {
-        id?: string;
-        compliance_item_id: string;
-        field_name: string;
-        old_value?: string | null;
-        new_value?: string | null;
-        changed_by: string;
-        changed_at?: string;
-      },
-      Update: {
-        id?: string;
-        compliance_item_id?: string;
-        field_name?: string;
-        old_value?: string | null;
-        new_value?: string | null;
-        changed_by?: string;
-        changed_at?: string;
-      },
-      Relationships: [
-        {
-          foreignKeyName: "fk_compliance_audit_item"
-          columns: ["compliance_item_id"]
-          isOneToOne: false
-          referencedRelation: "compliance_items"
-          referencedColumns: ["id"]
-        }
-      ]
-    }
-
-
-
       email_logs: {
         Row: {
           content_type: string
@@ -3468,9 +3287,6 @@ export type Database = {
           status: string | null
           status_new: string | null
           updated_at: string | null
-          review_date: string | null
-          costs: number | null
-          timeline_impact: number | null
         }
         Insert: {
           created_at?: string | null
@@ -3489,13 +3305,10 @@ export type Database = {
           risk_description?: string | null
           risk_level?: string | null
           risk_score?: number | null
-          risk_title?: string
+          risk_title: string
           status?: string | null
           status_new?: string | null
           updated_at?: string | null
-          review_date?: string | null
-          costs?: number | null
-          timeline_impact?: number | null
         }
         Update: {
           created_at?: string | null
@@ -3518,9 +3331,6 @@ export type Database = {
           status?: string | null
           status_new?: string | null
           updated_at?: string | null
-          review_date?: string | null
-          costs?: number | null
-          timeline_impact?: number | null
         }
         Relationships: [
           {
