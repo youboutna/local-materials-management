@@ -3,12 +3,13 @@
  * Handles supplier invoice data through proper architecture layers
  */
 
-import { InvoiceDTO, CreateInvoiceDTO, UpdateInvoiceDTO, ParsedInvoiceDTO } from '@/dtos/entities/InvoiceDTO';
-import { IInvoiceRepository } from '@/domain/repositories/IInvoiceRepository';
-import { AppError, ErrorCode } from '@/utils/errors';
+import { ParsedInvoiceDTO, CreateInvoiceDTO, UpdateInvoiceDTO } from '@/dtos/entities/InvoiceDTO';
+import { IParsedInvoiceRepository } from '@/domain/repositories/IParsedInvoiceRepository';
+import { ParsedInvoiceEntity, InvoiceStatus } from '@/domain/entities/ParsedInvoice';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export class InvoiceService {
-  constructor(private repository: IInvoiceRepository) {}
+  constructor(private repository: IParsedInvoiceRepository) {}
 
   /**
    * Get parsed invoices for a supplier
@@ -22,10 +23,10 @@ export class InvoiceService {
       }
 
       // Delegate to repository
-      const invoices = await this.repository.getParsedInvoices(supplierId);
+      const invoices = await this.repository.findBySupplierId(supplierId);
       
-      // Business logic: Process and validate invoice data
-      return this.validateInvoiceData(invoices);
+      // Transform entities to DTOs
+      return invoices.map(invoice => this.entityToDTO(invoice));
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
@@ -35,16 +36,16 @@ export class InvoiceService {
   }
 
   /**
-   * Get invoice by ID
+   * Get parsed invoice by ID
    */
-  async getInvoiceById(id: string): Promise<InvoiceDTO | null> {
+  async getInvoiceById(id: string): Promise<ParsedInvoiceDTO | null> {
     try {
       if (!id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Invoice ID is required');
       }
 
       const invoice = await this.repository.findById(id);
-      return invoice;
+      return invoice ? this.entityToDTO(invoice) : null;
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
@@ -54,29 +55,29 @@ export class InvoiceService {
   }
 
   /**
-   * Create new invoice
+   * Create new parsed invoice
    */
-  async createInvoice(invoiceData: CreateInvoiceDTO): Promise<InvoiceDTO> {
+  async createParsedInvoice(invoiceData: Omit<ParsedInvoiceEntity, 'id' | 'createdAt' | 'updatedAt'>): Promise<ParsedInvoiceDTO> {
     try {
       // Business validation
-      this.validateInvoiceData(invoiceData);
+      this.validateParsedInvoiceData(invoiceData);
 
       // Delegate to repository
       const createdInvoice = await this.repository.create(invoiceData);
       
-      return createdInvoice;
+      return this.entityToDTO(createdInvoice);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to create invoice');
+      throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to create parsed invoice');
     }
   }
 
   /**
-   * Update invoice
+   * Update parsed invoice
    */
-  async updateInvoice(id: string, updateData: UpdateInvoiceDTO): Promise<InvoiceDTO> {
+  async updateParsedInvoice(id: string, updateData: Partial<ParsedInvoiceEntity>): Promise<ParsedInvoiceDTO> {
     try {
       if (!id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Invoice ID is required');
@@ -84,57 +85,52 @@ export class InvoiceService {
 
       const updatedInvoice = await this.repository.update(id, updateData);
       
-      if (!updatedInvoice) {
-        throw new AppError(ErrorCode.NOT_FOUND, 'Invoice not found');
-      }
-
-      return updatedInvoice;
+      return this.entityToDTO(updatedInvoice);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to update invoice');
+      throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to update parsed invoice');
     }
   }
 
   /**
-   * Delete invoice
+   * Delete parsed invoice
    */
-  async deleteInvoice(id: string): Promise<boolean> {
+  async deleteParsedInvoice(id: string): Promise<void> {
     try {
       if (!id) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Invoice ID is required');
       }
 
-      const deleted = await this.repository.delete(id);
-      return deleted;
+      await this.repository.delete(id);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to delete invoice');
+      throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to delete parsed invoice');
     }
   }
 
   /**
-   * Get invoices by status
+   * Get parsed invoices by status
    */
-  async getInvoicesByStatus(status: string): Promise<InvoiceDTO[]> {
+  async getParsedInvoicesByStatus(status: InvoiceStatus): Promise<ParsedInvoiceDTO[]> {
     try {
       const invoices = await this.repository.findByStatus(status);
-      return invoices;
+      return invoices.map(invoice => this.entityToDTO(invoice));
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch invoices by status');
+      throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch parsed invoices by status');
     }
   }
 
   /**
-   * Get invoices by date range
+   * Get parsed invoices by date range
    */
-  async getInvoicesByDateRange(startDate: string, endDate: string): Promise<InvoiceDTO[]> {
+  async getParsedInvoicesByDateRange(startDate: string, endDate: string): Promise<ParsedInvoiceDTO[]> {
     try {
       // Business validation
       if (!startDate || !endDate) {
@@ -145,20 +141,22 @@ export class InvoiceService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Start date must be before end date');
       }
 
-      const invoices = await this.repository.findByDateRange(startDate, endDate);
-      return invoices;
+      const invoices = await this.repository.findAll({
+        dateRange: { startDate, endDate }
+      });
+      return invoices.map(invoice => this.entityToDTO(invoice));
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch invoices by date range');
+      throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch parsed invoices by date range');
     }
   }
 
   /**
-   * Calculate invoice statistics
+   * Calculate parsed invoice statistics
    */
-  async getInvoiceStatistics(supplierId?: string): Promise<{
+  async getParsedInvoiceStatistics(supplierId?: string): Promise<{
     totalInvoices: number;
     totalAmount: number;
     paidAmount: number;
@@ -169,16 +167,16 @@ export class InvoiceService {
     try {
       const invoices = supplierId 
         ? await this.getParsedInvoices(supplierId)
-        : await this.repository.findAll();
+        : await this.repository.findAll().then(invoices => invoices.map(invoice => this.entityToDTO(invoice)));
 
       // Business logic: Calculate statistics
       const stats = {
         totalInvoices: invoices.length,
-        totalAmount: invoices.reduce((sum, inv) => sum + (inv.amount || 0), 0),
-        paidAmount: invoices.filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + (inv.amount || 0), 0),
-        pendingAmount: invoices.filter(inv => inv.status === 'pending').reduce((sum, inv) => sum + (inv.amount || 0), 0),
-        overdueAmount: invoices.filter(inv => inv.status === 'overdue').reduce((sum, inv) => sum + (inv.amount || 0), 0),
-        averageAmount: invoices.length > 0 ? invoices.reduce((sum, inv) => sum + (inv.amount || 0), 0) / invoices.length : 0
+        totalAmount: invoices.reduce((sum, inv) => sum + (inv.invoiceData?.amount || 0), 0),
+        paidAmount: invoices.filter(inv => inv.processingStatus === 'completed').reduce((sum, inv) => sum + (inv.invoiceData?.amount || 0), 0),
+        pendingAmount: invoices.filter(inv => inv.processingStatus === 'processing').reduce((sum, inv) => sum + (inv.invoiceData?.amount || 0), 0),
+        overdueAmount: invoices.filter(inv => inv.invoiceData?.dueDate && new Date(inv.invoiceData.dueDate) < new Date()).reduce((sum, inv) => sum + (inv.invoiceData?.amount || 0), 0),
+        averageAmount: invoices.length > 0 ? invoices.reduce((sum, inv) => sum + (inv.invoiceData?.amount || 0), 0) / invoices.length : 0
       };
 
       return stats;
@@ -186,48 +184,78 @@ export class InvoiceService {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to calculate invoice statistics');
+      throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to calculate parsed invoice statistics');
     }
   }
 
   // Private helper methods for business logic
 
-  private validateInvoiceData(invoice: CreateInvoiceDTO | ParsedInvoiceDTO): void {
+  private validateParsedInvoiceData(invoice: Omit<ParsedInvoiceEntity, 'id' | 'createdAt' | 'updatedAt'>): void {
     // Business validation rules
-    if (!invoice.supplierId) {
-      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Supplier ID is required');
+    if (!invoice.fileName) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'File name is required');
     }
 
-    if (!invoice.invoiceNumber || invoice.invoiceNumber.trim().length === 0) {
-      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Invoice number is required');
+    if (!invoice.originalFileName) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Original file name is required');
     }
 
-    if (!invoice.amount || invoice.amount <= 0) {
+    if (!invoice.filePath) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'File path is required');
+    }
+
+    if (!invoice.uploadedBy) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Uploader ID is required');
+    }
+
+    // Validate amount if present
+    if (invoice.amount !== null && invoice.amount !== undefined && invoice.amount <= 0) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Invoice amount must be greater than 0');
     }
 
-    if (!invoice.dueDate) {
-      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Due date is required');
-    }
-
-    // Validate date format
-    const dueDate = new Date(invoice.dueDate);
-    if (isNaN(dueDate.getTime())) {
-      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Invalid due date format');
+    // Validate due date if present
+    if (invoice.dueDate) {
+      const dueDate = new Date(invoice.dueDate);
+      if (isNaN(dueDate.getTime())) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Invalid due date format');
+      }
     }
   }
 
-  private validateInvoiceData(invoices: ParsedInvoiceDTO[]): ParsedInvoiceDTO[] {
-    // Business logic: Filter and validate parsed invoices
-    return invoices.filter(invoice => {
-      try {
-        this.validateInvoiceData(invoice);
-        return true;
-      } catch {
-        // Log invalid invoices but don't fail the entire operation
-        console.warn('Invalid invoice data found:', invoice);
-        return false;
-      }
-    });
+  private entityToDTO(entity: ParsedInvoiceEntity): ParsedInvoiceDTO {
+    return {
+      id: entity.id,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+      originalFileName: entity.originalFileName,
+      parsedAt: entity.processedAt || entity.createdAt,
+      supplierInfo: {
+        supplierId: entity.supplierId || '',
+        name: entity.extractedData?.supplierName || 'Unknown',
+        email: entity.extractedData?.supplierEmail,
+        phone: entity.extractedData?.supplierPhone,
+        address: entity.extractedData?.supplierAddress,
+        taxId: entity.extractedData?.supplierTaxId
+      },
+      invoiceData: {
+        invoiceNumber: entity.invoiceNumber || '',
+        issueDate: entity.invoiceDate || '',
+        dueDate: entity.dueDate || '',
+        amount: entity.amount || 0,
+        currency: entity.currency || 'EUR',
+        taxAmount: entity.extractedData?.taxAmount,
+        totalAmount: entity.extractedData?.totalAmount,
+        description: entity.extractedData?.description
+      },
+      lineItems: entity.extractedData?.lineItems || [],
+      extractionConfidence: entity.extractedData?.confidence || 0,
+      validationStatus: entity.status === 'validated' ? 'validated' : 
+                       entity.status === 'rejected' ? 'rejected' : 
+                       entity.status === 'pending' ? 'pending' : 'needs_review',
+      validationErrors: entity.validationErrors || undefined,
+      processingStatus: entity.status === 'validated' ? 'completed' : 
+                       entity.status === 'rejected' ? 'failed' : 
+                       entity.status === 'processing' ? 'processing' : 'completed'
+    };
   }
 }
