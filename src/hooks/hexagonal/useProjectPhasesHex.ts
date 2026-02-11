@@ -1,9 +1,9 @@
 /**
  * Hexagonal Hook: useProjectPhasesHex
- * Provides project phases management via services
+ * Provides project phases management via RepositoryFactory
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { toast } from 'sonner';
 
 export interface ProjectPhase {
@@ -33,27 +33,6 @@ export interface PhaseFormData {
   custom_phase_data?: Record<string, unknown>;
 }
 
-async function fetchProjectPhases(projectId: string): Promise<ProjectPhase[]> {
-  const { data, error } = await supabase
-    .from('project_phases')
-    .select('*')
-    .eq('project_id', projectId)
-    .order('created_at', { ascending: true });
-
-  if (error) throw error;
-  return data || [];
-}
-
-async function insertPhases(phases: PhaseFormData[]): Promise<ProjectPhase[]> {
-  const { data, error } = await supabase
-    .from('project_phases')
-    .insert(phases)
-    .select();
-
-  if (error) throw error;
-  return data || [];
-}
-
 export function useProjectPhasesHex(projectId?: string) {
   const queryClient = useQueryClient();
 
@@ -64,14 +43,29 @@ export function useProjectPhasesHex(projectId?: string) {
     refetch,
   } = useQuery({
     queryKey: ['project-phases-hex', projectId],
-    queryFn: () => fetchProjectPhases(projectId!),
+    queryFn: async (): Promise<ProjectPhase[]> => {
+      const phaseRepo = RepositoryFactory.getPhaseRepository();
+      const data = await phaseRepo.findByProject(projectId!);
+      return (data || []).map((p: any) => ({
+        id: p.id,
+        name: p.phase_name || p.name || '',
+        description: p.description || null,
+        start_date: p.start_date || p.startDate || null,
+        end_date: p.end_date || p.endDate || null,
+        progress: p.progress || null,
+        phase_type: p.phase_type || null,
+        construction_phase: p.construction_phase || null,
+        custom_phase_data: p.custom_phase_data || undefined,
+      }));
+    },
     enabled: !!projectId,
     staleTime: 30_000,
   });
 
   const createPhasesMutation = useMutation({
     mutationFn: async (phasesData: PhaseFormData[]) => {
-      return await insertPhases(phasesData);
+      const phaseRepo = RepositoryFactory.getPhaseRepository();
+      return await phaseRepo.createMany(phasesData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project-phases-hex', projectId] });

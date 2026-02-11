@@ -173,7 +173,7 @@ export class SupplierPaymentReportingService {
   /**
    * Calculate payment totals by status
    */
-  calculatePaymentTotals(payments: PaymentDTO[], paymentRequests: PaymentRequestDTO[]): {
+  calculatePaymentTotals(payments: PaymentDTO[], paymentRequests: PaymentRequestDTO[]): { totalPaid: number; totalPending: number; totalOverdue: number } {
     const allTransactions = [
       ...payments.map(p => ({ ...p, source: 'payment' })),
       ...paymentRequests.map(pr => ({ ...pr, source: 'request' }))

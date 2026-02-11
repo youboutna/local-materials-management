@@ -42,8 +42,11 @@ export class ComplianceService {
     // Create domain entity
     const entity = ComplianceItem.create({
       id: uuidv4(),
-      ...data
-    });
+      ...data,
+      status: data.status || 'active',
+      priority: data.priority || 'medium',
+      category: data.category || 'general',
+    } as any);
 
     // Save to repository
     const savedEntity = await this.complianceRepository.save(entity);
@@ -270,8 +273,8 @@ export class ComplianceService {
       id: uuidv4(),
       complianceItemId,
       fieldName,
-      oldValue,
-      newValue,
+      oldValue: oldValue ?? undefined,
+      newValue: newValue ?? undefined,
       changedBy
     });
 

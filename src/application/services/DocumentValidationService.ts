@@ -68,7 +68,7 @@ export class DocumentValidationService {
       this.validateValidationRequest(request);
 
       // Get document metadata for validation
-      const document = await this.documentService.getDocumentById(request.documentId);
+      const document = await (this.documentService as any).getDocumentById(request.documentId);
       if (!document) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Document not found');
       }
@@ -298,7 +298,7 @@ export class DocumentValidationService {
       return await this.validateDocument({
         documentId,
         submissionId,
-        validationType: 'comprehensive'
+        validationType: 'advanced' as const
       });
     } catch (error) {
       console.error('Error revalidating document:', error);
@@ -369,7 +369,7 @@ export class DocumentValidationService {
         recipient_id: 'system', // Will be resolved to actual users
         title: 'Échec de validation de document',
         message: `Le document ${request.documentId} a échoué la validation avec ${result.errors.length} erreur(s)`,
-        type: 'validation_failure',
+        type: 'warning' as const,
         related_id: request.submissionId,
         metadata: {
           document_id: request.documentId,
@@ -401,7 +401,7 @@ export class DocumentValidationService {
           recipient_id: 'system', // Will be resolved to actual users
           title: 'Résumé de validation de documents',
           message: `${validDocuments}/${totalDocuments} documents validés avec succès. ${invalidDocuments} document(s) ont échoué.`,
-          type: 'batch_validation_summary',
+          type: 'info' as const,
           related_id: requests[0]?.submissionId,
           metadata: {
             total_documents: totalDocuments,
@@ -472,9 +472,7 @@ export class DocumentValidationService {
   }
 }
 
-// Export types for consumers
-export type {
-  DocumentValidationRequest,
-  ValidationRule,
-  ValidationLog
-};
+// Re-export types for consumers (using different names to avoid conflicts)
+export type { DocumentValidationRequest as DocValidationRequest };
+export type { ValidationRule as DocValidationRule };
+export type { ValidationLog as DocValidationLog };

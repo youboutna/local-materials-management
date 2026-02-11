@@ -1,31 +1,30 @@
 /**
  * Hexagonal hook for fetching active employees (for task assignment)
- * Centralizes active employee queries
+ * Uses RepositoryFactory instead of direct Supabase calls
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface ActiveEmployee {
   id: string;
   full_name: string;
   position?: string | null;
-  department?: string | null; // Added department property for UI filtering
+  department?: string | null;
 }
 
-// Hook: Fetch active employees for task assignment
 export function useActiveEmployeesHex() {
   return useQuery({
     queryKey: ['active-employees'],
     queryFn: async (): Promise<ActiveEmployee[]> => {
-      const { data, error } = await supabase
-        .from('employees')
-        .select('id, full_name, position, department')
-        .eq('is_active', true)
-        .order('full_name', { ascending: true });
-      
-      if (error) throw error;
-      return data || [];
+      const employeeRepo = RepositoryFactory.getEmployeeRepository();
+      const data = await employeeRepo.findAll({ isActive: true });
+      return (data || []).map((emp: any) => ({
+        id: emp.id,
+        full_name: emp.full_name || emp.fullName || '',
+        position: emp.position || null,
+        department: emp.department || null,
+      }));
     },
   });
 }

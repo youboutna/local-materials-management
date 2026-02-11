@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { toast } from '@/hooks/use-toast';
 
 export interface ProjectRisk {
@@ -83,234 +83,153 @@ export const useEnhancedRiskManagerHex = (
   propPhases?: ProjectPhase[]
 ) => {
   const queryClient = useQueryClient();
+  const riskRepo = RepositoryFactory.getRiskRepository();
+  const taskRepo = RepositoryFactory.getTaskRepository();
+  const phaseRepo = RepositoryFactory.getPhaseRepository();
+  const employeeRepo = RepositoryFactory.getEmployeeRepository();
+  const supplierRepo = RepositoryFactory.getSupplierRepository();
 
-  // Fetch risks
   const { data: fetchedRisks = [], isLoading: risksLoading, error: risksError } = useQuery({
     queryKey: ['enhanced-project-risks', projectId],
     queryFn: async (): Promise<ProjectRisk[]> => {
-      const { data, error } = await supabase
-        .from('project_risks')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
+      const data = await riskRepo.findByProject(projectId);
+      return (data || []) as unknown as ProjectRisk[];
     },
     enabled: !!projectId && !propRisks,
     retry: 3,
     retryDelay: 1000
   });
 
-  // Use props or fallback to fetched data
   const currentRisks = propRisks || fetchedRisks;
 
-  // Fetch task assignments
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
     queryKey: ['project-task-assignments', projectId],
     queryFn: async (): Promise<TaskAssignment[]> => {
-      const { data, error } = await supabase
-        .from('task_assignments')
-        .select('id, title, phase_id')
-        .eq('project_id', projectId);
-      
-      if (error) throw error;
-      return data || [];
+      const data = await taskRepo.findByProject(projectId);
+      return (data || []).map((t: any) => ({
+        id: t.id,
+        title: t.title || t.task_name || null,
+        phase_id: t.phase_id || t.phaseId || null,
+      }));
     },
     enabled: !!projectId,
     retry: 3,
     retryDelay: 1000
   });
 
-  // Fetch project phases
   const { data: phases = [], isLoading: phasesLoading } = useQuery({
     queryKey: ['project-phases', projectId],
     queryFn: async (): Promise<ProjectPhase[]> => {
-      const { data, error } = await supabase
-        .from('project_phases')
-        .select('id, phase_name, status, construction_phase, description, start_date, end_date')
-        .eq('project_id', projectId)
-        .order('start_date', { ascending: true });
-      
-      if (error) throw error;
-      return data?.map(phase => ({
-        ...phase,
-        construction_phase: phase.construction_phase || undefined
-      })) || [];
+      const data = await phaseRepo.findByProject(projectId);
+      return (data || []).map((phase: any) => ({
+        id: phase.id,
+        phase_name: phase.phase_name || phase.phaseName || phase.name || '',
+        status: phase.status || 'pending',
+        construction_phase: phase.construction_phase || undefined,
+        description: phase.description || undefined,
+        start_date: phase.start_date || phase.startDate || undefined,
+        end_date: phase.end_date || phase.endDate || undefined,
+      }));
     },
     enabled: !!projectId && !propPhases,
     retry: 3,
     retryDelay: 1000
   });
 
-  // Use props or fallback to fetched data
   const currentPhases = propPhases || phases;
 
-  // Fetch employees
   const { data: employees = [], isLoading: employeesLoading } = useQuery({
     queryKey: ['employees-active'],
     queryFn: async (): Promise<Employee[]> => {
-      const { data, error } = await supabase
-        .from('employees')
-        .select('id, full_name, position')
-        .eq('is_active', true);
-      
-      if (error) throw error;
-      return data?.map(emp => ({
-        ...emp,
+      const data = await employeeRepo.findAll({ isActive: true });
+      return (data || []).map((emp: any) => ({
+        id: emp.id,
+        full_name: emp.full_name || emp.fullName || '',
         position: emp.position || undefined
-      })) || [];
+      }));
     },
     retry: 3,
     retryDelay: 1000
   });
 
-  // Fetch suppliers
   const { data: suppliers = [], isLoading: suppliersLoading } = useQuery({
     queryKey: ['suppliers-active'],
     queryFn: async (): Promise<Supplier[]> => {
-      const { data, error } = await supabase
-        .from('suppliers')
-        .select('id, name, contact_person')
-        .eq('is_active', true);
-      
-      if (error) throw error;
-      return data?.map(supplier => ({
-        ...supplier,
-        contact_person: supplier.contact_person || undefined
-      })) || [];
+      const data = await supplierRepo.findAll({ isActive: true });
+      return (data || []).map((s: any) => ({
+        id: s.id,
+        name: s.name || '',
+        contact_person: s.contact_person || s.contactPerson || undefined
+      }));
     },
     retry: 3,
     retryDelay: 1000
   });
 
-  // Fetch risk-task relations
   const { data: riskTaskRelations = [], isLoading: relationsLoading } = useQuery({
     queryKey: ['risk-task-relations', projectId],
     queryFn: async (): Promise<RiskTaskRelation[]> => {
       if (!currentRisks || currentRisks.length === 0) return [];
-      
-      const { data, error } = await supabase
-        .from('risk_task_relations')
-        .select('*')
-        .in('risk_id', currentRisks.map(r => r.id));
-      
-      if (error) throw error;
-      return data || [];
+      const data = await riskRepo.findTaskRelations(currentRisks.map(r => r.id));
+      return (data || []) as RiskTaskRelation[];
     },
     enabled: !!currentRisks && currentRisks.length > 0,
     retry: 3,
     retryDelay: 1000
   });
 
-  // Create risk mutation
   const createRiskMutation = useMutation({
     mutationFn: async (data: Partial<ProjectRisk>) => {
-      const { error } = await supabase
-        .from('project_risks')
-        .insert([{
-          ...data,
-          project_id: data.project_id || '',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }]);
-      
-      if (error) throw error;
-      return data;
+      return await riskRepo.create({
+        ...data,
+        project_id: data.project_id || '',
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['enhanced-project-risks', projectId] });
-      toast({
-        title: "Succès",
-        description: "Risque créé avec succès",
-      });
+      toast({ title: "Succès", description: "Risque créé avec succès" });
     },
-    onError: (error) => {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
+    onError: (error: Error) => {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
     }
   });
 
-  // Update risk mutation
   const updateRiskMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<ProjectRisk> }) => {
-      const { error } = await supabase
-        .from('project_risks')
-        .update({
-          ...data,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id);
-      
-      if (error) throw error;
-      return { id, data };
+      return await riskRepo.update(id, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['enhanced-project-risks', projectId] });
-      toast({
-        title: "Succès",
-        description: "Risque mis à jour avec succès",
-      });
+      toast({ title: "Succès", description: "Risque mis à jour avec succès" });
     },
-    onError: (error) => {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
+    onError: (error: Error) => {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
     }
   });
 
-  // Delete risk mutation
   const deleteRiskMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('project_risks')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-      return id;
+      return await riskRepo.delete(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['enhanced-project-risks', projectId] });
       queryClient.invalidateQueries({ queryKey: ['risk-task-relations', projectId] });
-      toast({
-        title: "Succès",
-        description: "Risque supprimé avec succès",
-      });
+      toast({ title: "Succès", description: "Risque supprimé avec succès" });
     },
-    onError: (error) => {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
+    onError: (error: Error) => {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
     }
   });
 
-  // Create risk-task relation mutation
   const createRiskTaskRelationMutation = useMutation({
     mutationFn: async (relation: Omit<RiskTaskRelation, 'id'>) => {
-      const { error } = await supabase
-        .from('risk_task_relations')
-        .insert([relation]);
-      
-      if (error) throw error;
-      return relation;
+      return await riskRepo.createTaskRelation(relation);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['risk-task-relations', projectId] });
     },
-    onError: (error) => {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
+    onError: (error: Error) => {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
     }
   });
 
