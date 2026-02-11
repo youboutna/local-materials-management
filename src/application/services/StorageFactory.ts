@@ -4,11 +4,10 @@
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { IStorageProvider } from '@/domain/repositories/IStorageRepository';
 import { SupabaseStorageProvider } from '@/infrastructure/storage/SupabaseStorageProvider';
-import { LocalStorageProvider } from '@/infrastructure/storage/LocalStorageProvider';
 import { getStorageConfig } from '@/config/storage';
-
+import { IStorageProvider } from '@/domain/interfaces/IStorageProvider';
+import { LocalStorageProvider } from '@/infrastructure/storage/LocalStorageProvider';
 /**
  * Factory class for creating storage providers
  * Following hexagonal architecture principles
