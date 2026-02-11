@@ -1,12 +1,14 @@
 /**
  * Gantt/PERT Data Service
  * Provides unified data for Gantt and PERT diagrams
- * Integrates phases, tasks, and milestones
  * 
  * Architecture: Follows clean architecture with DTO pattern
  */
 
-import { ProjectDetailDTO, GanttChartData, PERTAnalysis } from '@/dtos/entities/ProjectDTO';
+import { GanttChartData } from '@/domain/entities/index';
+import { PERTAnalysis } from '@/types/project';
+import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
+import { TaskDTO } from '@/dtos/entities/TaskDTO';
 import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
 import { PERTActivity } from '@/types/project';
 
@@ -76,9 +78,9 @@ export class GanttPertDataService {
       const phases: GanttPhaseData[] = (projectDetail.plannedPhases || []).map(phase => {
         // Validate phase data
         const phaseId = phase.id || '';
-        const phaseName = phase.name || phase.phase_name || 'Phase';
-        const startDate = this.parseDate(phase.startDate || phase.start_date);
-        const endDate = this.parseDate(phase.endDate || phase.end_date);
+        const phaseName = phase.name || 'Phase';
+        const startDate = this.parseDate(phase.startDate);
+        const endDate = this.parseDate(phase.endDate);
         const progress = this.validateProgress(phase.progress);
 
         return {
@@ -130,7 +132,15 @@ export class GanttPertDataService {
         projectPeriod: { start: projectStart, end: projectEnd },
         phases,
         milestones,
-        tasks: projectDetail.tasks || [],
+        tasks: (projectDetail.tasks || []).map(task => ({
+          id: task.id,
+          name: task.title,
+          duration: this.estimateTaskDuration(task),
+          dependencies: task.dependsOn || [],
+          start_date: task.startDate || '',
+          end_date: task.endDate,
+          progress: task.progress || 0
+        })),
         criticalPath: criticalPath.map(cp => cp.id),
         spi
       };
@@ -154,19 +164,17 @@ export class GanttPertDataService {
       
       // Get milestone-specific activities
       const ganttMilestones = await this.milestoneService.getProjectMilestonesDTO(projectId);
-      const milestoneActivities: PERTActivity[] = ganttMilestones.map(m => ({
-        id: `milestone-${m.id}`,
-        name: m.title || 'Milestone',
-        duration: this.calculateMilestoneDuration(m),
-        earliestStart: this.parseDate(m.target_date),
-        latestFinish: this.parseDate(m.target_date),
-        expectedDuration: this.calculateMilestoneDuration(m),
-        optimisticDuration: this.calculateMilestoneDuration(m) * 0.8,
-        pessimisticDuration: this.calculateMilestoneDuration(m) * 1.2,
-        predecessors: [],
-        resources: [],
-        isCritical: m.priority === 'critical'
-      }));
+      const milestoneActivities: PERTActivity[] = ganttMilestones.map(m => {
+        const duration = this.calculateMilestoneDuration(m);
+        return {
+          name: m.title || 'Milestone',
+          optimistic: duration * 0.8,
+          mostLikely: duration,
+          pessimistic: duration * 1.2,
+          pertEstimate: duration,
+          standardDeviation: (duration * 1.2 - duration * 0.8) / 6
+        };
+      });
 
       // Get critical path
       const criticalPathData = await this.milestoneService.getCriticalPath(projectId);
@@ -177,9 +185,9 @@ export class GanttPertDataService {
         milestoneActivities,
         projectDurationDays: this.calculateProjectDuration(projectDetail),
         standardDeviation: this.calculateStandardDeviation(baseAnalysis.activities),
-        confidenceLevel95Days: baseAnalysis.expectedDuration + (1.96 * this.calculateStandardDeviation(baseAnalysis.activities)),
-        totalExpectedDuration: baseAnalysis.expectedDuration,
-        criticalPath: criticalPathData.map(cp => cp.id)
+        confidenceLevel95Days: baseAnalysis.totalExpectedDuration + (1.96 * this.calculateStandardDeviation(baseAnalysis.activities)),
+        totalExpectedDuration: baseAnalysis.totalExpectedDuration,
+        criticalPath: Array.isArray(criticalPathData) ? criticalPathData.map(cp => cp.id) : []
       };
     } catch (error) {
       console.error('Error getting unified PERT data:', error);
@@ -273,43 +281,38 @@ export class GanttPertDataService {
    * Calculate base PERT analysis
    */
   private calculateBasePERTAnalysis(projectDetail: ProjectDetailDTO): PERTAnalysis {
-    const activities: PERTActivity[] = (projectDetail.tasks || []).map(task => ({
-      id: task.id,
-      name: task.title || 'Task',
-      duration: this.estimateTaskDuration(task),
-      earliestStart: this.parseDate(task.start_date),
-      latestFinish: this.parseDate(task.end_date),
-      expectedDuration: this.estimateTaskDuration(task),
-      optimisticDuration: this.estimateTaskDuration(task) * 0.8,
-      pessimisticDuration: this.estimateTaskDuration(task) * 1.2,
-      predecessors: task.dependencies || [],
-      resources: task.assigned_resources || [],
-      isCritical: false
-    }));
+    const activities: PERTActivity[] = (projectDetail.tasks || []).map(task => {
+      const estimatedDuration = this.estimateTaskDuration(task);
+      return {
+        name: task.title || 'Task',
+        optimistic: estimatedDuration * 0.8,
+        mostLikely: estimatedDuration,
+        pessimistic: estimatedDuration * 1.2,
+        pertEstimate: estimatedDuration,
+        standardDeviation: (estimatedDuration * 1.2 - estimatedDuration * 0.8) / 6
+      };
+    });
 
     return {
       activities,
-      expectedDuration: this.calculateProjectDuration(projectDetail),
+      expectedDurations: {},
       criticalPath: [],
-      standardDeviation: this.calculateStandardDeviation(activities)
+      totalExpectedDuration: this.calculateProjectDuration(projectDetail),
+      variances: {}
     };
   }
 
   /**
    * Estimate task duration based on available data
    */
-  private estimateTaskDuration(task: {
-    estimated_duration?: number;
-    start_date?: string;
-    end_date?: string;
-  }): number {
-    if (task.estimated_duration) {
-      return Number(task.estimated_duration);
+  private estimateTaskDuration(task: TaskDTO): number {
+    if (task.estimatedDuration) {
+      return Number(task.estimatedDuration);
     }
     
-    if (task.start_date && task.end_date) {
-      const start = this.parseDate(task.start_date);
-      const end = this.parseDate(task.end_date);
+    if (task.startDate && task.endDate) {
+      const start = this.parseDate(task.startDate);
+      const end = this.parseDate(task.endDate);
       return (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
     }
     
@@ -338,12 +341,12 @@ export class GanttPertDataService {
     }
 
     const startDate = new Date(Math.min(...projectDetail.plannedPhases
-      .filter(p => p.start_date || p.startDate)
-      .map(p => new Date(p.start_date || p.startDate).getTime())));
+      .filter(p => p.startDate)
+      .map(p => new Date(p.startDate!).getTime())));
 
     const endDate = new Date(Math.max(...projectDetail.plannedPhases
-      .filter(p => p.end_date || p.endDate)
-      .map(p => new Date(p.end_date || p.endDate).getTime())));
+      .filter(p => p.endDate)
+      .map(p => new Date(p.endDate!).getTime())));
 
     return (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
   }
@@ -355,9 +358,8 @@ export class GanttPertDataService {
     if (activities.length === 0) return 0;
 
     const variances = activities.map(activity => {
-      const optimistic = activity.optimisticDuration || activity.expectedDuration;
-      const pessimistic = activity.pessimisticDuration || activity.expectedDuration;
-      const expected = activity.expectedDuration;
+      const optimistic = activity.optimistic;
+      const pessimistic = activity.pessimistic;
       
       return Math.pow((pessimistic - optimistic) / 6, 2);
     });

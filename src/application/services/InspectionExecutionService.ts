@@ -442,11 +442,13 @@ export class InspectionExecutionService {
       const observations = await this.inspectionRepository.findObservationsByInspectionId(inspectionId);
       return observations.map(obs => ({
         id: obs.id,
-        type: obs.type as InspectionObservation['type'],
+        type: obs.type,
         category: obs.type,
         description: obs.description,
         severity: obs.severity as InspectionObservation['severity'],
         conformity: 'partial' as ConformityStatus,
+        status: obs.status as InspectionObservation['status'],
+        createdAt: obs.createdAt instanceof Date ? obs.createdAt.toISOString() : String(obs.createdAt),
         created_at: obs.createdAt instanceof Date ? obs.createdAt.toISOString() : String(obs.createdAt)
       }));
     } catch (error) {
@@ -473,7 +475,9 @@ export class InspectionExecutionService {
         size: doc.size || 0,
         mime_type: doc.mimeType || 'application/octet-stream',
         uploaded_at: doc.uploadedAt || new Date().toISOString(),
-        uploaded_by: doc.uploadedBy
+        uploaded_by: doc.uploadedBy,
+        uploadedAt: doc.uploaded_at || new Date().toISOString(),
+        uploadedBy: doc.uploaded_by
       }));
     } catch (error) {
       console.error('InspectionExecutionService.getInspectionDocuments failed:', error);

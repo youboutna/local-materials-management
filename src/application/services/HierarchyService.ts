@@ -5,7 +5,7 @@
 
 import { HierarchyNode, CreateHierarchyNodeDTO, UpdateHierarchyNodeDTO } from '@/dtos/entities/HierarchyDTO';
 import { IHierarchyRepository } from '@/domain/repositories/IHierarchyRepository';
-import { AppError, ErrorCode } from '@/utils/errors';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export class HierarchyService {
   constructor(private repository: IHierarchyRepository) {}

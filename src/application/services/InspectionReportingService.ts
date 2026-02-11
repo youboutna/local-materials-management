@@ -5,10 +5,9 @@
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { IInspectionReportingRepository } from '@/domain/repositories/IInspectionReportingRepository';
-import { InspectionDTO, InspectionDocumentDTO, ProjectDTO } from '@/dtos/entities/InspectionDTO';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
+import { InspectionDTO, InspectionDocumentDTO } from '@/dtos/entities/InspectionDTO';
+import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 
 export interface InspectionReportData {
   inspection: InspectionDTO;
@@ -57,10 +56,10 @@ export interface InspectionRecommendation {
  * Service for managing inspection reporting and analytics with hexagonal architecture
  */
 export class InspectionReportingService {
-  private inspectionReportingRepository: IInspectionReportingRepository;
+  private inspectionRepository: IInspectionRepository;
 
   constructor() {
-    this.inspectionReportingRepository = RepositoryFactory.getInspectionReportingRepository();
+    this.inspectionRepository = RepositoryFactory.getInspectionRepository();
   }
 
   /**
@@ -78,9 +77,9 @@ export class InspectionReportingService {
         documentsResult,
         photosResult
       ] = await Promise.all([
-        this.inspectionReportingRepository.getInspectionById(inspectionId),
-        this.inspectionReportingRepository.getInspectionDocuments(inspectionId),
-        this.inspectionReportingRepository.getInspectionPhotos(inspectionId)
+        this.inspectionRepository.getInspectionById(inspectionId),
+        this.inspectionRepository.getInspectionDocuments(inspectionId),
+        this.inspectionRepository.getInspectionPhotos(inspectionId)
       ]);
 
       if (!inspectionResult) {
@@ -124,7 +123,7 @@ export class InspectionReportingService {
    */
   async calculateInspectionMetrics(projectId?: string): Promise<InspectionMetrics> {
     try {
-      const inspections = await this.inspectionReportingRepository.getInspections(projectId);
+      const inspections = await this.inspectionRepository.getInspections(projectId);
 
       if (!inspections || inspections.length === 0) {
         return this.getDefaultMetrics();
