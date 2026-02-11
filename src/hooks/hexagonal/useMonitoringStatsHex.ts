@@ -1,7 +1,8 @@
 // Hook hexagonal pour les statistiques de monitoring
+// Uses RepositoryFactory instead of direct Supabase calls
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface MonitoringStats {
   guarantees: { count: number; status: string };
@@ -10,33 +11,15 @@ export interface MonitoringStats {
 }
 
 async function fetchMonitoringStats(): Promise<MonitoringStats> {
-  const thirtyDaysFromNow = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-  const today = new Date().toISOString();
+  const bankGuaranteeRepo = RepositoryFactory.getBankGuaranteeRepository();
+  const paymentBlockingRepo = RepositoryFactory.getPaymentBlockingRepository();
+  const inspectionRepo = RepositoryFactory.getInspectionRepository();
 
-  const [
-    { data: guarantees, error: guaranteesError },
-    { data: blockedPayments, error: paymentsError },
-    { data: inspections, error: inspectionsError }
-  ] = await Promise.all([
-    supabase
-      .from('bank_guarantees')
-      .select('*')
-      .eq('status', 'active')
-      .lte('expiry_date', thirtyDaysFromNow),
-    supabase
-      .from('payment_blocks')
-      .select('*')
-      .is('resolved_at', null),
-    supabase
-      .from('inspections')
-      .select('*')
-      .eq('status', 'scheduled')
-      .lt('date', today)
+  const [guarantees, blockedPayments, inspections] = await Promise.all([
+    bankGuaranteeRepo.findExpiringSoon(30).catch(() => []),
+    paymentBlockingRepo.findUnresolved().catch(() => []),
+    inspectionRepo.findOverdue().catch(() => []),
   ]);
-
-  if (guaranteesError) console.error('Error loading guarantees:', guaranteesError);
-  if (paymentsError) console.error('Error loading payments:', paymentsError);
-  if (inspectionsError) console.error('Error loading inspections:', inspectionsError);
 
   return {
     guarantees: {

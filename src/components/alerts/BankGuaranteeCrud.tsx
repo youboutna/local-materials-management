@@ -158,7 +158,7 @@ const BankGuaranteeCrud = () => {
 
         // Update local state
         const updatedGuarantee = { ...selectedGuarantee, ...formData };
-        setGuarantees(prev => prev.map(g => g.id === selectedGuarantee.id ? updatedGuarantee : g)));
+        setGuarantees(prev => prev.map(g => g.id === selectedGuarantee.id ? updatedGuarantee : g));
         
         toast({
           title: t('common.success'),

@@ -1,7 +1,8 @@
 // hooks/hexagonal/usePhaseEmployeesHex.ts - Hexagonal hook for phase employees management
+// Uses RepositoryFactory instead of direct Supabase calls
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { toast } from '@/hooks/use-toast';
 
 export interface PhaseEmployee {
@@ -27,8 +28,8 @@ export interface EmployeeFormData {
 
 export const usePhaseEmployeesHex = (phaseId: string) => {
   const queryClient = useQueryClient();
+  const phaseRepo = RepositoryFactory.getPhaseRepository();
 
-  // Fetch phase employees
   const {
     data: employees = [],
     isLoading,
@@ -37,110 +38,60 @@ export const usePhaseEmployeesHex = (phaseId: string) => {
   } = useQuery({
     queryKey: ['phase-employees-hex', phaseId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('phase_employees')
-        .select('*')
-        .eq('phase_id', phaseId)
-        .order('start_date', { ascending: false });
-
-      if (error) throw error;
-      return data as PhaseEmployee[];
+      const data = await phaseRepo.findPhaseEmployees(phaseId);
+      return (data || []) as PhaseEmployee[];
     },
     enabled: !!phaseId
   });
 
   const addMutation = useMutation({
     mutationFn: async (employeeData: EmployeeFormData) => {
-      const { data, error } = await supabase
-        .from('phase_employees')
-        .insert({
-          phase_id: phaseId,
-          employee_name: employeeData.employee_name,
-          employee_role: employeeData.employee_role,
-          daily_rate: employeeData.daily_rate || 0,
-          start_date: employeeData.start_date,
-          end_date: employeeData.end_date,
-          employee_contact: employeeData.employee_contact
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      return await phaseRepo.addPhaseEmployee(phaseId, {
+        phase_id: phaseId,
+        employee_name: employeeData.employee_name,
+        employee_role: employeeData.employee_role,
+        daily_rate: employeeData.daily_rate || 0,
+        start_date: employeeData.start_date,
+        end_date: employeeData.end_date,
+        employee_contact: employeeData.employee_contact
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-employees-hex', phaseId] });
-      toast({
-        title: 'Employé ajouté',
-        description: 'L\'employé a été assigné à la phase'
-      });
+      toast({ title: 'Employé ajouté', description: 'L\'employé a été assigné à la phase' });
     },
-    onError: (error) => {
-      toast({
-        title: 'Erreur',
-        description: `Erreur lors de l'ajout: ${error.message}`,
-        variant: 'destructive'
-      });
+    onError: (error: Error) => {
+      toast({ title: 'Erreur', description: `Erreur lors de l'ajout: ${error.message}`, variant: 'destructive' });
     }
   });
 
-  // Update employee
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<EmployeeFormData> }) => {
-      const { error } = await supabase
-        .from('phase_employees')
-        .update(data)
-        .eq('id', id);
-
-      if (error) throw error;
+      return await phaseRepo.updatePhaseEmployee(id, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-employees-hex', phaseId] });
-      toast({
-        title: 'Employé mis à jour',
-        description: 'Les informations ont été mises à jour'
-      });
+      toast({ title: 'Employé mis à jour', description: 'Les informations ont été mises à jour' });
     },
-    onError: (error) => {
-      toast({
-        title: 'Erreur',
-        description: `Erreur lors de la mise à jour: ${error.message}`,
-        variant: 'destructive'
-      });
+    onError: (error: Error) => {
+      toast({ title: 'Erreur', description: `Erreur lors de la mise à jour: ${error.message}`, variant: 'destructive' });
     }
   });
 
-  // Remove employee from phase
   const removeMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('phase_employees')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      return await phaseRepo.removePhaseEmployee(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-employees-hex', phaseId] });
-      toast({
-        title: 'Employé retiré',
-        description: 'L\'employé a été retiré de la phase'
-      });
+      toast({ title: 'Employé retiré', description: 'L\'employé a été retiré de la phase' });
     },
-    onError: (error) => {
-      toast({
-        title: 'Erreur',
-        description: `Erreur lors de la suppression: ${error.message}`,
-        variant: 'destructive'
-      });
+    onError: (error: Error) => {
+      toast({ title: 'Erreur', description: `Erreur lors de la suppression: ${error.message}`, variant: 'destructive' });
     }
   });
 
-  // Calculate labor costs
-  const totalLaborCost = employees.reduce((sum, emp) => {
-    return sum + (emp.daily_rate || 0);
-  }, 0);
-
+  const totalLaborCost = employees.reduce((sum, emp) => sum + (emp.daily_rate || 0), 0);
   const totalEmployees = employees.length;
 
   return {

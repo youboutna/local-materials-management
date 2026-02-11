@@ -62,7 +62,7 @@ export class BankGuaranteeService {
         documents: [],
         currency: guaranteeData.currency || 'USD',
         exchange_rate: 1.0
-      });
+      } as any);
       
       return this.mapToDTO(created);
     } catch (error) {

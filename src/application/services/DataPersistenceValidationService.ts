@@ -227,7 +227,7 @@ export class DataPersistenceValidationService {
             return typeof phase === 'object' && phase !== null && 'phase_name' in phase;
           }
 
-          const phaseName = isLegacyPhase(phase) ? phase.phase_name || '' : phase.name;
+          const phaseName = isLegacyPhase(phase) ? phase.phase_name || '' : (phase as any).name || (phase as any).phaseName || '';
 
           if (!phaseName || phaseName.trim() === '') {
             issues.push({

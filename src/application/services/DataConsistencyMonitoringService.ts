@@ -238,14 +238,14 @@ export class DataConsistencyMonitoringService {
         }
         
         // Check progress value range
-        if (phase.progress !== undefined && (phase.progress < 0 || phase.progress > 100)) {
+        if (phase.progress !== undefined && phase.progress !== null && (phase.progress < 0 || phase.progress > 100)) {
           issues.push({
             severity: 'medium',
             recordId: phase.id,
             field: 'progress',
             message: 'Progress value out of range',
             expectedValue: '0-100',
-            actualValue: phase.progress,
+            actualValue: phase.progress ?? 0,
             suggestedFix: 'Correct progress to be within 0-100'
           });
         }

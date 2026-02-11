@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface Milestone {
   id: string;
@@ -13,19 +13,6 @@ export interface Milestone {
   description?: string;
   targetDate: string;
   completedDate?: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'delayed';
-  weight: number;
-  notes?: string;
-}
-
-export interface MilestoneDTO {
-  id: string;
-  project_id: string;
-  phase_id?: string;
-  title: string;
-  description?: string;
-  target_date: string;
-  completed_date?: string;
   status: 'pending' | 'in_progress' | 'completed' | 'delayed';
   weight: number;
   notes?: string;
@@ -43,28 +30,17 @@ export function useMilestonesHex(projectId?: string, phaseId?: string) {
     setError(null);
 
     try {
-      let query = supabase
-        .from('enhanced_project_milestones')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('target_date', { ascending: true });
+      const milestoneRepo = RepositoryFactory.getMilestoneRepository();
+      const data = await milestoneRepo.findByProject(projectId, phaseId);
 
-      if (phaseId) {
-        query = query.eq('phase_id', phaseId);
-      }
-
-      const { data, error: queryError } = await query;
-
-      if (queryError) throw queryError;
-
-      setMilestones((data || []).map(m => ({
+      setMilestones((data || []).map((m: any) => ({
         id: m.id,
-        projectId: m.project_id,
-        phaseId: m.phase_id || undefined,
+        projectId: m.project_id || m.projectId,
+        phaseId: m.phase_id || m.phaseId || undefined,
         title: m.title,
         description: m.description || undefined,
-        targetDate: m.target_date,
-        completedDate: m.completed_date || undefined,
+        targetDate: m.target_date || m.targetDate,
+        completedDate: m.completed_date || m.completedDate || undefined,
         status: (m.status || 'pending') as Milestone['status'],
         weight: m.weight || 0.1,
         notes: m.notes || undefined,
@@ -84,24 +60,20 @@ export function useMilestonesHex(projectId?: string, phaseId?: string) {
     milestone: Omit<Milestone, 'id'>
   ): Promise<string | null> => {
     try {
-      const { data, error } = await supabase
-        .from('enhanced_project_milestones')
-        .insert({
-          project_id: milestone.projectId,
-          phase_id: milestone.phaseId || null,
-          title: milestone.title,
-          description: milestone.description,
-          target_date: milestone.targetDate,
-          weight: milestone.weight,
-          notes: milestone.notes,
-          status: 'pending',
-        })
-        .select('id')
-        .single();
+      const milestoneRepo = RepositoryFactory.getMilestoneRepository();
+      const result = await milestoneRepo.create({
+        project_id: milestone.projectId,
+        phase_id: milestone.phaseId || null,
+        title: milestone.title,
+        description: milestone.description,
+        target_date: milestone.targetDate,
+        weight: milestone.weight,
+        notes: milestone.notes,
+        status: 'pending',
+      });
 
-      if (error) throw error;
       await fetchMilestones();
-      return data?.id || null;
+      return result?.id || null;
     } catch (err) {
       console.error('Error creating milestone:', err);
       return null;
@@ -113,7 +85,8 @@ export function useMilestonesHex(projectId?: string, phaseId?: string) {
     updates: Partial<Milestone>
   ): Promise<boolean> => {
     try {
-      const updateData: Partial<MilestoneDTO> = {};
+      const milestoneRepo = RepositoryFactory.getMilestoneRepository();
+      const updateData: Record<string, any> = {};
       if (updates.title) updateData.title = updates.title;
       if (updates.description !== undefined) updateData.description = updates.description;
       if (updates.targetDate) updateData.target_date = updates.targetDate;
@@ -122,12 +95,7 @@ export function useMilestonesHex(projectId?: string, phaseId?: string) {
       if (updates.weight !== undefined) updateData.weight = updates.weight;
       if (updates.notes !== undefined) updateData.notes = updates.notes;
 
-      const { error } = await supabase
-        .from('enhanced_project_milestones')
-        .update(updateData)
-        .eq('id', milestoneId);
-
-      if (error) throw error;
+      await milestoneRepo.update(milestoneId, updateData);
       await fetchMilestones();
       return true;
     } catch (error) {
@@ -146,15 +114,12 @@ export function useMilestonesHex(projectId?: string, phaseId?: string) {
       : null;
 
     try {
-      const { error } = await supabase
-        .from('enhanced_project_milestones')
-        .update({
-          status: newStatus,
-          completed_date: completedDate,
-        })
-        .eq('id', id);
+      const milestoneRepo = RepositoryFactory.getMilestoneRepository();
+      await milestoneRepo.update(id, {
+        status: newStatus,
+        completed_date: completedDate,
+      });
 
-      if (error) throw error;
       await fetchMilestones();
       return true;
     } catch (err) {
