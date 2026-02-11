@@ -10,11 +10,11 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { FileText, Camera, MapPin, FileSpreadsheet, Paperclip, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { 
-  InspectionWorkflowService, 
-  RequiredDocument, 
-  InspectionDocumentType 
-} from '@/services/inspection/InspectionWorkflowService';
+import {
+  InspectionWorkflowService,
+  RequiredDocument,
+  InspectionDocumentType
+} from '@/application/services/InspectionWorkflowService';
 
 interface InspectionDocumentsStepProps {
   inspectionType: string;

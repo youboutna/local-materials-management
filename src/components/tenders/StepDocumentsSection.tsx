@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useQuery } from '@tanstack/react-query';
-import { WorkflowStepService } from '@/services/workflowStepService';
+import { getWorkflowStepService, WorkflowStepService } from '@/application/services/WorkflowStepService';
 import { WorkflowStepDTO, StepDocumentDTO } from '@/dtos/entities/ProjectReportDTO';
 import { FileText, Plus, Eye, CheckCircle, AlertTriangle } from 'lucide-react';
 

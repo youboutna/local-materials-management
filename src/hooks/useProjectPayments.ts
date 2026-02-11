@@ -1,8 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { ProjectWithPayments, Payment } from '@/types/project';
-import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { PaymentService } from '@/application/services/PaymentService';
+import { ProjectService } from '@/application/services/ProjectService';
+import { InspectionService } from '@/application/services/InspectionService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { CreatePaymentDTO, PaymentDTO } from '@/dtos/entities/PaymentDTO';
+import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 
 interface CreatePaymentPayload {
   projectId: string;
@@ -28,60 +34,48 @@ export const useCreateProjectPayment = () => {
 
   return useMutation({
     mutationFn: async ({ projectId, payment }: CreatePaymentPayload) => {
-      // First get the project to validate the payment
-      const { data: project, error: projectError } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', projectId)
-        .single();
-      
-      if (projectError) throw new Error(projectError.message);
+      // Initialize services
+      const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+      const paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
+      const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
 
-      // Get inspections for this project
-      const { data: inspections } = await supabase
-        .from('inspections')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('date', { ascending: false })
-        .limit(1);
+      // First get the project to validate the payment
+      const project = await projectService.getProjectById(projectId);
+      if (!project) throw new Error('Project not found');
+
+      // Get latest inspection for this project
+      const inspections = await inspectionService.getInspectionsByProject(projectId);
+      const latestInspection = inspections.length > 0 ? inspections[0] : undefined;
       
-      const latestInspection = inspections?.[0];
-      
-      // Create the new payment record
-      const { data, error } = await supabase
-        .from('payments')
-        .insert({
-          project_id: projectId,
-          amount: payment.amount,
-          payment_date: payment.paymentDate,
-          payment_method: payment.paymentMethod,
-          progress_at_payment: (project as ProjectWithBudget).progress,
-          inspection_id: latestInspection?.id,
-          transaction_id: `TX-${Date.now()}`,
-          contractor_id: payment.contractorId,
-          contractor_name: payment.contractorName,
-          contractor_contact: payment.contractorContact,
-          bank_name: payment.bankName,
-          account_number: payment.accountNumber,
-          check_number: payment.checkNumber,
-          mobile_number: payment.mobileNumber,
-          mobile_operator: payment.mobileOperator,
-          receiver_name: payment.receiverName,
-        })
-        .select()
-        .single();
-      
-      if (error) throw new Error(error.message);
+      // Create the new payment record using service
+      const paymentDTO: CreatePaymentDTO = {
+        projectId,
+        amount: payment.amount,
+        paymentDate: payment.paymentDate,
+        paymentMethod: payment.paymentMethod,
+        progressAtPayment: project.progress || 0,
+        inspectionId: latestInspection?.id,
+        transactionId: `TX-${Date.now()}`,
+        contractorId: payment.contractorId,
+        contractorName: payment.contractorName,
+        contractorContact: payment.contractorContact,
+        bankName: payment.bankName,
+        accountNumber: payment.accountNumber,
+        checkNumber: payment.checkNumber,
+        mobileNumber: payment.mobileNumber,
+        mobileOperator: payment.mobileOperator,
+        receiverName: payment.receiverName,
+      };
+
+      const createdPayment = await paymentService.createPayment(paymentDTO);
+      if (!createdPayment) throw new Error('Failed to create payment');
 
       // Update project status to 'payé' if full amount
-      if (payment.amount >= (project as ProjectWithBudget).budget) {
-        await supabase
-          .from('projects')
-          .update({ status: 'payé' })
-          .eq('id', projectId);
+      if (payment.amount >= (project.budget || 0)) {
+        await projectService.updateProject(projectId, { status: 'payé' });
       }
       
-      return data as Payment;
+      return createdPayment as Payment;
     },
     onSuccess: (data: Payment, variables) => {
       queryClient.invalidateQueries({ queryKey: ['project', variables.projectId] });
@@ -123,28 +117,20 @@ export const useProjectPayments = (projectId: string) => {
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ['project-with-payments', projectId],
     queryFn: async (): Promise<ProjectWithPayments | null> => {
-      const { data: projectData, error: projectError } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', projectId)
-        .single();
+      // Initialize services
+      const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+      const paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
+      const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
 
-      if (projectError) throw projectError;
+      // Get project data
+      const projectData = await projectService.getProjectById(projectId);
+      if (!projectData) throw new Error('Project not found');
 
-      const { data: paymentsData, error: paymentsError } = await supabase
-        .from('payments')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('payment_date', { ascending: false });
+      // Get payments data
+      const paymentsData = await paymentService.getPaymentsByProject(projectId);
 
-      const { data: inspectionsData, error: inspectionsError } = await supabase
-        .from('inspections')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('date', { ascending: false });
-
-      if (paymentsError) throw paymentsError;
-      if (inspectionsError) throw inspectionsError;
+      // Get inspections data
+      const inspectionsData = await inspectionService.getInspectionsByProject(projectId);
 
       return {
         ...projectData,
@@ -157,30 +143,29 @@ export const useProjectPayments = (projectId: string) => {
 
   const createPayment = async (paymentData: ProjectPayment) => {
     try {
-      const { data, error } = await supabase
-        .from('payments')
-        .insert({
-          project_id: projectId,
-          amount: paymentData.amount,
-          payment_date: paymentData.paymentDate,
-          payment_method: paymentData.paymentMethod,
-          progress_at_payment: paymentData.progress,
-          contractor_id: paymentData.contractorId,
-          mobile_number: paymentData.mobileNumber,
-          mobile_operator: paymentData.mobileOperator,
-          receiver_name: paymentData.receiverName
-        })
-        .select()
-        .single();
+      const paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
+      const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
 
-      if (error) throw error;
+      const paymentDTO: CreatePaymentDTO = {
+        projectId,
+        amount: paymentData.amount,
+        paymentDate: paymentData.paymentDate,
+        paymentMethod: paymentData.paymentMethod,
+        progressAtPayment: paymentData.progress,
+        contractorId: paymentData.contractorId,
+        mobileNumber: paymentData.mobileNumber,
+        mobileOperator: paymentData.mobileOperator,
+        receiverName: paymentData.receiverName
+      };
+
+      const createdPayment = await paymentService.createPayment(paymentDTO);
+      if (!createdPayment) throw new Error('Failed to create payment');
 
       // Update project progress if needed
-      if (data && data.progress_at_payment !== undefined) {
-        await supabase
-          .from('projects')
-          .update({ progress: data.progress_at_payment })
-          .eq('id', projectId);
+      if (createdPayment.progressAtPayment !== undefined) {
+        await projectService.updateProject(projectId, { 
+          progress: createdPayment.progressAtPayment 
+        });
       }
 
       toast({
@@ -188,7 +173,7 @@ export const useProjectPayments = (projectId: string) => {
         description: "Le paiement a été enregistré avec succès.",
       });
 
-      return data as Payment;
+      return createdPayment as Payment;
     } catch (err) {
       console.error('Error creating payment:', err);
       toast({

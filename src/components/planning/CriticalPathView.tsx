@@ -2,7 +2,7 @@
  * CriticalPathView - Displays the critical path with float analysis
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -18,8 +18,8 @@ import {
   TrendingDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { MilestoneService } from '@/services/MilestoneService';
-import { CriticalPathDTO, MilestoneDTO } from '@/types/milestone-dto';
+import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
+import { CriticalPathDTO, MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
 import { differenceInDays, parseISO, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -38,11 +38,7 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
   const [milestones, setMilestones] = useState<MilestoneDTO[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadCriticalPath();
-  }, [projectId]);
-
-  const loadCriticalPath = async () => {
+  const loadCriticalPath = useCallback(async () => {
     try {
       setLoading(true);
       const [pathData, milestonesData] = await Promise.all([
@@ -56,7 +52,11 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId]);
+
+  useEffect(() => {
+    loadCriticalPath();
+  }, [loadCriticalPath]);
 
   const getCriticalMilestones = () => {
     if (!criticalPath) return [];

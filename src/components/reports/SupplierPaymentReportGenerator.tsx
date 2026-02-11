@@ -15,7 +15,7 @@ import { fr } from 'date-fns/locale';
 import { useNotifications } from '@/hooks/useNotifications';
 import { NotificationService } from '@/application/services/NotificationService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { SupplierPaymentReportingService, SupplierPaymentReportData } from '@/services/supplierPaymentReportingService';
+import { getSupplierPaymentReportingService, SupplierPaymentReportingService, SupplierPaymentReportData, SupplierPaymentReportConfig as SupplierPaymentReportConfigDTO, ReportGenerationResultDTO } from '@/application/services/SupplierPaymentReportingService';
 import { ReportFormatting } from '@/utils/reportFormatting';
 import { SupplierPaymentPDFDocument } from './pdf/SupplierPaymentPDFDocument';
 import { SupplierDTO, PaymentDTO, SupplierPaymentReportConfig, ReportGenerationResultDTO } from '@/dtos/reports/reportDTOs';

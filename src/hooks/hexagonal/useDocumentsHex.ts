@@ -6,10 +6,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { DocumentService, type DocumentResponseDto } from '@/application/services/DocumentService';
-import { CreateDocumentRequestDto, UpdateDocumentRequestDto } from '@/application/services/DocumentService';
+import { DocumentService } from '@/application/services/DocumentService';
+import { DocumentDTO, CreateDocumentDTO, UpdateDocumentDTO } from '@/dtos/entities/DocumentDTO';
 
-type DocumentRow = DocumentResponseDto;
+type DocumentRow = DocumentDTO;
 
 // Types for the hooks
 export interface UseDocumentsHexResult {
@@ -17,8 +17,8 @@ export interface UseDocumentsHexResult {
   isLoading: boolean;
   error: string | null;
   refetch: () => void;
-  createDocument: (data: CreateDocumentRequestDto) => void;
-  updateDocument: ({ id, data }: { id: string; data: UpdateDocumentRequestDto }) => void;
+  createDocument: (data: CreateDocumentDTO) => void;
+  updateDocument: ({ id, data }: { id: string; data: UpdateDocumentDTO }) => void;
   deleteDocument: (id: string) => void;
   isCreating: boolean;
   isUpdating: boolean;
@@ -39,9 +39,7 @@ export function useDocumentsHex(filters?: DocumentFilters): UseDocumentsHexResul
   const queryClient = useQueryClient();
   
   // Initialize service with hexagonal architecture
-  const documentService = new DocumentService(
-    RepositoryFactory.getDocumentRepository()
-  );
+  const documentService = DocumentService.getDocumentService();
 
   // Query for documents list from DocumentService
   const {
@@ -258,9 +256,7 @@ export const useDocumentById = (id: string) => {
 };
 
 export const useTenderDocuments = (tenderId: string) => {
-  const documentService = new DocumentService(
-    RepositoryFactory.getDocumentRepository()
-  );
+  const documentService = DocumentService.getDocumentService();
 
   return useQuery({
     queryKey: ['tender-documents', tenderId],
@@ -283,9 +279,7 @@ export const useTenderDocuments = (tenderId: string) => {
 };
 
 export const useWorkflowStepDocuments = (stepId: string) => {
-  const documentService = new DocumentService(
-    RepositoryFactory.getDocumentRepository()
-  );
+  const documentService = DocumentService.getDocumentService();
 
   return useQuery({
     queryKey: ['workflow-step-documents', stepId],
@@ -304,5 +298,110 @@ export const useWorkflowStepDocuments = (stepId: string) => {
       }
     },
     enabled: !!stepId
+  });
+};
+
+// =================== DOCUMENT GENERATION HOOKS ===================
+
+/**
+ * Hook for project documents summary and analytics
+ */
+export const useProjectDocumentsSummary = (projectId: string) => {
+  const documentService = DocumentService.getDocumentService();
+
+  return useQuery({
+    queryKey: ['project-documents-summary', projectId],
+    queryFn: async () => {
+      try {
+        return await documentService.generateProjectDocumentsSummary(projectId);
+      } catch (error) {
+        console.error('Error generating project documents summary:', error);
+        throw error;
+      }
+    },
+    enabled: !!projectId
+  });
+};
+
+/**
+ * Hook for document metadata for reports
+ */
+export const useDocumentMetadata = (projectId: string) => {
+  const documentService = DocumentService.getDocumentService();
+
+  return useQuery({
+    queryKey: ['document-metadata', projectId],
+    queryFn: async () => {
+      try {
+        return await documentService.generateDocumentMetadata(projectId);
+      } catch (error) {
+        console.error('Error generating document metadata:', error);
+        throw error;
+      }
+    },
+    enabled: !!projectId
+  });
+};
+
+/**
+ * Hook for document compliance report
+ */
+export const useDocumentComplianceReport = (projectId: string) => {
+  const documentService = DocumentService.getDocumentService();
+
+  return useQuery({
+    queryKey: ['document-compliance-report', projectId],
+    queryFn: async () => {
+      try {
+        return await documentService.generateComplianceReport(projectId);
+      } catch (error) {
+        console.error('Error generating compliance report:', error);
+        throw error;
+      }
+    },
+    enabled: !!projectId
+  });
+};
+
+/**
+ * Hook for document download package generation
+ */
+export const useDocumentDownloadPackage = (projectId: string, documentIds?: string[]) => {
+  const documentService = DocumentService.getDocumentService();
+
+  return useMutation({
+    mutationFn: async () => {
+      try {
+        return await documentService.generateDownloadPackage(projectId, documentIds);
+      } catch (error) {
+        console.error('Error generating download package:', error);
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      toast.success(`Package généré avec ${data.documentCount} documents`);
+    },
+    onError: (error) => {
+      toast.error('Erreur lors de la génération du package');
+    }
+  });
+};
+
+/**
+ * Hook for document analytics for dashboard
+ */
+export const useDocumentAnalytics = (projectId?: string) => {
+  const documentService = DocumentService.getDocumentService();
+
+  return useQuery({
+    queryKey: ['document-analytics', projectId],
+    queryFn: async () => {
+      try {
+        return await documentService.generateDocumentAnalytics(projectId);
+      } catch (error) {
+        console.error('Error generating document analytics:', error);
+        throw error;
+      }
+    }
   });
 };

@@ -3,7 +3,7 @@ import PhaseWorkflowOrchestrator from './PhaseWorkflowOrchestrator';
 import { usePhaseWorkflow } from '@/hooks/usePhaseWorkflow';
 import { useCreateProjectPayment } from '@/hooks/useProjectPayments';
 import { generatePVPDF } from '@/lib/pvGenerator';
-import { StorageFactory } from '@/services/storage/StorageFactory';
+import { StorageFactory } from '@/application/services/StorageFactory';
 import { DocumentService } from '@/application/services/DocumentService';
 import { DocumentType } from '@/domain/entities/Document';
 import type { CreateDocumentRequestDto } from '@/dtos/entities/DocumentDTO';

@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { DELAY_THRESHOLDS } from "../../types/project";
+import { DELAY_THRESHOLDS } from "../../dtos/entities/ProjectDTO";
 
 interface ProjectDelay {
   projectId: string;

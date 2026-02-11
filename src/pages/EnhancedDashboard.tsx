@@ -25,6 +25,7 @@ import { actionLabels } from '@/application/services/ProjectManagerService';
 import { EscalationRoles, ProjectData } from '@/dtos/entities/ProjectDTO';
 import { AppLayout } from '@/components/layout';
 import { useProjectsHex, useDocumentsHex } from '@/hooks/hexagonal';
+import { useProjectHierarchyHex } from '@/hooks/hexagonal/useProjectHierarchyHex';
 
 interface ProjectAlert {
   id: string;
@@ -428,9 +429,8 @@ const DashboardContent = () => {
 // Main component with ProjectManager provider
 const EnhancedDashboard = () => {
   const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
-  const [projectHierarchy, setProjectHierarchy] = useState<any[]>([]);
   
-  // Use hexagonal hook for projects
+  // Use hexagonal hooks for projects and hierarchy
   const { projects: hexProjects } = useProjectsHex();
 
   useEffect(() => {
@@ -454,13 +454,6 @@ const EnhancedDashboard = () => {
           } as ProjectData;
           
           setSelectedProject(projectData);
-
-          // Load organizational hierarchy for this project (RPC still needs dynamic import)
-          const { supabase } = await import('@/integrations/supabase/client');
-          const { data: hierarchy } = await supabase
-            .rpc('get_project_hierarchy', { project_id_param: project.id });
-          
-          setProjectHierarchy(hierarchy || []);
         }
       } catch (error) {
         console.error('Error loading default project:', error);

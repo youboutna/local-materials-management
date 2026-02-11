@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { ProjectDataCalculations } from '@/utils/projectDataCalculations';
+import { ProjectCalculationService } from '@/application/services/ProjectCalculationService';
 import {
   formatCurrency,
   getFinancialHealthColor,
@@ -29,7 +29,7 @@ const FinancialAnalysisCard: React.FC<FinancialAnalysisCardProps> = ({
 }) => {
   const { data: phaseCosts, isLoading: loadingCosts } = useQuery({
     queryKey: ['phase-costs', projectId, phaseId],
-    queryFn: () => ProjectDataCalculations.calculatePhaseCosts(projectId, phaseId),
+    queryFn: () => ProjectCalculationService.calculatePhaseCosts(projectId, phaseId),
     enabled: !!projectId && !!phaseId,
   });
 

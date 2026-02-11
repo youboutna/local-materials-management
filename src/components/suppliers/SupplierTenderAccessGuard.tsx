@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Shield, Lock, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { TenderSharingService } from '@/services/TenderSharingService';
+import { TenderSharingService } from '@/application/services/TenderSharingService';
 
 interface SupplierTenderAccessGuardProps {
   onAccessGranted: (tenderId: string, supplierEmail: string) => void;

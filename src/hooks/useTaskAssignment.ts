@@ -1,14 +1,25 @@
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/use-auth';
 import { useNotifications } from '@/hooks/useNotifications';
 import { TaskType, NotificationMetadata } from '@/dtos/entities/TaskDTO';
 import { toast } from '@/hooks/use-toast';
+import { TaskService } from '@/application/services/TaskService';
+import { EmployeeService } from '@/application/services/EmployeeService';
+import { SupplierService } from '@/application/services/SupplierService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { CreateTaskAssignmentDTO, TaskAssignmentDTO } from '@/dtos/entities/TaskAssignmentDTO';
+import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
+import { SupplierDTO } from '@/dtos/entities/SupplierDTO';
 
 export const useTaskAssignment = () => {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const { createNotification } = useNotifications();
+
+  // Initialize services
+  const taskService = new TaskService(RepositoryFactory.getTaskRepository());
+  const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
+  const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
 
   const createTaskAssignment = async (
     title: string,
@@ -30,74 +41,46 @@ export const useTaskAssignment = () => {
       let assigneeType: 'supplier' | 'employee' | 'user' = 'user';
 
       // Try employees first
-      const { data: employeeData } = await supabase
-        .from('employees')
-        .select('full_name, email')
-        .eq('id', assignedTo)
-        .maybeSingle();
+      const employeeData = await employeeService.getEmployeeById(assignedTo);
       
       if (employeeData) {
-        assigneeName = employeeData.full_name;
+        assigneeName = employeeData.fullName || employeeData.name || 'Employé';
         assigneeEmail = employeeData.email || '';
         assigneeType = 'employee';
       } else {
         // Try suppliers
-        const { data: supplierData } = await supabase
-          .from('suppliers')
-          .select('name, email, contact_person')
-          .eq('id', assignedTo)
-          .maybeSingle();
+        const supplierData = await supplierService.getSupplierById(assignedTo);
         
         if (supplierData) {
-          assigneeName = supplierData.contact_person || supplierData.name;
+          assigneeName = supplierData.contactPerson || supplierData.name || 'Fournisseur';
           assigneeEmail = supplierData.email || '';
           assigneeType = 'supplier';
         } else {
-          // Try profiles (authenticated users)
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', assignedTo)
-            .maybeSingle();
-          
-          if (profileData) {
-            assigneeName = profileData.full_name || 'Utilisateur';
-            assigneeType = 'user';
-          }
+          // Default to user if no employee or supplier found
+          assigneeName = user.user_metadata?.full_name || user.email || 'Utilisateur';
+          assigneeType = 'user';
         }
       }
 
-      // Create the task assignment with assigned_to + assignee_type pattern
-      interface TaskAssignmentData {
-        title: string;
-        description: string;
-        assignee_type: string;
-        assigned_to: string;
-        priority: 'low' | 'medium' | 'high' | 'urgent';
-        due_date?: string;
-      }
-
-      const insertData: TaskAssignmentData = {
+      // Create the task assignment using service
+      const taskAssignmentDTO: CreateTaskAssignmentDTO = {
         title,
         description,
-        assignee_type: assigneeType,
-        assigned_to: assignedTo,
+        assigneeType,
+        assignedTo,
         priority,
-        due_date: dueDate,
-        project_id: projectId,
-        assigned_by: user?.id || null,
-        assignee_name: assigneeName,
-        assignee_email: assigneeEmail,
+        dueDate,
+        projectId,
+        assignedBy: user?.id || null,
+        assigneeName,
+        assigneeEmail,
         status: 'pending',
+        taskType,
+        relatedId,
       };
 
-      const { data: taskData, error: taskError } = await supabase
-        .from('task_assignments')
-        .insert(insertData)
-        .select()
-        .single();
-
-      if (taskError) throw taskError;
+      const createdTask = await taskService.createTaskAssignment(taskAssignmentDTO);
+      if (!createdTask) throw new Error('Failed to create task assignment');
 
       // Create notification metadata
       const metadata: NotificationMetadata = {
@@ -133,7 +116,7 @@ export const useTaskAssignment = () => {
         `Nouvelle tâche assignée: ${title}`,
         `Vous avez été assigné(e) à une nouvelle tâche${priority === 'urgent' ? ' URGENTE' : priority === 'high' ? ' prioritaire' : ''}. ${description ? description.substring(0, 100) + '...' : ''}`,
         'task_assignment',
-        taskData?.id,
+        createdTask.id,
         metadata
       );
 
@@ -142,7 +125,7 @@ export const useTaskAssignment = () => {
         description: `La tâche "${title}" a été assignée à ${assigneeName}`,
       });
 
-      return taskData;
+      return createdTask;
     } catch (error) {
       console.error('Error creating task assignment:', error);
       toast({

@@ -4,6 +4,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
+import { TenderSubmissionService } from '@/application/services/TenderSubmissionService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface Submission {
@@ -82,9 +83,20 @@ export const useSupplierSubmissionsHex = (supplierId?: string) => {
   return useQuery({
     queryKey: ['supplier-submissions', supplierId],
     queryFn: async (): Promise<Submission[]> => {
-      // Placeholder - would use TenderSubmissionService
-      console.log('Supplier submissions not implemented for supplier:', supplierId);
-      return [];
+      // Use hexagonal TenderSubmissionService
+      if (!supplierId) return [];
+      const submissions = await TenderSubmissionService.getTenderSubmissions(supplierId);
+      return submissions.map((sub: any) => ({
+        id: sub.id,
+        tenderId: sub.tender_id,
+        supplierName: sub.supplier_name,
+        supplierEmail: sub.supplier_email,
+        submissionDate: sub.submission_date,
+        status: sub.status,
+        secretCode: sub.secret_code,
+        createdAt: sub.created_at,
+        updatedAt: sub.updated_at
+      }));
     },
     enabled: !!supplierId,
     staleTime: 5 * 60 * 1000, // 5 minutes

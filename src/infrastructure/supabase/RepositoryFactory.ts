@@ -43,12 +43,9 @@ import {
   IAlertRepository,
   IMilestoneRepository,
   ITaskAssignmentRepository,
-  IPerformanceMonitoringRepository,
-  IMonitoringRepository,
   IWorkspaceRepository,
   IProjectStakeholderRepository,
   IProjectAlertRepository,
-  IConstructionPhaseRepository,
   ITenderEstimateRepository,
   IPaymentBlockingRepository,
   IComplianceRepository
@@ -128,9 +125,7 @@ interface RepositoryRegistry {
   inspectionPermissionRepository?: IInspectionPermissionRepository;
   alertRepository?: IAlertRepository;
   milestoneRepository?: IMilestoneRepository;
-  constructionPhaseRepository?: IConstructionPhaseRepository;
   complianceRepository?: IComplianceRepository;
-  monitoringRepository?: IMonitoringRepository;
 }
 
 /**
@@ -647,7 +642,12 @@ export class RepositoryFactory {
 
   /**
    * Get Workspace Repository instance
-    throw new Error('WorkspaceRepository not yet implemented. Use local state management until database table is available');
+   * Lazy loaded for memory efficiency
+   */
+  static getWorkspaceRepository(): IWorkspaceRepository {
+    if (!repositoryRegistry.workspaceRepository) {
+      repositoryRegistry.workspaceRepository = new SupabaseWorkspaceAdapter();
+    }    return repositoryRegistry.workspaceRepository;
   }
 
 

@@ -12,7 +12,21 @@ import { IMilestoneRepository } from '@/domain/repositories/IMilestoneRepository
 import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import { getCheckpointVerificationEngine } from './CheckpointVerificationEngine';
 import { AutomaticDecompteCalculator } from './AutomaticDecompteCalculator';
-import type { CheckpointDTO, AutomaticDecompteDTO } from '@/types/checkpoint-dto';
+// Use AutomaticDecompteDTO from WorkflowDTO to avoid legacy imports
+import type { AutomaticDecompteDTO } from '@/dtos/entities/WorkflowDTO';
+
+// Define CheckpointDTO locally to avoid legacy imports
+export interface CheckpointDTO {
+  id: string;
+  phaseId: string;
+  milestoneId: string;
+  status: 'pending' | 'in_progress' | 'verified' | 'rejected';
+  verifiedAt?: string;
+  verifiedBy?: string;
+  notes?: string;
+  documents?: string[];
+  projectId: string;
+}
 import type { CalculatePhaseDecompteRequestDto } from '@/dtos/entities/DecompteDTO';
 import { WorkflowTransformer } from '@/dtos/transforms/WorkflowTransformer';
 import { MilestoneTransformer } from '@/dtos/transforms/MilestoneTransformer';

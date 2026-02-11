@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileText, Upload, Eye, CheckCircle, XCircle, Clock, AlertCircle, Plus, Calculator } from 'lucide-react';
 import { TenderDocumentWithDetails, TenderDocumentCategory, TENDER_DOCUMENT_LABELS, TENDER_CATEGORY_LABELS, TenderDocumentSubcategory } from '@/dtos/entities/TenderDTO';
-import { ADMINISTRATIVE_SUBCATEGORY_GROUPS } from '@/types/tender';
+import { ADMINISTRATIVE_SUBCATEGORY_GROUPS } from '@/dtos/entities/TenderDTO';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';

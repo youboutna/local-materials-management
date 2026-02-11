@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,10 +9,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { FileText, Upload, Download, Trash2, Plus, Calendar, User, Tag } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { DocumentService } from '@/application/services/DocumentService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { CreateMaterialDocumentDTO, MaterialDocumentDTO } from '@/dtos/entities/MaterialDocumentDTO';
 
 interface MaterialDocument {
   id: string;
@@ -41,7 +43,7 @@ interface MaterialDocument {
   expiry_date?: string;
   supplier_name?: string;
   
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   tags?: string[];
   uploaded_by?: string;
   created_at: string;
@@ -69,6 +71,9 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { uploadFile, uploading } = useDocumentStorage();
 
+  const documentService = useMemo(() => 
+    DocumentService.getDocumentService(), []);
+
   const [formData, setFormData] = useState({
     documentType: 'invoice' as MaterialDocument['documentType'],
     title: '',
@@ -91,25 +96,55 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
     if (materialId) {
       fetchDocuments();
     }
-  }, [materialId]);
+  }, [materialId, fetchDocuments]);
 
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('material_documents')
-        .select('*')
-        .eq('material_id', materialId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setDocuments((data || []) as MaterialDocument[]);
+      const materialDocs = await documentService.getDocumentsByMaterial(materialId);
+      
+      // Map to MaterialDocument interface for backward compatibility
+      const mappedDocs = materialDocs.map((doc: MaterialDocumentDTO) => ({
+        id: doc.id,
+        materialId: doc.materialId,
+        documentType: doc.documentType,
+        title: doc.title,
+        description: doc.description,
+        fileName: doc.fileName,
+        fileUrl: doc.fileUrl,
+        fileSize: doc.fileSize,
+        mimeType: doc.mimeType,
+        documentNumber: doc.documentNumber,
+        documentDate: doc.documentDate,
+        expiryDate: doc.expiryDate,
+        supplierName: doc.supplierName,
+        
+        // Legacy snake_case
+        material_id: doc.materialId,
+        document_type: doc.documentType,
+        file_name: doc.fileName,
+        file_url: doc.fileUrl,
+        file_size: doc.fileSize,
+        mime_type: doc.mimeType,
+        document_number: doc.documentNumber,
+        document_date: doc.documentDate,
+        expiry_date: doc.expiryDate,
+        supplier_name: doc.supplierName,
+        
+        metadata: doc.metadata,
+        tags: doc.tags,
+        uploaded_by: doc.uploadedBy,
+        created_at: doc.createdAt,
+        updated_at: doc.updatedAt,
+      }));
+      
+      setDocuments(mappedDocs);
     } catch (error) {
       console.error('Error fetching documents:', error);
       toast.error('Erreur lors du chargement des documents');
     } finally {
       setLoading(false);
     }
-  };
+  }, [materialId, documentService]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -163,26 +198,25 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
         .map(tag => tag.trim())
         .filter(tag => tag.length > 0);
 
-      // Insert document record
-      const { error } = await supabase
-        .from('material_documents')
-        .insert({
-          material_id: materialId,
-          document_type: formData.documentType || formData.document_type,
-          title: formData.title,
-          description: formData.description || null,
-          file_name: fileName || null,
-          file_url: fileUrl || null,
-          file_size: fileSize || null,
-          mime_type: mimeType || null,
-          document_number: formData.documentNumber || formData.document_number,
-          document_date: formData.documentDate || formData.document_date,
-          expiry_date: formData.expiryDate || formData.expiry_date,
-          supplier_name: formData.supplierName || formData.supplier_name,
-          tags: tags.length > 0 ? tags : null,
-        });
+      // Create material document using service
+      const createDocumentDTO: CreateMaterialDocumentDTO = {
+        materialId,
+        documentType: formData.documentType || formData.document_type,
+        title: formData.title,
+        description: formData.description || null,
+        fileName: fileName || null,
+        fileUrl: fileUrl || null,
+        fileSize: fileSize || null,
+        mimeType: mimeType || null,
+        documentNumber: formData.documentNumber || formData.document_number,
+        documentDate: formData.documentDate || formData.document_date,
+        expiryDate: formData.expiryDate || formData.expiry_date,
+        supplierName: formData.supplierName || formData.supplier_name,
+        tags: tags.length > 0 ? tags : null,
+      };
 
-      if (error) throw error;
+      const createdDocument = await documentService.createMaterialDocument(createDocumentDTO);
+      if (!createdDocument) throw new Error('Failed to create document');
 
       toast.success('Document ajouté avec succès');
       setIsAddDialogOpen(false);
@@ -200,12 +234,8 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
     }
 
     try {
-      const { error } = await supabase
-        .from('material_documents')
-        .delete()
-        .eq('id', documentId);
-
-      if (error) throw error;
+      const deleted = await documentService.deleteMaterialDocument(documentId);
+      if (!deleted) throw new Error('Failed to delete document');
 
       toast.success('Document supprimé');
       fetchDocuments();
@@ -283,7 +313,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
                       <Label htmlFor="document_type">Type de document</Label>
                       <Select
                         value={formData.document_type}
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, document_type: value as any }))}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, document_type: value as MaterialDocument['document_type'] }))}
                       >
                         <SelectTrigger>
                           <SelectValue />

@@ -8,6 +8,7 @@ import { Document, DocumentStatus as DomainDocumentStatus } from '@/domain/entit
 import { DocumentTransformer } from '@/dtos/transforms/DocumentTransformer';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { DocumentDTO, CreateDocumentDTO, UpdateDocumentDTO, DocumentStatus, DocumentType, DocumentResponseDto } from '@/dtos/entities/DocumentDTO';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 function isDocumentType(type: string): type is DocumentType {
@@ -76,6 +77,11 @@ export class DocumentService {
   static async getProjectDocuments(projectId: string): Promise<DocumentDTO[]> {
     const service = new DocumentService();
     return service.getProjectDocuments(projectId);
+  }
+
+  // Factory function for getting service instance
+  static getDocumentService(): DocumentService {
+    return new DocumentService();
   }
 
   /**
@@ -357,6 +363,295 @@ export class DocumentService {
     } catch (error) {
       console.error('DocumentService.uploadDocument failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to upload document');
+    }
+  }
+
+  // =================== DOCUMENT GENERATION METHODS ===================
+
+  /**
+   * Generate project documents summary
+   */
+  async generateProjectDocumentsSummary(projectId: string): Promise<{
+    totalDocuments: number;
+    documentsByType: Record<DocumentType, number>;
+    documentsByStatus: Record<DocumentStatus, number>;
+    recentDocuments: DocumentDTO[];
+    expiredDocuments: DocumentDTO[];
+    pendingApproval: DocumentDTO[];
+  }> {
+    try {
+      const allDocuments = await this.getAllDocuments();
+      const projectDocuments = allDocuments.filter(doc => doc.projectId === projectId);
+      
+      // Count by type
+      const documentsByType: Record<DocumentType, number> = {} as any;
+      projectDocuments.forEach(doc => {
+        documentsByType[doc.documentType] = (documentsByType[doc.documentType] || 0) + 1;
+      });
+      
+      // Count by status
+      const documentsByStatus: Record<DocumentStatus, number> = {} as any;
+      projectDocuments.forEach(doc => {
+        documentsByStatus[doc.status] = (documentsByStatus[doc.status] || 0) + 1;
+      });
+      
+      // Filter recent documents (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const recentDocuments = projectDocuments
+        .filter(doc => new Date(doc.createdAt) >= thirtyDaysAgo)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 10);
+      
+      // Filter expired documents
+      const expiredDocuments = projectDocuments.filter(doc => 
+        doc.status === DocumentStatus.EXPIRED ||
+        (doc.validUntil && new Date(doc.validUntil) < new Date())
+      );
+      
+      // Filter pending approval
+      const pendingApproval = projectDocuments.filter(doc => 
+        doc.status === DocumentStatus.PENDING_APPROVAL
+      );
+      
+      return {
+        totalDocuments: projectDocuments.length,
+        documentsByType,
+        documentsByStatus,
+        recentDocuments,
+        expiredDocuments,
+        pendingApproval
+      };
+    } catch (error) {
+      console.error('Error generating project documents summary:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to generate documents summary');
+    }
+  }
+
+  /**
+   * Generate document metadata for reports
+   */
+  async generateDocumentMetadata(projectId: string): Promise<{
+    documents: Array<{
+      id: string;
+      title: string;
+      type: string;
+      status: string;
+      fileSize: number;
+      createdAt: string;
+      uploadedBy?: string;
+      fileUrl?: string;
+      category?: string;
+      tags: string[];
+    }>;
+    totalSize: number;
+    lastUpdated: string;
+  }> {
+    try {
+      const projectDocuments = await this.getProjectDocuments(projectId);
+      
+      const documents = projectDocuments.map(doc => ({
+        id: doc.id,
+        title: doc.title,
+        type: doc.documentType,
+        status: doc.status,
+        fileSize: doc.fileSize || 0,
+        createdAt: doc.createdAt,
+        uploadedBy: doc.uploadedBy,
+        fileUrl: doc.fileUrl,
+        category: doc.category,
+        tags: doc.tags || []
+      }));
+      
+      const totalSize = documents.reduce((sum, doc) => sum + (doc.fileSize || 0), 0);
+      const lastUpdated = documents.length > 0 
+        ? documents.reduce((latest, doc) => 
+            new Date(doc.createdAt) > new Date(latest.createdAt) ? doc : latest
+          ).createdAt
+        : new Date().toISOString();
+      
+      return {
+        documents,
+        totalSize,
+        lastUpdated
+      };
+    } catch (error) {
+      console.error('Error generating document metadata:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to generate document metadata');
+    }
+  }
+
+  /**
+   * Generate document compliance report
+   */
+  async generateComplianceReport(projectId: string): Promise<{
+    totalDocuments: number;
+    compliantDocuments: number;
+    nonCompliantDocuments: number;
+    expiredDocuments: number;
+    missingDocuments: string[];
+    complianceScore: number;
+    recommendations: string[];
+  }> {
+    try {
+      const projectDocuments = await this.getProjectDocuments(projectId);
+      
+      const expiredDocuments = projectDocuments.filter(doc => 
+        doc.status === DocumentStatus.EXPIRED ||
+        (doc.validUntil && new Date(doc.validUntil) < new Date())
+      );
+      
+      const compliantDocuments = projectDocuments.filter(doc => 
+        doc.status === DocumentStatus.APPROVED
+      );
+      
+      const nonCompliantDocuments = projectDocuments.filter(doc => 
+        doc.status === DocumentStatus.REJECTED ||
+        doc.status === DocumentStatus.DRAFT
+      );
+      
+      // Check for required document types
+      const requiredTypes = [DocumentType.CONTRACT, DocumentType.INSURANCE, DocumentType.PERMIT];
+      const existingTypes = new Set(projectDocuments.map(doc => doc.documentType));
+      const missingDocuments = requiredTypes.filter(type => !existingTypes.has(type));
+      
+      const totalDocuments = projectDocuments.length;
+      const complianceScore = totalDocuments > 0 ? (compliantDocuments.length / totalDocuments) * 100 : 0;
+      
+      const recommendations: string[] = [];
+      
+      if (expiredDocuments.length > 0) {
+        recommendations.push(`${expiredDocuments.length} document(s) expiré(s) nécessitent une mise à jour`);
+      }
+      
+      if (missingDocuments.length > 0) {
+        recommendations.push(`Documents manquants: ${missingDocuments.join(', ')}`);
+      }
+      
+      if (nonCompliantDocuments.length > 0) {
+        recommendations.push(`${nonCompliantDocuments.length} document(s) nécessitent une validation`);
+      }
+      
+      return {
+        totalDocuments,
+        compliantDocuments: compliantDocuments.length,
+        nonCompliantDocuments: nonCompliantDocuments.length,
+        expiredDocuments: expiredDocuments.length,
+        missingDocuments,
+        complianceScore: Math.round(complianceScore),
+        recommendations
+      };
+    } catch (error) {
+      console.error('Error generating compliance report:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to generate compliance report');
+    }
+  }
+
+  /**
+   * Generate document download package (ZIP)
+   */
+  async generateDownloadPackage(projectId: string, documentIds?: string[]): Promise<{
+    packageUrl: string;
+    documentCount: number;
+    packageSize: number;
+    expiresAt: string;
+  }> {
+    try {
+      // This would integrate with a file storage service to create ZIP packages
+      // For now, return a mock implementation
+      const documents = documentIds 
+        ? await Promise.all(documentIds.map(id => this.getDocumentById(id).then(doc => doc).catch(() => null)))
+        : await this.getProjectDocuments(projectId);
+      
+      const validDocuments = documents.filter((doc): doc is DocumentDTO => doc !== null) as DocumentDTO[];
+      
+      // Mock implementation - in real scenario, this would:
+      // 1. Create ZIP file with all documents
+      // 2. Upload to storage
+      // 3. Return download URL
+      
+      return {
+        packageUrl: `/api/documents/download/${projectId}`,
+        documentCount: validDocuments.length,
+        packageSize: validDocuments.reduce((sum, doc) => sum + (doc.fileSize || 0), 0),
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
+      };
+    } catch (error) {
+      console.error('Error generating download package:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to generate download package');
+    }
+  }
+
+  /**
+   * Get document by ID (helper method)
+   */
+  private async getDocumentById(id: string): Promise<DocumentDTO | null> {
+    try {
+      const documents = await this.getAllDocuments();
+      return documents.find(doc => doc.id === id) || null;
+    } catch (error) {
+      console.error('Error getting document by ID:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Generate document analytics for dashboard
+   */
+  async generateDocumentAnalytics(projectId?: string): Promise<{
+    totalDocuments: number;
+    documentsByType: Record<string, number>;
+    documentsByStatus: Record<string, number>;
+    recentUploads: number;
+    storageUsed: number;
+    expiringSoon: number;
+  }> {
+    try {
+      const allDocuments = await this.getAllDocuments();
+      const documents = projectId 
+        ? allDocuments.filter(doc => doc.projectId === projectId)
+        : allDocuments;
+      
+      // Count by type
+      const documentsByType: Record<string, number> = {};
+      documents.forEach(doc => {
+        documentsByType[doc.documentType] = (documentsByType[doc.documentType] || 0) + 1;
+      });
+      
+      // Count by status
+      const documentsByStatus: Record<string, number> = {};
+      documents.forEach(doc => {
+        documentsByStatus[doc.status] = (documentsByStatus[doc.status] || 0) + 1;
+      });
+      
+      // Recent uploads (last 7 days)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const recentUploads = documents.filter(doc => new Date(doc.createdAt) >= sevenDaysAgo).length;
+      
+      // Storage used
+      const storageUsed = documents.reduce((sum, doc) => sum + (doc.fileSize || 0), 0);
+      
+      // Expiring soon (next 30 days)
+      const thirtyDaysFromNow = new Date();
+      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+      const expiringSoon = documents.filter(doc => 
+        doc.validUntil && 
+        new Date(doc.validUntil) >= new Date() && 
+        new Date(doc.validUntil) <= thirtyDaysFromNow
+      ).length;
+      
+      return {
+        totalDocuments: documents.length,
+        documentsByType,
+        documentsByStatus,
+        recentUploads,
+        storageUsed,
+        expiringSoon
+      };
+    } catch (error) {
+      console.error('Error generating document analytics:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to generate document analytics');
     }
   }
 }

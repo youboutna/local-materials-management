@@ -5,14 +5,14 @@ import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { TenderSharingService } from '@/services/TenderSharingService';
+import { TenderSharingService } from '@/application/services/TenderSharingService';
 import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, CheckCircle, Download, FileText, Lock, Shield } from 'lucide-react';
 import { useState } from 'react';
 
 export const SupplierSecureAccessPortal = () => {
   const [secretCode, setSecretCode] = useState('');
-  const [validatedSecret, setValidatedSecret] = useState<any>(null);
+  const [validatedSecret, setValidatedSecret] = useState<{ tender_id: string; secret_code: string } | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -105,7 +105,7 @@ export const SupplierSecureAccessPortal = () => {
     }
   };
 
-  const handleDownload = async (doc: any) => {
+  const handleDownload = async (doc: { id: string; title: string; file_url: string }) => {
     if (!doc.file_url) return;
     
     // Log download action
@@ -234,7 +234,7 @@ export const SupplierSecureAccessPortal = () => {
               </div>
             ) : documents && documents.length > 0 ? (
               <div className="grid gap-3">
-                {documents.map((doc: any) => (
+                {documents.map((doc: { id: string; title: string; description?: string; file_url: string }) => (
                   <Card key={doc.id} className="hover:shadow-md transition-shadow">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">

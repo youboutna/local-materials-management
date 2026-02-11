@@ -66,8 +66,8 @@ export class AppError extends Error {
   constructor(
     public code: ErrorCode,
     public message: string,
-    public originalError?: any,
-    public metadata?: Record<string, any>
+    public originalError?: Error | unknown,
+    public metadata?: Record<string, unknown>
   ) {
     super(message);
     this.name = 'AppError';
@@ -172,7 +172,7 @@ export class AppError extends Error {
  * Error logger utility
  */
 export class ErrorLogger {
-  static log(errorOrLevel: Error | AppError | 'info' | 'error' | 'warn', contextOrMessage?: string, data?: any): void {
+  static log(errorOrLevel: Error | AppError | 'info' | 'error' | 'warn', contextOrMessage?: string, data?: Record<string, unknown>): void {
     const timestamp = new Date().toISOString();
     
     // Support both legacy (error, context) and new (level, message, data) signatures

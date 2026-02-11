@@ -49,7 +49,8 @@ import { InsuranceService } from '@/application/services/InsuranceService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { ProjectTransformer } from '@/dtos/transforms/ProjectTransformer';
-import { ReferentialType } from '@/config/referentials';
+import { ReferentialType, getReferential, getPhasesForReferential } from '@/config/referentials';
+import { addDays, format, parseISO } from 'date-fns';
 
 export enum WorkflowMode {
   CREATE = 'create',
@@ -61,6 +62,74 @@ export enum WorkflowMode {
 // Export types for hooks
 export interface ProjectCreationWorkflowData extends ProjectWorkflowData {
   referentialCode?: ReferentialType;
+  generateMilestones?: boolean;
+}
+
+// Phase generation interfaces (from PhaseGeneratorService)
+export interface GeneratedPhaseData {
+  id: string;
+  phaseCode: string;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  estimatedDuration: number;
+  status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
+  budget: number;
+  progress: number;
+  order: number;
+  steps: GeneratedStepData[];
+  milestones: GeneratedMilestoneDTO[];
+}
+
+export interface GeneratedStepData {
+  id: string;
+  stepCode: string;
+  name: string;
+  order: number;
+  tasks: GeneratedTaskData[];
+}
+
+export interface GeneratedTaskData {
+  id: string;
+  taskCode: string;
+  name: string;
+  description?: string;
+  estimatedDurationDays: number;
+  requiresInspection: boolean;
+  requiresEngineerApproval: boolean;
+  status: 'not_started' | 'in_progress' | 'completed';
+}
+
+export interface ProjectGenerationConfig {
+  referentialType: ReferentialType;
+  projectStartDate: string;
+  projectBudget: number;
+  projectId?: string;
+  generateMilestones: boolean;
+}
+
+export interface GeneratedMilestoneDTO {
+  title: string;
+  description: string;
+  target_date: string;
+  type: string;
+  priority: string;
+  weight: number;
+  deliverables: string[];
+  dependencies: string[];
+  requiresInspection: boolean;
+  inspectionType: string;
+  templateId?: string;
+  phaseCode?: string;
+}
+
+export interface GenerationSummary {
+  totalPhases: number;
+  totalSteps: number;
+  totalTasks: number;
+  totalMilestones: number;
+  estimatedDurationDays: number;
 }
 
 export interface WorkflowResult {
@@ -292,12 +361,20 @@ export class ProjectWorkflowService {
         const createdProject = await this.projectRepository.create(projectEntity);
         savedProjectId = createdProject.id;
 
-        // If referential is specified, generate phases from it
+        // If referential is specified, generate enhanced phases from it
         if (projectData.projectReference) {
-          await this.generatePhasesFromReferential(
-            savedProjectId,
-            projectData.projectReference as ReferentialType
-          );
+          const config: ProjectGenerationConfig = {
+            referentialType: projectData.projectReference as ReferentialType,
+            projectStartDate: projectData.startDate || new Date().toISOString().split('T')[0],
+            projectBudget: projectData.budget || 0,
+            projectId: savedProjectId,
+            generateMilestones: true
+          };
+          
+          const generatedPhases = await this.generateCompleteProjectStructure(config);
+          
+          // Save the enhanced phase structure
+          await this.saveGeneratedPhases(savedProjectId, generatedPhases);
         }
       } else if (savedProjectId) {
         // Update existing project
@@ -461,7 +538,365 @@ export class ProjectWorkflowService {
     }
   }
 
-  // =================== REFERENTIAL INTEGRATION ===================
+  // =================== ENHANCED PHASE GENERATION (from PhaseGeneratorService) ===================
+
+  /**
+   * Generate complete project structure from referential (enhanced version)
+   */
+  async generateCompleteProjectStructure(config: ProjectGenerationConfig): Promise<GeneratedPhaseData[]> {
+    try {
+      const referential = getReferential(config.referentialType);
+      if (!referential) {
+        console.error(`Referential not found: ${config.referentialType}`);
+        return [];
+      }
+
+      const phases = getPhasesForReferential(config.referentialType, 'fr');
+      if (phases.length === 0) {
+        console.log(`No phases found for referential: ${config.referentialType}`);
+        return [];
+      }
+
+      const generatedPhases: GeneratedPhaseData[] = [];
+      let cumulativeStartDays = 0;
+      const projectStart = parseISO(config.projectStartDate);
+      const budgetPerPhase = config.projectBudget / phases.length;
+
+      for (let i = 0; i < phases.length; i++) {
+        const phase = phases[i];
+        const phaseId = `phase-${Date.now()}-${i}`;
+        
+        // Calculate phase duration from steps and tasks
+        const { steps, totalDuration } = this.generateStepsWithTasks(phase.steps, phaseId);
+        
+        // Calculate dates
+        const phaseStartDate = addDays(projectStart, cumulativeStartDays);
+        const phaseEndDate = addDays(phaseStartDate, totalDuration);
+
+        // Generate milestones if enabled
+        let milestones: GeneratedMilestoneDTO[] = [];
+        if (config.generateMilestones && config.projectId && this.milestoneService) {
+          milestones = await this.generateMilestonesForPhase({
+            referentialType: config.referentialType,
+            phaseCode: phase.code,
+            phaseStartDate: format(phaseStartDate, 'yyyy-MM-dd'),
+            projectId: config.projectId,
+            phaseId,
+            phaseBudget: budgetPerPhase
+          });
+        }
+
+        generatedPhases.push({
+          id: phaseId,
+          phaseCode: phase.code,
+          title: phase.label,
+          description: phase.description || `Phase: ${phase.label}`,
+          startDate: format(phaseStartDate, 'yyyy-MM-dd'),
+          endDate: format(phaseEndDate, 'yyyy-MM-dd'),
+          estimatedDuration: totalDuration,
+          status: 'not_started',
+          budget: Math.round(budgetPerPhase),
+          progress: 0,
+          order: phase.order || i + 1,
+          steps,
+          milestones
+        });
+
+        cumulativeStartDays += totalDuration;
+      }
+
+      return generatedPhases;
+    } catch (error) {
+      console.error('Error generating complete project structure:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to generate project structure: ${config.referentialType}`);
+    }
+  }
+
+  /**
+   * Generate steps and tasks from referential (enhanced version)
+   */
+  private generateStepsWithTasks(
+    stepsData: Array<{
+      code: string;
+      label: string;
+      order: number;
+      tasks: Array<{
+        code: string;
+        label: string;
+        description?: string;
+        requiresInspection?: boolean;
+        requiresEngineerApproval?: boolean;
+        estimatedDurationDays?: number;
+      }>;
+    }>,
+    phaseId: string
+  ): { steps: GeneratedStepData[]; totalDuration: number } {
+    const steps: GeneratedStepData[] = [];
+    let totalDuration = 0;
+
+    for (let i = 0; i < stepsData.length; i++) {
+      const step = stepsData[i];
+      const stepId = `step-${phaseId}-${i}`;
+      
+      const tasks: GeneratedTaskData[] = [];
+      let stepDuration = 0;
+
+      for (let j = 0; j < step.tasks.length; j++) {
+        const task = step.tasks[j];
+        const taskDuration = task.estimatedDurationDays || 7;
+        stepDuration += taskDuration;
+
+        tasks.push({
+          id: `task-${stepId}-${j}`,
+          taskCode: task.code,
+          name: task.label,
+          description: task.description,
+          estimatedDurationDays: taskDuration,
+          requiresInspection: task.requiresInspection || false,
+          requiresEngineerApproval: task.requiresEngineerApproval || false,
+          status: 'not_started'
+        });
+      }
+
+      // Minimum step duration
+      if (stepDuration === 0) stepDuration = 14;
+      totalDuration += stepDuration;
+
+      steps.push({
+        id: stepId,
+        stepCode: step.code,
+        name: step.label,
+        order: step.order || i + 1,
+        tasks
+      });
+    }
+
+    // Minimum phase duration
+    if (totalDuration === 0) totalDuration = 30;
+
+    return { steps, totalDuration };
+  }
+
+  /**
+   * Get summary of what would be generated for a referential
+   */
+  async getGenerationSummary(referentialType: ReferentialType): Promise<GenerationSummary> {
+    try {
+      const phases = getPhasesForReferential(referentialType, 'fr');
+      let totalSteps = 0;
+      let totalTasks = 0;
+      let totalMilestones = 0;
+      let estimatedDurationDays = 0;
+
+      for (const phase of phases) {
+        totalSteps += phase.steps.length;
+        
+        for (const step of phase.steps) {
+          totalTasks += step.tasks.length;
+          for (const task of step.tasks) {
+            estimatedDurationDays += task.estimatedDurationDays || 7;
+          }
+        }
+
+        if (this.milestoneService) {
+          // Count milestones for this phase
+          totalMilestones += phase.steps.length; // Simplified: one milestone per step
+        }
+      }
+
+      return {
+        totalPhases: phases.length,
+        totalSteps,
+        totalTasks,
+        totalMilestones,
+        estimatedDurationDays
+      };
+    } catch (error) {
+      console.error('Error getting generation summary:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to get generation summary for: ${referentialType}`);
+    }
+  }
+
+  /**
+   * Get milestones requiring inspection for all phases
+   */
+  async getInspectionMilestonesForProject(referentialType: ReferentialType): Promise<Map<string, GeneratedMilestoneDTO[]>> {
+    try {
+      const phases = getPhasesForReferential(referentialType, 'fr');
+      const inspectionMilestones = new Map<string, GeneratedMilestoneDTO[]>();
+
+      for (const phase of phases) {
+        // Generate inspection milestones for each step that requires inspection
+        const milestones: GeneratedMilestoneDTO[] = [];
+        
+        for (const step of phase.steps) {
+          const hasInspectionTasks = step.tasks.some(task => task.requiresInspection);
+          
+          if (hasInspectionTasks) {
+            milestones.push({
+              title: `Inspection - ${step.label}`,
+              description: `Inspection technique pour l'étape ${step.label}`,
+              target_date: '', // Will be calculated at generation time
+              type: 'inspection',
+              priority: 'high',
+              weight: 1.0,
+              deliverables: ['Rapport d\'inspection', 'Photos', 'Documents de conformité'],
+              dependencies: [],
+              requiresInspection: true,
+              inspectionType: 'technical',
+              phaseCode: phase.code
+            });
+          }
+        }
+        
+        if (milestones.length > 0) {
+          inspectionMilestones.set(phase.code, milestones);
+        }
+      }
+
+      return inspectionMilestones;
+    } catch (error) {
+      console.error('Error getting inspection milestones:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to get inspection milestones for: ${referentialType}`);
+    }
+  }
+
+  /**
+   * Generate milestones for a specific phase
+   */
+  private async generateMilestonesForPhase(config: {
+    referentialType: ReferentialType;
+    phaseCode: string;
+    phaseStartDate: string;
+    projectId: string;
+    phaseId: string;
+    phaseBudget: number;
+  }): Promise<GeneratedMilestoneDTO[]> {
+    try {
+      // This would integrate with MilestoneService to generate actual milestones
+      // For now, return basic milestone structure
+      const phases = getPhasesForReferential(config.referentialType, 'fr');
+      const phase = phases.find(p => p.code === config.phaseCode);
+      
+      if (!phase) return [];
+      
+      const milestones: GeneratedMilestoneDTO[] = [];
+      
+      // Generate milestone for each step that requires inspection
+      for (const step of phase.steps) {
+        const hasInspectionTasks = step.tasks.some(task => task.requiresInspection);
+        
+        if (hasInspectionTasks) {
+          milestones.push({
+            title: `Inspection - ${step.label}`,
+            description: `Inspection technique pour l'étape ${step.label}`,
+            target_date: config.phaseStartDate,
+            type: 'inspection',
+            priority: 'high',
+            weight: 1.0,
+            deliverables: ['Rapport d\'inspection', 'Photos', 'Documents de conformité'],
+            dependencies: [],
+            requiresInspection: true,
+            inspectionType: 'technical',
+            phaseCode: config.phaseCode
+          });
+        }
+      }
+      
+      return milestones;
+    } catch (error) {
+      console.error('Error generating milestones for phase:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Save generated phases with enhanced structure (steps → tasks hierarchy)
+   */
+  private async saveGeneratedPhases(projectId: string, generatedPhases: GeneratedPhaseData[]): Promise<void> {
+    try {
+      for (const phaseData of generatedPhases) {
+        // Create phase entity
+        const phaseEntity = {
+          projectId,
+          name: phaseData.title,
+          description: phaseData.description,
+          orderIndex: phaseData.order,
+          status: PhaseStatus.PENDING,
+          type: PhaseType.STRUCTURAL,
+          priority: PhasePriority.MEDIUM,
+          progress: 0,
+          startDate: phaseData.startDate,
+          endDate: phaseData.endDate,
+          budget: phaseData.budget
+        };
+        
+        const createdPhase = await this.phaseRepository.create(phaseEntity as any);
+        
+        // Save steps and tasks for this phase
+        if (this.taskService) {
+          for (const stepData of phaseData.steps) {
+            // Create step entity
+            const stepEntity = {
+              projectId,
+              phaseId: createdPhase.id,
+              name: stepData.name,
+              description: `Step: ${stepData.name}`,
+              orderIndex: stepData.order,
+              status: 'pending' as any,
+              progress: 0
+            };
+            
+            const createdStep = await this.taskRepository?.create(stepEntity as any);
+            
+            // Save tasks for this step
+            for (const taskData of stepData.tasks) {
+              const taskEntity = {
+                projectId,
+                phaseId: createdPhase.id,
+                stepId: createdStep?.id,
+                name: taskData.name,
+                description: taskData.description,
+                orderIndex: 0, // Will be set based on array index
+                status: 'pending' as any,
+                progress: 0,
+                estimatedDuration: taskData.estimatedDurationDays,
+                requiresInspection: taskData.requiresInspection,
+                requiresEngineerApproval: taskData.requiresEngineerApproval
+              };
+              
+              await this.taskRepository?.create(taskEntity as any);
+            }
+          }
+        }
+        
+        // Save milestones for this phase
+        if (this.milestoneService && phaseData.milestones.length > 0) {
+          for (const milestoneData of phaseData.milestones) {
+            await this.milestoneService.createMilestone({
+              projectId,
+              phaseId: createdPhase.id,
+              title: milestoneData.title,
+              description: milestoneData.description,
+              targetDate: milestoneData.target_date,
+              type: milestoneData.type,
+              priority: milestoneData.priority,
+              weight: milestoneData.weight,
+              deliverables: milestoneData.deliverables,
+              dependencies: milestoneData.dependencies,
+              requiresInspection: milestoneData.requiresInspection,
+              inspectionType: milestoneData.inspectionType
+            } as any);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error saving generated phases:', error);
+      throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to save generated phases');
+    }
+  }
+
+  // =================== LEGACY REFERENTIAL INTEGRATION ===================
 
   async generatePhasesFromReferential(projectId: string, referentialCode: ReferentialType): Promise<PhaseDTO[]> {
     try {

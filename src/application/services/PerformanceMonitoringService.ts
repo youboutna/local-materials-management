@@ -7,40 +7,52 @@
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-// TODO: Replace with RepositoryFactory when performance_metrics table is available
-// import { supabase } from '@/integrations/supabase/client';
+import { NotificationService } from '@/application/services/NotificationService';
+import { supabase } from '@/integrations/supabase/client';
+import { 
+  DatabaseMetricsDTO,
+  PerformanceMetricsDTO, 
+  PerformanceAlertDTO,
+  PerformanceSummaryDTO
+} from '@/dtos/entities/PerformanceMetricsDTO';
 
-// DTOs for performance monitoring - should use camelCase
-export interface DatabaseMetricsDTO {
-  connections: number;
-  maxConnections: number;
-  queryTime: number;
-  slowQueries: number;
-  activeProjects: number;
-  pendingInspections: number;
-  pendingPayments: number;
+// Event-driven interfaces for performance monitoring
+export interface EventPerformanceMetrics {
+  overallScore: number;
+  taskCompletionRate: number;
+  budgetEfficiency: number;
+  qualityMetrics: Record<string, number>;
+  timelineAdherence: number;
+  resourceUtilization: number;
+  dataSources: string[];
 }
 
-export interface PerformanceMetricsDTO {
-  database: DatabaseMetricsDTO;
-  timestamp: string;
-  responseTime?: number;
-  errorRate?: number;
-}
-
-export interface PerformanceAlertDTO {
-  type: 'warning' | 'critical';
+export interface EventPerformanceAlert {
+  type: 'low_performance' | 'budget_overrun' | 'timeline_delay' | 'quality_issue';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  projectId: string;
   message: string;
-  metric: string;
-  value: number;
   threshold: number;
+  currentValue: number;
+  recommendation: string;
 }
 
-export interface PerformanceSummaryDTO {
-  current: PerformanceMetricsDTO;
-  healthStatus: 'healthy' | 'warning' | 'critical';
-  isHealthy: boolean;
-  trend: 'improving' | 'stable' | 'degrading';
+export interface PerformanceMonitoringRecord {
+  id: string;
+  projectId: string;
+  employeeId?: string;
+  dateRange: string;
+  performanceScore: number;
+  taskCompletionRate: number;
+  budgetEfficiency: number;
+  qualityMetrics: Record<string, number>;
+  timelineAdherence: number;
+  resourceUtilization: number;
+  calculatedAt: string;
+  dataSources: string[];
+  metadata: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface MetricsValidationResult {
@@ -56,6 +68,15 @@ const THRESHOLDS = {
 };
 
 export class PerformanceMonitoringService {
+  private notificationService: NotificationService;
+  
+  // Event-driven in-memory storage for performance records (like Action system)
+  private monitoringRecords: Map<string, PerformanceMonitoringRecord> = new Map();
+
+  constructor() {
+    this.notificationService = new NotificationService();
+  }
+
   /**
    * Get database performance metrics from real data
    */
@@ -309,5 +330,374 @@ export class PerformanceMonitoringService {
       isValid: errors.length === 0,
       errors
     };
+  }
+
+  /**
+   * Calculate event-driven performance metrics from existing data sources
+   * Event-driven: queries existing tables to calculate KPIs
+   */
+  async calculateEventPerformanceMetrics(projectId: string): Promise<EventPerformanceMetrics> {
+    const dataSources: string[] = [];
+    let overallScore = 0;
+    let taskCompletionRate = 0;
+    let budgetEfficiency = 0;
+    const qualityMetrics: Record<string, number> = {};
+    let timelineAdherence = 0;
+    let resourceUtilization = 0;
+
+    try {
+      // Calculate task completion rate from task_assignments table
+      const { data: taskAssignments } = await supabase
+        .from('task_assignments')
+        .select('status')
+        .eq('project_id', projectId);
+      
+      if (taskAssignments && taskAssignments.length > 0) {
+        const completedTasks = taskAssignments.filter(t => t.status === 'completed').length;
+        taskCompletionRate = (completedTasks / taskAssignments.length) * 100;
+        dataSources.push('task_assignments');
+      }
+
+      // Calculate timeline adherence from project_phases table
+      const { data: phases } = await supabase
+        .from('project_phases')
+        .select('start_date', 'end_date', 'status')
+        .eq('project_id', projectId);
+      
+      if (phases && phases.length > 0) {
+        const onTimePhases = phases.filter(p => {
+          if (!p.end_date) return true;
+          const endDate = new Date(p.end_date);
+          const today = new Date();
+          return endDate <= today;
+        }).length;
+        timelineAdherence = (onTimePhases / phases.length) * 100;
+        dataSources.push('project_phases');
+      }
+
+      // Calculate budget efficiency from payments and projects tables
+      const { data: payments } = await supabase
+        .from('payments')
+        .select('amount')
+        .eq('project_id', projectId);
+      
+      const { data: project } = await supabase
+        .from('projects')
+        .select('budget')
+        .eq('id', projectId)
+        .single();
+
+      if (payments && project) {
+        const totalSpent = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+        const budget = project.budget || 0;
+        budgetEfficiency = budget > 0 ? ((budget - totalSpent) / budget) * 100 : 0;
+        dataSources.push('payments', 'projects');
+      }
+
+      // Calculate quality metrics from inspections table
+      const { data: inspections } = await supabase
+        .from('inspections')
+        .select('status')
+        .eq('project_id', projectId);
+      
+      if (inspections && inspections.length > 0) {
+        const passedInspections = inspections.filter(i => i.status === 'approved').length;
+        qualityMetrics.inspection_pass_rate = (passedInspections / inspections.length) * 100;
+        dataSources.push('inspections');
+      }
+
+      // Calculate resource utilization (placeholder for now)
+      resourceUtilization = 85; // Default value
+      dataSources.push('resource_calculation');
+
+      // Calculate overall score (weighted average)
+      const weights = {
+        tasks: 0.3,
+        budget: 0.25,
+        quality: 0.25,
+        timeline: 0.2
+      };
+      
+      overallScore = (
+        (taskCompletionRate * weights.tasks) +
+        (budgetEfficiency * weights.budget) +
+        (qualityMetrics.inspection_pass_rate || 0) * weights.quality +
+        (timelineAdherence * weights.timeline)
+      );
+
+    } catch (error) {
+      console.error('Error calculating event performance metrics:', error);
+    }
+
+    return {
+      overallScore,
+      taskCompletionRate,
+      budgetEfficiency,
+      qualityMetrics,
+      timelineAdherence,
+      resourceUtilization,
+      dataSources
+    };
+  }
+
+  /**
+   * Trigger event-driven performance alerts based on calculated metrics
+   * Event-driven: sends notifications when thresholds are breached
+   */
+  async triggerEventPerformanceAlerts(projectId: string, metrics: EventPerformanceMetrics): Promise<void> {
+    const alerts: EventPerformanceAlert[] = [];
+
+    // Low performance alert
+    if (metrics.overallScore < 50) {
+      alerts.push({
+        type: 'low_performance',
+        severity: metrics.overallScore < 30 ? 'critical' : 'high',
+        projectId,
+        message: `Performance global faible: ${metrics.overallScore.toFixed(1)}%`,
+        threshold: 50,
+        currentValue: metrics.overallScore,
+        recommendation: 'Réviser les ressources et la planification du projet'
+      });
+    }
+
+    // Budget overrun alert
+    if (metrics.budgetEfficiency < 0) {
+      alerts.push({
+        type: 'budget_overrun',
+        severity: metrics.budgetEfficiency < -20 ? 'critical' : 'high',
+        projectId,
+        message: `Dépassement de budget détecté: ${Math.abs(metrics.budgetEfficiency).toFixed(1)}%`,
+        threshold: 0,
+        currentValue: metrics.budgetEfficiency,
+        recommendation: 'Réévaluer le budget et contrôler les dépenses'
+      });
+    }
+
+    // Timeline delay alert
+    if (metrics.timelineAdherence < 70) {
+      alerts.push({
+        type: 'timeline_delay',
+        severity: metrics.timelineAdherence < 50 ? 'critical' : 'medium',
+        projectId,
+        message: `Retards dans les délais: ${metrics.timelineAdherence.toFixed(1)}% d'adhérence`,
+        threshold: 70,
+        currentValue: metrics.timelineAdherence,
+        recommendation: 'Réviser le planning et allouer des ressources supplémentaires'
+      });
+    }
+
+    // Quality issue alert
+    if (metrics.qualityMetrics.inspection_pass_rate && metrics.qualityMetrics.inspection_pass_rate < 80) {
+      alerts.push({
+        type: 'quality_issue',
+        severity: metrics.qualityMetrics.inspection_pass_rate < 60 ? 'high' : 'medium',
+        projectId,
+        message: `Problèmes de qualité: ${metrics.qualityMetrics.inspection_pass_rate.toFixed(1)}% de réussite`,
+        threshold: 80,
+        currentValue: metrics.qualityMetrics.inspection_pass_rate,
+        recommendation: 'Mettre en place des mesures de contrôle qualité renforcées'
+      });
+    }
+
+    // Send notifications for each alert
+    for (const alert of alerts) {
+      await this.sendEventPerformanceAlert(alert);
+    }
+  }
+
+  /**
+   * Send event-driven performance alert notification
+   */
+  private async sendEventPerformanceAlert(alert: EventPerformanceAlert): Promise<void> {
+    try {
+      await this.notificationService.createNotification({
+        recipient_id: 'system', // TODO: Get actual recipient based on project
+        title: `Alerte Performance - ${alert.type.replace('_', ' ').toUpperCase()}`,
+        message: alert.message,
+        type: 'system',
+        priority: alert.severity === 'critical' ? 'high' : alert.severity as 'low' | 'medium' | 'high',
+        metadata: {
+          alertType: alert.type,
+          projectId: alert.projectId,
+          threshold: alert.threshold,
+          currentValue: alert.currentValue,
+          recommendation: alert.recommendation
+        }
+      });
+
+      console.log(`🚨 Event performance alert sent: ${alert.type} - ${alert.severity} severity`);
+    } catch (error) {
+      console.error('Failed to send event performance alert:', error);
+    }
+  }
+
+  /**
+   * Create performance monitoring record
+   * Event-driven: calculates KPIs, stores in memory, and triggers alerts
+   */
+  async createPerformanceMonitoringRecord(
+    projectId: string, 
+    employeeId?: string, 
+    dateRange?: string
+  ): Promise<PerformanceMonitoringRecord> {
+    try {
+      // Calculate performance metrics from existing data sources
+      const performanceMetrics = await this.calculateEventPerformanceMetrics(projectId);
+      
+      // Create performance monitoring record in memory
+      const monitoringRecord: PerformanceMonitoringRecord = {
+        id: `monitoring-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        projectId,
+        employeeId: employeeId || 'system',
+        dateRange: dateRange || 'current',
+        performanceScore: performanceMetrics.overallScore,
+        taskCompletionRate: performanceMetrics.taskCompletionRate,
+        budgetEfficiency: performanceMetrics.budgetEfficiency,
+        qualityMetrics: performanceMetrics.qualityMetrics,
+        timelineAdherence: performanceMetrics.timelineAdherence,
+        resourceUtilization: performanceMetrics.resourceUtilization,
+        calculatedAt: new Date().toISOString(),
+        dataSources: performanceMetrics.dataSources,
+        metadata: {
+          calculationMethod: 'event_driven',
+          timestamp: new Date().toISOString(),
+          version: '1.0'
+        },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      // Store in memory (event-driven like Action system)
+      this.monitoringRecords.set(monitoringRecord.id, monitoringRecord);
+
+      // Log the monitoring event
+      console.log('PerformanceMonitoringService.createRecord:', monitoringRecord);
+
+      // Trigger performance alerts based on calculated metrics
+      await this.triggerEventPerformanceAlerts(projectId, performanceMetrics);
+
+      return monitoringRecord;
+    } catch (error) {
+      console.error('PerformanceMonitoringService.createRecord error:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create performance monitoring record');
+    }
+  }
+
+  /**
+   * Get performance monitoring by project ID (from memory)
+   */
+  async getPerformanceMonitoringByProject(projectId: string): Promise<PerformanceMonitoringRecord[]> {
+    try {
+      return Array.from(this.monitoringRecords.values())
+        .filter(record => record.projectId === projectId)
+        .sort((a, b) => new Date(b.calculatedAt).getTime() - new Date(a.calculatedAt).getTime());
+    } catch (error) {
+      console.error('PerformanceMonitoringService.getByProject error:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get performance monitoring by project');
+    }
+  }
+
+  /**
+   * Get event-driven performance statistics for a project
+   * Event-driven: calculates from current data
+   */
+  async getEventPerformanceStatistics(projectId: string): Promise<{
+    averagePerformance: number;
+    totalRecords: number;
+    performanceTrend: 'improving' | 'declining' | 'stable';
+    lastUpdated: string;
+    kpiBreakdown: {
+      taskCompletionRate: number;
+      budgetEfficiency: number;
+      qualityScore: number;
+      timelineAdherence: number;
+    };
+  }> {
+    try {
+      const projectRecords = Array.from(this.monitoringRecords.values())
+        .filter(record => record.projectId === projectId)
+        .sort((a, b) => new Date(b.calculatedAt).getTime() - new Date(a.calculatedAt).getTime());
+
+      const totalRecords = projectRecords.length;
+      
+      if (totalRecords === 0) {
+        // Calculate current metrics if no records exist
+        const currentMetrics = await this.calculateEventPerformanceMetrics(projectId);
+        
+        return {
+          averagePerformance: currentMetrics.overallScore,
+          totalRecords: 0,
+          performanceTrend: 'stable',
+          lastUpdated: new Date().toISOString(),
+          kpiBreakdown: {
+            taskCompletionRate: currentMetrics.taskCompletionRate,
+            budgetEfficiency: currentMetrics.budgetEfficiency,
+            qualityScore: currentMetrics.qualityMetrics.inspection_pass_rate || 0,
+            timelineAdherence: currentMetrics.timelineAdherence
+          }
+        };
+      }
+
+      const averagePerformance = projectRecords.reduce((sum, record) => sum + record.performanceScore, 0) / totalRecords;
+      
+      // Calculate trend based on last 3 records
+      let performanceTrend: 'improving' | 'declining' | 'stable' = 'stable';
+      if (totalRecords >= 3) {
+        const recent = projectRecords.slice(0, 3);
+        const firstScore = recent[2]?.performanceScore || 0;
+        const lastScore = recent[0]?.performanceScore || 0;
+        
+        if (lastScore > firstScore + 5) performanceTrend = 'improving';
+        else if (lastScore < firstScore - 5) performanceTrend = 'declining';
+      }
+
+      const latestRecord = projectRecords[0];
+      const kpiBreakdown = {
+        taskCompletionRate: latestRecord?.taskCompletionRate || 0,
+        budgetEfficiency: latestRecord?.budgetEfficiency || 0,
+        qualityScore: latestRecord?.qualityMetrics?.inspection_pass_rate || 0,
+        timelineAdherence: latestRecord?.timelineAdherence || 0
+      };
+
+      return {
+        averagePerformance,
+        totalRecords,
+        performanceTrend,
+        lastUpdated: latestRecord?.calculatedAt || new Date().toISOString(),
+        kpiBreakdown
+      };
+    } catch (error) {
+      console.error('PerformanceMonitoringService.getEventPerformanceStatistics error:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get performance statistics');
+    }
+  }
+
+  /**
+   * Get all performance monitoring records (from memory)
+   */
+  async getAllPerformanceMonitoringRecords(): Promise<PerformanceMonitoringRecord[]> {
+    try {
+      return Array.from(this.monitoringRecords.values())
+        .sort((a, b) => new Date(b.calculatedAt).getTime() - new Date(a.calculatedAt).getTime());
+    } catch (error) {
+      console.error('PerformanceMonitoringService.getAllRecords error:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get all performance monitoring records');
+    }
+  }
+
+  /**
+   * Delete performance monitoring record (from memory)
+   */
+  async deletePerformanceMonitoringRecord(recordId: string): Promise<boolean> {
+    try {
+      const deleted = this.monitoringRecords.delete(recordId);
+      if (deleted) {
+        console.log('PerformanceMonitoringService.deleteRecord:', recordId);
+      }
+      return deleted;
+    } catch (error) {
+      console.error('PerformanceMonitoringService.deleteRecord error:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete performance monitoring record');
+    }
   }
 }

@@ -18,7 +18,7 @@ import {
   Package,
   Shield
 } from 'lucide-react';
-import WorkflowPhaseService, { PhaseStepTask } from '@/services/WorkflowPhaseService';
+import { ProjectWorkflowService, PhaseStepTask } from '@/application/services/ProjectWorkflowService';
 import { supabase } from '@/integrations/supabase/client';
 
 interface PhaseStepTaskManagerProps {
@@ -39,7 +39,8 @@ const PhaseStepTaskManager: React.FC<PhaseStepTaskManagerProps> = ({ projectId }
   const { data: hierarchy = [], isLoading, refetch } = useQuery({
     queryKey: ['project-phase-hierarchy', projectId],
     queryFn: async () => {
-      return await WorkflowPhaseService.getProjectPhaseHierarchy(projectId);
+      const workflowService = ProjectWorkflowService.getProjectWorkflowService();
+      return await workflowService.getProjectPhaseHierarchy(projectId);
     },
     enabled: !!projectId && projectId !== 'new-project',
   });

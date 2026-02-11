@@ -44,7 +44,7 @@ import {
   Flag,
   PlusCircle
 } from 'lucide-react';
-import { MilestoneService } from '@/services/MilestoneService';
+import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
 import { MilestoneSummaryDTO, MilestoneType, MILESTONE_TYPES, MilestoneProgressDTO } from '@/types/milestone-dto';
 import { format, parseISO, isBefore, differenceInDays, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';

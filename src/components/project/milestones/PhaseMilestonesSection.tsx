@@ -22,7 +22,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { getMilestoneTemplates } from '@/config/referentials/milestones.referential';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { MilestoneService } from '@/services/MilestoneService';
+import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
 import {
   MILESTONE_PRIORITIES,
   MILESTONE_TYPES,

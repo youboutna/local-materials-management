@@ -15,7 +15,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Location, OperationalStatus } from '@/types/mauritania';
+import { Location, OperationalStatus } from '@/dtos/entities/ProjectDTO';
 
 interface Workspace {
   id: string;

@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, Package, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { ProjectDataCalculations } from "@/utils/projectDataCalculations";
+import { ProjectCalculationService } from "@/application/services/ProjectCalculationService";
 
 interface ResourceUtilizationCardProps {
   phaseId: string;
@@ -20,7 +21,7 @@ interface ResourceUtilizationCardProps {
 const ResourceUtilizationCard: React.FC<ResourceUtilizationCardProps> = ({ phaseId, projectId }) => {
   const { data: resources, isLoading } = useQuery({
     queryKey: ['phase-resources', projectId, phaseId],
-    queryFn: () => ProjectDataCalculations.calculatePhaseResourceUtilization(projectId, phaseId),
+    queryFn: () => ProjectCalculationService.calculatePhaseResourceUtilization(projectId, phaseId),
     enabled: !!projectId && !!phaseId,
   });
 

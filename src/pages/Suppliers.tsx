@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useSuppliersHex } from '@/hooks/hexagonal';
 import type { SupplierFormData } from '@/hooks/hexagonal/useSuppliersManagementHex';
-import { generateSupplierPasswordReset, sendSupplierNotification } from '@/services/supplierNotificationService';
+import { generateSupplierPasswordReset, sendSupplierNotification } from '@/application/services/SupplierNotificationService';
 import { Building2, Edit, FileText, Mail, Plus, Send, Share2, Star, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';

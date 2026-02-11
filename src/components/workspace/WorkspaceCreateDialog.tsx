@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Location, OperationalStatus, MAURITANIA_REGIONS } from '@/types/mauritania';
+import { Location, OperationalStatus, MAURITANIA_REGIONS } from '@/dtos/entities/ProjectDTO';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface WorkspaceCreateDialogProps {

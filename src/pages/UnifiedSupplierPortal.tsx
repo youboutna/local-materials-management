@@ -45,7 +45,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useDocumentStorage } from "@/hooks/useDocumentStorage";
-import { supabase } from "@/integrations/supabase/client";
+import { useParsedInvoicesHex } from "@/hooks/hexagonal/useInvoicesHex";
 import {
   Supplier,
   SupplierNotification,
@@ -112,21 +112,9 @@ const UnifiedSupplierPortal = () => {
   const addTaskCommentMutation = useAddSupplierTaskCommentHex();
   const markTaskCompletedMutation = useMarkTaskCompletedHex();
 
-  // Fetch parsed invoices
-  const { data: parsedInvoices = [] } = useQuery({
-    queryKey: ["parsed-invoices", supplierProfile?.id],
-    enabled: !!supplierProfile?.id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("parsed_invoices")
-        .select("*")
-        .eq("supplier_info->supplier_id", supplierProfile!.id)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return data || [];
-    },
-  });
+  // Fetch parsed invoices using hexagonal hook
+  // This replaces the direct supabase.from("parsed_invoices") call
+  const { invoices: parsedInvoices = [], isLoading: invoicesLoading } = useParsedInvoicesHex(supplierProfile?.id || "");
 
   // Fetch inspections with service layer (stakeholder-based)
   const {

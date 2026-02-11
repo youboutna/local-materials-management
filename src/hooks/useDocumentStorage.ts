@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { StorageFactory } from '@/services/storage/StorageFactory';
+import { StorageFactory } from '@/application/services/StorageFactory';
 import { UploadResult, DownloadResult, DeleteResult } from '@/services/storage/StorageProvider';
 
 export const useDocumentStorage = () => {

@@ -9,7 +9,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { MaterialService } from "@/application/services/MaterialService";
-import { MaterialTransformer, CreateMaterialRequestDto, UpdateMaterialRequestDto, MaterialDTO, MaterialCategory } from '@/dtos/transforms';
+import { MaterialTransformer, CreateMaterialRequestDto, UpdateMaterialRequestDto, MaterialDTO } from '@/dtos/transforms';
+import { MaterialCategory } from '@/dtos/entities/MaterialDTO';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -538,6 +539,79 @@ export function useLowStockMaterials() {
       return await materialService.getLowStockMaterials();
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+/**
+ * Hook for project materials operations
+ */
+export function useProjectMaterialsHex(projectId: string) {
+  const materialService = new MaterialService(
+    RepositoryFactory.getMaterialRepository()
+  );
+
+  return useQuery({
+    queryKey: ['project-materials', projectId],
+    queryFn: async () => {
+      return await materialService.getProjectMaterials(projectId);
+    },
+    enabled: !!projectId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+/**
+ * Hook for adding materials to project
+ */
+export function useAddMaterialToProjectHex() {
+  const queryClient = useQueryClient();
+  const materialService = new MaterialService(
+    RepositoryFactory.getMaterialRepository()
+  );
+
+  return useMutation({
+    mutationFn: async ({ projectId, materialId, quantity }: { 
+      projectId: string; 
+      materialId: string; 
+      quantity: number 
+    }) => {
+      return await materialService.addMaterialToProject(projectId, materialId, quantity);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['project-materials'] });
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+      toast.success('Material ajouté au projet avec succès');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Erreur lors de l\'ajout du matériel au projet');
+    }
+  });
+}
+
+/**
+ * Hook for removing materials from project
+ */
+export function useRemoveMaterialFromProjectHex() {
+  const queryClient = useQueryClient();
+  const materialService = new MaterialService(
+    RepositoryFactory.getMaterialRepository()
+  );
+
+  return useMutation({
+    mutationFn: async ({ projectId, materialId }: { 
+      projectId: string; 
+      materialId: string 
+    }) => {
+      return await materialService.removeMaterialFromProject(projectId, materialId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['project-materials'] });
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+      toast.success('Material retiré du projet avec succès');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Erreur lors du retrait du matériel du projet');
+    }
   });
 }
 

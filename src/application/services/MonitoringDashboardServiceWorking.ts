@@ -111,6 +111,109 @@ export class MonitoringDashboardService {
     }
   }
 
+  async updateMonitoringDashboard(dashboardId: string, updates: Partial<MonitoringDashboardDTO>): Promise<MonitoringDashboardDTO> {
+    try {
+      // Validate input
+      if (!dashboardId) {
+        throw new ValidationError('Dashboard ID is required');
+      }
+
+      // For now, return a mock updated dashboard
+      // In a real implementation, this would update the dashboard in the database
+      const dashboard: MonitoringDashboardDTO = {
+        id: dashboardId,
+        userId: updates.userId || 'default-user',
+        lastUpdated: new Date().toISOString(),
+        widgets: updates.widgets || this.getDefaultWidgets(),
+        filters: updates.filters || this.getDefaultFilters(),
+        refreshInterval: updates.refreshInterval || 300,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      return dashboard;
+    } catch (error) {
+      if (error instanceof ValidationError || error instanceof MonitoringServiceError) {
+        throw error;
+      }
+      throw new MonitoringServiceError(
+        `Failed to update monitoring dashboard: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'UPDATE_DASHBOARD_FAILED'
+      );
+    }
+  }
+
+  async addWidgetToDashboard(dashboardId: string, widget: Omit<MonitoringWidgetDTO, 'id' | 'lastRefresh'>): Promise<MonitoringDashboardDTO> {
+    try {
+      // Validate input
+      if (!dashboardId) {
+        throw new ValidationError('Dashboard ID is required');
+      }
+
+      // For now, return a mock dashboard with added widget
+      // In a real implementation, this would add the widget to the dashboard in the database
+      const dashboard: MonitoringDashboardDTO = {
+        id: dashboardId,
+        userId: 'default-user',
+        lastUpdated: new Date().toISOString(),
+        widgets: [
+          ...this.getDefaultWidgets(),
+          {
+            ...widget,
+            id: crypto.randomUUID(),
+            lastRefresh: new Date().toISOString()
+          }
+        ],
+        filters: this.getDefaultFilters(),
+        refreshInterval: 300,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      return dashboard;
+    } catch (error) {
+      if (error instanceof ValidationError || error instanceof MonitoringServiceError) {
+        throw error;
+      }
+      throw new MonitoringServiceError(
+        `Failed to add widget to dashboard: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'ADD_WIDGET_FAILED'
+      );
+    }
+  }
+
+  async removeWidgetFromDashboard(dashboardId: string, widgetId: string): Promise<MonitoringDashboardDTO> {
+    try {
+      // Validate input
+      if (!dashboardId || !widgetId) {
+        throw new ValidationError('Dashboard ID and Widget ID are required');
+      }
+
+      // For now, return a mock dashboard with removed widget
+      // In a real implementation, this would remove the widget from the dashboard in the database
+      const dashboard: MonitoringDashboardDTO = {
+        id: dashboardId,
+        userId: 'default-user',
+        lastUpdated: new Date().toISOString(),
+        widgets: this.getDefaultWidgets().filter(w => w.id !== widgetId),
+        filters: this.getDefaultFilters(),
+        refreshInterval: 300,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      return dashboard;
+    } catch (error) {
+      if (error instanceof ValidationError || error instanceof MonitoringServiceError) {
+        throw error;
+      }
+      throw new MonitoringServiceError(
+        `Failed to remove widget from dashboard: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'REMOVE_WIDGET_FAILED'
+      );
+    }
+  }
+
   // =================== COMPREHENSIVE MONITORING ===================
 
   async getComprehensiveMonitoring(userId: string, filters?: MonitoringFiltersDTO): Promise<ComprehensiveMonitoringDTO> {

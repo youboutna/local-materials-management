@@ -289,4 +289,9 @@ export class InsuranceService {
     const service = new InsuranceService();
     return service.deleteInsuranceCertificate(id);
   }
+
+  // Factory function for getting service instance
+  static getInsuranceService(): InsuranceService {
+    return new InsuranceService();
+  }
 }

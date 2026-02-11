@@ -22,9 +22,7 @@ import {
   useUpdateEmployee,
   useDeleteEmployee,
 } from '@/hooks/hexagonal';
-import type { Database } from '@/integrations/supabase/types';
-
-type Employee = Database['public']['Tables']['employees']['Row'];
+import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
 
 // Form data interface matching snake_case database schema
 interface EmployeeFormData {

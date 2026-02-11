@@ -22,7 +22,7 @@ import {
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { InspectionDetails } from './InspectionDetailsStep';
-import { InspectionDocumentType, InspectionWorkflowService } from '@/services/inspection/InspectionWorkflowService';
+import { InspectionDocumentType, InspectionWorkflowService } from '@/application/services/InspectionWorkflowService';
 
 interface InspectionReviewStepProps {
   mode: 'request' | 'schedule';

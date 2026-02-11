@@ -43,7 +43,7 @@ import {
   Plus,
   ChevronRight,
 } from 'lucide-react';
-import { MilestoneService } from '@/services/MilestoneService';
+import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
 import { 
   MilestoneSummaryDTO, 
   MilestoneProgressDTO, 

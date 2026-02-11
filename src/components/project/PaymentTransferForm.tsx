@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ProjectWithPayments } from '@/types/project';
-import { PaymentValidator } from '@/services/paymentValidation';
+import { usePaymentTransferValidation } from '@/hooks/hexagonal/usePaymentTransferValidation';
 import { AlertCircle, AlertTriangle, CreditCard, Building, Smartphone, Banknote } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from '@/components/ui/progress';
@@ -86,27 +86,11 @@ const paymentFormSchema = z.object({
 export function PaymentTransferForm({ project, onSubmit, isSubmitting }: PaymentTransferFormProps) {
   const [validationError, setValidationError] = useState<string | null>(null);
   
-  // Calculate allowed payment amounts
-  const totalPaid = project.payments ? 
-    project.payments.reduce((sum, payment) => sum + payment.amount, 0) : 0;
-  
-  // Check if initial payment is allowed and calculate amounts
-  const allowsInitialPayment = project.allowsInitialPayment || false;
-  const initialPaymentPercentage = project.initialPaymentPercentage || 0;
-  const maxInitialPayment = (project.budget * initialPaymentPercentage) / 100;
-  
-  // Determine if we're in initial payment phase (no payments made yet and progress < 25%)
-  const isInitialPaymentPhase = totalPaid === 0 && project.progress < 25 && allowsInitialPayment;
-  
-  // Calculate allowed amounts based on phase
-  const allowedPaymentAmount = isInitialPaymentPhase 
-    ? maxInitialPayment
-    : PaymentValidator.calculateAllowedAmount(project);
-    
-  // Maximum allowed amount with 1.5x tolerance instead of 1.1x
-  const maxToleranceAmount = isInitialPaymentPhase
-    ? maxInitialPayment
-    : allowedPaymentAmount * 1.5; // Changed from PaymentValidator.getMaxAllowedAmountWithTolerance
+  // Use hexagonal hook for payment validation (Rule #5: UI Layer Separation)
+  const paymentValidation = usePaymentTransferValidation({
+    projectId: project.id,
+    project
+  });
   
   const form = useForm<z.infer<typeof paymentFormSchema>>({
     resolver: zodResolver(paymentFormSchema),
@@ -129,18 +113,16 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
   const selectedPaymentMethod = form.watch("paymentMethod");
   
   const validateAndSubmit = (values: z.infer<typeof paymentFormSchema>) => {
-    // Custom validation for initial payment
-    if (isInitialPaymentPhase) {
-      if (values.amount > maxInitialPayment) {
-        setValidationError(`Le paiement initial ne peut pas dépasser ${maxInitialPayment.toLocaleString()} MRU (${initialPaymentPercentage}% du budget)`);
-        return;
-      }
-    } else {
-      // Use new tolerance of 1.5x instead of validation service
-      if (values.amount > maxToleranceAmount) {
-        setValidationError(`Le montant demandé (${values.amount.toLocaleString()}) dépasse le paiement autorisé maximum (${maxToleranceAmount.toLocaleString()}) basé sur le progrès actuel du projet (${project.progress}%)`);
-        return;
-      }
+    // Use hexagonal validation (Rule #5: UI Layer Separation)
+    if (!paymentValidation.canPay) {
+      setValidationError(`Paiement bloqué: ${paymentValidation.blockingReasons.join(', ')}`);
+      return;
+    }
+    
+    // Validate amount against allowed limits
+    if (values.amount > paymentValidation.maxAllowedAmount) {
+      setValidationError(`Le montant demandé (${values.amount.toLocaleString()}) dépasse le paiement autorisé maximum (${paymentValidation.maxAllowedAmount.toLocaleString()})`);
+      return;
     }
     
     setValidationError(null);
@@ -148,25 +130,11 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
   };
   
   // Calculate remaining budget
-  const remainingBudget = project.budget - totalPaid;
+  const remainingBudget = project.budget - (project.payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0);
   
-  // Calculate progress-based payment info
-  const progressBasedAmount = (project.budget * project.progress) / 100;
-  const progressBasedRemaining = progressBasedAmount - totalPaid;
-  
-  // Determine payment status
-  const paymentStatus = (() => {
-    if (isInitialPaymentPhase) return "initial_allowed";
-    if (project.progress < 25) return "initial";
-    
-    const latestInspection = project.inspections?.sort((a, b) => 
-      new Date(b.date).getTime() - new Date(a.date).getTime()
-    )[0];
-    
-    if (!latestInspection) return "inspection_required";
-    
-    return latestInspection.status;
-  })();
+  // Use hexagonal hook values (Rule #5: UI Layer Separation)
+  const maxToleranceAmount = paymentValidation.maxAllowedAmount;
+  const progressBasedRemaining = paymentValidation.allowedAmount - (project.payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0);
 
   // Payment method configurations
   const paymentMethods = [
@@ -273,10 +241,10 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
               <div>
                 <div className="flex justify-between text-sm mb-2">
                   <span>Progression vs paiement attendu</span>
-                  <span className="font-medium">{progressBasedAmount > 0 ? ((totalPaid / progressBasedAmount) * 100).toFixed(1) : 0}%</span>
+                  <span className="font-medium">{paymentValidation.allowedAmount > 0 ? ((totalPaid / paymentValidation.allowedAmount) * 100).toFixed(1) : 0}%</span>
                 </div>
                 <Progress 
-                  value={progressBasedAmount > 0 ? (totalPaid / progressBasedAmount) * 100 : 0} 
+                  value={paymentValidation.allowedAmount > 0 ? (totalPaid / paymentValidation.allowedAmount) * 100 : 0} 
                   className="h-3" 
                 />
               </div>
@@ -376,25 +344,8 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                           max={maxToleranceAmount}
                           {...field} 
                           onChange={e => field.onChange(e.target.valueAsNumber)}
-                          disabled={paymentStatus === "rejected"}
-                          className="text-lg font-medium"
                         />
                       </FormControl>
-                      <FormDescription className="text-xs">
-                        {isInitialPaymentPhase ? (
-                          <>
-                            Paiement initial autorisé: {maxInitialPayment.toLocaleString()} MRU
-                            <br />
-                            ({initialPaymentPercentage}% du budget total)
-                          </>
-                        ) : (
-                          <>
-                            Montant basé sur progression: {allowedPaymentAmount.toLocaleString()} MRU
-                            <br />
-                            Maximum autorisé (1.5x): {maxToleranceAmount.toLocaleString()} MRU
-                          </>
-                        )}
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

@@ -1,0 +1,483 @@
+/**
+ * Workflow Step Service - Hexagonal Architecture
+ * Business logic for workflow step management with proper error handling
+ */
+
+import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { IWorkflowStepRepository } from '@/domain/repositories/IWorkflowStepRepository';
+import { 
+  WorkflowStepDTO, 
+  StepDocumentDTO, 
+  WorkflowProgressDTO, 
+  DocumentUploadDTO 
+} from '@/types/workflow-dto';
+
+/**
+ * Service for managing workflow steps with hexagonal architecture
+ */
+export class WorkflowStepService {
+  private workflowStepRepository: IWorkflowStepRepository;
+
+  constructor() {
+    this.workflowStepRepository = RepositoryFactory.getWorkflowStepRepository();
+  }
+
+  /**
+   * Get all workflow steps for a tender with calculated metadata
+   */
+  async getTenderWorkflowSteps(tenderId: string): Promise<WorkflowStepDTO[]> {
+    try {
+      if (!tenderId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender ID is required');
+      }
+
+      const steps = await this.workflowStepRepository.findByTenderId(tenderId);
+      
+      // Get documents for all steps in one query
+      const stepDocuments = await this.getStepDocumentsForSteps(
+        steps.map(step => step.id)
+      );
+
+      // Transform and validate data
+      return steps.map(step => this.validateAndTransformStep(step, stepDocuments));
+    } catch (error) {
+      console.error('Error getting tender workflow steps:', error);
+      throw new AppError(
+        ErrorCode.INTERNAL_ERROR,
+        'Failed to get tender workflow steps',
+        error instanceof Error ? error : new Error(String(error))
+      );
+    }
+  }
+
+  /**
+   * Get documents for a specific step
+   */
+  async getStepDocuments(stepId: string): Promise<StepDocumentDTO[]> {
+    try {
+      if (!stepId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Step ID is required');
+      }
+
+      const documents = await this.workflowStepRepository.findDocumentsByStepId(stepId);
+      
+      // Validate and transform documents
+      return documents.map(doc => this.validateAndTransformDocument(doc));
+    } catch (error) {
+      console.error('Error getting step documents:', error);
+      throw new AppError(
+        ErrorCode.INTERNAL_ERROR,
+        'Failed to get step documents',
+        error instanceof Error ? error : new Error(String(error))
+      );
+    }
+  }
+
+  /**
+   * Upload document for a workflow step
+   */
+  async uploadStepDocument(uploadData: DocumentUploadDTO, projectId?: string): Promise<void> {
+    try {
+      // Validate upload data
+      this.validateDocumentUploadData(uploadData);
+
+      // Upload file to storage
+      const uploadResult = await this.uploadFileToStorage(uploadData.file, uploadData.stepId);
+
+      // Create document record
+      const documentEntity = {
+        id: `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        step_id: uploadData.stepId,
+        document_id: uploadData.documentId,
+        document_type: uploadData.documentType,
+        is_required: uploadData.isRequired || false,
+        title: uploadData.title,
+        description: uploadData.description,
+        file_url: uploadResult.url,
+        file_name: uploadData.file.name,
+        mime_type: uploadData.file.type,
+        file_size: uploadData.file.size,
+        status: 'submitted',
+        submitted_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      await this.workflowStepRepository.createDocument(documentEntity);
+    } catch (error) {
+      console.error('Error uploading step document:', error);
+      throw new AppError(
+        ErrorCode.INTERNAL_ERROR,
+        'Failed to upload step document',
+        error instanceof Error ? error : new Error(String(error))
+      );
+    }
+  }
+
+  /**
+   * Update step status and optionally update dates
+   */
+  async updateStepStatus(
+    stepId: string, 
+    status: string, 
+    dates?: {
+      submission_date?: string;
+      review_deadline?: string;
+      approval_deadline?: string;
+      due_date?: string;
+    }
+  ): Promise<void> {
+    try {
+      // Validate step exists
+      const existingStep = await this.workflowStepRepository.findById(stepId);
+      if (!existingStep) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Workflow step not found');
+      }
+
+      // Validate status transition
+      this.validateStatusTransition(existingStep.status, status);
+
+      // Prepare update data
+      const updateData: {
+        status: string;
+        updated_at: string;
+        submission_date?: string;
+        review_deadline?: string;
+        approval_deadline?: string;
+        due_date?: string;
+      } = {
+        status,
+        updated_at: new Date().toISOString()
+      };
+
+      // Add date fields if provided
+      if (dates) {
+        if (dates.submission_date) updateData.submission_date = dates.submission_date;
+        if (dates.review_deadline) updateData.review_deadline = dates.review_deadline;
+        if (dates.approval_deadline) updateData.approval_deadline = dates.approval_deadline;
+        if (dates.due_date) updateData.due_date = dates.due_date;
+      }
+
+      await this.workflowStepRepository.update(stepId, updateData);
+    } catch (error) {
+      console.error('Error updating step status:', error);
+      throw new AppError(
+        ErrorCode.INTERNAL_ERROR,
+        'Failed to update step status',
+        error instanceof Error ? error : new Error(String(error))
+      );
+    }
+  }
+
+  /**
+   * Update step dates only
+   */
+  async updateStepDates(
+    stepId: string, 
+    dates: {
+      submission_date?: string;
+      review_deadline?: string;
+      approval_deadline?: string;
+      due_date?: string;
+    }
+  ): Promise<void> {
+    try {
+      // Validate step exists
+      const existingStep = await this.workflowStepRepository.findById(stepId);
+      if (!existingStep) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Workflow step not found');
+      }
+
+      // Prepare update data
+      const updateData: {
+        updated_at: string;
+        submission_date?: string;
+        review_deadline?: string;
+        approval_deadline?: string;
+        actual_completion_date?: string;
+      } = {
+        updated_at: new Date().toISOString()
+      };
+
+      // Add date fields
+      if (dates.submission_date) updateData.submission_date = dates.submission_date;
+      if (dates.review_deadline) updateData.review_deadline = dates.review_deadline;
+      if (dates.approval_deadline) updateData.approval_deadline = dates.approval_deadline;
+      if (dates.due_date) updateData.due_date = dates.due_date;
+
+      await this.workflowStepRepository.update(stepId, updateData);
+    } catch (error) {
+      console.error('Error updating step dates:', error);
+      throw new AppError(
+        ErrorCode.INTERNAL_ERROR,
+        'Failed to update step dates',
+        error instanceof Error ? error : new Error(String(error))
+      );
+    }
+  }
+
+  /**
+   * Get workflow progress for a tender
+   */
+  async getTenderProgress(tenderId: string): Promise<WorkflowProgressDTO> {
+    try {
+      if (!tenderId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender ID is required');
+      }
+
+      const steps = await this.getTenderWorkflowSteps(tenderId);
+      
+      const completedSteps = steps.filter(step => 
+        ['completed', 'approved'].includes(step.status)
+      );
+      
+      const inProgressSteps = steps.filter(step => 
+        ['in_progress', 'pending'].includes(step.status)
+      );
+
+      const currentStep = steps.find(step => 
+        ['in_progress', 'pending'].includes(step.status)
+      );
+
+      return {
+        tender_id: tenderId,
+        total_steps: steps.length,
+        completed_steps: completedSteps.length,
+        in_progress_steps: inProgressSteps.length,
+        progress_percentage: steps.length > 0 ? (completedSteps.length / steps.length) * 100 : 0,
+        current_step: currentStep || null
+      };
+    } catch (error) {
+      console.error('Error getting tender progress:', error);
+      throw new AppError(
+        ErrorCode.INTERNAL_ERROR,
+        'Failed to get tender progress',
+        error instanceof Error ? error : new Error(String(error))
+      );
+    }
+  }
+
+  // Private helper methods
+
+  /**
+   * Get documents for multiple steps
+   */
+  private async getStepDocumentsForSteps(stepIds: string[]): Promise<StepDocumentDTO[]> {
+    try {
+      const documents = await this.workflowStepRepository.findDocumentsByStepIds(stepIds);
+      
+      // Group documents by step_id
+      const documentsByStep = documents.reduce((acc, doc) => {
+        if (!acc[doc.step_id]) acc[doc.step_id] = [];
+        acc[doc.step_id].push(doc);
+        return acc;
+      }, {} as Record<string, StepDocumentDTO[]>);
+
+      return documents;
+    } catch (error) {
+      console.error('Error getting step documents for steps:', error);
+      throw new AppError(
+        ErrorCode.INTERNAL_ERROR,
+        'Failed to get step documents for steps',
+        error instanceof Error ? error : new Error(String(error))
+      );
+    }
+  }
+
+  /**
+   * Validate and transform step data
+   */
+  private validateAndTransformStep(step: {
+    id: string;
+    tender_id: string;
+    step_number: number;
+    title: string;
+    description?: string;
+    status: string;
+    due_date?: string;
+    submission_date?: string;
+    review_deadline?: string;
+    approval_deadline?: string;
+    actual_completion_date?: string;
+    procurement_phase?: string;
+    procurement_stage?: string;
+    required_documents: string[];
+    can_upload_documents: boolean;
+    tasks_completed: number;
+      description: step.description || null,
+      status: this.normalizeStatus(step.status),
+      due_date: step.due_date || null,
+      submission_date: step.submission_date || null,
+      review_deadline: step.review_deadline || null,
+      approval_deadline: step.approval_deadline || null,
+      actual_completion_date: step.actual_completion_date || null,
+      procurement_phase: step.procurement_phase || null,
+      procurement_stage: step.procurement_stage || null,
+      required_documents: step.required_documents || [],
+      can_upload_documents: this.canUploadDocuments(step.status),
+      tasks_completed: completedTasks,
+      tasks_total: Math.max(step.required_documents?.length || 0, stepDocuments.length, 1),
+      created_at: step.created_at,
+      updated_at: step.updated_at
+    };
+  }
+
+  /**
+   * Validate and transform document data
+   */
+  private validateAndTransformDocument(doc: any): StepDocumentDTO {
+    return {
+      id: doc.id,
+      step_id: doc.step_id,
+      document_id: doc.document_id,
+      document_type: doc.document_type,
+      is_required: Boolean(doc.is_required),
+      status: this.normalizeDocumentStatus(doc.status),
+      submitted_at: doc.submitted_at || null,
+      reviewer_notes: doc.reviewer_notes || null,
+      document: {
+        id: doc.document?.id || '',
+        title: doc.document?.title || '',
+        description: doc.document?.description || null,
+        file_url: doc.document?.file_url || null,
+        file_name: doc.document?.file_name || null,
+        mime_type: doc.document?.mime_type || null,
+        file_size: doc.document?.file_size || null
+      },
+      can_share: this.canShareDocument(doc.status)
+    };
+  }
+
+  /**
+   * Validate document upload data
+   */
+  private validateDocumentUploadData(uploadData: DocumentUploadDTO): void {
+    if (!uploadData.file) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'File is required');
+    }
+
+    if (!uploadData.stepId) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Step ID is required');
+    }
+
+    if (!uploadData.title || uploadData.title.trim() === '') {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Document title is required');
+    }
+  }
+
+  /**
+   * Validate status transition
+   */
+  private validateStatusTransition(currentStatus: string, newStatus: string): void {
+    const validTransitions: Record<string, string[]> = {
+      'pending': ['in_progress', 'completed', 'cancelled'],
+      'in_progress': ['completed', 'cancelled'],
+      'completed': [], // Terminal state
+      'cancelled': ['pending'] // Can restart from cancelled
+    };
+
+    if (newStatus && !validTransitions[currentStatus]?.includes(newStatus)) {
+      throw new AppError(
+        ErrorCode.VALIDATION_ERROR,
+        `Invalid status transition from ${currentStatus} to ${newStatus}`
+      );
+    }
+  }
+
+  /**
+   * Normalize backend status to DTO status
+   */
+  private normalizeStatus(status: string): WorkflowStepDTO['status'] {
+    const s = (status || '').toLowerCase();
+    
+    if (['in_progress', 'started', 'open', 'ongoing'].includes(s)) {
+      return 'in_progress';
+    }
+    
+    if (['completed', 'done', 'finished', 'approved'].includes(s)) {
+      return 'completed';
+    }
+    
+    if (['approved', 'validated', 'accepted'].includes(s)) {
+      return 'approved';
+    }
+    
+    return 'pending';
+  }
+
+  /**
+   * Normalize document status
+   */
+  private normalizeDocumentStatus(status: string): StepDocumentDTO['status'] {
+    const s = (status || '').toLowerCase();
+    
+    if (['submitted', 'uploaded', 'sent'].includes(s)) {
+      return 'submitted';
+    }
+    
+    if (['approved', 'validated', 'accepted'].includes(s)) {
+      return 'approved';
+    }
+    
+    if (['rejected', 'declined', 'denied'].includes(s)) {
+      return 'rejected';
+    }
+    
+    return 'pending';
+  }
+
+  /**
+   * Upload file to storage with proper error handling
+   */
+  private async uploadFileToStorage(file: File, stepId: string): Promise<{ success: boolean; url: string | null; error?: string }> {
+    try {
+      // Generate unique file path
+      const timestamp = new Date().getTime();
+      const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const uniqueFilePath = `workflow-steps/${stepId}/${timestamp}_${sanitizedFileName}`;
+
+      // Upload to Supabase storage
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .upload(uniqueFilePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (error) {
+        return {
+          success: false,
+          error: `Storage upload failed: ${error.message}`,
+          url: null
+        };
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('documents')
+        .getPublicUrl(uniqueFilePath);
+
+      return {
+        success: true,
+        url: publicUrl
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Upload failed',
+        url: null
+      };
+    }
+  }
+}
+
+// Factory function for service instance
+let workflowStepServiceInstance: WorkflowStepService | null = null;
+
+export function getWorkflowStepService(): WorkflowStepService {
+  if (!workflowStepServiceInstance) {
+    workflowStepServiceInstance = new WorkflowStepService();
+  }
+  return workflowStepServiceInstance;
+}

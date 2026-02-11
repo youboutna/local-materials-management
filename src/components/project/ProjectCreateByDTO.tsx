@@ -11,7 +11,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, MapPin, Users, DollarSign, Save, X, Plus } from 'lucide-react';
 import { ProjectData, ConstructionPhase } from '@/types/project';
 import { ProjectReportDTO, EnhancedPhaseDTO, ConstructionMilestoneDTO } from '@/types/reportTypes';
-import { ReportDataTransformer } from '@/services/reportDataTransformer';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';

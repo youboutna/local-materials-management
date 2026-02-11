@@ -24,7 +24,7 @@ import {
 import { format, addDays, differenceInDays, startOfMonth, endOfMonth, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, parseISO, isWithinInterval } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { GanttPertDataService, UnifiedGanttData, getGanttPertService } from '@/services/GanttPertDataService';
+import { GanttPertDataService, UnifiedGanttData, getGanttPertService } from '@/application/services/GanttPertDataService';
 
 type ZoomLevel = 'day' | 'week' | 'month';
 

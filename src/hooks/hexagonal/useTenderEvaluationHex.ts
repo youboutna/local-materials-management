@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { TenderSubmissionService } from '@/application/services/TenderSubmissionService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { useToast } from '@/hooks/use-toast';
 
@@ -40,9 +41,25 @@ export function useTenderEvaluationHex(tenderId: string) {
   const submissionsQuery = useQuery({
     queryKey: ['tender-submissions', tenderId],
     queryFn: async (): Promise<TenderSubmission[]> => {
-      // Placeholder - would use TenderSubmissionService
-      console.log('Tender submissions not implemented for tender:', tenderId);
-      return [];
+      // Use hexagonal TenderSubmissionService
+      const submissions = await TenderSubmissionService.getTenderSubmissionsByTenderId(tenderId);
+      return submissions.map((sub: any) => ({
+        id: sub.id,
+        user_id: sub.user_id,
+        tender_id: sub.tender_id,
+        supplier_name: sub.supplier_name,
+        supplier_email: sub.supplier_email,
+        submission_date: sub.submission_date,
+        status: sub.status,
+        administrative_score: sub.administrative_score,
+        technical_score: sub.technical_score,
+        financial_score: sub.financial_score,
+        total_score: sub.total_score,
+        evaluator_notes: sub.evaluator_notes,
+        reviewer_id: sub.reviewer_id,
+        reviewed_at: sub.reviewed_at,
+        submission_documents: sub.submission_documents || []
+      }));
     },
     enabled: !!tenderId
   });

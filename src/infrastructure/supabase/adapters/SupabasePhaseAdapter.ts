@@ -1,31 +1,33 @@
 /**
  * Supabase Phase Adapter
  * Implements IPhaseRepository using Supabase
+ * Handles both regular phases and construction phases with semantic logic
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { Phase, PhaseStep, PhaseTask, PhaseStatus, PhaseMetrics } from '@/domain/entities';
+import { Phase, PhaseStep, PhaseTask, PhaseStatus } from '@/domain/entities';
 import { IPhaseRepository } from '@/domain/repositories';
 import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
-import { Json } from '@supabase/supabase-js';
+import { PhaseDTO, CreatePhaseDTO, UpdatePhaseDTO } from '@/dtos/entities/PhaseDTO';
 
-const defaultMetrics: PhaseMetrics = {
-  materialCost: 0,
-  totalMaterials: 0,
-  totalTasks: 0,
-  completedTasks: 0,
-  taskCompletionRate: 0,
-  totalInspections: 0,
-  passedInspections: 0,
-  inspectionPassRate: 0,
-  totalEmployees: 0,
-  totalPayments: 0,
-  totalPaymentAmount: 0,
-  totalDocuments: 0,
-  milestoneProgress: 0,
-  stepsCount: 0,
-  completedSteps: 0,
-};
+// Define PhaseMetrics interface locally since it's not in domain entities
+interface PhaseMetrics {
+  materialCost: number;
+  totalMaterials: number;
+  totalTasks: number;
+  completedTasks: number;
+  taskCompletionRate: number;
+  totalInspections: number;
+  passedInspections: number;
+  inspectionPassRate: number;
+  totalEmployees: number;
+  totalPayments: number;
+  totalPaymentAmount: number;
+  totalDocuments: number;
+  milestoneProgress: number;
+  stepsCount: number;
+  completedSteps: number;
+}
 
 interface PhaseOperationParams {
   id: string;
@@ -48,7 +50,7 @@ interface PhaseDB {
   actual_cost: number | null;
   construction_phase: string | null;
   construction_stage: string | null;
-  custom_phase_data: Json | null;
+  custom_phase_data: Record<string, unknown> | null;
 }
 
 export class SupabasePhaseAdapter implements IPhaseRepository {
@@ -76,7 +78,11 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
       .eq('project_id', projectId);
 
     if (error) throw new Error(error.message);
-    return data.map(d => PhaseTransformer.fromDTO(d));
+    return data.map(d => PhaseTransformer.toDTO(d));
+  }
+
+  async findByProjectId(projectId: string): Promise<Phase[]> {
+    return this.getPhasesByProjectId(projectId);
   }
 
   async create(phase: Partial<Phase>): Promise<Phase> {

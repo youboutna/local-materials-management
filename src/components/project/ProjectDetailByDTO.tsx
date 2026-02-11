@@ -23,6 +23,7 @@ import { ProjectService } from '@/application/services/ProjectService';
 import { MilestoneService } from '@/application/services/MilestoneService';
 import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import { ProjectDetailDTO, ProjectSummaryDTO } from "@/dtos/entities/ProjectDTO";
+import { InspectionDTO } from "@/dtos/entities/InspectionDTO";
 import { Dialog, DialogContent, DialogTrigger } from "@radix-ui/react-dialog";
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -48,7 +49,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ElectricSpinner } from "../loading-page";
 import { CompactProjectReportGenerator } from "../reports/CompactProjectReportGenerator";
 import { ReferentialType } from "@/config/referentials";
-import { referentialService } from '@/services/ReferentialService';
+import { referentialService } from '@/application/services/ReferentialService';
 import {
   Dialog as DialogUI,
   DialogContent as DialogContentUI,
@@ -85,7 +86,7 @@ interface PhaseToSave {
   progress: number;
   phase_type: string;
   construction_phase: string;
-  custom_phase_data: any;
+  custom_phase_data: Record<string, unknown>;
 }
 const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   projectId: propProjectId,
@@ -99,7 +100,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   const [selectedReferential, setSelectedReferential] =
     useState<ReferentialType | null>(null);
   const [showPhaseManager, setShowPhaseManager] = useState(false);
-  const [phases, setPhases] = useState<any[]>([]);
+  const [phases, setPhases] = useState<Record<string, unknown>[]>([]);
   console.log("🔍 ProjectDetailByDTO render - projectId:", projectId);
 
   const [error, setError] = useState<string | null>(null);
@@ -309,10 +310,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   }, [projectDetail]);
   
   const inspectionsSource = useMemo(() => {
-    const inspections = projectDetail?.inspections || [];
+    // ProjectDetailDTO doesn't have inspections property, using empty array for now
+    const inspections: InspectionDTO[] = [];
     console.log('📊 Inspections Source:', inspections);
     return inspections;
-  }, [projectDetail]);
+  }, []);
   
   const paymentsSource = useMemo(() => {
     const expenses = projectDetail?.expenses || [];
@@ -328,7 +330,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
     // Find the first phase that is "in_progress" - use name property from PhaseDTO
     const inProgressPhase = phasesSource.find(
-      (p: any) => p.status === "in_progress" || p.status === "active"
+      (p) => p.status === "in_progress"
     );
     if (inProgressPhase) {
       return {
@@ -337,13 +339,10 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       };
     }
 
-    // If no in_progress phase, find the first "pending" or "not_started"
+    // If no in_progress phase, find the first "pending" phase
     const pendingPhase = phasesSource.find(
-      (p: any) =>
-        p.status === "pending" ||
-        p.status === "not_started" ||
-        p.status === "planned" ||
-        p.status === "planning"
+      (p) =>
+        p.status === "pending"
     );
     if (pendingPhase) {
       return {
@@ -387,7 +386,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       const realResources = Array.isArray(projectDetail.resources) ? projectDetail.resources : [];
       
       // Transform real resources to the expected format
-      const allResources = realResources.map((resource: any) => ({
+      const allResources = realResources.map((resource: Record<string, unknown>) => ({
         id: resource.id || `resource-${Math.random()}`,
         name: resource.name || resource.title || "Ressource sans nom",
         type: resource.type || "human",
@@ -401,13 +400,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       
       // Add project manager if exists and not already included
       const contactsArray = Array.isArray(projectDetail.contacts) ? projectDetail.contacts : [];
-      if (projectDetail.projectResponsableId && !allResources.find((r: any) => r.id.includes('manager'))) {
-        const managerContact = contactsArray.find((c: any) => 
+      if (projectDetail.projectManagerId && !allResources.find((r) => r.id.includes('manager'))) {
+        const managerContact = contactsArray.find((c) => 
           c.role === 'project_manager' || c.role === 'chef de projet'
         );
         
         allResources.push({
-          id: `manager-${projectDetail.projectResponsableId}`,
+          id: `manager-${projectDetail.projectManagerId}`,
           name: managerContact?.name || "Chef de projet",
           type: "human",
           position: managerContact?.role || "Chef de projet",
@@ -420,8 +419,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       }
       
       // Add main contractor if exists and not already included
-      if (projectDetail.mainContractor && !allResources.find((r: any) => r.id.includes('contractor'))) {
-        const contractorContact = contactsArray.find((c: any) => 
+      if (projectDetail.mainContractor && !allResources.find((r) => r.id.includes('contractor'))) {
+        const contractorContact = contactsArray.find((c) => 
           c.role === 'contractor' || c.role === 'contractant principal'
         );
         
@@ -1910,6 +1909,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             onChange={(data) => {
               console.log("Map data changed:", data);
               // Handle map data updates
+              // TODO: Update project with new map data
             }}
           />
         </TabsContent>

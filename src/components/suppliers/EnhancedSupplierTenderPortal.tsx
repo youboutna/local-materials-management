@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { useAuth } from '@/hooks/hexagonal';
 import { TenderService } from '@/application/services/TenderService';
-import { TenderSubmissionService, UploadedDocument } from '@/services/TenderSubmissionService';
+import { TenderSubmissionService, UploadedDocument } from '@/application/services/TenderSubmissionService';
 import { supabase } from '@/integrations/supabase/client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -235,7 +235,7 @@ const EnhancedSupplierTenderPortal = () => {
         };
       });
 
-      // Create submission with documents and secret using service
+      // Create submission with documents and secret using hexagonal service
       return await TenderSubmissionService.createSubmissionWithDocuments(
         {
           tender_id: selectedTender.id,

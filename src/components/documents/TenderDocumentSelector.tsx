@@ -1,13 +1,17 @@
 
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FileText, Calendar, User, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { DocumentService } from '@/application/services/DocumentService';
+import { TenderService } from '@/application/services/TenderService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
+import { TenderDTO } from '@/dtos/entities/TenderDTO';
 
 interface Document {
   id: string;
@@ -32,50 +36,47 @@ const TenderDocumentSelector: React.FC<TenderDocumentSelectorProps> = ({
 }) => {
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
 
+  // Initialize services
+  const documentService = new DocumentService(RepositoryFactory.getDocumentRepository());
+  const tenderService = new TenderService(RepositoryFactory.getTenderRepository());
+
   // Fetch documents related to the tender
   const { data: documents, isLoading } = useQuery({
     queryKey: ['tender-documents', tenderId],
     queryFn: async (): Promise<Document[]> => {
-      // First, try to get documents directly associated with the tender
-      let query = supabase
-        .from('documents')
-        .select('*')
-        .or(`metadata->>'tender_id'.eq.${tenderId},metadata->>'related_tender_id'.eq.${tenderId}`)
-        .order('created_at', { ascending: false });
-
-      const { data: tenderDocs, error: tenderError } = await query;
-
-      if (tenderError) {
-        console.error('Error fetching tender documents:', tenderError);
-      }
-
-      // Also get documents from the tender's associated project if available
-      const { data: tender } = await supabase
-        .from('tenders')
-        .select('project_id')
-        .eq('id', tenderId)
-        .single();
-
-      let projectDocs: Document[] = [];
-      if (tender?.project_id) {
-        const { data: projDocs, error: projError } = await supabase
-          .from('documents')
-          .select('*')
-          .eq('project_id', tender.project_id)
-          .order('created_at', { ascending: false });
-
-        if (!projError && projDocs) {
-          projectDocs = projDocs as Document[];
+      try {
+        // Get tender details to find associated project
+        const tender = await tenderService.getTenderById(tenderId);
+        
+        // Get documents directly associated with the tender
+        const tenderDocs = await documentService.getDocumentsByTender(tenderId);
+        
+        // Get documents from the tender's associated project if available
+        let projectDocs: DocumentDTO[] = [];
+        if (tender?.projectId) {
+          projectDocs = await documentService.getDocumentsByProject(tender.projectId);
         }
+
+        // Combine and deduplicate documents
+        const allDocs = [...tenderDocs, ...projectDocs];
+        const uniqueDocs = allDocs.filter((doc, index, self) => 
+          index === self.findIndex(d => d.id === doc.id)
+        );
+
+        // Map to Document interface
+        return uniqueDocs.map((doc: DocumentDTO) => ({
+          id: doc.id,
+          title: doc.title,
+          document_type: doc.documentType,
+          file_name: doc.fileName,
+          created_at: doc.createdAt,
+          uploaded_by: doc.uploadedBy,
+          file_size: doc.fileSize,
+        }));
+      } catch (error) {
+        console.error('Error fetching tender documents:', error);
+        return [];
       }
-
-      // Combine and deduplicate documents
-      const allDocs = [...(tenderDocs || []), ...projectDocs];
-      const uniqueDocs = allDocs.filter((doc, index, self) => 
-        index === self.findIndex(d => d.id === doc.id)
-      );
-
-      return uniqueDocs as Document[];
     },
   });
 

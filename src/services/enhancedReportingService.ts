@@ -2,7 +2,7 @@ import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectData } from '@/types/project';
 import { ReportCalculations } from '@/utils/reportCalculations';
-import { ProjectDataCalculations } from '@/utils/projectDataCalculations';
+import { ProjectCalculationService } from '@/services/ProjectCalculationService';
 import {
   ProjectReportDTO,
   EnhancedPhaseDTO,
@@ -57,7 +57,7 @@ export class EnhancedReportingService {
       
       // Calculate resource utilization for the first phase if available
       const resourceUtilization = phasesData.length > 0 
-        ? await ProjectDataCalculations.calculatePhaseResourceUtilization(project.id, phasesData[0].id)
+        ? await ProjectCalculationService.calculatePhaseResourceUtilization(project.id, phasesData[0].id)
         : null;
 
       // Calculate comprehensive cost data
@@ -71,9 +71,10 @@ export class EnhancedReportingService {
       };
 
       // Calculate timeline performance
-      const timelinePerformance = ProjectDataCalculations.calculateTimelinePerformance(
+      const timelinePerformance = ProjectCalculationService.calculateTimelinePerformance(
         project, 
-        phasesData
+        phasesData,
+        realCosts
       );
 
       // Calculate quality score from inspections
@@ -81,7 +82,7 @@ export class EnhancedReportingService {
 
       // Calculate overall health score
       const budgetUtilization = project.budget > 0 ? (realCosts.totalSpent / project.budget) * 100 : 0;
-      const healthScore = ProjectDataCalculations.calculateProjectHealthScore(
+      const healthScore = NewService.calculateProjectHealthScore( // Update the method call to use the new service
         project.progress,
         budgetUtilization,
         timelinePerformance.completionRate || 0,

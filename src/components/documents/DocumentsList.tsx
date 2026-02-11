@@ -8,12 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FileText, Search, Download, Eye, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentsList } from '@/hooks/hexagonal';
-import type { Database } from '@/integrations/supabase/types';
-
-type Document = Database['public']['Tables']['documents']['Row'];
+import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
 
 interface DocumentsListProps {
-  onDocumentSelect?: (document: Document) => void;
+  onDocumentSelect?: (document: DocumentDTO) => void;
 }
 
 const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {

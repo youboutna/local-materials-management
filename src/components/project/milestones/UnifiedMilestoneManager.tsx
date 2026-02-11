@@ -4,7 +4,7 @@
  * Intègre Timeline, GANTT et PERT en vue unifiée
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,7 @@ import {
   CheckSquare,
   Plus
 } from 'lucide-react';
-import { MilestoneService } from '@/services/MilestoneService';
+import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
 import { 
   MilestoneSummaryDTO, 
   MilestoneProgressDTO,
@@ -71,11 +71,7 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
   const [viewMode, setViewMode] = useState<ViewMode>(defaultView);
   const [isExpanded, setIsExpanded] = useState(!compact);
 
-  useEffect(() => {
-    loadData();
-  }, [projectId, phaseId]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const [milestonesData, progressData] = await Promise.all([
@@ -91,7 +87,11 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId, phaseId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const getStatusInfo = (milestone: MilestoneSummaryDTO) => {
     const today = new Date();
@@ -392,8 +392,13 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
 // Timeline View Component
 interface TimelineViewProps {
   groupedMilestones: Record<string, MilestoneSummaryDTO[]>;
-  getStatusInfo: (m: MilestoneSummaryDTO) => any;
-  getTypeIcon: (type: MilestoneType) => any;
+  getStatusInfo: (m: MilestoneSummaryDTO) => {
+    status: string;
+    color: string;
+    icon: React.ComponentType<any>;
+    label: string;
+  };
+  getTypeIcon: (type: MilestoneType) => React.ComponentType<any>;
   onMilestoneClick?: (id: string, phaseId?: string) => void;
   showPhaseHeaders: boolean;
 }
@@ -499,8 +504,13 @@ const TimelineView: React.FC<TimelineViewProps> = ({
 // List View Component
 interface ListViewProps {
   milestones: MilestoneSummaryDTO[];
-  getStatusInfo: (m: MilestoneSummaryDTO) => any;
-  getTypeIcon: (type: MilestoneType) => any;
+  getStatusInfo: (m: MilestoneSummaryDTO) => {
+    status: string;
+    color: string;
+    icon: React.ComponentType<any>;
+    label: string;
+  };
+  getTypeIcon: (type: MilestoneType) => React.ComponentType<any>;
   onMilestoneClick?: (id: string, phaseId?: string) => void;
 }
 

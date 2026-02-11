@@ -1,4 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { StorageService } from '@/application/services/StorageService';
+import { DocumentService } from '@/application/services/DocumentService';
+import { InspectionService } from '@/application/services/InspectionService';
 import {
   InspectionExecutionData,
   InspectionObservation,
@@ -41,14 +45,13 @@ export class InspectionExecutionService {
         corrective_actions_required: false,
       };
 
-      const { error } = await supabase
-        .from('inspections')
-        .update({
-          status: 'in_progress',
-          documents: executionData as any,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', inspectionId);
+      // Use hexagonal inspection service (Rule #1: Arrow Flow)
+      const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
+      await inspectionService.updateInspection(inspectionId, {
+        status: 'in_progress',
+        documents: executionData,
+        updated_at: new Date().toISOString(),
+      });
 
       if (error) throw error;
       return true;
@@ -63,14 +66,10 @@ export class InspectionExecutionService {
    */
   static async getExecutionData(inspectionId: string): Promise<InspectionExecutionData | null> {
     try {
-      const { data, error } = await supabase
-        .from('inspections')
-        .select('documents')
-        .eq('id', inspectionId)
-        .single();
-
-      if (error) throw error;
-      return (data?.documents as unknown as InspectionExecutionData) || null;
+      // Use hexagonal inspection service (Rule #1: Arrow Flow)
+      const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
+      const documents = await inspectionService.findDocumentsByInspectionId(inspectionId);
+      return documents;
     } catch (error) {
       console.error('[InspectionExecutionService] getExecutionData error:', error);
       return null;
@@ -88,15 +87,13 @@ export class InspectionExecutionService {
       const existing = await this.getExecutionData(inspectionId);
       const merged = { ...existing, ...data };
 
-      const { error } = await supabase
-        .from('inspections')
-        .update({
-          documents: merged as any,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', inspectionId);
+      // Use hexagonal inspection service (Rule #1: Arrow Flow)
+      const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
+      await inspectionService.updateInspection(inspectionId, {
+        documents: merged,
+        updated_at: new Date().toISOString(),
+      });
 
-      if (error) throw error;
       return true;
     } catch (error) {
       console.error('[InspectionExecutionService] updateExecutionData error:', error);
@@ -143,28 +140,30 @@ export class InspectionExecutionService {
     try {
       // Upload to storage
       const filePath = `inspections/${projectId}/${inspectionId}/${Date.now()}-${file.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(filePath);
+      // Use hexagonal storage service (Rule #1: Arrow Flow)
+      const storageService = new StorageService(RepositoryFactory.getDocumentRepository());
+      const uploadResult = await storageService.uploadFile(filePath, file);
+      
+      if (uploadResult.error) throw uploadResult.error;
 
       const document: InspectionDocument = {
         id: crypto.randomUUID(),
         name: file.name,
         type: file.type.startsWith('image/') ? 'photo' : 
               file.type === 'application/pdf' ? 'scan' : 'report',
-        url: publicUrl,
+        url: uploadResult.publicUrl || '',
         size: file.size,
         mime_type: file.type,
+        uploaded_at: new Date().toISOString(),
         metadata: {
           ...metadata,
           captured_at: new Date().toISOString(),
         },
-        uploaded_at: new Date().toISOString(),
       };
+
+      // Document creation handled by DocumentService in hexagonal architecture (Rule #5: UI Layer Separation)
+      const documentService = new DocumentService(RepositoryFactory.getDocumentRepository());
+      await documentService.createDocument(document);
 
       // Add to execution data
       const existing = await this.getExecutionData(inspectionId);
@@ -172,23 +171,6 @@ export class InspectionExecutionService {
         const documents = [...(existing.documents || []), document];
         await this.updateExecutionData(inspectionId, { documents });
       }
-
-      // Also create document record
-      const user = (await supabase.auth.getUser()).data.user;
-      const docInsert: any = {
-        title: `Inspection - ${file.name}`,
-        file_name: file.name,
-        file_url: publicUrl,
-        file_size: file.size,
-        mime_type: file.type,
-        document_type: 'inspection_report',
-        project_id: projectId,
-        inspection_id: inspectionId,
-        uploaded_by: user?.id,
-        status: 'pending',
-        metadata: metadata,
-      };
-      await supabase.from('documents').insert(docInsert);
 
       return document;
     } catch (error) {
@@ -300,18 +282,16 @@ export class InspectionExecutionService {
       await this.updateExecutionData(inspectionId, completionData);
 
       // Update inspection status
-      const { error } = await supabase
-        .from('inspections')
-        .update({
-          status: 'completed',
-          progress_at_inspection: progressPercentage,
-          comments: summary,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', inspectionId);
-
-      if (error) throw error;
-      return true;
+      // Use hexagonal inspection service (Rule #1: Arrow Flow)
+      const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
+      await inspectionService.completeInspection(inspectionId, {
+        status: 'completed',
+        progress_at_inspection: progressPercentage,
+        comments: summary,
+        recommendations,
+        overall_conformity: overallConformity,
+        progress_percentage: progressPercentage
+      });
     } catch (error) {
       console.error('[InspectionExecutionService] completeInspection error:', error);
       return false;

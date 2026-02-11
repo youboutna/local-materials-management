@@ -40,7 +40,7 @@ import {
 import { cn } from '@/lib/utils';
 import { format, parseISO, differenceInDays, isBefore } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { MilestoneService } from '@/services/MilestoneService';
+import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
 import { MilestoneSummaryDTO, MILESTONE_TYPES } from '@/types/milestone-dto';
 import { MilestoneActionContext } from '@/components/project/milestones/MilestoneCheckpointActions';
 import { toast } from '@/hooks/use-toast';
@@ -66,7 +66,13 @@ interface InspectionData {
   progress_at_inspection: number;
   date: string;
   inspector: string;
-  documents?: any;
+  documents?: Array<{
+  id: string;
+  name: string;
+  type: string;
+  url?: string;
+  uploaded_at?: string;
+}>;
 }
 
 interface UnifiedPhaseWorkflowProps {
@@ -546,10 +552,11 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
                                         <span className="text-sm font-medium">{inspection.progress_at_inspection}%</span>
                                         {inspection.documents && typeof inspection.documents === 'object' && 
                                          !Array.isArray(inspection.documents) && 
-                                         (inspection.documents as any).validation_documents?.length > 0 && (
+                                         'validation_documents' in inspection.documents && 
+                                         (inspection.documents as { validation_documents?: unknown[] }).validation_documents?.length > 0 && (
                                           <Badge variant="outline" className="text-xs">
                                             <FileText className="h-3 w-3 mr-1" />
-                                            {(inspection.documents as any).validation_documents.length}
+                                            {(inspection.documents as { validation_documents: unknown[] }).validation_documents.length}
                                           </Badge>
                                         )}
                                       </div>

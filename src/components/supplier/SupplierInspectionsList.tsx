@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, ExternalLink, Calendar, User, FileText, Edit } from 'lucide-react';
-import { InspectionDTO } from '@/types/inspection.dto';
+import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 import { useNavigate } from 'react-router-dom';
 import { SupplierInspectionExecutionDialog } from './SupplierInspectionExecutionDialog';
 

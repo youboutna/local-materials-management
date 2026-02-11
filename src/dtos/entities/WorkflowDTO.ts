@@ -5,7 +5,22 @@
  * Rule #4: No DTOs in entities, proper type separation
  */
 
-import type { AutomaticDecompteDTO } from '@/types/checkpoint-dto';
+// AutomaticDecompteDTO type definition to avoid legacy imports
+export interface AutomaticDecompteDTO {
+  id: string;
+  decompteNumber: string;
+  amount: number;
+  calculatedAt: string;
+  items: Array<{
+    description: string;
+    quantity: number;
+    unitPrice: number;
+    total: number;
+  }>;
+  status: 'pending' | 'approved' | 'rejected';
+  projectId: string;
+  phaseId: string;
+}
 
 // WorkflowEvent type definition to avoid circular dependencies
 export type WorkflowEvent = 

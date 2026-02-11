@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { AuthService } from '@/application/services/AuthService';
-import { PasswordServiceFactory } from '@/services/password/PasswordServiceFactory';
-import { IPasswordResetRequest, IPasswordUpdateRequest } from '@/application/services/IPasswordService';
+import { getPasswordService, PasswordService } from '@/application/services/PasswordService';
+import { PasswordResetRequestDTO, PasswordUpdateRequestDTO } from '@/dtos/entities/PasswordDTO';
 
 interface PasswordError {
   message: string;
@@ -13,12 +13,12 @@ interface PasswordError {
 export const usePasswordManagement = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const passwordService = PasswordServiceFactory.getInstance();
+  const passwordService = getPasswordService();
 
   const requestPasswordReset = async (email: string, redirectUrl?: string) => {
     setLoading(true);
     try {
-      const request: IPasswordResetRequest = { 
+      const request: PasswordResetRequestDTO = { 
         email, 
         redirectUrl: redirectUrl || `${window.location.origin}/reset-password`
       };
@@ -55,7 +55,7 @@ export const usePasswordManagement = () => {
   const updatePassword = async (newPassword: string, confirmPassword: string) => {
     setLoading(true);
     try {
-      const request: IPasswordUpdateRequest = {
+      const request: PasswordUpdateRequestDTO = {
         newPassword,
         confirmPassword
       };

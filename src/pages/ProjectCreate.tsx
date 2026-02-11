@@ -1,7 +1,7 @@
 import ProjectCreationWorkflow from "@/components/project/ProjectCreationWorkflow";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useProjectsHex } from "@/hooks/hexagonal";
+import { useProjectsHex, useAddMaterialToProjectHex } from "@/hooks/hexagonal";
 import { toast } from "@/hooks/use-toast";
 import { PhaseService } from '@/application/services/PhaseService';
 import { ProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
@@ -25,6 +25,7 @@ const ProjectCreate = () => {
     SelectedMaterial[]
   >([]);
   const { createProject } = useProjectsHex();
+  const addMaterialToProjectMutation = useAddMaterialToProjectHex();
 
   // Status mapping from form values to database values
   const statusMapping = {
@@ -241,55 +242,30 @@ const ProjectCreate = () => {
     }
   };
 
-  // This function is now handled by PhaseService
-
-  // Add materials to project - isolated Supabase dependency
+  // Add materials to project using hexagonal architecture
   const addMaterialsToProject = async (
     projectId: string,
     materials: SelectedMaterial[]
   ) => {
     try {
-      // Import Supabase only when needed (lazy loading)
-      const { supabase } = await import("@/integrations/supabase/client");
-
-      const materialsToAdd = materials.map((material) => ({
-        project_id: projectId,
-        material_id: material.materialId,
-        quantity: material.quantity,
-      }));
-
-      const { error: materialsError } = await supabase
-        .from("project_materials")
-        .insert(materialsToAdd);
-
-      if (materialsError) throw materialsError;
-
-      const takeoffsToCreate = materials.map((material) => ({
-        project_id: projectId,
-        material_id: material.materialId,
-        element_type: "Standard Element",
-        unit: "unité",
-        length: material.quantity,
-        width: null,
-        height: null,
-        note: "Auto-généré lors de la création du projet",
-      }));
-
-      const { error: takeoffsError } = await supabase
-        .from("quantity_takeoffs")
-        .insert(takeoffsToCreate);
-
-      if (takeoffsError) throw takeoffsError;
+      // Use hexagonal hook for each material addition
+      for (const material of materials) {
+        await addMaterialToProjectMutation.mutateAsync({
+          projectId,
+          materialId: material.materialId,
+          quantity: material.quantity
+        });
+      }
 
       toast({
         title: "Matériaux ajoutés",
-        description: `${materials.length} matériau(x) et métré(s) créé(s) automatiquement.`,
+        description: `${materials.length} matériau(x) ajouté(s) au projet avec succès.`,
       });
     } catch (error) {
       console.error("Error adding materials to project:", error);
       toast({
-        title: "Avertissement",
-        description: "Projet créé mais erreur lors de l'ajout des matériaux.",
+        title: "Erreur",
+        description: "Impossible d'ajouter les matériaux au projet",
         variant: "destructive",
       });
     }

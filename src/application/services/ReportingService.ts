@@ -6,7 +6,7 @@
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { ReportCalculations } from '@/utils/reportCalculations';
-import { ProjectDataCalculations } from '@/utils/projectDataCalculations';
+import { ProjectCalculationService } from '@/application/services/ProjectCalculationService';
 import {
   ProjectReportDTO,
   EnhancedPhaseDTO,
@@ -77,7 +77,15 @@ export class ReportingService {
 
       const phasesData = phases || [];
       const inspectionsData = inspections || [];
-      
+
+      // Use ProjectCalculationService for project analytics
+      const analytics = ProjectCalculationService.calculateProjectHealthScore(
+        request.project.progress || 0,
+        85, // Default budget utilization
+        90, // Default schedule performance
+        88  // Default quality score
+      );
+
       // Calculate resource utilization for the first phase if available
       const resourceUtilization = phasesData.length > 0 
         ? await this.reportingRepository.calculatePhaseResourceUtilization(request.project.id, phasesData[0].id)

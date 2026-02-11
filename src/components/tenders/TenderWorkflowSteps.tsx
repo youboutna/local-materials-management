@@ -12,8 +12,10 @@ import { FileText, Plus, Upload, Eye, CheckCircle, Clock, AlertTriangle, Workflo
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useWorkflowSteps } from '@/hooks/useWorkflowSteps';
 import { WorkflowStepDTO, DocumentUploadDTO, DocumentShareDTO } from '@/types/workflow-dto';
+import { TenderDocumentCategory } from '@/dtos/entities/TenderDTO';
 import { DEV_MODE } from '@/config/constants';
 import WorkflowStepSelector from './WorkflowStepSelector';
+import { standardWorkflow, WorkflowPhase, WorkflowStage } from '@/types/workflow';
 import StandardWorkflowDocumentSuggestions from './StandardWorkflowDocumentSuggestions';
 import {
   PROCUREMENT_PHASES,
@@ -23,13 +25,7 @@ import {
   ProcurementStage,
   getSuggestedDocuments
 } from './PublicProcurementWorkflow';
-import {
-  TenderDocumentCategory,
-  TenderDocumentSubcategory,
-  TENDER_DOCUMENT_LABELS,
-  TENDER_CATEGORY_LABELS,
-  ADMINISTRATIVE_SUBCATEGORY_GROUPS
-} from '@/types/tender';
+import { TenderDocumentSubcategory, TENDER_DOCUMENT_LABELS, TENDER_CATEGORY_LABELS, ADMINISTRATIVE_SUBCATEGORY_GROUPS } from '@/types/tender';
 import ProcurementStepSelector from './ProcurementStepSelector';
 import { useQueryClient } from '@tanstack/react-query';
 import { StepDocumentDTO } from '@/types/workflow-dto';

@@ -2,7 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { IReportingRepository } from '@/domain/repositories/IReportingRepository';
 import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { ReportCalculations } from '@/utils/reportCalculations';
-import { ProjectDataCalculations } from '@/utils/projectDataCalculations';
+import { ProjectCalculationService } from '@/application/services/ProjectCalculationService';
 import { ProjectReportDTO } from '@/types/reportTypes';
 
 export class SupabaseReportingAdapter implements IReportingRepository {
@@ -24,11 +24,11 @@ export class SupabaseReportingAdapter implements IReportingRepository {
   }
 
   async calculateRealProjectCosts(projectId: string): Promise<any> {
-    return await ProjectDataCalculations.calculateRealProjectCosts(projectId);
+    return await ProjectCalculationService.calculateRealProjectCosts(projectId);
   }
 
   async calculatePhaseResourceUtilization(projectId: string, phaseId: string): Promise<any> {
-    return await ProjectDataCalculations.calculatePhaseResourceUtilization(projectId, phaseId);
+    return await ProjectCalculationService.calculatePhaseResourceUtilization(projectId, phaseId);
   }
 
   async transformProjectForReport(project: ProjectData): Promise<ProjectReportDTO> {
@@ -56,8 +56,8 @@ export class SupabaseReportingAdapter implements IReportingRepository {
       const actualCost = paymentsData?.reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0;
       const evmMetrics = ReportCalculations.calculateEVMMetrics(project, actualCost, phases);
 
-      // Use ProjectDataCalculations for project analytics
-      const analytics = ProjectDataCalculations.calculateProjectHealthScore(
+      // Use ProjectCalculationService for project analytics
+      const analytics = ProjectCalculationService.calculateProjectHealthScore(
         project.progress || 0,
         85, // Default budget utilization
         90, // Default schedule performance

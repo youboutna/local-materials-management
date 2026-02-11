@@ -1,7 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/use-auth';
 import { toast } from '@/hooks/use-toast';
+import { NotificationService } from '@/application/services/NotificationService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { NotificationDTO } from '@/dtos/entities/NotificationDTO';
 
 interface Notification {
   id: string;
@@ -19,22 +21,32 @@ export const useNotifications = (userId?: string) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const actualUserId = userId || user?.id;
+  
+  // Initialize notification service with repository
+  const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
 
   const { data: notifications = [], isLoading, error } = useQuery({
     queryKey: ['notifications', actualUserId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('recipient_id', actualUserId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      if (!actualUserId) return [];
       
-      return (data || []).map((notification: Notification) => ({
-        ...notification,
-        metadata: notification.metadata || {}
-      }));
+      try {
+        const notifications = await notificationService.getNotificationsByRecipient(actualUserId);
+        return notifications.map((notification: NotificationDTO) => ({
+          id: notification.id,
+          recipient_id: notification.recipientId,
+          title: notification.title,
+          message: notification.message,
+          type: notification.type,
+          related_id: notification.relatedId,
+          read: notification.read,
+          created_at: notification.createdAt,
+          metadata: notification.metadata || {}
+        }));
+      } catch (err) {
+        console.error('Error fetching notifications:', err);
+        throw err;
+      }
     },
     enabled: !!actualUserId,
   });
@@ -43,13 +55,7 @@ export const useNotifications = (userId?: string) => {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', notificationId);
-
-      if (error) throw error;
-      
+      await notificationService.markAsRead(notificationId);
       queryClient.invalidateQueries({ queryKey: ['notifications', actualUserId] });
     } catch (err) {
       console.error('Error marking notification as read:', err);
@@ -58,13 +64,13 @@ export const useNotifications = (userId?: string) => {
 
   const markAllAsRead = async () => {
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('recipient_id', actualUserId)
-        .eq('read', false);
-
-      if (error) throw error;
+      if (!actualUserId) return;
+      
+      // Get all unread notifications for this user
+      const unreadNotifications = notifications.filter(n => !n.read && n.recipient_id === actualUserId);
+      
+      // Mark all as read in parallel
+      await Promise.all(unreadNotifications.map(n => notificationService.markAsRead(n.id)));
       
       queryClient.invalidateQueries({ queryKey: ['notifications', actualUserId] });
     } catch (err) {
@@ -81,18 +87,14 @@ export const useNotifications = (userId?: string) => {
     metadata?: Record<string, unknown>
   ) => {
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .insert({
-          recipient_id: recipientId,
-          title,
-          message,
-          type,
-          related_id: relatedId,
-          metadata: metadata || {},
-        });
-
-      if (error) throw error;
+      await notificationService.createNotification({
+        recipientId,
+        title,
+        message,
+        type,
+        relatedId,
+        metadata: metadata || {},
+      });
       
       queryClient.invalidateQueries({ queryKey: ['notifications', recipientId] });
     } catch (err) {

@@ -1,10 +1,13 @@
 // Hook hexagonal pour les actions de gestion
-// Uses services instead of direct Supabase access
+// Uses EnhancedActionService for event-driven action management
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { InspectionService } from '@/application/services/InspectionService';
 import { ProjectService } from '@/application/services/ProjectService';
+import { TaskService } from '@/application/services/TaskService';
+import { PaymentService } from '@/application/services/PaymentService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { CreateEnhancedActionRequestDTO, EnhancedActionDTO } from '@/dtos/entities/ActionDTO';
 
 export interface ActionItem {
   id: string;
@@ -29,10 +32,11 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
 
   try {
     const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+    const inspectionService = new InspectionService();
 
     // Fetch inspections and projects in parallel
     const [allInspections, allProjects] = await Promise.all([
-      InspectionService.getAllInspections(),
+      inspectionService.getAllInspections(),
       projectService.getAllProjects(),
     ]);
 
@@ -134,16 +138,112 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
 }
 
 export function useManagementActionsHex() {
+  const queryClient = useQueryClient();
+  const enhancedActionService = new EnhancedActionService();
+
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['management-actions'],
     queryFn: fetchManagementActions,
     staleTime: 30000
   });
 
+  // Mutation for executing actions through EnhancedActionService
+  const executeActionMutation = useMutation({
+    mutationFn: async (actionData: {
+      type: 'schedule_inspection' | 'assign_task' | 'approve_payment' | 'escalate_issue';
+      title: string;
+      description: string;
+      projectId: string;
+      assigneeId?: string;
+      entityId?: string;
+      priority: 'low' | 'medium' | 'high' | 'urgent';
+    }) => {
+      const actionEvent = {
+        id: `action-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type: actionData.type,
+        title: actionData.title,
+        description: actionData.description,
+        priority: actionData.priority,
+        assigneeId: actionData.assigneeId,
+        projectId: actionData.projectId,
+        entityId: actionData.entityId,
+        entityType: 'project',
+        metadata: {},
+        createdBy: 'system',
+        createdAt: new Date().toISOString(),
+        scheduledFor: undefined,
+        recipients: actionData.assigneeId ? [actionData.assigneeId] : []
+      };
+
+      await enhancedActionService.executeAction(actionEvent);
+      return actionEvent;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['management-actions'] });
+    }
+  });
+
+  // Mutation for creating enhanced actions
+  const createActionMutation = useMutation({
+    mutationFn: async (actionData: {
+      actionType: EnhancedActionDTO['actionType'];
+      title: string;
+      message: string;
+      priority: 'low' | 'medium' | 'high' | 'urgent';
+      assigneeId?: string;
+      recipientIds: string[];
+      projectId?: string;
+      contractorId?: string;
+      entityId?: string;
+      metadata?: Record<string, unknown>;
+    }) => {
+      let result;
+      
+      switch (actionData.actionType) {
+        case 'taskAssignment':
+          result = await enhancedActionService.createInsuranceAction({
+            insuranceId: actionData.entityId || '',
+            projectId: actionData.projectId || '',
+            contractorId: actionData.contractorId,
+            actionType: actionData.actionType,
+            title: actionData.title,
+            message: actionData.message,
+            priority: actionData.priority === 'urgent' ? 'high' : actionData.priority,
+            assigneeId: actionData.assigneeId,
+            recipientIds: actionData.recipientIds,
+            metadata: actionData.metadata
+          });
+          break;
+        default:
+          // Default to insurance action for other types
+          result = await enhancedActionService.createInsuranceAction({
+            insuranceId: actionData.entityId || '',
+            projectId: actionData.projectId || '',
+            contractorId: actionData.contractorId,
+            actionType: actionData.actionType,
+            title: actionData.title,
+            message: actionData.message,
+            priority: actionData.priority === 'urgent' ? 'high' : actionData.priority,
+            assigneeId: actionData.assigneeId,
+            recipientIds: actionData.recipientIds,
+            metadata: actionData.metadata
+          });
+      }
+      
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['management-actions'] });
+    }
+  });
+
   return {
     actions: data || [],
     loading: isLoading,
     error,
-    refetch
+    refetch,
+    executeAction: executeActionMutation.mutate,
+    createAction: createActionMutation.mutate,
+    isExecuting: executeActionMutation.isPending || createActionMutation.isPending
   };
 }

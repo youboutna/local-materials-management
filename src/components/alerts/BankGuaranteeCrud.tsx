@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Edit, Trash2, Eye, AlertTriangle, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useBankGuaranteesHex } from '@/hooks/hexagonal/useBankGuaranteesHex';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 
@@ -38,26 +38,28 @@ interface BankGuaranteeFormData {
   issue_date: string;
   expiry_date: string;
   status: string;
+  phase_id: string;
+  notes: string;
 }
 
-const BankGuaranteeCrud: React.FC = () => {
-  const [guarantees, setGuarantees] = useState<BankGuarantee[]>([]);
-  const [selectedGuarantee, setSelectedGuarantee] = useState<BankGuarantee | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isViewMode, setIsViewMode] = useState(false);
-  const { toast } = useToast();
+const BankGuaranteeCrud = () => {
   const { t } = useLanguage();
-
+  const { createGuarantee, updateGuarantee, deleteGuarantee } = useBankGuaranteesHex();
+  const [guarantees, setGuarantees] = useState<BankGuarantee[]>([]);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isViewMode, setIsViewMode] = useState(false);
+  const [selectedGuarantee, setSelectedGuarantee] = useState<BankGuarantee | null>(null);
   const [formData, setFormData] = useState<BankGuaranteeFormData>({
     project_id: '',
     contractor_id: '',
     bank_name: '',
+    guarantee_type: '',
     guarantee_amount: 0,
-    guarantee_type: 'performance',
     issue_date: '',
     expiry_date: '',
-    status: 'active'
+    status: '',
+    phase_id: '',
+    notes: ''
   });
 
   const guaranteeTypes = [
@@ -141,51 +143,42 @@ const BankGuaranteeCrud: React.FC = () => {
 
     try {
       if (isEditing && selectedGuarantee) {
-        // Update guarantee in database
-        const { error } = await supabase
-          .from('bank_guarantees')
-          .update({
-            bank_name: formData.bank_name,
-            guarantee_type: formData.guarantee_type,
-            guarantee_amount: formData.guarantee_amount,
-            issue_date: formData.issue_date,
-            expiry_date: formData.expiry_date,
-            status: formData.status,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', selectedGuarantee.id);
-
-        if (error) throw error;
+        // Update guarantee using hexagonal hook
+        await updateGuarantee.mutateAsync({
+          id: selectedGuarantee.id,
+          data: {
+            bankName: formData.bank_name,
+            guaranteeType: formData.guarantee_type,
+            guaranteeAmount: formData.guarantee_amount,
+            issueDate: formData.issue_date,
+            expiryDate: formData.expiry_date,
+            status: formData.status
+          }
+        });
 
         // Update local state
         const updatedGuarantee = { ...selectedGuarantee, ...formData };
-        setGuarantees(prev => prev.map(g => g.id === selectedGuarantee.id ? updatedGuarantee : g));
+        setGuarantees(prev => prev.map(g => g.id === selectedGuarantee.id ? updatedGuarantee : g)));
         
         toast({
           title: t('common.success'),
           description: "Garantie bancaire mise à jour avec succès",
         });
       } else {
-        // Create new guarantee in database
-        const { data, error } = await supabase
-          .from('bank_guarantees')
-          .insert({
-            project_id: formData.project_id,
-            contractor_id: formData.contractor_id,
-            bank_name: formData.bank_name,
-            guarantee_type: formData.guarantee_type,
-            guarantee_amount: formData.guarantee_amount,
-            issue_date: formData.issue_date,
-            expiry_date: formData.expiry_date,
-            status: formData.status || 'active'
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
+        // Create new guarantee using hexagonal hook
+        const newGuarantee = await createGuarantee.mutateAsync({
+          projectId: formData.project_id,
+          contractorId: formData.contractor_id,
+          bankName: formData.bank_name,
+          guaranteeType: formData.guarantee_type,
+          guaranteeAmount: formData.guarantee_amount,
+          issueDate: formData.issue_date,
+          expiryDate: formData.expiry_date,
+          status: formData.status || 'active'
+        });
 
         // Add to local state
-        setGuarantees(prev => [...prev, data]);
+        setGuarantees(prev => [...prev, newGuarantee]);
         
         toast({
           title: t('common.success'),
@@ -206,7 +199,9 @@ const BankGuaranteeCrud: React.FC = () => {
 
   const handleDelete = async (guaranteeId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette garantie bancaire ?')) {
-      setGuarantees(prev => prev.filter(g => g.id !== guaranteeId));
+      // Delete guarantee using hexagonal hook
+      await deleteGuarantee.mutateAsync(guaranteeId);
+      
       toast({
         title: t('common.success'),
         description: "Garantie bancaire supprimée avec succès",

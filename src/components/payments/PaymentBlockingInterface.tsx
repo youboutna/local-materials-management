@@ -14,11 +14,14 @@ import { Shield, AlertTriangle, DollarSign, Clock, Ban, CheckCircle } from 'luci
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { 
-  validatePaymentEligibility, 
-  attemptPayment, 
-  getPaymentBlockHistory,
-  PaymentValidationResult 
-} from '@/services/paymentBlockingService';
+  PaymentBlockingService, 
+  PaymentBlockDTO, 
+  PaymentControlActionDTO, 
+  CreatePaymentBlockRequestDto, 
+  ResolvePaymentBlockRequestDto, 
+  PaymentBlockStatsDto, 
+  PaymentEligibilityValidationDto 
+} from '@/application/services/PaymentBlockingService';
 import { PaymentService } from '@/application/services/PaymentService';
 import { InsuranceService } from '@/application/services/InsuranceService';
 import { ProjectService } from '@/application/services/ProjectService';

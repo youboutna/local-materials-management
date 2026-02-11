@@ -1,5 +1,5 @@
 
-import { PasswordServiceFactory } from '@/services/password/PasswordServiceFactory';
+import { PasswordServiceFactory } from '@/application/services/password/PasswordServiceFactory';
 
 // Factory-based approach for updating passwords
 export const updateUserPassword = async (userId: string, newPassword: string) => {

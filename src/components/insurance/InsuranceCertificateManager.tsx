@@ -15,12 +15,15 @@ import * as z from 'zod';
 import { Shield, AlertTriangle, CheckCircle, Calendar, FileText, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { 
-  detectExpiringInsurance, 
-  sendInsuranceExpiryAlerts, 
-  createInsuranceCertificate,
-  InsuranceAlert,
-  InsuranceCertificate 
-} from '@/services/insuranceCertificateService';
+  InsuranceService,
+  InsuranceType,
+  InsuranceStatus,
+  CreateInsuranceRequestDTO,
+  UpdateInsuranceRequestDTO,
+  InsuranceStatisticsDTO,
+  InsuranceAlertDTO,
+  InsuranceCertificateDTO
+} from '@/application/services/InsuranceService';
 
 const insuranceFormSchema = z.object({
   projectId: z.string().min(1, 'ID projet requis'),

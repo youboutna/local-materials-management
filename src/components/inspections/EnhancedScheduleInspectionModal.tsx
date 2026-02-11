@@ -21,7 +21,7 @@ import {
   InspectionReviewStep,
   InspectionDetails,
 } from './workflow';
-import { InspectionDocumentType, InspectionWorkflowService } from '@/services/inspection/InspectionWorkflowService';
+import { InspectionDocumentType, InspectionWorkflowService } from '@/application/services/InspectionWorkflowService';
 
 type WorkflowStep = 'type' | 'details' | 'documents' | 'review';
 

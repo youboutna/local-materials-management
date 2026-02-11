@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { PaymentInitiationService } from '@/services/PaymentInitiationService';
+import { PaymentInitiationService } from '@/application/services/PaymentInitiationService';
 import { 
   PaymentInitiationNotification, 
   STATUS_LABELS,

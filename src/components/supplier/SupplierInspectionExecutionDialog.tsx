@@ -14,13 +14,13 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DocumentService } from '@/application/services/DocumentService';
-import { StorageFactory } from '@/services/storage/StorageFactory';
+import { StorageFactory } from '@/application/services/StorageFactory';
 import { InspectionService } from '@/application/services/InspectionService';
 import { generatePVPDF } from '@/lib/pvGenerator';
 import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 import { Upload, FileText, X, CheckCircle } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
-import { SupplierPaymentService } from '@/services/SupplierPaymentService';
+import { SupplierPaymentService } from '@/application/services/SupplierPaymentService';
 
 interface SupplierInspectionExecutionDialogProps {
   inspection: InspectionDTO | null;

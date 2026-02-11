@@ -17,19 +17,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PaginationControls } from '@/components/ui/pagination-controls';
-import { DocumentService } from '@/application/services/DocumentService';
-import { CreateDocumentDTO as CreateDocumentRequestDto } from '@/dtos/entities/DocumentDTO';
+import { InsuranceService, InsuranceType, InsuranceStatus, CreateInsuranceRequestDTO, UpdateInsuranceRequestDTO, InsuranceStatisticsDTO, InsuranceAlertDTO, InsuranceCertificateDTO } from '@/application/services/InsuranceService';
 import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { usePagination } from '@/hooks/usePagination';
-import { 
-  detectExpiringInsurance, 
-  sendInsuranceExpiryAlerts, 
-  createInsuranceCertificate,
-  InsuranceCertificate,
-  InsuranceAlert
-} from '@/services/insuranceCertificateService';
-import { InsuranceService } from '@/application/services/InsuranceService';
 import { createInsuranceAction } from '@/application/services/enhancedActionService';
 import { CreateEnhancedActionRequestDTO as CreateEnhancedActionRequest } from '@/dtos/entities/ActionDTO';
 import { checkAndSendInsuranceAlerts } from '@/utils/insuranceAlertUtils';

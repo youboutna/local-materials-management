@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { TenderService } from '@/application/services/TenderService';
+import { TenderSubmissionService } from '@/application/services/TenderSubmissionService';
 import { Tender } from '@/domain/entities/Tender';
 import { TenderSubmission } from '@/domain/entities/TenderSubmission';
 import { TenderSubmissionDocument } from '@/domain/entities/TenderSubmissionDocument';
@@ -98,7 +99,7 @@ export function useTenderHex(tenderId: string | undefined): UseTenderByIdHexResu
     try {
       setLoading(true);
       setError(null);
-      const result = await tenderService.getTenderById(tenderId);
+      const result = await tenderService.getTenderById({ id: tenderId });
       setTender(result);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch tender'));

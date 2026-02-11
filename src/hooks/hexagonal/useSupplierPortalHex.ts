@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { TenderSubmissionService, UploadedDocument } from '@/services/TenderSubmissionService';
+import { TenderSubmissionService, UploadedDocument } from '@/application/services/TenderSubmissionService';
 import { TenderService } from '@/application/services/TenderService';
-import { SharedDocument, PublicTender } from '@/dtos/transforms/TenderDocumentDTO';
+import { TenderDocumentDTO } from '@/dtos/entities/TenderDocumentDTO';
 import { UserService } from '@/application/services/UserService';
 import { AuthService } from '@/application/services/AuthService';
 import { DocumentService } from '@/application/services/DocumentService';
@@ -119,7 +119,7 @@ export function useSupplierPortalHex(selectedTenderId?: string) {
       const userService = new UserService(RepositoryFactory.getUserRepository());
       const profile = await userService.getUserById(user.id);
 
-      // Create submission with documents
+      // Create submission with documents using hexagonal service
       return await TenderSubmissionService.createSubmissionWithDocuments(
         {
           tender_id: tender.id,

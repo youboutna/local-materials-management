@@ -3,7 +3,7 @@
  * Shows optimistic/pessimistic estimates, critical path, and variance
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -20,11 +20,25 @@ import {
   Sigma
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getGanttPertService, UnifiedPERTData } from '@/services/GanttPertDataService';
+import { GanttPertDataService, UnifiedPERTData, getGanttPertService } from '@/application/services/GanttPertDataService';
 
 interface PERTDiagramProps {
   projectId: string;
-  projectData?: any;
+  projectData?: {
+    id: string;
+    title: string;
+    description?: string;
+    start_date?: string;
+    end_date?: string;
+    status?: string;
+    phases?: Array<{
+      id: string;
+      name: string;
+      start_date?: string;
+      end_date?: string;
+      status?: string;
+    }>;
+  };
   phaseId?: string; // Optional: filter to specific phase
   compact?: boolean;
 }
@@ -42,9 +56,9 @@ const PERTDiagram: React.FC<PERTDiagramProps> = ({
     if (projectId && projectData) {
       loadPERTData();
     }
-  }, [projectId, projectData]);
+  }, [projectId, projectData, loadPERTData]);
 
-  const loadPERTData = async () => {
+  const loadPERTData = useCallback(async () => {
     try {
       setLoading(true);
       const service = getGanttPertService();
@@ -55,7 +69,7 @@ const PERTDiagram: React.FC<PERTDiagramProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId, projectData]);
 
   if (loading) {
     return (

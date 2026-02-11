@@ -24,7 +24,7 @@ import {
   CheckCircle,
   Clock
 } from 'lucide-react';
-import { MilestoneService } from '@/services/MilestoneService';
+import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
 import { MilestoneSummaryDTO } from '@/types/milestone-dto';
 import { MilestoneCheckpointActions, MilestoneActionContext } from '@/components/project/milestones';
 import { cn } from '@/lib/utils';

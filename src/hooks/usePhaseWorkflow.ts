@@ -4,11 +4,16 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useMemo, useCallback } from 'react';
 import { PhaseDTO, PhaseStepDTO } from '@/dtos/entities/PhaseDTO';
 import { StepItem } from '@/types/unified-workflow';
+import { InspectionService } from '@/application/services/InspectionService';
+import { PaymentService } from '@/application/services/PaymentService';
+import { PhaseService } from '@/application/services/PhaseService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { CreateInspectionDTO, InspectionDTO } from '@/dtos/entities/InspectionDTO';
+import { CreatePaymentDTO, PaymentDTO } from '@/dtos/entities/PaymentDTO';
 
 export type WorkflowStage = 
   | 'not_started' 
@@ -103,17 +108,26 @@ interface WorkflowStep {
 export function usePhaseWorkflow(projectId: string, phaseId: string, phase?: PhaseDTO | null) {
   const queryClient = useQueryClient();
 
+  // Initialize services
+  const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
+  const paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
+  const phaseService = new PhaseService(RepositoryFactory.getPhaseRepository());
+
   // Fetch inspections
   const { data: inspections = [], isLoading: inspectionsLoading } = useQuery({
     queryKey: ['workflow-inspections', phaseId],
     queryFn: async (): Promise<InspectionRecord[]> => {
-      const { data, error } = await supabase
-        .from('inspections')
-        .select('*')
-        .eq('phase_id', phaseId)
-        .order('date', { ascending: false });
-      if (error) throw error;
-      return data || [];
+      const inspections = await inspectionService.getInspectionsByPhase(phaseId);
+      return inspections.map((inspection: InspectionDTO) => ({
+        id: inspection.id,
+        status: inspection.status,
+        progress_at_inspection: inspection.progressAtInspection || 0,
+        date: inspection.date,
+        inspector: inspection.inspector,
+        phase_id: inspection.phaseId,
+        project_id: inspection.projectId,
+        comments: inspection.comments,
+      }));
     },
     enabled: !!phaseId,
   });
@@ -122,13 +136,17 @@ export function usePhaseWorkflow(projectId: string, phaseId: string, phase?: Pha
   const { data: payments = [], isLoading: paymentsLoading } = useQuery({
     queryKey: ['workflow-payments', phaseId],
     queryFn: async (): Promise<PaymentRecord[]> => {
-      const { data, error } = await supabase
-        .from('payments')
-        .select('*')
-        .eq('phase_id', phaseId)
-        .order('payment_date', { ascending: false });
-      if (error) throw error;
-      return data || [];
+      const payments = await paymentService.getPaymentsByPhase(phaseId);
+      return payments.map((payment: PaymentDTO) => ({
+        id: payment.id,
+        amount: payment.amount,
+        payment_date: payment.paymentDate,
+        phase_id: payment.phaseId,
+        project_id: payment.projectId,
+        contractor_name: payment.contractorName || '',
+        progress_at_payment: payment.progressAtPayment || 0,
+        payment_method: payment.paymentMethod,
+      }));
     },
     enabled: !!phaseId,
   });
@@ -271,21 +289,20 @@ export function usePhaseWorkflow(projectId: string, phaseId: string, phase?: Pha
       inspector: string;
       comments?: string;
     }) => {
-      const { data, error } = await supabase
-        .from('inspections')
-        .insert({
-          project_id: projectId,
-          phase_id: phaseId,
-          date: inspectionData.date,
-          inspector: inspectionData.inspector,
-          comments: inspectionData.comments,
-          status: 'scheduled',
-          progress_at_inspection: phase?.progress || 0,
-        })
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
+      const inspectionDTO: CreateInspectionDTO = {
+        projectId,
+        phaseId,
+        date: inspectionData.date,
+        inspector: inspectionData.inspector,
+        comments: inspectionData.comments,
+        status: 'scheduled',
+        progressAtInspection: phase?.progress || 0,
+      };
+
+      const createdInspection = await inspectionService.createInspection(inspectionDTO);
+      if (!createdInspection) throw new Error('Failed to schedule inspection');
+      
+      return createdInspection;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workflow-inspections', phaseId] });
@@ -306,11 +323,10 @@ export function usePhaseWorkflow(projectId: string, phaseId: string, phase?: Pha
   // Approve inspection mutation
   const approveInspectionMutation = useMutation({
     mutationFn: async (inspectionId: string) => {
-      const { error } = await supabase
-        .from('inspections')
-        .update({ status: 'approved' })
-        .eq('id', inspectionId);
-      if (error) throw error;
+      const updatedInspection = await inspectionService.updateInspection(inspectionId, {
+        status: 'approved'
+      });
+      if (!updatedInspection) throw new Error('Failed to approve inspection');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workflow-inspections', phaseId] });
@@ -346,16 +362,13 @@ export function usePhaseWorkflow(projectId: string, phaseId: string, phase?: Pha
         status: step.status === 'delayed' ? 'in_progress' : step.status
       }));
 
-      const { error } = await supabase
-        .from('project_phases')
-        .update({
-          custom_phase_data: {
-            steps: updatedSteps,
-          },
-        })
-        .eq('id', phaseId);
-      
-      if (error) throw error;
+      const updateData: UpdatePhaseRequestDto = {
+        id: phaseId,
+        steps: updatedSteps,
+      };
+
+      const updatedPhase = await phaseService.updatePhase(phaseId, updateData);
+      if (!updatedPhase) throw new Error('Failed to update step progress');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });

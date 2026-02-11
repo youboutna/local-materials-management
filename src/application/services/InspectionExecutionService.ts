@@ -7,14 +7,59 @@ import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { IInspectionRepository, ChecklistItem as RepoChecklistItem } from '@/domain/repositories/IInspectionRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { Inspection, InspectionStatus as DomainInspectionStatus } from '@/domain/entities/Inspection';
-import {
-  InspectionExecutionData,
-  InspectionObservation,
-  InspectionDocument,
-  ChecklistItem,
-  ConformityStatus,
-  CHECKLIST_TEMPLATES
-} from '@/types/inspection-execution';
+// Local type definitions to avoid legacy imports
+export interface InspectionExecutionData {
+  id: string;
+  inspectionId: string;
+  status: 'in_progress' | 'completed' | 'paused';
+  progressAtInspection: number;
+  comments?: string;
+  documents: InspectionDocument[];
+  observations: InspectionObservation[];
+  checklist: ChecklistItem[];
+  projectId: string;
+  inspector: string;
+  date: string;
+}
+
+export interface InspectionObservation {
+  id: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  status: 'open' | 'resolved';
+  photo?: string;
+  createdAt: string;
+  resolvedAt?: string;
+}
+
+export interface InspectionDocument {
+  id: string;
+  name: string;
+  type: 'certificate' | 'checklist' | 'photo' | 'report' | 'scan';
+  url: string;
+  uploadedAt: string;
+  uploadedBy: string;
+}
+
+export interface ChecklistItem {
+  id: string;
+  title: string;
+  description?: string;
+  required: boolean;
+  completed: boolean;
+  notes?: string;
+  category?: string;
+}
+
+export type ConformityStatus = 'conforme' | 'non_conforme' | 'en_attente';
+
+export const CHECKLIST_TEMPLATES: Record<string, ChecklistItem[]> = {
+  standard: [
+    { id: '1', title: 'Vérification des plans', required: true, completed: false },
+    { id: '2', title: 'Contrôle des matériaux', required: true, completed: false },
+    { id: '3', title: 'Sécurité du chantier', required: true, completed: false }
+  ]
+};
 
 // Import existing DTOs from entities
 import { 
