@@ -5,7 +5,7 @@
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-geProvider';
+import { IStorageProvider } from '@/domain/interfaces/IStorageProvider';
 import { supabase } from '@/integrations/supabase/client';
 
 /**
