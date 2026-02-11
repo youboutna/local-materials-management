@@ -4,10 +4,9 @@
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { SupabaseStorageProvider } from '@/infrastructure/storage/SupabaseStorageProvider';
+import { SupabaseStorageProvider, LocalStorageProvider } from '@/infrastructure/storage';
 import { getStorageConfig } from '@/config/storage';
 import { IStorageProvider } from '@/domain/interfaces/IStorageProvider';
-import { LocalStorageProvider } from '@/infrastructure/storage/LocalStorageProvider';
 /**
  * Factory class for creating storage providers
  * Following hexagonal architecture principles
@@ -90,11 +89,11 @@ export class StorageFactory {
       // Test basic connectivity (implementation depends on provider)
       if (provider === 'supabase') {
         // Test Supabase connectivity
-        const testResult = await testProvider.listFiles('test', { limit: 1 });
+        const testResult = await testProvider.listFiles('test');
         return { success: !testResult.error };
       } else if (provider === 'local') {
         // Test local storage connectivity
-        const testResult = await testProvider.listFiles('test', { limit: 1 });
+        const testResult = await testProvider.listFiles('test');
         return { success: !testResult.error };
       }
 
