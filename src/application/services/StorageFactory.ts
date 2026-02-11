@@ -4,7 +4,8 @@
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { SupabaseStorageProvider, LocalStorageProvider } from '@/infrastructure/storage';
+import { SupabaseStorageProvider } from '@/infrastructure/storage/SupabaseStorageProvider';
+import { LocalStorageProvider } from '@/infrastructure/storage/LocalStorageProvider';
 import { getStorageConfig } from '@/config/storage';
 import { IStorageProvider } from '@/domain/interfaces/IStorageProvider';
 /**
