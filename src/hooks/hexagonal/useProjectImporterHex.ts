@@ -1,9 +1,10 @@
 /**
  * Hexagonal hook for Project Importer
+ * Uses ProjectRepository instead of direct Supabase access
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface ProjectImportData {
   project_order: number;
@@ -29,48 +30,37 @@ export function useImportProjectsHex() {
 
   return useMutation({
     mutationFn: async (projects: ProjectImportData[]) => {
+      const projectRepo = RepositoryFactory.getProjectRepository();
       const results: any[] = [];
 
       for (const projectData of projects) {
         try {
           // Check if project already exists
-          const { data: existing } = await supabase
-            .from('projects')
-            .select('id')
-            .eq('title', projectData.title)
-            .maybeSingle();
+          const existing = await projectRepo.findByTitle(projectData.title);
 
           if (!existing) {
-            const { data, error } = await supabase
-              .from('projects')
-              .insert({
-                title: projectData.title,
-                description: projectData.description,
-                location: projectData.location,
-                status: projectData.status,
-                progress: projectData.progress,
-                budget: projectData.budget,
-                start_date: projectData.start_date,
-                end_date: projectData.end_date,
-                team_size: projectData.team_size,
-                financing_source: projectData.financing_source,
-                market_type: projectData.market_type,
-                selection_mode: projectData.selection_mode,
-                launch_date: projectData.launch_date,
-                attribution_date: projectData.attribution_date,
-                completion_date: projectData.completion_date,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              })
-              .select()
-              .single();
+            const data = await projectRepo.create({
+              title: projectData.title,
+              description: projectData.description,
+              location: projectData.location,
+              status: projectData.status,
+              progress: projectData.progress,
+              budget: projectData.budget,
+              start_date: projectData.start_date,
+              end_date: projectData.end_date,
+              team_size: projectData.team_size,
+              financing_source: projectData.financing_source,
+              market_type: projectData.market_type,
+              selection_mode: projectData.selection_mode,
+              launch_date: projectData.launch_date,
+              attribution_date: projectData.attribution_date,
+              completion_date: projectData.completion_date,
+            } as any);
 
-            if (error) throw error;
             if (data) results.push(data);
           }
         } catch (error) {
           console.error('Error importing project:', projectData.title, error);
-          // Continue with other projects even if one fails
         }
       }
 

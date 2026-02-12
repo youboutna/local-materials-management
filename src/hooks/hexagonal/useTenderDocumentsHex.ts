@@ -1,39 +1,49 @@
 /**
  * Hexagonal hooks for Tender Document Management
- * Centralizes tender document operations
+ * Uses RepositoryFactory instead of direct Supabase access
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { TenderDocumentWithDetails, TenderDocumentCategory, TenderDocumentSubcategory } from '@/types/tender';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+
+export interface TenderDocumentWithDetails {
+  id: string;
+  tender_id: string;
+  document_id: string;
+  category: string;
+  subcategory?: string;
+  is_required?: boolean;
+  reviewer_notes?: string;
+  status?: string;
+  created_at: string;
+  updated_at?: string;
+  document?: any;
+  step_info?: { step_title?: string; step_number?: number };
+}
+
+type TenderDocumentCategory = string;
+
+enum TenderDocumentSubcategory {
+  WORKFLOW_STEP = 'workflow_step',
+  ADMINISTRATIVE = 'administrative',
+  TECHNICAL = 'technical',
+  FINANCIAL = 'financial'
+}
+
+enum TenderDocumentStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  REVISION = 'needs_revision'
+}
 
 // Hook: Fetch tender documents
 export function useTenderDocumentsList(tenderId: string) {
   return useQuery({
     queryKey: ['tender-documents', tenderId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tender_documents')
-        .select(`
-          *,
-          document:documents(
-            id,
-            title,
-            description,
-            file_url,
-            file_name,
-            mime_type,
-            file_size
-          )
-        `)
-        .eq('tender_id', tenderId)
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        console.error('Query error:', error);
-        return [] as TenderDocumentWithDetails[];
-      }
-
+      const tenderRepo = RepositoryFactory.getTenderRepository();
+      const data = await tenderRepo.getDocuments(tenderId);
       return (data || []) as TenderDocumentWithDetails[];
     },
     enabled: !!tenderId
@@ -45,34 +55,13 @@ export function useWorkflowStepDocumentsList(tenderId: string) {
   return useQuery({
     queryKey: ['workflow-step-documents', tenderId],
     queryFn: async () => {
-      // First get all steps for this tender
-      const { data: steps, error: stepsError } = await supabase
-        .from('tender_steps')
-        .select('id, title, step_number')
-        .eq('tender_id', tenderId);
-
-      if (stepsError) throw stepsError;
-      if (!steps?.length) return [];
-
-      // Get all documents for these steps
-      const stepIds = steps.map(s => s.id);
-      const { data: stepDocs, error: docsError } = await supabase
-        .from('tender_step_documents')
-        .select(`
-          *,
-          document:documents(*),
-          step:tender_steps(title, step_number)
-        `)
-        .in('step_id', stepIds);
-
-      if (docsError) throw docsError;
-
-      // Transform to match TenderDocumentWithDetails format
-      return (stepDocs || []).map(doc => ({
+      const tenderRepo = RepositoryFactory.getTenderRepository();
+      const stepDocs = await tenderRepo.getStepDocuments(tenderId);
+      return (stepDocs || []).map((doc: any) => ({
         id: doc.id,
         tender_id: tenderId,
         document_id: doc.document_id,
-        category: doc.document_type as TenderDocumentCategory || 'administrative',
+        category: doc.document_type || 'administrative',
         subcategory: TenderDocumentSubcategory.WORKFLOW_STEP,
         is_required: doc.is_required,
         reviewer_notes: doc.reviewer_notes,
@@ -95,60 +84,36 @@ export function useUploadTenderDocument(tenderId: string, projectId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ 
-      fileUrl, 
-      fileName, 
-      fileType, 
-      fileSize,
-      documentData 
-    }: { 
-      fileUrl: string;
-      fileName: string;
-      fileType: string;
-      fileSize: number;
-      documentData: {
-        category: TenderDocumentCategory;
-        subcategory: TenderDocumentSubcategory;
-        title: string;
-        description?: string;
-        is_required?: boolean;
-      };
+    mutationFn: async ({ fileUrl, fileName, fileType, fileSize, documentData }: {
+      fileUrl: string; fileName: string; fileType: string; fileSize: number;
+      documentData: { category: TenderDocumentCategory; subcategory: string; title: string; description?: string; is_required?: boolean; };
     }) => {
-      // Create document record
-      const { data: document, error: docError } = await supabase
-        .from('documents')
-        .insert({
-          title: documentData.title,
-          description: documentData.description,
-          file_url: fileUrl,
-          file_name: fileName,
-          mime_type: fileType,
-          file_size: fileSize,
-          document_type: 'tender' as const
-        })
-        .select()
-        .single();
+      const docRepo = RepositoryFactory.getDocumentRepository();
+      const tenderRepo = RepositoryFactory.getTenderRepository();
 
-      if (docError) throw docError;
+      // Create document record
+      const document = await docRepo.create({
+        title: documentData.title,
+        description: documentData.description,
+        file_url: fileUrl,
+        file_name: fileName,
+        mime_type: fileType,
+        file_size: fileSize,
+        document_type: 'tender'
+      } as any);
 
       // Create tender document record
-      const { data: tenderDoc, error: tenderDocError } = await supabase
-        .from('tender_documents')
-        .insert({
-          document_id: document.id,
-          tender_id: tenderId,
-          project_id: projectId || null,
-          category: documentData.category,
-          subcategory: documentData.subcategory,
-          is_required: documentData.is_required ?? true,
-          is_submitted: true,
-          submission_date: new Date().toISOString(),
-          status: 'pending'
-        })
-        .select()
-        .single();
-
-      if (tenderDocError) throw tenderDocError;
+      const tenderDoc = await tenderRepo.addDocument({
+        document_id: (document as any).id,
+        tender_id: tenderId,
+        project_id: projectId || null,
+        category: documentData.category,
+        subcategory: documentData.subcategory,
+        is_required: documentData.is_required ?? true,
+        is_submitted: true,
+        submission_date: new Date().toISOString(),
+        status: 'pending'
+      } as any);
 
       return { document, tenderDoc };
     },
@@ -156,18 +121,4 @@ export function useUploadTenderDocument(tenderId: string, projectId?: string) {
       queryClient.invalidateQueries({ queryKey: ['tender-documents', tenderId] });
     }
   });
-}
-
-enum TenderDocumentSubcategory {
-  WORKFLOW_STEP = 'workflow_step',
-  ADMINISTRATIVE = 'administrative',
-  TECHNICAL = 'technical',
-  FINANCIAL = 'financial'
-}
-
-enum TenderDocumentStatus {
-  PENDING = 'pending',
-  APPROVED = 'approved',
-  REJECTED = 'rejected',
-  REVISION = 'needs_revision'
 }

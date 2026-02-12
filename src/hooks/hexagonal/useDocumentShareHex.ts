@@ -1,10 +1,12 @@
 /**
  * Hexagonal hooks for Document Sharing
+ * Uses DocumentService instead of direct Supabase access
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AuthService } from '@/application/services/AuthService';
-import { supabase } from '@/integrations/supabase/client';
+import { DocumentService } from '@/application/services/DocumentService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface SharedDocument {
   id: string;
@@ -26,15 +28,9 @@ export function useTenderDocumentsForShare(tenderId: string, isOpen: boolean) {
   return useQuery({
     queryKey: ['tender-documents', tenderId],
     queryFn: async (): Promise<SharedDocument[]> => {
-      const { data, error } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('document_type', 'tender')
-        .or(`metadata->tender_id.eq.${tenderId},metadata.is.null`)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return (data || []) as SharedDocument[];
+      const docRepo = RepositoryFactory.getDocumentRepository();
+      const data = await docRepo.findByType('tender');
+      return (data || []) as unknown as SharedDocument[];
     },
     enabled: isOpen && !!tenderId
   });
@@ -52,22 +48,18 @@ export function useShareDocuments(tenderId: string) {
 
       const authService = new AuthService();
       const user = await authService.getCurrentUser();
+      const docRepo = RepositoryFactory.getDocumentRepository();
       
       for (const docId of documentIds) {
-        const { error } = await supabase
-          .from('documents')
-          .update({
-            is_shared_with_suppliers: true,
-            shared_date: new Date().toISOString(),
-            metadata: {
-              tender_id: tenderId,
-              phase: phase,
-              shared_by: user.user?.id
-            }
-          })
-          .eq('id', docId);
-
-        if (error) throw error;
+        await docRepo.update(docId, {
+          is_shared_with_suppliers: true,
+          shared_date: new Date().toISOString(),
+          metadata: {
+            tender_id: tenderId,
+            phase: phase,
+            shared_by: user.user?.id
+          }
+        } as any);
       }
 
       return documentIds;

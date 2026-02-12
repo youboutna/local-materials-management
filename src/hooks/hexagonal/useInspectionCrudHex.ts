@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { toast } from '@/hooks/use-toast';
 
 export interface Inspection {
@@ -30,7 +30,6 @@ export interface InspectionFormData {
 export const useInspectionCrudHex = (projectId?: string) => {
   const queryClient = useQueryClient();
 
-  // Fetch inspections
   const {
     data: inspections = [],
     isLoading,
@@ -39,105 +38,53 @@ export const useInspectionCrudHex = (projectId?: string) => {
   } = useQuery({
     queryKey: ['inspections-crud', projectId],
     queryFn: async () => {
-      let query = supabase
-        .from('inspections')
-        .select('*')
-        .order('date', { ascending: false });
-
+      const repo = RepositoryFactory.getInspectionRepository();
       if (projectId) {
-        query = query.eq('project_id', projectId);
+        return await repo.findByProject(projectId) as Inspection[];
       }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as Inspection[];
+      return await repo.findAll() as Inspection[];
     }
   });
 
-  // Create inspection
   const createMutation = useMutation({
     mutationFn: async (formData: InspectionFormData) => {
-      const { data, error } = await supabase
-        .from('inspections')
-        .insert({
-          project_id: formData.project_id,
-          inspector: formData.inspector,
-          date: formData.date,
-          status: formData.status,
-          progress_at_inspection: formData.progress_at_inspection,
-          comments: formData.comments
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      const repo = RepositoryFactory.getInspectionRepository();
+      return await repo.create(formData as any);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inspections-crud'] });
-      toast({
-        title: 'Inspection créée',
-        description: 'L\'inspection a été créée avec succès'
-      });
+      toast({ title: 'Inspection créée', description: 'L\'inspection a été créée avec succès' });
     },
-    onError: (error) => {
-      toast({
-        title: 'Erreur',
-        description: `Erreur lors de la création: ${error.message}`,
-        variant: 'destructive'
-      });
+    onError: (error: any) => {
+      toast({ title: 'Erreur', description: `Erreur lors de la création: ${error.message}`, variant: 'destructive' });
     }
   });
 
-  // Update inspection
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<InspectionFormData> }) => {
-      const { error } = await supabase
-        .from('inspections')
-        .update(data)
-        .eq('id', id);
-
-      if (error) throw error;
+      const repo = RepositoryFactory.getInspectionRepository();
+      return await repo.update(id, data as any);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inspections-crud'] });
-      toast({
-        title: 'Inspection mise à jour',
-        description: 'L\'inspection a été mise à jour avec succès'
-      });
+      toast({ title: 'Inspection mise à jour', description: 'L\'inspection a été mise à jour avec succès' });
     },
-    onError: (error) => {
-      toast({
-        title: 'Erreur',
-        description: `Erreur lors de la mise à jour: ${error.message}`,
-        variant: 'destructive'
-      });
+    onError: (error: any) => {
+      toast({ title: 'Erreur', description: `Erreur lors de la mise à jour: ${error.message}`, variant: 'destructive' });
     }
   });
 
-  // Delete inspection
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('inspections')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      const repo = RepositoryFactory.getInspectionRepository();
+      return await repo.delete(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inspections-crud'] });
-      toast({
-        title: 'Inspection supprimée',
-        description: 'L\'inspection a été supprimée avec succès'
-      });
+      toast({ title: 'Inspection supprimée', description: 'L\'inspection a été supprimée avec succès' });
     },
-    onError: (error) => {
-      toast({
-        title: 'Erreur',
-        description: `Erreur lors de la suppression: ${error.message}`,
-        variant: 'destructive'
-      });
+    onError: (error: any) => {
+      toast({ title: 'Erreur', description: `Erreur lors de la suppression: ${error.message}`, variant: 'destructive' });
     }
   });
 

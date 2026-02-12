@@ -1,10 +1,12 @@
 /**
  * Hexagonal hook for User Management Dialog
+ * Uses AuthService and UserService instead of direct Supabase access
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AuthService } from '@/application/services/AuthService';
-import { supabase } from '@/integrations/supabase/client';
+import { UserService } from '@/application/services/UserService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface CreateUserData {
   email: string;
@@ -40,15 +42,13 @@ export function useCreateUserHex() {
       }
       
       if (result.user) {
-        // Update profile
-        await supabase
-          .from('profiles')
-          .upsert({
-            id: result.user.id,
-            full_name: data.full_name,
-            phone: data.phone,
-            national_id: data.national_id
-          });
+        const userService = new UserService(RepositoryFactory.getUserRepository());
+        await userService.upsertProfile({
+          id: result.user.id,
+          full_name: data.full_name,
+          phone: data.phone,
+          national_id: data.national_id
+        });
       }
 
       return result.user;
@@ -64,16 +64,12 @@ export function useUpdateUserProfileHex() {
 
   return useMutation({
     mutationFn: async (data: UpdateUserData) => {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: data.full_name,
-          phone: data.phone,
-          national_id: data.national_id
-        })
-        .eq('id', data.userId);
-
-      if (error) throw error;
+      const userService = new UserService(RepositoryFactory.getUserRepository());
+      await userService.updateProfile(data.userId, {
+        full_name: data.full_name,
+        phone: data.phone,
+        national_id: data.national_id
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });

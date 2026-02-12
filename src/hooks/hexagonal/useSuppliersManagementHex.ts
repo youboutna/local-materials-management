@@ -1,13 +1,11 @@
 /**
  * Hexagonal hooks for Suppliers Management module
- * Centralizes CRUD operations for suppliers
+ * Centralizes CRUD operations for suppliers via SupplierService
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/integrations/supabase/types';
-
-type Supplier = Database['public']['Tables']['suppliers']['Row'];
+import { SupplierService } from '@/application/services/SupplierService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface SupplierFormData {
   name: string;
@@ -21,17 +19,32 @@ export interface SupplierFormData {
   commerce_register_ref?: string;
 }
 
+function getSupplierService() {
+  return new SupplierService(RepositoryFactory.getSupplierRepository());
+}
+
 // Hook: Fetch all suppliers
 export function useSuppliersList() {
   return useQuery({
     queryKey: ['suppliers'],
-    queryFn: async (): Promise<Supplier[]> => {
-      const { data, error } = await supabase
-        .from('suppliers')
-        .select('*')
-        .order('name');
-      if (error) throw error;
-      return (data as unknown as Supplier[]) || [];
+    queryFn: async () => {
+      const service = getSupplierService();
+      const result = await service.searchSuppliers({ limit: 500 });
+      return result.suppliers.map(s => ({
+        id: s.id,
+        name: s.name,
+        contact_person: s.contacts[0]?.name || null,
+        email: s.email,
+        phone: s.phone,
+        address: s.address,
+        category: s.category,
+        rating: s.rating?.overall || null,
+        nif: (s as any).nif || null,
+        commerce_register_ref: (s as any).commerceRegisterRef || null,
+        is_active: s.isActive(),
+        created_at: s.createdAt,
+        updated_at: s.updatedAt,
+      }));
     }
   });
 }
@@ -42,13 +55,8 @@ export function useCreateSupplier() {
 
   return useMutation({
     mutationFn: async (supplierData: SupplierFormData) => {
-      const { data, error } = await supabase
-        .from('suppliers')
-        .insert(supplierData)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
+      const repo = RepositoryFactory.getSupplierRepository();
+      return await repo.create(supplierData as any);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
@@ -62,11 +70,8 @@ export function useUpdateSupplier() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: SupplierFormData }) => {
-      const { error } = await supabase
-        .from('suppliers')
-        .update(data)
-        .eq('id', id);
-      if (error) throw error;
+      const repo = RepositoryFactory.getSupplierRepository();
+      return await repo.update(id, data as any);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
@@ -80,11 +85,8 @@ export function useDeleteSupplier() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('suppliers')
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
+      const repo = RepositoryFactory.getSupplierRepository();
+      return await repo.delete(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });

@@ -16,7 +16,6 @@ import { EmployeeService } from '@/application/services/EmployeeService';
 import { Material } from '@/domain/entities/Material';
 import { Supplier } from '@/domain/entities/Supplier';
 import { Employee } from '@/domain/entities/Employee';
-import { supabase } from '@/integrations/supabase/client';
 
 // Configuration commune pour éviter les appels en continu
 const COMMON_QUERY_OPTIONS = {
@@ -134,17 +133,19 @@ export function useProjectsSelector(options?: {
   return useQuery({
     queryKey: ['projects-selector', options?.searchTerm, options?.secureMode],
     queryFn: async (): Promise<ProjectOption[]> => {
-      const projectService = new ProjectService(
-        RepositoryFactory.getProjectRepository(),
-        new ProjectTransformer()
-      );
+      const projectRepo = RepositoryFactory.getProjectRepository();
+      const projects = await projectRepo.findAll();
       
-      const result = await projectService.searchProjects({
-        searchQuery: options?.searchTerm,
-        limit: 50
-      });
-      
-      return result.projects;
+      return projects.map((p: any) => ({
+        id: p.id,
+        title: p.title,
+        location: p.location,
+        status: p.status,
+        budget: p.budget,
+        start_date: p.startDate || p.start_date,
+        end_date: p.endDate || p.end_date,
+        project_reference: p.projectReference || p.project_reference,
+      }));
     },
     enabled: options?.enabled !== false,
     ...COMMON_QUERY_OPTIONS,
@@ -165,7 +166,6 @@ export function useSuppliersSelector(searchTerm?: string, enabled?: boolean) {
         limit: 50
       });
       
-      // Map Supplier entities to SupplierOption interface
       return result.suppliers.map(supplier => ({
         id: supplier.id,
         name: supplier.name,
@@ -202,12 +202,10 @@ export function useMaterialsSelector(options?: {
         materials = await materialService.getAllMaterials();
       }
       
-      // Apply category filter if specified
       if (options?.category && options.category !== 'all') {
         materials = materials.filter(m => m.category === options.category);
       }
       
-      // Map Material entities to MaterialOption interface
       return materials.map(material => ({
         id: material.id,
         name: material.name,
@@ -245,7 +243,6 @@ export function useEmployeesSelector(options?: {
         limit: 50
       });
       
-      // Map Employee entities to EmployeeOption interface
       return result.employees.map(employee => ({
         id: employee.id,
         full_name: employee.fullName,
