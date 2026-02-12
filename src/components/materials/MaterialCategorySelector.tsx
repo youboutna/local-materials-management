@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -18,9 +17,9 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
   onCategoryChange,
   onSubcategoryChange,
   onUnitChange
-}) => {
+}: MaterialCategorySelectorProps) => {
   const currentCategory = MATERIAL_CATEGORIES.find(cat => cat.id === selectedCategory);
-  
+
   const handleCategoryChange = (categoryId: string) => {
     onCategoryChange(categoryId);
     // Reset subcategory when category changes

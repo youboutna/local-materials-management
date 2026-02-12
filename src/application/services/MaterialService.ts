@@ -6,7 +6,7 @@
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
 import { Material, MaterialCategory } from '@/domain/entities/Material';
-import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
+import { MATERIAL_CATEGORIES, MaterialDTO, MaterialStatus, MaterialUnit } from '@/dtos/entities/MaterialDTO';
 
 // Service DTOs for data exchange
 export interface CreateMaterialDTO {
@@ -61,12 +61,9 @@ interface MaterialWithPhase {
   updatedAt: string;
 }
 
-// Valid material categories
-const VALID_MATERIAL_CATEGORIES = ['construction', 'building', 'pierre', 'electrical', 'plumbing', 'finishing', 'equipment', 'safety', 'tools', 'other'] as const;
-
 // Enhanced type guard for MaterialCategory
-function isMaterialCategory(category: string): category is 'construction' | 'building' | 'pierre' | 'electrical' | 'plumbing' | 'finishing' | 'equipment' | 'safety' | 'tools' | 'other' {
-  return VALID_MATERIAL_CATEGORIES.includes(category as MaterialCategory);
+function isMaterialCategory(category: MaterialCategory): category is 'construction' | 'building' | 'pierre' | 'electrical' | 'plumbing' | 'finishing' | 'equipment' | 'safety' | 'tools' | 'other' {
+  return MATERIAL_CATEGORIES.some(cat => cat.id === category);
 }
 
 export class MaterialService {
@@ -81,7 +78,7 @@ export class MaterialService {
     }
 
       if ('category' in data && data.category && !isMaterialCategory(data.category)) {
-        errors.category = [`Invalid material category. Valid values: ${VALID_MATERIAL_CATEGORIES.join(', ')}`];
+        errors.category = [`Invalid material category. Valid values: ${MATERIAL_CATEGORIES.map(cat => cat.id).join(', ')}`];
       }
 
     if ('pricePerUnit' in data && data.pricePerUnit !== undefined) {
@@ -430,34 +427,35 @@ export class MaterialService {
     // Handle Material entity, repository result, and DTO
     const result = repositoryResult as Record<string, unknown>;
     
-    // Import enums dynamically for compatibility
-    const MaterialCategoryDTO = {
-      RAW_MATERIAL: 'raw_material',
-      EQUIPMENT: 'equipment',
-      CONSUMABLES: 'consumables'
-    } as const;
+    // Get category from result or use default
+    const categoryId = (result.category as string) || 'construction';
+    const category = MATERIAL_CATEGORIES.find(cat => cat.id === categoryId) || MATERIAL_CATEGORIES[0];
     
-    const MaterialStatusDTO = {
-      AVAILABLE: 'available'
-    } as const;
+    // Get status from result or use default
+    const statusValue = (result.status as string) || 'available';
+    const status = Object.values(MaterialStatus).includes(statusValue as MaterialStatus) 
+      ? statusValue as MaterialStatus 
+      : MaterialStatus.AVAILABLE;
     
-    const MaterialUnitDTO = {
-      PIECES: 'pieces'
-    } as const;
+    // Get unit from result or use default
+    const unitValue = (result.unit as string) || 'pieces';
+    const unit = Object.values(MaterialUnit).includes(unitValue as MaterialUnit)
+      ? unitValue as MaterialUnit
+      : MaterialUnit.PIECES;
     
     return {
       id: (result.id as string) || '',
       name: (result.name as string) || '',
       description: (result.description as string) || '',
       type: (result.type as string) || 'general',
-      category: MaterialCategoryDTO.RAW_MATERIAL,
-      status: MaterialStatusDTO.AVAILABLE,
-      unit: MaterialUnitDTO.PIECES,
+      category: category,
+      status: status,
+      unit: unit,
       quantity: (result.availableQuantity as number) || (result.quantity as number) || 0,
       pricePerUnit: (result.pricePerUnit as number) || 0,
       supplierId: result.supplierId as string,
       createdAt: (result.createdAt as string) || new Date().toISOString(),
       updatedAt: (result.updatedAt as string) || new Date().toISOString()
-    } as MaterialDTO;
+    };
   }
 }

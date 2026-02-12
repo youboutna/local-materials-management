@@ -16,6 +16,7 @@ import { Phase } from './Phase';
 import { Milestone } from './Milestone';
 import { Tender } from './Tender';
 import { Risk } from './Risk';
+import { GeographicUnit } from '@/types/mauritania';
 
 // Interface for project resources
 interface ProjectResource {
@@ -45,7 +46,9 @@ export interface ProjectStakeholder {
 export class ProjectCoordinates {
   constructor(
     public readonly latitude: number,
-    public readonly longitude: number
+    public readonly longitude: number,
+    public readonly createdAt: Date = new Date(),
+    public readonly updatedAt: Date = new Date()
   ) {}
 
   // Methods
@@ -56,6 +59,36 @@ export class ProjectCoordinates {
   toString(): string {
     return `${this.latitude}, ${this.longitude}`;
   }
+}
+
+export interface ProjectBudget {
+  total: number; // In MRU (auto-convert if USD entered)
+  spent: number;
+  currency: "MRU" | "USD"; // Defaults to MRU
+  exchangeRate?: number; // For USD conversions
+  lastUpdated: Date;
+}
+
+export enum Priority {
+  Urgent = "Urgent",
+  High = "High",
+  Medium = "Medium",
+  Low = "Low",
+}
+
+export interface Tag {
+  id: string; // Unique identifier
+  name: string; // Display name ("Construction")
+  slug: string; // URL-safe version ("construction")
+  color?: string; // For UI display ("#FF5733")
+  description?: string; // Additional context
+  userId: string;
+}
+
+export interface TimeLine {
+  start: Date; // Auto-set to Mauritania timezone
+  end: Date;
+  estimatedDuration?: number; // In days
 }
 
 export class Project {

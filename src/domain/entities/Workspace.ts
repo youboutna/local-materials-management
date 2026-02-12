@@ -1,13 +1,33 @@
+import { GeographicUnit } from '@/types/mauritania';
+
+export enum OperationalStatus {
+  active = "active",
+  inactive = "inactive",
+  closed = "closed",
+}
+
 export interface Workspace {
   id: string;
+  workspaceId: string;
+  workspaceCode: string;
   name: string;
-  location: string;
-  status: string;
-  contactManager?: string;
-  contactPhone?: string;
-  facilities?: Record<string, any>;
+  location: GeographicUnit;
+  description?: string;
+  capacity?: number;
+  contact?: {
+    manager: string;
+    phone: string; // Mauritania format
+  };
+  facilities?: string[]; // ["warehouse", "dormitory"]
+  status?: OperationalStatus;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface TimeLine {
+  start: Date; // Auto-set to Mauritania timezone
+  end: Date;
+  estimatedDuration?: number; // In days
 }
 
 export interface ProjectAlert {

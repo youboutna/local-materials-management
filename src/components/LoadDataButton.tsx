@@ -4,15 +4,15 @@ import { DatabaseIcon, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { USE_TYPEORM } from '@/hooks/projects/constants';
-import { ProjectService } from '@/application/services/ProjectService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { useProjectsHex } from '@/hooks/hexagonal';
+import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
 
 // Sample data for import - externalisé pour maintenance
 const SAMPLE_PROJECTS = [
   {
     title: "Construction Centre Communautaire Adrar",
     description: "Centre communautaire moderne avec installations sportives et culturelles",
-    location: "Adrar, Algérie",
+    location: "Adrar, Mauritanie",
     estimated_budget: 250000000,
     start_date: "2024-01-15",
     end_date: "2025-12-31"
@@ -20,7 +20,7 @@ const SAMPLE_PROJECTS = [
   {
     title: "Réhabilitation Route Nationale N1",
     description: "Modernisation et réhabilitation de 150km de route",
-    location: "Adrar - Tamanrasset, Algérie",
+    location: "Adrar -atar , Mauritanie",
     estimated_budget: 450000000,
     start_date: "2024-03-01",
     end_date: "2026-08-31"
@@ -34,15 +34,16 @@ interface LoadDataButtonProps {
   onDataLoaded?: () => void;
 }
 
-const LoadDataButton = ({
-  variant = 'default',
-  size = 'default',
+const LoadDataButton: React.FC<LoadDataButtonProps> = ({
+  variant = "default",
+  size = "default",
   className = '',
   onDataLoaded
 }: LoadDataButtonProps) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { createProject, isCreating } = useProjectsHex();
 
   const handleLoadData = async () => {
     setLoading(true);
@@ -55,20 +56,19 @@ const LoadDataButton = ({
         });
       }
       
-      // Use ProjectService hexagonal instead of direct Supabase calls
-      const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+      // Use hexagonal hook instead of direct service calls (Rule #1 compliance)
       let importedCount = 0;
       
       for (const projectData of SAMPLE_PROJECTS) {
         try {
-          await projectService.createProject({
+          await createProject({
              title: projectData.title,
              description: projectData.description,
              location: projectData.location,
              budget: projectData.estimated_budget,
              startDate: projectData.start_date,
              endDate: projectData.end_date,
-             status: "enCours" as const
+             status: ProjectStatus.EN_COURS
            });
           importedCount++;
         } catch (error) {

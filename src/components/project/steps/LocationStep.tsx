@@ -2,6 +2,7 @@ import React from 'react';
 import { MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import InteractiveMapGIS from '../../materials/InteractiveMapGIS';
+import EnhancedLocationSelector from '../../location/EnhancedLocationSelector';
 
 // Import entity DTOs (following PROMPTS.md Rule #4: No type redefinition)
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
@@ -29,13 +30,26 @@ const LocationStep: React.FC<LocationStepProps> = ({
       <CardContent>
         <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium mb-2">Adresse du projet</label>
-            <input 
-              type="text" 
-              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-              placeholder="Adresse complète du site de construction"
-              value={formData.location || ''}
-              onChange={(e) => onUpdate({ location: e.target.value })}
+            <EnhancedLocationSelector
+              value={{
+                address: formData.location || formData.address,
+                latitude: formData.coordinates?.latitude || formData.latitude,
+                longitude: formData.coordinates?.longitude || formData.longitude
+              }}
+              onChange={(locationData) => onUpdate({
+                location: locationData.address,
+                address: locationData.address,
+                coordinates: locationData.latitude && locationData.longitude ? {
+                  latitude: locationData.latitude,
+                  longitude: locationData.longitude
+                } : undefined,
+                latitude: locationData.latitude,
+                longitude: locationData.longitude
+              })}
+              showCoordinates={true}
+              showGPS={true}
+              allowManualEntry={true}
+              className="mb-4"
             />
           </div>
 
@@ -46,9 +60,21 @@ const LocationStep: React.FC<LocationStepProps> = ({
                 title="Géolocalisation du Projet"
                 description="Sélectionnez l'emplacement et tracez la zone de travail"
                 allowPolygon={true}
-                value={formData.facilitiesLocation}
+                value={formData.coordinates ? {
+                  coordinates: {
+                    lat: formData.coordinates.latitude,
+                    lng: formData.coordinates.longitude
+                  }
+                } : undefined}
                 onChange={(locationData) => {
-                  onUpdate({ facilitiesLocation: locationData });
+                  if (locationData?.coordinates) {
+                    onUpdate({ 
+                      coordinates: {
+                        latitude: locationData.coordinates.lat,
+                        longitude: locationData.coordinates.lng
+                      }
+                    });
+                  }
                 }}
               />
             </div>
@@ -94,8 +120,8 @@ const LocationStep: React.FC<LocationStepProps> = ({
               <textarea 
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent min-h-[100px]"
                 placeholder="Décrivez les contraintes environnementales, réglementaires ou géographiques spécifiques au site"
-                value={(formData as any).environmental_constraints || ''}
-                onChange={(e) => onUpdate({ environmental_constraints: e.target.value } as any)}
+                value={(formData as unknown as { environmental_constraints?: string }).environmental_constraints || ''}
+                onChange={(e) => onUpdate({ environmental_constraints: e.target.value } as unknown as Partial<ProjectDTO>)}
               />
             </div>
 
@@ -105,8 +131,8 @@ const LocationStep: React.FC<LocationStepProps> = ({
                   type="checkbox" 
                   id="hasUtilities"
                   className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                  checked={(formData as any).has_utilities || false}
-                  onChange={(e) => onUpdate({ has_utilities: e.target.checked } as any)}
+                  checked={(formData as unknown as { has_utilities?: boolean }).has_utilities || false}
+                  onChange={(e) => onUpdate({ has_utilities: e.target.checked } as unknown as Partial<ProjectDTO>)}
                 />
                 <label htmlFor="hasUtilities" className="text-sm font-medium">
                   Raccordements aux réseaux disponibles
@@ -117,8 +143,8 @@ const LocationStep: React.FC<LocationStepProps> = ({
                   type="checkbox" 
                   id="requiresPermits"
                   className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                  checked={(formData as any).requires_permits || false}
-                  onChange={(e) => onUpdate({ requires_permits: e.target.checked } as any)}
+                  checked={(formData as unknown as { requires_permits?: boolean }).requires_permits || false}
+                  onChange={(e) => onUpdate({ requires_permits: e.target.checked } as unknown as Partial<ProjectDTO>)}
                 />
               <label htmlFor="requiresPermits" className="text-sm font-medium">
                 Permis spéciaux requis
@@ -126,18 +152,18 @@ const LocationStep: React.FC<LocationStepProps> = ({
             </div>
           </div>
 
-           {formData.facilitiesLocation && (
+           {formData.coordinates && (
              <div className="bg-muted p-4 rounded-lg">
                <h4 className="text-md font-medium mb-2">Informations de localisation</h4>
                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                 {formData.facilitiesLocation?.center && (
+                 {formData.coordinates?.latitude && (
                    <>
-                     <span>Latitude: {(formData.facilitiesLocation.center.latitude || 0).toFixed(6)}</span>
-                     <span>Longitude: {(formData.facilitiesLocation.center.longitude || 0).toFixed(6)}</span>
+                     <span>Latitude: {formData.coordinates.latitude.toFixed(6)}</span>
+                     <span>Longitude: {formData.coordinates.longitude.toFixed(6)}</span>
                    </>
                  )}
-                 {formData.facilitiesLocation?.address && (
-                   <span className="col-span-2">Adresse: {formData.facilitiesLocation.address}</span>
+                 {formData.address && (
+                   <span className="col-span-2">Adresse: {formData.address}</span>
                 )}
               </div>
             </div>

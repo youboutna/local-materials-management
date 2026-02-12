@@ -5,7 +5,21 @@ import { Employee } from './Employee';
 import { Project } from './Project';
 import { Phase } from './Phase';
 import { Document } from './Document';
-import { TaskStatus, TaskPriority } from '@/domain/types/TaskTypes';
+import { TimeLine } from './Project';
+
+export enum TaskStatus {
+  Todo = "todo",
+  Blocked = "blocked",
+  InProgress = "inProgress",
+  Done = "done",
+}
+
+export enum TaskPriority {
+  Low = "low",
+  Medium = "medium",
+  High = "high",
+  Urgent = "urgent",
+}
 
 export class Task {
   // Private fields for encapsulation
@@ -395,57 +409,99 @@ export class Task {
     };
   }
 
-  // ============= Validation Methods =============
+  // ============= Validation methods
   private validateId(id: string): string {
     if (!id || id.trim().length === 0) {
       throw new Error('Task ID is required');
     }
-    return id.trim();
+    return id;
   }
 
   private validateProjectId(projectId: string): string {
     if (!projectId || projectId.trim().length === 0) {
       throw new Error('Project ID is required');
     }
-    return projectId.trim();
+    return projectId;
   }
 
   private validateTitle(title: string): string {
     if (!title || title.trim().length === 0) {
       throw new Error('Task title is required');
     }
-    if (title.length > 200) {
-      throw new Error('Task title must be less than 200 characters');
-    }
-    return title.trim();
+    return title;
   }
 
   private validateStatus(status: TaskStatus): TaskStatus {
-    const validStatuses: TaskStatus[] = [
-      'not_started', 'in_progress', 'completed', 'delayed', 'blocked', 'cancelled'
-    ];
-    
+    const validStatuses = Object.values(TaskStatus);
     if (!validStatuses.includes(status)) {
       throw new Error(`Invalid task status: ${status}`);
     }
     return status;
   }
 
-  private validateProgress(progress: number): number {
-    if (progress < 0 || progress > 100) {
-      throw new Error('Progress must be between 0 and 100');
-    }
-    return progress;
+  // Public getters
+  get id(): string {
+    return this._id;
   }
 
-  private validateDuration(duration: number | null): number | null {
-    if (duration === null) return null;
-    if (duration < 0) {
-      throw new Error('Duration must be positive');
-    }
-    if (duration > 3650) {
-      throw new Error('Duration seems too long (max 10 years)');
-    }
-    return duration;
+  get deadline(): Date {
+    return this._deadline;
+  }
+
+  get assignedTo(): string {
+    return this._assignedTo;
+  }
+
+  get projectId(): string {
+    return this._projectId;
+  }
+
+  get title(): string {
+    return this._title;
+  }
+
+  get description(): string | undefined {
+    return this._description;
+  }
+
+  get status(): TaskStatus {
+    return this._status;
+  }
+
+  get timeline(): TimeLine {
+    return this._timeline;
+  }
+
+  get createdAt(): Date {
+    return this._createdAt;
+  }
+
+  get updatedAt(): Date {
+    return this._updatedAt;
+  }
+
+  // Business logic methods
+  updateStatus(newStatus: TaskStatus): void {
+    this._status = this.validateStatus(newStatus);
+    this._updatedAt = new Date();
+  }
+
+  isOverdue(): boolean {
+    return new Date() > this._deadline && this._status !== TaskStatus.Done && this._status !== TaskStatus.Blocked;
+  }
+
+  getDaysUntilDue(): number | null {
+    const diffTime = this._deadline.getTime() - new Date().getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 24));
+  }
+
+  getFormattedStatus(): string {
+    const statusMap = {
+      [TaskStatus.Todo]: '⏳ À faire',
+      [TaskStatus.Blocked]: '🚫 Bloqué',
+      [TaskStatus.InProgress]: '🔄 En cours',
+      [TaskStatus.Done]: '✅ Terminé'
+    };
+    return statusMap[this._status];
   }
 }

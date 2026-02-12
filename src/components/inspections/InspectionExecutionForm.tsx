@@ -20,13 +20,13 @@ import { useInspectionExecutionHex } from '@/hooks/hexagonal';
 interface InspectionExecutionFormProps {
   inspection: {
     id: string;
-    project_id: string;
+    projectId: string;
     status: string;
-    progress_at_inspection: number;
+    progressAtInspection: number;
     comments?: string | null;
     inspector: string;
     date: string;
-    phase_id?: string | null;
+    phaseId?: string | null;
   };
   projectTitle: string;
   onUpdate: (inspectionId: string, status: string, progress?: number, documents?: File[], syncResult?: SyncResult) => void;
@@ -38,7 +38,7 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
   onUpdate
 }) => {
   const [newStatus, setNewStatus] = useState(inspection.status);
-  const [newProgress, setNewProgress] = useState(inspection.progress_at_inspection.toString());
+  const [newProgress, setNewProgress] = useState(inspection.progressAtInspection.toString());
   const [comments, setComments] = useState(inspection.comments || '');
   const [documents, setDocuments] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -73,8 +73,8 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
         const validationDocs = (result as any)?.documents || [];
         const context: InspectionApprovalContext = {
           inspectionId: inspection.id,
-          projectId: inspection.project_id,
-          phaseId: inspection.phase_id,
+          projectId: inspection.projectId,
+          phaseId: inspection.phaseId,
           status: newStatus,
           progressAtInspection: parseInt(newProgress),
           inspector: inspection.inspector,

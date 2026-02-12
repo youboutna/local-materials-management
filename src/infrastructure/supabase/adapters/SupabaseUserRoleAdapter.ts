@@ -4,7 +4,7 @@
  * Architecture hexagonale pure - implémentation technique uniquement
  */
 
-import { UserRole, SomelecRole, UserRoleStatus } from '@/domain/entities/UserRoleSomelec';
+import { UserRoleEntity, SomelecRole, UserRoleStatus } from '@/domain/entities/User';
 import { IUserRoleRepository, AssignRoleOptions, RoleSearchCriteria, RoleStatistics } from '@/domain/repositories/IUserRoleRepository';
 import { supabase } from '@/integrations/supabase/client';
 import { AppError, ErrorLogger, ErrorCode } from '@/utils/errorHandling';
@@ -16,7 +16,7 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
     userId: string,
     roleName: SomelecRole,
     options?: AssignRoleOptions
-  ): Promise<UserRole> {
+  ): Promise<UserRoleEntity> {
     try {
       const now = new Date();
       
@@ -76,7 +76,7 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
     }
   }
 
-  async getUserRoles(userId: string): Promise<UserRole[]> {
+  async getUserRoles(userId: string): Promise<UserRoleEntity[]> {
     try {
       const { data, error } = await supabase
         .from('user_roles')
@@ -96,7 +96,7 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
     }
   }
 
-  async getActiveUserRoles(userId: string): Promise<UserRole[]> {
+  async getActiveUserRoles(userId: string): Promise<UserRoleEntity[]> {
     try {
       const { data, error } = await supabase
         .from('user_roles')
@@ -161,7 +161,7 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
     }
   }
 
-  async getUsersByRole(roleName: SomelecRole, includeInactive = false): Promise<UserRole[]> {
+  async getUsersByRole(roleName: SomelecRole, includeInactive = false): Promise<UserRoleEntity[]> {
     try {
       let query = supabase
         .from('user_roles')
@@ -188,7 +188,7 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
     }
   }
 
-  async searchRoles(criteria: RoleSearchCriteria): Promise<UserRole[]> {
+  async searchRoles(criteria: RoleSearchCriteria): Promise<UserRoleEntity[]> {
     try {
       let query = supabase
         .from('user_roles')
@@ -464,7 +464,7 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
     }
   }
 
-  async getRoleHistory(userId: string): Promise<UserRole[]> {
+  async getRoleHistory(userId: string): Promise<UserRoleEntity[]> {
     try {
       const { data, error } = await supabase
         .from('user_roles')
@@ -592,11 +592,11 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
   }
 
   // Méthode privée pour mapper les données de la base vers l'entité
-  private mapRowToEntity(row: Record<string, any>): UserRole {
+  private mapRowToEntity(row: Record<string, any>): UserRoleEntity {
     // Derive status from assigned_at since status column doesn't exist
     const status = row.assigned_at ? UserRoleStatus.ACTIVE : UserRoleStatus.REVOKED;
     
-    return new UserRole(
+    return new UserRoleEntity(
       row.id,
       row.user_id,
       row.role_name,

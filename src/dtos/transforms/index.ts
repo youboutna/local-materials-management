@@ -15,6 +15,17 @@ export { EmployeeTransformer } from './EmployeeTransformer';
 export { AuthDomainTransformer } from './AuthDomainTransformer';
 export { DocumentTransformer } from './DocumentTransformer';
 
+// Case conversion transformers (Rule #2 & Rule #9 compliance)
+export { 
+  snakeToCamelCase, 
+  camelToSnakeCase, 
+  transformKeysToCamelCase, 
+  transformKeysToSnakeCase,
+  InspectionTransformer as CaseInspectionTransformer,
+  ProjectTransformer as CaseProjectTransformer,
+  GenericTransformer
+} from './CaseTransformers';
+
 // Additional transformers
 export { CheckpointDomainTransformer } from './CheckpointDomainTransformer';
 export { DecompteDomainTransformer } from './DecompteDomainTransformer';

@@ -97,54 +97,14 @@ export interface InspectionDTO extends BaseEntityDTO {
   documents?: string[]; // Document IDs only for DTO
   attachments?: string[]; // Document IDs only for DTO
   photos?: string[]; // Photo URLs only for DTO
-  videos?: string[]; // Video URLs only for DTO
-  reports?: string[]; // Report URLs only for DTO
   
-  // Metadata
-  tags?: string[];
-  notes?: string;
-  
-  // Form data fields (merged from InspectionFormDataDTO)
-  checklist?: Array<{
-    id: string;
-    item: string;
-    completed: boolean;
-    notes?: string;
-  }>;
-  findings?: Array<{
-    id: string;
-    description: string;
-    severity: 'low' | 'medium' | 'high' | 'critical';
-    status: 'open' | 'resolved';
-  }>;
-  
-  // System fields
-  createdAt: string;
-  updatedAt: string;
-}
-
-/**
- * Inspection creation request interface
- * Input for creating new inspections
- */
-export interface CreateInspectionDTO {
-  title: string;
-  description?: string;
-  type: InspectionType;
-  priority?: InspectionPriority;
-  inspector?: string; // Employee ID only for DTO
-  inspectorRole?: string;
-  scheduledDate?: string;
-  location?: string;
-  siteConditions?: string;
-  weatherConditions?: string;
-  projectId?: string;
-  phaseId?: string;
-  taskId?: string;
-  relatedInspections?: string[]; // Inspection IDs only for DTO
-  documents?: string[]; // Document IDs only for DTO
-  attachments?: string[]; // Document IDs only for DTO
-  photos?: string[]; // Photo URLs only for DTO
+  // Legacy snake_case aliases for backward compatibility (Rule #9)
+  project_id?: string;        // Legacy: Use projectId instead
+  date?: string;             // Legacy: Use scheduledDate instead
+  progress_at_inspection?: number; // Legacy: Use progress instead
+  phase_id?: string;          // Legacy: Use phaseId instead
+  created_at?: string;         // Legacy: Use createdAt from BaseEntityDTO instead
+  updated_at?: string;         // Legacy: Use updatedAt from BaseEntityDTO instead
   videos?: string[]; // Video URLs only for DTO
   reports?: string[]; // Report URLs only for DTO
   tags?: string[];
@@ -155,7 +115,7 @@ export interface CreateInspectionDTO {
  * Inspection update request interface
  * Input for updating existing inspections
  */
-export interface UpdateInspectionDTO {
+export interface CreateInspectionDTO {
   title?: string;
   description?: string;
   type?: InspectionType;
@@ -163,7 +123,7 @@ export interface UpdateInspectionDTO {
   priority?: InspectionPriority;
   inspector?: string; // Employee ID only for DTO
   inspectorRole?: string;
-  scheduledDate?: string;
+  scheduledDate?: string; // Preferred: Use scheduledDate instead
   actualDate?: string;
   duration?: number; // in hours
   startTime?: string;
@@ -190,6 +150,13 @@ export interface UpdateInspectionDTO {
   // Metadata
   updatedBy?: string;
   changeReason?: string;
+  projectId: string;
+  projectTitle?: string;
+  phaseId?: string;
+  phaseName?: string;
+  date: string;
+  paymentType?: string;
+  comments?: string;
 }
 
 /**
@@ -332,19 +299,6 @@ export interface InspectionDetails extends InspectionDTO {
   }>;
 }
 
-export interface CreateInspectionDTO {
-  projectId: string;
-  projectTitle?: string;
-  phaseId?: string;
-  phaseName?: string;
-  date: string;
-  inspector: string;
-  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled' | 'approved' | 'rejected' | 'requires_changes' | 'pending';
-  progressAtInspection: number;
-  paymentType?: string;
-  comments?: string;
-  documents?: Record<string, unknown>;
-}
 
 export type UpdateInspectionDTO = Partial<CreateInspectionDTO>;
 
@@ -385,6 +339,27 @@ export interface InspectionExecutionData {
 }
 
 // Add inspection execution specific interfaces
+export interface InspectionMeasurement {
+  id?: string;
+  type: string;
+  value: number;
+  unit: string;
+  notes?: string;
+  measuredAt?: string;
+  measuredBy?: string;
+}
+
+export interface InspectionParticipant {
+  id?: string;
+  name: string;
+  role: string;
+  department?: string;
+  contact?: string;
+  joinedAt?: string;
+}
+
+export type ConformityStatus = 'conform' | 'non_conform' | 'partial_conform' | 'requires_review';
+
 export interface AddMeasurementRequestDTO {
   inspectionId: string;
   measurement: Omit<InspectionMeasurement, 'id'>;
@@ -407,6 +382,19 @@ export interface CompleteInspectionRequestDTO {
 export interface InspectionOperationResultDTO {
   success: boolean;
   error?: string;
+}
+
+export interface InspectionExecutionResult {
+  success: boolean;
+  inspectionId?: string;
+  error?: string;
+  data?: {
+    measurements?: InspectionMeasurement[];
+    participants?: InspectionParticipant[];
+    documents?: string[];
+    notes?: string;
+    completedAt?: string;
+  };
 }
 
 export interface InspectionApprovalContext {

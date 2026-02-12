@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { 
@@ -10,8 +10,17 @@ import {
 } from '@/components/ui/select';
 import { MapLocation } from '@/components/ProjectMap';
 import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
-import { MAURITANIA_REGIONS } from '@/dtos/entities/ProjectReportDTO';
-import { MapPin, Filter } from 'lucide-react';
+import { MAURITANIA_REGIONS, MAURITANIA_CITIES, GeographicUnit, Region, City } from '@/types/mauritania';
+import { 
+  isLocationInRegion, 
+  findRegionByLocation, 
+  getCitiesByWilaya, 
+  getWilayaByCode,
+  getWilayaCapital,
+  searchRegions,
+  searchCities
+} from '@/utils/mauritaniaUtils';
+import { MapPin, Filter, Building, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface MapFiltersProps {
@@ -19,23 +28,7 @@ interface MapFiltersProps {
   onFilterChange: (filteredLocations: MapLocation[]) => void;
 }
 
-// Enhanced mapping of cities/locations to their respective regions
-const CITY_TO_REGION_MAP: Record<string, string[]> = {
-  'NKC': ['nouakchott', 'nkc', 'capital', 'capitale'],
-  'NDB': ['nouadhibou', 'ndb', 'port', 'economic capital'],
-  'ADR': ['adrar', 'atar', 'chinguetti', 'ouadane', 'choum'],
-  'ASA': ['assaba', 'kifa', 'kiffa', 'guerou', 'barkeol', 'boumdeid', 'kankossa'], 
-  'BRK': ['brakna', 'aleg', 'magta lahjar', 'matka lahjar', 'boghé', 'boghe', 'mbagne'],
-  'DKN': ['dakhlet nouadhibou', 'nouadhibou', 'port autonome'],
-  'GOG': ['gorgol', 'kaédi', 'kaedi', 'maghama', 'monguel', 'lexeiba'],
-  'GDM': ['guidimaka', 'sélibaby', 'selibaby', 'ghabou', 'ould yengé', 'ould yenge'],
-  'HEC': ['hodh ech chargui', 'néma', 'nema', 'bassiknou', 'amourj', 'djiguenni'],
-  'HEG': ['hodh el gharbi', 'aioun', 'ayoun', 'ayoun el atrous', 'tintane', 'kobani'],
-  'INC': ['inchiri', 'akjoujt', 'benichab'],
-  'TGT': ['tagant', 'tidjikja', 'moudjéria', 'moudjerria', 'rachid'],
-  'TZM': ['tiris zemmour', 'zouerate', 'fderick', 'fderik', 'bir moghrein'],
-  'TRR': ['trarza', 'rosso', 'boutilimit', 'rkiz', 'mederdra', 'keur macene']
-};
+
 
 const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
   const [originalLocations] = useState<MapLocation[]>(locations);
@@ -53,126 +46,106 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
     return Array.from(statuses);
   }, [originalLocations]);
 
-  // Enhanced region matching function with better normalization
-  const matchesRegion = (itemRegion: string, selectedRegionCode: string): boolean => {
-    if (!itemRegion) return false;
+  // Get budget range from projects
+  const budgets = originalLocations.map(p => p.budget);
+  const minBudget = Math.min(...budgets);
+  const maxBudget = Math.max(...budgets);
+
+  const applyFilters = useCallback(() => {
+    const filtered = originalLocations.filter(project => {
+      // Region filter
+      if (regionFilter !== 'all' && project.region) {
+        const region = MAURITANIA_REGIONS.find(r => r.code === regionFilter);
+        if (region) {
+          return isLocationInRegion(project.region, region);
+        }
+      }
+      return true;
+    });
+    onFilterChange(filtered);
+  }, [originalLocations, regionFilter, onFilterChange]);
+
+  // Enhanced location matching using Mauritania utilities
+  const matchesLocation = useCallback((itemLocation: string, selectedRegionCode: string): boolean => {
+    if (!itemLocation || selectedRegionCode === 'all') return true;
     
-    const normalizeText = (text: string) => {
-      return text
-        .toLowerCase()
-        .trim()
-        .replace(/[àáâãäå]/g, 'a')
-        .replace(/[èéêë]/g, 'e')
-        .replace(/[ìíîï]/g, 'i')
-        .replace(/[òóôõö]/g, 'o')
-        .replace(/[ùúûü]/g, 'u')
-        .replace(/[ç]/g, 'c')
-        .replace(/[\s\-_]/g, ' ')
-        .replace(/\s+/g, ' ');
-    };
-    
-    const itemRegionNormalized = normalizeText(itemRegion);
-    const selectedRegion = MAURITANIA_REGIONS.find(r => r.code === selectedRegionCode);
-    
+    const selectedRegion = getWilayaByCode(selectedRegionCode);
     if (!selectedRegion) return false;
     
-    const regionName = normalizeText(selectedRegion.name);
-    const regionNameAr = normalizeText(selectedRegion.nameAr);
-    
-    console.log(`Matching "${itemRegionNormalized}" against region "${regionName}" (${selectedRegionCode})`);
-    
-    // 1. Direct exact matches
-    if (itemRegionNormalized === regionName || itemRegionNormalized === regionNameAr) {
-      console.log('✓ Exact match found');
+    // 1. Direct region matching using utility function
+    if (isLocationInRegion(itemLocation, selectedRegion)) {
       return true;
     }
     
-    // 2. Check if the item location is a known city in this region
-    const citiesInRegion = CITY_TO_REGION_MAP[selectedRegionCode] || [];
+    // 2. Check if item location matches any city in the selected region
+    const citiesInRegion = getCitiesByWilaya(selectedRegionCode);
     const cityMatch = citiesInRegion.some(city => {
-      const normalizedCity = normalizeText(city);
-      const match = itemRegionNormalized.includes(normalizedCity) || 
-                   normalizedCity.includes(itemRegionNormalized) ||
-                   itemRegionNormalized === normalizedCity;
-      if (match) console.log(`✓ City match found: "${city}" -> "${normalizedCity}"`);
-      return match;
+      const cityNameMatch = itemLocation.toLowerCase().includes(city.name.toLowerCase()) ||
+                           city.name.toLowerCase().includes(itemLocation.toLowerCase()) ||
+                           itemLocation.toLowerCase().includes(city.nameAr.toLowerCase()) ||
+                           city.nameAr.toLowerCase().includes(itemLocation.toLowerCase());
+      
+      // Check search terms if available
+      if (city.searchTerms) {
+        const searchMatch = city.searchTerms.some(term => 
+          itemLocation.toLowerCase().includes(term.toLowerCase()) ||
+          term.toLowerCase().includes(itemLocation.toLowerCase())
+        );
+        return cityNameMatch || searchMatch;
+      }
+      
+      return cityNameMatch;
     });
     
-    if (cityMatch) {
-      return true;
-    }
+    if (cityMatch) return true;
     
-    // 3. Partial name matching (contains)
-    const partialMatch = itemRegionNormalized.includes(regionName) || 
-                        itemRegionNormalized.includes(regionNameAr) ||
-                        regionName.includes(itemRegionNormalized) ||
-                        regionNameAr.includes(itemRegionNormalized);
-    
-    if (partialMatch) {
-      console.log('✓ Partial match found');
-      return true;
-    }
-    
-    // 4. Clean matches (remove common administrative words)
-    const cleanItemRegion = itemRegionNormalized.replace(/wilaya|region|province|governorate|commune/gi, '').trim();
-    const cleanRegionName = regionName.replace(/wilaya|region|province|governorate/gi, '').trim();
-    
-    if (cleanItemRegion === cleanRegionName) {
-      console.log('✓ Clean match found');
-      return true;
-    }
-    
-    // 5. Word-by-word matching
-    const regionWords = regionName.split(' ').filter(word => word.length > 2);
-    const itemWords = itemRegionNormalized.split(' ').filter(word => word.length > 2);
-    
-    const wordMatch = regionWords.some(word => 
-      itemWords.some(itemWord => 
-        itemWord.includes(word) || word.includes(itemWord)
-      )
-    );
-    
-    if (wordMatch) {
-      console.log('✓ Word match found');
-    } else {
-      console.log('✗ No match found');
-    }
-    
-    return wordMatch;
-  };
+    // 3. Fallback: search for any region that matches the item location
+    const matchingRegions = searchRegions(itemLocation);
+    return matchingRegions.some(region => region.code === selectedRegionCode);
+  }, []);
+  
+  // Get region statistics for enhanced UI
+  const regionStats = useMemo(() => {
+    return MAURITANIA_REGIONS.map(region => {
+      const cities = getCitiesByWilaya(region.code);
+      const capital = getWilayaCapital(region.code);
+      return {
+        ...region,
+        cityCount: cities.length,
+        hasCapital: !!capital,
+        capitalName: capital?.name || 'N/A'
+      };
+    });
+  }, []);
+  
+  // Get available regions based on current locations
+  const availableRegions = useMemo(() => {
+    const regionCodes = new Set<string>();
+    originalLocations.forEach(location => {
+      if (location.region) {
+        const matchedRegion = findRegionByLocation(location.region);
+        if (matchedRegion) {
+          regionCodes.add(matchedRegion.code);
+        }
+      }
+    });
+    return MAURITANIA_REGIONS.filter(region => regionCodes.has(region.code));
+  }, [originalLocations]);
 
   // Apply filters and update the parent component
   useEffect(() => {
     let filtered = [...originalLocations];
     
-    console.log('MapFilters - Starting with locations:', filtered.length);
-    console.log('MapFilters - Filter settings:', { statusFilter, regionFilter });
-    
     if (statusFilter !== 'all') {
       filtered = filtered.filter(item => item.status === statusFilter);
-      console.log('MapFilters - After status filter:', filtered.length);
     }
     
     if (regionFilter !== 'all') {
-      const selectedRegion = MAURITANIA_REGIONS.find(r => r.code === regionFilter);
-      if (selectedRegion) {
-        console.log('MapFilters - Selected region:', selectedRegion);
-        console.log('MapFilters - Cities in this region:', CITY_TO_REGION_MAP[regionFilter] || []);
-        
-        const beforeRegionFilter = filtered.length;
-        filtered = filtered.filter(item => {
-          const matches = matchesRegion(item.region || '', regionFilter);
-          console.log(`MapFilters - Item "${item.name}" in "${item.region}" matches: ${matches}`);
-          return matches;
-        });
-        
-        console.log(`MapFilters - Region filter: ${beforeRegionFilter} → ${filtered.length} locations`);
-      }
+      filtered = filtered.filter(item => matchesLocation(item.region || '', regionFilter));
     }
     
-    console.log('MapFilters - Final filtered locations:', filtered.length);
     onFilterChange(filtered);
-  }, [statusFilter, regionFilter, originalLocations, onFilterChange]);
+  }, [statusFilter, regionFilter, originalLocations, onFilterChange, matchesLocation]);
 
   return (
     <Card className="mb-6 shadow-md">
@@ -251,24 +224,49 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
                     Toutes les régions
                   </div>
                 </SelectItem>
-                {MAURITANIA_REGIONS.map(region => (
-                  <SelectItem key={region.code} value={region.code}>
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-3 w-3 text-green-600" />
-                        <span className="font-medium">{region.name}</span>
+                {availableRegions.map(region => {
+                  const stats = regionStats.find(s => s.code === region.code);
+                  return (
+                    <SelectItem key={region.code} value={region.code}>
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-3 w-3 text-green-600" />
+                          <span className="font-medium">{region.name}</span>
+                          {region.economicImportance === 'capital' && (
+                            <Badge variant="secondary" className="text-xs px-1">Capitale</Badge>
+                          )}
+                          {region.economicImportance === 'economic' && (
+                            <Badge variant="secondary" className="text-xs px-1">Économique</Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground pl-5">
+                          <span>{region.nameAr}</span>
+                          {stats && (
+                            <>
+                              <span>•</span>
+                              <span>{stats.cityCount} villes</span>
+                              {stats.hasCapital && (
+                                <>
+                                  <span>•</span>
+                                  <span>Cap: {stats.capitalName}</span>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </div>
-                      <span className="text-xs text-muted-foreground pl-5">
-                        {region.nameAr}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
             {regionFilter !== 'all' && (
               <p className="text-xs text-muted-foreground">
                 Filtré par: {MAURITANIA_REGIONS.find(r => r.code === regionFilter)?.name}
+                {(() => {
+                  const stats = regionStats.find(s => s.code === regionFilter);
+                  return stats ? ` (${stats.cityCount} villes)` : '';
+                })()}
               </p>
             )}
           </div>
@@ -293,7 +291,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
                     if (statusFilter !== 'all') {
                       filtered = filtered.filter(item => item.status === statusFilter);
                     }
-                    count = filtered.filter(item => matchesRegion(item.region || '', regionFilter)).length;
+                    count = filtered.filter(item => matchesLocation(item.region || '', regionFilter)).length;
                   }
                   
                   return count;
@@ -312,7 +310,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
                     if (statusFilter !== 'all') {
                       filtered = filtered.filter(item => item.status === statusFilter);
                     }
-                    count = filtered.filter(item => matchesRegion(item.region || '', regionFilter)).length;
+                    count = filtered.filter(item => matchesLocation(item.region || '', regionFilter)).length;
                   }
                   
                   return count > 1 ? 's' : '';
@@ -328,24 +326,30 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
                     if (statusFilter !== 'all') {
                       filtered = filtered.filter(item => item.status === statusFilter);
                     }
-                    count = filtered.filter(item => matchesRegion(item.region || '', regionFilter)).length;
+                    count = filtered.filter(item => matchesLocation(item.region || '', regionFilter)).length;
                   }
                   
                   return count > 1 ? 's' : '';
                 })()}
               </div>
               
-              {/* Debug info */}
+              {/* Enhanced Debug Info */}
               <div className="mt-2 text-xs text-gray-500 border-t pt-2">
                 <div>Total disponible: {originalLocations.length}</div>
-                {regionFilter !== 'all' && (
-                  <div>
-                    Région: {MAURITANIA_REGIONS.find(r => r.code === regionFilter)?.name}
-                  </div>
-                )}
-                {statusFilter !== 'all' && (
-                  <div>Statut: {statusFilter}</div>
-                )}
+                {regionFilter !== 'all' && (() => {
+                  const region = getWilayaByCode(regionFilter);
+                  const stats = regionStats.find(s => s.code === regionFilter);
+                  return region ? (
+                    <div>
+                      <div>Région: {region.name}</div>
+                      <div className="flex gap-2">
+                        <span>{stats?.cityCount || 0} villes</span>
+                        {stats?.hasCapital && <span>• Cap: {stats.capitalName}</span>}
+                      </div>
+                    </div>
+                  ) : null;
+                })()}
+                {statusFilter !== 'all' && <div>Statut: {statusFilter}</div>}
               </div>
             </div>
           </div>

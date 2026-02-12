@@ -32,6 +32,7 @@ import {
   TenderEstimateValidationDto,
   TenderEstimateComparisonDto
 } from '@/dtos/entities/TenderEstimateDTO';
+import { ParsedInvoiceDTO } from '@/dtos/entities/InvoiceDTO';
 import { TenderEstimateBusinessLogic } from '@/dtos/transforms/shared';
 
 export class TenderEstimateService {
@@ -547,6 +548,84 @@ export class TenderEstimateService {
       throw error instanceof AppError 
         ? error 
         : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to calculate estimate totals');
+    }
+  }
+
+  /**
+   * Create invoice from tender estimate
+   * Implements invoice creation logic following hexagonal architecture
+   */
+  async createInvoiceFromEstimate(estimateId: string): Promise<ParsedInvoiceDTO> {
+    try {
+      // Get the tender estimate
+      const estimate = await this.tenderEstimateRepository.findById(estimateId);
+      if (!estimate) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Tender estimate not found');
+      }
+
+      // Import InvoiceService (following Rule #1: Arrow Flow)
+      const { InvoiceService } = await import('./InvoiceService');
+      const invoiceRepository = RepositoryFactory.getParsedInvoiceRepository();
+      const invoiceService = new InvoiceService(invoiceRepository);
+
+      // Create invoice data from estimate
+      const invoiceData = {
+        invoiceNumber: `INV-${estimate.id}-${Date.now()}`,
+        supplierId: estimate.supplierId || 'default-supplier',
+        supplierName: estimate.supplierName || 'Default Supplier',
+        amount: estimate.total || 0,
+        currency: estimate.currency || 'EUR',
+        issueDate: new Date().toISOString(),
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+        status: 'draft' as const,
+        description: `Invoice for tender estimate: ${estimate.title || estimate.id}`,
+        projectId: estimate.projectId,
+        projectName: estimate.projectName,
+        metadata: {
+          category: 'tender-estimate',
+          priority: 'medium' as const,
+          notes: `Generated from tender estimate ${estimate.id}`,
+          customFields: {
+            estimateId: estimate.id,
+            estimateTitle: estimate.title
+          }
+        }
+      };
+
+      // Create the invoice through InvoiceService
+      const createdInvoice = await invoiceService.createParsedInvoice({
+        originalFileName: `estimate-${estimate.id}.pdf`,
+        parsedAt: new Date().toISOString(),
+        supplierInfo: {
+          supplierId: invoiceData.supplierId,
+          name: invoiceData.supplierName
+        },
+        invoiceData: {
+          invoiceNumber: invoiceData.invoiceNumber,
+          issueDate: invoiceData.issueDate,
+          dueDate: invoiceData.dueDate,
+          amount: invoiceData.amount,
+          currency: invoiceData.currency,
+          description: invoiceData.description
+        },
+        lineItems: estimate.items?.map(item => ({
+          description: item.description || `Item ${item.id}`,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          totalPrice: item.quantity * item.unitPrice,
+          category: item.category || 'general'
+        })) || [],
+        extractionConfidence: 1.0,
+        validationStatus: 'validated' as const,
+        processingStatus: 'completed' as const
+      });
+
+      return createdInvoice;
+    } catch (error) {
+      console.error('TenderEstimateService.createInvoiceFromEstimate failed:', error);
+      throw error instanceof AppError 
+        ? error 
+        : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create invoice from estimate');
     }
   }
 }

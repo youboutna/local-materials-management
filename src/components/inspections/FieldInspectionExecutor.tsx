@@ -114,9 +114,9 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
     if (!executionData.checklist?.length && !isStarted) {
       const defaultChecklist = InspectionExecutionService.getDefaultChecklist(inspectionType);
       // Note: getDefaultChecklist returns ChecklistItem[] synchronously
-      setExecutionData(prev => ({ ...prev, checklist: defaultChecklist as any }));
+      setExecutionData(prev => ({ ...prev, checklist: defaultChecklist }));
     }
-  }, [inspectionType, isStarted]);
+  }, [inspectionType, isStarted, executionData.checklist?.length]);
 
   // Capture GPS location
   const captureLocation = () => {
@@ -177,7 +177,7 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
         inspectionId: inspection.id,
         finalData: {
           overallConformity: 'conform',
-          notes: (executionData as any).notes || ''
+          notes: executionData?.notes || ''
         }
       });
       
@@ -315,14 +315,14 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
             title: file.name,
             name: file.name,
             type: 'photo',
-            documentType: 'photo' as any,
+            documentType: 'photo' as 'certificate' | 'checklist' | 'photo' | 'report' | 'scan',
             fileName: file.name,
             fileSize: file.size,
             mimeType: file.type,
-            projectId: inspection.project_id,
+            projectId: inspection.projectId,
             paymentId: '',
             supplierId: '',
-            phaseId: '',
+            phaseId: inspection.phaseId || '',
             inspectionId: inspection.id,
             description: '',
             fileUrl: '',
@@ -330,7 +330,7 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
             tags: [],
             isInternalOnly: false,
             isSharedWithSuppliers: false
-          } as any
+          } as InspectionExecutionResult
         });
 
         if (result.success) {

@@ -7,6 +7,9 @@ import { EstimateItem, EstimateData } from '@/dtos/transforms/shared';
 import { TenderEstimate } from '@/domain/entities/TenderEstimate';
 import { toast } from '@/hooks/use-toast';
 
+export type { EstimateItem } from '@/dtos/transforms/shared';
+export type { TenderEstimate } from '@/domain/entities/TenderEstimate';
+
 export const useTenderQuantitativeEstimateHex = (tenderId: string, projectId?: string) => {
   const queryClient = useQueryClient();
 

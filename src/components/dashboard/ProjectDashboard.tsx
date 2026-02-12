@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
+import LocationAutocomplete from '@/components/location/LocationAutocomplete';
 import { 
   BarChart, 
   Bar, 
@@ -371,6 +372,37 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
               </CardContent>
             </Card>
 
+            {/* Location Search */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Location Search
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <LocationAutocomplete
+                    value=""
+                    onChange={(address, locationData) => {
+                      // Handle location search
+                      console.log('Dashboard location search:', address, locationData);
+                      // Could filter projects by location here
+                    }}
+                    placeholder="Rechercher des projets par localisation..."
+                    filter="all"
+                    className="w-full"
+                  />
+                  <div className="text-sm text-muted-foreground">
+                    <p>Recherchez des projets par région, ville ou adresse spécifique.</p>
+                    <p className="text-xs mt-1">
+                      Supporte la recherche en français et en arabe.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Category Distribution */}
             <Card>
               <CardHeader>
@@ -404,6 +436,11 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
                       <div>
                         <h4 className="font-semibold">{project.title}</h4>
                         <p className="text-sm text-muted-foreground">{project.location}</p>
+                        {project.regionCode && (
+                          <Badge variant="outline" className="text-xs mt-1">
+                            {project.regionCode}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     <div className="text-right">

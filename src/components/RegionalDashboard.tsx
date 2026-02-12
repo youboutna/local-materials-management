@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
-import { MAURITANIA_REGIONS } from "@/dtos/entities/ProjectDTO";
+import { MAURITANIA_REGIONS, GeographicUnit } from "@/types/mauritania";
 import { MapPin, Building2, TrendingUp, Users } from "lucide-react";
 
 interface RegionalDashboardProps {

@@ -1,33 +1,31 @@
 import { useState, useEffect } from 'react';
 import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
-import { UserRole } from '@/domain/entities/UserRoleSomelec';
-import { UserDTO } from '@/dtos/entities/UserDTO';
-
-type AppRole = 'admin' | 'manager' | 'editor' | 'viewer';
+import { User, UserRoleEntity, SomelecRole } from '@/domain/entities/User';
+import { UserDTO, UserRoleDTO } from '@/dtos/entities/UserDTO';
 
 interface UserProfile {
   id: string;
   email?: string;
   full_name?: string;
-  role?: AppRole;
+  role?: string;
   phone?: string;
   national_id?: string;
   avatar_url?: string;
 }
 
 interface UserRolesResult {
-  userRoles: AppRole[];
-  hasRole: (roleName: AppRole) => boolean;
-  hasAnyRole: (roleNames: AppRole[]) => boolean;
+  userRoles: SomelecRole[];
+  hasRole: (roleName: SomelecRole) => boolean;
+  hasAnyRole: (roleNames: SomelecRole[]) => boolean;
   isAuthenticated: boolean;
   currentUser: UserDTO | null;
 }
 
 export const useCurrentUserRoles = (): UserRolesResult => {
   const { profile, isAuthenticated } = useKeycloakAuth();
-  const [userRoles, setUserRoles] = useState<AppRole[]>([]);
+  const [userRoles, setUserRoles] = useState<SomelecRole[]>([]);
 
-  const isAppRole = (role: string): role is AppRole => {
+  const isAppRole = (role: string): role is SomelecRole => {
     return ['admin', 'manager', 'editor', 'viewer'].includes(role);
   };
 
@@ -38,14 +36,13 @@ export const useCurrentUserRoles = (): UserRolesResult => {
     setUserRoles(roles);
   }, [profile?.role]);
 
-  const hasRole = (roleName: AppRole) => {
-    return userRoles.includes(String(roleName).toLowerCase() as AppRole);
+  const hasRole = (roleName: SomelecRole) => {
+    return userRoles.includes(roleName);
   };
 
-  const hasAnyRole = (roleNames: AppRole[]): boolean => {
+  const hasAnyRole = (roleNames: SomelecRole[]): boolean => {
     if (userRoles.length === 0) return false;
-    const wanted = roleNames.map((r) => String(r).toLowerCase() as AppRole);
-    return wanted.some((role) => userRoles.includes(role));
+    return roleNames.some((role) => userRoles.includes(role));
   };
 
   const currentUser: UserDTO | null = profile ? {
@@ -57,7 +54,16 @@ export const useCurrentUserRoles = (): UserRolesResult => {
     nationalId: profile.national_id || undefined,
     avatarUrl: profile.avatar_url || undefined,
     isActive: true,
-    userRoles: profile.role ? [profile.role] : [],
+    userRoles: profile.role ? [{ 
+      id: '', 
+      userId: profile.id, 
+      roleName: profile.role as SomelecRole, 
+      status: 'active' as any, 
+      assignedAt: new Date().toISOString(), 
+      assignedBy: '', 
+      createdAt: new Date().toISOString(), 
+      updatedAt: new Date().toISOString() 
+    }] : [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   } : null;

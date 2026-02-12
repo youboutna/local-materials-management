@@ -1,7 +1,7 @@
 /**
- * WorkspaceService - In-memory implementation
- * Uses local storage while database tables are pending migration
- * TODO: Replace with RepositoryFactory pattern when workspace tables are available
+ * WorkspaceService - Hexagonal Architecture Implementation
+ * Follows PROMPTS.md Rule #1: Arrow Flow Pattern
+ * Service → Repository → Domain ← Infrastructure
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
@@ -12,14 +12,24 @@ import {
   UpdateWorkspaceRequestDTO
 } from '@/dtos/entities/WorkspaceDTO';
 import { WorkspaceTransformer } from '@/dtos/transforms/WorkspaceTransformer';
+import { Workspace, OperationalStatus } from '@/domain/entities/Workspace';
 
 export class WorkspaceService {
-  private static workspaceRepository: any = null;
+  private workspaceRepository: any;
+
+  constructor() {
+    try {
+      this.workspaceRepository = RepositoryFactory.getWorkspaceRepository();
+    } catch (error) {
+      console.warn('Workspace repository not available, using fallback implementation');
+      this.workspaceRepository = null;
+    }
+  }
 
   /**
    * Get a workspace by ID
    */
-  static async getWorkspaceById(id: string): Promise<WorkspaceDTO | null> {
+  async getWorkspaceById(id: string): Promise<WorkspaceDTO | null> {
     try {
       if (!this.workspaceRepository) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Workspace repository not available');
@@ -35,11 +45,18 @@ export class WorkspaceService {
   /**
    * Create a new workspace
    */
-  static async createWorkspace(workspaceData: CreateWorkspaceRequestDTO): Promise<WorkspaceDTO> {
+  async createWorkspace(workspaceData: CreateWorkspaceRequestDTO): Promise<WorkspaceDTO> {
     try {
       if (!this.workspaceRepository) {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Workspace repository not available');
       }
+      
+      // Validate workspace data
+      const validation = this.validateWorkspaceData(workspaceData);
+      if (!validation.isValid) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, validation.errors.join(', '));
+      }
+
       const workspaceDataTransformed = WorkspaceTransformer.fromCreateDTO(workspaceData);
       const newWorkspace = await this.workspaceRepository.create(workspaceDataTransformed);
       return WorkspaceTransformer.toDTO(newWorkspace);
@@ -52,8 +69,12 @@ export class WorkspaceService {
   /**
    * Get all workspaces
    */
-  static async getAllWorkspaces(): Promise<WorkspaceDTO[]> {
+  async getAllWorkspaces(): Promise<WorkspaceDTO[]> {
     try {
+      if (!this.workspaceRepository) {
+        // Fallback to empty array if repository not available
+        return [];
+      }
       const workspaces = await this.workspaceRepository.findAll();
       return workspaces.map(workspace => WorkspaceTransformer.toDTO(workspace));
     } catch (error) {
@@ -65,7 +86,7 @@ export class WorkspaceService {
   /**
    * Update a workspace
    */
-  static async updateWorkspace(id: string, updates: UpdateWorkspaceRequestDTO): Promise<WorkspaceDTO> {
+  async updateWorkspace(id: string, updates: UpdateWorkspaceRequestDTO): Promise<WorkspaceDTO> {
     try {
       const updatesTransformed = WorkspaceTransformer.fromUpdateDTO(updates);
       const workspace = await this.workspaceRepository.update(id, updatesTransformed);
@@ -79,7 +100,7 @@ export class WorkspaceService {
   /**
    * Delete a workspace
    */
-  static async deleteWorkspace(id: string): Promise<void> {
+  async deleteWorkspace(id: string): Promise<void> {
     try {
       await this.workspaceRepository.delete(id);
     } catch (error) {
@@ -91,7 +112,7 @@ export class WorkspaceService {
   /**
    * Get workspaces by status
    */
-  static async getWorkspacesByStatus(status: string): Promise<WorkspaceDTO[]> {
+  async getWorkspacesByStatus(status: OperationalStatus): Promise<WorkspaceDTO[]> {
     try {
       const workspaces = await this.workspaceRepository.findByStatus(status);
       return workspaces.map(workspace => WorkspaceTransformer.toDTO(workspace));
@@ -104,9 +125,9 @@ export class WorkspaceService {
   /**
    * Get workspaces by location
    */
-  static async getWorkspacesByLocation(location: string): Promise<WorkspaceDTO[]> {
+  async getWorkspacesByLocation(locationCode: string): Promise<WorkspaceDTO[]> {
     try {
-      const workspaces = await this.workspaceRepository.findByLocation(location);
+      const workspaces = await this.workspaceRepository.findByLocation(locationCode);
       return workspaces.map(workspace => WorkspaceTransformer.toDTO(workspace));
     } catch (error) {
       console.error('Error fetching workspaces by location:', error);
@@ -117,26 +138,29 @@ export class WorkspaceService {
   /**
    * Get workspace statistics
    */
-  static async getWorkspaceStats(): Promise<{
+  async getWorkspaceStats(): Promise<{
     total: number;
     active: number;
     inactive: number;
+    closed: number;
     byLocation: Record<string, number>;
   }> {
     try {
       const workspaces = await this.getAllWorkspaces();
       const stats = {
         total: workspaces.length,
-        active: workspaces.filter(w => w.status === 'active').length,
-        inactive: workspaces.filter(w => w.status === 'inactive').length,
+        active: workspaces.filter(w => w.status === OperationalStatus.active).length,
+        inactive: workspaces.filter(w => w.status === OperationalStatus.inactive).length,
+        closed: workspaces.filter(w => w.status === OperationalStatus.closed).length,
         byLocation: {} as Record<string, number>
       };
 
       workspaces.forEach(workspace => {
-        if (stats.byLocation[workspace.location]) {
-          stats.byLocation[workspace.location]++;
+        const locationKey = workspace.location.name;
+        if (stats.byLocation[locationKey]) {
+          stats.byLocation[locationKey]++;
         } else {
-          stats.byLocation[workspace.location] = 1;
+          stats.byLocation[locationKey] = 1;
         }
       });
 
@@ -150,14 +174,14 @@ export class WorkspaceService {
   /**
    * Search workspaces by name or location
    */
-  static async searchWorkspaces(query: string): Promise<WorkspaceDTO[]> {
+  async searchWorkspaces(query: string): Promise<WorkspaceDTO[]> {
     try {
       const workspaces = await this.getAllWorkspaces();
       const lowerQuery = query.toLowerCase();
       
       return workspaces.filter(workspace => 
         workspace.name.toLowerCase().includes(lowerQuery) ||
-        workspace.location.toLowerCase().includes(lowerQuery)
+        workspace.location.name.toLowerCase().includes(lowerQuery)
       );
     } catch (error) {
       console.error('Error searching workspaces:', error);
@@ -168,7 +192,7 @@ export class WorkspaceService {
   /**
    * Validate workspace data
    */
-  static validateWorkspaceData(data: CreateWorkspaceRequestDTO | UpdateWorkspaceRequestDTO): {
+  validateWorkspaceData(data: CreateWorkspaceRequestDTO | UpdateWorkspaceRequestDTO): {
     isValid: boolean;
     errors: string[];
   } {
@@ -178,11 +202,19 @@ export class WorkspaceService {
       errors.push('Workspace name is required');
     }
 
-    if ('location' in data && (!data.location || data.location.trim().length === 0)) {
+    if ('workspaceId' in data && (!data.workspaceId || data.workspaceId.trim().length === 0)) {
+      errors.push('Workspace ID is required');
+    }
+
+    if ('workspaceCode' in data && (!data.workspaceCode || data.workspaceCode.trim().length === 0)) {
+      errors.push('Workspace code is required');
+    }
+
+    if ('location' in data && (!data.location || !data.location.code)) {
       errors.push('Workspace location is required');
     }
 
-    if (data.contactPhone && !/^[\d\s\-\+\(\)]+$/.test(data.contactPhone)) {
+    if (data.contact && data.contact.phone && !/^[\d\s\-+()]+$/.test(data.contact.phone)) {
       errors.push('Invalid phone number format');
     }
 

@@ -67,6 +67,14 @@ Usage : Utilisés par les composants UI
 Rôle : Interface pour accéder aux données
 Responsabilité : Définir les contrats pour les données
 Usage : Utilisés par les services
+9.  TypeScript Error Resolution Protocol    :
+    Trace: UI input? DB field? → Decide if persistent
+
+    Update chain: DB/Entity → Repository → DTOs → Service → adapter/Controller → UI
+
+    Check: All layers synced? Migration done? Tests passing?
+
+  Rule: If in DB → add everywhere. If UI-only and not input field → don't touch DB/DTOs.
 
 ### **RÈGLE #2 : CONVENTIONS DE CASING**
 

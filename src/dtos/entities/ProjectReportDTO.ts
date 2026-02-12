@@ -340,23 +340,6 @@ export const standardWorkflow: WorkflowPhase[] = [
   }
 ];
 
-// Mauritania regions for map filters
-export const MAURITANIA_REGIONS = [
-  { code: 'NKC', name: 'Nouakchott', nameAr: 'نواكشوط' },
-  { code: 'NDB', name: 'Nouadhibou', nameAr: 'نواذيبو' },
-  { code: 'ATR', name: 'Atar', nameAr: 'أطار' },
-  { code: 'AKJ', name: 'Akjoujt', nameAr: 'أكجوجت' },
-  { code: 'AEA', name: 'Aioun El Atrouss', nameAr: 'عيون العتروس' },
-  { code: 'NMA', name: 'Nema', nameAr: 'النعمة' },
-  { code: 'TDJ', name: 'Tidjikja', nameAr: 'تيجيكجة' },
-  { code: 'KED', name: 'Kaédi', nameAr: 'كيدي' },
-  { code: 'KFA', name: 'Kiffa', nameAr: 'كيفة' },
-  { code: 'RSO', name: 'Rosso', nameAr: 'روصو' },
-  { code: 'ZRT', name: 'Zouérat', nameAr: 'الزويرات' },
-  { code: 'SLB', name: 'Sélibabi', nameAr: 'سليبابي' },
-  { code: 'ALG', name: 'Aleg', nameAr: 'ألاك' }
-] as const;
-
 // Import/Export related types
 export interface ImportOptions {
   skipDuplicates?: boolean;

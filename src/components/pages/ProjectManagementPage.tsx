@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import LocationAutocomplete from '@/components/location/LocationAutocomplete';
 import { 
   Dialog, 
   DialogContent, 
@@ -544,10 +545,15 @@ const ProjectManagementPage: React.FC = () => {
                           <span className="flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
                             {project.location}
+                            {project.regionCode && (
+                              <Badge variant="outline" className="text-xs">
+                                {project.regionCode}
+                              </Badge>
+                            )}
                           </span>
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
-                            {project.start_date}
+                            {project.startDate}
                           </span>
                           <span className="flex items-center gap-1">
                             <DollarSign className="h-3 w-3" />
@@ -712,7 +718,16 @@ const ProjectManagementPage: React.FC = () => {
               </div>
               <div>
                 <Label htmlFor="location">Location</Label>
-                <Input id="location" placeholder="Enter project location" />
+                <LocationAutocomplete
+                  value=""
+                  onChange={(address, locationData) => {
+                    // Handle location change
+                    console.log('Location selected:', address, locationData);
+                  }}
+                  placeholder="Rechercher une localisation pour le projet..."
+                  filter="all"
+                  className="w-full"
+                />
               </div>
               <div>
                 <Label htmlFor="budget">Budget</Label>

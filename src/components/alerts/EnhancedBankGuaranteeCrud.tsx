@@ -98,16 +98,16 @@ const EnhancedBankGuaranteeCrud = () => {
 
   const openEditForm = (guarantee: BankGuaranteeRow) => {
     setFormData({
-      projectId: guarantee.projectId || guarantee.project_id || '',
-      contractorId: guarantee.contractorId || guarantee.contractor_id || '',
-      bankName: guarantee.bankName || guarantee.bank_name || '',
-      guaranteeAmount: guarantee.guaranteeAmount || guarantee.guarantee_amount || 0,
-      guaranteeType: guarantee.guaranteeType || guarantee.guarantee_type || '',
-      issueDate: guarantee.issueDate || guarantee.issue_date || '',
-      expiryDate: guarantee.expiryDate || guarantee.expiry_date || '',
+      projectId: guarantee.projectId || '',
+      contractorId: guarantee.contractorId || '',
+      bankName: guarantee.bankName || '',
+      guaranteeAmount: guarantee.guaranteeAmount || 0,
+      guaranteeType: guarantee.guaranteeType || '',
+      issueDate: guarantee.issueDate || '',
+      expiryDate: guarantee.expiryDate || '',
       status: guarantee.status,
       contractor_name: guarantee.contractor_name || '',
-      supporting_documents: guarantee.supportingDocuments || guarantee.supporting_documents || [],
+      supporting_documents: guarantee.supportingDocuments || [],
       notes: guarantee.notes || ''
     });
     setSelectedGuarantee(guarantee);
@@ -118,16 +118,16 @@ const EnhancedBankGuaranteeCrud = () => {
 
   const openViewForm = (guarantee: BankGuaranteeRow) => {
     setFormData({
-      projectId: guarantee.projectId || guarantee.project_id || '',
-      contractorId: guarantee.contractorId || guarantee.contractor_id || '',
-      bankName: guarantee.bankName || guarantee.bank_name || '',
-      guaranteeAmount: guarantee.guaranteeAmount || guarantee.guarantee_amount || 0,
-      guaranteeType: guarantee.guaranteeType || guarantee.guarantee_type || '',
-      issueDate: guarantee.issueDate || guarantee.issue_date || '',
-      expiryDate: guarantee.expiryDate || guarantee.expiry_date || '',
+      projectId: guarantee.projectId || '',
+      contractorId: guarantee.contractorId || '',
+      bankName: guarantee.bankName || '',
+      guaranteeAmount: guarantee.guaranteeAmount || 0,
+      guaranteeType: guarantee.guaranteeType || '',
+      issueDate: guarantee.issueDate || '',
+      expiryDate: guarantee.expiryDate || '',
       status: guarantee.status,
       contractor_name: guarantee.contractor_name || '',
-      supporting_documents: guarantee.supportingDocuments || guarantee.supporting_documents || [],
+      supporting_documents: guarantee.supportingDocuments || [],
       notes: guarantee.notes || ''
     });
     setSelectedGuarantee(guarantee);
@@ -244,7 +244,7 @@ const EnhancedBankGuaranteeCrud = () => {
                   <Label htmlFor="project">Projet *</Label>
                   <ProjectSelector
                     onChange={(projectId) => handleProjectChange(projectId)}
-                    value={formData.project_id}
+                    value={formData.projectId}
                     disabled={isViewMode}
                   />
                 </div>
@@ -416,16 +416,16 @@ const EnhancedBankGuaranteeCrud = () => {
           <TableBody>
             {guarantees.map((guarantee) => (
               <TableRow key={guarantee.id}>
-                <TableCell className="font-medium">{(guarantee.projectId || guarantee.project_id || '').slice(0, 8)}...</TableCell>
-                <TableCell>{guarantee.bankName || guarantee.bank_name}</TableCell>
+                <TableCell className="font-medium">{(guarantee.projectId || '').slice(0, 8)}...</TableCell>
+                <TableCell>{guarantee.bankName}</TableCell>
                 <TableCell>
-                  {guaranteeTypes.find(t => t.value === (guarantee.guaranteeType || guarantee.guarantee_type))?.label || guarantee.guaranteeType || guarantee.guarantee_type}
+                  {guaranteeTypes.find(t => t.value === guarantee.guaranteeType)?.label || guarantee.guaranteeType}
                 </TableCell>
-                <TableCell>{formatCurrency(guarantee.guaranteeAmount || guarantee.guarantee_amount || 0)}</TableCell>
+                <TableCell>{formatCurrency(guarantee.guaranteeAmount || 0)}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    {new Date(guarantee.expiryDate || guarantee.expiry_date || '').toLocaleDateString('fr-FR')}
-                    {isExpiringSoon(guarantee.expiryDate || guarantee.expiry_date || '') && (
+                    {new Date(guarantee.expiryDate || '').toLocaleDateString('fr-FR')}
+                    {isExpiringSoon(guarantee.expiryDate || '') && (
                       <AlertTriangle className="h-4 w-4 text-yellow-500" />
                     )}
                   </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Filter, MapPin, DollarSign, Target } from 'lucide-react';
 import { ProjectData } from '@/dtos/entities/ProjectDTO';
-import { MAURITANIA_REGIONS } from '@/dtos/entities/ProjectReportDTO';
+import { MAURITANIA_REGIONS, GeographicUnit } from '@/types/mauritania';
+import { isLocationInRegion, findRegionByLocation } from '@/utils/mauritaniaUtils';
 
 interface InteractiveMapFiltersProps {
   projects: ProjectData[];
@@ -32,15 +33,13 @@ const InteractiveMapFilters: React.FC<InteractiveMapFiltersProps> = ({
   const minBudget = Math.min(...budgets);
   const maxBudget = Math.max(...budgets);
 
-  const applyFilters = () => {
-    let filtered = projects.filter(project => {
+  const applyFilters = useCallback(() => {
+    const filtered = projects.filter(project => {
       // Region filter
-      if (selectedRegion !== 'all') {
+      if (selectedRegion !== 'all' && project.location) {
         const region = MAURITANIA_REGIONS.find(r => r.code === selectedRegion);
-        if (region && project.location) {
-          const matchRegion = project.location.toLowerCase().includes(region.name.toLowerCase()) ||
-                             project.location.toLowerCase().includes(region.nameAr.toLowerCase());
-          if (!matchRegion) return false;
+        if (region) {
+          return isLocationInRegion(project.location, region);
         }
       }
 
@@ -66,9 +65,7 @@ const InteractiveMapFilters: React.FC<InteractiveMapFiltersProps> = ({
 
       return true;
     });
-
-    onFiltersChange(filtered);
-  };
+  }, [selectedRegion, selectedStatus, budgetRange, gpsLatRange, gpsLngRange, projects]);
 
   const resetFilters = () => {
     setSelectedRegion('all');
@@ -81,7 +78,7 @@ const InteractiveMapFilters: React.FC<InteractiveMapFiltersProps> = ({
 
   React.useEffect(() => {
     applyFilters();
-  }, [selectedRegion, selectedStatus, budgetRange, gpsLatRange, gpsLngRange]);
+  }, [applyFilters, selectedRegion, selectedStatus, budgetRange, gpsLatRange, gpsLngRange, projects, onFiltersChange]);
 
   return (
     <Card className="bg-gradient-to-br from-card via-card/90 to-muted/20 backdrop-blur-sm border-border/50">

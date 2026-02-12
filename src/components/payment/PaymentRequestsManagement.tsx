@@ -65,17 +65,17 @@ export const PaymentRequestsManagement: React.FC = () => {
       const enrichedRequests = await Promise.all(
         requests.map(async (request) => {
           const [supplierData, projectData] = await Promise.all([
-            supplierService.getSupplierById(request.supplierId || (request as any).supplier_id),
-            request.projectId || (request as any).project_id ? projectService.getProjectById(request.projectId || (request as any).project_id) : Promise.resolve(null)
+            supplierService.getSupplierById(request.supplierId),
+            request.projectId ? projectService.getProjectById(request.projectId) : Promise.resolve(null)
           ]);
           
           return {
             ...request,
             suppliers: supplierData ? {
               name: supplierData.name,
-              account_number: (supplierData as any).account_number || null,
-              bank_name: (supplierData as any).bank_name || null,
-              rib: (supplierData as any).rib || null
+              accountNumber: supplierData.accountNumber || null,
+              bankName: supplierData.bankName || null,
+              rib: supplierData.rib || null
             } : undefined,
             projects: projectData ? {
               title: projectData.title
@@ -142,7 +142,7 @@ export const PaymentRequestsManagement: React.FC = () => {
       });
 
       refetch();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error approving request:', error);
       toast({
         title: 'Erreur',
@@ -175,7 +175,7 @@ export const PaymentRequestsManagement: React.FC = () => {
       });
 
       refetch();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error rejecting request:', error);
       toast({
         title: 'Erreur',
@@ -186,7 +186,7 @@ export const PaymentRequestsManagement: React.FC = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, { variant: any; label: string }> = {
+    const variants: Record<string, { variant: 'default' | 'secondary' | 'destructive'; label: string }> = {
       pending: { variant: 'secondary', label: 'En attente' },
       approved: { variant: 'default', label: 'Approuvé' },
       rejected: { variant: 'destructive', label: 'Rejeté' },

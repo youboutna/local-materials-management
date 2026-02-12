@@ -185,6 +185,24 @@ export const PROJECT_STATUS_TRANSITIONS: Record<ProjectStatus, ProjectStatus[]> 
   [ProjectStatus.EN_RETARD_LEGACY]: [ProjectStatus.EN_COURS_LEGACY, ProjectStatus.SUSPENDU_LEGACY]
 };
 
+// Role-based notification recipients
+export const NOTIFICATION_ROLES = {
+  PROJECT_MANAGER: "project_manager",
+  DIRECTOR_PROGRAMMING: "director_programming",
+  DIRECTOR: "director",
+  BANK_LIAISON: "bank_liaison",
+  ENGINEERING_CONSULTANT: "engineering_consultant",
+  CONTRACTOR: "contractor",
+};
+
+// Delay thresholds for escalation
+export const DELAY_THRESHOLDS = {
+  WARNING: 10, // 10% delay triggers warning
+  BANK_NOTIFICATION: 20, // 20% delay triggers bank notification
+  GUARANTEE_TRIGGER: 30, // 30% delay triggers guarantee clause
+  LEGAL_ESCALATION: 40, // 40% delay triggers legal team
+};
+
 // Project priority types - standardized
 export type ProjectPriority = StandardPriority;
 

@@ -110,13 +110,19 @@ export interface FileDTO {
   uploadedBy?: string;
 }
 
-// Common location
-export interface LocationDTO {
-  latitude?: number;
-  longitude?: number;
-  address?: string;
-  city?: string;
-  country?: string;
+// Enhanced location DTO for Mauritania-specific locations
+export interface LocationDTO extends BaseEntityDTO {
+  code: string;
+  name: string;
+  nameAr: string;
+  type: 'region' | 'city';
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
+  parentCode?: string;
+  economicImportance?: 'capital' | 'economic' | 'regional' | 'local';
+  population?: number;
 }
 
 // Common validation

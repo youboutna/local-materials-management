@@ -81,17 +81,17 @@ const InspectionCrud: React.FC = () => {
     setIsViewMode(false);
   };
 
-  // Helper to get values with dual-casing support
+  // Helper to get values with camelCase DTOs (Rule #9 compliance)
   const getProjectId = (inspection: InspectionRow): string => {
-    return inspection.projectId || (inspection as any).project_id || '';
+    return inspection.projectId || '';
   };
   
   const getProgress = (inspection: InspectionRow): number => {
-    return inspection.progressAtInspection ?? (inspection as any).progress_at_inspection ?? 0;
+    return inspection.progressAtInspection ?? 0;
   };
   
   const getPhaseId = (inspection: InspectionRow): string => {
-    return inspection.phaseId || (inspection as any).phase_id || '';
+    return inspection.phaseId || '';
   };
 
   const openEditForm = (inspection: InspectionRow) => {
@@ -191,11 +191,10 @@ const InspectionCrud: React.FC = () => {
               <div>
                 <Label>Projet</Label>
                 <ProjectSelector
-                  value={formData.projectId || formData.project_id || ''}
+                  value={formData.projectId || ''}
                   onChange={(value) => setFormData(prev => ({ 
                     ...prev, 
-                    projectId: value || '',
-                    project_id: value || ''
+                    projectId: value || ''
                   }))}
                   disabled={isViewMode}
                 />

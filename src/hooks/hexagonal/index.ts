@@ -56,7 +56,8 @@ export {
   useMaterialHex, 
   useMaterialsByCategory, 
   useMaterialById, 
-  useLowStockMaterials 
+  useLowStockMaterials,
+  useAddMaterialToProjectHex 
 } from './useMaterialsHex';
 export { 
   useMaterialsEnhanced, 
@@ -468,12 +469,25 @@ export type {
   UpdatePhaseRequestDto,
   TaskDTO,
   CreateTaskRequestDto,
-  UpdateTaskRequestDto
+  UpdateTaskRequestDto,
+  EmployeeDTO,
+  MilestoneDTO,
+  CreateMilestoneRequestDto,
+  UpdateMilestoneRequestDto,
+  TenderDTO,
+  CreateTenderRequestDto,
+  UpdateTenderRequestDto,
+  BankGuaranteeDTO,
+  CreateBankGuaranteeRequestDto,
+  UpdateBankGuaranteeRequestDto,
+  PaymentScheduleDTO,
+  CreatePaymentScheduleRequestDto,
+  UpdatePaymentScheduleRequestDto
 } 
-from '@/dtos/transforms';
+from '@/dtos/entities';
  
 export type {
- SupplierResponseDto,
+  SupplierResponseDto,
   UserResponseDto,
   TaskAssignmentResponseDto,
   DocumentResponseDto,
@@ -481,9 +495,8 @@ export type {
   MaterialResponseDto,
   InspectionResponseDto,
   AuthResponseDto
- } from '@/dtos/*';
+ } from '@/dtos/entities';
 
- 
 // Specialized type exports
 export type { CreateInspectionData } from './useInspectionDialogHex';
 export type { ProjectImportData } from './useProjectImporterHex';
@@ -502,47 +515,13 @@ export type { Submission, SubmissionDocument, ActivityLog } from './useSupplierS
 export type { Milestone } from './useMilestonesHex';
 export type { PhasePaymentFormData } from './usePhasePaymentsHex';
 
-// Project Workflow types
-export type { 
-  ProjectWorkflowData,
-  WorkflowStateDTO,
-  WorkflowValidationDTO,
-  WorkflowSaveContextDTO,
-  WorkflowTransitionDTO,
-  WorkflowAuditLogDTO,
-  WorkflowMetricsDTO,
-  WorkflowTemplateDTO,
-  WorkflowSessionDTO,
-  ProjectCreationWorkflowDTO,
-  ProjectBasicInfoDTO,
-  ProjectStakeholdersDTO,
-  ProjectLocationDTO,
-  ProjectPlanningDTO,
-  ProjectRisksDTO,
-  ProjectComplianceDTO,
-  ProjectValidationDTO,
-  StepProgressDTO,
-  ValidationResult,
-  SaveResult,
-  ProjectDTO,
-  StepRelatedDataDTO,
-  WorkflowMetadataDTO,
-  ComplianceDataDTO,
-  TaskFormDataDTO,
-  RiskFormDataDTO,
-  MaterialFormDataDTO,
-  EmployeeFormDataDTO,
-  InspectionFormDataDTO,
-  DocumentFormDataDTO
-} from '@/dtos/workflows/ProjectWorkflowDTOs';
-
 // Additional type exports for components - aligned with useBankGuaranteesHex
-export type { MaterialDTO as MaterialOption } from '@/dtos/transforms';
+export type { MaterialDTO as MaterialOption } from '@/dtos/entities';
 
 // Missing types for components
-export type { InspectionDTO as InspectionData } from '@/dtos/transforms';
-export type { PhaseDTO as ProjectPhase } from '@/dtos/transforms';
-export type { TaskDTO as ProjectTask } from '@/dtos/transforms';
+export type { InspectionDTO as InspectionData } from '@/dtos/entities';
+export type { PhaseDTO as ProjectPhase } from '@/dtos/entities';
+export type { TaskDTO as ProjectTask } from '@/dtos/entities';
 export type { EmployeeDTO as Employee } from '@/dtos/entities';
 
 // Selector option types for components

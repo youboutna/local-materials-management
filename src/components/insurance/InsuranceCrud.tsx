@@ -10,28 +10,38 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Eye, Shield, AlertTriangle, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { InsuranceService } from '@/application/services/InsuranceService';
+import { useInsuranceCertificatesHex } from '@/hooks/hexagonal';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
+import { InsuranceCertificateDTO } from '@/dtos/entities/InsuranceCertificateDTO';
 
-// Local form data interface matching component needs
+// Local form data interface matching component needs (Rule #2: camelCase)
 interface InsuranceFormData {
-  project_id: string;
-  contractor_id: string;
-  contractor_name: string;
-  coverage_type: string;
-  insurance_company: string;
-  policy_number: string;
-  coverage_amount: number;
-  valid_from: string;
-  valid_until: string;
+  projectId: string;
+  contractorId: string;
+  contractorName: string;
+  coverageType: string;
+  insuranceCompany: string;
+  policyNumber: string;
+  coverageAmount: number;
+  startDate: string;
+  endDate: string;
   status: string;
-  notes: string;
+  notes?: string;
 }
 
 // Local certificate type for display
 interface LocalInsuranceCertificate {
   id: string;
+  projectId: string;
+  contractorId: string;
+  contractorName: string;
+  coverageType: string;
+  insuranceCompany: string;
+  policyNumber: string;
+  coverageAmount: number;
+  startDate: string;
+  endDate: string;
   project_id: string;
   contractor_id: string;
   contractor_name: string;
@@ -54,15 +64,15 @@ const InsuranceCrud: React.FC = () => {
   const { toast } = useToast();
 
   const [formData, setFormData] = useState<InsuranceFormData>({
-    project_id: '',
-    contractor_id: '',
-    contractor_name: '',
-    coverage_type: '',
-    insurance_company: '',
-    policy_number: '',
-    coverage_amount: 0,
-    valid_from: '',
-    valid_until: '',
+    projectId: '',
+    contractorId: '',
+    contractorName: '',
+    coverageType: '',
+    insuranceCompany: '',
+    policyNumber: '',
+    coverageAmount: 0,
+    startDate: '',
+    endDate: '',
     status: 'active',
     notes: ''
   });
@@ -84,15 +94,15 @@ const InsuranceCrud: React.FC = () => {
 
   const resetForm = () => {
     setFormData({
-      project_id: '',
-      contractor_id: '',
-      contractor_name: '',
-      coverage_type: '',
-      insurance_company: '',
-      policy_number: '',
-      coverage_amount: 0,
-      valid_from: '',
-      valid_until: '',
+      projectId: '',
+      contractorId: '',
+      contractorName: '',
+      coverageType: '',
+      insuranceCompany: '',
+      policyNumber: '',
+      coverageAmount: 0,
+      startDate: '',
+      endDate: '',
       status: 'active',
       notes: ''
     });
@@ -107,15 +117,15 @@ const InsuranceCrud: React.FC = () => {
 
   const openEditForm = (certificate: LocalInsuranceCertificate) => {
     setFormData({
-      project_id: certificate.project_id,
-      contractor_id: certificate.contractor_id,
-      contractor_name: certificate.contractor_name,
-      coverage_type: certificate.coverage_type,
-      insurance_company: certificate.insurance_company,
-      policy_number: certificate.policy_number,
-      coverage_amount: certificate.coverage_amount,
-      valid_from: certificate.valid_from,
-      valid_until: certificate.valid_until,
+      projectId: certificate.projectId,
+      contractorId: certificate.contractorId,
+      contractorName: certificate.contractorName,
+      coverageType: certificate.coverageType,
+      insuranceCompany: certificate.insuranceCompany,
+      policyNumber: certificate.policyNumber,
+      coverageAmount: certificate.coverageAmount,
+      startDate: certificate.startDate,
+      endDate: certificate.endDate,
       status: certificate.status,
       notes: certificate.notes || ''
     });
@@ -127,15 +137,15 @@ const InsuranceCrud: React.FC = () => {
 
   const openViewForm = (certificate: LocalInsuranceCertificate) => {
     setFormData({
-      project_id: certificate.project_id,
-      contractor_id: certificate.contractor_id,
-      contractor_name: certificate.contractor_name,
-      coverage_type: certificate.coverage_type,
-      insurance_company: certificate.insurance_company,
-      policy_number: certificate.policy_number,
-      coverage_amount: certificate.coverage_amount,
-      valid_from: certificate.valid_from,
-      valid_until: certificate.valid_until,
+      projectId: certificate.projectId,
+      contractorId: certificate.contractorId,
+      contractorName: certificate.contractorName,
+      coverageType: certificate.coverageType,
+      insuranceCompany: certificate.insuranceCompany,
+      policyNumber: certificate.policyNumber,
+      coverageAmount: certificate.coverageAmount,
+      startDate: certificate.startDate,
+      endDate: certificate.endDate,
       status: certificate.status,
       notes: certificate.notes || ''
     });
@@ -157,15 +167,15 @@ const InsuranceCrud: React.FC = () => {
         });
       } else {
         await insuranceService.createInsuranceCertificate({
-          projectId: formData.project_id,
-          contractorId: formData.contractor_id,
-          contractorName: formData.contractor_name,
-          insuranceType: formData.coverage_type,
-          insuranceCompany: formData.insurance_company,
-          policyNumber: formData.policy_number,
-          coverageAmount: formData.coverage_amount,
-          validFrom: formData.valid_from,
-          validUntil: formData.valid_until,
+          projectId: formData.projectId,
+          contractorId: formData.contractorId,
+          contractorName: formData.contractorName,
+          insuranceType: formData.coverageType,
+          insuranceCompany: formData.insuranceCompany,
+          policyNumber: formData.policyNumber,
+          coverageAmount: formData.coverageAmount,
+          validFrom: formData.startDate,
+          validUntil: formData.endDate,
           notes: formData.notes
         });
       }
@@ -223,14 +233,14 @@ const InsuranceCrud: React.FC = () => {
   };
 
   const handleProjectChange = (projectId: string | undefined) => {
-    setFormData(prev => ({ ...prev, project_id: projectId || '' }));
+    setFormData(prev => ({ ...prev, projectId: projectId || '' }));
   };
 
   const handleSupplierChange = (supplier: { id?: string; name: string; contact: string; leadTime: number }) => {
     setFormData(prev => ({ 
       ...prev, 
-      contractor_id: supplier.id || '',
-      contractor_name: supplier.name || ''
+      contractorId: supplier.id || '',
+      contractorName: supplier.name || ''
     }));
   };
 
@@ -255,7 +265,7 @@ const InsuranceCrud: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <ProjectSelector
-                  value={formData.project_id}
+                  value={formData.projectId}
                   onChange={handleProjectChange}
                   label="Projet"
                   required
@@ -265,13 +275,14 @@ const InsuranceCrud: React.FC = () => {
                 <div>
                   <SupplierSelector
                     value={{ 
-                      id: formData.contractor_id,
-                      name: formData.contractor_name,
+                      id: formData.contractorId,
+                      name: formData.contractorName,
                       contact: '',
                       leadTime: 0
                     }}
                     onChange={handleSupplierChange}
-                    allowCustom={true}
+                    label="Contracteur"
+                    required
                     disabled={isViewMode}
                   />
                 </div>
@@ -279,11 +290,11 @@ const InsuranceCrud: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="insurance_company">Compagnie d'assurance *</Label>
+                  <Label htmlFor="insuranceCompany">Compagnie d'assurance *</Label>
                   <Input
-                    id="insurance_company"
-                    value={formData.insurance_company}
-                    onChange={(e) => setFormData(prev => ({ ...prev, insurance_company: e.target.value }))}
+                    id="insuranceCompany"
+                    value={formData.insuranceCompany}
+                    onChange={(e) => setFormData(prev => ({ ...prev, insuranceCompany: e.target.value }))}
                     required
                     disabled={isViewMode}
                     placeholder="Nom de la compagnie"
@@ -291,11 +302,11 @@ const InsuranceCrud: React.FC = () => {
                 </div>
                 
                 <div>
-                  <Label htmlFor="policy_number">Numéro de police *</Label>
+                  <Label htmlFor="policyNumber">Numéro de police *</Label>
                   <Input
-                    id="policy_number"
-                    value={formData.policy_number}
-                    onChange={(e) => setFormData(prev => ({ ...prev, policy_number: e.target.value }))}
+                    id="policyNumber"
+                    value={formData.policyNumber}
+                    onChange={(e) => setFormData(prev => ({ ...prev, policyNumber: e.target.value }))}
                     required
                     disabled={isViewMode}
                     placeholder="Numéro de police d'assurance"
@@ -305,10 +316,10 @@ const InsuranceCrud: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="coverage_type">Type de couverture *</Label>
+                  <Label htmlFor="coverageType">Type de couverture *</Label>
                   <Select 
-                    value={formData.coverage_type} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, coverage_type: value }))}
+                    value={formData.coverageType} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, coverageType: value }))}
                     disabled={isViewMode}
                   >
                     <SelectTrigger>
@@ -325,14 +336,14 @@ const InsuranceCrud: React.FC = () => {
                 </div>
                 
                 <div>
-                  <Label htmlFor="coverage_amount">Montant couvert (MRU) *</Label>
+                  <Label htmlFor="coverageAmount">Montant couvert (MRU) *</Label>
                   <Input
-                    id="coverage_amount"
+                    id="coverageAmount"
                     type="number"
                     min="0"
                     step="0.01"
-                    value={formData.coverage_amount}
-                    onChange={(e) => setFormData(prev => ({ ...prev, coverage_amount: parseFloat(e.target.value) || 0 }))}
+                    value={formData.coverageAmount}
+                    onChange={(e) => setFormData(prev => ({ ...prev, coverageAmount: parseFloat(e.target.value) || 0 }))}
                     required
                     disabled={isViewMode}
                   />
@@ -361,24 +372,24 @@ const InsuranceCrud: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="valid_from">Date de début *</Label>
+                  <Label htmlFor="startDate">Date de début *</Label>
                   <Input
-                    id="valid_from"
+                    id="startDate"
                     type="date"
-                    value={formData.valid_from}
-                    onChange={(e) => setFormData(prev => ({ ...prev, valid_from: e.target.value }))}
+                    value={formData.startDate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
                     required
                     disabled={isViewMode}
                   />
                 </div>
                 
                 <div>
-                  <Label htmlFor="valid_until">Date d'expiration *</Label>
+                  <Label htmlFor="endDate">Date d'expiration *</Label>
                   <Input
-                    id="valid_until"
+                    id="endDate"
                     type="date"
-                    value={formData.valid_until}
-                    onChange={(e) => setFormData(prev => ({ ...prev, valid_until: e.target.value }))}
+                    value={formData.endDate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
                     required
                     disabled={isViewMode}
                   />
@@ -434,20 +445,20 @@ const InsuranceCrud: React.FC = () => {
               {certificates.map((certificate) => (
                 <TableRow key={certificate.id}>
                   <TableCell className="font-medium">
-                    {certificate.project_id}
+                    {certificate.projectId}
                   </TableCell>
-                  <TableCell>{certificate.contractor_name || certificate.contractor_id}</TableCell>
+                  <TableCell>{certificate.contractorName || certificate.contractorId}</TableCell>
                   <TableCell>
-                    {coverageTypes.find(t => t.value === certificate.coverage_type)?.label || certificate.coverage_type}
+                    {coverageTypes.find(t => t.value === certificate.coverageType)?.label || certificate.coverageType}
                   </TableCell>
-                  <TableCell>{certificate.policy_number}</TableCell>
+                  <TableCell>{certificate.policyNumber}</TableCell>
                   <TableCell>
-                    {certificate.coverage_amount.toLocaleString()} MRU
+                    {certificate.coverageAmount.toLocaleString()} MRU
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      {new Date(certificate.valid_until).toLocaleDateString('fr-FR')}
-                      {isExpiringSoon(certificate.valid_until) && (
+                      {new Date(certificate.endDate).toLocaleDateString('fr-FR')}
+                      {isExpiringSoon(certificate.endDate) && (
                         <AlertTriangle className="h-4 w-4 text-orange-500" />
                       )}
                     </div>

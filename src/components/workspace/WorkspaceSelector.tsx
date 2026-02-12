@@ -15,26 +15,28 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Location, OperationalStatus } from '@/dtos/entities/ProjectDTO';
+import { MAURITANIA_REGIONS } from '@/types/mauritania';
+import { getAllGeographicUnits, getRegionsWithCapitals, getRegionsWithPorts, getRegionsWithUniversities } from '@/utils/mauritaniaUtils';
+import { GeographicUnit } from '@/types/mauritania';
+import LocationAutocomplete from '../location/LocationAutocomplete';
+import { WorkspaceDTO } from '@/dtos/entities/WorkspaceDTO';
+import { OperationalStatus } from '@/domain/entities/Workspace';
 
-interface Workspace {
-  id: string;
-  name: string;
-  location: Location;
-  status: OperationalStatus;
-  contact?: {
-    manager: string;
-    phone: string;
-  };
-  facilities?: string[];
-}
 
 interface WorkspaceSelectorProps {
-  workspaces: Workspace[];
+  workspaces: WorkspaceDTO[];
   selectedWorkspaceId?: string;
   onWorkspaceChange: (workspaceId: string) => void;
-  onLocationChange?: (workspace: Workspace) => void;
+  onLocationChange?: (workspace: WorkspaceDTO) => void;
+  onLocationSearch?: (locationData: {
+    address?: string;
+    latitude?: number;
+    longitude?: number;
+    regionCode?: string;
+    cityCode?: string;
+  }) => void;
   showDetails?: boolean;
+  showLocationSearch?: boolean;
 }
 
 const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
@@ -42,10 +44,26 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
   selectedWorkspaceId,
   onWorkspaceChange,
   onLocationChange,
-  showDetails = false
+  onLocationSearch,
+  showDetails = false,
+  showLocationSearch = false
 }) => {
   const [open, setOpen] = useState(false);
   const selectedWorkspace = workspaces.find(w => w.id === selectedWorkspaceId);
+
+  const regions = getRegionsWithCapitals();
+  
+  const handleRegionSelect = (regionCode: string) => {
+    const region = getRegionsWithCapitals().find(r => r.code === regionCode);
+    if (!region) return undefined;
+    
+    console.log(`Selected region: ${region.name} (${region.code})`);
+    toast({
+      title: "Région sélectionnée",
+      description: `Vous avez sélectionné la région: ${region.name}`,
+      variant: "default"
+    });
+  };
 
   const handleWorkspaceChange = (workspaceId: string) => {
     const workspace = workspaces.find(w => w.id === workspaceId);
@@ -58,8 +76,9 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
     setOpen(false);
   };
 
-  const getStatusIcon = (status: OperationalStatus) => {
-    switch (status) {
+  const getStatusIcon = (status?: string | OperationalStatus) => {
+    const statusValue = status as OperationalStatus;
+    switch (statusValue) {
       case OperationalStatus.active:
         return <CheckCircle className="h-4 w-4 text-green-600" />;
       case OperationalStatus.inactive:
@@ -71,8 +90,9 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
     }
   };
 
-  const getStatusLabel = (status: OperationalStatus) => {
-    switch (status) {
+  const getStatusLabel = (status?: string | OperationalStatus) => {
+    const statusValue = status as OperationalStatus;
+    switch (statusValue) {
       case OperationalStatus.active:
         return 'Actif';
       case OperationalStatus.inactive:
@@ -84,8 +104,9 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
     }
   };
 
-  const getStatusColor = (status: OperationalStatus) => {
-    switch (status) {
+  const getStatusColor = (status?: string | OperationalStatus) => {
+    const statusValue = status as OperationalStatus;
+    switch (statusValue) {
       case OperationalStatus.active:
         return 'bg-green-100 text-green-800 border-green-200';
       case OperationalStatus.inactive:
@@ -198,6 +219,28 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
           </p>
         )}
       </div>
+
+      {showLocationSearch && (
+        <div className="mt-4">
+          <LocationAutocomplete
+            value=""
+            onChange={(address, locationData) => {
+              if (onLocationSearch && locationData) {
+                onLocationSearch({
+                  address,
+                  latitude: locationData.coordinates?.lat,
+                  longitude: locationData.coordinates?.lng,
+                  regionCode: locationData.type === 'region' ? locationData.code : locationData.parentCode,
+                  cityCode: locationData.type === 'city' ? locationData.code : undefined
+                });
+              }
+            }}
+            placeholder="Rechercher une localisation pour les espaces de travail..."
+            filter="all"
+            className="w-full"
+          />
+        </div>
+      )}
 
       {showDetails && selectedWorkspace && (
         <Card>

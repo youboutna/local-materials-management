@@ -1,6 +1,8 @@
 // Domain Entity: Material
 // Pure business logic without infrastructure concerns
 
+import { GeographicUnit } from "@/types/mauritania";
+
 export type MaterialCategory = 
   | 'construction' 
   | 'building'
@@ -12,142 +14,100 @@ export type MaterialCategory =
   | 'safety' 
   | 'tools'
   | 'other';
-
+export interface MaterialImage {
+  id: string;
+  url: string;
+  materialId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
 export class Material {
   // Private fields for encapsulation
   private _id: string;
   private _name: string;
-  private _description: string;
-  private _category: MaterialCategory;
+  private _description?: string;
+  private _quantity: number;
   private _unit: string;
+  private _minQuantity: number;
+  private _workspaceId: string;
+  private _location: GeographicUnit;
+  private _timeline?: {
+    start: Date;
+    end: Date;
+    estimatedDuration?: number;
+  };
+  private _lastRestock: Date;
+  private _supplier?: {
+    name: string;
+    contact: string;
+    leadTime: number;
+  };
+  private _images: MaterialImage[];
   private _pricePerUnit: number;
   private _availableQuantity: number;
-  private _sku: string | null;
-  private _ean: string | null;
-  private _gtin: string | null;
-  private _asin: string | null;
-  private _image: string | null;
-  private _coordinates: { latitude: number; longitude: number } | null;
-  private _workspaceId: string | null;
-  private _createdAt: string;
-  private _updatedAt: string;
-  // Extended fields for Materials page compatibility
-  private _originLocation: string | null;
-  private _adresse: any = null;
-  private _coordinatesLatitude: number | null;
-  private _coordinatesLongitude: number | null;
-  private _forme: string | null;
-  private _localisation: any = null;
+  private _originLocation?: string;
+  private _category: MaterialCategory;
+  private _localisation: GeographicUnit[];
+  private _forme?: "polygon" | "rectangle" | "circle";
+  private _adresse?: string;
+  private _createdAt: Date;
+  private _updatedAt: Date;
 
   constructor(
     id: string,
     name: string,
-    description: string,
-    category: MaterialCategory,
+    quantity: number,
     unit: string,
-    pricePerUnit: number,
-    availableQuantity: number,
-    sku: string | null,
-    ean: string | null,
-    gtin: string | null,
-    asin: string | null,
-    image: string | null,
-    coordinates: { latitude: number; longitude: number } | null,
-    workspaceId: string | null,
-    createdAt: string,
-    updatedAt: string,
-    originLocation: string | null = null,
-    adresse: any = null,
-    coordinatesLatitude: number | null = null,
-    coordinatesLongitude: number | null = null,
-    forme: string | null = null,
-    localisation: any = null
+    workspaceId: string,
+    location: GeographicUnit,
+    description?: string,
+    minQuantity?: number,
+    timeline?: {
+      start: Date;
+      end: Date;
+      estimatedDuration?: number;
+    },
+    lastRestock?: Date,
+    supplier?: {
+      name: string;
+      contact: string;
+      leadTime: number;
+    },
+    images?: MaterialImage[],
+    pricePerUnit?: number,
+    availableQuantity?: number,
+    originLocation?: string,
+    category?: MaterialCategory,
+    localisation?: GeographicUnit[],
+    forme?: "polygon" | "rectangle" | "circle",
+    adresse?: string,
+    createdAt?: Date,
+    updatedAt?: Date
   ) {
-    // Validate and assign private fields
     this._id = this.validateId(id);
     this._name = this.validateName(name);
     this._description = description;
-    this._category = this.validateCategory(category);
+    this._quantity = this.validateQuantity(quantity);
     this._unit = this.validateUnit(unit);
-    this._pricePerUnit = this.validatePricePerUnit(pricePerUnit);
-    this._availableQuantity = this.validateAvailableQuantity(availableQuantity);
-    this._sku = sku;
-    this._ean = ean;
-    this._gtin = gtin;
-    this._asin = asin;
-    this._image = image;
-    this._coordinates = coordinates;
-    this._workspaceId = workspaceId;
-    this._createdAt = createdAt;
-    this._updatedAt = updatedAt;
+    this._minQuantity = minQuantity || 0;
+    this._workspaceId = this.validateWorkspaceId(workspaceId);
+    this._location = location;
+    this._timeline = timeline;
+    this._lastRestock = lastRestock || new Date();
+    this._supplier = supplier;
+    this._images = images || [];
+    this._pricePerUnit = pricePerUnit || 0;
+    this._availableQuantity = availableQuantity || 0;
     this._originLocation = originLocation;
-    this._adresse = adresse;
-    this._coordinatesLatitude = coordinatesLatitude;
-    this._coordinatesLongitude = coordinatesLongitude;
+    this._category = category || 'other';
+    this._localisation = localisation || [];
     this._forme = forme;
-    this._localisation = localisation;
+    this._adresse = adresse;
+    this._createdAt = createdAt || new Date();
+    this._updatedAt = updatedAt || new Date();
   }
 
-  // ============= Getters =============
-  get id(): string { return this._id; }
-  get name(): string { return this._name; }
-  get description(): string { return this._description; }
-  get category(): MaterialCategory { return this._category; }
-  get unit(): string { return this._unit; }
-  get pricePerUnit(): number { return this._pricePerUnit; }
-  get availableQuantity(): number { return this._availableQuantity; }
-  get sku(): string | null { return this._sku; }
-  get ean(): string | null { return this._ean; }
-  get gtin(): string | null { return this._gtin; }
-  get asin(): string | null { return this._asin; }
-  get image(): string | null { return this._image; }
-  get coordinates(): { latitude: number; longitude: number } | null { return this._coordinates; }
-  get workspaceId(): string | null { return this._workspaceId; }
-  get createdAt(): string { return this._createdAt; }
-  get updatedAt(): string { return this._updatedAt; }
-  get originLocation(): string | null { return this._originLocation; }
-  get adresse(): any { return this._adresse; }
-  get coordinatesLatitude(): number | null { return this._coordinatesLatitude; }
-  get coordinatesLongitude(): number | null { return this._coordinatesLongitude; }
-  get forme(): string | null { return this._forme; }
-  get localisation(): any { return this._localisation; }
-
-  // ============= Getters with Business Logic =============
-  get displayName(): string {
-    return this._name || `Material-${this._id}`;
-  }
-
-  getFormattedPrice(): string {
-    return new Intl.NumberFormat('fr-MR', {
-      style: 'currency',
-      currency: 'MRU'
-    }).format(this._pricePerUnit);
-  }
-
-  getTotalValue(): number {
-    return this._availableQuantity * this._pricePerUnit;
-  }
-
-  isInStock(): boolean {
-    return this._availableQuantity > 0;
-  }
-
-  // ============= Setters with Validation =============
-  set name(value: string) { 
-    this._name = this.validateName(value); 
-    this._updatedAt = new Date().toISOString();
-  }
-  
-  set description(value: string) { 
-    this._description = value; 
-    this._updatedAt = new Date().toISOString();
-  }
-  
-  set category(value: MaterialCategory) { 
-    this._category = this.validateCategory(value); 
-    this._updatedAt = new Date().toISOString();
-  }
-  
+  // Validation methods
   set unit(value: string) { 
     this._unit = this.validateUnit(value); 
     this._updatedAt = new Date().toISOString();

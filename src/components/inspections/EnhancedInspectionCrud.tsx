@@ -13,53 +13,34 @@ import { Plus, Eye, Edit, Trash2, CheckCircle, AlertCircle, Clock, FileText, Ext
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import { format } from 'date-fns';
 import { useEnhancedInspectionCrudHex } from '@/hooks/hexagonal';
-import type { InspectionStatus } from '@/domain/entities/Inspection';
-
-// Local interfaces matching snake_case from database
-interface LocalInspectionDTO {
-  id: string;
-  project_id?: string;
-  projectId?: string;
-  date?: string;
-  status: string;
-  inspector: string;
-  progress_at_inspection?: number;
-  progressAtInspection?: number;
-  comments?: string | null;
-  phase_id?: string | null;
-  phaseId?: string | null;
-  documents?: any;
-  created_at?: string;
-  createdAt?: string;
-  updated_at?: string;
-  updatedAt?: string;
-}
+import { InspectionDTO, InspectionStatus } from '@/dtos/entities/InspectionDTO';
+import type { InspectionStatus, InspectionDTO } from '@/dtos/entities/InspectionDTO';
 
 interface LocalInspectionFormData {
-  project_id: string;
+  projectId: string;
   inspector: string;
   date: string;
   status: string;
-  progress_at_inspection: number;
+  progressAtInspection: number;
   comments: string;
-  phase_id: string;
+  phaseId: string;
 }
 
 const EnhancedInspectionCrud = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isViewMode, setIsViewMode] = useState(false);
-  const [selectedInspection, setSelectedInspection] = useState<LocalInspectionDTO | null>(null);
+  const [selectedInspection, setSelectedInspection] = useState<InspectionDTO | null>(null);
   const [uploadedDocuments, setUploadedDocuments] = useState<any[]>([]);
 
   const [formData, setFormData] = useState<LocalInspectionFormData>({
-    project_id: '',
+    projectId: '',
     inspector: '',
     date: '',
     status: 'scheduled',
-    progress_at_inspection: 0,
+    progressAtInspection: 0,
     comments: '',
-    phase_id: '',
+    phaseId: '',
   });
 
   // Use hexagonal hook
@@ -86,13 +67,13 @@ const EnhancedInspectionCrud = () => {
 
   const resetForm = () => {
     setFormData({
-      project_id: '',
+      projectId: '',
       inspector: '',
       date: '',
-      status: 'scheduled',
-      progress_at_inspection: 0,
+      status: 'scheduled' as InspectionStatus,
+      progressAtInspection: 0,
       comments: '',
-      phase_id: '',
+      phaseId: ''
     });
     setUploadedDocuments([]);
     setSelectedInspection(null);
@@ -100,20 +81,20 @@ const EnhancedInspectionCrud = () => {
     setIsViewMode(false);
   };
 
-  const openEditForm = (inspection: LocalInspectionDTO) => {
-    const projectId = inspection.project_id || inspection.projectId || '';
-    const date = inspection.date ? new Date(inspection.date).toISOString().split('T')[0] : '';
-    const progress = inspection.progress_at_inspection ?? inspection.progressAtInspection ?? 0;
-    const phaseId = inspection.phase_id || inspection.phaseId || '';
+  const openEditForm = (inspection: InspectionDTO) => {
+    const projectId = inspection.projectId || '';
+    const date = inspection.scheduledDate ? new Date(inspection.scheduledDate).toISOString().split('T')[0] : '';
+    const progress = inspection.progress ?? 0;
+    const phaseId = inspection.phaseId || '';
     
     setFormData({
-      project_id: projectId,
+      projectId: projectId,
       inspector: inspection.inspector,
       date: date,
       status: inspection.status,
-      progress_at_inspection: progress,
-      comments: inspection.comments || '',
-      phase_id: phaseId,
+      progressAtInspection: progress,
+      comments: inspection.description || '',
+      phaseId: phaseId,
     });
     setSelectedInspection(inspection);
     setIsEditing(true);
@@ -121,20 +102,20 @@ const EnhancedInspectionCrud = () => {
     setIsFormOpen(true);
   };
 
-  const openViewForm = (inspection: LocalInspectionDTO) => {
-    const projectId = inspection.project_id || inspection.projectId || '';
+  const openViewForm = (inspection: InspectionDTO) => {
+    const projectId = inspection.projectId || '';
     const date = inspection.date ? new Date(inspection.date).toISOString().split('T')[0] : '';
-    const progress = inspection.progress_at_inspection ?? inspection.progressAtInspection ?? 0;
-    const phaseId = inspection.phase_id || inspection.phaseId || '';
+    const progress = inspection.progress ?? 0;
+    const phaseId = inspection.phaseId || '';
     
     setFormData({
-      project_id: projectId,
-      inspector: inspection.inspector,
+      projectId: projectId,
+      inspector: inspection.inspector || '',
       date: date,
       status: inspection.status,
-      progress_at_inspection: progress,
-      comments: inspection.comments || '',
-      phase_id: phaseId,
+      progressAtInspection: progress,
+      comments: inspection.description || '',
+      phaseId: phaseId,
     });
     setSelectedInspection(inspection);
     setIsEditing(false);
@@ -147,19 +128,31 @@ const EnhancedInspectionCrud = () => {
     
     try {
       const inspectionData = {
-        projectId: formData.project_id,
+        projectId: formData.projectId,
         inspector: formData.inspector,
         date: formData.date,
         status: formData.status as InspectionStatus,
-        progressAtInspection: formData.progress_at_inspection,
+        progressAtInspection: formData.progressAtInspection,
         comments: formData.comments,
-        phaseId: formData.phase_id || undefined,
+        phaseId: formData.phaseId || undefined,
       };
-
       if (isEditing && selectedInspection) {
-        await updateInspection(selectedInspection.id, inspectionData as any);
+        await updateInspection(selectedInspection.id, {
+          status: formData.status as InspectionStatus,
+          notes: formData.comments
+        });
       } else {
-        await createInspection(inspectionData as any);
+        const inspectionData: CreateInspectionDTO = {
+          title: formData.title,
+          description: formData.description,
+          projectId: formData.projectId,
+          inspector: formData.inspector,
+          status: formData.status as InspectionStatus,
+          progress: formData.progressAtInspection,
+          comments: formData.comments,
+          phaseId: formData.phaseId
+        };
+        await createInspection(inspectionData);
       }
 
       setIsFormOpen(false);
@@ -179,27 +172,12 @@ const EnhancedInspectionCrud = () => {
     }
   };
 
-  const handleDocumentSelect = (documents: any[]) => {
+  const handleDocumentSelect = (documents: File[]) => {
     setUploadedDocuments(documents);
   };
 
-  // Cast inspections to local type with dual-casing support
-  const typedInspections: LocalInspectionDTO[] = (inspections || []).map((insp: any) => ({
-    id: insp.id,
-    project_id: insp.project_id || insp.projectId,
-    projectId: insp.projectId || insp.project_id,
-    date: insp.date,
-    status: insp.status,
-    inspector: insp.inspector,
-    progress_at_inspection: insp.progress_at_inspection ?? insp.progressAtInspection,
-    progressAtInspection: insp.progressAtInspection ?? insp.progress_at_inspection,
-    comments: insp.comments,
-    phase_id: insp.phase_id || insp.phaseId,
-    phaseId: insp.phaseId || insp.phase_id,
-    documents: insp.documents,
-    created_at: insp.created_at || insp.createdAt,
-    updated_at: insp.updated_at || insp.updatedAt,
-  }));
+  // Use centralized InspectionDTO directly (Rule #3 compliance)
+  const typedInspections: InspectionDTO[] = inspections || [];
 
   return (
     <Card>
@@ -229,8 +207,8 @@ const EnhancedInspectionCrud = () => {
               <div>
                 <Label>Projet</Label>
                 <ProjectSelector
-                  value={formData.project_id}
-                  onChange={(value) => setFormData(prev => ({ ...prev, project_id: value || '' }))}
+                  value={formData.projectId}
+                  onChange={(value) => setFormData(prev => ({ ...prev, projectId: value || '' }))}
                   disabled={isViewMode}
                 />
               </div>
@@ -284,8 +262,8 @@ const EnhancedInspectionCrud = () => {
                   type="number"
                   min={0}
                   max={100}
-                  value={formData.progress_at_inspection}
-                  onChange={(e) => setFormData(prev => ({ ...prev, progress_at_inspection: parseInt(e.target.value) || 0 }))}
+                  value={formData.progressAtInspection}
+                  onChange={(e) => setFormData(prev => ({ ...prev, progressAtInspection: parseInt(e.target.value) || 0 }))}
                   disabled={isViewMode}
                 />
               </div>
@@ -334,15 +312,15 @@ const EnhancedInspectionCrud = () => {
             <TableBody>
               {typedInspections.map((inspection) => {
                 const statusConfig = getStatusConfig(inspection.status);
-                const projectId = inspection.project_id || inspection.projectId || '';
-                const progress = inspection.progress_at_inspection ?? inspection.progressAtInspection ?? 0;
+                const projectId = inspection.projectId || '';
+                const progress = inspection.progress ?? 0;
                 
                 return (
                   <TableRow key={inspection.id}>
                     <TableCell>{projectId}</TableCell>
                     <TableCell>{inspection.inspector}</TableCell>
                     <TableCell>
-                      {inspection.date && format(new Date(inspection.date), 'dd/MM/yyyy')}
+                      {inspection.scheduledDate && format(new Date(inspection.scheduledDate), 'dd/MM/yyyy')}
                     </TableCell>
                     <TableCell>
                       <Badge className={statusConfig.color}>
