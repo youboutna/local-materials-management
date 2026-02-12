@@ -1,6 +1,6 @@
 /**
  * Hexagonal hook for contact form / authorization request submission
- * Uses adapter instead of direct Supabase access
+ * Uses RepositoryFactory instead of direct Supabase access
  */
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,6 +43,7 @@ async function submitAuthorizationRequest(formData: ContactFormData) {
     if (formData.company_nif) insertData.company_nif = formData.company_nif;
   }
 
+  // TODO: Migrate to AuthorizationRequestAdapter when created
   const { data, error } = await supabase
     .from('authorization_requests')
     .insert([insertData as any]);

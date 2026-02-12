@@ -5,8 +5,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { EmployeeService } from '@/application/services/EmployeeService';
 import { SupplierService } from '@/application/services/SupplierService';
+import { UserService } from '@/application/services/UserService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { supabase } from '@/integrations/supabase/client';
 
 export interface AssigneeDetails {
   type: 'employee' | 'supplier' | 'user' | '';
@@ -45,19 +45,19 @@ async function fetchAssigneeDetails(assigneeId: string): Promise<AssigneeDetails
     };
   }
 
-  // Try profiles (authenticated users)
-  const { data: profileData } = await supabase
-    .from('profiles')
-    .select('full_name')
-    .eq('id', assigneeId)
-    .maybeSingle();
-
-  if (profileData) {
-    return {
-      type: 'user',
-      name: profileData.full_name || 'Utilisateur',
-      email: '',
-    };
+  // Try profiles (authenticated users) via UserService
+  try {
+    const userService = new UserService(RepositoryFactory.getUserRepository());
+    const profile = await userService.getUserById(assigneeId);
+    if (profile) {
+      return {
+        type: 'user',
+        name: (profile as any).full_name || (profile as any).fullName || 'Utilisateur',
+        email: (profile as any).email || '',
+      };
+    }
+  } catch {
+    // Profile not found
   }
 
   return { type: '', name: '', email: '' };

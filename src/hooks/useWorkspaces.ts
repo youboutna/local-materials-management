@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { toast } from '@/hooks/use-toast';
 
 interface WorkspaceData {
@@ -16,44 +16,31 @@ interface WorkspaceData {
 export const useWorkspaces = () => {
   const queryClient = useQueryClient();
 
-  // Fetch workspaces
   const { data: workspaces, isLoading, error } = useQuery({
     queryKey: ['workspaces'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('workspaces')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
+      const repo = RepositoryFactory.getWorkspaceRepository();
+      return await repo.findAll();
     }
   });
 
-  // Create workspace
   const createWorkspace = useMutation({
     mutationFn: async (workspaceData: WorkspaceData) => {
-      const { data, error } = await supabase
-        .from('workspaces')
-        .insert({
-          name: workspaceData.name,
-          location: workspaceData.location,
-          status: workspaceData.status || 'active',
-          contact_manager: workspaceData.contact_manager,
-          contact_phone: workspaceData.contact_phone,
-          facilities: workspaceData.facilities || []
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      const repo = RepositoryFactory.getWorkspaceRepository();
+      return await repo.create({
+        name: workspaceData.name,
+        location: workspaceData.location,
+        status: workspaceData.status || 'active',
+        contact_manager: workspaceData.contact_manager,
+        contact_phone: workspaceData.contact_phone,
+        facilities: workspaceData.facilities || []
+      } as any);
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['workspaces'] });
       toast({
         title: "Espace de travail créé",
-        description: `L'espace de travail "${data.name}" a été créé avec succès.`,
+        description: `L'espace de travail "${data?.name}" a été créé avec succès.`,
       });
     },
     onError: (error) => {
