@@ -9,6 +9,7 @@
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { InspectionStatus } from '@/domain/entities/Inspection';
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
 import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
@@ -172,7 +173,7 @@ export class CheckpointVerificationEngine {
       const inspections = await this.inspectionRepository.findByProjectId(request.projectId);
       
       // Filter approved inspections
-      const approvedInspections = inspections.filter(insp => insp.status === 'approved');
+      const approvedInspections = inspections.filter(insp => insp.status === InspectionStatus.Approved);
       
       // Check if we have approved inspections for the required progress
       const hasRequiredInspection = approvedInspections.some(
@@ -200,7 +201,7 @@ export class CheckpointVerificationEngine {
           id: inspectionId,
           category: 'inspection' as CheckpointCategory,
           title: inspection ? `Inspection: ${inspection.date}` : `Inspection: ${inspectionId}`,
-          status: inspection?.status === 'approved' ? 'verified' : 'pending' as VerificationStatus,
+          status: inspection?.status === InspectionStatus.Approved ? 'verified' : 'pending' as VerificationStatus,
           required: true,
           weight: 0.1,
           reference_id: inspectionId,
