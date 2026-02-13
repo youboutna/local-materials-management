@@ -7,7 +7,8 @@ import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { IInspectionRepository, ChecklistItem as RepoChecklistItem } from '@/domain/repositories/IInspectionRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { Inspection, InspectionStatus as DomainInspectionStatus } from '@/domain/entities/Inspection';
-// Local type definitions to avoid legacy imports
+
+// Local type definitions
 export interface InspectionExecutionData {
   id: string;
   inspectionId: string;
@@ -20,6 +21,17 @@ export interface InspectionExecutionData {
   projectId: string;
   inspector: string;
   date: string;
+  // Extended fields
+  measurements?: unknown[];
+  participants?: unknown[];
+  location?: { latitude: number; longitude: number; address?: string; captured_at?: string };
+  started_at?: Date | string;
+  completed_at?: string;
+  overall_conformity?: ConformityStatus;
+  progress_percentage?: number;
+  summary?: string;
+  recommendations?: string[];
+  corrective_actions_required?: boolean;
 }
 
 export interface InspectionObservation {
@@ -30,6 +42,11 @@ export interface InspectionObservation {
   photo?: string;
   createdAt: string;
   resolvedAt?: string;
+  // Legacy aliases
+  type?: string;
+  category?: string;
+  conformity?: string;
+  created_at?: string;
 }
 
 export interface InspectionDocument {
@@ -39,6 +56,10 @@ export interface InspectionDocument {
   url: string;
   uploadedAt: string;
   uploadedBy: string;
+  size?: number;
+  mime_type?: string;
+  uploaded_at?: string;
+  uploaded_by?: string;
 }
 
 export interface ChecklistItem {
@@ -47,6 +68,7 @@ export interface ChecklistItem {
   description?: string;
   required: boolean;
   completed: boolean;
+  checked?: boolean;
   notes?: string;
   category?: string;
 }
@@ -61,7 +83,6 @@ export const CHECKLIST_TEMPLATES: Record<string, ChecklistItem[]> = {
   ]
 };
 
-// Import existing DTOs from entities
 import { 
   InspectionOperationResultDTO,
   AddMeasurementRequestDTO,
@@ -70,7 +91,6 @@ import {
 } from '@/dtos/entities/InspectionDTO';
 import { CreateDocumentDTO } from '@/dtos/entities/DocumentDTO';
 
-// Request DTOs
 export type StartInspectionRequestDto = {
   inspectionId: string;
   projectId: string;
@@ -78,16 +98,12 @@ export type StartInspectionRequestDto = {
   phaseId?: string;
   stepId?: string;
   comments?: string;
-  location?: {
-    latitude: number;
-    longitude: number;
-    address?: string;
-  };
+  location?: { latitude: number; longitude: number; address?: string };
 };
 
 export type AddObservationRequestDto = {
   inspectionId: string;
-  observation: Omit<InspectionObservation, 'id' | 'created_at'>;
+  observation: Omit<InspectionObservation, 'id' | 'createdAt'>;
 };
 
 export type AddDocumentRequestDto = {
@@ -101,7 +117,6 @@ export type UpdateChecklistItemRequestDto = {
   updates: Partial<ChecklistItem>;
 };
 
-// Convert inspection status to enum for better type safety
 export enum InspectionStatus {
   PENDING = 'pending',
   IN_PROGRESS = 'in_progress',
@@ -113,11 +128,7 @@ export enum InspectionStatus {
   CANCELLED = 'cancelled'
 }
 
-// Status transition validation
-function isValidInspectionStatusTransition(
-  current: string,
-  next: string
-): boolean {
+function isValidInspectionStatusTransition(current: string, next: string): boolean {
   const validTransitions: Record<string, string[]> = {
     'pending': ['in_progress', 'cancelled'],
     'scheduled': ['in_progress', 'cancelled'],
@@ -138,9 +149,6 @@ export class InspectionExecutionService {
     private inspectionRepository: IInspectionRepository = RepositoryFactory.getInspectionRepository()
   ) {}
 
-  /**
-   * Start an inspection
-   */
   async startInspection(request: StartInspectionRequestDto): Promise<InspectionOperationResultDTO> {
     try {
       if (!request.projectId || !request.inspector) {
@@ -156,36 +164,27 @@ export class InspectionExecutionService {
         stepId: request.stepId,
         inspector: request.inspector,
         date: new Date().toISOString(),
-        status: 'in_progress' as DomainInspectionStatus,
+        status: DomainInspectionStatus.InProgress,
         comments: request.comments
       });
 
       await this.inspectionRepository.create({
         id: inspection.id,
-        projectId: inspection.projectId,
-        phaseId: inspection.phaseId ?? undefined,
-        stepId: inspection.stepId ?? undefined,
-        inspector: inspection.inspector,
         date: inspection.date,
         status: inspection.status,
+        inspector: inspection.inspector,
         progressAtInspection: inspection.progressAtInspection,
-        comments: inspection.comments ?? undefined
-      });
+        comments: inspection.comments
+      } as Partial<Inspection>);
       
       return { success: true };
     } catch (error) {
       console.error('InspectionExecutionService.startInspection failed:', error);
-      if (error instanceof AppError) {
-        return { success: false, error: error.message };
-      }
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      return { success: false, error: message };
+      if (error instanceof AppError) return { success: false, error: error.message };
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
 
-  /**
-   * Add an observation to an inspection
-   */
   async addObservation(request: AddObservationRequestDto): Promise<InspectionOperationResultDTO> {
     try {
       if (!request.inspectionId || !request.observation) {
@@ -193,36 +192,27 @@ export class InspectionExecutionService {
       }
 
       const inspection = await this.inspectionRepository.findById(request.inspectionId);
-      if (!inspection) {
-        throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
-      }
+      if (!inspection) throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
 
       const observationId = `obs-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const observation = {
         id: observationId,
         inspectionId: request.inspectionId,
-        type: request.observation.type,
+        type: request.observation.type || 'general',
         description: request.observation.description,
-        severity: request.observation.severity || 'minor',
+        severity: request.observation.severity || 'low',
         status: 'open'
       };
 
       await this.inspectionRepository.addObservation(observation);
-      console.log(`Observation added to inspection: ${request.inspectionId}`);
       return { success: true };
     } catch (error) {
       console.error('InspectionExecutionService.addObservation failed:', error);
-      if (error instanceof AppError) {
-        return { success: false, error: error.message };
-      }
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      return { success: false, error: message };
+      if (error instanceof AppError) return { success: false, error: error.message };
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
 
-  /**
-   * Add a document to an inspection
-   */
   async addDocument(request: AddDocumentRequestDto): Promise<InspectionOperationResultDTO> {
     try {
       if (!request.inspectionId || !request.document) {
@@ -230,9 +220,7 @@ export class InspectionExecutionService {
       }
 
       const inspection = await this.inspectionRepository.findById(request.inspectionId);
-      if (!inspection) {
-        throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
-      }
+      if (!inspection) throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
 
       await this.inspectionRepository.addDocument({
         inspectionId: request.inspectionId,
@@ -241,99 +229,61 @@ export class InspectionExecutionService {
         uploadedBy: 'system'
       });
 
-      console.log(`Document added to inspection: ${request.inspectionId}`);
       return { success: true };
     } catch (error) {
       console.error('InspectionExecutionService.addDocument failed:', error);
-      if (error instanceof AppError) {
-        return { success: false, error: error.message };
-      }
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      return { success: false, error: message };
+      if (error instanceof AppError) return { success: false, error: error.message };
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
 
-  /**
-   * Update a checklist item
-   */
   async updateChecklistItem(request: UpdateChecklistItemRequestDto): Promise<InspectionOperationResultDTO> {
     try {
-      if (!request.inspectionId || !request.itemId || request.updates.checked === undefined) {
+      if (!request.inspectionId || !request.itemId || (request.updates.completed === undefined && request.updates.checked === undefined)) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID, item ID and checked status are required');
       }
 
       const inspection = await this.inspectionRepository.findById(request.inspectionId);
-      if (!inspection) {
-        throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
-      }
+      if (!inspection) throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
 
-      console.log(`Checklist item ${request.itemId} updated in inspection: ${request.inspectionId}`);
       return { success: true };
     } catch (error) {
       console.error('InspectionExecutionService.updateChecklistItem failed:', error);
-      if (error instanceof AppError) {
-        return { success: false, error: error.message };
-      }
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      return { success: false, error: message };
+      if (error instanceof AppError) return { success: false, error: error.message };
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
 
-  /**
-   * Add a measurement to an inspection
-   */
   async addMeasurement(request: AddMeasurementRequestDTO): Promise<InspectionOperationResultDTO> {
     try {
       if (!request.inspectionId || !request.measurement) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID and measurement are required');
       }
-
       const inspection = await this.inspectionRepository.findById(request.inspectionId);
-      if (!inspection) {
-        throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
-      }
-
-      console.log(`Measurement added to inspection: ${request.inspectionId}`);
+      if (!inspection) throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
       return { success: true };
     } catch (error) {
       console.error('InspectionExecutionService.addMeasurement failed:', error);
-      if (error instanceof AppError) {
-        return { success: false, error: error.message };
-      }
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      return { success: false, error: message };
+      if (error instanceof AppError) return { success: false, error: error.message };
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
 
-  /**
-   * Add a participant to an inspection
-   */
   async addParticipant(request: AddParticipantRequestDTO): Promise<InspectionOperationResultDTO> {
     try {
       if (!request.inspectionId || !request.participant) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID and participant are required');
       }
-
       const inspection = await this.inspectionRepository.findById(request.inspectionId);
-      if (!inspection) {
-        throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
-      }
-
-      console.log(`Participant added to inspection: ${request.inspectionId}`);
+      if (!inspection) throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
       return { success: true };
     } catch (error) {
       console.error('InspectionExecutionService.addParticipant failed:', error);
-      if (error instanceof AppError) {
-        return { success: false, error: error.message };
-      }
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      return { success: false, error: message };
+      if (error instanceof AppError) return { success: false, error: error.message };
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
 
-  /**
-   * Complete an inspection
-   */
   async completeInspection(request: CompleteInspectionRequestDTO): Promise<InspectionOperationResultDTO> {
     try {
       if (!request.inspectionId || !request.finalData) {
@@ -341,71 +291,58 @@ export class InspectionExecutionService {
       }
 
       const inspection = await this.inspectionRepository.findById(request.inspectionId);
-      if (!inspection) {
-        throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
-      }
+      if (!inspection) throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
 
-      // Determine status based on conformity
       const newStatus: DomainInspectionStatus = request.finalData.overallConformity === 'conform' 
-        ? 'completed' 
-        : 'requires_changes';
+        ? DomainInspectionStatus.Completed 
+        : DomainInspectionStatus.RequiresChanges;
 
-      // Validate status transition
-      if (!isValidInspectionStatusTransition(inspection.status, newStatus)) {
-        throw new AppError(
-          ErrorCode.VALIDATION_ERROR,
-          `Invalid status transition from ${inspection.status} to ${newStatus}`
-        );
+      const currentStatusStr = inspection.status.toString().toLowerCase();
+      const newStatusStr = newStatus === DomainInspectionStatus.Completed ? 'completed' : 'requires_changes';
+
+      if (!isValidInspectionStatusTransition(currentStatusStr, newStatusStr)) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, `Invalid status transition from ${inspection.status} to ${newStatus}`);
       }
 
-      // Update inspection
       await this.inspectionRepository.update(request.inspectionId, {
         status: newStatus,
-        comments: request.finalData.notes ?? null,
+        comments: request.finalData.notes ?? undefined,
         completedAt: new Date().toISOString()
-      });
+      } as Partial<Inspection>);
 
-      console.log(`Completed inspection: ${request.inspectionId}`);
       return { success: true };
     } catch (error) {
       console.error('InspectionExecutionService.completeInspection failed:', error);
-      if (error instanceof AppError) {
-        return { success: false, error: error.message };
-      }
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      return { success: false, error: message };
+      if (error instanceof AppError) return { success: false, error: error.message };
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
 
-  /**
-   * Get inspection execution data
-   */
   async getInspectionExecution(inspectionId: string): Promise<InspectionExecutionData | null> {
     try {
-      if (!inspectionId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
-      }
+      if (!inspectionId) throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
 
       const inspection = await this.inspectionRepository.findById(inspectionId);
-      if (!inspection) {
-        return null;
-      }
+      if (!inspection) return null;
 
       return {
+        id: inspectionId,
+        inspectionId,
+        status: 'in_progress',
+        progressAtInspection: inspection.progressAtInspection,
+        comments: inspection.comments,
         observations: [],
         documents: [],
         checklist: [],
+        projectId: inspection.projectId || '',
+        inspector: inspection.inspector?.name || '',
+        date: inspection.date,
         measurements: [],
         participants: [],
-        location: {
-          latitude: 0,
-          longitude: 0,
-          address: 'Project Location',
-          captured_at: new Date().toISOString()
-        },
+        location: { latitude: 0, longitude: 0, address: 'Project Location', captured_at: new Date().toISOString() },
         started_at: inspection.createdAt,
         completed_at: inspection.completedAt ?? undefined,
-        overall_conformity: 'conform' as ConformityStatus,
+        overall_conformity: 'conforme' as ConformityStatus,
         progress_percentage: inspection.progress ?? inspection.progressAtInspection ?? 0,
         summary: inspection.comments || '',
         recommendations: [],
@@ -417,28 +354,18 @@ export class InspectionExecutionService {
     }
   }
 
-  /**
-   * Get checklist template for inspection type
-   */
   async getChecklistTemplate(inspectionType: string): Promise<ChecklistItem[]> {
     try {
-      // Use built-in templates from types file
-      return CHECKLIST_TEMPLATES[inspectionType] || CHECKLIST_TEMPLATES['technical'] || [];
+      return CHECKLIST_TEMPLATES[inspectionType] || CHECKLIST_TEMPLATES['standard'] || [];
     } catch (error) {
       console.error('InspectionExecutionService.getChecklistTemplate failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get checklist template');
     }
   }
 
-  /**
-   * Get inspection observations
-   */
   async getInspectionObservations(inspectionId: string): Promise<InspectionObservation[]> {
     try {
-      if (!inspectionId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
-      }
-      
+      if (!inspectionId) throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
       const observations = await this.inspectionRepository.findObservationsByInspectionId(inspectionId);
       return observations.map(obs => ({
         id: obs.id,
@@ -446,7 +373,7 @@ export class InspectionExecutionService {
         category: obs.type,
         description: obs.description,
         severity: obs.severity as InspectionObservation['severity'],
-        conformity: 'partial' as ConformityStatus,
+        conformity: 'partial' as string,
         status: obs.status as InspectionObservation['status'],
         createdAt: obs.createdAt instanceof Date ? obs.createdAt.toISOString() : String(obs.createdAt),
         created_at: obs.createdAt instanceof Date ? obs.createdAt.toISOString() : String(obs.createdAt)
@@ -457,15 +384,9 @@ export class InspectionExecutionService {
     }
   }
 
-  /**
-   * Get inspection documents
-   */
   async getInspectionDocuments(inspectionId: string): Promise<InspectionDocument[]> {
     try {
-      if (!inspectionId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
-      }
-      
+      if (!inspectionId) throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
       const documents = await this.inspectionRepository.findDocumentsByInspectionId(inspectionId);
       return documents.map(doc => ({
         id: doc.id,
@@ -476,8 +397,8 @@ export class InspectionExecutionService {
         mime_type: doc.mimeType || 'application/octet-stream',
         uploaded_at: doc.uploadedAt || new Date().toISOString(),
         uploaded_by: doc.uploadedBy,
-        uploadedAt: doc.uploaded_at || new Date().toISOString(),
-        uploadedBy: doc.uploaded_by
+        uploadedAt: doc.uploadedAt || new Date().toISOString(),
+        uploadedBy: doc.uploadedBy || ''
       }));
     } catch (error) {
       console.error('InspectionExecutionService.getInspectionDocuments failed:', error);
@@ -485,72 +406,7 @@ export class InspectionExecutionService {
     }
   }
 
-  /**
-   * Upload a document to an inspection
-   */
   async uploadDocument(request: AddDocumentRequestDto): Promise<InspectionOperationResultDTO> {
-    try {
-      if (!request.inspectionId || !request.document) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID and document are required');
-      }
-
-      const inspection = await this.inspectionRepository.findById(request.inspectionId);
-      if (!inspection) {
-        throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
-      }
-
-      await this.inspectionRepository.addDocument({
-        inspectionId: request.inspectionId,
-        document: request.document,
-        uploadedAt: new Date().toISOString(),
-        uploadedBy: 'system'
-      });
-
-      console.log(`Document uploaded to inspection: ${request.inspectionId}`);
-      return { success: true };
-    } catch (error) {
-      console.error('InspectionExecutionService.uploadDocument failed:', error);
-      if (error instanceof AppError) {
-        return { success: false, error: error.message };
-      }
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      return { success: false, error: message };
-    }
-  }
-
-  // Static methods for backward compatibility
-  static async getExecutionData(inspectionId: string): Promise<InspectionExecutionData | null> {
-    const service = new InspectionExecutionService();
-    return await service.getInspectionExecution(inspectionId);
-  }
-
-  static async getDefaultChecklist(inspectionType: string): Promise<ChecklistItem[]> {
-    const service = new InspectionExecutionService();
-    return await service.getChecklistTemplate(inspectionType);
-  }
-
-  static async startInspectionStatic(inspectionId: string, location?: { latitude: number; longitude: number; address?: string }): Promise<boolean> {
-    const service = new InspectionExecutionService();
-    const result = await service.startInspection({ 
-      inspectionId, 
-      projectId: '', 
-      inspector: 'system',
-      location
-    });
-    return result.success;
-  }
-
-  static async uploadDocument(inspectionId: string, file: File, documentType: string): Promise<{ success: boolean; documentId?: string }> {
-    const service = new InspectionExecutionService();
-    return service.uploadDocument({ 
-      inspectionId, 
-      document: { 
-        title: file.name, 
-        fileUrl: '', 
-        documentType: documentType,
-        name: file.name,
-        type: documentType
-      } as CreateDocumentDTO
-    });
+    return this.addDocument(request);
   }
 }

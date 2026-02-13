@@ -77,7 +77,6 @@ export class InspectionMonitoringService {
    */
   async createDigitalInspection(data: Omit<InspectionData, 'id' | 'status' | 'findings'>): Promise<InspectionData> {
     try {
-      // Send notification
       await this.notificationService.createNotification({
         recipient_id: data.inspectorId,
         title: 'New Inspection Scheduled',
@@ -110,10 +109,10 @@ export class InspectionMonitoringService {
       const inspections = await this.inspectionRepository.findByProjectId(projectId);
       return inspections.map(inspection => ({
         id: inspection.id,
-        projectId: inspection.projectId,
-        inspectorId: inspection.inspector,
+        projectId: inspection.projectId || projectId,
+        inspectorId: inspection.inspector?.name || '',
         inspectionType: 'standard',
-        status: inspection.status as InspectionStatus,
+        status: inspection.status.toLowerCase() as InspectionStatus,
         scheduledDate: inspection.date,
         location: 'Project site',
         findings: {
@@ -143,10 +142,8 @@ export class InspectionMonitoringService {
         throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
       }
 
-      // Build updates compatible with Inspection entity
-      const updates: Record<string, unknown> = { 
-        status: status as DomainInspectionStatus 
-      };
+      const domainStatus = Inspection.mapStringToStatus(status);
+      const updates: Record<string, unknown> = { status: domainStatus };
       
       if (status === 'approved' || status === 'rejected' || status === 'completed') {
         updates.completedAt = new Date().toISOString();
@@ -160,8 +157,8 @@ export class InspectionMonitoringService {
 
       return {
         id: inspection.id,
-        projectId: inspection.projectId,
-        inspectorId: inspection.inspector,
+        projectId: inspection.projectId || '',
+        inspectorId: inspection.inspector?.name || '',
         inspectionType: 'standard',
         status: status,
         scheduledDate: inspection.date,
