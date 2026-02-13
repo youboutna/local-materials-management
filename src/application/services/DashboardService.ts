@@ -11,6 +11,7 @@ import { DocumentService } from './DocumentService';
 import { PaymentRequestService } from './PaymentRequestService';
 import { InspectionService } from './InspectionService';
 import { SupplierService } from './SupplierService';
+import { InspectionStatus } from '@/domain/entities/Inspection';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import {
   MonitoringConfiguration,
@@ -172,7 +173,7 @@ export class DashboardService {
           averageProjectHealth,
           averageMaterialEfficiency: materialsData.length > 0 ? materialsData.reduce((sum, m) => sum + (m.quantity || 0), 0) / materialsData.length : 0,
           averagePaymentEfficiency: paymentsData.length > 0 ? paymentsData.filter(p => p.status === 'paid').length / paymentsData.length * 100 : 0,
-          averageInspectionCompliance: inspectionsData.length > 0 ? inspectionsData.filter(i => i.status === 'completed').length / inspectionsData.length * 100 : 0,
+          averageInspectionCompliance: inspectionsData.length > 0 ? inspectionsData.filter(i => i.status === InspectionStatus.Approved).length / inspectionsData.length * 100 : 0,
           averageEmployeeProductivity: employeesData.length > 0 ? employeesData.reduce((sum, e) => sum + (String(e.role) === 'project_manager' ? 1 : 0), 0) / employeesData.length * 100 : 0,
           averageSupplierReliability: suppliersData.length > 0 ? suppliersData.filter(s => s.isActive).length / suppliersData.length * 100 : 0,
           averageDocumentCompliance: documentsData.length > 0 ? documentsData.filter(d => d.status === 'approved').length / documentsData.length * 100 : 0,
@@ -195,7 +196,7 @@ export class DashboardService {
           criticalInspections: inspectionsData.filter(i => {
             const inspectionDate = new Date(i.date);
             const daysSinceInspection = Math.floor((Date.now() - inspectionDate.getTime()) / (1000 * 60 * 60 * 24));
-            return i.status !== 'completed' && daysSinceInspection > 7; // Overdue inspections as critical
+            return i.status !== InspectionStatus.Approved && daysSinceInspection > 7; // Overdue inspections as critical
           }).length,
           overloadedEmployees: employeesData.filter(e => String(e.role) === 'project_manager').length, // Managers as proxy for workload
           unreliableSuppliers: suppliersData.filter(s => !s.isActive).length,

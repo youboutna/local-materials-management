@@ -5,6 +5,7 @@
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { InspectionStatus } from '@/domain/entities/Inspection';
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
@@ -210,10 +211,10 @@ export class InspectionApprovalSyncService {
         throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
       }
       
-      await this.inspectionRepository.update(context.inspectionId, {
-        status: context.status as 'approved' | 'rejected' | 'requires_changes',
-        inspector: context.inspector,
-        progressAtInspection: context.progressAtInspection
+       await this.inspectionRepository.update(context.inspectionId, {
+         status: this.mapStatusToEnum(context.status),
+         inspector: { name: context.inspector, agency: '' },
+         progressAtInspection: context.progressAtInspection
       });
       
       console.log(`Inspection ${context.inspectionId} updated with validation documents`);
@@ -270,7 +271,7 @@ export class InspectionApprovalSyncService {
         
         for (const phase of phaseMilestones) {
           // Update milestone status based on inspection approval
-          if (context.status === 'approved') {
+           if (context.status === InspectionStatus.Approved) {
             await this.milestoneRepository.update(phase.id, { 
               status: 'completed'
             });
