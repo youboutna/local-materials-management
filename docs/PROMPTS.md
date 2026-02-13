@@ -1,39 +1,17 @@
 # **PROMPTS.md - Architecture Hexagonale Migration Guide**
 
-## **🚀 ÉTAT DE LA MIGRATION - 9 FÉVRIER 2026**
-
-### **Statistiques de Progression**
-```
-📊 **MÉTRIQUES DE MIGRATION** :
-- **Routes P0 Migrated** : 4/4 ✅ (Projects, ProjectEdit, ProjectDetail, PhaseDetails)
-- **Services Application** : ~35 créés (85%) ✅
-- **Hooks Hexagonaux** : ~20 créés (80%) ✅
-- **Adapters Infrastructure** : ~15 créés (70%) ✅
-- **Appels directs Supabase** : ~20 restants dans composants/hooks ⚠️
-- **Progression globale** : ~75% hexagonal ✅
-```
-
-### **Routes P0 (Priorité Maximale)**
-| Route | Composant | Status |
-|-------|-----------|--------|
-| `/projects/create` | ProjectCreationWorkflow | ✅ Migré |
-| `/projects/:id/edit` | EnhancedProjectEditForm | ✅ Migré |
-| `/projects/:id` | ProjectDetailByDTO | ✅ Migré |
-| `/projects/:projectId/phases/:phaseId` | PhaseDetailsPage | ✅ Migré |
-
----
-
 ## **🎮 RÈGLES D'ARCHITECTURE**
 
 ### **RÈGLE #1 : LA FLÈCHE SACRÉE - Flow de Données**
 ```
+each field in form input and DB must ensure proper management through Model → DTO → Service → Adapter/API flow.
 UI Component → Transformer → DTO (camelCase) → Service → Domain ← Adapter(snake_case) → DB
      ↑                                                                  ↓
      └──────────────────────── Transformer ←────────────────────────────┘
+continue, while paying attention to UI and DB needs. we are in migration focus first to UI
 ```
 
-
- Bonnes Pratiques d'Architecture Hexagonale
+## Bonnes Pratiques d'Architecture Hexagonale##
 📋 Rôles de Chaque Couche
 1. domain entities (domain/*)
 Rôle : Entités métier
@@ -68,13 +46,59 @@ Rôle : Interface pour accéder aux données
 Responsabilité : Définir les contrats pour les données
 Usage : Utilisés par les services
 9.  TypeScript Error Resolution Protocol    :
-    Trace: UI input? DB field? → Decide if persistent
+ START: Error detected in UI-DTO boundary
 
-    Update chain: DB/Entity → Repository → DTOs → Service → adapter/Controller → UI
+↓
 
-    Check: All layers synced? Migration done? Tests passing?
+STEP 1: IDENTIFY SOURCE
+| Database (PostgreSQL) | `snake_case` ? |
+| API Response (JSON) | `camelCase` ?|
+| UI Component | `camelCase`? |
 
-  Rule: If in DB → add everywhere. If UI-only and not input field → don't touch DB/DTOs.
+scan:/src/integrations/supabase/types.ts
+├── Check DB schema
+├── Check API response
+└── Check UI component
+    ├── Check /components/*
+    └── Check /hooks/hexagonal/*
+
+↓
+
+STEP 2: DETERMINE PATH
+├── DB/API change → Follow full chain
+└── UI change → Check if input field
+    ├── Yes → Update DTO + validation
+    └── No → Update UI only
+
+↓
+
+STEP 3: UPDATE LAYERS SEQUENTIALLY
+┌─────────────────────────────────────┐
+│ DB/API → Model → DTO → Service      │
+│              ↓                      │
+│           Adapter → UI               │
+└─────────────────────────────────────┘
+
+↓
+
+STEP 4: VALIDATE EACH TRANSFORMER
+├── Request transformer: UI → DTO → Service
+├── Response transformer: Service → DTO → UI
+└── Test edge cases: null, undefined, partial
+
+↓
+
+STEP 5: VERIFY
+├── Type check passes
+├── UI renders correctly
+├── Inputs submit correctly
+└── Tests pass
+
+↓
+
+END: Error resolved
+
+
 
 ### **RÈGLE #2 : CONVENTIONS DE CASING**
 
@@ -246,7 +270,7 @@ class ProjectService {
 ## **📁 FICHIERS RÉFÉRENTIELS CLÉS**
 
 ### **Configuration**
-- `src/config/referentials/somelec/` - Templates phases SOMELEC
+- `src/config/referentials/somelec/` - Templates phases for infrastructure projects
 - `src/config/constants.ts` - Constantes globales
 
 ### **DTOs Core**
@@ -333,3 +357,9 @@ const data: ProjectDTO = await repository.find(id);
 - `/tender-*` - Appels d'offres
 - `/suppliers` - Fournisseurs
 - `/*-monitor` - Tableaux de bord monitoring
+
+## MORE DOCUMENTATION
+-`docs/CONTEXT.md` - Contexte du projet
+-`docs/TASKS_PLAN.md` - Plan de tâches
+`docs/ARCHITECTURE.md` - Architecture hexagonale détaillée
+- `

@@ -1,4 +1,4 @@
-import { GeographicUnit } from '@/types/mauritania';
+import { GeographicUnit } from '@/utils/mauritania';
 
 export enum OperationalStatus {
   active = "active",

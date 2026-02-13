@@ -250,10 +250,14 @@ export class EnhancedReportingService {
 
   private static async calculateProjectAnalytics(project: ProjectData): Promise<ProjectAnalyticsDTO> {
     try {
+      const phaseRepository = RepositoryFactory.getPhaseRepository();
+      const paymentRepository = RepositoryFactory.getPaymentRepository();
+      const inspectionRepository = RepositoryFactory.getInspectionRepository();
+      
       const [phasesResponse, paymentsResponse, inspectionsResponse] = await Promise.all([
-        supabase.from('project_phases').select('*').eq('project_id', project.id),
-        supabase.from('payments').select('*').eq('project_id', project.id),
-        supabase.from('inspections').select('*').eq('project_id', project.id)
+        phaseRepository.getPhasesByProjectId(project.id),
+        paymentRepository.getPaymentsByProjectId(project.id),
+        inspectionRepository.getInspectionsByProjectId(project.id)
       ]);
 
       const phasesData = phasesResponse.data || [];
@@ -295,12 +299,18 @@ export class EnhancedReportingService {
 
   private static async calculateFinancialMetrics(projectId: string): Promise<FinancialMetricsDTO> {
     try {
+      const paymentRepository = RepositoryFactory.getPaymentRepository();
+      const bankGuaranteeRepository = RepositoryFactory.getBankGuaranteeRepository();
+      const insuranceRepository = RepositoryFactory.getInsuranceRepository();
+      const projectRepository = RepositoryFactory.getProjectRepository();
+      
       const [payments, bankGuarantees, insurance, project, expenses] = await Promise.all([
-        supabase.from('payments').select('*').eq('project_id', projectId),
-        supabase.from('bank_guarantees').select('*').eq('project_id', projectId),
-        supabase.from('insurance_certificates').select('*').eq('project_id', projectId),
-        supabase.from('projects').select('budget, progress').eq('id', projectId).single(),
-        supabase.from('mission_expenses').select('*').eq('mission_id', projectId)
+        paymentRepository.getPaymentsByProjectId(projectId),
+        bankGuaranteeRepository.getBankGuaranteesByProjectId(projectId),
+        insuranceRepository.getInsuranceCertificatesByProjectId(projectId),
+        projectRepository.getProjectById(projectId),
+        // TODO: Create MissionExpenseRepository for mission_expenses
+        { data: [], error: null } // Temporary placeholder for expenses
       ]);
 
       const paymentsData = payments.data || [];

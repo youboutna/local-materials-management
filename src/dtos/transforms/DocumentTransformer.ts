@@ -2,10 +2,9 @@
  * Document Transformer - Hexagonal Architecture
  * Transforms between Document entities and DTOs
  * Following clean architecture principles with proper separation of concerns
- * Includes functionality from DocumentDomainTransformer
  */
 
-import { Document } from '@/domain/entities/Document';
+import { Document ,DocumentStatus, DocumentType} from '@/domain/entities/Document';
 import { DocumentDTO, CreateDocumentDTO, UpdateDocumentDTO } from '@/dtos/entities/DocumentDTO';
 import { EntityToDTOMapper, ValidationResult } from '@/dtos/transforms/shared';
 
@@ -18,25 +17,24 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
   static toDTO(entity: Document): DocumentDTO {
     return {
       id: entity.id,
-      name: entity.name,
-      type: entity.type,
-      url: entity.url,
-      size: entity.size,
-      mimeType: entity.mimeType,
-      projectId: entity.projectId,
-      inspectionId: entity.inspectionId,
-      taskId: entity.taskId,
-      uploadedBy: entity.uploadedBy,
-      uploadedAt: entity.uploadedAt,
+      name: entity.title || undefined,
+      type: entity.documentType || undefined,
+      url: entity.fileUrl || undefined,
+      size: entity.fileSize || undefined,
+      mimeType: entity.mimeType || undefined,
+      projectId: entity.projectId || undefined,
+      inspectionId: entity.inspectionId || undefined,
+            uploadedBy: entity.uploadedBy || undefined,
+      uploadedAt: entity.uploadedBy || undefined,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
-      metadata: entity.metadata,
-      tags: entity.tags,
-      version: entity.version,
-      isPublic: entity.isPublic,
-      downloadCount: entity.downloadCount,
-      lastAccessedAt: entity.lastAccessedAt,
-      expiresAt: entity.expiresAt
+      metadata: entity.metadata || null,
+      tags: entity.tags || undefined,
+      version: undefined, // Not available in entity
+      isPublic: !entity.isInternalOnly || undefined,
+      downloadCount: undefined, // Not available in entity
+      lastAccessedAt: undefined, // Not available in entity
+      expiresAt: entity.deadlineDate || undefined
     };
   }
 
@@ -46,55 +44,64 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
    * Following hexagonal architecture: Presentation → Application → Domain
    */
   static toEntity(dto: DocumentDTO): Document {
-    return {
-      id: dto.id,
-      name: dto.name,
-      type: dto.type,
-      url: dto.url,
-      size: dto.size,
-      mimeType: dto.mimeType,
-      projectId: dto.projectId,
-      inspectionId: dto.inspectionId,
-      taskId: dto.taskId,
-      uploadedBy: dto.uploadedBy,
-      uploadedAt: dto.uploadedAt,
-      createdAt: dto.createdAt,
-      updatedAt: dto.updatedAt,
-      metadata: dto.metadata,
-      tags: dto.tags,
-      version: dto.version,
-      isPublic: dto.isPublic,
-      downloadCount: dto.downloadCount,
-      lastAccessedAt: dto.lastAccessedAt,
-      expiresAt: dto.expiresAt
-    };
+    return new Document(
+      dto.id,
+      dto.projectId || null,
+      dto.phaseId || null,
+      dto.inspectionId || null,
+      dto.paymentId || null,
+      dto.supplierId || null,
+      dto.title || '',
+      dto.description || null,
+      dto.documentType || 'other',
+      dto.fileName || null,
+      dto.fileUrl || null,
+      dto.fileSize || null,
+      dto.mimeType || null,
+      dto.status || 'draft',
+      dto.uploadedBy || null,
+      dto.createdAt || new Date().toISOString(),
+      dto.updatedAt || new Date().toISOString(),
+      dto.tags || null,
+      dto.isInternalOnly || false,
+      dto.isSharedWithSuppliers || false,
+      dto.deadlineDate || null,
+      dto.assignedTo || null,
+      dto.sharedDate || null,
+      dto.metadata || null
+    );
   }
 
   /**
    * Transform CreateDocumentDTO to Document entity
    */
   static fromCreateDTOToEntity(dto: CreateDocumentDTO): Document {
+    const now = new Date().toISOString();
     return {
       id: dto.id || crypto.randomUUID(),
-      name: dto.name,
-      type: dto.type,
-      url: dto.url,
-      size: dto.size || 0,
-      mimeType: dto.mimeType || 'application/octet-stream',
-      projectId: dto.projectId,
-      inspectionId: dto.inspectionId,
-      taskId: dto.taskId,
-      uploadedBy: dto.uploadedBy || '',
-      uploadedAt: dto.uploadedAt || new Date().toISOString(),
-      createdAt: dto.createdAt || new Date().toISOString(),
-      updatedAt: dto.updatedAt || new Date().toISOString(),
-      metadata: dto.metadata || {},
-      tags: dto.tags || [],
-      version: dto.version || 1,
-      isPublic: dto.isPublic !== undefined ? dto.isPublic : false,
-      downloadCount: dto.downloadCount || 0,
-      lastAccessedAt: dto.lastAccessedAt || null,
-      expiresAt: dto.expiresAt || null
+      projectId: dto.projectId || null,
+      phaseId: dto.phaseId || null,
+      inspectionId: dto.inspectionId || null,
+      paymentId: dto.paymentId || null,
+      supplierId: dto.supplierId || null,
+      title: dto.title || '',
+      description: dto.description || null,
+      documentType: dto.documentType as DocumentType, // Proper enum assignment
+      fileName: dto.fileName || null,
+      fileUrl: dto.fileUrl || null,
+      fileSize: dto.fileSize || null,
+      mimeType: dto.mimeType || null,
+      status: 'draft' as DocumentStatus, // Default status
+      uploadedBy: dto.uploadedBy || null,
+      createdAt: dto.createdAt || now,
+      updatedAt: dto.updatedAt || now,
+      tags: dto.tags || null,
+      isInternalOnly: dto.isInternalOnly || false,
+      isSharedWithSuppliers: dto.isSharedWithSuppliers || false,
+      deadlineDate: dto.deadlineDate || null,
+      assignedTo: dto.assignedTo || null,
+      sharedDate: null, // Not set on creation
+      metadata: dto.metadata || null
     };
   }
 
@@ -103,24 +110,29 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
    */
   static fromUpdateDTOToEntity(dto: UpdateDocumentDTO): Partial<Document> {
     return {
-      name: dto.name,
-      type: dto.type,
-      url: dto.url,
-      size: dto.size,
-      mimeType: dto.mimeType,
+      id: undefined, // ID not updated
       projectId: dto.projectId,
+      phaseId: dto.phaseId,
       inspectionId: dto.inspectionId,
-      taskId: dto.taskId,
+      paymentId: dto.paymentId,
+      supplierId: dto.supplierId,
+      title: dto.title,
+      description: dto.description,
+      documentType: dto.documentType as DocumentType, // Proper enum assignment
+      fileName: dto.fileName,
+      fileUrl: dto.fileUrl,
+      fileSize: dto.fileSize,
+      mimeType: dto.mimeType,
+      status: dto.status as DocumentStatus, // Proper enum assignment
       uploadedBy: dto.uploadedBy,
-      uploadedAt: dto.uploadedAt,
-      metadata: dto.metadata,
+      createdAt: undefined, // Not updated
+      updatedAt: new Date().toISOString(),
       tags: dto.tags,
-      version: dto.version,
-      isPublic: dto.isPublic,
-      downloadCount: dto.downloadCount,
-      lastAccessedAt: dto.lastAccessedAt,
-      expiresAt: dto.expiresAt,
-      updatedAt: new Date().toISOString()
+      isInternalOnly: dto.isInternalOnly,
+      isSharedWithSuppliers: dto.isSharedWithSuppliers,
+      deadlineDate: dto.deadlineDate,
+      assignedTo: dto.assignedTo,
+      metadata: dto.metadata
     };
   }
 
@@ -271,23 +283,29 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
 
   toUpdateDto(dto: DocumentDTO): Partial<DocumentDTO> {
     return {
-      name: dto.name,
-      type: dto.type,
-      url: dto.url,
-      size: dto.size,
-      mimeType: dto.mimeType,
-      projectId: dto.projectId,
+      assignedTo: dto.assignedTo,
+      createdAt: dto.createdAt,
+      deadlineDate: dto.deadlineDate,
+      description: dto.description,
+      documentType: dto.documentType,
+      fileName: dto.fileName,
+      fileSize: dto.fileSize,
+      fileUrl: dto.fileUrl,
       inspectionId: dto.inspectionId,
-      taskId: dto.taskId,
-      uploadedBy: dto.uploadedBy,
-      uploadedAt: dto.uploadedAt,
+      isInternalOnly: dto.isInternalOnly,
+      isSharedWithSuppliers: dto.isSharedWithSuppliers,
       metadata: dto.metadata,
+      mimeType: dto.mimeType,
+      paymentId: dto.paymentId,
+      phaseId: dto.phaseId,
+      projectId: dto.projectId,
+      sharedDate: dto.sharedDate,
+      status: dto.status,
+      supplierId: dto.supplierId,
       tags: dto.tags,
-      version: dto.version,
-      isPublic: dto.isPublic,
-      downloadCount: dto.downloadCount,
-      lastAccessedAt: dto.lastAccessedAt,
-      expiresAt: dto.expiresAt
+      title: dto.title,
+      updatedAt: dto.updatedAt,
+      uploadedBy: dto.uploadedBy
     };
   }
 

@@ -3,7 +3,7 @@
  * Helper functions for working with Mauritania regions and cities
  */
 
-import { Region, City, MAURITANIA_REGIONS, MAURITANIA_CITIES } from '@/types/mauritania';
+import { Region, City, MAURITANIA_REGIONS, MAURITANIA_CITIES } from '@/utils/mauritania';
 
 // =================== REGION LOOKUP FUNCTIONS ===================
 

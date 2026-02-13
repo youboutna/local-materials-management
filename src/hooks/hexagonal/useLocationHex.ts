@@ -10,7 +10,7 @@ import { toast } from '@/hooks/use-toast';
 
 // Import DTOs following Rule #4
 import { LocationDTO } from '@/dtos/shared';
-import { GeographicUnit, Region, City } from '@/types/mauritania';
+import { GeographicUnit, Region, City } from '@/utils/mauritania';
 
 // Import services (application layer)
 import { LocationService } from '@/application/services/LocationService';

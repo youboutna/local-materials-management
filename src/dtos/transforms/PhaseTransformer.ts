@@ -37,7 +37,15 @@ export class PhaseTransformer {
       dependencies: phase.dependencies || [],
       milestones: phase.milestones || [],
       createdAt: phase.createdAt,
-      updatedAt: phase.updatedAt
+      updatedAt: phase.updatedAt,
+
+      // NEW: Additional database fields in DTO
+      constructionPhase: phase.constructionPhase || undefined,
+      constructionStage: phase.constructionStage || undefined,
+      createdBy: phase.createdBy || undefined,
+      customPhaseData: phase.customPhaseData,
+      humanResources: phase.humanResources,
+      weight: phase.weight || undefined,
     };
   }
 
@@ -70,17 +78,14 @@ export class PhaseTransformer {
       description: task.description,
       status: task.status as DTOStatus,
       progress: task.progress,
-      order_index: task.orderIndex,
-      estimated_duration_days: task.estimatedDurationDays,
-      actual_duration_days: task.actualDurationDays,
-      start_date: task.startDate?.toISOString().split('T')[0],
-      end_date: task.endDate?.toISOString().split('T')[0],
-      requires_inspection: task.requiresInspection || false,
-      requires_engineer_approval: task.requiresEngineerApproval || false,
-      estimated_cost: task.estimatedCost || 0,
-      actual_cost: task.actualCost || 0,
-      assigned_to: task.assignedTo || [],
-      dependencies: task.dependencies || []
+      order_index: task.order_index,
+      estimated_duration_days: task.estimated_duration_days,
+      actual_duration_days: task.actual_duration_days,
+      start_date: task.start_date,
+      end_date: task.end_date,
+      assigned_to: task.assigned_to,
+      dependencies: task.dependencies || [],
+      weight: task.weight
     };
   }
 
@@ -124,17 +129,17 @@ export class PhaseTransformer {
       description: dto.description,
       status: dto.status as PhaseStatus,
       progress: dto.progress,
-      orderIndex: dto.order_index,
-      estimatedDurationDays: dto.estimated_duration_days,
-      actualDurationDays: dto.actual_duration_days,
-      startDate: dto.start_date ? new Date(dto.start_date) : undefined,
-      endDate: dto.end_date ? new Date(dto.end_date) : undefined,
-      requiresInspection: dto.requires_inspection,
-      requiresEngineerApproval: dto.requires_engineer_approval,
-      estimatedCost: dto.estimated_cost,
-      actualCost: dto.actual_cost,
-      assignedTo: dto.assigned_to,
-      // Note: dependencies property doesn't exist in PhaseStepDTO
+      order_index: dto.order_index,
+      estimated_duration_days: dto.estimated_duration_days,
+      actual_duration_days: dto.actual_duration_days,
+      start_date: dto.start_date,
+      end_date: dto.end_date,
+      // Note: PhaseStepDTO doesn't have these properties - using defaults
+      requires_inspection: false,
+      requires_engineer_approval: false,
+      estimated_cost: 0,
+      actual_cost: 0,
+      assigned_to: [],
       dependencies: [],
       tasks: dto.tasks?.map(task => this.dtoToTask(task)) || []
     };
@@ -147,17 +152,14 @@ export class PhaseTransformer {
       description: dto.description,
       status: dto.status as PhaseStatus,
       progress: dto.progress,
-      orderIndex: dto.order_index,
-      estimatedDurationDays: dto.estimated_duration_days,
-      actualDurationDays: dto.actual_duration_days,
-      startDate: dto.start_date ? new Date(dto.start_date) : undefined,
-      endDate: dto.end_date ? new Date(dto.end_date) : undefined,
-      requiresInspection: dto.requires_inspection,
-      requiresEngineerApproval: dto.requires_engineer_approval,
-      estimatedCost: dto.estimated_cost,
-      actualCost: dto.actual_cost,
-      assignedTo: dto.assigned_to,
+      order_index: dto.order_index,
+      estimated_duration_days: dto.estimated_duration_days,
+      actual_duration_days: dto.actual_duration_days,
+      start_date: dto.start_date,
+      end_date: dto.end_date,
+      assigned_to: dto.assigned_to,
       dependencies: dto.dependencies,
+      weight: dto.weight,
       // Note: materials property doesn't exist in PhaseTaskDTO
       materials: [],
     };

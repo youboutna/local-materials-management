@@ -255,7 +255,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     queryFn: async (): Promise<any> => {
       if (!projectId || !projectDetail) return null;
       const { ProjectCalculationService } = await import(
-        "@/services/ProjectCalculationService"
+        "/application/services/ProjectCalculationService"
       );
       return ProjectCalculationService.calculatePERTAnalysis(projectDetail);
     },
@@ -269,7 +269,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     queryFn: async (): Promise<any> => {
       if (!projectId || !projectDetail) return null;
       const { ProjectCalculationService } = await import(
-        "@/services/ProjectCalculationService"
+        "/application/services/ProjectCalculationService"
       );
       return ProjectCalculationService.generateGanttChart(projectDetail);
     },

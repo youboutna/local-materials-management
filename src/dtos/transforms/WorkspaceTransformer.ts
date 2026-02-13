@@ -1,5 +1,5 @@
 import { Workspace, OperationalStatus } from '@/domain/entities/Workspace';
-import { GeographicUnit } from '@/types/mauritania';
+import { GeographicUnit } from '@/utils/mauritania';
 import { WorkspaceDTO, CreateWorkspaceRequestDTO, UpdateWorkspaceRequestDTO } from '@/dtos/entities/WorkspaceDTO';
 
 export class WorkspaceTransformer {

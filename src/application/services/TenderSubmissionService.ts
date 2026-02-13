@@ -3,7 +3,9 @@ import { SubmissionSecretService } from './SubmissionSecretService';
 import { supabase } from '@/integrations/supabase/client';
 import { sendTenderSubmissionNotification } from '@/services/tenderSubmissionNotificationService';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { TenderSubmissionDTO as TenderSubmissionDTOType, TenderDocumentDTO } from '@/dtos/entities/TenderDTO';
+import { TenderSubmissionDTO as TenderSubmissionDTOType, TenderDocumentDTO } from '@/dtos/entities/TenderSubmissionDTO';
+import { ITenderSubmissionRepository } from '@/domain/repositories/ITenderSubmissionRepository';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface CreateTenderSubmissionDTO {
   tender_id: string;
@@ -180,20 +182,12 @@ export class TenderSubmissionService {
         });
 
         // Get tender details for notification
-        const { data: tender } = await supabase
-          .from('tenders')
-          .select('title, project_id')
-          .eq('id', submissionData.tender_id)
-          .single();
+        const tenderSubmissionRepository = RepositoryFactory.getTenderSubmissionRepository();
+        const tender = await tenderSubmissionRepository.getSubmissionById(submissionData.tender_id);
 
         // Fetch admin notification emails from system settings
-        const { data: settingsData } = await supabase
-          .from('system_settings')
-          .select('configuration')
-          .eq('key', 'admin_notification_emails')
-          .single();
-
-        const adminEmails = ((settingsData?.configuration as { emails?: string[] })?.emails) || [];
+        // TODO: Create SystemSettingsService and move this logic there
+        const adminEmails: string[] = []; // Temporary hardcoded value
 
         // Send email notifications (non-blocking - don't fail submission if email fails)
         if (secretData?.secret_code) {
@@ -278,50 +272,54 @@ export class TenderSubmissionService {
   /**
    * Create a new tender submission
    */
-  static async createSubmission(submission: CreateTenderSubmissionDTO): Promise<unknown> {
+  static async createSubmission(submissionData: CreateTenderSubmissionDTO): Promise<TenderSubmissionDTOType> {
+    const tenderSubmissionRepository = RepositoryFactory.getTenderSubmissionRepository();
+    
     try {
       // Check if user already has a submission
-      const existingSubmission = await this.hasExistingSubmission(
-        submission.tender_id,
-        submission.user_id
+      const existingSubmission = await tenderSubmissionRepository.getSubmissionsByTenderIdAndUserId(
+        submissionData.tender_id,
+        submissionData.user_id
       );
-
-      if (existingSubmission) {
+      
+      const hasExistingSubmission = existingSubmission.length > 0;
+      
+      if (hasExistingSubmission) {
         throw new AppError(
           ErrorCode.VALIDATION_ERROR,
           'Vous avez déjà soumis une candidature pour cet appel d\'offres'
         );
       }
-
-      // Create submission record first
-      const { data, error } = await supabase
-        .from('tender_submissions')
-        .insert({
-          ...submission,
-          submission_date: new Date().toISOString(),
-          status: 'submitted'
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
+      
+      // Create submission record
+      const submission = await tenderSubmissionRepository.createSubmission(submissionData);
+      
       // Generate submission secret after submission creation
       const submissionSecret = await SubmissionSecretService.createSubmissionSecret({
-        submission_id: data.id,
+        submission_id: submission.id,
         expires_at: SubmissionSecretService.getDefaultExpirationDate(30),
         max_access: 50
       });
 
+      // Get tender details for notification
+      const tenderRepository = RepositoryFactory.getTenderRepository();
+      const tender = await tenderRepository.findById(submissionData.tender_id);
+
+      // Fetch admin notification emails from system settings
+      // TODO: Create SystemSettingsService and move this logic there
+      const adminEmails: string[] = []; // Temporary hardcoded value
+
       // Send notification to tender owner
       await sendTenderSubmissionNotification({
-        tenderId: submission.tender_id,
-        supplierName: submission.supplier_name,
-        supplierEmail: submission.supplier_email,
-        submissionId: data.id
+        tender_title: tender?.title || 'Appel d\'offres',
+        supplier_email: submission.supplier_email,
+        supplier_name: submission.supplier_name,
+        submission_id: submission.id,
+        secret_code: submissionSecret.secretCode,
+        admin_emails: adminEmails
       });
 
-      return data;
+      return submission;
     } catch (error) {
       console.error('Error creating submission:', error);
       throw new AppError(

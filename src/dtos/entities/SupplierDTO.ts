@@ -16,6 +16,13 @@ export interface SupplierDTO extends BaseEntityDTO {
   isActive: boolean;
   nif?: string;
   commerceRegisterRef?: string;
+
+  // NEW: Additional database fields from suppliers table
+  accountNumber?: string;                    // account_number
+  bankName?: string;                         // bank_name
+  defaultPasswordResetRequired?: boolean;    // default_password_reset_required
+  rib?: string;                              // rib
+  userId?: string;                           // user_id
 }
 
 export interface SupplierDetailsDTO extends SupplierDTO {

@@ -31,22 +31,7 @@ import { TenderService } from "@/application/services/TenderService";
 import { SubmissionSecretService } from "@/application/services/SubmissionSecretService";
 import { useToast } from "@/hooks/use-toast";
 import { AppLayout } from "@/components/layout";
-
-interface Tender {
-  id: string;
-  title: string;
-  description: string;
-  project_id?: string;
-  launch_date?: string;
-  attribution_date?: string;
-  selection_mode?: string;
-  market_type?: string;
-  financing_source?: string;
-  project_reference?: string;
-  status: "draft" | "published" | "closed" | "awarded";
-  created_at: string;
-  updated_at: string;
-}
+import { TenderDTO } from "@/dtos/entities/TenderDTO";
 
 interface SelectedSupplier {
   id: string;
@@ -59,7 +44,7 @@ interface SelectedSupplier {
 }
 
 const TenderManagement = () => {
-  const [selectedTender, setSelectedTender] = useState<Tender | null>(null);
+  const [selectedTender, setSelectedTender] = useState<TenderDTO | null>(null);
   const [documentSharingOpen, setDocumentSharingOpen] = useState(false);
   const [secureSharingOpen, setSecureSharingOpen] = useState(false);
   const [documentSelectorOpen, setDocumentSelectorOpen] = useState(false);
@@ -280,7 +265,7 @@ const TenderManagement = () => {
                     <TabsContent value="phases" className="mt-0">
                       <TenderProjectPhases 
                         tenderId={selectedTender.id}
-                        projectId={selectedTender.project_id}
+                        projectId={selectedTender.projectId}
                       />
                     </TabsContent>
                     <TabsContent value="stepper" className="mt-0">
@@ -292,19 +277,19 @@ const TenderManagement = () => {
                     <TabsContent value="lots" className="mt-0">
                       <TenderLotBuilder 
                         tenderId={selectedTender.id} 
-                        projectId={selectedTender.project_id}
+                        projectId={selectedTender.projectId}
                       />
                     </TabsContent>
                     <TabsContent value="timeline" className="mt-0">
                       <TenderTimelineCard
-                        launchDate={selectedTender.launch_date}
-                        deadlineDate={selectedTender.attribution_date}
+                        launchDate={selectedTender.launchDate}
+                        deadlineDate={selectedTender.attributionDate}
                       />
                     </TabsContent>
                     <TabsContent value="steps" className="mt-0">
                       <TenderWorkflowSteps
                         tenderId={selectedTender.id}
-                        projectId={selectedTender.project_id}
+                        projectId={selectedTender.projectId}
                         readonly={false}
                       />
                     </TabsContent>

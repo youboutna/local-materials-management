@@ -1,7 +1,7 @@
 // Domain Entity: Material
 // Pure business logic without infrastructure concerns
 
-import { GeographicUnit } from "@/types/mauritania";
+import { GeographicUnit } from "@/utils/mauritania";
 
 export type MaterialCategory = 
   | 'construction' 

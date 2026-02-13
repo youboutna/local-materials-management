@@ -16,7 +16,7 @@ import { Phase } from './Phase';
 import { Milestone } from './Milestone';
 import { Tender } from './Tender';
 import { Risk } from './Risk';
-import { GeographicUnit } from '@/types/mauritania';
+import { GeographicUnit } from '@/utils/mauritania';
 
 // Interface for project resources
 interface ProjectResource {
@@ -32,6 +32,7 @@ interface ProjectResource {
 // Re-export ProjectStatus from DTO for type alignment
 import { ProjectStatus as DTOProjectStatus } from '@/dtos/entities/ProjectDTO';
 export type ProjectStatus = DTOProjectStatus;
+export { ProjectStatus } from '@/dtos/entities/ProjectDTO';
 
 // Interface commune pour les références de projet (Employee ou Supplier)
 export interface ProjectStakeholder {
@@ -123,7 +124,7 @@ export class Project {
   private _insuranceRequired?: boolean;
   private _materialsBudget?: number;
   private _procurementLeadTime?: number;
-  private _resourceAssignment?: ProjectResource[]; // ✅ SEMANTIC: Array of ProjectResource[] from project_resources table
+  private _resourceAssignment?: ProjectResource[];
   private _receptionStatus?: string;
   private _closureNotes?: string;
   private _clientOrganization?: string;
@@ -139,9 +140,10 @@ export class Project {
   private _projectOrder?: string;
   private _clientId?: string;
   private _currentPhase?: string;
-  private _currentStage?: string;
-  private _allowsInitialPayment?: boolean;
-  private _initialAdvancePercentage?: number;
+  private _initialPaymentPercentage?: number;
+  private _paymentFrequency?: string;
+  private _paymentMode?: string;
+  private _supervisorId?: string;
   private _completionDate?: Date;
   private _customFields?: Record<string, string | number | boolean>;
   private _estimatedDays?: number;
@@ -183,7 +185,7 @@ export class Project {
   private _projectAlerts?: { id: string; message: string }[];
   private _projectComments?: { id: string; comment: string }[];
   private _projectOrganizations?: { id: string; name: string }[];
-  private _quantityTakeoffs?: any[];
+  private _quantityTakeoffs?: Record<string, unknown>[];
   private _progressInvoices?: { id: string; date: Date }[];
   private _paymentBlocks?: { id: string; amount: number }[];
   private _supplierPaymentRequests?: { id: string; date: Date }[];
@@ -212,83 +214,21 @@ export class Project {
     // Object references
     coordinates?: ProjectCoordinates,
     financingSource?: string,
-    marketType?: string,
-    selectionMode?: string,
-    methodology?: string,
     mainContractor?: string | ProjectStakeholder,
     currency?: string,
     
-    // Financial and insurance attributes
-    bankGuaranteeRequired?: boolean,
-    bankGuaranteeAmount?: number,
-    bankGuaranteePercentage?: number,
-    insuranceRequired?: boolean,
-    materialsBudget?: number,
-    procurementLeadTime?: number,
-    resourceAssignment?: ProjectResource[], // ✅ SEMANTIC: Array of ProjectResource[] from project_resources table
-    receptionStatus?: string,
-    closureNotes?: string,
-    
-    // Additional project details
-    clientOrganization?: string,
-    donorOrganization?: string,
-    sector?: string,
-    projectType?: string,
-    priority?: string,
-    geographicZone?: string,
-    terrainType?: string,
-    environmentalConstraints?: string,
-    areaSqm?: number,
-    projectReferenceNumber?: string,
-    projectOrder?: string,
-    clientId?: string,
-    
-    // Project phases and stages
-    currentPhase?: string,
-    currentStage?: string,
-    
-    // Payment and financial settings
-    allowsInitialPayment?: boolean,
-    initialPaymentPercentage?: number,
-    paymentFrequency?: string,
-    paymentMode?: string,
-    retentionPercentage?: number,
-    initialAdvancePercentage?: number,
-    
-    // Dates and timeline
-    completionDate?: Date,
-    estimatedDays?: number,
-    launchDate?: Date,
-    attributionDate?: Date,
-    
-    // Validation and requirements
-    requiresConsultantValidation?: boolean,
-    requiresMinistryApproval?: boolean,
-    requiresPermits?: boolean,
-    permitNumber?: string,
-    hasUtilities?: boolean,
-    
-    // Optional references (loaded when needed)
-    engineeringConsultant?: User | ProjectStakeholder,
-    technicalManager?: User | ProjectStakeholder,
-    projectResponsable?: User | ProjectStakeholder,
-    supervisor?: User | ProjectStakeholder,
-    
     // Collections (direct entity relationships)
-    payments?: Payment[],      // Direct entity relationship
-    inspections?: Inspection[],  // Direct entity relationship
-    tasks?: Task[],            // Direct entity relationship
-    documents?: Document[],      // Direct entity relationship
-    materials?: Material[],      // Direct entity relationship
-    phases?: Phase[],          // Direct entity relationship
-    milestones?: Milestone[],    // Direct entity relationship
-    risks?: Risk[],     // Direct entity relationship
-    tenders?: Tender[],        // Direct entity relationship
-    suppliers?: Supplier[],     // Direct entity relationship
-    employees?: Employee[],     // Direct entity relationship
-    
-    // Additional metadata from database
-    projectReference?: string
+    payments?: Payment[],
+    inspections?: Inspection[],
+    tasks?: Task[],
+    documents?: Document[],
+    materials?: Material[],
+    phases?: Phase[],
+    milestones?: Milestone[],
+    risks?: Risk[],
+    tenders?: Tender[],
+    suppliers?: Supplier[],
+    employees?: Employee[]
   ) {
     // Validate and assign private fields
     this._id = this.validateId(id);
@@ -309,68 +249,21 @@ export class Project {
     this._updatedAt = updatedAt || new Date();
     this._coordinates = coordinates;
     this._financingSource = financingSource;
-    this._marketType = marketType;
-    this._selectionMode = selectionMode;
-    this._methodology = methodology;
     this._mainContractor = mainContractor;
     this._currency = currency;
     
-    // Financial and insurance attributes
-    this._bankGuaranteeRequired = bankGuaranteeRequired;
-    this._bankGuaranteeAmount = bankGuaranteeAmount;
-    this._bankGuaranteePercentage = bankGuaranteePercentage;
-    this._insuranceRequired = insuranceRequired;
-    this._materialsBudget = materialsBudget;
-    this._procurementLeadTime = procurementLeadTime;
-    this._resourceAssignment = resourceAssignment;
-    this._receptionStatus = receptionStatus;
-    this._closureNotes = closureNotes;
-    
-    this._clientOrganization = clientOrganization;
-    this._donorOrganization = donorOrganization;
-    this._sector = sector;
-    this._projectType = projectType;
-    this._priority = priority;
-    this._geographicZone = geographicZone;
-    this._terrainType = terrainType;
-    this._environmentalConstraints = environmentalConstraints;
-    this._areaSqm = areaSqm;
-    this._projectReferenceNumber = projectReferenceNumber;
-    this._projectOrder = projectOrder;
-    this._clientId = clientId;
-    this._currentPhase = currentPhase;
-    this._currentStage = currentStage;
-    this._allowsInitialPayment = allowsInitialPayment;
-    this._initialPaymentPercentage = this.validatePercentage(initialPaymentPercentage);
-    this._paymentFrequency = paymentFrequency;
-    this._paymentMode = paymentMode;
-    this._retentionPercentage = this.validatePercentage(retentionPercentage);
-    this._initialAdvancePercentage = this.validatePercentage(initialAdvancePercentage);
-    this._completionDate = completionDate;
-    this._estimatedDays = estimatedDays;
-    this._launchDate = launchDate;
-    this._attributionDate = attributionDate;
-    this._requiresConsultantValidation = requiresConsultantValidation;
-    this._requiresMinistryApproval = requiresMinistryApproval;
-    this._requiresPermits = requiresPermits;
-    this._permitNumber = permitNumber;
-    this._hasUtilities = hasUtilities;
-    this._engineeringConsultant = engineeringConsultant;
-    this._technicalManager = technicalManager;
-    this._projectResponsable = projectResponsable;
-    this._supervisor = supervisor;
-    this._payments = payments || [];
-    this._inspections = inspections || [];
-    this._tasks = tasks || [];
-    this._documents = documents || [];
-    this._materials = materials || [];
-    this._phases = phases || [];
-    this._milestones = milestones || [];
-    this._risks = risks || [];
-    this._tenders = tenders || [];
-    this._suppliers = suppliers || [];
-    this._employees = employees || [];
-    this._projectReference = projectReference;
+    // Collections
+    this._payments = payments;
+    this._inspections = inspections;
+    this._tasks = tasks;
+    this._documents = documents;
+    this._materials = materials;
+    this._phases = phases;
+    this._milestones = milestones;
+    this._risks = risks;
+    this._tenders = tenders;
+    this._suppliers = suppliers;
+    this._employees = employees;
   }
 
   // ============= Getters =============
@@ -410,12 +303,17 @@ export class Project {
   get projectAlerts(): { id: string; message: string }[] { return this._projectAlerts || []; }
   get projectComments(): { id: string; comment: string }[] { return this._projectComments || []; }
   get projectOrganizations(): { id: string; name: string }[] { return this._projectOrganizations || []; }
-  get quantityTakeoffs(): any[] { return this._quantityTakeoffs || []; }
+  get quantityTakeoffs(): Record<string, unknown>[] { return this._quantityTakeoffs || []; }
   get progressInvoices(): { id: string; date: Date }[] { return this._progressInvoices || []; }
   get paymentBlocks(): { id: string; amount: number }[] { return this._paymentBlocks || []; }
-  get supplierPaymentRequests(): { id: string; date: Date }[] { return this._supplierPaymentRequests || []; }
-  get taskAssignments(): { id: string; taskId: string }[] { return this._taskAssignments || []; }
-  get projectResources(): { id: string; resourceId: string }[] { return this._projectResources || []; } // ⚠️ CRITICAL: For resourceAssignment
+  get checkScheduleLastRun(): Record<string, unknown> | undefined { return this._checkScheduleLastRun; }
+  get closureNotes(): string | undefined { return this._closureNotes; }
+  get forme(): string | undefined { return this._forme; }
+  get fundingSource(): string | undefined { return this._fundingSource; }
+  get localisation(): Record<string, unknown> | undefined { return this._localisation; }
+  get paymentWorkflowConfig(): Record<string, unknown> | undefined { return this._paymentWorkflowConfig; }
+  get projectResponsableId(): string | undefined { return this._projectResponsableId; }
+  get siteDetails(): string | undefined { return this._siteDetails; }
   
   get clientOrganization(): string | undefined { return this._clientOrganization; }
   get donorOrganization(): string | undefined { return this._donorOrganization; }
@@ -455,7 +353,18 @@ export class Project {
   get tasks(): Task[] | undefined { return this._tasks; }
   get documents(): Document[] | undefined { return this._documents; }
   get materials(): Material[] | undefined { return this._materials; }
+  get phases(): Phase[] | undefined { return this._phases; }
+  get milestones(): Milestone[] | undefined { return this._milestones; }
+  get risks(): Risk[] | undefined { return this._risks; }
+  get tenders(): Tender[] | undefined { return this._tenders; }
+  get suppliers(): Supplier[] | undefined { return this._suppliers; }
+  get employees(): Employee[] | undefined { return this._employees; }
   get projectReference(): string | undefined { return this._projectReference; }
+  get receptionStatus(): string | undefined { return this._receptionStatus; }
+  get resourceAssignment(): ProjectResource[] | undefined { return this._resourceAssignment; }
+  get supervisorId(): string | undefined { 
+    return typeof this._supervisor === 'string' ? this._supervisor : this._supervisor?.id; 
+  }
 
   // ============= Setters with Validation =============
   set title(value: string) { 
@@ -512,53 +421,19 @@ export class Project {
       new Date(),
       this._coordinates,
       this._financingSource,
-      typeof this._mainContractor === 'string' ? this._mainContractor : this._mainContractor?.id,
+      this._mainContractor,
       this._currency,
-      this._clientOrganization,
-      this._donorOrganization,
-      this._sector,
-      this._projectType,
-      this._priority,
-      this._geographicZone,
-      this._terrainType,
-      this._environmentalConstraints,
-      this._areaSqm,
-      this._projectReferenceNumber,
-      this._projectOrder,
-      this._clientId,
-      this._currentPhase,
-      this._currentStage,
-      this._allowsInitialPayment,
-      this._initialPaymentPercentage,
-      this._paymentFrequency,
-      this._paymentMode,
-      this._retentionPercentage,
-      this._initialAdvancePercentage,
-      this._completionDate,
-      this._estimatedDays,
-      this._launchDate,
-      this._attributionDate,
-      this._requiresConsultantValidation,
-      this._requiresMinistryApproval,
-      this._requiresPermits,
-      this._permitNumber,
-      this._hasUtilities,
-      this._engineeringConsultant,
-      this._technicalManager,
-      this._projectResponsable,
-      this._supervisor,
-      this._payments,
-      this._inspections,
-      this._tasks,
-      this._documents,
-      this._materials,
-      this._phases,
-      this._milestones,
-      this._risks,
-      this._tenders,
-      this._suppliers,
-      this._employees,
-      this._projectReference
+      this.payments,
+      this.inspections,
+      this.tasks,
+      this.documents,
+      this.materials,
+      this.phases,
+      this.milestones,
+      this.risks,
+      this.tenders,
+      this.suppliers,
+      this.employees
     );
   }
 
@@ -580,53 +455,19 @@ export class Project {
       new Date(),
       this._coordinates,
       this._financingSource,
-      typeof this._mainContractor === 'string' ? this._mainContractor : this._mainContractor?.id,
+      this._mainContractor,
       this._currency,
-      this._clientOrganization,
-      this._donorOrganization,
-      this._sector,
-      this._projectType,
-      this._priority,
-      this._geographicZone,
-      this._terrainType,
-      this._environmentalConstraints,
-      this._areaSqm,
-      this._projectReferenceNumber,
-      this._projectOrder,
-      this._clientId,
-      this._currentPhase,
-      this._currentStage,
-      this._allowsInitialPayment,
-      this._initialPaymentPercentage,
-      this._paymentFrequency,
-      this._paymentMode,
-      this._retentionPercentage,
-      this._initialAdvancePercentage,
-      this._completionDate,
-      this._estimatedDays,
-      this._launchDate,
-      this._attributionDate,
-      this._requiresConsultantValidation,
-      this._requiresMinistryApproval,
-      this._requiresPermits,
-      this._permitNumber,
-      this._hasUtilities,
-      this._engineeringConsultant,
-      this._technicalManager,
-      this._projectResponsable,
-      this._supervisor,
-      this._payments,
-      this._inspections,
-      this._tasks,
-      this._documents,
-      this._materials,
-      this._phases,
-      this._milestones,
-      this._risks,
-      this._tenders,
-      this._suppliers,
-      this._employees,
-      this._projectReference
+      this.payments,
+      this.inspections,
+      this.tasks,
+      this.documents,
+      this.materials,
+      this.phases,
+      this.milestones,
+      this.risks,
+      this.tenders,
+      this.suppliers,
+      this.employees
     );
   }
 
@@ -648,53 +489,19 @@ export class Project {
       new Date(),
       this._coordinates,
       this._financingSource,
-      typeof this._mainContractor === 'string' ? this._mainContractor : this._mainContractor?.id,
+      this._mainContractor,
       this._currency,
-      this._clientOrganization,
-      this._donorOrganization,
-      this._sector,
-      this._projectType,
-      this._priority,
-      this._geographicZone,
-      this._terrainType,
-      this._environmentalConstraints,
-      this._areaSqm,
-      this._projectReferenceNumber,
-      this._projectOrder,
-      this._clientId,
-      this._currentPhase,
-      this._currentStage,
-      this._allowsInitialPayment,
-      this._initialPaymentPercentage,
-      this._paymentFrequency,
-      this._paymentMode,
-      this._retentionPercentage,
-      this._initialAdvancePercentage,
-      this._completionDate,
-      this._estimatedDays,
-      this._launchDate,
-      this._attributionDate,
-      this._requiresConsultantValidation,
-      this._requiresMinistryApproval,
-      this._requiresPermits,
-      this._permitNumber,
-      this._hasUtilities,
-      this._engineeringConsultant,
-      this._technicalManager,
-      this._projectResponsable,
-      this._supervisor,
-      this._payments,
-      this._inspections,
-      this._tasks,
-      this._documents,
-      this._materials,
-      this._phases,
-      this._milestones,
-      this._risks,
-      this._tenders,
-      this._suppliers,
-      this._employees,
-      this._projectReference
+      this.payments,
+      this.inspections,
+      this.tasks,
+      this.documents,
+      this.materials,
+      this.phases,
+      this.milestones,
+      this.risks,
+      this.tenders,
+      this.suppliers,
+      this.employees
     );
   }
   
@@ -742,15 +549,7 @@ export class Project {
   }
 
   private validateStatus(status: ProjectStatus): ProjectStatus {
-    const validStatuses: ProjectStatus[] = [
-      "en cours", "terminé", "en attente", "en inspection", "suspendu", 
-      "annulé", "attribué", "planifié", "pré-qualification", "en conception", 
-      "en construction", "en clôture", "en retard"
-    ];
-    
-    if (!validStatuses.includes(status)) {
-      throw new Error(`Invalid project status: ${status}`);
-    }
+    // The status is already validated by the DTO enum, so just return it
     return status;
   }
 
@@ -797,39 +596,6 @@ export class Project {
     financingSource?: string;
     mainContractor?: string | ProjectStakeholder;
     currency?: string;
-    clientOrganization?: string;
-    donorOrganization?: string;
-    sector?: string;
-    projectType?: string;
-    priority?: string;
-    geographicZone?: string;
-    terrainType?: string;
-    environmentalConstraints?: string;
-    areaSqm?: number;
-    projectReferenceNumber?: string;
-    projectOrder?: string;
-    clientId?: string;
-    currentPhase?: string;
-    currentStage?: string;
-    allowsInitialPayment?: boolean;
-    initialPaymentPercentage?: number;
-    paymentFrequency?: string;
-    paymentMode?: string;
-    retentionPercentage?: number;
-    initialAdvancePercentage?: number;
-    completionDate?: Date;
-    estimatedDays?: number;
-    launchDate?: Date;
-    attributionDate?: Date;
-    requiresConsultantValidation?: boolean;
-    requiresMinistryApproval?: boolean;
-    requiresPermits?: boolean;
-    permitNumber?: string;
-    hasUtilities?: boolean;
-    engineeringConsultant?: User | ProjectStakeholder;
-    technicalManager?: User | ProjectStakeholder;
-    projectResponsable?: User | ProjectStakeholder;
-    supervisor?: User | ProjectStakeholder;
     payments?: Payment[];
     inspections?: Inspection[];
     tasks?: Task[];
@@ -841,7 +607,6 @@ export class Project {
     tenders?: Tender[];
     suppliers?: Supplier[];
     employees?: Employee[];
-    projectReference?: string;
   }): Project {
     return new Project(
       updates.id !== undefined ? updates.id : this._id,
@@ -860,6 +625,19 @@ export class Project {
       new Date(), // Always update timestamp on clone
       updates.coordinates !== undefined ? updates.coordinates : this._coordinates,
       updates.financingSource !== undefined ? updates.financingSource : this._financingSource,
+      updates.mainContractor !== undefined ? updates.mainContractor : this._mainContractor,
+      updates.currency !== undefined ? updates.currency : this._currency,
+      updates.payments !== undefined ? updates.payments : this._payments,
+      updates.inspections !== undefined ? updates.inspections : this._inspections,
+      updates.tasks !== undefined ? updates.tasks : this._tasks,
+      updates.documents !== undefined ? updates.documents : this._documents,
+      updates.materials !== undefined ? updates.materials : this._materials,
+      updates.phases !== undefined ? updates.phases : this._phases,
+      updates.milestones !== undefined ? updates.milestones : this._milestones,
+      updates.risks !== undefined ? updates.risks : this._risks,
+      updates.tenders !== undefined ? updates.tenders : this._tenders,
+      updates.suppliers !== undefined ? updates.suppliers : this._suppliers,
+      updates.employees !== undefined ? updates.employees : this._employees
     );
   }
 
@@ -890,35 +668,39 @@ export class Project {
     const errors: string[] = [];
     const warnings: string[] = [];
 
-    // Required field validations
     try {
       this.validateId(this._id);
-    } catch (e: any) {
-      errors.push(e.message);
+    } catch (e: unknown) {
+      const error = e instanceof Error ? e : new Error('Unknown error');
+      errors.push(error.message);
     }
 
     try {
       this.validateTitle(this._title);
-    } catch (e: any) {
-      errors.push(e.message);
+    } catch (e: unknown) {
+      const error = e instanceof Error ? e : new Error('Unknown error');
+      errors.push(error.message);
     }
 
     try {
       this.validateStatus(this._status);
-    } catch (e: any) {
-      errors.push(e.message);
+    } catch (e: unknown) {
+      const error = e instanceof Error ? e : new Error('Unknown error');
+      errors.push(error.message);
     }
 
     try {
       this.validateProgress(this._progress);
-    } catch (e: any) {
-      errors.push(e.message);
+    } catch (e: unknown) {
+      const error = e instanceof Error ? e : new Error('Unknown error');
+      errors.push(error.message);
     }
 
     try {
       this.validateBudget(this._budget);
-    } catch (e: any) {
-      errors.push(e.message);
+    } catch (e: unknown) {
+      const error = e instanceof Error ? e : new Error('Unknown error');
+      errors.push(error.message);
     }
 
     // Business logic validations
@@ -926,12 +708,12 @@ export class Project {
       errors.push('Start date must be before end date');
     }
 
-    if (this._progress === 100 && this._status !== 'terminé') {
-      warnings.push('Project is 100% complete but status is not "terminé"');
+    if (this._progress === 100 && this._status !== ProjectStatus.TERMINE) {
+      warnings.push('Project is 100% complete but status is not "Terminé"');
     }
 
-    if (this._progress === 0 && this._status === 'en cours') {
-      warnings.push('Project has 0% progress but status is "en cours"');
+    if (this._progress === 0 && this._status === ProjectStatus.EN_COURS) {
+      warnings.push('Project has 0% progress but status is "En cours"');
     }
 
     if (this._budget > 0 && this._estimatedDays && this._estimatedDays > 0) {
@@ -1053,45 +835,12 @@ export class Project {
       data.createdAt ? new Date(data.createdAt as string) : undefined,
       undefined, // updatedAt will be set in constructor
       data.coordinates ? new ProjectCoordinates(
-        (data.coordinates as any).latitude,
-        (data.coordinates as any).longitude
+        (data.coordinates as { latitude: number; longitude: number }).latitude,
+        (data.coordinates as { latitude: number; longitude: number }).longitude
       ) : undefined,
       data.financingSource as string,
       data.mainContractor as string | ProjectStakeholder,
       data.currency as string,
-      data.clientOrganization as string,
-      data.donorOrganization as string,
-      data.sector as string,
-      data.projectType as string,
-      data.priority as string,
-      data.geographicZone as string,
-      data.terrainType as string,
-      data.environmentalConstraints as string,
-      data.areaSqm as number,
-      data.projectReferenceNumber as string,
-      data.projectOrder as string,
-      data.clientId as string,
-      data.currentPhase as string,
-      data.currentStage as string,
-      data.allowsInitialPayment as boolean,
-      data.initialPaymentPercentage as number,
-      data.paymentFrequency as string,
-      data.paymentMode as string,
-      data.retentionPercentage as number,
-      data.initialAdvancePercentage as number,
-      data.completionDate ? new Date(data.completionDate as string) : undefined,
-      data.estimatedDays as number,
-      data.launchDate ? new Date(data.launchDate as string) : undefined,
-      data.attributionDate ? new Date(data.attributionDate as string) : undefined,
-      data.requiresConsultantValidation as boolean,
-      data.requiresMinistryApproval as boolean,
-      data.requiresPermits as boolean,
-      data.permitNumber as string,
-      data.hasUtilities as boolean,
-      data.engineeringConsultant as User | ProjectStakeholder,
-      data.technicalManager as User | ProjectStakeholder,
-      data.projectResponsable as User | ProjectStakeholder,
-      data.supervisor as User | ProjectStakeholder,
       data.payments as Payment[],
       data.inspections as Inspection[],
       data.tasks as Task[],
@@ -1102,19 +851,18 @@ export class Project {
       data.risks as Risk[],
       data.tenders as Tender[],
       data.suppliers as Supplier[],
-      data.employees as Employee[],
-      data.projectReference as string
+      data.employees as Employee[]
     );
   }
 
   // ============= Business Logic =============
 
   isActive(): boolean {
-    return this.status === 'en cours';
+    return this.status === ProjectStatus.EN_COURS;
   }
 
   isCompleted(): boolean {
-    return this.status === 'terminé';
+    return this.status === ProjectStatus.TERMINE;
   }
 
   isOverdue(): boolean {
@@ -1197,10 +945,6 @@ export class Project {
 
   getDocumentsByType(type: string): Document[] {
     return this.documents?.filter(d => d.documentType === type) || [];
-  }
-
-  getMaterialsByCategory(category: string): Material[] {
-    return this.materials?.filter(m => m.category === category) || [];
   }
 
   getTeamProductivity(): number {
@@ -1344,6 +1088,7 @@ export class Project {
     technicalManager?: User | ProjectStakeholder;
     projectResponsable?: User | ProjectStakeholder;
     supervisor?: User | ProjectStakeholder;
+    supervisorId?: string;
     payments?: Payment[];
     inspections?: Inspection[];
     tasks?: Task[];
@@ -1356,13 +1101,15 @@ export class Project {
     suppliers?: Supplier[];
     employees?: Employee[];
     projectReference?: string;
+    receptionStatus?: string;
+    resourceAssignment?: ProjectResource[];
   }): Project {
     const now = new Date();
     return new Project(
       data.id || crypto.randomUUID(),
       data.title || '',
       data.description || '',
-      data.status || 'en attente',
+      (data.status as ProjectStatus) || ProjectStatus.EN_ATTENTE,
       data.progress || 0,
       data.budget || 0,
       data.startDate || null,
@@ -1375,41 +1122,8 @@ export class Project {
       data.updatedAt || now,
       data.coordinates,
       data.financingSource,
-      typeof data.mainContractor === 'string' ? data.mainContractor : data.mainContractor?.id,
+      data.mainContractor,
       data.currency,
-      data.clientOrganization,
-      data.donorOrganization,
-      data.sector,
-      data.projectType,
-      data.priority,
-      data.geographicZone,
-      data.terrainType,
-      data.environmentalConstraints,
-      data.areaSqm,
-      data.projectReferenceNumber,
-      data.projectOrder,
-      data.clientId,
-      data.currentPhase,
-      data.currentStage,
-      data.allowsInitialPayment,
-      data.initialPaymentPercentage,
-      data.paymentFrequency,
-      data.paymentMode,
-      data.retentionPercentage,
-      data.initialAdvancePercentage,
-      data.completionDate,
-      data.estimatedDays,
-      data.launchDate,
-      data.attributionDate,
-      data.requiresConsultantValidation,
-      data.requiresMinistryApproval,
-      data.requiresPermits,
-      data.permitNumber,
-      data.hasUtilities,
-      data.engineeringConsultant,
-      data.technicalManager,
-      data.projectResponsable,
-      data.supervisor,
       data.payments || [],
       data.inspections || [],
       data.tasks || [],
@@ -1420,8 +1134,7 @@ export class Project {
       data.risks || [],
       data.tenders || [],
       data.suppliers || [],
-      data.employees || [],
-      data.projectReference
+      data.employees || []
     );
   }
 
@@ -1511,51 +1224,17 @@ export class Project {
       this.financingSource,
       this.mainContractor,
       this.currency,
-      this.clientOrganization,
-      this.donorOrganization,
-      this.sector,
-      this.projectType,
-      this.priority,
-      this.geographicZone,
-      this.terrainType,
-      this.environmentalConstraints,
-      this.areaSqm,
-      this.projectReferenceNumber,
-      this.projectOrder,
-      this.clientId,
-      this.currentPhase,
-      this.currentStage,
-      this.allowsInitialPayment,
-      this.initialPaymentPercentage,
-      this.paymentFrequency,
-      this.paymentMode,
-      this.retentionPercentage,
-      this.initialAdvancePercentage,
-      this.completionDate,
-      this.estimatedDays,
-      this.launchDate,
-      this.attributionDate,
-      this.requiresConsultantValidation,
-      this.requiresMinistryApproval,
-      this.requiresPermits,
-      this.permitNumber,
-      this.hasUtilities,
-      this.engineeringConsultant,
-      this.technicalManager,
-      this.projectResponsable,
-      this.supervisor,
-      this._payments || [],
-      this._inspections || [],
-      this._tasks || [],
-      this._documents || [],
-      this._materials,
-      this._phases,
-      this._milestones,
-      this._risks,
-      this._tenders,
-      this._suppliers,
-      this._employees,
-      this._projectReference
+      this.payments,
+      this.inspections,
+      this.tasks,
+      this.documents,
+      this.materials,
+      this.phases,
+      this.milestones,
+      this.risks,
+      this.tenders,
+      this.suppliers,
+      this.employees
     );
   }
 
@@ -1579,51 +1258,17 @@ export class Project {
       this.financingSource,
       this.mainContractor,
       this.currency,
-      this.clientOrganization,
-      this.donorOrganization,
-      this.sector,
-      this.projectType,
-      this.priority,
-      this.geographicZone,
-      this.terrainType,
-      this.environmentalConstraints,
-      this.areaSqm,
-      this.projectReferenceNumber,
-      this.projectOrder,
-      this.clientId,
-      this.currentPhase,
-      this.currentStage,
-      this.allowsInitialPayment,
-      this.initialPaymentPercentage,
-      this.paymentFrequency,
-      this.paymentMode,
-      this.retentionPercentage,
-      this.initialAdvancePercentage,
-      this.completionDate,
-      this.estimatedDays,
-      this.launchDate,
-      this.attributionDate,
-      this.requiresConsultantValidation,
-      this.requiresMinistryApproval,
-      this.requiresPermits,
-      this.permitNumber,
-      this.hasUtilities,
-      this.engineeringConsultant,
-      this.technicalManager,
-      this.projectResponsable,
-      this.supervisor,
-      this._payments || [],
-      this._inspections || [],
-      this._tasks || [],
-      this._documents || [],
-      this._materials,
-      this._phases,
-      this._milestones,
-      this._risks,
-      this._tenders,
-      this._suppliers,
-      this._employees,
-      this._projectReference
+      this.payments,
+      this.inspections,
+      this.tasks,
+      this.documents,
+      this.materials,
+      this.phases,
+      this.milestones,
+      this.risks,
+      this.tenders,
+      this.suppliers,
+      this.employees
     );
   }
 
@@ -1631,69 +1276,35 @@ export class Project {
 
   copy(): Project {
     return new Project(
-      this.id,
-      this.title,
-      this.description,
-      this.status,
-      this.progress,
-      this.budget,
-      this.startDate,
-      this.endDate,
-      this.location,
-      this.teamSize,
-      this.thumbnail,
-      this.createdBy,
-      this.createdAt,
-      this.updatedAt,
-      this.coordinates,
-      this.financingSource,
-      this.mainContractor,
-      this.currency,
-      this.clientOrganization,
-      this.donorOrganization,
-      this.sector,
-      this.projectType,
-      this.priority,
-      this.geographicZone,
-      this.terrainType,
-      this.environmentalConstraints,
-      this.areaSqm,
-      this.projectReferenceNumber,
-      this.projectOrder,
-      this.clientId,
-      this.currentPhase,
-      this.currentStage,
-      this.allowsInitialPayment,
-      this.initialPaymentPercentage,
-      this.paymentFrequency,
-      this.paymentMode,
-      this.retentionPercentage,
-      this.initialAdvancePercentage,
-      this.completionDate,
-      this.estimatedDays,
-      this.launchDate,
-      this.attributionDate,
-      this.requiresConsultantValidation,
-      this.requiresMinistryApproval,
-      this.requiresPermits,
-      this.permitNumber,
-      this.hasUtilities,
-      this.engineeringConsultant,
-      this.technicalManager,
-      this.projectResponsable,
-      this.supervisor,
-      this._payments || [],
-      this._inspections || [],
-      this._tasks || [],
-      this._documents || [],
-      this._materials,
-      this._phases,
-      this._milestones,
-      this._risks,
-      this._tenders,
-      this._suppliers,
-      this._employees,
-      this._projectReference
+      this._id,
+      this._title,
+      this._description,
+      this._status,
+      this._progress,
+      this._budget,
+      this._startDate,
+      this._endDate,
+      this._location,
+      this._teamSize,
+      this._thumbnail,
+      this._createdBy,
+      this._createdAt,
+      this._updatedAt,
+      this._coordinates,
+      this._financingSource,
+      this._mainContractor,
+      this._currency,
+      this.payments,
+      this.inspections,
+      this.tasks,
+      this.documents,
+      this.materials,
+      this.phases,
+      this.milestones,
+      this.risks,
+      this.tenders,
+      this.suppliers,
+      this.employees
     );
   }
 }

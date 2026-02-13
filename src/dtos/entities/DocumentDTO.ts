@@ -64,68 +64,33 @@ export enum DocumentPriority {
 
 /**
  * Main Document DTO
- * Core document data structure
+ * Core document data structure matching database row
  */
 export interface DocumentDTO extends BaseEntityDTO {
-  // Core identification
   id: string;
-  name: string;
-  description?: string;
-  
-  // Classification
-  type: DocumentType;
-  status: DocumentStatus;
-  priority: DocumentPriority;
-  category?: string;
-  
-  // Content
-  content?: string;
-  summary?: string;
-  keywords?: string[];
-  
-  // File information
-  fileName?: string;
-  fileType?: string;
-  fileSize?: number;
-  mimeType?: string;
-  url?: string;
-  
-  // Versioning
-  version?: number;
-  isLatest?: boolean;
-  parentDocumentId?: string;
-  versionHistory?: Array<{
-    version: number;
-    createdBy: string; // Employee ID only for DTO
-    createdAt: string;
-    changeNotes?: string;
-  }>;
-  
-  // Access control
-  accessLevel?: 'public' | 'internal' | 'confidential' | 'restricted';
-  allowedRoles?: string[];
-  allowedUsers?: string[]; // User IDs only for DTO
-  
-  // Relationships
-  projectId?: string;
-  phaseId?: string;
-  taskId?: string;
-  inspectionId?: string;
-  riskId?: string;
-  relatedDocuments?: string[]; // Document IDs only for DTO
-  
-  // Metadata
-  tags?: string[];
-  notes?: string;
-  
-  // Form data fields (merged from DocumentFormDataDTO)
-  isRequired?: boolean;
-  uploadedBy?: string;
-  uploadedAt?: string;
-  
-  // System fields
-  createdAt: string;
-  updatedAt: string;
+  assignedTo: string | null;
+  createdAt: string | null;
+  deadlineDate: string | null;
+  description: string | null;
+  documentType: string; // Using string instead of Database enum for compatibility
+  fileName: string | null;
+  fileSize: number | null;
+  fileUrl: string | null;
+  inspectionId: string | null;
+  isInternalOnly: boolean | null;
+  isSharedWithSuppliers: boolean | null;
+  metadata: Record<string, unknown> | null;
+  mimeType: string | null;
+  paymentId: string | null;
+  phaseId: string | null;
+  projectId: string | null;
+  sharedDate: string | null;
+  status: string | null; // Using string instead of Database enum for compatibility
+  supplierId: string | null;
+  tags: string[] | null;
+  title: string;
+  updatedAt: string | null;
+  uploadedBy: string | null;
 }
 
 /**
@@ -133,66 +98,34 @@ export interface DocumentDTO extends BaseEntityDTO {
  * Input for creating new documents
  */
 export interface CreateDocumentDTO {
-  name: string;
-  description?: string;
-  type: DocumentType;
-  status?: DocumentStatus;
-  priority?: DocumentPriority;
-  category?: string;
-  content?: string;
-  summary?: string;
-  keywords?: string[];
-  fileName?: string;
-  fileType?: string;
-  fileSize?: number;
-  url?: string;
-  accessLevel?: 'public' | 'internal' | 'confidential' | 'restricted';
-  allowedRoles?: string[];
-  allowedUsers?: string[]; // User IDs only for DTO
-  parentDocumentId?: string;
-  version?: number;
-  isLatest?: boolean;
-  projectId?: string;
-  phaseId?: string;
-  taskId?: string;
-  inspectionId?: string;
-  riskId?: string;
-  relatedDocuments?: string[]; // Document IDs only for DTO
-  tags?: string[];
-  notes?: string;
+  assignedTo?: string | null;
+  deadlineDate?: string | null;
+  description?: string | null;
+  documentType: string;
+  fileName?: string | null;
+  fileSize?: number | null;
+  fileUrl?: string | null;
+  inspectionId?: string | null;
+  isInternalOnly?: boolean;
+  isSharedWithSuppliers?: boolean;
+  metadata?: Record<string, unknown> | null;
+  mimeType?: string | null;
+  paymentId?: string | null;
+  phaseId?: string | null;
+  projectId?: string | null;
+  sharedDate?: string | null;
+  status?: string | null;
+  supplierId?: string | null;
+  tags?: string[] | null;
+  title: string;
+  uploadedBy?: string | null;
 }
 
 /**
  * Document update request interface
  * Input for updating existing documents
  */
-export interface UpdateDocumentDTO {
-  name?: string;
-  description?: string;
-  type?: DocumentType;
-  status?: DocumentStatus;
-  priority?: DocumentPriority;
-  category?: string;
-  content?: string;
-  summary?: string;
-  keywords?: string[];
-  fileName?: string;
-  fileType?: string;
-  fileSize?: number;
-  url?: string;
-  accessLevel?: 'public' | 'internal' | 'confidential' | 'restricted';
-  allowedRoles?: string[];
-  allowedUsers?: string[]; // User IDs only for DTO
-  parentDocumentId?: string;
-  version?: number;
-  isLatest?: boolean;
-  tags?: string[];
-  notes?: string;
-  
-  // Metadata
-  updatedBy?: string;
-  changeReason?: string;
-}
+export type UpdateDocumentDTO = Partial<CreateDocumentDTO>;
 
 /**
  * Document summary interface
@@ -298,31 +231,29 @@ export interface DocumentFilterDTO {
 
 export interface DocumentDTO extends BaseEntityDTO {
   id: string;
-  name: string;
-  projectId: string | null;
-  phaseId: string | null;
-  inspectionId: string | null;
-  paymentId: string | null;
-  supplierId: string | null;
-  documentType: DocumentType;
-  title: string | null;
+  assignedTo: string | null;
+  createdAt: string | null;
+  deadlineDate: string | null;
   description: string | null;
   fileName: string | null;
   fileSize: number | null;
   fileUrl: string | null;
+  id: string;
+  inspectionId: string | null;
+  isInternalOnly: boolean | null;
+  isSharedWithSuppliers: boolean | null;
+  metadata: Json | null;
   mimeType: string | null;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
+  paymentId: string | null;
+  phaseId: string | null;
+  projectId: string | null;
+  sharedDate: string | null;
+  status: documentStatus | null;
+  supplierId: string | null;
+  tags: string[] | null;
+  title: string;
+  updatedAt: string | null;
   uploadedBy: string | null;
-  tags: string[];
-  isInternalOnly: boolean;
-  isSharedWithSuppliers: boolean;
-  deadlineDate: string | null;
-  assignedTo: string | null;
-  category: string | null;
-  subcategory: string | null;
-  metadata: Record<string, unknown> | null;
 }
 
 // 2. DTOs d'API (Adapter Layer)

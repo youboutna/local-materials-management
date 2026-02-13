@@ -117,12 +117,22 @@ export interface TaskDTO extends BaseEntityDTO {
   projectTitle?: string;
   phaseName?: string;
   milestoneTitle?: string;
-  tags?: string[];
-  notes?: string;
   
   // System fields
   createdAt: string;
   updatedAt: string;
+
+  // NEW: Additional database fields from task_assignments table
+  assignedBy?: string;            // assigned_by
+  assigneeEmail?: string;         // assignee_email
+  completionToken?: string;       // completion_token
+  completionUrl?: string;         // completion_url
+  criticalPath?: boolean;         // critical_path
+  mostLikelyEstimate?: number;    // most_likely_estimate
+  optimisticEstimate?: number;    // optimistic_estimate
+  pessimisticEstimate?: number;   // pessimistic_estimate
+  weight?: number;                // weight
+}
 }
 
 /**
@@ -288,7 +298,7 @@ export interface TaskFilterDTO {
  * Task details interface
  * Extended task information with relationships
  */
-export interface TaskDetailsDTO extends TaskDTO {
+export interface TaskDetailsDTO extends Omit<TaskDTO, 'attachments' | 'subtasks'> {
   // Extended relationships
   assigneeDetails?: Array<{
     id: string;

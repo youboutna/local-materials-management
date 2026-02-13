@@ -4,13 +4,22 @@
 
 **Projet** : HadraTech-GPI (Infrastructure Réseau, bâtiment, géolocalisé)  
 **Architecture** : Hexagonale (Ports & Adapters) + Référentiel Métier  
-**Phase** : **Phase Finale - $number$% Complète**  
+**OBJECTIVE FINALE** : **Phase Finale - $%100$% Complète-> o missing TypeScript Error Handling and 100% DB CRUD/UI**  
 **Rôle AGENT AI** : Architecte AI (explorer → analyser → concevoir)  
 
 ---
+en phase de migration :
 
- Bonnes Pratiques d'Architecture Hexagonale
-📋 Rôles de Chaque Couche
+```
+each field in DB/form input must ensure proper management through Model → DTO → Service → Adapter/API flow.
+
+UI Component → Transformer → DTO (camelCase) → Service → Domain ← Adapter(snake_case) → DB
+     ↑                                                                  ↓
+     └──────────────────────── Transformer ←────────────────────────────┘
+```
+## Bonnes Pratiques d'Architecture Hexagonale ##
+
+###📋 Rôles de Chaque Couche## 
 1. domain entities (domain/*)
 Rôle : Entités métier
 Responsabilité : Définir la structure des données métier

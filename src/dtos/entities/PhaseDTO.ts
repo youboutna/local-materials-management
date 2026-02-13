@@ -152,6 +152,14 @@ export interface PhaseDTO extends BaseEntityDTO {
   tags?: string[];
   createdAt: string;
   updatedAt: string;
+
+  // NEW: Additional database fields from project_phases table
+  constructionPhase?: string;           // construction_phase
+  constructionStage?: string;           // construction_stage
+  createdBy?: string;                   // created_by
+  customPhaseData?: Record<string, unknown>;                // custom_phase_data (Json)
+  humanResources?: Record<string, unknown>;                 // human_resources (Json)
+  weight?: number;                      // weight
 }
 
 // Base entity interface for DTO extensions

@@ -4,13 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
-import { MAURITANIA_REGIONS, GeographicUnit } from "@/types/mauritania";
+import { MaterialDTO } from "@/dtos/entities/MaterialDTO";
+import { WorkspaceDTO } from "@/dtos/entities/WorkspaceDTO";
+import { MAURITANIA_REGIONS, GeographicUnit } from "@/utils/mauritania";
 import { MapPin, Building2, TrendingUp, Users } from "lucide-react";
 
 interface RegionalDashboardProps {
   projects: ProjectDTO[];
-  materials?: any[];
-  workspaces?: any[];
+  materials?: MaterialDTO[];
+  workspaces?: WorkspaceDTO[];
 }
 
 const RegionalDashboard = ({ projects, materials = [], workspaces = [] }: RegionalDashboardProps) => {
@@ -25,14 +27,14 @@ const RegionalDashboard = ({ projects, materials = [], workspaces = [] }: Region
 
       // Filter materials for this region
       const regionMaterials = materials.filter(material => 
-        material.origin_location?.toLowerCase().includes(region.name.toLowerCase()) ||
-        material.origin_location?.toLowerCase().includes(region.nameAr.toLowerCase())
+        material.location?.toLowerCase().includes(region.name.toLowerCase()) ||
+        material.location?.toLowerCase().includes(region.nameAr.toLowerCase())
       );
 
       // Filter workspaces for this region
       const regionWorkspaces = workspaces.filter(workspace => 
-        workspace.location?.toLowerCase().includes(region.name.toLowerCase()) ||
-        workspace.location?.toLowerCase().includes(region.nameAr.toLowerCase())
+        workspace.location.name?.toLowerCase().includes(region.name.toLowerCase()) ||
+        workspace.location.nameAr?.toLowerCase().includes(region.nameAr.toLowerCase())
       );
 
       // Calculate metrics
@@ -41,8 +43,8 @@ const RegionalDashboard = ({ projects, materials = [], workspaces = [] }: Region
         ? regionProjects.reduce((sum, project) => sum + project.progress, 0) / regionProjects.length
         : 0;
       
-      const activeProjects = regionProjects.filter(p => p.status === 'enCours' || p.status === 'active').length;
-      const completedProjects = regionProjects.filter(p => p.status === 'termine' || p.status === 'completed').length;
+      const activeProjects = regionProjects.filter(p => p.status === 'enCours' || p.status === 'EN_ATTENTE').length;
+      const completedProjects = regionProjects.filter(p => p.status === 'termine' || p.status === 'TERMINE').length;
 
       return {
         region,

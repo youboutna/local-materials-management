@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Filter, MapPin, DollarSign, Target } from 'lucide-react';
 import { ProjectData } from '@/dtos/entities/ProjectDTO';
-import { MAURITANIA_REGIONS, GeographicUnit } from '@/types/mauritania';
+import { MAURITANIA_REGIONS, GeographicUnit } from '@/utils/mauritania';
 import { isLocationInRegion, findRegionByLocation } from '@/utils/mauritaniaUtils';
 
 interface InteractiveMapFiltersProps {

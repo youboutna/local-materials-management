@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { calculateQuantity, CreateQuantityTakeoffData } from '@/types/quantityTakeoff';
+import { calculateQuantity, CreateQuantityTakeoffData } from '@/dtos/entities/QuantityTakeoffDTO';
 import { useMaterialsForTakeoff, useCreateQuantityTakeoff } from '@/hooks/hexagonal';
 
 interface QuantityTakeoffFormProps {
@@ -20,14 +20,14 @@ interface QuantityTakeoffFormProps {
 }
 
 const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffFormProps) => {
-  const [formData, setFormData] = useState<Omit<CreateQuantityTakeoffData, 'project_id'>>({
-    material_id: '',
-    element_type: '',
+  const [formData, setFormData] = useState<Omit<CreateQuantityTakeoffData, 'projectId'>>({
+    materialId: '',
+    description: '',
     unit: 'm³',
-    length: 0,
-    width: 0,
-    height: 0,
-    note: ''
+    quantity: 0,
+    unitPrice: 0,
+    location: '',
+    calculatedBy: ''
   });
   const [calculatedQuantity, setCalculatedQuantity] = useState(0);
 
@@ -36,14 +36,13 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
   const createMutation = useCreateQuantityTakeoff(projectId);
 
   useEffect(() => {
-    const quantity = calculateQuantity(
-      formData.length, 
-      formData.width, 
-      formData.height, 
-      formData.unit
-    );
-    setCalculatedQuantity(quantity);
-  }, [formData.length, formData.width, formData.height, formData.unit]);
+    const quantity = calculateQuantity({
+      quantity: formData.quantity,
+      unit: formData.unit,
+      wastageFactor: 0.1
+    });
+    setCalculatedQuantity(quantity.totalWithWastage);
+  }, [formData.quantity, formData.unit]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

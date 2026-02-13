@@ -7,19 +7,10 @@ import { Phase } from './Phase';
 import { Document } from './Document';
 import { TimeLine } from './Project';
 
-export enum TaskStatus {
-  Todo = "todo",
-  Blocked = "blocked",
-  InProgress = "inProgress",
-  Done = "done",
-}
-
-export enum TaskPriority {
-  Low = "low",
-  Medium = "medium",
-  High = "high",
-  Urgent = "urgent",
-}
+// Align with DTO enum for architectural consistency
+import { TaskStatus as DTOTaskStatus, TaskPriority as DTOTaskPriority } from '@/dtos/entities/TaskDTO';
+export type TaskStatus = DTOTaskStatus;
+export type TaskPriority = DTOTaskPriority;
 
 export class Task {
   // Private fields for encapsulation

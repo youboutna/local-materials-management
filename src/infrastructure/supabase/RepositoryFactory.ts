@@ -28,6 +28,8 @@ import {
   IInspectionPaymentValidationRepository,
   ILoadDataRepository,
   IReportingRepository,
+  ITenderSubmissionRepository,
+  ITenderSharingRepository,
   IReportDataTransformerRepository,
   IProjectFormRepository,
   IUserRepository,
@@ -92,6 +94,7 @@ import {
   SupabaseMonitoringAdapter,
   SupabaseStakeholderAdapter
 } from './adapters';
+import { SupabaseTenderSharingAdapter } from './adapters/SupabaseTenderSharingAdapter';
 
 /**
  * Repository Registry - Enhanced Singleton Management
@@ -109,6 +112,8 @@ interface RepositoryRegistry {
   employeeRepository?: IEmployeeRepository;
   riskRepository?: IRiskRepository;
   tenderRepository?: ITenderRepository;
+  tenderSubmissionRepository?: ITenderSubmissionRepository;
+  tenderSharingRepository?: ITenderSharingRepository;
   tenderEstimateRepository?: ITenderEstimateRepository;
   paymentBlockingRepository?: IPaymentBlockingRepository;
   stakeholderRepository?: IProjectStakeholderRepository;
@@ -652,11 +657,24 @@ export class RepositoryFactory {
 
 
   /**
-   * Get Submission Secret Repository instance
+   * Get Tender Submission Repository instance
    * Lazy loaded for memory efficiency
-   * NOTE: SubmissionSecretRepository not yet implemented
    */
-  static getSubmissionSecretRepository(): any {
-    throw new Error('SubmissionSecretRepository not yet implemented');
+  static getTenderSubmissionRepository(): ITenderSubmissionRepository {
+    if (!repositoryRegistry.tenderSubmissionRepository) {
+      repositoryRegistry.tenderSubmissionRepository = new SupabaseTenderSubmissionAdapter();
+    }
+    return repositoryRegistry.tenderSubmissionRepository;
+  }
+
+  /**
+   * Get Tender Sharing Repository instance
+   * Lazy loaded for memory efficiency
+   */
+  static getTenderSharingRepository(): ITenderSharingRepository {
+    if (!repositoryRegistry.tenderSharingRepository) {
+      repositoryRegistry.tenderSharingRepository = new SupabaseTenderSharingAdapter();
+    }
+    return repositoryRegistry.tenderSharingRepository;
   }
 }

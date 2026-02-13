@@ -13,6 +13,8 @@ export interface SubmissionSecretDTO {
   maxAccess: number;
   createdAt: string;
   updatedAt: string;
+  evaluationPhase?: string;
+  evaluationStage?: string;
 }
 
 export interface GenerateSubmissionSecretRequestDTO {

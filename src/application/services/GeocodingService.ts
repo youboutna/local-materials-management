@@ -4,6 +4,7 @@
  */
 
 import { AppError, NetworkError } from '@/utils/errors';
+import { GeographicUnit } from '@/utils/mauritania';
 
 export interface GeocodingResult {
   address: string;
@@ -112,7 +113,7 @@ export class GeocodingService {
 
   private async reverseGeocodeLocal(latitude: number, longitude: number): Promise<ReverseGeocodingResult[]> {
     try {
-      const { MAURITANIA_REGIONS, MAURITANIA_CITIES } = await import('@/types/mauritania');
+      const { MAURITANIA_REGIONS, MAURITANIA_CITIES } = await import('@/utils/mauritania');
       const results: ReverseGeocodingResult[] = [];
       
       let nearestRegion: any = null;
@@ -207,7 +208,7 @@ export class GeocodingService {
     const dLat = this.toRadians(lat2 - lat1);
     const dLng = this.toRadians(lng2 - lng1);
     const a = Math.sin(dLat / 2) ** 2 + Math.cos(this.toRadians(lat1)) * Math.cos(this.toRadians(lat2)) * Math.sin(dLng / 2) ** 2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));@/utils/mauritania
   }
 
   private toRadians(degrees: number): number { return degrees * (Math.PI / 180); }

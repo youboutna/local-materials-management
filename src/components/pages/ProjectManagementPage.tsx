@@ -80,6 +80,7 @@ import {
 } from '@/dtos/entities/ProjectDTO';
 
 import { ProjectDashboard } from './ProjectDashboard';
+import { Skeleton } from '../ui/skeleton';
 
 /**
  * Comprehensive Project Management Page

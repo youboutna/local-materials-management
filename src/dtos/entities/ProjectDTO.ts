@@ -4,9 +4,8 @@
  */
 
 
-import { BaseEntityDTO, BaseFormDTO, BaseUIState, StandardStatus, StandardPriority, LocationDTO } from '../shared';
+import { BaseEntityDTO, BaseFormDTO, BaseUIState, StandardStatus, StandardPriority } from '../shared';
 import { PerformanceMetricsDTO } from '../transforms';
-import { InsuranceCertificateDTO } from './InsuranceCertificateDTO';
 
 // Construction phase types
 export type ConstructionPhase =
@@ -22,22 +21,18 @@ export type ConstructionPhase =
   | "finishing"
   | "post_construction"
   | "handover";
-import { InsurancePolicyDTO } from './InsuranceDTO';
-import { MaterialDTO, MaterialFormDataDTO } from './MaterialDTO';
+import { MaterialDTO } from './MaterialDTO';
 import { MilestoneDTO } from './MilestoneDTO';
 import { NotificationDTO } from './NotificationDTO';
 import { PaymentDTO } from './PaymentDTO';
-import { PhaseDTO, PhaseFormDataDTO, PhaseType, PhaseStatus, PhasePriority } from './PhaseDTO';
+import { PhaseDTO } from './PhaseDTO';
 import { ProjectAnalyticsDTO } from './ProjectAnalyticsDTO';
-import { RiskDTO, RiskFormDataDTO } from './RiskDTO';
+import { RiskDTO } from './RiskDTO';
 import { StakeholderDTO } from './StakeholderDTO';
-import { SupplierDTO } from './SupplierDTO';
-import { TaskDTO, TaskFormDataDTO } from './TaskDTO';
+import { TaskDTO } from './TaskDTO';
 import { TenderDTO } from './TenderDTO';
-import { EmployeeDTO, EmployeeFormDataDTO } from './EmployeeDTO';
-import { InspectionDTO, InspectionFormDataDTO } from './InspectionDTO';
-import { DocumentDTO, DocumentFormDataDTO } from './DocumentDTO';
-import { GanttChartData, PERTAnalysis } from '@/domain/entities';
+import { InspectionDTO } from './InspectionDTO';
+import { DocumentDTO } from './DocumentDTO';
 
 // Core project status types - standardized and comprehensive
 export enum ProjectStatus {
@@ -329,6 +324,7 @@ export interface ProjectDTO extends BaseEntityDTO {
   startDate: string;
   endDate?: string;
   estimatedDurationDays?: number;
+  attributionDate?: string;
   
   // Financials
   budget: number;
@@ -353,13 +349,11 @@ export interface ProjectDTO extends BaseEntityDTO {
   currentStage?: ConstructionStage;
   methodology?: "waterfall" | "agile" | "hybrid";
   
-  // Classification
+  // Classification and procurement
   category?: string;
   subCategory?: string;
   priorityLevel?: "faible" | "moyenne" | "elevee" | "tresElevee";
   riskLevel?: "faible" | "moyen" | "eleve" | "critique";
-  
-  // Procurement
   projectReference?: string;
   selectionMode?: string;
   financingSource?: string;
@@ -375,6 +369,8 @@ export interface ProjectDTO extends BaseEntityDTO {
   insuranceRequired?: boolean;
   bankGuaranteeRequired?: boolean;
   bankGuaranteeAmount?: number;
+  bankGuaranteePercentage?: number;
+  checkScheduleLastRun?: Record<string, unknown>;
   
   // Site utilities
   hasUtilities?: boolean;
@@ -651,7 +647,7 @@ export interface ProjectUIState extends BaseUIState<ProjectDTO> {
   
 }
 // Interface for create project request
-interface CreateProjectRequestDTO {
+export interface CreateProjectRequestDTO {
   title: string;
   description?: string;
   budget?: number;

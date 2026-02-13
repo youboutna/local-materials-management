@@ -16,7 +16,7 @@ import {
   City, 
   MAURITANIA_REGIONS, 
   MAURITANIA_CITIES 
-} from '@/types/mauritania';
+} from '@/utils/mauritania';
 import { 
   searchRegions, 
   searchCities, 

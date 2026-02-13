@@ -5,7 +5,7 @@ import {
   CreateSharingSecretDTO, 
   CreateAccessLogDTO, 
   ValidateSecretResponseDTO 
-} from '@/types/tender-sharing-dto';
+} from '@/dtos/entities/tender-sharing-dto';
 
 /**
  * Service for managing secure tender document sharing

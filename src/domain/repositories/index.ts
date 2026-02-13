@@ -17,6 +17,8 @@ export * from './IRiskRepository';
 export * from './ITenderRepository';
 export * from './ITenderEstimateRepository';
 export * from './ITenderDocumentRepository';
+export * from './ITenderSubmissionRepository';
+export * from './ITenderSharingRepository';
 export * from './ISupplierRepository';
 export * from './IDocumentRepository';
 export * from './IQuantityTakeoffRepository';

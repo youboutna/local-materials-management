@@ -16,7 +16,7 @@ import LocationAutocomplete from './LocationAutocomplete';
 
 // Import DTOs following Rule #4
 import { LocationDTO } from '@/dtos/shared';
-import { GeographicUnit, Region, City } from '@/types/mauritania';
+import { GeographicUnit, Region, City } from '@/utils/mauritania';
 import { getWilayaByCode, getCityByCode } from '@/utils/mauritaniaUtils';
 
 interface EnhancedLocationSelectorProps {

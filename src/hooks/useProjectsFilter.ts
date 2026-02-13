@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { ProjectData } from "@/components/ProjectCard";
 import { SortOption } from "@/components/projects/ProjectFilters";
 import { useNavigate } from "react-router-dom";
-import { MAURITANIA_REGIONS, Region } from "@/types/mauritania";
+import { MAURITANIA_REGIONS, Region } from "@/utils/mauritania";
 
 export const useProjectsFilter = (projects: ProjectData[]) => {
   const navigate = useNavigate();

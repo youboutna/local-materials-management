@@ -45,9 +45,16 @@ export class SupplierTransformer implements EntityToDTOMapper<Supplier, Supplier
       rating: entity.rating?.overall || undefined,
       isActive: entity.status === 'active',
       nif: entity.nif || undefined,
-      commerceRegisterRef: undefined,
+      commerceRegisterRef: undefined, // Not in domain entity
       createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt
+      updatedAt: entity.updatedAt,
+
+      // NEW: Additional database fields from suppliers table
+      accountNumber: undefined,                    // account_number - not in domain entity
+      bankName: undefined,                         // bank_name - not in domain entity
+      defaultPasswordResetRequired: undefined,     // default_password_reset_required - not in domain entity
+      rib: undefined,                              // rib - not in domain entity
+      userId: undefined,                           // user_id - not in domain entity
     };
   }
 
@@ -145,8 +152,27 @@ export class SupplierTransformer implements EntityToDTOMapper<Supplier, Supplier
     return SupplierTransformer.toDTO(entity);
   }
 
-  fromDtosToAdapter(dtos: SupplierDTO[]): SupplierDTO[] {
-    return dtos;
+  fromDtosToAdapter(dtos: SupplierDTO[]): Record<string, unknown>[] {
+    return dtos.map(dto => ({
+      id: dto.id,
+      name: dto.name,
+      email: dto.email,
+      phone: dto.phone,
+      address: dto.address,
+      contact_person: dto.contactPerson,
+      category: dto.category,
+      rating: dto.rating,
+      is_active: dto.isActive,
+      nif: dto.nif,
+      commerce_register_ref: dto.commerceRegisterRef,
+      account_number: dto.accountNumber,
+      bank_name: dto.bankName,
+      default_password_reset_required: dto.defaultPasswordResetRequired,
+      rib: dto.rib,
+      user_id: dto.userId,
+      created_at: dto.createdAt,
+      updated_at: dto.updatedAt,
+    }));
   }
 
   toResponseDto(entity: Supplier): SupplierDTO {
@@ -168,7 +194,14 @@ export class SupplierTransformer implements EntityToDTOMapper<Supplier, Supplier
       rating: dto.rating,
       isActive: dto.isActive,
       nif: dto.nif,
-      commerceRegisterRef: dto.commerceRegisterRef
+      commerceRegisterRef: dto.commerceRegisterRef,
+
+      // NEW: Additional database fields for updates
+      accountNumber: dto.accountNumber,
+      bankName: dto.bankName,
+      defaultPasswordResetRequired: dto.defaultPasswordResetRequired,
+      rib: dto.rib,
+      userId: dto.userId,
     };
   }
 

@@ -109,6 +109,13 @@ export interface InspectionDTO extends BaseEntityDTO {
   reports?: string[]; // Report URLs only for DTO
   tags?: string[];
   notes?: string;
+
+  // NEW: Additional database fields from inspections table
+  inspectionDate?: string;      // inspection_date
+  nextInspectionDate?: string;  // next_inspection_date
+  score?: number;               // score (quality rating)
+  supplierId?: string;          // supplier_id
+}
 }
 
 /**

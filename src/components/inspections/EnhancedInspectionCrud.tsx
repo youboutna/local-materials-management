@@ -14,7 +14,7 @@ import ProjectSelector from '@/components/selectors/ProjectSelector';
 import { format } from 'date-fns';
 import { useEnhancedInspectionCrudHex } from '@/hooks/hexagonal';
 import { InspectionDTO, InspectionStatus } from '@/dtos/entities/InspectionDTO';
-import type { InspectionStatus, InspectionDTO } from '@/dtos/entities/InspectionDTO';
+import type { InspectionStatus, InspectionDTO, CreateInspectionDTO } from '@/dtos/entities/InspectionDTO';
 
 interface LocalInspectionFormData {
   projectId: string;

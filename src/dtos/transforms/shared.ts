@@ -20,7 +20,7 @@ export interface EntityToDTOMapper<Entity, DTO> {
   toDTO(entity: Entity): DTO;
   fromDTO(dto: DTO): Entity;
   fromEntityToDTO(entity: Entity): DTO;
-  fromDtosToAdapter(dtos: DTO[]): DTO[];
+  fromDtosToAdapter(dtos: DTO[]): DTO[] | Record<string, unknown>[];
   toResponseDto(entity: Entity): DTO;
   toRequestDto(dto: DTO): DTO;
   toUpdateDto(dto: DTO): Partial<DTO>;

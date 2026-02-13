@@ -15,9 +15,9 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MAURITANIA_REGIONS } from '@/types/mauritania';
+import { MAURITANIA_REGIONS } from '@/utils/mauritania';
 import { getAllGeographicUnits, getRegionsWithCapitals, getRegionsWithPorts, getRegionsWithUniversities } from '@/utils/mauritaniaUtils';
-import { GeographicUnit } from '@/types/mauritania';
+import { GeographicUnit } from '@/utils/mauritania';
 import LocationAutocomplete from '../location/LocationAutocomplete';
 import { WorkspaceDTO } from '@/dtos/entities/WorkspaceDTO';
 import { OperationalStatus } from '@/domain/entities/Workspace';

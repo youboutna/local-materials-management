@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { SubmissionSecretService } from '@/application/services/SubmissionSecretService';
+import { SubmissionSecretDTO } from '@/dtos/entities/SubmissionSecretDTO';
 
 interface SubmissionSecretDisplayProps {
   submissionId: string;
@@ -29,7 +30,7 @@ export const SubmissionSecretDisplay: React.FC<SubmissionSecretDisplayProps> = (
   // Fetch submission secret
   const { data: submission, isLoading } = useQuery({
     queryKey: ['submission-secret-display', submissionId],
-    queryFn: async () => {
+    queryFn: async (): Promise<SubmissionSecretDTO | null> => {
       const data = await SubmissionSecretService.getSubmissionById(submissionId);
       return data;
     },
@@ -83,7 +84,7 @@ export const SubmissionSecretDisplay: React.FC<SubmissionSecretDisplayProps> = (
     );
   }
 
-  if (!submission?.secret_code) {
+  if (!submission?.secretCode) {
     return (
       <Alert>
         <AlertCircle className="h-4 w-4" />
@@ -95,7 +96,7 @@ export const SubmissionSecretDisplay: React.FC<SubmissionSecretDisplayProps> = (
   }
 
   const secretValid = SubmissionSecretService.isSecretValid(submission);
-  const formattedCode = formatSecretCode(submission.secret_code);
+  const formattedCode = formatSecretCode(submission.secretCode);
 
   return (
     <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-secondary/5">
@@ -133,7 +134,7 @@ export const SubmissionSecretDisplay: React.FC<SubmissionSecretDisplayProps> = (
             <Button
               variant="outline"
               size="icon"
-              onClick={() => copyToClipboard(submission.secret_code || '')}
+              onClick={() => copyToClipboard(submission.secretCode || '')}
               disabled={!showSecret}
             >
               <Copy className="h-4 w-4" />
@@ -151,14 +152,14 @@ export const SubmissionSecretDisplay: React.FC<SubmissionSecretDisplayProps> = (
             )}
           </Badge>
           
-          {submission.secret_expires_at && (
+          {submission.expiresAt && (
             <Badge variant="outline">
-              Expire le: {new Date(submission.secret_expires_at).toLocaleDateString()}
+              Expire le: {new Date(submission.expiresAt).toLocaleDateString()}
             </Badge>
           )}
           
           <Badge variant="outline">
-            Accès: {submission.secret_access_count}/{submission.max_secret_access}
+            Accès: {submission.accessCount}/{submission.maxAccess}
           </Badge>
         </div>
 
@@ -171,7 +172,7 @@ export const SubmissionSecretDisplay: React.FC<SubmissionSecretDisplayProps> = (
               <li>Communiquez ce code uniquement à la commission d'évaluation officielle</li>
               <li>Le code permet d'accéder à tous vos documents de soumission</li>
               <li>Vous pouvez régénérer un nouveau code si nécessaire</li>
-              <li>Le code expire automatiquement après {submission.max_secret_access} accès ou à la date d'expiration</li>
+              <li>Le code expire automatiquement après {submission.maxAccess} accès ou à la date d'expiration</li>
             </ul>
           </AlertDescription>
         </Alert>
