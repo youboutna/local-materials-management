@@ -141,7 +141,7 @@ export class GanttPertDataService {
           end_date: task.endDate,
           progress: task.progress || 0
         })),
-        criticalPath: criticalPath.map(cp => cp.id),
+        criticalPath: Array.isArray(criticalPath) ? criticalPath.map((cp: any) => cp.id || cp) : [],
         spi
       };
     } catch (error) {
