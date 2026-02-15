@@ -7,9 +7,25 @@
  */
 
 import { IWorkspaceRepository } from '@/domain/repositories/IWorkspaceRepository';
-import { WorkspaceDTO, CreateWorkspaceDTO, UpdateWorkspaceDTO } from '@/dtos/entities/WorkspaceDTO';
-import { WorkspaceTransformer } from '@/dtos/transforms/WorkspaceTransformer';
+import { Workspace } from '@/domain/entities/Workspace';
 import { supabase } from '@/integrations/supabase/client';
+
+// Database row interface for workspaces table
+interface WorkspaceRow {
+  id: string;
+  name: string;
+  description?: string;
+  owner_id: string;
+  project_id?: string;
+  workspace_type?: string;
+  location?: string;
+  capacity?: number;
+  status?: string;
+  is_active?: boolean;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
 
 /**
  * Supabase implementation of Workspace Repository
@@ -19,13 +35,27 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
   /**
    * Create a new workspace
    */
-  async create(workspaceDTO: CreateWorkspaceDTO): Promise<WorkspaceDTO> {
+  async create(workspace: Omit<Workspace, 'id' | 'createdAt' | 'updatedAt'>): Promise<Workspace> {
     try {
-      const entity = WorkspaceTransformer.fromCreateDTOToEntity(workspaceDTO);
-      
+      const workspaceData = {
+        id: workspace.id || crypto.randomUUID(),
+        name: workspace.name,
+        description: workspace.description,
+        owner_id: workspace.ownerId,
+        project_id: workspace.projectId,
+        workspace_type: workspace.workspaceType,
+        location: workspace.location,
+        capacity: workspace.capacity,
+        status: workspace.status,
+        is_active: workspace.isActive,
+        metadata: workspace.metadata,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
       const { data, error } = await supabase
         .from('workspaces')
-        .insert([entity])
+        .insert(workspaceData)
         .select()
         .single();
 
@@ -33,7 +63,7 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
         throw new Error(`Failed to create workspace: ${error.message}`);
       }
 
-      return WorkspaceTransformer.toDTO(data);
+      return this.mapToEntity(data);
     } catch (error) {
       console.error('SupabaseWorkspaceAdapter.create error:', error);
       throw error;
@@ -43,7 +73,7 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
   /**
    * Get workspace by ID
    */
-  async findById(id: string): Promise<WorkspaceDTO | null> {
+  async findById(id: string): Promise<Workspace | null> {
     try {
       const { data, error } = await supabase
         .from('workspaces')
@@ -58,7 +88,7 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
         throw new Error(`Failed to find workspace: ${error.message}`);
       }
 
-      return WorkspaceTransformer.toDTO(data);
+      return this.mapToEntity(data);
     } catch (error) {
       console.error('SupabaseWorkspaceAdapter.findById error:', error);
       throw error;
@@ -68,7 +98,7 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
   /**
    * Get all workspaces
    */
-  async findAll(): Promise<WorkspaceDTO[]> {
+  async findAll(): Promise<Workspace[]> {
     try {
       const { data, error } = await supabase
         .from('workspaces')
@@ -79,7 +109,7 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
         throw new Error(`Failed to fetch workspaces: ${error.message}`);
       }
 
-      return data.map(WorkspaceTransformer.toDTO);
+      return data.map(d => this.mapToEntity(d));
     } catch (error) {
       console.error('SupabaseWorkspaceAdapter.findAll error:', error);
       throw error;
@@ -89,13 +119,24 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
   /**
    * Update an existing workspace
    */
-  async update(id: string, updateDTO: UpdateWorkspaceDTO): Promise<WorkspaceDTO> {
+  async update(id: string, updates: Partial<Workspace>): Promise<Workspace> {
     try {
-      const entity = WorkspaceTransformer.fromUpdateDTOToEntity(updateDTO);
-      
+      const updateData: Record<string, unknown> = {};
+      if (updates.name !== undefined) updateData.name = updates.name;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.ownerId !== undefined) updateData.owner_id = updates.ownerId;
+      if (updates.projectId !== undefined) updateData.project_id = updates.projectId;
+      if (updates.workspaceType !== undefined) updateData.workspace_type = updates.workspaceType;
+      if (updates.location !== undefined) updateData.location = updates.location;
+      if (updates.capacity !== undefined) updateData.capacity = updates.capacity;
+      if (updates.status !== undefined) updateData.status = updates.status;
+      if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
+      if (updates.metadata !== undefined) updateData.metadata = updates.metadata;
+      updateData.updated_at = new Date().toISOString();
+
       const { data, error } = await supabase
         .from('workspaces')
-        .update(entity)
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
@@ -104,7 +145,7 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
         throw new Error(`Failed to update workspace: ${error.message}`);
       }
 
-      return WorkspaceTransformer.toDTO(data);
+      return this.mapToEntity(data);
     } catch (error) {
       console.error('SupabaseWorkspaceAdapter.update error:', error);
       throw error;
@@ -114,7 +155,7 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
   /**
    * Delete a workspace
    */
-  async delete(id: string): Promise<boolean> {
+  async delete(id: string): Promise<void> {
     try {
       const { error } = await supabase
         .from('workspaces')
@@ -124,8 +165,6 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
       if (error) {
         throw new Error(`Failed to delete workspace: ${error.message}`);
       }
-
-      return true;
     } catch (error) {
       console.error('SupabaseWorkspaceAdapter.delete error:', error);
       throw error;
@@ -133,161 +172,66 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
   }
 
   /**
-   * Get workspaces by owner ID
+   * Get workspaces by status
    */
-  async findByOwnerId(ownerId: string): Promise<WorkspaceDTO[]> {
+  async findByStatus(status: string): Promise<Workspace[]> {
     try {
       const { data, error } = await supabase
         .from('workspaces')
         .select('*')
-        .eq('owner_id', ownerId)
+        .eq('status', status)
         .order('created_at', { ascending: false });
 
       if (error) {
-        throw new Error(`Failed to fetch owner workspaces: ${error.message}`);
+        throw new Error(`Failed to fetch workspaces by status: ${error.message}`);
       }
 
-      return data.map(WorkspaceTransformer.toDTO);
+      return data.map(d => this.mapToEntity(d));
     } catch (error) {
-      console.error('SupabaseWorkspaceAdapter.findByOwnerId error:', error);
+      console.error('SupabaseWorkspaceAdapter.findByStatus error:', error);
       throw error;
     }
   }
 
   /**
-   * Get workspaces by project ID
+   * Get workspaces by location
    */
-  async findByProjectId(projectId: string): Promise<WorkspaceDTO[]> {
+  async findByLocation(location: string): Promise<Workspace[]> {
     try {
       const { data, error } = await supabase
         .from('workspaces')
         .select('*')
-        .eq('project_id', projectId)
+        .eq('location', location)
         .order('created_at', { ascending: false });
 
       if (error) {
-        throw new Error(`Failed to fetch project workspaces: ${error.message}`);
+        throw new Error(`Failed to fetch workspaces by location: ${error.message}`);
       }
 
-      return data.map(WorkspaceTransformer.toDTO);
+      return data.map(d => this.mapToEntity(d));
     } catch (error) {
-      console.error('SupabaseWorkspaceAdapter.findByProjectId error:', error);
+      console.error('SupabaseWorkspaceAdapter.findByLocation error:', error);
       throw error;
     }
   }
 
   /**
-   * Get active workspaces
+   * Map database row to Workspace entity
    */
-  async findActive(): Promise<WorkspaceDTO[]> {
-    try {
-      const { data, error } = await supabase
-        .from('workspaces')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        throw new Error(`Failed to fetch active workspaces: ${error.message}`);
-      }
-
-      return data.map(WorkspaceTransformer.toDTO);
-    } catch (error) {
-      console.error('SupabaseWorkspaceAdapter.findActive error:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get workspace by type
-   */
-  async findByType(type: string): Promise<WorkspaceDTO[]> {
-    try {
-      const { data, error } = await supabase
-        .from('workspaces')
-        .select('*')
-        .eq('workspace_type', type)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        throw new Error(`Failed to fetch workspaces by type: ${error.message}`);
-      }
-
-      return data.map(WorkspaceTransformer.toDTO);
-    } catch (error) {
-      console.error('SupabaseWorkspaceAdapter.findByType error:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Update workspace status
-   */
-  async updateStatus(id: string, status: string): Promise<WorkspaceDTO> {
-    try {
-      const { data, error } = await supabase
-        .from('workspaces')
-        .update({ 
-          status,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        throw new Error(`Failed to update workspace status: ${error.message}`);
-      }
-
-      return WorkspaceTransformer.toDTO(data);
-    } catch (error) {
-      console.error('SupabaseWorkspaceAdapter.updateStatus error:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get workspace statistics
-   */
-  async getWorkspaceStatistics(): Promise<{
-    totalWorkspaces: number;
-    activeWorkspaces: number;
-    workspacesByType: Record<string, number>;
-    workspacesByStatus: Record<string, number>;
-  }> {
-    try {
-      const { data, error } = await supabase
-        .from('workspaces')
-        .select('workspace_type, status, is_active');
-
-      if (error) {
-        throw new Error(`Failed to fetch workspace statistics: ${error.message}`);
-      }
-
-      const totalWorkspaces = data.length;
-      const activeWorkspaces = data.filter(w => w.is_active).length;
-      
-      const workspacesByType = data.reduce((acc, workspace) => {
-        const type = workspace.workspace_type || 'unknown';
-        acc[type] = (acc[type] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      const workspacesByStatus = data.reduce((acc, workspace) => {
-        const status = workspace.status || 'unknown';
-        acc[status] = (acc[status] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      return {
-        totalWorkspaces,
-        activeWorkspaces,
-        workspacesByType,
-        workspacesByStatus
-      };
-    } catch (error) {
-      console.error('SupabaseWorkspaceAdapter.getWorkspaceStatistics error:', error);
-      throw error;
-    }
+  private mapToEntity(data: WorkspaceRow): Workspace {
+    return {
+      id: data.id,
+      workspaceId: data.id, // Assuming workspaceId is same as id for now
+      workspaceCode: `WS-${data.id.slice(0, 8)}`, // Generate a simple code
+      name: data.name,
+      location: data.location || 'Nouakchott', // Default location
+      description: data.description,
+      capacity: data.capacity,
+      status: data.status === 'active' ? OperationalStatus.active :
+             data.status === 'inactive' ? OperationalStatus.inactive :
+             OperationalStatus.closed,
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at)
+    };
   }
 }

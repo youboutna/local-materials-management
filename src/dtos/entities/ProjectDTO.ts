@@ -439,6 +439,7 @@ export interface ProjectDetailDTO extends ProjectDTO {
   materials: MaterialDTO[];
   stakeholders: StakeholderDTO[];
   alerts: ProjectAlert[];
+  inspections: InspectionDTO[];
   
   // Construction details
   plannedPhases: PhaseDTO[];
@@ -636,7 +637,6 @@ export interface UpdateProjectDTO extends Partial<Omit<ProjectDTO, keyof BaseEnt
 
 // Project UI State - for React hooks and components
 export interface ProjectUIState extends BaseUIState<ProjectDTO> {
-  formData: ProjectDTO;
   calculatedFields?: {
     totalCost?: number;
     completionPercentage?: number;

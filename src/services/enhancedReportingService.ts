@@ -1,8 +1,8 @@
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { supabase } from '@/integrations/supabase/client';
-import { ProjectData } from '@/types/project';
+import { ProjectData } from '@/dtos/entities/ProjectDTO';
 import { ReportCalculations } from '@/utils/reportCalculations';
-import { ProjectCalculationService } from '@/services/ProjectCalculationService';
+import { ProjectCalculationService } from '@/application/services/ProjectCalculationService';
 import {
   ProjectReportDTO,
   EnhancedPhaseDTO,
@@ -11,8 +11,15 @@ import {
   FinancialMetricsDTO,
   RiskAssessmentDTO,
   ReportData,
-  CostCalculation
-} from '@/types/reportTypes';
+  CostCalculation,
+  RiskItemDTO
+} from '@/dtos/entities/ReportDTO';
+import { ResourceUtilization } from '@/types/calculations';
+import { Database } from '@/integrations/supabase/types';
+
+// Types officiels Supabase pour les tables utilisées
+type ProjectPhaseRow = Database['public']['Tables']['project_phases']['Row'];
+type InspectionRow = Database['public']['Tables']['inspections']['Row'];
 
 export class EnhancedReportingService {
   private reportingRepository = RepositoryFactory.getReportingRepository();
@@ -24,8 +31,14 @@ export class EnhancedReportingService {
     reportDTO: ProjectReportDTO;
     reportData: ReportData;
     costCalculation: CostCalculation;
-    resourceUtilization: any;
-    healthScore: any;
+    resourceUtilization: ResourceUtilization;
+    healthScore: {
+      overallScore: number;
+      scheduleScore: number;
+      budgetScore: number;
+      qualityScore: number;
+      riskScore: number;
+    };
   }> {
     const instance = new EnhancedReportingService();
     return instance.generateCompleteProjectReportInstance(project);
@@ -35,8 +48,14 @@ export class EnhancedReportingService {
     reportDTO: ProjectReportDTO;
     reportData: ReportData;
     costCalculation: CostCalculation;
-    resourceUtilization: any;
-    healthScore: any;
+    resourceUtilization: ResourceUtilization;
+    healthScore: {
+      overallScore: number;
+      scheduleScore: number;
+      budgetScore: number;
+      qualityScore: number;
+      riskScore: number;
+    };
   }> {
     try {
       // Fetch all required data in parallel using repository
@@ -67,7 +86,10 @@ export class EnhancedReportingService {
         remainingBudget: (project.budget || 0) - realCosts.totalSpent,
         costVariance: realCosts.totalSpent - (project.budget || 0),
         estimatedCost: realCosts.estimatedCost,
-        actualCost: realCosts.actualPhaseCost
+        actualCost: realCosts.actualPhaseCost,
+        efficiency: realCosts.totalSpent > 0 ? ((project.budget || 0) / realCosts.totalSpent) * 100 : 100,
+        projectedCompletion: new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toISOString(), // Default 30 days from now
+        projectedOverrun: Math.max(0, realCosts.totalSpent - (project.budget || 0))
       };
 
       // Calculate timeline performance
@@ -82,7 +104,7 @@ export class EnhancedReportingService {
 
       // Calculate overall health score
       const budgetUtilization = project.budget > 0 ? (realCosts.totalSpent / project.budget) * 100 : 0;
-      const healthScore = NewService.calculateProjectHealthScore( // Update the method call to use the new service
+      const healthScore = ProjectCalculationService.calculateProjectHealthScore(
         project.progress,
         budgetUtilization,
         timelinePerformance.completionRate || 0,
@@ -393,7 +415,7 @@ export class EnhancedReportingService {
     }
   }
 
-  private static calculatePhaseRiskLevel(phase: any): 'low' | 'medium' | 'high' {
+  private static calculatePhaseRiskLevel(phase: ProjectPhaseRow): 'low' | 'medium' | 'high' {
     const progress = phase.progress || 0;
     const budget = phase.estimated_cost || 0;
     const actualCost = phase.actual_cost || 0;
@@ -439,11 +461,11 @@ export class EnhancedReportingService {
     };
   }
 
-  private static calculateOnTimePerformance(phases: any[]): number {
+  private static calculateOnTimePerformance(phases: ProjectPhaseRow[]): number {
     if (!phases || phases.length === 0) return 100;
     
     const onTimePhases = phases.filter(p => {
-      if (p.status === 'completed') {
+      if (p.status === 'completed' && p.end_date) {
         const endDate = new Date(p.end_date);
         const now = new Date();
         return now <= endDate;
@@ -454,7 +476,7 @@ export class EnhancedReportingService {
     return phases.length > 0 ? (onTimePhases / phases.length) * 100 : 100;
   }
 
-  private static calculateQualityFromInspections(inspections: any[]): number {
+  private static calculateQualityFromInspections(inspections: InspectionRow[]): number {
     if (!inspections || inspections.length === 0) return 85;
     
     const completedInspections = inspections.filter(i => 
@@ -471,7 +493,7 @@ export class EnhancedReportingService {
     return Math.max(50, Math.min(100, (approvalRate * 100) - rejectionPenalty));
   }
 
-  private static calculateTeamEfficiency(project: ProjectData, phases: any[]): number {
+  private static calculateTeamEfficiency(project: ProjectData, phases: ProjectPhaseRow[]): number {
     if (!phases || phases.length === 0) return 90;
     
     const avgProgress = phases.reduce((sum, p) => sum + (p.progress || 0), 0) / phases.length;
@@ -512,8 +534,8 @@ export class EnhancedReportingService {
     ];
   }
 
-  private static generateRiskAssessment(project: ProjectData): any[] {
-    const risks: any[] = [];
+  private static generateRiskAssessment(project: ProjectData): RiskItemDTO[] {
+    const risks: RiskItemDTO[] = [];
     
     // Budget risk
     if (project.progress < 50 && new Date() > new Date(project.startDate)) {
@@ -531,7 +553,7 @@ export class EnhancedReportingService {
     return risks;
   }
 
-  private static calculateOverallRiskLevel(risks: any[]): 'low' | 'medium' | 'high' | 'critical' {
+  private static calculateOverallRiskLevel(risks: RiskItemDTO[]): 'low' | 'medium' | 'high' | 'critical' {
     if (risks.length === 0) return 'low';
     const avgRiskScore = risks.reduce((sum, r) => sum + r.riskScore, 0) / risks.length;
     if (avgRiskScore > 70) return 'critical';

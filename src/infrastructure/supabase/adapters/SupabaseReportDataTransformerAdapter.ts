@@ -13,9 +13,10 @@ import {
   FinancialMetricsDTO,
   RiskAssessmentDTO
 } from '@/dtos/entities/ReportDTO';
+import { RiskDTO, RiskCategory, RiskStatus, RiskLevel } from '@/dtos/entities/RiskDTO';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import { ProjectDataCalculations } from '@/utils/projectDataCalculations';
-import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
+import { ProjectData, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { Database } from '@/integrations/supabase/types';
 import { Project } from '@/domain/entities/Project';
 import { ProjectTransformer } from '@/dtos/transforms';
@@ -33,7 +34,7 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
    * Transform project data for reporting
    * Following hexagonal architecture: Adapter → Entity → Transformer → DTO
    */
-  async transformProjectForReport(project: ProjectDetailDTO): Promise<ProjectReportDTO> {
+  async transformProjectForReport(project: ProjectData): Promise<ProjectReportDTO> {
     try {
       // 1. Convert ProjectData to Project entity (Domain)
       const projectEntity = this.createProjectEntity(project);
@@ -62,35 +63,24 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
       const evmMetrics = ReportCalculations.calculateEVMMetrics(projectEntity, actualCost, phases);
 
       // 5. Use ProjectDataCalculations for project analytics (Domain logic)
-      const analytics = ProjectDataCalculations.calculateProjectHealthScore(
-        projectEntity.progress || 0,
-        85, // Default budget utilization
-        90, // Default schedule performance
-        88  // Default quality score
-      );
+      const analytics = await this.calculateProjectAnalytics(project);
 
-      // 6. Transform Project entity to DTO using transformer
-      const projectDTO = ProjectTransformer.toResponseDto(projectEntity);
+      // 6. Calculate financial metrics and risk assessment
+      const financialMetrics = await this.calculateFinancialMetrics(project.id);
+      const riskAssessment = await this.assessProjectRisks(project);
 
-      // 7. Return final report DTO with all data
+      // 7. Fetch enhanced phases and construction milestones
+      const enhancedPhases = await this.fetchEnhancedPhases(project.id);
+      const constructionMilestones = await this.fetchConstructionMilestones(project.id);
+
+      // 8. Return final report DTO with all data
       return {
-        project: {
-          ...projectDTO,
-          phases: phases.map(p => ({
-            ...p,
-            progress: this.calculatePhaseProgress(p),
-            status: this.getPhaseStatus(p)
-          })),
-          milestones: milestones.map(m => ({
-            ...m,
-            status: this.getMilestoneStatus(m)
-          })),
-          materials: materials,
-          inspections: inspections
-        },
-        evmMetrics,
+        project,
+        phases: enhancedPhases,
+        constructionMilestones,
         analytics,
-        generatedAt: new Date().toISOString()
+        financialMetrics,
+        riskAssessment
       };
     } catch (error) {
       console.error('Error transforming project for report:', error);
@@ -113,10 +103,8 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
       projectData.startDate ? new Date(projectData.startDate) : null,
       projectData.endDate ? new Date(projectData.endDate) : null,
       projectData.location || '',
-      projectData.coordinates ? {
-        latitude: projectData.coordinates.latitude || 0,
-        longitude: projectData.coordinates.longitude || 0
-      } : undefined,
+      projectData.coordinates?.latitude?.toString() || undefined,
+      projectData.coordinates?.longitude?.toString() || undefined,
       projectData.teamSize || 0,
       projectData.thumbnail || ''
     );
@@ -360,7 +348,7 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
           issueDate: new Date(bg.issue_date),
           expiryDate: new Date(bg.expiry_date),
           bankName: bg.bank_name,
-          status: bg.status as 'active' | 'expired' | 'claimed'
+          status: 'active' as const,
         })) || [],
         insuranceCoverage: insurance.data?.map(ins => ({
           id: ins.id,
@@ -449,7 +437,7 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
     return 'medium';
   }
 
-  private calculatePhaseRiskLevel(phase: DatabasePhaseData): 'low' | 'medium' | 'high' {
+  private calculatePhaseRiskLevel(phase: ProjectPhaseRow): 'low' | 'medium' | 'high' {
     const progress = phase.progress || 0;
     const budget = phase.estimated_cost || 0;
     const actualCost = phase.actual_cost || 0;
@@ -459,12 +447,12 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
     return 'low';
   }
 
-  private calculateOnTimePerformance(phases: DatabasePhaseData[]): number {
+  private calculateOnTimePerformance(phases: ProjectPhaseRow[]): number {
     const onTimePhases = phases.filter(p => p.status === 'completed' && p.end_date && new Date(p.end_date) >= new Date());
     return phases.length > 0 ? (onTimePhases.length / phases.length) * 100 : 100;
   }
 
-  private calculateQualityScore(inspections: InspectionData[]): number {
+  private calculateQualityScore(inspections: InspectionRow[]): number {
     if (!inspections || inspections.length === 0) return 85; // Default score
     
     const completedInspections = inspections.filter(i => i.status === 'completed' || i.status === 'approved');
@@ -480,7 +468,7 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
     return Math.max(50, Math.min(100, (approvalRate * 100) - rejectionPenalty));
   }
 
-  private calculateTeamEfficiency(project: ProjectData, phases: any[]): number {
+  private calculateTeamEfficiency(project: ProjectData, phases: ProjectPhaseRow[]): number {
     // Placeholder calculation - could be enhanced with actual team metrics
     const avgProgress = phases.reduce((sum, p) => sum + (p.progress || 0), 0) / phases.length || 0;
     return Math.min(100, avgProgress * 1.2);
@@ -575,44 +563,227 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
     ];
   }
 
-  private generateRiskAssessment(project: ProjectData): RiskData[] {
-    const risks: RiskData[] = [];
-    
-    // Budget risk
-    if (project.progress < 50 && new Date() > new Date(project.startDate)) {
+  private generateRiskAssessment(project: ProjectData): RiskDTO[] {
+    const risks: RiskDTO[] = [];
+    const now = new Date();
+    const projectStart = new Date(project.startDate);
+    const projectEnd = new Date(project.endDate || project.startDate);
+    const daysElapsed = Math.max(0, Math.floor((now.getTime() - projectStart.getTime()) / (1000 * 60 * 60 * 24)));
+    const totalProjectDays = Math.max(1, Math.floor((projectEnd.getTime() - projectStart.getTime()) / (1000 * 60 * 60 * 24)));
+    const progressRatio = daysElapsed / totalProjectDays;
+
+    // 1. BUDGET RISK ASSESSMENT
+    if (project.budget && project.budget > 0) {
+      const budgetRiskScore = this.calculateBudgetRiskScore(project);
+      if (budgetRiskScore > 30) {
+        risks.push({
+          id: `risk-${project.id}-budget-${Date.now()}`,
+          title: 'Risque budgétaire élevé',
+          description: `Budget: ${project.budget.toLocaleString()}€. Risque de dépassement budgétaire détecté.`,
+          category: RiskCategory.FINANCIAL,
+          status: RiskStatus.IDENTIFIED,
+          probability: Math.min(0.9, budgetRiskScore / 100),
+          impact: Math.min(0.9, budgetRiskScore / 100),
+          riskScore: Math.round((Math.min(0.9, budgetRiskScore / 100) * Math.min(0.9, budgetRiskScore / 100)) * 100),
+          riskLevel: budgetRiskScore > 70 ? RiskLevel.CRITICAL : budgetRiskScore > 50 ? RiskLevel.HIGH : RiskLevel.MEDIUM,
+          mitigationStrategy: 'Augmenter la surveillance budgétaire, mettre en place des contrôles hebdomadaires',
+          mitigationPlan: 'Établir un suivi budgétaire hebdomadaire, créer des alertes automatiques à 80% et 90% du budget',
+          mitigationCost: Math.round(project.budget * 0.05),
+          mitigationOwner: 'Chef de projet',
+          identifiedDate: now.toISOString(),
+          assessmentDate: now.toISOString(),
+          projectId: project.id,
+          createdAt: now.toISOString(),
+          updatedAt: now.toISOString(),
+          createdBy: 'system',
+          updatedBy: 'system',
+          version: 1
+        });
+      }
+    }
+
+    // 2. SCHEDULE RISK ASSESSMENT
+    const scheduleRiskScore = this.calculateScheduleRiskScore(project, progressRatio);
+    if (scheduleRiskScore > 40) {
       risks.push({
-        id: `risk-${project.id}-budget`,
-        category: 'financial' as 'financial' | 'technical' | 'environmental' | 'regulatory' | 'schedule',
-        description: 'Risque de dépassement budgétaire',
-        probability: 70,
-        impact: 80,
-        riskScore: 56,
-        status: 'identified' as 'identified' | 'assessed' | 'mitigated' | 'closed'
+        id: `risk-${project.id}-schedule-${Date.now()}`,
+        title: 'Risque de retard',
+        description: `Progrès actuel: ${project.progress || 0}% vs temps écoulé. Retard dans la planification.`,
+        category: RiskCategory.OPERATIONAL,
+        status: RiskStatus.IDENTIFIED,
+        probability: Math.min(0.85, scheduleRiskScore / 100),
+        impact: Math.min(0.8, scheduleRiskScore / 100),
+        riskScore: Math.round((Math.min(0.85, scheduleRiskScore / 100) * Math.min(0.8, scheduleRiskScore / 100)) * 100),
+        riskLevel: scheduleRiskScore > 70 ? RiskLevel.CRITICAL : scheduleRiskScore > 50 ? RiskLevel.HIGH : RiskLevel.MEDIUM,
+        mitigationStrategy: 'Réaffecter des ressources, optimiser les tâches critiques, réduire la portée si nécessaire',
+        mitigationPlan: 'Réviser le planning, identifier les tâches critiques, mettre en place un suivi quotidien du progrès',
+        mitigationCost: Math.round((project.budget || 0) * 0.03),
+        mitigationOwner: 'Chef de projet',
+        identifiedDate: now.toISOString(),
+        assessmentDate: now.toISOString(),
+        projectId: project.id,
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+        createdBy: 'system',
+        updatedBy: 'system',
+        version: 1
       });
     }
-    
-    // Schedule risk
-    const daysSinceStart = Math.floor((new Date().getTime() - new Date(project.startDate).getTime()) / (1000 * 60 * 60 * 24));
-    const expectedProgress = Math.min(100, (daysSinceStart / 365) * 100);
-    if (project.progress < expectedProgress - 20) {
+
+    // 3. TEAM SIZE RISK ASSESSMENT
+    const teamRiskScore = this.calculateTeamRiskScore(project);
+    if (teamRiskScore > 35) {
       risks.push({
-        id: `risk-${project.id}-schedule`,
-        category: 'schedule' as 'financial' | 'technical' | 'environmental' | 'regulatory' | 'schedule',
-        description: 'Retard dans la planification',
-        probability: 80,
-        impact: 70,
-        riskScore: 56,
-        status: 'identified' as 'identified' | 'assessed' | 'mitigated' | 'closed'
+        id: `risk-${project.id}-team-${Date.now()}`,
+        title: 'Risque lié à la taille de l\'équipe',
+        description: `Équipe actuelle: ${project.teamSize || 1} membres. Charge de travail potentiellement excessive.`,
+        category: RiskCategory.OPERATIONAL,
+        status: RiskStatus.IDENTIFIED,
+        probability: Math.min(0.75, teamRiskScore / 100),
+        impact: Math.min(0.7, teamRiskScore / 100),
+        riskScore: Math.round((Math.min(0.75, teamRiskScore / 100) * Math.min(0.7, teamRiskScore / 100)) * 100),
+        riskLevel: teamRiskScore > 70 ? RiskLevel.CRITICAL : teamRiskScore > 50 ? RiskLevel.HIGH : RiskLevel.MEDIUM,
+        mitigationStrategy: 'Recruter des ressources supplémentaires, former l\'équipe existante, sous-traiter certaines tâches',
+        mitigationPlan: 'Évaluer les besoins en ressources, lancer un processus de recrutement, identifier des tâches sous-traitables',
+        mitigationCost: Math.round((project.budget || 0) * 0.02),
+        mitigationOwner: 'Directeur de projet',
+        identifiedDate: now.toISOString(),
+        assessmentDate: now.toISOString(),
+        projectId: project.id,
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+        createdBy: 'system',
+        updatedBy: 'system',
+        version: 1
       });
     }
-    
+
+    // 4. COMPLEXITY RISK ASSESSMENT (based on methodology and location)
+    const complexityRiskScore = this.calculateComplexityRiskScore(project);
+    if (complexityRiskScore > 45) {
+      risks.push({
+        id: `risk-${project.id}-complexity-${Date.now()}`,
+        title: 'Risque de complexité élevé',
+        description: `Méthodologie: ${project.methodology || 'non définie'}, Localisation: ${project.location || 'non définie'}. Projet complexe nécessitant une gouvernance renforcée.`,
+        category: RiskCategory.TECHNICAL,
+        status: RiskStatus.IDENTIFIED,
+        probability: Math.min(0.8, complexityRiskScore / 100),
+        impact: Math.min(0.75, complexityRiskScore / 100),
+        riskScore: Math.round((Math.min(0.8, complexityRiskScore / 100) * Math.min(0.75, complexityRiskScore / 100)) * 100),
+        riskLevel: complexityRiskScore > 70 ? RiskLevel.CRITICAL : complexityRiskScore > 50 ? RiskLevel.HIGH : RiskLevel.MEDIUM,
+        mitigationStrategy: 'Renforcer la gouvernance, augmenter la fréquence des revues, impliquer des experts externes',
+        mitigationPlan: 'Mettre en place un comité de pilotage, augmenter la fréquence des points hebdomadaires, faire appel à des consultants spécialisés',
+        mitigationCost: Math.round((project.budget || 0) * 0.04),
+        mitigationOwner: 'Directeur technique',
+        identifiedDate: now.toISOString(),
+        assessmentDate: now.toISOString(),
+        projectId: project.id,
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+        createdBy: 'system',
+        updatedBy: 'system',
+        version: 1
+      });
+    }
+
+    // 5. QUALITY RISK ASSESSMENT (based on progress without proper inspections)
+    if ((project.progress || 0) > 50) {
+      risks.push({
+        id: `risk-${project.id}-quality-${Date.now()}`,
+        title: 'Risque qualité élevé',
+        description: 'Progrès significatif sans inspections régulières. Risque de non-conformité et de retravail.',
+        category: RiskCategory.COMPLIANCE,
+        status: RiskStatus.IDENTIFIED,
+        probability: 0.7,
+        impact: 0.6,
+        riskScore: Math.round(0.7 * 0.6 * 100),
+        riskLevel: RiskLevel.HIGH,
+        mitigationStrategy: 'Planifier des inspections régulières, renforcer les contrôles qualité, mettre en place des revues techniques',
+        mitigationPlan: 'Établir un calendrier d\'inspections, former les équipes aux normes qualité, mettre en place des contrôles qualité à chaque étape',
+        mitigationCost: Math.round((project.budget || 0) * 0.03),
+        mitigationOwner: 'Responsable qualité',
+        identifiedDate: now.toISOString(),
+        assessmentDate: now.toISOString(),
+        projectId: project.id,
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+        createdBy: 'system',
+        updatedBy: 'system',
+        version: 1
+      });
+    }
+
     return risks;
   }
 
-  private calculateOverallRiskLevel(risks: any[]): 'low' | 'medium' | 'high' | 'critical' {
+  private calculateBudgetRiskScore(project: ProjectData): number {
+    const budget = project.budget || 0;
+    const progress = project.progress || 0;
+
+    // Higher risk for large budgets with low progress
+    if (budget > 1000000 && progress < 25) return 80;
+    if (budget > 500000 && progress < 30) return 70;
+    if (budget > 100000 && progress < 40) return 60;
+    if (budget < 50000) return 20; // Low budget = lower risk
+
+    return 40; // Medium risk
+  }
+
+  private calculateScheduleRiskScore(project: ProjectData, progressRatio: number): number {
+    const actualProgress = project.progress || 0;
+    const expectedProgress = Math.min(100, progressRatio * 100);
+    const delay = actualProgress - expectedProgress;
+
+    // Calculate risk based on delay magnitude
+    if (delay < -30) return 85; // Significantly behind
+    if (delay < -20) return 70; // Moderately behind
+    if (delay < -10) return 55; // Slightly behind
+    if (delay > 20) return 25; // Ahead of schedule (good)
+
+    return 40; // On track
+  }
+
+  private calculateTeamRiskScore(project: ProjectData): number {
+    const teamSize = project.teamSize || 1;
+    const budget = project.budget || 0;
+
+    // Risk increases with budget per team member
+    const budgetPerMember = budget / teamSize;
+
+    if (budgetPerMember > 500000) return 80; // Very high workload per person
+    if (budgetPerMember > 200000) return 65; // High workload
+    if (budgetPerMember > 100000) return 50; // Moderate workload
+    if (teamSize < 3) return 60; // Very small team
+    if (teamSize < 5) return 45; // Small team
+
+    return 25; // Adequate team size
+  }
+
+  private calculateComplexityRiskScore(project: ProjectData): number {
+    let score = 30; // Base score
+
+    // Methodology complexity
+    if (project.methodology === 'agile') score += 10; // Agile can be more complex initially
+    if (project.methodology === 'waterfall') score += 5; // Waterfall is more predictable
+
+    // Location-based complexity (assuming certain locations are more challenging)
+    const complexLocations = ['remote', 'international', 'difficult terrain'];
+    if (project.location && complexLocations.some(loc => project.location!.toLowerCase().includes(loc))) {
+      score += 25;
+    }
+
+    // Large budget indicates complexity
+    if ((project.budget || 0) > 1000000) score += 20;
+    else if ((project.budget || 0) > 500000) score += 15;
+    else if ((project.budget || 0) > 100000) score += 10;
+
+    return Math.min(100, score);
+  }
+
+  private calculateOverallRiskLevel(risks: RiskDTO[]): 'low' | 'medium' | 'high' | 'critical' {
     if (risks.length === 0) return 'low';
     
-    const avgRiskScore = risks.reduce((sum, r) => sum + r.riskScore, 0) / risks.length;
+    const avgRiskScore = risks.reduce((sum, r) => sum + (r.riskScore || 0), 0) / risks.length;
     if (avgRiskScore > 70) return 'critical';
     if (avgRiskScore > 50) return 'high';
     if (avgRiskScore > 30) return 'medium';

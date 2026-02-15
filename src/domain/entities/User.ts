@@ -241,7 +241,7 @@ export class User {
   private _name: string;
   private _email: string;
   private _phone: string;
-  private _role: UserRole;
+  private _role: SomelecRole;
   private _image: string;
   private _workspaceIds: string[];
   private _isActive: boolean;
@@ -257,7 +257,7 @@ export class User {
     name: string,
     email: string,
     phone: string,
-    role: UserRole,
+    role: SomelecRole, // Changed from UserRole to SomelecRole
     image: string,
     workspaceIds: string[],
     isActive?: boolean,
@@ -313,8 +313,8 @@ export class User {
     return phone;
   }
 
-  private validateRole(role: UserRole): UserRole {
-    const validRoles = Object.values(UserRole);
+  private validateRole(role: SomelecRole): SomelecRole {
+    const validRoles = Object.values(SomelecRole);
     if (!validRoles.includes(role)) {
       throw new Error(`Invalid user role: ${role}`);
     }
@@ -346,7 +346,7 @@ export class User {
     return this._phone;
   }
 
-  get role(): UserRole {
+  get role(): SomelecRole {
     return this._role;
   }
 
@@ -388,7 +388,7 @@ export class User {
   }
 
   // Business logic methods
-  updateRole(newRole: UserRole): void {
+  updateRole(newRole: SomelecRole): void {
     this._role = this.validateRole(newRole);
     this._updatedAt = new Date();
   }
@@ -535,7 +535,7 @@ export class User {
     id: string,
     email: string,
     fullName: string,
-    primaryRole: UserRole,
+    primaryRole: SomelecRole, // Changed from UserRole to SomelecRole
     userRoles: UserRoleEntity[]
   ): User {
     return new User(
@@ -560,7 +560,7 @@ export class User {
     id: string,
     email: string,
     fullName: string,
-    primaryRole: UserRole,
+    primaryRole: SomelecRole, // Changed from UserRole to SomelecRole
     image?: string,
     workspaceIds?: string[],
     isActive?: boolean,

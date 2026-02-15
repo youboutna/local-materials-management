@@ -22,7 +22,7 @@ export interface IDocumentRepository {
   // Tag-based queries
   findByTag(tag: string): Promise<Document[]>;
   findByTags(tags: string[]): Promise<Document[]>;
-  getByTags(tags: string[]): Promise<DocumentDTO[]>;
+  getByTags(tags: string[]): Promise<Document[]>;
   
   // Search
   search(query: string): Promise<Document[]>;
@@ -41,7 +41,4 @@ export interface IDocumentRepository {
   getTotalSize(projectId: string): Promise<number>;
   
   // Additional methods
-  findByProjectId(projectId: string): Promise<DocumentDTO[]>;
-  findByInspectionId(inspectionId: string): Promise<DocumentDTO[]>;
-  findByPaymentId(paymentId: string): Promise<DocumentDTO[]>;
 }

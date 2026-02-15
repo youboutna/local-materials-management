@@ -17,11 +17,11 @@ import {
   CreatePaymentBlockRequestDto,
   ResolvePaymentBlockRequestDto,
   CreatePaymentControlActionRequestDto,
-  PaymentBlockStatsDto,
+  GetPaymentBlockStatsRequestDto,
   PaymentEligibilityValidationDto,
   PaymentWarningReasonDto,
   PaymentBlockingReasonDto
-} from '@/dtos/entities/PaymentBlockingDTO';
+} from '@/dtos/entities/PaymentDTO';
 
 // Re-export types for consumers
 export type {
@@ -30,7 +30,7 @@ export type {
   CreatePaymentBlockRequestDto,
   ResolvePaymentBlockRequestDto,
   CreatePaymentControlActionRequestDto,
-  PaymentBlockStatsDto,
+  GetPaymentBlockStatsRequestDto,
   PaymentEligibilityValidationDto
 };
 
@@ -194,7 +194,7 @@ export class PaymentBlockingService {
   /**
    * Get payment block statistics
    */
-  async getPaymentBlockStats(): Promise<PaymentBlockStatsDto> {
+  async getPaymentBlockStats(): Promise<GetPaymentBlockStatsRequestDto> {
     try {
       const stats = await this.paymentBlockingRepository.getBlockStats();
       

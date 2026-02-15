@@ -29,9 +29,9 @@ import {
   ILoadDataRepository,
   IReportingRepository,
   ITenderSubmissionRepository,
-  ITenderSharingRepository,
   IReportDataTransformerRepository,
   IProjectFormRepository,
+  ITenderSharingRepository,
   IUserRepository,
   IPVGeneratorRepository,
   IBankGuaranteeRepository,
@@ -46,11 +46,12 @@ import {
   IMilestoneRepository,
   ITaskAssignmentRepository,
   IWorkspaceRepository,
-  IProjectStakeholderRepository,
   IProjectAlertRepository,
   ITenderEstimateRepository,
   IPaymentBlockingRepository,
-  IComplianceRepository
+  IComplianceRepository,
+  IInspectionSchedulingRepository,
+  IProjectStakeholderRepository,
 } from '@/domain/repositories';
 
 import {
@@ -94,7 +95,10 @@ import {
   SupabaseMonitoringAdapter,
   SupabaseStakeholderAdapter
 } from './adapters';
-import { SupabaseTenderSharingAdapter } from './adapters/SupabaseTenderSharingAdapter';
+import { SupabaseTenderSharingAdapter } from '../adapters/SupabaseTenderSharingAdapter';
+import { IMonitoringRepository } from '@/domain/repositories/IMonitoringRepository';
+import { IStakeholderRepository } from '@/domain/repositories/IStakeholderRepository';
+import { SupabaseWorkspaceAdapter } from './adapters/SupabaseWorkspaceAdapter';
 
 /**
  * Repository Registry - Enhanced Singleton Management
@@ -102,8 +106,9 @@ import { SupabaseTenderSharingAdapter } from './adapters/SupabaseTenderSharingAd
  */
 interface RepositoryRegistry {
   projectRepository?: IProjectRepository;
-  phaseRepository?: IPhaseRepository;
   hierarchyRepository?: IHierarchyRepository;
+  documentRepository?: IDocumentRepository;
+  phaseRepository?: IPhaseRepository;
   inspectionSchedulingRepository?: IInspectionSchedulingRepository;
   inspectionRepository?: IInspectionRepository;
   paymentRepository?: IPaymentRepository;
@@ -116,7 +121,7 @@ interface RepositoryRegistry {
   tenderSharingRepository?: ITenderSharingRepository;
   tenderEstimateRepository?: ITenderEstimateRepository;
   paymentBlockingRepository?: IPaymentBlockingRepository;
-  stakeholderRepository?: IProjectStakeholderRepository;
+  stakeholderRepository?: IStakeholderRepository;
   userRepository?: IUserRepository;
   pvGeneratorRepository?: IPVGeneratorRepository;
   bankGuaranteeRepository?: IBankGuaranteeRepository;
@@ -131,6 +136,18 @@ interface RepositoryRegistry {
   alertRepository?: IAlertRepository;
   milestoneRepository?: IMilestoneRepository;
   complianceRepository?: IComplianceRepository;
+  monitoringRepository?: IMonitoringRepository;
+  workspaceRepository?: IWorkspaceRepository;
+  supplierRepository?: ISupplierRepository;
+  taskAssignmentRepository?: ITaskAssignmentRepository;
+  reportDataTransformerRepository?: IReportDataTransformerRepository;
+  projectFormRepository?: IProjectFormRepository;
+  quantityTakeoffRepository?: IQuantityTakeoffRepository;
+  inspectionExecutionRepository?: IInspectionExecutionRepository;
+  inspectionPaymentValidationRepository?: IInspectionPaymentValidationRepository;
+  loadDataRepository?: ILoadDataRepository;
+  reportingRepository?: IReportingRepository;
+  projectStakeholderRepository?: IProjectStakeholderRepository;
 }
 
 /**
@@ -211,7 +228,7 @@ export class RepositoryFactory {
     if (!repositoryRegistry.hierarchyRepository) {
       repositoryRegistry.hierarchyRepository = new SupabaseHierarchyAdapter();
     }
-    return repositoryRegistry.hierarchyRepository;
+    return repositoryRegistry.hierarchyRepository!;
   }
 
   /**
@@ -277,7 +294,7 @@ export class RepositoryFactory {
     if (!repositoryRegistry.inspectionRepository) {
       repositoryRegistry.inspectionRepository = new SupabaseInspectionAdapter();
     }
-    return repositoryRegistry.inspectionRepository;
+    return repositoryRegistry.inspectionRepository!;
   }
 
   /**
@@ -299,7 +316,7 @@ export class RepositoryFactory {
     if (!repositoryRegistry.documentRepository) {
       repositoryRegistry.documentRepository = new SupabaseDocumentAdapter();
     }
-    return repositoryRegistry.documentRepository;
+    return repositoryRegistry.documentRepository!;
   }
 
   /**
@@ -475,7 +492,7 @@ export class RepositoryFactory {
     if (!repositoryRegistry.userRepository) {
       repositoryRegistry.userRepository = new SupabaseUserAdapter();
     }
-    return repositoryRegistry.userRepository;
+    return repositoryRegistry.userRepository!;
   }
 
   /**
@@ -652,20 +669,10 @@ export class RepositoryFactory {
   static getWorkspaceRepository(): IWorkspaceRepository {
     if (!repositoryRegistry.workspaceRepository) {
       repositoryRegistry.workspaceRepository = new SupabaseWorkspaceAdapter();
-    }    return repositoryRegistry.workspaceRepository;
-  }
-
-
-  /**
-   * Get Tender Submission Repository instance
-   * Lazy loaded for memory efficiency
-   */
-  static getTenderSubmissionRepository(): ITenderSubmissionRepository {
-    if (!repositoryRegistry.tenderSubmissionRepository) {
-      repositoryRegistry.tenderSubmissionRepository = new SupabaseTenderSubmissionAdapter();
     }
-    return repositoryRegistry.tenderSubmissionRepository;
+    return repositoryRegistry.workspaceRepository!;
   }
+
 
   /**
    * Get Tender Sharing Repository instance

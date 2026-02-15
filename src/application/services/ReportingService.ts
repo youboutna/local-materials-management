@@ -16,8 +16,8 @@ import {
   RiskAssessmentDTO,
   ReportData,
   CostCalculation
-} from '@/types/reportTypes';
-import { ProjectData } from '@/types/project';
+} from '@/dtos/entities/ReportDTO';
+import { ProjectData } from '@/dtos/entities/ProjectDTO';
 import { IReportingRepository } from '@/domain/repositories/IReportingRepository';
 
 // Service DTOs for data exchange
@@ -43,6 +43,7 @@ export interface CompleteProjectReportResultDto {
   costCalculation: CostCalculation;
   resourceUtilization: unknown;
   healthScore: unknown;
+  realCosts: unknown; // Repository-provided real-time project cost data
 }
 
 export class ReportingService {
@@ -98,15 +99,35 @@ export class ReportingService {
         remainingBudget: (request.project.budget || 0) - (realCosts.totalSpent || 0),
         costVariance: (realCosts.totalSpent || 0) - (request.project.budget || 0),
         estimatedCost: realCosts.estimatedCost || 0,
-        actualCost: realCosts.actualPhaseCost || 0
+        actualCost: realCosts.actualPhaseCost || 0,
+        efficiency: realCosts.totalSpent > 0 ? ((request.project.budget || 0) / realCosts.totalSpent) * 100 : 100,
+        projectedCompletion: new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toISOString(), // Default 30 days from now
+        projectedOverrun: Math.max(0, (realCosts.totalSpent || 0) - (request.project.budget || 0))
+      };
+
+      // Create proper ReportData object
+      const reportData: ReportData = {
+        title: `Project Report for ${request.project.title}`,
+        content: `Comprehensive report generated on ${new Date().toISOString()}`,
+        generatedAt: new Date().toISOString(),
+        generatedBy: request.project.createdBy || 'system',
+        projectId: request.project.id,
+        reportType: 'summary',
+        status: 'completed',
+        metadata: {
+          totalBudget: request.project.budget,
+          progress: request.project.progress,
+          costData: realCosts
+        }
       };
 
       return {
         reportDTO,
-        reportData: realCosts,
+        reportData,
         costCalculation,
         resourceUtilization,
-        healthScore: null // To be implemented
+        healthScore: null, // To be implemented
+        realCosts
       };
     } catch (error) {
       console.error('ReportingService.generateCompleteProjectReport failed:', error);

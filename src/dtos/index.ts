@@ -5,9 +5,13 @@
  */
 
 // Primary export - New centralized DTOs
+// Explicitly export BaseEntityDTO from shared first to resolve ambiguity
+export type { BaseEntityDTO } from './shared';
+
+// Then export entities (which may import BaseEntityDTO but shouldn't re-export it)
 export * from './entities';
 
-// Re-export shared DTOs and utilities
+// Re-export remaining shared DTOs and utilities
 export * from './shared';
 
 // Re-export transforms with explicit naming to avoid conflicts
@@ -15,18 +19,18 @@ export * as TransformUtils from './transforms';
 export * as ValidationUtils from './utils';
 
 // Export specific DTOs for easier imports (avoiding duplicates)
-export { 
+export type { 
   PaymentBlockDTO,
   PaymentControlActionDTO,
   CreatePaymentBlockRequestDto,
   ResolvePaymentBlockRequestDto,
   CreatePaymentControlActionRequestDto,
-  PaymentBlockStatsDto,
+  GetPaymentBlockStatsRequestDto,
   PaymentEligibilityValidationDto,
   PaymentProcessingResultDto
-} from './entities/PaymentBlockingDTO';
+} from './entities/PaymentDTO';
 
-export {
+export type {
   TenderEstimateDTO,
   TenderEstimateItemDTO,
   CreateTenderEstimateRequestDto,
@@ -40,7 +44,7 @@ export {
   TenderEstimateComparisonDto
 } from './entities/TenderEstimateDTO';
 
-export {
+export type {
   NotificationDTO,
   CreateNotificationRequestDTO,
   UpdateNotificationRequestDTO,

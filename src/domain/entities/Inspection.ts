@@ -1,6 +1,8 @@
 // Domain Entity: Inspection
 // Pure business logic without infrastructure concerns
 
+import { InspectionObservation, InspectionParticipant } from '../repositories/IInspectionRepository';
+
 export enum InspectionStatus {
   Approved = "Approved",
   RequiresChanges = "RequiresChanges",
@@ -14,9 +16,18 @@ export enum InspectionStatus {
 }
 
 export interface Inspector {
-  id?: string;
+  id?: string; // Inspector ID
   name: string;
   agency: string;
+  type: 'employee' | 'supplier' | 'external'; // Type of inspector
+  employeeId?: string; // Reference to Employee entity if type is 'employee'
+  supplierId?: string; // Reference to Supplier entity if type is 'supplier'
+  userId?: string; // Reference to User entity if applicable
+  contactInfo?: {
+    email?: string;
+    phone?: string;
+    address?: string;
+  };
 }
 
 export interface Document {
@@ -40,6 +51,8 @@ export class Inspection {
   private _inspector: Inspector;
   private _progressAtInspection: number;
   private _comments?: string;
+  private _observations?: InspectionObservation[]; // Store as JSON array
+  private _participants?: InspectionParticipant[]; // Store as JSON array
   private _documents?: Document[];
   private _createdAt: Date;
   private _updatedAt: Date;
@@ -69,6 +82,8 @@ export class Inspection {
     completedBy?: string,
     progress?: number,
     paymentType?: string,
+    observations?: InspectionObservation[],
+    participants?: InspectionParticipant[],
   ) {
     this._id = this.validateId(id);
     this._date = this.validateDate(date);
@@ -77,6 +92,8 @@ export class Inspection {
     this._progressAtInspection = this.validateProgress(progressAtInspection);
     this._comments = comments;
     this._documents = documents || [];
+    this._observations = observations || [];
+    this._participants = participants || [];
     this._createdAt = createdAt || new Date();
     this._updatedAt = updatedAt || new Date();
     this._projectId = projectId;
@@ -118,6 +135,8 @@ export class Inspection {
   get progressAtInspection(): number { return this._progressAtInspection; }
   get comments(): string | undefined { return this._comments; }
   get documents(): Document[] { return this._documents || []; }
+  get observations(): InspectionObservation[] { return this._observations || []; }
+  get participants(): InspectionParticipant[] { return this._participants || []; }
   get createdAt(): Date { return this._createdAt; }
   get updatedAt(): Date { return this._updatedAt; }
   get projectId(): string | undefined { return this._projectId; }
@@ -199,9 +218,11 @@ export class Inspection {
     completedAt?: string;
     completedBy?: string;
     paymentType?: string;
+    observations?: InspectionObservation[];
+    participants?: InspectionParticipant[];
   }): Inspection {
     const inspectorObj: Inspector = typeof params.inspector === 'string'
-      ? { name: params.inspector, agency: '' }
+      ? { name: params.inspector, agency: '', type: 'employee' as const }
       : params.inspector;
 
     const statusEnum = typeof params.status === 'string'
@@ -225,6 +246,8 @@ export class Inspection {
       params.completedBy,
       params.progress || params.progressAtInspection || 0,
       params.paymentType,
+      params.observations || [],
+      params.participants || []
     );
   }
 

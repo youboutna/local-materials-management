@@ -1,24 +1,80 @@
-// Supabase Adapter for Inspection Repository
 import { supabase } from '@/integrations/supabase/client';
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
-import { Inspection, InspectionStatus } from '@/domain/entities/Inspection';
+import { Inspection, InspectionStatus, Document } from '@/domain/entities/Inspection';
+import {
+  InspectionObservation,
+  ChecklistItem
+} from '@/dtos/entities/InspectionDTO';
+
+// Database row interface for inspections table
+interface InspectionRow {
+  id: string;
+  project_id: string;
+  phase_id?: string;
+  step_id?: string;
+  inspector: string;
+  date: string;
+  status: string;
+  progress_at_inspection: number;
+  comments?: string;
+  observations?: InspectionObservation[]; // Store as JSON array
+  documents: unknown[];
+  created_at: string;
+  updated_at: string;
+}
 
 export class SupabaseInspectionAdapter implements IInspectionRepository {
-  private mapToEntity(data: any): Inspection {
+  private mapToEntity(data: InspectionRow): Inspection {
+    // Convert string status to InspectionStatus enum
+    const status = Inspection.mapStringToStatus(data.status);
+
+    // Create Inspector object - can be employee, supplier, or external
+    // In production, this should query the database to determine inspector type
+    // For now, assume inspector string contains type information or lookup is needed
+    const inspector: Inspector = {
+      id: data.inspector,
+      name: data.inspector, // This should be looked up from Employee/Supplier table
+      agency: 'SOMELEC',
+      type: 'employee', // Default assumption - should be determined by lookup
+      employeeId: data.inspector, // If inspector is an employee
+      userId: data.inspector // If inspector has a user account
+    };
+
     return new Inspection(
       data.id,
-      data.project_id,
-      data.phase_id || null,
-      data.step_id || null,
-      data.inspector,
       data.date,
-      data.status as InspectionStatus,
+      status,
+      inspector,
       data.progress_at_inspection || 0,
-      data.comments || null,
-      Array.isArray(data.documents) ? data.documents : [],
-      data.created_at,
-      data.updated_at
+      data.comments || undefined,
+      Array.isArray(data.documents) ? data.documents as Document[] : [],
+      new Date(data.created_at),
+      new Date(data.updated_at),
+      data.project_id,
+      data.phase_id,
+      data.step_id,
+      undefined, // completedAt
+      undefined, // completedBy
+      data.progress_at_inspection || 0, // progress
+      undefined, // paymentType
+      Array.isArray(data.observations) ? data.observations : []
     );
+  }
+
+  private mapToRow(inspection: Inspection): Omit<InspectionRow, 'created_at' | 'updated_at'> {
+    return {
+      id: inspection.id,
+      project_id: inspection.projectId || '',
+      phase_id: inspection.phaseId || undefined,
+      step_id: inspection.stepId || undefined,
+      inspector: inspection.inspector.name, // Extract name from Inspector object
+      date: inspection.date,
+      status: inspection.status.toString().toLowerCase(), // Convert enum to string
+      progress_at_inspection: inspection.progressAtInspection,
+      comments: inspection.comments || undefined,
+      observations: inspection.observations || [], // Store observations as JSON array
+      documents: inspection.documents || []
+    };
   }
 
   async findById(id: string): Promise<Inspection | null> {
@@ -43,29 +99,22 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
   }
 
   async save(inspection: Inspection): Promise<void> {
+    const inspectionData = this.mapToRow(inspection);
+
     const { error } = await supabase
       .from('inspections')
-      .insert([{
-        id: inspection.id,
-        project_id: inspection.projectId,
-        phase_id: inspection.phaseId,
-        inspector: inspection.inspector,
-        date: inspection.date,
-        status: inspection.status,
-        progress_at_inspection: inspection.progressAtInspection,
-        comments: inspection.comments,
-        documents: inspection.documents as any
-      }]);
+      .insert([inspectionData]);
 
     if (error) throw new Error(`Failed to save inspection: ${error.message}`);
   }
 
   async update(id: string, data: Partial<Inspection>): Promise<void> {
-    const updateData: Record<string, any> = {};
+    const updateData: Record<string, unknown> = {};
     if (data.status !== undefined) updateData.status = data.status;
     if (data.progressAtInspection !== undefined) updateData.progress_at_inspection = data.progressAtInspection;
     if (data.comments !== undefined) updateData.comments = data.comments;
     if (data.documents !== undefined) updateData.documents = data.documents;
+    if (data.observations !== undefined) updateData.observations = data.observations;
 
     const { error } = await supabase
       .from('inspections')
@@ -197,5 +246,58 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
   async getAverageCompletionTime(projectId: string): Promise<number> {
     // This would need a more complex query or calculation
     return 0;
+  }
+
+  async create(data: Partial<Inspection>): Promise<Inspection> {
+    const inspectionData = this.mapToRow(data as Inspection);
+
+    const { data: inserted, error } = await supabase
+      .from('inspections')
+      .insert(inspectionData)
+      .select()
+      .single();
+
+    if (error) throw new Error(`Failed to create inspection: ${error.message}`);
+    return this.mapToEntity(inserted);
+  }
+
+  async addDocument(document: { inspectionId: string; document: Document; uploadedAt: string; uploadedBy: string }): Promise<void> {
+    // TODO: Add inspection_documents table to Supabase schema
+    // For now, log warning and do nothing
+    console.warn('addDocument: inspection_documents table not available in Supabase schema');
+    // Document would be stored in the documents field of the inspections table
+  }
+
+  async findDocumentsByInspectionId(inspectionId: string): Promise<Document[]> {
+    // TODO: Add inspection_documents table to Supabase schema
+    // For now, return empty array
+    console.warn('findDocumentsByInspectionId: inspection_documents table not available in Supabase schema');
+    return [];
+  }
+
+  async getChecklistTemplate(inspectionType: string): Promise<ChecklistItem[]> {
+    // For now, return a basic checklist template based on inspection type
+    // In a real implementation, this would fetch from a checklist_templates table
+    const templates: Record<string, ChecklistItem[]> = {
+      'foundation': [
+        { id: '1', title: 'Foundation Excavation', description: 'Check foundation excavation depth and alignment', required: true, completed: false },
+        { id: '2', title: 'Rebar Installation', description: 'Verify rebar placement and tying', required: true, completed: false },
+        { id: '3', title: 'Formwork Quality', description: 'Inspect formwork for proper alignment and stability', required: true, completed: false }
+      ],
+      'structural': [
+        { id: '1', title: 'Column Alignment', description: 'Check column verticality and alignment', required: true, completed: false },
+        { id: '2', title: 'Beam Level', description: 'Verify beam level and camber', required: true, completed: false },
+        { id: '3', title: 'Concrete Quality', description: 'Inspect concrete mix and curing', required: true, completed: false }
+      ],
+      'finishing': [
+        { id: '1', title: 'Paint Quality', description: 'Check paint application and coverage', required: false, completed: false },
+        { id: '2', title: 'Tile Installation', description: 'Verify tile alignment and grout quality', required: false, completed: false },
+        { id: '3', title: 'Fixture Installation', description: 'Inspect fixture mounting and functionality', required: true, completed: false }
+      ]
+    };
+
+    return templates[inspectionType] || [
+      { id: '1', title: 'General Inspection', description: 'Perform general quality inspection', required: true, completed: false }
+    ];
   }
 }

@@ -1,5 +1,5 @@
 // Repository interface for Inspection entity
-import { Inspection, InspectionStatus, InspectionDocument } from '../entities/Inspection';
+import { Inspection, InspectionStatus, Document } from '../entities/Inspection';
 
 // Observation entity for inspections
 export interface InspectionObservation {
@@ -7,22 +7,23 @@ export interface InspectionObservation {
   inspectionId: string;
   type: string;
   description: string;
-  severity: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
   status: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
   createdBy?: string;
 }
 
 // Checklist item for inspections
 export interface ChecklistItem {
   id: string;
-  name: string;
+  title: string;
   description?: string;
-  isRequired: boolean;
-  isCompleted: boolean;
-  status?: 'pending' | 'completed' | 'skipped';
+  required: boolean;
+  completed: boolean;
+  checked?: boolean;
   notes?: string;
+  category?: string;
 }
 
 export interface IInspectionRepository {
@@ -50,13 +51,9 @@ export interface IInspectionRepository {
   countByStatus(projectId: string): Promise<Record<InspectionStatus, number>>;
   getAverageCompletionTime(projectId: string): Promise<number>;
   
-  // Observation operations
-  addObservation(observation: Omit<InspectionObservation, 'createdAt' | 'updatedAt'>): Promise<InspectionObservation>;
-  findObservationsByInspectionId(inspectionId: string): Promise<InspectionObservation[]>;
-  
   // Document operations
-  addDocument(document: { inspectionId: string; document: unknown; uploadedAt: string; uploadedBy: string }): Promise<void>;
-  findDocumentsByInspectionId(inspectionId: string): Promise<InspectionDocument[]>;
+  addDocument(document: { inspectionId: string; document: Document; uploadedAt: string; uploadedBy: string }): Promise<void>;
+  findDocumentsByInspectionId(inspectionId: string): Promise<Document[]>;
   
   // Checklist operations
   getChecklistTemplate(inspectionType: string): Promise<ChecklistItem[]>;

@@ -9,7 +9,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { MaterialService } from "@/application/services/MaterialService";
-import { MaterialTransformer, CreateMaterialRequestDto, UpdateMaterialRequestDto, MaterialDTO } from '@/dtos/transforms';
+import { MaterialTransformer, CreateMaterialRequestDto, UpdateMaterialRequestDto, MaterialDTO, MaterialUIDTO } from '@/dtos/transforms';
 import { MaterialCategory } from '@/dtos/entities/MaterialDTO';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -40,7 +40,7 @@ interface MaterialReport {
 }
 
 export interface UseMaterialsHexResult {
-  materials: MaterialDTO[];
+  materials: MaterialUIDTO[]; // Changed from MaterialDTO[] to MaterialUIDTO[]
   isLoading: boolean;
   error: string | null;
   refetch: () => void;
@@ -51,13 +51,13 @@ export interface UseMaterialsHexResult {
   isUpdating: boolean;
   isDeleting: boolean;
   // Enhanced UI features
-  getMaterialStockStatus: (material: MaterialDTO) => 'optimal' | 'low' | 'critical' | 'out_of_stock';
-  getMaterialCostEfficiency: (material: MaterialDTO) => number;
-  getMaterialQualityScore: (material: MaterialDTO) => number;
-  getMaterialReorderLevel: (material: MaterialDTO) => number;
+  getMaterialStockStatus: (material: MaterialUIDTO) => 'optimal' | 'low' | 'critical' | 'out_of_stock';
+  getMaterialCostEfficiency: (material: MaterialUIDTO) => number;
+  getMaterialQualityScore: (material: MaterialUIDTO) => number;
+  getMaterialReorderLevel: (material: MaterialUIDTO) => number;
   getMaterialAnalytics: () => MaterialAnalytics;
-  validateMaterialWithReferential: (material: MaterialDTO, referentialType: string) => Promise<ValidationResult>;
-  generateMaterialReport: (material: MaterialDTO) => MaterialReport;
+  validateMaterialWithReferential: (material: MaterialUIDTO, referentialType: string) => Promise<ValidationResult>;
+  generateMaterialReport: (material: MaterialUIDTO) => MaterialReport;
 }
 
 /**
@@ -81,10 +81,10 @@ export function useMaterialsHex(): UseMaterialsHexResult {
     refetch
   } = useQuery({
     queryKey: ['materials'],
-    queryFn: async (): Promise<MaterialDTO[]> => {
+    queryFn: async (): Promise<MaterialUIDTO[]> => {
       try {
-        const materialData = await materialService.getAllMaterials();
-        return materialData.map(entity => MaterialTransformer.toDTO(entity));
+        const materialData = await materialService.getMaterialsForUI();
+        return materialData;
       } catch (err) {
         console.error('Error fetching materials:', err);
         throw err;

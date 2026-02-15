@@ -340,38 +340,9 @@ export interface MaterialTransactionDTO {
 
 /**
  * Material details interface
- * Extended material data structure
+ * Extended material data structure with additional details
+ * Does not extend MaterialDTO due to different property types
  */
-export interface MaterialDetailsDTO extends MaterialDTO {
-  location?: LocationDTO;
-  workspaceDetails?: {
-    id: string;
-    name: string;
-    location: string;
-  };
-  supplierInfo?: {
-    id: string;
-    name: string;
-    contactInfo?: string;
-  };
-  stockHistory?: Array<{
-    date: string;
-    quantity: number;
-    type: 'in' | 'out' | 'adjustment';
-    reason?: string;
-  }>;
-  usageHistory?: Array<{
-    projectId: string;
-    projectTitle: string;
-    quantity: number;
-    usedAt: string;
-  }>;
-  qualityMetrics?: {
-    averageRating: number;
-    totalReviews: number;
-    defectRate: number;
-  };
-}
 
 /**
  * Material filter interface

@@ -4,129 +4,20 @@
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { IInspectionRepository, ChecklistItem as RepoChecklistItem } from '@/domain/repositories/IInspectionRepository';
+import { IInspectionRepository, InspectionObservation } from '@/domain/repositories/IInspectionRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { Inspection, InspectionStatus as DomainInspectionStatus } from '@/domain/entities/Inspection';
-
-// Local type definitions
-export interface InspectionExecutionData {
-  id: string;
-  inspectionId: string;
-  status: 'in_progress' | 'completed' | 'paused';
-  progressAtInspection: number;
-  comments?: string;
-  documents: InspectionDocument[];
-  observations: InspectionObservation[];
-  checklist: ChecklistItem[];
-  projectId: string;
-  inspector: string;
-  date: string;
-  // Extended fields
-  measurements?: unknown[];
-  participants?: unknown[];
-  location?: { latitude: number; longitude: number; address?: string; captured_at?: string };
-  started_at?: Date | string;
-  completed_at?: string;
-  overall_conformity?: ConformityStatus;
-  progress_percentage?: number;
-  summary?: string;
-  recommendations?: string[];
-  corrective_actions_required?: boolean;
-}
-
-export interface InspectionObservation {
-  id: string;
-  description: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  status: 'open' | 'resolved';
-  photo?: string;
-  createdAt: string;
-  resolvedAt?: string;
-  // Legacy aliases
-  type?: string;
-  category?: string;
-  conformity?: string;
-  created_at?: string;
-}
-
-export interface InspectionDocument {
-  id: string;
-  name: string;
-  type: 'certificate' | 'checklist' | 'photo' | 'report' | 'scan';
-  url: string;
-  uploadedAt: string;
-  uploadedBy: string;
-  size?: number;
-  mime_type?: string;
-  uploaded_at?: string;
-  uploaded_by?: string;
-}
-
-export interface ChecklistItem {
-  id: string;
-  title: string;
-  description?: string;
-  required: boolean;
-  completed: boolean;
-  checked?: boolean;
-  notes?: string;
-  category?: string;
-}
-
-export type ConformityStatus = 'conforme' | 'non_conforme' | 'en_attente';
-
-export const CHECKLIST_TEMPLATES: Record<string, ChecklistItem[]> = {
-  standard: [
-    { id: '1', title: 'Vérification des plans', required: true, completed: false },
-    { id: '2', title: 'Contrôle des matériaux', required: true, completed: false },
-    { id: '3', title: 'Sécurité du chantier', required: true, completed: false }
-  ]
-};
+import { supabase } from '@/integrations/supabase/client';
 
 import { 
   InspectionOperationResultDTO,
   AddMeasurementRequestDTO,
   AddParticipantRequestDTO,
-  CompleteInspectionRequestDTO
+  CompleteInspectionRequestDTO,
+  AddDocumentRequestDto,
+  CHECKLIST_TEMPLATES
 } from '@/dtos/entities/InspectionDTO';
 import { CreateDocumentDTO } from '@/dtos/entities/DocumentDTO';
-
-export type StartInspectionRequestDto = {
-  inspectionId: string;
-  projectId: string;
-  inspector: string;
-  phaseId?: string;
-  stepId?: string;
-  comments?: string;
-  location?: { latitude: number; longitude: number; address?: string };
-};
-
-export type AddObservationRequestDto = {
-  inspectionId: string;
-  observation: Omit<InspectionObservation, 'id' | 'createdAt'>;
-};
-
-export type AddDocumentRequestDto = {
-  inspectionId: string;
-  document: CreateDocumentDTO;
-};
-
-export type UpdateChecklistItemRequestDto = {
-  inspectionId: string;
-  itemId: string;
-  updates: Partial<ChecklistItem>;
-};
-
-export enum InspectionStatus {
-  PENDING = 'pending',
-  IN_PROGRESS = 'in_progress',
-  COMPLETED = 'completed',
-  REQUIRES_REVIEW = 'requires_review',
-  REQUIRES_CHANGES = 'requires_changes',
-  APPROVED = 'approved',
-  REJECTED = 'rejected',
-  CANCELLED = 'cancelled'
-}
 
 function isValidInspectionStatusTransition(current: string, next: string): boolean {
   const validTransitions: Record<string, string[]> = {
@@ -194,17 +85,32 @@ export class InspectionExecutionService {
       const inspection = await this.inspectionRepository.findById(request.inspectionId);
       if (!inspection) throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
 
+      // Get current user
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) {
+        throw new AppError(ErrorCode.UNAUTHORIZED, 'User not authenticated');
+      }
+      const currentUserId = userData.user.id;
+
       const observationId = `obs-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      const observation = {
+      const newObservation: InspectionObservation = {
         id: observationId,
         inspectionId: request.inspectionId,
         type: request.observation.type || 'general',
         description: request.observation.description,
         severity: request.observation.severity || 'low',
-        status: 'open'
+        status: 'open',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        createdBy: currentUserId // Use actual current user ID
       };
 
-      await this.inspectionRepository.addObservation(observation);
+      // Add observation to inspection entity
+      const updatedObservations = [...(inspection.observations || []), newObservation];
+      await this.inspectionRepository.update(request.inspectionId, {
+        observations: updatedObservations
+      } as Partial<Inspection>);
+
       return { success: true };
     } catch (error) {
       console.error('InspectionExecutionService.addObservation failed:', error);
@@ -259,8 +165,16 @@ export class InspectionExecutionService {
       if (!request.inspectionId || !request.measurement) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID and measurement are required');
       }
+
       const inspection = await this.inspectionRepository.findById(request.inspectionId);
       if (!inspection) throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
+
+      // Add measurement to inspection execution data
+      // For now, measurements are stored in the execution data but not persisted
+      // TODO: Add measurements field to inspection entity if needed
+
+      console.warn('addMeasurement: Measurements storage not yet implemented in inspection entity');
+
       return { success: true };
     } catch (error) {
       console.error('InspectionExecutionService.addMeasurement failed:', error);
@@ -274,8 +188,31 @@ export class InspectionExecutionService {
       if (!request.inspectionId || !request.participant) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID and participant are required');
       }
+
       const inspection = await this.inspectionRepository.findById(request.inspectionId);
       if (!inspection) throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
+
+      // Get current user
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) {
+        throw new AppError(ErrorCode.UNAUTHORIZED, 'User not authenticated');
+      }
+
+      const participantId = `part-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const newParticipant: InspectionParticipant = {
+        id: participantId,
+        name: request.participant.name,
+        role: request.participant.role,
+        organization: request.participant.organization,
+        joinedAt: new Date().toISOString()
+      };
+
+      // Add participant to inspection entity
+      const updatedParticipants = [...(inspection.participants || []), newParticipant];
+      await this.inspectionRepository.update(request.inspectionId, {
+        participants: updatedParticipants
+      } as Partial<Inspection>);
+
       return { success: true };
     } catch (error) {
       console.error('InspectionExecutionService.addParticipant failed:', error);
@@ -331,14 +268,14 @@ export class InspectionExecutionService {
         status: 'in_progress',
         progressAtInspection: inspection.progressAtInspection,
         comments: inspection.comments,
-        observations: [],
+        observations: inspection.observations || [], // Return actual observations from inspection
         documents: [],
         checklist: [],
         projectId: inspection.projectId || '',
         inspector: inspection.inspector?.name || '',
         date: inspection.date,
         measurements: [],
-        participants: [],
+        participants: inspection.participants || [], // Return actual participants from inspection
         location: { latitude: 0, longitude: 0, address: 'Project Location', captured_at: new Date().toISOString() },
         started_at: inspection.createdAt,
         completed_at: inspection.completedAt ?? undefined,
@@ -366,17 +303,21 @@ export class InspectionExecutionService {
   async getInspectionObservations(inspectionId: string): Promise<InspectionObservation[]> {
     try {
       if (!inspectionId) throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
-      const observations = await this.inspectionRepository.findObservationsByInspectionId(inspectionId);
-      return observations.map(obs => ({
+
+      const inspection = await this.inspectionRepository.findById(inspectionId);
+      if (!inspection) return [];
+
+      // Observations are now stored in the inspection entity
+      return (inspection.observations || []).map(obs => ({
         id: obs.id,
+        inspectionId: obs.inspectionId,
         type: obs.type,
-        category: obs.type,
         description: obs.description,
-        severity: obs.severity as InspectionObservation['severity'],
-        conformity: 'partial' as string,
-        status: obs.status as InspectionObservation['status'],
-        createdAt: obs.createdAt instanceof Date ? obs.createdAt.toISOString() : String(obs.createdAt),
-        created_at: obs.createdAt instanceof Date ? obs.createdAt.toISOString() : String(obs.createdAt)
+        severity: obs.severity,
+        status: obs.status,
+        createdAt: obs.createdAt,
+        updatedAt: obs.updatedAt,
+        createdBy: obs.createdBy
       }));
     } catch (error) {
       console.error('InspectionExecutionService.getInspectionObservations failed:', error);

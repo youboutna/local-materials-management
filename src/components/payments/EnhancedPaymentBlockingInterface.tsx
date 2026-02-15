@@ -74,7 +74,7 @@ import {
   PaymentControlActionDTO, 
   CreatePaymentBlockRequestDto, 
   ResolvePaymentBlockRequestDto, 
-  PaymentBlockStatsDto, 
+  GetPaymentBlockStatsRequestDto, 
   PaymentEligibilityValidationDto 
 } from '@/application/services/PaymentBlockingService';
 import ProjectSelector from "@/components/selectors/ProjectSelector";

@@ -1,5 +1,5 @@
 // Data Transformer Service for Project Reports - Migrated to Hexagonal Architecture
-import { ProjectData } from '@/types/project';
+import { ProjectData } from '@/dtos/entities/ProjectDTO';
 import { ReportDataTransformerService, createReportDataTransformerService } from '@/application/services/ReportDataTransformerService';
 import { 
   ProjectReportDTO, 
@@ -8,7 +8,7 @@ import {
   ProjectAnalyticsDTO,
   FinancialMetricsDTO,
   RiskAssessmentDTO
-} from '@/types/reportTypes';
+} from '@/dtos/entities/ReportDTO';
 
 // Create singleton instance of the hexagonal service using the factory
 const reportDataTransformerService = createReportDataTransformerService();

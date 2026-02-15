@@ -19,7 +19,7 @@ import {
   PaymentControlActionDTO, 
   CreatePaymentBlockRequestDto, 
   ResolvePaymentBlockRequestDto, 
-  PaymentBlockStatsDto, 
+  GetPaymentBlockStatsRequestDto, 
   PaymentEligibilityValidationDto 
 } from '@/application/services/PaymentBlockingService';
 import { PaymentService } from '@/application/services/PaymentService';

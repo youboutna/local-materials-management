@@ -206,7 +206,7 @@ export class ProjectCalculationService {
     
     const delayedTasksCount = tasks.filter(task => 
       task.status === 'delayed' || 
-      (task.status !== 'completed' && new Date(task.endDate) < new Date())
+      (task.status !== 'completed' && task.endDate && new Date(task.endDate) < new Date())
     ).length;
     
     const completedTasksCount = tasks.filter(task => task.status === 'completed').length;
@@ -296,7 +296,7 @@ export class ProjectCalculationService {
       const validIssues = Array.isArray(issuesList) 
         ? issuesList.filter(issue => typeof issue === 'object' && issue !== null)
         : [];
-      const criticalIssues = validIssues.filter((issue: any) => 
+      const criticalIssues = validIssues.filter((issue: { severity?: string }) => 
         issue.severity === 'high' || issue.severity === 'critical'
       );
       return count + criticalIssues.length;
@@ -307,7 +307,7 @@ export class ProjectCalculationService {
       const validIssues = Array.isArray(issuesList) 
         ? issuesList.filter(issue => typeof issue === 'object' && issue !== null)
         : [];
-      const resolvedIssues = validIssues.filter((issue: any) => issue.status === 'resolved');
+      const resolvedIssues = validIssues.filter((issue: { status?: string }) => issue.status === 'resolved');
       return count + resolvedIssues.length;
     }, 0);
     
@@ -453,12 +453,12 @@ export class ProjectCalculationService {
     const tasks = project.tasks || [];
     
     const activities = tasks.map(task => ({
-      name: task.name,
-      optimistic: task.estimatedDuration * 0.8,
-      mostLikely: task.estimatedDuration,
-      pessimistic: task.estimatedDuration * 1.5,
-      pertEstimate: (task.estimatedDuration * 0.8 + 4 * task.estimatedDuration + task.estimatedDuration * 1.5) / 6,
-      standardDeviation: (task.estimatedDuration * 1.5 - task.estimatedDuration * 0.8) / 6
+      name: task.title,
+      optimistic: (task.estimatedDuration || 1) * 0.8,
+      mostLikely: task.estimatedDuration || 1,
+      pessimistic: (task.estimatedDuration || 1) * 1.5,
+      pertEstimate: ((task.estimatedDuration || 1) * 0.8 + 4 * (task.estimatedDuration || 1) + (task.estimatedDuration || 1) * 1.5) / 6,
+      standardDeviation: ((task.estimatedDuration || 1) * 1.5 - (task.estimatedDuration || 1) * 0.8) / 6
     }));
     
     const expectedDurations: { [taskId: string]: number } = {};
@@ -488,16 +488,16 @@ export class ProjectCalculationService {
     
     const ganttTasks = tasks.map(task => ({
       id: task.id,
-      text: task.name,
-      start_date: task.startDate,
-      duration: task.estimatedDuration,
+      text: task.title,
+      start_date: task.startDate || new Date().toISOString().split('T')[0],
+      duration: task.estimatedDuration || 1,
       progress: task.progress / 100,
       color: task.status === 'completed' ? '#22c55e' : 
              task.status === 'in_progress' ? '#3b82f6' : 
              task.status === 'delayed' ? '#ef4444' : '#6b7280'
     }));
     
-    const dependencies: any[] = []; // Would need dependency data from tasks
+    const dependencies: { id: string; source: string; target: string }[] = []; // Would need dependency data from tasks
     
     return {
       tasks: ganttTasks,
@@ -661,9 +661,13 @@ export class ProjectCalculationService {
   /**
    * Calculate timeline performance for project analytics
    */
-  static calculateTimelinePerformance(project: any, phases: any[]): any {
+  static calculateTimelinePerformance(project: ProjectData, phases: ProjectPhaseRow[]): {
+    completionRate: number;
+    onTimePhases: number;
+    delayedPhases: number;
+  } {
     // Simplified timeline performance calculation
-    const completedPhases = phases?.filter((phase: any) => 
+    const completedPhases = phases?.filter((phase: ProjectPhaseRow) => 
       phase.status === 'completed' || phase.progress >= 100
     ) || [];
     
@@ -673,14 +677,20 @@ export class ProjectCalculationService {
     return {
       completionRate,
       onTimePhases: completedPhases.length,
-      delayedPhases: phases?.filter((phase: any) => phase.status === 'delayed')?.length || 0
+      delayedPhases: phases?.filter((phase: ProjectPhaseRow) => phase.status === 'delayed')?.length || 0
     };
   }
   
   /**
    * Calculate project health score for analytics
    */
-  static calculateProjectHealthScore(progress: number, budgetUtilization: number, schedulePerformance: number, qualityScore?: number): any {
+  static calculateProjectHealthScore(progress: number, budgetUtilization: number, schedulePerformance: number, qualityScore?: number): {
+    overallScore: number;
+    scheduleScore: number;
+    budgetScore: number;
+    qualityScore: number;
+    riskScore: number;
+  } {
     const overallScore = (
       (progress * 0.3) + 
       (budgetUtilization * 0.3) + 

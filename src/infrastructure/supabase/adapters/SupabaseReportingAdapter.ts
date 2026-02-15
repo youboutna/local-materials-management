@@ -3,19 +3,46 @@ import { IReportingRepository } from '@/domain/repositories/IReportingRepository
 import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import { ProjectCalculationService } from '@/application/services/ProjectCalculationService';
-import { ProjectReportDTO } from '@/types/reportTypes';
+import { ProjectReportDTO, EnhancedPhaseDTO } from '@/dtos/entities/ProjectReportDTO';
+import { Database } from '@/integrations/supabase/types';
+
+// Types officiels Supabase pour les tables utilisées
+type ProjectPhaseRow = Database['public']['Tables']['project_phases']['Row'];
+type InspectionRow = Database['public']['Tables']['inspections']['Row'];
+type ProjectMilestoneRow = Database['public']['Tables']['project_milestones']['Row'];
 
 export class SupabaseReportingAdapter implements IReportingRepository {
   
-  async getProjectPhases(projectId: string): Promise<any[]> {
+  async getProjectPhases(projectId: string): Promise<EnhancedPhaseDTO[]> {
     const { data } = await supabase
       .from('project_phases')
       .select('*')
       .eq('project_id', projectId);
-    return data || [];
+    
+    if (!data || data.length === 0) return [];
+
+    return data.map(phase => ({
+      id: phase.id,
+      name: phase.phase_name || 'Phase sans nom',
+      status: this.getPhaseStatus(phase),
+      progress: this.calculatePhaseProgress(phase),
+      startDate: phase.start_date || new Date().toISOString(),
+      endDate: phase.end_date || new Date().toISOString(),
+      actualStartDate: phase.start_date,
+      actualEndDate: phase.end_date,
+      budget: phase.estimated_cost || 0,
+      actualCost: phase.actual_cost || 0,
+      tasks: [], // TODO: Fetch actual tasks for this phase
+      milestones: [], // TODO: Fetch actual milestones for this phase
+      createdAt: phase.created_at || new Date().toISOString(),
+      updatedAt: phase.updated_at || new Date().toISOString(),
+      createdBy: phase.created_by || undefined,
+      updatedBy: phase.updated_by || undefined,
+      version: 1
+    }));
   }
 
-  async getProjectInspections(projectId: string): Promise<any[]> {
+  async getProjectInspections(projectId: string): Promise<InspectionRow[]> {
     const { data } = await supabase
       .from('inspections')
       .select('*')
@@ -23,11 +50,11 @@ export class SupabaseReportingAdapter implements IReportingRepository {
     return data || [];
   }
 
-  async calculateRealProjectCosts(projectId: string): Promise<any> {
+  async calculateRealProjectCosts(projectId: string): Promise<PhaseCostsResult> {
     return await ProjectCalculationService.calculateRealProjectCosts(projectId);
   }
 
-  async calculatePhaseResourceUtilization(projectId: string, phaseId: string): Promise<any> {
+  async calculatePhaseResourceUtilization(projectId: string, phaseId: string): Promise<ResourceUtilization> {
     return await ProjectCalculationService.calculatePhaseResourceUtilization(projectId, phaseId);
   }
 
@@ -92,7 +119,7 @@ export class SupabaseReportingAdapter implements IReportingRepository {
   /**
    * Calculate phase progress
    */
-  private calculatePhaseProgress(phase: any): number {
+  private calculatePhaseProgress(phase: ProjectPhaseRow): number {
     const now = new Date();
     const start = phase.start_date ? new Date(phase.start_date) : new Date();
     const end = phase.end_date ? new Date(phase.end_date) : new Date();
@@ -108,7 +135,7 @@ export class SupabaseReportingAdapter implements IReportingRepository {
   /**
    * Get phase status
    */
-  private getPhaseStatus(phase: any): string {
+  private getPhaseStatus(phase: ProjectPhaseRow): string {
     const progress = this.calculatePhaseProgress(phase);
     if (progress === 0) return 'pending';
     if (progress === 100) return 'completed';
@@ -118,7 +145,7 @@ export class SupabaseReportingAdapter implements IReportingRepository {
   /**
    * Get milestone status
    */
-  private getMilestoneStatus(milestone: any): string {
+  private getMilestoneStatus(milestone: ProjectMilestoneRow): string {
     if (milestone.completed) return 'completed';
     if (milestone.target_date && new Date(milestone.target_date) < new Date()) return 'overdue';
     return 'pending';

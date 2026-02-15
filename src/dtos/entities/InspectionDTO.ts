@@ -5,6 +5,7 @@
  */
 
 import { BaseEntityDTO } from '../shared';
+import { CreateDocumentDTO } from './DocumentDTO';
 
 /**
  * Inspection status enumeration
@@ -12,14 +13,15 @@ import { BaseEntityDTO } from '../shared';
  */
 export enum InspectionStatus {
   SCHEDULED = 'scheduled',
+  PENDING = 'pending',
+  PLANNED = 'planned',
   IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed',
-  CANCELLED = 'cancelled',
+  REQUIRES_REVIEW = 'requires_review',
+  REQUIRES_CHANGES = 'requires_changes',
   APPROVED = 'approved',
   REJECTED = 'rejected',
-  REQUIRES_CHANGES = 'requires_changes',
-  PENDING = 'pending',
-  PLANNED = 'planned'
+  CANCELLED = 'cancelled'
 }
 
 /**
@@ -110,12 +112,9 @@ export interface InspectionDTO extends BaseEntityDTO {
   tags?: string[];
   notes?: string;
 
-  // NEW: Additional database fields from inspections table
-  inspectionDate?: string;      // inspection_date
-  nextInspectionDate?: string;  // next_inspection_date
-  score?: number;               // score (quality rating)
-  supplierId?: string;          // supplier_id
-}
+  // Supabase table fields for adapter compatibility
+  comments?: string | null;
+  payment_type?: string | null;
 }
 
 /**
@@ -309,17 +308,6 @@ export interface InspectionDetails extends InspectionDTO {
 
 export type UpdateInspectionDTO = Partial<CreateInspectionDTO>;
 
-export interface InspectionDocument {
-  id: string;
-  name: string;
-  url: string;
-  type: string;
-  size?: number;
-  uploadedAt: string;
-  uploadedBy?: string;
-  inspectionId: string;
-}
-
 export interface InspectionWithPaymentRequest extends InspectionDTO {
   paymentRequest?: {
     id: string;
@@ -332,7 +320,7 @@ export interface InspectionWithPaymentRequest extends InspectionDTO {
 
 export interface InspectionExecutionData {
   inspectionId: string;
-  documents: InspectionDocument[];
+  documents: InspectionDocumentEntity[];
   statusUpdate: {
     status: string;
     comments?: string;
@@ -364,8 +352,6 @@ export interface InspectionParticipant {
   contact?: string;
   joinedAt?: string;
 }
-
-export type ConformityStatus = 'conform' | 'non_conform' | 'partial_conform' | 'requires_review';
 
 export interface AddMeasurementRequestDTO {
   inspectionId: string;
@@ -432,25 +418,13 @@ export interface VerificationItemDTO {
   notes?: string;
 }
 
-// Add specific document interface from InspectionService
-export interface InspectionDocumentDTO {
-  id: string;
-  type: string;
-  name: string;
-  url?: string;
-  uploadedAt?: string;
-  inspectionId: string;
-  size?: number;
-  uploadedBy?: string;
-}
-
 // Add execution data interface from InspectionService
 export interface InspectionExecutionDataDTO {
   id: string;
   status: string;
   progressAtInspection?: number;
   comments?: string;
-  documents: InspectionDocumentDTO[];
+  documents: InspectionDocumentEntity[];
   completedAt?: string;
   completedBy?: string;
   projectId?: string;
@@ -470,3 +444,131 @@ export interface InspectionPaymentValidationDTO {
   inspection_id?: string;
   rejection_notes?: string;
 }
+
+// Types moved from InspectionExecutionService
+export interface InspectionExecutionData {
+  id: string;
+  inspectionId: string;
+  status: 'in_progress' | 'completed' | 'paused';
+  progressAtInspection: number;
+  comments?: string;
+  documents: InspectionDocumentEntity[];
+  observations: InspectionObservation[];
+  checklist: ChecklistItem[];
+  projectId: string;
+  inspector: string;
+  date: string;
+  // Extended fields
+  measurements?: unknown[];
+  participants?: unknown[];
+  location?: { latitude: number; longitude: number; address?: string; captured_at?: string };
+  started_at?: Date | string;
+  completed_at?: string;
+  overall_conformity?: ConformityStatus;
+  progress_percentage?: number;
+  summary?: string;
+  recommendations?: string[];
+  corrective_actions_required?: boolean;
+}
+
+export interface InspectionObservation {
+  id: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  status: 'open' | 'resolved';
+  photo?: string;
+  createdAt: string;
+  resolvedAt?: string;
+  // Legacy aliases
+  type?: string;
+  category?: string;
+  conformity?: string;
+  created_at?: string;
+}
+
+export interface ChecklistItem {
+  id: string;
+  title: string;
+  description?: string;
+  required: boolean;
+  completed: boolean;
+  checked?: boolean;
+  notes?: string;
+  category?: string;
+}
+
+// Updated InspectionDocument interface to match service
+export interface InspectionDocumentEntity {
+  id: string;
+  name: string;
+  type: 'certificate' | 'checklist' | 'photo' | 'report' | 'scan';
+  url: string;
+  uploadedAt: string;
+  uploadedBy?: string;
+  size?: number;
+  mime_type?: string;
+  uploaded_at?: string;
+  uploaded_by?: string;
+}
+
+// Additional types for UI compatibility
+export type ObservationType = 'technical' | 'safety' | 'quality' | 'non_conformity';
+export type SeverityLevel = 'minor' | 'major' | 'critical';
+
+// Observation categories for UI
+export const OBSERVATION_CATEGORIES = {
+  technical: [
+    'Structure', 'Fondations', 'Maçonnerie', 'Charpente',
+    'Électricité', 'Plomberie', 'Menuiserie', 'Peinture', 'Finitions'
+  ],
+  safety: [
+    'EPI', 'Signalisation', 'Accès', 'Incendie',
+    'Électrique', 'Hauteur', 'Excavation', 'Circulation'
+  ],
+  quality: [
+    'Matériaux', 'Dimensions', 'Alignement', 'Nivellement',
+    'Étanchéité', 'Isolation', 'Acoustique', 'Esthétique'
+  ],
+  non_conformity: [
+    'Matériaux non conformes', 'Dimensions incorrectes', 'Mauvaise exécution', 'Non-respect normes'
+  ],
+};
+
+// Updated ConformityStatus to match service
+export type ConformityStatus = 'conforme' | 'non_conforme' | 'en_attente';
+
+// Checklist templates
+export const CHECKLIST_TEMPLATES: Record<string, ChecklistItem[]> = {
+  standard: [
+    { id: '1', title: 'Vérification des plans', required: true, completed: false },
+    { id: '2', title: 'Contrôle des matériaux', required: true, completed: false },
+    { id: '3', title: 'Sécurité du chantier', required: true, completed: false }
+  ]
+};
+
+// Request DTOs moved from service
+export type StartInspectionRequestDto = {
+  inspectionId: string;
+  projectId: string;
+  inspector: string;
+  phaseId?: string;
+  stepId?: string;
+  comments?: string;
+  location?: { latitude: number; longitude: number; address?: string };
+};
+
+export type AddObservationRequestDto = {
+  inspectionId: string;
+  observation: Omit<InspectionObservation, 'id' | 'createdAt'>;
+};
+
+export type AddDocumentRequestDto = {
+  inspectionId: string;
+  document: CreateDocumentDTO;
+};
+
+export type UpdateChecklistItemRequestDto = {
+  inspectionId: string;
+  itemId: string;
+  updates: Partial<ChecklistItem>;
+};

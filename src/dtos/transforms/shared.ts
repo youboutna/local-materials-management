@@ -335,6 +335,32 @@ export interface MaterialListItemDTO extends BaseEntityDTO {
   daysUntilReorder: number;
 }
 
+/**
+ * UI-specific Material DTO
+ * Simplified for UI components with category as string
+ * Following RULE #4: UI should use DTOs appropriate for presentation
+ */
+export interface MaterialUIDTO extends BaseEntityDTO {
+  id: string;
+  name: string;
+  description?: string;
+  category: string; // String ID instead of object
+  unit: string; // String instead of enum for UI flexibility
+  quantity: number;
+  pricePerUnit: number;
+  availableQuantity: number;
+  image?: string;
+  originLocation?: string;
+  coordinatesLatitude?: number;
+  coordinatesLongitude?: number;
+  forme?: string;
+  adresse?: string;
+  localisation?: any;
+  isActive?: boolean;
+  minimumQuantity?: number;
+  localType?: string;
+}
+
 export interface InspectionDTO extends BaseEntityDTO {
   projectId: string;
   inspector: string;

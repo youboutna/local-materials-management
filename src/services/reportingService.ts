@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { ProjectData } from '@/types/project';
+import { ProjectData } from '@/dtos/entities/ProjectDTO';
 import {
   ConstructionMilestoneDTO,
   EnhancedPhaseDTO,
@@ -8,7 +8,11 @@ import {
   ProjectReportDTO,
   RiskAssessmentDTO,
   RiskItemDTO
-} from '@/types/reportTypes';
+} from '@/dtos/entities/ReportDTO';
+import { Database } from '@/integrations/supabase/types';
+
+// Types officiels Supabase pour les tables utilisées
+type ProjectPhaseRow = Database['public']['Tables']['project_phases']['Row'];
 
 export class ReportingService {
   /**
@@ -289,7 +293,7 @@ export class ReportingService {
           issueDate: new Date(bg.issue_date),
           expiryDate: new Date(bg.expiry_date),
           bankName: bg.bank_name,
-          status: bg.status as any
+          status: bg.status as 'active' | 'expired' | 'claimed'
         })) || [],
         insuranceCoverage: insurance.data?.map(ins => ({
           id: ins.id,
@@ -298,7 +302,7 @@ export class ReportingService {
           provider: ins.insurance_company,
           validFrom: new Date(ins.valid_from),
           validUntil: new Date(ins.valid_until),
-          status: ins.status as any
+          status: ins.status as 'active' | 'expired' | 'claimed'
         })) || []
       };
     } catch (error) {
@@ -351,7 +355,7 @@ export class ReportingService {
     }
   }
 
-  private static calculatePhaseRiskLevel(phase: any): 'low' | 'medium' | 'high' {
+  private static calculatePhaseRiskLevel(phase: ProjectPhaseRow): 'low' | 'medium' | 'high' {
     const progress = phase.progress || 0;
     const budget = phase.estimated_cost || 0;
     const actualCost = phase.actual_cost || 0;
@@ -397,17 +401,17 @@ export class ReportingService {
     };
   }
 
-  private static calculateOnTimePerformance(phases: any[]): number {
+  private static calculateOnTimePerformance(phases: ProjectPhaseRow[]): number {
     const onTimePhases = phases.filter(p => p.status === 'completed' && new Date(p.end_date) >= new Date()).length;
     return phases.length > 0 ? (onTimePhases / phases.length) * 100 : 100;
   }
 
-  private static calculateQualityScore(phases: any[]): number {
+  private static calculateQualityScore(phases: ProjectPhaseRow[]): number {
     // Placeholder calculation - could be enhanced with actual quality metrics
     return Math.random() * 20 + 80; // 80-100 range
   }
 
-  private static calculateTeamEfficiency(project: ProjectData, phases: any[]): number {
+  private static calculateTeamEfficiency(project: ProjectData, phases: ProjectPhaseRow[]): number {
     // Placeholder calculation - could be enhanced with actual team metrics
     const avgProgress = phases.reduce((sum, p) => sum + (p.progress || 0), 0) / phases.length || 0;
     return Math.min(100, avgProgress * 1.2);

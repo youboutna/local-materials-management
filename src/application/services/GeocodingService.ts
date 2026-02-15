@@ -1,17 +1,61 @@
 /**
  * Geocoding Service
- * Handles forward and reverse geocoding operations
+ * Handles forward and reverse geocoding operations with Mauritania-specific data
  */
 
 import { AppError, NetworkError } from '@/utils/errors';
-import { GeographicUnit } from '@/utils/mauritania';
+import { 
+  GeographicUnit,
+  Region, 
+  City, 
+  MAURITANIA_REGIONS, 
+  MAURITANIA_CITIES,
+  CITY_TO_REGION_MAP,
+  getWilayaByCode,
+  getCityByCode,
+  getCitiesByWilaya,
+  getWilayaCapital,
+  getMajorCities,
+  getAllGeographicUnits
+} from '@/utils/mauritania';
+import {
+  searchRegions,
+  searchCities,
+  findRegionByLocation,
+  getCityCoordinates,
+  isValidRegionCode,
+  isValidCityCode,
+  isValidCityRegion,
+  isLocationInRegion
+} from '@/utils/mauritaniaUtils';
 
 export interface GeocodingResult {
   address: string;
   coordinates: { lat: number; lng: number };
   confidence: number;
   type: 'address' | 'city' | 'region' | 'landmark';
-  components?: { city?: string; region?: string; country?: string; postalCode?: string };
+  components?: { 
+    city?: string; 
+    region?: string; 
+    country?: string; 
+    postalCode?: string;
+    road?: string;
+    county?: string;
+    state?: string;
+    countryCode?: string;
+    isoCode?: string;
+  };
+  metadata?: {
+    code?: string;
+    isCapital?: boolean;
+    economicImportance?: string;
+    population?: number;
+    hasAirport?: boolean;
+    hasPort?: boolean;
+    hasUniversity?: boolean;
+    marketDays?: string[];
+    parentCode?: string;
+  };
 }
 
 export interface ReverseGeocodingResult {
@@ -19,24 +63,104 @@ export interface ReverseGeocodingResult {
   coordinates: { lat: number; lng: number };
   confidence: number;
   type: 'address' | 'city' | 'region' | 'landmark';
-  components?: { city?: string; region?: string; country?: string; postalCode?: string };
+  components?: { 
+    city?: string; 
+    region?: string; 
+    country?: string; 
+    postalCode?: string;
+    road?: string;
+    county?: string;
+    state?: string;
+    countryCode?: string;
+    isoCode?: string;
+  };
+  metadata?: {
+    code?: string;
+    isCapital?: boolean;
+    economicImportance?: string;
+    population?: number;
+    hasAirport?: boolean;
+    hasPort?: boolean;
+    hasUniversity?: boolean;
+    marketDays?: string[];
+    parentCode?: string;
+  };
+}
+
+export interface GeocodingConfig {
+  provider?: 'google' | 'mapbox' | 'openstreetmap';
+  apiKey?: string;
+  userAgent?: string; // Required for OpenStreetMap
+  prioritizeLocal?: boolean; // Prioritize local Mauritania data (default: true)
 }
 
 export class GeocodingService {
   private readonly apiKey?: string;
-  private readonly baseUrl: string;
+  private readonly provider: 'google' | 'mapbox' | 'openstreetmap';
+  private readonly userAgent?: string;
+  private readonly prioritizeLocal: boolean;
+  private readonly baseUrls = {
+    google: 'https://maps.googleapis.com/maps/api/geocode/json',
+    mapbox: 'https://api.mapbox.com/geocoding/v5/mapbox.places',
+    openstreetmap: 'https://nominatim.openstreetmap.org'
+  };
 
-  constructor(apiKey?: string) {
-    this.apiKey = apiKey || process.env.GEOCODING_API_KEY;
-    this.baseUrl = 'https://api.mapbox.com/geocoding/v5/mapbox.places';
+  // Cache for search terms
+  private readonly regionSearchTermsCache: Map<string, string[]> = new Map();
+  private readonly citySearchTermsCache: Map<string, string[]> = new Map();
+
+  constructor(config: GeocodingConfig = {}) {
+    this.provider = config.provider || 'openstreetmap';
+    this.apiKey = config.apiKey || process.env.GEOCODING_API_KEY;
+    this.userAgent = config.userAgent || 'MauritaniaMapper/1.0 (contact@mauritania-mapper.mr)';
+    this.prioritizeLocal = config.prioritizeLocal !== false; // Default to true
+    
+    // Initialize search terms cache
+    this.initializeSearchTermsCache();
   }
+
+  private initializeSearchTermsCache(): void {
+    // Cache region search terms from CITY_TO_REGION_MAP
+    Object.entries(CITY_TO_REGION_MAP).forEach(([code, terms]) => {
+      this.regionSearchTermsCache.set(code, terms);
+    });
+
+    // Cache city search terms from City objects
+    MAURITANIA_CITIES.forEach(city => {
+      if (city.searchTerms && city.searchTerms.length > 0) {
+        this.citySearchTermsCache.set(city.code, city.searchTerms);
+      }
+    });
+  }
+
+  // =================== PUBLIC METHODS ===================
 
   async geocode(address: string): Promise<GeocodingResult[]> {
     try {
-      if (!address?.trim()) throw new AppError('Address is required for geocoding', 'VALIDATION_ERROR');
-      const localResults = await this.geocodeLocal(address);
-      if (localResults.length > 0) return localResults;
-      if (this.apiKey) return await this.geocodeExternal(address);
+      if (!address?.trim()) {
+        throw new AppError('Address is required for geocoding', 'VALIDATION_ERROR');
+      }
+
+      // Always try local Mauritania data first (if prioritized)
+      if (this.prioritizeLocal) {
+        const localResults = await this.geocodeLocal(address);
+        if (localResults.length > 0) return localResults;
+      }
+
+      // Try external geocoding based on provider
+      const externalResults = await this.geocodeExternal(address);
+      
+      // If external results found and we still want local fallback, merge them
+      if (externalResults.length > 0) {
+        return externalResults;
+      }
+
+      // Final fallback: try local even if not prioritized
+      if (!this.prioritizeLocal) {
+        const localResults = await this.geocodeLocal(address);
+        if (localResults.length > 0) return localResults;
+      }
+
       return [];
     } catch (error) {
       if (error instanceof AppError) throw error;
@@ -46,10 +170,30 @@ export class GeocodingService {
 
   async reverseGeocode(latitude: number, longitude: number): Promise<ReverseGeocodingResult[]> {
     try {
-      if (!this.isValidCoordinate(latitude, longitude)) throw new AppError('Invalid coordinates provided', 'VALIDATION_ERROR');
-      const localResults = await this.reverseGeocodeLocal(latitude, longitude);
-      if (localResults.length > 0) return localResults;
-      if (this.apiKey) return await this.reverseGeocodeExternal(latitude, longitude);
+      if (!this.isValidCoordinate(latitude, longitude)) {
+        throw new AppError('Invalid coordinates provided', 'VALIDATION_ERROR');
+      }
+
+      // Always try local Mauritania data first (if prioritized)
+      if (this.prioritizeLocal) {
+        const localResults = await this.reverseGeocodeLocal(latitude, longitude);
+        if (localResults.length > 0) return localResults;
+      }
+
+      // Try external geocoding based on provider
+      const externalResults = await this.reverseGeocodeExternal(latitude, longitude);
+      
+      // If external results found and we still want local fallback, merge them
+      if (externalResults.length > 0) {
+        return externalResults;
+      }
+
+      // Final fallback: try local even if not prioritized
+      if (!this.prioritizeLocal) {
+        const localResults = await this.reverseGeocodeLocal(latitude, longitude);
+        if (localResults.length > 0) return localResults;
+      }
+
       return [];
     } catch (error) {
       if (error instanceof AppError) throw error;
@@ -60,12 +204,21 @@ export class GeocodingService {
   async batchGeocode(addresses: string[]): Promise<GeocodingResult[][]> {
     try {
       const results: GeocodingResult[][] = [];
-      const batchSize = 10;
+      const batchSize = this.provider === 'openstreetmap' ? 1 : 10; // OpenStreetMap has stricter rate limits
+      
       for (let i = 0; i < addresses.length; i += batchSize) {
         const batch = addresses.slice(i, i + batchSize);
-        const batchResults = await Promise.all(batch.map(address => this.geocode(address)));
+        const batchResults = await Promise.all(
+          batch.map(address => this.geocode(address))
+        );
         results.push(...batchResults);
+        
+        // Add delay between batches for OpenStreetMap (rate limiting)
+        if (this.provider === 'openstreetmap' && i + batchSize < addresses.length) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
       }
+      
       return results;
     } catch (error) {
       if (error instanceof AppError) throw error;
@@ -73,38 +226,138 @@ export class GeocodingService {
     }
   }
 
-  private isValidCoordinate(latitude: number, longitude: number): boolean {
-    return latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180 && !isNaN(latitude) && !isNaN(longitude);
+  async searchMauritaniaLocations(query: string): Promise<(Region | City)[]> {
+    try {
+      const regions = searchRegions(query);
+      const cities = searchCities(query);
+      return [...regions, ...cities];
+    } catch (error) {
+      console.error('Mauritania search failed:', error);
+      return [];
+    }
   }
+
+  async getLocationByCode(code: string): Promise<Region | City | null> {
+    return getWilayaByCode(code) || getCityByCode(code) || null;
+  }
+
+  async getCitiesInWilaya(wilayaCode: string): Promise<City[]> {
+    if (!isValidRegionCode(wilayaCode)) {
+      throw new AppError(`Invalid wilaya code: ${wilayaCode}`, 'VALIDATION_ERROR');
+    }
+    return getCitiesByWilaya(wilayaCode);
+  }
+
+  async getWilayaCapital(wilayaCode: string): Promise<City | undefined> {
+    if (!isValidRegionCode(wilayaCode)) {
+      throw new AppError(`Invalid wilaya code: ${wilayaCode}`, 'VALIDATION_ERROR');
+    }
+    return getWilayaCapital(wilayaCode);
+  }
+
+  async getSearchTermsForLocation(code: string): Promise<string[]> {
+    // Check if it's a region
+    const regionTerms = this.regionSearchTermsCache.get(code);
+    if (regionTerms) return regionTerms;
+
+    // Check if it's a city
+    const cityTerms = this.citySearchTermsCache.get(code);
+    if (cityTerms) return cityTerms;
+
+    // Try to find by code in regions
+    const region = getWilayaByCode(code);
+    if (region) {
+      return [region.name.toLowerCase(), region.nameAr.toLowerCase()];
+    }
+
+    // Try to find by code in cities
+    const city = getCityByCode(code);
+    if (city) {
+      return city.searchTerms || [city.name.toLowerCase(), city.nameAr.toLowerCase()];
+    }
+
+    return [];
+  }
+
+  async findLocationBySearchTerm(term: string): Promise<(Region | City)[]> {
+    const results: (Region | City)[] = [];
+    const lowerTerm = term.toLowerCase();
+
+    // Search in region search terms cache
+    this.regionSearchTermsCache.forEach((terms, code) => {
+      if (terms.some(t => t.toLowerCase().includes(lowerTerm))) {
+        const region = getWilayaByCode(code);
+        if (region) results.push(region);
+      }
+    });
+
+    // Search in city search terms cache
+    this.citySearchTermsCache.forEach((terms, code) => {
+      if (terms.some(t => t.toLowerCase().includes(lowerTerm))) {
+        const city = getCityByCode(code);
+        if (city) results.push(city);
+      }
+    });
+
+    return results;
+  }
+
+  // =================== PRIVATE METHODS ===================
+
+  private isValidCoordinate(latitude: number, longitude: number): boolean {
+    return latitude >= -90 && latitude <= 90 && 
+           longitude >= -180 && longitude <= 180 && 
+           !isNaN(latitude) && !isNaN(longitude);
+  }
+
+  // =================== LOCAL GEOCODING (Mauritania Data) ===================
 
   private async geocodeLocal(address: string): Promise<GeocodingResult[]> {
     try {
-      const { searchRegions, searchCities } = await import('@/utils/mauritaniaUtils');
       const results: GeocodingResult[] = [];
+      const lowerAddress = address.toLowerCase();
       
+      // Search in regions first using utility function
       const regions = searchRegions(address);
-      regions.forEach((region: any) => {
-        results.push({
-          address: region.name,
-          coordinates: { lat: region.lat, lng: region.lng },
-          confidence: 0.9,
-          type: 'region' as const,
-          components: { region: region.name, country: 'Mauritania' }
-        });
+      regions.forEach((region: Region) => {
+        results.push(this.formatRegionToGeocodingResult(region));
       });
 
+      // Search in cities using utility function
       const cities = searchCities(address);
-      cities.forEach((city: any) => {
-        results.push({
-          address: city.name,
-          coordinates: { lat: city.lat, lng: city.lng },
-          confidence: 0.95,
-          type: 'city' as const,
-          components: { city: city.name, region: city.parentCode ? this.getRegionName(city.parentCode) : undefined, country: 'Mauritania' }
-        });
+      cities.forEach((city: City) => {
+        results.push(this.formatCityToGeocodingResult(city));
       });
 
-      return results.sort((a, b) => b.confidence - a.confidence);
+      // If no exact matches, try fuzzy matching with search terms from CITY_TO_REGION_MAP
+      if (results.length === 0) {
+        // Search using region search terms from CITY_TO_REGION_MAP
+        Object.entries(CITY_TO_REGION_MAP).forEach(([code, terms]) => {
+          if (terms.some(term => lowerAddress.includes(term.toLowerCase()))) {
+            const region = getWilayaByCode(code);
+            if (region) {
+              results.push(this.formatRegionToGeocodingResult(region));
+            }
+          }
+        });
+
+        // Search using city search terms
+        MAURITANIA_CITIES.forEach((city: City) => {
+          if (city.searchTerms?.some(term => lowerAddress.includes(term.toLowerCase()))) {
+            results.push(this.formatCityToGeocodingResult(city));
+          }
+        });
+      }
+
+      // Also check using isLocationInRegion utility
+      MAURITANIA_REGIONS.forEach((region: Region) => {
+        if (isLocationInRegion(address, region) && !results.some(r => r.metadata?.code === region.code)) {
+          results.push(this.formatRegionToGeocodingResult(region));
+        }
+      });
+
+      // Sort by confidence and remove duplicates
+      return this.deduplicateResults(results.sort((a, b) => b.confidence - a.confidence));
     } catch (error) {
       console.error('Local geocoding failed:', error);
       return [];
@@ -113,15 +366,15 @@ export class GeocodingService {
 
   private async reverseGeocodeLocal(latitude: number, longitude: number): Promise<ReverseGeocodingResult[]> {
     try {
-      const { MAURITANIA_REGIONS, MAURITANIA_CITIES } = await import('@/utils/mauritania');
       const results: ReverseGeocodingResult[] = [];
       
-      let nearestRegion: any = null;
+      // Find nearest region
+      let nearestRegion: Region | null = null;
       let minRegionDistance = Infinity;
       
-      MAURITANIA_REGIONS.forEach((region: any) => {
+      MAURITANIA_REGIONS.forEach((region: Region) => {
         const distance = this.calculateDistance(latitude, longitude, region.lat, region.lng);
-        if (distance < minRegionDistance && distance < 50) {
+        if (distance < minRegionDistance && distance < 100) { // Within 100km
           minRegionDistance = distance;
           nearestRegion = region;
         }
@@ -131,102 +384,602 @@ export class GeocodingService {
         results.push({
           address: nearestRegion.name,
           coordinates: { lat: nearestRegion.lat, lng: nearestRegion.lng },
-          confidence: Math.max(0.5, 1 - (minRegionDistance / 50)),
-          type: 'region' as const,
-          components: { region: nearestRegion.name, country: 'Mauritania' }
+          confidence: Math.max(0.5, 1 - (minRegionDistance / 100)),
+          type: 'region',
+          components: { 
+            region: nearestRegion.name, 
+            country: 'Mauritania',
+            countryCode: 'mr'
+          },
+          metadata: {
+            code: nearestRegion.code,
+            economicImportance: nearestRegion.economicImportance,
+            population: nearestRegion.population
+          }
         });
       }
 
-      let nearestCity: any = null;
+      // Find nearest city
+      let nearestCity: City | null = null;
       let minCityDistance = Infinity;
       
-      MAURITANIA_CITIES.forEach((city: any) => {
+      MAURITANIA_CITIES.forEach((city: City) => {
         const distance = this.calculateDistance(latitude, longitude, city.lat, city.lng);
-        if (distance < minCityDistance && distance < 25) {
+        if (distance < minCityDistance && distance < 50) { // Within 50km
           minCityDistance = distance;
           nearestCity = city;
         }
       });
 
       if (nearestCity) {
+        const region = getWilayaByCode(nearestCity.parentCode);
         results.push({
           address: nearestCity.name,
           coordinates: { lat: nearestCity.lat, lng: nearestCity.lng },
-          confidence: Math.max(0.6, 1 - (minCityDistance / 25)),
-          type: 'city' as const,
-          components: { city: nearestCity.name, region: nearestCity.parentCode ? this.getRegionName(nearestCity.parentCode) : undefined, country: 'Mauritania' }
+          confidence: Math.max(0.6, 1 - (minCityDistance / 50)),
+          type: 'city',
+          components: { 
+            city: nearestCity.name, 
+            region: region?.name || nearestCity.parentCode,
+            country: 'Mauritania',
+            countryCode: 'mr'
+          },
+          metadata: {
+            code: nearestCity.code,
+            isCapital: nearestCity.isCapital,
+            economicImportance: nearestCity.economicImportance,
+            population: nearestCity.population,
+            hasAirport: nearestCity.hasAirport,
+            hasPort: nearestCity.hasPort,
+            hasUniversity: nearestCity.hasUniversity,
+            marketDays: nearestCity.marketDays,
+            parentCode: nearestCity.parentCode
+          }
         });
       }
 
-      return results.sort((a, b) => b.confidence - a.confidence);
+      return this.deduplicateResults(results.sort((a, b) => b.confidence - a.confidence));
     } catch (error) {
       console.error('Local reverse geocoding failed:', error);
       return [];
     }
   }
 
+  // =================== EXTERNAL GEOCODING ===================
+
   private async geocodeExternal(address: string): Promise<GeocodingResult[]> {
     try {
-      if (!this.apiKey) throw new AppError('Geocoding API key not configured', 'CONFIGURATION_ERROR');
-      const url = `${this.baseUrl}/${encodeURIComponent(address)}.json`;
-      const params = new URLSearchParams({ access_token: this.apiKey, country: 'MR', types: 'place,region,address' });
-      const response = await fetch(`${url}?${params}`);
-      if (!response.ok) throw new NetworkError(`Geocoding API error: ${response.statusText}`);
-      const data = await response.json();
-      if (!data.features?.length) return [];
-      return data.features.map((feature: any) => ({
-        address: feature.place_name || feature.text,
-        coordinates: { lat: feature.center[1], lng: feature.center[0] },
-        confidence: feature.relevance || 0.5,
-        type: this.mapMapboxType(feature.place_type?.[0]),
-        components: this.parseMapboxComponents(feature.context || [])
-      }));
-    } catch (error) { console.error('External geocoding failed:', error); return []; }
+      if (this.provider === 'openstreetmap') {
+        return await this.geocodeOpenStreetMap(address);
+      } else if (this.provider === 'google' && this.apiKey) {
+        return await this.geocodeGoogle(address);
+      } else if (this.provider === 'mapbox' && this.apiKey) {
+        return await this.geocodeMapbox(address);
+      }
+      return [];
+    } catch (error) {
+      console.error(`${this.provider} geocoding failed:`, error);
+      return [];
+    }
   }
 
-  private async reverseGeocodeExternal(latitude: number, longitude: number): Promise<ReverseGeocodingResult[]> {
+  private async reverseGeocodeExternal(lat: number, lng: number): Promise<ReverseGeocodingResult[]> {
     try {
-      if (!this.apiKey) throw new AppError('Geocoding API key not configured', 'CONFIGURATION_ERROR');
-      const url = `${this.baseUrl}/${longitude},${latitude}.json`;
-      const params = new URLSearchParams({ access_token: this.apiKey, types: 'place,region,address' });
+      if (this.provider === 'openstreetmap') {
+        return await this.reverseGeocodeOpenStreetMap(lat, lng);
+      } else if (this.provider === 'google' && this.apiKey) {
+        return await this.reverseGeocodeGoogle(lat, lng);
+      } else if (this.provider === 'mapbox' && this.apiKey) {
+        return await this.reverseGeocodeMapbox(lat, lng);
+      }
+      return [];
+    } catch (error) {
+      console.error(`${this.provider} reverse geocoding failed:`, error);
+      return [];
+    }
+  }
+
+  // OpenStreetMap (Nominatim) methods
+  private async geocodeOpenStreetMap(address: string): Promise<GeocodingResult[]> {
+    try {
+      const url = `${this.baseUrls.openstreetmap}/search`;
+      const params = new URLSearchParams({
+        q: address,
+        format: 'json',
+        addressdetails: '1',
+        limit: '10',
+        countrycodes: 'mr', // Focus on Mauritania
+        'accept-language': 'en,fr,ar'
+      });
+
+      const response = await fetch(`${url}?${params}`, {
+        headers: {
+          'User-Agent': this.userAgent || 'MauritaniaMapper/1.0'
+        }
+      });
+
+      if (!response.ok) {
+        throw new NetworkError(`OpenStreetMap geocoding error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (!data || data.length === 0) return [];
+
+      return data.map((item: any) => this.formatOpenStreetMapResult(item));
+    } catch (error) {
+      console.error('OpenStreetMap geocoding failed:', error);
+      return [];
+    }
+  }
+
+  private async reverseGeocodeOpenStreetMap(lat: number, lng: number): Promise<ReverseGeocodingResult[]> {
+    try {
+      const url = `${this.baseUrls.openstreetmap}/reverse`;
+      const params = new URLSearchParams({
+        lat: lat.toString(),
+        lon: lng.toString(),
+        format: 'json',
+        addressdetails: '1',
+        zoom: '18',
+        'accept-language': 'en,fr,ar'
+      });
+
+      const response = await fetch(`${url}?${params}`, {
+        headers: {
+          'User-Agent': this.userAgent || 'MauritaniaMapper/1.0'
+        }
+      });
+
+      if (!response.ok) {
+        throw new NetworkError(`OpenStreetMap reverse geocoding error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (!data || !data.address) return [];
+
+      return [this.formatOpenStreetMapResult(data)];
+    } catch (error) {
+      console.error('OpenStreetMap reverse geocoding failed:', error);
+      return [];
+    }
+  }
+
+  // Google Maps methods
+  private async geocodeGoogle(address: string): Promise<GeocodingResult[]> {
+    try {
+      if (!this.apiKey) throw new AppError('Google API key not configured', 'CONFIGURATION_ERROR');
+      
+      const url = this.baseUrls.google;
+      const params = new URLSearchParams({
+        address: address,
+        key: this.apiKey,
+        components: 'country:MR', // Focus on Mauritania
+        region: 'mr',
+        language: 'en'
+      });
+
       const response = await fetch(`${url}?${params}`);
-      if (!response.ok) throw new NetworkError(`Reverse geocoding API error: ${response.statusText}`);
+      if (!response.ok) {
+        throw new NetworkError(`Google geocoding error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (data.status !== 'OK' || !data.results?.length) return [];
+
+      return data.results.map((result: any) => this.formatGoogleResult(result));
+    } catch (error) {
+      console.error('Google geocoding failed:', error);
+      return [];
+    }
+  }
+
+  private async reverseGeocodeGoogle(lat: number, lng: number): Promise<ReverseGeocodingResult[]> {
+    try {
+      if (!this.apiKey) throw new AppError('Google API key not configured', 'CONFIGURATION_ERROR');
+      
+      const url = this.baseUrls.google;
+      const params = new URLSearchParams({
+        latlng: `${lat},${lng}`,
+        key: this.apiKey,
+        location_type: 'ROOFTOP',
+        language: 'en'
+      });
+
+      const response = await fetch(`${url}?${params}`);
+      if (!response.ok) {
+        throw new NetworkError(`Google reverse geocoding error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (data.status !== 'OK' || !data.results?.length) return [];
+
+      return data.results.map((result: any) => this.formatGoogleResult(result));
+    } catch (error) {
+      console.error('Google reverse geocoding failed:', error);
+      return [];
+    }
+  }
+
+  // Mapbox methods
+  private async geocodeMapbox(address: string): Promise<GeocodingResult[]> {
+    try {
+      if (!this.apiKey) throw new AppError('Mapbox API key not configured', 'CONFIGURATION_ERROR');
+      
+      const url = `${this.baseUrls.mapbox}/${encodeURIComponent(address)}.json`;
+      const params = new URLSearchParams({
+        access_token: this.apiKey,
+        country: 'MR',
+        types: 'place,region,address,poi',
+        language: 'en,fr,ar'
+      });
+
+      const response = await fetch(`${url}?${params}`);
+      if (!response.ok) {
+        throw new NetworkError(`Mapbox geocoding error: ${response.statusText}`);
+      }
+
       const data = await response.json();
       if (!data.features?.length) return [];
-      return data.features.map((feature: any) => ({
-        address: feature.place_name || feature.text,
-        coordinates: { lat: feature.center[1], lng: feature.center[0] },
-        confidence: feature.relevance || 0.5,
-        type: this.mapMapboxType(feature.place_type?.[0]),
-        components: this.parseMapboxComponents(feature.context || [])
-      }));
-    } catch (error) { console.error('External reverse geocoding failed:', error); return []; }
+
+      return data.features.map((feature: any) => this.formatMapboxResult(feature));
+    } catch (error) {
+      console.error('Mapbox geocoding failed:', error);
+      return [];
+    }
   }
+
+  private async reverseGeocodeMapbox(lat: number, lng: number): Promise<ReverseGeocodingResult[]> {
+    try {
+      if (!this.apiKey) throw new AppError('Mapbox API key not configured', 'CONFIGURATION_ERROR');
+      
+      const url = `${this.baseUrls.mapbox}/${lng},${lat}.json`;
+      const params = new URLSearchParams({
+        access_token: this.apiKey,
+        types: 'place,region,address,poi',
+        language: 'en,fr,ar'
+      });
+
+      const response = await fetch(`${url}?${params}`);
+      if (!response.ok) {
+        throw new NetworkError(`Mapbox reverse geocoding error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (!data.features?.length) return [];
+
+      return data.features.map((feature: any) => this.formatMapboxResult(feature));
+    } catch (error) {
+      console.error('Mapbox reverse geocoding failed:', error);
+      return [];
+    }
+  }
+
+  // =================== FORMATTING METHODS ===================
+
+  private formatRegionToGeocodingResult(region: Region): GeocodingResult {
+    return {
+      address: region.name,
+      coordinates: { lat: region.lat, lng: region.lng },
+      confidence: 0.9,
+      type: 'region',
+      components: { 
+        region: region.name, 
+        country: 'Mauritania',
+        countryCode: 'mr'
+      },
+      metadata: {
+        code: region.code,
+        economicImportance: region.economicImportance,
+        population: region.population
+      }
+    };
+  }
+
+  private formatCityToGeocodingResult(city: City): GeocodingResult {
+    const region = getWilayaByCode(city.parentCode);
+    
+    return {
+      address: city.name,
+      coordinates: { lat: city.lat, lng: city.lng },
+      confidence: 0.95,
+      type: 'city',
+      components: { 
+        city: city.name, 
+        region: region?.name || city.parentCode,
+        country: 'Mauritania',
+        countryCode: 'mr'
+      },
+      metadata: {
+        code: city.code,
+        isCapital: city.isCapital,
+        economicImportance: city.economicImportance,
+        population: city.population,
+        hasAirport: city.hasAirport,
+        hasPort: city.hasPort,
+        hasUniversity: city.hasUniversity,
+        marketDays: city.marketDays,
+        parentCode: city.parentCode
+      }
+    };
+  }
+
+  private formatOpenStreetMapResult(item: any): GeocodingResult | ReverseGeocodingResult {
+    const components: any = {};
+    const metadata: any = {};
+    
+    if (item.address) {
+      components.road = item.address.road;
+      components.city = item.address.city || item.address.town || item.address.village;
+      components.county = item.address.county;
+      components.region = item.address.state;
+      components.state = item.address.state;
+      components.country = item.address.country;
+      components.countryCode = item.address.country_code;
+      components.isoCode = item.address['ISO3166-2-lvl4'];
+      components.postalCode = item.address.postcode;
+    }
+
+    // Try to match with Mauritania data using search terms
+    if (components.city) {
+      // Check city search terms
+      const matchedCity = MAURITANIA_CITIES.find(city => 
+        city.searchTerms?.some(term => 
+          term.toLowerCase().includes(components.city?.toLowerCase()) ||
+          components.city?.toLowerCase().includes(term.toLowerCase())
+        ) ||
+        city.name.toLowerCase() === components.city?.toLowerCase() ||
+        city.nameAr.includes(components.city)
+      );
+      
+      if (matchedCity) {
+        Object.assign(metadata, {
+          code: matchedCity.code,
+          isCapital: matchedCity.isCapital,
+          economicImportance: matchedCity.economicImportance,
+          population: matchedCity.population,
+          hasAirport: matchedCity.hasAirport,
+          hasPort: matchedCity.hasPort,
+          hasUniversity: matchedCity.hasUniversity,
+          parentCode: matchedCity.parentCode
+        });
+      }
+    }
+
+    // Check region search terms from CITY_TO_REGION_MAP
+    if (components.region) {
+      Object.entries(CITY_TO_REGION_MAP).forEach(([code, terms]) => {
+        if (terms.some(term => term.toLowerCase().includes(components.region?.toLowerCase()))) {
+          const region = getWilayaByCode(code);
+          if (region) {
+            Object.assign(metadata, {
+              regionCode: region.code,
+              regionImportance: region.economicImportance,
+              regionPopulation: region.population
+            });
+          }
+        }
+      });
+    }
+
+    return {
+      address: item.display_name,
+      coordinates: { 
+        lat: parseFloat(item.lat || item.latitude), 
+        lng: parseFloat(item.lon || item.longitude) 
+      },
+      confidence: this.calculateOpenStreetMapConfidence(item),
+      type: this.mapOpenStreetMapType(item),
+      components,
+      metadata: Object.keys(metadata).length > 0 ? metadata : undefined
+    };
+  }
+
+  private formatGoogleResult(result: any): GeocodingResult | ReverseGeocodingResult {
+    const components: any = {};
+    const metadata: any = {};
+    
+    result.address_components?.forEach((component: any) => {
+      if (component.types.includes('locality')) {
+        components.city = component.long_name;
+      } else if (component.types.includes('administrative_area_level_1')) {
+        components.region = component.long_name;
+      } else if (component.types.includes('country')) {
+        components.country = component.long_name;
+        components.countryCode = component.short_name?.toLowerCase();
+      } else if (component.types.includes('postal_code')) {
+        components.postalCode = component.long_name;
+      } else if (component.types.includes('route')) {
+        components.road = component.long_name;
+      }
+    });
+
+    // Try to match with Mauritania data using search terms
+    if (components.city) {
+      const matchedCity = MAURITANIA_CITIES.find(city => 
+        city.searchTerms?.some(term => 
+          term.toLowerCase().includes(components.city?.toLowerCase()) ||
+          components.city?.toLowerCase().includes(term.toLowerCase())
+        ) ||
+        city.name.toLowerCase() === components.city?.toLowerCase() ||
+        city.nameAr.includes(components.city)
+      );
+      
+      if (matchedCity) {
+        Object.assign(metadata, {
+          code: matchedCity.code,
+          isCapital: matchedCity.isCapital,
+          economicImportance: matchedCity.economicImportance,
+          population: matchedCity.population
+        });
+      }
+    }
+
+    return {
+      address: result.formatted_address,
+      coordinates: {
+        lat: result.geometry.location.lat,
+        lng: result.geometry.location.lng
+      },
+      confidence: this.mapGoogleConfidence(result.geometry.location_type),
+      type: this.mapGoogleType(result.types?.[0]),
+      components,
+      metadata: Object.keys(metadata).length > 0 ? metadata : undefined
+    };
+  }
+
+  private formatMapboxResult(feature: any): GeocodingResult | ReverseGeocodingResult {
+    const components: any = {};
+    const metadata: any = {};
+    
+    feature.context?.forEach((item: any) => {
+      if (item.id?.startsWith('place.')) {
+        components.city = item.text;
+      } else if (item.id?.startsWith('region.')) {
+        components.region = item.text;
+      } else if (item.id?.startsWith('country.')) {
+        components.country = item.text;
+        components.countryCode = item.short_code;
+      } else if (item.id?.startsWith('postcode.')) {
+        components.postalCode = item.text;
+      }
+    });
+
+    // Try to match with Mauritania data using search terms
+    if (components.city) {
+      const matchedCity = MAURITANIA_CITIES.find(city => 
+        city.searchTerms?.some(term => 
+          term.toLowerCase().includes(components.city?.toLowerCase()) ||
+          components.city?.toLowerCase().includes(term.toLowerCase())
+        ) ||
+        city.name.toLowerCase() === components.city?.toLowerCase() ||
+        city.nameAr.includes(components.city)
+      );
+      
+      if (matchedCity) {
+        Object.assign(metadata, {
+          code: matchedCity.code,
+          isCapital: matchedCity.isCapital,
+          economicImportance: matchedCity.economicImportance,
+          population: matchedCity.population
+        });
+      }
+    }
+
+    return {
+      address: feature.place_name || feature.text,
+      coordinates: { 
+        lat: feature.center[1], 
+        lng: feature.center[0] 
+      },
+      confidence: feature.relevance || 0.5,
+      type: this.mapMapboxType(feature.place_type?.[0]),
+      components,
+      metadata: Object.keys(metadata).length > 0 ? metadata : undefined
+    };
+  }
+
+  // =================== HELPER METHODS ===================
 
   private calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
-    const R = 6371;
+    const R = 6371; // Earth's radius in km
     const dLat = this.toRadians(lat2 - lat1);
     const dLng = this.toRadians(lng2 - lng1);
-    const a = Math.sin(dLat / 2) ** 2 + Math.cos(this.toRadians(lat1)) * Math.cos(this.toRadians(lat2)) * Math.sin(dLng / 2) ** 2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));@/utils/mauritania
+    const a = Math.sin(dLat / 2) ** 2 + 
+              Math.cos(this.toRadians(lat1)) * Math.cos(this.toRadians(lat2)) * 
+              Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
-  private toRadians(degrees: number): number { return degrees * (Math.PI / 180); }
-  private getRegionName(code: string): string { return code; }
+  private toRadians(degrees: number): number {
+    return degrees * (Math.PI / 180);
+  }
+
+  private calculateOpenStreetMapConfidence(item: any): number {
+    if (item.importance) {
+      return Math.min(1, item.importance * 1.2);
+    }
+    return 0.7;
+  }
+
+  private mapOpenStreetMapType(item: any): 'address' | 'city' | 'region' | 'landmark' {
+    if (item.address?.road) {
+      return 'address';
+    }
+    
+    const type = item.type || item.class || '';
+    const typeMap: Record<string, 'address' | 'city' | 'region' | 'landmark'> = {
+      city: 'city',
+      town: 'city',
+      village: 'city',
+      hamlet: 'city',
+      state: 'region',
+      province: 'region',
+      country: 'region',
+      road: 'address',
+      street: 'address',
+      building: 'address',
+      amenity: 'landmark',
+      tourism: 'landmark'
+    };
+    
+    return typeMap[type] || 'address';
+  }
+
+  private mapGoogleConfidence(locationType: string): number {
+    const confidenceMap: Record<string, number> = {
+      'ROOFTOP': 0.95,
+      'RANGE_INTERPOLATED': 0.8,
+      'GEOMETRIC_CENTER': 0.7,
+      'APPROXIMATE': 0.5
+    };
+    return confidenceMap[locationType] || 0.5;
+  }
+
+  private mapGoogleType(googleType: string): 'address' | 'city' | 'region' | 'landmark' {
+    const typeMap: Record<string, 'address' | 'city' | 'region' | 'landmark'> = {
+      street_address: 'address',
+      route: 'address',
+      intersection: 'address',
+      locality: 'city',
+      administrative_area_level_1: 'region',
+      administrative_area_level_2: 'region',
+      country: 'region',
+      point_of_interest: 'landmark',
+      park: 'landmark',
+      airport: 'landmark'
+    };
+    return typeMap[googleType] || 'address';
+  }
 
   private mapMapboxType(mapboxType: string): 'address' | 'city' | 'region' | 'landmark' {
-    const typeMap: Record<string, 'address' | 'city' | 'region' | 'landmark'> = { address: 'address', poi: 'landmark', place: 'city', region: 'region', country: 'region', postcode: 'address' };
+    const typeMap: Record<string, 'address' | 'city' | 'region' | 'landmark'> = {
+      address: 'address',
+      poi: 'landmark',
+      place: 'city',
+      region: 'region',
+      country: 'region',
+      postcode: 'address'
+    };
     return typeMap[mapboxType] || 'address';
   }
 
-  private parseMapboxComponents(context: any[]): Record<string, string> {
-    const components: Record<string, string> = {};
-    (context || []).forEach((item: any) => {
-      if (item.id?.startsWith('place.')) components.city = item.text;
-      else if (item.id?.startsWith('region.')) components.region = item.text;
-      else if (item.id?.startsWith('country.')) components.country = item.text;
-      else if (item.id?.startsWith('postcode.')) components.postalCode = item.text;
+  private deduplicateResults<T extends GeocodingResult | ReverseGeocodingResult>(results: T[]): T[] {
+    const seen = new Set<string>();
+    return results.filter(result => {
+      const key = `${result.coordinates.lat.toFixed(4)},${result.coordinates.lng.toFixed(4)}`;
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
     });
-    return components;
+  }
+
+  // Utility method to get all search terms for debugging
+  public getAllSearchTerms(): Record<string, string[]> {
+    return {
+      regions: Object.fromEntries(this.regionSearchTermsCache),
+      cities: Object.fromEntries(this.citySearchTermsCache)
+    };
   }
 }

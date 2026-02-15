@@ -28,8 +28,7 @@ import {
   ObservationType,
   SeverityLevel,
   OBSERVATION_CATEGORIES,
-  InspectionDocument as InspectionDocumentType,
-} from '@/types/inspection-execution';
+} from '@/dtos/entities/InspectionDTO';
 
 interface FieldInspectionExecutorProps {
   inspection: {

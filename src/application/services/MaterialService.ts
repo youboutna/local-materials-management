@@ -6,7 +6,7 @@
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
 import { Material, MaterialCategory } from '@/domain/entities/Material';
-import { MATERIAL_CATEGORIES, MaterialDTO, MaterialStatus, MaterialUnit } from '@/dtos/entities/MaterialDTO';
+import { MATERIAL_CATEGORIES, MaterialDTO, MaterialStatus, MaterialUnit, MaterialTransformer, CreateMaterialRequestDto, UpdateMaterialRequestDto, MaterialUIDTO } from '@/dtos/transforms/MaterialDTO';
 
 // Service DTOs for data exchange
 export interface CreateMaterialDTO {
@@ -137,15 +137,32 @@ export class MaterialService {
   }
 
   /**
-   * Get all materials
+   * Get all materials for UI consumption
+   * Returns MaterialUIDTO with category as string for UI components
    */
-  async getAllMaterials(): Promise<MaterialDTO[]> {
+  async getMaterialsForUI(): Promise<MaterialUIDTO[]> {
     try {
       const materials = await this.materialRepository.findAll();
-      return materials.map(material => this.mapToDTO(material));
+      const dtos = materials.map(material => this.mapToDTO(material));
+      return dtos.map(dto => MaterialTransformer.toUIDTO(dto));
     } catch (error) {
-      console.error('MaterialService.getAllMaterials failed:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch materials');
+      console.error('MaterialService.getMaterialsForUI failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch materials for UI');
+    }
+  }
+
+  /**
+   * Get material by ID for UI consumption
+   */
+  async getMaterialForUI(id: string): Promise<MaterialUIDTO | null> {
+    try {
+      const material = await this.materialRepository.findById(id);
+      if (!material) return null;
+      const dto = this.mapToDTO(material);
+      return MaterialTransformer.toUIDTO(dto);
+    } catch (error) {
+      console.error('MaterialService.getMaterialForUI failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch material for UI');
     }
   }
 
@@ -448,7 +465,7 @@ export class MaterialService {
       name: (result.name as string) || '',
       description: (result.description as string) || '',
       type: (result.type as string) || 'general',
-      category: category,
+      category: category.id, // Return category ID as string instead of full object
       status: status,
       unit: unit,
       quantity: (result.availableQuantity as number) || (result.quantity as number) || 0,

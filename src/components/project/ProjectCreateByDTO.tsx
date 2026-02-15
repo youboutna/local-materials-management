@@ -9,8 +9,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, MapPin, Users, DollarSign, Save, X, Plus } from 'lucide-react';
-import { ProjectData, ConstructionPhase } from '@/types/project';
-import { ProjectReportDTO, EnhancedPhaseDTO, ConstructionMilestoneDTO } from '@/types/reportTypes';
+import { ProjectData, ConstructionPhase, ProjectStatus } from '@/dtos/entities/ProjectDTO';
+import { ProjectReportDTO, EnhancedPhaseDTO, ConstructionMilestoneDTO } from '@/dtos/entities/ReportDTO';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -29,7 +29,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
     title: '',
     description: '',
     location: '',
-    status: 'en cours',
+    status: ProjectStatus.EN_COURS_LEGACY,
     progress: 0,
     budget: 0,
     startDate: new Date().toISOString(),
@@ -72,7 +72,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
     }
   ]);
 
-  const handleBasicInfoChange = (field: keyof ProjectData, value: any) => {
+  const handleBasicInfoChange = (field: keyof ProjectData, value: string | number | boolean) => {
     setProjectData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -94,7 +94,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
     setPhases(prev => [...prev, newPhase]);
   };
 
-  const updatePhase = (index: number, field: keyof EnhancedPhaseDTO, value: any) => {
+  const updatePhase = (index: number, field: keyof EnhancedPhaseDTO, value: string | number | Date | undefined) => {
     setPhases(prev => prev.map((phase, i) => 
       i === index ? { ...phase, [field]: value } : phase
     ));
@@ -121,7 +121,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
     setMilestones(prev => [...prev, newMilestone]);
   };
 
-  const updateMilestone = (index: number, field: keyof ConstructionMilestoneDTO, value: any) => {
+  const updateMilestone = (index: number, field: keyof ConstructionMilestoneDTO, value: string | number | Date | undefined) => {
     setMilestones(prev => prev.map((milestone, i) => 
       i === index ? { ...milestone, [field]: value } : milestone
     ));
@@ -183,7 +183,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
         title: projectData.title!,
         description: projectData.description!,
         location: projectData.location!,
-        status: projectData.status || 'en cours',
+        status: projectData.status || ProjectStatus.EN_COURS_LEGACY,
         progress: projectData.progress || 0,
         budget: projectData.budget || 0,
         startDate: projectData.startDate!,
@@ -197,7 +197,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
         launchDate: projectData.startDate!,
         attributionDate: projectData.startDate!,
         currentPhase: 'pre_construction' as ConstructionPhase,
-        currentStage: 'planning_design',
+        currentStage: 'planningDesign',
         methodology: projectData.methodology || 'waterfall'
       };
 

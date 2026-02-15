@@ -6,7 +6,7 @@
  */
 
 import { Material } from '@/domain/entities/Material';
-import { MaterialDTO, MaterialDetailDTO, MaterialSummaryDTO, MaterialListItemDTO, CreateMaterialRequestDto, UpdateMaterialRequestDto } from '@/dtos/transforms/shared';
+import { MaterialDTO, MaterialDetailDTO, MaterialSummaryDTO, MaterialListItemDTO, CreateMaterialRequestDto, UpdateMaterialRequestDto, MaterialUIDTO } from '@/dtos/transforms/shared';
 import { EntityToDTOMapper, ValidationResult } from '@/dtos/transforms/shared';
 export class MaterialTransformer implements EntityToDTOMapper<Material, MaterialDTO> {
   /**
@@ -157,7 +157,7 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
       name: entity.name,
       description: entity.description || '',
       type: entity.type,
-      category: entity.category,
+      category: typeof entity.category === 'string' ? entity.category : (entity.category as any)?.id || 'construction',
       unit: entity.unit,
       quantity: entity.quantity,
       unitPrice: entity.unitPrice,
@@ -412,12 +412,11 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
     return dtos.map(dto => MaterialTransformer.toEntity(dto));
   }
 
-  toEntitiesFromDatabaseRows(rows: Record<string, unknown>[]): Material[] {
-    return rows.map(row => MaterialTransformer.toEntityFromDatabaseRow(row));
-  }
-
-  toEntityFromDatabaseRow(row: Record<string, unknown>): Material {
-    // Implementation for database row to entity transformation
+  /**
+   * Transform database row to Material entity
+   * Used for database query results
+   */
+  static toEntityFromDatabaseRow(row: Record<string, unknown>): Material {
     return Material.create({
       id: row.id as string,
       name: row.name as string,
@@ -433,4 +432,33 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
       updatedAt: new Date(row.updated_at as string)
     });
   }
-}
+
+  /**
+   * Transform MaterialDTO to MaterialUIDTO (DTO → UI DTO)
+   * Converts domain DTO to UI-appropriate format
+   * Following RULE #4: UI should use appropriate DTOs
+   */
+  static toUIDTO(dto: MaterialDTO): MaterialUIDTO {
+    return {
+      id: dto.id,
+      name: dto.name,
+      description: dto.description || '',
+      category: typeof dto.category === 'string' ? dto.category : (dto.category as any)?.id || 'construction',
+      unit: typeof dto.unit === 'string' ? dto.unit : dto.unit.toString(),
+      quantity: dto.quantity,
+      pricePerUnit: dto.pricePerUnit,
+      availableQuantity: dto.quantity, // Map to available quantity for UI
+      image: dto.images?.[0] || undefined, // Take first image
+      originLocation: dto.location || undefined,
+      coordinatesLatitude: undefined, // Will be set from additional data
+      coordinatesLongitude: undefined, // Will be set from additional data
+      forme: undefined, // Will be set from additional data
+      adresse: undefined, // Will be set from additional data
+      localisation: dto.location || undefined,
+      isActive: true, // Default for UI
+      minimumQuantity: dto.reorderLevel || undefined,
+      localType: undefined, // Will be set from additional data
+      createdAt: dto.createdAt,
+      updatedAt: dto.updatedAt
+    };
+  }

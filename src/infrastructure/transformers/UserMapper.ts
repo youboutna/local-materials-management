@@ -4,7 +4,27 @@
  * Following hexagonal architecture principles
  */
 
-import { User } from '@/domain/entities/User';
+import { User, SomelecRole, UserRoleEntity } from '@/domain/entities/User';
+
+// Interface for Supabase user data
+interface SupabaseUserData {
+  id: string;
+  email?: string;
+  full_name?: string;
+  phone?: string;
+  role?: string;
+  avatar_url?: string;
+  user_metadata?: {
+    full_name?: string;
+    avatar_url?: string;
+    national_id?: string;
+  };
+  is_active?: boolean;
+  last_login?: string;
+  created_at?: string;
+  updated_at?: string;
+  roles?: unknown[];
+}
 
 // DTOs d'API (Adapter Layer)
 export class UserResponseDto {
@@ -13,13 +33,12 @@ export class UserResponseDto {
     public email: string,
     public fullName: string,
     public role: string,
-    public phone?: string,
-    public nationalId?: string,
-    public avatar?: string,
     public isActive: boolean,
-    public lastLogin?: string,
     public createdAt: string,
-    public updatedAt: string
+    public updatedAt: string,
+    public phone?: string,
+    public avatar?: string,
+    public lastLogin?: string
   ) {}
 }
 
@@ -67,39 +86,59 @@ export class UserMapper {
   /**
    * Transforme les données brutes Supabase vers l'entité du domaine
    */
-  static toDomain(supabaseUser: any): User {
+  static toDomain(supabaseUser: SupabaseUserData): User {
+    // Validate and map the role to ensure it's a valid SomelecRole
+    const validRoles = Object.values(SomelecRole) as string[];
+    const rawRole = supabaseUser.role || 'user';
+    
+    // Normalize the role string to handle case variations
+    const normalizedRole = rawRole.toLowerCase().trim();
+    
+    console.log('UserMapper.toDomain: Raw role from Supabase:', rawRole);
+    console.log('UserMapper.toDomain: Normalized role:', normalizedRole);
+    console.log('UserMapper.toDomain: Valid SomelecRole values:', validRoles);
+    
+    // Map normalized roles to SomelecRole values
+    let mappedRole: SomelecRole = 'user' as SomelecRole;
+    
+    if (normalizedRole === 'admin') mappedRole = SomelecRole.ADMIN;
+    else if (normalizedRole === 'manager') mappedRole = SomelecRole.MANAGER;
+    else if (normalizedRole === 'director') mappedRole = SomelecRole.DIRECTOR;
+    else if (normalizedRole === 'agent') mappedRole = SomelecRole.AGENT;
+    else if (normalizedRole === 'supplier') mappedRole = SomelecRole.SUPPLIER;
+    else mappedRole = 'user' as SomelecRole; // Default fallback
+    
+    console.log('UserMapper.toDomain: Final mapped role:', mappedRole);
+
     return new User(
       supabaseUser.id,
-      supabaseUser.email || '',
-      supabaseUser.full_name || supabaseUser.user_metadata?.full_name || '',
-      supabaseUser.role || 'user', // Rôle principal depuis user_roles[0]
-      supabaseUser.phone || null,
-      supabaseUser.national_id || supabaseUser.user_metadata?.national_id || null,
-      supabaseUser.avatar_url || supabaseUser.user_metadata?.avatar_url || null,
-      supabaseUser.is_admin || false,
-      supabaseUser.last_login ? new Date(supabaseUser.last_login) : undefined,
-      new Date(supabaseUser.created_at),
-      new Date(supabaseUser.updated_at),
-      supabaseUser.roles || [] // Liste complète des rôles depuis user_roles
+      supabaseUser.full_name || supabaseUser.user_metadata?.full_name || supabaseUser.email || 'Unknown User', // name (required)
+      supabaseUser.email || `${supabaseUser.id}@temp.local`, // email (required)
+      supabaseUser.phone || '', // phone (required, but can be empty)
+      mappedRole, // role (required, validated)
+      supabaseUser.avatar_url || supabaseUser.user_metadata?.avatar_url || '', // image
+      [], // workspaceIds (empty array)
+      supabaseUser.is_active !== undefined ? supabaseUser.is_active : true, // isActive
+      supabaseUser.created_at ? new Date(supabaseUser.created_at) : undefined, // createdAt
+      supabaseUser.updated_at ? new Date(supabaseUser.updated_at) : undefined, // updatedAt
+      (supabaseUser.roles || []) as UserRoleEntity[], // userRoles
+      supabaseUser.full_name || supabaseUser.user_metadata?.full_name || supabaseUser.email, // fullName
+      supabaseUser.avatar_url || supabaseUser.user_metadata?.avatar_url, // avatar
+      supabaseUser.last_login ? new Date(supabaseUser.last_login) : undefined // lastLogin
     );
   }
-
-  /**
-   * Transforme l'entité du domaine vers le DTO de réponse API
-   */
   static toResponseDto(user: User): UserResponseDto {
     return new UserResponseDto(
       user.id,
       user.email,
       user.fullName,
-      user.primaryRole,
-      user.phone,
-      user.nationalId,
-      user.avatar,
+      user.role,
       user.isActive,
-      user.lastLogin?.toISOString(),
       user.createdAt.toISOString(),
-      user.updatedAt.toISOString()
+      user.updatedAt.toISOString(),
+      user.phone,
+      user.avatar,
+      user.lastLogin?.toISOString()
     );
   }
 
@@ -109,17 +148,19 @@ export class UserMapper {
   static toDomainFromCreateDto(requestDto: CreateUserRequestDto): User {
     return new User(
       crypto.randomUUID(), // ID généré
-      requestDto.email,
-      requestDto.fullName,
-      requestDto.role,
-      requestDto.phone, // Keep as undefined instead of null
-      requestDto.nationalId, // Keep as undefined instead of null
-      requestDto.avatar, // Keep as undefined instead of null
+      requestDto.fullName, // name (required)
+      requestDto.email, // email (required)
+      requestDto.phone || '', // phone (required, can be empty)
+      requestDto.role as SomelecRole || 'user', // role (required, cast to SomelecRole)
+      requestDto.avatar || '', // image
+      [], // workspaceIds (empty array)
       true, // isActive initial
-      undefined, // lastLogin initial
-      new Date(),
-      new Date(),
-      [] // userRoles initial - empty array
+      new Date(), // createdAt
+      new Date(), // updatedAt
+      [], // userRoles initial - empty array
+      requestDto.fullName, // fullName
+      requestDto.avatar, // avatar
+      undefined // lastLogin initial
     );
   }
 
@@ -130,9 +171,8 @@ export class UserMapper {
     return {
       email: requestDto.email,
       fullName: requestDto.fullName,
-      role: requestDto.role,
+      role: requestDto.role as SomelecRole,
       phone: requestDto.phone,
-      nationalId: requestDto.nationalId,
       avatar: requestDto.avatar,
       isActive: requestDto.isActive,
       updatedAt: new Date()
@@ -142,14 +182,13 @@ export class UserMapper {
   /**
    * Transforme l'entité du domaine vers les données de la base de données Supabase
    */
-  static toSupabaseRow(user: User): any {
+  static toSupabaseRow(user: User): Record<string, unknown> {
     return {
       id: user.id,
       email: user.email,
       full_name: user.fullName,
-      role: user.primaryRole,
+      role: user.role,
       phone: user.phone || null,
-      national_id: user.nationalId || null,
       avatar: user.avatar || null,
       is_active: user.isActive,
       last_login: user.lastLogin?.toISOString() || null,
@@ -161,7 +200,7 @@ export class UserMapper {
   /**
    * Transforme un tableau de données Supabase vers les entités du domaine
    */
-  static toDomainArray(supabaseUsers: any[]): User[] {
+  static toDomainArray(supabaseUsers: SupabaseUserData[]): User[] {
     return supabaseUsers.map(user => UserMapper.toDomain(user));
   }
 

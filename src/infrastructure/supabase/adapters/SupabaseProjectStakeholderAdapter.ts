@@ -7,6 +7,50 @@ import { supabase } from '@/integrations/supabase/client';
 import { ProjectStakeholderEntity } from '@/domain/entities/ProjectStakeholder';
 import { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
 
+// Database row interface for project_stakeholders table
+interface ProjectStakeholderRow {
+  id: string;
+  project_id: string;
+  stakeholder_type: string;
+  stakeholder_entity_type: string;
+  employee_id?: string | null;
+  supplier_id?: string | null;
+  external_name?: string | null;
+  external_email?: string | null;
+  external_phone?: string | null;
+  role_description?: string | null;
+  responsibilities?: string[] | null;
+  is_active?: boolean;
+  start_date?: string | null;
+  end_date?: string | null;
+  hourly_rate?: number | null;
+  contract_type?: string | null;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Supabase insert/update data interface
+interface ProjectStakeholderInsertData {
+  project_id?: string;
+  stakeholder_type?: string;
+  stakeholder_entity_type?: string;
+  employee_id?: string | null;
+  supplier_id?: string | null;
+  external_name?: string | null;
+  external_email?: string | null;
+  external_phone?: string | null;
+  role_description?: string | null;
+  responsibilities?: string[] | null;
+  is_active?: boolean;
+  start_date?: string | null;
+  end_date?: string | null;
+  hourly_rate?: number | null;
+  contract_type?: string | null;
+  notes?: string | null;
+  updated_at?: string;
+}
+
 export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRepository {
   // ============= CRUD Operations =============
 
@@ -136,9 +180,110 @@ export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRep
     if (error) throw error;
   }
 
+  async findAll(filters?: {
+    projectId?: string;
+    stakeholderType?: string;
+    isActive?: boolean;
+  }): Promise<ProjectStakeholderEntity[]> {
+    let query = supabase
+      .from('project_stakeholders')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (filters?.projectId) {
+      query = query.eq('project_id', filters.projectId);
+    }
+    if (filters?.stakeholderType) {
+      query = query.eq('stakeholder_type', filters.stakeholderType);
+    }
+    if (filters?.isActive !== undefined) {
+      query = query.eq('is_active', filters.isActive);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    return (data || []).map(this.mapToEntity);
+  }
+
+  async search(criteria: {
+    projectId?: string;
+    searchTerm?: string;
+    stakeholderType?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<{
+    stakeholders: ProjectStakeholderEntity[];
+    total: number;
+  }> {
+    let query = supabase
+      .from('project_stakeholders')
+      .select('*', { count: 'exact' });
+
+    if (criteria.projectId) {
+      query = query.eq('project_id', criteria.projectId);
+    }
+    if (criteria.stakeholderType) {
+      query = query.eq('stakeholder_type', criteria.stakeholderType);
+    }
+    if (criteria.searchTerm) {
+      query = query.or(`external_name.ilike.%${criteria.searchTerm}%,role_description.ilike.%${criteria.searchTerm}%`);
+    }
+
+    if (criteria.offset) {
+      query = query.range(criteria.offset, (criteria.offset + (criteria.limit || 10)) - 1);
+    } else if (criteria.limit) {
+      query = query.limit(criteria.limit);
+    }
+
+    const { data, error, count } = await query;
+
+    if (error) throw error;
+
+    return {
+      stakeholders: (data || []).map(this.mapToEntity),
+      total: count || 0
+    };
+  }
+
+  async exists(id: string): Promise<boolean> {
+    if (!id || id.trim() === '') {
+      return false;
+    }
+
+    const { data, error } = await supabase
+      .from('project_stakeholders')
+      .select('id')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return false;
+      throw error;
+    }
+
+    return !!data;
+  }
+
+  async countByProject(projectId: string): Promise<number> {
+    if (!projectId || projectId.trim() === '') {
+      return 0;
+    }
+
+    const { data, error } = await supabase
+      .from('project_stakeholders')
+      .select('id', { count: 'exact' })
+      .eq('project_id', projectId);
+
+    if (error) throw error;
+
+    return data?.length || 0;
+  }
+
   // ============= Helper Methods =============
 
-  private mapToEntity(data: any): ProjectStakeholderEntity {
+  private mapToEntity(data: ProjectStakeholderRow): ProjectStakeholderEntity {
     return new ProjectStakeholderEntity(
       data.id,
       data.project_id,
@@ -162,7 +307,7 @@ export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRep
     );
   }
 
-  private mapToSupabase(entity: Partial<ProjectStakeholderEntity>): any {
+  private mapToSupabase(entity: Partial<ProjectStakeholderEntity>): ProjectStakeholderInsertData {
     return {
       project_id: entity.projectId,
       stakeholder_type: entity.stakeholderType,

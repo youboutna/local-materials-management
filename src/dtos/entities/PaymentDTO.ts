@@ -25,7 +25,7 @@ export interface PaymentDTO extends BaseEntityDTO {
   receiverName?: string;
 }
 
-export interface PaymentBlockDTO extends BaseEntityDTO {
+export interface PaymentBlockDetailDTO extends BaseEntityDTO {
   projectId: string;
   contractorId: string;
   amount: number;
@@ -52,7 +52,7 @@ export interface PaymentActionDTO extends BaseEntityDTO {
   assigneeId?: string;
   recipientIds: string[];
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 export interface PaymentSummaryDTO {
@@ -123,6 +123,105 @@ export interface UpdatePaymentRequestDTO {
   paymentReason?: string;
   status?: 'pending' | 'approved' | 'rejected' | 'paid' | 'cancelled';
   notes?: string;
+}
+
+// Payment Blocking Types (merged from PaymentBlockingDTO.ts)
+export interface PaymentBlockDTO {
+  id: string;
+  payment_request_id: string;
+  block_reason: string;
+  block_type: 'financial' | 'document' | 'compliance' | 'technical';
+  status: 'active' | 'resolved' | 'cancelled';
+  blocked_amount: number;
+  resolution_notes?: string;
+  resolved_by?: string;
+  resolved_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaymentControlActionDTO {
+  id: string;
+  payment_block_id: string;
+  action_type: 'review' | 'approve' | 'reject' | 'request_document' | 'escalate';
+  description: string;
+  assigned_to?: string;
+  due_date?: string;
+  status: 'pending' | 'completed' | 'cancelled';
+  created_by: string;
+  created_at: string;
+  completed_at?: string;
+}
+
+// Service Request DTOs
+export interface CreatePaymentBlockRequestDto {
+  payment_request_id: string;
+  block_reason: string;
+  block_type: 'financial' | 'document' | 'compliance' | 'technical';
+  blocked_amount: number;
+}
+
+export interface ResolvePaymentBlockRequestDto {
+  block_id: string;
+  resolution_notes: string;
+  resolved_by: string;
+}
+
+export interface CreatePaymentControlActionRequestDto {
+  payment_block_id: string;
+  action_type: 'review' | 'approve' | 'reject' | 'request_document' | 'escalate';
+  description: string;
+  assigned_to?: string;
+  due_date?: string;
+  created_by?: string;
+}
+
+// Response DTOs
+export interface GetPaymentBlockStatsRequestDto {
+  total: number;
+  active: number;
+  resolved: number;
+  cancelled: number;
+  totalBlockedAmount: number;
+  blocksByType: Record<string, number>;
+}
+
+export interface PaymentEligibilityValidationDto {
+  canProceed: boolean;
+  warningReasons?: PaymentWarningReasonDto[];
+  blockingReasons?: PaymentBlockingReasonDto[];
+}
+
+export interface PaymentWarningReasonDto {
+  type: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high';
+  recommendedAction?: string;
+}
+
+export interface PaymentBlockingReasonDto {
+  type: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  actionRequired?: string;
+}
+
+export interface PaymentProcessingResultDto {
+  success: boolean;
+  message: string;
+  blockReasons?: string[];
+}
+
+// Query DTOs
+export interface GetPaymentBlocksRequestDto {
+  payment_request_id?: string;
+  status?: string;
+  block_type?: string;
+}
+
+export interface GetPaymentControlActionsRequestDto {
+  payment_block_id: string;
+  status?: string;
 }
 
 // Legacy compatibility types from transforms

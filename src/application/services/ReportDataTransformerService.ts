@@ -13,8 +13,8 @@ import {
   ProjectAnalyticsDTO,
   FinancialMetricsDTO,
   RiskAssessmentDTO
-} from '@/types/reportTypes';
-import { ProjectData } from '@/types/project';
+} from '@/dtos/entities/ReportDTO';
+import { ProjectData } from '@/dtos/entities/ProjectDTO';
 
 // Service DTOs for data exchange
 export interface TransformProjectForReportRequestDto {

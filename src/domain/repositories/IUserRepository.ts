@@ -3,7 +3,7 @@
  * Defines the contract for user data access
  */
 
-import { UserProfile } from '@/domain/entities/User';
+import { User } from '@/domain/entities/User';
 
 export interface SearchUsersOptions {
   searchTerm?: string;
@@ -13,7 +13,7 @@ export interface SearchUsersOptions {
 }
 
 export interface SearchUsersResult {
-  users: UserProfile[];
+  users: User[];
   total: number;
 }
 
@@ -21,7 +21,7 @@ export interface IUserRepository {
   /**
    * Find user by ID
    */
-  findById(id: string): Promise<UserProfile | null>;
+  findById(id: string): Promise<User | null>;
 
   /**
    * Search users with filters
@@ -31,17 +31,17 @@ export interface IUserRepository {
   /**
    * Get all users
    */
-  findAll(): Promise<UserProfile[]>;
+  findAll(): Promise<User[]>;
 
   /**
    * Create new user
    */
-  create(userData: Omit<UserProfile, 'id'>): Promise<UserProfile>;
+  create(userData: Omit<User, 'id'>): Promise<User>;
 
   /**
    * Update user
    */
-  update(id: string, userData: Partial<UserProfile>): Promise<UserProfile>;
+  update(id: string, userData: Partial<User>): Promise<User>;
 
   /**
    * Delete user
@@ -51,10 +51,10 @@ export interface IUserRepository {
   /**
    * Get users by role
    */
-  findByRole(role: string): Promise<UserProfile[]>;
+  findByRole(role: string): Promise<User[]>;
 
   /**
    * Get active users
    */
-  findActive(): Promise<UserProfile[]>;
+  findActive(): Promise<User[]>;
 }

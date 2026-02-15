@@ -52,6 +52,15 @@ export class Material {
   private _adresse?: string;
   private _createdAt: Date;
   private _updatedAt: Date;
+  // Missing fields referenced in methods
+  private _sku?: string;
+  private _ean?: string;
+  private _gtin?: string;
+  private _asin?: string;
+  private _image?: string;
+  private _coordinates?: string;
+  private _coordinatesLatitude?: number;
+  private _coordinatesLongitude?: number;
 
   constructor(
     id: string,
@@ -110,17 +119,17 @@ export class Material {
   // Validation methods
   set unit(value: string) { 
     this._unit = this.validateUnit(value); 
-    this._updatedAt = new Date().toISOString();
+    this._updatedAt = new Date();
   }
   
   set pricePerUnit(value: number) { 
     this._pricePerUnit = this.validatePricePerUnit(value); 
-    this._updatedAt = new Date().toISOString();
+    this._updatedAt = new Date();
   }
   
   set availableQuantity(value: number) { 
     this._availableQuantity = this.validateAvailableQuantity(value); 
-    this._updatedAt = new Date().toISOString();
+    this._updatedAt = new Date();
   }
 
   // ============= Business Logic Methods =============
@@ -141,26 +150,25 @@ export class Material {
     return new Material(
       this._id,
       this._name,
-      this._description,
-      this._category,
+      this._quantity,
       this._unit,
+      this._workspaceId,
+      this._location,
+      this._description,
+      this._minQuantity,
+      this._timeline,
+      this._lastRestock,
+      this._supplier,
+      this._images,
       this.validatePricePerUnit(newPrice),
       this._availableQuantity,
-      this._sku,
-      this._ean,
-      this._gtin,
-      this._asin,
-      this._image,
-      this._coordinates,
-      this._workspaceId,
-      this._createdAt,
-      new Date().toISOString(),
       this._originLocation,
-      this._adresse,
-      this._coordinatesLatitude,
-      this._coordinatesLongitude,
+      this._category,
+      this._localisation,
       this._forme,
-      this._localisation
+      this._adresse,
+      this._createdAt,
+      new Date()
     );
   }
 
@@ -168,26 +176,25 @@ export class Material {
     return new Material(
       this._id,
       this._name,
-      this._description,
-      this._category,
+      this._quantity,
       this._unit,
+      this._workspaceId,
+      this._location,
+      this._description,
+      this._minQuantity,
+      this._timeline,
+      this._lastRestock,
+      this._supplier,
+      this._images,
       this._pricePerUnit,
       this.validateAvailableQuantity(newQuantity),
-      this._sku,
-      this._ean,
-      this._gtin,
-      this._asin,
-      this._image,
-      this._coordinates,
-      this._workspaceId,
-      this._createdAt,
-      new Date().toISOString(),
       this._originLocation,
-      this._adresse,
-      this._coordinatesLatitude,
-      this._coordinatesLongitude,
+      this._category,
+      this._localisation,
       this._forme,
-      this._localisation
+      this._adresse,
+      this._createdAt,
+      new Date()
     );
   }
 
@@ -201,30 +208,30 @@ export class Material {
     pricePerUnit?: number;
     availableQuantity?: number;
     workspaceId?: string;
+    location?: GeographicUnit;
   }): Material {
     return new Material(
       params.id,
       params.name,
-      params.description || '',
-      params.category || 'other',
+      0, // quantity - default to 0
       params.unit || 'unit',
+      params.workspaceId || '',
+      params.location || { code: 'unknown', name: 'Unknown', nameAr: 'غير معروف', lat: 0, lng: 0 }, // default location
+      params.description || '',
+      undefined, // minQuantity
+      undefined, // timeline
+      undefined, // lastRestock
+      undefined, // supplier
+      undefined, // images
       params.pricePerUnit || 0,
       params.availableQuantity || 0,
-      null, // sku
-      null, // ean
-      null, // gtin
-      null, // asin
-      null, // image
-      null, // coordinates
-      params.workspaceId || null,
-      new Date().toISOString(),
-      new Date().toISOString(),
-      null, // originLocation
-      null, // adresse
-      null, // coordinatesLatitude
-      null, // coordinatesLongitude
-      null, // forme
-      null  // localisation
+      undefined, // originLocation
+      params.category || 'other',
+      undefined, // localisation
+      undefined, // forme
+      undefined, // adresse
+      undefined, // createdAt
+      undefined  // updatedAt
     );
   }
 
@@ -234,25 +241,24 @@ export class Material {
       id: this._id,
       name: this._name,
       description: this._description,
-      category: this._category,
+      quantity: this._quantity,
       unit: this._unit,
-      price_per_unit: this._pricePerUnit,
-      available_quantity: this._availableQuantity,
-      sku: this._sku,
-      ean: this._ean,
-      gtin: this._gtin,
-      asin: this._asin,
-      image: this._image,
-      coordinates: this._coordinates,
-      workspace_id: this._workspaceId,
-      created_at: this._createdAt,
-      updated_at: this._updatedAt,
-      origin_location: this._originLocation,
-      adresse: this._adresse,
-      coordinates_latitude: this._coordinatesLatitude,
-      coordinates_longitude: this._coordinatesLongitude,
+      minQuantity: this._minQuantity,
+      workspaceId: this._workspaceId,
+      location: this._location,
+      timeline: this._timeline,
+      lastRestock: this._lastRestock,
+      supplier: this._supplier,
+      images: this._images,
+      pricePerUnit: this._pricePerUnit,
+      availableQuantity: this._availableQuantity,
+      originLocation: this._originLocation,
+      category: this._category,
+      localisation: this._localisation,
       forme: this._forme,
-      localisation: this._localisation
+      adresse: this._adresse,
+      createdAt: this._createdAt,
+      updatedAt: this._updatedAt
     };
   }
 
@@ -295,6 +301,13 @@ export class Material {
     return unit.trim();
   }
 
+  private validateWorkspaceId(workspaceId: string): string {
+    if (!workspaceId || workspaceId.trim().length === 0) {
+      throw new Error('Workspace ID is required');
+    }
+    return workspaceId.trim();
+  }
+
   private validatePricePerUnit(price: number): number {
     if (price < 0) {
       throw new Error('Price per unit must be positive');
@@ -311,6 +324,16 @@ export class Material {
     }
     if (quantity > 10000000) {
       throw new Error('Available quantity seems too high');
+    }
+    return quantity;
+  }
+
+  private validateQuantity(quantity: number): number {
+    if (quantity < 0) {
+      throw new Error('Quantity must be positive');
+    }
+    if (quantity > 10000000) {
+      throw new Error('Quantity seems too high');
     }
     return quantity;
   }

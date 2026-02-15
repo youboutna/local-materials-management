@@ -2,24 +2,10 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Package } from 'lucide-react';
-
-interface Material {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  unit: string;
-  price_per_unit: number;
-  available_quantity: number;
-  image?: string;
-  origin_location?: string;
-  local_type?: string;
-  coordinates_latitude?: number;
-  coordinates_longitude?: number;
-}
+import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
 
 interface MaterialCardProps {
-  material: Material;
+  material: MaterialDTO;
   onClick: () => void;
 }
 

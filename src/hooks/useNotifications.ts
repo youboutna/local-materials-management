@@ -31,16 +31,16 @@ export const useNotifications = (userId?: string) => {
       if (!actualUserId) return [];
       
       try {
-        const notifications = await notificationService.getNotificationsByRecipient(actualUserId);
+        const notifications = await notificationService.getUserNotifications(actualUserId);
         return notifications.map((notification: NotificationDTO) => ({
           id: notification.id,
-          recipient_id: notification.recipientId,
+          recipient_id: notification.recipient_id,
           title: notification.title,
           message: notification.message,
           type: notification.type,
-          related_id: notification.relatedId,
+          related_id: undefined, // NotificationDTO doesn't have related_id, set to undefined
           read: notification.read,
-          created_at: notification.createdAt,
+          created_at: notification.created_at,
           metadata: notification.metadata || {}
         }));
       } catch (err) {
@@ -55,7 +55,7 @@ export const useNotifications = (userId?: string) => {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      await notificationService.markAsRead(notificationId);
+      await notificationService.markNotificationAsRead(notificationId);
       queryClient.invalidateQueries({ queryKey: ['notifications', actualUserId] });
     } catch (err) {
       console.error('Error marking notification as read:', err);
@@ -70,7 +70,7 @@ export const useNotifications = (userId?: string) => {
       const unreadNotifications = notifications.filter(n => !n.read && n.recipient_id === actualUserId);
       
       // Mark all as read in parallel
-      await Promise.all(unreadNotifications.map(n => notificationService.markAsRead(n.id)));
+      await Promise.all(unreadNotifications.map(n => notificationService.markNotificationAsRead(n.id)));
       
       queryClient.invalidateQueries({ queryKey: ['notifications', actualUserId] });
     } catch (err) {
@@ -82,17 +82,17 @@ export const useNotifications = (userId?: string) => {
     recipientId: string,
     title: string,
     message: string,
-    type: string,
+    type: 'info' | 'success' | 'warning' | 'error' | 'system',
     relatedId?: string,
     metadata?: Record<string, unknown>
   ) => {
     try {
       await notificationService.createNotification({
-        recipientId,
+        recipient_id: recipientId,
         title,
         message,
         type,
-        relatedId,
+        related_id: relatedId,
         metadata: metadata || {},
       });
       

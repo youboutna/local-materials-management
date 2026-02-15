@@ -17,26 +17,7 @@ import { ElectricSpinner } from "@/components/loading-page";
 import { useMaterialsHex } from "@/hooks/hexagonal";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
-
-interface Material {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  unit: string;
-  price_per_unit: number;
-  available_quantity: number;
-  image?: string;
-  origin_location?: string;
-  minimum_quantity?: number;
-  local_type?: string;
-  adresse?: string | any; // Can be string or jsonb from database
-  coordinates_latitude?: number;
-  coordinates_longitude?: number;
-  forme?: string;
-  localisation?: any;
-  is_active?: boolean;
-}
+import { MaterialDTO } from "@/dtos/entities/MaterialDTO";
 
 const Materials: React.FC = () => {
   const navigate = useNavigate();
@@ -44,26 +25,9 @@ const Materials: React.FC = () => {
   
   // Use hexagonal architecture hook
   const { materials: hexMaterials, loading: isLoading, error } = useMaterialsHex();
-  
-  // Map domain entities to local Material interface for compatibility
-  const materials: Material[] = useMemo(() => 
-    hexMaterials.map(m => ({
-      id: m.id,
-      name: m.name,
-      description: m.description,
-      category: m.category,
-      unit: m.unit,
-      price_per_unit: m.pricePerUnit,
-      available_quantity: m.availableQuantity,
-      image: m.image ?? undefined,
-      origin_location: m.originLocation ?? undefined,
-      adresse: m.adresse ?? undefined,
-      coordinates_latitude: m.coordinatesLatitude ?? undefined,
-      coordinates_longitude: m.coordinatesLongitude ?? undefined,
-      forme: m.forme ?? undefined,
-      localisation: m.localisation ?? undefined,
-    }))
-  , [hexMaterials]);
+
+  // Use materials directly from hook (already MaterialUIDTO[])
+  const materials: MaterialDTO[] = hexMaterials;
   
   const [mapLocations, setMapLocations] = useState<MapLocation[]>([]);
 
@@ -95,7 +59,7 @@ const Materials: React.FC = () => {
   } = useMaterialsFilter(materials);
 
   // Helper function to safely extract address string - always returns a string
-  const getAddressString = (adresse: any): string => {
+  const getAddressString = (adresse: string | object | null | undefined): string => {
     console.log("Processing address:", adresse);
     if (!adresse) return "";
     if (typeof adresse === "string") return adresse;
@@ -182,10 +146,10 @@ const Materials: React.FC = () => {
   });
 
   // Interactive materials map view component
-  const InteractiveMaterialsMapView: React.FC<{ materials: Material[] }> = ({
+  const InteractiveMaterialsMapView: React.FC<{ materials: MaterialUIDTO[] }> = ({
     materials,
   }) => {
-    const handleMaterialSelect = (material: Material) => {
+    const handleMaterialSelect = (material: MaterialDTO) => {
       navigate(`/materials/${material.id}`);
     };
 

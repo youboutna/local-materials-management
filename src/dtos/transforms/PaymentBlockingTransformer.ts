@@ -7,11 +7,11 @@ import { PaymentBlock, PaymentControlAction } from '@/domain/repositories/IPayme
 import { 
   PaymentBlockDTO, 
   PaymentControlActionDTO,
-  PaymentBlockStatsDto,
+  GetPaymentBlockStatsRequestDto,
   PaymentEligibilityValidationDto,
   PaymentWarningReasonDto,
   PaymentBlockingReasonDto
-} from '@/dtos/entities/PaymentBlockingDTO';
+} from '@/dtos/entities/PaymentDTO';
 
 export class PaymentBlockingTransformer {
   /**
@@ -119,14 +119,14 @@ export class PaymentBlockingTransformer {
   /**
    * Transform stats data to DTO
    */
-  static toPaymentBlockStatsDTO(stats: {
+  static toGetPaymentBlockStatsRequestDto(stats: {
     totalBlocks: number;
     activeBlocks: number;
     resolvedBlocks: number;
     cancelledBlocks: number;
     totalBlockedAmount: number;
     blocksByType: Record<string, number>;
-  }): PaymentBlockStatsDto {
+  }): GetPaymentBlockStatsRequestDto {
     return {
       total: stats.totalBlocks,
       active: stats.activeBlocks,
