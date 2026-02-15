@@ -64,6 +64,9 @@ export {
   useMaterialCalculations 
 } from './useMaterialsEnhanced';
 
+// Workspaces
+export { useWorkspacesHex, useWorkspaceById, useWorkspacesByStatus } from './useWorkspacesHex';
+
 // Inspections
 export { 
   useInspectionsHex, 
@@ -456,36 +459,38 @@ export type {
 export type {
   BaseEntityDTO,
   MaterialDTO,
-  CreateMaterialRequestDto,
-  UpdateMaterialRequestDto,
+  MaterialFormDataDTO,
+  CreateMaterialDTO,
+  UpdateMaterialDTO,
   InspectionDTO,
-  CreateInspectionRequestDto,
-  UpdateInspectionRequestDto,
   ProjectDTO,
-  CreateProjectRequestDto,
-  UpdateProjectRequestDto,
   PhaseDTO,
-  CreatePhaseRequestDto,
-  UpdatePhaseRequestDto,
   TaskDTO,
-  CreateTaskRequestDto,
-  UpdateTaskRequestDto,
-  EmployeeDTO,
-  MilestoneDTO,
-  CreateMilestoneRequestDto,
-  UpdateMilestoneRequestDto,
-  TenderDTO,
-  CreateTenderRequestDto,
-  UpdateTenderRequestDto,
+  EmployeeDTO
+} from '@/dtos/entities';
+
+// Export commonly used DTOs
+export type {
+  CreateProjectRequestDTO as CreateProjectRequestDto,
+  UpdateProjectRequestDTO as UpdateProjectRequestDto,
+  CreatePhaseRequestDTO as CreatePhaseRequestDto,
+  UpdatePhaseRequestDTO as UpdatePhaseRequestDto,
+  CreateTaskRequestDTO as CreateTaskRequestDto,
+  UpdateTaskRequestDTO as UpdateTaskRequestDto,
+  CreateEmployeeRequestDTO as CreateEmployeeRequestDto,
+  UpdateEmployeeRequestDTO as UpdateEmployeeRequestDto,
+  CreateMilestoneRequestDTO as CreateMilestoneRequestDto,
+  UpdateMilestoneRequestDTO as UpdateMilestoneRequestDto,
+  CreateTenderRequestDTO as CreateTenderRequestDto,
+  UpdateTenderRequestDTO as UpdateTenderRequestDto,
   BankGuaranteeDTO,
-  CreateBankGuaranteeRequestDto,
-  UpdateBankGuaranteeRequestDto,
+  CreateBankGuaranteeRequestDTO as CreateBankGuaranteeRequestDto,
+  UpdateBankGuaranteeRequestDTO as UpdateBankGuaranteeRequestDto,
   PaymentScheduleDTO,
-  CreatePaymentScheduleRequestDto,
-  UpdatePaymentScheduleRequestDto
-} 
-from '@/dtos/entities';
- 
+  CreatePaymentScheduleRequestDTO as CreatePaymentScheduleRequestDto,
+  UpdatePaymentScheduleRequestDTO as UpdatePaymentScheduleRequestDto
+} from '@/dtos/entities';
+
 export type {
   SupplierResponseDto,
   UserResponseDto,
@@ -519,7 +524,7 @@ export type { PhasePaymentFormData } from './usePhasePaymentsHex';
 export type { MaterialDTO as MaterialOption } from '@/dtos/entities';
 
 // Missing types for components
-export type { InspectionDTO as InspectionData } from '@/dtos/entities';
+export type { InspectionDTO as InspectionData } from '@/dtos/entities/InspectionDTO';
 export type { PhaseDTO as ProjectPhase } from '@/dtos/entities';
 export type { TaskDTO as ProjectTask } from '@/dtos/entities';
 export type { EmployeeDTO as Employee } from '@/dtos/entities';

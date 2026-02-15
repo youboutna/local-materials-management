@@ -1,13 +1,5 @@
-/**
- * Supabase Workspace Repository Adapter
- * Hexagonal Architecture - Infrastructure Layer
- * 
- * Implements IWorkspaceRepository interface using Supabase
- * Provides CRUD operations for workspace entities
- */
-
 import { IWorkspaceRepository } from '@/domain/repositories/IWorkspaceRepository';
-import { Workspace } from '@/domain/entities/Workspace';
+import { Workspace, OperationalStatus } from '@/domain/entities/Workspace';
 import { supabase } from '@/integrations/supabase/client';
 
 // Database row interface for workspaces table
@@ -15,14 +7,9 @@ interface WorkspaceRow {
   id: string;
   name: string;
   description?: string;
-  owner_id: string;
-  project_id?: string;
-  workspace_type?: string;
   location?: string;
   capacity?: number;
   status?: string;
-  is_active?: boolean;
-  metadata?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -38,17 +25,12 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
   async create(workspace: Omit<Workspace, 'id' | 'createdAt' | 'updatedAt'>): Promise<Workspace> {
     try {
       const workspaceData = {
-        id: workspace.id || crypto.randomUUID(),
+        id: workspace.workspaceId || crypto.randomUUID(),
         name: workspace.name,
         description: workspace.description,
-        owner_id: workspace.ownerId,
-        project_id: workspace.projectId,
-        workspace_type: workspace.workspaceType,
-        location: workspace.location,
+        location: typeof workspace.location === 'string' ? workspace.location : workspace.location.name,
         capacity: workspace.capacity,
         status: workspace.status,
-        is_active: workspace.isActive,
-        metadata: workspace.metadata,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -124,14 +106,11 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
       const updateData: Record<string, unknown> = {};
       if (updates.name !== undefined) updateData.name = updates.name;
       if (updates.description !== undefined) updateData.description = updates.description;
-      if (updates.ownerId !== undefined) updateData.owner_id = updates.ownerId;
-      if (updates.projectId !== undefined) updateData.project_id = updates.projectId;
-      if (updates.workspaceType !== undefined) updateData.workspace_type = updates.workspaceType;
-      if (updates.location !== undefined) updateData.location = updates.location;
+      if (updates.location !== undefined) {
+        updateData.location = typeof updates.location === 'string' ? updates.location : updates.location.name;
+      }
       if (updates.capacity !== undefined) updateData.capacity = updates.capacity;
       if (updates.status !== undefined) updateData.status = updates.status;
-      if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
-      if (updates.metadata !== undefined) updateData.metadata = updates.metadata;
       updateData.updated_at = new Date().toISOString();
 
       const { data, error } = await supabase

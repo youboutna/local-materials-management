@@ -307,10 +307,8 @@ export class User {
   }
 
   private validatePhone(phone: string): string {
-    if (!phone || phone.trim().length === 0) {
-      throw new Error('User phone is required');
-    }
-    return phone;
+    // Phone is now optional - return as-is or empty string
+    return phone || '';
   }
 
   private validateRole(role: SomelecRole): SomelecRole {

@@ -1,4 +1,4 @@
-import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
+import React, { useState, useImperativeHandle, forwardRef, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,60 +7,51 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Clock, MapPin, Package, User, Warehouse, Target, Pentagon, Upload, X, Image } from 'lucide-react';
+import { Clock, MapPin, Package, User, Warehouse, Target, Pentagon, Upload, X, Image, FileText } from 'lucide-react';
 import { useLanguage } from "@/contexts/LanguageContext";
 import MaterialCategorySelector from './MaterialCategorySelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import WorkspaceSelector from '@/components/workspace/WorkspaceSelector';
 import WorkspaceCreateDialog from '@/components/workspace/WorkspaceCreateDialog';
-import InteractiveMapGIS from './InteractiveMapGIS';
-import MaterialDocuments from './MaterialDocuments';
-import { useWorkspaces } from '@/hooks/useWorkspaces';
-import { useDocumentStorage } from '@/hooks/useDocumentStorage';
+import InteractiveMapGIS, { MapData } from '@/components/map/InteractiveMap';
+import DocumentUpload from '@/components/documents/DocumentUpload';
 import { toast } from 'sonner';
 
-interface MaterialFormData {
-  name: string;
-  description: string;
-  category: string;
-  subcategory?: string;
-  unit: string;
-  quantity: number;
-  minQuantity: number;
-  pricePerUnit: number;
-  availableQuantity: number;
-  workspaceId: string;
-  image?: string;
-  adresse?: string;
-  forme?: string;
-  localisation?: any[];
-  coordinatesLatitude?: number;
-  coordinatesLongitude?: number;
-  // New identifier fields
-  gtin?: string;
-  sku?: string;
-  ean?: string;
-  asin?: string;
-  multilangLabels?: Record<string, string>;
-  timeline?: {
-    start: Date;
-    end: Date;
-    estimatedDuration: number;
-  };
-  supplier?: {
-    name: string;
-    contact: string;
-    leadTime: number;
-  };
+// Hexagonal Architecture imports
+import { useMaterialsHex, useSuppliersHex, useWorkspacesHex } from '@/hooks/hexagonal';
+import { MaterialTransformer, CreateMaterialRequestDto, UpdateMaterialRequestDto, MaterialDTO } from '@/dtos/transforms';
+import { MaterialFormDataDTO, MaterialUnit, MaterialDTO as EntityMaterialDTO } from '@/dtos/entities/MaterialDTO';
+import { GeocodingService, GeocodingResult, ReverseGeocodingResult } from '@/application/services/GeocodingService';
+import { WorkspaceDTO } from '@/dtos/entities/WorkspaceDTO';
+
+// Import Mauritania utilities for enhanced location handling
+import { 
+  searchRegions, 
+  searchCities, 
+  getWilayaByCode,
+  getCityByCode,
+  getCitiesByWilaya,
+  getWilayaCapital,
+  getMajorCities,
+  getRegionsWithCapitals,
+  findRegionByLocation,
+  isValidRegionCode,
+  isValidCityCode,
+  getCityCoordinates
+} from '@/utils/mauritaniaUtils';
+
+// Import types directly from mauritania
+import type { Region, City } from '@/utils/mauritania';
+
+// Create type alias
+type MauritaniaLocation = Region | City;
+
+interface FormRef {
+  submit: () => void;
+  getFormData: () => Partial<MaterialFormDataDTO>;
 }
 
-interface MapData {
-  coordinates?: { lat: number; lng: number };
-  address?: string;
-  shape?: { lat: number; lng: number }[];
-  shapeType?: 'polygon' | 'rectangle' | 'circle' | 'diamond';
-}
-
+// Component-specific types
 interface SimpleWorkspace {
   id: string;
   name: string;
@@ -69,37 +60,51 @@ interface SimpleWorkspace {
 }
 
 interface EnhancedMaterialFormProps {
-  onSubmit: (material: Partial<MaterialFormData>) => void;
-  initialData?: Partial<MaterialFormData>;
-  workspaces?: SimpleWorkspace[];
+  onSubmit: (material: Partial<MaterialFormDataDTO>) => void;
+  initialData?: Partial<MaterialFormDataDTO>;
+  workspaces?: WorkspaceDTO[];
+  suppliers?: SupplierDTO[];
   showSubmitButton?: boolean;
   language?: string;
   materialId?: string; // For document management
 }
 
-const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
+const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
   onSubmit,
   initialData,
   workspaces = [],
+  suppliers = [],
   showSubmitButton = true,
-  language,
-  materialId
+  language = 'fr',
+  materialId,
 }, ref) => {
   const { t } = useLanguage();
-  const { workspaces: dbWorkspaces, createWorkspace } = useWorkspaces();
-  const { uploadFile, uploading } = useDocumentStorage();
 
-  const [formData, setFormData] = useState<Partial<MaterialFormData>>({
+  // Hexagonal Architecture hooks
+  const { createMaterial, updateMaterial } = useMaterialsHex();
+  const { workspaces: hexagonalWorkspaces, createWorkspace } = useWorkspacesHex();
+
+  // Enhanced geocoding service with Mauritania focus
+  const geoService = useMemo(() => new GeocodingService({
+    provider: 'openstreetmap',
+    userAgent: 'MauritaniaMapper/1.0 (contact@mauritania-mapper.mr)',
+    prioritizeLocal: true
+  }), []);
+
+  // Use hexagonal workspaces if available, otherwise use prop workspaces
+  const availableWorkspaces = hexagonalWorkspaces.length > 0 ? hexagonalWorkspaces : workspaces;
+
+  const [formData, setFormData] = useState<Partial<MaterialFormDataDTO>>({
     name: '',
     description: '',
-    category: '',
-    unit: 'kg',
+    category: 'construction', // Use valid MaterialCategory
+    unit: MaterialUnit.PIECES, // Use correct MaterialUnit enum value
     quantity: 0,
     minQuantity: 0,
     pricePerUnit: 0,
     availableQuantity: 0,
     workspaceId: '',
-    forme: '',
+    forme: undefined, // Use undefined instead of empty string
     localisation: [],
     coordinatesLatitude: undefined,
     coordinatesLongitude: undefined,
@@ -120,34 +125,183 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
   const [selectedSubcategory, setSelectedSubcategory] = useState(initialData?.subcategory || '');
   const [activeTab, setActiveTab] = useState('basic');
   const [mapData, setMapData] = useState<MapData>({});
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image || null);
+  const [address, setAddress] = useState(initialData?.adresse || '');
+  const [geocodingResults, setGeocodingResults] = useState<GeocodingResult[]>([]);
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [locationSuggestions, setLocationSuggestions] = useState<(Region | City)[]>([]);
 
-  // Use database workspaces if available, otherwise fall back to prop workspaces
-  const availableWorkspaces = dbWorkspaces.length > 0 ? dbWorkspaces : workspaces;
+  // Enhanced Mauritania location state
+  const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
+  const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [availableCities, setAvailableCities] = useState<City[]>([]);
 
-  // Update form data when initialData changes
-  useEffect(() => {
-    if (initialData && Object.keys(initialData).length > 0) {
-      console.log('Setting initial data:', initialData);
-      setFormData(prev => ({ ...prev, ...initialData }));
-      setSelectedCategory(initialData.category || '');
-      setSelectedSubcategory(initialData.subcategory || '');
+  const handleChange = useCallback((field: string, value: string | number | boolean | Date | Array<{ lat: number; lng: number; address?: string; type?: string; confidence?: number }> | Record<string, string> | { name: string; contact: string; leadTime: number }) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  }, []);
+
+  // Geocoding functions using GeocodingService
+  const handleAddressChange = useCallback(async (newAddress: string) => {
+    setAddress(newAddress);
+    handleChange('adresse', newAddress);
+
+    // Geocode the address if it's not empty and has enough characters
+    if (newAddress.trim().length > 3) {
+      setIsGeocoding(true);
+      try {
+        const results = await geoService.geocode(newAddress);
+        setGeocodingResults(results);
+
+        // If we have a good result, update coordinates
+        if (results.length > 0 && results[0].confidence > 0.8) {
+          const bestResult = results[0];
+          setFormData(prev => ({
+            ...prev,
+            coordinatesLatitude: bestResult.coordinates.lat,
+            coordinatesLongitude: bestResult.coordinates.lng,
+            localisation: [{
+              lat: bestResult.coordinates.lat,
+              lng: bestResult.coordinates.lng,
+              address: bestResult.address,
+              type: 'point' as const, // Map geocoding type to CoordinatePoint type
+              confidence: bestResult.confidence
+            }]
+          }));
+
+          // Update map data
+          setMapData({
+            center: bestResult.coordinates,
+            address: bestResult.address
+          });
+        }
+      } catch (error) {
+        console.error('Geocoding failed:', error);
+        toast.error('Erreur lors de la géolocalisation de l\'adresse');
+      } finally {
+        setIsGeocoding(false);
+      }
+    } else {
+      setGeocodingResults([]);
+    }
+  }, [handleChange, geoService]);
+
+  const handleGeocodingResultSelect = useCallback((result: GeocodingResult) => {
+    setAddress(result.address);
+    handleChange('adresse', result.address);
+
+    setFormData(prev => ({
+      ...prev,
+      coordinatesLatitude: result.coordinates.lat,
+      coordinatesLongitude: result.coordinates.lng,
+      localisation: [{
+        lat: result.coordinates.lat,
+        lng: result.coordinates.lng,
+        address: result.address,
+        type: 'point' as const, // Map geocoding type to CoordinatePoint type
+        confidence: result.confidence
+      }]
+    }));
+
+    setMapData({
+      center: result.coordinates,
+      address: result.address
+    });
+
+    setGeocodingResults([]);
+  }, [handleChange]);
+
+  const handleReverseGeocode = useCallback(async (lat: number, lng: number) => {
+    try {
+      const results = await geoService.reverseGeocode(lat, lng);
+      if (results.length > 0) {
+        const bestResult = results[0];
+        setAddress(bestResult.address);
+        handleChange('adresse', bestResult.address);
+      }
+    } catch (error) {
+      console.error('Reverse geocoding failed:', error);
+    }
+  }, [handleChange, geoService]);
+
+  const handleLocationSearch = useCallback(async (query: string) => {
+    if (query.length > 2) {
+      try {
+        const suggestions = await geoService.searchMauritaniaLocations(query);
+        setLocationSuggestions(suggestions);
+      } catch (error) {
+        console.error('Location search failed:', error);
+      }
+    } else {
+      setLocationSuggestions([]);
+    }
+  }, [geoService]);
+
+  // Enhanced Mauritania location functions
+  const handleRegionSelect = useCallback((region: Region) => {
+    setSelectedRegion(region);
+    setSelectedCity(null);
+    
+    // Get cities in this region
+    const citiesInRegion = getCitiesByWilaya(region.code);
+    setAvailableCities(citiesInRegion);
+    
+    // Update address with region name
+    const regionAddress = region.name;
+    setAddress(regionAddress);
+    handleChange('adresse', regionAddress);
+    
+    // Update map to region center
+    setMapData({
+      center: { lat: region.lat, lng: region.lng },
+      address: regionAddress
+    });
+  }, [handleChange]);
+
+  const handleCitySelect = useCallback((city: City) => {
+    setSelectedCity(city);
+    
+    // Update address with full location
+    const cityAddress = `${city.name}, ${getWilayaByCode(city.parentCode)?.name || city.parentCode}`;
+    setAddress(cityAddress);
+    handleChange('adresse', cityAddress);
+    
+    // Update coordinates from city
+    const cityCoords = getCityCoordinates(city.code);
+    if (cityCoords) {
+      setFormData(prev => ({
+        ...prev,
+        coordinatesLatitude: cityCoords.lat,
+        coordinatesLongitude: cityCoords.lng,
+        localisation: [{
+          lat: cityCoords.lat,
+          lng: cityCoords.lng,
+          address: cityAddress,
+          type: 'point' as const,
+          confidence: 1.0
+        }]
+      }));
       
+      // Update map
+      setMapData({
+        center: cityCoords,
+        address: cityAddress
+      });
       // Update map data if coordinates or location data exists
-      if (initialData.coordinatesLatitude && initialData.coordinatesLongitude) {
+      if (initialData!.coordinatesLatitude && initialData!.coordinatesLongitude) {
         setMapData({
-          coordinates: {
-            lat: initialData.coordinatesLatitude,
-            lng: initialData.coordinatesLongitude
+          center: {
+            lat: initialData!.coordinatesLatitude,
+            lng: initialData!.coordinatesLongitude
           },
-          address: initialData.adresse,
-          shape: Array.isArray(initialData.localisation) ? initialData.localisation : [],
-          shapeType: initialData.forme as 'polygon' | 'rectangle' | 'circle' | undefined
+          address: initialData!.adresse || '',
+          polygon: Array.isArray(initialData!.localisation) ? initialData!.localisation : [],
+          shapeType: initialData!.forme as 'polygon' | 'rectangle' | 'circle' | 'diamond' | undefined
         });
       }
     }
-  }, [initialData]);
+  }, [initialData, handleChange]);
 
   // Expose submit method to parent via ref
   useImperativeHandle(ref, () => ({
@@ -156,13 +310,6 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
     },
     getFormData: () => formData
   }));
-
-  const handleChange = (field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
 
   const handleCategoryChange = (categoryId: string) => {
     setSelectedCategory(categoryId);
@@ -178,7 +325,7 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
     handleChange('unit', unit);
   };
 
-  const handleTimelineChange = (field: string, value: any) => {
+  const handleTimelineChange = (field: string, value: string | Date) => {
     setFormData(prev => ({
       ...prev,
       timeline: {
@@ -188,7 +335,7 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
     }));
   };
 
-  const handleSupplierChange = (supplier: any) => {
+  const handleSupplierChange = (supplier: { name: string; contact: string; leadTime: number }) => {
     setFormData(prev => ({
       ...prev,
       supplier
@@ -199,76 +346,124 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
     console.log('Map data changed:', mapData);
     
     // Convert map coordinates to localisation format
-    let localisation: any[] = [];
+    let localisation: Array<{ lat: number; lng: number }> = [];
     
-    if (mapData.shape && mapData?.shape?.length > 0) {
-      // If there's a shape, use it as localisation
-      localisation = mapData.shape.map(point => ({
+    if (mapData.polygon && mapData.polygon.length > 0) {
+      // If there's a polygon, use it as localisation
+      localisation = mapData.polygon.map(point => ({
         lat: point.lat,
         lng: point.lng
       }));
-    } else if (mapData.coordinates) {
-      // If there are coordinates but no shape, use coordinates as single point
+    } else if (mapData.center) {
+      // If there are coordinates but no polygon, use center as single point
       localisation = [{
-        lat: mapData.coordinates.lat,
-        lng: mapData.coordinates.lng
+        lat: mapData.center.lat,
+        lng: mapData.center.lng
       }];
     }
 
     setFormData(prev => ({
       ...prev,
       adresse: mapData.address,
-      coordinatesLatitude: mapData.coordinates?.lat,
-      coordinatesLongitude: mapData.coordinates?.lng,
+      coordinatesLatitude: mapData.center?.lat,
+      coordinatesLongitude: mapData.center?.lng,
       localisation: localisation,
-      forme: mapData?.shapeType || (mapData.coordinates ? 'point' : undefined)
+      forme: mapData.shapeType && ['polygon', 'rectangle', 'circle', 'point'].includes(mapData.shapeType) 
+        ? mapData.shapeType as "polygon" | "rectangle" | "circle" | "point"
+        : (mapData.center ? 'point' : undefined)
     }));
 
-    console.log('Updated form data with localisation:', localisation, 'and forme:', mapData?.shapeType);
+    console.log('Updated form data with localisation:', localisation, 'and forme:', mapData.shapeType);
   };
 
-  const handleWorkspaceLocationChange = (workspace: any) => {
+  const handleWorkspaceLocationChange = (workspace: WorkspaceDTO | SimpleWorkspace) => {
     console.log('Workspace selected, focusing map on:', workspace);
     
     // Parse coordinates from workspace location if it contains coordinates
     let coordinates: { lat: number; lng: number } | undefined = undefined;
-    if (workspace.location && typeof workspace.location === 'string') {
-      // Try to extract coordinates from location string (format: "City, lat, lng" or similar)
-      const coordMatch = workspace.location.match(/(-?\d+\.?\d*),\s*(-?\d+\.?\d*)/);
-      if (coordMatch) {
+    if (workspace.location) {
+      if (typeof workspace.location === 'string') {
+        // SimpleWorkspace case
+        const coordMatch = workspace.location.match(/(-?\d+\.?\d*),\s*(-?\d+\.?\d*)/);
+        if (coordMatch) {
+          coordinates = {
+            lat: parseFloat(coordMatch[1]),
+            lng: parseFloat(coordMatch[2])
+          };
+        } else {
+          const result = geoService.findLocationBySearchTerm(workspace.name);
+          if (result) {
+            coordinates = {
+              lat: result[0].coordinates.lat,
+              lng: result[0].coordinates.lng
+            };
+          }
+        }
+      } else if (workspace.location.coordinates) {
+        // WorkspaceDTO case
         coordinates = {
-          lat: parseFloat(coordMatch[1]),
-          lng: parseFloat(coordMatch[2])
+          lat: workspace.location.coordinates.latitude,
+          lng: workspace.location.coordinates.longitude
         };
-      } else {
-        // Default coordinates for major Mauritanian cities
-        const cityCoordinates: { [key: string]: { lat: number; lng: number } } = {
-          'nouakchott': { lat: 18.0735, lng: -15.9582 },
-          'nouadhibou': { lat: 20.9, lng: -17.0347 },
-          'rosso': { lat: 16.5167, lng: -15.8 },
-          'kaédi': { lat: 16.15, lng: -13.5 },
-          'zouérat': { lat: 22.75, lng: -12.4667 },
-          'kiffa': { lat: 16.6167, lng: -11.4 }
-        };
-        
-        const cityName = workspace.location.toLowerCase();
-        coordinates = cityCoordinates[cityName] || { lat: 18.0735, lng: -15.9582 }; // Default to Nouakchott
       }
     }
 
     // Update map data to focus on workspace location
     const newMapData: MapData = {
       ...mapData,
-      coordinates,
-      address: `${workspace.name} - ${workspace.location}`
+      center: coordinates,
+      address: `${workspace.name} - ${typeof workspace.location === 'string' ? workspace.location : workspace.location.name}`
     };
     
     setMapData(newMapData);
     handleMapChange(newMapData);
   };
 
-  const handleFormSubmit = () => {
-    onSubmit(formData);
+  const handleFormSubmit = async () => {
+    try {
+      // Convert form data to DTO using MaterialTransformer
+      const formDataDTO: MaterialFormDataDTO = {
+        name: formData.name || '',
+        description: formData.description || '', // Ensure description is never undefined
+        category: formData.category || 'construction',
+        subcategory: formData.subcategory,
+        unit: formData.unit || MaterialUnit.PIECES,
+        quantity: formData.quantity || 0,
+        minQuantity: formData.minQuantity || 0,
+        pricePerUnit: formData.pricePerUnit || 0,
+        availableQuantity: formData.availableQuantity || 0,
+        workspaceId: formData.workspaceId || '',
+        image: formData.image,
+        adresse: formData.adresse,
+        forme: formData.forme,
+        localisation: formData.localisation,
+        coordinatesLatitude: formData.coordinatesLatitude,
+        coordinatesLongitude: formData.coordinatesLongitude,
+        gtin: formData.gtin,
+        sku: formData.sku,
+        ean: formData.ean,
+        asin: formData.asin,
+        multilangLabels: formData.multilangLabels,
+        timeline: formData.timeline,
+        supplier: formData.supplier
+      };
+
+      if (materialId) {
+        // Update existing material
+        const transformer = new MaterialTransformer();
+        const updateDTO = transformer.toUpdateDto(formDataDTO as MaterialDTO);
+        updateMaterial.mutate({ id: materialId, data: updateDTO });
+      } else {
+        // Create new material
+        createMaterial(formDataDTO as CreateMaterialRequestDto);
+      }
+
+      // Call original onSubmit callback for backward compatibility
+      onSubmit(formData);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast.error('Erreur lors de la soumission du formulaire');
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -279,22 +474,47 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
   // Convert form data to map format
   const getMapData = (): MapData => {
     return {
-      coordinates: formData.coordinatesLatitude && formData.coordinatesLongitude 
+      center: formData.coordinatesLatitude && formData.coordinatesLongitude 
         ? { lat: formData.coordinatesLatitude, lng: formData.coordinatesLongitude }
-        : mapData.coordinates,
+        : mapData.center,
       address: formData.adresse || mapData.address,
-      shape: Array.isArray(formData.localisation) ? formData.localisation : mapData.shape || [],
-      shapeType: formData.forme as 'polygon' | 'rectangle' | 'circle' | undefined || mapData?.shapeType
+      polygon: Array.isArray(formData.localisation) ? formData.localisation : mapData.polygon || [],
+      shapeType: formData.forme as 'polygon' | 'rectangle' | 'circle' | 'diamond' | undefined || mapData?.shapeType
     };
   };
 
   // Transform workspaces to match WorkspaceSelector interface
-  const transformedWorkspaces = availableWorkspaces.map(workspace => ({
-    id: workspace.id,
-    name: workspace.name,
-    location: workspace.location as any, // Cast to satisfy Location type
-    status: workspace.status as any, // Cast to satisfy OperationalStatus type
-  }));
+  const transformedWorkspaces: WorkspaceDTO[] = availableWorkspaces.map((workspace: WorkspaceDTO | SimpleWorkspace) => {
+    // If it's already a WorkspaceDTO, return as-is
+    if ('location' in workspace && typeof workspace.location === 'object' && workspace.location !== null) {
+      return workspace as WorkspaceDTO;
+    }
+
+    // Transform SimpleWorkspace to WorkspaceDTO
+    const simpleWorkspace = workspace as SimpleWorkspace;
+    return {
+      id: simpleWorkspace.id,
+      workspaceId: simpleWorkspace.id,
+      workspaceCode: simpleWorkspace.id,
+      name: simpleWorkspace.name,
+      location: {
+        code: 'default',
+        name: simpleWorkspace.location,
+        nameAr: simpleWorkspace.location,
+        type: 'city' as const,
+        coordinates: undefined,
+        parentCode: undefined,
+        population: undefined
+      },
+      description: undefined,
+      capacity: undefined,
+      contact: undefined,
+      facilities: undefined,
+      status: simpleWorkspace.status as 'active' | 'inactive' | 'closed',
+      createdAt: undefined,
+      updatedAt: undefined
+    };
+  });
 
   const handleWorkspaceCreated = (workspaceId: string) => {
     // Update the selected workspace to the newly created one
@@ -318,24 +538,9 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
       return;
     }
 
-    setImageFile(file);
-    
-    // Create preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setImagePreview(result);
-    };
-    reader.readAsDataURL(file);
-
     try {
-      const result = await uploadFile(file, `materials/${Date.now()}_${file.name}`);
-      if (result.success && result.url) {
-        handleChange('image', result.url);
-        toast.success('Image téléchargée avec succès');
-      } else {
-        toast.error('Erreur lors du téléchargement de l\'image');
-      }
+      // For now, just show a message that upload is disabled
+      toast.info('Upload functionality temporarily disabled');
     } catch (error) {
       console.error('Error uploading image:', error);
       toast.error('Erreur lors du téléchargement de l\'image');
@@ -343,8 +548,6 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
   };
 
   const handleRemoveImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
     handleChange('image', '');
   };
 
@@ -407,69 +610,6 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
                   rows={3}
                   className="border-gray-300 focus:border-terracotta-500"
                 />
-              </div>
-
-              {/* Image Upload */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">
-                  {t('materials.image') || 'Image du matériau'}
-                </Label>
-                <div className="space-y-4">
-                  {imagePreview ? (
-                    <div className="relative inline-block">
-                      <img
-                        src={imagePreview}
-                        alt="Aperçu du matériau"
-                        className="w-32 h-32 object-cover rounded-lg border border-gray-300"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        className="absolute -top-2 -right-2 w-6 h-6 rounded-full p-0"
-                        onClick={handleRemoveImage}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ) : null}
-
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-terracotta-500 transition-colors">
-                    {imagePreview ? null : (
-                      <>
-                        <Image className="mx-auto h-12 w-12 text-gray-400" />
-                        <p className="mt-2 text-sm text-gray-600">
-                          Cliquez pour ajouter une image
-                        </p>
-                      </>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                      id="image-upload"
-                      disabled={uploading}
-                    />
-                    <Label
-                      htmlFor="image-upload"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-terracotta-50 border border-terracotta-200 rounded-md text-sm font-medium text-terracotta-700 hover:bg-terracotta-100 cursor-pointer transition-colors"
-                    >
-                      <Upload className="h-4 w-4" />
-                      {uploading ? 'Téléchargement...' : 'Sélectionner une image'}
-                    </Label>
-                    {imagePreview && !imageFile && (
-                      <span className="text-xs text-green-600">✓ Image sauvegardée</span>
-                    )}
-                  </div>
-                  
-                  <p className="text-xs text-gray-500">
-                    Formats acceptés: JPG, PNG, GIF. Taille max: 5MB
-                  </p>
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -825,6 +965,7 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
                 value={formData.supplier}
                 onChange={handleSupplierChange}
                 allowCustom={true}
+                suppliers={suppliers}
               />
             </CardContent>
           </Card>
@@ -832,18 +973,104 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
 
         <TabsContent value="documents" className="space-y-6">
           {/* Material Documents */}
-          {materialId ? (
-            <MaterialDocuments 
-              materialId={materialId} 
-              readonly={false}
-            />
-          ) : (
-            <Card>
-              <CardContent className="p-6 text-center text-muted-foreground">
-                <p>Sauvegardez d'abord le matériau pour pouvoir ajouter des documents.</p>
-              </CardContent>
-            </Card>
-          )}
+          <Card className="border-l-4 border-l-indigo-500">
+            <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50">
+              <CardTitle className="flex items-center gap-2 text-adrar-800">
+                <FileText className="h-5 w-5" />
+                {t('materials.documents.title') || 'Documents du matériau'}
+              </CardTitle>
+              {materialId && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  {t('materials.documents.subtitle') || 'Gestion de tous les documents du matériau'}
+                </p>
+              )}
+            </CardHeader>
+            <CardContent className="space-y-4 pt-6">
+              {materialId ? (
+                <MaterialDocuments
+                  materialId={materialId}
+                  readonly={false}
+                />
+              ) : (
+                <div className="space-y-6">
+                  {/* Document Upload Section for New Materials */}
+                  <Card className="border-2 border-dashed border-indigo-200 bg-indigo-50/50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base flex items-center gap-2 text-indigo-900">
+                        <Upload className="h-4 w-4" />
+                        {t('materials.documents.upload_title') || 'Télécharger des documents'}
+                      </CardTitle>
+                      <p className="text-sm text-indigo-700">
+                        {t('materials.documents.upload_description') || 'Téléchargez des documents qui seront associés à ce matériau une fois créé'}
+                      </p>
+                    </CardHeader>
+                    <CardContent>
+                      <DocumentUpload embedded={true} />
+                    </CardContent>
+                  </Card>
+
+                  {/* Document Types Information */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 border rounded-lg bg-blue-50">
+                      <FileText className="h-5 w-5 mb-2 text-blue-600" />
+                      <h4 className="font-medium text-sm text-blue-900 mb-1">
+                        {t('materials.documents.types.invoice') || 'Factures'}
+                      </h4>
+                      <p className="text-xs text-blue-700">
+                        {t('materials.documents.invoice_desc') || 'Preuves d\'achat et de livraison'}
+                      </p>
+                    </div>
+                    <div className="p-4 border rounded-lg bg-green-50">
+                      <FileText className="h-5 w-5 mb-2 text-green-600" />
+                      <h4 className="font-medium text-sm text-green-900 mb-1">
+                        {t('materials.documents.types.certificate') || 'Certificats'}
+                      </h4>
+                      <p className="text-xs text-green-700">
+                        {t('materials.documents.certificate_desc') || 'Qualité, conformité, sécurité'}
+                      </p>
+                    </div>
+                    <div className="p-4 border rounded-lg bg-purple-50">
+                      <FileText className="h-5 w-5 mb-2 text-purple-600" />
+                      <h4 className="font-medium text-sm text-purple-900 mb-1">
+                        {t('materials.documents.types.manual') || 'Manuels'}
+                      </h4>
+                      <p className="text-xs text-purple-700">
+                        {t('materials.documents.manual_desc') || 'Instructions d\'utilisation'}
+                      </p>
+                    </div>
+                    <div className="p-4 border rounded-lg bg-orange-50">
+                      <FileText className="h-5 w-5 mb-2 text-orange-600" />
+                      <h4 className="font-medium text-sm text-orange-900 mb-1">
+                        {t('materials.documents.types.warranty') || 'Garanties'}
+                      </h4>
+                      <p className="text-xs text-orange-700">
+                        {t('materials.documents.warranty_desc') || 'Documents de garantie'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Save Reminder */}
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-amber-800">
+                          {t('materials.documents.save_reminder_title') || 'Sauvegarde automatique'}
+                        </h3>
+                        <p className="mt-1 text-sm text-amber-700">
+                          {t('materials.documents.save_reminder_text') || 'Les documents seront automatiquement associés au matériau après sa création.'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 

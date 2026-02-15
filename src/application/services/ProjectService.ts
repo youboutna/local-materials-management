@@ -20,16 +20,11 @@ import {
   UpdateProjectDTO, 
   ProjectSummaryDTO, 
   ProjectDetailDTO,
-  ProjectStatus as ProjectStatusEnum,
+  ProjectStatus,
   PROJECT_STATUS_LABELS,
   PROJECT_STATUS_CATEGORIES,
   PROJECT_STATUS_TRANSITIONS
 } from '@/dtos/entities/ProjectDTO';
-import { StakeholderDTO } from '@/dtos/entities/StakeholderDTO';
-import { ProjectTransformer } from '@/dtos/transforms/ProjectTransformer';
-
-// Type alias for clarity
-type ProjectStatus = ProjectStatusEnum;
 
 // =================== ERROR CLASSES ===================
 
@@ -114,7 +109,7 @@ export class ProjectService {
           Number(request.latitude),
           Number(request.longitude)
         );
-        (projectData as any).coordinates = coordinates;
+        (projectData as Partial<Project> & { coordinates: ProjectCoordinates }).coordinates = coordinates;
       }
 
       const project = await this.projectRepository.create(projectData);
@@ -208,7 +203,7 @@ export class ProjectService {
       }
 
       // Add timestamp for update
-      (projectData as any).updatedAt = new Date();
+      (projectData as Partial<Project> & { updatedAt: Date }).updatedAt = new Date();
 
       const project = await this.projectRepository.update(id, projectData);
       return ProjectTransformer.toDTO(project);
@@ -462,7 +457,7 @@ export class ProjectService {
         tasks: data.tasks || [],
         risks: data.risks || [],
         payments: data.payments || [],
-        inspections: data.inspections as any[] || [],
+        inspections: data.inspections as InspectionDTO[] || [],
       };
     } catch (error) {
       throw new ProjectServiceError(

@@ -1,7 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import { UserService } from '@/application/services/UserService';
-import { UserMapper, UserResponseDto, CreateUserRequestDto, UpdateUserRequestDto } from '@/infrastructure/transformers/UserMapper';
+import { UserMapper } from '@/infrastructure/transformers/UserMapper';
+import { UserTransformer, UserResponseDto, CreateUserRequestDto, UpdateUserRequestDto } from '@/dtos/transforms/UserTransformer';
+import { User } from '@/domain/entities/User';
+import { SomelecRole } from '@/domain/entities/User';
 import { toast } from 'sonner';
 
 // Types pour les hooks
@@ -45,8 +48,8 @@ export function useUsersHex(): UseUsersHexResult {
         const users = await userService.getAllUsers();
         
         // [Transformers]: Entities → DTOs
-        // Utilisation du Transformer existant : UserMapper
-        return UserMapper.toResponseDtoArray(users);
+        // Utilisation du Transformer existant : UserTransformer
+        return UserTransformer.toResponseDtoArray(users);
       } catch (error) {
         console.error('Error fetching users:', error);
         throw new Error(error instanceof Error ? error.message : 'Failed to fetch users');
@@ -58,11 +61,26 @@ export function useUsersHex(): UseUsersHexResult {
   const createMutation = useMutation({
     mutationFn: async (userData: CreateUserRequestDto): Promise<UserResponseDto> => {
       try {
-        // Flux hexagonal complet - géré automatiquement par RepositoryFactory
-        const userEntity = UserMapper.toDomainFromCreateDto(userData);
+        // Convert DTO to User entity for service
+        const userEntity: Omit<User, 'id'> = {
+          name: userData.fullName,
+          email: userData.email,
+          phone: userData.phone || '',
+          role: userData.role as SomelecRole, // Cast to SomelecRole enum
+          image: userData.avatar || '',
+          workspaceIds: [],
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          userRoles: [],
+          fullName: userData.fullName,
+          avatar: userData.avatar || '',
+          lastLogin: undefined
+        };
+
         const createdUser = await userService.createUser(userEntity);
         
-        return UserMapper.toResponseDto(createdUser);
+        return UserTransformer.toResponseDto(createdUser);
       } catch (error) {
         console.error('Error creating user:', error);
         throw new Error(error instanceof Error ? error.message : 'Failed to create user');
@@ -81,10 +99,10 @@ export function useUsersHex(): UseUsersHexResult {
     mutationFn: async ({ id, updates }: { id: string; updates: UpdateUserRequestDto }): Promise<UserResponseDto> => {
       try {
         // Flux hexagonal complet - géré automatiquement par RepositoryFactory
-        const updateData = UserMapper.toUpdateData(updates);
-        const updatedUser = await userService.updateUser(id, updateData);
+        const updateData = UserTransformer.toUpdateData(updates); // Application: Request DTO → Domain
+        const updatedUser = await userService.updateUser(id, updateData as any); // eslint-disable-line @typescript-eslint/no-explicit-any
         
-        return UserMapper.toResponseDto(updatedUser);
+        return UserTransformer.toResponseDto(updatedUser as any); // eslint-disable-line @typescript-eslint/no-explicit-any
       } catch (error) {
         console.error('Error updating user:', error);
         throw new Error(error instanceof Error ? error.message : 'Failed to update user');
@@ -121,7 +139,7 @@ export function useUsersHex(): UseUsersHexResult {
   return {
     users,
     isLoading,
-    error,
+    error: error ? String(error) : null,
     refetch,
     createUser: (data: CreateUserRequestDto) => createMutation.mutate(data),
     updateUser: ({ id, data }: { id: string; data: UpdateUserRequestDto }) => updateMutation.mutate({ id, updates: data }),

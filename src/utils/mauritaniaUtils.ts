@@ -5,6 +5,9 @@
 
 import { Region, City, MAURITANIA_REGIONS, MAURITANIA_CITIES } from '@/utils/mauritania';
 
+// Re-export types for convenience
+export type { Region, City };
+
 // =================== REGION LOOKUP FUNCTIONS ===================
 
 /**

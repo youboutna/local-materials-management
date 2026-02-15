@@ -8,7 +8,8 @@
  * Batch operations (manyFromSupabase, manyToDTO, manyToUI)
  */
 
-import { Project, ProjectStatus, ProjectCoordinates } from '@/domain/entities/Project';
+import { Project, ProjectCoordinates } from '@/domain/entities/Project';
+import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
 import { 
   ProjectDTO, 
   CreateProjectDTO,
@@ -187,8 +188,8 @@ export class ProjectTransformer {
       terrainType: project.terrainType || undefined,
       category: project.sector || undefined,
       subCategory: project.projectType || undefined,
-      priorityLevel: project.priority as any, // Keep as any for now - needs proper enum mapping
-      riskLevel: (project.getRiskScore() > 70 ? 'critique' : project.getRiskScore() > 40 ? 'eleve' : 'faible') as any,
+      priorityLevel: project.priority as "faible" | "moyenne" | "elevee" | "tresElevee" | undefined, // Proper enum mapping
+      riskLevel: (project.getRiskScore() > 70 ? 'critique' : project.getRiskScore() > 40 ? 'eleve' : 'faible') as "faible" | "moyen" | "eleve" | "critique",
       projectManagerId: project.projectResponsable?.id || undefined,
       technicalManagerId: project.technicalManager?.id || undefined,
       supervisorId: project.supervisorId || project.supervisor?.id,
@@ -197,8 +198,8 @@ export class ProjectTransformer {
         ? project.mainContractor
         : project.mainContractor?.name,
       currentPhase: project.currentPhase || undefined,
-      currentStage: project.currentStage as any, // Cast to ConstructionStage enum
-      methodology: project.methodology as any, // Cast to Methodology enum
+      currentStage: project.currentStage as ConstructionStage | undefined, // Cast to ConstructionStage enum
+      methodology: project.methodology as "waterfall" | "agile" | "hybrid" | undefined, // Cast to Methodology enum
       projectReference: project.projectReferenceNumber,
       selectionMode: project.selectionMode || undefined,
       financingSource: project.financingSource || undefined,
@@ -353,7 +354,7 @@ export class ProjectTransformer {
       title: formData.title as string,
       description: (formData.description as string) || '',
       location: (formData.location as string) || '',
-      status: (formData.status as any) || 'planifie',
+      status: (formData.status as ProjectStatus) || 'planifie',
       budget: Number(formData.budget) || 0,
       startDate: formData.startDate as string,
       endDate: formData.endDate as string,
@@ -423,7 +424,7 @@ export class ProjectTransformer {
       title: formData.title as string,
       description: formData.description as string,
       location: formData.location as string,
-      status: formData.status as any,
+      status: formData.status as ProjectStatus,
       budget: formData.budget !== undefined ? Number(formData.budget) : undefined,
       progress: formData.progress !== undefined ? Number(formData.progress) : undefined,
       startDate: formData.startDate as string,

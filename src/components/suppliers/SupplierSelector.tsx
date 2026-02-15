@@ -21,13 +21,15 @@ interface SupplierSelectorProps {
   }) => void;
   allowCustom?: boolean;
   disabled?: boolean;
+  suppliers?: any[]; // Add suppliers prop
 }
 
 const SupplierSelector: React.FC<SupplierSelectorProps> = ({
   value,
   onChange,
   allowCustom = true,
-  disabled = false
+  disabled = false,
+  suppliers: passedSuppliers
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isCustom, setIsCustom] = useState(!value?.id);
@@ -37,7 +39,11 @@ const SupplierSelector: React.FC<SupplierSelectorProps> = ({
     leadTime: value?.leadTime || 7
   });
 
-  const { data: suppliers, isLoading } = useSuppliersSelector(searchTerm);
+  const { data: hookSuppliers, isLoading: hookLoading } = useSuppliersSelector(searchTerm);
+
+  // Use passed suppliers if available, otherwise use hook data
+  const suppliers = passedSuppliers || hookSuppliers;
+  const isLoading = passedSuppliers ? false : hookLoading;
 
   const handleSupplierSelect = (supplierId: string) => {
     if (supplierId === 'custom') {

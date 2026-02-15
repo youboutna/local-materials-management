@@ -65,6 +65,7 @@ import WorkflowTest from "./pages/WorkflowTest";
 import MergedNavbar from "./components/MergedNavbar";
 import PhaseDetailsPage from "./components/project/PhaseDetailsPage";
 import { DEV_MODE } from "./config/constants";
+import EnhancedMaterialForm from "./components/materials/EnhancedMaterialForm";
 
 // Force rebuild - updated 2026-01-07
 const queryClient = new QueryClient({

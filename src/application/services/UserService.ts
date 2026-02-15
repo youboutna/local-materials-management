@@ -4,7 +4,7 @@
  */
 
 import { IUserRepository, SearchUsersResult } from '@/domain/repositories/IUserRepository';
-import { UserProfile } from '@/domain/entities/User';
+import { User, SomelecRole } from '@/domain/entities/User';
 import { AppError, ErrorCode, ErrorLogger } from '@/utils/errorHandling';
 
 export interface SearchUsersOptions {
@@ -15,6 +15,16 @@ export interface SearchUsersOptions {
 
 export class UserService {
   constructor(private userRepository: IUserRepository) {}
+
+  async getAllUsers(): Promise<User[]> {
+    try {
+      return await this.userRepository.findAll();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get all users';
+      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
+      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage);
+    }
+  }
 
   async searchUsers(options: SearchUsersOptions = {}): Promise<SearchUsersResult> {
     try {
@@ -38,16 +48,9 @@ export class UserService {
     }
   }
 
-  async getUserById(id: string): Promise<UserProfile | null> {
+  async getUserById(id: string): Promise<User | null> {
     try {
-      const user = await this.userRepository.findById(id);
-      
-      if (!user) {
-        console.warn('User not found:', id);
-        return null;
-      }
-
-      return user;
+      return await this.userRepository.findById(id);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to get user';
       ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
@@ -55,7 +58,7 @@ export class UserService {
     }
   }
 
-  async getActiveUsers(): Promise<UserProfile[]> {
+  async getActiveUsers(): Promise<User[]> {
     try {
       return await this.userRepository.findActive();
     } catch (error) {
@@ -65,7 +68,7 @@ export class UserService {
     }
   }
 
-  async getUsersByRole(role: string): Promise<UserProfile[]> {
+  async getUsersByRole(role: string): Promise<User[]> {
     try {
       return await this.userRepository.findByRole(role);
     } catch (error) {
@@ -75,21 +78,12 @@ export class UserService {
     }
   }
 
-  async createUser(userData: Omit<UserProfile, 'id'>): Promise<UserProfile> {
+  async createUser(userData: Omit<User, 'id'>): Promise<User> {
     try {
-      const newUser = await this.userRepository.create({
-        full_name: userData.full_name || '',
-        email: userData.email || '',
-        phone: userData.phone || null,
-        national_id: userData.national_id || null,
-        role: userData.role || 'user',
-        is_active: userData.is_active !== undefined ? userData.is_active : true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
+      const createdUser = await this.userRepository.create(userData);
 
-      console.log('User created successfully:', newUser.id);
-      return newUser;
+      console.log('User created successfully:', createdUser.id);
+      return createdUser;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create user';
       ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
@@ -97,18 +91,18 @@ export class UserService {
     }
   }
 
-  async updateUser(id: string, updates: Partial<UserProfile>): Promise<UserProfile> {
+  async updateUser(id: string, updates: Partial<User>): Promise<User> {
     try {
       const existingUser = await this.userRepository.findById(id);
       if (!existingUser) {
         throw new AppError(ErrorCode.NOT_FOUND, 'User not found');
       }
 
-      const updatedUser = await this.userRepository.update(id, {
-        ...updates,
-        updated_at: new Date().toISOString()
-      });
-      
+      const userUpdates: Partial<User> = updates;
+      userUpdates.updatedAt = new Date();
+
+      const updatedUser = await this.userRepository.update(id, userUpdates);
+
       console.log('User updated successfully:', id);
       return updatedUser;
     } catch (error) {
@@ -130,15 +124,15 @@ export class UserService {
   }
 
   async updateProfile(userId: string, data: {
-    full_name?: string;
+    fullName?: string;
     phone?: string;
-    national_id?: string;
+    avatar?: string;
   }): Promise<void> {
     try {
       await this.updateUser(userId, {
-        full_name: data.full_name,
+        fullName: data.fullName,
         phone: data.phone,
-        national_id: data.national_id
+        avatar: data.avatar
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update profile';

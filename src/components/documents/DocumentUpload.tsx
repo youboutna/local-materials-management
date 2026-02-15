@@ -16,7 +16,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 type Project = { id: string; title: string };
 
-const DocumentUpload = () => {
+const DocumentUpload = ({ embedded = false }: { embedded?: boolean }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -149,15 +149,10 @@ const DocumentUpload = () => {
   };
 
   return (
-    <Card className="max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <Upload className="h-5 w-5 mr-2" />
-          Télécharger un Document
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+    <div className={embedded ? "" : "max-w-2xl mx-auto"}>
+      {embedded ? (
+        // Embedded mode - just the form fields without form wrapper
+        <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="title">Titre *</Label>
@@ -177,13 +172,14 @@ const DocumentUpload = () => {
                   <SelectValue placeholder="Sélectionnez le type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="inspection_report">Rapport d'inspection</SelectItem>
-                  <SelectItem value="location_photo">Photo de localisation</SelectItem>
-                  <SelectItem value="project_report">Rapport de projet</SelectItem>
-                  <SelectItem value="contract">Contrat</SelectItem>
-                  <SelectItem value="supplier_info">Information fournisseur</SelectItem>
-                  <SelectItem value="task_assignment">Affectation de tâche</SelectItem>
-                  <SelectItem value="employee_record">Dossier employé</SelectItem>
+                  <SelectItem value="invoice">{t('materials.documents.types.invoice') || 'Facture'}</SelectItem>
+                  <SelectItem value="certificate">{t('materials.documents.types.certificate') || 'Certificat'}</SelectItem>
+                  <SelectItem value="manual">{t('materials.documents.types.manual') || 'Manuel'}</SelectItem>
+                  <SelectItem value="photo">{t('materials.documents.types.photo') || 'Photo'}</SelectItem>
+                  <SelectItem value="contract">{t('materials.documents.types.contract') || 'Contrat'}</SelectItem>
+                  <SelectItem value="report">{t('materials.documents.types.report') || 'Rapport'}</SelectItem>
+                  <SelectItem value="warranty">{t('materials.documents.types.warranty') || 'Garantie'}</SelectItem>
+                  <SelectItem value="other">{t('materials.documents.types.other') || 'Autre'}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -251,7 +247,7 @@ const DocumentUpload = () => {
             </div>
           </div>
 
-          <Button type="submit" disabled={uploading || uploadMutation.isPending} className="w-full">
+          <Button type="button" onClick={handleSubmit} disabled={uploading || uploadMutation.isPending} className="w-full">
             {uploading || uploadMutation.isPending ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -264,9 +260,131 @@ const DocumentUpload = () => {
               </>
             )}
           </Button>
-        </form>
-      </CardContent>
-    </Card>
+        </>
+      ) : (
+        // Standalone mode - with Card wrapper
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Upload className="h-5 w-5 mr-2" />
+              Télécharger un Document
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Same form content as embedded mode */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Titre *</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => handleInputChange('title', e.target.value)}
+                    placeholder="Entrez le titre du document"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="document_type">Type de Document *</Label>
+                  <Select value={formData.document_type} onValueChange={(value) => handleInputChange('document_type', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionnez le type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="invoice">{t('materials.documents.types.invoice') || 'Facture'}</SelectItem>
+                      <SelectItem value="certificate">{t('materials.documents.types.certificate') || 'Certificat'}</SelectItem>
+                      <SelectItem value="manual">{t('materials.documents.types.manual') || 'Manuel'}</SelectItem>
+                      <SelectItem value="photo">{t('materials.documents.types.photo') || 'Photo'}</SelectItem>
+                      <SelectItem value="contract">{t('materials.documents.types.contract') || 'Contrat'}</SelectItem>
+                      <SelectItem value="report">{t('materials.documents.types.report') || 'Rapport'}</SelectItem>
+                      <SelectItem value="warranty">{t('materials.documents.types.warranty') || 'Garantie'}</SelectItem>
+                      <SelectItem value="other">{t('materials.documents.types.other') || 'Autre'}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  placeholder="Entrez une description du document"
+                  rows={3}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="project_id">Projet (optionnel)</Label>
+                  <Select value={formData.project_id} onValueChange={(value) => handleInputChange('project_id', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionnez un projet" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {projects?.map((project) => (
+                        <SelectItem key={project.id} value={project.id}>
+                          {project.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="status">Statut</Label>
+                  <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Brouillon</SelectItem>
+                      <SelectItem value="pending_review">En attente de révision</SelectItem>
+                      <SelectItem value="approved">Approuvé</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="file">Fichier</Label>
+                <div className="flex items-center space-x-4">
+                  <Input
+                    id="file"
+                    type="file"
+                    onChange={handleFileChange}
+                    className="flex-1"
+                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif"
+                  />
+                  {file && (
+                    <div className="flex items-center text-sm text-gray-600">
+                      <FileText className="h-4 w-4 mr-1" />
+                      {file.name}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <Button type="submit" disabled={uploading || uploadMutation.isPending} className="w-full">
+                {uploading || uploadMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Téléchargement en cours...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Créer le Document
+                  </>
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };
 

@@ -4,17 +4,55 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "@/hooks/use-toast";
-import { useMaterialsHex } from "@/hooks/hexagonal";
-import { MaterialTransformer } from "@/dtos/transforms/MaterialTransformer";
+import { useWorkspacesHex } from '@/hooks/hexagonal/useWorkspacesHex';
+import { useMaterialsHex } from "@/hooks/hexagonal/useMaterialsHex";
+import { useSuppliersHex } from '@/hooks/hexagonal/useSuppliersHex';
+import { MaterialFormDataDTO, MaterialUnit } from "@/dtos/entities/MaterialDTO";
 import EnhancedMaterialForm from "@/components/materials/EnhancedMaterialForm";
 import { ArrowLeft, Package } from "lucide-react";
+import { MaterialTransformer } from "@/dtos/transforms/MaterialTransformer";
 
 const MaterialCreate = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const { createMaterial, isCreating } = useMaterialsHex();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (formData: any) => {
+  // Hexagonal Architecture: Use the hexagonal hook for material operations
+  const { createMaterial } = useMaterialsHex();
+
+  // Fetch related data for selectors
+  const { workspaces } = useWorkspacesHex();
+  const { suppliers } = useSuppliersHex();
+
+  // Transform workspaces to match WorkspaceDTO format
+  const transformedWorkspaces = workspaces?.map((workspace) => ({
+    id: workspace.id,
+    workspaceId: workspace.id,
+    workspaceCode: workspace.id,
+    name: workspace.name,
+    location: {
+      code: 'default',
+      name: workspace.location,
+      nameAr: workspace.location,
+      type: 'city' as const,
+      coordinates: undefined,
+      parentCode: undefined,
+      population: undefined
+    },
+    description: undefined,
+    capacity: undefined,
+    contact: workspace.contact_manager && workspace.contact_phone ? {
+      manager: workspace.contact_manager,
+      phone: workspace.contact_phone
+    } : undefined,
+    facilities: workspace.facilities,
+    status: workspace.status as 'active' | 'inactive' | 'closed',
+    createdAt: workspace.created_at,
+    updatedAt: workspace.updated_at
+  })) || [];
+
+  const handleSubmit = (formData: Partial<MaterialFormDataDTO>) => {
+    // Validate required fields
     if (!formData.name || !formData.category) {
       toast({
         title: t('common.error'),
@@ -24,9 +62,79 @@ const MaterialCreate = () => {
       return;
     }
 
-    // Form → DTO via Transformer (Rule #4)
-    const createDto = MaterialTransformer.formToCreateRequest(formData);
-    createMaterial(createDto);
+    // Ensure we have complete data for the DTO conversion
+    const completeFormData: MaterialFormDataDTO = {
+      name: formData.name,
+      description: formData.description || '',
+      category: formData.category,
+      subcategory: formData.subcategory,
+      unit: formData.unit as MaterialUnit || 'pieces',
+      quantity: formData.quantity || 0,
+      minQuantity: formData.minQuantity || 0,
+      pricePerUnit: formData.pricePerUnit || 0,
+      availableQuantity: formData.availableQuantity || 0,
+      workspaceId: formData.workspaceId || '',
+      image: formData.image,
+      adresse: formData.adresse,
+      forme: formData.forme,
+      localisation: formData.localisation,
+      coordinatesLatitude: formData.coordinatesLatitude,
+      coordinatesLongitude: formData.coordinatesLongitude,
+      gtin: formData.gtin,
+      sku: formData.sku,
+      ean: formData.ean,
+      asin: formData.asin,
+      multilangLabels: formData.multilangLabels,
+      timeline: formData.timeline,
+      supplier: formData.supplier
+    };
+
+    // Hexagonal Architecture: Use MaterialTransformer to convert UI form data to service DTO
+    const createDto = MaterialTransformer.formToCreateRequest(completeFormData);
+
+    // Add supplier ID if supplier info is provided (map from form supplier object)
+    if (completeFormData.supplier?.name) {
+      // In a real implementation, you'd look up supplier by name or create if not exists
+      // For now, we'll use a placeholder approach
+      createDto.supplierId = `supplier-${completeFormData.supplier.name.toLowerCase().replace(/\s+/g, '-')}`;
+      createDto.supplierName = completeFormData.supplier.name;
+    }
+
+    // Add workspace ID (already provided by form)
+    if (completeFormData.workspaceId) {
+      createDto.workspaceId = completeFormData.workspaceId;
+    }
+
+    // Note: Document associations would be handled separately after material creation
+    // The DocumentUpload component in embedded mode collects documents but association
+    // happens after successful material creation
+
+    setIsSubmitting(true);
+
+    // Hexagonal Architecture: Use the mutation from the hexagonal hook
+    createMaterial.mutate(createDto, {
+      onSuccess: (createdMaterial) => {
+        toast({
+          title: t('common.success'),
+          description: "Matériau créé avec succès!",
+          variant: "default",
+        });
+
+        // Navigate to material details or list
+        navigate(`/materials/${createdMaterial.id}`);
+      },
+      onError: (error) => {
+        console.error('Material creation failed:', error);
+        toast({
+          title: t('common.error'),
+          description: error instanceof Error ? error.message : "Erreur lors de la création du matériau.",
+          variant: "destructive",
+        });
+      },
+      onSettled: () => {
+        setIsSubmitting(false);
+      }
+    });
   };
 
   return (
@@ -65,10 +173,12 @@ const MaterialCreate = () => {
             <CardContent>
               <EnhancedMaterialForm
                 onSubmit={handleSubmit}
+                workspaces={transformedWorkspaces}
+                suppliers={suppliers}
                 showSubmitButton={false}
               />
               <div className="flex justify-end gap-4 pt-6 mt-6 border-t">
-                <Button variant="outline" onClick={() => navigate("/materials")} disabled={isCreating}>
+                <Button variant="outline" onClick={() => navigate("/materials")} disabled={isSubmitting}>
                   Annuler
                 </Button>
                 <Button
@@ -76,10 +186,10 @@ const MaterialCreate = () => {
                     const formElement = document.querySelector("form");
                     if (formElement) formElement.requestSubmit();
                   }}
-                  disabled={isCreating}
+                  disabled={isSubmitting}
                   className="bg-gradient-to-r from-terracotta-500 to-adrar-600 hover:from-terracotta-600 hover:to-adrar-700 text-white"
                 >
-                  {isCreating ? "Création..." : "Créer le matériau"}
+                  {isSubmitting ? "Création..." : "Créer le matériau"}
                 </Button>
               </div>
             </CardContent>

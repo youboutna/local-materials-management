@@ -73,7 +73,7 @@ export * from './AuthDTO';
 
 export * from './AutomaticDecompteDTO';
 
-export * from './VerificationItemDTO';
+export * from './InspectionDTO';
 
 export * from './CheckpointDTO';
 

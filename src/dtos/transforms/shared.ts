@@ -4,6 +4,8 @@
  * Following hexagonal architecture principles
  */
 
+import { CoordinatePoint } from '../entities/MaterialDTO';
+
 export interface BaseEntityDTO {
   id: string;
   createdAt: string;
@@ -355,7 +357,7 @@ export interface MaterialUIDTO extends BaseEntityDTO {
   coordinatesLongitude?: number;
   forme?: string;
   adresse?: string;
-  localisation?: any;
+  localisation?: CoordinatePoint[];
   isActive?: boolean;
   minimumQuantity?: number;
   localType?: string;
@@ -1177,12 +1179,38 @@ export interface UpdateTaskAssignmentRequestDto {
   notes?: string;
 }
 
-export interface TaskAssignmentFilters {
-  searchTerm?: string;
-  status?: string;
-  priority?: string;
-  assignee?: string;
-  project_id?: string;
+export interface MaterialFormDataDTO {
+  name: string;
+  description?: string;
+  category: string; // String for UI flexibility
+  subcategory?: string;
+  unit: string; // String for UI flexibility
+  quantity: number;
+  minQuantity: number;
+  pricePerUnit: number;
+  availableQuantity: number;
+  workspaceId: string;
+  image?: string;
+  adresse?: string;
+  forme?: string;
+  localisation?: CoordinatePoint[];
+  coordinatesLatitude?: number;
+  coordinatesLongitude?: number;
+  gtin?: string;
+  sku?: string;
+  ean?: string;
+  asin?: string;
+  multilangLabels?: Record<string, string>;
+  timeline?: {
+    start: Date;
+    end: Date;
+    estimatedDuration: number;
+  };
+  supplier?: {
+    name: string;
+    contact: string;
+    leadTime: number;
+  };
 }
 
 // Performance Monitoring DTOs

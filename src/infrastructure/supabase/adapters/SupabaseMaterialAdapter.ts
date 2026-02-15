@@ -7,6 +7,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
 import { Material, MaterialCategory } from '@/domain/entities/Material';
 
+interface ProjectMaterialData {
+  id: string;
+  projectId: string;
+  materialId: string;
+  quantity: number;
+  material: Material | null;
+}
+
 export class SupabaseMaterialAdapter implements IMaterialRepository {
   async findById(id: string): Promise<Material | null> {
     const { data, error } = await supabase
@@ -30,36 +38,72 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
   }
 
   async save(material: Material): Promise<void> {
-    const dbData = material.toDatabase();
-    const { error } = await supabase.from('materials').insert(dbData as any);
+    const dbData = material.toDatabase() as {
+      adresse?: string | null;
+      asin?: string | null;
+      available_quantity?: number;
+      category: string;
+      coordinates_latitude?: number | null;
+      coordinates_longitude?: number | null;
+      created_at: string;
+      description: string; // Required for Supabase
+      ean?: string | null;
+      forme?: string;
+      gtin?: string | null;
+      id: string;
+      image?: string;
+      localisation?: unknown[] | null;
+      min_quantity?: number;
+      multilang_labels?: Record<string, string>;
+      name: string;
+      origin_location?: string;
+      price_per_unit: number;
+      quantity: number;
+      sku?: string | null;
+      subcategory?: string;
+      supplier?: unknown;
+      timeline?: unknown;
+      unit: string;
+      updated_at: string;
+      workspace_id?: string;
+    };
+    const { error } = await supabase.from('materials').insert(dbData);
     if (error) throw new Error(`Failed to save material: ${error.message}`);
   }
 
   async update(id: string, data: Partial<Material>): Promise<void> {
     const updateData: Record<string, unknown> = {};
+
+    // Map all possible fields from domain entity to database schema
     if (data.name !== undefined) updateData.name = data.name;
     if (data.description !== undefined) updateData.description = data.description;
     if (data.category !== undefined) updateData.category = data.category;
+    if (data.subcategory !== undefined) updateData.subcategory = data.subcategory;
     if (data.unit !== undefined) updateData.unit = data.unit;
+    if (data.quantity !== undefined) updateData.quantity = data.quantity;
+    if (data.minQuantity !== undefined) updateData.min_quantity = data.minQuantity;
     if (data.pricePerUnit !== undefined) updateData.price_per_unit = data.pricePerUnit;
     if (data.availableQuantity !== undefined) updateData.available_quantity = data.availableQuantity;
-    if (data.sku !== undefined) updateData.sku = data.sku;
-    if (data.ean !== undefined) updateData.ean = data.ean;
-    if (data.gtin !== undefined) updateData.gtin = data.gtin;
-    if (data.asin !== undefined) updateData.asin = data.asin;
-    if (data.image !== undefined) updateData.image = data.image;
-    if (data.coordinatesLatitude !== undefined) updateData.coordinates_latitude = data.coordinatesLatitude;
-    if (data.coordinatesLongitude !== undefined) updateData.coordinates_longitude = data.coordinatesLongitude;
     if (data.workspaceId !== undefined) updateData.workspace_id = data.workspaceId;
     if (data.originLocation !== undefined) updateData.origin_location = data.originLocation;
     if (data.adresse !== undefined) updateData.adresse = data.adresse;
     if (data.forme !== undefined) updateData.forme = data.forme;
     if (data.localisation !== undefined) updateData.localisation = data.localisation;
+    if (data.coordinatesLatitude !== undefined) updateData.coordinates_latitude = data.coordinatesLatitude;
+    if (data.coordinatesLongitude !== undefined) updateData.coordinates_longitude = data.coordinatesLongitude;
+    if (data.gtin !== undefined) updateData.gtin = data.gtin;
+    if (data.sku !== undefined) updateData.sku = data.sku;
+    if (data.ean !== undefined) updateData.ean = data.ean;
+    if (data.asin !== undefined) updateData.asin = data.asin;
+    if (data.image !== undefined) updateData.image = data.image;
     if (data.multilangLabels !== undefined) updateData.multilang_labels = data.multilangLabels;
+    if (data.supplier !== undefined) updateData.supplier = data.supplier;
+    if (data.timeline !== undefined) updateData.timeline = data.timeline;
+    if (data.lastRestock !== undefined) updateData.last_restock = data.lastRestock.toISOString();
 
     const { error } = await supabase
       .from('materials')
-      .update(updateData as any)
+      .update(updateData)
       .eq('id', id);
 
     if (error) throw new Error(`Failed to update material: ${error.message}`);
@@ -179,7 +223,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
     };
   }
 
-  async getProjectMaterials(projectId: string): Promise<any[]> {
+  async getProjectMaterials(projectId: string): Promise<ProjectMaterialData[]> {
     const { data, error } = await supabase
       .from('project_materials')
       .select('*, materials(*)')
@@ -191,10 +235,6 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       projectId: pm.project_id,
       materialId: pm.material_id,
       quantity: pm.quantity,
-      estimatedCost: pm.estimated_cost,
-      actualCost: pm.actual_cost,
-      procurementStatus: pm.procurement_status,
-      deliveryDate: pm.delivery_date,
       material: pm.materials ? Material.fromDatabase(pm.materials as Record<string, unknown>) : null,
     }));
   }

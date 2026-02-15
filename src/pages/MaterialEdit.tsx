@@ -7,30 +7,38 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "@/hooks/use-toast";
 import EnhancedMaterialForm from "@/components/materials/EnhancedMaterialForm";
 import { useMaterialHex, useMaterialsHex } from "@/hooks/hexagonal";
+import { MaterialFormDataDTO, UpdateMaterialRequestDto } from "@/dtos/transforms/shared";
+import { MaterialDTO, MaterialUnit, MaterialStatus, MaterialCategory } from "@/dtos/entities/MaterialDTO";
 import { MaterialTransformer } from "@/dtos/transforms/MaterialTransformer";
 import { AppLayout } from "@/components/layout";
 
+// Extend window interface for form ref access
+declare global {
+  interface Window {
+    materialFormRef?: {
+      submit: () => void;
+      getFormData: () => Partial<MaterialFormDataDTO>;
+    };
+  }
+}
+
 const MaterialEdit = () => {
-  const { t } = useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const safeId = id || '';
 
-  const { material, isLoading, error } = useMaterialHex(safeId);
-  const { updateMaterial, workspaces } = useMaterialsHex();
+  const { material, isLoading, error, updateMaterial, isUpdating } = useMaterialHex(safeId);
+  const { workspaces } = useMaterialsHex();
 
-  const { material, isLoading, error } = useMaterialHex(id);
-  const { updateMaterial, workspaces } = useMaterialsHex();
+  // Transform DTO → Form data (material is already in DTO format)
+  const formData = material || {};
 
-  // Transform DTO → Form data via Transformer (Rule #4)
-  const formData = material ? MaterialTransformer.toFormData(material) : {};
-
-  const handleSubmit = (updatedFormData: any) => {
-    // Form → UpdateDTO via Transformer (Rule #4)
-    const updateDto = MaterialTransformer.formToUpdateRequest(updatedFormData);
-    
+  const handleSubmit = (updatedFormData: Partial<MaterialFormDataDTO>) => {
+    // Form (transforms DTO) → Hook (transformation) → Service (entities DTO) → Entity
+    // Pass the transforms DTO directly to the hook, let it handle transformation
     updateMaterial.mutate(
-      { id, data: updateDto },
+      { id: safeId, data: updatedFormData as UpdateMaterialRequestDto },
       {
         onSuccess: () => {
           toast({ title: t("materials.updated"), description: t("materials.updated_success") });
@@ -44,11 +52,30 @@ const MaterialEdit = () => {
     );
   };
 
-  const transformedWorkspaces = (workspaces || []).map((w: any) => ({
+  const transformedWorkspaces = (workspaces || []).map((w) => ({
     id: w.id,
+    workspaceId: w.id, // Use id as workspaceId
+    workspaceCode: w.id, // Use id as workspaceCode for now
     name: w.name,
-    location: w.location || "",
-    status: w.status || "",
+    location: {
+      code: 'default',
+      name: typeof w.location === 'string' ? w.location : w.location?.name || '',
+      nameAr: typeof w.location === 'string' ? w.location : w.location?.nameAr || w.location?.name || '',
+      type: 'city' as const,
+      coordinates: (typeof w.location === 'object' && w.location.coordinates) ? {
+        latitude: w.location.coordinates.latitude,
+        longitude: w.location.coordinates.longitude
+      } : undefined,
+      parentCode: undefined,
+      population: undefined
+    },
+    description: undefined,
+    capacity: undefined,
+    contact: undefined,
+    facilities: undefined,
+    status: (w.status as 'active' | 'inactive' | 'closed') || 'active',
+    createdAt: undefined,
+    updatedAt: undefined
   }));
 
   if (isLoading) {
@@ -96,7 +123,7 @@ const MaterialEdit = () => {
         </CardHeader>
         <CardContent>
           <EnhancedMaterialForm
-            ref={(formRef) => { if (formRef) (window as any).materialFormRef = formRef; }}
+            ref={(formRef) => { if (formRef) window.materialFormRef = formRef; }}
             onSubmit={handleSubmit}
             initialData={formData}
             workspaces={transformedWorkspaces}
@@ -105,20 +132,20 @@ const MaterialEdit = () => {
           />
 
           <div className="flex justify-end gap-4 mt-6 pt-6 border-t">
-            <Button variant="outline" onClick={() => navigate("/materials")} disabled={updateMaterial.isPending}>
+            <Button variant="outline" onClick={() => navigate("/materials")} disabled={isUpdating}>
               {t("materials.cancel")}
             </Button>
             <Button
               onClick={() => {
-                const formRef = (window as any).materialFormRef;
+                const formRef = window.materialFormRef;
                 if (formRef?.getFormData) {
                   handleSubmit(formRef.getFormData());
                 }
               }}
-              disabled={updateMaterial.isPending}
+              disabled={isUpdating}
               className="bg-gradient-to-r from-terracotta-500 to-adrar-600 hover:from-terracotta-600 hover:to-adrar-700"
             >
-              {updateMaterial.isPending ? (
+              {isUpdating ? (
                 <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t("materials.updating")}</>
               ) : (
                 <><Save className="h-4 w-4 mr-2" />{t("materials.save_changes")}</>

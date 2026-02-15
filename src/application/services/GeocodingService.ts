@@ -28,6 +28,7 @@ import {
   isValidCityRegion,
   isLocationInRegion
 } from '@/utils/mauritaniaUtils';
+import { Fallback } from '@radix-ui/react-avatar';
 
 export interface GeocodingResult {
   address: string;
@@ -94,7 +95,83 @@ export interface GeocodingConfig {
   prioritizeLocal?: boolean; // Prioritize local Mauritania data (default: true)
 }
 
+// =================== EXTERNAL API RESPONSE INTERFACES ===================
+
+interface OpenStreetMapResponse {
+  place_id?: string;
+  licence?: string;
+  osm_type?: string;
+  osm_id?: string;
+  boundingbox?: string[];
+  lat: string;
+  lon: string;
+  display_name: string;
+  class?: string;
+  type?: string;
+  importance?: number;
+  address?: Record<string, string | undefined>;
+}
+
+interface GoogleGeocodingResponse {
+  status: string;
+  results?: Array<{
+    address_components?: Array<{
+      long_name: string;
+      short_name: string;
+      types: string[];
+    }>;
+    formatted_address: string;
+    geometry: {
+      location: {
+        lat: number;
+        lng: number;
+      };
+      location_type: string;
+    };
+    place_id?: string;
+    types?: string[];
+  }>;
+}
+
+interface MapboxGeocodingResponse {
+  features?: Array<{
+    id?: string;
+    type: string;
+    place_type?: string[];
+    relevance?: number;
+    properties?: Record<string, unknown>;
+    text?: string;
+    place_name?: string;
+    bbox?: number[];
+    center: [number, number];
+    geometry?: {
+      type: string;
+      coordinates: number[];
+    };
+    context?: Array<{
+      id: string;
+      text: string;
+      short_code?: string;
+    }>;
+  }>;
+}
+
 export class GeocodingService {
+  getCity(cityName: any) {
+    throw new Error('Method not implemented.');
+  }
+  getCityByCode(arg0: string) {
+    throw new Error('Method not implemented.');
+  }
+  getRegionByCode(arg0: string) {
+    throw new Error('Method not implemented.');
+  }
+  findRegionByLocation(arg0: { lat: number; lng: number; }) {
+    throw new Error('Method not implemented.');
+  }
+  getGeographicUnitByCode(arg0: string) {
+    throw new Error('Method not implemented.');
+  }
   private readonly apiKey?: string;
   private readonly provider: 'google' | 'mapbox' | 'openstreetmap';
   private readonly userAgent?: string;
@@ -111,7 +188,7 @@ export class GeocodingService {
 
   constructor(config: GeocodingConfig = {}) {
     this.provider = config.provider || 'openstreetmap';
-    this.apiKey = config.apiKey || process.env.GEOCODING_API_KEY;
+    this.apiKey = config.apiKey || (typeof window !== 'undefined' && import.meta?.env?.GEOCODING_API_KEY) || undefined;
     this.userAgent = config.userAgent || 'MauritaniaMapper/1.0 (contact@mauritania-mapper.mr)';
     this.prioritizeLocal = config.prioritizeLocal !== false; // Default to true
     
@@ -502,12 +579,15 @@ export class GeocodingService {
         throw new NetworkError(`OpenStreetMap geocoding error: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data: OpenStreetMapResponse[] = await response.json();
       if (!data || data.length === 0) return [];
 
-      return data.map((item: any) => this.formatOpenStreetMapResult(item));
+      return data.map((item: OpenStreetMapResponse) => this.formatOpenStreetMapResult(item));
     } catch (error) {
+      if (error instanceof NetworkError) throw error;
       console.error('OpenStreetMap geocoding failed:', error);
+     // TODO: Fallback localdata
+      throw new NetworkError('OpenStreetMap geocoding failed');
       return [];
     }
   }
@@ -534,7 +614,7 @@ export class GeocodingService {
         throw new NetworkError(`OpenStreetMap reverse geocoding error: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data: OpenStreetMapResponse = await response.json();
       if (!data || !data.address) return [];
 
       return [this.formatOpenStreetMapResult(data)];
@@ -563,10 +643,10 @@ export class GeocodingService {
         throw new NetworkError(`Google geocoding error: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data: GoogleGeocodingResponse = await response.json();
       if (data.status !== 'OK' || !data.results?.length) return [];
 
-      return data.results.map((result: any) => this.formatGoogleResult(result));
+      return data.results.map((result: GoogleGeocodingResponse['results'][0]) => this.formatGoogleResult(result));
     } catch (error) {
       console.error('Google geocoding failed:', error);
       return [];
@@ -590,10 +670,10 @@ export class GeocodingService {
         throw new NetworkError(`Google reverse geocoding error: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data: GoogleGeocodingResponse = await response.json();
       if (data.status !== 'OK' || !data.results?.length) return [];
 
-      return data.results.map((result: any) => this.formatGoogleResult(result));
+      return data.results.map((result: GoogleGeocodingResponse['results'][0]) => this.formatGoogleResult(result));
     } catch (error) {
       console.error('Google reverse geocoding failed:', error);
       return [];
@@ -618,10 +698,10 @@ export class GeocodingService {
         throw new NetworkError(`Mapbox geocoding error: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data: MapboxGeocodingResponse = await response.json();
       if (!data.features?.length) return [];
 
-      return data.features.map((feature: any) => this.formatMapboxResult(feature));
+      return data.features.map((feature: MapboxGeocodingResponse['features'][0]) => this.formatMapboxResult(feature));
     } catch (error) {
       console.error('Mapbox geocoding failed:', error);
       return [];
@@ -644,10 +724,10 @@ export class GeocodingService {
         throw new NetworkError(`Mapbox reverse geocoding error: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data: MapboxGeocodingResponse = await response.json();
       if (!data.features?.length) return [];
 
-      return data.features.map((feature: any) => this.formatMapboxResult(feature));
+      return data.features.map((feature: MapboxGeocodingResponse['features'][0]) => this.formatMapboxResult(feature));
     } catch (error) {
       console.error('Mapbox reverse geocoding failed:', error);
       return [];
@@ -703,9 +783,9 @@ export class GeocodingService {
     };
   }
 
-  private formatOpenStreetMapResult(item: any): GeocodingResult | ReverseGeocodingResult {
-    const components: any = {};
-    const metadata: any = {};
+  private formatOpenStreetMapResult(item: OpenStreetMapResponse): GeocodingResult | ReverseGeocodingResult {
+    const components: Record<string, unknown> = {};
+    const metadata: Record<string, unknown> = {};
     
     if (item.address) {
       components.road = item.address.road;
@@ -774,11 +854,11 @@ export class GeocodingService {
     };
   }
 
-  private formatGoogleResult(result: any): GeocodingResult | ReverseGeocodingResult {
-    const components: any = {};
-    const metadata: any = {};
+  private formatGoogleResult(result: GoogleGeocodingResponse['results'][0]): GeocodingResult | ReverseGeocodingResult {
+    const components: Record<string, unknown> = {};
+    const metadata: Record<string, unknown> = {};
     
-    result.address_components?.forEach((component: any) => {
+    result.address_components?.forEach((component) => {
       if (component.types.includes('locality')) {
         components.city = component.long_name;
       } else if (component.types.includes('administrative_area_level_1')) {
@@ -794,14 +874,15 @@ export class GeocodingService {
     });
 
     // Try to match with Mauritania data using search terms
-    if (components.city) {
+    if (components.city && typeof components.city === 'string') {
+      const cityName = components.city as string;
       const matchedCity = MAURITANIA_CITIES.find(city => 
         city.searchTerms?.some(term => 
-          term.toLowerCase().includes(components.city?.toLowerCase()) ||
-          components.city?.toLowerCase().includes(term.toLowerCase())
+          term.toLowerCase().includes(cityName.toLowerCase()) ||
+          cityName.toLowerCase().includes(term.toLowerCase())
         ) ||
-        city.name.toLowerCase() === components.city?.toLowerCase() ||
-        city.nameAr.includes(components.city)
+        city.name.toLowerCase() === cityName.toLowerCase() ||
+        city.nameAr.includes(cityName)
       );
       
       if (matchedCity) {
@@ -817,21 +898,21 @@ export class GeocodingService {
     return {
       address: result.formatted_address,
       coordinates: {
-        lat: result.geometry.location.lat,
-        lng: result.geometry.location.lng
+        lat: result.geometry?.location?.lat ?? 0,
+        lng: result.geometry?.location?.lng ?? 0
       },
-      confidence: this.mapGoogleConfidence(result.geometry.location_type),
-      type: this.mapGoogleType(result.types?.[0]),
+      confidence: this.mapGoogleConfidence(result.geometry?.location_type ?? ''),
+      type: this.mapGoogleType(result.types && result.types.length > 0 ? result.types[0] : ''),
       components,
       metadata: Object.keys(metadata).length > 0 ? metadata : undefined
     };
   }
 
-  private formatMapboxResult(feature: any): GeocodingResult | ReverseGeocodingResult {
-    const components: any = {};
-    const metadata: any = {};
+  private formatMapboxResult(feature: MapboxGeocodingResponse['features'][0]): GeocodingResult | ReverseGeocodingResult {
+    const components: Record<string, unknown> = {};
+    const metadata: Record<string, unknown> = {};
     
-    feature.context?.forEach((item: any) => {
+    feature.context?.forEach((item) => {
       if (item.id?.startsWith('place.')) {
         components.city = item.text;
       } else if (item.id?.startsWith('region.')) {
@@ -845,14 +926,15 @@ export class GeocodingService {
     });
 
     // Try to match with Mauritania data using search terms
-    if (components.city) {
+    if (components.city && typeof components.city === 'string') {
+      const cityName = components.city as string;
       const matchedCity = MAURITANIA_CITIES.find(city => 
         city.searchTerms?.some(term => 
-          term.toLowerCase().includes(components.city?.toLowerCase()) ||
-          components.city?.toLowerCase().includes(term.toLowerCase())
+          term.toLowerCase().includes(cityName.toLowerCase()) ||
+          cityName.toLowerCase().includes(term.toLowerCase())
         ) ||
-        city.name.toLowerCase() === components.city?.toLowerCase() ||
-        city.nameAr.includes(components.city)
+        city.name.toLowerCase() === cityName.toLowerCase() ||
+        city.nameAr.includes(cityName)
       );
       
       if (matchedCity) {
@@ -868,17 +950,15 @@ export class GeocodingService {
     return {
       address: feature.place_name || feature.text,
       coordinates: { 
-        lat: feature.center[1], 
-        lng: feature.center[0] 
+        lat: feature.center && feature.center.length > 1 ? feature.center[1] : 0, 
+        lng: feature.center && feature.center.length > 0 ? feature.center[0] : 0 
       },
       confidence: feature.relevance || 0.5,
-      type: this.mapMapboxType(feature.place_type?.[0]),
+      type: feature.place_type && feature.place_type.length > 0 && feature.place_type[0] ? this.mapMapboxType(feature.place_type[0]) : 'address',
       components,
       metadata: Object.keys(metadata).length > 0 ? metadata : undefined
     };
   }
-
-  // =================== HELPER METHODS ===================
 
   private calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
     const R = 6371; // Earth's radius in km
@@ -894,14 +974,14 @@ export class GeocodingService {
     return degrees * (Math.PI / 180);
   }
 
-  private calculateOpenStreetMapConfidence(item: any): number {
+  private calculateOpenStreetMapConfidence(item: OpenStreetMapResponse): number {
     if (item.importance) {
       return Math.min(1, item.importance * 1.2);
     }
     return 0.7;
   }
 
-  private mapOpenStreetMapType(item: any): 'address' | 'city' | 'region' | 'landmark' {
+  private mapOpenStreetMapType(item: OpenStreetMapResponse): 'address' | 'city' | 'region' | 'landmark' {
     if (item.address?.road) {
       return 'address';
     }

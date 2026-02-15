@@ -148,7 +148,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
                     </div>
                     <div className="flex items-center gap-1 text-xs text-gray-500">
                       <MapPin className="h-3 w-3 flex-shrink-0" />
-                      <span className="truncate">{selectedWorkspace.location}</span>
+                      <span className="truncate">{typeof selectedWorkspace.location === 'string' ? selectedWorkspace.location : selectedWorkspace.location.name}</span>
                     </div>
                   </div>
                 </div>
@@ -193,7 +193,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
                         </div>
                         <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
                           <MapPin className="h-3 w-3 flex-shrink-0" />
-                          <span className="truncate">{workspace.location}</span>
+                          <span className="truncate">{typeof workspace.location === 'string' ? workspace.location : workspace.location.name}</span>
                         </div>
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(workspace.status)}`}>
                           {getStatusLabel(workspace.status)}
@@ -253,7 +253,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
           <CardContent className="space-y-3">
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <MapPin className="h-4 w-4" />
-              <span>{selectedWorkspace.location}</span>
+              <span>{typeof selectedWorkspace.location === 'string' ? selectedWorkspace.location : selectedWorkspace.location.name}</span>
             </div>
 
             {selectedWorkspace.contact && (

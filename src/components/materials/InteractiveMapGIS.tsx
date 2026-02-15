@@ -11,6 +11,21 @@ import { MapContainer, TileLayer, Marker, Popup, Polygon, useMapEvents } from 'r
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
+// Import GeoService and Mauritania utilities
+import { GeocodingService } from '@/application/services/GeocodingService';
+import { 
+  Region, 
+  City, 
+  getMajorCities, 
+  getRegionsWithCapitals,
+  getAllCityCoordinates,
+  searchRegions,
+  searchCities,
+  getWilayaByCode,
+  getCityByCode,
+  getCitiesByWilaya
+} from '@/utils/mauritaniaUtils';
+
 // Fix default markers in Leaflet
 const DefaultIcon = L.icon({
   iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
@@ -85,21 +100,17 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
   const [activeTab, setActiveTab] = useState('location');
   const [mapLayer, setMapLayer] = useState<'osm' | 'satellite' | 'topo' | 'relief'>('osm');
 
-  // Mauritania cities for reference
-  const mauritaniaCities = [
-    { name: "Nouakchott", lat: 18.0735, lng: -15.9582, isCapital: true },
-    { name: "Nouadhibou", lat: 20.9, lng: -17.0347 },
-    { name: "Rosso", lat: 16.5167, lng: -15.8 },
-    { name: "Kaédi", lat: 16.15, lng: -13.5 },
-    { name: "Zouérat", lat: 22.75, lng: -12.4667 },
-    { name: "Kiffa", lat: 16.6167, lng: -11.4 },
-    { name: "Atar", lat: 20.5167, lng: -13.05 },
-    { name: "Aleg", lat: 17.05, lng: -13.9167 },
-    { name: "Boutilimit", lat: 17.55, lng: -14.7 },
-    { name: "Tidjikja", lat: 18.55, lng: -11.4333 },
-    { name: "Aioun", lat: 16.661879 , lng: -9.615950 },
-     { name: "Nema", lat: 16.612300 , lng: -7.260246 },
-  ];
+  // Enhanced Mauritania data using utilities
+  const mauritaniaCities = getMajorCities();
+  const regionsWithCapitals = getRegionsWithCapitals();
+  const allCityCoordinates = getAllCityCoordinates();
+
+  // GeoService instance
+  const geoService = new GeocodingService({
+    provider: 'openstreetmap',
+    userAgent: 'MauritaniaMapper/1.0 (contact@mauritania-mapper.mr)',
+    prioritizeLocal: true
+  });
 
   useEffect(() => {
     if (value) {
@@ -336,10 +347,34 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                   {mauritaniaCities.map((city, index) => (
                     <Marker key={index} position={[city.lat, city.lng]}>
                       <Popup>
-                        <strong className={city.isCapital ? "text-red-600" : "text-blue-600"}>
-                          {city.name}
-                        </strong>
-                        {city.isCapital && <div className="text-xs text-red-500">Capitale</div>}
+                        <div className="text-center">
+                          <strong className={city.isCapital ? "text-red-600" : "text-blue-600"}>
+                            {city.name}
+                          </strong>
+                          {city.isCapital && <div className="text-xs text-red-500 font-semibold">Capitale</div>}
+                          <div className="text-xs text-gray-600 mt-1">
+                            Région: {getWilayaByCode(city.parentCode)?.name || city.parentCode}
+                          </div>
+                          {city.economicImportance && (
+                            <div className="text-xs text-gray-500">
+                              Importance: {city.economicImportance}
+                            </div>
+                          )}
+                          {city.population && (
+                            <div className="text-xs text-gray-500">
+                              Population: {city.population.toLocaleString()}
+                            </div>
+                          )}
+                          {city.hasAirport && (
+                            <div className="text-xs text-green-600">🛫 Aéroport</div>
+                          )}
+                          {city.hasPort && (
+                            <div className="text-xs text-blue-600">⚓ Port</div>
+                          )}
+                          {city.hasUniversity && (
+                            <div className="text-xs text-purple-600">🎓 Université</div>
+                          )}
+                        </div>
                       </Popup>
                     </Marker>
                   ))}

@@ -7,23 +7,71 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { MaterialService } from "@/application/services/MaterialService";
-import { MaterialTransformer, CreateMaterialRequestDto, UpdateMaterialRequestDto, MaterialDTO, MaterialUIDTO } from '@/dtos/transforms';
-import { MaterialCategory } from '@/dtos/entities/MaterialDTO';
+import { MaterialTransformer, CreateMaterialRequestDto, UpdateMaterialRequestDto, MaterialUIDTO } from '@/dtos/transforms';
+import { MaterialCategory, MaterialFormDataDTO, MaterialDTO, MaterialUnit, UpdateMaterialDTO, CreateMaterialDTO } from '@/dtos/entities';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useWorkspaces } from '@/hooks/useWorkspaces';
+import { GeocodingService } from '@/application/services/GeocodingService';
+
+// Types for advanced UI features
+interface WorkspaceData {
+  id: string;
+  name: string;
+  location: {
+    name: string;
+    coordinates?: {
+      latitude: number;
+      longitude: number;
+    };
+  } | string; // Can be string or object with coordinates
+  status: string;
+  coordinatesLatitude?: number; // Add direct coordinate access
+  coordinatesLongitude?: number; // Add direct coordinate access
+}
+
+interface MaterialAnalytics {
+  totalMaterials: number;
+  totalValue: number;
+  averagePrice: number;
+  lowStockItems: number;
+  outOfStockItems: number;
+  categoryBreakdown: Record<string, number>;
+  supplierBreakdown: Record<string, number>;
+}
+
+interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+interface MaterialReport {
+  material: MaterialDTO;
+  summary: string;
+  recommendations: string[];
+  generatedAt: string;
+}
 
 export interface UseMaterialsHexResult {
-  materials: MaterialUIDTO[]; // Changed from MaterialDTO[] to MaterialUIDTO[]
+  materials: MaterialUIDTO[]; // Changed from MaterialDTO[] to MateriaDTO[]
   isLoading: boolean;
   error: string | null;
   refetch: () => void;
-  createMaterial: (data: CreateMaterialRequestDto) => void;
+  createMaterial: { 
+    mutate: (data: CreateMaterialRequestDto, options?: {
+      onSuccess?: (data: MaterialDTO) => void;
+      onError?: (error: Error) => void;
+      onSettled?: () => void;
+    }) => void; 
+    isPending: boolean; 
+  };
   updateMaterial: { mutate: (params: { id: string; data: UpdateMaterialRequestDto }) => void; isPending: boolean };
   deleteMaterial: (id: string) => void;
   isCreating: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
+  workspaces: WorkspaceData[]; // Workspace data for forms
   // Enhanced UI features
   getMaterialStockStatus: (material: MaterialUIDTO) => 'optimal' | 'low' | 'critical' | 'out_of_stock';
   getMaterialCostEfficiency: (material: MaterialUIDTO) => number;
@@ -43,6 +91,12 @@ export function useMaterialsHex(): UseMaterialsHexResult {
   const { t } = useLanguage();
   const { workspaces } = useWorkspaces();
 
+  // Initialize geocoding service for workspace enhancement
+  const geocodingService = new GeocodingService({
+    userAgent: 'MauritaniaMapper/1.0 (workspace-enhancement)',
+    prioritizeLocal: true
+  });
+
   const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
 
   const {
@@ -52,7 +106,7 @@ export function useMaterialsHex(): UseMaterialsHexResult {
     refetch
   } = useQuery({
     queryKey: ['materials'],
-    queryFn: async (): Promise<MaterialUIDTO[]> => {
+    queryFn: async (): Promise<MaterialDTO[]> => {
       try {
         const materialData = await materialService.getMaterialsForUI();
         return materialData;
@@ -65,9 +119,151 @@ export function useMaterialsHex(): UseMaterialsHexResult {
     retryDelay: 1000,
   });
 
+  // Enhanced workspaces with geocoding data
+  const {
+    data: enhancedWorkspaces = [],
+    isLoading: isLoadingWorkspaces
+  } = useQuery({
+    queryKey: ['enhanced-workspaces'],
+    queryFn: async (): Promise<WorkspaceData[]> => {
+      if (!workspaces || workspaces.length === 0) return [];
+
+      const enhancedWorkspacesPromises = workspaces.map(async (w): Promise<WorkspaceData> => {
+        try {
+          let enhancedLocation = w.location;
+
+          // If location is a GeographicUnit with coordinates but missing name, try reverse geocoding
+          if (typeof w.location === 'object' &&
+              w.location.lat && w.location.lng &&
+              (!w.location.name || w.location.name === '')) {
+
+            try {
+              const reverseResults = await geocodingService.reverseGeocode(
+                w.location.lat,
+                w.location.lng
+              );
+
+              if (reverseResults.length > 0) {
+                const bestResult = reverseResults[0];
+                enhancedLocation = {
+                  ...w.location,
+                  name: bestResult.address,
+                  nameAr: bestResult.address // Could be enhanced with Arabic translation
+                };
+              }
+            } catch (error) {
+              console.warn(`Reverse geocoding failed for workspace ${w.id}:`, error);
+            }
+          }
+
+          // If location is just a name string, try to geocode it for coordinates
+          else if (typeof w.location === 'string' && w.location.trim() !== '') {
+            try {
+              const geocodeResults = await geocodingService.geocode(w.location);
+
+              if (geocodeResults.length > 0) {
+                const bestResult = geocodeResults[0];
+                enhancedLocation = {
+                  name: w.location,
+                  nameAr: w.location, // Could be enhanced
+                  lat: bestResult.coordinates.lat,
+                  lng: bestResult.coordinates.lng,
+                  code: w.location.toLowerCase().replace(/\s+/g, '-'),
+                  population: undefined, // Could be looked up from local data
+                };
+              }
+            } catch (error) {
+              console.warn(`Geocoding failed for workspace ${w.id}:`, error);
+            }
+          }
+
+          return {
+            id: w.id,
+            name: w.name,
+            location: enhancedLocation,
+            status: w.status || 'active',
+            coordinatesLatitude: typeof enhancedLocation === 'object' && enhancedLocation.lat
+              ? enhancedLocation.lat
+              : undefined,
+            coordinatesLongitude: typeof enhancedLocation === 'object' && enhancedLocation.lng
+              ? enhancedLocation.lng
+              : undefined,
+          };
+        } catch (error) {
+          console.warn(`Failed to enhance workspace ${w.id} with geocoding:`, error);
+          // Return basic workspace data if enhancement fails
+          return {
+            id: w.id,
+            name: w.name,
+            location: w.location,
+            status: w.status || 'active',
+            coordinatesLatitude: undefined,
+            coordinatesLongitude: undefined,
+          };
+        }
+      });
+
+      return await Promise.all(enhancedWorkspacesPromises);
+    },
+    enabled: !!workspaces && workspaces.length > 0,
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes since geocoding is expensive
+  });
+
+  // Transform MaterialDTO[] to MaterialUIDTO[] for UI
+  const transformedMaterials: MaterialUIDTO[] = materials.map((material): MaterialUIDTO => ({
+    id: material.id,
+    name: material.name,
+    description: material.description,
+    category: material.category,
+    unit: material.unit,
+    quantity: material.quantity,
+    pricePerUnit: material.pricePerUnit,
+    availableQuantity: material.availableQuantity,
+    image: material.image,
+    originLocation: material.originLocation,
+    coordinatesLatitude: material.coordinatesLatitude,
+    coordinatesLongitude: material.coordinatesLongitude,
+    forme: material.forme,
+    adresse: material.adresse,
+    localisation: material.localisation,
+    isActive: material.status === 'available',
+    minimumQuantity: material.minQuantity,
+    createdAt: material.createdAt,
+    updatedAt: material.updatedAt
+  }));
+
   const createMaterialMutation = useMutation({
     mutationFn: async (data: CreateMaterialRequestDto) => {
-      return await materialService.createMaterial(data);
+      // Transform CreateMaterialRequestDto to CreateMaterialDTO
+      const createDTO: CreateMaterialDTO = {
+        name: data.name,
+        description: data.description,
+        category: data.category as MaterialCategory,
+        unit: data.unit as MaterialUnit,
+        pricePerUnit: data.unitCost || 0, // Map unitCost to pricePerUnit
+        quantity: data.currentStock || 0, // Map currentStock to quantity
+        availableQuantity: data.currentStock || 0, // Map currentStock to availableQuantity
+        workspaceId: 'default-workspace', // Default workspace, should be provided by UI
+        minQuantity: data.minStock || 0, // Map minStock to minQuantity
+        gtin: data.specifications, // Map specifications to gtin (placeholder)
+        sku: undefined,
+        ean: undefined,
+        asin: undefined,
+        image: undefined,
+        coordinatesLatitude: undefined,
+        coordinatesLongitude: undefined,
+        adresse: undefined,
+        forme: undefined,
+        localisation: undefined,
+        multilangLabels: undefined,
+        timeline: undefined,
+        supplier: data.supplierId ? {
+          name: data.supplierName || '',
+          contact: data.leadTime?.toString() || '',
+          leadTime: data.leadTime || 7
+        } : undefined
+      };
+      return await materialService.createMaterial(createDTO);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['materials'] });
@@ -80,9 +276,62 @@ export function useMaterialsHex(): UseMaterialsHexResult {
     }
   });
 
+  // Create a custom mutate function that accepts options
+  const createMaterial = {
+    mutate: (data: CreateMaterialRequestDto, options?: {
+      onSuccess?: (data: MaterialDTO) => void;
+      onError?: (error: Error) => void;
+      onSettled?: () => void;
+    }) => {
+      createMaterialMutation.mutate(data, {
+        onSuccess: (responseData) => {
+          queryClient.invalidateQueries({ queryKey: ['materials'] });
+          options?.onSuccess?.(responseData);
+        },
+        onError: (error) => {
+          console.error('Error creating material:', error);
+          options?.onError?.(error as Error);
+        },
+        onSettled: options?.onSettled,
+      });
+    },
+    isPending: createMaterialMutation.isPending,
+  };
+
   const updateMaterialMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateMaterialRequestDto }) => {
-      return await materialService.updateMaterial(id, data);
+      // Transform UpdateMaterialRequestDto to UpdateMaterialDTO
+      const updateDTO: UpdateMaterialDTO = {
+        name: data.name,
+        description: data.description,
+        category: data.category as MaterialCategory,
+        unit: data.unit as MaterialUnit,
+        quantity: data.currentStock,
+        pricePerUnit: data.unitCost,
+        availableQuantity: data.currentStock,
+        minQuantity: data.minStock,
+        supplierName: data.supplierName,
+        coordinatesLatitude: data.specifications ? undefined : undefined, // Not in transforms DTO
+        coordinatesLongitude: data.specifications ? undefined : undefined, // Not in transforms DTO
+        adresse: data.specifications ? undefined : undefined, // Not in transforms DTO
+        forme: data.specifications ? undefined : undefined, // Not in transforms DTO
+        localisation: data.specifications ? undefined : undefined, // Not in transforms DTO
+        gtin: data.specifications,
+        sku: undefined,
+        ean: undefined,
+        asin: undefined,
+        image: undefined,
+        multilangLabels: undefined,
+        timeline: undefined,
+        supplier: data.supplierId ? {
+          name: data.supplierName || '',
+          contact: data.leadTime?.toString() || '',
+          leadTime: data.leadTime || 7
+        } : undefined,
+        tags: undefined,
+        notes: undefined
+      };
+      return await materialService.updateMaterial(id, updateDTO);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['materials'] });
@@ -108,17 +357,17 @@ export function useMaterialsHex(): UseMaterialsHexResult {
   });
 
   return {
-    materials,
-    isLoading,
+    materials: transformedMaterials,
+    isLoading: isLoading || isLoadingWorkspaces,
     error: error ? String(error) : null,
     refetch,
-    createMaterial: createMaterialMutation.mutate,
+    createMaterial,
     updateMaterial: updateMaterialMutation,
     deleteMaterial: deleteMaterialMutation.mutate,
     isCreating: createMaterialMutation.isPending,
     isUpdating: updateMaterialMutation.isPending,
     isDeleting: deleteMaterialMutation.isPending,
-    workspaces: workspaces || [],
+    workspaces: enhancedWorkspaces,
   };
 }
 
@@ -126,7 +375,7 @@ export function useMaterialsByCategory(category: string) {
   const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
   return useQuery({
     queryKey: ['materials', 'category', category],
-    queryFn: () => materialService.getMaterialsByCategory(category as any),
+    queryFn: () => materialService.getMaterialsByCategory(category as MaterialCategory),
     enabled: !!category,
     staleTime: 5 * 60 * 1000,
   });
@@ -176,7 +425,7 @@ export function useAddMaterialToProjectHex() {
       queryClient.invalidateQueries({ queryKey: ['materials'] });
       toast.success('Matériel ajouté au projet');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error.message || 'Erreur lors de l\'ajout');
     }
   });
@@ -204,8 +453,39 @@ export function useMaterialHex(id: string) {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: UpdateMaterialRequestDto) => {
-      return await materialService.updateMaterial(id, data);
+    mutationFn: async ({ id, data }: { id: string; data: UpdateMaterialRequestDto }) => {
+      // Transform UpdateMaterialRequestDto to UpdateMaterialDTO
+      const updateDTO: UpdateMaterialDTO = {
+        name: data.name,
+        description: data.description,
+        category: data.category as MaterialCategory,
+        unit: data.unit as MaterialUnit,
+        quantity: data.currentStock,
+        pricePerUnit: data.unitCost,
+        availableQuantity: data.currentStock,
+        minQuantity: data.minStock,
+        supplierName: data.supplierName,
+        coordinatesLatitude: data.specifications ? undefined : undefined, // Not in transforms DTO
+        coordinatesLongitude: data.specifications ? undefined : undefined, // Not in transforms DTO
+        adresse: data.specifications ? undefined : undefined, // Not in transforms DTO
+        forme: data.specifications ? undefined : undefined, // Not in transforms DTO
+        localisation: data.specifications ? undefined : undefined, // Not in transforms DTO
+        gtin: data.specifications,
+        sku: undefined,
+        ean: undefined,
+        asin: undefined,
+        image: undefined,
+        multilangLabels: undefined,
+        timeline: undefined,
+        supplier: data.supplierId ? {
+          name: data.supplierName || '',
+          contact: data.leadTime?.toString() || '',
+          leadTime: data.leadTime || 7
+        } : undefined,
+        tags: undefined,
+        notes: undefined
+      };
+      return await materialService.updateMaterial(id, updateDTO);
     },
     onSuccess: () => {
       toast.success('Matériel mis à jour');
@@ -232,7 +512,7 @@ export function useMaterialHex(id: string) {
     isLoading,
     error,
     refetch,
-    updateMaterial: updateMutation.mutate,
+    updateMaterial: updateMutation,
     deleteMaterial: deleteMutation.mutate,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending

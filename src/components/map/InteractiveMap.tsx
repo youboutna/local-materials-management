@@ -1,20 +1,27 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import {
-  MapPin,
-  Navigation,
-  Globe,
-  Target,
-  Info,
-  Compass,
-} from "lucide-react";
-import { MapContainer, TileLayer, Marker, Popup, Polygon } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Target, MapPin, Globe, Compass, Info, Navigation } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup, Polygon } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Import GeoService and Mauritania utilities
+import { GeocodingService } from '@/application/services/GeocodingService';
+import { 
+  Region, 
+  City, 
+  getMajorCities, 
+  getRegionsWithCapitals,
+  getAllCityCoordinates,
+  searchRegions,
+  searchCities,
+  getWilayaByCode,
+  getCityByCode
+} from '@/utils/mauritaniaUtils';
 
 // Fix default markers in Leaflet - more robust approach
 const DefaultIcon = L.icon({
@@ -32,9 +39,9 @@ const DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
-type Coordinate = { lat: number; lng: number };
+export type Coordinate = { lat: number; lng: number };
 
-interface MapData {
+export interface MapData {
   center?: Coordinate;
   polygon?: Coordinate[];
   warehouseShape?: Coordinate[];
@@ -62,19 +69,20 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [mapData, setMapData] = useState<MapData>(value);
   const [address, setAddress] = useState(value?.address || "");
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [geocodingResults, setGeocodingResults] = useState<GeocodingResult[]>([]);
 
-  const mauritaniaCities = [
-    { name: "Nouakchott", lat: 18.0735, lng: -15.9582, isCapital: true },
-    { name: "Nouadhibou", lat: 20.9, lng: -17.0347 },
-    { name: "Rosso", lat: 16.5167, lng: -15.8 },
-    { name: "Kaédi", lat: 16.15, lng: -13.5 },
-    { name: "Zouérat", lat: 22.75, lng: -12.4667 },
-    { name: "Kiffa", lat: 16.6167, lng: -11.4 },
-    { name: "Atar", lat: 20.5167, lng: -13.05 },
-    { name: "Aleg", lat: 17.05, lng: -13.9167 },
-    { name: "Boutilimit", lat: 17.55, lng: -14.7 },
-    { name: "Tidjikja", lat: 18.55, lng: -11.4333 },
-  ];
+  // Enhanced Mauritania data using utilities
+  const mauritaniaCities = getMajorCities();
+  const regionsWithCapitals = getRegionsWithCapitals();
+  const allCityCoordinates = getAllCityCoordinates();
+
+  // GeoService instance
+  const geoService = new GeocodingService({
+    provider: 'openstreetmap',
+    userAgent: 'MauritaniaMapper/1.0 (contact@mauritania-mapper.mr)',
+    prioritizeLocal: true
+  });
 
   useEffect(() => {
     if (value) {
@@ -83,10 +91,39 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
   }, [value]);
 
-  const handleAddressChange = (newAddress: string) => {
+  const handleAddressChange = async (newAddress: string) => {
     setAddress(newAddress);
     const updatedData = { ...mapData, address: newAddress };
     setMapData(updatedData);
+
+    // Geocode the address using GeoService
+    if (newAddress.trim().length > 3) {
+      setIsGeocoding(true);
+      try {
+        const results = await geoService.geocode(newAddress);
+        setGeocodingResults(results);
+
+        // If we have a good result, auto-update coordinates
+        if (results.length > 0 && results[0].confidence > 0.7) {
+          const bestResult = results[0];
+          const geocodedData = {
+            ...updatedData,
+            center: { lat: bestResult.coordinates.lat, lng: bestResult.coordinates.lng }
+          };
+          setMapData(geocodedData);
+          if (onChange) {
+            onChange(geocodedData);
+          }
+        }
+      } catch (error) {
+        console.error('Geocoding failed:', error);
+      } finally {
+        setIsGeocoding(false);
+      }
+    } else {
+      setGeocodingResults([]);
+    }
+
     if (onChange) {
       onChange(updatedData);
     }
@@ -210,7 +247,20 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                         {city.name}
                       </strong>
                       {city.isCapital && (
-                        <div className="text-xs text-red-500">Capitale</div>
+                        <div className="text-xs text-red-500 font-semibold">Capitale</div>
+                      )}
+                      <div className="text-xs text-gray-600 mt-1">
+                        Région: {getWilayaByCode(city.parentCode)?.name || city.parentCode}
+                      </div>
+                      {city.economicImportance && (
+                        <div className="text-xs text-gray-500">
+                          Importance: {city.economicImportance}
+                        </div>
+                      )}
+                      {city.population && (
+                        <div className="text-xs text-gray-500">
+                          Population: {city.population.toLocaleString()}
+                        </div>
                       )}
                     </div>
                   </Popup>
