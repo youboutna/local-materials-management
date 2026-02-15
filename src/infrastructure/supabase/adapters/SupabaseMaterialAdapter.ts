@@ -1,39 +1,13 @@
-// Supabase Adapter for Material Repository
+/**
+ * Supabase Adapter for Material Repository
+ * Implements IMaterialRepository using Supabase
+ * Rule #9: DB → Entity → Repository → Service
+ */
 import { supabase } from '@/integrations/supabase/client';
 import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
 import { Material, MaterialCategory } from '@/domain/entities/Material';
 
 export class SupabaseMaterialAdapter implements IMaterialRepository {
-  private mapToEntity(data: any): Material {
-    return new Material(
-      data.id,
-      data.name,
-      data.description || '',
-      (data.category || 'other') as MaterialCategory,
-      data.unit || 'unit',
-      data.price_per_unit || 0,
-      data.available_quantity || 0,
-      data.sku || null,
-      data.ean || null,
-      data.gtin || null,
-      data.asin || null,
-      data.image || null,
-      data.coordinates_latitude && data.coordinates_longitude
-        ? { latitude: data.coordinates_latitude, longitude: data.coordinates_longitude }
-        : null,
-      data.workspace_id || null,
-      data.created_at,
-      data.updated_at,
-      // Extended fields
-      data.origin_location || null,
-      data.adresse || null,
-      data.coordinates_latitude || null,
-      data.coordinates_longitude || null,
-      data.forme || null,
-      data.localisation || null
-    );
-  }
-
   async findById(id: string): Promise<Material | null> {
     const { data, error } = await supabase
       .from('materials')
@@ -42,58 +16,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       .single();
 
     if (error || !data) return null;
-    return this.mapToEntity(data);
-  }
-
-  async getProjectMaterials(projectId: string): Promise<any[]> {
-    const { data, error } = await supabase
-      .from('project_materials')
-      .select('*')
-      .eq('project_id', projectId);
-
-    if (error) throw error;
-    return data || [];
-  }
-
-  async addMaterialToProject(projectId: string, materialId: string, quantity: number): Promise<void> {
-    const { error } = await supabase
-      .from('project_materials')
-      .insert({
-        project_id: projectId,
-        material_id: materialId,
-        quantity: quantity
-      });
-
-    if (error) throw error;
-  }
-
-  async removeMaterialFromProject(projectId: string, materialId: string): Promise<void> {
-    const { error } = await supabase
-      .from('project_materials')
-      .delete()
-      .eq('project_id', projectId)
-      .eq('material_id', materialId);
-
-    if (error) throw error;
-  }
-
-  async updateProjectMaterialQuantity(projectId: string, materialId: string, quantity: number): Promise<void> {
-    const { error } = await supabase
-      .from('project_materials')
-      .update({ quantity })
-      .eq('project_id', projectId)
-      .eq('material_id', materialId);
-
-    if (error) throw error;
-  }
-
-  async deleteByProjectId(projectId: string): Promise<void> {
-    const { error } = await supabase
-      .from('project_materials')
-      .delete()
-      .eq('project_id', projectId);
-
-    if (error) throw error;
+    return Material.fromDatabase(data as Record<string, unknown>);
   }
 
   async findAll(): Promise<Material[]> {
@@ -103,56 +26,47 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       .order('name', { ascending: true });
 
     if (error || !data) return [];
-    return data.map(d => this.mapToEntity(d));
+    return data.map(d => Material.fromDatabase(d as Record<string, unknown>));
   }
 
   async save(material: Material): Promise<void> {
-    const { error } = await supabase
-      .from('materials')
-      .insert({
-        id: material.id,
-        name: material.name,
-        description: material.description,
-        category: material.category,
-        unit: material.unit,
-        price_per_unit: material.pricePerUnit,
-        available_quantity: material.availableQuantity,
-        sku: material.sku,
-        ean: material.ean,
-        gtin: material.gtin,
-        asin: material.asin,
-        image: material.image,
-        coordinates_latitude: material.coordinates?.latitude,
-        coordinates_longitude: material.coordinates?.longitude,
-        workspace_id: material.workspaceId
-      });
-
+    const dbData = material.toDatabase();
+    const { error } = await supabase.from('materials').insert(dbData as any);
     if (error) throw new Error(`Failed to save material: ${error.message}`);
   }
 
   async update(id: string, data: Partial<Material>): Promise<void> {
-    const updateData: Record<string, any> = {};
+    const updateData: Record<string, unknown> = {};
     if (data.name !== undefined) updateData.name = data.name;
     if (data.description !== undefined) updateData.description = data.description;
     if (data.category !== undefined) updateData.category = data.category;
     if (data.unit !== undefined) updateData.unit = data.unit;
     if (data.pricePerUnit !== undefined) updateData.price_per_unit = data.pricePerUnit;
     if (data.availableQuantity !== undefined) updateData.available_quantity = data.availableQuantity;
+    if (data.sku !== undefined) updateData.sku = data.sku;
+    if (data.ean !== undefined) updateData.ean = data.ean;
+    if (data.gtin !== undefined) updateData.gtin = data.gtin;
+    if (data.asin !== undefined) updateData.asin = data.asin;
+    if (data.image !== undefined) updateData.image = data.image;
+    if (data.coordinatesLatitude !== undefined) updateData.coordinates_latitude = data.coordinatesLatitude;
+    if (data.coordinatesLongitude !== undefined) updateData.coordinates_longitude = data.coordinatesLongitude;
+    if (data.workspaceId !== undefined) updateData.workspace_id = data.workspaceId;
+    if (data.originLocation !== undefined) updateData.origin_location = data.originLocation;
+    if (data.adresse !== undefined) updateData.adresse = data.adresse;
+    if (data.forme !== undefined) updateData.forme = data.forme;
+    if (data.localisation !== undefined) updateData.localisation = data.localisation;
+    if (data.multilangLabels !== undefined) updateData.multilang_labels = data.multilangLabels;
 
     const { error } = await supabase
       .from('materials')
-      .update(updateData)
+      .update(updateData as any)
       .eq('id', id);
 
     if (error) throw new Error(`Failed to update material: ${error.message}`);
   }
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('materials')
-      .delete()
-      .eq('id', id);
-
+    const { error } = await supabase.from('materials').delete().eq('id', id);
     if (error) throw new Error(`Failed to delete material: ${error.message}`);
   }
 
@@ -164,7 +78,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       .order('name', { ascending: true });
 
     if (error || !data) return [];
-    return data.map(d => this.mapToEntity(d));
+    return data.map(d => Material.fromDatabase(d as Record<string, unknown>));
   }
 
   async findByWorkspace(workspaceId: string): Promise<Material[]> {
@@ -175,7 +89,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       .order('name', { ascending: true });
 
     if (error || !data) return [];
-    return data.map(d => this.mapToEntity(d));
+    return data.map(d => Material.fromDatabase(d as Record<string, unknown>));
   }
 
   async findBySku(sku: string): Promise<Material | null> {
@@ -186,7 +100,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       .single();
 
     if (error || !data) return null;
-    return this.mapToEntity(data);
+    return Material.fromDatabase(data as Record<string, unknown>);
   }
 
   async findByEan(ean: string): Promise<Material | null> {
@@ -197,7 +111,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       .single();
 
     if (error || !data) return null;
-    return this.mapToEntity(data);
+    return Material.fromDatabase(data as Record<string, unknown>);
   }
 
   async search(query: string): Promise<Material[]> {
@@ -208,7 +122,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       .order('name', { ascending: true });
 
     if (error || !data) return [];
-    return data.map(d => this.mapToEntity(d));
+    return data.map(d => Material.fromDatabase(d as Record<string, unknown>));
   }
 
   async findLowStock(threshold: number): Promise<Material[]> {
@@ -220,7 +134,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       .order('available_quantity', { ascending: true });
 
     if (error || !data) return [];
-    return data.map(d => this.mapToEntity(d));
+    return data.map(d => Material.fromDatabase(d as Record<string, unknown>));
   }
 
   async findOutOfStock(): Promise<Material[]> {
@@ -231,7 +145,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       .order('name', { ascending: true });
 
     if (error || !data) return [];
-    return data.map(d => this.mapToEntity(d));
+    return data.map(d => Material.fromDatabase(d as Record<string, unknown>));
   }
 
   async getTotalValue(): Promise<number> {
@@ -242,11 +156,9 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
   async getTotalValueByCategory(): Promise<Record<MaterialCategory, number>> {
     const materials = await this.findAll();
     const totals: Record<string, number> = {};
-    
     materials.forEach(m => {
       totals[m.category] = (totals[m.category] || 0) + m.calculateTotalValue();
     });
-
     return totals as Record<MaterialCategory, number>;
   }
 
@@ -259,12 +171,64 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
     const materials = await this.findAll();
     const lowStock = await this.findLowStock(10);
     const outOfStock = await this.findOutOfStock();
-
     return {
       totalItems: materials.length,
       totalValue: materials.reduce((sum, m) => sum + m.calculateTotalValue(), 0),
       lowStockCount: lowStock.length,
-      outOfStockCount: outOfStock.length
+      outOfStockCount: outOfStock.length,
     };
+  }
+
+  async getProjectMaterials(projectId: string): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('project_materials')
+      .select('*, materials(*)')
+      .eq('project_id', projectId);
+
+    if (error) throw error;
+    return (data || []).map(pm => ({
+      id: pm.id,
+      projectId: pm.project_id,
+      materialId: pm.material_id,
+      quantity: pm.quantity,
+      estimatedCost: pm.estimated_cost,
+      actualCost: pm.actual_cost,
+      procurementStatus: pm.procurement_status,
+      deliveryDate: pm.delivery_date,
+      material: pm.materials ? Material.fromDatabase(pm.materials as Record<string, unknown>) : null,
+    }));
+  }
+
+  async addMaterialToProject(projectId: string, materialId: string, quantity: number): Promise<void> {
+    const { error } = await supabase
+      .from('project_materials')
+      .insert({ project_id: projectId, material_id: materialId, quantity });
+    if (error) throw error;
+  }
+
+  async removeMaterialFromProject(projectId: string, materialId: string): Promise<void> {
+    const { error } = await supabase
+      .from('project_materials')
+      .delete()
+      .eq('project_id', projectId)
+      .eq('material_id', materialId);
+    if (error) throw error;
+  }
+
+  async updateProjectMaterialQuantity(projectId: string, materialId: string, quantity: number): Promise<void> {
+    const { error } = await supabase
+      .from('project_materials')
+      .update({ quantity })
+      .eq('project_id', projectId)
+      .eq('material_id', materialId);
+    if (error) throw error;
+  }
+
+  async deleteByProjectId(projectId: string): Promise<void> {
+    const { error } = await supabase
+      .from('project_materials')
+      .delete()
+      .eq('project_id', projectId);
+    if (error) throw error;
   }
 }
