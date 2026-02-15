@@ -1,317 +1,189 @@
-// Domain Entity: Material
-// Pure business logic without infrastructure concerns
+/**
+ * Domain Entity: Material
+ * Aligned with DB schema (materials table) per Rule #9
+ * DB → Entity → Repository → Service
+ */
 
-import { GeographicUnit } from "@/utils/mauritania";
-
-export type MaterialCategory = 
-  | 'construction' 
+export type MaterialCategory =
+  | 'construction'
   | 'building'
   | 'pierre'
-  | 'electrical' 
-  | 'plumbing' 
-  | 'finishing' 
-  | 'equipment' 
-  | 'safety' 
+  | 'electrical'
+  | 'plumbing'
+  | 'finishing'
+  | 'equipment'
+  | 'safety'
   | 'tools'
   | 'other';
-export interface MaterialImage {
-  id: string;
-  url: string;
-  materialId: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+
 export class Material {
-  // Private fields for encapsulation
-  private _id: string;
-  private _name: string;
-  private _description?: string;
-  private _quantity: number;
-  private _unit: string;
-  private _minQuantity: number;
-  private _workspaceId: string;
-  private _location: GeographicUnit;
-  private _timeline?: {
-    start: Date;
-    end: Date;
-    estimatedDuration?: number;
-  };
-  private _lastRestock: Date;
-  private _supplier?: {
-    name: string;
-    contact: string;
-    leadTime: number;
-  };
-  private _images: MaterialImage[];
-  private _pricePerUnit: number;
-  private _availableQuantity: number;
-  private _originLocation?: string;
-  private _category: MaterialCategory;
-  private _localisation: GeographicUnit[];
-  private _forme?: "polygon" | "rectangle" | "circle";
-  private _adresse?: string;
-  private _createdAt: Date;
-  private _updatedAt: Date;
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly category: MaterialCategory;
+  readonly unit: string;
+  readonly pricePerUnit: number;
+  readonly availableQuantity: number;
+  readonly sku: string | null;
+  readonly ean: string | null;
+  readonly gtin: string | null;
+  readonly asin: string | null;
+  readonly image: string | null;
+  readonly coordinatesLatitude: number | null;
+  readonly coordinatesLongitude: number | null;
+  readonly workspaceId: string | null;
+  readonly originLocation: string | null;
+  readonly adresse: string | null;
+  readonly forme: string | null;
+  readonly localisation: Record<string, unknown>[] | null;
+  readonly multilangLabels: Record<string, string> | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
 
-  constructor(
-    id: string,
-    name: string,
-    quantity: number,
-    unit: string,
-    workspaceId: string,
-    location: GeographicUnit,
-    description?: string,
-    minQuantity?: number,
-    timeline?: {
-      start: Date;
-      end: Date;
-      estimatedDuration?: number;
-    },
-    lastRestock?: Date,
-    supplier?: {
-      name: string;
-      contact: string;
-      leadTime: number;
-    },
-    images?: MaterialImage[],
-    pricePerUnit?: number,
-    availableQuantity?: number,
-    originLocation?: string,
-    category?: MaterialCategory,
-    localisation?: GeographicUnit[],
-    forme?: "polygon" | "rectangle" | "circle",
-    adresse?: string,
-    createdAt?: Date,
-    updatedAt?: Date
-  ) {
-    this._id = this.validateId(id);
-    this._name = this.validateName(name);
-    this._description = description;
-    this._quantity = this.validateQuantity(quantity);
-    this._unit = this.validateUnit(unit);
-    this._minQuantity = minQuantity || 0;
-    this._workspaceId = this.validateWorkspaceId(workspaceId);
-    this._location = location;
-    this._timeline = timeline;
-    this._lastRestock = lastRestock || new Date();
-    this._supplier = supplier;
-    this._images = images || [];
-    this._pricePerUnit = pricePerUnit || 0;
-    this._availableQuantity = availableQuantity || 0;
-    this._originLocation = originLocation;
-    this._category = category || 'other';
-    this._localisation = localisation || [];
-    this._forme = forme;
-    this._adresse = adresse;
-    this._createdAt = createdAt || new Date();
-    this._updatedAt = updatedAt || new Date();
+  private constructor(params: MaterialParams) {
+    this.id = params.id;
+    this.name = params.name;
+    this.description = params.description;
+    this.category = params.category;
+    this.unit = params.unit;
+    this.pricePerUnit = params.pricePerUnit;
+    this.availableQuantity = params.availableQuantity;
+    this.sku = params.sku;
+    this.ean = params.ean;
+    this.gtin = params.gtin;
+    this.asin = params.asin;
+    this.image = params.image;
+    this.coordinatesLatitude = params.coordinatesLatitude;
+    this.coordinatesLongitude = params.coordinatesLongitude;
+    this.workspaceId = params.workspaceId;
+    this.originLocation = params.originLocation;
+    this.adresse = params.adresse;
+    this.forme = params.forme;
+    this.localisation = params.localisation;
+    this.multilangLabels = params.multilangLabels;
+    this.createdAt = params.createdAt;
+    this.updatedAt = params.updatedAt;
   }
 
-  // Validation methods
-  set unit(value: string) { 
-    this._unit = this.validateUnit(value); 
-    this._updatedAt = new Date().toISOString();
-  }
-  
-  set pricePerUnit(value: number) { 
-    this._pricePerUnit = this.validatePricePerUnit(value); 
-    this._updatedAt = new Date().toISOString();
-  }
-  
-  set availableQuantity(value: number) { 
-    this._availableQuantity = this.validateAvailableQuantity(value); 
-    this._updatedAt = new Date().toISOString();
-  }
-
-  // ============= Business Logic Methods =============
+  // ============= Business Logic =============
   isAvailable(): boolean {
-    return this._availableQuantity > 0;
+    return this.availableQuantity > 0;
   }
 
   isLowStock(threshold: number = 10): boolean {
-    return this._availableQuantity <= threshold;
+    return this.availableQuantity <= threshold && this.availableQuantity > 0;
+  }
+
+  isOutOfStock(): boolean {
+    return this.availableQuantity <= 0;
   }
 
   calculateTotalValue(): number {
-    return this._availableQuantity * this._pricePerUnit;
+    return this.availableQuantity * this.pricePerUnit;
   }
 
-  // ============= Immutability Methods =============
-  withPricePerUnit(newPrice: number): Material {
-    return new Material(
-      this._id,
-      this._name,
-      this._description,
-      this._category,
-      this._unit,
-      this.validatePricePerUnit(newPrice),
-      this._availableQuantity,
-      this._sku,
-      this._ean,
-      this._gtin,
-      this._asin,
-      this._image,
-      this._coordinates,
-      this._workspaceId,
-      this._createdAt,
-      new Date().toISOString(),
-      this._originLocation,
-      this._adresse,
-      this._coordinatesLatitude,
-      this._coordinatesLongitude,
-      this._forme,
-      this._localisation
-    );
+  hasCoordinates(): boolean {
+    return this.coordinatesLatitude !== null && this.coordinatesLongitude !== null;
   }
 
-  withAvailableQuantity(newQuantity: number): Material {
-    return new Material(
-      this._id,
-      this._name,
-      this._description,
-      this._category,
-      this._unit,
-      this._pricePerUnit,
-      this.validateAvailableQuantity(newQuantity),
-      this._sku,
-      this._ean,
-      this._gtin,
-      this._asin,
-      this._image,
-      this._coordinates,
-      this._workspaceId,
-      this._createdAt,
-      new Date().toISOString(),
-      this._originLocation,
-      this._adresse,
-      this._coordinatesLatitude,
-      this._coordinatesLongitude,
-      this._forme,
-      this._localisation
-    );
+  // ============= Validation =============
+  static validate(params: Partial<MaterialParams>): string[] {
+    const errors: string[] = [];
+    if (!params.name?.trim()) errors.push('Material name is required');
+    if (!params.category) errors.push('Material category is required');
+    if (!params.unit?.trim()) errors.push('Material unit is required');
+    if (params.pricePerUnit !== undefined && params.pricePerUnit < 0) {
+      errors.push('Price per unit must be non-negative');
+    }
+    if (params.availableQuantity !== undefined && params.availableQuantity < 0) {
+      errors.push('Available quantity must be non-negative');
+    }
+    return errors;
   }
 
-  // ============= Factory Methods =============
-  static create(params: {
-    id: string;
-    name: string;
-    description?: string;
-    category?: MaterialCategory;
-    unit?: string;
-    pricePerUnit?: number;
-    availableQuantity?: number;
-    workspaceId?: string;
-  }): Material {
-    return new Material(
-      params.id,
-      params.name,
-      params.description || '',
-      params.category || 'other',
-      params.unit || 'unit',
-      params.pricePerUnit || 0,
-      params.availableQuantity || 0,
-      null, // sku
-      null, // ean
-      null, // gtin
-      null, // asin
-      null, // image
-      null, // coordinates
-      params.workspaceId || null,
-      new Date().toISOString(),
-      new Date().toISOString(),
-      null, // originLocation
-      null, // adresse
-      null, // coordinatesLatitude
-      null, // coordinatesLongitude
-      null, // forme
-      null  // localisation
-    );
+  // ============= Factory =============
+  static create(params: MaterialParams): Material {
+    const errors = Material.validate(params);
+    if (errors.length > 0) {
+      throw new Error(`Material validation failed: ${errors.join(', ')}`);
+    }
+    return new Material(params);
   }
 
-  // ============= Data Transformation Methods =============
-  toPlainObject(): Record<string, unknown> {
+  static fromDatabase(row: Record<string, unknown>): Material {
+    return new Material({
+      id: row.id as string,
+      name: row.name as string,
+      description: (row.description as string) || '',
+      category: (row.category as MaterialCategory) || 'other',
+      unit: (row.unit as string) || 'unit',
+      pricePerUnit: Number(row.price_per_unit) || 0,
+      availableQuantity: Number(row.available_quantity) || 0,
+      sku: (row.sku as string) || null,
+      ean: (row.ean as string) || null,
+      gtin: (row.gtin as string) || null,
+      asin: (row.asin as string) || null,
+      image: (row.image as string) || null,
+      coordinatesLatitude: row.coordinates_latitude != null ? Number(row.coordinates_latitude) : null,
+      coordinatesLongitude: row.coordinates_longitude != null ? Number(row.coordinates_longitude) : null,
+      workspaceId: (row.workspace_id as string) || null,
+      originLocation: (row.origin_location as string) || null,
+      adresse: row.adresse != null ? (typeof row.adresse === 'string' ? row.adresse : JSON.stringify(row.adresse)) : null,
+      forme: (row.forme as string) || null,
+      localisation: Array.isArray(row.localisation) ? row.localisation : (row.localisation ? [row.localisation] : null),
+      multilangLabels: (row.multilang_labels as Record<string, string>) || null,
+      createdAt: (row.created_at as string) || new Date().toISOString(),
+      updatedAt: (row.updated_at as string) || new Date().toISOString(),
+    });
+  }
+
+  toDatabase(): Record<string, unknown> {
     return {
-      id: this._id,
-      name: this._name,
-      description: this._description,
-      category: this._category,
-      unit: this._unit,
-      price_per_unit: this._pricePerUnit,
-      available_quantity: this._availableQuantity,
-      sku: this._sku,
-      ean: this._ean,
-      gtin: this._gtin,
-      asin: this._asin,
-      image: this._image,
-      coordinates: this._coordinates,
-      workspace_id: this._workspaceId,
-      created_at: this._createdAt,
-      updated_at: this._updatedAt,
-      origin_location: this._originLocation,
-      adresse: this._adresse,
-      coordinates_latitude: this._coordinatesLatitude,
-      coordinates_longitude: this._coordinatesLongitude,
-      forme: this._forme,
-      localisation: this._localisation
+      id: this.id,
+      name: this.name,
+      description: this.description,
+      category: this.category,
+      unit: this.unit,
+      price_per_unit: this.pricePerUnit,
+      available_quantity: this.availableQuantity,
+      sku: this.sku,
+      ean: this.ean,
+      gtin: this.gtin,
+      asin: this.asin,
+      image: this.image,
+      coordinates_latitude: this.coordinatesLatitude,
+      coordinates_longitude: this.coordinatesLongitude,
+      workspace_id: this.workspaceId,
+      origin_location: this.originLocation,
+      adresse: this.adresse,
+      forme: this.forme,
+      localisation: this.localisation,
+      multilang_labels: this.multilangLabels,
     };
   }
+}
 
-  // ============= Validation Methods =============
-  private validateId(id: string): string {
-    if (!id || id.trim().length === 0) {
-      throw new Error('Material ID is required');
-    }
-    return id.trim();
-  }
-
-  private validateName(name: string): string {
-    if (!name || name.trim().length === 0) {
-      throw new Error('Material name is required');
-    }
-    if (name.length > 200) {
-      throw new Error('Material name must be less than 200 characters');
-    }
-    return name.trim();
-  }
-
-  private validateCategory(category: MaterialCategory): MaterialCategory {
-    const validCategories: MaterialCategory[] = [
-      'construction', 'building', 'pierre', 'electrical', 'plumbing', 'finishing', 'equipment', 'safety', 'tools', 'other'
-    ];
-    
-    // Accept both lowercase and capitalized versions
-    const normalizedCategory = category.toLowerCase() as MaterialCategory;
-    
-    if (!validCategories.includes(normalizedCategory)) {
-      throw new Error(`Invalid material category: ${category}`);
-    }
-    return normalizedCategory;
-  }
-
-  private validateUnit(unit: string): string {
-    if (!unit || unit.trim().length === 0) {
-      throw new Error('Material unit is required');
-    }
-    return unit.trim();
-  }
-
-  private validatePricePerUnit(price: number): number {
-    if (price < 0) {
-      throw new Error('Price per unit must be positive');
-    }
-    if (price > 10000000) {
-      throw new Error('Price per unit seems too high');
-    }
-    return price;
-  }
-
-  private validateAvailableQuantity(quantity: number): number {
-    if (quantity < 0) {
-      throw new Error('Available quantity must be positive');
-    }
-    if (quantity > 10000000) {
-      throw new Error('Available quantity seems too high');
-    }
-    return quantity;
-  }
+export interface MaterialParams {
+  id: string;
+  name: string;
+  description: string;
+  category: MaterialCategory;
+  unit: string;
+  pricePerUnit: number;
+  availableQuantity: number;
+  sku: string | null;
+  ean: string | null;
+  gtin: string | null;
+  asin: string | null;
+  image: string | null;
+  coordinatesLatitude: number | null;
+  coordinatesLongitude: number | null;
+  workspaceId: string | null;
+  originLocation: string | null;
+  adresse: string | null;
+  forme: string | null;
+  localisation: Record<string, unknown>[] | null;
+  multilangLabels: Record<string, string> | null;
+  createdAt: string;
+  updatedAt: string;
 }
