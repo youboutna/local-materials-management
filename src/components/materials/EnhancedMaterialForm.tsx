@@ -19,32 +19,27 @@ import { toast } from 'sonner';
 
 // Hexagonal Architecture imports
 import { useMaterialsHex, useSuppliersHex, useWorkspacesHex } from '@/hooks/hexagonal';
-import { MaterialTransformer, CreateMaterialRequestDto, UpdateMaterialRequestDto, MaterialDTO } from '@/dtos/transforms';
-import { MaterialFormDataDTO, MaterialUnit, MaterialDTO as EntityMaterialDTO } from '@/dtos/entities/MaterialDTO';
-import { GeocodingService, GeocodingResult, ReverseGeocodingResult } from '@/application/services/GeocodingService';
-import { WorkspaceDTO } from '@/dtos/entities/WorkspaceDTO';
+import { useLocationHex } from '@/hooks/hexagonal/useLocationHex';
+import { MaterialTransformer } from '@/dtos/transforms/MaterialTransformer';
+import {
+  MaterialDTO,
+  CreateMaterialDTO,
+  UpdateMaterialDTO,
+  MaterialFilterDTO,
+  MaterialCategory,
+  MaterialFormDataDTO,
+  MaterialUnit
+} from '@/dtos/entities/MaterialDTO';
 
-// Import Mauritania utilities for enhanced location handling
-import { 
-  searchRegions, 
-  searchCities, 
-  getWilayaByCode,
-  getCityByCode,
-  getCitiesByWilaya,
-  getWilayaCapital,
-  getMajorCities,
-  getRegionsWithCapitals,
-  findRegionByLocation,
-  isValidRegionCode,
-  isValidCityCode,
-  getCityCoordinates
-} from '@/utils/mauritaniaUtils';
-
-// Import types directly from mauritania
+// Location/Geocoding Service (to be created)
 import type { Region, City } from '@/utils/mauritania';
+import { WorkspaceDTO, SupplierDTO, LocationDTO } from '@/dtos';
+import { CreateMaterialRequestDto } from '@/dtos/transforms';
+import MaterialDocuments from './MaterialDocuments';
+import UnifiedLocationSelector from '@/components/location/UnifiedLocationSelector';
 
 // Create type alias
-type MauritaniaLocation = Region | City;
+type MauritaniaLocation = Location ;
 
 interface FormRef {
   submit: () => void;
@@ -83,13 +78,15 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
   // Hexagonal Architecture hooks
   const { createMaterial, updateMaterial } = useMaterialsHex();
   const { workspaces: hexagonalWorkspaces, createWorkspace } = useWorkspacesHex();
+  const { getLocationByCode } = useLocationHex();
 
-  // Enhanced geocoding service with Mauritania focus
-  const geoService = useMemo(() => new GeocodingService({
-    provider: 'openstreetmap',
-    userAgent: 'MauritaniaMapper/1.0 (contact@mauritania-mapper.mr)',
-    prioritizeLocal: true
-  }), []);
+  // Location auto-fill hook using GeocodingService
+  const {
+    handleMapClick: autoFillMapClick,
+    geocodeAddress,
+    searchMauritaniaLocations,
+    isLoading: locationAutoFillLoading
+  } = useLocationAutoFill();
 
   // Use hexagonal workspaces if available, otherwise use prop workspaces
   const availableWorkspaces = hexagonalWorkspaces.length > 0 ? hexagonalWorkspaces : workspaces;
@@ -121,19 +118,14 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
     ...initialData
   });
 
-  const [selectedCategory, setSelectedCategory] = useState(initialData?.category || '');
-  const [selectedSubcategory, setSelectedSubcategory] = useState(initialData?.subcategory || '');
   const [activeTab, setActiveTab] = useState('basic');
   const [mapData, setMapData] = useState<MapData>({});
   const [address, setAddress] = useState(initialData?.adresse || '');
-  const [geocodingResults, setGeocodingResults] = useState<GeocodingResult[]>([]);
-  const [isGeocoding, setIsGeocoding] = useState(false);
-  const [locationSuggestions, setLocationSuggestions] = useState<(Region | City)[]>([]);
-
-  // Enhanced Mauritania location state
-  const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
-  const [selectedCity, setSelectedCity] = useState<City | null>(null);
-  const [availableCities, setAvailableCities] = useState<City[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState<LocationDTO | null>(null);
+  const [selectedCity, setSelectedCity] = useState<LocationDTO | null>(null);
+  const [isProcessingLocation, setIsProcessingLocation] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>(initialData?.category || 'construction');
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>(initialData?.subcategory || '');
 
   const handleChange = useCallback((field: string, value: string | number | boolean | Date | Array<{ lat: number; lng: number; address?: string; type?: string; confidence?: number }> | Record<string, string> | { name: string; contact: string; leadTime: number }) => {
     setFormData(prev => ({
@@ -142,116 +134,40 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
     }));
   }, []);
 
-  // Geocoding functions using GeocodingService
-  const handleAddressChange = useCallback(async (newAddress: string) => {
-    setAddress(newAddress);
-    handleChange('adresse', newAddress);
+  // Geocoding functions using abstracted location service
+  const handleGeocodeAddress = useCallback(async (address: string) => {
+    const result = await geocodeAddress(address);
+    if (result && result.length > 0) {
+      const bestResult = result[0];
+      setFormData(prev => ({
+        ...prev,
+        coordinatesLatitude: bestResult.coordinates.lat,
+        coordinatesLongitude: bestResult.coordinates.lng,
+        localisation: [{
+          lat: bestResult.coordinates.lat,
+          lng: bestResult.coordinates.lng,
+          address: bestResult.address,
+          type: 'point' as const,
+          confidence: bestResult.confidence
+        }]
+      }));
 
-    // Geocode the address if it's not empty and has enough characters
-    if (newAddress.trim().length > 3) {
-      setIsGeocoding(true);
-      try {
-        const results = await geoService.geocode(newAddress);
-        setGeocodingResults(results);
-
-        // If we have a good result, update coordinates
-        if (results.length > 0 && results[0].confidence > 0.8) {
-          const bestResult = results[0];
-          setFormData(prev => ({
-            ...prev,
-            coordinatesLatitude: bestResult.coordinates.lat,
-            coordinatesLongitude: bestResult.coordinates.lng,
-            localisation: [{
-              lat: bestResult.coordinates.lat,
-              lng: bestResult.coordinates.lng,
-              address: bestResult.address,
-              type: 'point' as const, // Map geocoding type to CoordinatePoint type
-              confidence: bestResult.confidence
-            }]
-          }));
-
-          // Update map data
-          setMapData({
-            center: bestResult.coordinates,
-            address: bestResult.address
-          });
-        }
-      } catch (error) {
-        console.error('Geocoding failed:', error);
-        toast.error('Erreur lors de la géolocalisation de l\'adresse');
-      } finally {
-        setIsGeocoding(false);
-      }
-    } else {
-      setGeocodingResults([]);
+      setMapData({
+        center: { lat: bestResult.coordinates.lat, lng: bestResult.coordinates.lng },
+        address: bestResult.address
+      });
     }
-  }, [handleChange, geoService]);
+  }, [geocodeAddress]);
 
-  const handleGeocodingResultSelect = useCallback((result: GeocodingResult) => {
-    setAddress(result.address);
-    handleChange('adresse', result.address);
-
-    setFormData(prev => ({
-      ...prev,
-      coordinatesLatitude: result.coordinates.lat,
-      coordinatesLongitude: result.coordinates.lng,
-      localisation: [{
-        lat: result.coordinates.lat,
-        lng: result.coordinates.lng,
-        address: result.address,
-        type: 'point' as const, // Map geocoding type to CoordinatePoint type
-        confidence: result.confidence
-      }]
-    }));
-
-    setMapData({
-      center: result.coordinates,
-      address: result.address
-    });
-
-    setGeocodingResults([]);
-  }, [handleChange]);
-
-  const handleReverseGeocode = useCallback(async (lat: number, lng: number) => {
-    try {
-      const results = await geoService.reverseGeocode(lat, lng);
-      if (results.length > 0) {
-        const bestResult = results[0];
-        setAddress(bestResult.address);
-        handleChange('adresse', bestResult.address);
-      }
-    } catch (error) {
-      console.error('Reverse geocoding failed:', error);
-    }
-  }, [handleChange, geoService]);
-
-  const handleLocationSearch = useCallback(async (query: string) => {
-    if (query.length > 2) {
-      try {
-        const suggestions = await geoService.searchMauritaniaLocations(query);
-        setLocationSuggestions(suggestions);
-      } catch (error) {
-        console.error('Location search failed:', error);
-      }
-    } else {
-      setLocationSuggestions([]);
-    }
-  }, [geoService]);
-
-  // Enhanced Mauritania location functions
+  // Enhanced Mauritania location functions using abstracted service
   const handleRegionSelect = useCallback((region: Region) => {
     setSelectedRegion(region);
-    setSelectedCity(null);
-    
-    // Get cities in this region
-    const citiesInRegion = getCitiesByWilaya(region.code);
-    setAvailableCities(citiesInRegion);
-    
+
     // Update address with region name
     const regionAddress = region.name;
     setAddress(regionAddress);
     handleChange('adresse', regionAddress);
-    
+
     // Update map to region center
     setMapData({
       center: { lat: region.lat, lng: region.lng },
@@ -261,15 +177,16 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
 
   const handleCitySelect = useCallback((city: City) => {
     setSelectedCity(city);
-    
+
     // Update address with full location
-    const cityAddress = `${city.name}, ${getWilayaByCode(city.parentCode)?.name || city.parentCode}`;
+    const cityAddress = `${city.name}, ${selectedRegion?.name || city.parentCode}`;
     setAddress(cityAddress);
     handleChange('adresse', cityAddress);
-    
-    // Update coordinates from city
-    const cityCoords = getCityCoordinates(city.code);
-    if (cityCoords) {
+
+    // Update coordinates from city using the location service
+    // For now, cities have fixed coordinates - this could be enhanced
+    const cityCoords = { lat: city.lat || 0, lng: city.lng || 0 };
+    if (cityCoords.lat && cityCoords.lng) {
       setFormData(prev => ({
         ...prev,
         coordinatesLatitude: cityCoords.lat,
@@ -282,26 +199,14 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
           confidence: 1.0
         }]
       }));
-      
+
       // Update map
       setMapData({
         center: cityCoords,
         address: cityAddress
       });
-      // Update map data if coordinates or location data exists
-      if (initialData!.coordinatesLatitude && initialData!.coordinatesLongitude) {
-        setMapData({
-          center: {
-            lat: initialData!.coordinatesLatitude,
-            lng: initialData!.coordinatesLongitude
-          },
-          address: initialData!.adresse || '',
-          polygon: Array.isArray(initialData!.localisation) ? initialData!.localisation : [],
-          shapeType: initialData!.forme as 'polygon' | 'rectangle' | 'circle' | 'diamond' | undefined
-        });
-      }
     }
-  }, [initialData, handleChange]);
+  }, [selectedRegion, handleChange]);
 
   // Expose submit method to parent via ref
   useImperativeHandle(ref, () => ({
@@ -376,9 +281,75 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
     console.log('Updated form data with localisation:', localisation, 'and forme:', mapData.shapeType);
   };
 
-  const handleWorkspaceLocationChange = (workspace: WorkspaceDTO | SimpleWorkspace) => {
+  // Enhanced map click handler using LocationAutoFill hook
+  const handleMapClick = useCallback(async (coordinates: { lat: number; lng: number }) => {
+    try {
+      setIsProcessingLocation(true);
+
+      // Use the LocationAutoFill hook's map click handler
+      const locationData = await autoFillMapClick(coordinates);
+
+      if (locationData) {
+        // Update form data with the auto-filled location data
+        setFormData(prev => ({
+          ...prev,
+          adresse: locationData.address,
+          coordinatesLatitude: locationData.coordinates?.lat,
+          coordinatesLongitude: locationData.coordinates?.lng,
+          localisation: locationData.coordinates ? [{
+            lat: locationData.coordinates.lat,
+            lng: locationData.coordinates.lng,
+            address: locationData.address,
+            type: 'point' as const,
+            confidence: locationData.confidence
+          }] : []
+        }));
+
+        // Update region and city state for UI
+        setSelectedRegion(locationData.region || null);
+        setSelectedCity(locationData.city || null);
+
+        // Update map data
+        setMapData({
+          center: locationData.coordinates,
+          address: locationData.address
+        });
+      }
+
+    } catch (error) {
+      console.error('Map click processing failed:', error);
+
+      // Fallback: just set coordinates without address
+      const fallbackAddress = `📍 Lat: ${coordinates.lat.toFixed(6)}, Lng: ${coordinates.lng.toFixed(6)}`;
+      setFormData(prev => ({
+        ...prev,
+        coordinatesLatitude: coordinates.lat,
+        coordinatesLongitude: coordinates.lng,
+        localisation: [{
+          lat: coordinates.lat,
+          lng: coordinates.lng,
+          address: fallbackAddress,
+          type: 'point' as const,
+          confidence: 0.5
+        }]
+      }));
+
+      setMapData({
+        center: coordinates,
+        address: fallbackAddress
+      });
+
+      toast.warning('⚠️ Coordonnées mises à jour, mais impossible de trouver l\'adresse automatiquement', {
+        duration: 4000
+      });
+    } finally {
+      setIsProcessingLocation(false);
+    }
+  }, [autoFillMapClick]);
+
+  const handleWorkspaceLocationChange = async (workspace: WorkspaceDTO | SimpleWorkspace) => {
     console.log('Workspace selected, focusing map on:', workspace);
-    
+
     // Parse coordinates from workspace location if it contains coordinates
     let coordinates: { lat: number; lng: number } | undefined = undefined;
     if (workspace.location) {
@@ -391,12 +362,9 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
             lng: parseFloat(coordMatch[2])
           };
         } else {
-          const result = geoService.findLocationBySearchTerm(workspace.name);
-          if (result) {
-            coordinates = {
-              lat: result[0].coordinates.lat,
-              lng: result[0].coordinates.lng
-            };
+          const result = await geocodeAddress(workspace.name);
+          if (result?.coordinates) {
+            coordinates = result.coordinates;
           }
         }
       } else if (workspace.location.coordinates) {
@@ -414,7 +382,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
       center: coordinates,
       address: `${workspace.name} - ${typeof workspace.location === 'string' ? workspace.location : workspace.location.name}`
     };
-    
+
     setMapData(newMapData);
     handleMapChange(newMapData);
   };
@@ -455,7 +423,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
         updateMaterial.mutate({ id: materialId, data: updateDTO });
       } else {
         // Create new material
-        createMaterial(formDataDTO as CreateMaterialRequestDto);
+        createMaterial.mutate(formDataDTO as CreateMaterialRequestDto);
       }
 
       // Call original onSubmit callback for backward compatibility
@@ -772,54 +740,72 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
             </CardContent>
           </Card>
 
-          {/* Interactive Map GIS */}
-          <InteractiveMapGIS
-            value={getMapData()}
-            onChange={handleMapChange}
-            className="border-l-4 border-l-primary shadow-lg"
-          />
+          {/* Unified Location Selector */}
+          <UnifiedLocationSelector
+            value={{
+              address: formData.adresse,
+              latitude: formData.coordinatesLatitude,
+              longitude: formData.coordinatesLongitude,
+              regionCode: selectedRegion?.code,
+              cityCode: selectedCity?.code,
+              locationData: undefined // Could be populated if needed
+            }}
+            onChange={(location) => {
+              setFormData(prev => ({
+                ...prev,
+                adresse: location.address,
+                coordinatesLatitude: location.latitude,
+                coordinatesLongitude: location.longitude,
+                localisation: location.latitude && location.longitude ? [{
+                  lat: location.latitude,
+                  lng: location.longitude,
+                  address: location.address || `Lat: ${location.latitude}, Lng: ${location.longitude}`,
+                  type: 'point' as const,
+                  confidence: 0.9
+                }] : prev.localisation,
+                forme: location.latitude && location.longitude ? 'point' : prev.forme
+              }));
 
-          {/* Location Data Display */}
-          {(formData.localisation && formData.localisation.length > 0) && (
-            <Card className="border-l-4 border-l-success bg-gradient-to-r from-success/5 to-success/10 shadow-lg">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2 text-success-foreground">
-                  <Target className="h-4 w-4 text-success" />
-                  Données de géolocalisation
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-background/60 border border-border/50 p-3 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Pentagon className="h-3 w-3 text-success" />
-                      <span className="text-xs font-medium text-muted-foreground">Type de forme</span>
-                    </div>
-                    <Badge variant="secondary" className="capitalize">
-                      {formData.forme || 'Non définie'}
-                    </Badge>
-                  </div>
-                  <div className="bg-background/60 border border-border/50 p-3 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <MapPin className="h-3 w-3 text-success" />
-                      <span className="text-xs font-medium text-muted-foreground">Points de coordonnées</span>
-                    </div>
-                    <span className="text-sm font-semibold text-foreground">{formData.localisation.length}</span>
-                  </div>
-                </div>
-                <details className="mt-4">
-                  <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                    Voir les coordonnées détaillées
-                  </summary>
-                  <div className="mt-2 max-h-32 overflow-y-auto bg-muted/30 border border-border/50 p-3 rounded-lg">
-                    <pre className="text-xs text-muted-foreground font-mono">
-                      {JSON.stringify(formData.localisation, null, 2)}
-                    </pre>
-                  </div>
-                </details>
-              </CardContent>
-            </Card>
-          )}
+              // Update region and city state for UI using LocationService
+              const updateLocationState = async () => {
+                if (location.locationData) {
+                  if (location.locationData.type === 'region') {
+                    try {
+                      const regionData = await getLocationByCode(location.locationData.code, 'region');
+                      setSelectedRegion(regionData);
+                    } catch (error) {
+                      console.error('Error fetching region data:', error);
+                      setSelectedRegion(null);
+                    }
+                  } else {
+                    setSelectedRegion(null);
+                  }
+
+                  if (location.locationData.type === 'city') {
+                    try {
+                      const cityData = await getLocationByCode(location.locationData.code, 'city');
+                      setSelectedCity(cityData);
+                    } catch (error) {
+                      console.error('Error fetching city data:', error);
+                      setSelectedCity(null);
+                    }
+                  } else {
+                    setSelectedCity(null);
+                  }
+                } else {
+                  setSelectedRegion(null);
+                  setSelectedCity(null);
+                }
+              };
+
+              updateLocationState();
+            }}
+            placeholder="Rechercher une région, ville ou localité pour le matériau..."
+            filter="all"
+            showCoordinates={true}
+            showGPS={true}
+            allowManualEntry={true}
+          />
         </TabsContent>
 
         <TabsContent value="quantities" className="space-y-6">

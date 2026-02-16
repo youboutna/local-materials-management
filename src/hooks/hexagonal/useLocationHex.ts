@@ -4,21 +4,13 @@
  * UI Component → Hook → Service → Domain ← Infrastructure
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 // Import DTOs following Rule #4
 import { LocationDTO } from '@/dtos/shared';
-import { GeographicUnit, Region, City } from '@/utils/mauritania';
-
-// Import services (application layer)
-import { LocationService } from '@/application/services/LocationService';
-
-// Import repository factory for dependency injection
-import { RepositoryFactory } from '@/infrastructure/repository/RepositoryFactory';
-
-// Import utilities
+import { GeographicUnit, Region, City, MAURITANIA_CITIES } from '@/utils/mauritania';
 import { 
   searchRegions, 
   searchCities, 
@@ -27,38 +19,70 @@ import {
   getCityByCode,
   isValidRegionCode,
   isValidCityCode,
+  isValidCityRegion,
+  isLocationInRegion,
   findRegionByLocation
 } from '@/utils/mauritaniaUtils';
+
+// Import services (application layer)
+import { LocationService } from '@/application/services/LocationService';
+import { GeocodingService } from '@/application/services/GeocodingService';
+
+// Import repository factory for dependency injection
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+
+// Interface for geocoding search results
+interface GeocodingSearchResult {
+  code?: string;
+  name: string;
+  nameAr: string;
+  lat?: number;
+  lng?: number;
+  parentCode?: string;
+  economicImportance?: string;
+  population?: number;
+}
 
 interface UseLocationHexResult {
   // Search functionality
   searchLocations: (query: string, filters?: {
-    type?: 'all' | 'regions' | 'cities';
+    type?: 'all' | 'regions' | 'cities' | 'localite' | 'wilaya' | 'moughataa' | 'commune' | 'jiha';
     excludeCodes?: string[];
     maxResults?: number;
   }) => Promise<LocationDTO[]>;
   
   // Location validation
-  validateLocationCode: (code: string, type: 'region' | 'city') => boolean;
-  getLocationByCode: (code: string, type: 'region' | 'city') => LocationDTO | null;
+  validateLocationCode: (code: string, type?: 'region' | 'city' | 'localite' | 'wilaya' | 'moughataa' | 'commune' | 'jiha') => boolean;
+  getLocationByCode: (code: string, type?: 'region' | 'city' | 'localite' | 'wilaya' | 'moughataa' | 'commune' | 'jiha') => Promise<LocationDTO | null>;
   
   // Region/City relationships
   getCitiesInRegion: (regionCode: string) => Promise<LocationDTO[]>;
   getRegionForCity: (cityCode: string) => Promise<LocationDTO | null>;
   
-  // Geocoding
+  // City-specific methods
+  getMajorCities: () => Promise<LocationDTO[]>;
+  getCitiesByPopulation: (minPopulation?: number) => Promise<LocationDTO[]>;
+  findNearestCity: (latitude: number, longitude: number, maxDistanceKm?: number) => Promise<LocationDTO | null>;
+  findLocationBySearchTerm: (term: string) => Promise<LocationDTO[]>;
+  
+  // Geocoding methods
   reverseGeocode: (latitude: number, longitude: number) => Promise<LocationDTO | null>;
   geocode: (address: string) => Promise<LocationDTO | null>;
   
+  // Location type methods
+  getLocationsByType: (type: 'region' | 'city' | 'localite' | 'wilaya' | 'moughataa' | 'commune' | 'jiha') => Promise<LocationDTO[]>;
+  getAllLocations: () => Promise<LocationDTO[]>;
+  
   // Location data
-  allRegions: Region[] | undefined;
-  allCities: City[] | undefined;
+  allRegions: LocationDTO[] | undefined;
+  allCities: LocationDTO[] | undefined;
+  allLocations: LocationDTO[] | undefined;
   isLoading: boolean;
   error: string | null;
   
   // Mutations
   createLocation: (location: Omit<LocationDTO, 'id'>) => Promise<LocationDTO>;
-  updateLocation: (id: string, location: Partial<LocationDTO>) => Promise<LocationDTO>;
+  updateLocation: (params: { id: string; location: Partial<LocationDTO> }) => Promise<LocationDTO>;
   deleteLocation: (id: string) => Promise<void>;
 }
 
@@ -67,7 +91,19 @@ interface UseLocationHexResult {
  * Follows PROMPTS.md Rule #1: Arrow Flow Architecture
  */
 export function useLocationHex(): UseLocationHexResult {
-  const locationService = new LocationService(RepositoryFactory.getLocationRepository());
+  // Memoize services to prevent recreation on every render
+  const locationService = useMemo(() => 
+    new LocationService(RepositoryFactory.getLocationRepository()), 
+    []
+  );
+
+  const geocodingService = useMemo(() => 
+    new GeocodingService({
+      userAgent: 'MauritaniaMapper/1.0 (location-hex-hook)',
+      prioritizeLocal: true
+    }), 
+    []
+  );
 
   // Query all regions and cities
   const { data: allRegions, isLoading: regionsLoading } = useQuery({
@@ -82,128 +118,106 @@ export function useLocationHex(): UseLocationHexResult {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Search locations
+  const { data: allLocations, isLoading: locationsLoading } = useQuery({
+    queryKey: ['locations', 'all'],
+    queryFn: () => locationService.findAll(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Search locations - delegate to service
   const searchLocations = useCallback(async (
     query: string, 
     filters?: {
-      type?: 'all' | 'regions' | 'cities';
+      type?: 'all' | 'regions' | 'cities' | 'localite' | 'wilaya' | 'moughataa' | 'commune' | 'jiha';
       excludeCodes?: string[];
       maxResults?: number;
     }
   ): Promise<LocationDTO[]> => {
-    try {
-      const results: LocationDTO[] = [];
-      const maxResultsLimit = filters?.maxResults || 10;
+    // Map extended types to basic locationService types
+    let serviceFilters: {
+      type?: 'all' | 'regions' | 'cities';
+      excludeCodes?: string[];
+      maxResults?: number;
+    } | undefined = undefined;
+    
+    if (filters) {
+      const mapToBasicType = (extendedType: string): 'all' | 'regions' | 'cities' => {
+        switch (extendedType) {
+          case 'region':
+          case 'wilaya':
+            return 'regions';
+          case 'city':
+          case 'localite':
+          case 'moughataa':
+          case 'commune':
+          case 'jiha':
+            return 'cities';
+          case 'all':
+          default:
+            return 'all';
+        }
+      };
 
-      // Search regions
-      if (!filters?.type || filters?.type === 'all' || filters?.type === 'regions') {
-        const regions = searchRegions(query)
-          .filter(region => !filters?.excludeCodes?.includes(region.code))
-          .slice(0, maxResultsLimit)
-          .map(region => ({
-            id: region.code,
-            code: region.code,
-            name: region.name,
-            nameAr: region.nameAr,
-            type: 'region' as const,
-            coordinates: { lat: region.lat, lng: region.lng },
-            economicImportance: region.economicImportance,
-            population: region.population,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          }));
-        results.push(...regions);
-      }
-
-      // Search cities
-      if (!filters?.type || filters?.type === 'all' || filters?.type === 'cities') {
-        const cities = searchCities(query)
-          .filter(city => !filters?.excludeCodes?.includes(city.code))
-          .slice(0, Math.max(0, maxResultsLimit - results.length))
-          .map(city => ({
-            id: city.code,
-            code: city.code,
-            name: city.name,
-            nameAr: city.nameAr,
-            type: 'city' as const,
-            parentCode: city.parentCode,
-            coordinates: { lat: city.lat, lng: city.lng },
-            economicImportance: city.economicImportance,
-            population: city.population,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          }));
-        results.push(...cities);
-      }
-
-      return results;
-    } catch (error) {
-      console.error('Error searching locations:', error);
-      toast.error('Erreur lors de la recherche de localisations');
-      return [];
+      serviceFilters = {
+        ...filters,
+        type: filters.type ? mapToBasicType(filters.type) : undefined
+      };
     }
-  }, []);
+
+    return await locationService.searchLocations(query, serviceFilters);
+  }, [locationService]);
 
   // Validate location code
-  const validateLocationCode = useCallback((code: string, type: 'region' | 'city'): boolean => {
-    return type === 'region' ? isValidRegionCode(code) : isValidCityCode(code);
+  const validateLocationCode = useCallback((code: string, type?: 'region' | 'city' | 'localite' | 'wilaya' | 'moughataa' | 'commune' | 'jiha'): boolean => {
+    if (!type) return isValidRegionCode(code) || isValidCityCode(code);
+    switch (type) {
+      case 'region':
+      case 'wilaya':
+        return isValidRegionCode(code);
+      case 'city':
+      case 'localite':
+      case 'moughataa':
+      case 'commune':
+      case 'jiha':
+        return isValidCityCode(code);
+      default:
+        return false;
+    }
   }, []);
 
-  // Get location by code
-  const getLocationByCode = useCallback((code: string, type: 'region' | 'city'): LocationDTO | null => {
-    try {
-      let location: GeographicUnit | null = null;
-      
-      if (type === 'region') {
-        location = getWilayaByCode(code);
-      } else {
-        location = getCityByCode(code);
+  // Get location by code - delegate to service
+  const getLocationByCode = useCallback(async (code: string, type?: 'region' | 'city' | 'localite' | 'wilaya' | 'moughataa' | 'commune' | 'jiha'): Promise<LocationDTO | null> => {
+    // Map extended types to basic LocationService types
+    const mapToBasicType = (extendedType: string): 'region' | 'city' => {
+      switch (extendedType) {
+        case 'region':
+        case 'wilaya':
+          return 'region';
+        case 'city':
+        case 'localite':
+        case 'moughataa':
+        case 'commune':
+        case 'jiha':
+        default:
+          return 'city';
       }
+    };
 
-      if (!location) return null;
-
-      return {
-        id: location.code,
-        code: location.code,
-        name: location.name,
-        nameAr: 'nameAr' in location ? location.nameAr : '',
-        type: type,
-        coordinates: { lat: location.lat, lng: location.lng },
-        economicImportance: 'economicImportance' in location ? location.economicImportance : undefined,
-        population: 'population' in location ? location.population : undefined,
-        parentCode: 'parentCode' in location ? location.parentCode : undefined,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-    } catch (error) {
-      console.error('Error getting location by code:', error);
-      return null;
+    if (!type) {
+      // Try region first, then city
+      const regionResult = await locationService.getLocationByCode(code, 'region');
+      if (regionResult) return regionResult;
+      return await locationService.getLocationByCode(code, 'city');
     }
-  }, []);
 
-  // Get cities in region
+    const basicType = mapToBasicType(type);
+    return await locationService.getLocationByCode(code, basicType);
+  }, [locationService]);
+
+  // Get cities in region - delegate to service
   const getCitiesInRegion = useCallback(async (regionCode: string): Promise<LocationDTO[]> => {
-    try {
-      const cities = getCitiesByWilaya(regionCode);
-      return cities.map(city => ({
-        id: city.code,
-        code: city.code,
-        name: city.name,
-        nameAr: city.nameAr,
-        type: 'city' as const,
-        parentCode: city.parentCode,
-        coordinates: { lat: city.lat, lng: city.lng },
-        economicImportance: city.economicImportance,
-        population: city.population,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }));
-    } catch (error) {
-      console.error('Error getting cities in region:', error);
-      toast.error('Erreur lors de la récupération des villes de la région');
-      return [];
-    }
-  }, []);
+    return await locationService.getCitiesByRegion(regionCode);
+  }, [locationService]);
 
   // Get region for city
   const getRegionForCity = useCallback(async (cityCode: string): Promise<LocationDTO | null> => {
@@ -232,39 +246,217 @@ export function useLocationHex(): UseLocationHexResult {
     }
   }, []);
 
+  // Get major cities (capitals and large cities)
+  const getMajorCities = useCallback(async (): Promise<LocationDTO[]> => {
+    try {
+      const majorCities = await getMajorCities();
+      return majorCities.map(city => ({
+        id: city.code,
+        code: city.code,
+        name: city.name,
+        nameAr: city.nameAr,
+        type: 'city' as const,
+        parentCode: city.parentCode,
+        coordinates: city.coordinates, // Use nested coordinates property
+        economicImportance: city.economicImportance,
+        population: city.population,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }));
+    } catch (error) {
+      console.error('Error getting major cities:', error);
+      return [];
+    }
+  }, []);
+
+  // Get cities by population threshold
+  const getCitiesByPopulation = useCallback(async (minPopulation: number = 10000): Promise<LocationDTO[]> => {
+    try {
+      const cities = MAURITANIA_CITIES.filter(city => city.population && city.population >= minPopulation);
+      return cities.map(city => ({
+        id: city.code,
+        code: city.code,
+        name: city.name,
+        nameAr: city.nameAr,
+        type: 'city' as const,
+        parentCode: city.parentCode,
+        coordinates: city.lat && city.lng ? { lat: city.lat, lng: city.lng } : undefined,
+        economicImportance: city.economicImportance,
+        population: city.population,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }));
+    } catch (error) {
+      console.error('Error getting cities by population:', error);
+      return [];
+    }
+  }, []);
+
+  // Find nearest city to coordinates
+  const findNearestCity = useCallback(async (latitude: number, longitude: number, maxDistanceKm: number = 50): Promise<LocationDTO | null> => {
+    try {
+      const nearestLocations = await locationService.findNearestLocations(latitude, longitude, maxDistanceKm, 10);
+      const cities = nearestLocations.filter(location => location.type === 'city');
+      return cities.length > 0 ? cities[0] : null;
+    } catch (error) {
+      console.error('Error finding nearest city:', error);
+      return null;
+    }
+  }, [locationService]);
+
+  // Find locations by search term using GeocodingService
+  const findLocationBySearchTerm = useCallback(async (term: string): Promise<LocationDTO[]> => {
+    try {
+      const searchResults = await geocodingService.searchMauritaniaLocations(term);
+      return searchResults.map((result: GeocodingSearchResult) => {
+        // Determine type based on available properties
+        const hasParentCode = result.parentCode;
+        const locationType: 'region' | 'city' = hasParentCode ? 'city' : 'region';
+        
+        return {
+          id: result.code || result.name.toLowerCase().replace(/\s+/g, '-'),
+          code: result.code || result.name.toLowerCase().replace(/\s+/g, '-'),
+          name: result.name,
+          nameAr: result.nameAr,
+          type: locationType,
+          coordinates: result.lat && result.lng ? { lat: result.lat, lng: result.lng } : undefined,
+          parentCode: hasParentCode ? result.parentCode : undefined, // Only cities have parentCode
+          economicImportance: result.economicImportance as 'capital' | 'economic' | 'regional' | 'local' | undefined,
+          population: result.population,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+      });
+    } catch (error) {
+      console.error('Error finding location by search term:', error);
+      return [];
+    }
+  }, [geocodingService]);
+
+  // Get locations by type
+  const getLocationsByType = useCallback(async (type: 'region' | 'city' | 'localite' | 'wilaya' | 'moughataa' | 'commune' | 'jiha'): Promise<LocationDTO[]> => {
+    try {
+      // Map extended types to basic locationService types
+      const mapToBasicType = (extendedType: string): 'all' | 'regions' | 'cities' => {
+        switch (extendedType) {
+          case 'region':
+          case 'wilaya':
+            return 'regions';
+          case 'city':
+          case 'localite':
+          case 'moughataa':
+          case 'commune':
+          case 'jiha':
+            return 'cities';
+          case 'all':
+          default:
+            return 'all';
+        }
+      };
+
+      const basicType = mapToBasicType(type);
+      return await locationService.searchLocations('', { type: basicType });
+    } catch (error) {
+      console.error('Error getting locations by type:', error);
+      return [];
+    }
+  }, [locationService]);
+
+  // Get all locations (combined regions and cities)
+  const getAllLocations = useCallback(async (): Promise<LocationDTO[]> => {
+    try {
+      return await locationService.findAll();
+    } catch (error) {
+      console.error('Error getting all locations:', error);
+      return [];
+    }
+  }, [locationService]);
+
   // Reverse geocoding (coordinates to location)
   const reverseGeocode = useCallback(async (latitude: number, longitude: number): Promise<LocationDTO | null> => {
     try {
-      // This would typically call a geocoding service
-      // For now, we'll use a simple distance-based approach
+      // First try the GeocodingService
+      const geoResults = await geocodingService.reverseGeocode(latitude, longitude);
+      if (geoResults && geoResults.length > 0) {
+        // Convert geocoding result to LocationDTO
+        // Try to find matching region or city from our data
+        const allLocations: LocationDTO[] = [];
+
+        // Add all regions
+        if (allRegions) {
+          allLocations.push(...allRegions.map(region => ({
+            id: region.code,
+            code: region.code,
+            name: region.name,
+            nameAr: region.nameAr,
+            type: 'region' as const,
+            coordinates: region.coordinates,
+            economicImportance: region.economicImportance,
+            population: region.population,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          })));
+        }
+
+        // Add all cities
+        if (allCities) {
+          allLocations.push(...allCities.map(city => ({
+            id: city.code,
+            code: city.code,
+            name: city.name,
+            nameAr: city.nameAr,
+            type: 'city' as const,
+            parentCode: city.parentCode,
+            coordinates: city.coordinates,
+            economicImportance: city.economicImportance,
+            population: city.population,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          })));
+        }
+
+        // Find closest location to the geocoding result using service layer
+        const bestGeoResult = geoResults[0]; // Get the best geocoding result
+        const nearestLocations = await locationService.findNearestLocations(
+          bestGeoResult.coordinates.lat,
+          bestGeoResult.coordinates.lng,
+          30, // 10km radius to find locations
+          1    // Get only the closest one
+        );
+
+        return nearestLocations.length > 0 ? nearestLocations[0] : null;
+      }
+
+      // Fallback: Use distance-based approach if geocoding service fails
+      console.warn('Geocoding service failed, using fallback distance-based approach');
       const allLocations: LocationDTO[] = [];
-      
+
       // Add all regions
       if (allRegions) {
-        allRegions.push(...allRegions.map(region => ({
+        allLocations.push(...allRegions.map(region => ({
           id: region.code,
           code: region.code,
           name: region.name,
           nameAr: region.nameAr,
           type: 'region' as const,
-          coordinates: { lat: region.lat, lng: region.lng },
+          coordinates: region.coordinates,
           economicImportance: region.economicImportance,
           population: region.population,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         })));
       }
-      
+
       // Add all cities
       if (allCities) {
-        allCities.push(...allCities.map(city => ({
+        allLocations.push(...allCities.map(city => ({
           id: city.code,
           code: city.code,
           name: city.name,
           nameAr: city.nameAr,
           type: 'city' as const,
           parentCode: city.parentCode,
-          coordinates: { lat: city.lat, lng: city.lng },
+          coordinates: city.coordinates,
           economicImportance: city.economicImportance,
           population: city.population,
           createdAt: new Date().toISOString(),
@@ -282,7 +474,7 @@ export function useLocationHex(): UseLocationHexResult {
             Math.pow(latitude - location.coordinates.lat, 2) +
             Math.pow(longitude - location.coordinates.lng, 2)
           );
-          
+
           if (distance < minDistance) {
             minDistance = distance;
             closestLocation = location;
@@ -296,12 +488,79 @@ export function useLocationHex(): UseLocationHexResult {
       toast.error('Erreur lors du géocodage inversé');
       return null;
     }
-  }, [allRegions, allCities]);
+  }, [locationService, geocodingService, allRegions, allCities]);
 
   // Forward geocoding (address to location)
   const geocode = useCallback(async (address: string): Promise<LocationDTO | null> => {
     try {
-      // Try to find region by address
+      // First try the GeocodingService for forward geocoding
+
+      const geoResults = await geocodingService.geocode(address);
+      if (geoResults && geoResults.length > 0) {
+        const bestGeoResult = geoResults[0];
+
+        // Convert geocoding result to LocationDTO
+        // Try to find matching region or city from our data
+        const allLocations: LocationDTO[] = [];
+
+        // Add all regions
+        if (allRegions) {
+          allLocations.push(...allRegions.map(region => ({
+            id: region.code,
+            code: region.code,
+            name: region.name,
+            nameAr: region.nameAr,
+            type: 'region' as const,
+            coordinates: region.coordinates,
+            economicImportance: region.economicImportance,
+            population: region.population,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          })));
+        }
+
+        // Add all cities
+        if (allCities) {
+          allLocations.push(...allCities.map(city => ({
+            id: city.code,
+            code: city.code,
+            name: city.name,
+            nameAr: city.nameAr,
+            type: 'city' as const,
+            parentCode: city.parentCode,
+            coordinates: city.coordinates,
+            economicImportance: city.economicImportance,
+            population: city.population,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          })));
+        }
+
+        // Find closest location to the geocoding result
+        let closestLocation: LocationDTO | null = null;
+        let minDistance = Infinity;
+
+        allLocations.forEach(location => {
+          if (location.coordinates && bestGeoResult.coordinates) {
+            const distance = Math.sqrt(
+              Math.pow(bestGeoResult.coordinates.lat - location.coordinates.lat, 2) +
+              Math.pow(bestGeoResult.coordinates.lng - location.coordinates.lng, 2)
+            );
+
+            if (distance < minDistance) {
+              minDistance = distance;
+              closestLocation = location;
+            }
+          }
+        });
+
+        return closestLocation;
+      }
+
+      // Fallback: Use local region/city search if geocoding service fails
+      console.warn('Geocoding service failed, using fallback local search');
+
+      // Try to find region by address using local data first
       const region = findRegionByLocation(address);
       if (region) {
         return {
@@ -310,9 +569,11 @@ export function useLocationHex(): UseLocationHexResult {
           name: region.name,
           nameAr: region.nameAr,
           type: 'region' as const,
-          coordinates: { lat: region.lat, lng: region.lng },
+          coordinates: region.lat && region.lng ? { lat: region.lat, lng: region.lng } : undefined,
           economicImportance: region.economicImportance,
-          population: region.population
+          population: region.population,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         };
       }
 
@@ -327,9 +588,11 @@ export function useLocationHex(): UseLocationHexResult {
           nameAr: city.nameAr,
           type: 'city' as const,
           parentCode: city.parentCode,
-          coordinates: { lat: city.lat, lng: city.lng },
+          coordinates: city.lat && city.lng ? { lat: city.lat, lng: city.lng } : undefined,
           economicImportance: city.economicImportance,
-          population: city.population
+          population: city.population,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         };
       }
 
@@ -339,7 +602,7 @@ export function useLocationHex(): UseLocationHexResult {
       toast.error('Erreur lors du géocodage');
       return null;
     }
-  }, []);
+  }, [geocodingService, allRegions, allCities]);
 
   // Mutations
   const createLocationMutation = useMutation({
@@ -387,14 +650,20 @@ export function useLocationHex(): UseLocationHexResult {
     getLocationByCode,
     getCitiesInRegion,
     getRegionForCity,
+    getMajorCities,
+    getCitiesByPopulation,
+    findNearestCity,
+    findLocationBySearchTerm,
     reverseGeocode,
     geocode,
+    getLocationsByType,
+    getAllLocations,
     allRegions,
     allCities,
-    isLoading: regionsLoading || citiesLoading,
+    allLocations,
+    isLoading: regionsLoading || citiesLoading || locationsLoading,
     error: null, // Could be enhanced with error handling
     createLocation: createLocationMutation.mutateAsync,
     updateLocation: updateLocationMutation.mutateAsync,
     deleteLocation: deleteLocationMutation.mutateAsync
   };
-}

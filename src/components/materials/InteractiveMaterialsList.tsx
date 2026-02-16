@@ -5,26 +5,11 @@ import { Button } from '@/components/ui/button';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { MapPin, Package, DollarSign, Truck, Eye } from 'lucide-react';
 import { usePagination } from '@/hooks/usePagination';
-
-interface Material {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  unit: string;
-  price_per_unit: number;
-  available_quantity: number;
-  image?: string;
-  origin_location?: string;
-  coordinates_latitude?: number;
-  coordinates_longitude?: number;
-  forme?: string;
-  adresse?: string;
-}
+import { MaterialUIDTO } from '@/dtos/transforms';
 
 interface InteractiveMaterialsListProps {
-  materials: Material[];
-  onMaterialSelect?: (material: Material) => void;
+  materials: MaterialUIDTO[];
+  onMaterialSelect?: (material: MaterialUIDTO) => void;
 }
 
 const InteractiveMaterialsList: React.FC<InteractiveMaterialsListProps> = ({
@@ -111,7 +96,7 @@ const InteractiveMaterialsList: React.FC<InteractiveMaterialsListProps> = ({
       <CardContent className="p-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
           {paginatedMaterials.map((material) => {
-            const stockLevel = getStockLevel(material.available_quantity, material.unit);
+            const stockLevel = getStockLevel(material.availableQuantity, material.unit);
             const stockColor = getStockColor(stockLevel);
             const stockLabel = getStockLabel(stockLevel);
 
@@ -142,16 +127,16 @@ const InteractiveMaterialsList: React.FC<InteractiveMaterialsListProps> = ({
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-primary" />
                       <span className="text-muted-foreground">
-                        {material.origin_location || 'Région non spécifiée'}
+                        {material.originLocation || 'Région non spécifiée'}
                       </span>
                     </div>
 
                     {/* GPS Coordinates */}
-                    {material.coordinates_latitude && material.coordinates_longitude && (
+                    {material.coordinatesLatitude && material.coordinatesLongitude && (
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-success" />
                         <span className="text-xs text-muted-foreground font-mono">
-                          GPS: {material.coordinates_latitude.toFixed(4)}, {material.coordinates_longitude.toFixed(4)}
+                          GPS: {material.coordinatesLatitude.toFixed(4)}, {material.coordinatesLongitude.toFixed(4)}
                         </span>
                       </div>
                     )}
@@ -171,13 +156,13 @@ const InteractiveMaterialsList: React.FC<InteractiveMaterialsListProps> = ({
                       <div className="flex items-center gap-2">
                         <DollarSign className="h-4 w-4 text-success" />
                         <span className="font-medium text-success">
-                          {formatPrice(material.price_per_unit)}/{material.unit}
+                          {formatPrice(material.pricePerUnit)}/{material.unit}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Package className="h-4 w-4 text-primary" />
                         <span className="font-medium">
-                          {material.available_quantity} {material.unit}
+                          {material.availableQuantity} {material.unit}
                         </span>
                         <Badge 
                           variant="secondary" 

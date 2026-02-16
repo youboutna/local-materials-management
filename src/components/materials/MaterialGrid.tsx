@@ -3,29 +3,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from '@/components/ui/pagination';
 import { Package } from 'lucide-react';
 import MaterialCard from './MaterialCard';
-
-interface Material {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  unit: string;
-  price_per_unit: number;
-  available_quantity: number;
-  image?: string;
-  origin_location?: string;
-  local_type?: string;
-  coordinates_latitude?: number;
-  coordinates_longitude?: number;
-}
+import { MaterialUIDTO } from '@/dtos/transforms';
 
 interface MaterialGridProps {
-  materials: Material[];
+  materials: MaterialUIDTO[];
   currentPage: number;
   totalPages: number;
   totalItems: number;
   onPageChange: (page: number) => void;
-  onMaterialClick: (material: Material) => void;
+  onMaterialClick: (material: MaterialUIDTO) => void;
 }
 
 const MaterialGrid: React.FC<MaterialGridProps> = ({

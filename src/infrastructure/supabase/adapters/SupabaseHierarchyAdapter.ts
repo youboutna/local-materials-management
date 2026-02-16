@@ -3,6 +3,25 @@
  * Implements IHierarchyRepository using Supabase
  */
 
+import { supabase } from '@/integrations/supabase/client';
+
+// Import DTOs following Rule #4
+import {
+  HierarchyNode,
+  CreateHierarchyNodeDTO,
+  UpdateHierarchyNodeDTO,
+  HierarchyStatisticsDTO,
+  HierarchySearchCriteriaDTO,
+  HierarchySearchResultDTO,
+  HierarchyValidationDTO
+} from '@/dtos/entities/HierarchyDTO';
+
+// Import domain entities
+import { ProjectHierarchy, HierarchyMember, EscalationTarget, EscalationLevel } from '@/domain/entities/Hierarchy';
+
+// Import interfaces
+import { IHierarchyRepository } from '@/domain/repositories/IHierarchyRepository';
+
 // Database row interfaces for hierarchy tables
 interface HierarchyMemberRow {
   hierarchy_id: string;
@@ -12,9 +31,22 @@ interface HierarchyMemberRow {
   department: string;
   level: number;
   parent_id?: string;
-  organization_name: string;
+  organization_name?: string; // Made optional to match RPC responses
   can_approve_projects?: boolean;
   can_approve_payments?: boolean;
+  employee_email?: string;
+  employee_phone?: string;
+}
+
+// Interface for hierarchy chain RPC response (different structure)
+interface HierarchyChainRow {
+  hierarchy_id: string;
+  employee_id: string;
+  employee_name: string;
+  position_title: string;
+  department: string;
+  level: number;
+  distance: number; // Additional field for chain queries
   employee_email?: string;
   employee_phone?: string;
 }
@@ -29,10 +61,35 @@ interface EscalationTargetRow {
   hierarchy_level: number;
 }
 
+interface HierarchyNodeRow {
+  id?: string;
+  project_id?: string;
+  name?: string;
+  type?: string;
+  parent_id?: string;
+  order_index?: number;
+  level?: number;
+  path?: string;
+  status?: string;
+  description?: string;
+  start_date?: string;
+  end_date?: string;
+  assigned_to?: string;
+  priority?: string;
+  estimated_hours?: number;
+  actual_hours?: number;
+  budget?: number;
+  actual_cost?: number;
+  tags?: string[];
+  custom_fields?: Record<string, unknown>;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export class SupabaseHierarchyAdapter implements IHierarchyRepository {
   // ============= Core CRUD Operations =============
 
-  async getProjectHierarchy(projectId: string): Promise<HierarchyNode[]> {
+  async getMembers(projectId: string): Promise<HierarchyMember[]> {
     const { data, error } = await supabase
       .rpc('get_project_hierarchy', { project_id_param: projectId });
 
@@ -42,6 +99,18 @@ export class SupabaseHierarchyAdapter implements IHierarchyRepository {
     }
 
     return (data || []).map(this.mapToHierarchyMember);
+  }
+
+  async getProjectHierarchy(projectId: string): Promise<HierarchyNode[]> {
+    const { data, error } = await supabase
+      .rpc('get_project_hierarchy', { project_id_param: projectId });
+
+    if (error) {
+      console.error('Error fetching hierarchy nodes:', error);
+      throw error;
+    }
+
+    return (data || []).map(this.mapToHierarchyNode);
   }
 
   async getMemberById(projectId: string, employeeId: string): Promise<HierarchyMember | null> {
@@ -97,7 +166,7 @@ export class SupabaseHierarchyAdapter implements IHierarchyRepository {
       return [];
     }
 
-    return (data || []).map(this.mapToHierarchyMember);
+    return (data || []).map(this.mapToHierarchyChainMember);
   }
 
   // ============= Approval Operations =============
@@ -422,12 +491,61 @@ export class SupabaseHierarchyAdapter implements IHierarchyRepository {
       positionTitle: data.position_title,
       department: data.department,
       level: data.level,
-      parentId: data.parent_id,
-      organizationName: data.organization_name,
+      parentId: data.parent_id || null,
+      organizationName: data.organization_name || '',
       canApproveProjects: data.can_approve_projects || false,
       canApprovePayments: data.can_approve_payments || false,
       employeeEmail: data.employee_email || '',
       employeePhone: data.employee_phone || '',
+    };
+  }
+
+  private mapToHierarchyChainMember(data: HierarchyChainRow): HierarchyMember {
+    return {
+      hierarchyId: data.hierarchy_id,
+      employeeId: data.employee_id,
+      employeeName: data.employee_name,
+      positionTitle: data.position_title,
+      department: data.department,
+      level: data.level,
+      parentId: null, // Chain queries don't include parent relationships
+      organizationName: '', // Not provided in chain queries
+      canApproveProjects: false, // Default values for chain queries
+      canApprovePayments: false,
+      employeeEmail: data.employee_email || '',
+      employeePhone: data.employee_phone || '',
+    };
+  }
+
+  private mapToHierarchyNode(data: HierarchyNodeRow): HierarchyNode {
+    // Build metadata object only with defined values
+    const metadata: HierarchyNode['metadata'] = {};
+
+    if (data.status !== undefined) metadata.status = data.status as 'active' | 'completed' | 'pending' | 'cancelled';
+    if (data.description !== undefined) metadata.description = data.description;
+    if (data.start_date !== undefined) metadata.startDate = data.start_date;
+    if (data.end_date !== undefined) metadata.endDate = data.end_date;
+    if (data.assigned_to !== undefined) metadata.assignedTo = data.assigned_to;
+    if (data.priority !== undefined) metadata.priority = data.priority as 'low' | 'medium' | 'high' | 'critical';
+    if (data.estimated_hours !== undefined) metadata.estimatedHours = data.estimated_hours;
+    if (data.actual_hours !== undefined) metadata.actualHours = data.actual_hours;
+    if (data.budget !== undefined) metadata.budget = data.budget;
+    if (data.actual_cost !== undefined) metadata.actualCost = data.actual_cost;
+    if (data.tags !== undefined) metadata.tags = data.tags;
+    if (data.custom_fields !== undefined) metadata.customFields = data.custom_fields;
+
+    return {
+      id: data.id || crypto.randomUUID(),
+      projectId: data.project_id || '',
+      name: data.name || 'Unknown Node',
+      type: (data.type as HierarchyNode['type']) || 'task',
+      parentId: data.parent_id,
+      orderIndex: data.order_index || 0,
+      level: data.level || 1,
+      path: data.path || '',
+      metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
+      createdAt: data.created_at || new Date().toISOString(),
+      updatedAt: data.updated_at || new Date().toISOString()
     };
   }
 

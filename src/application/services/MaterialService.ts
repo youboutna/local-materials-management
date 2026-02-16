@@ -17,9 +17,7 @@ import {
 } from '@/dtos/entities/MaterialDTO';
 import { MaterialTransformer } from '@/dtos/transforms/MaterialTransformer';
 import { GeocodingService } from './GeocodingService';
-
-// Hexagonal Architecture: Import related services
-import { SupplierService } from './SupplierService';
+import { SupplierService } from '@/application/services/SupplierService';
 import { WorkspaceService } from './WorkspaceService';
 import { DocumentService } from './DocumentService';
 import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
@@ -28,9 +26,9 @@ import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
 
 export class MaterialService {
   private geocodingService: GeocodingService;
-  private supplierService: SupplierService;
-  private workspaceService: WorkspaceService;
-  private documentService: DocumentService;
+  private supplierService!: SupplierService;
+  private workspaceService!: WorkspaceService;
+  private documentService!: DocumentService;
 
   constructor(
     private materialRepository: IMaterialRepository,
@@ -44,9 +42,15 @@ export class MaterialService {
     });
 
     // Initialize related services following hexagonal architecture
-    this.supplierService = supplierRepository ? new SupplierService(supplierRepository) : null as any;
-    this.workspaceService = workspaceRepository ? new WorkspaceService(workspaceRepository) : null as any;
-    this.documentService = documentRepository ? new DocumentService(documentRepository) : null as any;
+    if (supplierRepository) {
+      this.supplierService = new SupplierService(supplierRepository);
+    }
+    if (workspaceRepository) {
+      this.workspaceService = new WorkspaceService(workspaceRepository);
+    }
+    if (documentRepository) {
+      this.documentService = new DocumentService(documentRepository);
+    }
   }
 
   // =================== CRUD Operations ===================
@@ -372,41 +376,41 @@ export class MaterialService {
   }
 
   private applyUpdatesToEntity(existing: Material, updates: UpdateMaterialDTO): Material {
-    // Create updated entity with new values
-    const updatedEntity = new Material(
+    // Create updated entity with new values using the new constructor
+    return new Material(
       existing.id,
       updates.name ?? existing.name,
       updates.quantity ?? existing.quantity,
       updates.unit ?? existing.unit,
+      updates.category ?? existing.category,
       updates.workspaceId ?? existing.workspaceId,
       existing.location, // Keep existing location
-      updates.description ?? existing.description,
-      updates.minQuantity ?? existing.minQuantity,
-      existing.timeline, // Keep existing timeline
-      existing.lastRestock,
-      updates.supplier ?? existing.supplier,
-      existing.images,
-      updates.pricePerUnit ?? existing.pricePerUnit,
-      updates.availableQuantity ?? existing.availableQuantity,
-      updates.originLocation ?? existing.originLocation,
-      updates.category ?? existing.category,
-      updates.subcategory ?? existing.subcategory,
-      updates.localisation ?? existing.localisation,
-      updates.forme ?? existing.forme,
-      updates.adresse ?? existing.adresse,
-      existing.createdAt,
-      new Date(), // Update timestamp
-      updates.gtin ?? existing.gtin,
-      updates.sku ?? existing.sku,
-      updates.ean ?? existing.ean,
-      updates.asin ?? existing.asin,
-      updates.image ?? existing.image,
-      updates.coordinatesLatitude ?? existing.coordinatesLatitude,
-      updates.coordinatesLongitude ?? existing.coordinatesLongitude,
-      updates.multilangLabels ?? existing.multilangLabels
+      {
+        description: updates.description ?? existing.description,
+        minQuantity: updates.minQuantity ?? existing.minQuantity,
+        timeline: existing.timeline, // Keep existing timeline
+        lastRestock: existing.lastRestock,
+        supplier: updates.supplier ?? existing.supplier,
+        images: existing.images,
+        pricePerUnit: updates.pricePerUnit ?? existing.pricePerUnit,
+        availableQuantity: updates.availableQuantity ?? existing.availableQuantity,
+        originLocation: updates.originLocation ?? existing.originLocation,
+        subcategory: updates.subcategory ?? existing.subcategory,
+        localisation: updates.localisation ?? existing.localisation,
+        forme: updates.forme ?? existing.forme,
+        adresse: updates.adresse ?? existing.adresse,
+        createdAt: existing.createdAt,
+        updatedAt: new Date(), // Update timestamp
+        gtin: updates.gtin ?? existing.gtin,
+        sku: updates.sku ?? existing.sku,
+        ean: updates.ean ?? existing.ean,
+        asin: updates.asin ?? existing.asin,
+        image: updates.image ?? existing.image,
+        coordinatesLatitude: updates.coordinatesLatitude ?? existing.coordinatesLatitude,
+        coordinatesLongitude: updates.coordinatesLongitude ?? existing.coordinatesLongitude,
+        multilangLabels: updates.multilangLabels ?? existing.multilangLabels
+      }
     );
-
-    return updatedEntity;
   }
 
   private applyFilters(materials: MaterialDTO[], filter: MaterialFilterDTO): MaterialDTO[] {

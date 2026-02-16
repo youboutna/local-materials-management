@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { MapPin, Package, DollarSign, Eye } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { MaterialUIDTO } from '@/dtos/transforms';
 
 // Fix default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -26,24 +27,9 @@ const DefaultIcon = L.icon({
   shadowSize: [41, 41]
 });
 
-interface Material {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  unit: string;
-  price_per_unit: number;
-  available_quantity: number;
-  origin_location?: string;
-  coordinates_latitude?: number;
-  coordinates_longitude?: number;
-  forme?: string;
-  adresse?: string;
-}
-
 interface EnhancedInteractiveMaterialMapProps {
-  materials: Material[];
-  onMaterialSelect?: (material: Material) => void;
+  materials: MaterialUIDTO[];
+  onMaterialSelect?: (material: MaterialUIDTO) => void;
 }
 
 // Map click handler component
@@ -93,8 +79,8 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
     return `${price.toLocaleString()} MRU`;
   };
 
-  const createMaterialIcon = (material: Material) => {
-    const stockLevel = getStockLevel(material.available_quantity);
+  const createMaterialIcon = (material: MaterialUIDTO) => {
+    const stockLevel = getStockLevel(material.availableQuantity);
     const color = getStockColor(stockLevel);
     
     return L.divIcon({
@@ -198,14 +184,14 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
 
             {/* Material markers */}
             {materials.map((material) => {
-              if (!material.coordinates_latitude || !material.coordinates_longitude) return null;
+              if (!material.coordinatesLatitude || !material.coordinatesLongitude) return null;
               
-              const stockLevel = getStockLevel(material.available_quantity);
+              const stockLevel = getStockLevel(material.availableQuantity);
               
               return (
                 <Marker
                   key={material.id}
-                  position={[material.coordinates_latitude, material.coordinates_longitude]}
+                  position={[material.coordinatesLatitude, material.coordinatesLongitude]}
                   icon={createMaterialIcon(material)}
                 >
                   <Popup maxWidth={300} className="material-popup">
@@ -229,7 +215,7 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
                         
                         <div className="flex items-center gap-2">
                           <MapPin className="h-4 w-4 text-green-500" />
-                          <span>{material.origin_location || 'Région non spécifiée'}</span>
+                          <span>{material.originLocation || 'Région non spécifiée'}</span>
                         </div>
                         
                         {material.adresse && (
@@ -243,12 +229,12 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
                           <div className="flex items-center gap-1">
                             <DollarSign className="h-4 w-4 text-green-600" />
                             <span className="font-medium text-green-600 text-sm">
-                              {formatPrice(material.price_per_unit)}/{material.unit}
+                              {formatPrice(material.pricePerUnit)}/{material.unit}
                             </span>
                           </div>
                           <div className="text-right">
                             <div className="font-medium text-sm">
-                              {material.available_quantity} {material.unit}
+                              {material.availableQuantity} {material.unit}
                             </div>
                             <div className="text-xs text-gray-500">
                               {stockLevel === 'high' && 'Stock élevé'}

@@ -51,7 +51,7 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
       availableQuantity: entity.availableQuantity,
       minQuantity: entity.minQuantity,
       totalValue: entity.calculateTotalValue(),
-      workspaceId: entity.workspaceId,
+      workspaceId: entity.workspaceId || '',
       originLocation: entity.originLocation,
       coordinatesLatitude: entity.coordinatesLatitude,
       coordinatesLongitude: entity.coordinatesLongitude,
@@ -82,32 +82,32 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
       dto.name,
       dto.quantity,
       dto.unit,
-      dto.workspaceId,
-      { code: 'default', name: 'Default', nameAr: 'افتراضي', lat: 0, lng: 0 }, // Default location, can be enhanced
-      dto.description,
-      dto.minQuantity,
-      dto.timeline,
-      undefined, // lastRestock
-      dto.supplier,
-      [], // images
-      dto.pricePerUnit,
-      dto.availableQuantity,
-      dto.originLocation,
       dto.category,
-      dto.subcategory,
-      dto.localisation,
-      dto.forme,
-      dto.adresse,
-      new Date(dto.createdAt),
-      new Date(dto.updatedAt),
-      dto.gtin,
-      dto.sku,
-      dto.ean,
-      dto.asin,
-      dto.image,
-      dto.coordinatesLatitude,
-      dto.coordinatesLongitude,
-      dto.multilangLabels
+      dto.workspaceId,
+      { code: 'default', name: 'Default', nameAr: 'افتراضي', lat: 0, lng: 0 }, // Default location
+      {
+        description: dto.description || '',
+        minQuantity: dto.minQuantity,
+        timeline: dto.timeline,
+        supplier: dto.supplier,
+        pricePerUnit: dto.pricePerUnit,
+        availableQuantity: dto.availableQuantity,
+        originLocation: dto.originLocation,
+        subcategory: dto.subcategory,
+        localisation: dto.localisation,
+        forme: dto.forme,
+        adresse: dto.adresse,
+        createdAt: new Date(dto.createdAt),
+        updatedAt: new Date(dto.updatedAt),
+        gtin: dto.gtin,
+        sku: dto.sku,
+        ean: dto.ean,
+        asin: dto.asin,
+        image: dto.image,
+        coordinatesLatitude: dto.coordinatesLatitude,
+        coordinatesLongitude: dto.coordinatesLongitude,
+        multilangLabels: dto.multilangLabels
+      }
     );
   }
 
@@ -120,40 +120,38 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
       dto.name,
       dto.quantity,
       dto.unit,
+      dto.category,
       dto.workspaceId,
       { code: 'default', name: 'Default', nameAr: 'افتراضي', lat: dto.coordinatesLatitude || 0, lng: dto.coordinatesLongitude || 0 },
-      dto.description,
-      0, // minQuantity default
-      dto.timeline,
-      new Date(), // lastRestock
-      dto.supplier,
-      [], // images
-      dto.pricePerUnit,
-      dto.availableQuantity,
-      dto.originLocation,
-      dto.category,
-      dto.subcategory,
-      dto.localisation || [],
-      dto.forme,
-      dto.adresse,
-      new Date(), // createdAt
-      new Date(), // updatedAt
-      dto.gtin,
-      dto.sku,
-      dto.ean,
-      dto.asin,
-      dto.image,
-      dto.coordinatesLatitude,
-      dto.coordinatesLongitude,
-      dto.multilangLabels
+      {
+        description: dto.description || '',
+        timeline: dto.timeline,
+        supplier: dto.supplier,
+        pricePerUnit: dto.pricePerUnit,
+        availableQuantity: dto.availableQuantity,
+        originLocation: dto.originLocation,
+        subcategory: dto.subcategory,
+        localisation: dto.localisation || [],
+        forme: dto.forme,
+        adresse: dto.adresse,
+        gtin: dto.gtin,
+        sku: dto.sku,
+        ean: dto.ean,
+        asin: dto.asin,
+        image: dto.image,
+        coordinatesLatitude: dto.coordinatesLatitude,
+        coordinatesLongitude: dto.coordinatesLongitude,
+        multilangLabels: dto.multilangLabels,
+        materialStatus: 'active'
+      }
     );
   }
 
   /**
-   * Convert MaterialFormDataDTO to CreateMaterialDTO
-   * Form data → Create request for service layer
+   * Convert MaterialFormDataDTO to UpdateMaterialDTO
+   * Form data → Update request for service layer
    */
-  static formToCreateRequest(formData: MaterialFormDataDTO): CreateMaterialDTO {
+  static formToUpdateRequest(formData: MaterialFormDataDTO): UpdateMaterialDTO {
     return {
       name: formData.name,
       description: formData.description,

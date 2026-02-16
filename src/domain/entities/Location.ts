@@ -13,6 +13,25 @@ export interface Coordinates {
 }
 
 /**
+ * Map Location DTO for UI components
+ * Represents locations displayed on maps with additional UI properties
+ */
+export interface MapLocation {
+  id: string;
+  name: string;
+  type: "project" | "warehouse" | "material";
+  latitude: number;
+  longitude: number;
+  status?: string;
+  region?: string;
+  startDate?: string;
+  endDate?: string;
+  warehouseShape?: { lat: number; lng: number }[];
+  warehouseShapeType?: "polygon" | "rectangle" | "circle";
+  adresse?: string | undefined;
+}
+
+/**
  * Location Domain Entity
  * Represents a geographical location (region or city) in Mauritania
  */

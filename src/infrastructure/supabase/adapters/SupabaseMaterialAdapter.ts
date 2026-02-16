@@ -52,7 +52,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       gtin?: string | null;
       id: string;
       image?: string;
-      localisation?: unknown[] | null;
+      localisation,
       min_quantity?: number;
       multilang_labels?: Record<string, string>;
       name: string;
@@ -61,8 +61,17 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       quantity: number;
       sku?: string | null;
       subcategory?: string;
-      supplier?: unknown;
-      timeline?: unknown;
+      supplier?: unknown; // Supabase Json type
+      supplier_id?: string;
+      material_code?: string;
+      minimum_stock?: number;
+      maximum_stock?: number;
+      lead_time_days?: number;
+      quality_grade?: string;
+      technical_specifications?: unknown; // Supabase Json type
+      material_status?: string;
+      tags?: unknown; // Supabase Json array type
+      timeline?: unknown; // Supabase Json type
       unit: string;
       updated_at: string;
       workspace_id?: string;
@@ -100,6 +109,16 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
     if (data.supplier !== undefined) updateData.supplier = data.supplier;
     if (data.timeline !== undefined) updateData.timeline = data.timeline;
     if (data.lastRestock !== undefined) updateData.last_restock = data.lastRestock.toISOString();
+    // New fields
+    if (data.supplierId !== undefined) updateData.supplier_id = data.supplierId;
+    if (data.materialCode !== undefined) updateData.material_code = data.materialCode;
+    if (data.minimumStock !== undefined) updateData.minimum_stock = data.minimumStock;
+    if (data.maximumStock !== undefined) updateData.maximum_stock = data.maximumStock;
+    if (data.leadTimeDays !== undefined) updateData.lead_time_days = data.leadTimeDays;
+    if (data.qualityGrade !== undefined) updateData.quality_grade = data.qualityGrade;
+    if (data.technicalSpecifications !== undefined) updateData.technical_specifications = data.technicalSpecifications;
+    if (data.materialStatus !== undefined) updateData.material_status = data.materialStatus;
+    if (data.tags !== undefined) updateData.tags = data.tags;
 
     const { error } = await supabase
       .from('materials')

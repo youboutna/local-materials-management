@@ -8,7 +8,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { MapLocation } from '@/components/ProjectMap';
+import { MapLocation } from '@/domain/entities/Location';
 import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
 import { MAURITANIA_REGIONS, MAURITANIA_CITIES, GeographicUnit, Region, City } from '@/utils/mauritania';
 import { 

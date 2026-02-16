@@ -14,7 +14,7 @@ import EnhancedInteractiveMap from "@/components/projects/EnhancedInteractiveMap
 import { useProjectsHex } from "@/hooks/hexagonal";
 import { usePagination } from "@/hooks/usePagination";
 import { ProjectData } from '@/dtos/entities/ProjectDTO';
-import { MapLocation } from "@/components/ProjectMap";
+import { MapLocation } from '@/domain/entities/Location';
 import { useProjectsFilter } from "@/hooks/useProjectsFilter";
 import WaterfallProjectManager from "@/components/project/WaterfallProjectManager";
 import { ElectricSpinner } from "@/components/loading-page";
@@ -53,7 +53,7 @@ const Projects: React.FC = () => {
         ? { latitude: p.coordinates.latitude, longitude: p.coordinates.longitude }
         : undefined,
     })) || []
-  , [projectsKey]);
+  , [hexProjects]);
   
   const [filteredMapLocations, setFilteredMapLocations] = useState<MapLocation[]>([]);
   const [interactiveFilteredProjects, setInteractiveFilteredProjects] = useState<ProjectData[]>([]);

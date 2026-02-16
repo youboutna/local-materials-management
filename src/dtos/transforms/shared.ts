@@ -360,6 +360,7 @@ export interface MaterialUIDTO extends BaseEntityDTO {
   localisation?: CoordinatePoint[];
   isActive?: boolean;
   minimumQuantity?: number;
+  multilangLabels?: Record<string, string>;
   localType?: string;
 }
 

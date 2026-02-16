@@ -5,7 +5,7 @@
  */
 
 import { ILocationRepository } from '@/domain/repositories/LocationRepository';
-import { Location } from '@/domain/entities/Location';
+import { Location, MapLocation } from '@/domain/entities/Location';
 import { AppError, DatabaseError } from '@/utils/errors';
 import { supabase } from '@/integrations/supabase/client';
 

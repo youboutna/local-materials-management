@@ -4,34 +4,8 @@ import React, { useEffect, useState } from "react";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
+import { MapLocation } from "@/domain/entities/Location";
 import { Badge } from "@/components/ui/badge";
-
-// Fix default marker icons
-const DefaultIcon = L.icon({
-  iconUrl: "/node_modules/leaflet/dist/images/marker-icon.png",
-  iconRetinaUrl: "/node_modules/leaflet/dist/images/marker-icon-2x.png",
-  shadowUrl: "/node_modules/leaflet/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
-L.Marker.prototype.options.icon = DefaultIcon;
-
-export interface MapLocation {
-  id: string;
-  name: string;
-  type: "project" | "warehouse" | "material";
-  latitude: number;
-  longitude: number;
-  status?: string;
-  region?: string;
-  startDate?: string;
-  endDate?: string;
-  warehouseShape?: { lat: number; lng: number }[];
-  warehouseShapeType?: "polygon" | "rectangle" | "circle";
-  adresse?: string | undefined;
-}
 
 export type ProjectStatus =
   | "en cours"

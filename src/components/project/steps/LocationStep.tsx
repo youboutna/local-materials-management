@@ -2,7 +2,7 @@ import React from 'react';
 import { MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import InteractiveMapGIS from '../../materials/InteractiveMapGIS';
-import EnhancedLocationSelector from '../../location/EnhancedLocationSelector';
+import UnifiedLocationSelector from '../../location/UnifiedLocationSelector';
 
 // Import entity DTOs (following PROMPTS.md Rule #4: No type redefinition)
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
@@ -30,7 +30,7 @@ const LocationStep: React.FC<LocationStepProps> = ({
       <CardContent>
         <div className="space-y-6">
           <div>
-            <EnhancedLocationSelector
+            <UnifiedLocationSelector
               value={{
                 address: formData.location || formData.address,
                 latitude: formData.coordinates?.latitude || formData.latitude,
@@ -46,10 +46,11 @@ const LocationStep: React.FC<LocationStepProps> = ({
                 latitude: locationData.latitude,
                 longitude: locationData.longitude
               })}
+              placeholder="Rechercher l'emplacement du projet..."
+              filter="all"
               showCoordinates={true}
               showGPS={true}
               allowManualEntry={true}
-              className="mb-4"
             />
           </div>
 

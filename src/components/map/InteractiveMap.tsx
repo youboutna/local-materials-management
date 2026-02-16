@@ -6,7 +6,6 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Target, MapPin, Globe, Compass, Info, Navigation } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, Polygon } from 'react-leaflet';
-import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 // Import GeoService and Mauritania utilities
@@ -54,6 +53,7 @@ interface InteractiveMapProps {
   description?: string;
   value?: MapData;
   onChange?: (data: MapData) => void;
+  onMapClick?: (coordinates: Coordinate) => void;
   allowPolygon?: boolean;
   className?: string;
 }
@@ -63,6 +63,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   description = "Sélectionnez une localisation sur la carte",
   value = {},
   onChange,
+  onMapClick,
   allowPolygon = false,
   className = "",
 }) => {
@@ -234,6 +235,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
+
+              <MapClickHandler onMapClick={onMapClick} />
 
               {mauritaniaCities.map((city, index) => (
                 <Marker key={index} position={[city.lat, city.lng]}>

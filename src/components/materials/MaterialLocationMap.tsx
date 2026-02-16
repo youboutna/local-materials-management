@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin, Map } from 'lucide-react';
-import ProjectMap, { MapLocation } from '@/components/ProjectMap';
+import ProjectMap from '@/components/ProjectMap';
+import { MapLocation } from '@/domain/entities/Location';
 import LocationAutocomplete from '../location/LocationAutocomplete';
 
 interface MaterialLocationMapProps {

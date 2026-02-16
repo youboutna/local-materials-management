@@ -5,7 +5,7 @@
  * UI → Service → Domain ← Infrastructure
  */
 
-import { LocationRepository } from '@/domain/repositories/LocationRepository';
+import { ILocationRepository } from '@/domain/repositories/LocationRepository';
 import { LocationDTO } from '@/dtos/shared';
 import { LocationTransformer } from '@/dtos/transforms/LocationTransformer';
 import { AppError } from '@/utils/errors';
@@ -15,7 +15,7 @@ import { AppError } from '@/utils/errors';
  * Handles all location-related business logic
  */
 export class LocationService {
-  constructor(private locationRepository: LocationRepository) {}
+  constructor(private locationRepository: ILocationRepository) {}
 
   /**
    * Get all regions
@@ -38,6 +38,18 @@ export class LocationService {
       return cities.map(city => LocationTransformer.toDTO(city));
     } catch (error) {
       throw new AppError('Failed to fetch cities', 'LOCATION_SERVICE_ERROR', error);
+    }
+  }
+
+  /**
+   * Get all locations (regions and cities combined)
+   */
+  async findAll(): Promise<LocationDTO[]> {
+    try {
+      const locations = await this.locationRepository.findAll();
+      return locations.map(location => LocationTransformer.toDTO(location));
+    } catch (error) {
+      throw new AppError('Failed to fetch all locations', 'LOCATION_SERVICE_ERROR', error);
     }
   }
 
@@ -206,8 +218,8 @@ export class LocationService {
         distance: this.calculateDistance(
           latitude, 
           longitude, 
-          location.lat, 
-          location.lng
+          location.coordinates?.lat || 0, 
+          location.coordinates?.lng || 0
         )
       }));
     } catch (error) {
@@ -283,6 +295,24 @@ export class LocationService {
     if (locationData.type === 'city' && !locationData.parentCode) {
       throw new AppError('City must have a parent region code', 'VALIDATION_ERROR');
     }
+  }
+
+  /**
+   * Format address data into a readable string
+   */
+  formatAddress(adresse: string | unknown[] | Record<string, unknown> | null | undefined): string {
+    if (typeof adresse === 'string') {
+      return adresse;
+    }
+    if (typeof adresse === 'object' && adresse !== null) {
+      const addr = adresse as Record<string, unknown>;
+      if (addr.address) return String(addr.address);
+      if (addr.street) return String(addr.street);
+      if (Array.isArray(adresse) && adresse.length > 0)
+        return String(adresse[0]);
+      return JSON.stringify(adresse);
+    }
+    return String(adresse);
   }
 
   /**

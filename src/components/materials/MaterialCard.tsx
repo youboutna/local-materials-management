@@ -2,10 +2,10 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Package } from 'lucide-react';
-import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
+import { MaterialUIDTO } from '@/dtos/transforms';
 
 interface MaterialCardProps {
-  material: MaterialDTO;
+  material: MaterialUIDTO;
   onClick: () => void;
 }
 
@@ -46,8 +46,8 @@ const MaterialCard: React.FC<MaterialCardProps> = ({ material, onClick }) => {
 
           <div className="flex flex-wrap gap-2">
             <Badge variant="secondary">{material.category}</Badge>
-            {material.local_type && (
-              <Badge variant="outline">{material.local_type}</Badge>
+            {material.localType && (
+              <Badge variant="outline">{material.localType}</Badge>
             )}
           </div>
 
@@ -55,7 +55,7 @@ const MaterialCard: React.FC<MaterialCardProps> = ({ material, onClick }) => {
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Prix:</span>
               <span className="font-semibold text-sm">
-                {(material.price_per_unit || 0).toLocaleString()} MRU/{material.unit}
+                {(material.pricePerUnit || 0).toLocaleString()} MRU/{material.unit}
               </span>
             </div>
             
@@ -64,21 +64,21 @@ const MaterialCard: React.FC<MaterialCardProps> = ({ material, onClick }) => {
               <div className="flex items-center gap-1">
                 <Package className="h-3 w-3 text-muted-foreground" />
                 <span className="font-medium text-sm">
-                  {material.available_quantity} {material.unit}
+                  {material.availableQuantity} {material.unit}
                 </span>
               </div>
             </div>
 
-            {material.origin_location && (
+            {material.originLocation && (
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Origine:</span>
                 <span className="font-medium text-xs text-primary">
-                  {material.origin_location}
+                  {material.originLocation}
                 </span>
               </div>
             )}
 
-            {material.coordinates_latitude && material.coordinates_longitude && (
+            {material.coordinatesLatitude && material.coordinatesLongitude && (
               <div className="flex items-center gap-1 text-xs text-primary">
                 <MapPin className="h-3 w-3" />
                 <span>Géolocalisé</span>

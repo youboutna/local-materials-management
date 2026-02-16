@@ -1,11 +1,9 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Plus, Map, MapPin, Grid } from "lucide-react";
+import { Plus, MapPin, Grid } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import ProjectMap from "@/components/ProjectMap";
-import { MapLocation } from "@/components/ProjectMap";
 import MaterialFilters from "@/components/materials/MaterialFilters";
 import MaterialGrid from "@/components/materials/MaterialGrid";
 import { usePagination } from "@/hooks/usePagination";
@@ -17,19 +15,18 @@ import { ElectricSpinner } from "@/components/loading-page";
 import { useMaterialsHex } from "@/hooks/hexagonal";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { MaterialDTO } from "@/dtos/entities/MaterialDTO";
+import { MaterialUIDTO } from "@/dtos/transforms";
+import InteractiveMapGIS from "@/components/materials/InteractiveMapGIS";
 
 const Materials: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   
   // Use hexagonal architecture hook
-  const { materials: hexMaterials, loading: isLoading, error } = useMaterialsHex();
+  const { materials: hexMaterials, isLoading, error } = useMaterialsHex();
 
   // Use materials directly from hook (already MaterialUIDTO[])
-  const materials: MaterialDTO[] = hexMaterials;
-  
-  const [mapLocations, setMapLocations] = useState<MapLocation[]>([]);
+  const materials: MaterialUIDTO[] = hexMaterials;
 
   // Use the custom hook for filtering with debouncing
   const {
@@ -58,81 +55,6 @@ const Materials: React.FC = () => {
     setSelectedStockLevel,
   } = useMaterialsFilter(materials);
 
-  // Helper function to safely extract address string - always returns a string
-  const getAddressString = (adresse: string | object | null | undefined): string => {
-    console.log("Processing address:", adresse);
-    if (!adresse) return "";
-    if (typeof adresse === "string") return adresse;
-    if (typeof adresse === "object") {
-      // If it's a JSON object, try to extract a meaningful address string
-      if (adresse.address) return String(adresse.address);
-      if (adresse.street) return String(adresse.street);
-      if (Array.isArray(adresse) && adresse.length > 0)
-        return String(adresse[0]);
-      return JSON.stringify(adresse);
-    }
-    return String(adresse);
-  };
-
-  // Initialize map locations from hexagonal materials
-  useEffect(() => {
-    if (materials.length > 0) {
-      const locations: MapLocation[] = materials
-        .filter(
-          (material) =>
-            material.coordinates_latitude && material.coordinates_longitude
-        )
-        .map((material) => {
-          const addressString = getAddressString(material.adresse);
-          const baseLocation: MapLocation = {
-            id: material.id,
-            name: material.name,
-            type: "material" as const,
-            latitude: material.coordinates_latitude!,
-            longitude: material.coordinates_longitude!,
-            region: material.origin_location || "",
-          };
-
-          if (addressString && addressString.trim()) {
-            return { ...baseLocation, adresse: addressString.trim() };
-          }
-          return baseLocation;
-        });
-
-      setMapLocations(locations);
-    }
-  }, [materials]);
-
-  // Update map locations when filtered materials change
-  useEffect(() => {
-    const filteredLocations: MapLocation[] = filteredMaterials
-      .filter(
-        (material) =>
-          material.coordinates_latitude && material.coordinates_longitude
-      )
-      .map((material) => {
-        const addressString = getAddressString(material.adresse);
-
-        const baseLocation: MapLocation = {
-          id: material.id,
-          name: material.name,
-          type: "material" as const,
-          latitude: material.coordinates_latitude!,
-          longitude: material.coordinates_longitude!,
-          region: material.origin_location || "",
-        };
-
-        // Only add adresse if it's a non-empty string
-        if (addressString && addressString.trim()) {
-          return { ...baseLocation, adresse: addressString.trim() };
-        }
-
-        return baseLocation;
-      });
-
-    setMapLocations(filteredLocations);
-  }, [filteredMaterials]);
-
   // Pagination for materials
   const {
     currentData: paginatedMaterials,
@@ -149,8 +71,13 @@ const Materials: React.FC = () => {
   const InteractiveMaterialsMapView: React.FC<{ materials: MaterialUIDTO[] }> = ({
     materials,
   }) => {
-    const handleMaterialSelect = (material: MaterialDTO) => {
+    const handleMaterialSelect = (material: MaterialUIDTO) => {
       navigate(`/materials/${material.id}`);
+    };
+
+    // Wrapper function to match InteractiveMaterialsList expected type
+    const handleListMaterialSelect = (material: unknown) => {
+      handleMaterialSelect(material as MaterialUIDTO);
     };
 
     return (
@@ -175,7 +102,7 @@ const Materials: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <InteractiveMaterialsList
             materials={filteredInteractiveMaterials}
-            onMaterialSelect={handleMaterialSelect}
+            onMaterialSelect={handleListMaterialSelect}
           />
           <EnhancedInteractiveMaterialMap
             materials={filteredInteractiveMaterials}
@@ -211,14 +138,10 @@ const Materials: React.FC = () => {
       <div className="space-y-6">
 
         <Tabs defaultValue="grid" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="grid" className="flex items-center gap-2">
               <Grid className="h-4 w-4" />
               Vue Grille
-            </TabsTrigger>
-            <TabsTrigger value="map" className="flex items-center gap-2">
-              <Map className="h-4 w-4" />
-              Carte des Matériaux
             </TabsTrigger>
             <TabsTrigger
               value="interactive"
@@ -254,58 +177,6 @@ const Materials: React.FC = () => {
                 navigate(`/materials/${material.id}`)
               }
             />
-          </TabsContent>
-
-          <TabsContent value="map" className="space-y-6">
-            <Card>
-              <CardContent className="p-0">
-                {mapLocations.length > 0 ? (
-                  <ProjectMap
-                    locations={mapLocations}
-                    height="600px"
-                    className="rounded-lg"
-                  />
-                ) : (
-                  <div className="h-96 flex items-center justify-center text-gray-500">
-                    Aucun matériau géolocalisé à afficher
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {mapLocations.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Matériaux Géolocalisés</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {mapLocations.map((location) => {
-                      const addressDisplay =
-                        location.adresse || "Adresse non spécifiée";
-                      return (
-                        <div
-                          key={location.id}
-                          className="p-3 border rounded-lg"
-                        >
-                          <h4 className="font-medium">{location.name}</h4>
-                          <p className="text-sm text-gray-600">
-                            {location.region}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {addressDisplay}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {location.latitude.toFixed(6)},{" "}
-                            {location.longitude.toFixed(6)}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </TabsContent>
 
           <TabsContent value="interactive" className="space-y-6">

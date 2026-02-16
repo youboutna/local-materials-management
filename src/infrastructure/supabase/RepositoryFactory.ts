@@ -54,6 +54,8 @@ import {
   IProjectStakeholderRepository,
 } from '@/domain/repositories';
 
+import { ILocationRepository } from '@/domain/repositories/LocationRepository';
+
 import {
   SupabaseProjectAdapter,
   SupabasePhaseAdapter,
@@ -100,6 +102,8 @@ import { IMonitoringRepository } from '@/domain/repositories/IMonitoringReposito
 import { IStakeholderRepository } from '@/domain/repositories/IStakeholderRepository';
 import { SupabaseWorkspaceAdapter } from './adapters/SupabaseWorkspaceAdapter';
 
+import { LocationRepository } from './adapters/LocationRepository';
+
 /**
  * Repository Registry - Enhanced Singleton Management
  * Type-safe registry with lazy loading and memory optimization
@@ -125,7 +129,6 @@ interface RepositoryRegistry {
   userRepository?: IUserRepository;
   pvGeneratorRepository?: IPVGeneratorRepository;
   bankGuaranteeRepository?: IBankGuaranteeRepository;
-  bankGuaranteeActionRepository?: IBankGuaranteeActionRepository;
   insuranceRepository?: IInsuranceRepository;
   authRepository?: IAuthRepository;
   storageRepository?: IStorageRepository;
@@ -148,6 +151,7 @@ interface RepositoryRegistry {
   loadDataRepository?: ILoadDataRepository;
   reportingRepository?: IReportingRepository;
   projectStakeholderRepository?: IProjectStakeholderRepository;
+  locationRepository?: ILocationRepository;
 }
 
 /**
@@ -673,6 +677,17 @@ export class RepositoryFactory {
     return repositoryRegistry.workspaceRepository!;
   }
 
+
+  /**
+   * Get Location Repository instance
+   * Lazy loaded for memory efficiency
+   */
+  static getLocationRepository(): ILocationRepository {
+    if (!repositoryRegistry.locationRepository) {
+      repositoryRegistry.locationRepository = new LocationRepository();
+    }
+    return repositoryRegistry.locationRepository;
+  }
 
   /**
    * Get Tender Sharing Repository instance

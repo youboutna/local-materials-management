@@ -1,44 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
+import { MaterialUIDTO } from '@/dtos/transforms';
 
-interface Material {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  unit: string;
-  price_per_unit: number;
-  available_quantity: number;
-  image?: string;
-  location?: string;
-  type?: string;
-  address?: string;
-  coordinates?: {
-    lat: number;
-    lng: number;
-  };
-  shape?: string;
-  isActive?: boolean;
-}
-
-interface MaterialFilter {
-  location?: string;
-  minimumQuantity?: number;
-  type?: string;
-  address?: string;
-  coordinates?: {
-    lat: number;
-    lng: number;
-  };
-  shape?: string;
-  isActive?: boolean;
-}
-
-export const useMaterialsFilter = (materials: Material[]) => {
+export const useMaterialsFilter = (materials: MaterialUIDTO[]) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeSearchTerm, setActiveSearchTerm] = useState(""); // Actual search to filter by
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedLocalType, setSelectedLocalType] = useState("all");
-  const [filteredMaterials, setFilteredMaterials] = useState<Material[]>([]);
   
   // Interactive map filters
   const [interactiveSearchTerm, setInteractiveSearchTerm] = useState("");
@@ -46,38 +13,20 @@ export const useMaterialsFilter = (materials: Material[]) => {
   const [selectedInteractiveCategory, setSelectedInteractiveCategory] = useState("all");
   const [selectedRegion, setSelectedRegion] = useState("all");
   const [selectedStockLevel, setSelectedStockLevel] = useState("all");
-  
-  const [filters, setFilters] = useState<MaterialFilter>({});
-  
-  // Extract unique values for filter options
-  const categories = useMemo(() => 
-    Array.from(new Set(materials.map((m) => m.category))).filter(Boolean),
-    [materials]
-  );
-  
-  const localTypes = useMemo(() => 
-    Array.from(new Set(materials.map((m) => m.type).filter(Boolean))) as string[],
-    [materials]
-  );
-  
-  const regions = useMemo(() => 
-    Array.from(new Set(materials.map((m) => m.location).filter(Boolean))) as string[],
-    [materials]
-  );
-  
+
   // Filter materials based on fulltext search and filters using active search term
-  useEffect(() => {
-    let filtered = materials;
+  const filteredMaterials = useMemo(() => {
+    let filteredOriginal = materials;
 
     // Apply fulltext search filter
     if (activeSearchTerm && activeSearchTerm.trim()) {
       const queryTerms = activeSearchTerm.toLowerCase().trim().split(/\s+/);
       
-      filtered = filtered.filter((material) => {
+      filteredOriginal = filteredOriginal.filter((material) => {
         // Create searchable text from all material fields
         const searchableText = [
           material.name,
-          material.description,
+          material.description || '',
           material.category,
           material.unit,
         ].filter(Boolean).join(' ').toLowerCase();
@@ -89,30 +38,36 @@ export const useMaterialsFilter = (materials: Material[]) => {
 
     // Apply category filter
     if (selectedCategory && selectedCategory !== "all") {
-      filtered = filtered.filter(
+      filteredOriginal = filteredOriginal.filter(
         (material) => material.category === selectedCategory
       );
     }
 
     // Apply local type filter
     if (selectedLocalType && selectedLocalType !== "all") {
-      filtered = filtered.filter(
-        (material) => material.type === selectedLocalType
+      filteredOriginal = filteredOriginal.filter(
+        (material) => material.localType === selectedLocalType
       );
     }
 
-    // Apply location filter
-    if (filters.location) {
-      filtered = filtered.filter((material) => material.location?.includes(filters.location || ''));
-    }
-
-    // Apply type filter
-    if (filters.type) {
-      filtered = filtered.filter((material) => material.type === filters.type);
-    }
-
-    setFilteredMaterials(filtered);
-  }, [materials, activeSearchTerm, selectedCategory, selectedLocalType, filters]);
+    return filteredOriginal;
+  }, [materials, activeSearchTerm, selectedCategory, selectedLocalType]);
+  
+  // Extract unique values for filter options
+  const categories = useMemo(() => 
+    Array.from(new Set(materials.map((m) => m.category))).filter(Boolean),
+    [materials]
+  );
+  
+  const localTypes = useMemo(() => 
+    Array.from(new Set(materials.map((m) => m.localType).filter(Boolean))) as string[],
+    [materials]
+  );
+  
+  const regions = useMemo(() => 
+    Array.from(new Set(materials.map((m) => m.originLocation).filter(Boolean))) as string[],
+    [materials]
+  );
   
   // Get stock level for material
   const getStockLevel = (available: number) => {
@@ -126,21 +81,21 @@ export const useMaterialsFilter = (materials: Material[]) => {
   const filteredInteractiveMaterials = useMemo(() => {
     return materials.filter(material => {
       // Only show materials with GPS coordinates
-      if (!material.coordinates?.lat || !material.coordinates?.lng) return false;
+      if (!material.coordinatesLatitude || !material.coordinatesLongitude) return false;
 
       // Fulltext search filter using active search term
       if (activeInteractiveSearchTerm && activeInteractiveSearchTerm.trim()) {
         const queryTerms = activeInteractiveSearchTerm.toLowerCase().trim().split(/\s+/);
-        
+
         const searchableText = [
           material.name,
-          material.description,
+          material.description || '',
           material.category,
-          material.location,
-          material.type,
+          material.originLocation || '',
+          material.localType || '',
           material.unit
         ].filter(Boolean).join(' ').toLowerCase();
-        
+
         if (!queryTerms.every(term => searchableText.includes(term))) {
           return false;
         }
@@ -152,13 +107,13 @@ export const useMaterialsFilter = (materials: Material[]) => {
       }
 
       // Region filter
-      if (selectedRegion !== "all" && material.location !== selectedRegion) {
+      if (selectedRegion !== "all" && material.originLocation !== selectedRegion) {
         return false;
       }
 
       // Stock level filter
       if (selectedStockLevel !== "all") {
-        const stockLevel = getStockLevel(material.available_quantity);
+        const stockLevel = getStockLevel(material.availableQuantity);
         if (stockLevel !== selectedStockLevel) {
           return false;
         }
@@ -224,8 +179,6 @@ export const useMaterialsFilter = (materials: Material[]) => {
     handleResetFilters,
     handleResetInteractiveFilters,
     performSearch,
-    performInteractiveSearch,
-    filters,
-    setFilters
+    performInteractiveSearch
   };
 };

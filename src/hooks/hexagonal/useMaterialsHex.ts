@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { MaterialService } from "@/application/services/MaterialService";
 import { MaterialTransformer, CreateMaterialRequestDto, UpdateMaterialRequestDto, MaterialUIDTO } from '@/dtos/transforms';
-import { MaterialCategory, MaterialFormDataDTO, MaterialDTO, MaterialUnit, UpdateMaterialDTO, CreateMaterialDTO } from '@/dtos/entities';
+import { MaterialCategory, MaterialFormDataDTO, MaterialDTO, MaterialUnit, UpdateMaterialDTO, CreateMaterialDTO, MaterialStatus } from '@/dtos/entities';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useWorkspaces } from '@/hooks/useWorkspaces';
@@ -91,7 +91,8 @@ export function useMaterialsHex(): UseMaterialsHexResult {
   const { t } = useLanguage();
   const { workspaces } = useWorkspaces();
 
-  // Initialize geocoding service for workspace enhancement
+  // Initialize geocoding service for workspace enhancement (should be injected via service)
+  // TODO: Inject geocoding service via dependency injection
   const geocodingService = new GeocodingService({
     userAgent: 'MauritaniaMapper/1.0 (workspace-enhancement)',
     prioritizeLocal: true
@@ -130,26 +131,38 @@ export function useMaterialsHex(): UseMaterialsHexResult {
 
       const enhancedWorkspacesPromises = workspaces.map(async (w): Promise<WorkspaceData> => {
         try {
-          let enhancedLocation = w.location;
+          let enhancedLocation: string | {
+            name: string;  // required name
+            coordinates?: {
+              latitude: number;
+              longitude: number;
+            };
+          } = w.location;
 
           // If location is a GeographicUnit with coordinates but missing name, try reverse geocoding
           if (typeof w.location === 'object' &&
-              w.location.lat && w.location.lng &&
-              (!w.location.name || w.location.name === '')) {
+              w.location &&
+              'lat' in w.location && 'lng' in w.location &&
+              (!('name' in w.location) || !(w.location as { name?: string }).name || (w.location as { name?: string }).name === '')) {
 
             try {
-              const reverseResults = await geocodingService.reverseGeocode(
-                w.location.lat,
-                w.location.lng
-              );
-
+              const locationObj = w.location as { lat: number; lng: number };
+              const coordinates = {
+                latitude: locationObj.lat,
+                longitude: locationObj.lng
+              };
+              const reverseResults = await geocodingService.reverseGeocode(coordinates.latitude, coordinates.longitude);
               if (reverseResults.length > 0) {
                 const bestResult = reverseResults[0];
-                enhancedLocation = {
-                  ...w.location,
-                  name: bestResult.address,
-                  nameAr: bestResult.address // Could be enhanced with Arabic translation
-                };
+                if (bestResult.coordinates && typeof bestResult.coordinates.lng === 'number') {
+                  enhancedLocation = {
+                    name: bestResult.address,
+                    coordinates: {
+                      latitude: bestResult.coordinates.lat,
+                      longitude: bestResult.coordinates.lng
+                    }
+                  };
+                }
               }
             } catch (error) {
               console.warn(`Reverse geocoding failed for workspace ${w.id}:`, error);
@@ -159,18 +172,19 @@ export function useMaterialsHex(): UseMaterialsHexResult {
           // If location is just a name string, try to geocode it for coordinates
           else if (typeof w.location === 'string' && w.location.trim() !== '') {
             try {
-              const geocodeResults = await geocodingService.geocode(w.location);
-
-              if (geocodeResults.length > 0) {
-                const bestResult = geocodeResults[0];
-                enhancedLocation = {
-                  name: w.location,
-                  nameAr: w.location, // Could be enhanced
-                  lat: bestResult.coordinates.lat,
-                  lng: bestResult.coordinates.lng,
-                  code: w.location.toLowerCase().replace(/\s+/g, '-'),
-                  population: undefined, // Could be looked up from local data
-                };
+              const query = w.location.trim();
+              const suggestions = await geocodingService.searchMauritaniaLocations(query);
+              if (suggestions.length > 0) {
+                const bestResult = suggestions[0] as { coordinates?: { lat: number; lng: number } };
+                if (bestResult.coordinates && typeof bestResult.coordinates.lng === 'number') {
+                  enhancedLocation = {
+                    name: w.location,
+                    coordinates: {
+                      latitude: bestResult.coordinates.lat,
+                      longitude: bestResult.coordinates.lng
+                    }
+                  };
+                }
               }
             } catch (error) {
               console.warn(`Geocoding failed for workspace ${w.id}:`, error);
@@ -182,11 +196,11 @@ export function useMaterialsHex(): UseMaterialsHexResult {
             name: w.name,
             location: enhancedLocation,
             status: w.status || 'active',
-            coordinatesLatitude: typeof enhancedLocation === 'object' && enhancedLocation.lat
-              ? enhancedLocation.lat
+            coordinatesLatitude: typeof enhancedLocation === 'object' && enhancedLocation.coordinates
+              ? enhancedLocation.coordinates.latitude
               : undefined,
-            coordinatesLongitude: typeof enhancedLocation === 'object' && enhancedLocation.lng
-              ? enhancedLocation.lng
+            coordinatesLongitude: typeof enhancedLocation === 'object' && enhancedLocation.coordinates
+              ? enhancedLocation.coordinates.longitude
               : undefined,
           };
         } catch (error) {
@@ -368,6 +382,84 @@ export function useMaterialsHex(): UseMaterialsHexResult {
     isUpdating: updateMaterialMutation.isPending,
     isDeleting: deleteMaterialMutation.isPending,
     workspaces: enhancedWorkspaces,
+    // Enhanced UI features - stub implementations
+    getMaterialStockStatus: (material: MaterialUIDTO) => {
+      if (material.availableQuantity <= 0) return 'out_of_stock';
+      if (material.availableQuantity < 10) return 'critical';
+      if (material.availableQuantity < 50) return 'low';
+      return 'optimal';
+    },
+    getMaterialCostEfficiency: (material: MaterialUIDTO) => {
+      return material.pricePerUnit * material.availableQuantity;
+    },
+    getMaterialQualityScore: (material: MaterialUIDTO) => {
+      // Stub implementation - could be enhanced with actual quality metrics
+      return 8.5;
+    },
+    getMaterialReorderLevel: (material: MaterialUIDTO) => {
+      return material.minimumQuantity || 10;
+    },
+    getMaterialAnalytics: () => ({
+      totalMaterials: transformedMaterials.length,
+      totalValue: transformedMaterials.reduce((sum, m) => sum + (m.pricePerUnit * m.availableQuantity), 0),
+      averagePrice: transformedMaterials.length > 0 
+        ? transformedMaterials.reduce((sum, m) => sum + m.pricePerUnit, 0) / transformedMaterials.length
+        : 0,
+      lowStockItems: transformedMaterials.filter(m => m.availableQuantity < 10).length,
+      outOfStockItems: transformedMaterials.filter(m => m.availableQuantity <= 0).length,
+      categoryBreakdown: transformedMaterials.reduce((acc, m) => {
+        acc[m.category] = (acc[m.category] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>),
+      supplierBreakdown: {} // Could be enhanced with actual supplier data
+    }),
+    validateMaterialWithReferential: async (material: MaterialUIDTO, referentialType: string): Promise<ValidationResult> => {
+      // Stub implementation - could be enhanced with actual referential validation
+      return {
+        isValid: true,
+        errors: [],
+        warnings: []
+      };
+    },
+    generateMaterialReport: (material: MaterialUIDTO): MaterialReport => {
+      return {
+        material: {
+          id: material.id,
+          name: material.name,
+          description: material.description || '',
+          category: material.category as MaterialCategory,
+          status: 'available' as MaterialStatus,
+          unit: material.unit as MaterialUnit,
+          quantity: material.quantity,
+          pricePerUnit: material.pricePerUnit,
+          availableQuantity: material.availableQuantity,
+          minQuantity: material.minimumQuantity || 0,
+          totalValue: material.pricePerUnit * material.availableQuantity,
+          workspaceId: '',
+          originLocation: material.originLocation,
+          coordinatesLatitude: material.coordinatesLatitude,
+          coordinatesLongitude: material.coordinatesLongitude,
+          adresse: material.adresse,
+          forme: material.forme as "polygon" | "rectangle" | "circle" | "point" | undefined,
+          localisation: material.localisation,
+          gtin: '',
+          sku: '',
+          ean: '',
+          asin: '',
+          multilangLabels: material.multilangLabels || {},
+          timeline: undefined,
+          supplier: undefined,
+          image: material.image,
+          tags: [],
+          notes: undefined,
+          createdAt: material.createdAt || new Date().toISOString(),
+          updatedAt: material.updatedAt || new Date().toISOString()
+        },
+        summary: `Material ${material.name} is in ${material.availableQuantity > 0 ? 'stock' : 'out of stock'} with ${material.availableQuantity} units available.`,
+        recommendations: material.availableQuantity < 10 ? ['Reorder material soon'] : [],
+        generatedAt: new Date().toISOString()
+      };
+    }
   };
 }
 

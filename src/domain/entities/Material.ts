@@ -30,8 +30,8 @@ export class Material {
   private _quantity: number;
   private _unit: string;
   private _minQuantity: number;
-  private _workspaceId: string;
-  private _location: GeographicUnit;
+  private _workspaceId?: string;
+  private _location?: GeographicUnit;
   private _timeline?: {
     start: Date;
     end: Date;
@@ -42,6 +42,7 @@ export class Material {
     name: string;
     contact: string;
     leadTime: number;
+    id?: string; // Added supplier ID
   };
   private _images: MaterialImage[];
   private _pricePerUnit: number;
@@ -49,7 +50,7 @@ export class Material {
   private _originLocation?: string;
   private _category: MaterialCategory;
   private _subcategory?: string;
-  private _localisation: CoordinatePoint[]; // Array of coordinate objects
+  private _localisation: CoordinatePoint[];
   private _forme?: "polygon" | "rectangle" | "circle" | "point";
   private _adresse?: string;
   private _createdAt: Date;
@@ -60,82 +61,105 @@ export class Material {
   private _ean?: string;
   private _asin?: string;
   private _image?: string;
-  private _coordinates?: string;
   private _coordinatesLatitude?: number;
   private _coordinatesLongitude?: number;
   // Multi-language support
   private _multilangLabels?: Record<string, string>;
+  // Database-specific fields
+  private _supplierId?: string; // Foreign key to suppliers table
+  private _materialCode?: string; // Unique material code
+  private _minimumStock?: number; // Renamed from minQuantity for clarity
+  private _maximumStock?: number;
+  private _leadTimeDays?: number;
+  private _qualityGrade?: string;
+  private _technicalSpecifications?: Record<string, unknown>;
+  private _materialStatus?: 'active' | 'discontinued' | 'pending';
+  private _tags?: string[];
 
   constructor(
     id: string,
     name: string,
-    quantity: number,
-    unit: string,
-    workspaceId: string,
-    location: GeographicUnit,
-    description?: string,
-    minQuantity?: number,
-    timeline?: {
-      start: Date;
-      end: Date;
-      estimatedDuration?: number;
-    },
-    lastRestock?: Date,
-    supplier?: {
-      name: string;
-      contact: string;
-      leadTime: number;
-    },
-    images?: MaterialImage[],
-    pricePerUnit?: number,
-    availableQuantity?: number,
-    originLocation?: string,
-    category?: MaterialCategory,
-    subcategory?: string,
-    localisation?: CoordinatePoint[],
-    forme?: "polygon" | "rectangle" | "circle" | "point",
-    adresse?: string,
-    createdAt?: Date,
-    updatedAt?: Date,
-    gtin?: string,
-    sku?: string,
-    ean?: string,
-    asin?: string,
-    image?: string,
-    coordinatesLatitude?: number,
-    coordinatesLongitude?: number,
-    multilangLabels?: Record<string, string>
+    quantity: number = 0,
+    unit: string = 'unit',
+    category: MaterialCategory = 'other',
+    workspaceId?: string,
+    location?: GeographicUnit,
+    options?: {
+      description?: string;
+      minQuantity?: number;
+      timeline?: { start: Date; end: Date; estimatedDuration?: number };
+      lastRestock?: Date;
+      supplier?: { name: string; contact: string; leadTime: number; id?: string };
+      images?: MaterialImage[];
+      pricePerUnit?: number;
+      availableQuantity?: number;
+      originLocation?: string;
+      subcategory?: string;
+      localisation?: CoordinatePoint[];
+      forme?: "polygon" | "rectangle" | "circle" | "point";
+      adresse?: string;
+      createdAt?: Date;
+      updatedAt?: Date;
+      gtin?: string;
+      sku?: string;
+      ean?: string;
+      asin?: string;
+      image?: string;
+      coordinatesLatitude?: number;
+      coordinatesLongitude?: number;
+      multilangLabels?: Record<string, string>;
+      supplierId?: string;
+      materialCode?: string;
+      minimumStock?: number;
+      maximumStock?: number;
+      leadTimeDays?: number;
+      qualityGrade?: string;
+      technicalSpecifications?: Record<string, unknown>;
+      materialStatus?: 'active' | 'discontinued' | 'pending';
+      tags?: string[];
+    }
   ) {
     this._id = this.validateId(id);
     this._name = this.validateName(name);
-    this._description = description;
     this._quantity = this.validateQuantity(quantity);
     this._unit = this.validateUnit(unit);
-    this._minQuantity = minQuantity || 0;
-    this._workspaceId = this.validateWorkspaceId(workspaceId);
+    this._category = this.validateCategory(category);
+    this._workspaceId = workspaceId;
     this._location = location;
-    this._timeline = timeline;
-    this._lastRestock = lastRestock || new Date();
-    this._supplier = supplier;
-    this._images = images || [];
-    this._pricePerUnit = pricePerUnit || 0;
-    this._availableQuantity = availableQuantity || 0;
-    this._originLocation = originLocation;
-    this._category = category || 'other';
-    this._subcategory = subcategory;
-    this._localisation = localisation || [];
-    this._forme = forme;
-    this._adresse = adresse;
-    this._createdAt = createdAt || new Date();
-    this._updatedAt = updatedAt || new Date();
-    this._gtin = gtin;
-    this._sku = sku;
-    this._ean = ean;
-    this._asin = asin;
-    this._image = image;
-    this._coordinatesLatitude = coordinatesLatitude;
-    this._coordinatesLongitude = coordinatesLongitude;
-    this._multilangLabels = multilangLabels;
+    
+    // Apply options with defaults
+    this._description = options?.description;
+    this._minQuantity = options?.minQuantity || 0;
+    this._timeline = options?.timeline;
+    this._lastRestock = options?.lastRestock || new Date();
+    this._supplier = options?.supplier;
+    this._images = options?.images || [];
+    this._pricePerUnit = options?.pricePerUnit || 0;
+    this._availableQuantity = options?.availableQuantity || 0;
+    this._originLocation = options?.originLocation;
+    this._subcategory = options?.subcategory;
+    this._localisation = options?.localisation || [];
+    this._forme = options?.forme;
+    this._adresse = options?.adresse;
+    this._createdAt = options?.createdAt || new Date();
+    this._updatedAt = options?.updatedAt || new Date();
+    this._gtin = options?.gtin;
+    this._sku = options?.sku;
+    this._ean = options?.ean;
+    this._asin = options?.asin;
+    this._image = options?.image;
+    this._coordinatesLatitude = options?.coordinatesLatitude;
+    this._coordinatesLongitude = options?.coordinatesLongitude;
+    this._multilangLabels = options?.multilangLabels || {};
+    this._supplierId = options?.supplierId;
+    this._materialCode = options?.materialCode;
+    this._minimumStock = options?.minimumStock;
+    this._maximumStock = options?.maximumStock;
+    this._leadTimeDays = options?.leadTimeDays;
+    this._qualityGrade = options?.qualityGrade;
+    this._technicalSpecifications = options?.technicalSpecifications || {};
+    this._materialStatus = options?.materialStatus || 'active';
+    this._tags = options?.tags || [];
   }
 
   // Validation methods
@@ -174,32 +198,43 @@ export class Material {
       this._name,
       this._quantity,
       this._unit,
+      this._category,
       this._workspaceId,
       this._location,
-      this._description,
-      this._minQuantity,
-      this._timeline,
-      this._lastRestock,
-      this._supplier,
-      this._images,
-      this.validatePricePerUnit(newPrice),
-      this._availableQuantity,
-      this._originLocation,
-      this._category,
-      this._subcategory,
-      this._localisation,
-      this._forme,
-      this._adresse,
-      this._createdAt,
-      new Date(),
-      this._gtin,
-      this._sku,
-      this._ean,
-      this._asin,
-      this._image,
-      this._coordinatesLatitude,
-      this._coordinatesLongitude,
-      this._multilangLabels
+      {
+        description: this._description,
+        minQuantity: this._minQuantity,
+        timeline: this._timeline,
+        lastRestock: this._lastRestock,
+        supplier: this._supplier,
+        images: this._images,
+        pricePerUnit: this.validatePricePerUnit(newPrice),
+        availableQuantity: this._availableQuantity,
+        originLocation: this._originLocation,
+        subcategory: this._subcategory,
+        localisation: this._localisation,
+        forme: this._forme,
+        adresse: this._adresse,
+        createdAt: this._createdAt,
+        updatedAt: new Date(),
+        gtin: this._gtin,
+        sku: this._sku,
+        ean: this._ean,
+        asin: this._asin,
+        image: this._image,
+        coordinatesLatitude: this._coordinatesLatitude,
+        coordinatesLongitude: this._coordinatesLongitude,
+        multilangLabels: this._multilangLabels,
+        supplierId: this._supplierId,
+        materialCode: this._materialCode,
+        minimumStock: this._minimumStock,
+        maximumStock: this._maximumStock,
+        leadTimeDays: this._leadTimeDays,
+        qualityGrade: this._qualityGrade,
+        technicalSpecifications: this._technicalSpecifications,
+        materialStatus: this._materialStatus,
+        tags: this._tags
+      }
     );
   }
 
@@ -209,32 +244,43 @@ export class Material {
       this._name,
       this._quantity,
       this._unit,
+      this._category,
       this._workspaceId,
       this._location,
-      this._description,
-      this._minQuantity,
-      this._timeline,
-      this._lastRestock,
-      this._supplier,
-      this._images,
-      this._pricePerUnit,
-      this.validateAvailableQuantity(newQuantity),
-      this._originLocation,
-      this._category,
-      this._subcategory,
-      this._localisation,
-      this._forme,
-      this._adresse,
-      this._createdAt,
-      new Date(),
-      this._gtin,
-      this._sku,
-      this._ean,
-      this._asin,
-      this._image,
-      this._coordinatesLatitude,
-      this._coordinatesLongitude,
-      this._multilangLabels
+      {
+        description: this._description,
+        minQuantity: this._minQuantity,
+        timeline: this._timeline,
+        lastRestock: this._lastRestock,
+        supplier: this._supplier,
+        images: this._images,
+        pricePerUnit: this._pricePerUnit,
+        availableQuantity: this.validateAvailableQuantity(newQuantity),
+        originLocation: this._originLocation,
+        subcategory: this._subcategory,
+        localisation: this._localisation,
+        forme: this._forme,
+        adresse: this._adresse,
+        createdAt: this._createdAt,
+        updatedAt: new Date(),
+        gtin: this._gtin,
+        sku: this._sku,
+        ean: this._ean,
+        asin: this._asin,
+        image: this._image,
+        coordinatesLatitude: this._coordinatesLatitude,
+        coordinatesLongitude: this._coordinatesLongitude,
+        multilangLabels: this._multilangLabels,
+        supplierId: this._supplierId,
+        materialCode: this._materialCode,
+        minimumStock: this._minimumStock,
+        maximumStock: this._maximumStock,
+        leadTimeDays: this._leadTimeDays,
+        qualityGrade: this._qualityGrade,
+        technicalSpecifications: this._technicalSpecifications,
+        materialStatus: this._materialStatus,
+        tags: this._tags
+      }
     );
   }
 
@@ -244,32 +290,43 @@ export class Material {
       this._name,
       this._quantity,
       this._unit,
+      this._category,
       this._workspaceId,
       this._location,
-      this._description,
-      this._minQuantity,
-      this._timeline,
-      this._lastRestock,
-      this._supplier,
-      this._images,
-      this._pricePerUnit,
-      this._availableQuantity,
-      this._originLocation,
-      this._category,
-      this._subcategory,
-      this._localisation,
-      this._forme,
-      this._adresse,
-      this._createdAt,
-      new Date(),
-      this._gtin,
-      this._sku,
-      this._ean,
-      this._asin,
-      this._image,
-      latitude,
-      longitude,
-      this._multilangLabels
+      {
+        description: this._description,
+        minQuantity: this._minQuantity,
+        timeline: this._timeline,
+        lastRestock: this._lastRestock,
+        supplier: this._supplier,
+        images: this._images,
+        pricePerUnit: this._pricePerUnit,
+        availableQuantity: this._availableQuantity,
+        originLocation: this._originLocation,
+        subcategory: this._subcategory,
+        localisation: this._localisation,
+        forme: this._forme,
+        adresse: this._adresse,
+        createdAt: this._createdAt,
+        updatedAt: new Date(),
+        gtin: this._gtin,
+        sku: this._sku,
+        ean: this._ean,
+        asin: this._asin,
+        image: this._image,
+        coordinatesLatitude: latitude,
+        coordinatesLongitude: longitude,
+        multilangLabels: this._multilangLabels,
+        supplierId: this._supplierId,
+        materialCode: this._materialCode,
+        minimumStock: this._minimumStock,
+        maximumStock: this._maximumStock,
+        leadTimeDays: this._leadTimeDays,
+        qualityGrade: this._qualityGrade,
+        technicalSpecifications: this._technicalSpecifications,
+        materialStatus: this._materialStatus,
+        tags: this._tags
+      }
     );
   }
 
@@ -279,32 +336,43 @@ export class Material {
       this._name,
       this._quantity,
       this._unit,
+      this._category,
       this._workspaceId,
       this._location,
-      this._description,
-      this._minQuantity,
-      this._timeline,
-      this._lastRestock,
-      this._supplier,
-      this._images,
-      this._pricePerUnit,
-      this._availableQuantity,
-      this._originLocation,
-      this._category,
-      this._subcategory,
-      localisation,
-      this._forme,
-      this._adresse,
-      this._createdAt,
-      new Date(),
-      this._gtin,
-      this._sku,
-      this._ean,
-      this._asin,
-      this._image,
-      this._coordinatesLatitude,
-      this._coordinatesLongitude,
-      this._multilangLabels
+      {
+        description: this._description,
+        minQuantity: this._minQuantity,
+        timeline: this._timeline,
+        lastRestock: this._lastRestock,
+        supplier: this._supplier,
+        images: this._images,
+        pricePerUnit: this._pricePerUnit,
+        availableQuantity: this._availableQuantity,
+        originLocation: this._originLocation,
+        subcategory: this._subcategory,
+        localisation: localisation,
+        forme: this._forme,
+        adresse: this._adresse,
+        createdAt: this._createdAt,
+        updatedAt: new Date(),
+        gtin: this._gtin,
+        sku: this._sku,
+        ean: this._ean,
+        asin: this._asin,
+        image: this._image,
+        coordinatesLatitude: this._coordinatesLatitude,
+        coordinatesLongitude: this._coordinatesLongitude,
+        multilangLabels: this._multilangLabels,
+        supplierId: this._supplierId,
+        materialCode: this._materialCode,
+        minimumStock: this._minimumStock,
+        maximumStock: this._maximumStock,
+        leadTimeDays: this._leadTimeDays,
+        qualityGrade: this._qualityGrade,
+        technicalSpecifications: this._technicalSpecifications,
+        materialStatus: this._materialStatus,
+        tags: this._tags
+      }
     );
   }
 
@@ -319,29 +387,29 @@ export class Material {
     availableQuantity?: number;
     workspaceId?: string;
     location?: GeographicUnit;
+    supplierId?: string;
+    coordinatesLatitude?: number;
+    coordinatesLongitude?: number;
+    adresse?: string;
   }): Material {
     return new Material(
       params.id,
       params.name,
       0, // quantity - default to 0
       params.unit || 'unit',
-      params.workspaceId || '',
-      params.location || { code: 'unknown', name: 'Unknown', nameAr: 'غير معروف', lat: 0, lng: 0 }, // default location
-      params.description || '',
-      undefined, // minQuantity
-      undefined, // timeline
-      undefined, // lastRestock
-      undefined, // supplier
-      undefined, // images
-      params.pricePerUnit || 0,
-      params.availableQuantity || 0,
-      undefined, // originLocation
       params.category || 'other',
-      undefined, // localisation
-      undefined, // forme
-      undefined, // adresse
-      undefined, // createdAt
-      undefined  // updatedAt
+      params.workspaceId,
+      params.location,
+      {
+        description: params.description,
+        pricePerUnit: params.pricePerUnit,
+        availableQuantity: params.availableQuantity,
+        coordinatesLatitude: params.coordinatesLatitude,
+        coordinatesLongitude: params.coordinatesLongitude,
+        adresse: params.adresse,
+        supplierId: params.supplierId,
+        materialStatus: 'active'
+      }
     );
   }
 
@@ -352,11 +420,11 @@ export class Material {
   get quantity(): number { return this._quantity; }
   get unit(): string { return this._unit; }
   get minQuantity(): number { return this._minQuantity; }
-  get workspaceId(): string { return this._workspaceId; }
-  get location(): GeographicUnit { return this._location; }
+  get workspaceId(): string | undefined { return this._workspaceId; }
+  get location(): GeographicUnit | undefined { return this._location; }
   get timeline(): { start: Date; end: Date; estimatedDuration?: number } | undefined { return this._timeline; }
   get lastRestock(): Date { return this._lastRestock; }
-  get supplier(): { name: string; contact: string; leadTime: number } | undefined { return this._supplier; }
+  get supplier(): { name: string; contact: string; leadTime: number; id?: string } | undefined { return this._supplier; }
   get images(): MaterialImage[] { return this._images; }
   get pricePerUnit(): number { return this._pricePerUnit; }
   get availableQuantity(): number { return this._availableQuantity; }
@@ -376,42 +444,16 @@ export class Material {
   get coordinatesLatitude(): number | undefined { return this._coordinatesLatitude; }
   get coordinatesLongitude(): number | undefined { return this._coordinatesLongitude; }
   get multilangLabels(): Record<string, string> | undefined { return this._multilangLabels; }
-
-  // ============= Data Transformation Methods =============
-  toPlainObject(): Record<string, unknown> {
-    return {
-      id: this._id,
-      name: this._name,
-      description: this._description,
-      quantity: this._quantity,
-      unit: this._unit,
-      minQuantity: this._minQuantity,
-      workspaceId: this._workspaceId,
-      location: this._location,
-      timeline: this._timeline,
-      lastRestock: this._lastRestock,
-      supplier: this._supplier,
-      images: this._images,
-      pricePerUnit: this._pricePerUnit,
-      availableQuantity: this._availableQuantity,
-      originLocation: this._originLocation,
-      category: this._category,
-      subcategory: this._subcategory,
-      localisation: this._localisation,
-      forme: this._forme,
-      adresse: this._adresse,
-      createdAt: this._createdAt,
-      updatedAt: this._updatedAt,
-      gtin: this._gtin,
-      sku: this._sku,
-      ean: this._ean,
-      asin: this._asin,
-      image: this._image,
-      coordinatesLatitude: this._coordinatesLatitude,
-      coordinatesLongitude: this._coordinatesLongitude,
-      multilangLabels: this._multilangLabels
-    };
-  }
+  // Database-specific getters
+  get supplierId(): string | undefined { return this._supplierId; }
+  get materialCode(): string | undefined { return this._materialCode; }
+  get minimumStock(): number | undefined { return this._minimumStock; }
+  get maximumStock(): number | undefined { return this._maximumStock; }
+  get leadTimeDays(): number | undefined { return this._leadTimeDays; }
+  get qualityGrade(): string | undefined { return this._qualityGrade; }
+  get technicalSpecifications(): Record<string, unknown> | undefined { return this._technicalSpecifications; }
+  get materialStatus(): 'active' | 'discontinued' | 'pending' | undefined { return this._materialStatus; }
+  get tags(): string[] | undefined { return this._tags; }
 
   // ============= Validation Methods =============
   private validateId(id: string): string {
@@ -494,7 +536,7 @@ export class Material {
    */
   static fromDatabase(row: Record<string, unknown>): Material {
     // Extract timeline safely
-    let timeline: { start: Date; end: Date; estimatedDuration: number } | undefined;
+    let timeline: { start: Date; end: Date; estimatedDuration?: number } | undefined;
     if (row.timeline) {
       const timelineData = row.timeline as {
         start?: string;
@@ -513,32 +555,43 @@ export class Material {
       row.name as string,
       row.quantity as number ?? 0,
       row.unit as string ?? 'unit',
-      row.workspace_id as string ?? '',
-      { code: 'default', name: 'Default', nameAr: 'افتراضي', lat: 0, lng: 0 }, // Default location, can be enhanced
-      row.description as string,
-      row.min_quantity as number ?? 0,
-      timeline,
-      row.last_restock ? new Date(row.last_restock as string) : new Date(),
-      row.supplier as { name: string; contact: string; leadTime: number } | undefined,
-      [], // images - can be loaded separately
-      row.price_per_unit as number ?? 0,
-      row.available_quantity as number ?? 0,
-      row.origin_location as string,
       row.category as MaterialCategory ?? 'other',
-      row.subcategory as string,
-      row.localisation as CoordinatePoint[] ?? [],
-      row.forme as "polygon" | "rectangle" | "circle" | "point",
-      row.adresse as string,
-      row.created_at ? new Date(row.created_at as string) : new Date(),
-      row.updated_at ? new Date(row.updated_at as string) : new Date(),
-      row.gtin as string,
-      row.sku as string,
-      row.ean as string,
-      row.asin as string,
-      row.image as string,
-      row.coordinates_latitude as number,
-      row.coordinates_longitude as number,
-      row.multilang_labels as Record<string, string>
+      row.workspace_id as string,
+      { code: 'default', name: 'Default', nameAr: 'افتراضي', lat: 0, lng: 0 }, // Default location, can be enhanced
+      {
+        description: row.description as string,
+        minQuantity: row.min_quantity as number ?? 0,
+        timeline: timeline,
+        lastRestock: row.last_restock ? new Date(row.last_restock as string) : new Date(),
+        supplier: row.supplier as { name: string; contact: string; leadTime: number } | undefined,
+        images: [], // images - can be loaded separately
+        pricePerUnit: row.price_per_unit as number ?? 0,
+        availableQuantity: row.available_quantity as number ?? 0,
+        originLocation: row.origin_location as string,
+        subcategory: row.subcategory as string,
+        localisation: row.localisation as CoordinatePoint[] ?? [],
+        forme: row.forme as "polygon" | "rectangle" | "circle" | "point",
+        adresse: row.adresse as string,
+        createdAt: row.created_at ? new Date(row.created_at as string) : new Date(),
+        updatedAt: row.updated_at ? new Date(row.updated_at as string) : new Date(),
+        gtin: row.gtin as string,
+        sku: row.sku as string,
+        ean: row.ean as string,
+        asin: row.asin as string,
+        image: row.image as string,
+        coordinatesLatitude: row.coordinates_latitude as number,
+        coordinatesLongitude: row.coordinates_longitude as number,
+        multilangLabels: row.multilang_labels as Record<string, string>,
+        supplierId: row.supplier_id as string,
+        materialCode: row.material_code as string,
+        minimumStock: row.minimum_stock as number,
+        maximumStock: row.maximum_stock as number,
+        leadTimeDays: row.lead_time_days as number,
+        qualityGrade: row.quality_grade as string,
+        technicalSpecifications: row.technical_specifications as Record<string, unknown>,
+        materialStatus: row.material_status as 'active' | 'discontinued' | 'pending' ?? 'active',
+        tags: row.tags as string[]
+      }
     );
   }
 
@@ -576,7 +629,16 @@ export class Material {
       image: this._image,
       coordinates_latitude: this._coordinatesLatitude,
       coordinates_longitude: this._coordinatesLongitude,
-      multilang_labels: this._multilangLabels
+      multilang_labels: this._multilangLabels,
+      supplier_id: this._supplierId,
+      material_code: this._materialCode,
+      minimum_stock: this._minimumStock,
+      maximum_stock: this._maximumStock,
+      lead_time_days: this._leadTimeDays,
+      quality_grade: this._qualityGrade,
+      technical_specifications: this._technicalSpecifications,
+      material_status: this._materialStatus,
+      tags: this._tags
     };
   }
 }

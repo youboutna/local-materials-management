@@ -1,13 +1,13 @@
 /**
- * Enhanced Location Selector Component
- * Replaces basic LocationSelector with advanced autocomplete and features
+ * Location Selector Component
+ * Unified location selection using clean, reusable components
  * Following PROMPTS.md Rule #4: Use centralized DTOs, no type redefinition
  */
 
 import React from 'react';
-import EnhancedLocationSelector from './EnhancedLocationSelector';
+import UnifiedLocationSelector from './UnifiedLocationSelector';
 
-// Re-export EnhancedLocationSelector as LocationSelector for backward compatibility
-const LocationSelector = EnhancedLocationSelector;
+// Re-export UnifiedLocationSelector as LocationSelector for backward compatibility
+const LocationSelector = UnifiedLocationSelector;
 
 export default LocationSelector;
