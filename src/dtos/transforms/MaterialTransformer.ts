@@ -148,6 +148,42 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
   }
 
   /**
+   * Convert MaterialFormDataDTO to CreateMaterialDTO
+   * Form data → Create request for service layer
+   */
+  static formToCreateRequest(formData: MaterialFormDataDTO): CreateMaterialDTO {
+    return {
+      name: formData.name,
+      description: formData.description,
+      category: formData.category,
+      subcategory: formData.subcategory,
+      unit: formData.unit,
+      pricePerUnit: formData.pricePerUnit,
+      quantity: formData.quantity,
+      availableQuantity: formData.availableQuantity,
+      minQuantity: formData.minQuantity,
+      workspaceId: formData.workspaceId,
+      gtin: formData.gtin,
+      sku: formData.sku,
+      ean: formData.ean,
+      asin: formData.asin,
+      image: formData.image,
+      coordinatesLatitude: formData.coordinatesLatitude,
+      coordinatesLongitude: formData.coordinatesLongitude,
+      adresse: formData.adresse,
+      forme: formData.forme,
+      localisation: formData.localisation,
+      multilangLabels: formData.multilangLabels,
+      timeline: formData.timeline ? {
+        start: formData.timeline.start,
+        end: formData.timeline.end,
+        estimatedDuration: formData.timeline.estimatedDuration
+      } : undefined,
+      supplier: formData.supplier
+    };
+  }
+
+  /**
    * Convert MaterialFormDataDTO to UpdateMaterialDTO
    * Form data → Update request for service layer
    */

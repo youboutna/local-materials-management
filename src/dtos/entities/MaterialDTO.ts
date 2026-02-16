@@ -187,6 +187,7 @@ export interface CreateMaterialDTO extends Omit<MaterialDTO, keyof BaseEntityDTO
   pricePerUnit: number;
   quantity: number;
   availableQuantity: number;
+  minQuantity: number;
   workspaceId: string;
   gtin?: string;
   sku?: string;

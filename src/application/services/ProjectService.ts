@@ -14,6 +14,7 @@
 import { Project, ProjectCoordinates } from '@/domain/entities/Project';
 import { IProjectRepository, ProjectSummary } from '@/domain/repositories/IProjectRepository';
 import { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
+import { InspectionDTO, StakeholderDTO } from '@/dtos';
 import { 
   ProjectDTO, 
   CreateProjectDTO, 
@@ -25,6 +26,9 @@ import {
   PROJECT_STATUS_CATEGORIES,
   PROJECT_STATUS_TRANSITIONS
 } from '@/dtos/entities/ProjectDTO';
+
+// Import ProjectTransformer for transformations
+import { ProjectTransformer } from '@/dtos/transforms/ProjectTransformer';
 
 // =================== ERROR CLASSES ===================
 
@@ -386,14 +390,14 @@ export class ProjectService {
       const statistics: Record<string, number> = {};
       
       // Initialize all statuses with 0
-      Object.keys(ProjectStatusEnum).forEach(statusKey => {
-        const status = ProjectStatusEnum[statusKey as keyof typeof ProjectStatusEnum];
+      Object.keys(ProjectStatus).forEach(statusKey => {
+        const status = ProjectStatus[statusKey as keyof typeof ProjectStatus];
         statistics[status] = 0;
       });
       
       // Count projects by status
       allProjects.forEach(project => {
-        const status = project.status as ProjectStatusEnum;
+        const status = project.status as ProjectStatus;
         if (statistics[status] !== undefined) {
           statistics[status]++;
         }
@@ -537,10 +541,10 @@ export class ProjectService {
       
       return {
         total: projects.length,
-        active: projects.filter(p => p.status === 'en cours').length,
-        completed: projects.filter(p => p.status === 'terminé').length,
-        onHold: projects.filter(p => p.status === 'suspendu').length,
-        cancelled: projects.filter(p => p.status === 'annulé').length,
+        active: projects.filter(p => p.status === ProjectStatus.EN_COURS).length,
+        completed: projects.filter(p => p.status === ProjectStatus.TERMINE).length,
+        onHold: projects.filter(p => p.status === ProjectStatus.SUSPENDU).length,
+        cancelled: projects.filter(p => p.status === ProjectStatus.ANNULE).length,
       };
     } catch (error) {
       throw new ProjectServiceError(

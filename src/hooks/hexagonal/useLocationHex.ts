@@ -667,3 +667,4 @@ export function useLocationHex(): UseLocationHexResult {
     updateLocation: updateLocationMutation.mutateAsync,
     deleteLocation: deleteLocationMutation.mutateAsync
   };
+}

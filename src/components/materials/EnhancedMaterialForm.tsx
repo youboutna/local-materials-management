@@ -37,6 +37,7 @@ import { WorkspaceDTO, SupplierDTO, LocationDTO } from '@/dtos';
 import { CreateMaterialRequestDto } from '@/dtos/transforms';
 import MaterialDocuments from './MaterialDocuments';
 import UnifiedLocationSelector from '@/components/location/UnifiedLocationSelector';
+import { useLocationAutoFill } from '@/hooks/hexagonal/useLocationAutoFill';
 
 // Create type alias
 type MauritaniaLocation = Location ;
@@ -137,31 +138,41 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
   // Geocoding functions using abstracted location service
   const handleGeocodeAddress = useCallback(async (address: string) => {
     const result = await geocodeAddress(address);
-    if (result && result.length > 0) {
-      const bestResult = result[0];
+    if (result) {
       setFormData(prev => ({
         ...prev,
-        coordinatesLatitude: bestResult.coordinates.lat,
-        coordinatesLongitude: bestResult.coordinates.lng,
-        localisation: [{
-          lat: bestResult.coordinates.lat,
-          lng: bestResult.coordinates.lng,
-          address: bestResult.address,
+        coordinatesLatitude: result.coordinates?.lat,
+        coordinatesLongitude: result.coordinates?.lng,
+        localisation: result.coordinates ? [{
+          lat: result.coordinates.lat,
+          lng: result.coordinates.lng,
+          address: result.address,
           type: 'point' as const,
-          confidence: bestResult.confidence
-        }]
+          confidence: result.confidence
+        }] : []
       }));
 
       setMapData({
-        center: { lat: bestResult.coordinates.lat, lng: bestResult.coordinates.lng },
-        address: bestResult.address
+        center: result.coordinates,
+        address: result.address
       });
     }
   }, [geocodeAddress]);
 
   // Enhanced Mauritania location functions using abstracted service
   const handleRegionSelect = useCallback((region: Region) => {
-    setSelectedRegion(region);
+    setSelectedRegion({
+      id: region.code,
+      code: region.code,
+      name: region.name,
+      nameAr: region.nameAr,
+      type: 'region',
+      coordinates: { lat: region.lat, lng: region.lng },
+      economicImportance: region.economicImportance,
+      population: region.population,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
 
     // Update address with region name
     const regionAddress = region.name;
@@ -176,7 +187,19 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
   }, [handleChange]);
 
   const handleCitySelect = useCallback((city: City) => {
-    setSelectedCity(city);
+    setSelectedCity({
+      id: city.code,
+      code: city.code,
+      name: city.name,
+      nameAr: city.nameAr,
+      type: 'city',
+      coordinates: { lat: city.lat, lng: city.lng },
+      parentCode: city.parentCode,
+      economicImportance: city.economicImportance,
+      population: city.population,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
 
     // Update address with full location
     const cityAddress = `${city.name}, ${selectedRegion?.name || city.parentCode}`;
@@ -306,8 +329,32 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
         }));
 
         // Update region and city state for UI
-        setSelectedRegion(locationData.region || null);
-        setSelectedCity(locationData.city || null);
+        setSelectedRegion(locationData.region ? {
+          id: locationData.region.code,
+          code: locationData.region.code,
+          name: locationData.region.name,
+          nameAr: locationData.region.nameAr,
+          type: 'region',
+          coordinates: { lat: locationData.region.lat, lng: locationData.region.lng },
+          economicImportance: locationData.region.economicImportance,
+          population: locationData.region.population,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        } : null);
+
+        setSelectedCity(locationData.city ? {
+          id: locationData.city.code,
+          code: locationData.city.code,
+          name: locationData.city.name,
+          nameAr: locationData.city.nameAr,
+          type: 'city',
+          coordinates: { lat: locationData.city.lat, lng: locationData.city.lng },
+          parentCode: locationData.city.parentCode,
+          economicImportance: locationData.city.economicImportance,
+          population: locationData.city.population,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        } : null);
 
         // Update map data
         setMapData({
@@ -362,6 +409,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
             lng: parseFloat(coordMatch[2])
           };
         } else {
+          // Try to geocode the workspace name if no coordinates found
           const result = await geocodeAddress(workspace.name);
           if (result?.coordinates) {
             coordinates = result.coordinates;
@@ -379,11 +427,30 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
     // Update map data to focus on workspace location
     const newMapData: MapData = {
       ...mapData,
-      center: coordinates,
-      address: `${workspace.name} - ${typeof workspace.location === 'string' ? workspace.location : workspace.location.name}`
+      center: coordinates, // Will be undefined if no coordinates found
+      address: coordinates
+        ? `${workspace.name} - ${typeof workspace.location === 'string' ? workspace.location : workspace.location.name}`
+        : workspace.name // Just use workspace name if no coordinates
     };
 
     setMapData(newMapData);
+
+    // Update form data - preserve existing coordinates if workspace has none
+    setFormData(prev => ({
+      ...prev,
+      adresse: coordinates ? newMapData.address : (prev.adresse || workspace.name),
+      coordinatesLatitude: coordinates?.lat ?? prev.coordinatesLatitude,
+      coordinatesLongitude: coordinates?.lng ?? prev.coordinatesLongitude,
+      localisation: coordinates ? [{
+        lat: coordinates.lat,
+        lng: coordinates.lng,
+        address: newMapData.address || workspace.name,
+        type: 'point' as const,
+        confidence: 0.9
+      }] : prev.localisation, // Preserve existing localisation if no coordinates
+      forme: coordinates ? 'point' : prev.forme
+    }));
+
     handleMapChange(newMapData);
   };
 
@@ -762,7 +829,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                   address: location.address || `Lat: ${location.latitude}, Lng: ${location.longitude}`,
                   type: 'point' as const,
                   confidence: 0.9
-                }] : prev.localisation,
+                }] : prev.localisation || [],
                 forme: location.latitude && location.longitude ? 'point' : prev.forme
               }));
 

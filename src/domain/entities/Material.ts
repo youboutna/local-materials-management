@@ -611,7 +611,6 @@ export class Material {
       timeline: this._timeline,
       last_restock: this._lastRestock.toISOString(),
       supplier: this._supplier,
-      images: this._images,
       price_per_unit: this._pricePerUnit,
       available_quantity: this._availableQuantity,
       origin_location: this._originLocation,

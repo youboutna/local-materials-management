@@ -28,7 +28,6 @@ import {
   isValidCityRegion,
   isLocationInRegion
 } from '@/utils/mauritaniaUtils';
-import { Fallback } from '@radix-ui/react-avatar';
 
 export interface GeocodingResult {
   address: string;
@@ -158,19 +157,31 @@ interface MapboxGeocodingResponse {
 
 export class GeocodingService {
   getCity(cityName: any) {
-    throw new Error('Method not implemented.');
+    return getCityByCode(cityName) || getWilayaByCode(cityName);
   }
-  getCityByCode(arg0: string) {
-    throw new Error('Method not implemented.');
+  getCityByCode(code: string) {
+    return getCityByCode(code);
   }
-  getRegionByCode(arg0: string) {
-    throw new Error('Method not implemented.');
+  getRegionByCode(code: string) {
+    return getWilayaByCode(code);
   }
-  findRegionByLocation(arg0: { lat: number; lng: number; }) {
-    throw new Error('Method not implemented.');
+  findRegionByLocation(coordinates: { lat: number; lng: number; }) {
+    // Find nearest region to coordinates
+    let nearestRegion: Region | null = null;
+    let minDistance = Infinity;
+    
+    MAURITANIA_REGIONS.forEach(region => {
+      const distance = this.calculateDistance(coordinates.lat, coordinates.lng, region.lat, region.lng);
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearestRegion = region;
+      }
+    });
+    
+    return nearestRegion;
   }
-  getGeographicUnitByCode(arg0: string) {
-    throw new Error('Method not implemented.');
+  getGeographicUnitByCode(code: string) {
+    return getCityByCode(code) || getWilayaByCode(code);
   }
   private readonly apiKey?: string;
   private readonly provider: 'google' | 'mapbox' | 'openstreetmap';
@@ -490,27 +501,28 @@ export class GeocodingService {
 
       if (nearestCity) {
         const region = getWilayaByCode(nearestCity.parentCode);
+        const city = nearestCity; // Type assertion to ensure non-null
         results.push({
-          address: nearestCity.name,
-          coordinates: { lat: nearestCity.lat, lng: nearestCity.lng },
+          address: city.name,
+          coordinates: { lat: city.lat, lng: city.lng },
           confidence: Math.max(0.6, 1 - (minCityDistance / 50)),
           type: 'city',
           components: { 
-            city: nearestCity.name, 
-            region: region?.name || nearestCity.parentCode,
+            city: city.name, 
+            region: region?.name || city.parentCode,
             country: 'Mauritania',
             countryCode: 'mr'
           },
           metadata: {
-            code: nearestCity.code,
-            isCapital: nearestCity.isCapital,
-            economicImportance: nearestCity.economicImportance,
-            population: nearestCity.population,
-            hasAirport: nearestCity.hasAirport,
-            hasPort: nearestCity.hasPort,
-            hasUniversity: nearestCity.hasUniversity,
-            marketDays: nearestCity.marketDays,
-            parentCode: nearestCity.parentCode
+            code: city.code,
+            isCapital: city.isCapital,
+            economicImportance: city.economicImportance,
+            population: city.population,
+            hasAirport: city.hasAirport,
+            hasPort: city.hasPort,
+            hasUniversity: city.hasUniversity,
+            marketDays: city.marketDays,
+            parentCode: city.parentCode
           }
         });
       }
