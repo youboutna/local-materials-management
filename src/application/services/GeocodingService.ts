@@ -460,29 +460,30 @@ export class GeocodingService {
       let nearestRegion: Region | null = null;
       let minRegionDistance = Infinity;
       
-      MAURITANIA_REGIONS.forEach((region: Region) => {
+      for (const region of MAURITANIA_REGIONS) {
         const distance = this.calculateDistance(latitude, longitude, region.lat, region.lng);
-        if (distance < minRegionDistance && distance < 100) { // Within 100km
+        if (distance < minRegionDistance && distance < 100) {
           minRegionDistance = distance;
           nearestRegion = region;
         }
-      });
+      }
 
       if (nearestRegion) {
+        const r = nearestRegion as Region;
         results.push({
-          address: nearestRegion.name,
-          coordinates: { lat: nearestRegion.lat, lng: nearestRegion.lng },
+          address: r.name,
+          coordinates: { lat: r.lat, lng: r.lng },
           confidence: Math.max(0.5, 1 - (minRegionDistance / 100)),
           type: 'region',
           components: { 
-            region: nearestRegion.name, 
+            region: r.name, 
             country: 'Mauritania',
             countryCode: 'mr'
           },
           metadata: {
-            code: nearestRegion.code,
-            economicImportance: nearestRegion.economicImportance,
-            population: nearestRegion.population
+            code: r.code,
+            economicImportance: r.economicImportance,
+            population: r.population
           }
         });
       }
@@ -491,38 +492,38 @@ export class GeocodingService {
       let nearestCity: City | null = null;
       let minCityDistance = Infinity;
       
-      MAURITANIA_CITIES.forEach((city: City) => {
+      for (const city of MAURITANIA_CITIES) {
         const distance = this.calculateDistance(latitude, longitude, city.lat, city.lng);
-        if (distance < minCityDistance && distance < 50) { // Within 50km
+        if (distance < minCityDistance && distance < 50) {
           minCityDistance = distance;
           nearestCity = city;
         }
-      });
+      }
 
       if (nearestCity) {
-        const region = getWilayaByCode(nearestCity.parentCode);
-        const city = nearestCity; // Type assertion to ensure non-null
+        const c = nearestCity as City;
+        const region = getWilayaByCode(c.parentCode);
         results.push({
-          address: city.name,
-          coordinates: { lat: city.lat, lng: city.lng },
+          address: c.name,
+          coordinates: { lat: c.lat, lng: c.lng },
           confidence: Math.max(0.6, 1 - (minCityDistance / 50)),
           type: 'city',
           components: { 
-            city: city.name, 
-            region: region?.name || city.parentCode,
+            city: c.name, 
+            region: region?.name || c.parentCode,
             country: 'Mauritania',
             countryCode: 'mr'
           },
           metadata: {
-            code: city.code,
-            isCapital: city.isCapital,
-            economicImportance: city.economicImportance,
-            population: city.population,
-            hasAirport: city.hasAirport,
-            hasPort: city.hasPort,
-            hasUniversity: city.hasUniversity,
-            marketDays: city.marketDays,
-            parentCode: city.parentCode
+            code: c.code,
+            isCapital: c.isCapital,
+            economicImportance: c.economicImportance,
+            population: c.population,
+            hasAirport: c.hasAirport,
+            hasPort: c.hasPort,
+            hasUniversity: c.hasUniversity,
+            marketDays: c.marketDays,
+            parentCode: c.parentCode
           }
         });
       }
@@ -658,7 +659,7 @@ export class GeocodingService {
       const data: GoogleGeocodingResponse = await response.json();
       if (data.status !== 'OK' || !data.results?.length) return [];
 
-      return data.results.map((result: GoogleGeocodingResponse['results'][0]) => this.formatGoogleResult(result));
+      return (data.results || []).map((result) => this.formatGoogleResult(result));
     } catch (error) {
       console.error('Google geocoding failed:', error);
       return [];
@@ -685,7 +686,7 @@ export class GeocodingService {
       const data: GoogleGeocodingResponse = await response.json();
       if (data.status !== 'OK' || !data.results?.length) return [];
 
-      return data.results.map((result: GoogleGeocodingResponse['results'][0]) => this.formatGoogleResult(result));
+      return (data.results || []).map((result) => this.formatGoogleResult(result));
     } catch (error) {
       console.error('Google reverse geocoding failed:', error);
       return [];
@@ -713,7 +714,7 @@ export class GeocodingService {
       const data: MapboxGeocodingResponse = await response.json();
       if (!data.features?.length) return [];
 
-      return data.features.map((feature: MapboxGeocodingResponse['features'][0]) => this.formatMapboxResult(feature));
+      return (data.features || []).map((feature) => this.formatMapboxResult(feature));
     } catch (error) {
       console.error('Mapbox geocoding failed:', error);
       return [];
@@ -739,7 +740,7 @@ export class GeocodingService {
       const data: MapboxGeocodingResponse = await response.json();
       if (!data.features?.length) return [];
 
-      return data.features.map((feature: MapboxGeocodingResponse['features'][0]) => this.formatMapboxResult(feature));
+      return (data.features || []).map((feature) => this.formatMapboxResult(feature));
     } catch (error) {
       console.error('Mapbox reverse geocoding failed:', error);
       return [];
@@ -813,14 +814,14 @@ export class GeocodingService {
 
     // Try to match with Mauritania data using search terms
     if (components.city) {
-      // Check city search terms
+      const cityStr = String(components.city);
       const matchedCity = MAURITANIA_CITIES.find(city => 
         city.searchTerms?.some(term => 
-          term.toLowerCase().includes(components.city?.toLowerCase()) ||
-          components.city?.toLowerCase().includes(term.toLowerCase())
+          term.toLowerCase().includes(cityStr.toLowerCase()) ||
+          cityStr.toLowerCase().includes(term.toLowerCase())
         ) ||
-        city.name.toLowerCase() === components.city?.toLowerCase() ||
-        city.nameAr.includes(components.city)
+        city.name.toLowerCase() === cityStr.toLowerCase() ||
+        city.nameAr.includes(cityStr)
       );
       
       if (matchedCity) {
@@ -839,8 +840,9 @@ export class GeocodingService {
 
     // Check region search terms from CITY_TO_REGION_MAP
     if (components.region) {
+      const regionStr = String(components.region);
       Object.entries(CITY_TO_REGION_MAP).forEach(([code, terms]) => {
-        if (terms.some(term => term.toLowerCase().includes(components.region?.toLowerCase()))) {
+        if ((terms as string[]).some(term => term.toLowerCase().includes(regionStr.toLowerCase()))) {
           const region = getWilayaByCode(code);
           if (region) {
             Object.assign(metadata, {
@@ -856,8 +858,8 @@ export class GeocodingService {
     return {
       address: item.display_name,
       coordinates: { 
-        lat: parseFloat(item.lat || item.latitude), 
-        lng: parseFloat(item.lon || item.longitude) 
+        lat: parseFloat(item.lat), 
+        lng: parseFloat(item.lon)
       },
       confidence: this.calculateOpenStreetMapConfidence(item),
       type: this.mapOpenStreetMapType(item),
@@ -866,7 +868,7 @@ export class GeocodingService {
     };
   }
 
-  private formatGoogleResult(result: GoogleGeocodingResponse['results'][0]): GeocodingResult | ReverseGeocodingResult {
+  private formatGoogleResult(result: NonNullable<GoogleGeocodingResponse['results']>[0]): GeocodingResult | ReverseGeocodingResult {
     const components: Record<string, unknown> = {};
     const metadata: Record<string, unknown> = {};
     
@@ -920,7 +922,7 @@ export class GeocodingService {
     };
   }
 
-  private formatMapboxResult(feature: MapboxGeocodingResponse['features'][0]): GeocodingResult | ReverseGeocodingResult {
+  private formatMapboxResult(feature: NonNullable<MapboxGeocodingResponse['features']>[0]): GeocodingResult | ReverseGeocodingResult {
     const components: Record<string, unknown> = {};
     const metadata: Record<string, unknown> = {};
     
@@ -960,7 +962,7 @@ export class GeocodingService {
     }
 
     return {
-      address: feature.place_name || feature.text,
+      address: feature.place_name || feature.text || '',
       coordinates: { 
         lat: feature.center && feature.center.length > 1 ? feature.center[1] : 0, 
         lng: feature.center && feature.center.length > 0 ? feature.center[0] : 0 
@@ -1068,7 +1070,7 @@ export class GeocodingService {
   }
 
   // Utility method to get all search terms for debugging
-  public getAllSearchTerms(): Record<string, string[]> {
+  public getAllSearchTerms(): Record<string, Record<string, string[]>> {
     return {
       regions: Object.fromEntries(this.regionSearchTermsCache),
       cities: Object.fromEntries(this.citySearchTermsCache)

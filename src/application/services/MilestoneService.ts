@@ -1143,7 +1143,7 @@ export class MilestoneService {
         const targetDate = new Date(startDate);
         targetDate.setDate(targetDate.getDate() + template.relative_offset_days);
 
-        const milestoneData: CreateMilestoneDTO = {
+        const milestoneData: any = {
           projectId,
           phaseId,
           title: template.name,
@@ -1160,7 +1160,7 @@ export class MilestoneService {
         };
 
         const milestone = await this.createMilestone(milestoneData);
-        milestones.push(milestone);
+        milestones.push(milestone as any);
       }
 
       return milestones;

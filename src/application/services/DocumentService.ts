@@ -391,15 +391,16 @@ export class DocumentService {
       // Count by status
       const documentsByStatus: Record<DocumentStatus, number> = {} as any;
       projectDocuments.forEach(doc => {
-        documentsByStatus[doc.status] = (documentsByStatus[doc.status] || 0) + 1;
+        const status = doc.status || 'unknown';
+        documentsByStatus[status] = (documentsByStatus[status] || 0) + 1;
       });
       
       // Filter recent documents (last 30 days)
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       const recentDocuments = projectDocuments
-        .filter(doc => new Date(doc.createdAt) >= thirtyDaysAgo)
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .filter(doc => doc.createdAt && new Date(doc.createdAt) >= thirtyDaysAgo)
+        .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
         .slice(0, 10);
       
       // Filter expired documents
@@ -453,12 +454,12 @@ export class DocumentService {
         id: doc.id,
         title: doc.title || '',
         type: doc.documentType as string,
-        status: doc.status as string,
+        status: (doc.status || 'unknown') as string,
         fileSize: doc.fileSize || 0,
-        createdAt: doc.createdAt,
-        uploadedBy: doc.uploadedBy,
+        createdAt: doc.createdAt || new Date().toISOString(),
+        uploadedBy: doc.uploadedBy || undefined,
         fileUrl: doc.fileUrl || undefined,
-        category: doc.category,
+        category: doc.documentType as string,
         tags: doc.tags || []
       }));
       
@@ -620,13 +621,14 @@ export class DocumentService {
       // Count by status
       const documentsByStatus: Record<string, number> = {};
       documents.forEach(doc => {
-        documentsByStatus[doc.status] = (documentsByStatus[doc.status] || 0) + 1;
+        const status = doc.status || 'unknown';
+        documentsByStatus[status] = (documentsByStatus[status] || 0) + 1;
       });
       
       // Recent uploads (last 7 days)
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      const recentUploads = documents.filter(doc => new Date(doc.createdAt) >= sevenDaysAgo).length;
+      const recentUploads = documents.filter(doc => doc.createdAt && new Date(doc.createdAt) >= sevenDaysAgo).length;
       
       // Storage used
       const storageUsed = documents.reduce((sum, doc) => sum + (doc.fileSize || 0), 0);

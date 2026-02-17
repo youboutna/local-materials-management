@@ -366,7 +366,7 @@ export class EnhancedValidationService {
     }
 
     // Check permits and licenses
-    const permitDocs = documents.filter(d => d.type === 'permit');
+    const permitDocs = documents.filter(d => d.documentType === 'permit');
     if (permitDocs.length === 0) {
       issues.push(this.createIssue(
         ValidationCategory.REGULATORY,
