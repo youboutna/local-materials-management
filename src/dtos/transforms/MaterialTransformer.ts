@@ -569,3 +569,4 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
 
     return { materials, results };
   }
+}

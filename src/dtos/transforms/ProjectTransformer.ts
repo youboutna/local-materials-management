@@ -782,6 +782,7 @@ export class ProjectTransformer {
     }
 
     return entityUpdates;
+  }
 
   /**
    * Domain Entity → UI State

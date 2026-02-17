@@ -322,22 +322,8 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
     return paymentDate > dueDate && payment.status !== 'completed';
   }
 
-/**
- * Calculate payment risk assessment
- */
-static calculatePaymentRisk(payment: Payment): PaymentRiskResult {
-  const riskFactors: string[] = [];
-  const recommendations: string[] = [];
-  
-  // Check payment status - use valid PaymentStatus values
-  if (payment.status === 'failed' || payment.status === 'cancelled') {
-    riskFactors.push('Payment has issues');
-    recommendations.push('Review payment status and resolve issues');
-  }
-  
-  if (payment.status === 'pending' || payment.status === 'processing') {
-    riskFactors.push('Payment is still processing');
-    recommendations.push('Monitor payment progress');
+  /**
+   * Convert Payment to PaymentRequestDTO
    */
   static paymentToRequestDTO(payment: Payment): PaymentRequestDTO {
     return {
@@ -879,3 +865,4 @@ static calculatePaymentRisk(payment: Payment): PaymentRiskResult {
       riskScore
     };
   }
+}

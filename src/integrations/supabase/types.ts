@@ -1493,6 +1493,59 @@ export type Database = {
           },
         ]
       }
+      locations: {
+        Row: {
+          code: string
+          created_at: string | null
+          economic_importance: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          name: string
+          name_ar: string | null
+          parent_code: string | null
+          population: number | null
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          economic_importance?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          name_ar?: string | null
+          parent_code?: string | null
+          population?: number | null
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          economic_importance?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          name_ar?: string | null
+          parent_code?: string | null
+          population?: number | null
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_locations_parent_code"
+            columns: ["parent_code"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       material_documents: {
         Row: {
           created_at: string
@@ -1637,12 +1690,20 @@ export type Database = {
           gtin: string | null
           id: string
           image: string | null
+          last_restock: string | null
           localisation: Json | null
+          material_status: string | null
+          min_quantity: number | null
           multilang_labels: Json | null
           name: string
           origin_location: string | null
           price_per_unit: number
+          quantity: number | null
           sku: string | null
+          subcategory: string | null
+          supplier: Json | null
+          tags: Json | null
+          timeline: Json | null
           unit: string
           updated_at: string
           workspace_id: string | null
@@ -1661,12 +1722,20 @@ export type Database = {
           gtin?: string | null
           id?: string
           image?: string | null
+          last_restock?: string | null
           localisation?: Json | null
+          material_status?: string | null
+          min_quantity?: number | null
           multilang_labels?: Json | null
           name: string
           origin_location?: string | null
           price_per_unit: number
+          quantity?: number | null
           sku?: string | null
+          subcategory?: string | null
+          supplier?: Json | null
+          tags?: Json | null
+          timeline?: Json | null
           unit: string
           updated_at?: string
           workspace_id?: string | null
@@ -1685,12 +1754,20 @@ export type Database = {
           gtin?: string | null
           id?: string
           image?: string | null
+          last_restock?: string | null
           localisation?: Json | null
+          material_status?: string | null
+          min_quantity?: number | null
           multilang_labels?: Json | null
           name?: string
           origin_location?: string | null
           price_per_unit?: number
+          quantity?: number | null
           sku?: string | null
+          subcategory?: string | null
+          supplier?: Json | null
+          tags?: Json | null
+          timeline?: Json | null
           unit?: string
           updated_at?: string
           workspace_id?: string | null
