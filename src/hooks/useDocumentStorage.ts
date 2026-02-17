@@ -11,7 +11,7 @@ export const useDocumentStorage = () => {
   const uploadFile = async (file: File, path?: string): Promise<UploadResult> => {
     setUploading(true);
     try {
-      const result = await storageProvider.upload(file, path);
+      const result = await storageProvider.uploadFile(file, path || file.name);
       return result;
     } finally {
       setUploading(false);
@@ -21,11 +21,11 @@ export const useDocumentStorage = () => {
   const downloadFile = async (url: string, fileName: string): Promise<DownloadResult> => {
     setDownloading(true);
     try {
-      const result = await storageProvider.download(url, fileName);
+      const result = await storageProvider.downloadFile(url);
       
-      if (result.success && result.blob) {
+      if (result.success && result.data) {
         // Create download link
-        const downloadUrl = window.URL.createObjectURL(result.blob);
+        const downloadUrl = window.URL.createObjectURL(result.data);
         const link = document.createElement('a');
         link.href = downloadUrl;
         link.download = fileName;
@@ -42,11 +42,18 @@ export const useDocumentStorage = () => {
   };
 
   const deleteFile = async (url: string): Promise<DeleteResult> => {
-    return await storageProvider.delete(url);
+    return await storageProvider.deleteFile(url);
   };
 
   const validateConnection = async (): Promise<boolean> => {
-    return await storageProvider.validateConnection();
+    // Basic validation - try to list files to check connectivity
+    try {
+      const result = await storageProvider.listFiles();
+      return result.success;
+    } catch (error) {
+      console.error('Storage connection validation failed:', error);
+      return false;
+    }
   };
 
   return {

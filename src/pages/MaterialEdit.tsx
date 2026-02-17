@@ -6,7 +6,7 @@ import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "@/hooks/use-toast";
 import EnhancedMaterialForm from "@/components/materials/EnhancedMaterialForm";
-import { useMaterialHex, useMaterialsHex } from "@/hooks/hexagonal";
+import { useMaterialHex, useMaterialsHex, useWorkspacesHex, useSuppliersHex } from "@/hooks/hexagonal";
 import { MaterialFormDataDTO, UpdateMaterialRequestDto } from "@/dtos/transforms/shared";
 import { MaterialDTO, MaterialUnit, MaterialStatus, MaterialCategory } from "@/dtos/entities/MaterialDTO";
 import { MaterialTransformer } from "@/dtos/transforms/MaterialTransformer";
@@ -30,6 +30,7 @@ const MaterialEdit = () => {
 
   const { material, isLoading, error, updateMaterial, isUpdating } = useMaterialHex(safeId);
   const { workspaces } = useMaterialsHex();
+  const { suppliers } = useSuppliersHex();
 
   // Transform DTO → Form data (material is already in DTO format)
   const formData = material || {};
@@ -59,23 +60,23 @@ const MaterialEdit = () => {
     name: w.name,
     location: {
       code: 'default',
-      name: typeof w.location === 'string' ? w.location : w.location?.name || '',
-      nameAr: typeof w.location === 'string' ? w.location : w.location?.nameAr || w.location?.name || '',
+      name: w.location,
+      nameAr: w.location,
       type: 'city' as const,
-      coordinates: (typeof w.location === 'object' && w.location.coordinates) ? {
-        latitude: w.location.coordinates.latitude,
-        longitude: w.location.coordinates.longitude
-      } : undefined,
+      coordinates: undefined,
       parentCode: undefined,
       population: undefined
     },
-    description: undefined,
-    capacity: undefined,
-    contact: undefined,
-    facilities: undefined,
+    description: w.description,
+    capacity: w.capacity,
+    contact: w.contact_manager || w.contact_phone ? {
+      manager: w.contact_manager,
+      phone: w.contact_phone
+    } : undefined,
+    facilities: w.facilities,
     status: (w.status as 'active' | 'inactive' | 'closed') || 'active',
-    createdAt: undefined,
-    updatedAt: undefined
+    createdAt: w.created_at ? new Date(w.created_at) : undefined,
+    updatedAt: w.updated_at ? new Date(w.updated_at) : undefined
   }));
 
   if (isLoading) {
@@ -127,6 +128,7 @@ const MaterialEdit = () => {
             onSubmit={handleSubmit}
             initialData={formData}
             workspaces={transformedWorkspaces}
+            suppliers={suppliers}
             showSubmitButton={false}
             materialId={id}
           />

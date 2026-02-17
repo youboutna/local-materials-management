@@ -11,6 +11,7 @@ import { MaterialFormDataDTO, MaterialUnit } from "@/dtos/entities/MaterialDTO";
 import EnhancedMaterialForm from "@/components/materials/EnhancedMaterialForm";
 import { ArrowLeft, Package } from "lucide-react";
 import { MaterialTransformer } from "@/dtos/transforms/MaterialTransformer";
+import { CreateMaterialRequestDto } from "@/dtos/transforms";
 
 const MaterialCreate = () => {
   const { t } = useLanguage();
@@ -39,16 +40,16 @@ const MaterialCreate = () => {
       parentCode: undefined,
       population: undefined
     },
-    description: undefined,
-    capacity: undefined,
-    contact: workspace.contact_manager && workspace.contact_phone ? {
-      manager: workspace.contact_manager,
-      phone: workspace.contact_phone
+    description: workspace.description,
+    capacity: workspace.capacity,
+    contact: workspace.contact_manager || workspace.contact_phone ? {
+      manager: workspace.contact_manager || '',
+      phone: workspace.contact_phone || ''
     } : undefined,
     facilities: workspace.facilities,
     status: workspace.status as 'active' | 'inactive' | 'closed',
-    createdAt: workspace.created_at,
-    updatedAt: workspace.updated_at
+    createdAt: workspace.created_at ? new Date(workspace.created_at).toISOString() : undefined,
+    updatedAt: workspace.updated_at ? new Date(workspace.updated_at).toISOString() : undefined
   })) || [];
 
   const handleSubmit = (formData: Partial<MaterialFormDataDTO>) => {
@@ -65,10 +66,10 @@ const MaterialCreate = () => {
     // Ensure we have complete data for the DTO conversion
     const completeFormData: MaterialFormDataDTO = {
       name: formData.name,
-      description: formData.description || '',
+      description: formData.description || '', // Ensure description is never undefined
       category: formData.category,
       subcategory: formData.subcategory,
-      unit: formData.unit as MaterialUnit || 'pieces',
+      unit: formData.unit as MaterialUnit || MaterialUnit.PIECES,
       quantity: formData.quantity || 0,
       minQuantity: formData.minQuantity || 0,
       pricePerUnit: formData.pricePerUnit || 0,
@@ -90,7 +91,35 @@ const MaterialCreate = () => {
     };
 
     // Hexagonal Architecture: Use MaterialTransformer to convert UI form data to service DTO
-    const createDto = MaterialTransformer.formToCreateRequest(completeFormData);
+    const createDto: CreateMaterialRequestDto = {
+      name: formData.name,
+      description: completeFormData.description || '', // Ensure description is never undefined
+      category: formData.category,
+      subcategory: formData.subcategory,
+      unit: formData.unit,
+      pricePerUnit: formData.pricePerUnit,
+      quantity: formData.quantity,
+      availableQuantity: formData.availableQuantity,
+      minQuantity: formData.minQuantity,
+      workspaceId: formData.workspaceId,
+      gtin: formData.gtin,
+      sku: formData.sku,
+      ean: formData.ean,
+      asin: formData.asin,
+      image: formData.image,
+      coordinatesLatitude: formData.coordinatesLatitude,
+      coordinatesLongitude: formData.coordinatesLongitude,
+      adresse: formData.adresse,
+      forme: formData.forme,
+      localisation: formData.localisation,
+      multilangLabels: formData.multilangLabels,
+      timeline: formData.timeline ? {
+        start: formData.timeline.start,
+        end: formData.timeline.end,
+        estimatedDuration: formData.timeline.estimatedDuration
+      } : undefined,
+      supplier: formData.supplier
+    };
 
     // Add supplier ID if supplier info is provided (map from form supplier object)
     if (completeFormData.supplier?.name) {

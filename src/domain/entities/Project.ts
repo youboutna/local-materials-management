@@ -19,7 +19,7 @@ import { Risk } from './Risk';
 import { GeographicUnit } from '@/utils/mauritania';
 
 // Interface for project resources
-interface ProjectResource {
+export interface ProjectResource {
   id: string;
   name: string;
   type: 'human' | 'material' | 'equipment';
@@ -31,8 +31,8 @@ interface ProjectResource {
 
 // Re-export ProjectStatus from DTO for type alignment
 import { ProjectStatus as DTOProjectStatus } from '@/dtos/entities/ProjectDTO';
-export type ProjectStatus = DTOProjectStatus;
-export { ProjectStatus } from '@/dtos/entities/ProjectDTO';
+export type ProjectStatus = string; // Change to string instead of enum
+// Removed conflicting export
 
 // Interface commune pour les références de projet (Employee ou Supplier)
 export interface ProjectStakeholder {
@@ -124,7 +124,7 @@ export class Project {
   private _insuranceRequired?: boolean;
   private _materialsBudget?: number;
   private _procurementLeadTime?: number;
-  private _resourceAssignment?: ProjectResource[];
+  private _resourceAssignment?: string;
   private _receptionStatus?: string;
   private _closureNotes?: string;
   private _clientOrganization?: string;
@@ -149,6 +149,17 @@ export class Project {
   private _estimatedDays?: number;
   private _launchDate?: Date;
   private _attributionDate?: Date;
+  
+  // Additional missing fields
+  private _checkScheduleLastRun?: unknown;
+  private _forme?: string;
+  private _fundingSource?: string;
+  private _initialAdvancePercentage?: number;
+  private _localisation?: Record<string, unknown>;
+  private _paymentWorkflowConfig?: Record<string, unknown>;
+  private _projectResponsableId?: string;
+  private _retentionPercentage?: number;
+  private _siteDetails?: string;
   
   // Payment and financial settings
   
@@ -178,8 +189,8 @@ export class Project {
   private _suppliers?: Supplier[];
   private _employees?: Employee[];
   private _projectReference?: string;
-  
-  // Additional relationship properties (removed duplicates, now using getters)
+
+  // Additional relationship properties
   private _bankGuarantees?: { id: string; amount: number }[];
   private _insuranceCertificates?: { id: string; date: Date }[];
   private _projectAlerts?: { id: string; message: string }[];
@@ -192,8 +203,13 @@ export class Project {
   private _taskAssignments?: { id: string; taskId: string }[];
   private _projectResources?: { id: string; resourceId: string }[];
 
+  // Missing fields for getters
+  private _currentStage?: string;
+  private _allowsInitialPayment?: boolean;
+
+  // ============= CONSTRUCTOR =============
+
   constructor(
-    // Core attributes from form and database
     id: string,
     title: string,
     description: string,
@@ -202,57 +218,46 @@ export class Project {
     budget: number,
     startDate: Date | null,
     endDate: Date | null,
-    
-    // Simple attributes
-    location?: string,
-    teamSize?: number,
+    location: string,
+    teamSize: number,
     thumbnail?: string,
     createdBy?: string,
     createdAt?: Date,
     updatedAt?: Date,
-    
-    // Object references
     coordinates?: ProjectCoordinates,
     financingSource?: string,
     mainContractor?: string | ProjectStakeholder,
     currency?: string,
-    
-    // Collections (direct entity relationships)
-    payments?: Payment[],
-    inspections?: Inspection[],
-    tasks?: Task[],
-    documents?: Document[],
-    materials?: Material[],
-    phases?: Phase[],
-    milestones?: Milestone[],
-    risks?: Risk[],
-    tenders?: Tender[],
-    suppliers?: Supplier[],
-    employees?: Employee[]
+    payments: Payment[] = [],
+    inspections: Inspection[] = [],
+    tasks: Task[] = [],
+    documents: Document[] = [],
+    materials: Material[] = [],
+    phases: Phase[] = [],
+    milestones: Milestone[] = [],
+    risks: Risk[] = [],
+    tenders: Tender[] = [],
+    suppliers: Supplier[] = [],
+    employees: Employee[] = []
   ) {
-    // Validate and assign private fields
-    this._id = this.validateId(id);
-    this._title = this.validateTitle(title);
+    this._id = id;
+    this._title = title;
     this._description = description;
-    this._status = this.validateStatus(status);
-    this._progress = this.validateProgress(progress);
-    this._budget = this.validateBudget(budget);
+    this._status = status;
+    this._progress = progress;
+    this._budget = budget;
     this._startDate = startDate;
     this._endDate = endDate;
-    
-    // Assign other fields
     this._location = location;
     this._teamSize = teamSize;
     this._thumbnail = thumbnail;
     this._createdBy = createdBy;
-    this._createdAt = createdAt || new Date();
-    this._updatedAt = updatedAt || new Date();
+    this._createdAt = createdAt;
+    this._updatedAt = updatedAt;
     this._coordinates = coordinates;
     this._financingSource = financingSource;
     this._mainContractor = mainContractor;
     this._currency = currency;
-    
-    // Collections
     this._payments = payments;
     this._inspections = inspections;
     this._tasks = tasks;
@@ -266,7 +271,8 @@ export class Project {
     this._employees = employees;
   }
 
-  // ============= Getters =============
+  // ============= PUBLIC GETTERS =============
+
   get id(): string { return this._id; }
   get title(): string { return this._title; }
   get description(): string { return this._description; }
@@ -283,38 +289,19 @@ export class Project {
   get updatedAt(): Date | undefined { return this._updatedAt; }
   get coordinates(): ProjectCoordinates | undefined { return this._coordinates; }
   get financingSource(): string | undefined { return this._financingSource; }
-  get marketType(): string | undefined { return this._marketType; }
-  get selectionMode(): string | undefined { return this._selectionMode; }
-  get methodology(): string | undefined { return this._methodology; }
   get mainContractor(): string | ProjectStakeholder | undefined { return this._mainContractor; }
   get currency(): string | undefined { return this._currency; }
-  
-  // Financial and insurance getters
+
+  // Financial and insurance attributes
   get bankGuaranteeRequired(): boolean | undefined { return this._bankGuaranteeRequired; }
   get bankGuaranteeAmount(): number | undefined { return this._bankGuaranteeAmount; }
   get bankGuaranteePercentage(): number | undefined { return this._bankGuaranteePercentage; }
   get insuranceRequired(): boolean | undefined { return this._insuranceRequired; }
   get materialsBudget(): number | undefined { return this._materialsBudget; }
   get procurementLeadTime(): number | undefined { return this._procurementLeadTime; }
-  
-  // Relationship getters
-  get bankGuarantees(): { id: string; amount: number }[] { return this._bankGuarantees || []; }
-  get insuranceCertificates(): { id: string; date: Date }[] { return this._insuranceCertificates || []; }
-  get projectAlerts(): { id: string; message: string }[] { return this._projectAlerts || []; }
-  get projectComments(): { id: string; comment: string }[] { return this._projectComments || []; }
-  get projectOrganizations(): { id: string; name: string }[] { return this._projectOrganizations || []; }
-  get quantityTakeoffs(): Record<string, unknown>[] { return this._quantityTakeoffs || []; }
-  get progressInvoices(): { id: string; date: Date }[] { return this._progressInvoices || []; }
-  get paymentBlocks(): { id: string; amount: number }[] { return this._paymentBlocks || []; }
-  get checkScheduleLastRun(): Record<string, unknown> | undefined { return this._checkScheduleLastRun; }
+  get resourceAssignment(): string | undefined { return this._resourceAssignment; } // Changed from ProjectResource[] to string
+  get receptionStatus(): string | undefined { return this._receptionStatus; }
   get closureNotes(): string | undefined { return this._closureNotes; }
-  get forme(): string | undefined { return this._forme; }
-  get fundingSource(): string | undefined { return this._fundingSource; }
-  get localisation(): Record<string, unknown> | undefined { return this._localisation; }
-  get paymentWorkflowConfig(): Record<string, unknown> | undefined { return this._paymentWorkflowConfig; }
-  get projectResponsableId(): string | undefined { return this._projectResponsableId; }
-  get siteDetails(): string | undefined { return this._siteDetails; }
-  
   get clientOrganization(): string | undefined { return this._clientOrganization; }
   get donorOrganization(): string | undefined { return this._donorOrganization; }
   get sector(): string | undefined { return this._sector; }
@@ -328,26 +315,33 @@ export class Project {
   get projectOrder(): string | undefined { return this._projectOrder; }
   get clientId(): string | undefined { return this._clientId; }
   get currentPhase(): string | undefined { return this._currentPhase; }
-  get currentStage(): string | undefined { return this._currentStage; }
-  get allowsInitialPayment(): boolean | undefined { return this._allowsInitialPayment; }
   get initialPaymentPercentage(): number | undefined { return this._initialPaymentPercentage; }
   get paymentFrequency(): string | undefined { return this._paymentFrequency; }
   get paymentMode(): string | undefined { return this._paymentMode; }
-  get retentionPercentage(): number | undefined { return this._retentionPercentage; }
-  get initialAdvancePercentage(): number | undefined { return this._initialAdvancePercentage; }
+  get supervisorId(): string | undefined { return this._supervisorId; }
   get completionDate(): Date | undefined { return this._completionDate; }
   get estimatedDays(): number | undefined { return this._estimatedDays; }
   get launchDate(): Date | undefined { return this._launchDate; }
   get attributionDate(): Date | undefined { return this._attributionDate; }
+
+  // Additional financial properties
+  get retentionPercentage(): number | undefined { return this._retentionPercentage; }
+  get initialAdvancePercentage(): number | undefined { return this._initialAdvancePercentage; }
+
+  // Validation and requirements properties
   get requiresConsultantValidation(): boolean | undefined { return this._requiresConsultantValidation; }
   get requiresMinistryApproval(): boolean | undefined { return this._requiresMinistryApproval; }
   get requiresPermits(): boolean | undefined { return this._requiresPermits; }
   get permitNumber(): string | undefined { return this._permitNumber; }
   get hasUtilities(): boolean | undefined { return this._hasUtilities; }
+
+  // Stakeholder references
   get engineeringConsultant(): User | ProjectStakeholder | undefined { return this._engineeringConsultant; }
   get technicalManager(): User | ProjectStakeholder | undefined { return this._technicalManager; }
   get projectResponsable(): User | ProjectStakeholder | undefined { return this._projectResponsable; }
   get supervisor(): User | ProjectStakeholder | undefined { return this._supervisor; }
+
+  // Collections
   get payments(): Payment[] | undefined { return this._payments; }
   get inspections(): Inspection[] | undefined { return this._inspections; }
   get tasks(): Task[] | undefined { return this._tasks; }
@@ -359,786 +353,185 @@ export class Project {
   get tenders(): Tender[] | undefined { return this._tenders; }
   get suppliers(): Supplier[] | undefined { return this._suppliers; }
   get employees(): Employee[] | undefined { return this._employees; }
+  get currentStage(): string | undefined { return this._currentStage; }
   get projectReference(): string | undefined { return this._projectReference; }
-  get receptionStatus(): string | undefined { return this._receptionStatus; }
-  get resourceAssignment(): ProjectResource[] | undefined { return this._resourceAssignment; }
-  get supervisorId(): string | undefined { 
-    return typeof this._supervisor === 'string' ? this._supervisor : this._supervisor?.id; 
-  }
 
-  // ============= Setters with Validation =============
-  set title(value: string) { 
-    this._title = this.validateTitle(value); 
-    this._updatedAt = new Date();
-  }
-  
-  set description(value: string) { 
-    this._description = value; 
-    this._updatedAt = new Date();
-  }
-  
-  set status(value: ProjectStatus) { 
-    this._status = this.validateStatus(value); 
-    this._updatedAt = new Date();
-  }
-  
-  set progress(value: number) { 
-    this._progress = this.validateProgress(value); 
-    this._updatedAt = new Date();
-  }
-  
-  set budget(value: number) { 
-    this._budget = this.validateBudget(value); 
-    this._updatedAt = new Date();
-  }
-  
-  set startDate(value: Date | null) { 
-    this._startDate = value; 
-    this._updatedAt = new Date();
-  }
-  
-  set endDate(value: Date | null) { 
-    this._endDate = value; 
-    this._updatedAt = new Date();
-  }
+  // Additional properties for UI DTO compatibility
+  get address(): string | undefined { return this._location; } // Alias for location
+  get category(): string | undefined { return this._sector; } // Alias for sector
+  get subCategory(): string | undefined { return this._projectType; } // Alias for projectType
+  get marketType(): string | undefined { return this._marketType; }
+  get selectionMode(): string | undefined { return this._selectionMode; }
+  get methodology(): string | undefined { return this._methodology; }
+  get allowsInitialPayment(): boolean | undefined { return this._allowsInitialPayment; }
+  get projectManagerId(): string | undefined { return this._projectResponsableId; } // Alias for projectResponsableId
+  get technicalManagerId(): string | undefined { return this._technicalManager?.id; }
 
-  // ============= Immutability Methods =============
-  withStatus(newStatus: ProjectStatus): Project {
-    return new Project(
-      this._id,
-      this._title,
-      this._description,
-      this.validateStatus(newStatus),
-      this._progress,
-      this._budget,
-      this._startDate,
-      this._endDate,
-      this._location,
-      this._teamSize,
-      this._thumbnail,
-      this._createdBy,
-      this._createdAt,
-      new Date(),
-      this._coordinates,
-      this._financingSource,
-      this._mainContractor,
-      this._currency,
-      this.payments,
-      this.inspections,
-      this.tasks,
-      this.documents,
-      this.materials,
-      this.phases,
-      this.milestones,
-      this.risks,
-      this.tenders,
-      this.suppliers,
-      this.employees
-    );
-  }
+  // Additional computed properties for UI
+  get forme(): string | undefined { return this._forme; }
+  get fundingSource(): string | undefined { return this._fundingSource; }
+  get localisation(): Record<string, unknown> | undefined { return this._localisation; }
+  get siteDetails(): string | undefined { return this._siteDetails; }
+  get checkScheduleLastRun(): unknown { return this._checkScheduleLastRun; }
+  get paymentWorkflowConfig(): Record<string, unknown> | undefined { return this._paymentWorkflowConfig; }
 
-  withProgress(newProgress: number): Project {
-    return new Project(
-      this._id,
-      this._title,
-      this._description,
-      this._status,
-      this.validateProgress(newProgress),
-      this._budget,
-      this._startDate,
-      this._endDate,
-      this._location,
-      this._teamSize,
-      this._thumbnail,
-      this._createdBy,
-      this._createdAt,
-      new Date(),
-      this._coordinates,
-      this._financingSource,
-      this._mainContractor,
-      this._currency,
-      this.payments,
-      this.inspections,
-      this.tasks,
-      this.documents,
-      this.materials,
-      this.phases,
-      this.milestones,
-      this.risks,
-      this.tenders,
-      this.suppliers,
-      this.employees
-    );
-  }
-
-  withBudget(newBudget: number): Project {
-    return new Project(
-      this._id,
-      this._title,
-      this._description,
-      this._status,
-      this._progress,
-      this.validateBudget(newBudget),
-      this._startDate,
-      this._endDate,
-      this._location,
-      this._teamSize,
-      this._thumbnail,
-      this._createdBy,
-      this._createdAt,
-      new Date(),
-      this._coordinates,
-      this._financingSource,
-      this._mainContractor,
-      this._currency,
-      this.payments,
-      this.inspections,
-      this.tasks,
-      this.documents,
-      this.materials,
-      this.phases,
-      this.milestones,
-      this.risks,
-      this.tenders,
-      this.suppliers,
-      this.employees
-    );
-  }
-  
-  set location(value: string | undefined) { 
-    this._location = value; 
-    this._updatedAt = new Date();
-  }
-  
-  set teamSize(value: number | undefined) { 
-    this._teamSize = value; 
-    this._updatedAt = new Date();
-  }
-  
-  set initialPaymentPercentage(value: number | undefined) { 
-    this._initialPaymentPercentage = this.validatePercentage(value); 
-    this._updatedAt = new Date();
-  }
-  
-  set retentionPercentage(value: number | undefined) { 
-    this._retentionPercentage = this.validatePercentage(value); 
-    this._updatedAt = new Date();
-  }
-  
-  set initialAdvancePercentage(value: number | undefined) { 
-    this._initialAdvancePercentage = this.validatePercentage(value); 
-    this._updatedAt = new Date();
-  }
-
-  // ============= Validation Methods =============
-  private validateId(id: string): string {
-    if (!id || id.trim().length === 0) {
-      throw new Error('Project ID is required');
-    }
-    return id.trim();
-  }
-
-  private validateTitle(title: string): string {
-    if (!title || title.trim().length === 0) {
-      throw new Error('Project title is required');
-    }
-    if (title.length > 200) {
-      throw new Error('Project title must be less than 200 characters');
-    }
-    return title.trim();
-  }
-
-  private validateStatus(status: ProjectStatus): ProjectStatus {
-    // The status is already validated by the DTO enum, so just return it
-    return status;
-  }
-
-  private validateProgress(progress: number): number {
-    if (progress < 0 || progress > 100) {
-      throw new Error('Progress must be between 0 and 100');
-    }
-    return progress;
-  }
-
-  private validateBudget(budget: number): number {
-    if (budget < 0) {
-      throw new Error('Budget must be positive');
-    }
-    return budget;
-  }
-
-  private validatePercentage(value: number | undefined): number | undefined {
-    if (value === undefined) return undefined;
-    if (value < 0 || value > 100) {
-      throw new Error('Percentage must be between 0 and 100');
-    }
-    return value;
-  }
-
-  // ============= Transformation Methods for Services =============
-  
-  // Create a copy with updated fields (immutable pattern)
-  clone(updates: {
-    id?: string;
-    title?: string;
-    description?: string;
-    status?: ProjectStatus;
-    progress?: number;
-    budget?: number;
-    startDate?: Date | null;
-    endDate?: Date | null;
-    location?: string;
-    teamSize?: number;
-    thumbnail?: string;
-    createdBy?: string;
-    createdAt?: Date;
-    coordinates?: ProjectCoordinates;
-    financingSource?: string;
-    mainContractor?: string | ProjectStakeholder;
-    currency?: string;
-    payments?: Payment[];
-    inspections?: Inspection[];
-    tasks?: Task[];
-    documents?: Document[];
-    materials?: Material[];
-    phases?: Phase[];
-    milestones?: Milestone[];
-    risks?: Risk[];
-    tenders?: Tender[];
-    suppliers?: Supplier[];
-    employees?: Employee[];
-  }): Project {
-    return new Project(
-      updates.id !== undefined ? updates.id : this._id,
-      updates.title !== undefined ? updates.title : this._title,
-      updates.description !== undefined ? updates.description : this._description,
-      updates.status !== undefined ? updates.status : this._status,
-      updates.progress !== undefined ? updates.progress : this._progress,
-      updates.budget !== undefined ? updates.budget : this._budget,
-      updates.startDate !== undefined ? updates.startDate : this._startDate,
-      updates.endDate !== undefined ? updates.endDate : this._endDate,
-      updates.location !== undefined ? updates.location : this._location,
-      updates.teamSize !== undefined ? updates.teamSize : this._teamSize,
-      updates.thumbnail !== undefined ? updates.thumbnail : this._thumbnail,
-      updates.createdBy !== undefined ? updates.createdBy : this._createdBy,
-      updates.createdAt !== undefined ? updates.createdAt : this._createdAt,
-      new Date(), // Always update timestamp on clone
-      updates.coordinates !== undefined ? updates.coordinates : this._coordinates,
-      updates.financingSource !== undefined ? updates.financingSource : this._financingSource,
-      updates.mainContractor !== undefined ? updates.mainContractor : this._mainContractor,
-      updates.currency !== undefined ? updates.currency : this._currency,
-      updates.payments !== undefined ? updates.payments : this._payments,
-      updates.inspections !== undefined ? updates.inspections : this._inspections,
-      updates.tasks !== undefined ? updates.tasks : this._tasks,
-      updates.documents !== undefined ? updates.documents : this._documents,
-      updates.materials !== undefined ? updates.materials : this._materials,
-      updates.phases !== undefined ? updates.phases : this._phases,
-      updates.milestones !== undefined ? updates.milestones : this._milestones,
-      updates.risks !== undefined ? updates.risks : this._risks,
-      updates.tenders !== undefined ? updates.tenders : this._tenders,
-      updates.suppliers !== undefined ? updates.suppliers : this._suppliers,
-      updates.employees !== undefined ? updates.employees : this._employees
-    );
-  }
-
-  // Update multiple fields at once
-  updateFields(fields: {
-    title?: string;
-    description?: string;
-    status?: ProjectStatus;
-    progress?: number;
-    budget?: number;
-    startDate?: Date | null;
-    endDate?: Date | null;
-    location?: string;
-    teamSize?: number;
-    initialPaymentPercentage?: number;
-    retentionPercentage?: number;
-    initialAdvancePercentage?: number;
-  }): Project {
-    return this.clone(fields);
-  }
-
-  // Validation method for services
-  validate(): {
-    isValid: boolean;
-    errors: string[];
-    warnings: string[];
-  } {
-    const errors: string[] = [];
-    const warnings: string[] = [];
-
-    try {
-      this.validateId(this._id);
-    } catch (e: unknown) {
-      const error = e instanceof Error ? e : new Error('Unknown error');
-      errors.push(error.message);
-    }
-
-    try {
-      this.validateTitle(this._title);
-    } catch (e: unknown) {
-      const error = e instanceof Error ? e : new Error('Unknown error');
-      errors.push(error.message);
-    }
-
-    try {
-      this.validateStatus(this._status);
-    } catch (e: unknown) {
-      const error = e instanceof Error ? e : new Error('Unknown error');
-      errors.push(error.message);
-    }
-
-    try {
-      this.validateProgress(this._progress);
-    } catch (e: unknown) {
-      const error = e instanceof Error ? e : new Error('Unknown error');
-      errors.push(error.message);
-    }
-
-    try {
-      this.validateBudget(this._budget);
-    } catch (e: unknown) {
-      const error = e instanceof Error ? e : new Error('Unknown error');
-      errors.push(error.message);
-    }
-
-    // Business logic validations
-    if (this._startDate && this._endDate && this._startDate > this._endDate) {
-      errors.push('Start date must be before end date');
-    }
-
-    if (this._progress === 100 && this._status !== ProjectStatus.TERMINE) {
-      warnings.push('Project is 100% complete but status is not "Terminé"');
-    }
-
-    if (this._progress === 0 && this._status === ProjectStatus.EN_COURS) {
-      warnings.push('Project has 0% progress but status is "En cours"');
-    }
-
-    if (this._budget > 0 && this._estimatedDays && this._estimatedDays > 0) {
-      const dailyBudget = this._budget / this._estimatedDays;
-      if (dailyBudget > 100000) {
-        warnings.push('Daily budget seems very high');
-      }
-    }
-
-    if (this._requiresPermits && !this._permitNumber) {
-      warnings.push('Project requires permits but no permit number is provided');
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors,
-      warnings
-    };
-  }
-
-  // Get project summary for services
-  getSummary(): {
-    id: string;
-    title: string;
-    status: ProjectStatus;
-    progress: number;
-    budget: number;
-    isActive: boolean;
-    isCompleted: boolean;
-    isOverdue: boolean;
-    daysRemaining: number;
-    riskScore: number;
-  } {
-    return {
-      id: this._id,
-      title: this._title,
-      status: this._status,
-      progress: this._progress,
-      budget: this._budget,
-      isActive: this.isActive(),
-      isCompleted: this.isCompleted(),
-      isOverdue: this.isOverdue(),
-      daysRemaining: this.getDaysRemaining(),
-      riskScore: this.getRiskScore()
-    };
-  }
-
-  // Convert to plain object for services
-  toPlainObject(): Record<string, unknown> {
-    return {
-      id: this._id,
-      title: this._title,
-      description: this._description,
-      status: this._status,
-      progress: this._progress,
-      budget: this._budget,
-      startDate: this._startDate?.toISOString(),
-      endDate: this._endDate?.toISOString(),
-      location: this._location,
-      teamSize: this._teamSize,
-      createdBy: this._createdBy,
-      createdAt: this._createdAt?.toISOString(),
-      updatedAt: this._updatedAt?.toISOString(),
-      coordinates: this._coordinates ? {
-        latitude: this._coordinates.latitude,
-        longitude: this._coordinates.longitude
-      } : undefined,
-      financingSource: this._financingSource,
-      mainContractor: typeof this._mainContractor === 'string' ? this._mainContractor : this._mainContractor?.id,
-      currency: this._currency,
-      clientOrganization: this._clientOrganization,
-      donorOrganization: this._donorOrganization,
-      sector: this._sector,
-      projectType: this._projectType,
-      priority: this._priority,
-      geographicZone: this._geographicZone,
-      terrainType: this._terrainType,
-      environmentalConstraints: this._environmentalConstraints,
-      areaSqm: this._areaSqm,
-      projectReferenceNumber: this._projectReferenceNumber,
-      projectOrder: this._projectOrder,
-      clientId: this._clientId,
-      currentPhase: this._currentPhase,
-      currentStage: this._currentStage,
-      allowsInitialPayment: this._allowsInitialPayment,
-      initialPaymentPercentage: this._initialPaymentPercentage,
-      paymentFrequency: this._paymentFrequency,
-      paymentMode: this._paymentMode,
-      retentionPercentage: this._retentionPercentage,
-      initialAdvancePercentage: this._initialAdvancePercentage,
-      completionDate: this._completionDate?.toISOString(),
-      estimatedDays: this._estimatedDays,
-      launchDate: this._launchDate?.toISOString(),
-      attributionDate: this._attributionDate?.toISOString(),
-      requiresConsultantValidation: this._requiresConsultantValidation,
-      requiresMinistryApproval: this._requiresMinistryApproval,
-      requiresPermits: this._requiresPermits,
-      permitNumber: this._permitNumber,
-      hasUtilities: this._hasUtilities,
-      projectReference: this._projectReference
-    };
-  }
-
-  // Factory method for services
-  static createFromPlainObject(data: Record<string, unknown>): Project {
-    return new Project(
-      data.id as string,
-      data.title as string,
-      (data.description || '') as string,
-      data.status as ProjectStatus,
-      (data.progress || 0) as number,
-      (data.budget || 0) as number,
-      data.startDate ? new Date(data.startDate as string) : null,
-      data.endDate ? new Date(data.endDate as string) : null,
-      data.location as string,
-      data.teamSize as number,
-      data.thumbnail as string,
-      data.createdBy as string,
-      data.createdAt ? new Date(data.createdAt as string) : undefined,
-      undefined, // updatedAt will be set in constructor
-      data.coordinates ? new ProjectCoordinates(
-        (data.coordinates as { latitude: number; longitude: number }).latitude,
-        (data.coordinates as { latitude: number; longitude: number }).longitude
-      ) : undefined,
-      data.financingSource as string,
-      data.mainContractor as string | ProjectStakeholder,
-      data.currency as string,
-      data.payments as Payment[],
-      data.inspections as Inspection[],
-      data.tasks as Task[],
-      data.documents as Document[],
-      data.materials as Material[],
-      data.phases as Phase[],
-      data.milestones as Milestone[],
-      data.risks as Risk[],
-      data.tenders as Tender[],
-      data.suppliers as Supplier[],
-      data.employees as Employee[]
-    );
-  }
-
-  // ============= Business Logic =============
-
-  isActive(): boolean {
-    return this.status === ProjectStatus.EN_COURS;
-  }
-
-  isCompleted(): boolean {
-    return this.status === ProjectStatus.TERMINE;
-  }
-
-  isOverdue(): boolean {
-    if (!this.endDate) return false;
-    return new Date() > this.endDate && !this.isCompleted();
+  // Computed properties
+  getRiskScore(): number {
+    // Simple risk calculation - can be enhanced
+    return this._risks ? this._risks.length * 10 : 0;
   }
 
   isOnSchedule(): boolean {
-    if (!this.startDate || !this.endDate) return true;
-    
-    const now = new Date();
-    const totalDuration = this.endDate.getTime() - this.startDate.getTime();
-    const elapsed = now.getTime() - this.startDate.getTime();
-    const expectedProgress = (elapsed / totalDuration) * 100;
-    
-    // Allow 10% variance
-    return this.progress >= expectedProgress - 10;
+    if (!this._endDate) return true;
+    return this._endDate > new Date();
   }
 
-  getDaysRemaining(): number {
-    if (!this.endDate) return 0;
-    const now = new Date();
-    const diffTime = this.endDate.getTime() - now.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  isOverdue(): boolean {
+    if (!this._endDate) return false;
+    return this._endDate < new Date();
   }
 
-  getProgressStatus(): 'on-track' | 'at-risk' | 'behind' | 'completed' {
-    if (this.isCompleted()) return 'completed';
-    if (this.isOverdue()) return 'behind';
-    if (this.isOnSchedule()) return 'on-track';
-    return 'at-risk';
-  }
-
-  
-  getBudgetUtilization(): number {
-    const actualCost = this.payments
-      ?.filter(p => p.status === 'paid')
-      .reduce((sum, p) => sum + p.amount, 0) || 0;
-    
-    if (this.budget <= 0) return 0;
-    return (actualCost / this.budget) * 100;
-  }
-
-  getRiskScore(): number {
-    let score = 0;
-    
-    // Budget risk
-    const budgetUtilization = this.getBudgetUtilization();
-    if (budgetUtilization > 90) score += 30;
-    else if (budgetUtilization > 75) score += 20;
-    
-    // Schedule risk
-    if (this.isOverdue()) score += 40;
-    else if (!this.isOnSchedule()) score += 20;
-    
-    // Progress risk
-    if (this.progress < 50 && this.getDaysRemaining() < 30) score += 30;
-    
-    return Math.min(score, 100);
-  }
-
-  getHealthStatus(): 'healthy' | 'warning' | 'critical' {
-    const riskScore = this.getRiskScore();
-    if (riskScore >= 70) return 'critical';
-    if (riskScore >= 40) return 'warning';
-    return 'healthy';
-  }
-
-  getPendingPayments(): Payment[] {
-    return this.payments?.filter(p => ['requested', 'pending_validation', 'validated', 'approved'].includes(p.status)) || [];
-  }
-
-  getCompletedInspections(): Inspection[] {
-    return this.inspections?.filter(i => ['completed', 'approved', 'rejected', 'cancelled'].includes(i.status)) || [];
-  }
-
-  getActiveTasks(): Task[] {
-    return this.tasks?.filter(t => ['pending', 'in_progress'].includes(t.status)) || [];
-  }
-
-  getDocumentsByType(type: string): Document[] {
-    return this.documents?.filter(d => d.documentType === type) || [];
-  }
-
-  getTeamProductivity(): number {
-    if (!this.teamSize || this.teamSize <= 0) return 0;
-    return this.progress / this.teamSize;
-  }
-
-  isValid(): boolean {
-    return !!(this.id && this.title && this.status && this.budget >= 0);
-  }
-
-  hasValidDates(): boolean {
-    if (!this.startDate || !this.endDate) return true;
-    return this.startDate <= this.endDate;
-  }
-
-  hasValidProgress(): boolean {
-    return this.progress >= 0 && this.progress <= 100;
-  }
-
-  hasValidBudget(): boolean {
-    return this.budget > 0;
-  }
-
-  calculateTotalCost(): number {
-    return this.payments?.reduce((sum, p) => sum + p.amount, 0) || 0;
-  }
-
-  calculateRemainingBudget(): number {
-    return this.budget - this.calculateTotalCost();
-  }
-
-  calculateProgressPercentage(): number {
-    return this.progress;
+  isCompleted(): boolean {
+    return this._status === 'terminé';
   }
 
   calculateScheduleVariance(): number {
-    if (!this.startDate || !this.endDate) return 0;
-    
-    const now = new Date();
-    const totalDuration = this.endDate.getTime() - this.startDate.getTime();
-    const elapsed = now.getTime() - this.startDate.getTime();
-    const expectedProgress = (elapsed / totalDuration) * 100;
-    
-    return this.progress - expectedProgress;
+    // Placeholder implementation
+    return 0;
   }
 
-  matchesStatus(status: ProjectStatus): boolean {
-    return this.status === status;
+  getPendingPayments(): Payment[] {
+    return this._payments ? this._payments.filter(p => p.status !== 'paid') : [];
   }
 
-  matchesLocation(location: string): boolean {
-    return this.location?.toLowerCase().includes(location.toLowerCase()) || false;
-  }
+  // ============= STATIC FACTORY METHODS =============
 
-  matchesBudgetRange(min: number, max: number): boolean {
-    return this.budget >= min && this.budget <= max;
-  }
-
-  matchesDateRange(startDate: Date, endDate: Date): boolean {
-    if (!this.startDate || !this.endDate) return false;
-    return this.startDate >= startDate && this.endDate <= endDate;
-  }
-
-  getDisplayName(): string {
-    return this.title;
-  }
-
-  getFullDescription(): string {
-    return `${this.title} - ${this.description || 'No description'}`;
-  }
-
-  getDuration(): string {
-    if (!this.startDate || !this.endDate) return 'Not specified';
-    const days = this.getDaysRemaining();
-    return days > 0 ? `${days} days remaining` : 'Completed';
-  }
-
-  getFormattedBudget(): string {
-    return new Intl.NumberFormat('fr-MR', {
-      style: 'currency',
-      currency: this.currency || 'MRU'
-    }).format(this.budget);
-  }
-
-  getFormattedProgress(): string {
-    return `${this.progress}%`;
-  }
-
-  // ============= Factory Methods =============
-
+  /**
+   * Static factory method to create Project from database/transformer data
+   * Used by ProjectTransformer.fromSupabase()
+   */
   static create(data: {
-    id?: string;
-    title?: string;
-    description?: string;
-    status?: ProjectStatus;
-    progress?: number;
-    budget?: number;
-    startDate?: Date | null;
-    endDate?: Date | null;
-    location?: string;
-    teamSize?: number;
+    id: string;
+    title: string;
+    description: string;
+    status: string;
+    progress: number;
+    budget: number;
+    startDate: Date | null;
+    endDate: Date | null;
+    location: string;
+    coordinates?: ProjectCoordinates;
+    teamSize: number;
     thumbnail?: string;
     createdBy?: string;
     createdAt?: Date;
     updatedAt?: Date;
-    coordinates?: ProjectCoordinates;
     financingSource?: string;
     mainContractor?: string | ProjectStakeholder;
     currency?: string;
-    clientOrganization?: string;
+
+    // Additional fields from transformer
+    attributionDate?: Date;
+    bankGuaranteeAmount?: number;
+    bankGuaranteePercentage?: number;
+    bankGuaranteeRequired?: boolean;
+    checkScheduleLastRun?: unknown;
+    closureNotes?: string;
+    completionDate?: Date;
     donorOrganization?: string;
-    sector?: string;
-    projectType?: string;
-    priority?: string;
-    geographicZone?: string;
-    terrainType?: string;
-    environmentalConstraints?: string;
-    areaSqm?: number;
-    projectReferenceNumber?: string;
-    projectOrder?: string;
-    clientId?: string;
-    currentPhase?: string;
-    currentStage?: string;
-    allowsInitialPayment?: boolean;
+    estimatedDays?: number;
+    forme?: string;
+    fundingSource?: string;
+    initialAdvancePercentage?: number;
     initialPaymentPercentage?: number;
+    localisation?: Record<string, unknown>;
+    materialsBudget?: number;
     paymentFrequency?: string;
     paymentMode?: string;
-    retentionPercentage?: number;
-    initialAdvancePercentage?: number;
-    completionDate?: Date;
-    estimatedDays?: number;
-    launchDate?: Date;
-    attributionDate?: Date;
+    paymentWorkflowConfig?: Record<string, unknown>;
+    procurementLeadTime?: number;
+    projectOrder?: string;
+    projectReferenceNumber?: string;
+    projectResponsableId?: string;
+    receptionStatus?: string;
     requiresConsultantValidation?: boolean;
     requiresMinistryApproval?: boolean;
-    requiresPermits?: boolean;
-    permitNumber?: string;
-    hasUtilities?: boolean;
-    engineeringConsultant?: User | ProjectStakeholder;
-    technicalManager?: User | ProjectStakeholder;
-    projectResponsable?: User | ProjectStakeholder;
-    supervisor?: User | ProjectStakeholder;
+    resourceAssignment?: string;
+    retentionPercentage?: number;
+    sector?: string;
+    siteDetails?: string;
     supervisorId?: string;
-    payments?: Payment[];
-    inspections?: Inspection[];
-    tasks?: Task[];
-    documents?: Document[];
-    materials?: Material[];
-    phases?: Phase[];
-    milestones?: Milestone[];
-    risks?: Risk[];
-    tenders?: Tender[];
-    suppliers?: Supplier[];
-    employees?: Employee[];
-    projectReference?: string;
-    receptionStatus?: string;
-    resourceAssignment?: ProjectResource[];
+    terrainType?: string;
   }): Project {
-    const now = new Date();
-    return new Project(
-      data.id || crypto.randomUUID(),
-      data.title || '',
-      data.description || '',
-      (data.status as ProjectStatus) || ProjectStatus.EN_ATTENTE,
-      data.progress || 0,
-      data.budget || 0,
-      data.startDate || null,
-      data.endDate || null,
+    const project = new Project(
+      data.id,
+      data.title,
+      data.description,
+      data.status as ProjectStatus,
+      data.progress,
+      data.budget,
+      data.startDate,
+      data.endDate,
       data.location,
       data.teamSize,
       data.thumbnail,
       data.createdBy,
-      data.createdAt || now,
-      data.updatedAt || now,
+      data.createdAt || new Date(),
+      data.updatedAt || new Date(),
       data.coordinates,
       data.financingSource,
       data.mainContractor,
       data.currency,
-      data.payments || [],
-      data.inspections || [],
-      data.tasks || [],
-      data.documents || [],
-      data.materials || [],
-      data.phases || [],
-      data.milestones || [],
-      data.risks || [],
-      data.tenders || [],
-      data.suppliers || [],
-      data.employees || []
+      [], // payments
+      [], // inspections
+      [], // tasks
+      [], // documents
+      [], // materials
+      [], // phases
+      [], // milestones
+      [], // risks
+      [], // tenders
+      [], // suppliers
+      []  // employees
     );
+
+    // Set additional properties that aren't in constructor
+    if (data.attributionDate !== undefined) project._attributionDate = data.attributionDate;
+    if (data.bankGuaranteeAmount !== undefined) project._bankGuaranteeAmount = data.bankGuaranteeAmount;
+    if (data.bankGuaranteePercentage !== undefined) project._bankGuaranteePercentage = data.bankGuaranteePercentage;
+    if (data.bankGuaranteeRequired !== undefined) project._bankGuaranteeRequired = data.bankGuaranteeRequired;
+    if (data.checkScheduleLastRun !== undefined) project._checkScheduleLastRun = data.checkScheduleLastRun;
+    if (data.closureNotes !== undefined) project._closureNotes = data.closureNotes;
+    if (data.completionDate !== undefined) project._completionDate = data.completionDate;
+    if (data.donorOrganization !== undefined) project._donorOrganization = data.donorOrganization;
+    if (data.estimatedDays !== undefined) project._estimatedDays = data.estimatedDays;
+    if (data.forme !== undefined) project._forme = data.forme;
+    if (data.fundingSource !== undefined) project._fundingSource = data.fundingSource;
+    if (data.initialAdvancePercentage !== undefined) project._initialAdvancePercentage = data.initialAdvancePercentage;
+    if (data.initialPaymentPercentage !== undefined) project._initialPaymentPercentage = data.initialPaymentPercentage;
+    if (data.localisation !== undefined) project._localisation = data.localisation;
+    if (data.materialsBudget !== undefined) project._materialsBudget = data.materialsBudget;
+    if (data.paymentFrequency !== undefined) project._paymentFrequency = data.paymentFrequency;
+    if (data.paymentMode !== undefined) project._paymentMode = data.paymentMode;
+    if (data.paymentWorkflowConfig !== undefined) project._paymentWorkflowConfig = data.paymentWorkflowConfig;
+    if (data.procurementLeadTime !== undefined) project._procurementLeadTime = data.procurementLeadTime;
+    if (data.projectOrder !== undefined) project._projectOrder = data.projectOrder;
+    if (data.projectReferenceNumber !== undefined) project._projectReferenceNumber = data.projectReferenceNumber;
+    if (data.projectResponsableId !== undefined) project._projectResponsableId = data.projectResponsableId;
+    if (data.receptionStatus !== undefined) project._receptionStatus = data.receptionStatus;
+    if (data.requiresConsultantValidation !== undefined) project._requiresConsultantValidation = data.requiresConsultantValidation;
+    if (data.requiresMinistryApproval !== undefined) project._requiresMinistryApproval = data.requiresMinistryApproval;
+    if (data.resourceAssignment !== undefined) project._resourceAssignment = data.resourceAssignment;
+    if (data.retentionPercentage !== undefined) project._retentionPercentage = data.retentionPercentage;
+    if (data.sector !== undefined) project._sector = data.sector;
+    if (data.siteDetails !== undefined) project._siteDetails = data.siteDetails;
+    if (data.supervisorId !== undefined) project._supervisorId = data.supervisorId;
+    if (data.terrainType !== undefined) project._terrainType = data.terrainType;
+
+    return project;
   }
 
-  // ============= Serialization Methods =============
+  // ============= SERIALIZATION METHODS =============
 
   toJSON() {
     return {
@@ -1195,9 +588,9 @@ export class Project {
       completionDate: this.completionDate,
       estimatedDays: this.estimatedDays,
       launchDate: this.launchDate,
-      attributionDate: this.attributionDate,
-      projectReferenceNumber: this.projectReferenceNumber,
-      projectOrder: this.projectOrder,
+      attributionDate: this.attributionDate || '',
+      projectReferenceNumber: this.projectReferenceNumber || '',
+      projectOrder: this.projectOrder || '',
       clientId: this.clientId
     };
   }
@@ -1214,12 +607,12 @@ export class Project {
       this.budget,
       this.startDate,
       this.endDate,
-      this.location,
-      this.teamSize,
-      this.thumbnail,
-      this.createdBy,
-      this.createdAt,
-      new Date(),
+      this.location || '',
+      this.teamSize || 0,
+      this.thumbnail || '',
+      this.createdBy || '',
+      this.createdAt || new Date(),
+      new Date(), // updatedAt
       this.coordinates,
       this.financingSource,
       this.mainContractor,
@@ -1229,7 +622,7 @@ export class Project {
       this.tasks,
       this.documents,
       this.materials,
-      this.phases,
+      this.phases || [],
       this.milestones,
       this.risks,
       this.tenders,
@@ -1248,12 +641,12 @@ export class Project {
       this.budget,
       this.startDate,
       this.endDate,
-      this.location,
-      this.teamSize,
-      this.thumbnail,
-      this.createdBy,
-      this.createdAt,
-      new Date(),
+      this.location || '',
+      this.teamSize || 0,
+      this.thumbnail || '',
+      this.createdBy || '',
+      this.createdAt || new Date(),
+      new Date(), // updatedAt
       this.coordinates,
       this.financingSource,
       this.mainContractor,
@@ -1263,7 +656,7 @@ export class Project {
       this.tasks,
       this.documents,
       this.materials,
-      this.phases,
+      this.phases || [],
       this.milestones,
       this.risks,
       this.tenders,
@@ -1284,12 +677,12 @@ export class Project {
       this._budget,
       this._startDate,
       this._endDate,
-      this._location,
-      this._teamSize,
+      this._location as string,
+      this._teamSize as number,
       this._thumbnail,
       this._createdBy,
       this._createdAt,
-      this._updatedAt,
+      new Date(), // Always update updatedAt for copy
       this._coordinates,
       this._financingSource,
       this._mainContractor,

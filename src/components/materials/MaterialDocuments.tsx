@@ -14,7 +14,15 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { DocumentService } from '@/application/services/DocumentService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { CreateMaterialDocumentDTO, MaterialDocumentDTO } from '@/dtos/entities/MaterialDocumentDTO';
+import { CreateDocumentDTO, DocumentDTO } from '@/dtos/entities/DocumentDTO';
+
+interface MaterialDocumentMetadata {
+  materialId: string;
+  documentNumber?: string;
+  documentDate?: string;
+  expiryDate?: string;
+  supplierName?: string;
+}
 
 interface MaterialDocument {
   id: string;
@@ -43,7 +51,7 @@ interface MaterialDocument {
   expiry_date?: string;
   supplier_name?: string;
   
-  metadata?: Record<string, unknown>;
+  metadata?: MaterialDocumentMetadata;
   tags?: string[];
   uploaded_by?: string;
   created_at: string;
@@ -95,47 +103,54 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
   useEffect(() => {
     if (materialId) {
       fetchDocuments();
-    }
-  }, [materialId, fetchDocuments]);
+    } // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [materialId]); // fetchDocuments is not included in the dependency array to avoid the temporal dead zone issue
 
   const fetchDocuments = useCallback(async () => {
     try {
-      const materialDocs = await documentService.getDocumentsByMaterial(materialId);
+      // Get all documents and filter those associated with this material
+      const allDocs = await documentService.getAllDocuments();
+      const materialDocs = allDocs.filter(doc => 
+        doc.metadata && (doc.metadata as MaterialDocumentMetadata).materialId === materialId
+      );
       
       // Map to MaterialDocument interface for backward compatibility
-      const mappedDocs = materialDocs.map((doc: MaterialDocumentDTO) => ({
-        id: doc.id,
-        materialId: doc.materialId,
-        documentType: doc.documentType,
-        title: doc.title,
-        description: doc.description,
-        fileName: doc.fileName,
-        fileUrl: doc.fileUrl,
-        fileSize: doc.fileSize,
-        mimeType: doc.mimeType,
-        documentNumber: doc.documentNumber,
-        documentDate: doc.documentDate,
-        expiryDate: doc.expiryDate,
-        supplierName: doc.supplierName,
-        
-        // Legacy snake_case
-        material_id: doc.materialId,
-        document_type: doc.documentType,
-        file_name: doc.fileName,
-        file_url: doc.fileUrl,
-        file_size: doc.fileSize,
-        mime_type: doc.mimeType,
-        document_number: doc.documentNumber,
-        document_date: doc.documentDate,
-        expiry_date: doc.expiryDate,
-        supplier_name: doc.supplierName,
-        
-        metadata: doc.metadata,
-        tags: doc.tags,
-        uploaded_by: doc.uploadedBy,
-        created_at: doc.createdAt,
-        updated_at: doc.updatedAt,
-      }));
+      const mappedDocs = materialDocs.map((doc: DocumentDTO) => {
+        const metadata = doc.metadata as MaterialDocumentMetadata | undefined;
+        return {
+          id: doc.id,
+          materialId: metadata?.materialId || materialId,
+          documentType: doc.documentType as MaterialDocument['documentType'],
+          title: doc.title,
+          description: doc.description || undefined,
+          fileName: doc.fileName || undefined,
+          fileUrl: doc.fileUrl || undefined,
+          fileSize: doc.fileSize || undefined,
+          mimeType: doc.mimeType || undefined,
+          documentNumber: metadata?.documentNumber,
+          documentDate: metadata?.documentDate,
+          expiryDate: metadata?.expiryDate,
+          supplierName: metadata?.supplierName,
+          
+          // Legacy snake_case
+          material_id: metadata?.materialId || materialId,
+          document_type: doc.documentType as MaterialDocument['document_type'],
+          file_name: doc.fileName || undefined,
+          file_url: doc.fileUrl || undefined,
+          file_size: doc.fileSize || undefined,
+          mime_type: doc.mimeType || undefined,
+          document_number: metadata?.documentNumber,
+          document_date: metadata?.documentDate,
+          expiry_date: metadata?.expiryDate,
+          supplier_name: metadata?.supplierName,
+          
+          metadata: doc.metadata,
+          tags: doc.tags || [],
+          uploaded_by: doc.uploadedBy,
+          created_at: doc.createdAt || '',
+          updated_at: doc.updatedAt || '',
+        };
+      });
       
       setDocuments(mappedDocs);
     } catch (error) {
@@ -198,24 +213,26 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
         .map(tag => tag.trim())
         .filter(tag => tag.length > 0);
 
-      // Create material document using service
-      const createDocumentDTO: CreateMaterialDocumentDTO = {
-        materialId,
-        documentType: formData.documentType || formData.document_type,
+      // Create material document using service - store material association in metadata
+      const createDocumentDTO: CreateDocumentDTO = {
         title: formData.title,
         description: formData.description || null,
+        documentType: formData.documentType || formData.document_type,
         fileName: fileName || null,
         fileUrl: fileUrl || null,
         fileSize: fileSize || null,
         mimeType: mimeType || null,
-        documentNumber: formData.documentNumber || formData.document_number,
-        documentDate: formData.documentDate || formData.document_date,
-        expiryDate: formData.expiryDate || formData.expiry_date,
-        supplierName: formData.supplierName || formData.supplier_name,
-        tags: tags.length > 0 ? tags : null,
+        tags: [...(tags.length > 0 ? tags : []), `material:${materialId}`],
+        metadata: {
+          materialId,
+          documentNumber: formData.documentNumber || formData.document_number,
+          documentDate: formData.documentDate || formData.document_date,
+          expiryDate: formData.expiryDate || formData.expiry_date,
+          supplierName: formData.supplierName || formData.supplier_name,
+        },
       };
 
-      const createdDocument = await documentService.createMaterialDocument(createDocumentDTO);
+      const createdDocument = await documentService.createDocument(createDocumentDTO);
       if (!createdDocument) throw new Error('Failed to create document');
 
       toast.success('Document ajouté avec succès');
@@ -234,8 +251,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
     }
 
     try {
-      const deleted = await documentService.deleteMaterialDocument(documentId);
-      if (!deleted) throw new Error('Failed to delete document');
+      await documentService.deleteDocument(documentId);
 
       toast.success('Document supprimé');
       fetchDocuments();

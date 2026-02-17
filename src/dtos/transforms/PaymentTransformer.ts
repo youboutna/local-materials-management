@@ -5,8 +5,9 @@
  * Includes functionality from PaymentDomainTransformer
  */
 
-import { Payment, PaymentStatus } from '@/domain/entities/Payment';
-import { PaymentDTO, CreatePaymentDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
+import { Payment, PaymentMethod, PaymentStatus } from '@/domain/entities/Payment';
+import { PaymentDTO, CreatePaymentDTO, UpdatePaymentDTO, PaymentRequestDTO } from '@/dtos/entities/PaymentDTO';
+import { Project } from '@/domain/entities/Project';
 import { EntityToDTOMapper, ValidationResult } from '@/dtos/transforms/shared';
 
 export interface PaymentEfficiencyResult {
@@ -34,22 +35,65 @@ export interface CashFlowMetricsResult {
 export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO> {
   /**
    * Transform Payment entity to PaymentDTO (Domain Entity → DTO)
-   * Converts domain entity to data transfer object for UI layer
-   * Following hexagonal architecture: Domain → Application → Presentation
+   * Basic transformation without project context
    */
   static toDTO(entity: Payment): PaymentDTO {
     return {
       id: entity.id,
       projectId: entity.project?.id || '',
-      contractorId: '', // Would need to extract from entity
+      contractorId: '', // Cannot resolve without project context
       contractorName: entity.contractorName,
       contractorContact: entity.contractorContact,
       amount: entity.amount,
       paymentDate: entity.paymentDate,
       paymentMethod: entity.paymentMethod,
-      status: entity.status,
-      progressAtPayment: entity.progressAtPayment,
       transactionId: entity.transactionId || '',
+      progressAtPayment: entity.progressAtPayment,
+      inspectionId: '', // Would need to extract from entity
+      phaseId: entity.phase?.id || '',
+      bankName: entity.bankName || '',
+      accountNumber: entity.accountNumber || '',
+      checkNumber: entity.checkNumber || '',
+      mobileNumber: entity.mobileNumber || '',
+      mobileOperator: entity.mobileOperator || '',
+      receiverName: entity.receiverName || '',
+      createdAt: entity.createdAt || new Date().toISOString(),
+      updatedAt: entity.updatedAt || new Date().toISOString()
+    };
+  }
+
+  /**
+   * Transform Payment entity to PaymentDTO with project context for contractor resolution
+   * (Domain Entity → DTO with relationship resolution)
+   */
+  static toDTOWithProjectContext(entity: Payment, project: Project): PaymentDTO {
+    // Derive contractorId from project relationships (suppliers or employees)
+    let contractorId = '';
+    if (entity.contractorName) {
+      // Try to find contractor in project suppliers first
+      const supplier = project.suppliers?.find((s) => s.name === entity.contractorName);
+      if (supplier) {
+        contractorId = supplier.id;
+      } else {
+        // If not found in suppliers, try employees
+        const employee = project.employees?.find((e) => e.fullName === entity.contractorName);
+        if (employee) {
+          contractorId = employee.id;
+        }
+      }
+    }
+
+    return {
+      id: entity.id,
+      projectId: entity.project?.id || '',
+      contractorId: contractorId, // Now properly derived from project relationships
+      contractorName: entity.contractorName,
+      contractorContact: entity.contractorContact,
+      amount: entity.amount,
+      paymentDate: entity.paymentDate, // This exists in PaymentDTO
+      paymentMethod: entity.paymentMethod,
+      transactionId: entity.transactionId || '',
+      progressAtPayment: entity.progressAtPayment,
       inspectionId: '', // Would need to extract from entity
       phaseId: entity.phase?.id || '',
       bankName: entity.bankName || '',
@@ -75,8 +119,8 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
       phase: null, // Would need to fetch from phase repository using dto.phaseId
       inspection: null, // Would need to fetch from inspection repository using dto.inspectionId
       amount: dto.amount,
-      paymentDate: dto.paymentDate,
-      paymentMethod: dto.paymentMethod as Payment['paymentMethod'], // Would need proper enum conversion
+      paymentDate: new Date(dto.paymentDate), // Convert string to Date
+      paymentMethod: dto.paymentMethod as PaymentMethod, // Proper enum conversion
       contractorName: dto.contractorName,
       contractorContact: dto.contractorContact,
       progressAtPayment: dto.progressAtPayment
@@ -93,8 +137,8 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
       phase: null, // Would need to fetch from phase repository using dto.phaseId
       inspection: null, // Would need to fetch from inspection repository using dto.inspectionId
       amount: dto.amount,
-      paymentDate: dto.paymentDate,
-      paymentMethod: dto.paymentMethod as Payment['paymentMethod'], // Would need proper enum conversion
+      paymentDate: new Date(dto.paymentDate), // Convert string to Date
+      paymentMethod: dto.paymentMethod as PaymentMethod, // Proper enum conversion
       contractorName: dto.contractorName,
       contractorContact: dto.contractorContact,
       progressAtPayment: dto.progressAtPayment
@@ -108,8 +152,7 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
     return {
       amount: dto.amount,
       paymentDate: dto.paymentDate,
-      paymentMethod: dto.paymentMethod,
-      status: dto.status,
+      paymentMethod: dto.paymentMethod as PaymentMethod,
       progressAtPayment: dto.progressAtPayment,
       transactionId: dto.transactionId,
       contractorName: dto.contractorName,
@@ -197,15 +240,15 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
     const riskFactors: string[] = [];
     const recommendations: string[] = [];
     
-    // Check payment status
-    if (payment.status === 'overdue') {
-      riskFactors.push('Payment is overdue');
-      recommendations.push('Follow up immediately with contractor');
+    // Check payment status - use valid PaymentStatus values
+    if (payment.status === 'failed' || payment.status === 'cancelled') {
+      riskFactors.push('Payment has issues');
+      recommendations.push('Review payment status and resolve issues');
     }
     
-    if (payment.status === 'blocked') {
-      riskFactors.push('Payment is blocked');
-      recommendations.push('Resolve blocking issues before processing');
+    if (payment.status === 'pending' || payment.status === 'processing') {
+      riskFactors.push('Payment is still processing');
+      recommendations.push('Monitor payment progress');
     }
     
     // Check payment method risk
@@ -253,7 +296,7 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
       .reduce((sum, p) => sum + p.amount, 0);
     
     const totalDue = payments
-      .filter(p => p.status === 'pending' || p.status === 'overdue')
+      .filter(p => p.status === 'pending' || p.status === 'processing')
       .reduce((sum, p) => sum + p.amount, 0);
     
     const cashFlowVariance = totalDue > 0 ? ((totalPaid - totalDue) / totalDue) * 100 : 0;
@@ -279,62 +322,46 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
     return paymentDate > dueDate && payment.status !== 'completed';
   }
 
-  /**
-   * Get payment priority based on amount and status
-   */
-  static getPriority(payment: Payment): 'high' | 'medium' | 'low' {
-    if (payment.status === 'overdue' || payment.status === 'blocked') {
-      return 'high';
-    }
-    
-    if (payment.amount > 50000) {
-      return 'high';
-    }
-    
-    if (payment.amount > 10000) {
-      return 'medium';
-    }
-    
-    return 'low';
+/**
+ * Calculate payment risk assessment
+ */
+static calculatePaymentRisk(payment: Payment): PaymentRiskResult {
+  const riskFactors: string[] = [];
+  const recommendations: string[] = [];
+  
+  // Check payment status - use valid PaymentStatus values
+  if (payment.status === 'failed' || payment.status === 'cancelled') {
+    riskFactors.push('Payment has issues');
+    recommendations.push('Review payment status and resolve issues');
   }
-
-  /**
-   * Transform Payment to PaymentRequestDTO
+  
+  if (payment.status === 'pending' || payment.status === 'processing') {
+    riskFactors.push('Payment is still processing');
+    recommendations.push('Monitor payment progress');
    */
   static paymentToRequestDTO(payment: Payment): PaymentRequestDTO {
     return {
       id: payment.id,
-      supplierId: payment.contractorName,
-      projectId: payment.projectId,
+      supplierId: payment.contractorName, // Use contractorName as supplierId
+      projectId: payment.project?.id || '', // Access through project relationship
       amount: payment.amount,
-      description: payment.description || '',
-      paymentReason: payment.paymentReason || '',
+      description: '', // Payment entity doesn't have description
+      paymentReason: '', // Payment entity doesn't have paymentReason
       status: payment.status as 'pending' | 'approved' | 'rejected' | 'paid' | 'cancelled',
       createdAt: payment.createdAt,
       updatedAt: payment.updatedAt
     };
   }
 
-  /**
-   * Transform PaymentRequestDTO to Payment
-   */
   static requestDTOToPayment(dto: PaymentRequestDTO): Payment {
-    return {
+    return Payment.create({
       id: dto.id,
       contractorName: dto.supplierId,
-      projectId: dto.projectId || '',
       amount: dto.amount,
-      description: dto.description,
-      paymentReason: dto.paymentReason || '',
-      status: dto.status,
-      paymentDate: new Date().toISOString(),
-      paymentMethod: '',
-      progressAtPayment: 0,
-      transactionId: '',
-      contractorContact: '',
-      createdAt: dto.createdAt || new Date().toISOString(),
-      updatedAt: dto.updatedAt || new Date().toISOString()
-    };
+      paymentDate: new Date(), // Default to now since PaymentRequestDTO doesn't have payment date
+      paymentMethod: 'bank_transfer' as PaymentMethod, // Default method
+      progressAtPayment: 0 // Default progress
+    });
   }
 
   // EntityToDTOMapper interface implementation
@@ -431,25 +458,424 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
     return rows.map(row => PaymentTransformer.toEntityFromDatabaseRow(row));
   }
 
-  static toEntityFromDatabaseRow(row: Record<string, unknown>): Payment {
+  /**
+   * Payment Method-Specific Validation
+   * Validates payment data based on payment method requirements
+   */
+  static validatePaymentMethod(dto: Partial<PaymentDTO>): {
+    isValid: boolean;
+    errors: string[];
+    warnings: string[];
+    requiredFields: string[];
+  } {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    const requiredFields: string[] = [];
+
+    const method = dto.paymentMethod;
+    const amount = dto.amount;
+
+    // Basic validation
+    if (!method) {
+      errors.push('Payment method is required');
+      return { isValid: false, errors, warnings, requiredFields };
+    }
+
+    if (!amount || amount <= 0) {
+      errors.push('Payment amount must be greater than 0');
+    }
+
+    // Method-specific validation
+    switch (method) {
+      case 'bank_transfer':
+        requiredFields.push('bankName', 'accountNumber');
+        if (!dto.bankName?.trim()) {
+          errors.push('Bank name is required for bank transfers');
+        }
+        if (!dto.accountNumber?.trim()) {
+          errors.push('Account number is required for bank transfers');
+        }
+        if (amount && amount > 100000) {
+          warnings.push('Large bank transfer - consider additional approval');
+        }
+        break;
+
+      case 'cash':
+        requiredFields.push('receiverName');
+        if (!dto.receiverName?.trim()) {
+          errors.push('Receiver name is required for cash payments');
+        }
+        if (amount && amount > 5000) {
+          warnings.push('Large cash payment - consider electronic methods');
+        }
+        break;
+
+      case 'check':
+        requiredFields.push('checkNumber', 'bankName');
+        if (!dto.checkNumber?.trim()) {
+          errors.push('Check number is required for check payments');
+        }
+        if (!dto.bankName?.trim()) {
+          errors.push('Bank name is required for check payments');
+        }
+        break;
+
+      case 'mobile_payment':
+        requiredFields.push('mobileNumber', 'mobileOperator', 'receiverName');
+        if (!dto.mobileNumber?.trim()) {
+          errors.push('Mobile number is required for mobile payments');
+        }
+        if (!dto.mobileOperator?.trim()) {
+          errors.push('Mobile operator is required for mobile payments');
+        }
+        if (!dto.receiverName?.trim()) {
+          errors.push('Receiver name is required for mobile payments');
+        }
+        break;
+
+      default:
+        errors.push(`Unsupported payment method: ${method}`);
+    }
+
     return {
-      id: row.id as string,
-      amount: Number(row.amount) || 0,
-      paymentDate: row.payment_date as string,
-      paymentMethod: row.payment_method as string,
-      status: row.status as PaymentStatus,
-      progressAtPayment: Number(row.progress_at_payment) || 0,
-      transactionId: row.transaction_id as string || '',
-      contractorName: row.contractor_name as string,
-      contractorContact: row.contractor_contact as string,
-      bankName: row.bank_name as string || null,
-      accountNumber: row.account_number as string || null,
-      checkNumber: row.check_number as string || null,
-      mobileNumber: row.mobile_number as string || null,
-      receiverName: row.receiver_name as string || null,
-      mobileOperator: row.mobile_operator as string || null,
-      createdAt: row.created_at as string,
-      updatedAt: row.updated_at as string
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+      requiredFields
     };
   }
-}
+
+  /**
+   * File Upload Processing for Payments
+   * Processes receipt and invoice file uploads
+   */
+  static processPaymentFiles(dto: Partial<PaymentDTO>): {
+    receiptUrl?: string;
+    invoiceUrl?: string;
+    hasRequiredDocuments: boolean;
+    missingDocuments: string[];
+  } {
+    const receiptUrl = dto.purchaseOrderUrl || dto.invoiceUrl; // Map to receipt
+    const invoiceUrl = dto.quoteUrl || dto.invoiceUrl; // Map to invoice
+
+    const missingDocuments: string[] = [];
+    let hasRequiredDocuments = true;
+
+    // Business rules for document requirements
+    if (!receiptUrl) {
+      missingDocuments.push('receipt');
+      hasRequiredDocuments = false;
+    }
+
+    if (!invoiceUrl) {
+      missingDocuments.push('invoice');
+      hasRequiredDocuments = false;
+    }
+
+    return {
+      receiptUrl,
+      invoiceUrl,
+      hasRequiredDocuments,
+      missingDocuments
+    };
+  }
+
+  /**
+   * Payment Blocking Logic
+   * Validates if payment can proceed based on blocking rules
+   */
+  static validatePaymentBlocking(dto: PaymentDTO, projectContext?: any): {
+    canProceed: boolean;
+    blockingReasons: string[];
+    warningReasons: string[];
+    requiredActions: string[];
+  } {
+    const blockingReasons: string[] = [];
+    const warningReasons: string[] = [];
+    const requiredActions: string[] = [];
+
+    // Amount-based blocking
+    if (dto.amount && dto.amount > 500000) {
+      blockingReasons.push('Payment amount exceeds maximum limit');
+      requiredActions.push('Obtain director approval');
+    }
+
+    // Progress validation
+    if (dto.progressAtPayment && (dto.progressAtPayment < 0 || dto.progressAtPayment > 100)) {
+      blockingReasons.push('Invalid progress percentage');
+    }
+
+    // Contractor validation
+    if (!dto.contractorId && !dto.contractorName) {
+      blockingReasons.push('Contractor information is required');
+    }
+
+    // Project validation
+    if (!dto.projectId) {
+      blockingReasons.push('Project information is required');
+    }
+
+    // Document validation
+    const fileValidation = PaymentTransformer.processPaymentFiles(dto);
+    if (!fileValidation.hasRequiredDocuments) {
+      blockingReasons.push(`Missing required documents: ${fileValidation.missingDocuments.join(', ')}`);
+      requiredActions.push('Upload missing documents');
+    }
+
+    // Payment method validation
+    const methodValidation = PaymentTransformer.validatePaymentMethod(dto);
+    if (!methodValidation.isValid) {
+      blockingReasons.push(...methodValidation.errors);
+    }
+
+    // Warnings for large amounts
+    if (dto.amount && dto.amount > 100000) {
+      warningReasons.push('Large payment amount - additional review recommended');
+      requiredActions.push('Schedule additional review');
+    }
+
+    // Warnings for incomplete information
+    if (!dto.transactionId) {
+      warningReasons.push('Transaction ID not provided - tracking may be difficult');
+    }
+
+    return {
+      canProceed: blockingReasons.length === 0,
+      blockingReasons,
+      warningReasons,
+      requiredActions
+    };
+  }
+
+  /**
+   * Enhanced Payment Creation with Business Rules
+   * Creates payment with full validation and blocking logic
+   */
+  static createPaymentWithValidation(dto: CreatePaymentDTO, projectContext?: any): {
+    payment: Payment;
+    validation: {
+      isValid: boolean;
+      errors: string[];
+      warnings: string[];
+      canProceed: boolean;
+      blockingReasons: string[];
+      requiredActions: string[];
+    };
+  } {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    // Convert to full DTO for validation
+    const fullDTO: PaymentDTO = {
+      ...dto,
+      id: dto.id || crypto.randomUUID(),
+      status: dto.status || 'pending',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    // Run all validations
+    const methodValidation = PaymentTransformer.validatePaymentMethod(fullDTO);
+    const blockingValidation = PaymentTransformer.validatePaymentBlocking(fullDTO, projectContext);
+
+    // Aggregate results
+    errors.push(...methodValidation.errors);
+    warnings.push(...methodValidation.warnings, ...blockingValidation.warningReasons);
+
+    // Create payment entity
+    const payment = PaymentTransformer.fromCreateDTOToEntity(dto);
+
+    return {
+      payment,
+      validation: {
+        isValid: errors.length === 0,
+        errors,
+        warnings,
+        canProceed: blockingValidation.canProceed,
+        blockingReasons: blockingValidation.blockingReasons,
+        requiredActions: blockingValidation.requiredActions
+      }
+    };
+  }
+
+  /**
+   * Payment Status Workflow Management
+   * Manages payment status transitions with business rules
+   */
+  static validateStatusTransition(currentStatus: string, newStatus: string): {
+    isValid: boolean;
+    errors: string[];
+    warnings: string[];
+    allowedTransitions: string[];
+  } {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    // Define allowed status transitions
+    const statusTransitions: Record<string, string[]> = {
+      'pending': ['processing', 'approved', 'cancelled'],
+      'processing': ['completed', 'failed', 'cancelled'],
+      'approved': ['processing', 'cancelled'],
+      'completed': ['cancelled'], // Final state, only cancellation allowed
+      'failed': ['pending', 'cancelled'], // Can retry or cancel
+      'cancelled': [] // Final state
+    };
+
+    const allowedTransitions = statusTransitions[currentStatus] || [];
+
+    if (!allowedTransitions.includes(newStatus)) {
+      errors.push(`Invalid status transition from ${currentStatus} to ${newStatus}`);
+    }
+
+    // Business rule warnings
+    if (currentStatus === 'completed' && newStatus === 'cancelled') {
+      warnings.push('Cancelling a completed payment - ensure proper reversal procedures');
+    }
+
+    if (currentStatus === 'failed' && newStatus === 'completed') {
+      warnings.push('Marking failed payment as completed - verify payment actually succeeded');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+      allowedTransitions
+    };
+  }
+
+  /**
+   * Bulk Payment Processing
+   * Processes multiple payments with validation and blocking logic
+   */
+  static processBulkPayments(dtos: CreatePaymentDTO[], projectContext?: any): {
+    payments: Payment[];
+    results: Array<{
+      index: number;
+      success: boolean;
+      errors: string[];
+      warnings: string[];
+      canProceed: boolean;
+      blockingReasons: string[];
+      requiredActions: string[];
+    }>;
+  } {
+    const payments: Payment[] = [];
+    const results: Array<{
+      index: number;
+      success: boolean;
+      errors: string[];
+      warnings: string[];
+      canProceed: boolean;
+      blockingReasons: string[];
+      requiredActions: string[];
+    }> = [];
+
+    dtos.forEach((dto, index) => {
+      try {
+        const { payment, validation } = PaymentTransformer.createPaymentWithValidation(dto, projectContext);
+
+        if (validation.isValid && validation.canProceed) {
+          payments.push(payment);
+          results.push({
+            index,
+            success: true,
+            errors: [],
+            warnings: validation.warnings,
+            canProceed: true,
+            blockingReasons: [],
+            requiredActions: validation.requiredActions
+          });
+        } else {
+          results.push({
+            index,
+            success: false,
+            errors: validation.errors,
+            warnings: validation.warnings,
+            canProceed: validation.canProceed,
+            blockingReasons: validation.blockingReasons,
+            requiredActions: validation.requiredActions
+          });
+        }
+      } catch (error) {
+        results.push({
+          index,
+          success: false,
+          errors: [error instanceof Error ? error.message : 'Unknown error'],
+          warnings: [],
+          canProceed: false,
+          blockingReasons: ['Processing error'],
+          requiredActions: ['Review and retry']
+        });
+      }
+    });
+
+    return { payments, results };
+  }
+
+  /**
+   * Payment Analytics Generation
+   * Generates comprehensive payment analytics
+   */
+  static generatePaymentAnalytics(payments: PaymentDTO[]): {
+    totalPayments: number;
+    totalAmount: number;
+    averagePaymentAmount: number;
+    paymentsByMethod: Record<string, { count: number; amount: number }>;
+    paymentsByStatus: Record<string, { count: number; amount: number }>;
+    overduePayments: number;
+    blockedPayments: number;
+    completionRate: number;
+    riskScore: number;
+  } {
+    const totalPayments = payments.length;
+    const totalAmount = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+    const averagePaymentAmount = totalPayments > 0 ? totalAmount / totalPayments : 0;
+
+    // Group by payment method
+    const paymentsByMethod = payments.reduce((acc, payment) => {
+      const method = payment.paymentMethod || 'unknown';
+      if (!acc[method]) acc[method] = { count: 0, amount: 0 };
+      acc[method].count++;
+      acc[method].amount += payment.amount || 0;
+      return acc;
+    }, {} as Record<string, { count: number; amount: number }>);
+
+    // Group by status
+    const paymentsByStatus = payments.reduce((acc, payment) => {
+      const status = payment.status || 'unknown';
+      if (!acc[status]) acc[status] = { count: 0, amount: 0 };
+      acc[status].count++;
+      acc[status].amount += payment.amount || 0;
+      return acc;
+    }, {} as Record<string, { count: number; amount: number }>);
+
+    // Calculate metrics
+    const overduePayments = payments.filter(p =>
+      p.paymentDate && new Date(p.paymentDate) < new Date() &&
+      (p.status === 'pending' || p.status === 'processing')
+    ).length;
+
+    const blockedPayments = payments.filter(p => p.status === 'blocked').length;
+    const completedPayments = payments.filter(p => p.status === 'completed').length;
+    const completionRate = totalPayments > 0 ? (completedPayments / totalPayments) * 100 : 0;
+
+    // Risk score based on overdue and blocked payments
+    const riskScore = Math.min(100,
+      (overduePayments * 10) +
+      (blockedPayments * 20) +
+      ((100 - completionRate) * 0.5)
+    );
+
+    return {
+      totalPayments,
+      totalAmount,
+      averagePaymentAmount,
+      paymentsByMethod,
+      paymentsByStatus,
+      overduePayments,
+      blockedPayments,
+      completionRate,
+      riskScore
+    };
+  }

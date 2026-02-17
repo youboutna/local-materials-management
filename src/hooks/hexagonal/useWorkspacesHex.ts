@@ -16,6 +16,8 @@ export interface UseWorkspacesHexResult {
     contact_manager?: string;
     contact_phone?: string;
     facilities?: string[];
+    description?: string;
+    capacity?: number;
     created_at?: string;
     updated_at?: string;
   }>;
@@ -37,6 +39,8 @@ export interface CreateWorkspaceDTO {
   contact_manager?: string;
   contact_phone?: string;
   facilities?: string[];
+  description?: string;
+  capacity?: number;
 }
 
 export interface UpdateWorkspaceDTO {
@@ -46,6 +50,8 @@ export interface UpdateWorkspaceDTO {
   contact_manager?: string;
   contact_phone?: string;
   facilities?: string[];
+  description?: string;
+  capacity?: number;
 }
 
 /**
@@ -61,7 +67,19 @@ export function useWorkspacesHex(): UseWorkspacesHexResult {
     refetch
   } = useQuery({
     queryKey: ['workspaces'],
-    queryFn: async (): Promise<any[]> => {
+    queryFn: async (): Promise<Array<{
+      id: string;
+      name: string;
+      location: string;
+      status: string;
+      contact_manager?: string;
+      contact_phone?: string;
+      facilities?: string[];
+      description?: string;
+      capacity?: number;
+      created_at?: string;
+      updated_at?: string;
+    }>> => {
       try {
         const workspaceRepository = RepositoryFactory.getWorkspaceRepository();
         return await workspaceRepository.findAll();
@@ -77,7 +95,21 @@ export function useWorkspacesHex(): UseWorkspacesHexResult {
   const createWorkspaceMutation = useMutation({
     mutationFn: async (data: CreateWorkspaceDTO) => {
       const workspaceRepository = RepositoryFactory.getWorkspaceRepository();
-      return await workspaceRepository.create(data as any);
+      const createData = {
+        workspaceId: crypto.randomUUID(),
+        workspaceCode: `WS-${Date.now()}`,
+        name: data.name,
+        location: data.location,
+        description: data.description,
+        capacity: data.capacity,
+        contact: data.contact_manager || data.contact_phone ? {
+          manager: data.contact_manager || '',
+          phone: data.contact_phone || ''
+        } : undefined,
+        facilities: data.facilities,
+        status: OperationalStatus.active
+      };
+      return await workspaceRepository.create(createData);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['workspaces'] });
@@ -92,7 +124,21 @@ export function useWorkspacesHex(): UseWorkspacesHexResult {
   const updateWorkspaceMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateWorkspaceDTO }) => {
       const workspaceRepository = RepositoryFactory.getWorkspaceRepository();
-      return await workspaceRepository.update(id, data as any);
+      const updateData: Partial<Workspace> = {
+        name: data.name,
+        location: data.location,
+        description: data.description,
+        capacity: data.capacity,
+        status: data.status === 'active' ? OperationalStatus.active :
+               data.status === 'inactive' ? OperationalStatus.inactive :
+               OperationalStatus.closed,
+        contact: data.contact_manager || data.contact_phone ? {
+          manager: data.contact_manager || '',
+          phone: data.contact_phone || ''
+        } : undefined,
+        facilities: data.facilities
+      };
+      return await workspaceRepository.update(id, updateData);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['workspaces'] });

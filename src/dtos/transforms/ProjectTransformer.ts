@@ -8,16 +8,27 @@
  * Batch operations (manyFromSupabase, manyToDTO, manyToUI)
  */
 
-import { Project, ProjectCoordinates } from '@/domain/entities/Project';
-import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
-import { 
-  ProjectDTO, 
+import { Project, ProjectCoordinates, ProjectResource } from '@/domain/entities/Project';
+import {
+  ProjectDTO,
+  ProjectStatus,
   CreateProjectDTO,
   UpdateProjectDTO,
   ProjectDetailDTO,
   ProjectSummaryDTO,
   CreateProjectRequestDTO
 } from '@/dtos/entities/ProjectDTO';
+import type { ConstructionStage } from '@/dtos/entities/ProjectDTO';
+import { PhaseTransformer } from './PhaseTransformer';
+import { TaskTransformer } from './TaskTransformer';
+import { RiskTransformer } from './RiskTransformer';
+import { MilestoneTransformer } from './MilestoneTransformer';
+import { PaymentTransformer } from './PaymentTransformer';
+import { TenderDomainTransformer } from './TenderDomainTransformer';
+import { MaterialTransformer } from './MaterialTransformer';
+import { InspectionTransformer } from './InspectionTransformer';
+import { StakeholderTransformer } from './StakeholderTransformer';
+import { InspectionStatus } from '@/domain/entities/Inspection';
 
 export class ProjectTransformer {
   
@@ -39,7 +50,7 @@ export class ProjectTransformer {
       id: row.id as string,
       title: row.title as string,
       description: (row.description as string) || '',
-      status: (row.status as ProjectStatus) || 'planifié',
+      status: (row.status as string) || 'planifié',
       progress: Number(row.progress) || 0,
       budget: Number(row.budget) || 0,
       startDate: row.start_date ? new Date(row.start_date as string) : null,
@@ -60,7 +71,7 @@ export class ProjectTransformer {
       bankGuaranteeAmount: row.bank_guarantee_amount ? Number(row.bank_guarantee_amount) : undefined,
       bankGuaranteePercentage: row.bank_guarantee_percentage ? Number(row.bank_guarantee_percentage) : undefined,
       bankGuaranteeRequired: row.bank_guarantee_required as boolean,
-      checkScheduleLastRun: row.check_schedule_last_run,
+      checkScheduleLastRun: row.check_schedule_last_run as Record<string, unknown> | undefined,
       closureNotes: row.closure_notes as string,
       completionDate: row.completion_date ? new Date(row.completion_date as string) : undefined,
       donorOrganization: row.donor_organization as string,
@@ -69,11 +80,11 @@ export class ProjectTransformer {
       fundingSource: row.funding_source as string,
       initialAdvancePercentage: row.initial_advance_percentage ? Number(row.initial_advance_percentage) : undefined,
       initialPaymentPercentage: row.initial_payment_percentage ? Number(row.initial_payment_percentage) : undefined,
-      localisation: row.localisation,
+      localisation: row.localisation as Record<string, unknown> | undefined,
       materialsBudget: row.materials_budget ? Number(row.materials_budget) : undefined,
       paymentFrequency: row.payment_frequency as string,
       paymentMode: row.payment_mode as string,
-      paymentWorkflowConfig: row.payment_workflow_config,
+      paymentWorkflowConfig: row.payment_workflow_config as Record<string, unknown> | undefined,
       procurementLeadTime: row.procurement_lead_time ? Number(row.procurement_lead_time) : undefined,
       projectOrder: row.project_order ? String(row.project_order) : undefined,
       projectReferenceNumber: row.project_reference_number as string,
@@ -170,7 +181,7 @@ export class ProjectTransformer {
       id: project.id,
       title: project.title,
       description: project.description,
-      status: project.status,
+      status: project.status as ProjectStatus,
       progress: project.progress,
       location: project.location || '',
       latitude: project.coordinates?.latitude,
@@ -214,7 +225,7 @@ export class ProjectTransformer {
       hasUtilities: project.hasUtilities || undefined,
       areaSqm: project.areaSqm || undefined,
       siteDetails: project.siteDetails || undefined,
-      workspaceId: undefined, // Not in entity
+     // workspaceId: undefined, // Not in entity
       createdBy: project.createdBy || undefined,
       taskCount: project.tasks?.length || 0,
       completedTasks: project.tasks?.filter(t => t.status === 'completed' || t.status === 'done' || t.status === 'validated').length || 0,
@@ -222,8 +233,8 @@ export class ProjectTransformer {
       riskCount: project.risks?.length || 0,
       highRiskCount: project.risks?.filter(r => r.probability * r.impact > 0.7).length || 0,
       inspectionCount: project.inspections?.length || 0,
-      passedInspections: project.inspections?.filter(i => i.status === 'completed' || i.status === 'approved').length || 0,
-      failedInspections: project.inspections?.filter(i => i.status === 'rejected').length || 0,
+      passedInspections: project.inspections?.filter(i => i.status === InspectionStatus.Completed || i.status === InspectionStatus.Approved).length || 0,
+      failedInspections: project.inspections?.filter(i => i.status === InspectionStatus.Rejected).length || 0,
       paymentCount: project.payments?.length || 0,
       paidAmount: project.payments?.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0) || 0,
       pendingPayments: project.getPendingPayments().length || 0,
@@ -242,7 +253,7 @@ export class ProjectTransformer {
       // NEW: Additional database fields in DTO
       attributionDate: project.attributionDate?.toISOString(),
       bankGuaranteePercentage: project.bankGuaranteePercentage,
-      checkScheduleLastRun: project.checkScheduleLastRun,
+      checkScheduleLastRun: project.checkScheduleLastRun as Record<string, unknown> | undefined,
       closureNotes: project.closureNotes,
       completionDate: project.completionDate?.toISOString(),
       coordinatesLatitude: project.coordinates?.latitude,
@@ -265,9 +276,12 @@ export class ProjectTransformer {
       receptionStatus: project.receptionStatus,
       requiresConsultantValidation: project.requiresConsultantValidation,
       requiresMinistryApproval: project.requiresMinistryApproval,
-      resourceAssignment: project.resourceAssignment,
+      resourceAssignment: project.resourceAssignment ? JSON.stringify(project.resourceAssignment) : undefined,
       retentionPercentage: project.retentionPercentage,
       sector: project.sector,
+      siteDetails: project.siteDetails,
+      supervisorId: project.supervisorId,
+      terrainType: project.terrainType || '',
     };
   }
 
@@ -278,8 +292,8 @@ export class ProjectTransformer {
   static fromDTO(dto: ProjectDTO): Project {
     const coordinates = dto.latitude && dto.longitude
       ? new ProjectCoordinates(dto.latitude, dto.longitude)
-      : dto.coordinatesLatitude && dto.coordinatesLongitude
-      ? new ProjectCoordinates(dto.coordinatesLatitude, dto.coordinatesLongitude)
+      : dto.coordinates
+      ? new ProjectCoordinates(dto.coordinates.latitude, dto.coordinates.longitude)
       : undefined;
 
     return Project.create({
@@ -298,7 +312,6 @@ export class ProjectTransformer {
       currency: dto.currency || 'EUR',
       // Additional fields that exist in domain entity
       financingSource: dto.financingSource,
-      marketType: dto.marketType,
       mainContractor: dto.mainContractor,
 
       // NEW: Additional database fields from DTO
@@ -327,7 +340,71 @@ export class ProjectTransformer {
       receptionStatus: dto.receptionStatus,
       requiresConsultantValidation: dto.requiresConsultantValidation,
       requiresMinistryApproval: dto.requiresMinistryApproval,
-      resourceAssignment: dto.resourceAssignment,
+      resourceAssignment: dto.resourceAssignment?.toString(),
+      retentionPercentage: dto.retentionPercentage,
+      sector: dto.sector,
+      siteDetails: dto.siteDetails,
+      supervisorId: dto.supervisorId,
+      terrainType: dto.terrainType,
+    });
+  }
+
+  /**
+   * ProjectDetailDTO → Domain Entity with Collections
+   * For processing detailed API requests with all related data
+   */
+  static fromDetailDTO(dto: ProjectDetailDTO): Project {
+    const coordinates = dto.latitude && dto.longitude
+      ? new ProjectCoordinates(dto.latitude, dto.longitude)
+      : dto.coordinates
+      ? new ProjectCoordinates(dto.coordinates.latitude, dto.coordinates.longitude)
+      : undefined;
+
+    return Project.create({
+      id: dto.id,
+      title: dto.title,
+      description: dto.description || '',
+      status: dto.status,
+      progress: dto.progress || 0,
+      budget: dto.budget || 0,
+      startDate: dto.startDate ? new Date(dto.startDate) : null,
+      endDate: dto.endDate ? new Date(dto.endDate) : null,
+      location: dto.location,
+      coordinates,
+      teamSize: dto.teamSize || 0,
+      thumbnail: dto.thumbnail,
+      currency: dto.currency || 'EUR',
+      // Additional fields that exist in domain entity
+      financingSource: dto.financingSource,
+      mainContractor: dto.mainContractor,
+
+      // NEW: Additional database fields from DTO
+      attributionDate: dto.attributionDate ? new Date(dto.attributionDate) : undefined,
+      bankGuaranteeAmount: dto.bankGuaranteeAmount,
+      bankGuaranteePercentage: dto.bankGuaranteePercentage,
+      bankGuaranteeRequired: dto.bankGuaranteeRequired,
+      checkScheduleLastRun: dto.checkScheduleLastRun,
+      closureNotes: dto.closureNotes,
+      completionDate: dto.completionDate ? new Date(dto.completionDate) : undefined,
+      donorOrganization: dto.donorOrganization,
+      estimatedDays: dto.estimatedDays,
+      forme: dto.forme,
+      fundingSource: dto.fundingSource,
+      initialAdvancePercentage: dto.initialAdvancePercentage,
+      initialPaymentPercentage: dto.initialPaymentPercentage,
+      localisation: dto.localisation,
+      materialsBudget: dto.materialsBudget,
+      paymentFrequency: dto.paymentFrequency,
+      paymentMode: dto.paymentMode,
+      paymentWorkflowConfig: dto.paymentWorkflowConfig,
+      procurementLeadTime: dto.procurementLeadTime,
+      projectOrder: dto.projectOrder,
+      projectReferenceNumber: dto.projectReferenceNumber || dto.projectReference,
+      projectResponsableId: dto.projectResponsableId,
+      receptionStatus: dto.receptionStatus,
+      requiresConsultantValidation: dto.requiresConsultantValidation,
+      requiresMinistryApproval: dto.requiresMinistryApproval,
+      resourceAssignment: dto.resourceAssignment?.toString(),
       retentionPercentage: dto.retentionPercentage,
       sector: dto.sector,
       siteDetails: dto.siteDetails,
@@ -345,16 +422,12 @@ export class ProjectTransformer {
 
   // =================== UI ↔ DTO ===================
   
-  /**
-   * UI Form Data → Create Request DTO
-   * Transforms form submission data to API create request
-   */
   static formToCreateRequest(formData: Record<string, unknown>): CreateProjectDTO {
     return {
       title: formData.title as string,
       description: (formData.description as string) || '',
       location: (formData.location as string) || '',
-      status: (formData.status as ProjectStatus) || 'planifie',
+      status: (formData.status as ProjectStatus) || ProjectStatus.PLANIFIE,
       budget: Number(formData.budget) || 0,
       startDate: formData.startDate as string,
       endDate: formData.endDate as string,
@@ -364,22 +437,91 @@ export class ProjectTransformer {
       latitude: formData.latitude ? Number(formData.latitude) : undefined,
       longitude: formData.longitude ? Number(formData.longitude) : undefined,
       createdBy: formData.createdBy as string,
+
+      // Extended fields from comprehensive Project entity
+      address: formData.address as string,
+      geographicZone: formData.geographicZone as string,
+      terrainType: formData.terrainType as string,
+      category: formData.category as string,
+      subCategory: formData.subCategory as string,
+      priorityLevel: formData.priorityLevel as "faible" | "moyenne" | "elevee" | "tresElevee",
+      riskLevel: formData.riskLevel as "faible" | "moyen" | "eleve" | "critique",
+      projectManagerId: formData.projectManagerId as string,
+      clientId: formData.clientId as string,
+      mainContractor: formData.mainContractor as string,
+      currentStage: formData.currentStage as ConstructionStage,
+      methodology: formData.methodology as "waterfall" | "agile" | "hybrid",
+      projectReference: formData.projectReference as string,
+      selectionMode: formData.selectionMode as string,
+      financingSource: formData.financingSource as string,
+      marketType: formData.marketType as string,
+      launchDate: formData.launchDate as string,
+      attributionDate: formData.attributionDate as string,
+      allowsInitialPayment: formData.allowsInitialPayment as boolean,
+      initialPaymentPercentage: formData.initialPaymentPercentage as number,
+      paymentFrequency: formData.paymentFrequency as string,
+      paymentMode: formData.paymentMode as string,
+      retentionPercentage: formData.retentionPercentage as number,
+      initialAdvancePercentage: formData.initialAdvancePercentage as number,
+      completionDate: formData.completionDate as string,
+      estimatedDays: formData.estimatedDays as number,
+      requiresConsultantValidation: formData.requiresConsultantValidation as boolean,
+      requiresMinistryApproval: formData.requiresMinistryApproval as boolean,
+      requiresPermits: formData.requiresPermits as boolean,
+      permitNumber: formData.permitNumber as string,
+      hasUtilities: formData.hasUtilities as boolean,
+      areaSqm: formData.areaSqm as number,
+      siteDetails: formData.siteDetails as string,
+
+      // Insurance and financial
+      insuranceRequired: formData.insuranceRequired as boolean,
+      bankGuaranteeRequired: formData.bankGuaranteeRequired as boolean,
+      bankGuaranteeAmount: formData.bankGuaranteeAmount as number,
+      bankGuaranteePercentage: formData.bankGuaranteePercentage as number,
+      checkScheduleLastRun: formData.checkScheduleLastRun as Record<string, unknown> | undefined,
+
+      // Organization
+      clientOrganization: formData.clientOrganization as string,
+      donorOrganization: formData.donorOrganization as string,
+      sector: formData.sector as string,
+      projectType: formData.projectType as string,
+      priority: formData.priority as string,
+
+      // Procurement and materials
+      materialsBudget: formData.materialsBudget as number,
+      procurementLeadTime: formData.procurementLeadTime as number,
+      resourceAssignment: formData.resourceAssignment as string,
+
+      // References and details
+      projectReferenceNumber: formData.projectReferenceNumber as string,
+      projectOrder: formData.projectOrder as string,
+      projectResponsableId: formData.projectResponsableId as string,
+      forme: formData.forme as string,
+      fundingSource: formData.fundingSource as string,
+      localisation: formData.localisation as Record<string, unknown>,
+      receptionStatus: formData.receptionStatus as string,
+      environmentalConstraints: formData.environmentalConstraints as string,
+      closureNotes: formData.closureNotes as string,
+
+      // Workflow configuration
+      paymentWorkflowConfig: formData.paymentWorkflowConfig as Record<string, unknown>,
+      workspaceId: formData.workspaceId as string,
     };
   }
 
   /**
-   * CreateProjectDTO → Partial<Project> (Entity)
-   * For repository create operations
+   * CreateProjectDTO → Entity Data Object
+   * For repository create operations - returns plain object with all UI data
    */
-  static fromCreateDTOToEntity(dto: CreateProjectDTO): Partial<Project> {
+  static fromCreateDTOToEntity(dto: CreateProjectDTO): Record<string, unknown> {
     const coordinates = dto.latitude && dto.longitude
       ? new ProjectCoordinates(dto.latitude, dto.longitude)
       : undefined;
 
-    return {
+    const entityData: Record<string, unknown> = {
       title: dto.title,
       description: dto.description || '',
-      status: (dto.status as unknown as ProjectStatus) || 'planifié',
+      status: (dto.status as string) || 'planifié',
       progress: 0,
       budget: dto.budget || 0,
       startDate: dto.startDate ? new Date(dto.startDate) : null,
@@ -390,19 +532,71 @@ export class ProjectTransformer {
       thumbnail: dto.thumbnail,
       currency: dto.currency || 'XOF',
       createdBy: dto.createdBy,
-    } as Partial<Project>;
+    };
+
+    // Add optional properties if they exist
+    if (dto.financingSource !== undefined) entityData.financingSource = dto.financingSource;
+    if (dto.mainContractor !== undefined) entityData.mainContractor = dto.mainContractor;
+    if (dto.currentStage !== undefined) entityData.currentStage = dto.currentStage;
+    if (dto.currentPhase !== undefined) entityData.currentPhase = dto.currentPhase;
+    if (dto.methodology !== undefined) entityData.methodology = dto.methodology;
+    if (dto.allowsInitialPayment !== undefined) entityData.allowsInitialPayment = dto.allowsInitialPayment;
+    if (dto.initialPaymentPercentage !== undefined) entityData.initialPaymentPercentage = dto.initialPaymentPercentage;
+    if (dto.paymentFrequency !== undefined) entityData.paymentFrequency = dto.paymentFrequency;
+    if (dto.paymentMode !== undefined) entityData.paymentMode = dto.paymentMode;
+    if (dto.retentionPercentage !== undefined) entityData.retentionPercentage = dto.retentionPercentage;
+    if (dto.initialAdvancePercentage !== undefined) entityData.initialAdvancePercentage = dto.initialAdvancePercentage;
+    if (dto.completionDate !== undefined) entityData.completionDate = new Date(dto.completionDate);
+    if (dto.estimatedDays !== undefined) entityData.estimatedDays = dto.estimatedDays;
+    if (dto.launchDate !== undefined) entityData.launchDate = new Date(dto.launchDate);
+    if (dto.attributionDate !== undefined) entityData.attributionDate = new Date(dto.attributionDate);
+    if (dto.requiresConsultantValidation !== undefined) entityData.requiresConsultantValidation = dto.requiresConsultantValidation;
+    if (dto.requiresMinistryApproval !== undefined) entityData.requiresMinistryApproval = dto.requiresMinistryApproval;
+    if (dto.requiresPermits !== undefined) entityData.requiresPermits = dto.requiresPermits;
+    if (dto.permitNumber !== undefined) entityData.permitNumber = dto.permitNumber;
+    if (dto.hasUtilities !== undefined) entityData.hasUtilities = dto.hasUtilities;
+    if (dto.areaSqm !== undefined) entityData.areaSqm = dto.areaSqm;
+    if (dto.siteDetails !== undefined) entityData.siteDetails = dto.siteDetails;
+    if (dto.bankGuaranteeRequired !== undefined) entityData.bankGuaranteeRequired = dto.bankGuaranteeRequired;
+    if (dto.bankGuaranteeAmount !== undefined) entityData.bankGuaranteeAmount = dto.bankGuaranteeAmount;
+    if (dto.bankGuaranteePercentage !== undefined) entityData.bankGuaranteePercentage = dto.bankGuaranteePercentage;
+    if (dto.insuranceRequired !== undefined) entityData.insuranceRequired = dto.insuranceRequired;
+    if (dto.materialsBudget !== undefined) entityData.materialsBudget = dto.materialsBudget;
+    if (dto.procurementLeadTime !== undefined) entityData.procurementLeadTime = dto.procurementLeadTime;
+    if (dto.resourceAssignment !== undefined) entityData.resourceAssignment = dto.resourceAssignment;
+    if (dto.clientOrganization !== undefined) entityData.clientOrganization = dto.clientOrganization;
+    if (dto.donorOrganization !== undefined) entityData.donorOrganization = dto.donorOrganization;
+    if (dto.sector !== undefined) entityData.sector = dto.sector;
+    if (dto.projectType !== undefined) entityData.projectType = dto.projectType;
+    if (dto.priority !== undefined) entityData.priority = dto.priority;
+    if (dto.geographicZone !== undefined) entityData.geographicZone = dto.geographicZone;
+    if (dto.terrainType !== undefined) entityData.terrainType = dto.terrainType;
+    if (dto.environmentalConstraints !== undefined) entityData.environmentalConstraints = dto.environmentalConstraints;
+    if (dto.projectReferenceNumber !== undefined) entityData.projectReferenceNumber = dto.projectReferenceNumber;
+    if (dto.projectOrder !== undefined) entityData.projectOrder = dto.projectOrder;
+    if (dto.clientId !== undefined) entityData.clientId = dto.clientId;
+    if (dto.projectResponsableId !== undefined) entityData.projectResponsable = dto.projectResponsableId;
+    if (dto.forme !== undefined) entityData.forme = dto.forme;
+    if (dto.fundingSource !== undefined) entityData.fundingSource = dto.fundingSource;
+    if (dto.localisation !== undefined) entityData.localisation = dto.localisation;
+    if (dto.receptionStatus !== undefined) entityData.receptionStatus = dto.receptionStatus;
+    if (dto.closureNotes !== undefined) entityData.closureNotes = dto.closureNotes;
+    if (dto.checkScheduleLastRun !== undefined) entityData.checkScheduleLastRun = dto.checkScheduleLastRun;
+    if (dto.paymentWorkflowConfig !== undefined) entityData.paymentWorkflowConfig = dto.paymentWorkflowConfig;
+
+    return entityData;
   }
 
   /**
-   * UpdateProjectDTO → Partial<Project> (Entity)
-   * For repository update operations
+   * UpdateProjectDTO → Update Data Object
+   * For repository update operations - returns plain object to avoid read-only property issues
    */
-  static fromUpdateDTOToEntity(dto: UpdateProjectDTO): Partial<Project> {
-    const updates: Partial<Project> = {};
-    
+  static fromUpdateDTOToEntity(dto: UpdateProjectDTO): Record<string, unknown> {
+    const updates: Record<string, unknown> = {};
+
     if (dto.title !== undefined) updates.title = dto.title;
     if (dto.description !== undefined) updates.description = dto.description;
-    if (dto.status !== undefined) updates.status = dto.status as unknown as ProjectStatus;
+    if (dto.status !== undefined) updates.status = dto.status as string;
     if (dto.budget !== undefined) updates.budget = dto.budget;
     if (dto.progress !== undefined) updates.progress = dto.progress;
     if (dto.startDate !== undefined) updates.startDate = new Date(dto.startDate);
@@ -410,29 +604,184 @@ export class ProjectTransformer {
     if (dto.location !== undefined) updates.location = dto.location;
     if (dto.teamSize !== undefined) updates.teamSize = dto.teamSize;
     if (dto.thumbnail !== undefined) updates.thumbnail = dto.thumbnail;
-    
+
     return updates;
   }
 
   /**
-   * UI Form Data → Update Request DTO
-   * Transforms form submission data to API update request
+   * ProjectWorkflowData → ProjectDetailDTO
+   * Converts multi-step workflow data to detailed project DTO for API operations
    */
-  static formToUpdateRequest(formData: Record<string, unknown>): UpdateProjectDTO {
+  static workflowToDetailDTO(workflowData: ProjectWorkflowData): ProjectDetailDTO {
+    const projectData = workflowData.projectData;
+    const relatedData = workflowData.relatedData;
+
+    // Convert basic project data
+    const projectDTO: ProjectDetailDTO = {
+      ...this.toDTO(this.fromDTO(projectData)), // Convert using existing logic
+      // Override with workflow-specific data
+      id: projectData.id || '',
+      title: projectData.title,
+      description: projectData.description || '',
+      status: projectData.status || ProjectStatus.PLANIFIE,
+      progress: projectData.progress || 0,
+      budget: projectData.budget || 0,
+      startDate: projectData.startDate || '',
+      endDate: projectData.endDate || '',
+      location: projectData.location || '',
+      address: projectData.address,
+      latitude: projectData.latitude,
+      longitude: projectData.longitude,
+      teamSize: projectData.teamSize || 0,
+      thumbnail: projectData.thumbnail,
+      createdAt: projectData.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+
+      // Workflow step tracking (UI-only, not stored in domain)
+      currentStep: workflowData.currentStep,
+      completedSteps: workflowData.completedSteps,
+      stepValidation: workflowData.stepValidation,
+      workflowState: workflowData.workflowState,
+
+      // Step-specific collections
+      stakeholdersData: workflowData.stakeholdersData,
+      locationData: workflowData.locationData,
+      phasesData: workflowData.phasesData,
+      risksData: workflowData.risksData,
+      complianceData: workflowData.complianceData,
+      validationData: workflowData.validationData,
+
+      // Convert related data to domain collections
+      phases: relatedData?.phases ? PhaseTransformer.manyToDTO(relatedData.phases) : [],
+      tasks: relatedData?.tasks ? TaskTransformer.manyToDTO(relatedData.tasks) : [],
+      risks: relatedData?.risks ? RiskTransformer.manyToDTO(relatedData.risks) : [],
+      milestones: relatedData?.milestones ? MilestoneTransformer.manyToDTO(relatedData.milestones) : [],
+      payments: relatedData?.payments ? PaymentTransformer.manyToDTO(relatedData.payments) : [],
+      materials: relatedData?.materials ? MaterialTransformer.manyToDTO(relatedData.materials) : [],
+      stakeholders: relatedData?.stakeholders ? StakeholderTransformer.manyToDTO(relatedData.stakeholders) : [],
+      inspections: relatedData?.inspections ? InspectionTransformer.manyToDTO(relatedData.inspections) : [],
+
+      // Aliases for UI compatibility
+      plannedPhases: relatedData?.phases ? PhaseTransformer.manyToDTO(relatedData.phases) : [],
+      expenses: relatedData?.payments ? PaymentTransformer.manyToDTO(relatedData.payments) : [],
+      resources: workflowData.resources,
+    };
+
+    return projectDTO;
+  }
+
+  /**
+   * ProjectDetailDTO → ProjectWorkflowData
+   * Converts detailed project DTO back to workflow data for form editing
+   */
+  static detailDTOToWorkflow(dto: ProjectDetailDTO): ProjectWorkflowData {
     return {
-      id: formData.id as string,
-      title: formData.title as string,
-      description: formData.description as string,
-      location: formData.location as string,
-      status: formData.status as ProjectStatus,
-      budget: formData.budget !== undefined ? Number(formData.budget) : undefined,
-      progress: formData.progress !== undefined ? Number(formData.progress) : undefined,
-      startDate: formData.startDate as string,
-      endDate: formData.endDate as string,
-      teamSize: formData.teamSize !== undefined ? Number(formData.teamSize) : undefined,
-      thumbnail: formData.thumbnail as string,
+      // Basic project data
+      projectData: {
+        id: dto.id,
+        title: dto.title,
+        description: dto.description,
+        status: dto.status,
+        progress: dto.progress,
+        budget: dto.budget,
+        startDate: dto.startDate,
+        endDate: dto.endDate,
+        location: dto.location,
+        address: dto.address,
+        latitude: dto.latitude,
+        longitude: dto.longitude,
+        teamSize: dto.teamSize,
+        thumbnail: dto.thumbnail,
+        createdAt: dto.createdAt,
+        updatedAt: dto.updatedAt,
+        // Include all other project fields...
+        financingSource: dto.financingSource,
+        mainContractor: dto.mainContractor,
+        currency: dto.currency,
+        category: dto.category,
+        subCategory: dto.subCategory,
+        priorityLevel: dto.priorityLevel,
+        riskLevel: dto.riskLevel,
+        methodology: dto.methodology,
+        projectReference: dto.projectReference,
+        selectionMode: dto.selectionMode,
+        marketType: dto.marketType,
+        requiresPermits: dto.requiresPermits,
+        permitNumber: dto.permitNumber,
+        environmentalImpact: dto.environmentalImpact,
+        environmentalConstraints: dto.environmentalConstraints,
+        insuranceRequired: dto.insuranceRequired,
+        bankGuaranteeRequired: dto.bankGuaranteeRequired,
+        hasUtilities: dto.hasUtilities,
+        areaSqm: dto.areaSqm,
+        siteDetails: dto.siteDetails,
+      },
+
+      // Workflow step tracking
+      currentStep: dto.currentStep,
+      completedSteps: dto.completedSteps,
+      stepValidation: dto.stepValidation,
+      workflowState: dto.workflowState,
+
+      // Step-specific collections
+      stakeholdersData: dto.stakeholdersData,
+      locationData: dto.locationData,
+      phasesData: dto.phasesData,
+      risksData: dto.risksData,
+      complianceData: dto.complianceData,
+      validationData: dto.validationData,
+
+      // Related domain collections
+      relatedData: {
+        phases: dto.phases ? PhaseTransformer.manyFromDTO(dto.phases) : [],
+        tasks: dto.tasks ? TaskTransformer.manyFromDTO(dto.tasks) : [],
+        risks: dto.risks ? RiskTransformer.manyFromDTO(dto.risks) : [],
+        milestones: dto.milestones ? MilestoneTransformer.manyFromDTO(dto.milestones) : [],
+        payments: dto.payments ? PaymentTransformer.manyFromDTO(dto.payments) : [],
+        materials: dto.materials ? MaterialTransformer.manyFromDTO(dto.materials) : [],
+        stakeholders: dto.stakeholders ? StakeholderTransformer.manyFromDTO(dto.stakeholders) : [],
+        inspections: dto.inspections ? InspectionTransformer.manyFromDTO(dto.inspections) : [],
+      },
+
+      // Resources
+      resources: dto.resources,
     };
   }
+
+  /**
+   * Workflow Form Update → Update Data Object
+   * Handles incremental updates from workflow form steps
+   */
+  static workflowFormUpdateToEntity(updates: Partial<ProjectWorkflowData>): Record<string, unknown> {
+    const entityUpdates: Record<string, unknown> = {};
+
+    // Handle project data updates
+    if (updates.projectData) {
+      const projectUpdates = this.fromUpdateDTOToEntity({
+        id: updates.projectData.id || '',
+        ...updates.projectData
+      });
+      Object.assign(entityUpdates, projectUpdates);
+    }
+
+    // Handle related data updates (convert to entity format)
+    if (updates.relatedData) {
+      if (updates.relatedData.phases) {
+        entityUpdates.phases = PhaseTransformer.manyFromDTO(updates.relatedData.phases);
+      }
+      if (updates.relatedData.tasks) {
+        entityUpdates.tasks = TaskTransformer.manyFromDTO(updates.relatedData.tasks);
+      }
+      if (updates.relatedData.risks) {
+        entityUpdates.risks = RiskTransformer.manyFromDTO(updates.relatedData.risks);
+      }
+      if (updates.relatedData.stakeholders) {
+        entityUpdates.stakeholders = StakeholderTransformer.manyFromDTO(updates.relatedData.stakeholders);
+      }
+      // Add other related data conversions...
+    }
+
+    return entityUpdates;
 
   /**
    * Domain Entity → UI State
@@ -479,7 +828,7 @@ export class ProjectTransformer {
       id,
       title: request.title,
       description: request.description || '',
-      status: 'planifié' as ProjectStatus,
+      status: 'planifié' as string,
       progress: 0,
       budget: request.budget || 0,
       startDate: request.startDate ? new Date(request.startDate) : null,
@@ -528,23 +877,78 @@ export class ProjectTransformer {
    */
   static toDetailDTO(project: Project): ProjectDetailDTO {
     const baseDTO = this.toDTO(project);
-    
+    const phases = project.phases?.map(phase => PhaseTransformer.toDTO(phase)) || [];
+    const payments = project.payments?.map(payment => PaymentTransformer.toDTOWithProjectContext(payment, project)) || [];
+
     return {
       ...baseDTO,
-      phases: [],
-      tasks: [],
-      risks: [],
-      milestones: [],
-      payments: [],
-      materials: [],
-      stakeholders: [],
+      // Populate collections from Project entity
+      // Delegate phase transformation to PhaseTransformer (OOP principle: separation of concerns)
+      phases: phases,
+      // Delegate task transformation to TaskTransformer (OOP principle: separation of concerns)
+      tasks: project.tasks?.map(task => TaskTransformer.toDTO(task)) || [],
+      // Delegate risk transformation to RiskTransformer (OOP principle: separation of concerns)
+      risks: project.risks?.map(risk => RiskTransformer.toDTO(risk)) || [],
+      // Delegate milestone transformation to MilestoneTransformer (OOP principle: separation of concerns)
+      milestones: project.milestones?.map(milestone => MilestoneTransformer.toDTO(milestone)) || [],
+      // Delegate payment transformation to PaymentTransformer (OOP principle: separation of concerns)
+      payments: payments,
+      // Delegate material transformation to MaterialTransformer (OOP principle: separation of concerns)
+      materials: project.materials?.map(material => MaterialTransformer.toDTO(material)) || [],
+      // Delegate stakeholder transformation to StakeholderTransformer (OOP principle: separation of concerns)
+      stakeholders: project.suppliers?.map(supplier => StakeholderTransformer.toDTO(supplier)) || [],
+      inspections: project.inspections?.map(inspection => InspectionTransformer.toDTO(inspection)) || [],
+      alerts: [], // Project entity doesn't have alerts collection yet
+      constructionMilestones: project.milestones?.map(milestone => MilestoneTransformer.toDTO(milestone)) || [],
+      tenders: project.tenders?.map(tender => TenderDomainTransformer.toDTO(tender)) || [],
+      expenses: payments.filter(payment => payment.status === 'paid'), // Alias for payments
+
+      // ADDING MISSING PROPERTIES
+      plannedPhases: phases, // Alias for phases
+      resources: [], // Default empty array - can be populated from employees/materials if needed
+
+      // Insurance related collections (placeholder for now)
       insurancePolicies: [],
       insuranceCertificates: [],
-      alerts: [],
-      plannedPhases: [],
-      constructionMilestones: [],
-      tenders: [],
-      expenses: [],
+
+      // Performance data
+      escalationThresholds: {
+        alert: 10,
+        notification: 20,
+        guarantee: 30,
+        legal: 40,
+      },
+
+      // Team allocation
+      teamAllocations: [],
+
+      // Documents
+      documents: project.documents?.map(doc => ({
+        id: doc.id,
+        title: doc.title,
+        documentType: doc.documentType,
+        description: doc.description,
+        fileName: doc.fileName,
+        fileSize: doc.fileSize,
+        fileUrl: doc.fileUrl,
+        status: doc.status,
+        assignedTo: doc.assignedTo,
+        uploadedBy: doc.uploadedBy,
+        createdAt: doc.createdAt,
+        deadlineDate: doc.deadlineDate,
+        isInternalOnly: doc.isInternalOnly,
+        isSharedWithSuppliers: doc.isSharedWithSuppliers,
+        tags: doc.tags,
+        mimeType: doc.mimeType,
+        metadata: doc.metadata,
+        phaseId: doc.phaseId,
+        projectId: doc.projectId,
+        inspectionId: doc.inspectionId,
+        paymentId: doc.paymentId,
+        supplierId: doc.supplierId,
+        sharedDate: null,
+        updatedAt: doc.updatedAt
+      })) || [],
     };
   }
 

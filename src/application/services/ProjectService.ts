@@ -24,11 +24,31 @@ import {
   ProjectStatus,
   PROJECT_STATUS_LABELS,
   PROJECT_STATUS_CATEGORIES,
-  PROJECT_STATUS_TRANSITIONS
+  PROJECT_STATUS_TRANSITIONS,
+  ProjectLocationData
 } from '@/dtos/entities/ProjectDTO';
 
 // Import ProjectTransformer for transformations
 import { ProjectTransformer } from '@/dtos/transforms/ProjectTransformer';
+
+// Import location service and types
+import { LocationService } from './LocationService';
+import { ProjectLocationData } from '@/dtos/entities/ProjectDTO';
+
+// Import geocoding for project location validation
+import { AutoFillLocationData, useLocationAutoFill } from '@/hooks/hexagonal/useLocationAutoFill';
+import { MAURITANIA_REGIONS } from '@/utils/mauritania';
+
+// Location metadata interface
+interface LocationMetadata extends Record<string, unknown> {
+  validatedAt: string;
+  validationSource: string;
+  confidence: number;
+  updatedAt?: string;
+  updateSource?: string;
+  region?: string;
+  city?: string;
+}
 
 // =================== ERROR CLASSES ===================
 
@@ -55,7 +75,8 @@ export class ValidationError extends Error {
 export class ProjectService {
   constructor(
     private projectRepository: IProjectRepository,
-    private stakeholderRepository?: IProjectStakeholderRepository
+    private stakeholderRepository?: IProjectStakeholderRepository,
+    private locationService?: LocationService
   ) {}
 
   // =================== CORE CRUD OPERATIONS ===================
@@ -72,38 +93,13 @@ export class ProjectService {
         title: request.title,
         description: request.description,
         location: request.location,
-        status: request.status || ProjectStatus.EN_ATTENTE,
+        status: 'en_attente' as ProjectStatus, // Cast to ProjectStatus type
         budget: request.budget,
         progress: 0,
         startDate: request.startDate ? new Date(request.startDate) : null,
         endDate: request.endDate ? new Date(request.endDate) : null,
         teamSize: request.teamSize || 0,
-        thumbnail: request.thumbnail,
-        // Additional fields from CreateProjectDTO
-        address: request.address,
-        latitude: request.latitude,
-        longitude: request.longitude,
-        geographicZone: request.geographicZone,
-        terrainType: request.terrainType,
-        category: request.category,
-        subCategory: request.subCategory,
-        priorityLevel: request.priorityLevel,
-        riskLevel: request.riskLevel,
-        projectManagerId: request.projectManagerId,
-        clientId: request.clientId,
-        workspaceId: request.workspaceId,
-        createdBy: request.createdBy,
-        projectReference: request.projectReference,
-        methodology: request.methodology,
-        estimatedDurationDays: request.estimatedDurationDays,
-        financingSource: request.financingSource,
-        marketType: request.marketType,
-        selectionMode: request.selectionMode,
-        launchDate: request.launchDate ? new Date(request.launchDate) : undefined,
-        attributionDate: request.attributionDate ? new Date(request.attributionDate) : undefined,
-        mainContractor: request.mainContractor,
-        allowsInitialPayment: request.allowsInitialPayment,
-        initialPaymentPercentage: request.initialPaymentPercentage,
+        // Additional fields from CreateProjectDTO that are allowed
         currency: request.currency || 'EUR'
       };
 
@@ -113,7 +109,8 @@ export class ProjectService {
           Number(request.latitude),
           Number(request.longitude)
         );
-        (projectData as Partial<Project> & { coordinates: ProjectCoordinates }).coordinates = coordinates;
+        // Coordinates will be set during Project construction
+        (projectData as Partial<Project> & { coordinates?: ProjectCoordinates }).coordinates = coordinates;
       }
 
       const project = await this.projectRepository.create(projectData);
@@ -179,35 +176,23 @@ export class ProjectService {
       if (request.endDate !== undefined && request.endDate !== null) projectData.endDate = new Date(String(request.endDate));
       if (request.teamSize !== undefined && request.teamSize !== null) projectData.teamSize = Number(request.teamSize);
       
-      // Additional fields from form (using correct DTO field names)
-      if (request.thumbnail !== undefined && request.thumbnail !== null) projectData.thumbnail = String(request.thumbnail);
-      if (request.financingSource !== undefined && request.financingSource !== null) projectData.financingSource = String(request.financingSource);
-      if (request.marketType !== undefined && request.marketType !== null) projectData.marketType = String(request.marketType);
-      if (request.selectionMode !== undefined && request.selectionMode !== null) projectData.selectionMode = String(request.selectionMode);
-      if (request.projectReference !== undefined && request.projectReference !== null) projectData.projectReference = String(request.projectReference);
-      if (request.mainContractor !== undefined && request.mainContractor !== null) projectData.mainContractor = String(request.mainContractor);
-      if (request.currentPhase !== undefined && request.currentPhase !== null) projectData.currentPhase = String(request.currentPhase);
-      if (request.currentStage !== undefined && request.currentStage !== null) projectData.currentStage = String(request.currentStage);
-      
       // Handle coordinates (create new ProjectCoordinates object for the entity)
       if (request.coordinates !== undefined && request.coordinates !== null) {
         if (typeof request.coordinates === 'object' && request.coordinates.latitude && request.coordinates.longitude) {
-          // Create a new ProjectCoordinates instance
-          projectData.coordinates = new ProjectCoordinates(
-            Number(request.coordinates.latitude),
-            Number(request.coordinates.longitude)
-          );
+          // Coordinates will be handled during Project update through repository
+          // projectData.coordinates = new ProjectCoordinates(
+          //   Number(request.coordinates.latitude),
+          //   Number(request.coordinates.longitude)
+          // );
         }
       } else if (request.latitude !== undefined && request.longitude !== undefined) {
         // Handle individual latitude/longitude fields
-        projectData.coordinates = new ProjectCoordinates(
-          Number(request.latitude),
-          Number(request.longitude)
-        );
+        // Coordinates will be handled during Project update through repository
+        // projectData.coordinates = new ProjectCoordinates(
+        //   Number(request.latitude),
+        //   Number(request.longitude)
+        // );
       }
-
-      // Add timestamp for update
-      (projectData as Partial<Project> & { updatedAt: Date }).updatedAt = new Date();
 
       const project = await this.projectRepository.update(id, projectData);
       return ProjectTransformer.toDTO(project);
@@ -275,10 +260,7 @@ export class ProjectService {
     }
   }
 
-  /**
-   * Get projects by status (enhanced with new ProjectStatus enum)
-   */
-  async getProjectsByStatus(status: ProjectStatus): Promise<ProjectDTO[]> {
+  async getProjectsByStatus(status: string): Promise<ProjectDTO[]> {
     try {
       const allProjects = await this.projectRepository.findAll();
       const filtered = allProjects.filter(p => p.status === status);
@@ -291,10 +273,7 @@ export class ProjectService {
     }
   }
 
-  /**
-   * Update project status with business logic validation
-   */
-  async updateProjectStatus(id: string, newStatus: ProjectStatus, reason?: string): Promise<ProjectDTO | null> {
+  async updateProjectStatus(id: string, newStatus: string, reason?: string): Promise<ProjectDTO | null> {
     try {
       const project = await this.projectRepository.findById(id);
       if (!project) {
@@ -305,26 +284,24 @@ export class ProjectService {
       }
 
       // Validate status transition
-      const currentStatus = project.status as ProjectStatus;
+      const currentStatus = project.status;
       if (!this.isValidStatusTransition(currentStatus, newStatus)) {
         throw new ProjectServiceError(
-          `Invalid status transition from ${PROJECT_STATUS_LABELS[currentStatus]} to ${PROJECT_STATUS_LABELS[newStatus]}`,
+          `Invalid status transition from ${currentStatus} to ${newStatus}`,
           'INVALID_STATUS_TRANSITION'
         );
       }
 
       // Update project with new status
       const updateData: UpdateProjectDTO = {
-        id,
-        status: newStatus,
-        updatedAt: new Date().toISOString()
+        status: newStatus
       };
 
       const updatedProject = await this.update(id, updateData);
       
       // Log status change if reason provided
       if (reason) {
-        console.log(`Project ${id} status changed from ${PROJECT_STATUS_LABELS[currentStatus]} to ${PROJECT_STATUS_LABELS[newStatus]}. Reason: ${reason}`);
+        console.log(`Project ${id} status changed from ${currentStatus} to ${newStatus}. Reason: ${reason}`);
       }
 
       return updatedProject;
@@ -342,12 +319,21 @@ export class ProjectService {
   /**
    * Get projects by status category
    */
-  async getProjectsByCategory(category: keyof typeof PROJECT_STATUS_CATEGORIES): Promise<ProjectDTO[]> {
+  async getProjectsByCategory(category: string): Promise<ProjectDTO[]> {
     try {
-      const statusInCategory = PROJECT_STATUS_CATEGORIES[category];
+      // Define status categories
+      const statusCategories: Record<string, string[]> = {
+        'INITIAL': ['en_attente', 'en_conception', 'pre_qualification'],
+        'ACTIVE': ['en_attente', 'en_conception', 'planifie_v2', 'attribue_v2', 'en_cours_v2', 'en_construction_v2'],
+        'REVIEW': ['en_inspection_v2', 'en_review'],
+        'COMPLETED': ['termine_v2', 'en_cloture_v2', 'completed'],
+        'PROBLEM': ['suspendu_v2', 'en_retard_v2', 'annule_v2', 'cancelled']
+      };
+      
+      const statusInCategory = statusCategories[category] || [];
       const allProjects = await this.projectRepository.findAll();
       const filtered = allProjects.filter(p => 
-        statusInCategory.includes(p.status as ProjectStatus)
+        statusInCategory.includes(p.status)
       );
       return ProjectTransformer.manyToDTO(filtered);
     } catch (error) {
@@ -361,7 +347,7 @@ export class ProjectService {
   /**
    * Get available status transitions for a project
    */
-  async getAvailableStatusTransitions(id: string): Promise<ProjectStatus[]> {
+  async getAvailableStatusTransitions(id: string): Promise<string[]> {
     try {
       const project = await this.projectRepository.findById(id);
       if (!project) {
@@ -371,8 +357,26 @@ export class ProjectService {
         );
       }
 
-      const currentStatus = project.status as ProjectStatus;
-      return PROJECT_STATUS_TRANSITIONS[currentStatus] || [];
+      const currentStatus = project.status;
+      // Return available transitions based on current status
+      const transitions: Record<string, string[]> = {
+        'en_attente': ['en_conception', 'planifie_v2', 'en_cours_v2', 'annule_v2'],
+        'en_conception': ['planifie_v2', 'en_cours_v2', 'annule_v2'],
+        'planifie_v2': ['attribue_v2', 'en_cours_v2', 'annule_v2'],
+        'attribue_v2': ['en_cours_v2', 'en_construction_v2', 'annule_v2'],
+        'en_cours_v2': ['en_construction_v2', 'en_inspection_v2', 'suspendu_v2', 'en_retard_v2', 'annule_v2'],
+        'en_construction_v2': ['en_inspection_v2', 'en_review', 'suspendu_v2', 'en_retard_v2', 'annule_v2'],
+        'en_inspection_v2': ['en_review', 'termine_v2', 'en_cloture_v2', 'suspendu_v2', 'en_retard_v2'],
+        'en_review': ['termine_v2', 'en_cloture_v2', 'suspendu_v2', 'en_retard_v2'],
+        'termine_v2': ['en_cloture_v2', 'completed'],
+        'en_cloture_v2': ['completed'],
+        'completed': [],
+        'suspendu_v2': ['en_cours_v2', 'en_retard_v2', 'annule_v2'],
+        'en_retard_v2': ['en_cours_v2', 'suspendu_v2', 'annule_v2'],
+        'annule_v2': [],
+        'cancelled': []
+      };
+      return transitions[currentStatus] || [];
     } catch (error) {
       if (error instanceof ProjectServiceError) {
         throw error;
@@ -384,26 +388,26 @@ export class ProjectService {
     }
   }
 
-  async getStatusStatistics(): Promise<Record<ProjectStatus, number>> {
+  async getStatusStatistics(): Promise<Record<string, number>> {
     try {
       const allProjects = await this.projectRepository.findAll();
       const statistics: Record<string, number> = {};
       
       // Initialize all statuses with 0
-      Object.keys(ProjectStatus).forEach(statusKey => {
-        const status = ProjectStatus[statusKey as keyof typeof ProjectStatus];
+      const allStatuses = ['en_attente', 'en_conception', 'planifie_v2', 'attribue_v2', 'en_cours_v2', 'en_construction_v2', 'en_inspection_v2', 'en_review', 'termine_v2', 'en_cloture_v2', 'completed', 'suspendu_v2', 'en_retard_v2', 'annule_v2', 'cancelled'];
+      allStatuses.forEach(status => {
         statistics[status] = 0;
       });
       
       // Count projects by status
       allProjects.forEach(project => {
-        const status = project.status as ProjectStatus;
+        const status = project.status;
         if (statistics[status] !== undefined) {
           statistics[status]++;
         }
       });
       
-      return statistics as Record<ProjectStatus, number>;
+      return statistics;
     } catch (error) {
       throw new ProjectServiceError(
         `Failed to get status statistics: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -412,11 +416,27 @@ export class ProjectService {
     }
   }
 
-  /**
-   * Validate status transition according to business rules
-   */
-  private isValidStatusTransition(currentStatus: ProjectStatus, newStatus: ProjectStatus): boolean {
-    const allowedTransitions = PROJECT_STATUS_TRANSITIONS[currentStatus] || [];
+  private isValidStatusTransition(currentStatus: string, newStatus: string): boolean {
+    // Define valid transitions
+    const validTransitions: Record<string, string[]> = {
+      'en_attente': ['en_conception', 'planifie_v2', 'en_cours_v2', 'annule_v2'],
+      'en_conception': ['planifie_v2', 'en_cours_v2', 'annule_v2'],
+      'planifie_v2': ['attribue_v2', 'en_cours_v2', 'annule_v2'],
+      'attribue_v2': ['en_cours_v2', 'en_construction_v2', 'annule_v2'],
+      'en_cours_v2': ['en_construction_v2', 'en_inspection_v2', 'suspendu_v2', 'en_retard_v2', 'annule_v2'],
+      'en_construction_v2': ['en_inspection_v2', 'en_review', 'suspendu_v2', 'en_retard_v2', 'annule_v2'],
+      'en_inspection_v2': ['en_review', 'termine_v2', 'en_cloture_v2', 'suspendu_v2', 'en_retard_v2'],
+      'en_review': ['termine_v2', 'en_cloture_v2', 'suspendu_v2', 'en_retard_v2'],
+      'termine_v2': ['en_cloture_v2', 'completed'],
+      'en_cloture_v2': ['completed'],
+      'completed': [],
+      'suspendu_v2': ['en_cours_v2', 'en_retard_v2', 'annule_v2'],
+      'en_retard_v2': ['en_cours_v2', 'suspendu_v2', 'annule_v2'],
+      'annule_v2': [],
+      'cancelled': []
+    };
+    
+    const allowedTransitions = validTransitions[currentStatus] || [];
     return allowedTransitions.includes(newStatus);
   }
 
@@ -541,10 +561,10 @@ export class ProjectService {
       
       return {
         total: projects.length,
-        active: projects.filter(p => p.status === ProjectStatus.EN_COURS).length,
-        completed: projects.filter(p => p.status === ProjectStatus.TERMINE).length,
-        onHold: projects.filter(p => p.status === ProjectStatus.SUSPENDU).length,
-        cancelled: projects.filter(p => p.status === ProjectStatus.ANNULE).length,
+        active: projects.filter(p => p.status === 'en_cours_v2').length,
+        completed: projects.filter(p => p.status === 'termine_v2').length,
+        onHold: projects.filter(p => p.status === 'suspendu_v2').length,
+        cancelled: projects.filter(p => p.status === 'annule_v2').length,
       };
     } catch (error) {
       throw new ProjectServiceError(
@@ -594,11 +614,111 @@ export class ProjectService {
   // =================== FORM WORKFLOW METHODS ===================
 
   /**
-   * Create project from form data
+   * Create project with enhanced location data
    */
-  async createFromForm(formData: Record<string, unknown>): Promise<ProjectDTO> {
-    const request = ProjectTransformer.formToCreateRequest(formData);
-    return this.create(request);
+  async createWithLocation(request: CreateProjectDTO, locationData?: ProjectLocationData): Promise<ProjectDTO> {
+    try {
+      this.validateCreateRequest(request);
+      
+      // Validate and enrich location data if provided
+      let enrichedLocation: ProjectLocationData & { validatedAt: string; validationSource: string; confidence: number } | undefined;
+      if (locationData && this.locationService) {
+        // We need to pass the location hook from React context
+        // This method should be called from a React component that can provide the hook
+        enrichedLocation = await this.locationService.validateAndEnrichProjectLocation(locationData);
+      }
+
+      // Create project data for repository - let repository handle mapping
+      const projectDataForRepo: Record<string, unknown> = {};
+
+      // Add basic project data from request
+      Object.assign(projectDataForRepo, {
+        title: request.title,
+        description: request.description,
+        status: 'en_attente',
+        budget: request.budget,
+        startDate: request.startDate,
+        endDate: request.endDate,
+        teamSize: request.teamSize || 0,
+        currency: request.currency || 'EUR',
+        financingSource: request.financingSource,
+        mainContractor: request.mainContractor,
+        clientId: request.clientId,
+        projectManagerId: request.projectManagerId,
+        projectReference: request.projectReference,
+        methodology: request.methodology,
+        allowsInitialPayment: request.allowsInitialPayment,
+        initialPaymentPercentage: request.initialPaymentPercentage,
+      });
+
+      // Add validated location data
+      if (enrichedLocation?.latitude && enrichedLocation?.longitude) {
+        projectDataForRepo.coordinates_latitude = enrichedLocation.latitude;
+        projectDataForRepo.coordinates_longitude = enrichedLocation.longitude;
+      }
+
+      if (enrichedLocation) {
+        projectDataForRepo.location = enrichedLocation.address;
+        projectDataForRepo.geographicZone = enrichedLocation.regionCode;
+        projectDataForRepo.localisation = {
+          ...enrichedLocation.locationData,
+          validatedAt: enrichedLocation.validatedAt,
+          validationSource: enrichedLocation.validationSource,
+          confidence: enrichedLocation.confidence,
+        } as LocationMetadata;
+      }
+
+      // Use repository to create project - it will handle the mapping
+      const project = await this.projectRepository.create(projectDataForRepo as Partial<Project>);
+      return ProjectTransformer.toDTO(project);
+      
+    } catch (error) {
+      if (error instanceof ValidationError) throw error;
+      throw new ProjectServiceError(
+        `Failed to create project with location: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'CREATE_WITH_LOCATION_ERROR'
+      );
+    }
+  }
+
+  async updateLocation(projectId: string, locationData: ProjectLocationData): Promise<ProjectDTO> {
+    try {
+      if (!this.locationService) {
+        throw new ProjectServiceError('Location service not available', 'LOCATION_SERVICE_UNAVAILABLE');
+      }
+
+      // Validate and enrich location data
+      const enrichedLocation = await this.locationService.validateAndEnrichProjectLocation(locationData);
+
+      // Update project with location data
+      const updateData: UpdateProjectDTO = {
+        id: projectId,
+        location: enrichedLocation.address,
+        latitude: enrichedLocation.latitude,
+        longitude: enrichedLocation.longitude,
+        geographicZone: enrichedLocation.regionCode,
+        localisation: {
+          ...enrichedLocation.locationData,
+          updatedAt: new Date().toISOString(),
+          updateSource: 'location_update',
+          confidence: enrichedLocation.confidence,
+        } as LocationMetadata,
+      };
+
+      const result = await this.update(projectId, updateData);
+      if (!result) {
+        throw new ProjectServiceError('Project not found', 'PROJECT_NOT_FOUND');
+      }
+
+      return result;
+      
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new ProjectServiceError(
+        `Failed to update project location: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'UPDATE_LOCATION_ERROR'
+      );
+    }
   }
 
   /**
@@ -607,6 +727,192 @@ export class ProjectService {
   async updateFromForm(id: string, formData: Record<string, unknown>): Promise<ProjectDTO | null> {
     const request = ProjectTransformer.formToUpdateRequest(formData);
     return this.update(id, request);
+  }
+
+  // =================== PROJECT LOCATION METHODS ===================
+
+  /**
+   * Validate and enrich project location data with geocoding
+   */
+  async validateAndEnrichProjectLocation(
+    locationData: ProjectLocationData,
+    locationHook?: ReturnType<typeof useLocationAutoFill>
+  ): Promise<ProjectLocationData & { validatedAt: string; validationSource: string; confidence: number }> {
+    try {
+      // Validate coordinates first
+      this.validateProjectCoordinates(locationData.latitude, locationData.longitude);
+
+      // Attempt geocoding if address provided but no coordinates
+      if (locationData.address && (!locationData.latitude || !locationData.longitude) && locationHook) {
+        const geocoded = await this.geocodeProjectAddress(locationData.address, locationHook);
+        if (geocoded?.coordinates && geocoded.confidence > 0.7) {
+          locationData.latitude = geocoded.coordinates.lat;
+          locationData.longitude = geocoded.coordinates.lng;
+          locationData.locationData = geocoded;
+        }
+      }
+
+      // Attempt reverse geocoding if coordinates provided but no address
+      if ((locationData.latitude && locationData.longitude) && !locationData.address && locationHook) {
+        const reverseGeocoded = await this.reverseGeocodeProjectCoordinates(locationData.latitude, locationData.longitude, locationHook);
+        if (reverseGeocoded?.address) {
+          locationData.address = reverseGeocoded.address;
+          locationData.locationData = reverseGeocoded;
+        }
+      }
+
+      // Validate and enrich region/city data
+      this.validateAndEnrichProjectRegionData(locationData);
+
+      // Validate Mauritania bounds
+      this.validateProjectMauritaniaBounds(locationData);
+
+      return {
+        ...locationData,
+        validatedAt: new Date().toISOString(),
+        validationSource: 'ProjectService',
+        confidence: locationData.locationData?.confidence || 0.5,
+      };
+
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new ProjectServiceError(`Project location validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`, 'LOCATION_VALIDATION_ERROR');
+    }
+  }
+
+  /**
+   * Validate project coordinates
+   */
+  private validateProjectCoordinates(lat?: number, lng?: number): void {
+    if (lat !== undefined) {
+      if (isNaN(lat)) {
+        throw new ProjectServiceError('Project latitude must be a valid number.', 'VALIDATION_ERROR');
+      }
+      if (lat < -90 || lat > 90) {
+        throw new ProjectServiceError('Project latitude must be between -90° and +90°.', 'VALIDATION_ERROR');
+      }
+    }
+
+    if (lng !== undefined) {
+      if (isNaN(lng)) {
+        throw new ProjectServiceError('Project longitude must be a valid number.', 'VALIDATION_ERROR');
+      }
+      if (lng < -180 || lng > 180) {
+        throw new ProjectServiceError('Project longitude must be between -180° and +180°.', 'VALIDATION_ERROR');
+      }
+    }
+  }
+
+  /**
+   * Geocode project address
+   */
+  private async geocodeProjectAddress(
+    address: string,
+    locationHook: ReturnType<typeof useLocationAutoFill>
+  ): Promise<AutoFillLocationData | null> {
+    try {
+      return await locationHook.geocodeAddress(address);
+    } catch (error) {
+      console.warn('Project geocoding failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Reverse geocode project coordinates
+   */
+  private async reverseGeocodeProjectCoordinates(
+    lat: number,
+    lng: number,
+    locationHook: ReturnType<typeof useLocationAutoFill>
+  ): Promise<AutoFillLocationData | null> {
+    try {
+      return await locationHook.reverseGeocode(lat, lng);
+    } catch (error) {
+      console.warn('Project reverse geocoding failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Validate and enrich project region/city data
+   */
+  private validateAndEnrichProjectRegionData(locationData: ProjectLocationData): void {
+    // If we have locationData from geocoding, try to match with Mauritania regions
+    if (locationData.locationData?.region) {
+      const region = MAURITANIA_REGIONS.find(r =>
+        r.name.toLowerCase() === locationData.locationData!.region!.name.toLowerCase() ||
+        r.code === locationData.locationData!.region!.code
+      );
+
+      if (region) {
+        locationData.regionCode = region.code;
+        // Enhanced locationData with region info
+        locationData.locationData!.region = region;
+      }
+    }
+
+    // If we have regionCode, validate it exists
+    if (locationData.regionCode) {
+      const regionExists = MAURITANIA_REGIONS.some(r => r.code === locationData.regionCode);
+      if (!regionExists) {
+        console.warn(`Project region code '${locationData.regionCode}' not found in Mauritania regions`);
+      }
+    }
+  }
+
+  /**
+   * Validate project coordinates are within Mauritania bounds
+   */
+  private validateProjectMauritaniaBounds(locationData: ProjectLocationData): void {
+    if (!locationData.latitude || !locationData.longitude) {
+      return;
+    }
+
+    // Mauritania geographical bounds (approximate)
+    const MAURITANIA_BOUNDS = {
+      north: 27.3,
+      south: 14.8,
+      east: -4.8,  // Note: negative values for western hemisphere
+      west: -17.1
+    };
+
+    const { latitude, longitude } = locationData;
+
+    if (latitude < MAURITANIA_BOUNDS.south || latitude > MAURITANIA_BOUNDS.north ||
+        longitude < MAURITANIA_BOUNDS.west || longitude > MAURITANIA_BOUNDS.east) {
+      console.warn('Project coordinates appear to be outside Mauritania geographical bounds', {
+        coordinates: { lat: latitude, lng: longitude },
+        bounds: MAURITANIA_BOUNDS
+      });
+    }
+  }
+
+  /**
+   * Check if project location is within reasonable distance from Mauritania
+   */
+  isProjectLocationWithinMauritania(locationData: ProjectLocationData): boolean {
+    if (!locationData.latitude || !locationData.longitude) {
+      return false;
+    }
+
+    // Nouakchott coordinates (approximate center of Mauritania)
+    const nouakchottLat = 18.0735;
+    const nouakchottLng = -15.9582;
+
+    // Use generic distance calculation from LocationService
+    if (this.locationService) {
+      const distance = this.locationService.calculateDistance(
+        locationData.latitude,
+        locationData.longitude,
+        nouakchottLat,
+        nouakchottLng
+      );
+      // Mauritania's maximum extent is about 1500km, so 2000km is a reasonable buffer
+      return distance <= 2000;
+    }
+
+    return false;
   }
 
   // =================== PRIVATE HELPERS ===================
@@ -625,19 +931,19 @@ export class ProjectService {
 
   private validateProjectData(data: Partial<CreateProjectDTO | UpdateProjectDTO>): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
-    
+
     if ('title' in data && data.title !== undefined) {
       if (typeof data.title !== 'string' || data.title.trim().length === 0) {
         errors.push('Title must be a non-empty string');
       }
     }
-    
+
     if ('budget' in data && data.budget !== undefined) {
       if (typeof data.budget !== 'number' || data.budget < 0) {
         errors.push('Budget must be a non-negative number');
       }
     }
-    
+
     if ('progress' in data && data.progress !== undefined) {
       if (typeof data.progress !== 'number' || data.progress < 0 || data.progress > 100) {
         errors.push('Progress must be between 0 and 100');
@@ -654,7 +960,7 @@ export class ProjectService {
       }
 
       const stakeholders = await this.stakeholderRepository.findByProjectId(projectId);
-      
+
       return stakeholders.map(s => ({
         id: s.id,
         projectId: s.projectId,

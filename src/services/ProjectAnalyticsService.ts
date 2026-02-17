@@ -1,6 +1,7 @@
 // Service for comprehensive project analytics
 import { ProjectDetailDTO } from '@/types/dto';
 import { ProjectCalculationService } from './ProjectCalculationService';
+import { InspectionStatus } from '@/domain/entities/Inspection';
 
 export class ProjectAnalyticsService {
   
@@ -80,13 +81,13 @@ export class ProjectAnalyticsService {
     
     const totalInspections = inspections.length;
     const passedInspections = inspections.filter(i => 
-      i.status === 'approved' || i.status === 'completed'
+      i.status === InspectionStatus.Approved || i.status === InspectionStatus.Completed
     ).length;
     const failedInspections = inspections.filter(i => 
-      i.status === 'rejected' || i.status === 'requires_changes'
+      i.status === InspectionStatus.Rejected || i.status === InspectionStatus.RequiresChanges
     ).length;
     const pendingInspections = inspections.filter(i => 
-      i.status === 'scheduled' || i.status === 'pending'
+      i.status === InspectionStatus.Scheduled || i.status === InspectionStatus.Pending
     ).length;
 
     const issues = inspections.flatMap(i => {

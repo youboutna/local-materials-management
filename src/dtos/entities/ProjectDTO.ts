@@ -7,6 +7,26 @@
 import { BaseEntityDTO, BaseFormDTO, BaseUIState, StandardStatus, StandardPriority } from '../shared';
 import { PerformanceMetricsDTO } from '../transforms';
 
+// Import location types
+import { AutoFillLocationData } from '@/hooks/hexagonal/useLocationAutoFill';
+
+// Import ProjectResource for resource assignments
+import { ProjectResource } from '@/domain/entities/Project';
+
+// Project Location Data Interface - Enhanced location handling
+export interface ProjectLocationData {
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  regionCode?: string;
+  cityCode?: string;
+  locationData?: AutoFillLocationData;
+  // Additional metadata
+  validatedAt?: string;
+  validationSource?: string;
+  confidence?: number;
+}
+
 // Construction phase types
 export type ConstructionPhase =
   | "pre_construction"
@@ -31,7 +51,7 @@ import { RiskDTO } from './RiskDTO';
 import { StakeholderDTO } from './StakeholderDTO';
 import { TaskDTO } from './TaskDTO';
 import { TenderDTO } from './TenderDTO';
-import { InspectionDTO } from './InspectionDTO';
+import { InspectionDTO, InspectionStatus } from './InspectionDTO';
 import { DocumentDTO } from './DocumentDTO';
 
 // Core project status types - standardized and comprehensive
@@ -371,17 +391,51 @@ export interface ProjectDTO extends BaseEntityDTO {
   bankGuaranteeAmount?: number;
   bankGuaranteePercentage?: number;
   checkScheduleLastRun?: Record<string, unknown>;
+  closureNotes?: string;
+  completionDate?: string;
   
   // Site utilities
   hasUtilities?: boolean;
   areaSqm?: number;
   siteDetails?: string;
   
-  // Relationships (foreign keys)
-  workspaceId?: string;
-  createdBy?: string;
+  // Organization and stakeholders
+  clientOrganization?: string;
+  donorOrganization?: string;
+  sector?: string;
+  projectType?: string;
+  priority?: string;
   
-  // Aggregated metrics
+  // Financial and payment settings
+  allowsInitialPayment?: boolean;
+  initialPaymentPercentage?: number;
+  initialAdvancePercentage?: number;
+  retentionPercentage?: number;
+  paymentFrequency?: string;
+  paymentMode?: string;
+  paymentWorkflowConfig?: Record<string, unknown>;
+  
+  // Procurement and materials
+  materialsBudget?: number;
+  procurementLeadTime?: number;
+  resourceAssignment?: ProjectResource[];
+  
+  // Timeline and scheduling
+  estimatedDays?: number;
+  launchDate?: string;
+  
+  // Validation and approval
+  requiresConsultantValidation?: boolean;
+  requiresMinistryApproval?: boolean;
+  
+  // Project references and details
+  projectReferenceNumber?: string;
+  projectOrder?: string;
+  projectResponsableId?: string;
+  forme?: string;
+  fundingSource?: string;
+  localisation?: Record<string, unknown>;
+  receptionStatus?: string;
   taskCount?: number;
   completedTasks?: number;
   overdueTasks?: number;
@@ -441,15 +495,34 @@ export interface ProjectDetailDTO extends ProjectDTO {
   alerts: ProjectAlert[];
   inspections: InspectionDTO[];
   
+  // Insurance related collections
+  insurancePolicies?: {
+    id: string;
+    policyNumber: string;
+    provider: string;
+    coverage: number;
+    expiryDate: string;
+  }[];
+  insuranceCertificates?: {
+    id: string;
+    certificateNumber: string;
+    issueDate: string;
+    expiryDate: string;
+    coverage: number;
+  }[];
+  
   // Construction details
-  plannedPhases: PhaseDTO[];
+  plannedPhases: PhaseDTO[]; // Alias for phases to match UI expectations
   constructionMilestones: MilestoneDTO[];
   
   // Project tenders
   tenders: TenderDTO[];
   
   // Financial details
-  expenses: PaymentDTO[];
+  expenses: PaymentDTO[]; // Alias for payments to match UI expectations
+  
+  // Resource allocation - ADDING MISSING PROPERTY
+  resources?: ProjectResource[];
   
   // Performance data
   escalationThresholds?: {
@@ -459,8 +532,7 @@ export interface ProjectDetailDTO extends ProjectDTO {
     legal: number;
   };
   
-  // Resource allocation
-  resourceAssignment?: ResourceAssignmentDTO[];
+  // Team allocation
   teamAllocations?: TeamAllocationDTO[];
   
   // Documents
@@ -531,6 +603,25 @@ export interface ProjectFormDataDTO extends BaseFormDTO<ProjectDTO> {
   thumbnail?: string;
   workspaceId?: string;
   createdBy?: string;
+
+  // WORKFLOW STEP TRACKING - Added for EnhancedProjectEditForm compatibility
+  currentStep?: number;
+  completedSteps?: number[];
+  stepValidation?: Record<number, boolean>;
+  workflowState?: {
+    isDirty?: boolean;
+    isValid?: boolean;
+    lastSaved?: string;
+    totalSteps?: number;
+  };
+
+  // STEP-SPECIFIC DATA COLLECTIONS - Added for form workflow
+  stakeholdersData?: StakeholderDTO[];
+  locationData?: ProjectLocationData;
+  phasesData?: PhaseDTO[];
+  risksData?: RiskDTO[];
+  complianceData?: Record<string, unknown>;
+  validationData?: Record<string, unknown>;
 }
 
 // Project UI State for form management
@@ -589,36 +680,36 @@ export interface CreateProjectDTO {
   budget: number;
   startDate: string;
   endDate?: string;
-  
+
   // Optional creation fields
   thumbnail?: string;
   teamSize?: number;
   currency?: string;
-  
+
   // Project details
   address?: string;
   latitude?: number;
   longitude?: number;
   geographicZone?: string;
   terrainType?: string;
-  
+
   // Classification
   category?: string;
   subCategory?: string;
   priorityLevel?: "faible" | "moyenne" | "elevee" | "tresElevee";
   riskLevel?: "faible" | "moyen" | "eleve" | "critique";
-  
+
   // Organization
   projectManagerId?: string;
   clientId?: string;
   workspaceId?: string;
   createdBy?: string;
-  
+
   // Additional setup
   projectReference?: string;
   methodology?: "waterfall" | "agile" | "hybrid";
   estimatedDurationDays?: number;
-  
+
   // Extended fields for backward compatibility
   financingSource?: string;
   marketType?: string;
@@ -628,6 +719,56 @@ export interface CreateProjectDTO {
   mainContractor?: string;
   allowsInitialPayment?: boolean;
   initialPaymentPercentage?: number;
+
+  // Construction and workflow
+  currentStage?: ConstructionStage;
+  currentPhase?: string;
+  paymentFrequency?: string;
+  paymentMode?: string;
+  retentionPercentage?: number;
+  initialAdvancePercentage?: number;
+  completionDate?: string;
+  estimatedDays?: number;
+  requiresConsultantValidation?: boolean;
+  requiresMinistryApproval?: boolean;
+  requiresPermits?: boolean;
+  permitNumber?: string;
+  hasUtilities?: boolean;
+  areaSqm?: number;
+  siteDetails?: string;
+
+  // Insurance and financial
+  insuranceRequired?: boolean;
+  bankGuaranteeRequired?: boolean;
+  bankGuaranteeAmount?: number;
+  bankGuaranteePercentage?: number;
+  checkScheduleLastRun?: Record<string, unknown>;
+
+  // Organization details
+  clientOrganization?: string;
+  donorOrganization?: string;
+  sector?: string;
+  projectType?: string;
+  priority?: string;
+
+  // Procurement and materials
+  materialsBudget?: number;
+  procurementLeadTime?: number;
+  resourceAssignment?: ProjectResource[];
+
+  // References and details
+  projectReferenceNumber?: string;
+  projectOrder?: string;
+  projectResponsableId?: string;
+  forme?: string;
+  fundingSource?: string;
+  localisation?: Record<string, unknown>;
+  receptionStatus?: string;
+  environmentalConstraints?: string;
+  closureNotes?: string;
+
+  // Workflow configuration
+  paymentWorkflowConfig?: Record<string, unknown>;
 }
 
 // Update Project DTO - standardized pattern  
@@ -716,68 +857,15 @@ export interface CreateProjectRequestDTO {
     email: string;
     phone: string;
   };
-  // Domain collections
-  payments?: {
-    id: string;
-    amount: number;
-    date: string;
-    status: string;
-  }[];
-  inspections?: {
-    id: string;
-    date: string;
-    status: string;
-    report: string;
-  }[];
-  tasks?: {
-    id: string;
-    title: string;
-    status: string;
-    dueDate: string;
-  }[];
-  documents?: {
-    id: string;
-    name: string;
-    type: string;
-    url: string;
-  }[];
-  materials?: {
-    id: string;
-    name: string;
-    quantity: number;
-    unit: string;
-  }[];
-  phases?: {
-    id: string;
-    name: string;
-    status: string;
-    startDate: string;
-    endDate: string;
-  }[];
-  milestones?: {
-    id: string;
-    title: string;
-    date: string;
-    status: string;
-  }[];
-  risks?: {
-    id: string;
-    title: string;
-    probability: number;
-    impact: number;
-    mitigation: string;
-  }[];
-  tenders?: {
-    id: string;
-    title: string;
-    status: string;
-    deadline: string;
-  }[];
-  suppliers?: {
-    id: string;
-    name: string;
-    contact: string;
-  }[];
+  // Domain collections - using proper DTO types following hexagonal architecture
+  phases?: PhaseDTO[];
+  tasks?: TaskDTO[];
+  risks?: RiskDTO[];
+  milestones?: MilestoneDTO[];
+  payments?: PaymentDTO[];
+  materials?: MaterialDTO[];
+  inspections?: InspectionDTO[];
+  stakeholders?: StakeholderDTO[];
   employees?: {
     id: string;
     name: string;
@@ -793,8 +881,7 @@ export type ProjectData = ProjectDTO;
 export type ProjectEVMMetrics = ProjectEvmData;
 export type ProjectPERTAnalysis = ProjectPertAnalysis;
 
-// Inspection status for workflow components
-export type InspectionStatus = 'pending' | 'scheduled' | 'in_progress' | 'completed' | 'approved' | 'rejected';
+// Inspection status for workflow components - imported from InspectionDTO.ts
 
 // Project with payments for workflow inspection
 export interface ProjectWithPayments extends ProjectDTO {

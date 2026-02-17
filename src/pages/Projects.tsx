@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Map, Grid, Filter, Plus } from "lucide-react";
@@ -31,29 +31,25 @@ const Projects: React.FC = () => {
   // Use hexagonal architecture hook
   const { projects: hexProjects, isLoading, error, deleteProject } = useProjectsHex();
   
-  // Map domain entities to ProjectData for compatibility
-  const projectsKey = React.useMemo(() => {
-    return `${hexProjects?.length || 0}-${hexProjects?.map(p => p.id).join(',') || ''}`;
+  // Use useRef to stabilize the projects array and prevent infinite re-renders
+  const projectsRef = useRef<ProjectData[]>([]);
+  
+  // Update projects ref only when hexProjects actually changes
+  useEffect(() => {
+    if (hexProjects && hexProjects.length > 0) {
+      // Use hexProjects directly since they are already ProjectDTO objects
+      // Only update if the projects actually changed
+      const currentIds = projectsRef.current.map(p => p.id).sort().join(',');
+      const newIds = hexProjects.map(p => p.id).sort().join(',');
+      
+      if (currentIds !== newIds) {
+        projectsRef.current = hexProjects;
+      }
+    }
   }, [hexProjects]);
 
-  const projects: ProjectData[] = React.useMemo(() => 
-    hexProjects?.map(p => ({
-      id: p.id || '',
-      title: p.title || '',
-      description: p.description || '',
-      location: p.location || '',
-      status: (p.status as ProjectData['status']) || 'en attente',
-      progress: p.progress || 0,
-      budget: p.budget || 0,
-      startDate: p.startDate ? new Date(p.startDate).toISOString() : new Date().toISOString(),
-      endDate: p.endDate ? new Date(p.endDate).toISOString() : new Date().toISOString(),
-      thumbnail: p.thumbnail || undefined,
-      teamSize: p.teamSize || 0,
-      coordinates: p.coordinates?.latitude && p.coordinates?.longitude 
-        ? { latitude: p.coordinates.latitude, longitude: p.coordinates.longitude }
-        : undefined,
-    })) || []
-  , [hexProjects]);
+  // Use the stable ref for projects
+  const projects = projectsRef.current;
   
   const [filteredMapLocations, setFilteredMapLocations] = useState<MapLocation[]>([]);
   const [interactiveFilteredProjects, setInteractiveFilteredProjects] = useState<ProjectData[]>([]);
@@ -147,22 +143,14 @@ const Projects: React.FC = () => {
       }));
   }, [projects]);
 
-  // Initialize locations when projects load
+  // Initialize and update map locations
   useEffect(() => {
-    console.log("Projects initialized - Total locations:", originalMapLocations.length);
-    setFilteredMapLocations(originalMapLocations);
-  }, [originalMapLocations]);
+    console.log("Projects initialized - Total locations:", projects.length);
 
-  // Memoized filtered locations to avoid repeated calculations
-  const filteredMapLocationsFromProjects = React.useMemo(() => {
-    if (!filteredProjects) return [];
-    
-    return filteredProjects
-      .filter(
-        (project) =>
-          project.coordinates?.latitude && project.coordinates?.longitude
-      )
-      .map((project) => ({
+    // Set initial locations from all projects
+    const allLocations = projects
+      .filter(project => project.coordinates?.latitude && project.coordinates?.longitude)
+      .map(project => ({
         id: project.id,
         name: project.title,
         type: "project" as const,
@@ -173,12 +161,9 @@ const Projects: React.FC = () => {
         startDate: project.startDate,
         endDate: project.endDate,
       }));
-  }, [filteredProjects]);
 
-  // Update map locations when filtered projects change
-  useEffect(() => {
-    setFilteredMapLocations(filteredMapLocationsFromProjects);
-  }, [filteredMapLocationsFromProjects]);
+    setFilteredMapLocations(allLocations);
+  }, [projects]);
 
   const handleReset = () => {
     setSearchQuery("");

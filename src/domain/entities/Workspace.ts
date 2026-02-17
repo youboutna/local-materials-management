@@ -11,7 +11,7 @@ export interface Workspace {
   workspaceId: string;
   workspaceCode: string;
   name: string;
-  location: GeographicUnit;
+  location: string; // Simple string location instead of GeographicUnit
   description?: string;
   capacity?: number;
   contact?: {
@@ -46,8 +46,13 @@ export interface ProjectAlert {
   resolvedAt?: Date;
   resolvedBy?: string;
   assignedActions?: string[];
-  actionProofs?: Record<string, any>;
-  metadata?: Record<string, any>;
+  actionProofs?: Record<string, {
+    documentId?: string;
+    timestamp?: string;
+    userId?: string;
+    notes?: string;
+  }>;
+  metadata?: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
 }

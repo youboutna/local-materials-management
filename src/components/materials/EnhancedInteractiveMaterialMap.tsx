@@ -7,6 +7,7 @@ import { MapPin, Package, DollarSign, Eye } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { MaterialUIDTO } from '@/dtos/transforms';
+import { getMajorCities } from '@/utils/mauritania';
 
 // Fix default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -108,19 +109,6 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
     });
   };
 
-  // Mauritanian cities for reference
-  const mauritanianCities = [
-    { name: 'Nouakchott', lat: 18.0735, lng: -15.9582 },
-    { name: 'Nouadhibou', lat: 20.9276, lng: -17.0359 },
-    { name: 'Rosso', lat: 16.5131, lng: -15.8061 },
-    { name: 'Kaédi', lat: 16.1503, lng: -13.5066 },
-    { name: 'Zouérat', lat: 22.7461, lng: -12.4794 },
-    { name: 'Atar', lat: 20.5169, lng: -13.0499 },
-    { name: 'Kiffa', lat: 16.6207, lng: -11.4056 },
-    { name: 'Aioun', lat: 16.6644, lng: -9.6149 },
-    { name: 'Néma', lat: 16.6169, lng: -7.2569 },
-    { name: 'Sélibaby', lat: 15.1592, lng: -12.1844 }
-  ];
 
   return (
     <Card className="border-2 shadow-lg">
@@ -167,7 +155,7 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
             <MapClickHandler onMapClick={handleMapClick} />
 
             {/* Mauritanian cities markers */}
-            {mauritanianCities.map((city) => (
+            {getMajorCities().map((city) => (
               <Marker
                 key={city.name}
                 position={[city.lat, city.lng]}

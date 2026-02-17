@@ -240,6 +240,7 @@ export interface CreateMaterialRequestDto {
   description: string;
   category: string;
   unit: string;
+  workspaceId?: string;
   currentStock?: number;
   minStock?: number;
   maxStock?: number;

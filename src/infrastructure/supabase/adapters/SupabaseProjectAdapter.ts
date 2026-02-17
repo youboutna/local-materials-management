@@ -7,6 +7,40 @@ import { supabase } from '@/integrations/supabase/client';
 import { Project } from '@/domain/entities';
 import { IProjectRepository, ProjectSummary, ProjectWithRelatedData } from '@/domain/repositories';
 
+// Import transformer for proper field mapping
+import { ProjectTransformer } from '@/dtos/transforms/ProjectTransformer';
+
+// Define database row types for better type safety
+interface ProjectRow {
+  id: string;
+  title: string;
+  description: string | null;
+  status: string;
+  progress: number;
+  budget: number;
+  start_date: string | null;
+  end_date: string | null; // Supabase uses null, not undefined
+  location: string;
+  coordinates_latitude: number | null;
+  coordinates_longitude: number | null;
+  team_size: number;
+  thumbnail: string | null;
+  financing_source: string | null;
+  main_contractor: string | null;
+  currency: string | null;
+  created_by: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  // Additional fields...
+  [key: string]: unknown;
+}
+
+interface PhaseRow {
+  id: string;
+  progress?: number;
+  [key: string]: unknown;
+}
+
 export class SupabaseProjectAdapter implements IProjectRepository {
   // ============= CRUD Operations =============
 
@@ -41,12 +75,13 @@ export class SupabaseProjectAdapter implements IProjectRepository {
     return (data || []).map(this.mapToProject);
   }
 
-  async create(project: Partial<Project>): Promise<Project> {
-    const entityData = this.mapToEntity(project);
+  async create(projectData: Record<string, unknown>): Promise<Project> {
+    // Use transformer to convert to Supabase format
+    const supabaseData = ProjectTransformer.toSupabase(projectData as Partial<Project>);
 
     const { data, error } = await supabase
       .from('projects')
-      .insert(entityData)
+      .insert(supabaseData)
       .select()
       .single();
 
@@ -61,11 +96,13 @@ export class SupabaseProjectAdapter implements IProjectRepository {
       throw new Error('Invalid project ID provided');
     }
 
-    const entityData = this.mapToEntity(updates);
+    // Use transformer to convert updates to Supabase format
+    const entityData = ProjectTransformer.toSupabase(updates as Project);
 
     const { data, error } = await supabase
       .from('projects')
-      .update(entityData)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .update(entityData as any) // Cast to any for Supabase operations
       .eq('id', id)
       .select()
       .single();
@@ -207,7 +244,7 @@ export class SupabaseProjectAdapter implements IProjectRepository {
     const phases = related.phases;
     if (phases.length === 0) return 0;
 
-    const totalProgress = phases.reduce((sum: number, phase: any) => 
+    const totalProgress = phases.reduce((sum: number, phase: PhaseRow) => 
       sum + (phase.progress || 0), 0
     );
     const averageProgress = totalProgress / phases.length;
@@ -219,69 +256,8 @@ export class SupabaseProjectAdapter implements IProjectRepository {
 
   // ============= Private Mappers =============
 
-  private mapToProject(data: any): Project {
-    return Project.create({
-      id: data.id,
-      title: data.title,
-      description: data.description || '',
-      status: data.status,
-      progress: data.progress || 0,
-      budget: data.budget || 0,
-      startDate: data.start_date ? new Date(data.start_date) : null,
-      endDate: data.end_date ? new Date(data.end_date) : null,
-      location: data.location,
-      coordinates: data.coordinates_latitude && data.coordinates_longitude ? {
-        latitude: data.coordinates_latitude,
-        longitude: data.coordinates_longitude,
-      } : undefined,
-      teamSize: data.team_size,
-      thumbnail: data.thumbnail,
-      financingSource: data.financing_source,
-      marketType: data.market_type,
-      selectionMode: data.selection_mode,
-      projectReferenceNumber: data.project_reference,
-      mainContractor: data.main_contractor,
-      allowsInitialPayment: data.allows_initial_payment,
-      initialAdvancePercentage: data.initial_payment_percentage,
-      currentPhase: data.current_phase,
-      currentStage: data.current_stage,
-    });
-  }
-
-  private mapToEntity(project: Partial<Project>): Record<string, unknown> {
-    const entity: Record<string, unknown> = {};
-
-    if (project.title !== undefined) entity.title = project.title;
-    if (project.description !== undefined) entity.description = project.description;
-    if (project.status !== undefined) entity.status = project.status;
-    if (project.progress !== undefined) entity.progress = project.progress;
-    if (project.budget !== undefined) entity.budget = project.budget;
-    if (project.startDate !== undefined) {
-      entity.start_date = project.startDate instanceof Date 
-        ? project.startDate.toISOString().split('T')[0] 
-        : project.startDate;
-    }
-    if (project.endDate !== undefined) {
-      entity.end_date = project.endDate instanceof Date 
-        ? project.endDate.toISOString().split('T')[0] 
-        : project.endDate;
-    }
-    if (project.location !== undefined) entity.location = project.location;
-    if (project.coordinates !== undefined) {
-      entity.coordinates_latitude = project.coordinates?.latitude;
-      entity.coordinates_longitude = project.coordinates?.longitude;
-    }
-    if (project.teamSize !== undefined) entity.team_size = project.teamSize;
-    if (project.thumbnail !== undefined) entity.thumbnail = project.thumbnail;
-    if (project.financingSource !== undefined) entity.financing_source = project.financingSource;
-    if (project.marketType !== undefined) entity.market_type = project.marketType;
-    if (project.selectionMode !== undefined) entity.selection_mode = project.selectionMode;
-    if (project.projectReferenceNumber !== undefined) entity.project_reference = project.projectReferenceNumber;
-    if (project.mainContractor !== undefined) entity.main_contractor = typeof project.mainContractor === 'string' ? project.mainContractor : project.mainContractor?.name;
-    if (project.allowsInitialPayment !== undefined) entity.allows_initial_payment = project.allowsInitialPayment;
-    if (project.currentPhase !== undefined) entity.current_phase = project.currentPhase;
-    if (project.currentStage !== undefined) entity.current_stage = project.currentStage;
-
-    return entity;
+  private mapToProject(data: ProjectRow): Project {
+    // Use transformer to convert from Supabase format to Domain Entity
+    return ProjectTransformer.fromSupabase(data);
   }
 }

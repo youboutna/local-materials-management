@@ -23,6 +23,9 @@ import { useLocationAutoFill, AutoFillLocationData } from '@/hooks/hexagonal/use
 import { LocationDTO } from '@/dtos';
 import { MapPin, Target, Globe, Navigation, Loader2, Crosshair, CheckCircle, X, Map } from 'lucide-react';
 
+// Import Mauritania location data
+import { MAURITANIA_REGIONS, MAURITANIA_CITIES } from '@/utils/mauritania';
+
 // Fix default markers in Leaflet
 const DefaultIcon = L.icon({
   iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
@@ -122,6 +125,10 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
     isLoading: isGeocoding
   } = useLocationAutoFill();
 
+  // Location data from Mauritania utils
+  const allRegions = MAURITANIA_REGIONS;
+  const allCities = MAURITANIA_CITIES;
+
   // Handle location selection from autocomplete
   const handleLocationSelect = useCallback((locationAddress: string, locationData?: LocationDTO) => {
     setAddress(locationAddress);
@@ -168,7 +175,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
       cityCode: locationData?.type === 'city' ? locationData.code : value.cityCode,
       locationData: transformedLocationData
     });
-  }, [onChange, value]);
+  }, [onChange, value, allRegions, allCities]);
 
   // Handle manual address changes with auto-fill
   const handleAddressChange = useCallback(async (newAddress: string) => {

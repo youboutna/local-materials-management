@@ -122,6 +122,7 @@ export interface InspectionDTO extends BaseEntityDTO {
  * Input for updating existing inspections
  */
 export interface CreateInspectionDTO {
+  id?: string; // Optional ID for updates
   title?: string;
   description?: string;
   type?: InspectionType;

@@ -1,15 +1,16 @@
-import { IWorkspaceRepository } from '@/domain/repositories/IWorkspaceRepository';
-import { Workspace, OperationalStatus } from '@/domain/entities/Workspace';
-import { supabase } from '@/integrations/supabase/client';
+import { Json } from '@/integrations/supabase/types';
 
 // Database row interface for workspaces table
 interface WorkspaceRow {
   id: string;
   name: string;
-  description?: string;
-  location?: string;
-  capacity?: number;
-  status?: string;
+  description?: string | null;
+  location?: string | null;
+  capacity?: number | null;
+  status?: string | null;
+  contact_manager?: string | null;
+  contact_phone?: string | null;
+  facilities?: Json; // Supabase Json type - can be string[] or null
   created_at: string;
   updated_at: string;
 }
@@ -31,6 +32,9 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
         location: typeof workspace.location === 'string' ? workspace.location : workspace.location.name,
         capacity: workspace.capacity,
         status: workspace.status,
+        contact_manager: workspace.contact?.manager,
+        contact_phone: workspace.contact?.phone,
+        facilities: workspace.facilities,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -111,6 +115,9 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
       }
       if (updates.capacity !== undefined) updateData.capacity = updates.capacity;
       if (updates.status !== undefined) updateData.status = updates.status;
+      if (updates.contact?.manager !== undefined) updateData.contact_manager = updates.contact.manager;
+      if (updates.contact?.phone !== undefined) updateData.contact_phone = updates.contact.phone;
+      if (updates.facilities !== undefined) updateData.facilities = updates.facilities;
       updateData.updated_at = new Date().toISOString();
 
       const { data, error } = await supabase
@@ -203,9 +210,14 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
       workspaceId: data.id, // Assuming workspaceId is same as id for now
       workspaceCode: `WS-${data.id.slice(0, 8)}`, // Generate a simple code
       name: data.name,
-      location: data.location || 'Nouakchott', // Default location
-      description: data.description,
-      capacity: data.capacity,
+      location: data.location || 'Nouakchott', // String location for now
+      description: data.description || undefined,
+      capacity: data.capacity || undefined,
+      contact: (data.contact_manager || data.contact_phone) ? {
+        manager: data.contact_manager || '',
+        phone: data.contact_phone || ''
+      } : undefined,
+      facilities: Array.isArray(data.facilities) ? data.facilities : undefined,
       status: data.status === 'active' ? OperationalStatus.active :
              data.status === 'inactive' ? OperationalStatus.inactive :
              OperationalStatus.closed,

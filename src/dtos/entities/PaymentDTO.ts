@@ -17,6 +17,7 @@ export interface PaymentDTO extends BaseEntityDTO {
   progressAtPayment: number;
   inspectionId?: string;
   phaseId?: string;
+  status?: string; // Add status property to match domain entity
   bankName?: string;
   accountNumber?: string;
   checkNumber?: string;
