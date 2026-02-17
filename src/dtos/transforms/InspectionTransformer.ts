@@ -62,6 +62,7 @@ export class InspectionTransformer {
       createdAt: entity.createdAt.toISOString(), // Convert Date to string
       updatedAt: entity.updatedAt.toISOString(), // Convert Date to string
     };
+  }
 
   /**
    * Transform InspectionDTO to Inspection entity (DTO → Domain Entity)
