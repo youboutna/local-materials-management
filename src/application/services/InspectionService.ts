@@ -4,7 +4,7 @@ import { Inspection, InspectionStatus } from '@/domain/entities/Inspection';
 import { AppError, ErrorLogger, ErrorCode } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { 
-  InspectionDocumentDTO,
+  InspectionDocumentEntity,
   InspectionExecutionDataDTO,
   InspectionPaymentValidationDTO
 } from '@/dtos/entities/InspectionDTO';
@@ -182,16 +182,16 @@ export class InspectionService {
     catch (error) { ErrorLogger.log(error as Error, 'InspectionService.getAverageCompletionTime'); throw error; }
   }
 
-  async uploadDocuments(inspectionId: string, files: File[]): Promise<InspectionDocumentDTO[]> {
+  async uploadDocuments(inspectionId: string, files: File[]): Promise<InspectionDocumentEntity[]> {
     try {
       if (!inspectionId) throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
       if (!files || files.length === 0) throw new AppError(ErrorCode.VALIDATION_ERROR, 'Files are required');
 
       return files.map(file => ({
         id: `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        type: file.type || 'unknown',
+        type: 'report' as const,
         name: file.name,
-        inspectionId,
+        url: '',
         uploadedAt: new Date().toISOString()
       }));
     } catch (error) {
@@ -210,14 +210,14 @@ export class InspectionService {
         status: inspection.status as string,
         progressAtInspection: inspection.progressAtInspection,
         comments: inspection.comments ?? undefined,
-        documents: inspection.documents?.map(doc => ({
+        documents: (inspection.documents?.map(doc => ({
           id: doc.id,
-          type: doc.type,
+          type: (doc.type || 'report') as InspectionDocumentEntity['type'],
           name: doc.name,
-          url: doc.url,
-          uploadedAt: doc.uploadedAt,
+          url: doc.url || '',
+          uploadedAt: doc.uploadedAt || '',
           inspectionId: inspection.id
-        })) || [],
+        })) || []) as InspectionDocumentEntity[],
         completedAt: inspection.completedAt ?? undefined,
         projectId: inspection.projectId,
         phaseId: inspection.phaseId ?? undefined,

@@ -155,7 +155,7 @@ export class PVGeneratorService {
       }
 
       // Get project data
-      const project = await this.projectRepository.findById(inspection.projectId);
+      const project = await this.projectRepository.findById(inspection.projectId || '');
       
       if (!project) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Project not found');
@@ -172,10 +172,10 @@ export class PVGeneratorService {
 
       return {
         id: inspection.id,
-        project_id: inspection.projectId,
-        phase_id: inspection.phaseId,
+        project_id: inspection.projectId || '',
+        phase_id: inspection.phaseId || undefined,
         date: inspection.date,
-        inspector: inspection.inspector,
+        inspector: typeof inspection.inspector === 'string' ? inspection.inspector : inspection.inspector?.name || '',
         status: inspection.status,
         comments: inspection.comments,
         progress_at_inspection: inspection.progressAtInspection || 0,

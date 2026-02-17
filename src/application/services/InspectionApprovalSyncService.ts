@@ -157,8 +157,7 @@ export class InspectionApprovalSyncService {
     try {
       const project = await this.projectRepository.findById(projectId);
       if (!project) throw new AppError(ErrorCode.NOT_FOUND, 'Project not found');
-      const progress = project.calculateProgressPercentage();
-      project.progress = progress;
+      const progress = (project as any).calculateProgressPercentage?.() ?? project.progress ?? 0;
       await this.projectRepository.update(projectId, { progress });
       return progress;
     } catch (error) {

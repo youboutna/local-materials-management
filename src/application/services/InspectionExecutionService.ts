@@ -15,7 +15,14 @@ import {
   AddParticipantRequestDTO,
   CompleteInspectionRequestDTO,
   AddDocumentRequestDto,
-  CHECKLIST_TEMPLATES
+  CHECKLIST_TEMPLATES,
+  StartInspectionRequestDto,
+  AddObservationRequestDto,
+  UpdateChecklistItemRequestDto,
+  InspectionParticipant,
+  InspectionDocumentEntity,
+  ChecklistItem,
+  ConformityStatus
 } from '@/dtos/entities/InspectionDTO';
 import { CreateDocumentDTO } from '@/dtos/entities/DocumentDTO';
 
@@ -130,7 +137,7 @@ export class InspectionExecutionService {
 
       await this.inspectionRepository.addDocument({
         inspectionId: request.inspectionId,
-        document: request.document,
+        document: request.document as any,
         uploadedAt: new Date().toISOString(),
         uploadedBy: 'system'
       });
@@ -203,7 +210,7 @@ export class InspectionExecutionService {
         id: participantId,
         name: request.participant.name,
         role: request.participant.role,
-        organization: request.participant.organization,
+        department: (request.participant as any).department || (request.participant as any).organization,
         joinedAt: new Date().toISOString()
       };
 
@@ -230,7 +237,7 @@ export class InspectionExecutionService {
       const inspection = await this.inspectionRepository.findById(request.inspectionId);
       if (!inspection) throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
 
-      const newStatus: DomainInspectionStatus = request.finalData.overallConformity === 'conform' 
+      const newStatus: DomainInspectionStatus = request.finalData.overallConformity === 'conforme' 
         ? DomainInspectionStatus.Completed 
         : DomainInspectionStatus.RequiresChanges;
 
@@ -255,7 +262,7 @@ export class InspectionExecutionService {
     }
   }
 
-  async getInspectionExecution(inspectionId: string): Promise<InspectionExecutionData | null> {
+  async getInspectionExecution(inspectionId: string): Promise<any | null> {
     try {
       if (!inspectionId) throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
 
@@ -325,14 +332,14 @@ export class InspectionExecutionService {
     }
   }
 
-  async getInspectionDocuments(inspectionId: string): Promise<InspectionDocument[]> {
+  async getInspectionDocuments(inspectionId: string): Promise<InspectionDocumentEntity[]> {
     try {
       if (!inspectionId) throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
       const documents = await this.inspectionRepository.findDocumentsByInspectionId(inspectionId);
       return documents.map(doc => ({
         id: doc.id,
         name: doc.name,
-        type: (doc.type || 'report') as InspectionDocument['type'],
+        type: (doc.type || 'report') as InspectionDocumentEntity['type'],
         url: doc.url || '',
         size: doc.size || 0,
         mime_type: doc.mimeType || 'application/octet-stream',

@@ -48,9 +48,7 @@ export class MaterialService {
     if (workspaceRepository) {
       this.workspaceService = new WorkspaceService(workspaceRepository);
     }
-    if (documentRepository) {
-      this.documentService = new DocumentService(documentRepository);
-    }
+    this.documentService = new DocumentService();
   }
 
   // =================== CRUD Operations ===================

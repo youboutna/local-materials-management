@@ -6,7 +6,7 @@
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
-import { InspectionDTO, InspectionDocumentDTO } from '@/dtos/entities/InspectionDTO';
+import { InspectionDTO, InspectionDocumentEntity } from '@/dtos/entities/InspectionDTO';
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -14,8 +14,8 @@ import { fr } from 'date-fns/locale';
 export interface InspectionReportData {
   inspection: InspectionDTO;
   project?: ProjectDTO;
-  documents?: InspectionDocumentDTO[];
-  photos?: InspectionDocumentDTO[];
+  documents?: InspectionDocumentEntity[];
+  photos?: InspectionDocumentEntity[];
   recommendations?: string[];
   timeline?: InspectionTimelineEvent[];
   qualityScore?: QualityScore;
@@ -209,14 +209,14 @@ export class InspectionReportingService {
     } as InspectionDTO;
   }
 
-  private validateAndTransformDocument(data: any): InspectionDocumentDTO {
+  private validateAndTransformDocument(data: any): InspectionDocumentEntity {
     return {
       id: data.id,
-      type: data.type || 'document',
+      type: (data.type || 'report') as InspectionDocumentEntity['type'],
       name: data.name || data.file_name || '',
       url: data.url || data.file_url || '',
       uploadedAt: data.uploaded_at || data.uploadedAt || new Date().toISOString(),
-      inspectionId: data.inspection_id || data.inspectionId || '',
+      uploadedBy: data.uploaded_by || data.uploadedBy || '',
     };
   }
 }

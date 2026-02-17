@@ -37,19 +37,20 @@ export class InsuranceService {
   private mapEntityToDTO(entity: InsuranceCertificateEntity): InsuranceCertificateDTO {
     return {
       id: entity.id,
-      project_id: entity.project_id,
-      contractor_id: entity.contractor_id,
-      contractor_name: entity.contractor_name,
-      insurance_company: entity.insurance_company,
-      policy_number: entity.policy_number,
-      coverage_amount: entity.coverage_amount,
-      coverage_type: entity.coverage_type,
-      valid_from: entity.valid_from,
-      valid_until: entity.valid_until,
-      status: entity.status,
-      created_at: entity.created_at,
-      updated_at: entity.updated_at
-    };
+      projectId: entity.project_id,
+      contractorId: entity.contractor_id,
+      contractorName: entity.contractor_name,
+      insuranceCompany: entity.insurance_company,
+      insuranceType: entity.coverage_type as any,
+      policyNumber: entity.policy_number,
+      coverageAmount: entity.coverage_amount,
+      coverageType: entity.coverage_type,
+      validFrom: entity.valid_from,
+      validUntil: entity.valid_until,
+      status: entity.status as any,
+      createdAt: entity.created_at,
+      updatedAt: entity.updated_at
+    } as InsuranceCertificateDTO;
   }
 
   async detectExpiringInsurance(daysThreshold: number = 30): Promise<InsuranceAlertDTO[]> {
@@ -248,17 +249,18 @@ export class InsuranceService {
       // Return updated certificate as DTO
       return {
         id,
-        project_id: '',
-        contractor_id: '',
-        contractor_name: data.contractorName || '',
-        insurance_company: data.insuranceCompany || '',
-        policy_number: data.policyNumber || '',
-        coverage_amount: data.coverageAmount || 0,
-        coverage_type: (data.insuranceType as InsuranceType) || 'responsabilite_civile',
-        valid_from: data.validFrom || '',
-        valid_until: data.validUntil || '',
-        status: (data.status as InsuranceStatus) || 'active'
-      };
+        projectId: '',
+        contractorId: '',
+        contractorName: data.contractorName || '',
+        insuranceCompany: data.insuranceCompany || '',
+        insuranceType: (data.insuranceType || 'responsabilite_civile') as any,
+        policyNumber: data.policyNumber || '',
+        coverageAmount: data.coverageAmount || 0,
+        coverageType: (data.insuranceType as InsuranceType) || 'responsabilite_civile',
+        validFrom: data.validFrom || '',
+        validUntil: data.validUntil || '',
+        status: (data.status || 'active') as any
+      } as InsuranceCertificateDTO;
     } catch (error) {
       console.error('InsuranceService.updateInsuranceCertificate failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update insurance certificate');
