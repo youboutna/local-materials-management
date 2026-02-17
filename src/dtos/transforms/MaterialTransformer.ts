@@ -20,6 +20,13 @@ import { EntityToDTOMapper, ValidationResult } from '@/dtos/transforms/shared';
 
 export class MaterialTransformer implements EntityToDTOMapper<Material, MaterialDTO> {
   /**
+   * Batch: Domain Entities → DTOs
+   */
+  static manyToDTO(materials: Material[]): MaterialDTO[] {
+    return materials.map(material => this.toDTO(material));
+  }
+
+  /**
    * Transform Material entity to MaterialDTO (Domain → DTO)
    * Converts domain entity to data transfer object for UI/API
   */
@@ -270,8 +277,11 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
     };
   }
 
-  toDTOs(entities: Material[]): MaterialDTO[] {
-    return entities.map(entity => MaterialTransformer.toDTO(entity));
+  /**
+   * Batch: DTOs → Domain Entities
+   */
+  static manyFromDTO(dtos: MaterialDTO[]): Material[] {
+    return dtos.map(dto => this.fromDTO(dto));
   }
 
   /**

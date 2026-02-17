@@ -19,7 +19,8 @@ import {
   TaskSummaryDTO,
   TaskStatus as DTOTaskStatus,
   TaskPriority as DTOTaskPriority,
-  TaskType as DTOTaskType
+  TaskType as DTOTaskType,
+  TaskPriority
 } from '@/dtos/entities/TaskDTO';
 
 // UI State for Task presentation
@@ -55,6 +56,9 @@ export class TaskTransformer {
    * Following hexagonal architecture: Infrastructure → Application → Domain
    */
   static fromSupabase(row: Record<string, unknown>): Task {
+    const domainStatus = TaskTransformer.fromDatabaseStatus(row.status as string);
+    const domainPriority = TaskTransformer.fromDatabasePriority(row.priority as string);
+    
     return Task.create({
       id: row.id as string,
       projectId: row.project_id as string,
@@ -62,8 +66,8 @@ export class TaskTransformer {
       stepId: (row.step_id as string) || undefined,
       title: row.title as string,
       description: row.description as string,
-      status: TaskTransformer.fromDatabaseStatus(row.status as string),
-      priority: TaskTransformer.fromDatabasePriority(row.priority as string),
+      status: TaskTransformer.domainStatusToEnum(domainStatus),
+      priority: TaskTransformer.domainPriorityToEnum(domainPriority),
       progress: Number(row.progress) || 0,
       startDate: row.start_date as string,
       endDate: row.end_date as string,
@@ -175,7 +179,7 @@ export class TaskTransformer {
       stepId: undefined,
       title: request.title,
       description: request.description,
-      status: 'not_started',
+      status: DTOTaskStatus.NOT_STARTED,
       priority: TaskTransformer.fromDTOPriority(request.priority || DTOTaskPriority.MEDIUM),
       progress: 0,
       startDate: request.startDate,
@@ -281,12 +285,22 @@ export class TaskTransformer {
 
   // =================== BATCH OPERATIONS ===================
   
+  /**
+   * Batch: Domain Entities → DTOs
+   */
+  static manyToDTO(tasks: Task[]): TaskDTO[] {
+    return tasks.map(task => TaskTransformer.toDTO(task));
+  }
+  
   static manyFromSupabase(rows: Record<string, unknown>[]): Task[] {
     return rows.map(row => TaskTransformer.fromSupabase(row));
   }
 
-  static manyToDTO(tasks: Task[]): TaskDTO[] {
-    return tasks.map(task => TaskTransformer.toDTO(task));
+  /**
+   * Batch: DTOs → Domain Entities
+   */
+  static manyFromDTO(dtos: TaskDTO[]): Task[] {
+    return dtos.map(dto => TaskTransformer.fromDTO(dto));
   }
 
   static manyToUI(tasks: Task[]): TaskUIState[] {
@@ -385,14 +399,26 @@ export class TaskTransformer {
     return labels[status] || status;
   }
 
-  private static getPriorityLabel(priority: DomainTaskPriority): string {
-    const labels: Record<DomainTaskPriority, string> = {
-      'low': 'Basse',
-      'medium': 'Moyenne',
-      'high': 'Haute',
-      'urgent': 'Urgente'
-    };
-    return labels[priority] || priority;
+  private static domainStatusToEnum(domainStatus: DomainTaskStatus): TaskStatus {
+    switch (domainStatus) {
+      case 'not_started': return TaskStatus.NOT_STARTED;
+      case 'in_progress': return TaskStatus.IN_PROGRESS;
+      case 'completed': return TaskStatus.COMPLETED;
+      case 'delayed': return TaskStatus.DELAYED;
+      case 'blocked': return TaskStatus.BLOCKED;
+      case 'cancelled': return TaskStatus.CANCELLED;
+      default: return TaskStatus.NOT_STARTED;
+    }
+  }
+
+  private static domainPriorityToEnum(domainPriority: DomainTaskPriority): TaskPriority {
+    switch (domainPriority) {
+      case 'low': return TaskPriority.LOW;
+      case 'medium': return TaskPriority.MEDIUM;
+      case 'high': return TaskPriority.HIGH;
+      case 'urgent': return TaskPriority.URGENT;
+      default: return TaskPriority.MEDIUM;
+    }
   }
 
   // =================== SUMMARY DTO ===================

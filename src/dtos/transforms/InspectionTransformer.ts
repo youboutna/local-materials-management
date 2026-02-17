@@ -12,6 +12,20 @@ import { EntityToDTOMapper, ValidationResult } from '@/dtos/transforms/shared';
 
 export class InspectionTransformer {
   /**
+   * Batch: DTOs → Domain Entities
+   */
+  static manyFromDTO(dtos: InspectionDTO[]): Inspection[] {
+    return dtos.map(dto => this.toEntity(dto));
+  }
+
+  /**
+   * Batch: Domain Entities → DTOs
+   */
+  static manyToDTO(inspections: Inspection[]): InspectionDTO[] {
+    return inspections.map(inspection => this.toDTO(inspection));
+  }
+
+  /**
    * Transform Inspection entity to InspectionDTO (Domain Entity → DTO)
    * Converts domain entity to data transfer object for UI layer
    * Following hexagonal architecture: Domain → Application → Presentation

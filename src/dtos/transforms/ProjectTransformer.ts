@@ -30,6 +30,18 @@ import { InspectionTransformer } from './InspectionTransformer';
 import { StakeholderTransformer } from './StakeholderTransformer';
 import { InspectionStatus } from '@/domain/entities/Inspection';
 
+// TYPE-SAFE INTERFACES FOR DTOs WITH RELATED COLLECTIONS
+interface ProjectDTOWithCollections extends ProjectDTO {
+  phases?: import('@/dtos/entities/PhaseDTO').PhaseDTO[];
+  tasks?: import('@/dtos/entities/TaskDTO').TaskDTO[];
+  risks?: import('@/dtos/entities/RiskDTO').RiskDTO[];
+  inspections?: import('@/dtos/entities/InspectionDTO').InspectionDTO[];
+  payments?: import('@/dtos/entities/PaymentDTO').PaymentDTO[];
+  materials?: import('@/dtos/entities/MaterialDTO').MaterialDTO[];
+  stakeholders?: import('@/dtos/entities/StakeholderDTO').StakeholderDTO[];
+  milestones?: import('@/dtos/entities/MilestoneDTO').MilestoneDTO[];
+}
+
 export class ProjectTransformer {
   
   // =================== DATABASE ↔ DOMAIN ===================
@@ -289,7 +301,7 @@ export class ProjectTransformer {
    * DTO → Domain Entity
    * For processing incoming API requests
    */
-  static fromDTO(dto: ProjectDTO): Project {
+  static fromDTO(dto: ProjectDTO | ProjectDTOWithCollections): Project {
     const coordinates = dto.latitude && dto.longitude
       ? new ProjectCoordinates(dto.latitude, dto.longitude)
       : dto.coordinates
@@ -346,6 +358,18 @@ export class ProjectTransformer {
       siteDetails: dto.siteDetails,
       supervisorId: dto.supervisorId,
       terrainType: dto.terrainType,
+
+      // PROPER HYDRATION: Hydrate related sub-objects from DTO collections
+      // Note: In a full implementation, these would be loaded from repositories
+      // For now, we hydrate what we can from the DTO data
+      phases: 'phases' in dto && dto.phases ? PhaseTransformer.manyFromDTO(dto.phases) : [],
+      tasks: 'tasks' in dto && dto.tasks ? TaskTransformer.manyFromDTO(dto.tasks) : [],
+      risks: 'risks' in dto && dto.risks ? RiskTransformer.manyFromDTO(dto.risks) : [],
+      inspections: 'inspections' in dto && dto.inspections ? InspectionTransformer.manyFromDTO(dto.inspections) : [],
+      payments: 'payments' in dto && dto.payments ? PaymentTransformer.manyFromDTO(dto.payments) : [],
+      materials: 'materials' in dto && dto.materials ? MaterialTransformer.manyFromDTO(dto.materials) : [],
+      suppliers: 'stakeholders' in dto && dto.stakeholders ? StakeholderTransformer.manyFromDTO(dto.stakeholders) : [],
+      milestones: 'milestones' in dto && dto.milestones ? MilestoneTransformer.manyFromDTO(dto.milestones) : [],
     });
   }
 
@@ -638,7 +662,7 @@ export class ProjectTransformer {
       updatedAt: new Date().toISOString(),
 
       // Workflow step tracking (UI-only, not stored in domain)
-      currentStep: workflowData.currentStep,
+      currentStage: workflowData.currentStep,
       completedSteps: workflowData.completedSteps,
       stepValidation: workflowData.stepValidation,
       workflowState: workflowData.workflowState,

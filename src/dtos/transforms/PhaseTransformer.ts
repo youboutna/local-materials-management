@@ -17,6 +17,20 @@ import {
 export class PhaseTransformer {
   // =================== Domain to DTO ===================
 
+  /**
+   * Batch: DTOs → Domain Entities
+   */
+  static manyFromDTO(dtos: PhaseDTO[]): Phase[] {
+    return dtos.map(dto => this.toEntity(dto));
+  }
+
+  /**
+   * Batch: Domain Entities → DTOs
+   */
+  static manyToDTO(phases: Phase[]): PhaseDTO[] {
+    return phases.map(phase => this.toDTO(phase));
+  }
+
   static toDTO(phase: Phase): PhaseDTO {
     return {
       id: phase.id,
@@ -56,17 +70,17 @@ export class PhaseTransformer {
       description: step.description,
       status: step.status as DTOStatus,
       progress: step.progress,
-      order_index: step.orderIndex,
-      estimated_duration_days: step.estimatedDurationDays,
-      actual_duration_days: step.actualDurationDays,
-      start_date: step.startDate?.toISOString().split('T')[0],
-      end_date: step.endDate?.toISOString().split('T')[0],
-      requires_inspection: step.requiresInspection || false,
-      requires_engineer_approval: step.requiresEngineerApproval || false,
-      estimated_cost: step.estimatedCost || 0,
-      actual_cost: step.actualCost || 0,
-      assigned_to: step.assignedTo || [],
-      dependencies: step.dependencies || [],
+      order_index: step.order_index,
+      estimated_duration_days: step.estimated_duration_days,
+      actual_duration_days: step.actual_duration_days,
+      start_date: step.start_date ? new Date(step.start_date).toISOString().split('T')[0] : undefined,
+      end_date: step.end_date ? new Date(step.end_date).toISOString().split('T')[0] : undefined,
+      requires_inspection: false, // Default value - not in PhaseStep interface
+      requires_engineer_approval: false, // Default value - not in PhaseStep interface
+      estimated_cost: 0, // Default value - not in PhaseStep interface
+      actual_cost: 0, // Default value - not in PhaseStep interface
+      assigned_to: [], // Default value - not in PhaseStep interface
+      dependencies: [], // Default value - not in PhaseStep interface
       tasks: step.tasks.map(task => this.taskToDTO(task))
     };
   }
@@ -134,13 +148,6 @@ export class PhaseTransformer {
       actual_duration_days: dto.actual_duration_days,
       start_date: dto.start_date,
       end_date: dto.end_date,
-      // Note: PhaseStepDTO doesn't have these properties - using defaults
-      requires_inspection: false,
-      requires_engineer_approval: false,
-      estimated_cost: 0,
-      actual_cost: 0,
-      assigned_to: [],
-      dependencies: [],
       tasks: dto.tasks?.map(task => this.dtoToTask(task)) || []
     };
   }

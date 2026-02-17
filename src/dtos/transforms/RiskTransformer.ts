@@ -5,29 +5,36 @@
  */
 
 import { Risk } from '@/domain/entities/Risk';
-import { RiskStatus, RiskLevel, RiskCategory, RISK_STATUS_VALUES, RISK_CATEGORY_VALUES } from '@/domain/entities/RiskTypesExport';
-import { RiskDTO } from '@/dtos/entities/RiskDTO';
+import { RiskStatus as DomainRiskStatus, RiskLevel, RiskCategory as DomainRiskCategory, RISK_STATUS_VALUES, RISK_CATEGORY_VALUES } from '@/domain/entities/RiskTypesExport';
+import { RiskDTO, CreateRiskDTO, UpdateRiskDTO, RiskStatus, RiskCategory } from '@/dtos/entities/RiskDTO';
 
 export class RiskTransformer {
+  /**
+   * Batch: Domain Entities → DTOs
+   */
+  static manyToDTO(risks: Risk[]): RiskDTO[] {
+    return risks.map(risk => this.toDTO(risk));
+  }
+
   /**
    * Transformer une entité Risk en DTO
    */
   static toDTO(entity: Risk): RiskDTO {
     return {
       id: entity.id,
-      project_id: entity.project?.id,
+      projectId: entity.project?.id,
       title: entity.title,
       description: entity.description || undefined,
       probability: entity.probability,
       impact: entity.impact,
-      status: entity.status,
-      category: entity.category,
-      mitigation_strategy: entity.mitigationStrategy || undefined,
-      identified_by: entity.identifiedBy?.id,
-      identified_date: entity.identifiedDate || undefined,
-      related_tasks: entity.relatedTasks,
-      created_at: entity.createdAt,
-      updated_at: entity.updatedAt
+      status: this.domainToDtoStatus(entity.status),
+      category: this.domainToDtoCategory(entity.category),
+      mitigationStrategy: entity.mitigationStrategy || undefined,
+      owner: entity.identifiedBy?.id,
+      identifiedDate: entity.identifiedDate || undefined,
+      relatedRisks: entity.relatedTasks,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt
     };
   }
 
@@ -37,37 +44,37 @@ export class RiskTransformer {
   static toEntity(dto: RiskDTO): Risk {
     return new Risk(
       dto.id || crypto.randomUUID(),
-      dto.project_id ? { id: dto.project_id, title: '' } : null,
+      dto.projectId ? { id: dto.projectId, title: '' } : null,
       dto.title,
       dto.description || null,
       dto.probability,
       dto.impact,
-      dto.status,
-      dto.category,
-      dto.mitigation_strategy || null,
-      dto.identified_by ? { id: dto.identified_by, fullName: '' } : null,
-      dto.identified_date || null,
-      dto.related_tasks || [],
-      dto.created_at || new Date().toISOString(),
-      dto.updated_at || new Date().toISOString()
+      this.dtoToDomainStatus(dto.status),
+      this.dtoToDomainCategory(dto.category),
+      dto.mitigationStrategy || null,
+      dto.identifiedBy ? { id: dto.identifiedBy, fullName: '' } : null,
+      dto.identifiedDate || null,
+      dto.relatedRisks || [],
+      dto.createdAt || new Date().toISOString(),
+      dto.updatedAt || new Date().toISOString()
     );
   }
 
   /**
-   * Transformer CreateRiskRequest en entité Risk
+   * Transformer CreateRiskDTO en entité Risk
    */
-  static fromCreateRequestToEntity(request: CreateRiskRequest): Risk {
+  static fromCreateRequestToEntity(request: CreateRiskDTO): Risk {
     return new Risk(
       crypto.randomUUID(),
-      { id: request.project_id, title: '' },
+      request.projectId ? { id: request.projectId, title: '' } : null,
       request.title,
       request.description || null,
       request.probability,
       request.impact,
-      'identified', // Status par défaut pour les nouveaux risques
-      request.category,
-      request.mitigation_strategy || null,
-      request.identified_by ? { id: request.identified_by, fullName: '' } : null,
+      this.dtoToDomainStatus('identified' as RiskStatus), // Default status for new risks
+      this.dtoToDomainCategory(request.category),
+      request.mitigationStrategy || null,
+      request.owner ? { id: request.owner, fullName: '' } : null,
       new Date().toISOString(),
       [],
       new Date().toISOString(),
@@ -76,28 +83,28 @@ export class RiskTransformer {
   }
 
   /**
-   * Transformer UpdateRiskRequest en mises à jour partielles pour l'entité
+   * Transformer UpdateRiskDTO en mises à jour partielles pour l'entité
    */
-  static fromUpdateRequestToUpdates(request: UpdateRiskRequest): Partial<Risk> {
+  static fromUpdateRequestToUpdates(request: UpdateRiskDTO): Partial<Risk> {
     const updates: Partial<Risk> = {};
 
     if (request.title !== undefined) updates.title = request.title;
     if (request.description !== undefined) updates.description = request.description;
     if (request.probability !== undefined) updates.probability = request.probability;
     if (request.impact !== undefined) updates.impact = request.impact;
-    if (request.status !== undefined) updates.status = request.status;
-    if (request.category !== undefined) updates.category = request.category;
-    if (request.mitigation_strategy !== undefined) updates.mitigationStrategy = request.mitigation_strategy;
-    if (request.related_tasks !== undefined) updates.relatedTasks = request.related_tasks;
+    if (request.status !== undefined) updates.status = this.dtoToDomainStatus(request.status);
+    if (request.category !== undefined) updates.category = this.dtoToDomainCategory(request.category);
+    if (request.mitigationStrategy !== undefined) updates.mitigationStrategy = request.mitigationStrategy;
+    if (request.relatedRisks !== undefined) updates.relatedTasks = request.relatedRisks;
 
     return updates;
   }
 
   /**
-   * Transformer un tableau d'entités en tableau de DTOs
+   * Batch: DTOs → Domain Entities
    */
-  static toDTOList(entities: Risk[]): RiskDTO[] {
-    return entities.map(entity => this.toDTO(entity));
+  static manyFromDTO(dtos: RiskDTO[]): Risk[] {
+    return dtos.map(dto => this.toEntity(dto));
   }
 
   /**
@@ -142,15 +149,61 @@ export class RiskTransformer {
   }
 
   /**
-   * Calculer le niveau de risque basé sur la probabilité et l'impact
+   * Convert DTO status to domain status
    */
-  static calculateRiskLevel(probability: number, impact: number): RiskLevel {
-    const score = probability * impact;
-    
-    if (score >= 0.8) return 'critical';
-    if (score >= 0.6) return 'high';
-    if (score >= 0.3) return 'medium';
-    return 'low';
+  private static dtoToDomainStatus(dtoStatus: RiskStatus): DomainRiskStatus {
+    switch (dtoStatus) {
+      case RiskStatus.IDENTIFIED: return 'identified';
+      case RiskStatus.MONITORED: return 'monitored';
+      case RiskStatus.MITIGATED: return 'mitigated';
+      case RiskStatus.RESOLVED: return 'resolved';
+      case RiskStatus.ACCEPTED: return 'accepted';
+      default: return 'identified';
+    }
+  }
+
+  /**
+   * Convert domain status to DTO status
+   */
+  private static domainToDtoStatus(domainStatus: DomainRiskStatus): RiskStatus {
+    switch (domainStatus as string) {
+      case 'identified': return RiskStatus.IDENTIFIED;
+      case 'monitored': return RiskStatus.MONITORED;
+      case 'mitigated': return RiskStatus.MITIGATED;
+      case 'resolved': return RiskStatus.RESOLVED;
+      case 'accepted': return RiskStatus.ACCEPTED;
+      default: return RiskStatus.IDENTIFIED;
+    }
+  }
+
+  /**
+   * Convert DTO category to domain category
+   */
+  private static dtoToDomainCategory(dtoCategory: RiskCategory): DomainRiskCategory {
+    switch (dtoCategory) {
+      case RiskCategory.TECHNICAL: return 'technical';
+      case RiskCategory.FINANCIAL: return 'financial';
+      case RiskCategory.OPERATIONAL: return 'operational';
+      case RiskCategory.STRATEGIC: return 'strategic';
+      case RiskCategory.COMPLIANCE: return 'compliance';
+      case RiskCategory.SAFETY: return 'safety';
+      default: return 'operational';
+    }
+  }
+
+  /**
+   * Convert domain category to DTO category
+   */
+  private static domainToDtoCategory(domainCategory: DomainRiskCategory): RiskCategory {
+    switch (domainCategory) {
+      case 'technical': return RiskCategory.TECHNICAL;
+      case 'financial': return RiskCategory.FINANCIAL;
+      case 'operational': return RiskCategory.OPERATIONAL;
+      case 'strategic': return RiskCategory.STRATEGIC;
+      case 'compliance': return RiskCategory.COMPLIANCE;
+      case 'safety': return RiskCategory.SAFETY;
+      default: return RiskCategory.OPERATIONAL;
+    }
   }
 
   /**
@@ -159,28 +212,28 @@ export class RiskTransformer {
   static validateAndCleanDTO(dto: Partial<RiskDTO>): RiskDTO {
     const cleaned: RiskDTO = {
       id: dto.id,
-      project_id: dto.project_id,
+      projectId: dto.projectId,
       title: dto.title || '',
       description: dto.description,
       probability: Math.max(0, Math.min(1, dto.probability || 0)),
       impact: Math.max(0, Math.min(1, dto.impact || 0)),
-      status: dto.status || 'identified',
-      category: dto.category || 'operational',
-      mitigation_strategy: dto.mitigation_strategy,
-      identified_by: dto.identified_by,
-      identified_date: dto.identified_date,
-      related_tasks: dto.related_tasks || [],
-      created_at: dto.created_at || new Date().toISOString(),
-      updated_at: dto.updated_at || new Date().toISOString()
+      status: dto.status || RiskStatus.IDENTIFIED,
+      category: dto.category || RiskCategory.OPERATIONAL,
+      mitigationStrategy: dto.mitigationStrategy,
+      identifiedBy: dto.identifiedBy,
+      identifiedDate: dto.identifiedDate,
+      relatedRisks: dto.relatedRisks || [],
+      createdAt: dto.createdAt || new Date().toISOString(),
+      updatedAt: dto.updatedAt || new Date().toISOString()
     };
 
     // Validation des types
-    if (!RISK_STATUS_VALUES.includes(cleaned.status)) {
-      cleaned.status = 'identified';
+    if (!Object.values(RiskStatus).includes(cleaned.status)) {
+      cleaned.status = RiskStatus.IDENTIFIED;
     }
 
-    if (!RISK_CATEGORY_VALUES.includes(cleaned.category)) {
-      cleaned.category = 'operational';
+    if (!Object.values(RiskCategory).includes(cleaned.category)) {
+      cleaned.category = RiskCategory.OPERATIONAL;
     }
 
     return cleaned;

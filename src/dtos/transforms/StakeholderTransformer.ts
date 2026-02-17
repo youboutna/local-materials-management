@@ -14,6 +14,17 @@ import {
 } from '@/dtos/entities/StakeholderDTO';
 
 export class StakeholderTransformer {
+  static manyToDTO(stakeholders: Stakeholder[]): StakeholderDTO[] {
+    return stakeholders.map(stakeholder => this.toDTO(stakeholder));
+  }
+
+  /**
+   * Batch: DTOs → Domain Entities
+   */
+  static manyFromDTO(dtos: StakeholderDTO[]): Stakeholder[] {
+    return dtos.map(dto => this.toEntity(dto));
+  }
+
   // Entity → DTO
   static toDTO(entity: Stakeholder): StakeholderDTO {
     return {

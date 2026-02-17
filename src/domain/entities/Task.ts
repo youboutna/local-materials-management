@@ -347,8 +347,8 @@ export class Task {
       params.stepId || null,
       params.title,
       params.description || null,
-      params.status || 'not_started',
-      params.priority || 'medium',
+      params.status || TaskStatus.NOT_STARTED,
+      params.priority || TaskPriority.MEDIUM,
       params.progress || 0,
       params.startDate || null,
       params.endDate || null,
@@ -430,69 +430,10 @@ export class Task {
     return status;
   }
 
-  // Public getters
-  get id(): string {
-    return this._id;
-  }
-
-  get deadline(): Date {
-    return this._deadline;
-  }
-
-  get assignedTo(): string {
-    return this._assignedTo;
-  }
-
-  get projectId(): string {
-    return this._projectId;
-  }
-
-  get title(): string {
-    return this._title;
-  }
-
-  get description(): string | undefined {
-    return this._description;
-  }
-
-  get status(): TaskStatus {
-    return this._status;
-  }
-
-  get timeline(): TimeLine {
-    return this._timeline;
-  }
-
-  get createdAt(): Date {
-    return this._createdAt;
-  }
-
-  get updatedAt(): Date {
-    return this._updatedAt;
-  }
-
-  // Business logic methods
-  updateStatus(newStatus: TaskStatus): void {
-    this._status = this.validateStatus(newStatus);
-    this._updatedAt = new Date();
-  }
-
-  isOverdue(): boolean {
-    return new Date() > this._deadline && this._status !== TaskStatus.Done && this._status !== TaskStatus.Blocked;
-  }
-
-  getDaysUntilDue(): number | null {
-    const diffTime = this._deadline.getTime() - new Date().getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 24));
-  }
-
-  getFormattedStatus(): string {
-    const statusMap = {
-      [TaskStatus.Todo]: '⏳ À faire',
-      [TaskStatus.Blocked]: '🚫 Bloqué',
-      [TaskStatus.InProgress]: '🔄 En cours',
-      [TaskStatus.Done]: '✅ Terminé'
-    };
-    return statusMap[this._status];
+  private validateDuration(duration: number | null): number | null {
+    if (duration !== null && duration < 0) {
+      throw new Error('Duration must be positive');
+    }
+    return duration;
   }
 }
