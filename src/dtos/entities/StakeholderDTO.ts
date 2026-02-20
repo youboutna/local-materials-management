@@ -13,6 +13,7 @@ import { BaseEntityDTO } from '../shared';
 export enum StakeholderType {
   EMPLOYEE = 'employee',
   EXTERNAL = 'external',
+  PRINCIPAL_CONTRACTOR = 'principal_contractor',
   CLIENT = 'client',
   VENDOR = 'vendor',
   PARTNER = 'partner',

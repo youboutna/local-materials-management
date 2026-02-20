@@ -1,7 +1,7 @@
 
 ## 📚 **Principes Fondamentaux**
 
-### **1. Architecture Hexagonale (Ports & Adapters)**
+### **1. Architecture Hexagonale (Ports & Adapters)   -- **
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    UI Layer                         │
