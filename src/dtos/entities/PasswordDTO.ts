@@ -8,8 +8,10 @@ export interface PasswordResetRequestDTO {
 }
 
 export interface PasswordUpdateRequestDTO {
+  userId: string;
   newPassword: string;
   confirmPassword: string;
+  resetToken?: string;
 }
 
 export interface PasswordValidationResultDTO {
