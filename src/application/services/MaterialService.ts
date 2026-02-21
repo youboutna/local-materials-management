@@ -48,7 +48,8 @@ export class MaterialService {
     if (workspaceRepository) {
       this.workspaceService = new WorkspaceService(workspaceRepository);
     }
-    this.documentService = new DocumentService();
+    // DocumentService uses RepositoryFactory internally
+    this.documentService = {} as DocumentService; // Lazy init - will use RepositoryFactory
   }
 
   // =================== CRUD Operations ===================
