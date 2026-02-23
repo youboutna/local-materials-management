@@ -29,7 +29,6 @@ export {
 // Additional transformers
 export { CheckpointDomainTransformer } from './CheckpointDomainTransformer';
 export { DecompteDomainTransformer } from './DecompteDomainTransformer';
-export { MilestoneDomainTransformer } from './MilestoneDomainTransformer';
 export { PerformanceMonitoringDomainTransformer } from './PerformanceMonitoringDomainTransformer';
 export { PhaseTransformer } from './PhaseTransformer';
 export { TaskAssignmentDomainTransformer } from './TaskAssignmentDomainTransformer';

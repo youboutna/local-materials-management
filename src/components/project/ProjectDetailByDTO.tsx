@@ -25,6 +25,7 @@ import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import { ProjectDetailDTO, ProjectSummaryDTO } from "@/dtos/entities/ProjectDTO";
 import { InspectionDTO } from "@/dtos/entities/InspectionDTO";
 import { ProjectComplianceDTO } from '@/hooks/hexagonal';
+import { PhaseDTO } from "@/dtos/entities/PhaseDTO";
 import { Dialog, DialogContent, DialogTrigger } from "@radix-ui/react-dialog";
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -101,8 +102,24 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   const [selectedReferential, setSelectedReferential] =
     useState<ReferentialType | null>(null);
   const [showPhaseManager, setShowPhaseManager] = useState(false);
-  const [phases, setPhases] = useState<Record<string, unknown>[]>([]);
+  const [phases, setPhases] = useState<PhaseDTO[]>([]);
+  const [referentialOptions, setReferentialOptions] = useState<{ value: string; label: string; description?: string }[]>([]);
   console.log("🔍 ProjectDetailByDTO render - projectId:", projectId);
+
+  // Load referential options
+  useEffect(() => {
+    const loadReferentialOptions = async () => {
+      try {
+        const options = await referentialService.getReferentialOptions();
+        setReferentialOptions(options);
+      } catch (error) {
+        console.error('Failed to load referential options:', error);
+        setReferentialOptions([]);
+      }
+    };
+    
+    loadReferentialOptions();
+  }, []);
 
   const [error, setError] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
@@ -387,7 +404,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       const realResources = Array.isArray(projectDetail.resources) ? projectDetail.resources : [];
       
       // Transform real resources to the expected format
-      const allResources = realResources.map((resource: Record<string, unknown>) => ({
+      const allResources = realResources.map((resource: any) => ({
         id: resource.id || `resource-${Math.random()}`,
         name: resource.name || resource.title || "Ressource sans nom",
         type: resource.type || "human",
@@ -1085,9 +1102,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                         <SelectValue placeholder="Sélectionner un référentiel" />
                       </SelectTrigger>
                       <SelectContent>
-                        {referentialService
-                          .getReferentialOptions()
-                          .map((option) => (
+                        {referentialOptions.map((option) => (
                             <SelectItem key={option.value} value={option.value}>
                               {option.label}
                             </SelectItem>

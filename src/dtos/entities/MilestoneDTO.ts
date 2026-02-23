@@ -5,6 +5,8 @@
  * Jalon de projet avec méthodologie PM (Waterfall, PERT, CPM)
  */
 
+import { UserRoleDTO } from "./UserDTO";
+
 export type MilestoneStatus = 'pending' | 'in_progress' | 'completed' | 'delayed';
 
 /**
@@ -60,17 +62,21 @@ export interface MilestoneTemplateDTO {
  * Database DTO format (snake_case)
  */
 export interface MilestoneDTO {
+  assignedTo: UserRoleDTO;
+  createdBy: UserRoleDTO;
+  completedate: string | number | Date;
+
   id: string;
-  project_id: string;
-  phase_id?: string;
+  projectId: string;
+  phaseId?: string;
   title: string;
   description?: string;
-  target_date: string;
+  targetDate: string;
   /** Earliest start date (PERT forward pass) */
-  early_start_date?: string;
+  earlyStartDate?: string;
   /** Latest finish date without delay (PERT backward pass) */
-  late_finish_date?: string;
-  completed_date?: string;
+  lateFinishDate?: string;
+  completedDate?: string;
   status: MilestoneStatus;
   /** Milestone type */
   type: MilestoneType;
@@ -79,24 +85,24 @@ export interface MilestoneDTO {
   weight: number;
   notes?: string;
   /** Whether from referential template or custom */
-  is_from_template: boolean;
-  template_id?: string;
+  isFromTemplate: boolean;
+  templateId?: string;
   /** Predecessor milestone IDs (FS - Finish-to-Start dependencies) */
   dependencies?: string[];
   /** Float/slack time in days (0 = critical path) */
-  float_days?: number;
+  floatDays?: number;
   /** Is on critical path */
-  is_on_critical_path?: boolean;
+  isOnCriticalPath?: boolean;
   /** Deliverables list */
   deliverables?: string[];
   /** Approval status for gate milestones */
-  approval_status?: 'pending' | 'approved' | 'rejected' | 'not_applicable';
+  approvalStatus?: 'pending' | 'approved' | 'rejected' | 'not_applicable';
   /** Approved by user ID */
-  approved_by?: string;
+  approvedBy?: string;
   /** Approval date */
-  approval_date?: string;
-  created_at: string;
-  updated_at: string;
+  approvalDate?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**
@@ -105,19 +111,19 @@ export interface MilestoneDTO {
 export interface MilestoneSummaryDTO {
   id: string;
   title: string;
-  target_date: string;
-  completed_date?: string;
+  targetDate: string;
+  completedDate?: string;
   status: MilestoneStatus;
   type: MilestoneType;
   priority: MilestonePriority;
-  phase_name?: string;
-  phase_id?: string;
+  phaseDame?: string;
+  phaseId?: string;
   weight: number;
-  is_critical?: boolean;
+  isCritical?: boolean;
   /** Float days for scheduling visualization */
-  float_days?: number;
+  floatDays?: number;
   /** Percent complete (0-100) for in-progress milestones */
-  percent_complete?: number;
+  percentComplete?: number;
 }
 
 /**
@@ -126,12 +132,12 @@ export interface MilestoneSummaryDTO {
 export interface MilestoneFormDTO {
   title: string;
   description?: string;
-  target_date: string;
+  targetDate: string;
   type: MilestoneType;
   priority: MilestonePriority;
   weight: number;
   notes?: string;
-  phase_id?: string;
+  phaseId?: string;
   deliverables?: string[];
   dependencies?: string[];
 }
@@ -141,55 +147,55 @@ export interface MilestoneFormDTO {
  * Aligned with Earned Value Management (EVM) concepts
  */
 export interface MilestoneProgressDTO {
-  total_milestones: number;
-  completed_milestones: number;
-  delayed_milestones: number;
+  totalMilestones: number;
+  completedMilestones: number;
+  delayedMilestones: number;
   /** Weighted progress (0-100) */
-  weighted_progress: number;
+  weightedProgress: number;
   /** Schedule Performance Index (SPI) = Earned Value / Planned Value */
-  schedule_performance_index?: number;
+  schedulePerformance_index?: number;
   /** Critical path status */
-  critical_path_status: 'on_track' | 'at_risk' | 'delayed';
+  criticalPath_status: 'on_track' | 'at_risk' | 'delayed';
   /** Days of float remaining on critical path */
-  critical_path_float_days?: number;
+  criticalPathFloat_days?: number;
   next_milestone?: MilestoneSummaryDTO;
-  overdue_milestones: MilestoneSummaryDTO[];
+  overdueMilestones: MilestoneSummaryDTO[];
   /** Upcoming milestones in next 14 days */
-  upcoming_milestones: MilestoneSummaryDTO[];
+  upcomingMilestones: MilestoneSummaryDTO[];
 }
 
 /**
  * PERT estimation for milestone duration
  */
 export interface PERTEstimateDTO {
-  milestone_id: string;
+  milestoneId: string;
   /** Optimistic duration (days) */
   optimistic: number;
   /** Most likely duration (days) */
-  most_likely: number;
+  mostLikely: number;
   /** Pessimistic duration (days) */
   pessimistic: number;
   /** Expected duration = (O + 4M + P) / 6 */
-  expected_duration: number;
+  expectedDuration: number;
   /** Standard deviation = (P - O) / 6 */
-  standard_deviation: number;
+  standardDeviation: number;
 }
 
 /**
  * Critical path analysis result
  */
 export interface CriticalPathDTO {
-  project_id: string;
+  projectId: string;
   /** List of milestone IDs on critical path */
-  critical_path_milestones: string[];
+  criticalPathMilestones: string[];
   /** Total project duration based on critical path */
-  total_duration_days: number;
+  totalDurationDays: number;
   /** Project end date based on critical path */
-  estimated_end_date: string;
+  estimatedEndDate: string;
   /** Near-critical paths (float < 5 days) */
-  near_critical_paths: Array<{
+  nearCriticalPaths: Array<{
     milestones: string[];
-    float_days: number;
+    floatDays: number;
   }>;
 }
 
@@ -236,13 +242,13 @@ export const MILESTONE_PRIORITIES: Record<MilestonePriority, { label: string; co
 export interface GeneratedMilestoneDTO {
   title: string;
   description?: string;
-  target_date: string;
+  targetDate: string;
   type: 'gate' | 'deliverable' | 'checkpoint' | 'event';
   priority: 'critical' | 'high' | 'normal' | 'low';
   weight: number;
   deliverables?: string[];
   dependencies?: string[];
-  phase_id: string;
+  phaseId: string;
   requiresInspection?: boolean;
   inspectionType?: string;
   templateId?: string;

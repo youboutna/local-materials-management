@@ -97,8 +97,9 @@ const phaseService = new PhaseService();
 interface ConstructionPhaseManagerProps {
   workflowData: ProjectWorkflowData | null;
   onStepComplete: (stepData: { phases: PhaseDTO[] }) => void;
+  phases: PhaseDTO[];
   projectBudget?: number;
-  projectId?: string;
+  projectId: string | undefined;
   referentialType?: ReferentialType;
 }
 

@@ -390,7 +390,7 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
     // Extract region/city from localisation data if available
     let region: string | undefined;
     let city: string | undefined;
-    let country = 'Mauritania'; // Default for BTP context
+    const country = 'Mauritania'; // Default for BTP context
 
     if (dto.localisation && dto.localisation.length > 0) {
       const firstLocation = dto.localisation[0];

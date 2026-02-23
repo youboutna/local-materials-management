@@ -57,8 +57,8 @@ export class PhaseTransformer {
       constructionPhase: phase.constructionPhase || undefined,
       constructionStage: phase.constructionStage || undefined,
       createdBy: phase.createdBy || undefined,
-      customPhaseData: phase.customPhaseData,
-      humanResources: phase.humanResources,
+      customPhaseData: phase.customPhaseData || undefined,
+      humanResources: phase.humanResources || undefined,
       weight: phase.weight || undefined,
     };
   }
@@ -75,12 +75,6 @@ export class PhaseTransformer {
       actual_duration_days: step.actual_duration_days,
       start_date: step.start_date ? new Date(step.start_date).toISOString().split('T')[0] : undefined,
       end_date: step.end_date ? new Date(step.end_date).toISOString().split('T')[0] : undefined,
-      requires_inspection: false, // Default value - not in PhaseStep interface
-      requires_engineer_approval: false, // Default value - not in PhaseStep interface
-      estimated_cost: 0, // Default value - not in PhaseStep interface
-      actual_cost: 0, // Default value - not in PhaseStep interface
-      assigned_to: [], // Default value - not in PhaseStep interface
-      dependencies: [], // Default value - not in PhaseStep interface
       tasks: step.tasks.map(task => this.taskToDTO(task))
     };
   }
@@ -166,9 +160,7 @@ export class PhaseTransformer {
       end_date: dto.end_date,
       assigned_to: dto.assigned_to,
       dependencies: dto.dependencies,
-      weight: dto.weight,
-      // Note: materials property doesn't exist in PhaseTaskDTO
-      materials: [],
+      weight: dto.weight
     };
   }
 

@@ -696,8 +696,8 @@ export class CheckpointActionContextService {
         return {
           id: milestoneDTO.id,
           title: milestoneDTO.title,
-          targetDate: milestoneDTO.target_date || '',
-          completionDate: milestoneDTO.completed_date || undefined,
+          targetDate: milestoneDTO.targetDate || '',
+          completionDate: milestoneDTO.completedDate || undefined,
           status: milestoneDTO.status,
           priority: milestoneDTO.priority || 'normal',
           progressPercentage: 0, // MilestoneDTO doesn't have direct progress

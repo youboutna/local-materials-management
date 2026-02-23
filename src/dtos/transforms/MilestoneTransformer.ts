@@ -27,6 +27,7 @@ import {
   MilestoneType,
   MilestonePriority as DTOPriority
 } from '@/dtos/entities/MilestoneDTO';
+import { UserRoleDTO } from '@/dtos/entities/UserDTO';
 
 // Request DTOs for API
 export interface CreateMilestoneRequestDTO {
@@ -114,7 +115,7 @@ export class MilestoneTransformer {
       {
         templateId: (row.template_id as string) || undefined,
         constructionPhase: undefined,
-        weight: (row.weight as number) || 1,
+        weight: (row.weight as number) ||1,
         isCritical: (row.is_critical as boolean) || false,
         type: (row.type as MilestoneType) || 'checkpoint',
         priority: (row.priority as DTOPriority) || 'normal',
@@ -134,27 +135,30 @@ export class MilestoneTransformer {
   static toSupabase(milestone: Milestone): Record<string, unknown> {
     return {
       id: milestone.id,
-      project_id: milestone.projectId,
+      projectId: milestone.projectId,
       title: milestone.title,
       description: milestone.description,
-      target_date: milestone.targetDate,
-      completed_date: milestone.completionDate,
+      targetDate: milestone.targetDate,
+      completedDate: milestone.completionDate,
       status: this.toDatabaseStatus(milestone.status),
-      priority: milestone.priority,
-      progress_percentage: milestone.progressPercentage,
+      progressPercentage: milestone.progressPercentage,
       dependencies: milestone.dependencies.map(dep => dep.description),
       deliverables: milestone.deliverables.map(del => del.name),
-      assigned_to: milestone.assignedTo,
-      created_by: milestone.createdBy,
-      created_at: milestone.createdAt,
-      updated_at: milestone.updatedAt,
+      assignedTo: milestone.assignedTo,
+      createdBy: milestone.createdBy,
+      createdAt: milestone.createdAt,
+      updatedAt: milestone.updatedAt,
       // Configuration fields
-      template_id: milestone.configuration.templateId,
+      templateId: milestone.configuration.templateId,
       type: milestone.configuration.type,
-      is_critical: milestone.configuration.isCritical,
+      priority: milestone.configuration.priority,
       weight: milestone.configuration.weight,
+      isCritical: milestone.configuration.isCritical,
       tags: milestone.configuration.tags,
-      approval_requirements: milestone.configuration.approvalRequirements
+      predecessorIds: milestone.configuration.predecessorIds,
+      expectedDeliverables: milestone.configuration.expectedDeliverables,
+      approvalRequirements: milestone.configuration.approvalRequirements,
+      relativeOffsetDays: milestone.configuration.relativeOffsetDays
     };
   }
 
@@ -166,23 +170,23 @@ export class MilestoneTransformer {
     const now = new Date().toISOString();
     
     return {
-      project_id: request.projectId,
+      projectId: request.projectId,
       title: request.title,
       description: request.description,
-      target_date: request.targetDate,
+      targetDate: request.targetDate,
       status: 'pending',
       priority: request.priority || 'normal',
       weight: request.weight || 1,
       type: request.type || 'checkpoint',
-      is_critical: request.isCritical || false,
+      isCritical: request.isCritical || false,
       dependencies: request.dependencies || [],
       deliverables: request.deliverables || [],
-      assigned_to: request.assignedTo,
+      assignedTo: request.assignedTo,
       tags: request.tags || [],
-      template_id: request.templateId,
-      approval_requirements: request.approvalRequirements || [],
-      created_at: now,
-      updated_at: now
+      templateId: request.templateId,
+      approvalRequirements: request.approvalRequirements || [],
+      createdAt: now,
+      updatedAt: now
     };
   }
 
@@ -194,31 +198,51 @@ export class MilestoneTransformer {
    */
   static toDTO(milestone: Milestone): MilestoneDTO {
     return {
+      // Required UserRoleDTO properties
+      assignedTo: milestone.assignedTo ? {
+        id: milestone.assignedTo,
+        userId: milestone.assignedTo,
+        roleName: 'assignee',
+        status: 'active',
+        assignedAt: milestone.createdAt || new Date().toISOString(),
+        createdAt: milestone.createdAt || '',
+        updatedAt: milestone.updatedAt || ''
+      } : {} as UserRoleDTO,
+      createdBy: milestone.createdBy ? {
+        id: milestone.createdBy,
+        userId: milestone.createdBy,
+        roleName: 'creator',
+        status: 'active',
+        assignedAt: milestone.createdAt || new Date().toISOString(),
+        createdAt: milestone.createdAt || '',
+        updatedAt: milestone.updatedAt || ''
+      } : {} as UserRoleDTO,
+      completedate: milestone.completionDate || '',
+
       id: milestone.id,
-      project_id: milestone.projectId,
-      phase_id: undefined, // Will be set by service layer
+      projectId: milestone.projectId,
+      phaseId: undefined, // Will be set by service layer
       title: milestone.title,
       description: milestone.description || undefined,
-      target_date: milestone.targetDate || '',
-      early_start_date: undefined,
-      late_finish_date: undefined,
-      completed_date: milestone.completionDate || undefined,
+      targetDate: milestone.targetDate || '',
+      earlyStartDate: undefined,
+      lateFinishDate: undefined,
       status: this.toDTOStatus(milestone.status),
       type: milestone.configuration.type,
       priority: milestone.configuration.priority,
       weight: milestone.configuration.weight,
       notes: undefined,
-      is_from_template: !!milestone.configuration.templateId,
-      template_id: milestone.configuration.templateId,
+      isFromTemplate: !!milestone.configuration.templateId,
+      templateId: milestone.configuration.templateId,
       dependencies: milestone.dependencies.map(dep => dep.description),
-      float_days: undefined,
-      is_on_critical_path: milestone.configuration.isCritical,
+      floatDays: undefined,
+      isOnCriticalPath: milestone.configuration.isCritical,
       deliverables: milestone.deliverables.map(del => del.name),
-      approval_status: undefined,
-      approved_by: undefined,
-      approval_date: undefined,
-      created_at: milestone.createdAt || '',
-      updated_at: milestone.updatedAt || ''
+      approvalStatus: undefined,
+      approvedBy: undefined,
+      approvalDate: undefined,
+      createdAt: milestone.createdAt || '',
+      updatedAt: milestone.updatedAt || ''
     };
   }
 
@@ -245,32 +269,32 @@ export class MilestoneTransformer {
         name: del,
         description: '',
         status: 'pending' as const,
-        dueDate: dto.target_date,
+        dueDate: dto.targetDate,
         assignedTo: undefined
       })));
     }
 
     return new Milestone(
       dto.id,
-      dto.project_id,
+      dto.projectId,
       dto.title,
       dto.description || null,
-      dto.target_date,
-      dto.completed_date || null,
+      dto.targetDate,
+      dto.completedDate || null,
       this.fromDTOStatus(dto.status),
       dto.priority,
       null, // progressPercentage not in DTO
       dependencies,
       deliverables,
-      undefined, // assignedTo not in DTO
-      undefined, // createdBy not in DTO
-      dto.created_at,
-      dto.updated_at,
+      dto?.assignedTo?.userId || null, // Extract userId from UserRoleDTO
+      dto?.createdBy?.userId || null, // Extract userId from UserRoleDTO
+      dto.createdAt,
+      dto.updatedAt,
       {
-        templateId: dto.template_id,
+        templateId: dto.templateId,
         constructionPhase: undefined,
         weight: dto.weight,
-        isCritical: dto.is_on_critical_path || false,
+        isCritical: dto.isOnCriticalPath || false,
         type: dto.type,
         priority: dto.priority,
         tags: [],
@@ -387,14 +411,14 @@ export class MilestoneTransformer {
   static toUI(milestone: Milestone) {
     const dto = this.toDTO(milestone);
     const today = new Date();
-    const targetDate = new Date(dto.target_date);
+    const targetDate = new Date(dto.targetDate);
     const daysRemaining = Math.ceil((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     
     return {
       ...dto,
       // UI-specific properties
       formattedTargetDate: targetDate.toLocaleDateString(),
-      formattedCompletionDate: dto.completed_date ? new Date(dto.completed_date).toLocaleDateString() : null,
+      formattedCompletionDate: dto.completedDate ? new Date(dto.completedDate).toLocaleDateString() : null,
       daysRemaining: daysRemaining,
       isOverdue: daysRemaining < 0 && dto.status !== 'completed',
       isToday: daysRemaining === 0,
@@ -550,10 +574,10 @@ export class MilestoneTransformer {
       title: ui.title,
       status: ui.status,
       priority: ui.priority,
-      target_date: ui.formattedTargetDate,
+      targetDate: ui.formattedTargetDate,
       daysRemaining: ui.daysRemaining,
-      progress_percentage: milestone.progressPercentage,
-      is_critical: milestone.configuration.isCritical,
+      progressPercentage: milestone.progressPercentage,
+      isCritical: milestone.configuration.isCritical,
       badgeVariant: ui.badgeVariant,
       statusColor: ui.statusColor
     };
