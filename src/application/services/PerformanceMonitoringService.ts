@@ -361,11 +361,11 @@ export class PerformanceMonitoringService {
       // Calculate timeline adherence from project_phases table
       const { data: phases } = await supabase
         .from('project_phases')
-        .select('start_date', 'end_date', 'status')
+        .select('start_date, end_date, status')
         .eq('project_id', projectId);
       
       if (phases && phases.length > 0) {
-        const onTimePhases = phases.filter(p => {
+        const onTimePhases = phases.filter((p: any) => {
           if (!p.end_date) return true;
           const endDate = new Date(p.end_date);
           const today = new Date();

@@ -59,6 +59,7 @@ export class PaymentRequestService {
     try {
       const paymentEntity = PaymentTransformer.requestDTOToPayment({
         ...data,
+        status: 'pending',
         id: crypto.randomUUID(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
