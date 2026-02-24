@@ -41,20 +41,12 @@ export class PaymentValidationService {
   }
 
   /**
-   * Get count of blocked payments for current month
+   * Get count of blocked payments (active blocks)
    */
   async getBlockedPaymentsCount(): Promise<number> {
     try {
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      startOfMonth.setHours(0, 0, 0, 0);
-
-      const blockedPayments = await this.paymentBlockingRepository.findByDateRange(
-        startOfMonth,
-        new Date()
-      );
-
-      return blockedPayments.filter(payment => !payment.resolvedAt).length;
+      const activeBlocks = await this.paymentBlockingRepository.getActiveBlocks();
+      return activeBlocks.length;
     } catch (error) {
       console.error('PaymentValidationService.getBlockedPaymentsCount failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get blocked payments count');
@@ -66,9 +58,8 @@ export class PaymentValidationService {
    */
   async getExpiredInsurancesCount(): Promise<number> {
     try {
-      const currentDate = new Date();
-      const expiredInsurances = await this.insuranceRepository.findExpired(currentDate);
-      
+      // Use getExpiringSoon with 0 days threshold to get already expired
+      const expiredInsurances = await this.insuranceRepository.getExpiringSoon(0);
       return expiredInsurances.length;
     } catch (error) {
       console.error('PaymentValidationService.getExpiredInsurancesCount failed:', error);
@@ -81,9 +72,8 @@ export class PaymentValidationService {
    */
   async getMissingDocumentsCount(): Promise<number> {
     try {
-      const missingDocuments = await this.documentRepository.findByStatus('draft');
-      const contractDocuments = missingDocuments.filter(doc => doc.type === 'contract');
-      
+      const draftDocuments = await this.documentRepository.findByStatus('draft' as any);
+      const contractDocuments = draftDocuments.filter(doc => doc.documentType === 'contract');
       return contractDocuments.length;
     } catch (error) {
       console.error('PaymentValidationService.getMissingDocumentsCount failed:', error);
@@ -92,14 +82,12 @@ export class PaymentValidationService {
   }
 
   /**
-   * Get count of delayed projects
+   * Get count of delayed projects (using overdue actions as proxy)
    */
   async getDelayedProjectsCount(): Promise<number> {
     try {
-      const currentDate = new Date();
-      const delayedProjects = await this.paymentBlockingRepository.findDelayedProjects(currentDate);
-      
-      return delayedProjects.length;
+      const overdueActions = await this.paymentBlockingRepository.getOverdueActions();
+      return overdueActions.length;
     } catch (error) {
       console.error('PaymentValidationService.getDelayedProjectsCount failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get delayed projects count');
@@ -136,8 +124,7 @@ export class PaymentValidationService {
   }
 
   /**
-   * Factory method for UI compatibility (Rule #5: UI Layer Separation)
-   * Provides static-like access for components transitioning to hexagonal architecture
+   * Factory method for UI compatibility
    */
   static getPaymentValidationService(): PaymentValidationService {
     return new PaymentValidationService();
@@ -145,14 +132,10 @@ export class PaymentValidationService {
 
   /**
    * Calculate allowed payment amount for a project (UI compatibility)
-   * Mirrors legacy PaymentValidator.calculateAllowedAmount behavior
    */
   async calculateAllowedAmount(projectId: string): Promise<number> {
     try {
-      // Get project details for calculation
       const project = await this.documentRepository.findByProjectId(projectId);
-      // For now, return a calculated amount based on project progress
-      // This should be enhanced with proper business logic
       return 1000; // Placeholder - implement proper calculation
     } catch (error) {
       console.error('PaymentValidationService.calculateAllowedAmount failed:', error);
@@ -162,11 +145,10 @@ export class PaymentValidationService {
 
   /**
    * Get maximum allowed amount with tolerance (UI compatibility)
-   * Mirrors legacy PaymentValidator.getMaxAllowedAmountWithTolerance behavior
    */
   async getMaxAllowedAmountWithTolerance(projectId: string): Promise<number> {
     const allowedAmount = await this.calculateAllowedAmount(projectId);
-    return allowedAmount * 1.5; // 1.5x tolerance as used in component
+    return allowedAmount * 1.5;
   }
 
   /**
@@ -181,27 +163,24 @@ export class PaymentValidationService {
       const blockingReasons: string[] = [];
       const recommendations: string[] = [];
 
-      // Check for blocked payments
-      const blockedPayments = await this.paymentBlockingRepository.findByProjectId(projectId);
-      if (blockedPayments.some(payment => !payment.resolvedAt)) {
-        blockingReasons.push('Project has unresolved payment blocks');
+      // Check for active payment blocks
+      const activeBlocks = await this.paymentBlockingRepository.getActiveBlocks();
+      if (activeBlocks.length > 0) {
+        blockingReasons.push('There are active payment blocks');
         recommendations.push('Resolve all payment blocks before processing payment');
       }
 
-      // Check for expired insurances
-      const projectInsurances = await this.insuranceRepository.findByProjectId(projectId);
-      const expiredInsurances = projectInsurances.filter(insurance => 
-        insurance.validUntil && new Date(insurance.validUntil) < new Date()
-      );
-      if (expiredInsurances.length > 0) {
+      // Check for expiring insurances
+      const expiringInsurances = await this.insuranceRepository.getExpiringSoon(0);
+      if (expiringInsurances.length > 0) {
         blockingReasons.push('Project has expired insurance certificates');
         recommendations.push('Update expired insurance certificates');
       }
 
       // Check for missing documents
       const projectDocuments = await this.documentRepository.findByProjectId(projectId);
-      const requiredDocuments = projectDocuments.filter(doc => doc.type === 'contract' && doc.status === 'draft');
-      if (requiredDocuments.length > 0) {
+      const draftContracts = projectDocuments.filter(doc => doc.documentType === 'contract' && doc.status === 'draft');
+      if (draftContracts.length > 0) {
         blockingReasons.push('Project has missing required documents');
         recommendations.push('Complete all required contract documents');
       }

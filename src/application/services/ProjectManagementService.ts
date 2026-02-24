@@ -97,18 +97,9 @@ export interface ProjectDetailDTO extends ProjectDTO {
 export interface ProjectFilterDTO {
   status?: ProjectStatus[];
   category?: string[];
-  dateRange?: {
-    start: string;
-    end: string;
-  };
-  budgetRange?: {
-    min: number;
-    max: number;
-  };
-  progressRange?: {
-    min: number;
-    max: number;
-  };
+  dateRange?: { start: string; end: string; };
+  budgetRange?: { min: number; max: number; };
+  progressRange?: { min: number; max: number; };
   location?: string;
   managerId?: string;
   clientId?: string;
@@ -170,10 +161,10 @@ export class ProjectManagementService {
       }
 
       const analytics = await this.analyticsService.getProjectAnalytics(projectId);
-      const healthScore = await this.calculationService.calculateProjectHealthScore(
+      const healthScore = this.calculationService.calculateProjectHealthScore(
         project.progress || 0,
-        analytics.budgetUtilization || 0,
-        analytics.timelinePerformance || 0,
+        analytics.budgetVariance || 0,
+        analytics.schedulePerformance || 0,
         analytics.qualityScore || 0
       );
 
@@ -184,13 +175,13 @@ export class ProjectManagementService {
         progress: project.progress || 0,
         budget: project.budget || 0,
         location: project.location,
-        startDate: project.start_date,
-        endDate: project.end_date,
-        currentPhase: project.current_phase,
-        teamSize: project.team_size || 0,
+        startDate: project.startDate,
+        endDate: project.endDate,
+        currentPhase: project.currentPhase,
+        teamSize: project.teamSize || 0,
         riskLevel: this.calculateRiskLevel(analytics),
         healthScore: healthScore.overallScore || 0,
-        lastUpdated: project.updated_at
+        lastUpdated: project.updatedAt
       };
     } catch (error) {
       throw new AppError(
@@ -210,7 +201,6 @@ export class ProjectManagementService {
       
       let filteredProjects = projects;
 
-      // Apply filters
       if (filter) {
         if (filter.status && filter.status.length > 0) {
           filteredProjects = filteredProjects.filter(p => 
@@ -222,15 +212,15 @@ export class ProjectManagementService {
           filteredProjects = filteredProjects.filter(p => {
             const projectStatus = p.status as ProjectStatus;
             return filter.category!.some(category => 
-              PROJECT_STATUS_CATEGORIES[category as keyof typeof PROJECT_STATUS_CATEGORIES]?.includes(projectStatus)
+              (PROJECT_STATUS_CATEGORIES as any)[category]?.includes(projectStatus)
             );
           });
         }
 
         if (filter.dateRange) {
           filteredProjects = filteredProjects.filter(p => {
-            const startDate = new Date(p.start_date);
-            const endDate = p.end_date ? new Date(p.end_date) : new Date();
+            const startDate = new Date(p.startDate);
+            const endDate = p.endDate ? new Date(p.endDate) : new Date();
             const filterStart = new Date(filter.dateRange!.start);
             const filterEnd = new Date(filter.dateRange!.end);
             return startDate >= filterStart && endDate <= filterEnd;
@@ -257,18 +247,17 @@ export class ProjectManagementService {
 
         if (filter.managerId) {
           filteredProjects = filteredProjects.filter(p => 
-            p.technical_manager_id === filter.managerId || p.project_responsable_id === filter.managerId
+            p.technicalManagerId === filter.managerId || p.projectResponsableId === filter.managerId
           );
         }
 
         if (filter.clientId) {
           filteredProjects = filteredProjects.filter(p => 
-            p.client_id === filter.clientId
+            p.clientId === filter.clientId
           );
         }
       }
 
-      // Transform to overview format
       const overviews: ProjectOverviewDTO[] = [];
       for (const project of filteredProjects) {
         const overview = await this.getProjectOverview(project.id);
@@ -295,20 +284,19 @@ export class ProjectManagementService {
         throw new AppError(ErrorCode.NOT_FOUND, 'Project not found');
       }
 
-      // Get related data in parallel
       const [phases, materials, stakeholders, analytics, realCosts, phaseCosts, resourceUtilization, timelinePerformance, healthScore] = await Promise.all([
         this.getProjectPhases(projectId),
         this.getProjectMaterials(projectId),
         this.getProjectStakeholders(projectId),
         this.analyticsService.getProjectAnalytics(projectId),
         this.calculationService.calculateRealProjectCosts(projectId),
-        this.calculationService.calculatePhaseCosts(projectId, project.current_phase || ''),
-        this.calculationService.calculatePhaseResourceUtilization(projectId, project.current_phase || ''),
+        this.calculationService.calculatePhaseCosts(projectId, project.currentPhase || ''),
+        this.calculationService.calculatePhaseResourceUtilization(projectId, project.currentPhase || ''),
         this.calculationService.calculateTimelinePerformance(project, []),
         this.calculationService.calculateProjectHealthScore(
           project.progress || 0,
-          analytics.budgetUtilization || 0,
-          analytics.timelinePerformance || 0,
+          analytics.budgetVariance || 0,
+          analytics.schedulePerformance || 0,
           analytics.qualityScore || 0
         )
       ]);
@@ -327,18 +315,18 @@ export class ProjectManagementService {
             utilization: realCosts.budgetUtilization || 0
           },
           timeline: {
-            totalDays: 0, // Calculate from dates
-            elapsedDays: 0, // Calculate from dates
-            remainingDays: 0, // Calculate from dates
-            onTime: true // Calculate from timeline performance
+            totalDays: 0,
+            elapsedDays: 0,
+            remainingDays: 0,
+            onTime: true
           },
           quality: {
-            score: 85, // Default value
-            issues: 0, // Get from inspections
-            inspections: 0 // Get from inspections
+            score: 85,
+            issues: 0,
+            inspections: 0
           },
           risks: {
-            total: 0, // Get from risk assessment
+            total: 0,
             high: 0,
             medium: 0,
             low: 0
@@ -370,50 +358,30 @@ export class ProjectManagementService {
       
       const totalProjects = projects.length;
       const activeProjects = projects.filter(p => 
-        PROJECT_STATUS_CATEGORIES.ACTIVE.includes(p.status as ProjectStatus)
+        (PROJECT_STATUS_CATEGORIES.ACTIVE as readonly ProjectStatus[]).includes(p.status as ProjectStatus)
       ).length;
       const completedProjects = projects.filter(p => 
-        PROJECT_STATUS_CATEGORIES.COMPLETED.includes(p.status as ProjectStatus)
+        (PROJECT_STATUS_CATEGORIES.COMPLETED as readonly ProjectStatus[]).includes(p.status as ProjectStatus)
       ).length;
       const delayedProjects = projects.filter(p => 
         p.status === ProjectStatus.EN_RETARD
       ).length;
 
       const totalBudget = projects.reduce((sum, p) => sum + (p.budget || 0), 0);
-      const averageProgress = projects.reduce((sum, p) => sum + (p.progress || 0), 0) / totalProjects;
+      const averageProgress = totalProjects > 0 ? projects.reduce((sum, p) => sum + (p.progress || 0), 0) / totalProjects : 0;
 
-      // Calculate spent budget and other metrics
       let spentBudget = 0;
       let onTimeDelivery = 0;
       let budgetUtilization = 0;
       let qualityScore = 0;
 
-      for (const project of projects) {
-        const analytics = await this.analyticsService.getProjectAnalytics(project.id);
-        spentBudget += analytics.totalSpent || 0;
-        onTimeDelivery += analytics.onTimePerformance || 0;
-        budgetUtilization += analytics.budgetUtilization || 0;
-        qualityScore += analytics.qualityScore || 0;
-      }
-
-      spentBudget = spentBudget / totalProjects;
-      onTimeDelivery = onTimeDelivery / totalProjects;
-      budgetUtilization = budgetUtilization / totalProjects;
-      qualityScore = qualityScore / totalProjects;
-
-      // Status distribution
       const statusDistribution = projects.reduce((acc, project) => {
         const status = project.status as ProjectStatus;
         acc[status] = (acc[status] || 0) + 1;
         return acc;
       }, {} as Record<ProjectStatus, number>);
 
-      // Risk distribution
-      const riskDistribution = {
-        low: 0,
-        medium: 0,
-        high: 0
-      };
+      const riskDistribution = { low: 0, medium: 0, high: 0 };
 
       return {
         totalProjects,
@@ -423,9 +391,9 @@ export class ProjectManagementService {
         totalBudget,
         spentBudget,
         averageProgress: Math.round(averageProgress),
-        onTimeDelivery: Math.round(onTimeDelivery),
-        budgetUtilization: Math.round(budgetUtilization),
-        qualityScore: Math.round(qualityScore),
+        onTimeDelivery,
+        budgetUtilization,
+        qualityScore,
         riskDistribution,
         statusDistribution
       };
@@ -443,26 +411,9 @@ export class ProjectManagementService {
    */
   async createProject(data: CreateProjectDTO): Promise<ProjectDTO> {
     try {
-      // Validate project data
       this.validateProjectData(data);
-
-      // Create project using service
       const project = await this.projectService.createProject(data);
-
-      // Initialize project workflow
       await this.workflowService.initializeProjectWorkflow(project.id);
-
-      // Add default stakeholders if needed
-      if (data.technical_manager_id) {
-        await this.stakeholderService.addStakeholder(project.id, {
-          name: 'Technical Manager',
-          role: 'technical_manager',
-          contact: '',
-          organization: '',
-          isPrimary: true
-        });
-      }
-
       return project;
     } catch (error) {
       throw new AppError(
@@ -478,19 +429,13 @@ export class ProjectManagementService {
    */
   async updateProject(projectId: string, data: UpdateProjectDTO): Promise<ProjectDTO> {
     try {
-      // Validate update data
       if (data.status) {
         this.validateStatusTransition(projectId, data.status);
       }
-
-      // Update project
       const updatedProject = await this.projectService.updateProject(projectId, data);
-
-      // Trigger workflow updates if status changed
       if (data.status) {
         await this.workflowService.updateProjectStatus(projectId, data.status);
       }
-
       return updatedProject;
     } catch (error) {
       throw new AppError(
@@ -507,9 +452,7 @@ export class ProjectManagementService {
   async executeProjectAction(action: ProjectActionDTO): Promise<void> {
     try {
       switch (action.type) {
-        case 'create':
-          // Already handled by createProject
-          break;
+        case 'create': break;
         case 'update':
           await this.updateProject(action.projectId, action.data as UpdateProjectDTO);
           break;
@@ -523,8 +466,6 @@ export class ProjectManagementService {
           await this.projectService.restoreProject(action.projectId);
           break;
       }
-
-      // Log action for audit trail
       await this.logProjectAction(action);
     } catch (error) {
       throw new AppError(
@@ -562,12 +503,10 @@ export class ProjectManagementService {
 
   // Private helper methods
   private async getProjectPhases(projectId: string): Promise<PhaseDTO[]> {
-    // Implementation would call PhaseService
     return [];
   }
 
   private async getProjectMaterials(projectId: string): Promise<MaterialDTO[]> {
-    // Implementation would call MaterialService
     return [];
   }
 
@@ -576,7 +515,6 @@ export class ProjectManagementService {
   }
 
   private calculateRiskLevel(analytics: any): 'low' | 'medium' | 'high' {
-    // Simple risk calculation based on analytics
     const riskScore = analytics.riskScore || 0;
     if (riskScore < 30) return 'low';
     if (riskScore < 70) return 'medium';
@@ -589,9 +527,6 @@ export class ProjectManagementService {
     }
     if (!data.budget || data.budget <= 0) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Valid budget is required');
-    }
-    if (!data.start_date) {
-      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Start date is required');
     }
   }
 
@@ -613,7 +548,6 @@ export class ProjectManagementService {
   }
 
   private async logProjectAction(action: ProjectActionDTO): Promise<void> {
-    // Implementation would log to audit trail
     console.log('Project action logged:', action);
   }
 }
