@@ -22,7 +22,7 @@ import type { IEmployeeRepository } from '@/domain/repositories/IEmployeeReposit
 import type { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
 import type { IReceptionRepository } from '@/domain/repositories/IReceptionRepository';
 import { WorkflowStep, WorkflowState, WorkflowTransition, ProjectWorkflowData, ValidationResult, SaveResult } from '@/dtos/workflows/ProjectWorkflowDTOs';
-import { ProjectDTO, CreateProjectDTO, UpdateProjectDTO } from '@/dtos/entities/ProjectDTO';
+import { ProjectDTO, CreateProjectDTO, UpdateProjectDTO, ProjectStatus } from '@/dtos/entities/ProjectDTO';
 import { PhaseDTO, PhaseStatus, PhaseType, PhasePriority } from '@/dtos/entities/PhaseDTO';
 import { RiskDTO, RiskStatus } from '@/dtos/entities/RiskDTO';
 import { MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
@@ -340,7 +340,7 @@ export class ProjectWorkflowService {
           budget: projectData.budget || 0,
           startDate: projectData.startDate || new Date().toISOString().split('T')[0],
           endDate: projectData.endDate,
-          status: 'planifie' as const,
+          status: ProjectStatus.PLANIFIE_LEGACY as any,
           thumbnail: projectData.thumbnail || '',
           teamSize: projectData.teamSize || 1,
           financingSource: projectData.financingSource,
@@ -354,7 +354,7 @@ export class ProjectWorkflowService {
           initialPaymentPercentage: projectData.initialPaymentPercentage as number | undefined,
           currentPhase: projectData.currentPhase,
           currentStage: projectData.currentStage,
-          coordinates: projectData.coordinates
+          ...(projectData.coordinates ? { latitude: (projectData.coordinates as any).latitude, longitude: (projectData.coordinates as any).longitude } : {})
         };
 
         const projectEntity = ProjectTransformer.fromCreateDTOToEntity(createRequest);
@@ -847,7 +847,7 @@ export class ProjectWorkflowService {
               progress: 0
             };
             
-            const createdStep = await this.taskRepository?.create(stepEntity as any);
+            const createdStep = await this.taskRepository?.save(stepEntity as any).then(() => stepEntity) as any;
             
             // Save tasks for this step
             for (const taskData of stepData.tasks) {
@@ -865,7 +865,7 @@ export class ProjectWorkflowService {
                 requiresEngineerApproval: taskData.requiresEngineerApproval
               };
               
-              await this.taskRepository?.create(taskEntity as any);
+              await this.taskRepository?.save(taskEntity as any);
             }
           }
         }

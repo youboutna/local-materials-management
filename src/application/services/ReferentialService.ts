@@ -77,29 +77,30 @@ export class ReferentialService {
         code: ref.code,
         name: this.getLabel(ref.name),
         description: this.getLabel(ref.description),
-        phases: ref.phases.map(phase => ({
-          id: phase.id,
+        phases: ref.phases.map((phase: any) => ({
+          id: phase.id || phase.code,
           label: this.getLabel(phase.label),
-          description: this.getLabel(phase.description),
+          description: this.getLabel(phase.description || ''),
           order: phase.order,
-          steps: phase.steps.map(step => ({
-            id: step.id,
+          steps: (phase.steps || []).map((step: any) => ({
+            id: step.id || step.code,
             label: this.getLabel(step.label),
-            description: this.getLabel(step.description),
+            description: this.getLabel(step.description || ''),
             order: step.order,
-            tasks: step.tasks.map(task => ({
-              id: task.id,
+            tasks: (step.tasks || []).map((task: any) => ({
+              id: task.id || task.code,
               label: this.getLabel(task.label),
-              description: this.getLabel(task.description),
-              order: task.order,
-              estimated_duration_days: task.estimated_duration_days
+              description: this.getLabel(task.description || ''),
+              order: task.order || 0,
+              estimated_duration_days: task.estimatedDurationDays || task.estimated_duration_days || 0
             }))
           }))
         })),
         requiresDonorApproval: ref.requiresDonorApproval || false,
         requiresMinistryApproval: ref.requiresMinistryApproval || false,
+        requiresEngineeringConsultant: (ref as any).requiresEngineeringConsultant || false,
         paymentWorkflow: ref.paymentWorkflow || 'simplified'
-      }));
+      })) as any;
     } catch (error) {
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get all referentials');
     }
@@ -120,29 +121,32 @@ export class ReferentialService {
         code: ref.code,
         name: this.getLabel(ref.name),
         description: this.getLabel(ref.description),
-        phases: ref.phases.map(phase => ({
-          id: phase.id,
+        phases: ref.phases.map((phase: any) => ({
+          code: phase.code || phase.id || '',
+          id: phase.id || phase.code,
           label: this.getLabel(phase.label),
-          description: this.getLabel(phase.description),
+          description: this.getLabel(phase.description || ''),
           order: phase.order,
-          steps: phase.steps.map(step => ({
-            id: step.id,
+          steps: (phase.steps || []).map((step: any) => ({
+            code: step.code || step.id || '',
+            id: step.id || step.code,
             label: this.getLabel(step.label),
-            description: this.getLabel(step.description),
+            description: this.getLabel(step.description || ''),
             order: step.order,
-            tasks: step.tasks.map(task => ({
-              id: task.id,
+            tasks: (step.tasks || []).map((task: any) => ({
+              code: task.code || task.id || '',
+              id: task.id || task.code,
               label: this.getLabel(task.label),
-              description: this.getLabel(task.description),
-              order: task.order,
-              estimated_duration_days: task.estimated_duration_days
+              description: this.getLabel(task.description || ''),
+              order: task.order || 0,
+              estimated_duration_days: task.estimatedDurationDays || task.estimated_duration_days || 0
             }))
           }))
         })),
         requiresDonorApproval: ref.requiresDonorApproval || false,
         requiresMinistryApproval: ref.requiresMinistryApproval || false,
         paymentWorkflow: ref.paymentWorkflow || 'simplified'
-      };
+      } as any;
     } catch (error) {
       throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to get referential: ${referentialCode}`);
     }
@@ -155,25 +159,28 @@ export class ReferentialService {
     try {
       const phases = getPhasesForReferential(referentialCode);
       
-      return phases.map(phase => ({
-        id: phase.id,
+      return phases.map((phase: any) => ({
+        code: phase.code || '',
+        id: phase.id || phase.code,
         label: this.getLabel(phase.label),
-        description: this.getLabel(phase.description),
+        description: this.getLabel(phase.description || ''),
         order: phase.order,
-        steps: phase.steps.map(step => ({
-          id: step.id,
+        steps: (phase.steps || []).map((step: any) => ({
+          code: step.code || '',
+          id: step.id || step.code,
           label: this.getLabel(step.label),
-          description: this.getLabel(step.description),
+          description: this.getLabel(step.description || ''),
           order: step.order,
-          tasks: step.tasks.map(task => ({
-            id: task.id,
+          tasks: (step.tasks || []).map((task: any) => ({
+            code: task.code || '',
+            id: task.id || task.code,
             label: this.getLabel(task.label),
-            description: this.getLabel(task.description),
-            order: task.order,
-            estimated_duration_days: task.estimated_duration_days
+            description: this.getLabel(task.description || ''),
+            order: task.order || 0,
+            estimated_duration_days: task.estimatedDurationDays || task.estimated_duration_days || 0
           }))
         }))
-      }));
+      })) as any;
     } catch (error) {
       throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to get phases for referential: ${referentialCode}`);
     }
@@ -239,28 +246,28 @@ export class ReferentialService {
     try {
       const phases = await this.getPhasesForReferential(referentialCode);
       
-      return phases.map((phase, phaseIndex) => ({
+      return phases.map((phase: any, phaseIndex: number) => ({
         project_id: projectId,
-        name: phase.label,
-        description: phase.description || '',
+        name: typeof phase.label === 'string' ? phase.label : (phase.label as any)?.fr || '',
+        description: typeof phase.description === 'string' ? phase.description : (phase.description as any)?.fr || '',
         phase_number: phase.order,
         start_date: null,
         end_date: null,
         status: 'not_started' as const,
         phases: {
           referential_code: referentialCode,
-          phase_id: phase.id,
-          steps: phase.steps.map(step => ({
-            step_id: step.id,
-            name: step.label,
-            description: step.description,
+          phase_id: phase.code || phase.id || '',
+          steps: (phase.steps || []).map((step: any) => ({
+            step_id: step.code || step.id || '',
+            name: typeof step.label === 'string' ? step.label : (step.label as any)?.fr || '',
+            description: typeof step.description === 'string' ? step.description : (step.description as any)?.fr || '',
             order_index: step.order,
-            tasks: step.tasks.map(task => ({
-              task_id: task.id,
-              name: task.label,
-              description: task.description,
-              order_index: task.order,
-              estimated_duration_days: task.estimated_duration_days
+            tasks: (step.tasks || []).map((task: any) => ({
+              task_id: task.code || task.id || '',
+              name: typeof task.label === 'string' ? task.label : (task.label as any)?.fr || '',
+              description: typeof task.description === 'string' ? task.description : (task.description as any)?.fr || '',
+              order_index: task.order || 0,
+              estimated_duration_days: task.estimatedDurationDays || task.estimated_duration_days || 0
             }))
           }))
         }

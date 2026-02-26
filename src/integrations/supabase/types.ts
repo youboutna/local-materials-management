@@ -511,6 +511,60 @@ export type Database = {
           },
         ]
       }
+      distance_matrix: {
+        Row: {
+          created_at: string
+          destination_code: string
+          destination_name_ar: string | null
+          destination_name_fr: string
+          distance_km: number
+          estimated_hours: number | null
+          id: string
+          is_active: boolean
+          notes: string | null
+          origin_code: string
+          origin_name_ar: string | null
+          origin_name_fr: string
+          piste_percentage: number | null
+          route_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          destination_code: string
+          destination_name_ar?: string | null
+          destination_name_fr: string
+          distance_km: number
+          estimated_hours?: number | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          origin_code: string
+          origin_name_ar?: string | null
+          origin_name_fr: string
+          piste_percentage?: number | null
+          route_type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          destination_code?: string
+          destination_name_ar?: string | null
+          destination_name_fr?: string
+          distance_km?: number
+          estimated_hours?: number | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          origin_code?: string
+          origin_name_ar?: string | null
+          origin_name_fr?: string
+          piste_percentage?: number | null
+          route_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       document_validation_logs: {
         Row: {
           created_at: string
@@ -2629,6 +2683,247 @@ export type Database = {
           },
         ]
       }
+      price_calculations: {
+        Row: {
+          calculated_at: string
+          calculated_by: string | null
+          created_at: string
+          destination_code: string
+          distance_km: number
+          fuel_type_code: string
+          id: string
+          index_km: number
+          label_prod_ar: string | null
+          label_prod_fr: string
+          label_vill_ar: string | null
+          label_vill_fr: string
+          origin_code: string
+          periode: string
+          piste_coefficient: number
+          previous_tarif_unit: number | null
+          price_variation_pct: number | null
+          prix_base: number
+          quantity_liters: number
+          rec_id: string
+          route_type: string
+          stock_movement_id: string | null
+          tarif_km: number
+          tarif_unit: number
+          total_value: number
+          updated_at: string
+          volatility_check: boolean | null
+        }
+        Insert: {
+          calculated_at?: string
+          calculated_by?: string | null
+          created_at?: string
+          destination_code: string
+          distance_km: number
+          fuel_type_code: string
+          id?: string
+          index_km: number
+          label_prod_ar?: string | null
+          label_prod_fr: string
+          label_vill_ar?: string | null
+          label_vill_fr: string
+          origin_code: string
+          periode: string
+          piste_coefficient?: number
+          previous_tarif_unit?: number | null
+          price_variation_pct?: number | null
+          prix_base: number
+          quantity_liters: number
+          rec_id: string
+          route_type: string
+          stock_movement_id?: string | null
+          tarif_km: number
+          tarif_unit: number
+          total_value: number
+          updated_at?: string
+          volatility_check?: boolean | null
+        }
+        Update: {
+          calculated_at?: string
+          calculated_by?: string | null
+          created_at?: string
+          destination_code?: string
+          distance_km?: number
+          fuel_type_code?: string
+          id?: string
+          index_km?: number
+          label_prod_ar?: string | null
+          label_prod_fr?: string
+          label_vill_ar?: string | null
+          label_vill_fr?: string
+          origin_code?: string
+          periode?: string
+          piste_coefficient?: number
+          previous_tarif_unit?: number | null
+          price_variation_pct?: number | null
+          prix_base?: number
+          quantity_liters?: number
+          rec_id?: string
+          route_type?: string
+          stock_movement_id?: string | null
+          tarif_km?: number
+          tarif_unit?: number
+          total_value?: number
+          updated_at?: string
+          volatility_check?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_calculations_stock_movement_id_fkey"
+            columns: ["stock_movement_id"]
+            isOneToOne: false
+            referencedRelation: "stock_movements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      price_references: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          effective_date: string
+          expiry_date: string | null
+          fuel_type_code: string
+          id: string
+          is_active: boolean
+          label_prod_ar: string | null
+          label_prod_fr: string
+          periode: string
+          piste_coefficient: number
+          prix_base: number
+          source_document: string | null
+          tarif_km: number
+          updated_at: string
+          volatility_cap: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          effective_date: string
+          expiry_date?: string | null
+          fuel_type_code: string
+          id?: string
+          is_active?: boolean
+          label_prod_ar?: string | null
+          label_prod_fr: string
+          periode: string
+          piste_coefficient?: number
+          prix_base: number
+          source_document?: string | null
+          tarif_km?: number
+          updated_at?: string
+          volatility_cap?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string
+          expiry_date?: string | null
+          fuel_type_code?: string
+          id?: string
+          is_active?: boolean
+          label_prod_ar?: string | null
+          label_prod_fr?: string
+          periode?: string
+          piste_coefficient?: number
+          prix_base?: number
+          source_document?: string | null
+          tarif_km?: number
+          updated_at?: string
+          volatility_cap?: number
+        }
+        Relationships: []
+      }
+      price_revaluation_logs: {
+        Row: {
+          adjustment_type: string
+          applied_at: string | null
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          created_by: string | null
+          depot_code: string
+          fuel_type_code: string
+          id: string
+          label_vill_ar: string | null
+          label_vill_fr: string | null
+          new_tarif_unit: number
+          new_value: number
+          notes: string | null
+          old_tarif_unit: number
+          old_value: number
+          periode: string
+          status: string
+          stock_id: string | null
+          stock_volume: number
+          updated_at: string
+          variance: number
+          variance_pct: number
+        }
+        Insert: {
+          adjustment_type?: string
+          applied_at?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          depot_code: string
+          fuel_type_code: string
+          id?: string
+          label_vill_ar?: string | null
+          label_vill_fr?: string | null
+          new_tarif_unit: number
+          new_value: number
+          notes?: string | null
+          old_tarif_unit: number
+          old_value: number
+          periode: string
+          status?: string
+          stock_id?: string | null
+          stock_volume: number
+          updated_at?: string
+          variance: number
+          variance_pct: number
+        }
+        Update: {
+          adjustment_type?: string
+          applied_at?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          depot_code?: string
+          fuel_type_code?: string
+          id?: string
+          label_vill_ar?: string | null
+          label_vill_fr?: string | null
+          new_tarif_unit?: number
+          new_value?: number
+          notes?: string | null
+          old_tarif_unit?: number
+          old_value?: number
+          periode?: string
+          status?: string
+          stock_id?: string | null
+          stock_volume?: number
+          updated_at?: string
+          variance?: number
+          variance_pct?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_revaluation_logs_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       processing_logs: {
         Row: {
           created_at: string
@@ -4253,45 +4548,75 @@ export type Database = {
         Row: {
           created_at: string
           destination: string | null
+          destination_code: string | null
           id: string
+          index_km: number | null
+          label_prod_ar: string | null
+          label_prod_fr: string | null
+          label_vill_ar: string | null
+          label_vill_fr: string | null
           movement_date: string
           movement_type: string
           notes: string | null
+          origin_code: string | null
+          prix_base: number | null
           quantity: number
+          rec_id: string | null
           recorded_by: string | null
           reference: string | null
           stock_id: string
           supplier: string | null
+          tarif_unit: number | null
           total_value: number | null
           unit_price: number | null
         }
         Insert: {
           created_at?: string
           destination?: string | null
+          destination_code?: string | null
           id?: string
+          index_km?: number | null
+          label_prod_ar?: string | null
+          label_prod_fr?: string | null
+          label_vill_ar?: string | null
+          label_vill_fr?: string | null
           movement_date?: string
           movement_type: string
           notes?: string | null
+          origin_code?: string | null
+          prix_base?: number | null
           quantity: number
+          rec_id?: string | null
           recorded_by?: string | null
           reference?: string | null
           stock_id: string
           supplier?: string | null
+          tarif_unit?: number | null
           total_value?: number | null
           unit_price?: number | null
         }
         Update: {
           created_at?: string
           destination?: string | null
+          destination_code?: string | null
           id?: string
+          index_km?: number | null
+          label_prod_ar?: string | null
+          label_prod_fr?: string | null
+          label_vill_ar?: string | null
+          label_vill_fr?: string | null
           movement_date?: string
           movement_type?: string
           notes?: string | null
+          origin_code?: string | null
+          prix_base?: number | null
           quantity?: number
+          rec_id?: string | null
           recorded_by?: string | null
           reference?: string | null
           stock_id?: string
           supplier?: string | null
+          tarif_unit?: number | null
           total_value?: number | null
           unit_price?: number | null
         }
@@ -4375,10 +4700,16 @@ export type Database = {
       stocks: {
         Row: {
           capacity: number
+          city_code: string | null
+          city_name_ar: string | null
+          city_name_fr: string | null
           created_at: string
           current_stock: number
+          current_tarif_unit: number | null
           depot: string
+          fuel_type_code: string | null
           id: string
+          last_revaluation_date: string | null
           last_update: string | null
           notes: string | null
           product: string
@@ -4389,10 +4720,16 @@ export type Database = {
         }
         Insert: {
           capacity: number
+          city_code?: string | null
+          city_name_ar?: string | null
+          city_name_fr?: string | null
           created_at?: string
           current_stock?: number
+          current_tarif_unit?: number | null
           depot: string
+          fuel_type_code?: string | null
           id?: string
+          last_revaluation_date?: string | null
           last_update?: string | null
           notes?: string | null
           product: string
@@ -4403,10 +4740,16 @@ export type Database = {
         }
         Update: {
           capacity?: number
+          city_code?: string | null
+          city_name_ar?: string | null
+          city_name_fr?: string | null
           created_at?: string
           current_stock?: number
+          current_tarif_unit?: number | null
           depot?: string
+          fuel_type_code?: string | null
           id?: string
+          last_revaluation_date?: string | null
           last_update?: string | null
           notes?: string | null
           product?: string
@@ -6448,6 +6791,7 @@ export type Database = {
           updated_at: string
         }[]
       }
+      generate_movement_rec_id: { Args: never; Returns: string }
       generate_request_number: { Args: never; Returns: string }
       generate_station_code: { Args: never; Returns: string }
       generate_submission_secret_code: { Args: never; Returns: string }

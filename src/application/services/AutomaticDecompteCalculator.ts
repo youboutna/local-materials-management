@@ -271,7 +271,7 @@ export class AutomaticDecompteCalculator {
             title: m.title,
             weight: m.weight || 0.1,
             amount: (phaseData.estimatedCost * (m.weight || 0.1)),
-            verified_at: m.completed_date || now,
+            verified_at: m.completedDate || now,
           })),
         progress_at_decompte: phaseData.progress,
         calculated_at: now,
@@ -387,9 +387,9 @@ export class AutomaticDecompteCalculator {
           id: m.id,
           title: m.title,
           weight: m.weight ?? 0.1,
-          completedDate: m.completed_date ?? new Date().toISOString(),
+          completedDate: m.completedDate ?? new Date().toISOString(),
           amount: (m.weight ?? 0.1) * 10000, // Approximate calculation
-          phaseId: m.phase_id ?? '',
+          phaseId: m.phaseId ?? '',
           phaseEstimatedCost: 0
         }));
     } catch {

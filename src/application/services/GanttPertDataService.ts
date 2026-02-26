@@ -95,7 +95,7 @@ export class GanttPertDataService {
 
       // Map milestones with validation
       const milestones: GanttMilestoneData[] = ganttMilestones.map(m => {
-        const targetDate = this.parseDate(m.target_date);
+        const targetDate = this.parseDate(m.targetDate);
         const status = this.mapMilestoneStatus(m.status);
 
         return {
@@ -104,7 +104,7 @@ export class GanttPertDataService {
           date: targetDate,
           status,
           isKey: m.priority === 'critical',
-          phaseId: m.phase_id,
+          phaseId: m.phaseId,
           type: m.type || 'milestone',
           priority: m.priority || 'normal'
         };

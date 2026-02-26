@@ -206,7 +206,7 @@ export class ProjectAnalyticsService {
 
       const inspections = await this.inspectionRepository.findByProjectId(projectDetail.id);
       const completedInspections = inspections.filter(i => 
-        i.status === 'completed' || (i.status as string) === 'completed'
+        (i.status as string) === 'completed'
       ).length;
       const totalInspections = inspections.length;
       

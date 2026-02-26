@@ -118,11 +118,11 @@ export class PaymentControlService {
       }
 
       // Check if payment can be blocked
-      if (this.isPaymentBlocked(payment)) {
+      if (this.isPaymentBlocked(payment as any)) {
         throw new PaymentControlServiceError('Payment is already blocked', 'PAYMENT_ALREADY_BLOCKED');
       }
 
-      if (payment.status === 'completed') {
+      if ((payment as any).status === 'completed') {
         throw new PaymentControlServiceError('Cannot block a completed payment', 'CANNOT_BLOCK_COMPLETED');
       }
 
@@ -141,7 +141,7 @@ export class PaymentControlService {
       };
 
       // Send notifications
-      const notifications = await this.sendBlockingNotifications(payment, reason, blockedBy);
+      const notifications = await this.sendBlockingNotifications(payment as any, reason, blockedBy);
       blockingInterface.notifications = notifications;
 
       return blockingInterface;
@@ -179,16 +179,22 @@ export class PaymentControlService {
       }
 
       // Update payment status to approved
-      const updatedPayment = await this.paymentRepository.update(paymentId, {
-        status: 'approved',
-        progressAtPayment: 100,
+      await this.paymentRepository.update(paymentId, {
+        status: 'approved' as any,
         paymentDate: new Date().toISOString()
-      } as Partial<PaymentDTO>);
+      } as any);
 
       // Send approval notifications
-      await this.sendApprovalNotifications(payment, approvedBy, notes);
+      await this.sendApprovalNotifications(payment as any, approvedBy, notes);
 
-      return updatedPayment;
+      // Refetch updated payment
+      const updatedPayment = await this.paymentRepository.findById(paymentId);
+      return {
+        id: paymentId,
+        projectId: (updatedPayment as any)?.projectId || '',
+        contractorId: (updatedPayment as any)?.contractorId || '',
+        ...(updatedPayment || {})
+      } as PaymentDTO;
     } catch (error) {
       if (error instanceof ValidationError || error instanceof PaymentControlServiceError) {
         throw error;

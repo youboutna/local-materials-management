@@ -14,7 +14,7 @@ import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { MilestoneDTO, MilestoneSummaryDTO, MilestoneType, MilestonePriority, MilestoneStatus } from '@/types/milestone-dto';
+import { MilestoneDTO, MilestoneSummaryDTO, MilestoneType, MilestonePriority, MilestoneStatus } from '@/dtos/entities/MilestoneDTO';
 import { PhaseDTO, PhaseSummaryDTO, PhaseStepDTO, PhaseTaskDTO } from '@/types/phase-dto';
 import { Milestone } from '@/domain/entities/Milestone';
 
@@ -243,19 +243,18 @@ export class CheckpointActionContextService {
       const maxAllowedWithTolerance = progressBasedAmount * 1.5;
 
       // Calculate milestone progress - milestones is now MilestoneDTO[]
-      const milestonesSummary = milestones.map((m: MilestoneDTO) => ({
+      const milestonesSummary: MilestoneSummaryDTO[] = milestones.map((m: MilestoneDTO) => ({
         id: m.id,
         title: m.title,
-        target_date: m.target_date || '',
-        actual_completion_date: m.completed_date || undefined,
+        targetDate: m.targetDate || '',
+        completedDate: m.completedDate || undefined,
         status: m.status,
         type: m.type || 'checkpoint',
         priority: m.priority || 'normal',
         weight: m.weight || 0.5,
-        is_critical: m.priority === 'critical',
-        float_days: 0,
-        completed_date: m.completed_date || undefined
-      } as MilestoneSummaryDTO));
+        isCritical: m.priority === 'critical',
+        floatDays: 0
+      }));
 
       const checkpoints = milestonesSummary.filter((m: MilestoneSummaryDTO) => m.type === 'checkpoint' || m.type === 'gate');
       const completedCheckpoints = checkpoints.filter((m: MilestoneSummaryDTO) => m.status === 'completed');
@@ -354,14 +353,14 @@ export class CheckpointActionContextService {
           linkedMilestone = {
             id: milestone.id,
             title: milestone.title,
-            target_date: milestone.targetDate || '',
-            completed_date: milestone.completionDate || undefined,
+            targetDate: milestone.targetDate || '',
+            completedDate: milestone.completionDate || undefined,
             status: milestone.status,
             type: 'checkpoint',
             priority: milestone.priority,
             weight: milestone.weight || 0.1,
-            is_critical: milestone.priority === 'critical',
-            float_days: 0
+            isCritical: milestone.priority === 'critical',
+            floatDays: 0
           };
         }
       }
@@ -439,14 +438,14 @@ export class CheckpointActionContextService {
           linkedMilestone = {
             id: milestone.id,
             title: milestone.title,
-            target_date: milestone.targetDate || '',
-            completed_date: milestone.completionDate || undefined,
+            targetDate: milestone.targetDate || '',
+            completedDate: milestone.completionDate || undefined,
             status: milestone.status,
             type: 'checkpoint',
             priority: milestone.priority,
             weight: milestone.weight || 0.1,
-            is_critical: milestone.priority === 'critical',
-            float_days: 0
+            isCritical: milestone.priority === 'critical',
+            floatDays: 0
           };
           
           isGateInspection = milestone.priority === 'critical';
@@ -551,18 +550,18 @@ export class CheckpointActionContextService {
         milestones = await this.fetchMilestones(projectId);
       }
 
-      return milestones
+      return (milestones as MilestoneDTO[])
         .map(m => ({
-          id: (m as { id: string }).id,
-          title: (m as { title: string }).title,
-          target_date: (m as { target_date: string }).target_date,
-          completed_date: (m as { actual_completion_date?: string }).actual_completion_date,
-          status: (m as { status: MilestoneStatus }).status as MilestoneStatus,
+          id: m.id,
+          title: m.title,
+          targetDate: m.targetDate || '',
+          completedDate: m.completedDate,
+          status: m.status as MilestoneStatus,
           type: 'checkpoint' as MilestoneType,
-          priority: (m as { priority: MilestonePriority }).priority as MilestonePriority,
+          priority: m.priority as MilestonePriority,
           weight: 0.1,
-          is_critical: (m as { priority: MilestonePriority }).priority === 'critical',
-          float_days: 0
+          isCritical: m.priority === 'critical',
+          floatDays: 0
         }));
     } catch (error) {
       console.error('CheckpointActionContextService.getActionableMilestones failed:', error);
@@ -645,37 +644,43 @@ export class CheckpointActionContextService {
       return [
         {
           id: 'milestone-1',
-          project_id: projectId,
+          projectId: projectId,
           title: 'Milestone 1',
           description: 'First project milestone',
-          target_date: '2024-03-31T00:00:00.000Z',
-          completed_date: '2024-03-30T00:00:00.000Z',
+          targetDate: '2024-03-31T00:00:00.000Z',
+          completedDate: '2024-03-30T00:00:00.000Z',
+          completedate: '2024-03-30T00:00:00.000Z',
           status: 'completed' as MilestoneStatus,
           type: 'gate' as MilestoneType,
           priority: 'high' as MilestonePriority,
           weight: 0.3,
           notes: '',
-          is_from_template: false,
+          isFromTemplate: false,
           dependencies: [],
-          created_at: '2024-01-01T00:00:00.000Z',
-          updated_at: '2024-03-30T00:00:00.000Z'
+          assignedTo: {} as any,
+          createdBy: {} as any,
+          createdAt: '2024-01-01T00:00:00.000Z',
+          updatedAt: '2024-03-30T00:00:00.000Z'
         },
         {
           id: 'milestone-2',
-          project_id: projectId,
+          projectId: projectId,
           title: 'Milestone 2',
           description: 'Second project milestone',
-          target_date: '2024-06-30T00:00:00.000Z',
-          completed_date: undefined,
+          targetDate: '2024-06-30T00:00:00.000Z',
+          completedDate: undefined,
+          completedate: '',
           status: 'pending' as MilestoneStatus,
           type: 'checkpoint' as MilestoneType,
           priority: 'critical' as MilestonePriority,
           weight: 0.4,
           notes: '',
-          is_from_template: false,
+          isFromTemplate: false,
           dependencies: ['milestone-1'],
-          created_at: '2024-01-01T00:00:00.000Z',
-          updated_at: '2024-01-01T00:00:00.000Z'
+          assignedTo: {} as any,
+          createdBy: {} as any,
+          createdAt: '2024-01-01T00:00:00.000Z',
+          updatedAt: '2024-01-01T00:00:00.000Z'
         }
       ];
     }
