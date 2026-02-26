@@ -301,7 +301,7 @@ export class MonitoringDashboardService {
       projects: [],
       status: [],
       departments: [],
-      severity: [] as string[]
+      severity: [] as ('high' | 'low' | 'medium' | 'critical')[]
     };
   }
 

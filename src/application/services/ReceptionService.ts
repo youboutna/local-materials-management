@@ -46,10 +46,8 @@ export class ReceptionService {
       // Create reception
       const reception = await this.receptionRepository.create({
         ...receptionData,
-        status: ReceptionStatus.PENDING,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
+        status: ReceptionStatus.PENDING
+      } as any);
 
       return reception;
     } catch (error) {
@@ -132,7 +130,7 @@ export class ReceptionService {
         scheduledDate: data.scheduledDate,
         receptionCommittee: data.committee,
         chairmanId: data.chairmanId,
-        chairmanName: `${chairman.firstName} ${chairman.lastName}`,
+        chairmanName: (chairman as any).fullName || (chairman as any).full_name || 'Unknown',
         participants: await this.createParticipants(data.committee),
         documents: uploadedDocuments,
         inspections: [],
@@ -214,7 +212,7 @@ export class ReceptionService {
         scheduledDate: data.scheduledDate,
         receptionCommittee: data.committee,
         chairmanId: data.chairmanId,
-        chairmanName: (await this.employeeRepository.findById(data.chairmanId))?.name || 'Unknown',
+        chairmanName: (await this.employeeRepository.findById(data.chairmanId) as any)?.fullName || 'Unknown',
         participants: await this.createParticipants(data.committee),
         documents: uploadedDocuments,
         inspections: [],
@@ -248,7 +246,7 @@ export class ReceptionService {
 
       // Create approval decision
       const decision: ReceptionDecisionDTO = {
-        id: `decision-${date.now()}`,
+        id: `decision-${Date.now()}`,
         type: data.conditions.length > 0 ? 'conditional_approval' : 'approval',
         description: 'Definitive reception approved',
         conditions: data.conditions.map(c => c.description),
@@ -375,7 +373,7 @@ export class ReceptionService {
     
     for (const file of files) {
       // In a real implementation, this would upload to storage service
-      const document: ReceptionDocumentDTO = {
+      const document = {
         id: `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         projectId,
         title: file.name,
@@ -389,8 +387,10 @@ export class ReceptionService {
         uploadedBy: 'system',
         isRequired: true,
         isSubmitted: true,
-        validationStatus: 'pending'
-      };
+        validationStatus: 'pending',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      } as ReceptionDocumentDTO;
       documents.push(document);
     }
 

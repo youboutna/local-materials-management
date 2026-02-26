@@ -46,7 +46,7 @@ export class MaterialService {
       this.supplierService = new SupplierService(supplierRepository);
     }
     if (workspaceRepository) {
-      this.workspaceService = new WorkspaceService(workspaceRepository);
+      this.workspaceService = new WorkspaceService();
     }
     // DocumentService uses RepositoryFactory internally
     this.documentService = {} as DocumentService; // Lazy init - will use RepositoryFactory

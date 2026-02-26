@@ -145,15 +145,17 @@ export class PhaseService {
       const phases: Phase[] = [];
       
       for (const phaseData of referentialData.phases) {
+        const labelStr = typeof phaseData.label === 'string' ? phaseData.label : (phaseData.label as any)?.fr || String(phaseData.label);
+        const descStr = typeof phaseData.description === 'string' ? phaseData.description : (phaseData.description as any)?.fr || '';
         const phase = PhaseTransformer.fromCreateDTO({
           id: crypto.randomUUID(),
           projectId,
-          name: phaseData.label,
-          description: phaseData.description || '',
+          name: labelStr,
+          description: descStr,
           status: PhaseStatus.PENDING,
           progress: 0,
           orderIndex: phaseData.order || 0,
-          steps: this.convertReferentialSteps(phaseData.steps || []),
+          steps: this.convertReferentialSteps((phaseData.steps || []) as any[]),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         });

@@ -958,41 +958,41 @@ export class MilestoneService {
       const completedWeight = completed.reduce((sum, m) => sum + (m.weight || 0.1), 0);
       
       // Get upcoming and overdue milestones
-      const upcomingMilestones = pending
+      const upcomingMilestones: MilestoneSummaryDTO[] = pending
         .filter(m => {
-          const targetDate = new Date(m.target_date);
+          const targetDate = new Date(m.targetDate);
           const daysUntil = differenceInDays(targetDate, today);
           return daysUntil >= 0 && daysUntil <= 14;
         })
         .map(m => ({
           id: m.id,
           title: m.title,
-          target_date: m.target_date,
+          targetDate: m.targetDate,
           status: m.status,
           type: m.type,
           priority: m.priority,
           weight: m.weight
         }));
 
-      const overdueMilestones = pending
+      const overdueMilestones: MilestoneSummaryDTO[] = pending
         .filter(m => {
-          const targetDate = new Date(m.target_date);
+          const targetDate = new Date(m.targetDate);
           return targetDate < today;
         })
         .map(m => ({
           id: m.id,
           title: m.title,
-          target_date: m.target_date,
+          targetDate: m.targetDate,
           status: m.status,
           type: m.type,
           priority: m.priority,
           weight: m.weight
         }));
 
-      const nextMilestone = pending.length > 0 ? {
+      const nextMilestone: MilestoneSummaryDTO | undefined = pending.length > 0 ? {
         id: pending[0].id,
         title: pending[0].title,
-        target_date: pending[0].target_date,
+        targetDate: pending[0].targetDate,
         status: pending[0].status,
         type: pending[0].type,
         priority: pending[0].priority,
@@ -1000,16 +1000,16 @@ export class MilestoneService {
       } : undefined;
 
       return {
-        total_milestones: milestoneDTOs.length,
-        completed_milestones: completed.length,
-        delayed_milestones: delayed.length,
-        weighted_progress: totalWeight > 0 ? (completedWeight / totalWeight) * 100 : 0,
-        schedule_performance_index: 1.0, // Simplified - would need proper calculation
-        critical_path_status: delayed.length > 0 ? 'at_risk' : 'on_track',
-        critical_path_float_days: 0,
+        totalMilestones: milestoneDTOs.length,
+        completedMilestones: completed.length,
+        delayedMilestones: delayed.length,
+        weightedProgress: totalWeight > 0 ? (completedWeight / totalWeight) * 100 : 0,
+        schedulePerformance_index: 1.0,
+        criticalPath_status: delayed.length > 0 ? 'at_risk' : 'on_track',
+        criticalPathFloat_days: 0,
         next_milestone: nextMilestone,
-        overdue_milestones: overdueMilestones,
-        upcoming_milestones: upcomingMilestones
+        overdueMilestones: overdueMilestones,
+        upcomingMilestones: upcomingMilestones
       };
     } catch (error) {
       console.error('MilestoneService.getMilestoneProgressWithMetrics failed:', error);
@@ -1031,17 +1031,17 @@ export class MilestoneService {
       const criticalMilestones = milestoneDTOs.filter(m => m.priority === 'critical');
       
       return {
-        project_id: projectId,
-        critical_path_milestones: criticalMilestones.map(m => m.id),
-        total_duration_days: criticalMilestones.length > 0 ? 
+        projectId: projectId,
+        criticalPathMilestones: criticalMilestones.map(m => m.id),
+        totalDurationDays: criticalMilestones.length > 0 ? 
           differenceInDays(
-            new Date(criticalMilestones[criticalMilestones.length - 1].target_date),
-            new Date(criticalMilestones[0].target_date)
+            new Date(criticalMilestones[criticalMilestones.length - 1].targetDate),
+            new Date(criticalMilestones[0].targetDate)
           ) : 0,
-        estimated_end_date: criticalMilestones.length > 0 
-          ? criticalMilestones[criticalMilestones.length - 1].target_date 
+        estimatedEndDate: criticalMilestones.length > 0 
+          ? criticalMilestones[criticalMilestones.length - 1].targetDate 
           : new Date().toISOString(),
-        near_critical_paths: []
+        nearCriticalPaths: []
       };
     } catch (error) {
       console.error('MilestoneService.getCriticalPath failed:', error);
@@ -1066,14 +1066,14 @@ export class MilestoneService {
       return {
         id: projectId,
         title: `Project ${projectId} Summary`,
-        target_date: nextPending?.target_date || new Date().toISOString(),
-        status: progress.delayed_milestones > 0 ? 'delayed' : 'pending',
+        targetDate: nextPending?.targetDate || new Date().toISOString(),
+        status: progress.delayedMilestones > 0 ? 'delayed' : 'pending',
         type: 'checkpoint',
         priority: 'normal',
         weight: 1,
-        is_critical: criticalPath.critical_path_milestones.length > 0,
-        float_days: 0,
-        percent_complete: progress.weighted_progress
+        isCritical: criticalPath.criticalPathMilestones.length > 0,
+        floatDays: 0,
+        percentComplete: progress.weightedProgress
       };
     } catch (error) {
       console.error('MilestoneService.getProjectSummary failed:', error);
@@ -1279,7 +1279,7 @@ export class MilestoneService {
         project_id: projectId,
         title: data.title,
         description: data.description,
-        target_date: data.target_date,
+        target_date: data.targetDate,
         status: 'pending' as const,
         progress: 0,
         priority: this.transformPriorityFromForm(data.priority),
@@ -1304,7 +1304,7 @@ export class MilestoneService {
       const updateData = {
         title: data.title,
         description: data.description,
-        target_date: data.target_date,
+        target_date: data.targetDate,
         priority: data.priority ? this.transformPriorityFromForm(data.priority) : undefined,
         deliverables: data.deliverables,
         dependencies: data.dependencies
@@ -1326,20 +1326,23 @@ export class MilestoneService {
   private transformToMilestoneDTO(milestone: Milestone): MilestoneDTO {
     return {
       id: milestone.id,
-      project_id: milestone.project_id,
+      projectId: milestone.project_id,
       title: milestone.title,
       description: milestone.description,
-      target_date: milestone.target_date,
-      completed_date: milestone.actual_completion_date,
+      targetDate: milestone.target_date,
+      completedDate: milestone.actual_completion_date,
+      completedate: milestone.actual_completion_date || '',
       status: milestone.status === 'cancelled' ? 'delayed' : milestone.status,
       type: 'checkpoint' as MilestoneType,
       priority: this.transformPriority(milestone.priority),
       weight: 1,
-      is_from_template: false,
+      isFromTemplate: false,
       dependencies: milestone.dependencies,
       deliverables: milestone.deliverables,
-      created_at: milestone.created_at,
-      updated_at: milestone.updated_at
+      assignedTo: {} as any,
+      createdBy: {} as any,
+      createdAt: milestone.created_at,
+      updatedAt: milestone.updated_at
     };
   }
 

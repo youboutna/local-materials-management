@@ -25,7 +25,7 @@ import {
   PROJECT_STATUS_LABELS,
   PROJECT_STATUS_CATEGORIES,
   PROJECT_STATUS_TRANSITIONS,
-  ProjectLocationData
+  ProjectLocationData as ProjectLocationDataType
 } from '@/dtos/entities/ProjectDTO';
 
 // Import ProjectTransformer for transformations
@@ -33,7 +33,7 @@ import { ProjectTransformer } from '@/dtos/transforms/ProjectTransformer';
 
 // Import location service and types
 import { LocationService } from './LocationService';
-import { ProjectLocationData } from '@/dtos/entities/ProjectDTO';
+import type { ProjectLocationData } from '@/dtos/entities/ProjectDTO';
 
 // Import geocoding for project location validation
 import { AutoFillLocationData, useLocationAutoFill } from '@/hooks/hexagonal/useLocationAutoFill';
@@ -163,18 +163,18 @@ export class ProjectService {
    */
   async update(id: string, request: UpdateProjectDTO): Promise<ProjectDTO | null> {
     try {
-      const projectData: Partial<Project> = {};
+      const projectData: Record<string, unknown> = {};
       
       // Basic fields with proper type handling
-      if (request.title !== undefined && request.title !== null) projectData.title = String(request.title);
-      if (request.description !== undefined && request.description !== null) projectData.description = String(request.description);
-      if (request.location !== undefined && request.location !== null) projectData.location = String(request.location);
-      if (request.status !== undefined && request.status !== null) projectData.status = request.status as ProjectStatus;
-      if (request.progress !== undefined && request.progress !== null) projectData.progress = Number(request.progress);
-      if (request.budget !== undefined && request.budget !== null) projectData.budget = Number(request.budget);
-      if (request.startDate !== undefined && request.startDate !== null) projectData.startDate = new Date(String(request.startDate));
-      if (request.endDate !== undefined && request.endDate !== null) projectData.endDate = new Date(String(request.endDate));
-      if (request.teamSize !== undefined && request.teamSize !== null) projectData.teamSize = Number(request.teamSize);
+      if (request.title !== undefined && request.title !== null) (projectData as any).title = String(request.title);
+      if (request.description !== undefined && request.description !== null) (projectData as any).description = String(request.description);
+      if (request.location !== undefined && request.location !== null) (projectData as any).location = String(request.location);
+      if (request.status !== undefined && request.status !== null) (projectData as any).status = request.status as ProjectStatus;
+      if (request.progress !== undefined && request.progress !== null) (projectData as any).progress = Number(request.progress);
+      if (request.budget !== undefined && request.budget !== null) (projectData as any).budget = Number(request.budget);
+      if (request.startDate !== undefined && request.startDate !== null) (projectData as any).startDate = new Date(String(request.startDate));
+      if (request.endDate !== undefined && request.endDate !== null) (projectData as any).endDate = new Date(String(request.endDate));
+      if (request.teamSize !== undefined && request.teamSize !== null) (projectData as any).teamSize = Number(request.teamSize);
       
       // Handle coordinates (create new ProjectCoordinates object for the entity)
       if (request.coordinates !== undefined && request.coordinates !== null) {
@@ -294,7 +294,8 @@ export class ProjectService {
 
       // Update project with new status
       const updateData: UpdateProjectDTO = {
-        status: newStatus
+        id,
+        status: newStatus as any
       };
 
       const updatedProject = await this.update(id, updateData);
@@ -625,7 +626,7 @@ export class ProjectService {
       if (locationData && this.locationService) {
         // We need to pass the location hook from React context
         // This method should be called from a React component that can provide the hook
-        enrichedLocation = await this.locationService.validateAndEnrichProjectLocation(locationData);
+        enrichedLocation = await (this.locationService as any).validateAndEnrichProjectLocation(locationData);
       }
 
       // Create project data for repository - let repository handle mapping
@@ -688,7 +689,7 @@ export class ProjectService {
       }
 
       // Validate and enrich location data
-      const enrichedLocation = await this.locationService.validateAndEnrichProjectLocation(locationData);
+      const enrichedLocation = await (this.locationService as any).validateAndEnrichProjectLocation(locationData);
 
       // Update project with location data
       const updateData: UpdateProjectDTO = {
@@ -713,7 +714,7 @@ export class ProjectService {
       return result;
       
     } catch (error) {
-      if (error instanceof AppError) throw error;
+      if (error instanceof ProjectServiceError) throw error;
       throw new ProjectServiceError(
         `Failed to update project location: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'UPDATE_LOCATION_ERROR'
@@ -725,7 +726,7 @@ export class ProjectService {
    * Update project from form data
    */
   async updateFromForm(id: string, formData: Record<string, unknown>): Promise<ProjectDTO | null> {
-    const request = ProjectTransformer.formToUpdateRequest(formData);
+    const request = ProjectTransformer.formToCreateRequest(formData) as UpdateProjectDTO;
     return this.update(id, request);
   }
 
@@ -775,7 +776,7 @@ export class ProjectService {
       };
 
     } catch (error) {
-      if (error instanceof AppError) throw error;
+      if (error instanceof ProjectServiceError) throw error;
       throw new ProjectServiceError(`Project location validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`, 'LOCATION_VALIDATION_ERROR');
     }
   }

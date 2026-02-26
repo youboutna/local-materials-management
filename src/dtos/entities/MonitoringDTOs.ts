@@ -40,7 +40,7 @@ export interface MonitoringFiltersDTO {
   projects: string[];
   status: ProjectStatus[];
   departments: string[];
-  severity: 'low' | 'medium' | 'high' | 'critical'[];
+  severity: ('low' | 'medium' | 'high' | 'critical')[];
 }
 
 // =================== PAYMENT CONTROL ===================
