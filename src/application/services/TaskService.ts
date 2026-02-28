@@ -267,7 +267,7 @@ export class TaskService {
 
   async getTasksByStatus(status: string): Promise<TaskDTO[]> {
     try {
-      const tasks = await this.taskRepository.findByStatus(status as TaskStatus);
+      const tasks = await this.taskRepository.findByStatus(status as any);
       return tasks.map(task => this.toDTO(task));
     } catch (error) {
       throw new TaskServiceError(

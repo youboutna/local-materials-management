@@ -107,8 +107,9 @@ export class ReportingService {
 
       // Create proper ReportData object
       const reportData: ReportData = {
+        id: crypto.randomUUID?.() || Date.now().toString(),
         title: `Project Report for ${request.project.title}`,
-        content: `Comprehensive report generated on ${new Date().toISOString()}`,
+        description: `Comprehensive report generated on ${new Date().toISOString()}`,
         generatedAt: new Date().toISOString(),
         generatedBy: request.project.createdBy || 'system',
         projectId: request.project.id,
@@ -154,7 +155,7 @@ export class ReportingService {
         totalPhases: phases.length,
         completedPhases: phases.filter(p => p.status === 'completed').length,
         overallProgress: phases.reduce((sum, phase) => sum + (phase.progress || 0), 0) / phases.length,
-        budgetUtilization: phases.reduce((sum, phase) => sum + (phase.actual_cost || 0), 0) / (phases.reduce((sum, phase) => sum + (phase.budget || 0), 0) || 1),
+        budgetUtilization: phases.reduce((sum, phase) => sum + (phase.actualCost || 0), 0) / (phases.reduce((sum, phase) => sum + (phase.budget || 0), 0) || 1),
         healthScore: null // To be implemented
       } as unknown as ProjectAnalyticsDTO;
     } catch (error) {

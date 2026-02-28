@@ -193,7 +193,7 @@ export class SupplierPortalService {
       
       // Update task status
       await taskRepository.update(taskId, {
-        status: 'completed'
+        status: 'completed' as any
       });
       
       // Create notification for project manager

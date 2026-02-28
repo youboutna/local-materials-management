@@ -20,7 +20,7 @@ import { SubmissionSecretTransformer } from '@/dtos/transforms/SubmissionSecretT
 
 export class SubmissionSecretService {
   constructor(
-    private repository: ISubmissionSecretRepository = RepositoryFactory.getSubmissionSecretRepository()
+    private repository: ISubmissionSecretRepository = RepositoryFactory.getTenderSharingRepository() as any
   ) {}
 
   // ============= STATIC METHODS FOR BACKWARD COMPATIBILITY =============

@@ -834,11 +834,13 @@ export class TenderEstimateService {
 
         subtotal: 0,
 
-        tax_amount: 0,
+        discountAmount: 0,
 
-        total_with_tax: 0,
+        taxAmount: 0,
 
-        final_total: 0
+        totalWithTax: 0,
+
+        finalTotal: 0
 
       };
 
