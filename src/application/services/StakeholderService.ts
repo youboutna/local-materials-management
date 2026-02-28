@@ -475,11 +475,11 @@ function isValidStakeholderType(type: string): type is StakeholderType {
   return Object.values(StakeholderType).includes(type as StakeholderType);
 }
 
-function isValidStakeholderRole<T extends StakeholderType>(
-  type: T | undefined,
+function isValidStakeholderRole(
+  type: StakeholderType | undefined,
   role: string
 ): boolean {
   if (!type) return false;
-  const validRoles = StakeholderRoles[type] as readonly string[];
+  const validRoles = StakeholderRoles[type] as readonly string[] | undefined;
   return validRoles?.includes(role) ?? false;
 }

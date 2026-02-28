@@ -98,8 +98,8 @@ export class UserService {
         throw new AppError(ErrorCode.NOT_FOUND, 'User not found');
       }
 
-      const userUpdates: Partial<User> = updates;
-      userUpdates.updatedAt = new Date();
+      const userUpdates: Partial<User> = { ...updates };
+      (userUpdates as any).updatedAt = new Date();
 
       const updatedUser = await this.userRepository.update(id, userUpdates);
 

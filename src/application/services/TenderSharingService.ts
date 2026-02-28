@@ -41,7 +41,7 @@ export class TenderSharingService {
     secretCode: string,
     supplierEmail: string
   ): Promise<ValidateSecretResponseDTO> {
-    return await this.getRepository().validateSecret(secretCode, supplierEmail);
+    return await this.getRepository().validateSecret(secretCode);
   }
 
   /**
