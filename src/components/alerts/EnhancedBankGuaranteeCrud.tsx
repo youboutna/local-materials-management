@@ -1,5 +1,6 @@
 /**
  * EnhancedBankGuaranteeCrud - MIGRATED TO HEXAGONAL ARCHITECTURE
+ * Uses camelCase formData aligned with BankGuaranteeFormData from hooks
  */
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,6 +34,7 @@ const EnhancedBankGuaranteeCrud = () => {
   const [isViewMode, setIsViewMode] = useState(false);
   const [selectedGuarantee, setSelectedGuarantee] = useState<BankGuaranteeRow | null>(null);
   const [uploadedDocuments, setUploadedDocuments] = useState<any[]>([]);
+  const [contractorName, setContractorName] = useState('');
 
   const [formData, setFormData] = useState<BankGuaranteeFormData>({
     projectId: '',
@@ -43,9 +45,6 @@ const EnhancedBankGuaranteeCrud = () => {
     issueDate: '',
     expiryDate: '',
     status: 'active',
-    contractor_name: '',
-    supporting_documents: [],
-    notes: ''
   });
   
   const { t } = useLanguage();
@@ -82,10 +81,8 @@ const EnhancedBankGuaranteeCrud = () => {
       issueDate: '',
       expiryDate: '',
       status: 'active',
-      contractor_name: '',
-      supporting_documents: [],
-      notes: ''
     });
+    setContractorName('');
     setUploadedDocuments([]);
   };
 
@@ -106,10 +103,9 @@ const EnhancedBankGuaranteeCrud = () => {
       issueDate: guarantee.issueDate || '',
       expiryDate: guarantee.expiryDate || '',
       status: guarantee.status,
-      contractor_name: guarantee.contractor_name || '',
-      supporting_documents: guarantee.supportingDocuments || [],
-      notes: guarantee.notes || ''
+      notes: guarantee.notes || '',
     });
+    setContractorName('');
     setSelectedGuarantee(guarantee);
     setIsEditing(true);
     setIsViewMode(false);
@@ -126,10 +122,9 @@ const EnhancedBankGuaranteeCrud = () => {
       issueDate: guarantee.issueDate || '',
       expiryDate: guarantee.expiryDate || '',
       status: guarantee.status,
-      contractor_name: guarantee.contractor_name || '',
-      supporting_documents: guarantee.supportingDocuments || [],
-      notes: guarantee.notes || ''
+      notes: guarantee.notes || '',
     });
+    setContractorName('');
     setSelectedGuarantee(guarantee);
     setIsViewMode(true);
     setIsFormOpen(true);
@@ -191,8 +186,7 @@ const EnhancedBankGuaranteeCrud = () => {
   const isExpiringSoon = (expiryDate: string) => {
     const today = new Date();
     const expiry = new Date(expiryDate);
-    const diffTime = expiry.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     return diffDays <= 30 && diffDays >= 0;
   };
 
@@ -253,38 +247,38 @@ const EnhancedBankGuaranteeCrud = () => {
                   <Label>Contracteur *</Label>
                   <SupplierSelector
                     value={{
-                      id: formData.contractor_id,
-                      name: formData.contractor_name,
+                      id: formData.contractorId,
+                      name: contractorName,
                       contact: '',
                       leadTime: 0
                     }}
                     onChange={(supplier) => {
                       setFormData(prev => ({
                         ...prev,
-                        contractor_id: supplier.id || '',
-                        contractor_name: supplier.name
+                        contractorId: supplier.id || '',
                       }));
+                      setContractorName(supplier.name);
                     }}
                     disabled={isViewMode}
                   />
                 </div>
                 
                 <div>
-                  <Label htmlFor="bank_name">Banque *</Label>
+                  <Label htmlFor="bankName">Banque *</Label>
                   <Input
-                    id="bank_name"
-                    value={formData.bank_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, bank_name: e.target.value }))}
+                    id="bankName"
+                    value={formData.bankName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, bankName: e.target.value }))}
                     disabled={isViewMode}
                     required
                   />
                 </div>
                 
                 <div>
-                  <Label htmlFor="guarantee_type">Type de Garantie *</Label>
+                  <Label htmlFor="guaranteeType">Type de Garantie *</Label>
                   <Select 
-                    value={formData.guarantee_type} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, guarantee_type: value }))}
+                    value={formData.guaranteeType} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, guaranteeType: value }))}
                     disabled={isViewMode}
                   >
                     <SelectTrigger>
@@ -301,12 +295,12 @@ const EnhancedBankGuaranteeCrud = () => {
                 </div>
                 
                 <div>
-                  <Label htmlFor="guarantee_amount">Montant (MRU) *</Label>
+                  <Label htmlFor="guaranteeAmount">Montant (MRU) *</Label>
                   <Input
-                    id="guarantee_amount"
+                    id="guaranteeAmount"
                     type="number"
-                    value={formData.guarantee_amount}
-                    onChange={(e) => setFormData(prev => ({ ...prev, guarantee_amount: parseFloat(e.target.value) || 0 }))}
+                    value={formData.guaranteeAmount}
+                    onChange={(e) => setFormData(prev => ({ ...prev, guaranteeAmount: parseFloat(e.target.value) || 0 }))}
                     disabled={isViewMode}
                     required
                   />
@@ -333,24 +327,24 @@ const EnhancedBankGuaranteeCrud = () => {
                 </div>
                 
                 <div>
-                  <Label htmlFor="issue_date">Date d'Émission *</Label>
+                  <Label htmlFor="issueDate">Date d'Émission *</Label>
                   <Input
-                    id="issue_date"
+                    id="issueDate"
                     type="date"
-                    value={formData.issue_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, issue_date: e.target.value }))}
+                    value={formData.issueDate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, issueDate: e.target.value }))}
                     disabled={isViewMode}
                     required
                   />
                 </div>
                 
                 <div>
-                  <Label htmlFor="expiry_date">Date d'Expiration *</Label>
+                  <Label htmlFor="expiryDate">Date d'Expiration *</Label>
                   <Input
-                    id="expiry_date"
+                    id="expiryDate"
                     type="date"
-                    value={formData.expiry_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, expiry_date: e.target.value }))}
+                    value={formData.expiryDate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, expiryDate: e.target.value }))}
                     disabled={isViewMode}
                     required
                   />
@@ -447,7 +441,7 @@ const EnhancedBankGuaranteeCrud = () => {
                       size="sm" 
                       variant="ghost" 
                       onClick={() => handleDelete(guarantee.id)}
-                      className="text-red-600 hover:text-red-700"
+                      className="text-destructive hover:text-destructive"
                       disabled={deleteMutation.isPending}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -459,7 +453,7 @@ const EnhancedBankGuaranteeCrud = () => {
             {guarantees.length === 0 && (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                  Aucune garantie bancaire trouvée
+                  Aucune garantie bancaire enregistrée
                 </TableCell>
               </TableRow>
             )}

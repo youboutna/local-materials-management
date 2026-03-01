@@ -73,21 +73,24 @@ export class EnhancedReportingService {
       // Calculate timeline performance
       const timelinePerformance = ProjectCalculationService.calculateTimelinePerformance(
         project, 
-        phasesData,
-        realCosts
+        phasesData
       );
 
       // Calculate quality score from inspections
-      const qualityScore = EnhancedReportingService.calculateQualityFromInspections(inspectionsData);
+      const inspectionQualityScore = EnhancedReportingService.calculateQualityFromInspections(inspectionsData);
 
       // Calculate overall health score
       const budgetUtilization = project.budget > 0 ? (realCosts.totalSpent / project.budget) * 100 : 0;
-      const healthScore = NewService.calculateProjectHealthScore( // Update the method call to use the new service
-        project.progress,
-        budgetUtilization,
-        timelinePerformance.completionRate || 0,
-        qualityScore
-      );
+      const progressScore = project.progress || 0;
+      const budgetScore = Math.max(0, 100 - Math.abs(budgetUtilization - progressScore));
+      const timelineScore = timelinePerformance.completionRate || 0;
+      const healthScore = {
+        overallScore: Math.round((progressScore * 0.3 + budgetScore * 0.3 + timelineScore * 0.2 + inspectionQualityScore * 0.2)),
+        progressScore,
+        budgetScore,
+        timelineScore,
+        qualityScore: inspectionQualityScore
+      };
 
       // Generate report data
       const reportData: ReportData = {
@@ -256,13 +259,13 @@ export class EnhancedReportingService {
       
       const [phasesResponse, paymentsResponse, inspectionsResponse] = await Promise.all([
         phaseRepository.getPhasesByProjectId(project.id),
-        paymentRepository.getPaymentsByProjectId(project.id),
-        inspectionRepository.getInspectionsByProjectId(project.id)
+        paymentRepository.findByProjectId(project.id),
+        inspectionRepository.findByProjectId(project.id)
       ]);
 
-      const phasesData = phasesResponse.data || [];
-      const paymentsData = paymentsResponse.data || [];
-      const inspectionsData = inspectionsResponse.data || [];
+      const phasesData = phasesResponse || [];
+      const paymentsData = paymentsResponse || [];
+      const inspectionsData = inspectionsResponse || [];
 
       if (phasesData.length === 0) {
         return this.getDefaultAnalytics(project);
@@ -305,21 +308,21 @@ export class EnhancedReportingService {
       const projectRepository = RepositoryFactory.getProjectRepository();
       
       const [payments, bankGuarantees, insurance, project, expenses] = await Promise.all([
-        paymentRepository.getPaymentsByProjectId(projectId),
-        bankGuaranteeRepository.getBankGuaranteesByProjectId(projectId),
-        insuranceRepository.getInsuranceCertificatesByProjectId(projectId),
-        projectRepository.getProjectById(projectId),
+        paymentRepository.findByProjectId(projectId),
+        bankGuaranteeRepository.findByProjectId(projectId),
+        insuranceRepository.getByProjectId(projectId),
+        projectRepository.findById(projectId),
         // TODO: Create MissionExpenseRepository for mission_expenses
         { data: [], error: null } // Temporary placeholder for expenses
       ]);
 
-      const paymentsData = payments.data || [];
+      const paymentsData = payments || [];
       const expensesData = expenses.data || [];
-      const projectData = project.data;
+      const projectData = project;
 
       const totalBudget = projectData?.budget || 0;
-      const totalPaid = paymentsData.reduce((sum, p) => sum + (p.amount || 0), 0);
-      const totalExpenses = expensesData.reduce((sum, e) => sum + (e.amount || 0), 0);
+      const totalPaid = paymentsData.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+      const totalExpenses = expensesData.reduce((sum: number, e: any) => sum + (e.amount || 0), 0);
       const spentAmount = totalPaid + totalExpenses;
       const remainingBudget = totalBudget - spentAmount;
       const costOverrun = Math.max(0, spentAmount - totalBudget);
@@ -329,24 +332,24 @@ export class EnhancedReportingService {
         spentAmount,
         remainingBudget,
         costOverrun,
-        paymentMilestones: paymentsData.map(p => ({
+        paymentMilestones: paymentsData.map((p: any) => ({
           id: p.id,
           amount: p.amount,
-          dueDate: new Date(p.payment_date),
-          paidDate: new Date(p.payment_date),
+          dueDate: new Date(p.payment_date || p.paymentDate || new Date()),
+          paidDate: new Date(p.payment_date || p.paymentDate || new Date()),
           status: 'paid' as const,
-          description: p.transaction_id || `Payment ${p.id.slice(0, 8)}`
+          description: p.transaction_id || p.transactionId || `Payment ${p.id.slice(0, 8)}`
         })),
-        bankGuarantees: bankGuarantees.data?.map(bg => ({
+        bankGuarantees: (bankGuarantees || []).map((bg: any) => ({
           id: bg.id,
-          type: bg.guarantee_type,
-          amount: bg.guarantee_amount,
-          issueDate: new Date(bg.issue_date),
-          expiryDate: new Date(bg.expiry_date),
-          bankName: bg.bank_name,
+          type: bg.guarantee_type || bg.guaranteeType,
+          amount: bg.guarantee_amount || bg.guaranteeAmount,
+          issueDate: new Date(bg.issue_date || bg.issueDate),
+          expiryDate: new Date(bg.expiry_date || bg.expiryDate),
+          bankName: bg.bank_name || bg.bankName,
           status: bg.status as 'active' | 'expired' | 'claimed'
-        })) || [],
-        insuranceCoverage: insurance.data?.map(ins => ({
+        })),
+        insuranceCoverage: (insurance || []).map((ins: any) => ({
           id: ins.id,
           type: ins.coverage_type,
           coverage: ins.coverage_amount,
@@ -354,7 +357,7 @@ export class EnhancedReportingService {
           validFrom: new Date(ins.valid_from),
           validUntil: new Date(ins.valid_until),
           status: ins.status as 'active' | 'expired'
-        })) || []
+        }))
       };
     } catch (error) {
       console.error('Error calculating financial metrics:', error);

@@ -46,33 +46,24 @@ const TenderDocumentSelector: React.FC<TenderDocumentSelectorProps> = ({
     queryFn: async (): Promise<Document[]> => {
       try {
         // Get tender details to find associated project
-        const tender = await tenderService.getTenderById(tenderId);
+        const tender = await tenderService.getTenderById({ id: tenderId });
         
-        // Get documents directly associated with the tender
-        const tenderDocs = await documentService.getDocumentsByTender(tenderId);
-        
-        // Get documents from the tender's associated project if available
+        // Get documents by phase if project available
         let projectDocs: DocumentDTO[] = [];
         if (tender?.projectId) {
-          projectDocs = await documentService.getDocumentsByProject(tender.projectId);
+          projectDocs = await documentService.getDocumentsByPhase(tender.projectId);
         }
 
-        // Combine and deduplicate documents
-        const allDocs = [...tenderDocs, ...projectDocs];
-        const uniqueDocs = allDocs.filter((doc, index, self) => 
-          index === self.findIndex(d => d.id === doc.id)
-        );
-
         // Map to Document interface
-        return uniqueDocs.map((doc: DocumentDTO) => ({
+        return projectDocs.map((doc: DocumentDTO) => ({
           id: doc.id,
           title: doc.title,
           document_type: doc.documentType,
-          file_name: doc.fileName,
-          created_at: doc.createdAt,
-          uploaded_by: doc.uploadedBy,
-          file_size: doc.fileSize,
-        }));
+          file_name: doc.fileName ?? undefined,
+          created_at: doc.createdAt ?? new Date().toISOString(),
+          uploaded_by: doc.uploadedBy ?? undefined,
+          file_size: doc.fileSize ?? undefined,
+        } as Document));
       } catch (error) {
         console.error('Error fetching tender documents:', error);
         return [];

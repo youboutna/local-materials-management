@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
+import { ProjectDTO, ProjectStatus } from "@/dtos/entities/ProjectDTO";
 import { MaterialDTO } from "@/dtos/entities/MaterialDTO";
 import { WorkspaceDTO } from "@/dtos/entities/WorkspaceDTO";
 import { MAURITANIA_REGIONS, GeographicUnit } from "@/utils/mauritania";
@@ -27,8 +27,8 @@ const RegionalDashboard = ({ projects, materials = [], workspaces = [] }: Region
 
       // Filter materials for this region
       const regionMaterials = materials.filter(material => 
-        material.location?.toLowerCase().includes(region.name.toLowerCase()) ||
-        material.location?.toLowerCase().includes(region.nameAr.toLowerCase())
+        material.originLocation?.toLowerCase().includes(region.name.toLowerCase()) ||
+        material.originLocation?.toLowerCase().includes(region.nameAr.toLowerCase())
       );
 
       // Filter workspaces for this region
@@ -43,8 +43,8 @@ const RegionalDashboard = ({ projects, materials = [], workspaces = [] }: Region
         ? regionProjects.reduce((sum, project) => sum + project.progress, 0) / regionProjects.length
         : 0;
       
-      const activeProjects = regionProjects.filter(p => p.status === 'enCours' || p.status === 'EN_ATTENTE').length;
-      const completedProjects = regionProjects.filter(p => p.status === 'termine' || p.status === 'TERMINE').length;
+      const activeProjects = regionProjects.filter(p => p.status === ProjectStatus.EN_COURS || p.status === ProjectStatus.EN_ATTENTE).length;
+      const completedProjects = regionProjects.filter(p => p.status === ProjectStatus.TERMINE || p.status === ProjectStatus.COMPLETED).length;
 
       return {
         region,

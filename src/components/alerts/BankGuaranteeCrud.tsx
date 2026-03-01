@@ -3,63 +3,44 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, Eye, AlertTriangle, Calendar } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Plus, Edit, Trash2, Eye, AlertTriangle } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useBankGuaranteesHex } from '@/hooks/hexagonal/useBankGuaranteesHex';
+import {
+  useBankGuaranteesList,
+  useCreateBankGuarantee,
+  useUpdateBankGuarantee,
+  useDeleteBankGuarantee,
+  BankGuaranteeFormData,
+  BankGuaranteeRow
+} from '@/hooks/hexagonal/useBankGuaranteesHex';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 
-interface BankGuarantee {
-  id: string;
-  project_id: string;
-  contractor_id: string;
-  bank_name: string;
-  guarantee_amount: number;
-  guarantee_type: string;
-  issue_date: string;
-  expiry_date: string;
-  status: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-interface BankGuaranteeFormData {
-  project_id: string;
-  contractor_id: string;
-  bank_name: string;
-  guarantee_amount: number;
-  guarantee_type: string;
-  issue_date: string;
-  expiry_date: string;
-  status: string;
-  phase_id: string;
-  notes: string;
-}
-
 const BankGuaranteeCrud = () => {
   const { t } = useLanguage();
-  const { createGuarantee, updateGuarantee, deleteGuarantee } = useBankGuaranteesHex();
-  const [guarantees, setGuarantees] = useState<BankGuarantee[]>([]);
+  const { data: guarantees = [], isLoading } = useBankGuaranteesList();
+  const createMutation = useCreateBankGuarantee();
+  const updateMutation = useUpdateBankGuarantee();
+  const deleteMutation = useDeleteBankGuarantee();
+
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [isViewMode, setIsViewMode] = useState(false);
-  const [selectedGuarantee, setSelectedGuarantee] = useState<BankGuarantee | null>(null);
+  const [selectedGuarantee, setSelectedGuarantee] = useState<BankGuaranteeRow | null>(null);
   const [formData, setFormData] = useState<BankGuaranteeFormData>({
-    project_id: '',
-    contractor_id: '',
-    bank_name: '',
-    guarantee_type: '',
-    guarantee_amount: 0,
-    issue_date: '',
-    expiry_date: '',
-    status: '',
-    phase_id: '',
-    notes: ''
+    projectId: '',
+    contractorId: '',
+    bankName: '',
+    guaranteeType: 'performance',
+    guaranteeAmount: 0,
+    issueDate: '',
+    expiryDate: '',
+    status: 'active',
   });
 
   const guaranteeTypes = [
@@ -78,14 +59,14 @@ const BankGuaranteeCrud = () => {
 
   const resetForm = () => {
     setFormData({
-      project_id: '',
-      contractor_id: '',
-      bank_name: '',
-      guarantee_amount: 0,
-      guarantee_type: 'performance',
-      issue_date: '',
-      expiry_date: '',
-      status: 'active'
+      projectId: '',
+      contractorId: '',
+      bankName: '',
+      guaranteeAmount: 0,
+      guaranteeType: 'performance',
+      issueDate: '',
+      expiryDate: '',
+      status: 'active',
     });
   };
 
@@ -96,16 +77,16 @@ const BankGuaranteeCrud = () => {
     setIsFormOpen(true);
   };
 
-  const openEditForm = (guarantee: BankGuarantee) => {
+  const openEditForm = (guarantee: BankGuaranteeRow) => {
     setFormData({
-      project_id: guarantee.project_id,
-      contractor_id: guarantee.contractor_id,
-      bank_name: guarantee.bank_name,
-      guarantee_amount: guarantee.guarantee_amount,
-      guarantee_type: guarantee.guarantee_type,
-      issue_date: guarantee.issue_date,
-      expiry_date: guarantee.expiry_date,
-      status: guarantee.status
+      projectId: guarantee.projectId || '',
+      contractorId: guarantee.contractorId || '',
+      bankName: guarantee.bankName || '',
+      guaranteeAmount: guarantee.guaranteeAmount || 0,
+      guaranteeType: guarantee.guaranteeType || 'performance',
+      issueDate: guarantee.issueDate || '',
+      expiryDate: guarantee.expiryDate || '',
+      status: guarantee.status || 'active',
     });
     setSelectedGuarantee(guarantee);
     setIsEditing(true);
@@ -113,16 +94,16 @@ const BankGuaranteeCrud = () => {
     setIsFormOpen(true);
   };
 
-  const openViewForm = (guarantee: BankGuarantee) => {
+  const openViewForm = (guarantee: BankGuaranteeRow) => {
     setFormData({
-      project_id: guarantee.project_id,
-      contractor_id: guarantee.contractor_id,
-      bank_name: guarantee.bank_name,
-      guarantee_amount: guarantee.guarantee_amount,
-      guarantee_type: guarantee.guarantee_type,
-      issue_date: guarantee.issue_date,
-      expiry_date: guarantee.expiry_date,
-      status: guarantee.status
+      projectId: guarantee.projectId || '',
+      contractorId: guarantee.contractorId || '',
+      bankName: guarantee.bankName || '',
+      guaranteeAmount: guarantee.guaranteeAmount || 0,
+      guaranteeType: guarantee.guaranteeType || 'performance',
+      issueDate: guarantee.issueDate || '',
+      expiryDate: guarantee.expiryDate || '',
+      status: guarantee.status || 'active',
     });
     setSelectedGuarantee(guarantee);
     setIsViewMode(true);
@@ -132,7 +113,7 @@ const BankGuaranteeCrud = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.project_id || !formData.contractor_id || !formData.bank_name) {
+    if (!formData.projectId || !formData.contractorId || !formData.bankName) {
       toast({
         title: t('common.error'),
         description: "Veuillez remplir tous les champs obligatoires",
@@ -143,47 +124,11 @@ const BankGuaranteeCrud = () => {
 
     try {
       if (isEditing && selectedGuarantee) {
-        // Update guarantee using hexagonal hook
-        await updateGuarantee.mutateAsync({
-          id: selectedGuarantee.id,
-          data: {
-            bankName: formData.bank_name,
-            guaranteeType: formData.guarantee_type,
-            guaranteeAmount: formData.guarantee_amount,
-            issueDate: formData.issue_date,
-            expiryDate: formData.expiry_date,
-            status: formData.status
-          }
-        });
-
-        // Update local state
-        const updatedGuarantee = { ...selectedGuarantee, ...formData };
-        setGuarantees(prev => prev.map(g => g.id === selectedGuarantee.id ? updatedGuarantee : g));
-        
-        toast({
-          title: t('common.success'),
-          description: "Garantie bancaire mise à jour avec succès",
-        });
+        await updateMutation.mutateAsync({ id: selectedGuarantee.id, data: formData });
+        toast({ title: t('common.success'), description: "Garantie bancaire mise à jour avec succès" });
       } else {
-        // Create new guarantee using hexagonal hook
-        const newGuarantee = await createGuarantee.mutateAsync({
-          projectId: formData.project_id,
-          contractorId: formData.contractor_id,
-          bankName: formData.bank_name,
-          guaranteeType: formData.guarantee_type,
-          guaranteeAmount: formData.guarantee_amount,
-          issueDate: formData.issue_date,
-          expiryDate: formData.expiry_date,
-          status: formData.status || 'active'
-        });
-
-        // Add to local state
-        setGuarantees(prev => [...prev, newGuarantee]);
-        
-        toast({
-          title: t('common.success'),
-          description: "Garantie bancaire créée avec succès",
-        });
+        await createMutation.mutateAsync(formData);
+        toast({ title: t('common.success'), description: "Garantie bancaire créée avec succès" });
       }
       
       setIsFormOpen(false);
@@ -199,13 +144,12 @@ const BankGuaranteeCrud = () => {
 
   const handleDelete = async (guaranteeId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette garantie bancaire ?')) {
-      // Delete guarantee using hexagonal hook
-      await deleteGuarantee.mutateAsync(guaranteeId);
-      
-      toast({
-        title: t('common.success'),
-        description: "Garantie bancaire supprimée avec succès",
-      });
+      try {
+        await deleteMutation.mutateAsync(guaranteeId);
+        toast({ title: t('common.success'), description: "Garantie bancaire supprimée avec succès" });
+      } catch {
+        toast({ title: t('common.error'), description: "Erreur lors de la suppression", variant: "destructive" });
+      }
     }
   };
 
@@ -216,17 +160,8 @@ const BankGuaranteeCrud = () => {
   const isExpiringSoon = (expiryDate: string) => {
     const today = new Date();
     const expiry = new Date(expiryDate);
-    const diffTime = expiry.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     return diffDays <= 30 && diffDays >= 0;
-  };
-
-  const handleProjectChange = (projectId: string | undefined) => {
-    setFormData(prev => ({ ...prev, project_id: projectId || '' }));
-  };
-
-  const handleSupplierChange = (supplier: any) => {
-    setFormData(prev => ({ ...prev, contractor_id: supplier.id || '' }));
   };
 
   return (
@@ -250,8 +185,8 @@ const BankGuaranteeCrud = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <ProjectSelector
-                  value={formData.project_id}
-                  onChange={handleProjectChange}
+                  value={formData.projectId}
+                  onChange={(projectId) => setFormData(prev => ({ ...prev, projectId: projectId || '' }))}
                   label="Projet"
                   required
                   disabled={isViewMode}
@@ -259,13 +194,8 @@ const BankGuaranteeCrud = () => {
                 
                 <div>
                   <SupplierSelector
-                    value={{ 
-                      id: formData.contractor_id,
-                      name: '',
-                      contact: '',
-                      leadTime: 0
-                    }}
-                    onChange={handleSupplierChange}
+                    value={{ id: formData.contractorId, name: '', contact: '', leadTime: 0 }}
+                    onChange={(supplier) => setFormData(prev => ({ ...prev, contractorId: supplier.id || '' }))}
                     allowCustom={false}
                     disabled={isViewMode}
                   />
@@ -274,25 +204,24 @@ const BankGuaranteeCrud = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="bank_name">Banque émettrice *</Label>
+                  <Label htmlFor="bankName">Banque émettrice *</Label>
                   <Input
-                    id="bank_name"
-                    value={formData.bank_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, bank_name: e.target.value }))}
+                    id="bankName"
+                    value={formData.bankName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, bankName: e.target.value }))}
                     required
                     disabled={isViewMode}
                   />
                 </div>
-                
                 <div>
-                  <Label htmlFor="guarantee_amount">Montant (MRU) *</Label>
+                  <Label htmlFor="guaranteeAmount">Montant (MRU) *</Label>
                   <Input
-                    id="guarantee_amount"
+                    id="guaranteeAmount"
                     type="number"
                     min="0"
                     step="0.01"
-                    value={formData.guarantee_amount}
-                    onChange={(e) => setFormData(prev => ({ ...prev, guarantee_amount: parseFloat(e.target.value) || 0 }))}
+                    value={formData.guaranteeAmount}
+                    onChange={(e) => setFormData(prev => ({ ...prev, guaranteeAmount: parseFloat(e.target.value) || 0 }))}
                     required
                     disabled={isViewMode}
                   />
@@ -301,44 +230,38 @@ const BankGuaranteeCrud = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="guarantee_type">Type de garantie *</Label>
+                  <Label>Type de garantie *</Label>
                   <Select 
-                    value={formData.guarantee_type} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, guarantee_type: value }))}
+                    value={formData.guaranteeType} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, guaranteeType: value }))}
                     disabled={isViewMode}
                   >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {guaranteeTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
+                        <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                
                 <div>
-                  <Label htmlFor="issue_date">Date d'émission *</Label>
+                  <Label htmlFor="issueDate">Date d'émission *</Label>
                   <Input
-                    id="issue_date"
+                    id="issueDate"
                     type="date"
-                    value={formData.issue_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, issue_date: e.target.value }))}
+                    value={formData.issueDate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, issueDate: e.target.value }))}
                     required
                     disabled={isViewMode}
                   />
                 </div>
-                
                 <div>
-                  <Label htmlFor="expiry_date">Date d'expiration *</Label>
+                  <Label htmlFor="expiryDate">Date d'expiration *</Label>
                   <Input
-                    id="expiry_date"
+                    id="expiryDate"
                     type="date"
-                    value={formData.expiry_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, expiry_date: e.target.value }))}
+                    value={formData.expiryDate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, expiryDate: e.target.value }))}
                     required
                     disabled={isViewMode}
                   />
@@ -346,20 +269,16 @@ const BankGuaranteeCrud = () => {
               </div>
 
               <div>
-                <Label htmlFor="status">Statut</Label>
+                <Label>Statut</Label>
                 <Select 
                   value={formData.status} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
                   disabled={isViewMode}
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {statusOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
+                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -367,10 +286,8 @@ const BankGuaranteeCrud = () => {
 
               {!isViewMode && (
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>
-                    Annuler
-                  </Button>
-                  <Button type="submit">
+                  <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>Annuler</Button>
+                  <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
                     {isEditing ? 'Mettre à jour' : 'Créer'}
                   </Button>
                 </div>
@@ -385,83 +302,50 @@ const BankGuaranteeCrud = () => {
           <CardTitle>Liste des Garanties Bancaires</CardTitle>
         </CardHeader>
         <CardContent className="p-2 sm:p-6">
-          <div className="table-container-responsive">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Projet</TableHead>
-                  <TableHead className="hidden sm:table-cell">Banque</TableHead>
-                  <TableHead className="hidden sm:table-cell">Type</TableHead>
-                  <TableHead>Montant</TableHead>
-                  <TableHead className="hidden lg:table-cell">Expiration</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Projet</TableHead>
+                <TableHead className="hidden sm:table-cell">Banque</TableHead>
+                <TableHead className="hidden sm:table-cell">Type</TableHead>
+                <TableHead>Montant</TableHead>
+                <TableHead className="hidden lg:table-cell">Expiration</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
             <TableBody>
               {guarantees.map((guarantee) => (
                 <TableRow key={guarantee.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex flex-col sm:table-cell">
-                      <span className="font-medium">{guarantee.project_id}</span>
-                      <span className="text-xs text-muted-foreground sm:hidden">
-                        {guarantee.bank_name}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell">{guarantee.bank_name}</TableCell>
+                  <TableCell className="font-medium">{(guarantee.projectId || '').slice(0, 8)}...</TableCell>
+                  <TableCell className="hidden sm:table-cell">{guarantee.bankName}</TableCell>
                   <TableCell className="hidden sm:table-cell">
-                    {guaranteeTypes.find(t => t.value === guarantee.guarantee_type)?.label}
+                    {guaranteeTypes.find(t => t.value === guarantee.guaranteeType)?.label}
                   </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{guarantee.guarantee_amount.toLocaleString()} MRU</span>
-                      <span className="text-xs text-muted-foreground sm:hidden">
-                        {guaranteeTypes.find(t => t.value === guarantee.guarantee_type)?.label}
-                      </span>
-                    </div>
-                  </TableCell>
+                  <TableCell>{(guarantee.guaranteeAmount || 0).toLocaleString()} MRU</TableCell>
                   <TableCell className="hidden lg:table-cell">
                     <div className="flex items-center gap-2">
-                      {new Date(guarantee.expiry_date).toLocaleDateString('fr-FR')}
-                      {isExpiringSoon(guarantee.expiry_date) && (
+                      {new Date(guarantee.expiryDate || '').toLocaleDateString('fr-FR')}
+                      {isExpiringSoon(guarantee.expiryDate || '') && (
                         <AlertTriangle className="h-4 w-4 text-orange-500" />
                       )}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <Badge className={getStatusColor(guarantee.status)}>
-                        {statusOptions.find(s => s.value === guarantee.status)?.label}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground lg:hidden">
-                        {new Date(guarantee.expiry_date).toLocaleDateString('fr-FR')}
-                      </span>
-                    </div>
+                    <Badge className={getStatusColor(guarantee.status)}>
+                      {statusOptions.find(s => s.value === guarantee.status)?.label}
+                    </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="table-actions-responsive">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => openViewForm(guarantee)}
-                      >
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => openViewForm(guarantee)}>
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => openEditForm(guarantee)}
-                      >
+                      <Button size="sm" variant="ghost" onClick={() => openEditForm(guarantee)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDelete(guarantee.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
+                      <Button size="sm" variant="ghost" onClick={() => handleDelete(guarantee.id)} disabled={deleteMutation.isPending}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
                   </TableCell>
@@ -469,14 +353,13 @@ const BankGuaranteeCrud = () => {
               ))}
               {guarantees.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                    Aucune garantie bancaire trouvée
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    Aucune garantie bancaire enregistrée
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
-            </Table>
-          </div>
+          </Table>
         </CardContent>
       </Card>
     </div>

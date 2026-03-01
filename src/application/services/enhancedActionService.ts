@@ -18,7 +18,7 @@ import { InspectionService } from '@/application/services/InspectionService';
 import { ProjectService } from '@/application/services/ProjectService';
 import { TaskService } from '@/application/services/TaskService';
 import { PaymentService } from '@/application/services/PaymentService';
-import { TaskStatus } from '@/dtos/entities/TaskDTO';
+import { TaskStatus } from '@/application/services/TaskService';
 
 /**
  * Event-driven Action Types

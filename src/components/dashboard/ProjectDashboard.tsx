@@ -55,10 +55,10 @@ import { ProjectManagerService } from '@/application/services/ProjectManagerServ
 
 // Import all project-related hooks
 import { useProjectsHex } from '@/hooks/hexagonal/useProjectsHex';
-import { useProjectAnalyticsHex } from '@/hooks/hexagonal/useProjectAnalyticsHex';
+import { useProjectAnalytics } from '@/hooks/hexagonal/useProjectAnalyticsHex';
 import { useProjectPhasesHex } from '@/hooks/hexagonal/useProjectPhasesHex';
 import { useProjectMaterialsHex } from '@/hooks/hexagonal/useProjectMaterialsHex';
-import { useProjectDetailHex } from '@/hooks/hexagonal/useProjectDetailHex';
+import { useProjectDetail } from '@/hooks/hexagonal/useProjectDetailHex';
 
 // Import DTOs
 import { 
@@ -80,30 +80,30 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
 
   // Project data hooks
   const { 
-    data: projects, 
+    projects, 
     isLoading: projectsLoading, 
     error: projectsError 
   } = useProjectsHex();
 
   const { 
-    data: projectDetail, 
+    project: projectDetail, 
     isLoading: detailLoading 
-  } = useProjectDetailHex(selectedProject);
+  } = useProjectDetail(selectedProject);
 
   const { 
-    data: analytics, 
+    analytics, 
     isLoading: analyticsLoading 
-  } = useProjectAnalyticsHex(selectedProject);
+  } = useProjectAnalytics(selectedProject, (projectDetail as any) ?? null);
 
   const { 
-    data: phases, 
+    phases, 
     isLoading: phasesLoading 
-  } = useProjectPhasesHex(selectedProject);
+  } = useProjectPhasesHex(selectedProject || undefined);
 
   const { 
-    data: materials, 
+    materials, 
     isLoading: materialsLoading 
-  } = useProjectMaterialsHex(selectedProject);
+  } = useProjectMaterialsHex(selectedProject || undefined);
 
   // Calculate project statistics
   const projectStats = React.useMemo(() => {
@@ -248,7 +248,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
       <Alert variant="destructive">
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
-          Failed to load project data: {projectsError.message}
+          Failed to load project data: {String(projectsError)}
         </AlertDescription>
       </Alert>
     );
@@ -436,9 +436,9 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
                       <div>
                         <h4 className="font-semibold">{project.title}</h4>
                         <p className="text-sm text-muted-foreground">{project.location}</p>
-                        {project.regionCode && (
+                        {(project as any).regionCode && (
                           <Badge variant="outline" className="text-xs mt-1">
-                            {project.regionCode}
+                            {(project as any).regionCode}
                           </Badge>
                         )}
                       </div>
@@ -484,7 +484,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
                             </span>
                             <span className="text-sm text-muted-foreground flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
-                              {project.start_date}
+                              {project.startDate}
                             </span>
                             <span className="text-sm text-muted-foreground flex items-center gap-1">
                               <DollarSign className="h-3 w-3" />
@@ -571,11 +571,11 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
                     <div key={phase.id} className="p-4 border rounded-lg">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h4 className="font-semibold">{phase.phase_name}</h4>
+                          <h4 className="font-semibold">{phase.name}</h4>
                           <p className="text-sm text-muted-foreground">{phase.description}</p>
                         </div>
                         <div className="text-right">
-                          <Badge variant="outline">{phase.status}</Badge>
+                          <Badge variant="outline">{phase.phase_type || 'N/A'}</Badge>
                           <div className="mt-2">
                             <Progress value={phase.progress || 0} className="w-24 h-2" />
                           </div>
@@ -610,13 +610,13 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
                         <div className="flex items-center gap-4">
                           <Package className="h-8 w-8 text-blue-500" />
                           <div>
-                            <h4 className="font-semibold">{material.name}</h4>
-                            <p className="text-sm text-muted-foreground">{material.description}</p>
+                            <h4 className="font-semibold">{material.material_name || material.material_id}</h4>
+                            <p className="text-sm text-muted-foreground">{material.material_type || ''}</p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm font-medium">{material.quantity} {material.unit}</div>
-                          <div className="text-sm text-muted-foreground">{material.unit_price} per unit</div>
+                          <div className="text-sm font-medium">{material.quantity} units</div>
+                          <div className="text-sm text-muted-foreground">{material.unit_cost} per unit</div>
                         </div>
                       </div>
                     </div>

@@ -13,8 +13,7 @@ import { Plus, Eye, Edit, Trash2, CheckCircle, AlertCircle, Clock, FileText, Ext
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import { format } from 'date-fns';
 import { useEnhancedInspectionCrudHex } from '@/hooks/hexagonal';
-import { InspectionDTO, InspectionStatus } from '@/dtos/entities/InspectionDTO';
-import type { InspectionStatus, InspectionDTO, CreateInspectionDTO } from '@/dtos/entities/InspectionDTO';
+import type { InspectionDTO, InspectionStatus, CreateInspectionDTO } from '@/dtos/entities/InspectionDTO';
 
 interface LocalInspectionFormData {
   projectId: string;
@@ -89,7 +88,7 @@ const EnhancedInspectionCrud = () => {
     
     setFormData({
       projectId: projectId,
-      inspector: inspection.inspector,
+      inspector: inspection.inspector || '',
       date: date,
       status: inspection.status,
       progressAtInspection: progress,
@@ -142,17 +141,16 @@ const EnhancedInspectionCrud = () => {
           notes: formData.comments
         });
       } else {
-        const inspectionData: CreateInspectionDTO = {
-          title: formData.title,
-          description: formData.description,
+        const createData: CreateInspectionDTO = {
           projectId: formData.projectId,
           inspector: formData.inspector,
+          date: formData.date,
           status: formData.status as InspectionStatus,
           progress: formData.progressAtInspection,
           comments: formData.comments,
           phaseId: formData.phaseId
         };
-        await createInspection(inspectionData);
+        await createInspection(createData);
       }
 
       setIsFormOpen(false);
