@@ -42,7 +42,7 @@ const EmployeeManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showHierarchyDialog, setShowHierarchyDialog] = useState(false);
-  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [editingEmployee, setEditingEmployee] = useState<EmployeeDTO | null>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
 
@@ -141,7 +141,7 @@ const EmployeeManagement = () => {
     }
   };
 
-  const handleEdit = (employee: Employee) => {
+  const handleEdit = (employee: EmployeeDTO) => {
     setEditingEmployee(employee);
     setFormData({
       employee_id: employee.employee_id,

@@ -7,14 +7,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Bell, Eye, EyeOff, Clock, AlertTriangle, DollarSign, FileText, Users } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
-import { NotificationType } from '@/dtos/entities/NotificationDTO';
+// NotificationType is just a string alias for filter
 import { getNotificationLink } from '@/utils/notificationUtils';
 
 const RoleBasedNotificationCenter: React.FC = () => {
   const navigate = useNavigate();
   const { notifications, isLoading, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { userRoles, hasRole } = useCurrentUserRoles();
-  const [selectedFilter, setSelectedFilter] = useState<NotificationType | 'all'>('all');
+  const [selectedFilter, setSelectedFilter] = useState<string>('all');
 
   const handleNotificationClick = async (notification: any) => {
     // Mark as read

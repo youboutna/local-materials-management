@@ -74,8 +74,8 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
     return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
   };
 
-  const handleDownload = async (doc: Document) => {
-    if (!doc.file_url) {
+  const handleDownload = async (doc: DocumentDTO) => {
+    if (!doc.fileUrl) {
       toast({
         title: "Erreur",
         description: "Aucun fichier disponible pour ce document.",
@@ -85,13 +85,13 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
     }
 
     try {
-      const response = await fetch(doc.file_url);
+      const response = await fetch(doc.fileUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = window.document.createElement('a');
       a.style.display = 'none';
       a.href = url;
-      a.download = doc.file_name || 'document';
+      a.download = doc.fileName || 'document';
       window.document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -105,7 +105,7 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
     }
   };
 
-  const handleViewDocument = (doc: Document) => {
+  const handleViewDocument = (doc: DocumentDTO) => {
     if (onDocumentSelect) {
       onDocumentSelect(doc);
     }
@@ -204,8 +204,8 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {documents?.map(doc => (
           <div key={doc.id}>
-            <span>{doc.file_name}</span>
-            <span>{getDocumentTypeLabel(doc.document_type)}</span>
+            <span>{doc.fileName}</span>
+            <span>{getDocumentTypeLabel(doc.documentType)}</span>
           </div>
         ))}
       </div>

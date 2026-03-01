@@ -262,8 +262,8 @@ export class TenderSubmissionService {
 
       await sendTenderSubmissionNotification({
         tender_title: tender?.title || 'Appel d\'offres',
-        supplier_email: submission.supplier_email,
-        supplier_name: submission.supplier_name,
+        supplier_email: submission.supplier_email || '',
+        supplier_name: submission.supplier_name || '',
         submission_id: submission.id,
         secret_code: submissionSecret.secretCode,
         admin_emails: []
