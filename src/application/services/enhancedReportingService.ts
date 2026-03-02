@@ -1,6 +1,6 @@
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { supabase } from '@/integrations/supabase/client';
-import { ProjectData } from '@/types/project';
+import { ProjectDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import { ProjectCalculationService } from '@/application/services/ProjectCalculationService';
 import {
@@ -20,7 +20,7 @@ export class EnhancedReportingService {
   /**
    * Generate complete project report with all enhanced calculations
    */
-  static async generateCompleteProjectReport(project: ProjectData): Promise<{
+  static async generateCompleteProjectReport(project: ProjectDTO): Promise<{
     reportDTO: ProjectReportDTO;
     reportData: ReportData;
     costCalculation: CostCalculation;
@@ -31,7 +31,7 @@ export class EnhancedReportingService {
     return instance.generateCompleteProjectReportInstance(project);
   }
 
-  private async generateCompleteProjectReportInstance(project: ProjectData): Promise<{
+  private async generateCompleteProjectReportInstance(project: ProjectDTO): Promise<{
     reportDTO: ProjectReportDTO;
     reportData: ReportData;
     costCalculation: CostCalculation;
@@ -76,6 +76,7 @@ export class EnhancedReportingService {
         phasesData
       );
 
+<<<<<<< HEAD
       // Calculate quality score from inspections
       const inspectionQualityScore = EnhancedReportingService.calculateQualityFromInspections(inspectionsData);
 
@@ -91,6 +92,19 @@ export class EnhancedReportingService {
         timelineScore,
         qualityScore: inspectionQualityScore
       };
+=======
+      // Calculate quality score from inspections
+      const qualityScore = EnhancedReportingService.calculateQualityFromInspections(inspectionsData);
+
+      // Calculate overall health score
+      const budgetUtilization = project.budget > 0 ? (realCosts.totalSpent / project.budget) * 100 : 0;
+      const healthScore = ProjectCalculationService.calculateProjectHealthScore(
+        project.progress,
+        budgetUtilization,
+        timelinePerformance.completionRate || 0,
+        qualityScore
+      );
+>>>>>>> b4aa55c (fix camelcase conv)
 
       // Generate report data
       const reportData: ReportData = {
@@ -103,7 +117,7 @@ export class EnhancedReportingService {
           remainingBudget: costCalculation.remainingBudget,
           costVariance: costCalculation.costVariance
         },
-        taskProgress: project.tasks?.map(task => ({
+        taskProgress: (project.tasks || []).map(task => ({
           taskId: task.id,
           name: task.name,
           progress: task.progress,
@@ -133,7 +147,7 @@ export class EnhancedReportingService {
   /**
    * Transform project data into enriched DTO for reporting
    */
-  static async transformProjectForReport(project: ProjectData): Promise<ProjectReportDTO> {
+  static async transformProjectForReport(project: ProjectDTO): Promise<ProjectReportDTO> {
     const [phases, milestones, analytics, financial, risks] = await Promise.all([
       this.fetchEnhancedPhases(project.id),
       this.fetchConstructionMilestones(project.id),
@@ -251,7 +265,7 @@ export class EnhancedReportingService {
     }
   }
 
-  private static async calculateProjectAnalytics(project: ProjectData): Promise<ProjectAnalyticsDTO> {
+  private static async calculateProjectAnalytics(project: ProjectDTO): Promise<ProjectAnalyticsDTO> {
     try {
       const phaseRepository = RepositoryFactory.getPhaseRepository();
       const paymentRepository = RepositoryFactory.getPaymentRepository();
@@ -259,6 +273,7 @@ export class EnhancedReportingService {
       
       const [phasesResponse, paymentsResponse, inspectionsResponse] = await Promise.all([
         phaseRepository.getPhasesByProjectId(project.id),
+<<<<<<< HEAD
         paymentRepository.findByProjectId(project.id),
         inspectionRepository.findByProjectId(project.id)
       ]);
@@ -266,6 +281,15 @@ export class EnhancedReportingService {
       const phasesData = phasesResponse || [];
       const paymentsData = paymentsResponse || [];
       const inspectionsData = inspectionsResponse || [];
+=======
+        paymentRepository.findByProjectId(project.id),
+        inspectionRepository.findByProjectId(project.id)
+      ]);
+
+      const phasesData = phasesResponse || [];
+      const paymentsData = paymentsResponse || [];
+      const inspectionsData = inspectionsResponse || [];
+>>>>>>> b4aa55c (fix camelcase conv)
 
       if (phasesData.length === 0) {
         return this.getDefaultAnalytics(project);
@@ -307,6 +331,7 @@ export class EnhancedReportingService {
       const insuranceRepository = RepositoryFactory.getInsuranceRepository();
       const projectRepository = RepositoryFactory.getProjectRepository();
       
+<<<<<<< HEAD
       const [payments, bankGuarantees, insurance, project, expenses] = await Promise.all([
         paymentRepository.findByProjectId(projectId),
         bankGuaranteeRepository.findByProjectId(projectId),
@@ -326,12 +351,33 @@ export class EnhancedReportingService {
       const spentAmount = totalPaid + totalExpenses;
       const remainingBudget = totalBudget - spentAmount;
       const costOverrun = Math.max(0, spentAmount - totalBudget);
+=======
+      const [payments, bankGuarantees, insurance, project, expenses] = await Promise.all([
+        paymentRepository.findByProjectId(projectId),
+        bankGuaranteeRepository.getByProject({ projectId }),
+        insuranceRepository.getByProjectId(projectId),
+        projectRepository.findById(projectId),
+        RepositoryFactory.getMissionExpenseRepository().findByMissionId(projectId)
+      ]);
+
+      const paymentsData = payments || [];
+      const expensesData = expenses || [];
+      const projectData = project;
+
+      const totalBudget = projectData?.budget || 0;
+      const totalPaid = paymentsData.reduce((sum, p) => sum + (p.amount || 0), 0);
+      const totalExpenses = expensesData.reduce((sum, e) => sum + (e.amount || 0), 0);
+      const spentAmount = totalPaid + totalExpenses;
+      const remainingBudget = totalBudget - spentAmount;
+      const costOverrun = Math.max(0, spentAmount - totalBudget);
+>>>>>>> b4aa55c (fix camelcase conv)
 
       return {
         totalBudget,
         spentAmount,
         remainingBudget,
         costOverrun,
+<<<<<<< HEAD
         paymentMilestones: paymentsData.map((p: any) => ({
           id: p.id,
           amount: p.amount,
@@ -358,6 +404,34 @@ export class EnhancedReportingService {
           validUntil: new Date(ins.valid_until),
           status: ins.status as 'active' | 'expired'
         }))
+=======
+        paymentMilestones: paymentsData.map(p => ({
+          id: p.id,
+          amount: p.amount,
+          dueDate: new Date(p.paymentDate),
+          paidDate: new Date(p.paymentDate),
+          status: 'paid' as const,
+          description: p.transactionId || `Payment ${p.id.slice(0, 8)}`
+        })),
+        bankGuarantees: bankGuarantees?.map(bg => ({
+          id: bg.id,
+          type: bg.guarantee_type,
+          amount: bg.guarantee_amount,
+          issueDate: new Date(bg.issue_date),
+          expiryDate: new Date(bg.expiry_date),
+          bankName: bg.bank_name,
+          status: bg.status as 'active' | 'expired' | 'claimed'
+        })) || [],
+        insuranceCoverage: insurance?.map(ins => ({
+          id: ins.id,
+          type: ins.coverage_type,
+          coverage: ins.coverage_amount,
+          provider: ins.insurance_company,
+          validFrom: new Date(ins.valid_from),
+          validUntil: new Date(ins.valid_until),
+          status: ins.status as 'active' | 'expired'
+        })) || []
+>>>>>>> b4aa55c (fix camelcase conv)
       };
     } catch (error) {
       console.error('Error calculating financial metrics:', error);
@@ -373,7 +447,7 @@ export class EnhancedReportingService {
     }
   }
 
-  private static async assessProjectRisks(project: ProjectData): Promise<RiskAssessmentDTO> {
+  private static async assessProjectRisks(project: ProjectDTO): Promise<RiskAssessmentDTO> {
     // Generate risk assessment based on project data
     const risks = this.generateRiskAssessment(project);
     
@@ -434,7 +508,7 @@ export class EnhancedReportingService {
     return 'medium';
   }
 
-  private static getDefaultAnalytics(project: ProjectData): ProjectAnalyticsDTO {
+  private static getDefaultAnalytics(project: ProjectDTO): ProjectAnalyticsDTO {
     return {
       schedulePerformanceIndex: 1,
       costPerformanceIndex: 1,
@@ -484,7 +558,7 @@ export class EnhancedReportingService {
     return Math.max(50, Math.min(100, (approvalRate * 100) - rejectionPenalty));
   }
 
-  private static calculateTeamEfficiency(project: ProjectData, phases: any[]): number {
+  private static calculateTeamEfficiency(project: ProjectDTO, phases: any[]): number {
     if (!phases || phases.length === 0) return 90;
     
     const avgProgress = phases.reduce((sum, p) => sum + (p.progress || 0), 0) / phases.length;
@@ -525,7 +599,7 @@ export class EnhancedReportingService {
     ];
   }
 
-  private static generateRiskAssessment(project: ProjectData): any[] {
+  private static generateRiskAssessment(project: ProjectDTO): any[] {
     const risks: any[] = [];
     
     // Budget risk

@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,16 +5,17 @@ import { Progress } from '@/components/ui/progress';
 import { ProjectDTO, ProjectStatus } from "@/dtos/entities/ProjectDTO";
 import { MaterialDTO } from "@/dtos/entities/MaterialDTO";
 import { WorkspaceDTO } from "@/dtos/entities/WorkspaceDTO";
-import { MAURITANIA_REGIONS, GeographicUnit } from "@/utils/mauritania";
+import { MAURITANIA_REGIONS, GeographicUnit, Region } from "@/utils/mauritania";
 import { MapPin, Building2, TrendingUp, Users } from "lucide-react";
+import { useProjectsHex } from '@/hooks/hexagonal';
+import { useMaterialsHex } from '@/hooks/hexagonal';
+import { useWorkspacesHex } from '@/hooks/hexagonal';
 
-interface RegionalDashboardProps {
-  projects: ProjectDTO[];
-  materials?: MaterialDTO[];
-  workspaces?: WorkspaceDTO[];
-}
-
-const RegionalDashboard = ({ projects, materials = [], workspaces = [] }: RegionalDashboardProps) => {
+const RegionalDashboard = () => {
+  // Use hexagonal hooks to fetch data instead of props
+  const { projects = [] } = useProjectsHex();
+  const { materials = [] } = useMaterialsHex();
+  const { workspaces = [] } = useWorkspacesHex();
   // Calculate regional statistics
   const regionalStats = useMemo(() => {
     return MAURITANIA_REGIONS.map(region => {
@@ -28,7 +28,13 @@ const RegionalDashboard = ({ projects, materials = [], workspaces = [] }: Region
       // Filter materials for this region
       const regionMaterials = materials.filter(material => 
         material.originLocation?.toLowerCase().includes(region.name.toLowerCase()) ||
+<<<<<<< HEAD
         material.originLocation?.toLowerCase().includes(region.nameAr.toLowerCase())
+=======
+        material.originLocation?.toLowerCase().includes(region.nameAr.toLowerCase()) ||
+        material.adresse?.toLowerCase().includes(region.name.toLowerCase()) ||
+        material.adresse?.toLowerCase().includes(region.nameAr.toLowerCase())
+>>>>>>> b4aa55c (fix camelcase conv)
       );
 
       // Filter workspaces for this region

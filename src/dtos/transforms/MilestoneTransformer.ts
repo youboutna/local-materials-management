@@ -427,7 +427,7 @@ export class MilestoneTransformer {
       progressVariant: this.getProgressVariant(milestone.progressPercentage || 0),
       canEdit: dto.status !== 'completed',
       canDelete: dto.status === 'pending',
-      canComplete: ['pending', 'in_progress'].includes(dto.status),
+      canComplete: ['pending', 'in_progress'].includes(dto.status as 'pending' | 'in_progress' | 'completed' | 'delayed'),
       // Visual indicators
       badgeVariant: this.getBadgeVariant(dto.status, daysRemaining),
       icon: this.getStatusIcon(dto.status)

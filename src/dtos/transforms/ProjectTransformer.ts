@@ -359,15 +359,17 @@ export class ProjectTransformer {
       supervisorId: dto.supervisorId,
       terrainType: dto.terrainType,
 
-      // PROPER HYDRATION: Use proper transformer methods
-      phases: dto.phases ? PhaseTransformer.manyFromDTO(dto.phases) : [],
-      tasks: dto.tasks ? TaskTransformer.manyFromDTO(dto.tasks) : [],
-      risks: dto.risks ? RiskTransformer.manyFromDTO(dto.risks) : [],
-      inspections: dto.inspections ? InspectionTransformer.manyFromDTO(dto.inspections) : [],
-      payments: dto.payments ? PaymentTransformer.manyFromDTO(dto.payments) : [],
-      materials: dto.materials ? MaterialTransformer.manyFromDTO(dto.materials) : [],
-      suppliers: dto.stakeholders ? StakeholderTransformer.manyFromDTO(dto.stakeholders) : [],
-      milestones: dto.milestones ? MilestoneTransformer.manyFromDTO(dto.milestones) : [],
+      // PROPER HYDRATION: Hydrate related sub-objects from DTO collections
+      // Note: In a full implementation, these would be loaded from repositories
+      // For now, we hydrate what we can from the DTO data
+      phases: 'phases' in dto && dto.phases ? PhaseTransformer.manyFromDTO(dto.phases) : [],
+      tasks: 'tasks' in dto && dto.tasks ? TaskTransformer.manyFromDTO(dto.tasks) : [],
+      risks: 'risks' in dto && dto.risks ? RiskTransformer.manyFromDTO(dto.risks) : [],
+      inspections: 'inspections' in dto && dto.inspections ? InspectionTransformer.manyFromDTO(dto.inspections) : [],
+      payments: 'payments' in dto && dto.payments ? PaymentTransformer.manyFromDTO(dto.payments) : [],
+      materials: 'materials' in dto && dto.materials ? MaterialTransformer.manyFromDTO(dto.materials) : [],
+      suppliers: 'stakeholders' in dto && dto.stakeholders ? StakeholderTransformer.manyFromDTO(dto.stakeholders) : [],
+      milestones: 'milestones' in dto && dto.milestones ? MilestoneTransformer.manyFromDTO(dto.milestones) : [],
     });
   }
 

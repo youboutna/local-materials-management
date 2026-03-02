@@ -18,7 +18,12 @@ import { InspectionService } from '@/application/services/InspectionService';
 import { ProjectService } from '@/application/services/ProjectService';
 import { TaskService } from '@/application/services/TaskService';
 import { PaymentService } from '@/application/services/PaymentService';
+<<<<<<< HEAD
 import { TaskStatus } from '@/application/services/TaskService';
+=======
+import { TaskStatus } from '@/dtos/entities/TaskDTO';
+import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+>>>>>>> b4aa55c (fix camelcase conv)
 
 /**
  * Event-driven Action Types
@@ -263,7 +268,7 @@ export class EnhancedActionService {
         await this.taskService.updateTask(actionEvent.entityId, {
           assignedTo: [actionEvent.assigneeId],
           status: TaskStatus.IN_PROGRESS
-        });
+        } as any);
 
         await this.notificationService.createNotification({
           recipient_id: actionEvent.assigneeId || '',

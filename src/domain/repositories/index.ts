@@ -58,6 +58,7 @@ export type { IStorageRepository } from './IStorageRepository';
 export type { INotificationRepository } from './INotificationRepository';
 export type { IComplianceRepository } from './IComplianceRepository';
 export type { IAlertRepository } from './IAlertRepository';
+export * from './IMissionExpenseRepository';
 
 // Repository Implementations (migrated from services)
 export * from './MaterialRepository';

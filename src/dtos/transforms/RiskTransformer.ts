@@ -5,8 +5,8 @@
  */
 
 import { Risk } from '@/domain/entities/Risk';
-import { RiskStatus as DomainRiskStatus, RiskCategory as DomainRiskCategory, RISK_STATUS_VALUES, RISK_CATEGORY_VALUES } from '@/domain/entities/RiskTypesExport';
-import { RiskDTO, CreateRiskDTO, UpdateRiskDTO, RiskStatus, RiskCategory, RiskLevel } from '@/dtos/entities/RiskDTO';
+import { RiskStatus as DomainRiskStatus, RiskLevel, RiskCategory as DomainRiskCategory, RISK_STATUS_VALUES, RISK_CATEGORY_VALUES } from '@/domain/entities/RiskTypesExport';
+import { RiskDTO, CreateRiskDTO, UpdateRiskDTO, RiskStatus, RiskCategory } from '@/dtos/entities/RiskDTO';
 
 export class RiskTransformer {
   /**
@@ -34,35 +34,7 @@ export class RiskTransformer {
       identifiedDate: entity.identifiedDate || undefined,
       relatedRisks: entity.relatedTasks,
       createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
-      // Additional fields with defaults
-      riskScore: entity.probability * entity.impact,
-      riskLevel: (this.calculateRiskLevel(entity.probability * entity.impact) as RiskLevel) || undefined,
-      mitigationPlan: undefined,
-      mitigationStatus: undefined,
-      mitigationCost: undefined,
-      mitigationOwner: undefined,
-      assessmentDate: undefined,
-      nextReviewDate: undefined,
-      reviewDate: undefined,
-      costs: undefined,
-      timelineImpact: undefined,
-      resolutionDate: undefined,
-      phaseId: undefined,
-      taskId: undefined,
-      assignedTo: undefined,
-      reviewer: undefined,
-      documents: [],
-      attachments: [],
-      tags: [],
-      notes: undefined,
-      riskType: undefined,
-      severity: (this.calculateRiskLevel(entity.probability * entity.impact) as RiskLevel) || undefined,
-      affectedAreas: [],
-      mitigationActions: [],
-      contingencyPlan: undefined,
-      monitoringPlan: undefined,
-      reviewFrequency: undefined
+      updatedAt: entity.updatedAt
     };
   }
 
@@ -80,7 +52,7 @@ export class RiskTransformer {
       this.dtoToDomainStatus(dto.status),
       this.dtoToDomainCategory(dto.category),
       dto.mitigationStrategy || null,
-      dto.owner ? { id: dto.owner, fullName: '' } : null,
+      dto.identifiedBy ? { id: dto.identifiedBy, fullName: '' } : null,
       dto.identifiedDate || null,
       dto.relatedRisks || [],
       dto.createdAt || new Date().toISOString(),
@@ -143,109 +115,41 @@ export class RiskTransformer {
   }
 
   /**
-   * Transformer DTO vers format base de données Supabase (snake_case)
-   * Enhanced version with proper type safety
+   * Transformer DTO vers format base de données (snake_case)
    */
-  static toSupabase(dto: RiskDTO): Record<string, unknown> {
+  static toDatabaseFormat(dto: RiskDTO): any {
     return {
-      id: dto.id,
-      title: dto.title,
-      description: dto.description || null,
-      category: dto.category,
-      status: dto.status,
-      probability: dto.probability,
-      impact: dto.impact,
-      risk_score: dto.riskScore || (dto.probability * dto.impact),
-      risk_level: dto.riskLevel || this.calculateRiskLevel(dto.probability * dto.impact),
-      mitigation_strategy: dto.mitigationStrategy || null,
-      mitigation_plan: dto.mitigationPlan || null,
-      mitigation_status: dto.mitigationStatus || null,
-      mitigation_cost: dto.mitigationCost || null,
-      mitigation_owner: dto.mitigationOwner || null,
-      identified_date: dto.identifiedDate || null,
-      assessment_date: dto.assessmentDate || null,
-      next_review_date: dto.nextReviewDate || null,
-      review_date: dto.reviewDate || null,
-      costs: dto.costs || null,
-      timeline_impact: dto.timelineImpact || null,
-      resolution_date: dto.resolutionDate || null,
-      project_id: dto.projectId || null,
-      phase_id: dto.phaseId || null,
-      task_id: dto.taskId || null,
-      related_risks: dto.relatedRisks || [],
-      assigned_to: dto.assignedTo || null,
-      reviewer: dto.reviewer || null,
-      owner: dto.owner || null,
-      documents: dto.documents || [],
-      attachments: dto.attachments || [],
-      tags: dto.tags || [],
-      notes: dto.notes || null,
+      ...dto,
+      // Convert camelCase to snake_case for database
+      review_date: dto.reviewDate,
+      timeline_impact: dto.timelineImpact,
+      // Keep existing fields as is
+      owner_id: dto.owner,
+      project_id: dto.projectId,
       created_at: dto.createdAt,
-      updated_at: dto.updatedAt,
-      // Additional UI fields
-      risk_type: dto.riskType || null,
-      severity: dto.severity || null,
-      affected_areas: dto.affectedAreas || [],
-      mitigation_actions: dto.mitigationActions || [],
-      contingency_plan: dto.contingencyPlan || null,
-      monitoring_plan: dto.monitoringPlan || null,
-      review_frequency: dto.reviewFrequency || null
+      updated_at: dto.updatedAt
     };
   }
 
   /**
-   * Transformer format base de données Supabase vers DTO (snake_case ↔ camelCase)
-   * Enhanced version with proper type safety
+   * Transformer format base de données vers DTO (snake_case ↔ camelCase)
    */
-  static fromSupabase(dbRow: Record<string, unknown>): RiskDTO {
+  static fromDatabaseFormat(dbRow: any): RiskDTO {
     return {
-      id: dbRow.id as string,
-      title: dbRow.title as string,
-      description: (dbRow.description as string) || undefined,
-      category: (dbRow.category as RiskCategory) || RiskCategory.OPERATIONAL,
-      status: (dbRow.status as RiskStatus) || RiskStatus.IDENTIFIED,
-      probability: (dbRow.probability as number) || 0,
-      impact: (dbRow.impact as number) || 0,
-      riskScore: (dbRow.risk_score as number) || undefined,
-      riskLevel: (dbRow.risk_level as RiskLevel) || undefined,
-      mitigationStrategy: (dbRow.mitigation_strategy as string) || undefined,
-      mitigationPlan: (dbRow.mitigation_plan as string) || undefined,
-      mitigationStatus: (dbRow.mitigation_status as 'not_started' | 'in_progress' | 'completed') || undefined,
-      mitigationCost: (dbRow.mitigation_cost as number) || undefined,
-      mitigationOwner: (dbRow.mitigation_owner as string) || undefined,
-      identifiedDate: (dbRow.identified_date as string) || undefined,
-      assessmentDate: (dbRow.assessment_date as string) || undefined,
-      nextReviewDate: (dbRow.next_review_date as string) || undefined,
-      reviewDate: (dbRow.review_date as string) || undefined,
-      costs: (dbRow.costs as number) || undefined,
-      timelineImpact: (dbRow.timeline_impact as number) || undefined,
-      resolutionDate: (dbRow.resolution_date as string) || undefined,
-      projectId: (dbRow.project_id as string) || undefined,
-      phaseId: (dbRow.phase_id as string) || undefined,
-      taskId: (dbRow.task_id as string) || undefined,
-      relatedRisks: (dbRow.related_risks as string[]) || [],
-      assignedTo: (dbRow.assigned_to as string) || undefined,
-      reviewer: (dbRow.reviewer as string) || undefined,
-      owner: (dbRow.owner as string) || undefined,
-      documents: (dbRow.documents as string[]) || [],
-      attachments: (dbRow.attachments as string[]) || [],
-      tags: (dbRow.tags as string[]) || [],
-      notes: (dbRow.notes as string) || undefined,
-      createdAt: (dbRow.created_at as string) || new Date().toISOString(),
-      updatedAt: (dbRow.updated_at as string) || new Date().toISOString(),
-      // Additional UI fields
-      riskType: (dbRow.risk_type as string) || undefined,
-      severity: (dbRow.severity as RiskLevel | undefined),
-      affectedAreas: (dbRow.affected_areas as string[]) || [],
-      mitigationActions: (dbRow.mitigation_actions as string[]) || [],
-      contingencyPlan: (dbRow.contingency_plan as string) || undefined,
-      monitoringPlan: (dbRow.monitoring_plan as string) || undefined,
-      reviewFrequency: (dbRow.review_frequency as string) || undefined
+      ...dbRow,
+      // Convert snake_case to camelCase for DTO
+      reviewDate: dbRow.review_date,
+      timelineImpact: dbRow.timeline_impact,
+      // Keep existing fields as is
+      projectId: dbRow.project_id,
+      owner: dbRow.owner_id,
+      createdAt: dbRow.created_at,
+      updatedAt: dbRow.updated_at
     };
   }
 
   /**
-   * Convert domain status to DTO status
+   * Convert DTO status to domain status
    */
   private static dtoToDomainStatus(dtoStatus: RiskStatus): DomainRiskStatus {
     switch (dtoStatus) {
@@ -253,6 +157,7 @@ export class RiskTransformer {
       case RiskStatus.MONITORED: return 'monitored';
       case RiskStatus.MITIGATED: return 'mitigated';
       case RiskStatus.RESOLVED: return 'resolved';
+      case RiskStatus.ACCEPTED: return 'accepted';
       default: return 'identified';
     }
   }
@@ -266,7 +171,7 @@ export class RiskTransformer {
       case 'monitored': return RiskStatus.MONITORED;
       case 'mitigated': return RiskStatus.MITIGATED;
       case 'resolved': return RiskStatus.RESOLVED;
-      case 'accepted': return RiskStatus.IDENTIFIED;
+      case 'accepted': return RiskStatus.ACCEPTED;
       default: return RiskStatus.IDENTIFIED;
     }
   }
@@ -302,90 +207,33 @@ export class RiskTransformer {
   }
 
   /**
-   * Calculate risk level based on risk score
-   */
-  private static calculateRiskLevel(riskScore: number): RiskLevel {
-    const riskScoreValue = riskScore as number;
-    if (riskScoreValue >= 0.8) return RiskLevel.CRITICAL;
-    if (riskScoreValue >= 0.6) return RiskLevel.HIGH;
-    if (riskScoreValue >= 0.4) return RiskLevel.MEDIUM;
-    if (riskScoreValue >= 0.2) return RiskLevel.LOW;
-    return RiskLevel.LOW;
-  }
-
-  /**
-   * Validate and clean DTO with enhanced type safety
+   * Valider et nettoyer les données d'un DTO
    */
   static validateAndCleanDTO(dto: Partial<RiskDTO>): RiskDTO {
     const cleaned: RiskDTO = {
-      id: dto.id || crypto.randomUUID(),
+      id: dto.id,
+      projectId: dto.projectId,
       title: dto.title || '',
       description: dto.description,
-      category: dto.category || RiskCategory.OPERATIONAL,
-      status: dto.status || RiskStatus.IDENTIFIED,
       probability: Math.max(0, Math.min(1, dto.probability || 0)),
       impact: Math.max(0, Math.min(1, dto.impact || 0)),
-      riskScore: dto.riskScore || (dto.probability || 0) * (dto.impact || 0),
-      riskLevel: dto.riskLevel || this.calculateRiskLevel((dto.probability || 0) * (dto.impact || 0)),
+      status: dto.status || RiskStatus.IDENTIFIED,
+      category: dto.category || RiskCategory.OPERATIONAL,
       mitigationStrategy: dto.mitigationStrategy,
-      mitigationPlan: dto.mitigationPlan,
-      mitigationStatus: dto.mitigationStatus,
-      mitigationCost: dto.mitigationCost,
-      mitigationOwner: dto.mitigationOwner,
+      identifiedBy: dto.identifiedBy,
       identifiedDate: dto.identifiedDate,
-      assessmentDate: dto.assessmentDate,
-      nextReviewDate: dto.nextReviewDate,
-      reviewDate: dto.reviewDate,
-      costs: dto.costs,
-      timelineImpact: dto.timelineImpact,
-      resolutionDate: dto.resolutionDate,
-      projectId: dto.projectId,
-      phaseId: dto.phaseId,
-      taskId: dto.taskId,
       relatedRisks: dto.relatedRisks || [],
-      assignedTo: dto.assignedTo,
-      reviewer: dto.reviewer,
-      owner: dto.owner,
-      documents: dto.documents || [],
-      attachments: dto.attachments || [],
-      tags: dto.tags || [],
-      notes: dto.notes,
       createdAt: dto.createdAt || new Date().toISOString(),
-      updatedAt: dto.updatedAt || new Date().toISOString(),
-      // Additional UI fields
-      riskType: dto.riskType,
-      severity: (dto.severity || dto.riskLevel || this.calculateRiskLevel((dto.probability || 0) * (dto.impact || 0))) as RiskLevel | undefined,
-      affectedAreas: dto.affectedAreas || [],
-      mitigationActions: dto.mitigationActions || [],
-      contingencyPlan: dto.contingencyPlan,
-      monitoringPlan: dto.monitoringPlan,
-      reviewFrequency: dto.reviewFrequency
+      updatedAt: dto.updatedAt || new Date().toISOString()
     };
 
-    // Enhanced validation
+    // Validation des types
     if (!Object.values(RiskStatus).includes(cleaned.status)) {
       cleaned.status = RiskStatus.IDENTIFIED;
     }
 
     if (!Object.values(RiskCategory).includes(cleaned.category)) {
       cleaned.category = RiskCategory.OPERATIONAL;
-    }
-
-    if (cleaned.probability < 0 || cleaned.probability > 1) {
-      cleaned.probability = Math.max(0, Math.min(1, cleaned.probability));
-    }
-
-    if (cleaned.impact < 0 || cleaned.impact > 1) {
-      cleaned.impact = Math.max(0, Math.min(1, cleaned.impact));
-    }
-
-    // Auto-calculate risk score and level if not provided
-    if (!cleaned.riskScore) {
-      cleaned.riskScore = cleaned.probability * cleaned.impact;
-    }
-
-    if (!cleaned.riskLevel) {
-      cleaned.riskLevel = this.calculateRiskLevel(cleaned.riskScore);
     }
 
     return cleaned;

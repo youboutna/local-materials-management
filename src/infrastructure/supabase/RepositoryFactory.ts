@@ -52,6 +52,7 @@ import {
   IComplianceRepository,
   IInspectionSchedulingRepository,
   IProjectStakeholderRepository,
+  IMissionExpenseRepository,
 } from '@/domain/repositories';
 
 import { ILocationRepository } from '@/domain/repositories/LocationRepository';
@@ -86,7 +87,9 @@ import {
   SupabaseInsuranceAdapter,
   SupabaseParsedInvoiceAdapter,
   SupabaseInspectionPermissionAdapter,
-  SupabaseAlertRepository,
+} from './adapters';
+import { SupabaseMissionExpenseAdapter } from './adapters/SupabaseMissionExpenseAdapter';
+import {
   SupabaseTenderDocumentAdapter,
   TenderEstimateAdapter,
   PaymentBlockingAdapter,
@@ -152,6 +155,7 @@ interface RepositoryRegistry {
   reportingRepository?: IReportingRepository;
   projectStakeholderRepository?: IProjectStakeholderRepository;
   locationRepository?: ILocationRepository;
+  missionExpenseRepository?: IMissionExpenseRepository;
 }
 
 /**
@@ -687,6 +691,17 @@ export class RepositoryFactory {
       repositoryRegistry.locationRepository = new LocationRepository();
     }
     return repositoryRegistry.locationRepository;
+  }
+
+  /**
+   * Get Mission Expense Repository instance
+   * Lazy loaded for memory efficiency
+   */
+  static getMissionExpenseRepository(): IMissionExpenseRepository {
+    if (!repositoryRegistry.missionExpenseRepository) {
+      repositoryRegistry.missionExpenseRepository = new SupabaseMissionExpenseAdapter();
+    }
+    return repositoryRegistry.missionExpenseRepository;
   }
 
   /**
