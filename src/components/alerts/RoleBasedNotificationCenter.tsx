@@ -7,8 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Bell, Eye, EyeOff, Clock, AlertTriangle, DollarSign, FileText, Users } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
-// NotificationType is just a string alias for filter
-import { getNotificationLink } from '@/utils/notificationUtils';
+import { NotificationType, getNotificationLink } from '@/utils/notificationUtils';
 
 const RoleBasedNotificationCenter: React.FC = () => {
   const navigate = useNavigate();
@@ -17,10 +16,7 @@ const RoleBasedNotificationCenter: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
 
   const handleNotificationClick = async (notification: any) => {
-    // Mark as read
     await markAsRead(notification.id);
-    
-    // Navigate to the relevant page
     const link = getNotificationLink(
       notification.type as NotificationType,
       notification.metadata || {},
@@ -29,7 +25,7 @@ const RoleBasedNotificationCenter: React.FC = () => {
     navigate(link);
   };
 
-  const getNotificationIcon = (type: NotificationType) => {
+  const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'bank_guarantee_trigger':
       case 'contractor_penalty':
