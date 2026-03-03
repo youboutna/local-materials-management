@@ -1,6 +1,6 @@
 import { BaseEntityDTO } from '../shared';
 
-export interface CreateBankGuaranteeDto extends BaseEntityDTO {
+export interface CreateBankGuaranteeDTO extends BaseEntityDTO {
   /** Project ID this guarantee belongs to */
   projectId: string;
   

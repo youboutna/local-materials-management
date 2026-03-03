@@ -5,17 +5,20 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { BankGuaranteeType, BankGuaranteeStatus } from '@/dtos/entities/BankGuaranteeDTO';
 
 export interface BankGuaranteeFormData {
   projectId: string;
   contractorId: string;
+  contractorName: string;
   bankName: string;
   guaranteeAmount: number;
-  guaranteeType: string;
+  guaranteeType: BankGuaranteeType;
   issueDate: string;
   expiryDate: string;
-  status: string;
+  status: BankGuaranteeStatus;
   phaseId?: string;
+  supportingDocuments: string[];
   notes?: string;
 }
 
@@ -23,6 +26,7 @@ export interface BankGuaranteeRow {
   id: string;
   projectId: string;
   contractorId: string;
+  contractorName: string;
   bankName: string;
   guaranteeAmount: number;
   guaranteeType: string;
@@ -38,6 +42,7 @@ export interface BankGuaranteeRow {
   // Legacy snake_case for backward compatibility
   project_id?: string;
   contractor_id?: string;
+  contractor_name?: string;
   bank_name?: string;
   guarantee_amount?: number;
   guarantee_type?: string;
@@ -54,6 +59,7 @@ function mapRowToCamelCase(item: any): BankGuaranteeRow {
     id: item.id,
     projectId: item.project_id,
     contractorId: item.contractor_id,
+    contractorName: item.contractor_name || '',
     bankName: item.bank_name,
     guaranteeAmount: item.guarantee_amount,
     guaranteeType: item.guarantee_type,
@@ -67,6 +73,7 @@ function mapRowToCamelCase(item: any): BankGuaranteeRow {
     // Legacy
     project_id: item.project_id,
     contractor_id: item.contractor_id,
+    contractor_name: item.contractor_name,
     bank_name: item.bank_name,
     guarantee_amount: item.guarantee_amount,
     guarantee_type: item.guarantee_type,
@@ -97,14 +104,17 @@ export function useCreateBankGuarantee() {
     mutationFn: async (data: BankGuaranteeFormData) => {
       const repo = RepositoryFactory.getBankGuaranteeRepository();
       await repo.create({
-        project_id: data.projectId,
-        contractor_id: data.contractorId,
-        bank_name: data.bankName,
-        guarantee_amount: data.guaranteeAmount,
-        guarantee_type: data.guaranteeType,
-        issue_date: data.issueDate,
-        expiry_date: data.expiryDate,
+        projectId: data.projectId,
+        issuingBank: data.bankName,
+        guaranteeAmount: data.guaranteeAmount,
+        guaranteeType: data.guaranteeType,
+        issueDate: data.issueDate,
+        expiryDate: data.expiryDate,
         status: data.status || 'active',
+        guaranteeNumber: `BG-${Date.now()}`,
+        id: crypto.randomUUID(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       });
     },
     onSuccess: () => {
@@ -120,14 +130,12 @@ export function useUpdateBankGuarantee() {
     mutationFn: async ({ id, data }: { id: string; data: BankGuaranteeFormData }) => {
       const repo = RepositoryFactory.getBankGuaranteeRepository();
       await repo.update(id, {
-        project_id: data.projectId,
-        contractor_id: data.contractorId,
-        bank_name: data.bankName,
+        issuing_bank: data.bankName,
         guarantee_amount: data.guaranteeAmount,
         guarantee_type: data.guaranteeType,
         issue_date: data.issueDate,
         expiry_date: data.expiryDate,
-        status: data.status,
+        status: data.status
       });
     },
     onSuccess: () => {

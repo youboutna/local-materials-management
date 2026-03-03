@@ -4,13 +4,13 @@
  */
 
 import { BankGuaranteeDTO } from '@/dtos/entities/BankGuaranteeDTO';
-import { CreateBankGuaranteeDto } from '@/dtos/bank-guarantees/CreateBankGuaranteeDto';
-import { UpdateBankGuaranteeDto } from '@/dtos/bank-guarantees/UpdateBankGuaranteeDto';
+import { CreateBankGuaranteeDTO } from '@/dtos/bank-guarantees/CreateBankGuaranteeDTO';
+import { UpdateBankGuaranteeDTO } from '@/dtos/bank-guarantees/UpdateBankGuaranteeDTO';
 
 /**
  * Options for querying bank guarantees
  */
-interface BankGuaranteeQueryOptions {
+export interface BankGuaranteeQueryOptions {
   projectId?: string;
   limit?: number;
   offset?: number;
@@ -21,18 +21,23 @@ export interface IBankGuaranteeRepository {
   /**
    * Create bank guarantee
    */
-  create(guarantee: CreateBankGuaranteeDto): Promise<BankGuaranteeDto>;
+  create(guarantee: CreateBankGuaranteeDTO): Promise<BankGuaranteeDTO>;
+
+  /**
+   * Get all guarantees
+   */
+  findAll(): Promise<BankGuaranteeDTO[]>;
 
   /**
    * Get guarantees with query options
    * @param options Query options including pagination and filters
    */
-  getByProject(options: BankGuaranteeQueryOptions): Promise<BankGuaranteeDto[]>;
+  getByProject(options: BankGuaranteeQueryOptions): Promise<BankGuaranteeDTO[]>;
 
   /**
    * @deprecated Use getByProject with options instead
    */
-  findByProjectId(projectId: string): Promise<BankGuaranteeDto[]>;
+  findByProjectId(projectId: string): Promise<BankGuaranteeDTO[]>;
 
   /**
    * Update guarantee status
@@ -52,12 +57,12 @@ export interface IBankGuaranteeRepository {
   /**
    * Get guarantee by ID
    */
-  getById(guaranteeId: string): Promise<BankGuaranteeDto>;
+  getById(guaranteeId: string): Promise<BankGuaranteeDTO>;
 
   /**
    * Update guarantee
    */
-  update(guaranteeId: string, updates: UpdateBankGuaranteeDto): Promise<BankGuaranteeDto>;
+  update(guaranteeId: string, updates: UpdateBankGuaranteeDTO): Promise<BankGuaranteeDTO>;
 
   /**
    * Delete guarantee

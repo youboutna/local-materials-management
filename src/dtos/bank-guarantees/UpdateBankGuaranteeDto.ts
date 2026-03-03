@@ -1,6 +1,6 @@
 import { BankGuaranteeActionDTO } from './BankGuaranteeActionDTO';
 
-export interface UpdateBankGuaranteeDto {
+export interface UpdateBankGuaranteeDTO {
   /** Type of bank guarantee */
   guarantee_type?: 'performance' | 'payment' | 'advance_payment' | 'warranty' | 'retention';
   

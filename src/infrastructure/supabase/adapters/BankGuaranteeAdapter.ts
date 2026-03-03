@@ -5,7 +5,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { IBankGuaranteeRepository } from '@/domain/repositories/IBankGuaranteeRepository';
-import { BankGuaranteeDto, CreateBankGuaranteeDto, UpdateBankGuaranteeDto } from '@/dtos/bank-guarantees';
+import { BankGuaranteeDTO, CreateBankGuaranteeDTO, UpdateBankGuaranteeDTO } from '@/dtos/bank-guarantees';
 import { BankGuaranteeQueryOptions } from '@/domain/repositories/IBankGuaranteeRepository';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
@@ -30,7 +30,7 @@ interface SupabaseBankGuarantee {
 
 export class BankGuaranteeAdapter implements IBankGuaranteeRepository {
   
-  async create(guarantee: CreateBankGuaranteeDto): Promise<BankGuaranteeDto> {
+  async create(guarantee: CreateBankGuaranteeDTO): Promise<BankGuaranteeDTO> {
     const supabaseData = {
       project_id: guarantee.project_id,
       guarantee_type: guarantee.guarantee_type,
@@ -57,7 +57,7 @@ export class BankGuaranteeAdapter implements IBankGuaranteeRepository {
     return this.toDto(data as SupabaseBankGuarantee);
   }
 
-  async getByProject(options: BankGuaranteeQueryOptions): Promise<BankGuaranteeDto[]> {
+  async getByProject(options: BankGuaranteeQueryOptions): Promise<BankGuaranteeDTO[]> {
     let query = supabase
       .from('bank_guarantees')
       .select('*')
@@ -74,8 +74,12 @@ export class BankGuaranteeAdapter implements IBankGuaranteeRepository {
     return (data as SupabaseBankGuarantee[]).map(this.toDto);
   }
 
-  async findByProjectId(projectId: string): Promise<BankGuaranteeDto[]> {
+  async findByProjectId(projectId: string): Promise<BankGuaranteeDTO[]> {
     return this.getByProject({ projectId });
+  }
+
+  async findAll(): Promise<BankGuaranteeDTO[]> {
+    return this.getByProject({});
   }
 
   async updateStatus(guaranteeId: string, status: string): Promise<void> {
@@ -105,7 +109,7 @@ export class BankGuaranteeAdapter implements IBankGuaranteeRepository {
     if (error) throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to release project guarantees', error);
   }
 
-  async getById(guaranteeId: string): Promise<BankGuaranteeDto> {
+  async getById(guaranteeId: string): Promise<BankGuaranteeDTO> {
     const { data, error } = await supabase
       .from('bank_guarantees')
       .select('*')
@@ -116,7 +120,7 @@ export class BankGuaranteeAdapter implements IBankGuaranteeRepository {
     return this.toDto(data as SupabaseBankGuarantee);
   }
 
-  async update(guaranteeId: string, updates: UpdateBankGuaranteeDto): Promise<BankGuaranteeDto> {
+  async update(guaranteeId: string, updates: UpdateBankGuaranteeDTO): Promise<BankGuaranteeDTO> {
     const supabaseData = {
       guarantee_type: updates.guarantee_type,
       guarantee_amount: updates.guarantee_amount,
@@ -150,7 +154,7 @@ export class BankGuaranteeAdapter implements IBankGuaranteeRepository {
     if (error) throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to delete bank guarantee', error);
   }
 
-  private toDto(data: SupabaseBankGuarantee): BankGuaranteeDto {
+  private toDto(data: SupabaseBankGuarantee): BankGuaranteeDTO {
     return {
       id: data.id,
       project_id: data.project_id,

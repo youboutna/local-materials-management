@@ -109,21 +109,47 @@ export class InspectionWorkflowService {
     this.documentService = documentService || new DocumentService();
   }
 
-  private readonly workflowTransitions: WorkflowTransition[] = [
-    { from: 'requested', to: 'scheduled', requiredRole: ['technical_manager', 'inspector'], requiresApproval: false },
-    { from: 'scheduled', to: 'in_progress', requiredRole: ['inspector'], requiresApproval: false },
-    { from: 'in_progress', to: 'completed', requiredRole: ['inspector'], requiredDocuments: ['photos', 'rapport_final'], requiresApproval: false },
-    { from: 'completed', to: 'approved', requiredRole: ['engineer', 'technical_manager'], requiresApproval: true },
-    { from: 'completed', to: 'rejected', requiredRole: ['engineer', 'technical_manager'], requiresApproval: true },
-    { from: 'completed', to: 'requires_changes', requiredRole: ['engineer', 'technical_manager'], requiresApproval: true },
-    { from: 'requires_changes', to: 'in_progress', requiredRole: ['inspector'], requiresApproval: false },
-    { from: 'rejected', to: 'in_progress', requiredRole: ['inspector'], requiresApproval: false }
+  // Workflow transitions configuration
+  private workflowTransitions: WorkflowTransition[] = [
+    {
+      from: 'requested',
+      to: 'scheduled',
+      requiredRole: ['technical_manager', 'inspector']
+    },
+    {
+      from: 'scheduled',
+      to: 'in_progress',
+      requiredRole: ['inspector']
+    },
+    {
+      from: 'in_progress',
+      to: 'completed',
+      requiredRole: ['inspector']
+    },
+    {
+      from: 'completed',
+      to: 'approved',
+      requiredRole: ['technical_manager', 'project_manager'],
+      requiresApproval: true
+    },
+    {
+      from: 'completed',
+      to: 'rejected',
+      requiredRole: ['technical_manager', 'project_manager'],
+      requiresApproval: true
+    },
+    {
+      from: 'completed',
+      to: 'requires_changes',
+      requiredRole: ['technical_manager', 'project_manager']
+    }
   ];
 
-  private readonly requiredDocumentsByType: Record<string, RequiredDocument[]> = {
+  // Required documents by inspection type
+  private requiredDocumentsByType: Record<string, RequiredDocument[]> = {
     'regular': [
-      { type: 'photos', label: 'Photos de chantier', required: true, minCount: 5, maxCount: 20, acceptedFormats: ['jpg', 'jpeg', 'png'] },
-      { type: 'rapport_final', label: "Rapport d'inspection", required: true, maxCount: 1, acceptedFormats: ['pdf', 'docx'] }
+      { type: 'pv_service_fait', label: 'PV de service fait', required: true, maxCount: 1, acceptedFormats: ['pdf'] },
+      { type: 'photos', label: 'Photos de fin de travaux', required: true, minCount: 5, maxCount: 20, acceptedFormats: ['jpg', 'jpeg', 'png'] }
     ],
     'main_levee': [
       { type: 'pv_main_levee', label: 'PV de main levée', required: true, maxCount: 1, acceptedFormats: ['pdf'] },
@@ -137,11 +163,11 @@ export class InspectionWorkflowService {
     ]
   };
 
-  async createInspectionRequest(request: InspectionRequest): Promise<any> {
+  async createInspectionRequest(request: InspectionRequest): Promise<CreateInspectionDTO> {
     try {
       this.validateInspectionRequest(request);
 
-      const inspectionData: any = {
+      const inspectionData: CreateInspectionDTO = {
         projectId: request.project_id,
         phaseId: request.phase_id,
         title: `Inspection - ${request.inspection_type}`,
@@ -149,35 +175,27 @@ export class InspectionWorkflowService {
         inspector: request.requested_by,
         date: request.requested_date,
         status: InspectionStatus.PENDING,
-        priority: request.priority || 'medium',
-        inspectionType: request.inspection_type,
-        proposedDates: request.proposed_dates || []
+        priority: request.priority as InspectionPriority || 'medium'
       };
 
       const inspection = await this.inspectionService.createInspection(inspectionData);
-
+      
+      // Send notifications
       await this.notificationService.createNotification({
-        recipient_id: 'system',
-        title: "Nouvelle demande d'inspection",
-        message: `Inspection ${request.inspection_type} demandée pour le projet ${request.project_id}`,
-        type: 'info',
-        related_id: inspection.id,
-        metadata: {
-          inspection_id: inspection.id,
-          project_id: request.project_id,
-          inspection_type: request.inspection_type,
-          priority: request.priority || 'medium'
-        }
+        recipient_id: 'technical_manager',
+        title: 'Nouvelle demande d\'inspection',
+        message: `Une inspection a été demandée pour le projet ${request.project_id}`,
+        type: 'info'
       });
-
-      return inspection;
+      
+      return inspectionData;
     } catch (error) {
       console.error('Error creating inspection request:', error);
       throw new AppError(ErrorCode.DATABASE_ERROR, "Erreur lors de la création de la demande d'inspection");
     }
   }
 
-  async scheduleInspection(schedule: InspectionSchedule): Promise<any> {
+  async scheduleInspection(schedule: InspectionSchedule): Promise<UpdateInspectionDTO> {
     try {
       await this.validateWorkflowTransition(schedule.inspection_id, 'scheduled', ['technical_manager', 'inspector']);
 
@@ -189,95 +207,107 @@ export class InspectionWorkflowService {
         notes: schedule.notes || ''
       };
 
-      const inspection = await this.inspectionService.updateInspection(schedule.inspection_id, updateData as any);
-      if (!inspection) throw new AppError(ErrorCode.NOT_FOUND, 'Inspection non trouvée');
-
+      const inspection = await this.inspectionService.updateInspection(schedule.inspection_id, {
+        id: schedule.inspection_id,
+        date: schedule.scheduled_date,
+        inspector: schedule.inspector_id,
+        status: InspectionStatus.IN_PROGRESS,
+        comments: schedule.notes || '',
+        documents: []
+      });
+      
+      // Send notifications
       await this.notificationService.createNotification({
-        recipient_id: schedule.inspector_id,
-        title: 'Inspection programmée',
-        message: `Inspection programmée pour le ${schedule.scheduled_date}`,
-        type: 'info',
-        related_id: schedule.inspection_id,
-        metadata: {
-          inspection_id: schedule.inspection_id,
-          scheduled_date: schedule.scheduled_date,
-          location: schedule.location
-        }
+        recipient_id: 'technical_manager',
+        title: 'Inspection planifiée',
+        message: `L'inspection ${schedule.inspection_id} a été planifiée pour le ${schedule.scheduled_date}`,
+        type: 'info'
       });
 
-      return inspection;
+      return updateData;
     } catch (error) {
       console.error('Error scheduling inspection:', error);
-      throw new AppError(ErrorCode.DATABASE_ERROR, "Erreur lors de la programmation de l'inspection");
+      throw new AppError(ErrorCode.DATABASE_ERROR, "Erreur lors de la planification de l'inspection");
     }
   }
 
-  async executeInspection(execution: InspectionExecution): Promise<any> {
+  async executeInspection(execution: InspectionExecution): Promise<UpdateInspectionDTO> {
     try {
-      await this.validateWorkflowTransition(execution.inspection_id, 'completed', ['inspector']);
+      await this.validateWorkflowTransition(execution.inspection_id, 'in_progress', ['inspector']);
 
       const updateData: UpdateInspectionDTO = {
         id: execution.inspection_id,
         status: InspectionStatus.COMPLETED,
-        notes: execution.findings || '',
+        notes: execution.findings || ''
       };
 
-      const inspection = await this.inspectionService.updateInspection(execution.inspection_id, updateData as any);
-      if (!inspection) throw new AppError(ErrorCode.NOT_FOUND, 'Inspection non trouvée');
+      const inspection = await this.inspectionService.updateInspection(execution.inspection_id, updateData);
+      
+      // Upload documents if provided
+      if (execution.non_conformities && execution.non_conformities.length > 0) {
+        // TODO: Implement document upload for non-conformities
+        console.log('Non-conformities to document:', execution.non_conformities);
+      }
 
+      // Send notifications
       await this.notificationService.createNotification({
-        recipient_id: 'system',
-        title: 'Inspection terminée - En attente de validation',
-        message: `Inspection ${execution.inspection_id} terminée, en attente de validation`,
-        type: 'info',
-        related_id: execution.inspection_id,
-        metadata: {
-          inspection_id: execution.inspection_id,
-          completed_at: execution.completed_at,
-          non_conformities: execution.non_conformities?.length || 0
-        }
+        recipient_id: 'technical_manager',
+        title: 'Inspection terminée',
+        message: `L'inspection ${execution.inspection_id} a été terminée`,
+        type: 'info'
       });
 
-      return inspection;
+      return updateData;
     } catch (error) {
       console.error('Error executing inspection:', error);
       throw new AppError(ErrorCode.DATABASE_ERROR, "Erreur lors de l'exécution de l'inspection");
     }
   }
 
-  async reviewInspection(review: InspectionReview): Promise<any> {
+  async reviewInspection(review: InspectionReview): Promise<UpdateInspectionDTO> {
     try {
-      await this.validateWorkflowTransition(review.inspection_id, review.decision as InspectionWorkflowStatus, ['engineer', 'technical_manager']);
+      const targetStatus = review.decision === 'approved' ? 'approved' : 
+                        review.decision === 'rejected' ? 'rejected' : 'requires_changes';
+      
+      await this.validateWorkflowTransition(review.inspection_id, targetStatus, ['technical_manager', 'project_manager']);
 
       const updateData: UpdateInspectionDTO = {
         id: review.inspection_id,
-        status: review.decision as unknown as InspectionStatus,
+        status: review.decision === 'approved' ? InspectionStatus.APPROVED :
+               review.decision === 'rejected' ? InspectionStatus.REJECTED :
+               InspectionStatus.REQUIRES_CHANGES,
         notes: review.comments || ''
       };
 
-      const inspection = await this.inspectionService.updateInspection(review.inspection_id, updateData as any);
-      if (!inspection) throw new AppError(ErrorCode.NOT_FOUND, 'Inspection non trouvée');
+      const inspection = await this.inspectionService.updateInspection(review.inspection_id, {
+        id: review.inspection_id,
+        status: review.decision === 'approved' ? InspectionStatus.APPROVED :
+               review.decision === 'rejected' ? InspectionStatus.REJECTED :
+               InspectionStatus.REQUIRES_CHANGES,
+        comments: review.comments || '',
+        documents: []
+      });
+      
+      // Prepare notification data
+      const notificationTitle = review.decision === 'approved' ? 'Inspection approuvée' :
+                              review.decision === 'rejected' ? 'Inspection rejetée' :
+                              'Inspection requiert des modifications';
+      
+      const notificationMessage = review.decision === 'approved' ? 
+        `L'inspection ${review.inspection_id} a été approuvée` :
+        review.decision === 'rejected' ?
+        `L'inspection ${review.inspection_id} a été rejetée` :
+        `L'inspection ${review.inspection_id} requiert des modifications`;
 
-      const notificationTitle = review.decision === 'approved' ? 'Inspection approuvée' : 'Inspection requiert des modifications';
-      const notificationMessage = review.decision === 'approved' 
-        ? `Inspection ${review.inspection_id} a été approuvée`
-        : `Inspection ${review.inspection_id} requiert des modifications: ${review.required_changes?.join(', ')}`;
-
+      // Send notifications
       await this.notificationService.createNotification({
-        recipient_id: 'system',
+        recipient_id: 'technical_manager',
         title: notificationTitle,
         message: notificationMessage,
-        type: 'info',
-        related_id: review.inspection_id,
-        metadata: {
-          inspection_id: review.inspection_id,
-          decision: review.decision,
-          reviewed_by: review.reviewed_by,
-          required_changes: review.required_changes
-        }
+        type: 'info'
       });
 
-      return inspection;
+      return updateData;
     } catch (error) {
       console.error('Error reviewing inspection:', error);
       throw new AppError(ErrorCode.DATABASE_ERROR, "Erreur lors de la révision de l'inspection");
@@ -286,6 +316,22 @@ export class InspectionWorkflowService {
 
   getRequiredDocuments(inspectionType: string): RequiredDocument[] {
     return this.requiredDocumentsByType[inspectionType] || this.requiredDocumentsByType['regular'];
+  }
+
+  // Static methods for backward compatibility
+  static getRequiredDocuments(inspectionType: string): RequiredDocument[] {
+    const service = new InspectionWorkflowService();
+    return service.getRequiredDocuments(inspectionType);
+  }
+
+  static async createInspectionRequest(request: InspectionRequest): Promise<CreateInspectionDTO> {
+    const service = new InspectionWorkflowService();
+    return service.createInspectionRequest(request);
+  }
+
+  static async scheduleInspection(schedule: InspectionSchedule): Promise<UpdateInspectionDTO> {
+    const service = new InspectionWorkflowService();
+    return service.scheduleInspection(schedule);
   }
 
   getAvailableTransitions(currentStatus: InspectionWorkflowStatus, userRole: string): WorkflowTransition[] {
@@ -302,34 +348,27 @@ export class InspectionWorkflowService {
   }
 
   private async validateWorkflowTransition(
-    inspectionId: string,
-    targetStatus: InspectionWorkflowStatus,
+    inspectionId: string, 
+    targetStatus: string, 
     userRoles: string[]
   ): Promise<void> {
     const inspection = await this.inspectionService.getInspectionById(inspectionId);
-    if (!inspection) throw new AppError(ErrorCode.NOT_FOUND, 'Inspection non trouvée');
+    if (!inspection) {
+      throw new AppError(ErrorCode.NOT_FOUND, 'Inspection non trouvée');
+    }
 
-    const currentStatus = (inspection.status as string) as InspectionWorkflowStatus;
-
+    const currentStatus = inspection.status;
     const validTransition = this.workflowTransitions.find(
-      transition => transition.from === currentStatus && 
-                   transition.to === targetStatus &&
-                   transition.requiredRole.some(role => userRoles.includes(role))
+      t => t.from === currentStatus as string && t.to === targetStatus
     );
 
     if (!validTransition) {
-      throw new AppError(
-        ErrorCode.VALIDATION_ERROR,
-        `Transition invalide de ${currentStatus} vers ${targetStatus} pour les rôles: ${userRoles.join(', ')}`
-      );
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Transition de workflow non valide');
     }
 
-    if (validTransition.requiredDocuments) {
-      console.log(`Checking required documents: ${validTransition.requiredDocuments.join(', ')}`);
+    const hasRequiredRole = userRoles.some(role => validTransition.requiredRole.includes(role));
+    if (!hasRequiredRole) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Rôle requis pour cette transition');
     }
-  }
-
-  static getInspectionWorkflowService(): InspectionWorkflowService {
-    return new InspectionWorkflowService();
   }
 }

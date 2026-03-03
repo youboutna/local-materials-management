@@ -45,8 +45,8 @@ const EnhancedBankGuaranteeCrud = () => {
     issueDate: '',
     expiryDate: '',
     status: 'active',
-    contractor_name: '',
-    supporting_documents: [],
+    contractorName: '',
+    supportingDocuments: [],
     notes: ''
   });
   
@@ -109,7 +109,7 @@ const EnhancedBankGuaranteeCrud = () => {
       expiryDate: guarantee.expiryDate || '',
       status: guarantee.status,
       contractorName: guarantee.contractorName || '',
-      supporting_documents: guarantee.supportingDocuments || [],
+      supportingDocuments: guarantee.supportingDocuments || [],
       notes: guarantee.notes || ''
     });
     setSelectedGuarantee(guarantee);
@@ -129,7 +129,7 @@ const EnhancedBankGuaranteeCrud = () => {
       expiryDate: guarantee.expiryDate || '',
       status: guarantee.status,
       contractorName: guarantee.contractorName || '',
-      supporting_documents: guarantee.supportingDocuments || [],
+      supportingDocuments: guarantee.supportingDocuments || [],
       notes: guarantee.notes || ''
     });
     setSelectedGuarantee(guarantee);
@@ -473,4 +473,3 @@ const EnhancedBankGuaranteeCrud = () => {
 };
 
 export default EnhancedBankGuaranteeCrud;
->>>>>>> 4ca2ffe ( fix alerts)

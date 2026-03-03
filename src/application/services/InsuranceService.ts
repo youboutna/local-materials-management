@@ -8,15 +8,7 @@ import { IInsuranceRepository } from '@/domain/repositories/IInsuranceRepository
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { NotificationService } from '@/application/services/NotificationService';
 import { InsuranceCertificateEntity } from '@/domain/entities/InsuranceCertificate.entity';
-import { InsuranceCertificateDTO } from '@/dtos/entities/InsuranceCertificateDTO';
-import {
-  InsuranceType,
-  InsuranceStatus,
-  CreateInsuranceRequestDTO,
-  UpdateInsuranceRequestDTO,
-  InsuranceStatisticsDTO,
-  InsuranceAlertDTO
-} from '@/dtos/entities/InsuranceDTO';
+import { InsuranceCertificateDTO, InsuranceType, InsuranceStatus, CreateInsuranceCertificateDTO, UpdateInsuranceCertificateDTO, InsuranceStatisticsDTO, InsuranceAlertDTO, CreateInsuranceRequestDTO } from '@/dtos/entities/InsuranceDTO';
 
 // Status and type constants for validation
 const INSURANCE_STATUSES = ['active', 'expired', 'expiring_soon', 'missing', 'pending'] as const;
@@ -120,10 +112,10 @@ export class InsuranceService {
       let expiringSoonCertificates = 0;
       
       for (const cert of certificates) {
-        totalCoverageAmount += cert.coverage_amount || 0;
+        totalCoverageAmount += cert.coverageAmount || 0;
         
         // Count by type
-        const type = cert.coverage_type || 'unknown';
+        const type = cert.coverageType || 'unknown';
         byType[type] = (byType[type] || 0) + 1;
         
         // Count by status
@@ -152,7 +144,7 @@ export class InsuranceService {
   }
 
   isExpiringSoon(certificate: InsuranceCertificateDTO, daysThreshold: number = 30): boolean {
-    const validUntil = certificate.valid_until;
+    const validUntil = certificate.validUntil;
     if (!validUntil) return false;
     
     const endDate = new Date(validUntil);
@@ -161,7 +153,7 @@ export class InsuranceService {
     return daysUntilExpiry <= daysThreshold && daysUntilExpiry > 0;
   }
 
-  validateInsuranceData(data: Partial<CreateInsuranceRequestDTO>): { isValid: boolean; errors: Record<string, string[]> } {
+  validateInsuranceData(data: Partial<CreateInsuranceCertificateDTO>): { isValid: boolean; errors: Record<string, string[]> } {
     const errors: Record<string, string[]> = {};
     
     if (!data.projectId) errors.projectId = ['Project ID required'];
@@ -218,7 +210,7 @@ export class InsuranceService {
     return service.getInsuranceStatistics(projectId);
   }
 
-  async createInsuranceCertificate(data: CreateInsuranceRequestDTO): Promise<InsuranceCertificateDTO> {
+  async createInsuranceCertificate(data: CreateInsuranceCertificateDTO): Promise<InsuranceCertificateDTO> {
     try {
       // Use insuranceRepository methods correctly
       const certificates = await this.insuranceRepository.getByProjectId(data.projectId);
@@ -244,7 +236,7 @@ export class InsuranceService {
     }
   }
 
-  async updateInsuranceCertificate(id: string, data: UpdateInsuranceRequestDTO): Promise<InsuranceCertificateDTO | null> {
+  async updateInsuranceCertificate(id: string, data: UpdateInsuranceCertificateDTO): Promise<InsuranceCertificateDTO | null> {
     try {
       // Return updated certificate as DTO
       return {
