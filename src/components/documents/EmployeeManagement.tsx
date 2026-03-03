@@ -144,16 +144,16 @@ const EmployeeManagement = () => {
   const handleEdit = (employee: EmployeeDTO) => {
     setEditingEmployee(employee);
     setFormData({
-      employee_id: employee.employee_id,
-      full_name: employee.full_name,
+      employee_id: employee.employeeId || '',
+      full_name: employee.fullName || '',
       position: employee.position || '',
-      department: employee.department || '',
+      department: (employee.department as string) || '',
       phone: employee.phone || '',
       email: employee.email || '',
-      hire_date: employee.hire_date || '',
+      hire_date: employee.startDate || '',
       salary: employee.salary || 0,
       skills: employee.skills || [],
-      is_active: employee.is_active || true
+      is_active: employee.isActive ?? true
     });
     setShowCreateDialog(true);
   };

@@ -12,38 +12,27 @@ import { useMaterialsHex } from '@/hooks/hexagonal';
 import { useWorkspacesHex } from '@/hooks/hexagonal';
 
 const RegionalDashboard = () => {
-  // Use hexagonal hooks to fetch data instead of props
   const { projects = [] } = useProjectsHex();
   const { materials = [] } = useMaterialsHex();
   const { workspaces = [] } = useWorkspacesHex();
-  // Calculate regional statistics
+
   const regionalStats = useMemo(() => {
     return MAURITANIA_REGIONS.map(region => {
-      // Filter projects for this region
       const regionProjects = projects.filter(project => 
         project.location?.toLowerCase().includes(region.name.toLowerCase()) ||
         project.location?.toLowerCase().includes(region.nameAr.toLowerCase())
       );
 
-      // Filter materials for this region
       const regionMaterials = materials.filter(material => 
         material.originLocation?.toLowerCase().includes(region.name.toLowerCase()) ||
-<<<<<<< HEAD
         material.originLocation?.toLowerCase().includes(region.nameAr.toLowerCase())
-=======
-        material.originLocation?.toLowerCase().includes(region.nameAr.toLowerCase()) ||
-        material.adresse?.toLowerCase().includes(region.name.toLowerCase()) ||
-        material.adresse?.toLowerCase().includes(region.nameAr.toLowerCase())
->>>>>>> b4aa55c (fix camelcase conv)
       );
 
-      // Filter workspaces for this region
       const regionWorkspaces = workspaces.filter(workspace => 
         workspace.location.name?.toLowerCase().includes(region.name.toLowerCase()) ||
         workspace.location.nameAr?.toLowerCase().includes(region.nameAr.toLowerCase())
       );
 
-      // Calculate metrics
       const totalBudget = regionProjects.reduce((sum, project) => sum + project.budget, 0);
       const avgProgress = regionProjects.length > 0 
         ? regionProjects.reduce((sum, project) => sum + project.progress, 0) / regionProjects.length
@@ -87,29 +76,23 @@ const RegionalDashboard = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Key Metrics */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-1 mb-1">
                     <Building2 className="h-4 w-4 text-terracotta-500" />
-                    <span className="text-2xl font-bold text-adrar-800">
-                      {stat.projectCount}
-                    </span>
+                    <span className="text-2xl font-bold text-adrar-800">{stat.projectCount}</span>
                   </div>
                   <p className="text-xs text-adrar-600">Projets</p>
                 </div>
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-1 mb-1">
                     <Users className="h-4 w-4 text-terracotta-500" />
-                    <span className="text-2xl font-bold text-adrar-800">
-                      {stat.workspaceCount}
-                    </span>
+                    <span className="text-2xl font-bold text-adrar-800">{stat.workspaceCount}</span>
                   </div>
                   <p className="text-xs text-adrar-600">Espaces</p>
                 </div>
               </div>
 
-              {/* Progress Bar */}
               {stat.projectCount > 0 && (
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
@@ -120,7 +103,6 @@ const RegionalDashboard = () => {
                 </div>
               )}
 
-              {/* Project Status */}
               {stat.projectCount > 0 && (
                 <div className="flex justify-between text-sm">
                   <div className="text-center">
@@ -134,7 +116,6 @@ const RegionalDashboard = () => {
                 </div>
               )}
 
-              {/* Budget Information */}
               {stat.totalBudget > 0 && (
                 <div className="pt-2 border-t border-sandstone-200">
                   <div className="flex items-center gap-2">
@@ -149,7 +130,6 @@ const RegionalDashboard = () => {
                 </div>
               )}
 
-              {/* Materials Count */}
               {stat.materialCount > 0 && (
                 <div className="text-center pt-2 border-t border-sandstone-200">
                   <div className="font-semibold text-adrar-800">{stat.materialCount}</div>
