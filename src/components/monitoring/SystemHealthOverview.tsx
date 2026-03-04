@@ -16,11 +16,14 @@ import {
   Clock,
   Zap
 } from 'lucide-react';
-import { PerformanceMonitoringService, DatabaseMetricsDTO, PerformanceMetricsDTO } from '@/application/services/PerformanceMonitoringService';
+import { PerformanceMonitoringService } from '@/application/services/PerformanceMonitoringService';
+// Local type definitions for metrics
+interface DatabaseMetricsDTO { totalSize?: number; activeConnections?: number; queryPerformance?: number; }
+interface LocalPerformanceMetricsDTO { uptime?: number; responseTime?: number; errorRate?: number; throughput?: number; }
 import { getHealthColor, getHealthBadgeVariant, formatMetric } from '@/utils/monitoringCalculations';
 
 const SystemHealthOverview: React.FC = () => {
-  const [stats, setStats] = useState<PerformanceMetricsDTO | null>(null);
+  const [stats, setStats] = useState<LocalPerformanceMetricsDTO | null>(null);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 

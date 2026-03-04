@@ -28,6 +28,7 @@ import {
   BankGuaranteeFormData,
   BankGuaranteeRow
 } from '@/hooks/hexagonal';
+import { BankGuaranteeType, BankGuaranteeStatus } from '@/dtos/entities/BankGuaranteeDTO';
 
 const EnhancedBankGuaranteeCrud = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -41,10 +42,10 @@ const EnhancedBankGuaranteeCrud = () => {
     contractorId: '',
     bankName: '',
     guaranteeAmount: 0,
-    guaranteeType: '',
+    guaranteeType: 'performance' as BankGuaranteeType,
     issueDate: '',
     expiryDate: '',
-    status: 'active',
+    status: 'active' as BankGuaranteeStatus,
     contractorName: '',
     supportingDocuments: [],
     notes: ''
@@ -80,10 +81,10 @@ const EnhancedBankGuaranteeCrud = () => {
       contractorId: '',
       bankName: '',
       guaranteeAmount: 0,
-      guaranteeType: '',
+      guaranteeType: 'performance' as BankGuaranteeType,
       issueDate: '',
       expiryDate: '',
-      status: 'active',
+      status: 'active' as BankGuaranteeStatus,
       contractorName: '',
       supportingDocuments: [],
       notes: ''
@@ -104,10 +105,10 @@ const EnhancedBankGuaranteeCrud = () => {
       contractorId: guarantee.contractorId || '',
       bankName: guarantee.bankName || '',
       guaranteeAmount: guarantee.guaranteeAmount || 0,
-      guaranteeType: guarantee.guaranteeType || '',
+      guaranteeType: (guarantee.guaranteeType || 'performance') as BankGuaranteeType,
       issueDate: guarantee.issueDate || '',
       expiryDate: guarantee.expiryDate || '',
-      status: guarantee.status,
+      status: (guarantee.status || 'active') as BankGuaranteeStatus,
       contractorName: guarantee.contractorName || '',
       supportingDocuments: guarantee.supportingDocuments || [],
       notes: guarantee.notes || ''
@@ -124,10 +125,10 @@ const EnhancedBankGuaranteeCrud = () => {
       contractorId: guarantee.contractorId || '',
       bankName: guarantee.bankName || '',
       guaranteeAmount: guarantee.guaranteeAmount || 0,
-      guaranteeType: guarantee.guaranteeType || '',
+      guaranteeType: (guarantee.guaranteeType || 'performance') as BankGuaranteeType,
       issueDate: guarantee.issueDate || '',
       expiryDate: guarantee.expiryDate || '',
-      status: guarantee.status,
+      status: (guarantee.status || 'active') as BankGuaranteeStatus,
       contractorName: guarantee.contractorName || '',
       supportingDocuments: guarantee.supportingDocuments || [],
       notes: guarantee.notes || ''
@@ -263,8 +264,8 @@ const EnhancedBankGuaranteeCrud = () => {
                     onChange={(supplier) => {
                       setFormData(prev => ({
                         ...prev,
-                        contractor_id: supplier.id || '',
-                        contractor_name: supplier.name
+                        contractorId: supplier.id || '',
+                        contractorName: supplier.name
                       }));
                     }}
                     disabled={isViewMode}
@@ -286,7 +287,7 @@ const EnhancedBankGuaranteeCrud = () => {
                   <Label htmlFor="guaranteeType">Type de Garantie *</Label>
                   <Select 
                     value={formData.guaranteeType} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, guaranteeType: value }))}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, guaranteeType: value as BankGuaranteeType }))}
                     disabled={isViewMode}
                   >
                     <SelectTrigger>
@@ -318,7 +319,7 @@ const EnhancedBankGuaranteeCrud = () => {
                   <Label htmlFor="status">Statut</Label>
                   <Select 
                     value={formData.status} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as BankGuaranteeStatus }))}
                     disabled={isViewMode}
                   >
                     <SelectTrigger>

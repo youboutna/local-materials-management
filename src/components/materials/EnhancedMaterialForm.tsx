@@ -838,7 +838,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                 if (location.locationData) {
                   if (location.locationData.type === 'region') {
                     try {
-                      const regionData = await getLocationByCode(location.locationData.code, 'region');
+                      const regionData = await getLocationByCode((location.locationData as any).code, 'region');
                       setSelectedRegion(regionData);
                     } catch (error) {
                       console.error('Error fetching region data:', error);
@@ -850,7 +850,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
 
                   if (location.locationData.type === 'city') {
                     try {
-                      const cityData = await getLocationByCode(location.locationData.code, 'city');
+                      const cityData = await getLocationByCode((location.locationData as any).code, 'city');
                       setSelectedCity(cityData);
                     } catch (error) {
                       console.error('Error fetching city data:', error);
@@ -995,7 +995,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     type="number"
                     min="1"
                     value={formData.timeline?.estimatedDuration || 0}
-                    onChange={(e) => handleTimelineChange('estimatedDuration', parseInt(e.target.value) || 0)}
+                    onChange={(e) => handleTimelineChange('estimatedDuration', String(parseInt(e.target.value) || 0))}
                     className="border-gray-300 focus:border-blue-500"
                   />
                 </div>

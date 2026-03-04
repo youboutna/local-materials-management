@@ -7,10 +7,24 @@ import { Badge } from '@/components/ui/badge';
 import { Target, MapPin, Globe, Compass, Info, Navigation } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, Polygon, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
 // Import hexagonal architecture services
 import { useLocationHex } from '@/hooks/hexagonal/useLocationHex';
 import { LocationDataService } from '@/application/services/LocationDataService';
+
+// City interface for this component
+interface MapCity {
+  code: string;
+  name: string;
+  nameAr: string;
+  lat: number;
+  lng: number;
+  parentCode?: string;
+  isCapital: boolean;
+  economicImportance?: string;
+  population?: number;
+}
 
 // Fix default markers in Leaflet - more robust approach
 const DefaultIcon = L.icon({
@@ -75,7 +89,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [isGeocoding, setIsGeocoding] = useState(false);
 
   // Use hexagonal architecture hook for location services
-  const { geocodeAddress } = useLocationHex();
+  const locationHex = useLocationHex();
 
   // Get location data through service layer
   const mauritaniaCities = LocationDataService.getAllAutocompleteOptions('cities')
@@ -89,15 +103,15 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         code: locationData.code,
         name: locationData.name,
         nameAr: locationData.nameAr,
-        lat: locationData.coordinates.lat,
-        lng: locationData.coordinates.lng,
+        lat: locationData.coordinates?.lat || 0,
+        lng: locationData.coordinates?.lng || 0,
         parentCode: locationData.parentCode,
         isCapital: option.category === 'Capitale',
         economicImportance: locationData.economicImportance,
         population: locationData.population
       } : null;
     })
-    .filter(Boolean) as City[];
+    .filter(Boolean) as MapCity[];
 
   useEffect(() => {
     if (value) {

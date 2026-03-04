@@ -161,9 +161,9 @@ const EnhancedLocationSelector: React.FC<EnhancedLocationSelectorProps> = ({
     let location: GeographicUnit | null = null;
     
     if (value.cityCode) {
-      location = getCityByCode(value.cityCode);
+      location = getCityByCode(value.cityCode) || null;
     } else if (value.regionCode) {
-      location = getWilayaByCode(value.regionCode);
+      location = getWilayaByCode(value.regionCode) || null;
     }
 
     if (!location) return null;

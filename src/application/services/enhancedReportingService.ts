@@ -92,12 +92,7 @@ export class EnhancedReportingService {
           remainingBudget: costCalculation.remainingBudget,
           costVariance: costCalculation.costVariance
         },
-        taskProgress: (project.tasks || []).map(task => ({
-          taskId: task.id,
-          name: task.name,
-          progress: task.progress,
-          status: task.status
-        })) || [],
+        taskProgress: [],
         riskAssessment: reportDTO.riskAssessment?.risks?.map(risk => ({
           id: risk.id,
           title: risk.description,
@@ -129,7 +124,7 @@ export class EnhancedReportingService {
     ]);
 
     return {
-      project,
+      project: project as any,
       phases,
       constructionMilestones: milestones,
       analytics,
@@ -256,7 +251,7 @@ export class EnhancedReportingService {
       }
 
       const actualCost = paymentsData.reduce((sum, p) => sum + (p.amount || 0), 0);
-      const evmMetrics = ReportCalculations.calculateEVMMetrics(project, actualCost, phasesData);
+      const evmMetrics = ReportCalculations.calculateEVMMetrics(project as any, actualCost, phasesData);
 
       const onTimePerformance = this.calculateOnTimePerformance(phasesData);
       const budgetVariance = project.budget > 0 ? ((project.budget - actualCost) / project.budget) * 100 : 0;

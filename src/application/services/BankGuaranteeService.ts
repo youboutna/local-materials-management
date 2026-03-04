@@ -139,7 +139,7 @@ export class BankGuaranteeService {
       }
 
       // Convert updates to repository format with proper typing
-      const repositoryUpdates: Partial<import('@/dtos/bank-guarantees/UpdateBankGuaranteeDTO').UpdateBankGuaranteeDTO> = {};
+      const repositoryUpdates: Record<string, any> = {};
       if (updates.type !== undefined) repositoryUpdates.guarantee_type = updates.type;
       if (updates.number !== undefined) repositoryUpdates.guarantee_number = updates.number;
       if (updates.issuingBank !== undefined) repositoryUpdates.issuing_bank = updates.issuingBank;

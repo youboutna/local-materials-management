@@ -111,12 +111,12 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
       // Get all documents and filter those associated with this material
       const allDocs = await documentService.getAllDocuments();
       const materialDocs = allDocs.filter(doc => 
-        doc.metadata && (doc.metadata as MaterialDocumentMetadata).materialId === materialId
+        doc.metadata && (doc.metadata as unknown as MaterialDocumentMetadata).materialId === materialId
       );
       
       // Map to MaterialDocument interface for backward compatibility
       const mappedDocs = materialDocs.map((doc: DocumentDTO) => {
-        const metadata = doc.metadata as MaterialDocumentMetadata | undefined;
+        const metadata = (doc.metadata as unknown) as MaterialDocumentMetadata | undefined;
         return {
           id: doc.id,
           materialId: metadata?.materialId || materialId,
@@ -144,7 +144,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
           expiry_date: metadata?.expiryDate,
           supplier_name: metadata?.supplierName,
           
-          metadata: doc.metadata,
+          metadata: (doc.metadata as unknown) as MaterialDocumentMetadata | undefined,
           tags: doc.tags || [],
           uploaded_by: doc.uploadedBy,
           created_at: doc.createdAt || '',
@@ -152,7 +152,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
         };
       });
       
-      setDocuments(mappedDocs);
+      setDocuments(mappedDocs as any);
     } catch (error) {
       console.error('Error fetching documents:', error);
       toast.error('Erreur lors du chargement des documents');
@@ -214,7 +214,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
         .filter(tag => tag.length > 0);
 
       // Create material document using service - store material association in metadata
-      const createDocumentDTO: CreateDocumentDTO = {
+      const createDocumentDTO = {
         title: formData.title,
         description: formData.description || null,
         documentType: formData.documentType || formData.document_type,
