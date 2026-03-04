@@ -12,13 +12,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Edit, Trash2, Eye, AlertTriangle, Calendar } from 'lucide-react';
 import { toast, useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useBankGuaranteesList, type BankGuaranteeFormData, type BankGuaranteeRow } from '@/hooks/hexagonal/useBankGuaranteesHex';
+import { useBankGuaranteesList, useCreateBankGuarantee, useUpdateBankGuarantee, useDeleteBankGuarantee, type BankGuaranteeFormData, type BankGuaranteeRow } from '@/hooks/hexagonal/useBankGuaranteesHex';
+import { BankGuaranteeType, BankGuaranteeStatus } from '@/dtos/entities/BankGuaranteeDTO';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 
 const BankGuaranteeCrud = () => {
   const { t } = useLanguage();
-  const { createGuarantee, updateGuarantee, deleteGuarantee, data: guarantees = [] } = useBankGuaranteesHex();
+  const { data: guarantees = [] } = useBankGuaranteesList();
+  const createGuarantee = useCreateBankGuarantee();
+  const updateGuarantee = useUpdateBankGuarantee();
+  const deleteGuarantee = useDeleteBankGuarantee();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isViewMode, setIsViewMode] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -28,10 +32,12 @@ const BankGuaranteeCrud = () => {
     contractorId: '',
     bankName: '',
     guaranteeAmount: 0,
-    guaranteeType: '',
+    guaranteeType: 'performance' as BankGuaranteeType,
     issueDate: '',
     expiryDate: '',
-    status: '',
+    status: 'active' as BankGuaranteeStatus,
+    contractorName: '',
+    supportingDocuments: [],
     phaseId: '',
     notes: ''
   });
@@ -56,10 +62,12 @@ const BankGuaranteeCrud = () => {
       contractorId: '',
       bankName: '',
       guaranteeAmount: 0,
-      guaranteeType: 'performance',
+      guaranteeType: 'performance' as BankGuaranteeType,
       issueDate: '',
       expiryDate: '',
-      status: 'active'
+      status: 'active' as BankGuaranteeStatus,
+      contractorName: '',
+      supportingDocuments: []
     });
   };
 
@@ -76,10 +84,12 @@ const BankGuaranteeCrud = () => {
       contractorId: guarantee.contractorId || guarantee.contractor_id || '',
       bankName: guarantee.bankName || guarantee.bank_name || '',
       guaranteeAmount: guarantee.guaranteeAmount || guarantee.guarantee_amount || 0,
-      guaranteeType: guarantee.guaranteeType || guarantee.guarantee_type || '',
+      guaranteeType: (guarantee.guaranteeType || guarantee.guarantee_type || 'performance') as BankGuaranteeType,
       issueDate: guarantee.issueDate || guarantee.issue_date || '',
       expiryDate: guarantee.expiryDate || guarantee.expiry_date || '',
-      status: guarantee.status
+      status: (guarantee.status || 'active') as BankGuaranteeStatus,
+      contractorName: guarantee.contractorName || guarantee.contractor_name || '',
+      supportingDocuments: guarantee.supportingDocuments || []
     });
     setSelectedGuarantee(guarantee);
     setIsEditing(true);
@@ -93,10 +103,12 @@ const BankGuaranteeCrud = () => {
       contractorId: guarantee.contractorId || guarantee.contractor_id || '',
       bankName: guarantee.bankName || guarantee.bank_name || '',
       guaranteeAmount: guarantee.guaranteeAmount || guarantee.guarantee_amount || 0,
-      guaranteeType: guarantee.guaranteeType || guarantee.guarantee_type || '',
+      guaranteeType: (guarantee.guaranteeType || guarantee.guarantee_type || 'performance') as BankGuaranteeType,
       issueDate: guarantee.issueDate || guarantee.issue_date || '',
       expiryDate: guarantee.expiryDate || guarantee.expiry_date || '',
-      status: guarantee.status
+      status: (guarantee.status || 'active') as BankGuaranteeStatus,
+      contractorName: guarantee.contractorName || guarantee.contractor_name || '',
+      supportingDocuments: guarantee.supportingDocuments || []
     });
     setSelectedGuarantee(guarantee);
     setIsViewMode(true);
@@ -120,14 +132,7 @@ const BankGuaranteeCrud = () => {
         // Update guarantee using hexagonal hook
         await updateGuarantee.mutateAsync({
           id: selectedGuarantee.id,
-          data: {
-            bankName: formData.bankName,
-            guaranteeType: formData.guaranteeType,
-            guaranteeAmount: formData.guaranteeAmount,
-            issueDate: formData.issueDate,
-            expiryDate: formData.expiryDate,
-            status: formData.status
-          }
+          data: formData
         });
         
         toast({
@@ -136,16 +141,7 @@ const BankGuaranteeCrud = () => {
         });
       } else {
         // Create new guarantee using hexagonal hook
-        await createGuarantee.mutateAsync({
-          projectId: formData.projectId,
-          contractorId: formData.contractorId,
-          bankName: formData.bankName,
-          guaranteeType: formData.guaranteeType,
-          guaranteeAmount: formData.guaranteeAmount,
-          issueDate: formData.issueDate,
-          expiryDate: formData.expiryDate,
-          status: formData.status || 'active'
-        });
+        await createGuarantee.mutateAsync(formData);
         
         toast({
           title: t('common.success'),
@@ -245,7 +241,7 @@ const BankGuaranteeCrud = () => {
                   <Input
                     id="bank_name"
                     value={formData.bankName}
-                    onChange={(e) => setFormData(prev => ({ ...prev, bank_name: e.target.value }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, bankName: e.target.value }))}
                     required
                     disabled={isViewMode}
                   />
@@ -259,7 +255,7 @@ const BankGuaranteeCrud = () => {
                     min="0"
                     step="0.01"
                     value={formData.guaranteeAmount}
-                    onChange={(e) => setFormData(prev => ({ ...prev, guarantee_amount: parseFloat(e.target.value) || 0 }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, guaranteeAmount: parseFloat(e.target.value) || 0 }))}
                     required
                     disabled={isViewMode}
                   />
@@ -271,7 +267,7 @@ const BankGuaranteeCrud = () => {
                   <Label htmlFor="guarantee_type">Type de garantie *</Label>
                   <Select 
                     value={formData.guaranteeType} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, guarantee_type: value }))}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, guaranteeType: value as BankGuaranteeType }))}
                     disabled={isViewMode}
                   >
                     <SelectTrigger>
@@ -293,7 +289,7 @@ const BankGuaranteeCrud = () => {
                     id="issue_date"
                     type="date"
                     value={formData.issueDate}
-                    onChange={(e) => setFormData(prev => ({ ...prev, issue_date: e.target.value }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, issueDate: e.target.value }))}
                     required
                     disabled={isViewMode}
                   />
@@ -305,7 +301,7 @@ const BankGuaranteeCrud = () => {
                     id="expiry_date"
                     type="date"
                     value={formData.expiryDate}
-                    onChange={(e) => setFormData(prev => ({ ...prev, expiry_date: e.target.value }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, expiryDate: e.target.value }))}
                     required
                     disabled={isViewMode}
                   />
@@ -316,7 +312,7 @@ const BankGuaranteeCrud = () => {
                 <Label htmlFor="status">Statut</Label>
                 <Select 
                   value={formData.status} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as BankGuaranteeStatus }))}
                   disabled={isViewMode}
                 >
                   <SelectTrigger>
@@ -376,22 +372,22 @@ const BankGuaranteeCrud = () => {
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell">{guarantee.bank_name}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{guarantee.bankName || guarantee.bank_name}</TableCell>
                   <TableCell className="hidden sm:table-cell">
-                    {guaranteeTypes.find(t => t.value === guarantee.guarantee_type)?.label}
+                    {guaranteeTypes.find(t => t.value === (guarantee.guaranteeType || guarantee.guarantee_type))?.label}
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
-                      <span className="font-medium">{guarantee.guarantee_amount.toLocaleString()} MRU</span>
+                      <span className="font-medium">{(guarantee.guaranteeAmount || guarantee.guarantee_amount || 0).toLocaleString()} MRU</span>
                       <span className="text-xs text-muted-foreground sm:hidden">
-                        {guaranteeTypes.find(t => t.value === guarantee.guarantee_type)?.label}
+                        {guaranteeTypes.find(t => t.value === (guarantee.guaranteeType || guarantee.guarantee_type))?.label}
                       </span>
                     </div>
                   </TableCell>
                   <TableCell className="hidden lg:table-cell">
                     <div className="flex items-center gap-2">
-                      {new Date(guarantee.expiry_date).toLocaleDateString('fr-FR')}
-                      {isExpiringSoon(guarantee.expiry_date) && (
+                      {new Date(guarantee.expiryDate || guarantee.expiry_date || '').toLocaleDateString('fr-FR')}
+                      {isExpiringSoon(guarantee.expiryDate || guarantee.expiry_date || '') && (
                         <AlertTriangle className="h-4 w-4 text-orange-500" />
                       )}
                     </div>
@@ -402,7 +398,7 @@ const BankGuaranteeCrud = () => {
                         {statusOptions.find(s => s.value === guarantee.status)?.label}
                       </Badge>
                       <span className="text-xs text-muted-foreground lg:hidden">
-                        {new Date(guarantee.expiry_date).toLocaleDateString('fr-FR')}
+                        {new Date(guarantee.expiryDate || guarantee.expiry_date || '').toLocaleDateString('fr-FR')}
                       </span>
                     </div>
                   </TableCell>

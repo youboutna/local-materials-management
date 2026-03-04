@@ -60,18 +60,18 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
 
   const getCriticalMilestones = () => {
     if (!criticalPath) return [];
-    return milestones.filter(m => criticalPath.critical_path_milestones.includes(m.id));
+    return milestones.filter(m => (criticalPath.criticalPathMilestones || []).includes(m.id));
   };
 
   const getNearCriticalMilestones = () => {
-    if (!criticalPath?.near_critical_paths) return [];
-    const nearCriticalIds = criticalPath.near_critical_paths.flatMap(p => p.milestones);
+    if (!criticalPath?.nearCriticalPaths) return [];
+    const nearCriticalIds = criticalPath.nearCriticalPaths.flatMap(p => p.milestones);
     return milestones.filter(m => nearCriticalIds.includes(m.id));
   };
 
   const getStatusInfo = (milestone: MilestoneDTO) => {
     const today = new Date();
-    const targetDate = parseISO(milestone.target_date);
+    const targetDate = parseISO(milestone.targetDate || '');
     
     if (milestone.status === 'completed') {
       return { color: 'bg-success', icon: CheckCircle, label: 'Terminé' };
@@ -127,7 +127,7 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
           </CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="outline">
-              {criticalPath.total_duration_days} jours
+              {criticalPath.totalDurationDays} jours
             </Badge>
             <Badge className="bg-destructive">
               {criticalMilestones.length} jalons critiques
@@ -144,7 +144,7 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
               <Route className="h-4 w-4" />
               <span className="text-xs font-medium uppercase">Durée critique</span>
             </div>
-            <p className="text-2xl font-bold">{criticalPath.total_duration_days}j</p>
+            <p className="text-2xl font-bold">{criticalPath.totalDurationDays}j</p>
           </div>
           <div className="bg-amber-500/10 rounded-lg p-4 border border-amber-500/20">
             <div className="flex items-center gap-2 text-amber-600 mb-2">
@@ -159,7 +159,7 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
               <span className="text-xs font-medium uppercase">Fin estimée</span>
             </div>
             <p className="text-lg font-bold">
-              {format(parseISO(criticalPath.estimated_end_date), 'd MMM yyyy', { locale: fr })}
+              {format(parseISO(criticalPath.estimatedEndDate), 'd MMM yyyy', { locale: fr })}
             </p>
           </div>
         </div>
@@ -197,7 +197,7 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
                           </div>
                           <p className="font-medium text-sm line-clamp-2">{milestone.title}</p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {format(parseISO(milestone.target_date), 'd MMM', { locale: fr })}
+                            {format(parseISO(milestone.targetDate || ''), 'd MMM', { locale: fr })}
                           </p>
                           <Badge variant="secondary" className="mt-2 text-xs">
                             {status.label}
@@ -207,9 +207,9 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
                       <TooltipContent>
                         <div className="space-y-1">
                           <p className="font-medium">{milestone.title}</p>
-                          <p className="text-xs">Date cible: {format(parseISO(milestone.target_date), 'd MMMM yyyy', { locale: fr })}</p>
-                          {milestone.float_days !== undefined && (
-                            <p className="text-xs">Marge: {milestone.float_days} jours</p>
+                          <p className="text-xs">Date cible: {format(parseISO(milestone.targetDate || ''), 'd MMMM yyyy', { locale: fr })}</p>
+                          {milestone.floatDays !== undefined && (
+                            <p className="text-xs">Marge: {milestone.floatDays} jours</p>
                           )}
                         </div>
                       </TooltipContent>
@@ -252,11 +252,11 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">{milestone.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        {format(parseISO(milestone.target_date), 'd MMM yyyy', { locale: fr })}
+                        {format(parseISO(milestone.targetDate || ''), 'd MMM yyyy', { locale: fr })}
                       </p>
                     </div>
                     <Badge variant="outline" className="text-xs">
-                      {milestone.float_days ?? 0}j marge
+                      {milestone.floatDays ?? 0}j marge
                     </Badge>
                   </div>
                 );

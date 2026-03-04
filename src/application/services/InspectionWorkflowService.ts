@@ -167,18 +167,18 @@ export class InspectionWorkflowService {
     try {
       this.validateInspectionRequest(request);
 
-      const inspectionData: CreateInspectionDTO = {
+      const inspectionData = {
         projectId: request.project_id,
         phaseId: request.phase_id,
         title: `Inspection - ${request.inspection_type}`,
         description: request.notes || '',
         inspector: request.requested_by,
         date: request.requested_date,
-        status: InspectionStatus.PENDING,
+        status: InspectionStatus.PENDING as string,
         priority: request.priority as InspectionPriority || 'medium'
       };
 
-      const inspection = await this.inspectionService.createInspection(inspectionData);
+      const inspection = await this.inspectionService.createInspection(inspectionData as any);
       
       // Send notifications
       await this.notificationService.createNotification({
@@ -188,7 +188,7 @@ export class InspectionWorkflowService {
         type: 'info'
       });
       
-      return inspectionData;
+      return inspectionData as CreateInspectionDTO;
     } catch (error) {
       console.error('Error creating inspection request:', error);
       throw new AppError(ErrorCode.DATABASE_ERROR, "Erreur lors de la création de la demande d'inspection");
@@ -211,10 +211,10 @@ export class InspectionWorkflowService {
         id: schedule.inspection_id,
         date: schedule.scheduled_date,
         inspector: schedule.inspector_id,
-        status: InspectionStatus.IN_PROGRESS,
+        status: InspectionStatus.IN_PROGRESS as string,
         comments: schedule.notes || '',
         documents: []
-      });
+      } as any);
       
       // Send notifications
       await this.notificationService.createNotification({
@@ -241,7 +241,7 @@ export class InspectionWorkflowService {
         notes: execution.findings || ''
       };
 
-      const inspection = await this.inspectionService.updateInspection(execution.inspection_id, updateData);
+      const inspection = await this.inspectionService.updateInspection(execution.inspection_id, updateData as any);
       
       // Upload documents if provided
       if (execution.non_conformities && execution.non_conformities.length > 0) {

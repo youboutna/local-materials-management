@@ -17,7 +17,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PaginationControls } from '@/components/ui/pagination-controls';
-import { InsuranceService, InsuranceType, InsuranceStatus, CreateInsuranceRequestDTO, UpdateInsuranceRequestDTO, InsuranceStatisticsDTO, InsuranceAlertDTO, InsuranceCertificateDTO } from '@/application/services/InsuranceService';
+import { InsuranceService } from '@/application/services/InsuranceService';
+import { InsuranceType, InsuranceStatus, CreateInsuranceRequestDTO, UpdateInsuranceRequestDTO, InsuranceStatisticsDTO, InsuranceAlertDTO, InsuranceCertificateDTO } from '@/dtos/entities/InsuranceDTO';
 import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { usePagination } from '@/hooks/usePagination';
@@ -85,9 +86,9 @@ const UnifiedInsuranceManager = () => {
   const { getUser } = useAuth();
   
   // Initialize services
-  const documentService = new DocumentService(RepositoryFactory.getDocumentRepository());
+  const documentService = RepositoryFactory.getDocumentRepository() as any;
   
-  const [alerts, setAlerts] = useState<InsuranceAlert[]>([]);
+  const [alerts, setAlerts] = useState<InsuranceAlertDTO[]>([]);
   const [certificates, setCertificates] = useState<LocalInsuranceCertificate[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -169,7 +170,8 @@ const UnifiedInsuranceManager = () => {
   const loadInsuranceDataCallback = useCallback(async () => {
     try {
       setLoading(true);
-      const expiringAlerts = await detectExpiringInsurance();
+      const insuranceService = new InsuranceService();
+      const expiringAlerts = await insuranceService.detectExpiringInsurance?.() || [];
       setAlerts(expiringAlerts);
     } catch (error) {
       console.error('Error loading insurance data:', error);

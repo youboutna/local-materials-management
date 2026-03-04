@@ -7,7 +7,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Bell, Eye, EyeOff, Clock, AlertTriangle, DollarSign, FileText, Users } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
-import { NotificationType, getNotificationLink } from '@/utils/notificationUtils';
+import { getNotificationLink } from '@/utils/notificationUtils';
+import { NotificationType } from '@/types/notification';
 
 const RoleBasedNotificationCenter: React.FC = () => {
   const navigate = useNavigate();

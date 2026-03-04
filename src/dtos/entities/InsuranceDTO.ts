@@ -100,6 +100,13 @@ export interface InsuranceAlertDTO {
   projectId?: string;
   contractorId?: string;
   createdAt: string;
+  // UI convenience fields
+  alertLevel?: string;
+  insuranceType?: string;
+  contractorName?: string;
+  policyNumber?: string;
+  expiryDate?: string;
+  daysRemaining?: number;
 }
 
 export interface InsuranceFilterDTO {

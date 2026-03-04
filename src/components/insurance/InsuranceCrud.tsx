@@ -13,7 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useInsuranceCertificatesHex } from '@/hooks/hexagonal';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
-import { InsuranceCertificateDTO } from '@/dtos/entities/InsuranceCertificateDTO';
+import { InsuranceCertificateDTO } from '@/dtos/entities/InsuranceDTO';
+import { InsuranceService } from '@/application/services/InsuranceService';
 
 // Local form data interface matching component needs (Rule #2: camelCase)
 interface InsuranceFormData {
@@ -281,8 +282,6 @@ const InsuranceCrud: React.FC = () => {
                       leadTime: 0
                     }}
                     onChange={handleSupplierChange}
-                    label="Contracteur"
-                    required
                     disabled={isViewMode}
                   />
                 </div>

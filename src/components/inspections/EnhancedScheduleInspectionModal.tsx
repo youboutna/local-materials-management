@@ -125,52 +125,41 @@ const EnhancedScheduleInspectionModal: React.FC<EnhancedScheduleInspectionModalP
     try {
       if (mode === 'request') {
         // Create inspection request
-        const result = await InspectionWorkflowService.createInspectionRequest({
-          project_id: projectId,
-          phase_id: phaseId,
-          step_id: stepId,
-          inspection_type: inspectionType,
-          requested_by: 'current_user', // TODO: Get from auth
-          requested_date: details.scheduled_date,
-          proposed_dates: details.proposed_dates,
-          priority: details.priority,
-          requirements: details.requirements,
-          required_documents: selectedDocuments,
-        });
+        try {
+          await InspectionWorkflowService.createInspectionRequest({
+            project_id: projectId,
+            phase_id: phaseId,
+            step_id: stepId,
+            inspection_type: inspectionType,
+            requested_by: 'current_user',
+            requested_date: details.scheduled_date,
+            proposed_dates: details.proposed_dates,
+            priority: details.priority,
+            notes: details.requirements,
+          });
 
-        if (result.success) {
           toast.success('Demande d\'inspection soumise avec succès');
           handleOpenChange(false);
           onSuccess?.();
-        } else {
-          throw new Error(result.error);
+        } catch (err) {
+          throw err;
         }
       } else {
         // Schedule inspection
-        const result = await InspectionWorkflowService.scheduleInspection({
-          project_id: projectId,
-          phase_id: phaseId,
-          step_id: stepId,
-          inspection_type: inspectionType,
-          requested_by: 'current_user',
-          requested_date: details.scheduled_date,
-          scheduled_by: 'current_user',
-          scheduled_date: `${details.scheduled_date}T${details.scheduled_time}:00.000Z`,
-          inspector_id: details.inspector_id || '',
-          inspector_name: details.inspector_name || 'Inspecteur',
-          backup_inspector_id: details.backup_inspector_id,
-          estimated_duration_hours: details.estimated_duration_hours,
-          priority: details.priority,
-          requirements: details.requirements,
-          required_documents: selectedDocuments,
-        });
+        try {
+          await InspectionWorkflowService.scheduleInspection({
+            inspection_id: stepId || '',
+            scheduled_date: `${details.scheduled_date}T${details.scheduled_time}:00.000Z`,
+            scheduled_time: details.scheduled_time || '',
+            inspector_id: details.inspector_id || '',
+            notes: details.requirements,
+          });
 
-        if (result.success) {
           toast.success('Inspection programmée avec succès');
           handleOpenChange(false);
           onSuccess?.();
-        } else {
-          throw new Error(result.error);
+        } catch (err) {
+          throw err;
         }
       }
     } catch (error) {

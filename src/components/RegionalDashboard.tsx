@@ -23,15 +23,19 @@ const RegionalDashboard = () => {
         project.location?.toLowerCase().includes(region.nameAr.toLowerCase())
       );
 
+      const regionName = region.name.toLowerCase();
+      const regionNameAr = region.nameAr.toLowerCase();
+
       const regionMaterials = materials.filter(material => 
-        material.originLocation?.toLowerCase().includes(region.name.toLowerCase()) ||
-        material.originLocation?.toLowerCase().includes(region.nameAr.toLowerCase())
+        material.originLocation?.toLowerCase().includes(regionName) ||
+        material.originLocation?.toLowerCase().includes(regionNameAr)
       );
 
-      const regionWorkspaces = workspaces.filter(workspace => 
-        workspace.location.name?.toLowerCase().includes(region.name.toLowerCase()) ||
-        workspace.location.nameAr?.toLowerCase().includes(region.nameAr.toLowerCase())
-      );
+      const regionWorkspaces = workspaces.filter(workspace => {
+        const locName = typeof workspace.location === 'string' ? workspace.location : (workspace.location as any)?.name || '';
+        const locNameAr = typeof workspace.location === 'string' ? '' : (workspace.location as any)?.nameAr || '';
+        return locName.toLowerCase().includes(regionName) || locNameAr.toLowerCase().includes(regionNameAr);
+      });
 
       const totalBudget = regionProjects.reduce((sum, project) => sum + project.budget, 0);
       const avgProgress = regionProjects.length > 0 

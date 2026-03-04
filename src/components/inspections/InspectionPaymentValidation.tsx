@@ -99,7 +99,7 @@ const InspectionPaymentValidation: React.FC = () => {
         return null;
       }
       
-      if (inspectionData.status !== 'approved') {
+      if (String(inspectionData.status) !== 'approved') {
         console.warn(`[InspectionPaymentValidation] Inspection not approved. Status: ${inspectionData.status}`);
         return null;
       }
@@ -115,10 +115,10 @@ const InspectionPaymentValidation: React.FC = () => {
       
       return {
         id: inspectionData.id,
-        projectId: inspectionData.projectId,
+        projectId: inspectionData.projectId || '',
         phaseId: inspectionData.phaseId || undefined,
-        date: inspectionData.date,
-        inspector: inspectionData.inspector,
+        date: inspectionData.date || '',
+        inspector: String(inspectionData.inspector || ''),
         status: inspectionData.status,
         progressAtInspection: inspectionData.progressAtInspection,
         comments: inspectionData.comments || undefined,

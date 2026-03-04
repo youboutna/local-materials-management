@@ -274,7 +274,7 @@ export class InsuranceService {
     return service.createInsuranceCertificate(data);
   }
 
-  static async updateInsuranceCertificate(id: string, data: UpdateInsuranceRequestDTO): Promise<InsuranceCertificateDTO | null> {
+  static async updateInsuranceCertificate(id: string, data: Partial<CreateInsuranceRequestDTO>): Promise<InsuranceCertificateDTO | null> {
     const service = new InsuranceService();
     return service.updateInsuranceCertificate(id, data);
   }
