@@ -914,13 +914,13 @@ const UnifiedInsuranceManager = () => {
                       <div>
                         <CardTitle className="flex items-center gap-2">
                           <Shield className="h-5 w-5" />
-                          {getCoverageTypeLabel(alert.insuranceType)} - {alert.contractorName}
+                          {getCoverageTypeLabel(alert.insuranceType || '')} - {alert.contractorName || ''}
                         </CardTitle>
                         <CardDescription>
                           Police: {alert.policyNumber}
                         </CardDescription>
                       </div>
-                      <Badge variant={getAlertBadgeVariant(alert.alertLevel)}>
+                      <Badge variant={getAlertBadgeVariant(alert.alertLevel || 'warning')}>
                         {alert.alertLevel === 'expired' ? 'Expirée' : 
                          alert.alertLevel === 'critical' ? 'Critique' : 'Attention'}
                       </Badge>
@@ -930,10 +930,10 @@ const UnifiedInsuranceManager = () => {
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
                         <p className="text-sm text-gray-600">
-                          <strong>Expiration:</strong> {new Date(alert.expiryDate).toLocaleDateString()}
+                          <strong>Expiration:</strong> {alert.expiryDate ? new Date(alert.expiryDate).toLocaleDateString() : 'N/A'}
                         </p>
                         <p className="text-sm text-gray-600">
-                          <strong>Jours restants:</strong> {alert.daysRemaining < 0 ? 'Expirée' : alert.daysRemaining}
+                          <strong>Jours restants:</strong> {(alert.daysRemaining ?? 0) < 0 ? 'Expirée' : alert.daysRemaining ?? 'N/A'}
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-2">

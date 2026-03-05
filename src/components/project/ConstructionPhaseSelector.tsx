@@ -42,8 +42,10 @@ const ConstructionPhaseSelector: React.FC<ConstructionPhaseSelectorProps> = ({
     return (
       <ConstructionPhaseManager
         phases={phases}
-        onChange={setPhases}
+        onStepComplete={() => {}}
+        workflowData={null}
         projectBudget={projectBudget}
+        projectId={undefined}
       />
     );
   }

@@ -52,7 +52,7 @@ const paymentFormSchema = z.object({
 });
 
 const PaymentBlockingInterface = () => {
-  const [validationResult, setValidationResult] = useState<PaymentValidationResult | null>(null);
+  const [validationResult, setValidationResult] = useState<PaymentEligibilityValidationDto | null>(null);
   const [blockHistory, setBlockHistory] = useState<PaymentBlockHistoryItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -69,6 +69,7 @@ const PaymentBlockingInterface = () => {
     const loadStats = async () => {
       try {
         // Initialize services
+        const paymentBlockingService = new PaymentBlockingService();
         const paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
         const insuranceService = new InsuranceService(RepositoryFactory.getInsuranceRepository());
         const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
@@ -105,17 +106,8 @@ const PaymentBlockingInterface = () => {
         });
 
         // Load recent blocked payments using existing service function
-        const recentBlocks = await getPaymentBlockHistory();
-        setBlockHistory(recentBlocks.slice(0, 5).map(block => ({
-          id: block.id,
-          projectId: block.project_id || '',
-          contractorId: block.contractor_id || '',
-          amount: block.amount || 0,
-          blockedAt: block.blocked_at || '',
-          reason: 'blocked', // Use default reason since property doesn't exist
-          projectTitle: (block as any).projects?.title,
-          supplierName: (block as any).suppliers?.name
-        })));
+        const recentBlocks: PaymentBlockHistoryItem[] = []; // TODO: Implement when PaymentBlockingService supports history listing
+        setBlockHistory(recentBlocks);
       } catch (error) {
         console.error('Error loading payment stats:', error);
       }
@@ -136,10 +128,9 @@ const PaymentBlockingInterface = () => {
   const onValidatePayment = async (values: z.infer<typeof paymentFormSchema>) => {
     try {
       setLoading(true);
-      const result = await validatePaymentEligibility(
-        values.projectId, 
-        values.contractorId, 
-        values.amount
+      const service = new PaymentBlockingService();
+      const result = await service.validatePaymentEligibility(
+        values.projectId
       );
       setValidationResult(result);
       
@@ -151,7 +142,7 @@ const PaymentBlockingInterface = () => {
       } else {
         toast({
           title: "Paiement bloqué",
-          description: `${result.blockingReasons.length} problème(s) détecté(s)`,
+          description: `${(result.blockingReasons || []).length} problème(s) détecté(s)`,
           variant: "destructive"
         });
       }
@@ -170,19 +161,10 @@ const PaymentBlockingInterface = () => {
   const onProcessPayment = async (values: z.infer<typeof paymentFormSchema>) => {
     try {
       setLoading(true);
-      const result = await attemptPayment(
-        values.projectId,
-        values.contractorId,
-        values.amount,
-        {
-          contractor_name: values.contractorName,
-          contractor_contact: values.contractorContact,
-          payment_method: values.paymentMethod,
-          progress_at_payment: values.progressAtPayment
-        }
-      );
+      const service = new PaymentBlockingService();
+      const result = await service.processPayment(values.projectId);
 
-        if (result.success) {
+      if (result.success) {
         toast({
           title: t('common.success'),
           description: `Paiement de ${values.amount} MRU traité avec succès`
@@ -402,25 +384,25 @@ const PaymentBlockingInterface = () => {
                     </h3>
                   </div>
                   
-                  {validationResult.blockingReasons.length > 0 && (
+                  {(validationResult.blockingReasons || []).length > 0 && (
                     <div className="space-y-2">
                       <p className="text-sm font-medium text-red-700">Problèmes bloquants:</p>
-                      {validationResult.blockingReasons.map((reason, index) => (
+                      {(validationResult.blockingReasons || []).map((reason: any, index: number) => (
                         <div key={index} className="flex items-center gap-2 text-sm text-red-600">
-                          {getReasonIcon(reason.reason)}
-                          <span>{getReasonLabel(reason.reason)}: {reason.description}</span>
+                          {getReasonIcon(reason.blockReason || reason.reason || '')}
+                          <span>{getReasonLabel(reason.blockReason || reason.reason || '')}: {reason.description || reason.blockReason || ''}</span>
                         </div>
                       ))}
                     </div>
                   )}
                   
-                  {validationResult.warningReasons.length > 0 && (
+                  {(validationResult.warningReasons || []).length > 0 && (
                     <div className="space-y-2 mt-3">
                       <p className="text-sm font-medium text-orange-700">Avertissements:</p>
-                      {validationResult.warningReasons.map((reason, index) => (
+                      {(validationResult.warningReasons || []).map((reason: any, index: number) => (
                         <div key={index} className="flex items-center gap-2 text-sm text-orange-600">
-                          {getReasonIcon(reason.reason)}
-                          <span>{getReasonLabel(reason.reason)}: {reason.description}</span>
+                          {getReasonIcon(reason.warningType || reason.reason || '')}
+                          <span>{getReasonLabel(reason.warningType || reason.reason || '')}: {reason.description || reason.warningType || ''}</span>
                         </div>
                       ))}
                     </div>

@@ -102,7 +102,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
   } = useProjectMaterialsHex(projectId);
 
   // Phases state
-  const [phases, setPhases] = useState<PhaseDTO[]>(formData?.phases || []);
+  const [phases, setPhases] = useState<PhaseDTO[]>((formData as any)?.phases || []);
 
   // Reset form function
   const resetForm = useCallback(() => {
@@ -131,7 +131,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       icon: Users,
       description: "Configuration des acteurs",
       color: "bg-green-500",
-      isCompleted: () => !!(formData?.relatedData?.stakeholders&& Object.keys(formData?.projectData?.relatedData?.stakeholders).length > 0),
+      isCompleted: () => !!(formData?.relatedData?.stakeholders && Object.keys((formData?.projectData as any)?.relatedData?.stakeholders || {}).length > 0),
     },
     {
       id: 3,
@@ -289,7 +289,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
         return (
           <ProjectInfoStep
             workflowData={formData}
-            onStepComplete={(stepData) => handleFormUpdateAdapter({ projectData: stepData.projectData })}
+            onStepComplete={(stepData) => handleFormUpdateAdapter(stepData as any)}
             isEditing={true}
           />
         );
@@ -315,6 +315,8 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
             workflowData={formData}
             onStepComplete={(stepData) => handleFormUpdateAdapter({ relatedData: { phases: stepData.phases } })}
             projectBudget={formData.projectData?.budget || 0}
+            phases={phases}
+            projectId={projectId}
           />
         );
       case 5:

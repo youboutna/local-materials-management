@@ -231,7 +231,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
         estimatedDuration: 30,
 
-        status: 'planned',
+        status: 'not_started' as const,
 
         budget: Math.floor((projectBudget || 0) * 0.1), // Default 10% of project budget
 
@@ -254,7 +254,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
       
 
       // Create the phase using the hexagonal hook
-      await constructionPhaseHook.createConstructionPhase(newPhase as PhaseDTO);
+      await constructionPhaseHook.createConstructionPhase(newPhase as unknown as PhaseDTO);
 
       setIsAddingPhase(false);
 
@@ -294,7 +294,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
         estimatedDuration: 30,
 
-        status: 'planned',
+        status: 'not_started' as const,
 
         budget: Math.floor((projectBudget || 0) * 0.2), // Default 20% of project budget for procurement phases
 
@@ -315,7 +315,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
       };
 
       // Create the phase using the hexagonal hook
-      await constructionPhaseHook.createConstructionPhase(newPhase as PhaseDTO);
+      await constructionPhaseHook.createConstructionPhase(newPhase as unknown as PhaseDTO);
 
       setIsAddingPhase(false);
 
@@ -371,7 +371,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
       };
 
       // Create the phase using the hexagonal hook
-      await constructionPhaseHook.createConstructionPhase(newPhase as PhaseDTO);
+      await constructionPhaseHook.createConstructionPhase(newPhase as unknown as PhaseDTO);
 
       setIsAddingPhase(false);
 
@@ -385,7 +385,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
     checkAuthenticationAndProceed(async () => {
 
-      await constructionPhaseHook.updateConstructionPhase(updatedPhase.id, updatedPhase as PhaseDTO);
+      await constructionPhaseHook.updateConstructionPhase(updatedPhase.id, updatedPhase as unknown as PhaseDTO);
 
       setEditingPhase(null);
 
@@ -699,7 +699,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
             estimatedDuration: phaseDuration,
 
-            status: 'planned',
+            status: 'not_started' as const,
 
             budget: Math.floor((projectBudget || 0) / referentialPhases.length),
 
@@ -775,7 +775,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
         // Add new phases to existing phases
         for (const newPhase of newPhases) {
-          await constructionPhaseHook.createConstructionPhase(newPhase as PhaseDTO);
+          await constructionPhaseHook.createConstructionPhase(newPhase as unknown as PhaseDTO);
         }
 
         
@@ -2206,16 +2206,38 @@ const ProcurementPhaseCreator: React.FC<{
 
 
   const availableStages = selectedPhase ? 
-    getPhasesForReferential('MR_PUBLIC_PROCUREMENT', 'fr')
-      .find(p => p.code === selectedPhase)?.steps.map(s => ({
+    referentialService.getPhasesForReferential('MR_PUBLIC_PROCUREMENT' as any)
+      .then(phases => phases.find(p => p.code === selectedPhase)?.steps.map(s => ({
         value: s.code,
         label: s.label
-      })) || [] : [];
+      })) || []) : Promise.resolve([]);
 
-  const availableProcurementPhases = getPhasesForReferential('MR_PUBLIC_PROCUREMENT', 'fr').map(phase => ({
-    value: phase.code,
-    label: phase.label
-  }));
+  // Use state for async referential data
+  const [procurementPhases, setProcurementPhases] = React.useState<Array<{value: string, label: string}>>([]);
+  const [procurementStages, setProcurementStages] = React.useState<Array<{value: string, label: string}>>([]);
+
+  React.useEffect(() => {
+    referentialService.getPhasesForReferential('MR_PUBLIC_PROCUREMENT' as any).then(phases => {
+      setProcurementPhases(phases.map(phase => ({
+        value: phase.code,
+        label: phase.label
+      })));
+    });
+  }, []);
+
+  React.useEffect(() => {
+    if (selectedPhase) {
+      referentialService.getPhasesForReferential('MR_PUBLIC_PROCUREMENT' as any).then(phases => {
+        const phaseData = phases.find(p => p.code === selectedPhase);
+        setProcurementStages(phaseData?.steps.map(s => ({
+          value: s.code,
+          label: s.label
+        })) || []);
+      });
+    }
+  }, [selectedPhase]);
+
+  const availableProcurementPhases = procurementPhases;
 
   const handleCreate = () => {
 
@@ -2309,7 +2331,7 @@ const ProcurementPhaseCreator: React.FC<{
 
             <SelectContent>
 
-              {availableStages.map((stage) => (
+              {procurementStages.map((stage) => (
 
                 <SelectItem key={stage.value} value={stage.value}>
 

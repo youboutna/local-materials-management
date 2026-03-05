@@ -232,7 +232,11 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
         },
       };
 
-      const createdDocument = await documentService.createDocument(createDocumentDTO);
+      const createdDocument = await documentService.createDocument({
+        ...createDocumentDTO,
+        category: createDocumentDTO.documentType || 'other',
+        subcategory: '',
+      } as any);
       if (!createdDocument) throw new Error('Failed to create document');
 
       toast.success('Document ajouté avec succès');
