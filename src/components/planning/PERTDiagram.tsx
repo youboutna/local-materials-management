@@ -52,17 +52,12 @@ const PERTDiagram: React.FC<PERTDiagramProps> = ({
   const [data, setData] = useState<UnifiedPERTData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (projectId && projectData) {
-      loadPERTData();
-    }
-  }, [projectId, projectData, loadPERTData]);
-
   const loadPERTData = useCallback(async () => {
     try {
       setLoading(true);
       const service = getGanttPertService();
-      const pertData = await service.getUnifiedPERTData(projectId, projectData);
+      if (!projectData) return;
+      const pertData = await service.getUnifiedPERTData(projectId, projectData as any);
       setData(pertData);
     } catch (error) {
       console.error('Error loading PERT data:', error);
@@ -70,6 +65,12 @@ const PERTDiagram: React.FC<PERTDiagramProps> = ({
       setLoading(false);
     }
   }, [projectId, projectData]);
+
+  useEffect(() => {
+    if (projectId && projectData) {
+      loadPERTData();
+    }
+  }, [projectId, projectData, loadPERTData]);
 
   if (loading) {
     return (

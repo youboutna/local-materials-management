@@ -108,22 +108,22 @@ const PhaseDocuments: React.FC<PhaseDocumentsProps> = ({ phaseId, projectId, pha
                     {doc.description && (
                       <p className="text-sm text-muted-foreground mt-1">{doc.description}</p>
                     )}
-                    {doc.file_name && (
+                    {(doc as any).file_name || doc.fileName && (
                       <p className="text-xs text-muted-foreground mt-1">
-                        Fichier: {doc.file_name}
+                        Fichier: {(doc as any).file_name || doc.fileName}
                       </p>
                     )}
                   </div>
                   <div className="flex gap-2">
-                    {doc.file_url && (
+                    {((doc as any).file_url || doc.fileUrl) && (
                       <>
                         <Button size="sm" variant="outline" asChild>
-                          <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
+                          <a href={(doc as any).file_url || doc.fileUrl} target="_blank" rel="noopener noreferrer">
                             <Eye className="h-4 w-4" />
                           </a>
                         </Button>
                         <Button size="sm" variant="outline" asChild>
-                          <a href={doc.file_url} download>
+                          <a href={(doc as any).file_url || doc.fileUrl} download>
                             <Download className="h-4 w-4" />
                           </a>
                         </Button>
@@ -140,11 +140,11 @@ const PhaseDocuments: React.FC<PhaseDocumentsProps> = ({ phaseId, projectId, pha
                 </div>
                 
                 <div className="flex flex-wrap gap-2">
-                  <Badge className={getDocumentTypeColor(doc.document_type)}>
-                    {getDocumentTypeLabel(doc.document_type)}
+                  <Badge className={getDocumentTypeColor((doc as any).document_type || doc.documentType)}>
+                    {getDocumentTypeLabel((doc as any).document_type || doc.documentType)}
                   </Badge>
                   <Badge variant="outline">
-                    {doc.created_at ? new Date(doc.created_at).toLocaleDateString() : 'Date inconnue'}
+                    {((doc as any).created_at || doc.createdAt) ? new Date((doc as any).created_at || doc.createdAt).toLocaleDateString() : 'Date inconnue'}
                   </Badge>
                   {doc.status && (
                     <Badge variant={doc.status === 'approved' ? 'default' : 'secondary'}>

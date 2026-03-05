@@ -129,7 +129,9 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     if (newAddress.trim().length > 3) {
       setIsGeocoding(true);
       try {
-        const result = await geocodeAddress(newAddress);
+        const geocodingService = new (await import('@/application/services/GeocodingService')).GeocodingService();
+        const results = await geocodingService.geocode(newAddress);
+        const result = results[0] ? { coordinates: results[0].coordinates, confidence: results[0].confidence || 0.8 } : null;
 
         // If we have a good result, auto-update coordinates
         if (result && result.confidence > 0.7) {

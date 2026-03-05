@@ -91,6 +91,17 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
     projectId: project.id,
     project
   });
+
+  // Destructure validation results for template usage
+  const { 
+    isInitialPaymentPhase, 
+    maxInitialPayment, 
+    paymentStatus,
+    maxAllowedAmount: maxToleranceAmount
+  } = paymentValidation;
+  const totalPaid = project.payments ? project.payments.reduce((sum, p) => sum + p.amount, 0) : 0;
+  const initialPaymentPercentage = project.initialPaymentPercentage || 0;
+  const progressBasedAmount = (project.budget * project.progress) / 100;
   
   const form = useForm<z.infer<typeof paymentFormSchema>>({
     resolver: zodResolver(paymentFormSchema),
@@ -133,7 +144,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
   const remainingBudget = project.budget - (project.payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0);
   
   // Use hexagonal hook values (Rule #5: UI Layer Separation)
-  const maxToleranceAmount = paymentValidation.maxAllowedAmount;
+  const maxToleranceAmountCalc = paymentValidation.maxAllowedAmount;
   const progressBasedRemaining = paymentValidation.allowedAmount - (project.payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0);
 
   // Payment method configurations

@@ -134,7 +134,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
     setAddress(locationAddress);
 
     // Transform LocationDTO to AutoFillLocationData if provided
-    let transformedLocationData: AutoFillLocationData | undefined;
+    let transformedLocationData: AutoFillLocationData | undefined = undefined;
     if (locationData) {
       transformedLocationData = {
         address: locationData.name,
@@ -156,7 +156,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
         // For cities, we might need to get the city and region data
         transformedLocationData.city = allCities.find(c => c.code === locationData.code);
         if (transformedLocationData.city?.parentCode) {
-          transformedLocationData.region = allRegions.find(r => r.code === transformedLocationData.city?.parentCode) || undefined;
+          transformedLocationData.region = allRegions.find(r => r.code === transformedLocationData.city!.parentCode) || undefined;
         }
       }
     }

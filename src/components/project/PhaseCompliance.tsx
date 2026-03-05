@@ -46,7 +46,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
     createComplianceItem, 
     updateComplianceItem,
     refetch 
-  } = useComplianceHex(phaseId, projectId);
+  } = useComplianceHex(phaseId);
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ComplianceItemDTO | null>(null);
@@ -72,7 +72,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
           status: formData.status,
           priority: formData.priority,
           deadline: formData.deadline || undefined,
-          responsiblePerson: formData.responsible_person,
+          responsiblePerson: formData.responsiblePerson,
           notes: formData.notes,
         });
         toast({ title: "Succès", description: "Élément modifié" });
@@ -84,7 +84,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
           status: formData.status,
           priority: formData.priority,
           deadline: formData.deadline || undefined,
-          responsiblePerson: formData.responsible_person,
+          responsiblePerson: formData.responsiblePerson,
           notes: formData.notes,
         });
         toast({ title: "Succès", description: "Élément ajouté" });
@@ -112,7 +112,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
       priority: item.priority,
       deadline: item.deadline ? item.deadline.split("T")[0] : "",
       responsiblePerson: item.responsible || "",
-      notes: item.notes || "",
+      notes: (item as any).notes || "",
     });
     setIsDialogOpen(true);
   };
@@ -126,7 +126,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
       status: "pending",
       priority: "medium",
       deadline: "",
-      responsible_person: "",
+      responsiblePerson: "",
       notes: "",
     });
   };
@@ -301,11 +301,11 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
                 <Label htmlFor="responsible">Responsable</Label>
                 <Input
                   id="responsible"
-                  value={formData.responsible_person}
+                  value={formData.responsiblePerson}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      responsible_person: e.target.value,
+                      responsiblePerson: e.target.value,
                     })
                   }
                   placeholder="Personne responsable"
@@ -378,9 +378,9 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
                     </div>
                   </div>
                 </div>
-                {item.responsiblePerson && (
+                {(item as any).responsiblePerson && (
                   <div className="mt-2 text-sm text-muted-foreground">
-                    Responsable: {item.responsiblePerson}
+                    Responsable: {(item as any).responsiblePerson}
                   </div>
                 )}
               </div>

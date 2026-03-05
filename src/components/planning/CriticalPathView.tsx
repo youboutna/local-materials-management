@@ -18,7 +18,7 @@ import {
   TrendingDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
+import { getMilestoneService } from '@/application/services/MilestoneService';
 import { CriticalPathDTO, MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
 import { differenceInDays, parseISO, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -41,9 +41,10 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
   const loadCriticalPath = useCallback(async () => {
     try {
       setLoading(true);
+      const milestoneService = getMilestoneService();
       const [pathData, milestonesData] = await Promise.all([
-        MilestoneService.calculateCriticalPath(projectId),
-        MilestoneService.getProjectMilestones(projectId)
+        milestoneService.getCriticalPath(projectId),
+        milestoneService.getProjectMilestonesDTO(projectId)
       ]);
       setCriticalPath(pathData);
       setMilestones(milestonesData);

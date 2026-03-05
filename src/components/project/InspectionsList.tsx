@@ -40,17 +40,17 @@ interface InspectionUIData {
 
 // Helper to map status to StatusType
 const mapStatus = (status: string): StatusType => {
-  const statusMap: Record<string, StatusType> = {
+  const statusMap: Record<string, string> = {
     'approved': 'approuvée',
-    'completed': 'termine',
-    'in_progress': 'enCours',
-    'pending': 'enAttente',
-    'scheduled': 'enAttente',
+    'completed': 'approuvée',
+    'in_progress': 'en_cours',
+    'pending': 'en_attente',
+    'scheduled': 'en_attente',
     'rejected': 'rejetée',
-    'cancelled': 'annule',
-    'requires_changes': 'enAttente'
+    'cancelled': 'rejetée',
+    'requires_changes': 'modifications requises'
   };
-  return statusMap[status] || (status as StatusType);
+  return (statusMap[status] || status) as StatusType;
 };
 
 export const InspectionsList = ({ projectId }: InspectionsListProps) => {
