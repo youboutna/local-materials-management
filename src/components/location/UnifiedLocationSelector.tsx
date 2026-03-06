@@ -155,8 +155,8 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
       } else if (locationData.type === 'city') {
         // For cities, we might need to get the city and region data
         transformedLocationData.city = allCities.find(c => c.code === locationData.code);
-        if (transformedLocationData.city?.parentCode) {
-          transformedLocationData.region = allRegions.find(r => r.code === transformedLocationData.city!.parentCode) || undefined;
+        if (transformedLocationData?.city?.parentCode) {
+          transformedLocationData.region = allRegions.find(r => r.code === transformedLocationData!.city!.parentCode) || undefined;
         }
       }
     }

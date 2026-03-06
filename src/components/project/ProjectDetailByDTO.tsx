@@ -24,7 +24,7 @@ import { MilestoneService } from '@/application/services/MilestoneService';
 import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import { ProjectDetailDTO, ProjectSummaryDTO } from "@/dtos/entities/ProjectDTO";
 import { InspectionDTO } from "@/dtos/entities/InspectionDTO";
-import { ProjectComplianceDTO } from '@/hooks/hexagonal';
+import { useProjectCompliance } from '@/hooks/hexagonal';
 import { PhaseDTO } from "@/dtos/entities/PhaseDTO";
 import { Dialog, DialogContent, DialogTrigger } from "@radix-ui/react-dialog";
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -203,7 +203,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
        // Type the responses safely
        const typedMetrics = (metrics || {}) as { totalMilestones?: number; completedMilestones?: number; overdueTasks?: number };
-       const typedAnalytics = (analytics || {}) as Record<string, number>;
+       const typedAnalytics = (analytics || {}) as unknown as Record<string, number>;
        const typedCostAnalysis = (costAnalysis || {}) as Record<string, number>;
        
        // Combine all data into the expected format (camelCase only)
@@ -258,7 +258,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   // Compliance data
   const { data: complianceData } = useQuery({
     queryKey: ["project-compliance", projectId],
-    queryFn: async (): Promise<ProjectComplianceDTO> => {
+    queryFn: async (): Promise<any> => {
       if (!projectId || !projectDetail) return null;
       const analyticsService = new ProjectAnalyticsService();
       return await analyticsService.getComplianceData(projectDetail);
@@ -270,7 +270,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   // PERT Analysis
   const { data: pertAnalysis } = useQuery({
     queryKey: ["project-pert", projectId],
-    queryFn: async (): Promise<PERTAnalysis> => {
+    queryFn: async (): Promise<any> => {
       if (!projectId || !projectDetail) return null;
       const { ProjectCalculationService } = await import(
         "@/application/services/ProjectCalculationService"
@@ -284,7 +284,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   // Gantt Chart
   const { data: ganttChart } = useQuery({
     queryKey: ["project-gantt", projectId],
-    queryFn: async (): Promise<GanttChartData> => {
+    queryFn: async (): Promise<any> => {
       if (!projectId || !projectDetail) return null;
       const { ProjectCalculationService } = await import(
         "@/application/services/ProjectCalculationService"
@@ -417,9 +417,9 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       }));
       
       // Add project manager if exists and not already included
-      const contactsArray = Array.isArray(projectDetail.contacts) ? projectDetail.contacts : [];
+      const contactsArray = Array.isArray((projectDetail as any).contacts) ? (projectDetail as any).contacts : [];
       if (projectDetail.projectManagerId && !allResources.find((r) => r.id.includes('manager'))) {
-        const managerContact = contactsArray.find((c) => 
+        const managerContact = contactsArray.find((c: any) => 
           c.role === 'project_manager' || c.role === 'chef de projet'
         );
         
@@ -438,7 +438,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       
       // Add main contractor if exists and not already included
       if (projectDetail.mainContractor && !allResources.find((r) => r.id.includes('contractor'))) {
-        const contractorContact = contactsArray.find((c) => 
+        const contractorContact = contactsArray.find((c: any) => 
           c.role === 'contractor' || c.role === 'contractant principal'
         );
         
@@ -460,7 +460,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     if (projectDetail) {
       computeResources();
       // Transform tasks to expected format
-      const transformedTasks = tasksSource.map((t: TaskDTO) => ({
+      const transformedTasks = tasksSource.map((t: any) => ({
         id: t.id,
         name: t.title || t.name || 'Task',
         status: t.status || 'pending',
@@ -468,7 +468,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       }));
       setTasks(transformedTasks);
       // Transform risks to expected format
-      const transformedRisks = risksSource.map((r: RiskDTO) => ({
+      const transformedRisks = risksSource.map((r: any) => ({
         id: r.id,
         title: r.title || r.name || 'Risk',
         description: r.description || '',
@@ -528,7 +528,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       phases: phasesSource, // Ajouter les phases du projet
       inspections: inspectionsSource, // Ajouter les inspections
       expenses: paymentsSource, // Ajouter les dépenses/payments
-      risks: risksSource.map((r: RiskDTO) => ({
+      risks: risksSource.map((r: any) => ({
         id: r.id || `risk-${Date.now()}`,
         title: r.title || r.description || 'Risque sans titre',
         description: r.description || "Aucune description",
@@ -594,7 +594,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
     try {
       const referentialPhases =
-        referentialService.getPhasesForReferential(selectedReferential);
+        await referentialService.getPhasesForReferential(selectedReferential);
 
       if (referentialPhases.length === 0) {
         toast({
@@ -654,7 +654,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           end_date: endDate.toISOString().split("T")[0],
           estimated_duration: phaseDuration,
           estimated_cost: Math.floor(
-            (project?.budget || 0) / referentialPhases.length
+          (project?.budget || 0) / (referentialPhases.length || 1)
           ),
           status: "not_started",
           progress: 0,
@@ -670,7 +670,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             startDate: startDate.toISOString().split("T")[0],
             endDate: endDate.toISOString().split("T")[0],
             budget: Math.floor(
-              (project?.budget || 0) / referentialPhases.length
+              (project?.budget || 0) / (referentialPhases.length || 1)
             ),
             status: "not_started",
             progress: 0,
@@ -711,33 +711,35 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     // Use directly fetched phases first, then fallback to plannedPhases
     const phasesSource = projectPhases || projectDetail?.plannedPhases || [];
 
-    const normalize = (p: PhaseDTO) => ({
-      id: p.id,
-      phase:
-        p.phase_name ||
-        p.phase ||
-        p.name ||
-        p.construction_stage ||
-        t("project.phase_label"),
-      phase_name: p.phase_name || p.phase || p.name,
-      status: p.status || "planned",
-      progress: p.progress || 0,
-      startDate: p.start_date || p.startDate || p.start || "",
-      endDate: p.end_date || p.endDate || p.end || "",
-      description: p.description,
-      budget: p.estimated_cost || p.budget,
-      stages: Array.isArray(p.stages)
-        ? p.stages
-        : p.custom_phase_data?.customStages
-        ? p.custom_phase_data.customStages.map((s: { name: string; status?: string; order?: number }) => ({
-            name: s.name,
-            status: s.status || "pending",
-            order: s.order,
-          }))
-        : p.construction_stage
-        ? [{ name: p.construction_stage, status: p.status || "planned" }]
-        : [],
-    });
+    const normalize = (p: any) => {
+      return {
+        id: p.id,
+        phase:
+          p.phase_name ||
+          p.phase ||
+          p.name ||
+          p.constructionStage ||
+          t("project.phase_label"),
+        phase_name: p.phase_name || p.phase || p.name,
+        status: p.status || "planned",
+        progress: p.progress || 0,
+        startDate: p.startDate || "",
+        endDate: p.endDate || "",
+        description: p.description,
+        budget: p.estimatedCost || p.estimated_cost || p.budget,
+        stages: Array.isArray(p.stages)
+          ? p.stages
+          : (p.customPhaseData || p.custom_phase_data)?.customStages
+          ? ((p.customPhaseData || p.custom_phase_data).customStages as Array<{ name: string; status?: string; order?: number }>).map((s) => ({
+              name: s.name,
+              status: s.status || "pending",
+              order: s.order,
+            }))
+          : (p.constructionStage || p.construction_stage)
+          ? [{ name: p.constructionStage || p.construction_stage, status: p.status || "planned" }]
+          : [],
+      };
+    };
 
     return (phasesSource || []).map(normalize);
   }, [projectPhases, projectDetail?.plannedPhases, t]);
@@ -887,8 +889,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             </DialogHeader>
             <div className="overflow-y-auto pr-1 max-h-[75vh]">
               {projectDataForReport && (
-                <CompactProjectReportGenerator 
-                  project={projectDataForReport}
+                <CompactProjectReportGenerator
+                  project={projectDataForReport as any}
                   useDirectData={true}
                 />
               )}
@@ -1157,7 +1159,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               </DialogHeaderUI>
               <ConstructionPhaseManager
                 phases={phases}
-                onChange={setPhases}
+                workflowData={null}
+                onStepComplete={(stepData) => setPhases(stepData.phases)}
                 projectBudget={project?.budget || 0}
                 projectId={projectId}
               />
@@ -1232,7 +1235,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                 />
               ) : (
                 <ProjectGantt
-                  project={project}
+                  project={project as any}
                   phases={(computedPhases || []).map((p) => ({
                     id: p.id,
                     name: p.phase,
@@ -1365,16 +1368,16 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                         <div className="flex justify-between items-start">
                           <div>
                             <h4 className="font-medium">
-                              {payment.description || "Paiement"}
+                              {(payment as any).description || "Paiement"}
                             </h4>
                             <p className="text-sm text-muted-foreground">
                               Date:{" "}
                               {new Date(
-                                payment.payment_date
+                                payment.paymentDate
                               ).toLocaleDateString()}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                              Progression: {payment.progress_at_payment}%
+                              Progression: {payment.progressAtPayment}%
                             </p>
                           </div>
                           <div className="text-right">
@@ -1772,12 +1775,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                           </div>
                           <Badge
                             className={
-                              cert.status === "active"
+                              (cert as any).status === "active"
                                 ? "bg-green-100 text-green-800"
                                 : "bg-red-100 text-red-800"
                             }
                           >
-                            {cert.status}
+                            {(cert as any).status || 'N/A'}
                           </Badge>
                         </div>
                       </div>

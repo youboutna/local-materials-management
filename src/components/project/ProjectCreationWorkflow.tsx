@@ -196,7 +196,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
     // Attempt to save current step using unified workflow
     const result = await saveCurrentStep();
-    if (!result?.success) {
+    if (!result || !result.success) {
       console.error('Échec de la sauvegarde, passage à l\'étape suivante annulé');
       return; // 🚫 Do not proceed if save fails
     }
@@ -214,17 +214,15 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
     // Use the unified workflow hook's save functionality (Rule #5: UI Layer Separation)
     const result = await saveCurrentStep();
-    if (!result?.success) {
+    if (!result || !result.success) {
       // Type-safe error handling for SaveResult interface
       let errorMessage = 'Failed to save workflow data';
       
-      // Check if result has errors array (SaveResult interface)
-      if ('errors' in result && Array.isArray(result.errors) && result.errors.length > 0) {
-        errorMessage = result.errors.join(', ');
+      if (result && 'errors' in result && Array.isArray((result as any).errors) && (result as any).errors.length > 0) {
+        errorMessage = (result as any).errors.join(', ');
       }
-      // Check if result has message property (fallback error object)
-      else if ('message' in result && typeof result.message === 'string') {
-        errorMessage = result.message;
+      else if (result && 'message' in result && typeof (result as any).message === 'string') {
+        errorMessage = (result as any).message;
       }
       
       console.error('Erreur lors de la sauvegarde complète:', errorMessage);
@@ -275,8 +273,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       await updateFormData(finalWorkflowData);
       const result = await saveCurrentStep();
       
-      if (!result?.success) {
-        throw new Error(result.errors?.join(', ') || 'Failed to complete project creation');
+      if (!result || !result.success) {
+        throw new Error((result as any)?.errors?.join(', ') || 'Failed to complete project creation');
       }
       
       toast({
@@ -413,7 +411,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
         {currentStep === 3 && (
           <ConstructionPhaseManager
             projectId={formData?.projectId || ''}
-            workflowData={formData}
+            workflowData={formData ?? null}
+            phases={formData?.relatedData?.phases || []}
             onStepComplete={(stepData) => {
               updateFormData({
                 relatedData: {
