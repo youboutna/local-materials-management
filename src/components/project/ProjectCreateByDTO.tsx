@@ -198,7 +198,10 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
         attributionDate: projectData.startDate!,
         currentPhase: 'pre_construction' as ConstructionPhase,
         currentStage: 'planningDesign',
-        methodology: projectData.methodology || 'waterfall'
+        methodology: projectData.methodology || 'waterfall',
+        currency: 'MRO',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
       // TODO: Save phases and milestones to database

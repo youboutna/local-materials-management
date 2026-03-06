@@ -18,8 +18,27 @@ import {
   Package,
   Shield
 } from 'lucide-react';
-import { ProjectWorkflowService, PhaseStepTask } from '@/application/services/ProjectWorkflowService';
+import { ProjectWorkflowService } from '@/application/services/ProjectWorkflowService';
+
+// Local type for phase hierarchy view data (snake_case from DB query)
+interface PhaseStepTask {
+  phase_id: string;
+  phase_name: string;
+  phase_code: string;
+  status: string;
+  progress?: number;
+  start_date?: string;
+  end_date?: string;
+  step_id?: string;
+  step_name?: string;
+  step_code?: string;
+  task_id?: string;
+  task_name?: string;
+  task_description?: string;
+  assigned_to?: string[];
+}
 import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 interface PhaseStepTaskManagerProps {
   projectId: string;
@@ -39,8 +58,25 @@ const PhaseStepTaskManager: React.FC<PhaseStepTaskManagerProps> = ({ projectId }
   const { data: hierarchy = [], isLoading, refetch } = useQuery({
     queryKey: ['project-phase-hierarchy', projectId],
     queryFn: async () => {
-      const workflowService = ProjectWorkflowService.getProjectWorkflowService();
-      return await workflowService.getProjectPhaseHierarchy(projectId);
+      // Use supabase directly for hierarchy query since WorkflowService constructor requires many repos
+      const { data, error } = await supabase
+        .from('project_phases')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('order_index');
+      
+      if (error) throw error;
+      
+      // Transform to PhaseStepTask format
+      return (data || []).map((row: any) => ({
+        phase_id: row.id,
+        phase_name: row.phase_name || row.name || 'Phase',
+        phase_code: row.construction_phase || '',
+        status: row.status || 'planned',
+        progress: row.progress || 0,
+        start_date: row.start_date,
+        end_date: row.end_date,
+      })) as PhaseStepTask[];
     },
     enabled: !!projectId && projectId !== 'new-project',
   });

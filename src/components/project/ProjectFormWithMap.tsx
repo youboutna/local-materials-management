@@ -13,8 +13,8 @@ import ProjectPhases from '@/components/project/ProjectPhases';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import TenderProjectFields from '@/components/projects/TenderProjectFields';
 import { supabase } from '@/integrations/supabase/client';
-import { ConstructionPhase } from '@/dtos/entities/ProjectDTO';
-import { ConstructionStage } from '@/dtos/entities/PhaseDTO';
+import { ConstructionPhase, ConstructionStage } from '@/dtos/entities/ProjectDTO';
+import { PhaseData, CustomPhase } from '@/dtos/entities/PhaseDTO';
 
 interface Employee {
   id: string;
@@ -23,47 +23,7 @@ interface Employee {
   department?: string | null;
 }
 
-interface CustomPhase {
-  id: string;
-  name: string;
-  number: number;
-  customStages: Array<{
-    id: string;
-    name: string;
-    order: number;
-  }>;
-  description?: string;
-  startDate?: string;
-  endDate?: string;
-  budget?: number;
-  materials?: Array<{ materialId: string; quantity: number; name?: string }>;
-  humanResources?: Array<{ roleId: string; quantity: number; role?: string }>;
-  suppliers?: Array<{ supplierId: string; name?: string; contact?: string }>;
-  location?: string;
-  status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
-  progress: number;
-}
-
-interface PhaseData {
-  id: string;
-  phase?: ConstructionPhase;
-  stage?: ConstructionStage;
-  customPhase?: CustomPhase;
-  title: string;
-  description: string;
-  startDate: string;
-  endDate: string;
-  estimatedDuration: number;
-  status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
-  budget: number;
-  actualCost: number;
-  progress: number;
-  materials: Array<{ materialId: string; quantity: number; name?: string }>;
-  humanResources: Array<{ roleId: string; quantity: number; role?: string }>;
-  suppliers: Array<{ supplierId: string; name?: string; contact?: string }>;
-  location: string;
-  notes?: string;
-}
+// Use PhaseData and CustomPhase from PhaseDTO.ts instead of local definitions
 
 interface ProjectFormData {
   title: string;
@@ -129,7 +89,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
     allows_initial_payment: false,
     initial_payment_percentage: 0,
     current_phase: 'pre_construction',
-    current_stage: 'planning_design',
+    current_stage: 'planningDesign' as ConstructionStage,
     ...initialData
   });
 

@@ -128,7 +128,7 @@ const PhaseWorkflowContainer: React.FC<PhaseWorkflowContainerProps> = ({
         const storage = StorageFactory.createProvider();
         const file = new File([pvResult.blob], pvResult.fileName, { type: 'application/pdf' });
         const destPath = `phases/${projectId}/${pvResult.fileName}`;
-        const uploadRes = await storage.upload(file, destPath);
+        const uploadRes = await storage.uploadFile(file, destPath);
 
         if (uploadRes.success) {
           const publicUrl = uploadRes.url || '';
@@ -154,7 +154,7 @@ const PhaseWorkflowContainer: React.FC<PhaseWorkflowContainerProps> = ({
                 projectData.created_by,
                 'PV généré',
                 `Un procès-verbal pour la phase ${rawPhaseData.phase_name} a été généré.`,
-                'document',
+                'info' as any,
                 (docRecord as any)?.id || null,
                 { documents: docRecord ? [{ id: String((docRecord as any)?.id || ''), file_url: publicUrl }] : [{ file_url: publicUrl }] }
               );
