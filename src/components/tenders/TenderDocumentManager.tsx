@@ -413,7 +413,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
      setUploadFormData(prev => ({ 
        ...prev, 
        subcategory: value,
-       category: value === 'devis_quantitatif_estimatif' ? 'financial' : prev.category,
+      category: (value as string) === 'devis_quantitatif_estimatif' ? 'financial' : prev.category,
      }));
      
      // Show quantitative estimate component for "devis_quantitatif_estimatif"
