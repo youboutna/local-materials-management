@@ -19,7 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { InspectionStatus } from '@/types/project';
+type InspectionStatusLocal = 'approved' | 'requires_changes' | 'rejected' | 'pending';
 import { InspectorSelector } from '@/components/selectors/InspectorSelector';
 import { useInspectionActionContext } from '@/hooks/useCheckpointActionContext';
 import { MilestoneActionContext } from '@/components/project/milestones';
@@ -70,7 +70,7 @@ export function InspectionFormWithContext({
   const [date, setDate] = useState<Date>(new Date());
   const [inspectorId, setInspectorId] = useState('');
   const [inspectorName, setInspectorName] = useState('');
-  const [status, setStatus] = useState<InspectionStatus>('pending');
+  const [status, setStatus] = useState<InspectionStatusLocal>('pending');
   const [inspectionType, setInspectionType] = useState('progress');
   const [comments, setComments] = useState('');
   const [progress, setProgress] = useState(0);
@@ -348,7 +348,7 @@ export function InspectionFormWithContext({
               {/* Status */}
               <div>
                 <Label htmlFor="status">Statut</Label>
-                <Select value={status} onValueChange={(v: InspectionStatus) => setStatus(v)}>
+                <Select value={status} onValueChange={(v: InspectionStatusLocal) => setStatus(v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un statut" />
                   </SelectTrigger>

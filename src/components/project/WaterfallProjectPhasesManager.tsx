@@ -23,8 +23,7 @@ import WaterfallGanttChart from './WaterfallGanttChart';
 import WaterfallProjectKPIs from './WaterfallProjectKPIs';
 import ConstructionPhaseManager from './ConstructionPhaseManager';
 import { useProjects } from '@/hooks/projects/useProjects';
-import { supabase } from '@/integrations/supabase/client';
-import { ProjectData } from '@/types/project';
+import type { ProjectData } from '@/types/project';
 
 interface WaterfallProjectPhasesManagerProps {
   selectedProject: ProjectData | null;
@@ -58,7 +57,7 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
       if (!selectedProject) return;
 
       try {
-        // Récupérer les phases spécifiques au projet sélectionné
+        const { supabase } = await import('@/integrations/supabase/client');
         const { data: phasesData } = await supabase
           .from('project_phases')
           .select('*')
@@ -159,8 +158,8 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
     if (!selectedProject) return;
 
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       if (currentPhase.id) {
-        // Mise à jour d'une phase existante
         const { error } = await supabase
           .from('project_phases')
           .update({
@@ -228,6 +227,7 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
     if (!confirm('Êtes-vous sûr de vouloir supprimer cette phase?')) return;
 
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase
         .from('project_phases')
         .delete()

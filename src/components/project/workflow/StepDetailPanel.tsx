@@ -5,7 +5,6 @@
 
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,7 +26,7 @@ import {
   CalendarPlus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { PhaseStepDTO } from '@/types/phase-dto';
+import { PhaseStepDTO } from '@/dtos/entities/PhaseDTO';
 import { toast } from 'sonner';
 
 // Import existing components
@@ -70,6 +69,7 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
   const { data: project } = useQuery({
     queryKey: ['project-for-scheduler', projectId],
     queryFn: async () => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('projects')
         .select('id, title, location, status, project_reference, budget, progress, main_contractor')
@@ -104,6 +104,7 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
     additionalData?: any
   ) => {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase
         .from('inspections')
         .insert({

@@ -17,7 +17,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useCreateInspectionHex, useUpdateProjectStatusHex } from '@/hooks/hexagonal';
-import { ProjectWithPayments, InspectionStatus } from '@/types/project';
+import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
+import type { ProjectWithPayments } from '@/types/project';
+type InspectionStatusLocal = 'approved' | 'requires_changes' | 'rejected' | 'pending';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { InspectorSelector } from '@/components/selectors/InspectorSelector';
 
@@ -32,7 +34,7 @@ export function InspectionDialog({ project, onInspectionCreated }: InspectionDia
   const [date, setDate] = useState<Date>(new Date());
   const [inspectorId, setInspectorId] = useState('');
   const [inspectorName, setInspectorName] = useState('');
-  const [status, setStatus] = useState<InspectionStatus>('pending');
+  const [status, setStatus] = useState<InspectionStatusLocal>('pending');
   const [comments, setComments] = useState('');
   const [progress, setProgress] = useState(project.progress);
   const { toast } = useToast();
@@ -171,7 +173,7 @@ export function InspectionDialog({ project, onInspectionCreated }: InspectionDia
               </Label>
               <Select
                 value={status}
-                onValueChange={(value: InspectionStatus) => setStatus(value)}
+                onValueChange={(value: InspectionStatusLocal) => setStatus(value)}
               >
                 <SelectTrigger className="col-span-4">
                   <SelectValue placeholder={t("inspection.dialog.select_status")} />

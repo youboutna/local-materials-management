@@ -1,7 +1,7 @@
 import React from 'react';
 import GanttDiagramWithMilestones from './GanttDiagramWithMilestones';
 import { ReportCalculations } from '@/utils/reportCalculations';
-import { ProjectData } from '@/types/project';
+import type { ProjectData } from '@/types/project';
 
 interface ProjectGanttProps {
   project: ProjectData;

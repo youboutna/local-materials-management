@@ -25,7 +25,7 @@ import {
   MilestoneType,
   MILESTONE_TYPES,
   MILESTONE_PRIORITIES
-} from '@/types/milestone-dto';
+} from '@/dtos/entities/MilestoneDTO';
 import { format, parseISO, isBefore, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -56,26 +56,25 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
       const milestonesData: MilestoneSummaryDTO[] = rawMilestones.map((m: any) => ({
         id: m.id,
         title: m.title,
-        target_date: m.target_date,
+        targetDate: m.target_date || m.targetDate,
         status: m.status,
         type: m.type || 'checkpoint',
         priority: m.priority || 'medium',
         weight: m.weight || 0.2,
-        phase_id: m.phase_id,
-        phase_name: m.phase_name,
-        completed_date: m.actual_completion_date || m.completed_date,
-        is_critical: m.priority === 'critical',
-        is_from_template: false,
+        phaseId: m.phase_id || m.phaseId,
+        phaseDame: m.phase_name || m.phaseName,
+        completedDate: m.actual_completion_date || m.completed_date || m.completedDate,
+        isCritical: m.priority === 'critical',
       }));
       const progressData: MilestoneProgressDTO = {
-        total_milestones: rawMilestones.length,
-        completed_milestones: rawMilestones.filter((m: any) => m.status === 'completed').length,
-        delayed_milestones: rawMilestones.filter((m: any) => m.status === 'delayed').length,
-        weighted_progress: Math.round(rawMilestones.filter((m: any) => m.status === 'completed').length / Math.max(1, rawMilestones.length) * 100),
-        overdue_milestones: rawMilestones.filter((m: any) => m.status === 'delayed').map((m: any) => m.id),
-        upcoming_milestones: [],
-        schedule_performance_index: 1,
-        critical_path_status: 'on_track',
+        totalMilestones: rawMilestones.length,
+        completedMilestones: rawMilestones.filter((m: any) => m.status === 'completed').length,
+        delayedMilestones: rawMilestones.filter((m: any) => m.status === 'delayed').length,
+        weightedProgress: Math.round(rawMilestones.filter((m: any) => m.status === 'completed').length / Math.max(1, rawMilestones.length) * 100),
+        overdueMilestones: rawMilestones.filter((m: any) => m.status === 'delayed').map((m: any) => m.id),
+        upcomingMilestones: [],
+        schedulePerformance_index: 1,
+        criticalPath_status: 'on_track',
       };
       setMilestones(milestonesData);
       setProgress(progressData);
@@ -88,7 +87,7 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
 
   const getStatusInfo = (milestone: MilestoneSummaryDTO) => {
     const today = new Date();
-    const targetDate = parseISO(milestone.target_date);
+    const targetDate = parseISO(milestone.targetDate);
     
     if (milestone.status === 'completed') {
       return { 
@@ -139,7 +138,7 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
 
   // Group milestones by phase
   const groupedMilestones = milestones.reduce((acc, m) => {
-    const key = m.phase_name || 'Projet global';
+    const key = m.phaseDame || 'Projet global';
     if (!acc[key]) acc[key] = [];
     acc[key].push(m);
     return acc;
@@ -185,7 +184,7 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
             Jalons du Projet (Timeline)
             {progress && (
               <Badge variant="outline" className="ml-2">
-                {progress.completed_milestones}/{progress.total_milestones}
+                {progress.completedMilestones}/{progress.totalMilestones}
               </Badge>
             )}
           </CardTitle>
@@ -204,45 +203,45 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
             <div className="flex justify-between items-center text-sm">
               <span className="text-muted-foreground">Progression des jalons</span>
               <div className="flex items-center gap-2">
-                <span className="font-medium">{progress.weighted_progress}%</span>
-                {progress.schedule_performance_index !== undefined && (
+                <span className="font-medium">{progress.weightedProgress}%</span>
+                {progress.schedulePerformance_index !== undefined && (
                   <Badge 
-                    variant={progress.schedule_performance_index >= 1 ? 'default' : 'destructive'}
+                    variant={progress.schedulePerformance_index >= 1 ? 'default' : 'destructive'}
                     className="text-xs flex items-center gap-1"
                   >
-                    {progress.schedule_performance_index >= 1 ? (
+                    {progress.schedulePerformance_index >= 1 ? (
                       <TrendingUp className="h-3 w-3" />
                     ) : (
                       <TrendingDown className="h-3 w-3" />
                     )}
-                    SPI: {progress.schedule_performance_index}
+                    SPI: {progress.schedulePerformance_index}
                   </Badge>
                 )}
               </div>
             </div>
-            <Progress value={progress.weighted_progress} className="h-2" />
+            <Progress value={progress.weightedProgress} className="h-2" />
             
             {/* Status indicators */}
             <div className="flex flex-wrap gap-4 text-sm">
-              {progress.overdue_milestones && progress.overdue_milestones.length > 0 && (
+              {progress.overdueMilestones && progress.overdueMilestones.length > 0 && (
                 <div className="flex items-center gap-2 text-red-600">
                   <AlertTriangle className="h-4 w-4" />
-                  {progress.overdue_milestones.length} jalon(s) en retard
+                  {progress.overdueMilestones.length} jalon(s) en retard
                 </div>
               )}
-              {progress.upcoming_milestones && progress.upcoming_milestones.length > 0 && (
+              {progress.upcomingMilestones && progress.upcomingMilestones.length > 0 && (
                 <div className="flex items-center gap-2 text-orange-600">
                   <Clock className="h-4 w-4" />
-                  {progress.upcoming_milestones.length} jalon(s) à venir (14j)
+                  {progress.upcomingMilestones.length} jalon(s) à venir (14j)
                 </div>
               )}
-              {progress.critical_path_status !== 'on_track' && (
+              {progress.criticalPath_status !== 'on_track' && (
                 <div className={cn(
                   "flex items-center gap-2",
-                  progress.critical_path_status === 'delayed' ? 'text-red-600' : 'text-orange-600'
+                  progress.criticalPath_status === 'delayed' ? 'text-red-600' : 'text-orange-600'
                 )}>
                   <ShieldCheck className="h-4 w-4" />
-                  Chemin critique {progress.critical_path_status === 'delayed' ? 'en retard' : 'à risque'}
+                  Chemin critique {progress.criticalPath_status === 'delayed' ? 'en retard' : 'à risque'}
                 </div>
               )}
             </div>
@@ -275,9 +274,9 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
                           className={cn(
                             "relative pl-10 cursor-pointer hover:bg-muted/50 p-2 rounded-lg transition-colors",
                             milestone.status === 'completed' && "opacity-60",
-                            milestone.is_critical && milestone.status !== 'completed' && "border-l-2 border-red-400"
+                            milestone.isCritical && milestone.status !== 'completed' && "border-l-2 border-red-400"
                           )}
-                          onClick={() => onMilestoneClick?.(milestone.id, milestone.phase_id)}
+                          onClick={() => onMilestoneClick?.(milestone.id, milestone.phaseId)}
                         >
                           {/* Timeline dot */}
                           <div className={cn(
@@ -297,7 +296,7 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
                                   {milestone.title}
                                 </p>
                                 <TypeIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                                {milestone.is_critical && (
+                                {milestone.isCritical && (
                                   <Badge variant="destructive" className="text-xs">
                                     Critique
                                   </Badge>
@@ -306,13 +305,13 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
                               <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground flex-wrap">
                                 <Calendar className="h-3 w-3" />
                                 <span>
-                                  {format(parseISO(milestone.target_date), 'd MMM yyyy', { locale: fr })}
+                                  {format(parseISO(milestone.targetDate), 'd MMM yyyy', { locale: fr })}
                                 </span>
-                                {milestone.completed_date && (
+                                {milestone.completedDate && (
                                   <>
                                     <span>•</span>
                                     <span className="text-green-600">
-                                      Terminé le {format(parseISO(milestone.completed_date), 'd MMM', { locale: fr })}
+                                      Terminé le {format(parseISO(milestone.completedDate), 'd MMM', { locale: fr })}
                                     </span>
                                   </>
                                 )}

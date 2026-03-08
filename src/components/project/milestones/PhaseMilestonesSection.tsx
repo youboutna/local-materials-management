@@ -30,7 +30,7 @@ import {
   MilestonePriority,
   MilestoneProgressDTO,
   MilestoneType
-} from '@/types/milestone-dto';
+} from '@/dtos/entities/MilestoneDTO';
 import { format, isBefore, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
@@ -207,7 +207,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
     setFormData({
       title: milestone.title,
       description: milestone.description || '',
-      target_date: milestone.target_date,
+      target_date: milestone.targetDate,
       weight: milestone.weight,
       notes: milestone.notes || '',
       type: milestone.type || 'checkpoint',
@@ -231,7 +231,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
 
   const getStatusInfo = (milestone: MilestoneDTO) => {
     const today = new Date();
-    const targetDate = parseISO(milestone.target_date);
+    const targetDate = parseISO(milestone.targetDate);
     
     if (milestone.status === 'completed') {
       return { icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-100' };
@@ -280,7 +280,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
         
         {!readonly && (
           <div className="flex gap-2">
-            {hasTemplates && milestones.filter(m => m.is_from_template).length === 0 && (
+            {hasTemplates && milestones.filter(m => m.isFromTemplate).length === 0 && (
               <Button
                 variant="outline"
                 size="sm"
@@ -455,11 +455,11 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                         )}
                         <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
                           <span>
-                            Cible: {format(parseISO(milestone.target_date), 'd MMM yyyy', { locale: fr })}
+                            Cible: {format(parseISO(milestone.targetDate), 'd MMM yyyy', { locale: fr })}
                           </span>
-                          {milestone.completed_date && (
+                          {milestone.completedDate && (
                             <span className="text-green-600">
-                              ✓ {format(parseISO(milestone.completed_date), 'd MMM', { locale: fr })}
+                              ✓ {format(parseISO(milestone.completedDate), 'd MMM', { locale: fr })}
                             </span>
                           )}
                           <Badge variant="outline" className="text-xs">

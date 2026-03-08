@@ -18,8 +18,7 @@ import GanttDiagramWithMilestones from './GanttDiagramWithMilestones';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import WaterfallProjectKPIs from './WaterfallProjectKPIs';
 import { useProjects } from '@/hooks/projects/useProjects';
-import { supabase } from '@/integrations/supabase/client';
-import { EscalationRoles,ActionLabels, ProjectData } from '@/types/project';
+import type { EscalationRoles, ActionLabels, ProjectData } from '@/types/project';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
 
@@ -84,7 +83,7 @@ const WaterfallProjectManager = () => {
       if (!selectedProject) return;
 
       try {
-        // Récupérer les phases spécifiques au projet sélectionné
+        const { supabase } = await import('@/integrations/supabase/client');
         const { data: phasesData } = await supabase
           .from('project_phases')
           .select('*')

@@ -10,8 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calculator, Plus, Trash2, Save, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/repositories/RepositoryFactory';
-import { calculateQuantity } from '@/types/quantityTakeoff';
-import { supabase } from '@/integrations/supabase/client';
+import { calculateQuantity } from '@/dtos/entities/QuantityTakeoffDTO';
 
 // Local Material interface for UI usage
 interface LocalMaterial {
@@ -106,7 +105,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
 
   const fetchExistingCalculations = async () => {
     try {
-      // Fetch from quantity_takeoffs table
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('quantity_takeoffs')
         .select('*')
@@ -171,7 +170,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
   const saveCalculations = async () => {
     setLoading(true);
     try {
-      // First, delete existing calculations for this project
+      const { supabase } = await import('@/integrations/supabase/client');
       await supabase
         .from('quantity_takeoffs')
         .delete()

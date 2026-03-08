@@ -11,9 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { calculateQuantity } from '@/types/quantityTakeoff';
+import { calculateQuantity } from '@/dtos/entities/QuantityTakeoffDTO';
 import { useMaterialsForTakeoff } from '@/hooks/hexagonal';
-import { supabase } from '@/integrations/supabase/client';
 
 interface QuantityTakeoffFormProps {
   projectId: string;
@@ -63,6 +62,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
 
     try {
       setSubmitting(true);
+      const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase.from('quantity_takeoffs').insert({
         project_id: projectId,
         material_id: formData.materialId,

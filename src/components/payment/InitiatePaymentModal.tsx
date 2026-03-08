@@ -16,8 +16,7 @@ import {
   ROLE_PAYMENT_LIMITS, 
   ROLE_APPROVAL_CHAIN,
   ROLE_LABELS 
-} from '@/types/paymentInitiation';
-import { supabase } from '@/integrations/supabase/client';
+} from '@/dtos/entities/PaymentInitiationDTO';
 import { DollarSign, AlertTriangle, CheckCircle, Clock, Users, FileText } from 'lucide-react';
 import SimpleSupplierSelector from '@/components/selectors/SimpleSupplierSelector';
 
@@ -71,6 +70,7 @@ const InitiatePaymentModal: React.FC<InitiatePaymentModalProps> = ({
   }, [suggestedSupplierId, suggestedAmount]);
 
   const fetchProjectInfo = async () => {
+    const { supabase } = await import('@/integrations/supabase/client');
     const { data } = await supabase
       .from('projects')
       .select('title, budget, status')

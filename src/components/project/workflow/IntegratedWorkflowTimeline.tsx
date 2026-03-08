@@ -51,8 +51,8 @@ import {
   MilestonePriority,
   MILESTONE_TYPES,
   MILESTONE_PRIORITIES 
-} from '@/types/milestone-dto';
-import { PhaseStepDTO } from '@/types/phase-dto';
+} from '@/dtos/entities/MilestoneDTO';
+import { PhaseStepDTO } from '@/dtos/entities/PhaseDTO';
 import { format, parseISO, isBefore, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -247,12 +247,12 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
         type: 'milestone',
         id: m.id,
         title: m.title,
-        date: m.target_date,
+        date: m.targetDate,
         status: m.status,
         data: m,
         milestoneType: m.type,
         priority: m.priority,
-        isCritical: m.is_critical,
+        isCritical: m.isCritical,
       });
     });
 
@@ -318,7 +318,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
       <Card className="overflow-hidden">
         <div className={cn(
           "p-4",
-          progress?.critical_path_status === 'delayed' 
+          progress?.criticalPath_status === 'delayed' 
             ? "bg-gradient-to-r from-destructive/10 to-transparent" 
             : "bg-gradient-to-r from-primary/10 to-transparent"
         )}>
@@ -336,20 +336,20 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
-              {progress?.schedule_performance_index !== undefined && (
+              {progress?.schedulePerformance_index !== undefined && (
                 <Badge 
-                  variant={progress.schedule_performance_index >= 1 ? 'default' : 'destructive'}
+                  variant={progress.schedulePerformance_index >= 1 ? 'default' : 'destructive'}
                   className={cn(
                     "flex items-center gap-1",
-                    progress.schedule_performance_index >= 1 && "bg-green-600"
+                    progress.schedulePerformance_index >= 1 && "bg-green-600"
                   )}
                 >
-                  {progress.schedule_performance_index >= 1 ? (
+                  {progress.schedulePerformance_index >= 1 ? (
                     <TrendingUp className="h-3 w-3" />
                   ) : (
                     <TrendingDown className="h-3 w-3" />
                   )}
-                  SPI: {progress.schedule_performance_index}
+                  SPI: {progress.schedulePerformance_index}
                 </Badge>
               )}
               <Button size="sm" variant="outline" onClick={handleAddMilestone}>
@@ -363,33 +363,33 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
             <div className="mt-4 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Progression pondérée</span>
-                <span className="font-medium">{progress.weighted_progress}%</span>
+                <span className="font-medium">{progress.weightedProgress}%</span>
               </div>
-              <Progress value={progress.weighted_progress} className="h-2" />
+              <Progress value={progress.weightedProgress} className="h-2" />
             </div>
           )}
 
           {/* Status indicators */}
           <div className="flex flex-wrap gap-3 mt-3 text-sm">
-            {progress?.overdue_milestones && progress.overdue_milestones.length > 0 && (
+            {progress?.overdueMilestones && progress.overdueMilestones.length > 0 && (
               <div className="flex items-center gap-1.5 text-destructive">
                 <AlertTriangle className="h-4 w-4" />
-                <span>{progress.overdue_milestones.length} en retard</span>
+                <span>{progress.overdueMilestones.length} en retard</span>
               </div>
             )}
-            {progress?.upcoming_milestones && progress.upcoming_milestones.length > 0 && (
+            {progress?.upcomingMilestones && progress.upcomingMilestones.length > 0 && (
               <div className="flex items-center gap-1.5 text-amber-600">
                 <Clock className="h-4 w-4" />
-                <span>{progress.upcoming_milestones.length} à venir (14j)</span>
+                <span>{progress.upcomingMilestones.length} à venir (14j)</span>
               </div>
             )}
-            {progress?.critical_path_status && progress.critical_path_status !== 'on_track' && (
+            {progress?.criticalPath_status && progress.criticalPath_status !== 'on_track' && (
               <div className={cn(
                 "flex items-center gap-1.5",
-                progress.critical_path_status === 'delayed' ? 'text-destructive' : 'text-amber-600'
+                progress.criticalPath_status === 'delayed' ? 'text-destructive' : 'text-amber-600'
               )}>
                 <ShieldCheck className="h-4 w-4" />
-                <span>Chemin critique {progress.critical_path_status === 'delayed' ? 'en retard' : 'à risque'}</span>
+                <span>Chemin critique {progress.criticalPath_status === 'delayed' ? 'en retard' : 'à risque'}</span>
               </div>
             )}
           </div>

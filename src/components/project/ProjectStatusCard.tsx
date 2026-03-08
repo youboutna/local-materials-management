@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { ProjectWithPayments, ProjectStatus } from '@/types/project';
+import type { ProjectWithPayments } from '@/types/project';
 import { format } from 'date-fns';
 
 export function ProjectStatusCard({ project }: { project: ProjectWithPayments }) {
