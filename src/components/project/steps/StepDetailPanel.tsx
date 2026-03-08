@@ -379,8 +379,8 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
                         </div>
                       </div>
                       <Badge variant={
-                        inspection.status === 'approved' ? 'default' :
-                        inspection.status === 'rejected' ? 'destructive' : 'secondary'
+                        (inspection.status as string) === 'approved' ? 'default' :
+                        (inspection.status as string) === 'rejected' ? 'destructive' : 'secondary'
                       }>
                         {inspection.status}
                       </Badge>
