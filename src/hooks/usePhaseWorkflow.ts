@@ -290,7 +290,7 @@ export function usePhaseWorkflow(projectId: string, phaseId: string, phase?: Pha
       inspector: string;
       comments?: string;
     }) => {
-      const inspectionDTO: CreateInspectionDTO = {
+      const inspectionDTO: any = {
         projectId,
         phaseId,
         date: inspectionData.date,
@@ -300,7 +300,7 @@ export function usePhaseWorkflow(projectId: string, phaseId: string, phase?: Pha
         progressAtInspection: phase?.progress || 0,
       };
 
-      const createdInspection = await inspectionService.createInspection(inspectionDTO);
+      const createdInspection = await inspectionService.createInspection(inspectionDTO as any);
       if (!createdInspection) throw new Error('Failed to schedule inspection');
       
       return createdInspection;
