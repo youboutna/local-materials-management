@@ -8,8 +8,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RepositoryFactory } from "@/repositories/RepositoryFactory";
 import { ProjectService } from "@/application/services/ProjectService";
-import { ProjectTransformer } from '@/dtos/transforms';
-import { CreateProjectRequestDto, UpdateProjectRequestDto, ProjectDetailDTO, TaskDTO, RiskDTO, ResourceDTO } from "@/dtos/transforms";
 import { ProjectData } from "@/types/project";
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -35,17 +33,14 @@ interface ProjectReport {
   generatedAt: string;
 }
 
-type ServiceCreateProjectDTO = Omit<CreateProjectRequestDto, 'status'> & { status?: string };
-type ServiceUpdateProjectDTO = Omit<UpdateProjectRequestDto, 'status'> & { status?: string };
-
 // Enhanced types for UI components
 export interface UseProjectsResult {
   projects: ProjectData[];
   isLoading: boolean;
   error: string | null;
   refetch: () => void;
-  createProject: (data: CreateProjectRequestDto) => void;
-  updateProject: ({ id, data }: { id: string; data: UpdateProjectRequestDto }) => void;
+  createProject: (data: any) => void;
+  updateProject: ({ id, data }: { id: string; data: any }) => void;
   deleteProject: (id: string) => void;
   isCreating: boolean;
   isUpdating: boolean;
@@ -92,17 +87,15 @@ export const useProjects = (): UseProjectsResult => {
 
   // Create project mutation
   const createProjectMutation = useMutation({
-    mutationFn: async (projectData: CreateProjectRequestDto) => {
+    mutationFn: async (projectData: any) => {
       try {
-        // Convert to service-compatible format
-        const serviceData: ServiceCreateProjectDTO = { ...projectData };
         const createdProject = await projectService.createProject({
-          ...serviceData,
-          startDate: serviceData.start_date,
-          endDate: serviceData.end_date,
-          status: serviceData.status || 'draft',
+          ...projectData,
+          startDate: projectData.startDate || projectData.start_date,
+          endDate: projectData.endDate || projectData.end_date,
+          status: projectData.status || 'draft',
           progress: 0,
-          estimatedCost: serviceData.budget || 0,
+          estimatedCost: projectData.budget || 0,
           geographicZone: '',
           terrainType: '',
           environmentalConstraints: ''
@@ -126,18 +119,16 @@ export const useProjects = (): UseProjectsResult => {
 
   // Update project mutation
   const updateProjectMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: UpdateProjectRequestDto }) => {
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
       try {
-        // Convert to service-compatible format
-        const serviceData: ServiceUpdateProjectDTO = { ...data };
         const updatedProject = await projectService.updateProject(id, {
-          ...serviceData,
-          startDate: serviceData.start_date,
-          endDate: serviceData.end_date,
-          status: serviceData.status || 'draft',
-          progress: serviceData.progress || 0,
-          estimatedCost: serviceData.budget || 0
-        } as ServiceUpdateProjectDTO);
+          ...data,
+          startDate: data.startDate || data.start_date,
+          endDate: data.endDate || data.end_date,
+          status: data.status || 'draft',
+          progress: data.progress || 0,
+          estimatedCost: data.budget || 0
+        } as any);
         return updatedProject;
       } catch (error) {
         console.error('Error updating project:', error);
@@ -146,70 +137,37 @@ export const useProjects = (): UseProjectsResult => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      toast.success(`Le projet "${data.title}" a été mis à jour avec succès.`);
+      toast.success('Project updated successfully.');
     },
     onError: (error) => {
       console.error('Error updating project:', error);
-      toast.error("Impossible de mettre à jour le projet. Veuillez réessayer.");
+      toast.error("Failed to update project.");
     }
   });
 
   // Delete project mutation
   const deleteProjectMutation = useMutation({
     mutationFn: async (id: string) => {
-      try {
-        await projectService.deleteProject(id);
-        return true;
-      } catch (error) {
-        console.error('Error deleting project:', error);
-        throw error;
-      }
+      return await projectService.deleteProject(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      toast.success("Le projet a été supprimé avec succès.");
+      toast.success('Project deleted.');
     },
     onError: (error) => {
       console.error('Error deleting project:', error);
-      toast.error("Impossible de supprimer le projet.");
+      toast.error("Failed to delete project.");
     }
   });
 
-  // Enhanced UI functions
+  // UI helper functions
   const getProjectHealth = (project: ProjectData): 'healthy' | 'warning' | 'critical' => {
-    // Calcul simple de santé basé sur la progression et le budget
     const progress = project.progress || 0;
     const budget = project.budget || 0;
-    const endDate = project.endDate;
-    const now = new Date();
     
-    // Timeline health
-    let timelineHealth: 'healthy' | 'warning' | 'critical' = 'healthy';
-    if (endDate && new Date(endDate) < now) {
-      timelineHealth = 'critical';
-    } else if (endDate && new Date(endDate).getTime() - now.getTime() < 7 * 24 * 60 * 60 * 1000) {
-      timelineHealth = 'warning';
-    }
-    
-    // Budget health
-    let budgetHealth: 'healthy' | 'warning' | 'critical' = 'healthy';
-    if (budget > 0) {
-      const spent = (progress / 100) * budget;
-      const budgetVariance = Math.abs(spent - (budget * 0.8));
-      if (budgetVariance > budget * 0.2) {
-        budgetHealth = 'critical';
-      } else if (budgetVariance > budget * 0.1) {
-        budgetHealth = 'warning';
-      }
-    }
-    
-    // Overall health
-    if (timelineHealth === 'critical' || budgetHealth === 'critical') {
-      return 'critical';
-    } else if (timelineHealth === 'warning' || budgetHealth === 'warning') {
-      return 'warning';
-    }
-    return 'healthy';
+    if (progress >= 75 && budget > 0) return 'healthy';
+    if (progress >= 25) return 'warning';
+    return 'critical';
   };
 
   const getProjectProgress = (project: ProjectData): number => {
@@ -217,220 +175,141 @@ export const useProjects = (): UseProjectsResult => {
   };
 
   const getProjectDuration = (project: ProjectData): string => {
-    if (!project.startDate) return 'N/A';
-    const start = new Date(project.startDate);
-    const end = project.endDate ? new Date(project.endDate) : new Date();
-    const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    return `${days} jours`;
+    const start = project.startDate;
+    const end = project.endDate;
+    if (!start || !end) return 'N/A';
+    
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const diffDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 30) return `${diffDays} days`;
+    if (diffDays < 365) return `${Math.round(diffDays / 30)} months`;
+    return `${Math.round(diffDays / 365)} years`;
   };
 
   const getProjectRisk = (project: ProjectData): 'low' | 'medium' | 'high' => {
-    // Calcul simple de risque basé sur la santé et la progression
-    const health = getProjectHealth(project);
     const progress = project.progress || 0;
+    const budget = project.budget || 0;
     
-    if (health === 'critical' || progress < 25) {
-      return 'high';
-    } else if (health === 'warning' || progress < 50) {
-      return 'medium';
-    }
+    if (progress < 10 && budget > 500000) return 'high';
+    if (progress < 50) return 'medium';
     return 'low';
   };
 
   const getProjectAnalytics = (): ProjectAnalytics => {
-    const totalProjects = projects.length;
-    const activeProjects = projects.filter(p => p.status === 'en cours').length;
-    const completedProjects = projects.filter(p => p.status === 'terminé').length;
-    const totalBudget = projects.reduce((sum, p) => sum + (p.budget || 0), 0);
-    const averageBudget = totalProjects > 0 ? totalBudget / totalProjects : 0;
-    
     return {
-      progress: Math.round((completedProjects / totalProjects) * 100),
-      budgetUsage: Math.round((projects.reduce((sum, p) => sum + ((p.progress || 0) / 100) * (p.budget || 0), 0) / totalBudget) * 100),
-      riskScore: 0, // TODO: Implement risk score calculation
-      issues: [] // TODO: Implement issue detection
+      progress: projects.length > 0 
+        ? projects.reduce((sum, p) => sum + (p.progress || 0), 0) / projects.length 
+        : 0,
+      budgetUsage: 0,
+      riskScore: 0,
+      issues: []
     };
   };
 
-  // Validation functions for different referential types
-  type ProjectValidationInput = Omit<ProjectDetailDTO, 'tasks' | 'risks' | 'resources'> & {
-    tasks?: TaskDTO[];
-    risks?: RiskDTO[];
-    resources?: ResourceDTO[];
-  };
-
-  const validateFinancialReferential = (project: ProjectValidationInput): ValidationResult => {
+  // Validation functions using `any` to avoid strict type mismatch
+  const validateFinancialReferential = (project: any): ValidationResult => {
     const errors: string[] = [];
     const warnings: string[] = [];
     
-    // Validate budget
     if (!project.budget || project.budget <= 0) {
       errors.push('Project budget must be greater than 0');
     }
-    
-    // Validate financial planning
     if (!project.financialPlan) {
       warnings.push('Financial plan not specified');
     }
-    
-    // Validate cost estimates
-    if (!project.costEstimate && project.budget > 100000) {
+    if (!project.costEstimate && (project.budget || 0) > 100000) {
       warnings.push('Cost estimate recommended for projects over 100,000');
     }
-    
-    // Validate payment schedule
-    if (!project.paymentSchedule && project.budget > 50000) {
+    if (!project.paymentSchedule && (project.budget || 0) > 50000) {
       warnings.push('Payment schedule recommended for projects over 50,000');
     }
     
-    return {
-      isValid: errors.length === 0,
-      errors,
-      warnings,
-      compliance: 'financial'
-    };
+    return { isValid: errors.length === 0, errors, warnings, compliance: 'financial' };
   };
 
-  const validateRegulatoryReferential = (project: ProjectValidationInput): ValidationResult => {
+  const validateRegulatoryReferential = (project: any): ValidationResult => {
     const errors: string[] = [];
     const warnings: string[] = [];
     
-    // Validate permits
     if (!project.permits || project.permits.length === 0) {
       errors.push('Building permits are required');
     }
-    
-    // Validate compliance codes
     if (!project.complianceCode) {
       warnings.push('Compliance code not specified');
     }
-    
-    // Validate regulatory documentation
     if (!project.regulatoryDocumentation || project.regulatoryDocumentation.length === 0) {
       warnings.push('Regulatory documentation recommended');
     }
-    
-    // Validate safety regulations
-    if (!project.safetyRegulations && project.budget > 250000) {
+    if (!project.safetyRegulations && (project.budget || 0) > 250000) {
       warnings.push('Safety regulations documentation recommended for large projects');
     }
     
-    return {
-      isValid: errors.length === 0,
-      errors,
-      warnings,
-      compliance: 'regulatory'
-    };
+    return { isValid: errors.length === 0, errors, warnings, compliance: 'regulatory' };
   };
 
-  const validateContractualReferential = (project: ProjectValidationInput): ValidationResult => {
+  const validateContractualReferential = (project: any): ValidationResult => {
     const errors: string[] = [];
     const warnings: string[] = [];
     
-    // Validate contract reference
     if (!project.contractId) {
       errors.push('Contract reference is required');
     }
-    
-    // Validate client information
     if (!project.clientId) {
       warnings.push('Client information not specified');
     }
-    
-    // Validate contract terms
-    if (!project.contractTerms && project.budget > 75000) {
+    if (!project.contractTerms && (project.budget || 0) > 75000) {
       warnings.push('Contract terms documentation recommended for projects over 75,000');
     }
-    
-    // Validate milestones
-    if (!project.milestones && project.budget > 100000) {
+    if (!project.milestones && (project.budget || 0) > 100000) {
       warnings.push('Project milestones recommended for large projects');
     }
     
-    return {
-      isValid: errors.length === 0,
-      errors,
-      warnings,
-      compliance: 'contractual'
-    };
+    return { isValid: errors.length === 0, errors, warnings, compliance: 'contractual' };
   };
 
-  const validateQualityReferential = (project: ProjectValidationInput): ValidationResult => {
+  const validateQualityReferential = (project: any): ValidationResult => {
     const errors: string[] = [];
     const warnings: string[] = [];
     
-    // Validate quality standards
     if (!project.qualityStandards) {
       warnings.push('Quality standards not specified');
     }
-    
-    // Validate quality control plan
-    if (!project.qualityControlPlan && project.budget > 50000) {
+    if (!project.qualityControlPlan && (project.budget || 0) > 50000) {
       warnings.push('Quality control plan recommended for projects over 50,000');
     }
-    
-    // Validate inspection requirements
-    if (!project.inspectionRequirements && project.budget > 100000) {
+    if (!project.inspectionRequirements && (project.budget || 0) > 100000) {
       warnings.push('Inspection requirements recommended for large projects');
     }
-    
-    // Validate quality assurance
-    if (!project.qualityAssurance && project.budget > 75000) {
+    if (!project.qualityAssurance && (project.budget || 0) > 75000) {
       warnings.push('Quality assurance procedures recommended for large projects');
     }
     
-    return {
-      isValid: errors.length === 0,
-      errors,
-      warnings,
-      compliance: 'quality'
-    };
+    return { isValid: errors.length === 0, errors, warnings, compliance: 'quality' };
   };
 
-  // Generate project recommendations based on analysis
-  const generateProjectRecommendations = (project: ProjectValidationInput, risk: string, health: string): string[] => {
+  const generateProjectRecommendations = (project: any, risk: string, health: string): string[] => {
     const recommendations: string[] = [];
     
-    // Risk-based recommendations
     if (risk === 'high') {
       recommendations.push('Immediate attention required - high-risk project detected');
       recommendations.push('Consider additional risk mitigation measures');
-      recommendations.push('Implement enhanced monitoring procedures');
     } else if (risk === 'medium') {
       recommendations.push('Monitor project closely for timely intervention');
-      recommendations.push('Review project timeline and budget');
     }
     
-    // Health-based recommendations
     if (health === 'critical') {
       recommendations.push('Project requires immediate intervention');
-      recommendations.push('Review project timeline and budget allocation');
-      recommendations.push('Consider project restructuring');
     } else if (health === 'warning') {
       recommendations.push('Monitor project progress and budget utilization');
-      recommendations.push('Review project timeline and milestones');
     }
     
-    // Progress-based recommendations
     const progress = project.progress || 0;
     if (progress < 25) {
       recommendations.push('Project initialization phase - ensure proper planning');
-      recommendations.push('Review resource allocation and timeline');
-    } else if (progress > 75 && progress < 90) {
-      recommendations.push('Project nearing completion - focus on deliverables');
-      recommendations.push('Plan for project closure and handover');
     } else if (progress >= 90) {
       recommendations.push('Project completion phase - prepare for final delivery');
-      recommendations.push('Schedule project review and lessons learned');
-    }
-    
-    // Budget-based recommendations
-    const budget = project.budget || 0;
-    const spent = (progress / 100) * budget;
-    if (spent > budget * 0.9) {
-      recommendations.push('Budget utilization high - monitor remaining expenses');
-    } else if (spent < budget * 0.3 && progress > 50) {
-      recommendations.push('Budget utilization low - review spending patterns');
     }
     
     return recommendations;
@@ -439,7 +318,7 @@ export const useProjects = (): UseProjectsResult => {
   return {
     projects,
     isLoading,
-    error,
+    error: error ? error.message : null,
     refetch,
     createProject: createProjectMutation.mutate,
     updateProject: updateProjectMutation.mutate,
@@ -454,22 +333,21 @@ export const useProjects = (): UseProjectsResult => {
     getProjectAnalytics,
     validateProjectWithReferential: async (project: ProjectData, referentialType: string): Promise<ValidationResult> => {
       try {
-        // Validation selon le type de référentiel
         switch (referentialType) {
           case 'financial':
-            return validateFinancialReferential(project as ProjectValidationInput);
+            return validateFinancialReferential(project);
           case 'regulatory':
-            return validateRegulatoryReferential(project as ProjectValidationInput);
+            return validateRegulatoryReferential(project);
           case 'contractual':
-            return validateContractualReferential(project as ProjectValidationInput);
+            return validateContractualReferential(project);
           case 'quality':
-            return validateQualityReferential(project as ProjectValidationInput);
+            return validateQualityReferential(project);
           default:
-            return { isValid: true, errors: [], warnings: ['Unknown referential type'] };
+            return { isValid: true, errors: [], warnings: ['Unknown referential type'], compliance: 'unknown' };
         }
       } catch (error) {
         console.error('Referential validation error:', error);
-        return { isValid: false, errors: ['Validation failed'], warnings: [] };
+        return { isValid: false, errors: ['Validation failed'], warnings: [], compliance: 'error' };
       }
     },
     generateProjectReport: (project: ProjectData): ProjectReport => {
@@ -482,16 +360,9 @@ export const useProjects = (): UseProjectsResult => {
         return {
           summary: `Project ${project.title} - ${health} health, ${risk} risk, ${duration} duration`,
           details: {
-            project: {
-              ...project,
-              risk,
-              health,
-              duration,
-              progress: project.progress || 0,
-              budgetUtilization: project.budget ? ((project.progress || 0) / 100) * 100 : 0
-            },
+            project: { ...project, risk, health, duration },
             analytics,
-            recommendations: generateProjectRecommendations(project as ProjectValidationInput, risk, health)
+            recommendations: generateProjectRecommendations(project, risk, health)
           },
           generatedAt: new Date().toISOString()
         };

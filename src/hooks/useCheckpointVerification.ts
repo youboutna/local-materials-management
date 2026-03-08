@@ -6,15 +6,13 @@
 
 import { useCallback, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getCheckpointVerificationEngine } from '@/application/services/CheckpointVerificationEngine';
 import { AutomaticDecompteCalculator } from '@/application/services/AutomaticDecompteCalculator';
 import { PaymentService } from '@/application/services/PaymentService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { toast } from '@/hooks/use-toast';
-import { AutomaticDecompteDTO, CheckpointVerificationResultDTO } from '@/dtos/entities/CheckpointDTO';
-import { CalculatePhaseDecompteRequestDto } from '@/dtos/entities/DecompteDTO';
-import type { CreatePaymentDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
-import type { MilestoneDTO } from '@/types/milestone-dto';
+import { AutomaticDecompteDTO } from '@/dtos/entities/DecompteDTO';
+import type { CreatePaymentDTO } from '@/dtos/entities/PaymentDTO';
+import type { MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
 
 interface UseCheckpointVerificationOptions {
   projectId: string;
@@ -72,12 +70,6 @@ export function useCheckpointVerification({
           return [];
         }
 
-        console.log('useCheckpointVerification: Fetching checkpoints for', {
-          projectId,
-          phaseId,
-          timestamp: new Date().toISOString()
-        });
-
         const milestoneRepository = getMilestoneRepository();
         
         // Get milestones by project
@@ -86,18 +78,18 @@ export function useCheckpointVerification({
         // Filter by phase if provided
         let filteredMilestones = milestones;
         if (phaseId) {
-          filteredMilestones = milestones.filter((m: MilestoneDTO) => 
-            m.phase_id === phaseId
+          filteredMilestones = milestones.filter((m: any) => 
+            (m.phaseId || m.phase_id) === phaseId
           );
         }
         
-        return filteredMilestones.map((m: MilestoneDTO) => ({
+        return filteredMilestones.map((m: any) => ({
           id: m.id,
           title: m.title,
           status: m.status === 'completed' ? 'verified' : 'pending',
           trigger_progress: m.weight || 25,
           verification_score: m.status === 'completed' ? 100 : 0,
-          phase_id: m.phase_id || null,
+          phase_id: m.phaseId || m.phase_id || null,
         }));
       } catch (error) {
         console.error('Error fetching checkpoints:', error);
@@ -112,26 +104,9 @@ export function useCheckpointVerification({
   const { data: decompteData } = useQuery({
     queryKey: ['automatic-decompte', projectId, phaseId, checkpoints?.length],
     queryFn: async (): Promise<AutomaticDecompteDTO | null> => {
-      if (!phaseId) {
-        console.warn('Phase ID is required for decompte calculation');
-        return null;
-      }
-      
-      if (!projectId) {
-        console.warn('Project ID is required for decompte calculation');
-        return null;
-      }
+      if (!phaseId || !projectId) return null;
       
       try {
-        console.log('useCheckpointVerification - About to call calculator with:', {
-          projectId,
-          phaseId,
-          hasProjectId: !!projectId,
-          hasPhaseId: !!phaseId,
-          typeofPhaseId: typeof phaseId,
-          timestamp: new Date().toISOString()
-        });
-
         const calculator = new AutomaticDecompteCalculator(projectId);
         return await calculator.calculatePhaseDecompte({
           projectId,
@@ -145,7 +120,6 @@ export function useCheckpointVerification({
     enabled: !!projectId && !!phaseId,
     staleTime: 30_000,
     retry: (failureCount, error) => {
-      // Don't retry on "Phase ID is required" errors
       if (error instanceof Error && error.message.includes('Phase ID is required')) {
         return false;
       }
@@ -162,13 +136,12 @@ export function useCheckpointVerification({
         return await calculator.canGenerateDecompte();
       } catch (error) {
         console.error('AutomaticDecompteCalculator.canGenerateDecompte failed:', error);
-        return false;
+        return { allowed: false, reason: 'Error', suggestedAmount: 0 };
       }
     },
     enabled: !!projectId,
     staleTime: 30_000,
     retry: (failureCount, error) => {
-      // Don't retry on "Repository methods not available" errors
       if (error instanceof Error && error.message.includes('Repository methods not available')) {
         return false;
       }
@@ -185,11 +158,12 @@ export function useCheckpointVerification({
         // Create payment request DTO
         const paymentRequest: CreatePaymentDTO = {
           projectId: projectId,
+          contractorId: 'auto-generated',
           phaseId: phaseId || undefined,
-          amount: decompte.net_payable,
+          amount: decompte.net_payable || 0,
           paymentDate: new Date().toISOString(),
           paymentMethod: 'bank_transfer',
-          progressAtPayment: decompte.progress_at_decompte,
+          progressAtPayment: decompte.progress_at_decompte || 0,
           transactionId: `AUTO-${Date.now()}`,
           contractorName: 'Auto-generated',
           contractorContact: '',

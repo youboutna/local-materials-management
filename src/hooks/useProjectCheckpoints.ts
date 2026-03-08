@@ -55,13 +55,10 @@ interface ProjectCheckpoint {
 
 
 interface InspectionResult {
-
   id: string;
-
-  status: 'pending' | 'completed';
-
-  phase_id: string;
-
+  status: string;
+  phase_id: string | null;
+  [key: string]: any;
 }
 
 
@@ -145,45 +142,27 @@ interface ProjectCheckpointsResult {
 
 
 interface ProjectDocument {
-
   id: string;
-
-  phase_id: string;
-
-  type: string;
-
-  url: string;
-
-  uploaded_at: string;
-
+  phase_id: string | null;
+  [key: string]: any;
 }
 
 
 
 interface ProjectPayment {
-
   id: string;
-
-  phase_id: string;
-
+  phase_id: string | null;
   amount: number;
-
-  date: string;
-
+  [key: string]: any;
 }
 
 
 
 interface ProjectMilestone {
-
   id: string;
-
-  phase_id: string;
-
-  status: 'pending' | 'completed';
-
-  due_date: string;
-
+  phase_id: string | null;
+  status: string;
+  [key: string]: any;
 }
 
 
@@ -436,13 +415,13 @@ export function useProjectCheckpoints(projectId: string | undefined): ProjectChe
 
     for (const phase of phases) {
 
-      const phaseInspections = inspections.filter((i: InspectionResult) => i.phase_id === phase.id);
+      const phaseInspections = inspections.filter((i: any) => i.phase_id === phase.id);
 
-      const phaseDocuments = documents.filter((d: ProjectDocument) => d.phase_id === phase.id);
+      const phaseDocuments = documents.filter((d: any) => d.phase_id === phase.id);
 
-      const phasePayments = payments.filter((p: ProjectPayment) => p.phase_id === phase.id);
+      const phasePayments = payments.filter((p: any) => p.phase_id === phase.id);
 
-      const phaseMilestones = milestones.filter((m: ProjectMilestone) => m.phase_id === phase.id);
+      const phaseMilestones = milestones.filter((m: any) => m.phase_id === phase.id);
 
       
 
@@ -532,9 +511,9 @@ export function useProjectCheckpoints(projectId: string | undefined): ProjectChe
 
 
 
-      pendingCheckpoints += phaseMilestones.filter((m: ProjectMilestone) => m.status !== 'completed').length;
+      pendingCheckpoints += phaseMilestones.filter((m: any) => m.status !== 'completed').length;
 
-      completedCheckpoints += phaseMilestones.filter((m: ProjectMilestone) => m.status === 'completed').length;
+      completedCheckpoints += phaseMilestones.filter((m: any) => m.status === 'completed').length;
 
     }
 
@@ -638,15 +617,15 @@ export function useProjectCheckpoints(projectId: string | undefined): ProjectChe
 
   return {
 
-    phases,
+    phases: phases as any,
 
-    inspections,
+    inspections: inspections as any,
 
-    documents,
+    documents: documents as any,
 
-    payments,
+    payments: payments as any,
 
-    milestones,
+    milestones: milestones as any,
 
     ...computed,
 

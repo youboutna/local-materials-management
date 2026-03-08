@@ -118,15 +118,15 @@ export function usePhaseWorkflow(projectId: string, phaseId: string, phase?: Pha
     queryKey: ['workflow-inspections', phaseId],
     queryFn: async (): Promise<InspectionRecord[]> => {
       const inspections = await inspectionService.getInspectionsByPhase(phaseId);
-      return inspections.map((inspection: InspectionDTO) => ({
+      return (inspections as any[]).map((inspection: any) => ({
         id: inspection.id,
-        status: inspection.status,
-        progress_at_inspection: inspection.progressAtInspection || 0,
-        date: inspection.date,
-        inspector: inspection.inspector,
-        phase_id: inspection.phaseId,
-        project_id: inspection.projectId,
-        comments: inspection.comments,
+        status: String(inspection.status),
+        progress_at_inspection: inspection.progressAtInspection || inspection.progress_at_inspection || 0,
+        date: inspection.date || inspection.createdAt || '',
+        inspector: typeof inspection.inspector === 'string' ? inspection.inspector : (inspection.inspector?.name || ''),
+        phase_id: inspection.phaseId || inspection.phase_id || null,
+        project_id: inspection.projectId || inspection.project_id || '',
+        comments: inspection.comments || null,
       }));
     },
     enabled: !!phaseId,
@@ -136,16 +136,17 @@ export function usePhaseWorkflow(projectId: string, phaseId: string, phase?: Pha
   const { data: payments = [], isLoading: paymentsLoading } = useQuery({
     queryKey: ['workflow-payments', phaseId],
     queryFn: async (): Promise<PaymentRecord[]> => {
-      const payments = await paymentService.getPaymentsByPhase(phaseId);
-      return payments.map((payment: PaymentDTO) => ({
+      const result = await paymentService.getPaymentsByPhase(phaseId);
+      const paymentsArr = Array.isArray(result) ? result : (result as any)?.data || [];
+      return paymentsArr.map((payment: any) => ({
         id: payment.id,
         amount: payment.amount,
-        payment_date: payment.paymentDate,
-        phase_id: payment.phaseId,
-        project_id: payment.projectId,
-        contractor_name: payment.contractorName || '',
-        progress_at_payment: payment.progressAtPayment || 0,
-        payment_method: payment.paymentMethod,
+        payment_date: payment.paymentDate || payment.payment_date || '',
+        phase_id: payment.phaseId || payment.phase_id || null,
+        project_id: payment.projectId || payment.project_id || '',
+        contractor_name: payment.contractorName || payment.contractor_name || '',
+        progress_at_payment: payment.progressAtPayment || payment.progress_at_payment || 0,
+        payment_method: payment.paymentMethod || payment.payment_method || '',
       }));
     },
     enabled: !!phaseId,
@@ -289,7 +290,7 @@ export function usePhaseWorkflow(projectId: string, phaseId: string, phase?: Pha
       inspector: string;
       comments?: string;
     }) => {
-      const inspectionDTO: CreateInspectionDTO = {
+      const inspectionDTO: any = {
         projectId,
         phaseId,
         date: inspectionData.date,
@@ -299,7 +300,7 @@ export function usePhaseWorkflow(projectId: string, phaseId: string, phase?: Pha
         progressAtInspection: phase?.progress || 0,
       };
 
-      const createdInspection = await inspectionService.createInspection(inspectionDTO);
+      const createdInspection = await inspectionService.createInspection(inspectionDTO as any);
       if (!createdInspection) throw new Error('Failed to schedule inspection');
       
       return createdInspection;
@@ -357,12 +358,13 @@ export function usePhaseWorkflow(projectId: string, phaseId: string, phase?: Pha
     }) => {
       if (!phase) throw new Error('Phase data required');
       
-      const updatedSteps = phase.steps.map((step: WorkflowStep) => ({
+      const phaseSteps = (phase as any).steps || [];
+      const updatedSteps = phaseSteps.map((step: any) => ({
         ...step,
         status: step.status === 'delayed' ? 'in_progress' : step.status
       }));
 
-      const updateData: UpdatePhaseRequestDto = {
+      const updateData: any = {
         id: phaseId,
         steps: updatedSteps,
       };

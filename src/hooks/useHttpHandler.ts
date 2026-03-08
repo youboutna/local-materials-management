@@ -107,14 +107,14 @@ export const useSupabaseHandler = <T = unknown>() => {
         // Mapper les erreurs Supabase vers nos codes HTTP
         let httpStatus = 500;
         
-        if (supabaseError.code === 'PGRST116') httpStatus = 404; // Not found
-        if (supabaseError.message?.includes('permission')) httpStatus = 403; // Forbidden
-        if (supabaseError.message?.includes('authentication')) httpStatus = 401; // Unauthorized
+        if ((supabaseError as any).code === 'PGRST116') httpStatus = 404;
+        if (supabaseError.message?.includes('permission')) httpStatus = 403;
+        if (supabaseError.message?.includes('authentication')) httpStatus = 401;
         
         const httpError = new HttpErrorResponse({
           status: httpStatus,
           message: supabaseError.message || 'Erreur Supabase',
-          code: supabaseError.code
+          code: (supabaseError as any).code
         });
 
         await httpHandler.handleResponse(new Response(null, { status: httpStatus }));

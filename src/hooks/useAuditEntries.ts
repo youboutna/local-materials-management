@@ -36,29 +36,27 @@ const fetchAuditEntries = async (
     const inspectionRepository = RepositoryFactory.getInspectionRepository();
     const inspectionService = new InspectionService(inspectionRepository);
     
-    let inspections: AuditEntry[] = [];
+    let inspections: any[] = [];
     
     if (projectId) {
-      // Get inspections for project
       inspections = await inspectionService.getInspectionsByProject(projectId);
     } else {
-      // Get all inspections and filter by phase
       inspections = await inspectionService.getAllInspections();
     }
     
     // Filter by phase if provided
     if (phaseId) {
-      inspections = inspections.filter((i: AuditEntry) => i.phaseId === phaseId || i.phase_id === phaseId);
+      inspections = inspections.filter((i: any) => (i.phaseId || i.phase_id) === phaseId);
     }
     
     // Transform to AuditEntry format and limit to 10
     return inspections
       .slice(0, 10)
-      .map((inspection: AuditEntry) => ({
+      .map((inspection: any) => ({
         id: inspection.id,
         date: inspection.date || inspection.createdAt || '',
         status: inspection.status || '',
-        inspector: inspection.inspector || '',
+        inspector: typeof inspection.inspector === 'string' ? inspection.inspector : (inspection.inspector?.name || ''),
         comments: inspection.comments || null,
         created_at: inspection.createdAt || inspection.created_at || ''
       }));
