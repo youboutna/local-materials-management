@@ -140,7 +140,7 @@ const PhaseOverviewMetrics: React.FC<PhaseOverviewMetricsProps> = ({
                 <span>Total:</span>
                 <span className={cn(
                   "font-bold",
-                  phaseCosts.totalSpent > (phase.estimated_cost || 0) 
+                  phaseCosts.totalSpent > (phase.estimatedCost || 0) 
                     ? "text-red-600" 
                     : "text-green-600"
                 )}>
