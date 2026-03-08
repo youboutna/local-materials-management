@@ -7,6 +7,7 @@ import { ProjectService } from '@/application/services/ProjectService';
 import { TaskService } from '@/application/services/TaskService';
 import { PaymentService } from '@/application/services/PaymentService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { EnhancedActionService } from '@/application/services/enhancedActionService';
 import { CreateEnhancedActionRequestDTO, EnhancedActionDTO } from '@/dtos/entities/ActionDTO';
 
 export interface ActionItem {
@@ -42,7 +43,7 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
 
     // Process pending/in-progress inspections
     const pendingInspections = allInspections
-      .filter(i => ['in_progress', 'scheduled'].includes(i.status))
+      .filter(i => ['in_progress', 'scheduled'].includes(i.status as string))
       .slice(0, 5);
 
     pendingInspections.forEach(inspection => {
@@ -51,9 +52,9 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
         title: 'Validation paiement inspection',
         description: `Inspection à ${inspection.progressAtInspection || 0}% - ${inspection.inspector}`,
         type: 'approval',
-        priority: inspection.status === 'in_progress' ? 'high' : 'medium',
+        priority: (inspection.status as string) === 'in_progress' ? 'high' : 'medium',
         status: 'pending',
-        urgency: inspection.status === 'in_progress' ? 'high' : 'medium',
+        urgency: (inspection.status as string) === 'in_progress' ? 'high' : 'medium',
         category: 'approval',
         createdAt: new Date().toISOString(),
         projectId: inspection.projectId || '',
@@ -66,7 +67,7 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
     // Overdue inspections
     const now = new Date();
     const overdueInspections = allInspections
-      .filter(i => i.status === 'pending' && new Date(i.date) < now)
+      .filter(i => (i.status as string) === 'pending' && new Date(i.date) < now)
       .slice(0, 3);
 
     overdueInspections.forEach(inspection => {
@@ -167,7 +168,7 @@ export function useManagementActionsHex() {
         assigneeId: actionData.assigneeId,
         projectId: actionData.projectId,
         entityId: actionData.entityId,
-        entityType: 'project',
+        entityType: 'project' as const,
         metadata: {},
         createdBy: 'system',
         createdAt: new Date().toISOString(),

@@ -4,13 +4,13 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { InvoiceDTO, CreateInvoiceDTO, UpdateInvoiceDTO, ParsedInvoiceDTO, InvoiceStatisticsDTO } from '@/dtos/entities/InvoiceDTO';
+import { ParsedInvoiceDTO, CreateInvoiceDTO, UpdateInvoiceDTO, InvoiceStatisticsDTO } from '@/dtos/entities/InvoiceDTO';
 import { InvoiceService } from '@/application/services/InvoiceService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { useToast } from '@/hooks/use-toast';
 
 export interface UseInvoicesResult {
-  invoices: InvoiceDTO[];
+  invoices: ParsedInvoiceDTO[];
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
@@ -31,9 +31,9 @@ export interface UseInvoiceStatisticsResult {
 }
 
 export interface UseInvoiceMutationsResult {
-  createInvoice: (invoiceData: CreateInvoiceDTO) => Promise<InvoiceDTO>;
-  updateInvoice: (id: string, updateData: UpdateInvoiceDTO) => Promise<InvoiceDTO>;
-  deleteInvoice: (id: string) => Promise<boolean>;
+  createInvoice: (invoiceData: CreateInvoiceDTO) => Promise<ParsedInvoiceDTO>;
+  updateInvoice: (id: string, updateData: UpdateInvoiceDTO) => Promise<ParsedInvoiceDTO>;
+  deleteInvoice: (id: string) => Promise<void>;
   isCreating: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
@@ -47,17 +47,15 @@ export function useInvoicesHex(): UseInvoicesResult {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Initialize service with RepositoryFactory
-  const service = new InvoiceService(RepositoryFactory.getInvoiceRepository());
+  const service = new InvoiceService(RepositoryFactory.getParsedInvoiceRepository());
 
   const result = useQuery({
     queryKey: ['invoices'],
-    queryFn: () => service.getInvoicesByStatus(''), // Empty status gets all invoices
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    queryFn: () => service.getParsedInvoicesByStatus('' as any),
+    staleTime: 5 * 60 * 1000,
     retry: 1,
   });
 
-  // Handle errors with toast notifications
   if (result.error) {
     toast({
       title: 'Erreur de chargement',
@@ -76,17 +74,16 @@ export function useInvoicesHex(): UseInvoicesResult {
 
 /**
  * Hook for fetching parsed invoices for a supplier
- * Replaces direct supabase.from("parsed_invoices") calls
  */
 export function useParsedInvoicesHex(supplierId: string): UseParsedInvoicesResult {
   const { toast } = useToast();
-  const service = new InvoiceService(RepositoryFactory.getInvoiceRepository());
+  const service = new InvoiceService(RepositoryFactory.getParsedInvoiceRepository());
 
   const result = useQuery({
     queryKey: ['parsed-invoices', supplierId],
     queryFn: () => service.getParsedInvoices(supplierId),
     enabled: !!supplierId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
   if (result.error) {
@@ -110,12 +107,15 @@ export function useParsedInvoicesHex(supplierId: string): UseParsedInvoicesResul
  */
 export function useInvoiceStatisticsHex(supplierId?: string): UseInvoiceStatisticsResult {
   const { toast } = useToast();
-  const service = new InvoiceService(RepositoryFactory.getInvoiceRepository());
+  const service = new InvoiceService(RepositoryFactory.getParsedInvoiceRepository());
 
   const result = useQuery({
     queryKey: ['invoice-statistics', supplierId],
-    queryFn: () => service.getInvoiceStatistics(supplierId),
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    queryFn: async () => {
+      const stats = await service.getParsedInvoiceStatistics(supplierId);
+      return stats as InvoiceStatisticsDTO;
+    },
+    staleTime: 10 * 60 * 1000,
   });
 
   if (result.error) {
@@ -140,16 +140,14 @@ export function useInvoiceStatisticsHex(supplierId?: string): UseInvoiceStatisti
 export function useInvoiceMutationsHex(): UseInvoiceMutationsResult {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const service = new InvoiceService(RepositoryFactory.getInvoiceRepository());
+  const service = new InvoiceService(RepositoryFactory.getParsedInvoiceRepository());
 
-  // Create invoice mutation
   const createMutation = useMutation({
-    mutationFn: (invoiceData: CreateInvoiceDTO) => service.createInvoice(invoiceData),
-    onSuccess: (newInvoice) => {
-      toast({
-        title: 'Facture créée',
-        description: `La facture ${newInvoice.invoiceNumber} a été créée avec succès`,
-      });
+    mutationFn: async (invoiceData: CreateInvoiceDTO) => {
+      return await service.createParsedInvoice(invoiceData as any);
+    },
+    onSuccess: () => {
+      toast({ title: 'Facture créée', description: 'La facture a été créée avec succès' });
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['invoice-statistics'] });
     },
@@ -162,15 +160,12 @@ export function useInvoiceMutationsHex(): UseInvoiceMutationsResult {
     },
   });
 
-  // Update invoice mutation
   const updateMutation = useMutation({
-    mutationFn: ({ id, updateData }: { id: string; updateData: UpdateInvoiceDTO }) =>
-      service.updateInvoice(id, updateData),
-    onSuccess: (updatedInvoice) => {
-      toast({
-        title: 'Facture mise à jour',
-        description: `La facture ${updatedInvoice.invoiceNumber} a été mise à jour avec succès`,
-      });
+    mutationFn: async ({ id, updateData }: { id: string; updateData: UpdateInvoiceDTO }) => {
+      return await service.updateParsedInvoice(id, updateData as any);
+    },
+    onSuccess: () => {
+      toast({ title: 'Facture mise à jour', description: 'La facture a été mise à jour avec succès' });
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['invoice-statistics'] });
     },
@@ -183,14 +178,12 @@ export function useInvoiceMutationsHex(): UseInvoiceMutationsResult {
     },
   });
 
-  // Delete invoice mutation
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => service.deleteInvoice(id),
+    mutationFn: async (id: string) => {
+      await service.deleteParsedInvoice(id);
+    },
     onSuccess: () => {
-      toast({
-        title: 'Facture supprimée',
-        description: 'La facture a été supprimée avec succès',
-      });
+      toast({ title: 'Facture supprimée', description: 'La facture a été supprimée avec succès' });
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['invoice-statistics'] });
     },
@@ -205,7 +198,7 @@ export function useInvoiceMutationsHex(): UseInvoiceMutationsResult {
 
   return {
     createInvoice: createMutation.mutateAsync,
-    updateInvoice: updateMutation.mutateAsync,
+    updateInvoice: async (id: string, updateData: UpdateInvoiceDTO) => updateMutation.mutateAsync({ id, updateData }),
     deleteInvoice: deleteMutation.mutateAsync,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
@@ -218,7 +211,7 @@ export function useInvoiceMutationsHex(): UseInvoiceMutationsResult {
  * Hook for fetching invoice by ID
  */
 export function useInvoiceHex(invoiceId: string) {
-  const service = new InvoiceService(RepositoryFactory.getInvoiceRepository());
+  const service = new InvoiceService(RepositoryFactory.getParsedInvoiceRepository());
 
   return useQuery({
     queryKey: ['invoice', invoiceId],
@@ -233,11 +226,11 @@ export function useInvoiceHex(invoiceId: string) {
  */
 export function useInvoicesByStatusHex(status: string): UseInvoicesResult {
   const { toast } = useToast();
-  const service = new InvoiceService(RepositoryFactory.getInvoiceRepository());
+  const service = new InvoiceService(RepositoryFactory.getParsedInvoiceRepository());
 
   const result = useQuery({
     queryKey: ['invoices', 'status', status],
-    queryFn: () => service.getInvoicesByStatus(status),
+    queryFn: () => service.getParsedInvoicesByStatus(status as any),
     enabled: !!status,
     staleTime: 5 * 60 * 1000,
   });
@@ -263,11 +256,11 @@ export function useInvoicesByStatusHex(status: string): UseInvoicesResult {
  */
 export function useInvoicesByDateRangeHex(startDate: string, endDate: string): UseInvoicesResult {
   const { toast } = useToast();
-  const service = new InvoiceService(RepositoryFactory.getInvoiceRepository());
+  const service = new InvoiceService(RepositoryFactory.getParsedInvoiceRepository());
 
   const result = useQuery({
     queryKey: ['invoices', 'date-range', startDate, endDate],
-    queryFn: () => service.getInvoicesByDateRange(startDate, endDate),
+    queryFn: () => service.getParsedInvoicesByDateRange(startDate, endDate),
     enabled: !!startDate && !!endDate,
     staleTime: 5 * 60 * 1000,
   });

@@ -16,8 +16,12 @@ async function fetchMonitoringStats(): Promise<MonitoringStats> {
   const inspectionRepo = RepositoryFactory.getInspectionRepository();
 
   const [guarantees, blockedPayments, inspections] = await Promise.all([
-    bankGuaranteeRepo.findExpiringSoon(30).catch(() => []),
-    paymentBlockingRepo.findUnresolved().catch(() => []),
+    bankGuaranteeRepo.findAll().then(all => all.filter((g: any) => {
+      const exp = new Date(g.expiry_date || g.expiryDate);
+      const threshold = new Date(); threshold.setDate(threshold.getDate() + 30);
+      return exp <= threshold && (g.status === 'active');
+    })).catch(() => []),
+    paymentBlockingRepo.getActiveBlocks().catch(() => []),
     inspectionRepo.findOverdue().catch(() => []),
   ]);
 

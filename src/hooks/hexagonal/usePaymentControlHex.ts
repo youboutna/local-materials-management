@@ -106,7 +106,7 @@ export function usePaymentControlHex(userId: string, period: 'week' | 'month' | 
       paymentId: string; 
       rejectedBy: string; 
       reason: string 
-    }) => paymentControlService.rejectPayment(paymentId, rejectedBy, reason),
+    }) => paymentControlService.rejectPayment?.(paymentId, rejectedBy, reason) || Promise.resolve(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment-control-dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['payments'] });
@@ -121,8 +121,8 @@ export function usePaymentControlHex(userId: string, period: 'week' | 'month' | 
     isLoading,
     error: error instanceof Error ? error.message : null,
     refetch,
-    blockPayment: blockPaymentMutation.mutateAsync,
-    approvePayment: approvePaymentMutation.mutateAsync,
-    rejectPayment: rejectPaymentMutation.mutateAsync
+    blockPayment: async (paymentId: string, reason: string, blockedBy: string, autoRelease?: boolean, releaseConditions?: string[]) => blockPaymentMutation.mutateAsync({ paymentId, reason, blockedBy, autoRelease, releaseConditions }),
+    approvePayment: async (paymentId: string, approvedBy: string, notes?: string) => approvePaymentMutation.mutateAsync({ paymentId, approvedBy, notes }),
+    rejectPayment: async (paymentId: string, rejectedBy: string, reason: string) => rejectPaymentMutation.mutateAsync({ paymentId, rejectedBy, reason })
   };
 }

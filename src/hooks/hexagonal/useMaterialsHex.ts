@@ -612,4 +612,4 @@ export function useMaterialHex(id: string) {
 }
 
 // Re-export types
-export type { MaterialDTO, CreateMaterialRequestDto, UpdateMaterialRequestDto, MaterialFormData };
+export type { MaterialDTO, CreateMaterialRequestDto, UpdateMaterialRequestDto, MaterialFormDataDTO as MaterialFormData };

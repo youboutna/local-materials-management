@@ -29,8 +29,8 @@ async function fetchAssigneeDetails(assigneeId: string): Promise<AssigneeDetails
   if (employee) {
     return {
       type: 'employee' as const,
-      name: employee.fullName,
-      email: employee.email || '',
+      name: employee.fullName || '',
+      email: (employee.email || '') as string,
     };
   }
 

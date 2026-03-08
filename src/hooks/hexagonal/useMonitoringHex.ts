@@ -95,16 +95,16 @@ export function useBankGuaranteesHex(projectId?: string) {
       // Transform BankGuaranteeDTO to BankGuarantee
       const transformedData = data.map(dto => ({
         id: dto.id,
-        projectId: dto.project_id,
-        contractorId: dto.contractor_id,
-        bankName: dto.bank_name,
-        guaranteeType: dto.guarantee_type,
-        guaranteeAmount: dto.guarantee_amount,
-        issueDate: dto.issue_date,
-        expiryDate: dto.expiry_date,
-        status: dto.status,
-        createdAt: dto.created_at,
-        updatedAt: dto.updated_at,
+        projectId: dto.project_id || '',
+        contractorId: dto.contractor_id || '',
+        bankName: dto.bank_name || '',
+        guaranteeType: dto.guarantee_type || '',
+        guaranteeAmount: dto.guarantee_amount || 0,
+        issueDate: dto.issue_date || '',
+        expiryDate: dto.expiry_date || '',
+        status: dto.status || '',
+        createdAt: dto.created_at || '',
+        updatedAt: dto.updated_at || '',
       }));
       setGuarantees(transformedData);
     } catch (err) {
@@ -163,8 +163,8 @@ export function usePaymentBlocksHex(projectId?: string) {
     setError(null);
 
     try {
-      // Use static method - PaymentBlockingService has static methods only
-      const data = await PaymentBlockingService.getPaymentBlocks(projectId);
+      const blockingService = new PaymentBlockingService();
+      const data = await blockingService.getPaymentBlocks(projectId);
       
       setBlocks(data.map(b => ({
         id: b.id,
@@ -191,8 +191,8 @@ export function usePaymentBlocksHex(projectId?: string) {
 
   const resolveBlock = useCallback(async (blockId: string, resolvedBy: string): Promise<boolean> => {
     try {
-      // Use static method
-      await PaymentBlockingService.resolvePaymentBlock(blockId, '', resolvedBy);
+      const blockingService = new PaymentBlockingService();
+      await blockingService.resolvePaymentBlock({ block_id: blockId, resolution_notes: '', resolved_by: resolvedBy } as any);
       await fetchBlocks();
       return true;
     } catch (err) {
@@ -245,18 +245,18 @@ export function useInsurancesHex(projectId?: string) {
 
       setInsurances(insuranceData.map(i => ({
         id: i.id,
-        projectId: i.project_id,
-        contractorId: i.contractor_id,
-        contractorName: i.provider, // Using provider as contractorName
-        insuranceCompany: i.provider,
-        policyNumber: i.policy_number,
-        coverageType: i.insurance_type,
-        coverageAmount: i.coverage_amount,
-        validFrom: i.start_date,
-        validUntil: i.valid_until,
-        status: i.status,
-        createdAt: i.created_at,
-        updatedAt: i.updated_at,
+        projectId: i.projectId || i.project_id || '',
+        contractorId: i.contractorId || i.contractor_id || '',
+        contractorName: i.contractorName || i.contractor_name || '',
+        insuranceCompany: i.insuranceCompany || i.insurance_company || '',
+        policyNumber: i.policyNumber || i.policy_number || '',
+        coverageType: i.insuranceType || '',
+        coverageAmount: i.coverageAmount || i.coverage_amount || 0,
+        validFrom: i.validFrom || i.valid_from || '',
+        validUntil: i.validUntil || i.valid_until || '',
+        status: i.status || '',
+        createdAt: i.createdAt || i.created_at || '',
+        updatedAt: i.updatedAt || i.updated_at || '',
       })));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load insurances');

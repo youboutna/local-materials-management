@@ -50,7 +50,7 @@ const fetchKPIMetrics = async (): Promise<KPIMetrics> => {
     const [projects, payments, milestones, alerts] = await Promise.all([
       projectRepo.findAll(),
       paymentRepo.findAll(),
-      milestoneRepo.findAll(),
+      milestoneRepo.findByProjectId('').catch(() => []),
       alertRepo.findAll().then((all: any[]) => (all || []).filter((a: any) => a.status === 'active').slice(0, 5)),
     ]);
 

@@ -37,18 +37,18 @@ export function useKanbanTasks(projectId: string, phaseId?: string) {
       const milestoneRepository = RepositoryFactory.getMilestoneRepository();
       
       // Get milestones with business logic (méthode correcte du repository)
-      let allMilestones = await milestoneRepository.findAll({ project_id: projectId });
+      let allMilestones = await milestoneRepository.findByProjectId(projectId);
       
       // Filter by phase if needed
       if (phaseId) {
-        allMilestones = allMilestones.filter(milestone => milestone.phase_id === phaseId);
+        allMilestones = allMilestones.filter(milestone => milestone.phaseId === phaseId);
       }
       
       // Apply business rules and calculations (transformer logic)
       const kanbanTasks = allMilestones.map(milestone => {
         // Business logic: Calculate progress based on critical path and status
         const progress = milestone.status === 'completed' ? 100 : 
-                       milestone.is_on_critical_path ? 75 : 
+                       milestone.isOnCriticalPath ? 75 : 
                        milestone.status === 'in_progress' ? 50 : 0;
         
         // Business logic: Map priority levels
@@ -62,10 +62,10 @@ export function useKanbanTasks(projectId: string, phaseId?: string) {
           description: milestone.description,
           status: milestone.status,
           priority,
-          assignee: milestone.approved_by,
-          dueDate: milestone.target_date,
+          assignee: milestone.approvedBy,
+          dueDate: milestone.targetDate,
           progress,
-          phase: milestone.phase_id,
+          phase: milestone.phaseId,
           tags: milestone.deliverables || []
         };
       });

@@ -31,7 +31,7 @@ export function useMilestonesHex(projectId?: string, phaseId?: string) {
 
     try {
       const milestoneRepo = RepositoryFactory.getMilestoneRepository();
-      const data = await milestoneRepo.findByProject(projectId, phaseId);
+      const data = await milestoneRepo.findByProjectId(projectId);
 
       setMilestones((data || []).map((m: any) => ({
         id: m.id,
@@ -63,7 +63,7 @@ export function useMilestonesHex(projectId?: string, phaseId?: string) {
       const milestoneRepo = RepositoryFactory.getMilestoneRepository();
       const result = await milestoneRepo.create({
         project_id: milestone.projectId,
-        phase_id: milestone.phaseId || null,
+        phase_id: milestone.phaseId || undefined,
         title: milestone.title,
         description: milestone.description,
         target_date: milestone.targetDate,
@@ -117,7 +117,7 @@ export function useMilestonesHex(projectId?: string, phaseId?: string) {
       const milestoneRepo = RepositoryFactory.getMilestoneRepository();
       await milestoneRepo.update(id, {
         status: newStatus,
-        completed_date: completedDate,
+        completed_date: completedDate || undefined,
       });
 
       await fetchMilestones();

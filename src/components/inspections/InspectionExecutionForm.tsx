@@ -45,7 +45,7 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const { uploadDocumentsMutation, updateInspectionMutation } = useInspectionExecutionHex();
+  const { uploadDocuments, updateInspection, isUploading: hookIsUploading } = useInspectionExecutionHex();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,13 +53,14 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
     setSyncResult(null);
     
     try {
-      const result = await uploadDocumentsMutation.mutateAsync({
+      // Upload documents
+      uploadDocuments({
         inspectionId: inspection.id,
         documents
       });
       
       // Update inspection status
-      await updateInspectionMutation.mutateAsync({
+      updateInspection({
         inspectionId: inspection.id,
         status: newStatus,
         progress: parseInt(newProgress),
@@ -70,7 +71,7 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
       if (newStatus === 'approved') {
         setIsSyncing(true);
         const syncService = new InspectionApprovalSyncService();
-        const validationDocs = (result as any)?.documents || [];
+        const validationDocs: any[] = [];
         const context: InspectionApprovalContext = {
           inspectionId: inspection.id,
           projectId: inspection.projectId,
