@@ -453,6 +453,8 @@ const PublicProcurementWorkflow: React.FC<PublicProcurementWorkflowProps> = ({ s
     }
   }, [selectedTender?.id]);
 
+  const workflowSvc = getWorkflowService();
+
   const loadWorkflowProgress = async () => {
     if (!selectedTender?.id) return;
     
