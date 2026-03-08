@@ -120,7 +120,7 @@ export const useEnhancedRiskManagerHex = (
   const { data: phases = [], isLoading: phasesLoading } = useQuery({
     queryKey: ['project-phases', projectId],
     queryFn: async (): Promise<ProjectPhase[]> => {
-      const data = await phaseRepo.findByProject(projectId);
+      const data = await phaseRepo.findByProjectId(projectId);
       return (data || []).map((phase: any) => ({
         id: phase.id,
         phase_name: phase.phase_name || phase.phaseName || phase.name || '',
