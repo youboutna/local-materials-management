@@ -1,33 +1,35 @@
 import { useState, useEffect } from 'react';
 import { InspectionService } from '@/application/services/InspectionService';
-import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 import { useToast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { Inspection } from '@/domain/entities/Inspection';
 
 /**
  * Custom hook for managing supplier inspections
- * Provides inspections data and loading state with proper error handling
  */
 export const useSupplierInspections = (supplierId: string | null) => {
-  const [inspections, setInspections] = useState<InspectionDTO[]>([]);
+  const [inspections, setInspections] = useState<Inspection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
 
   const fetchInspections = async () => {
     if (!supplierId) {
-      console.log('[useSupplierInspections] No supplier ID provided');
       setInspections([]);
       setLoading(false);
       return;
     }
 
     try {
-      console.log('[useSupplierInspections] Fetching inspections for supplier:', supplierId);
       setLoading(true);
       setError(null);
-      const data = await InspectionService.getInspectionsForSupplier(supplierId);
-      console.log('[useSupplierInspections] Fetched inspections:', data);
-      setInspections(data);
+      const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
+      // Use getAllInspections and filter by supplier
+      const allInspections = await inspectionService.getAllInspections();
+      const supplierInspections = allInspections.filter(
+        (i: any) => i.supplierId === supplierId || i.contractorId === supplierId
+      );
+      setInspections(supplierInspections);
     } catch (err) {
       const error = err as Error;
       setError(error);
