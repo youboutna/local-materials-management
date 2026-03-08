@@ -290,8 +290,6 @@ export class ProjectTransformer {
       resourceAssignment: project.resourceAssignment ? [{ id: 'default', name: project.resourceAssignment, type: 'human' as const }] : undefined,
       retentionPercentage: project.retentionPercentage,
       sector: project.sector,
-      siteDetails: project.siteDetails,
-      supervisorId: project.supervisorId,
     };
   }
 
