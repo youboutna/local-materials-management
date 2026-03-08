@@ -194,7 +194,7 @@ export class UserRoleEntity {
     );
   }
 
-  // Factory methods
+  // Legacy factory methods (delegate to create)
   static assign(
     id: string,
     userId: string,
@@ -202,16 +202,15 @@ export class UserRoleEntity {
     assignedBy?: string,
     expiresAt?: Date
   ): UserRoleEntity {
-    return new UserRoleEntity(
+    return UserRoleEntity.create({
       id,
       userId,
       roleName,
-      UserRoleStatus.ACTIVE,
-      new Date(),
+      status: UserRoleStatus.ACTIVE,
+      assignedAt: new Date(),
       assignedBy,
-      undefined,
       expiresAt
-    );
+    });
   }
 
   static createTemporary(
@@ -221,16 +220,15 @@ export class UserRoleEntity {
     expiresAt: Date,
     assignedBy?: string
   ): UserRoleEntity {
-    return new UserRoleEntity(
+    return UserRoleEntity.create({
       id,
       userId,
       roleName,
-      UserRoleStatus.ACTIVE,
-      new Date(),
+      status: UserRoleStatus.ACTIVE,
+      assignedAt: new Date(),
       assignedBy,
-      undefined,
       expiresAt
-    );
+    });
   }
 
   // Comparison
