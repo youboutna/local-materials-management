@@ -6,17 +6,18 @@ import { Tender, TenderStatus, SelectionMode, MarketType } from '@/domain/entiti
 
 export class SupabaseTenderAdapter implements ITenderRepository {
   private mapToEntity(data: any): Tender {
-    return new Tender(
-      data.id, data.project_id || null, data.title, data.description || null,
-      data.tender_number || null, (data.status as TenderStatus) || 'draft',
-      (data.selection_mode as SelectionMode) || null, (data.market_type as MarketType) || null,
-      data.financing_source || null, data.project_reference || null,
-      data.publication_date || null, data.deadline_date || null,
-      data.launch_date || null, data.attribution_date || null,
-      data.budget_min || null, data.budget_max || null,
-      data.evaluation_criteria || [], data.eligibility_requirements || [],
-      data.created_at, data.updated_at
-    );
+    return Tender.create({
+      id: data.id,
+      projectId: data.project_id || undefined,
+      title: data.title,
+      description: data.description || undefined,
+      tenderNumber: data.tender_number || undefined,
+      selectionMode: (data.selection_mode as SelectionMode) || undefined,
+      marketType: (data.market_type as MarketType) || undefined,
+      deadlineDate: data.deadline_date || undefined,
+      budgetMin: data.budget_min || undefined,
+      budgetMax: data.budget_max || undefined
+    });
   }
 
   async findById(id: string): Promise<Tender | null> {

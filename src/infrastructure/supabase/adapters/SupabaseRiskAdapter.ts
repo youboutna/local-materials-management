@@ -31,21 +31,16 @@ export class SupabaseRiskAdapter implements IRiskRepository {
     const index = this.risks.findIndex(r => r.id === id);
     if (index >= 0) {
       const existing = this.risks[index];
-      this.risks[index] = new Risk(
-        existing.id,
-        existing.projectId,
-        data.title ?? existing.title,
-        data.description ?? existing.description,
-        data.probability ?? existing.probability,
-        data.impact ?? existing.impact,
-        data.status ?? existing.status,
-        data.mitigationStrategy ?? existing.mitigationStrategy,
-        existing.identifiedBy,
-        existing.identifiedDate,
-        existing.relatedTasks,
-        existing.createdAt,
-        new Date().toISOString()
-      );
+      this.risks[index] = Risk.create({
+        id: existing.id,
+        project: existing.project,
+        title: data.title ?? existing.title,
+        description: data.description ?? existing.description ?? undefined,
+        probability: data.probability ?? existing.probability,
+        impact: data.impact ?? existing.impact,
+        status: data.status ?? existing.status,
+        category: data.category ?? existing.category
+      });
     }
   }
 
