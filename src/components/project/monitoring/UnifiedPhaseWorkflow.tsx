@@ -176,7 +176,7 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
   // Get milestone status with workflow context
   const getMilestoneWorkflowStatus = useCallback((milestone: MilestoneSummaryDTO) => {
     const today = new Date();
-    const targetDate = parseISO(milestone.target_date);
+    const targetDate = parseISO(milestone.targetDate);
     
     if (milestone.status === 'completed') {
       return {
