@@ -487,7 +487,7 @@ export function useProjectCheckpoints(projectId: string | undefined): ProjectChe
 
       };
 
-      phaseDecomptesMap.set(phase.id, phaseDecompte);
+      phaseDecomptesMap.set(phase.id || '', phaseDecompte);
 
 
 
