@@ -57,9 +57,8 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
       if (!selectedProject) return;
 
       try {
-        // Récupérer les phases spécifiques au projet sélectionné
+        const { supabase } = await import('@/integrations/supabase/client');
         const { data: phasesData } = await supabase
-          .from('project_phases')
           .select('*')
           .eq('project_id', selectedProject.id)
           .order('start_date', { ascending: true });

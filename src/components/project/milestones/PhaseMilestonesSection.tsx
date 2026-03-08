@@ -455,11 +455,11 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                         )}
                         <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
                           <span>
-                            Cible: {format(parseISO(milestone.target_date), 'd MMM yyyy', { locale: fr })}
+                            Cible: {format(parseISO(milestone.targetDate), 'd MMM yyyy', { locale: fr })}
                           </span>
-                          {milestone.completed_date && (
+                          {milestone.completedDate && (
                             <span className="text-green-600">
-                              ✓ {format(parseISO(milestone.completed_date), 'd MMM', { locale: fr })}
+                              ✓ {format(parseISO(milestone.completedDate), 'd MMM', { locale: fr })}
                             </span>
                           )}
                           <Badge variant="outline" className="text-xs">

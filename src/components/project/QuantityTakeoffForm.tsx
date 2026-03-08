@@ -62,6 +62,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
 
     try {
       setSubmitting(true);
+      const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase.from('quantity_takeoffs').insert({
         project_id: projectId,
         material_id: formData.materialId,

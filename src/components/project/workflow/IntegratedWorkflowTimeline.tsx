@@ -371,25 +371,25 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
 
           {/* Status indicators */}
           <div className="flex flex-wrap gap-3 mt-3 text-sm">
-            {progress?.overdue_milestones && progress.overdue_milestones.length > 0 && (
+            {progress?.overdueMilestones && progress.overdueMilestones.length > 0 && (
               <div className="flex items-center gap-1.5 text-destructive">
                 <AlertTriangle className="h-4 w-4" />
-                <span>{progress.overdue_milestones.length} en retard</span>
+                <span>{progress.overdueMilestones.length} en retard</span>
               </div>
             )}
-            {progress?.upcoming_milestones && progress.upcoming_milestones.length > 0 && (
+            {progress?.upcomingMilestones && progress.upcomingMilestones.length > 0 && (
               <div className="flex items-center gap-1.5 text-amber-600">
                 <Clock className="h-4 w-4" />
-                <span>{progress.upcoming_milestones.length} à venir (14j)</span>
+                <span>{progress.upcomingMilestones.length} à venir (14j)</span>
               </div>
             )}
-            {progress?.critical_path_status && progress.critical_path_status !== 'on_track' && (
+            {progress?.criticalPath_status && progress.criticalPath_status !== 'on_track' && (
               <div className={cn(
                 "flex items-center gap-1.5",
-                progress.critical_path_status === 'delayed' ? 'text-destructive' : 'text-amber-600'
+                progress.criticalPath_status === 'delayed' ? 'text-destructive' : 'text-amber-600'
               )}>
                 <ShieldCheck className="h-4 w-4" />
-                <span>Chemin critique {progress.critical_path_status === 'delayed' ? 'en retard' : 'à risque'}</span>
+                <span>Chemin critique {progress.criticalPath_status === 'delayed' ? 'en retard' : 'à risque'}</span>
               </div>
             )}
           </div>

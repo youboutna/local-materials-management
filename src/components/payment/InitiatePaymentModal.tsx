@@ -70,6 +70,7 @@ const InitiatePaymentModal: React.FC<InitiatePaymentModalProps> = ({
   }, [suggestedSupplierId, suggestedAmount]);
 
   const fetchProjectInfo = async () => {
+    const { supabase } = await import('@/integrations/supabase/client');
     const { data } = await supabase
       .from('projects')
       .select('title, budget, status')
