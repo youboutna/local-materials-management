@@ -52,8 +52,7 @@ export function useMaterialsEnhanced(): UseMaterialsEnhancedResult {
     queryKey: ['materials'],
     queryFn: async (): Promise<MaterialDTO[]> => {
       try {
-        const materialEntities = await materialService.getAllMaterials();
-        return materialEntities.map(entity => MaterialTransformer.toDTO(entity));
+        return await materialService.getAllMaterials();
       } catch (err) {
         console.error('Error fetching materials:', err);
         throw err;
