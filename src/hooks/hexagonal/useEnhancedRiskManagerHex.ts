@@ -105,7 +105,7 @@ export const useEnhancedRiskManagerHex = (
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
     queryKey: ['project-task-assignments', projectId],
     queryFn: async (): Promise<TaskAssignment[]> => {
-      const data = await taskRepo.findByProject(projectId);
+      const data = await taskRepo.findByProjectId(projectId);
       return (data || []).map((t: any) => ({
         id: t.id,
         title: t.title || t.task_name || null,
