@@ -563,8 +563,8 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
     hasRequiredDocuments: boolean;
     missingDocuments: string[];
   } {
-    const receiptUrl = dto.documents?.find(doc => doc.includes('receipt')) || '';
-    const invoiceUrl = dto.documents?.find(doc => doc.includes('invoice')) || '';
+    const receiptUrl = (dto as any).documents?.find((doc: string) => doc.includes('receipt')) || '';
+    const invoiceUrl = (dto as any).documents?.find((doc: string) => doc.includes('invoice')) || '';
 
     const missingDocuments: string[] = [];
     let hasRequiredDocuments = true;
