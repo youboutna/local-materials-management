@@ -20,7 +20,7 @@ export class MaterialRepository {
         .order('name');
 
       if (error) throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch materials', error);
-      return (data || []) as MaterialEntity[];
+      return (data || []) as unknown as MaterialEntity[];
     } catch (error) {
       if (error instanceof AppError) throw error;
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch materials', error);
