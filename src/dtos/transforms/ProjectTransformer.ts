@@ -351,7 +351,7 @@ export class ProjectTransformer {
       receptionStatus: dto.receptionStatus,
       requiresConsultantValidation: dto.requiresConsultantValidation,
       requiresMinistryApproval: dto.requiresMinistryApproval,
-      resourceAssignment: dto.resourceAssignment?.toString(),
+      resourceAssignment: dto.resourceAssignment ? (dto.resourceAssignment as any)[0]?.name || '' : undefined,
       retentionPercentage: dto.retentionPercentage,
       sector: dto.sector,
       siteDetails: dto.siteDetails,
