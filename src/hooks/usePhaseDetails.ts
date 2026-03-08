@@ -115,7 +115,7 @@ export function usePhaseDetails(phaseId: string | undefined) {
         const completedTasks = tasksData?.filter((t) => t.status === 'completed').length || 0;
         const totalInspections = inspectionsData?.length || 0;
         const passedInspections = inspectionsData?.filter(
-          (i) => i.status === 'approved' || i.status === 'completed'
+          (i: any) => String(i.status) === 'approved' || String(i.status) === 'completed'
         ).length || 0;
         const totalPayments = (paymentsData as any)?.length || (paymentsData as any)?.data?.length || 0;
         const paymentArr = Array.isArray(paymentsData) ? paymentsData : (paymentsData as any)?.data || [];
