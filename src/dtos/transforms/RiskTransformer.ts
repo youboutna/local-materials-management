@@ -42,22 +42,17 @@ export class RiskTransformer {
    * Transformer un DTO en entité Risk
    */
   static toEntity(dto: RiskDTO): Risk {
-    return new Risk(
-      dto.id || crypto.randomUUID(),
-      dto.projectId ? { id: dto.projectId, title: '' } : null,
-      dto.title,
-      dto.description || null,
-      dto.probability,
-      dto.impact,
-      this.dtoToDomainStatus(dto.status),
-      this.dtoToDomainCategory(dto.category),
-      dto.mitigationStrategy || null,
-      (dto as any).identifiedBy ? { id: (dto as any).identifiedBy, fullName: '' } : null,
-      dto.identifiedDate || null,
-      dto.relatedRisks || [],
-      dto.createdAt || new Date().toISOString(),
-      dto.updatedAt || new Date().toISOString()
-    );
+    return Risk.create({
+      id: dto.id || crypto.randomUUID(),
+      project: dto.projectId ? { id: dto.projectId, title: '' } : null,
+      title: dto.title,
+      description: dto.description || undefined,
+      probability: dto.probability,
+      impact: dto.impact,
+      status: this.dtoToDomainStatus(dto.status),
+      category: this.dtoToDomainCategory(dto.category),
+      identifiedBy: (dto as any).identifiedBy ? { id: (dto as any).identifiedBy, fullName: '' } : null
+    });
   }
 
   /**
