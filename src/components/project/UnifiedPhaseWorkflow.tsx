@@ -119,10 +119,10 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
               />
 
               <PaymentCalculator
-                phaseName={phase.phase_name || 'Phase'}
+                phaseName={phase.name || 'Phase'}
                 phaseProgress={phase.progress || 0}
                 validatedProgress={workflowMetrics.lastApprovedProgress}
-                contractAmount={phase.estimated_cost || 0}
+                contractAmount={phase.estimatedCost || 0}
                 guaranteeRetentionRate={5}
                 previousPayments={workflowMetrics.totalPaid || 0}
                 onGenerateDecompte={() => onGenerateDecompte && onGenerateDecompte()}
