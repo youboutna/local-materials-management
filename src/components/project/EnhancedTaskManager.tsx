@@ -511,6 +511,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
       }
 
       if (tasksToCreate.length > 0) {
+        const { supabase } = await import('@/integrations/supabase/client');
         const { data, error } = await supabase
           .from('task_assignments')
           .insert(tasksToCreate as any)
