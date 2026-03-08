@@ -1,6 +1,6 @@
 // Repository for Supplier Payment Requests
 import { supabase } from '@/integrations/supabase/client';
-// Local type for supplier_payment_requests table rows
+// Local type for supplier_payment_requests table rows (snake_case matching DB)
 interface SupplierPaymentRequestEntity {
   id: string;
   supplier_id: string;
@@ -12,8 +12,8 @@ interface SupplierPaymentRequestEntity {
   status: string;
   requested_date: string;
   notes: string | null;
-  approved_date: string | null;
-  paid_date: string | null;
+  approved_at: string | null;
+  approved_by: string | null;
   created_at: string;
   updated_at: string;
   [key: string]: unknown;
