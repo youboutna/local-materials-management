@@ -66,7 +66,7 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
     // Overdue inspections
     const now = new Date();
     const overdueInspections = allInspections
-      .filter(i => i.status === 'pending' && new Date(i.date) < now)
+      .filter(i => (i.status as string) === 'pending' && new Date(i.date) < now)
       .slice(0, 3);
 
     overdueInspections.forEach(inspection => {
