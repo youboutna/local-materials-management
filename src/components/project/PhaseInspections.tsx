@@ -403,7 +403,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
                       size="sm"
                       variant="ghost"
                       className="text-destructive hover:text-destructive"
-                      onClick={() => deleteInspectionMutation.mutate(inspection.id)}
+                      onClick={() => deleteInspectionMutation.mutate(inspection.id || '')}
                       title="Supprimer"
                     >
                       <Trash2 className="h-4 w-4" />
