@@ -70,7 +70,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
   const { suppliers, isLoading: suppliersLoading } = useSuppliersHex();
 
   const [localStakeholders, setLocalStakeholders] = useState<StakeholderDTO[]>(
-    projectData.stakeholders || []
+    (projectData as any).stakeholders || []
   );
   const [teamMembers, setTeamMembers] = useState<EmployeeDTO[]>([]);
   const [newStakeholder, setNewStakeholder] = useState<Partial<StakeholderDTO>>(
