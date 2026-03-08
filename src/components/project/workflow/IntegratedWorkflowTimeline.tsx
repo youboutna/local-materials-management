@@ -155,12 +155,9 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
     try {
       setLoading(true);
       const milestoneService = getMilestoneService();
-      const [milestonesData, progressData] = await Promise.all([
-        milestoneService.getPhaseMilestones(projectId, phaseId),
-        milestoneService.getMilestoneProgress(projectId, phaseId)
-      ]);
-      setMilestones(milestonesData);
-      setProgress(progressData);
+      const milestonesData = await milestoneService.getProjectMilestones(projectId);
+      setMilestones(milestonesData as any);
+      setProgress(null);
     } catch (error) {
       console.error('Error loading milestones:', error);
     } finally {
