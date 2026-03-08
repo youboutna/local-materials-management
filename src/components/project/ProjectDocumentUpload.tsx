@@ -160,7 +160,7 @@ const ProjectDocumentUpload = ({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    document_type: '' as DocumentType,
+    documentType: '' as DocumentType,
     status: 'draft' as const
   });
   const [file, setFile] = useState<File | null>(null);
