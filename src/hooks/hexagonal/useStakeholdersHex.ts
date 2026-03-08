@@ -285,7 +285,7 @@ export function useStakeholdersHex(projectId?: string) {
     onSuccess: (result) => {
       toast({
         title: 'Statut mis à jour',
-        description: `${result.displayName} est maintenant ${result.isActive ? 'actif' : 'inactif'}.`,
+        description: `${result.name} est maintenant ${result.isActive ? 'actif' : 'inactif'}.`,
         className: result.isActive ? 'bg-green-100 border-green-300 text-green-800' : 'bg-gray-100 border-gray-300 text-gray-800',
       });
 
