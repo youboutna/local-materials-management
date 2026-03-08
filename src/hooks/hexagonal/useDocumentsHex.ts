@@ -127,7 +127,7 @@ export const useDocumentCreate = () => {
   );
 
   const mutation = useMutation({
-    mutationFn: async (documentData: CreateDocumentRequestDto) => {
+    mutationFn: async (documentData: CreateDocumentDTO) => {
       return await documentService.createDocument(documentData);
     },
     onSuccess: () => {
