@@ -230,8 +230,8 @@ export function useLocationAutoFill(): LocationAutoFillResult {
         return R * c;
       };
 
-      let nearestCity: City | null = null;
-      let nearestRegion: Region | null = null;
+      let nearestCity: City | null = null as City | null;
+      let nearestRegion: Region | null = null as Region | null;
       let minCityDistance = Infinity;
       let minRegionDistance = Infinity;
 

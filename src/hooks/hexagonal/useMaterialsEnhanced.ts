@@ -86,8 +86,7 @@ export function useMaterialsEnhanced(): UseMaterialsEnhancedResult {
   const updateMaterialMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateMaterialRequestDto }): Promise<MaterialDTO> => {
       try {
-        const materialEntity = await materialService.updateMaterial(id, data as any);
-        return MaterialTransformer.toDTO(materialEntity);
+        return await materialService.updateMaterial(id, data as any);
       } catch (error) {
         console.error('Error updating material:', error);
         throw error;

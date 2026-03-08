@@ -71,7 +71,7 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
       if (newStatus === 'approved') {
         setIsSyncing(true);
         const syncService = new InspectionApprovalSyncService();
-        const validationDocs = (result as any)?.documents || [];
+        const validationDocs: any[] = [];
         const context: InspectionApprovalContext = {
           inspectionId: inspection.id,
           projectId: inspection.projectId,

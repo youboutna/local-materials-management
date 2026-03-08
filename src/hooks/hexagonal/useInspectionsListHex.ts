@@ -27,11 +27,11 @@ export function useInspectionsListHex(projectId: string) {
       return inspections.map((item) => ({
         id: item.id,
         date: item.date,
-        status: (item.status || 'pending') as StatusType,
-        inspector: item.inspector,
+        status: (item.status as string || 'pending') as StatusType,
+        inspector: typeof item.inspector === 'string' ? item.inspector : (item.inspector as any)?.name || '',
         progress_at_inspection: item.progressAtInspection ?? 0,
         comments: item.comments ?? null,
-        documents: item.documents ?? [],
+        documents: (item.documents as any) ?? [],
       })) as InspectionData[];
     },
     enabled: !!projectId

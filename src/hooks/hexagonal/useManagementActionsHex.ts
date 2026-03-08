@@ -140,8 +140,7 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
 
 export function useManagementActionsHex() {
   const queryClient = useQueryClient();
-  const { EnhancedActionService: EnhancedActionServiceClass } = require('@/application/services/enhancedActionService');
-  const enhancedActionService = new EnhancedActionServiceClass();
+  const enhancedActionService = new EnhancedActionService();
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['management-actions'],
