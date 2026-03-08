@@ -77,7 +77,7 @@ export function useDocumentsHex(filters?: DocumentFilters): UseDocumentsHexResul
 
   // Update document mutation
   const updateDocumentMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: UpdateDocumentRequestDto }) => {
+    mutationFn: async ({ id, data }: { id: string; data: UpdateDocumentDTO }) => {
       return await documentService.updateDocument(id, data);
     },
     onSuccess: () => {
