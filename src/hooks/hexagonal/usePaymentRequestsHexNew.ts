@@ -1,14 +1,13 @@
 /**
  * Hexagonal Hook for Payment Requests
  * Uses PaymentRequestService instead of direct Supabase calls
- * Following hexagonal architecture principles
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { PaymentRequestService } from '@/application/services/PaymentRequestService';
-import { CreatePaymentRequestData, UpdatePaymentRequestData } from '@/application/services/PaymentRequestService';
-import { useToast } from '@/hooks/use-toast';
+import { CreatePaymentRequestDTO, UpdatePaymentRequestDTO } from '@/dtos/entities/PaymentDTO';
+import { toast } from '@/hooks/use-toast';
 
 export function usePaymentRequests() {
   const queryClient = useQueryClient();
@@ -25,11 +24,11 @@ export function usePaymentRequests() {
   } = useQuery({
     queryKey: ['payment-requests'],
     queryFn: () => paymentRequestService.getAllPaymentRequests(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data: CreatePaymentRequestData) => {
+    mutationFn: async (data: CreatePaymentRequestDTO) => {
       return await paymentRequestService.createPaymentRequest(data);
     },
     onSuccess: () => {
@@ -39,7 +38,7 @@ export function usePaymentRequests() {
         description: 'Demande de paiement créée avec succès',
       });
     },
-    onError: (error: Error) => {
+    onError: () => {
       toast({
         title: 'Erreur',
         description: 'Échec de la création de la demande de paiement',
@@ -49,7 +48,7 @@ export function usePaymentRequests() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: UpdatePaymentRequestData }) => {
+    mutationFn: async ({ id, data }: { id: string; data: UpdatePaymentRequestDTO }) => {
       return await paymentRequestService.updatePaymentRequest(id, data);
     },
     onSuccess: () => {
@@ -59,7 +58,7 @@ export function usePaymentRequests() {
         description: 'Demande de paiement mise à jour avec succès',
       });
     },
-    onError: (error: Error) => {
+    onError: () => {
       toast({
         title: 'Erreur',
         description: 'Échec de la mise à jour de la demande de paiement',
@@ -79,7 +78,7 @@ export function usePaymentRequests() {
         description: 'Demande de paiement supprimée avec succès',
       });
     },
-    onError: (error: Error) => {
+    onError: () => {
       toast({
         title: 'Erreur',
         description: 'Échec de la suppression de la demande de paiement',
@@ -109,9 +108,9 @@ export function usePaymentRequestsBySupplier(supplierId: string) {
 
   return useQuery({
     queryKey: ['payment-requests', 'supplier', supplierId],
-    queryFn: () => paymentRequestService.getPaymentRequestsByProject(supplierId),
+    queryFn: () => paymentRequestService.getPaymentRequestsBySupplier(supplierId),
     enabled: !!supplierId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -124,6 +123,6 @@ export function usePaymentRequestsByProject(projectId: string) {
     queryKey: ['payment-requests', 'project', projectId],
     queryFn: () => paymentRequestService.getPaymentRequestsByProject(projectId),
     enabled: !!projectId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }

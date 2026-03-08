@@ -1,6 +1,5 @@
 /**
  * Hexagonal Hook for Payment Workflows
- * Encapsulates payment workflow use cases and state management
  */
 
 import { useState, useCallback } from 'react';
@@ -20,16 +19,13 @@ export interface PaymentRequestInput {
 
 export interface ValidatePaymentInput {
   paymentId: string;
-  status: 'pending' | 'approved' | 'rejected' | 'processed';
+  status: 'pending' | 'approved' | 'rejected' | 'paid' | 'cancelled';
   notes?: string;
 }
 
 export interface UsePaymentWorkflowHexResult {
-  // Actions
   createRequest: (input: PaymentRequestInput) => Promise<{ success: boolean; paymentId?: string; errors?: string[] }>;
   validatePayment: (input: ValidatePaymentInput) => Promise<{ success: boolean; nextStep?: string }>;
-  
-  // State
   loading: boolean;
   error: string | null;
 }
@@ -50,40 +46,24 @@ export function usePaymentWorkflowHex(): UsePaymentWorkflowHexResult {
       if (!input.supplier_id) validationErrors.push('supplier_id est requis');
       if (!Number.isFinite(input.amount) || input.amount <= 0) validationErrors.push('amount doit être > 0');
       if (validationErrors.length > 0) {
-        const message = 'Erreur de validation';
-        setError(message);
-        toast({
-          title: message,
-          description: validationErrors.join(', '),
-          variant: 'destructive',
-        });
+        setError('Erreur de validation');
+        toast({ title: 'Erreur de validation', description: validationErrors.join(', '), variant: 'destructive' });
         return { success: false, errors: validationErrors };
       }
 
       const created = await paymentRequestService.createPaymentRequest({
-        supplier_id: input.supplier_id,
-        project_id: input.project_id,
+        supplierId: input.supplier_id,
+        projectId: input.project_id,
         amount: input.amount,
         description: input.description,
-        payment_reason: input.payment_reason,
-        supporting_documents: input.supporting_documents,
-        notes: input.notes,
+        paymentReason: input.payment_reason,
       });
 
       if (created?.id) {
-        toast({
-          title: "Demande créée",
-          description: 'La demande de paiement a été créée.',
-        });
+        toast({ title: "Demande créée", description: 'La demande de paiement a été créée.' });
         return { success: true, paymentId: created.id };
       } else {
-        const message = 'Création impossible';
-        setError(message);
-        toast({
-          title: "Erreur de validation",
-          description: message,
-          variant: "destructive",
-        });
+        setError('Création impossible');
         return { success: false };
       }
     } catch (err) {
@@ -105,11 +85,8 @@ export function usePaymentWorkflowHex(): UsePaymentWorkflowHexResult {
         notes: input.notes,
       });
 
-        toast({
-          title: "Validation effectuée",
-          description: 'Le statut de paiement a été mis à jour.',
-        });
-        return { success: true };
+      toast({ title: "Validation effectuée", description: 'Le statut de paiement a été mis à jour.' });
+      return { success: true };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur inconnue';
       setError(message);
