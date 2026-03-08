@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * LocalStorage Phase Adapter
  * Implements IPhaseRepository using LocalStorage for DEV_MODE

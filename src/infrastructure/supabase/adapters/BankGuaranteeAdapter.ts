@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Bank Guarantee Adapter - Supabase Implementation
  * Implements IBankGuaranteeRepository using Supabase

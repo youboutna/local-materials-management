@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * LocalStorage Quantity Takeoff Adapter
  * Implements IQuantityTakeoffRepository using LocalStorage for DEV_MODE

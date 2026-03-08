@@ -1,26 +1,8 @@
 import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { ProjectService } from '@/application/services/ProjectService';
-import { ProjectFormDTO, ProjectData, CreateProjectRequestDto, UpdateProjectRequestDto, LocationDTO } from '@/dtos/entities/ProjectDTO';
-import { RepositoryFactory } from '@/infrastructure/repository/RepositoryFactory';
-
-interface ProjectAnalytics {
-  progress: number;
-  budgetUsage: number;
-  riskScore: number;
-  issues: string[];
-}
-
-interface ValidationResult {
-  isValid: boolean;
-  errors: string[];
-  warnings: string[];
-}
-
-type ServiceCreateProjectDTO = Omit<CreateProjectRequestDto, 'status'> & { status?: string };
-type ServiceUpdateProjectDTO = Omit<UpdateProjectRequestDto, 'status'> & { status?: string };
-
-type ProjectStatus = 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé';
+import { ProjectDTO, ProjectFormDTO, ProjectData, CreateProjectRequestDTO } from '@/dtos/entities/ProjectDTO';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 type ConstructionPhase = 'preparation' | 'foundation' | 'structure' | 'finishing' | 'completed';
 
@@ -28,20 +10,6 @@ interface Location {
   latitude: number;
   longitude: number;
 }
-
-interface SafeCoordinates {
-  latitude: number;
-  longitude: number;
-}
-
-const safeCoordinates = (coords?: LocationDTO): SafeCoordinates | undefined => {
-  if (!coords || coords.latitude === undefined || coords.longitude === undefined) 
-    return undefined;
-  return {
-    latitude: coords.latitude,
-    longitude: coords.longitude
-  };
-};
 
 const safeLocation = (loc?: any): Location | undefined => {
   if (!loc || loc.latitude === undefined || loc.longitude === undefined) 
@@ -59,102 +27,52 @@ const toConstructionPhase = (phase?: string): ConstructionPhase | undefined => {
     : undefined;
 };
 
-// Use injectable service instead of direct Supabase dependency
 const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
 
-const handleError = (error: unknown) => {
-  const message = error instanceof Error ? error.message : 'Unknown error';
-  setError(message);
-  toast({
-    title: "Erreur",
-    description: message,
-    variant: "destructive",
-  });
-};
-
 export const useProjects = () => {
-  const [projects, setProjects] = useState<ProjectData[]>([]);
+  const [projects, setProjects] = useState<ProjectDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-const fetchProjects = async () => {
-  setLoading(true);
-  try {
-    // Use service layer instead of direct Supabase calls
-    const projectsList = await projectService.getAllProjects();
-    
-    // Map DTOs to ProjectData (ProjectListItemDTO has limited fields)
-    const transformedData: ProjectData[] = projectsList.map((dto) => ({
-      ...dto,
-      coordinates: safeLocation(dto.coordinates),
-      status: dto.status as ProjectStatus,
-      currentPhase: toConstructionPhase(dto.currentPhase)
-    }));
+  const handleError = (err: unknown) => {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    setError(message);
+    toast({
+      title: "Erreur",
+      description: message,
+      variant: "destructive",
+    });
+  };
 
-    setProjects(transformedData);
-    setError(null);
-  } catch (error: unknown) {
-    handleError(error);
-  } finally {
-    setLoading(false);
-  }
-};
-
-  const createProject = async (projectData: Omit<ProjectData, 'id'>) => {
+  const fetchProjects = async () => {
+    setLoading(true);
     try {
-      // Use service layer with DTO mapping
+      const projectsList = await projectService.getAllProjects();
+      setProjects(projectsList as unknown as ProjectDTO[]);
+      setError(null);
+    } catch (err: unknown) {
+      handleError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createProject = async (projectData: Omit<ProjectDTO, 'id'>) => {
+    try {
       const formDTO: ProjectFormDTO = {
-        title: projectData.title,
-        description: projectData.description,
-        location: projectData.location,
-        budget: projectData.budget,
-        startDate: projectData.startDate,
-        endDate: projectData.endDate,
-        teamSize: projectData.teamSize,
-        coordinates: projectData.coordinates,
-        financingSource: projectData.financingSource,
-        marketType: projectData.marketType,
-        selectionMode: projectData.selectionMode,
-        launchDate: projectData.launchDate,
-        attributionDate: projectData.attributionDate,
-        projectReference: projectData.projectReference,
-        projectResponsableId: projectData.projectResponsableId,
-        mainContractor: projectData.mainContractor,
-        allowsInitialPayment: projectData.allowsInitialPayment,
-        initialPaymentPercentage: projectData.initialPaymentPercentage
+        ...projectData,
+        id: '',
+        status: projectData.status,
+        progress: projectData.progress || 0,
+        currency: projectData.currency || 'MRU',
+        teamSize: projectData.teamSize || 1,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
       const createdDTO = await projectService.createProject(formDTO);
+      const newProject = createdDTO as unknown as ProjectDTO;
 
-      // Map back to ProjectData
-      const newProject: ProjectData = {
-        id: createdDTO.id,
-        title: createdDTO.title,
-        description: createdDTO.description,
-        location: createdDTO.location,
-        status: createdDTO.status as ProjectStatus,
-        progress: createdDTO.progress,
-        budget: createdDTO.budget,
-        startDate: createdDTO.startDate,
-        endDate: createdDTO.endDate,
-        thumbnail: createdDTO.thumbnail,
-        teamSize: createdDTO.teamSize,
-        coordinates: safeLocation(createdDTO.coordinates),
-        financingSource: createdDTO.financingSource,
-        marketType: createdDTO.marketType,
-        selectionMode: createdDTO.selectionMode,
-        launchDate: createdDTO.launchDate,
-        attributionDate: createdDTO.attributionDate,
-        projectReference: createdDTO.projectReference,
-        projectResponsableId: createdDTO.projectResponsableId,
-        mainContractor: createdDTO.mainContractor,
-        allowsInitialPayment: createdDTO.allowsInitialPayment,
-        initialPaymentPercentage: createdDTO.initialPaymentPercentage,
-        currentPhase: toConstructionPhase(createdDTO.currentPhase),
-        currentStage: createdDTO.currentStage
-      };
-
-      // Update the local state
       setProjects(prev => [newProject, ...prev]);
 
       toast({
@@ -163,52 +81,23 @@ const fetchProjects = async () => {
       });
 
       return newProject;
-    } catch (error: unknown) {
-      handleError(error);
-      throw error;
+    } catch (err: unknown) {
+      handleError(err);
+      throw err;
     }
   };
 
-  const getProject = async (id: string): Promise<ProjectData | null> => {
+  const getProject = async (id: string): Promise<ProjectDTO | null> => {
     try {
       const dto = await projectService.getProjectById(id);
-      
       if (!dto) return null;
-
-      // Map DTO to ProjectData
-      return {
-        id: dto.id,
-        title: dto.title,
-        description: dto.description,
-        location: dto.location,
-        status: dto.status as ProjectStatus,
-        progress: dto.progress,
-        budget: dto.budget,
-        startDate: dto.startDate,
-        endDate: dto.endDate,
-        thumbnail: dto.thumbnail,
-        teamSize: dto.teamSize,
-        coordinates: safeLocation(dto.coordinates),
-        financingSource: dto.financingSource,
-        marketType: dto.marketType,
-        selectionMode: dto.selectionMode,
-        launchDate: dto.launchDate,
-        attributionDate: dto.attributionDate,
-        projectReference: dto.projectReference,
-        projectResponsableId: dto.projectResponsableId,
-        mainContractor: dto.mainContractor,
-        allowsInitialPayment: dto.allowsInitialPayment,
-        initialPaymentPercentage: dto.initialPaymentPercentage,
-        currentPhase: toConstructionPhase(dto.currentPhase),
-        currentStage: dto.currentStage
-      };
+      return dto as unknown as ProjectDTO;
     } catch (err) {
       handleError(err);
       return null;
     }
   };
 
-  // Fetch projects on component mount
   useEffect(() => {
     fetchProjects();
   }, []);

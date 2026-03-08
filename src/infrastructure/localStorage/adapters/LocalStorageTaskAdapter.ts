@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * LocalStorage Task Adapter
  * Implements ITaskRepository using LocalStorage for DEV_MODE

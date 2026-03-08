@@ -1,14 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { ProjectWithPayments, Payment } from '@/types/project';
 import { useQuery } from '@tanstack/react-query';
 import { PaymentService } from '@/application/services/PaymentService';
 import { ProjectService } from '@/application/services/ProjectService';
 import { InspectionService } from '@/application/services/InspectionService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { CreatePaymentDTO, PaymentDTO } from '@/dtos/entities/PaymentDTO';
-import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
-import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
+import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
 
 interface CreatePaymentPayload {
   projectId: string;
@@ -19,7 +17,6 @@ interface CreatePaymentPayload {
     contractorId?: string;
     contractorName: string;
     contractorContact: string;
-    // Method-specific fields
     bankName?: string;
     accountNumber?: string;
     checkNumber?: string;
@@ -34,20 +31,16 @@ export const useCreateProjectPayment = () => {
 
   return useMutation({
     mutationFn: async ({ projectId, payment }: CreatePaymentPayload) => {
-      // Initialize services
       const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
       const paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
       const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
 
-      // First get the project to validate the payment
       const project = await projectService.getProjectById(projectId);
       if (!project) throw new Error('Project not found');
 
-      // Get latest inspection for this project
       const inspections = await inspectionService.getInspectionsByProject(projectId);
       const latestInspection = inspections.length > 0 ? inspections[0] : undefined;
       
-      // Create the new payment record using service
       const paymentDTO: CreatePaymentDTO = {
         projectId,
         amount: payment.amount,
@@ -56,7 +49,7 @@ export const useCreateProjectPayment = () => {
         progressAtPayment: project.progress || 0,
         inspectionId: latestInspection?.id,
         transactionId: `TX-${Date.now()}`,
-        contractorId: payment.contractorId,
+        contractorId: payment.contractorId || '',
         contractorName: payment.contractorName,
         contractorContact: payment.contractorContact,
         bankName: payment.bankName,
@@ -70,14 +63,13 @@ export const useCreateProjectPayment = () => {
       const createdPayment = await paymentService.createPayment(paymentDTO);
       if (!createdPayment) throw new Error('Failed to create payment');
 
-      // Update project status to 'payé' if full amount
       if (payment.amount >= (project.budget || 0)) {
-        await projectService.updateProject(projectId, { status: 'payé' });
+        await projectService.updateProject(projectId, { id: projectId, status: ProjectStatus.TERMINE });
       }
       
-      return createdPayment as Payment;
+      return createdPayment;
     },
-    onSuccess: (data: Payment, variables) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['project', variables.projectId] });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       
@@ -96,11 +88,6 @@ export const useCreateProjectPayment = () => {
   });
 };
 
-interface ProjectWithBudget {
-  progress?: number;
-  budget?: number;
-}
-
 interface ProjectPayment {
   id: string;
   amount: number;
@@ -113,29 +100,54 @@ interface ProjectPayment {
   receiverName?: string;
 }
 
+interface ProjectWithPaymentsData {
+  id: string;
+  title: string;
+  description: string;
+  budget: number;
+  progress: number;
+  status: string;
+  payments: PaymentDTO[];
+  inspections: Array<{
+    id: string;
+    date: string;
+    status: string;
+    inspector?: string;
+    progress_at_inspection?: number;
+    comments?: string;
+  }>;
+}
+
 export const useProjectPayments = (projectId: string) => {
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ['project-with-payments', projectId],
-    queryFn: async (): Promise<ProjectWithPayments | null> => {
-      // Initialize services
+    queryFn: async (): Promise<ProjectWithPaymentsData | null> => {
       const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
       const paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
       const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
 
-      // Get project data
       const projectData = await projectService.getProjectById(projectId);
       if (!projectData) throw new Error('Project not found');
 
-      // Get payments data
       const paymentsData = await paymentService.getPaymentsByProject(projectId);
-
-      // Get inspections data
       const inspectionsData = await inspectionService.getInspectionsByProject(projectId);
 
       return {
-        ...projectData,
+        id: projectData.id,
+        title: projectData.title,
+        description: projectData.description,
+        budget: projectData.budget,
+        progress: projectData.progress,
+        status: projectData.status as string,
         payments: paymentsData || [],
-        inspections: inspectionsData || [],
+        inspections: (inspectionsData || []).map(i => ({
+          id: i.id,
+          date: i.date || '',
+          status: i.status as string,
+          inspector: typeof i.inspector === 'string' ? i.inspector : (i.inspector as any)?.name,
+          progress_at_inspection: i.progressAtInspection,
+          comments: i.comments || undefined,
+        })),
       };
     },
     enabled: !!projectId,
@@ -151,8 +163,11 @@ export const useProjectPayments = (projectId: string) => {
         amount: paymentData.amount,
         paymentDate: paymentData.paymentDate,
         paymentMethod: paymentData.paymentMethod,
-        progressAtPayment: paymentData.progress,
-        contractorId: paymentData.contractorId,
+        progressAtPayment: paymentData.progress || 0,
+        contractorId: paymentData.contractorId || '',
+        contractorName: '',
+        contractorContact: '',
+        transactionId: `TX-${Date.now()}`,
         mobileNumber: paymentData.mobileNumber,
         mobileOperator: paymentData.mobileOperator,
         receiverName: paymentData.receiverName
@@ -161,9 +176,9 @@ export const useProjectPayments = (projectId: string) => {
       const createdPayment = await paymentService.createPayment(paymentDTO);
       if (!createdPayment) throw new Error('Failed to create payment');
 
-      // Update project progress if needed
       if (createdPayment.progressAtPayment !== undefined) {
         await projectService.updateProject(projectId, { 
+          id: projectId,
           progress: createdPayment.progressAtPayment 
         });
       }
@@ -173,7 +188,7 @@ export const useProjectPayments = (projectId: string) => {
         description: "Le paiement a été enregistré avec succès.",
       });
 
-      return createdPayment as Payment;
+      return createdPayment;
     } catch (err) {
       console.error('Error creating payment:', err);
       toast({

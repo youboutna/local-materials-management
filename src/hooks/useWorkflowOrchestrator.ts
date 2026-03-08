@@ -59,7 +59,7 @@ export function useWorkflowOrchestrator(projectId: string | undefined): UseWorkf
           break;
         case 'DECOMPTE_CALCULATED':
           toast.info('Décompte calculé', {
-            description: `Montant: ${event.payload.decompte.net_payable.toLocaleString()} MRU`,
+            description: `Montant: ${event.payload.decompte.amount.toLocaleString()} MRU`,
           });
           break;
         case 'PAYMENT_CREATED':

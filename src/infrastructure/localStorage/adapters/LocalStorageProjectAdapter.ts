@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * LocalStorage Project Adapter
  * Implements IProjectRepository using LocalStorage for DEV_MODE

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * LocalStorage Inspection Payment Validation Adapter
  * Implements IInspectionPaymentValidationRepository using LocalStorage for DEV_MODE

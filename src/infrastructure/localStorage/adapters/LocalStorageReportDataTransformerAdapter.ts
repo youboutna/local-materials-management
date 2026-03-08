@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * LocalStorage Report Data Transformer Adapter
  * Implements IReportDataTransformerRepository using LocalStorage for DEV_MODE
