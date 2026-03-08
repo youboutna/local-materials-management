@@ -248,6 +248,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   // Create task mutation
   const createTaskMutation = useMutation({
     mutationFn: async (data: Partial<TaskAssignmentExtended>) => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase
         .from('task_assignments')
         .insert([{
