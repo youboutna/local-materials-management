@@ -145,7 +145,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       .order('name', { ascending: true });
 
     if (error || !data) return [];
-    return data.map(d => Material.fromDatabase(d as Record<string, unknown>));
+    return data.map(d => MaterialTransformer.fromSupabase(d as Record<string, unknown>));
   }
 
   async findLowStock(threshold: number): Promise<Material[]> {
