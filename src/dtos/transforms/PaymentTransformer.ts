@@ -346,10 +346,12 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
   static requestDTOToPayment(dto: PaymentRequestDTO): Payment {
     return Payment.create({
       id: dto.id,
+      project: null,
       contractorName: dto.supplierId,
+      contractorContact: '',
       amount: dto.amount,
-      paymentMethod: 'bank_transfer' as PaymentMethod, // Default method
-      progressAtPayment: 0 // Default progress
+      paymentMethod: 'bank_transfer' as PaymentMethod,
+      progressAtPayment: 0
     });
   }
 
