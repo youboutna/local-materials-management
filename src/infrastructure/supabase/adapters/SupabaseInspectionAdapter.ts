@@ -41,25 +41,19 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
       userId: data.inspector // If inspector has a user account
     };
 
-    return new Inspection(
-      data.id,
-      data.date,
-      status,
-      inspector,
-      data.progress_at_inspection || 0,
-      data.comments || undefined,
-      Array.isArray(data.documents) ? data.documents as Document[] : [],
-      new Date(data.created_at),
-      new Date(data.updated_at),
-      data.project_id,
-      data.phase_id,
-      data.step_id,
-      undefined, // completedAt
-      undefined, // completedBy
-      data.progress_at_inspection || 0, // progress
-      undefined, // paymentType
-      Array.isArray(data.observations) ? data.observations : []
-    );
+    return Inspection.create({
+      id: data.id,
+      projectId: data.project_id,
+      phaseId: data.phase_id,
+      stepId: data.step_id,
+      inspector: inspector,
+      date: data.date,
+      status: status,
+      progressAtInspection: data.progress_at_inspection || 0,
+      comments: data.comments || undefined,
+      progress: data.progress_at_inspection || 0,
+      observations: Array.isArray(data.observations) ? data.observations : []
+    });
   }
 
   private mapToRow(inspection: Inspection): Omit<InspectionRow, 'created_at' | 'updated_at'> {

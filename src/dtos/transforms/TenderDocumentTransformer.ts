@@ -34,38 +34,34 @@ export class TenderDocumentTransformer {
 
   // DTO to Entity
   static toEntity(dto: TenderDocumentDTO): TenderDocument {
-    return new TenderDocument(
-      dto.id,
-      dto.project_id,
-      dto.document_id || '',
-      dto.category as any,
-      dto.subcategory as any,
-      dto.is_required,
-      dto.is_submitted,
-      dto.submission_date ? new Date(dto.submission_date) : undefined,
-      dto.reviewer_notes,
-      dto.status,
-      new Date(dto.created_at),
-      new Date(dto.updated_at)
-    );
+    return TenderDocument.create({
+      id: dto.id,
+      projectId: dto.project_id,
+      documentId: dto.document_id || '',
+      category: dto.category as any,
+      subcategory: dto.subcategory as any,
+      isRequired: dto.is_required,
+      isSubmitted: dto.is_submitted,
+      submissionDate: dto.submission_date ? new Date(dto.submission_date) : undefined,
+      reviewerNotes: dto.reviewer_notes,
+      status: dto.status,
+      createdAt: new Date(dto.created_at),
+      updatedAt: new Date(dto.updated_at)
+    });
   }
 
   // Create DTO to Entity
   static fromCreateDtoToEntity(dto: CreateTenderDocumentDTO, id: string): TenderDocument {
-    return new TenderDocument(
+    return TenderDocument.create({
       id,
-      dto.project_id,
-      dto.document_id || '',
-      dto.category as any,
-      dto.subcategory as any,
-      dto.is_required ?? false,
-      dto.is_submitted ?? false,
-      undefined,
-      undefined,
-      dto.status ?? 'draft',
-      new Date(),
-      new Date()
-    );
+      projectId: dto.project_id,
+      documentId: dto.document_id || '',
+      category: dto.category as any,
+      subcategory: dto.subcategory as any,
+      isRequired: dto.is_required ?? false,
+      isSubmitted: dto.is_submitted ?? false,
+      status: dto.status ?? 'draft'
+    });
   }
 
   // Entity to Response DTO

@@ -6,29 +6,24 @@ import { Task, TaskStatus, TaskPriority } from '@/domain/entities/Task';
 
 export class SupabaseTaskAdapter implements ITaskRepository {
   private mapToEntity(data: any): Task {
-    return new Task(
-      data.id,
-      data.project_id,
-      data.phase_id || null,
-      data.step_id || null,
-      data.title,
-      data.description || null,
-      (data.status || 'not_started') as TaskStatus,
-      (data.priority || 'medium') as TaskPriority,
-      data.progress || 0,
-      data.assigned_to ? [data.assigned_to] : [],
-      data.assigned_by || null,
-      data.start_date || null,
-      data.end_date || null,
-      data.due_date || null,
-      data.completion_date || null,
-      data.estimated_duration || null,
-      data.actual_duration || null,
-      data.dependencies || [],
-      data.notes || null,
-      data.created_at,
-      data.updated_at
-    );
+    return Task.create({
+      id: data.id,
+      projectId: data.project_id,
+      phaseId: data.phase_id || undefined,
+      stepId: data.step_id || undefined,
+      title: data.title,
+      description: data.description || undefined,
+      status: (data.status || 'not_started') as TaskStatus,
+      priority: (data.priority || 'medium') as TaskPriority,
+      progress: data.progress || 0,
+      startDate: data.start_date || undefined,
+      endDate: data.end_date || undefined,
+      dueDate: data.due_date || undefined,
+      estimatedDuration: data.estimated_duration || undefined,
+      notes: data.notes || undefined,
+      assignedTo: data.assigned_to ? [data.assigned_to] : [],
+      assignedById: data.assigned_by || undefined
+    });
   }
 
   async findById(id: string): Promise<Task | null> {

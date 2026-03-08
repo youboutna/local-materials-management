@@ -42,44 +42,34 @@ export class RiskTransformer {
    * Transformer un DTO en entité Risk
    */
   static toEntity(dto: RiskDTO): Risk {
-    return new Risk(
-      dto.id || crypto.randomUUID(),
-      dto.projectId ? { id: dto.projectId, title: '' } : null,
-      dto.title,
-      dto.description || null,
-      dto.probability,
-      dto.impact,
-      this.dtoToDomainStatus(dto.status),
-      this.dtoToDomainCategory(dto.category),
-      dto.mitigationStrategy || null,
-      (dto as any).identifiedBy ? { id: (dto as any).identifiedBy, fullName: '' } : null,
-      dto.identifiedDate || null,
-      dto.relatedRisks || [],
-      dto.createdAt || new Date().toISOString(),
-      dto.updatedAt || new Date().toISOString()
-    );
+    return Risk.create({
+      id: dto.id || crypto.randomUUID(),
+      project: dto.projectId ? { id: dto.projectId, title: '' } : null,
+      title: dto.title,
+      description: dto.description || undefined,
+      probability: dto.probability,
+      impact: dto.impact,
+      status: this.dtoToDomainStatus(dto.status),
+      category: this.dtoToDomainCategory(dto.category),
+      identifiedBy: (dto as any).identifiedBy ? { id: (dto as any).identifiedBy, fullName: '' } : null
+    });
   }
 
   /**
    * Transformer CreateRiskDTO en entité Risk
    */
   static fromCreateRequestToEntity(request: CreateRiskDTO): Risk {
-    return new Risk(
-      crypto.randomUUID(),
-      request.projectId ? { id: request.projectId, title: '' } : null,
-      request.title,
-      request.description || null,
-      request.probability,
-      request.impact,
-      this.dtoToDomainStatus('identified' as RiskStatus), // Default status for new risks
-      this.dtoToDomainCategory(request.category),
-      request.mitigationStrategy || null,
-      request.owner ? { id: request.owner, fullName: '' } : null,
-      new Date().toISOString(),
-      [],
-      new Date().toISOString(),
-      new Date().toISOString()
-    );
+    return Risk.create({
+      id: crypto.randomUUID(),
+      project: request.projectId ? { id: request.projectId, title: '' } : null,
+      title: request.title,
+      description: request.description || undefined,
+      probability: request.probability,
+      impact: request.impact,
+      status: this.dtoToDomainStatus('identified' as RiskStatus),
+      category: this.dtoToDomainCategory(request.category),
+      identifiedBy: request.owner ? { id: request.owner, fullName: '' } : null
+    });
   }
 
   /**

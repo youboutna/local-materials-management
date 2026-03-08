@@ -22,17 +22,17 @@ export class SubmissionSecretTransformer {
   }
 
   static toEntity(dto: SubmissionSecretDTO): SubmissionSecret {
-    return new SubmissionSecret(
-      dto.id,
-      dto.submissionId,
-      dto.secretCode,
-      dto.expiresAt ? new Date(dto.expiresAt) : undefined,
-      dto.isActive,
-      dto.accessCount,
-      dto.maxAccess,
-      new Date(dto.createdAt),
-      new Date(dto.updatedAt)
-    );
+    return SubmissionSecret.create({
+      id: dto.id,
+      submissionId: dto.submissionId,
+      secretCode: dto.secretCode,
+      expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : undefined,
+      isActive: dto.isActive,
+      accessCount: dto.accessCount,
+      maxAccess: dto.maxAccess,
+      createdAt: new Date(dto.createdAt),
+      updatedAt: new Date(dto.updatedAt)
+    });
   }
 
   static fromCreateDTO(dto: GenerateSubmissionSecretRequestDTO, secretCode: string): Partial<SubmissionSecret> {

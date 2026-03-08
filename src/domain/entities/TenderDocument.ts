@@ -1,6 +1,7 @@
 /**
  * Tender Document Entity
  * Represents a document associated with a tender
+ * Following hexagonal architecture: Props interface + create() factory
  */
 
 export type TenderDocumentCategory = "administrative" | "technical" | "financial";
@@ -16,45 +17,81 @@ export type TenderDocumentSubcategory =
 
 export type TenderDocumentStatus = "draft" | "submitted" | "reviewed" | "approved" | "rejected";
 
+export interface TenderDocumentProps {
+  id: string;
+  projectId: string;
+  documentId: string;
+  category: TenderDocumentCategory;
+  subcategory: TenderDocumentSubcategory;
+  isRequired?: boolean;
+  isSubmitted?: boolean;
+  submissionDate?: Date;
+  reviewerNotes?: string;
+  status?: TenderDocumentStatus;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 export class TenderDocument {
-  constructor(
-    public id: string,
-    public projectId: string,
-    public documentId: string,
-    public category: TenderDocumentCategory,
-    public subcategory: TenderDocumentSubcategory,
-    public isRequired: boolean = false,
-    public isSubmitted: boolean = false,
-    public submissionDate?: Date,
-    public reviewerNotes?: string,
-    public status: TenderDocumentStatus = "draft",
-    public createdAt: Date = new Date(),
-    public updatedAt: Date = new Date()
-  ) {}
+  public readonly id: string;
+  public readonly projectId: string;
+  public readonly documentId: string;
+  public readonly category: TenderDocumentCategory;
+  public readonly subcategory: TenderDocumentSubcategory;
+  public readonly isRequired: boolean;
+  public readonly isSubmitted: boolean;
+  public readonly submissionDate?: Date;
+  public readonly reviewerNotes?: string;
+  public readonly status: TenderDocumentStatus;
+  public readonly createdAt: Date;
+  public readonly updatedAt: Date;
 
-  // Business logic methods
-  submit(): void {
-    this.isSubmitted = true;
-    this.submissionDate = new Date();
-    this.status = "submitted";
-    this.updatedAt = new Date();
+  private constructor(props: Required<Pick<TenderDocumentProps, 'id' | 'projectId' | 'documentId' | 'category' | 'subcategory'>> & Partial<TenderDocumentProps>) {
+    this.id = props.id;
+    this.projectId = props.projectId;
+    this.documentId = props.documentId;
+    this.category = props.category;
+    this.subcategory = props.subcategory;
+    this.isRequired = props.isRequired ?? false;
+    this.isSubmitted = props.isSubmitted ?? false;
+    this.submissionDate = props.submissionDate;
+    this.reviewerNotes = props.reviewerNotes;
+    this.status = props.status ?? "draft";
+    this.createdAt = props.createdAt ?? new Date();
+    this.updatedAt = props.updatedAt ?? new Date();
   }
 
-  approve(notes?: string): void {
-    this.status = "approved";
-    this.reviewerNotes = notes;
-    this.updatedAt = new Date();
+  // ============= Factory Method =============
+  static create(props: TenderDocumentProps): TenderDocument {
+    return new TenderDocument(props);
   }
 
-  reject(notes: string): void {
-    this.status = "rejected";
-    this.reviewerNotes = notes;
-    this.updatedAt = new Date();
+  // ============= Business Logic =============
+  withStatus(newStatus: TenderDocumentStatus, notes?: string): TenderDocument {
+    return TenderDocument.create({
+      ...this.toProps(),
+      status: newStatus,
+      reviewerNotes: notes ?? this.reviewerNotes,
+      updatedAt: new Date()
+    });
   }
 
-  requestReview(): void {
-    this.status = "reviewed";
-    this.updatedAt = new Date();
+  submit(): TenderDocument {
+    return TenderDocument.create({
+      ...this.toProps(),
+      isSubmitted: true,
+      submissionDate: new Date(),
+      status: "submitted",
+      updatedAt: new Date()
+    });
+  }
+
+  approve(notes?: string): TenderDocument {
+    return this.withStatus("approved", notes);
+  }
+
+  reject(notes: string): TenderDocument {
+    return this.withStatus("rejected", notes);
   }
 
   // Validation methods
@@ -82,5 +119,22 @@ export class TenderDocument {
 
   canBeRejected(): boolean {
     return this.status === "reviewed" || this.status === "submitted";
+  }
+
+  private toProps(): TenderDocumentProps {
+    return {
+      id: this.id,
+      projectId: this.projectId,
+      documentId: this.documentId,
+      category: this.category,
+      subcategory: this.subcategory,
+      isRequired: this.isRequired,
+      isSubmitted: this.isSubmitted,
+      submissionDate: this.submissionDate,
+      reviewerNotes: this.reviewerNotes,
+      status: this.status,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt
+    };
   }
 }
