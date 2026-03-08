@@ -93,7 +93,19 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
   // Fetch progress
   const { data: progress } = useQuery({
     queryKey: ['project-milestone-progress', projectId],
-    queryFn: () => MilestoneService.getMilestoneProgress(projectId),
+    queryFn: async () => {
+      const service = getMilestoneService();
+      const raw = await service.getProjectMilestones(projectId);
+      return {
+        total_milestones: raw.length,
+        completed_milestones: raw.filter((m: any) => m.status === 'completed').length,
+        weighted_progress: Math.round(raw.filter((m: any) => m.status === 'completed').length / Math.max(1, raw.length) * 100),
+        overdue_milestones: raw.filter((m: any) => m.status === 'delayed').map((m: any) => m.id),
+        upcoming_milestones: [],
+        schedule_performance_index: 1,
+        critical_path_status: 'on_track' as const,
+      };
+    },
     enabled: !!projectId,
   });
 
