@@ -106,9 +106,9 @@ const FinancialAnalysisCard: React.FC<FinancialAnalysisCardProps> = ({
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center justify-between">
           <span>Analyse financière</span>
-          <Badge variant="outline" className={getFinancialHealthColor(phaseCosts.financialHealth)}>
-            {getFinancialHealthIcon(phaseCosts.financialHealth)}
-            <span className="ml-1">{getFinancialHealthLabel(phaseCosts.financialHealth)}</span>
+          <Badge variant="outline" className={getFinancialHealthColor(financialHealth)}>
+            {getFinancialHealthIcon(financialHealth)}
+            <span className="ml-1">{getFinancialHealthLabel(financialHealth)}</span>
           </Badge>
         </CardTitle>
       </CardHeader>
