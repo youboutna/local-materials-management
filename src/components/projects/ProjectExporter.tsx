@@ -148,7 +148,7 @@ const ProjectExporter = () => {
             expenses: detail?.expenses || [],
             alerts: detail?.alerts || [],
             insurancePolicies: detail?.insurancePolicies || [],
-            contacts: detail?.contacts || [],
+            contacts: (detail as any)?.contacts || [],
             milestones: detail?.milestones || detail?.constructionMilestones || [],
             documents: detail?.documents || [],
             stakeholders: detail?.stakeholders || []

@@ -26,6 +26,7 @@ export interface MapLocation {
   region?: string;
   startDate?: string;
   endDate?: string;
+  budget?: number;
   warehouseShape?: { lat: number; lng: number }[];
   warehouseShapeType?: "polygon" | "rectangle" | "circle";
   adresse?: string | undefined;

@@ -239,10 +239,10 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
         ${ReportFormatting.generatePaginatedTable(
           reportData.photos,
           [
-            { label: 'Document', render: (item) => item.title || item.file_name, width: '40%' },
-            { label: 'Type', render: (item) => item.document_type || 'Photo', width: '20%' },
-            { label: 'Date', render: (item) => item.created_at ? format(new Date(item.created_at), 'dd/MM/yyyy') : 'N/A', width: '20%' },
-            { label: 'Taille', render: (item) => item.file_size ? `${(item.file_size / 1024).toFixed(1)} KB` : 'N/A', width: '20%' }
+            { label: 'Document', render: (item: any) => item.name || item.title || item.file_name || '', width: '40%' },
+            { label: 'Type', render: (item: any) => item.type || item.document_type || 'Photo', width: '20%' },
+            { label: 'Date', render: (item: any) => (item.uploadedAt || item.created_at) ? format(new Date(item.uploadedAt || item.created_at), 'dd/MM/yyyy') : 'N/A', width: '20%' },
+            { label: 'Taille', render: (item: any) => (item.size || item.file_size) ? `${((item.size || item.file_size) / 1024).toFixed(1)} KB` : 'N/A', width: '20%' }
           ],
           { pageSize: 10, includeHeaders: true },
           'Photos et Documents'
