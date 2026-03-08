@@ -253,11 +253,11 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
 
     const paymentContext: MilestoneActionContext = {
       milestoneId: context?.milestoneId || '',
-      milestoneTitle: context?.milestoneTitle || `Paiement suite à inspection (${latestApprovedInspection?.progress_at_inspection}%)`,
+      milestoneTitle: context?.milestoneTitle || `Paiement suite à inspection (${(latestApprovedInspection as any)?.progressAtInspection}%)`,
       milestoneType: context?.milestoneType || 'checkpoint',
       phaseId,
       phaseName,
-      suggestedProgress: latestApprovedInspection?.progress_at_inspection
+      suggestedProgress: (latestApprovedInspection as any)?.progressAtInspection
     };
     setSelectedContext(paymentContext);
     setPaymentDialogOpen(true);

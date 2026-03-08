@@ -268,8 +268,8 @@ export const MilestonePositionEditor: React.FC<MilestonePositionEditorProps> = (
                 <div>
                   <Label>Phase associée</Label>
                   <Select 
-                    value={editForm.phase_id} 
-                    onValueChange={(value) => setEditForm({ ...editForm, phase_id: value })}
+                    value={editForm.phaseId} 
+                    onValueChange={(value) => setEditForm({ ...editForm, phaseId: value })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner une phase" />
