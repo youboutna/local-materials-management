@@ -104,7 +104,7 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
 
             <div className="lg:col-span-1 space-y-4">
               <QuickActionsPanel
-                phaseName={phase.phase_name || 'Phase'}
+                phaseName={phase.name || 'Phase'}
                 phaseProgress={phase.progress || 0}
                 workflowMetrics={workflowMetrics}
                 lastInspectionDate={latestApprovedInspection?.date}
