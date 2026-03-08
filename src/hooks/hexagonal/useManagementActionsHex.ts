@@ -7,6 +7,7 @@ import { ProjectService } from '@/application/services/ProjectService';
 import { TaskService } from '@/application/services/TaskService';
 import { PaymentService } from '@/application/services/PaymentService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { EnhancedActionService } from '@/application/services/enhancedActionService';
 import { CreateEnhancedActionRequestDTO, EnhancedActionDTO } from '@/dtos/entities/ActionDTO';
 
 export interface ActionItem {
