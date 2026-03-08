@@ -511,9 +511,9 @@ export function useProjectCheckpoints(projectId: string | undefined): ProjectChe
 
 
 
-      pendingCheckpoints += phaseMilestones.filter((m: ProjectMilestone) => m.status !== 'completed').length;
+      pendingCheckpoints += phaseMilestones.filter((m: any) => m.status !== 'completed').length;
 
-      completedCheckpoints += phaseMilestones.filter((m: ProjectMilestone) => m.status === 'completed').length;
+      completedCheckpoints += phaseMilestones.filter((m: any) => m.status === 'completed').length;
 
     }
 
