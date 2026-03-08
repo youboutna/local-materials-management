@@ -260,8 +260,8 @@ export const MilestonePositionEditor: React.FC<MilestonePositionEditorProps> = (
                   <Label>Date cible</Label>
                   <Input
                     type="date"
-                    value={editForm.target_date}
-                    onChange={(e) => setEditForm({ ...editForm, target_date: e.target.value })}
+                    value={editForm.targetDate}
+                    onChange={(e) => setEditForm({ ...editForm, targetDate: e.target.value })}
                   />
                 </div>
 
