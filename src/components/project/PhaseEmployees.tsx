@@ -336,8 +336,8 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                     <Label htmlFor="employee_role">Rôle/Fonction *</Label>
                     <Input
                       id="employee_role"
-                      value={formData.employee_role}
-                      onChange={(e) => setFormData({ ...formData, employee_role: e.target.value })}
+                      value={formData.employeeRole}
+                      onChange={(e) => setFormData({ ...formData, employeeRole: e.target.value })}
                       required
                       placeholder="Ex: Chef de chantier, Maçon, etc."
                       disabled={memberType === 'supplier'}
