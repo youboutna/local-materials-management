@@ -102,16 +102,16 @@ export interface ProjectReportDTO {
   phases?: EnhancedPhaseDTO[];
   
   // Milestones data
-  milestones?: ConstructionMilestoneDTO[];
+  milestones?: any[];
   
   // Analytics data
   analytics?: {
-    progressMetrics: ProgressMetricsDTO;
-    budgetMetrics: BudgetMetricsDTO;
-    scheduleMetrics: ScheduleMetricsDTO;
-    qualityMetrics: QualityMetricsDTO;
-    trends?: TrendDataDTO[];
-    comparisons?: ComparisonDataDTO;
+    progressMetrics: any;
+    budgetMetrics: any;
+    scheduleMetrics: any;
+    qualityMetrics: any;
+    trends?: any[];
+    comparisons?: any;
   };
   
   // Financial data
