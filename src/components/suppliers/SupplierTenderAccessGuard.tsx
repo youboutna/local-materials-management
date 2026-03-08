@@ -37,7 +37,7 @@ export const SupplierTenderAccessGuard: React.FC<SupplierTenderAccessGuardProps>
     setIsValidating(true);
 
     try {
-      const validation = await TenderSharingService.validateSecret(secretCode.trim());
+      const validation = await TenderSharingService.validateSecret(secretCode.trim(), '');
       
       if (!validation.is_valid) {
         toast({
