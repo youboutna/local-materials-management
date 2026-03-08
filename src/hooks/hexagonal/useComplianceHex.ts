@@ -11,9 +11,15 @@ import {
   ComplianceDocumentDTO, 
   ComplianceNoteDTO, 
   ComplianceAuditEntryDTO,
-  CreateComplianceItemDTO,
-  UpdateComplianceItemDTO 
+  CreateComplianceRequestDTO as CreateComplianceItemDTO,
+  UpdateComplianceRequestDTO as UpdateComplianceItemDTO 
 } from '@/dtos/entities/ComplianceDTO';
+
+interface ComplianceAlert {
+  type: string;
+  message: string;
+  count: number;
+}
 
 export function useComplianceHex(projectId?: string) {
   const [complianceItems, setComplianceItems] = useState<ComplianceItemDTO[]>([]);
