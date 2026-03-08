@@ -2,36 +2,20 @@
 /**
  * Supabase Adapter for Supplier Repository
  * Implements ISupplierRepository using Supabase
- * Rule #9: DB → Entity → Repository → Service
+ * Rule #9: DB → Transformer → Entity → Repository → Service
+ * Adapter NEVER calls `new Entity()` — always uses Transformer
  */
 import { supabase } from '@/integrations/supabase/client';
 import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
 import { Supplier, SupplierStatus, SupplierCategory } from '@/domain/entities/Supplier';
+import { SupplierTransformer } from '@/dtos/transforms/SupplierTransformer';
 import { Database } from '@/integrations/supabase/types';
 
 type SupplierRow = Database['public']['Tables']['suppliers']['Row'];
 
 export class SupabaseSupplierAdapter implements ISupplierRepository {
   private mapToEntity(data: SupplierRow): Supplier {
-    const status: SupplierStatus = data.is_active ? 'active' : 'inactive';
-
-    return new Supplier(
-      data.id,
-      data.name,
-      data.email || null,
-      data.phone || null,
-      data.address || null,
-      data.nif || null,
-      (data.category as SupplierCategory) || null,
-      status,
-      data.rating ? { quality: 0, delivery: 0, price: 0, communication: 0, overall: data.rating } : null,
-      [],
-      false,
-      null,
-      data.user_id || null,
-      data.created_at || new Date().toISOString(),
-      data.updated_at || new Date().toISOString()
-    );
+    return SupplierTransformer.fromDatabaseRow(data as Record<string, unknown>);
   }
 
   async findById(id: string): Promise<Supplier | null> {
@@ -47,17 +31,8 @@ export class SupabaseSupplierAdapter implements ISupplierRepository {
   }
 
   async save(supplier: Supplier): Promise<void> {
-    const { error } = await supabase.from('suppliers').insert([{
-      id: supplier.id,
-      name: supplier.name,
-      email: supplier.email,
-      phone: supplier.phone,
-      address: supplier.address,
-      nif: supplier.nif,
-      category: supplier.category,
-      is_active: supplier.status === 'active',
-      user_id: supplier.workspaceId,
-    }]);
+    const dbData = SupplierTransformer.toSupabase(supplier);
+    const { error } = await supabase.from('suppliers').insert([dbData as Database['public']['Tables']['suppliers']['Insert']]);
     if (error) throw new Error(`Failed to save supplier: ${error.message}`);
   }
 
