@@ -156,7 +156,7 @@ export class SupabaseInspectionPermissionAdapter implements IInspectionPermissio
   async getUserRole(userId: string): Promise<string> {
     try {
       // Get user role from user_roles table
-      const { data, error } = await supabase
+      const { data, error } = await publicClient
         .from('user_roles')
         .select('role_name')
         .eq('user_id', userId)
