@@ -55,22 +55,22 @@ export const MilestonePositionEditor: React.FC<MilestonePositionEditorProps> = (
 }) => {
   const [editingMilestone, setEditingMilestone] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<{
-    target_date: string;
+    targetDate: string;
     weight: number;
-    phase_id: string;
+    phaseId: string;
     priority: MilestonePriority;
   } | null>(null);
 
   const sortedMilestones = [...milestones].sort((a, b) => 
-    new Date(a.target_date).getTime() - new Date(b.target_date).getTime()
+    new Date(a.targetDate).getTime() - new Date(b.targetDate).getTime()
   );
 
   const handleEditStart = (milestone: MilestoneDTO | GeneratedMilestoneDTO) => {
-    setEditingMilestone('id' in milestone ? milestone.id : milestone.templateId);
+    setEditingMilestone('id' in milestone ? milestone.id : milestone.templateId || null);
     setEditForm({
-      target_date: milestone.target_date,
+      targetDate: milestone.targetDate,
       weight: milestone.weight,
-      phase_id: 'phase_id' in milestone ? milestone.phase_id || '' : '',
+      phaseId: 'phaseId' in milestone ? milestone.phaseId || '' : '',
       priority: milestone.priority
     });
   };
