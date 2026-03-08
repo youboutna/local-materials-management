@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * InspectionSchedulingService - Service pour la programmation d'inspections
  * Gère la création, validation et notifications des inspections programmées

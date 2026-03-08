@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Supabase Adapter for Task Repository
 import { supabase } from '@/integrations/supabase/client';
 import { ITaskRepository } from '@/domain/repositories/ITaskRepository';

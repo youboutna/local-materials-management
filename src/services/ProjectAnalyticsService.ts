@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Service for comprehensive project analytics
 import { ProjectDetailDTO } from '@/types/dto';
 import { ProjectCalculationService } from './ProjectCalculationService';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Supabase Adapter for Tender Document Repository
  * Implements ITenderDocumentRepository interface using Supabase

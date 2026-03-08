@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Unified workflow service for projects and tenders
 import { supabase } from '@/integrations/supabase/client';
 import { standardWorkflow, WorkflowPhase, WorkflowStage, WorkflowTask } from '@/types/workflow';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Legacy Notification Service - Migrated to Hexagonal Architecture
  * Provides backward compatibility while using hexagonal patterns

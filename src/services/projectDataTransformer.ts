@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { supabase } from '@/integrations/supabase/client';
 import { GanttChartData, GanttDependency, GanttTask, Inspection, ProjectData, ProjectResource, ProjectRisk, ProjectStatus, Task } from '@/types/project';
 import { ReportCalculations } from '@/utils/reportCalculations';

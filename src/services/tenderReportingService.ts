@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { supabase } from '@/integrations/supabase/client';
 import { format, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';

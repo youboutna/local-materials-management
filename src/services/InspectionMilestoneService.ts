@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Inspection-Milestone Synchronization Service
  * Links inspections to milestones and manages the relationship

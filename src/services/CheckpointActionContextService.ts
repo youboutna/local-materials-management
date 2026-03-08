@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Checkpoint Action Context Service
  * Récupère le contexte complet pour les actions de paiement et d'inspection

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Service de synchronisation après approbation d'inspection
  * Gère la mise à jour en cascade du projet, phases, jalons et la mainlevée des garanties

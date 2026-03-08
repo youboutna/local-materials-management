@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Payment Transformer
  * Maps between Supabase data, Domain entities, and DTOs

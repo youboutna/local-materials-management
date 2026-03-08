@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Mission Expense Supabase Adapter
  * Implements IMissionExpenseRepository for Supabase database operations

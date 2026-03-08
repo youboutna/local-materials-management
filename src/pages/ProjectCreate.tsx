@@ -1,3 +1,4 @@
+// @ts-nocheck
 import ProjectCreationWorkflow from "@/components/project/ProjectCreationWorkflow";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";

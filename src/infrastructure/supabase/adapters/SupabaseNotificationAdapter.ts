@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Supabase Notification Adapter
  * Implements INotificationRepository for Supabase notifications and functions

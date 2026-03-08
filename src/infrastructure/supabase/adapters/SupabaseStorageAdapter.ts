@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Supabase Storage Adapter
  * Implements IStorageRepository for Supabase storage

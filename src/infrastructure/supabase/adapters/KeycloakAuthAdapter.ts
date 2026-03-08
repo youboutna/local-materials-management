@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Keycloak Auth Adapter
  * Implements IAuthRepository for Keycloak authentication

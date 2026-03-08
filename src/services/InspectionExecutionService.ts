@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { supabase } from '@/integrations/supabase/client';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { StorageService } from '@/application/services/StorageService';

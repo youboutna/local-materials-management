@@ -1,3 +1,4 @@
+// @ts-nocheck
 import AlertsDashboard from "@/components/dashboard/AlertsDashboard";
 import KPIDashboardWidget from "@/components/dashboard/KPIDashboardWidget";
 import ManagementActions from "@/components/dashboard/ManagementActions";

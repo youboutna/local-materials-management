@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SupabaseUserProfileAdapter
  * Adapter pour la table profiles

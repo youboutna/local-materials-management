@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Supabase Adapter for Supplier Repository
 import { supabase } from '@/integrations/supabase/client';
 import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';

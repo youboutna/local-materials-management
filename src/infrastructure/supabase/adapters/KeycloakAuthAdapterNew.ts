@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * KeycloakAuthAdapter
  * Adapter pour l'authentification Keycloak

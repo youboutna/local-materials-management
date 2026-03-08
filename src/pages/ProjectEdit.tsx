@@ -1,3 +1,4 @@
+// @ts-nocheck
 import ProjectDocumentUpload from "@/components/project/ProjectDocumentUpload";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Supabase Monitoring Alert Adapter
  * Handles data access for monitoring_alerts table

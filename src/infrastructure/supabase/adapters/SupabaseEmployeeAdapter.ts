@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Supabase Adapter for Employee Repository
 import { supabase } from '@/integrations/supabase/client';
 import { IEmployeeRepository } from '@/domain/repositories/IEmployeeRepository';

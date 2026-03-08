@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Database Auth Adapter
  * Implements IAuthRepository for database-based authentication

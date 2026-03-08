@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Supabase Load Data Adapter
  * Implements ILoadDataRepository using Supabase

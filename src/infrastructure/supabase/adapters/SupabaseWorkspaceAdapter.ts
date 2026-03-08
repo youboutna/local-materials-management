@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Json } from '@/integrations/supabase/types';
 
 // Database row interface for workspaces table

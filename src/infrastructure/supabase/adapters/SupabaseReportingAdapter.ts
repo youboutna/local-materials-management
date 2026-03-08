@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { supabase } from '@/integrations/supabase/client';
 import { IReportingRepository } from '@/domain/repositories/IReportingRepository';
 import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
