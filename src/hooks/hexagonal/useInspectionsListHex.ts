@@ -21,7 +21,8 @@ export function useInspectionsListHex(projectId: string) {
   return useQuery({
     queryKey: ['inspections-list', projectId],
     queryFn: async () => {
-      const inspections = await InspectionService.getInspectionsByProject(projectId);
+      const service = new InspectionService();
+      const inspections = await service.getInspectionsByProject(projectId);
       
       return inspections.map((item) => ({
         id: item.id,

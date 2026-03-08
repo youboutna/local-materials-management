@@ -53,13 +53,14 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
     setSyncResult(null);
     
     try {
-      const result = await uploadDocumentsMutation.mutateAsync({
+      // Upload documents
+      uploadDocuments({
         inspectionId: inspection.id,
         documents
       });
       
       // Update inspection status
-      await updateInspectionMutation.mutateAsync({
+      updateInspection({
         inspectionId: inspection.id,
         status: newStatus,
         progress: parseInt(newProgress),

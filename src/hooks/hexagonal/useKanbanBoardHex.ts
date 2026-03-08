@@ -37,7 +37,7 @@ export function useKanbanTasks(projectId: string, phaseId?: string) {
       const milestoneRepository = RepositoryFactory.getMilestoneRepository();
       
       // Get milestones with business logic (méthode correcte du repository)
-      let allMilestones = await milestoneRepository.findAll({ project_id: projectId });
+      let allMilestones = await milestoneRepository.findByProjectId(projectId);
       
       // Filter by phase if needed
       if (phaseId) {
