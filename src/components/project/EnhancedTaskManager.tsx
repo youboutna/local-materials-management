@@ -199,6 +199,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   const { data: employees = [] } = useQuery({
     queryKey: ['employees-active'],
     queryFn: async (): Promise<Employee[]> => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('employees')
         .select('id, full_name, position')
