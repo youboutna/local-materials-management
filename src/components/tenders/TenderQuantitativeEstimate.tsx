@@ -57,7 +57,7 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
     material_id: ''
   });
 
-  const [estimateData, setEstimateData] = useState<Omit<TenderEstimate, 'id'>>({
+  const [estimateData, setEstimateData] = useState<Record<string, any>>({
     tenderId: tenderId,
     projectId: projectId,
     estimateType: 'quantitative',
