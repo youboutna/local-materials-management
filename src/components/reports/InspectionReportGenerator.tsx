@@ -15,10 +15,10 @@ import { fr } from 'date-fns/locale';
 import { useNotifications } from '@/hooks/useNotifications';
 import { NotificationService } from '@/application/services/NotificationService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { getInspectionReportingService, InspectionReportingService, InspectionReportData, InspectionReportConfig as InspectionReportConfigDTO, ReportGenerationResultDTO } from '@/application/services/InspectionReportingService';
+import { InspectionReportingService, InspectionReportData, InspectionMetrics } from '@/application/services/InspectionReportingService';
 import { ReportFormatting } from '@/utils/reportFormatting';
 import { InspectionPDFDocument } from './pdf/InspectionPDFDocument';
-import { InspectionDTO, InspectionReportConfig as InspectionReportConfigDTO, ReportGenerationResultDTO } from '@/dtos/reports/reportDTOs';
+import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 
 interface InspectionReportGeneratorProps {
   inspection: InspectionDTO;
