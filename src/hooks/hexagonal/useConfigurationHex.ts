@@ -73,8 +73,8 @@ export function useConfiguration(): UseConfigurationReturn {
   }, [configService]);
 
   // Generate environment variables
-  const generateEnvironmentVariables = useCallback((_config: DeploymentConfig) => {
-    return {} as Record<string, string>;
+  const generateEnvironmentVariables = useCallback((_config: DeploymentConfig): string => {
+    return '';
   }, []);
 
   // Generate Docker Compose
