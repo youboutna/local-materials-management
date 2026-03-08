@@ -118,38 +118,7 @@ export class InspectionTransformer {
       progressAtInspection: dto.progressAtInspection || 0,
       comments: dto.description || dto.comments || '',
       completedAt: dto.actualDate || dto.date,
-      completedBy: dto.inspector || 'system',
-      // Documents: For DTOs with document IDs, we create minimal Document objects
-      // In a full implementation, documents would be loaded separately via repository
-      documents: dto.documents?.map(id => {
-        // Create minimal Document object using factory method
-        return DocumentTransformer.toEntity({
-          id,
-          title: `Document ${id}`,
-          documentType: 'other',
-          status: 'draft',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          assignedTo: null,
-          deadlineDate: null,
-          description: null,
-          fileName: null,
-          fileSize: null,
-          fileUrl: null,
-          inspectionId: dto.id, // Link to this inspection
-          isInternalOnly: null,
-          isSharedWithSuppliers: null,
-          metadata: null,
-          mimeType: null,
-          paymentId: null,
-          phaseId: dto.phaseId || null,
-          projectId: dto.projectId || null,
-          sharedDate: null,
-          supplierId: null,
-          tags: null,
-          uploadedBy: null
-        });
-      }) || []
+      completedBy: dto.inspector || 'system'
     });
   }
 
