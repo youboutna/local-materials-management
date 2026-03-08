@@ -1,8 +1,12 @@
-import { EVMMetrics, PERTAnalysis, ProjectDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
+import { ProjectDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { ProjectReportDTO } from '@/dtos/entities/ProjectReportDTO';
 import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+
+// Local types for PDF rendering
+type EVMMetrics = Record<string, any>;
+type PERTAnalysis = Record<string, any>;
 
 // Local type for PDF rendering - compatible with both ProjectDTO and ProjectData
 type ProjectData = ProjectDTO & {

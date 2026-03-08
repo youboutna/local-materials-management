@@ -110,7 +110,7 @@ const ProjectExporter = () => {
             priorityLevel: detail?.priorityLevel || project.priorityLevel || '',
             riskLevel: detail?.riskLevel || project.riskLevel || '',
             environmentalImpact: detail?.environmentalImpact || project.environmentalImpact || '',
-            sustainabilityScore: detail?.sustainabilityScore || project.sustainabilityScore || 0,
+            sustainabilityScore: (detail as any)?.sustainabilityScore || (project as any)?.sustainabilityScore || 0,
             
             // Project details
             financingSource: detail?.financingSource || project.financingSource || '',
@@ -148,7 +148,7 @@ const ProjectExporter = () => {
             expenses: detail?.expenses || [],
             alerts: detail?.alerts || [],
             insurancePolicies: detail?.insurancePolicies || [],
-            contacts: detail?.contacts || [],
+            contacts: (detail as any)?.contacts || [],
             milestones: detail?.milestones || detail?.constructionMilestones || [],
             documents: detail?.documents || [],
             stakeholders: detail?.stakeholders || []

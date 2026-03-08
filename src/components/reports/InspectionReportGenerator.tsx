@@ -15,10 +15,10 @@ import { fr } from 'date-fns/locale';
 import { useNotifications } from '@/hooks/useNotifications';
 import { NotificationService } from '@/application/services/NotificationService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { getInspectionReportingService, InspectionReportingService, InspectionReportData, InspectionReportConfig as InspectionReportConfigDTO, ReportGenerationResultDTO } from '@/application/services/InspectionReportingService';
+import { InspectionReportingService, InspectionReportData, InspectionMetrics } from '@/application/services/InspectionReportingService';
 import { ReportFormatting } from '@/utils/reportFormatting';
 import { InspectionPDFDocument } from './pdf/InspectionPDFDocument';
-import { InspectionDTO, InspectionReportConfig as InspectionReportConfigDTO, ReportGenerationResultDTO } from '@/dtos/reports/reportDTOs';
+import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 
 interface InspectionReportGeneratorProps {
   inspection: InspectionDTO;
@@ -51,6 +51,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
   const [loading, setLoading] = useState(false);
   const [reportData, setReportData] = useState<InspectionReportData | null>(null);
   const [metrics, setMetrics] = useState<InspectionMetrics | null>(null);
+  const inspectionService = new InspectionReportingService();
   const [reportConfig, setReportConfig] = useState<LocalInspectionReportConfig>({
     title: `Rapport d'inspection - ${inspection.title || inspection.id}`,
     recipientEmail: '',
@@ -67,8 +68,8 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
       try {
         setLoading(true);
         const [data, projectMetrics] = await Promise.all([
-          InspectionReportingService.fetchInspectionReportData(inspection.id),
-          InspectionReportingService.calculateInspectionMetrics(project?.id)
+          inspectionService.fetchInspectionReportData(inspection.id),
+          inspectionService.calculateInspectionMetrics(project?.id)
         ]);
         setReportData(data);
         setMetrics(projectMetrics);
@@ -104,8 +105,8 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
     
     if (!reportData) return '';
     
-    const qualityScore = InspectionReportingService.calculateQualityScore([reportData.inspection]);
-    const timeline = reportData.inspection ? InspectionReportingService.generateInspectionTimeline([reportData.inspection]) : [];
+    const qualityScore = inspectionService.calculateQualityScore([reportData.inspection]);
+    const timeline = reportData.inspection ? inspectionService.generateInspectionTimeline([reportData.inspection]) : [];
     
     return `
       <div id="inspection-report-content" style="font-family: 'Arial', sans-serif; max-width: 170mm; margin: 0 auto; padding: 0; background: white; color: #333; line-height: 1.4;">
@@ -198,14 +199,14 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
           ${ReportFormatting.generateSectionHeader('Résultats de l\'Inspection', undefined, 'linear-gradient(135deg, #059669 0%, #10b981 100%)')}
           <div style="background: #ecfdf5; padding: 20px; border-radius: 8px;">
             <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-              ${reportData.inspection.status === 'passed' || reportData.inspection.status === 'approved' ? 
+              ${String(reportData.inspection.status) === 'passed' || String(reportData.inspection.status) === 'approved' ? 
                 '<div style="width: 40px; height: 40px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;">✓</div>' :
                 '<div style="width: 40px; height: 40px; background: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;">!</div>'
               }
               <div>
                 <h3 style="margin: 0; color: #374151; font-size: 18px;">
-                  ${reportData.inspection.status === 'passed' || reportData.inspection.status === 'approved' ? 'Inspection Réussie' : 
-                    reportData.inspection.status === 'failed' || reportData.inspection.status === 'requires_changes' ? 'Inspection Échouée - Actions Requises' :
+                  ${String(reportData.inspection.status) === 'passed' || String(reportData.inspection.status) === 'approved' ? 'Inspection Réussie' : 
+                    String(reportData.inspection.status) === 'failed' || String(reportData.inspection.status) === 'requires_changes' ? 'Inspection Échouée - Actions Requises' :
                     'Inspection en Cours'}
                 </h3>
                 <p style="margin: 5px 0 0 0; color: #6b7280;">Progression: ${(reportData.inspection as any).progressAtInspection || (reportData.inspection as any).progress_at_inspection || 0}%</p>
@@ -238,10 +239,10 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
         ${ReportFormatting.generatePaginatedTable(
           reportData.photos,
           [
-            { label: 'Document', render: (item) => item.title || item.file_name, width: '40%' },
-            { label: 'Type', render: (item) => item.document_type || 'Photo', width: '20%' },
-            { label: 'Date', render: (item) => item.created_at ? format(new Date(item.created_at), 'dd/MM/yyyy') : 'N/A', width: '20%' },
-            { label: 'Taille', render: (item) => item.file_size ? `${(item.file_size / 1024).toFixed(1)} KB` : 'N/A', width: '20%' }
+            { label: 'Document', render: (item: any) => item.name || item.title || item.file_name || '', width: '40%' },
+            { label: 'Type', render: (item: any) => item.type || item.document_type || 'Photo', width: '20%' },
+            { label: 'Date', render: (item: any) => (item.uploadedAt || item.created_at) ? format(new Date(item.uploadedAt || item.created_at), 'dd/MM/yyyy') : 'N/A', width: '20%' },
+            { label: 'Taille', render: (item: any) => (item.size || item.file_size) ? `${((item.size || item.file_size) / 1024).toFixed(1)} KB` : 'N/A', width: '20%' }
           ],
           { pageSize: 10, includeHeaders: true },
           'Photos et Documents'

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { TenderSharingService } from '@/application/services/TenderSharingService';
-import { CreateSharingSecretDTO } from '@/dtos/entities/TenderDTO';
+import { CreateSharingSecretDTO } from '@/dtos/entities/tender-sharing-dto';
 import { Copy, Check, Shield, Clock, Users, Lock, Eye, Download } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -41,7 +41,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
   // Fetch existing secrets
   const { data: secrets, isLoading } = useQuery({
     queryKey: ['tender-sharing-secrets', tenderId],
-    queryFn: () => TenderSharingService.getSecretsForTender(tenderId),
+    queryFn: () => TenderSharingService.getTenderSharingSecrets(tenderId),
     enabled: isOpen
   });
 
@@ -49,13 +49,14 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
   const createSecretMutation = useMutation({
     mutationFn: async () => {
       const dto: CreateSharingSecretDTO = {
-        tender_id: tenderId,
-        supplier_email: supplierEmail || undefined,
-        expires_at: TenderSharingService.getDefaultExpirationDate(expirationDays),
-        max_access_count: maxAccess,
-        workflow_phase: workflowPhase,
-        workflow_stage: workflowStage,
-        allowed_document_ids: documentIds.length > 0 ? documentIds : undefined
+        tenderId: tenderId,
+        supplierEmail: supplierEmail || undefined,
+        expiresAt: new Date(Date.now() + expirationDays * 24 * 60 * 60 * 1000).toISOString(),
+        maxAccessCount: maxAccess,
+        workflowPhase: workflowPhase,
+        workflowStage: workflowStage,
+        allowedDocumentIds: documentIds.length > 0 ? documentIds : undefined,
+        sharedBy: null
       };
       
       return await TenderSharingService.createSharingSecret(dto);
@@ -64,7 +65,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
       queryClient.invalidateQueries({ queryKey: ['tender-sharing-secrets', tenderId] });
       toast({
         title: 'Code de partage créé',
-        description: `Code: ${data.secret_code}`,
+        description: `Code: ${data.secretCode}`,
       });
       setSupplierEmail('');
     },
@@ -88,7 +89,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
   };
 
   const deactivateSecret = useMutation({
-    mutationFn: (secretId: string) => TenderSharingService.deactivateSecret(secretId),
+    mutationFn: (secretId: string) => TenderSharingService.revokeSecret(secretId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tender-sharing-secrets', tenderId] });
       toast({

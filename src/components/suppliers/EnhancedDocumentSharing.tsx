@@ -84,8 +84,8 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
       doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (doc.description && doc.description.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesType = !selectedDocumentType || doc.document_type === selectedDocumentType;
-    const matchesProject = !selectedProject || doc.project_id === selectedProject;
+    const matchesType = !selectedDocumentType || (doc as any).document_type === selectedDocumentType || doc.documentType === selectedDocumentType;
+    const matchesProject = !selectedProject || (doc as any).project_id === selectedProject || doc.projectId === selectedProject;
     
     return matchesSearch && matchesType && matchesProject;
   }) || [];
@@ -149,15 +149,17 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
         // Create document record using hexagonal hook
         await createDocument({
           title: uploadFormData.title,
-          document_type: 'contract',
+          documentType: 'contract' as any,
           description: uploadFormData.description,
-          project_id: uploadFormData.project_id || null,
-          file_url: uploadResult.url,
-          file_name: selectedFile.name,
-          file_size: selectedFile.size,
-          mime_type: selectedFile.type,
-          uploaded_by: user.id,
-          status: 'draft'
+          projectId: uploadFormData.project_id || null,
+          fileUrl: uploadResult.url,
+          fileName: selectedFile.name,
+          fileSize: selectedFile.size,
+          mimeType: selectedFile.type,
+          uploadedBy: user.id,
+          status: 'draft',
+          category: 'general',
+          subcategory: 'other'
         });
 
         console.info('ENHANCED_DOCUMENT_SHARING_006: Document created successfully', {
@@ -405,10 +407,10 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
                               <div className="font-medium">{doc.title}</div>
                               <div className="flex items-center gap-2 text-sm text-gray-500">
                                 <Badge variant="outline">
-                                  {DOCUMENT_TYPES.find(t => t.value === doc.document_type)?.label || doc.document_type}
+                                  {DOCUMENT_TYPES.find(t => t.value === ((doc as any).document_type || doc.documentType))?.label || (doc as any).document_type || doc.documentType}
                                 </Badge>
                                 <span>•</span>
-                                <span>{doc.created_at ? new Date(doc.created_at).toLocaleDateString('fr-FR') : 'Date inconnue'}</span>
+                                <span>{(doc.createdAt || (doc as any).created_at) ? new Date(doc.createdAt || (doc as any).created_at).toLocaleDateString('fr-FR') : 'Date inconnue'}</span>
                               </div>
                               {doc.description && (
                                 <div className="text-sm text-gray-600 mt-1">{doc.description}</div>

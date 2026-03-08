@@ -57,7 +57,7 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
   const fetchInitiations = async () => {
     setLoading(true);
     try {
-      const data = await PaymentInitiationService.getSupplierInitiations(supplierId);
+      const data = await PaymentInitiationService.getPendingInitiations(supplierId);
       setInitiations(data);
     } catch (error) {
       console.error('Error fetching initiations:', error);
@@ -97,13 +97,13 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
 
     setSubmitting(true);
     try {
-      await PaymentInitiationService.supplierComplete({
+      await PaymentInitiationService.handleSupplierCompletion({
         notification_id: selectedInitiation.id,
         final_amount: numAmount,
         description,
         payment_reason: paymentReason,
         notes
-      }, supplierId);
+      } as any);
 
       toast({ title: 'Demande soumise', description: 'Votre demande de paiement a été créée avec succès' });
       setIsCompletionDialogOpen(false);

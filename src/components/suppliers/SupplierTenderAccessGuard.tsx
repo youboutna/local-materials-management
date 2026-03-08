@@ -37,9 +37,9 @@ export const SupplierTenderAccessGuard: React.FC<SupplierTenderAccessGuardProps>
     setIsValidating(true);
 
     try {
-      const validation = await TenderSharingService.validateSecret(secretCode.trim());
+      const validation = await TenderSharingService.validateSecret(secretCode.trim(), '');
       
-      if (!validation.is_valid) {
+      if (!validation.isValid) {
         toast({
           title: 'Code invalide',
           description: validation.message || 'Le code secret est invalide, expiré ou a atteint son nombre maximum d\'accès.',
@@ -50,8 +50,11 @@ export const SupplierTenderAccessGuard: React.FC<SupplierTenderAccessGuardProps>
 
       // Log the access
       await TenderSharingService.logAccess({
-        sharing_secret_id: secretCode,
-        action_type: 'view',
+        sharingSecretId: secretCode,
+        actionType: 'view',
+        accessedAt: new Date().toISOString(),
+        accessedBy: null,
+        sharedBy: null,
         metadata: {
           access_type: 'supplier_tender_portal',
           timestamp: new Date().toISOString()
@@ -59,7 +62,7 @@ export const SupplierTenderAccessGuard: React.FC<SupplierTenderAccessGuardProps>
       });
 
       setHasAccess(true);
-      setGrantedTenderId(validation.tender_id || null);
+      setGrantedTenderId(validation.tenderId || null);
       
       // Get supplier email from validated secret
       const email = validation.message || '';
@@ -70,8 +73,8 @@ export const SupplierTenderAccessGuard: React.FC<SupplierTenderAccessGuardProps>
         description: 'Vous avez accès aux détails de l\'appel d\'offres et pouvez soumettre votre candidature.',
       });
 
-      if (validation.tender_id) {
-        onAccessGranted(validation.tender_id, email);
+      if (validation.tenderId) {
+        onAccessGranted(validation.tenderId, email);
       }
     } catch (error: any) {
       console.error('Validation error:', error);

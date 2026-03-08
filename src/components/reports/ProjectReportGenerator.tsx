@@ -7,9 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ReportingService } from '@/application/services/ReportingService';
-import { EVMMetrics, PERTAnalysis, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
-import { CostCalculation, ProjectReportDTO, ReportData } from '@/dtos/entities/ProjectReportDTO';
+import { ReportingService, CompleteProjectReportResultDto } from '@/application/services/ReportingService';
+import { ProjectData, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import { pdf } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver';
@@ -18,7 +17,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { ProjectPDFDocument } from './pdf/ProjectPDFDocument';
 
 interface ProjectReportGeneratorProps {
-  project: ProjectData;
+  project: any; // ProjectData or ProjectDTO
   onClose?: () => void;
 }
 
@@ -53,11 +52,11 @@ interface ReportConfig {
 export function ProjectReportGenerator({ project, onClose }: ProjectReportGeneratorProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [reportData, setReportData] = useState<ReportData | null>(null);
-  const [costCalculation, setCostCalculation] = useState<CostCalculation | null>(null);
-  const [evmMetrics, setEvmMetrics] = useState<EVMMetrics | null>(null);
-  const [pertAnalysis, setPertAnalysis] = useState<PERTAnalysis | null>(null);
-  const [enrichedData, setEnrichedData] = useState<ProjectReportDTO | null>(null);
+  const [reportData, setReportData] = useState<any>(null);
+  const [costCalculation, setCostCalculation] = useState<any>(null);
+  const [evmMetrics, setEvmMetrics] = useState<any>(null);
+  const [pertAnalysis, setPertAnalysis] = useState<any>(null);
+  const [enrichedData, setEnrichedData] = useState<any>(null);
   
   const [reportConfig, setReportConfig] = useState<ReportConfig>({
     title: `Rapport de projet - ${project.title}`,
@@ -91,8 +90,8 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
   const reportingServiceInstance = useMemo(() => new ReportingService(), []);
 
   // Generate complete project report using ReportingService
-  const generateCompleteReport = async (project: ProjectData) => {
-    return await reportingServiceInstance.generateCompleteProjectReport({ project });
+  const generateCompleteReport = async (proj: any) => {
+    return await reportingServiceInstance.generateCompleteProjectReport({ project: proj });
   };
 
   // Load all report data on component mount

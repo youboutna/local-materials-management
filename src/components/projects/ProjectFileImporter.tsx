@@ -74,13 +74,13 @@ export default function ProjectFileImporter({
   };
 
   const validateFile = (file: File): string | null => {
-    if (file.size > IMPORT_OPTIONS.maxFileSize) {
+    if (IMPORT_OPTIONS.maxFileSize && file.size > IMPORT_OPTIONS.maxFileSize) {
       return `${t("projects.import.fileTooLarge")} ${formatFileSize(
-        IMPORT_OPTIONS.maxFileSize
+        IMPORT_OPTIONS.maxFileSize!
       )}`;
     }
 
-    if (!IMPORT_OPTIONS.allowedFormats.includes(file.type)) {
+    if (IMPORT_OPTIONS.allowedFormats && !IMPORT_OPTIONS.allowedFormats.includes(file.type)) {
       return t("projects.import.unsupportedFormat");
     }
 
@@ -777,7 +777,7 @@ export default function ProjectFileImporter({
             {t("projects.import.supportedFormats")}: Excel (.xlsx, .xls), JSON
             (.json), CSV (.csv).
             {t("projects.import.maxSize")}:{" "}
-            {formatFileSize(IMPORT_OPTIONS.maxFileSize)}
+            {formatFileSize(IMPORT_OPTIONS.maxFileSize || 10 * 1024 * 1024)}
           </AlertDescription>
         </Alert>
 

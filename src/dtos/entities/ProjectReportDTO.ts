@@ -347,19 +347,26 @@ export interface ImportOptions {
   updateExisting?: boolean;
   dryRun?: boolean;
   format?: 'json' | 'csv' | 'xlsx';
+  maxFileSize?: number;
+  allowedFormats?: string[];
+  allowedMimeTypes?: string[];
+  validationRules?: Array<{
+    field: string;
+    required: boolean;
+    type: string;
+  }>;
 }
 
 export interface ImportResult {
   success: boolean;
-  imported: number;
-  skipped: number;
-  failed: number;
-  errors: Array<{
-    row?: number;
-    field?: string;
-    message: string;
-  }>;
-  warnings: string[];
+  message?: string;
+  importedCount?: number;
+  imported?: number;
+  skipped?: number;
+  failed?: number;
+  errors?: string[];
+  warnings?: string[];
+  importedProjects?: any[];
 }
 
 // Financial metrics DTO for reporting
