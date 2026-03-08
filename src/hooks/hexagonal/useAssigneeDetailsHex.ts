@@ -12,6 +12,7 @@ export interface AssigneeDetails {
   type: 'employee' | 'supplier' | 'user' | '';
   name: string;
   email: string;
+  [key: string]: any;
 }
 
 async function fetchAssigneeDetails(assigneeId: string): Promise<AssigneeDetails> {

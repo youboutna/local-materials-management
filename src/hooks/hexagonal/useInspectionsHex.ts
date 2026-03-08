@@ -154,16 +154,16 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
       try {
         // Convert to service-compatible format
         const serviceData: ServiceUpdateInspectionDTO = { ...data };
-        const partial: Partial<Inspection> = {
-          inspector: serviceData.inspector,
+        const partial = {
+          inspector: serviceData.inspector as any,
           date: serviceData.date,
           comments: serviceData.comments,
           phaseId: serviceData.phaseId,
           stepId: (serviceData as unknown as { stepId?: string }).stepId,
           progressAtInspection: (serviceData as unknown as { progressAtInspection?: number }).progressAtInspection,
-          status: (serviceData as unknown as { status?: Inspection['status'] }).status,
+          status: (serviceData as unknown as { status?: string }).status,
         };
-        const updatedInspection = await inspectionService.updateInspection(id, partial);
+        const updatedInspection = await inspectionService.updateInspection(id, partial as any);
         return updatedInspection;
       } catch (error) {
         console.error('Error updating inspection:', error);

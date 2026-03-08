@@ -40,9 +40,9 @@ export const useInspectionCrudHex = (projectId?: string) => {
     queryFn: async () => {
       const repo = RepositoryFactory.getInspectionRepository();
       if (projectId) {
-        return await repo.findByProject(projectId) as Inspection[];
+        return await repo.findByProjectId(projectId) as unknown as Inspection[];
       }
-      return await repo.findAll() as Inspection[];
+      return await repo.findAll() as unknown as Inspection[];
     }
   });
 

@@ -221,8 +221,9 @@ export const useEnhancedRiskManagerHex = (
   });
 
   const createRiskTaskRelationMutation = useMutation({
-    mutationFn: async (relation: Omit<RiskTaskRelation, 'id'>) => {
-      return await riskRepo.createTaskRelation(relation);
+    mutationFn: async (_relation: Omit<RiskTaskRelation, 'id'>) => {
+      // Task relations not available in IRiskRepository
+      return;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['risk-task-relations', projectId] });

@@ -65,8 +65,7 @@ export function useInspectionPaymentValidationHex(inspectionId: string) {
       const updatedInspection = await inspectionService.updateInspection(inspectionId, {
         status,
         comments: notes || '',
-        updatedAt: new Date().toISOString()
-      });
+      } as any);
       return updatedInspection;
     },
     onSuccess: () => {

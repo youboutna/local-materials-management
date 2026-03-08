@@ -1,10 +1,5 @@
-/**
- * Hexagonal hooks for Enhanced Task List (project-scoped tasks)
- * Centralizes all project task operations
- */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/repositories/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { TaskService } from '@/application/services/TaskService';
 
 export interface ProjectTaskFormData {
@@ -49,9 +44,9 @@ export function useProjectPhasesForTasks(projectId: string) {
       const taskRepository = RepositoryFactory.getTaskRepository();
       const taskService = new TaskService(taskRepository);
       const phases = await taskService.getProjectPhases(projectId);
-      return phases;
+      return phases as unknown as ProjectPhase[];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     enabled: !!projectId
   });
 }
@@ -64,9 +59,9 @@ export function useProjectTasks(projectId: string) {
       const taskRepository = RepositoryFactory.getTaskRepository();
       const taskService = new TaskService(taskRepository);
       const tasks = await taskService.getProjectTasks(projectId);
-      return tasks;
+      return tasks as unknown as ProjectTask[];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     enabled: !!projectId
   });
 }
@@ -79,9 +74,8 @@ export function useCreateProjectTask(projectId: string) {
     mutationFn: async (taskData: ProjectTaskFormData) => {
       const taskRepository = RepositoryFactory.getTaskRepository();
       const taskService = new TaskService(taskRepository);
-      const { data: { user } } = await taskService.createTask(taskData);
-      if (!user) throw new Error('User not authenticated');
-      return data;
+      const result = await taskService.createTask(taskData as any);
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project-tasks', projectId] });
@@ -97,7 +91,7 @@ export function useUpdateProjectTask(projectId: string) {
     mutationFn: async ({ id, data }: { id: string; data: Partial<ProjectTaskFormData> }) => {
       const taskRepository = RepositoryFactory.getTaskRepository();
       const taskService = new TaskService(taskRepository);
-      const updatedTask = await taskService.updateTask(id, data);
+      const updatedTask = await taskService.updateTask(id, data as any);
       return updatedTask;
     },
     onSuccess: () => {

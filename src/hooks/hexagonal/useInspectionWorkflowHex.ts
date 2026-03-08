@@ -150,14 +150,13 @@ export function useInspectionWorkflowHex(): UseInspectionWorkflowHexResult {
         return { success: false };
       }
 
-      const updates: Partial<Inspection> = {
-        status: input.status as InspectionStatus,
+      const updates = {
+        status: input.status,
         progressAtInspection: input.progressAtInspection,
         comments: input.comments || undefined,
-        updatedAt: new Date().toISOString(),
       };
 
-      await inspectionService.updateInspection(input.inspectionId, updates);
+      await inspectionService.updateInspection(input.inspectionId, updates as any);
 
       const canTriggerPayment = input.status === 'approved' && (input.progressAtInspection ?? 0) >= 25;
 

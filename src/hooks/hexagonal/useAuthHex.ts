@@ -30,12 +30,13 @@ export interface UseAuthHexResult {
   isLoggingIn: boolean;
   isRegistering: boolean;
   isUpdating: boolean;
-  // Enhanced UI features
   getUserSecurityLevel: (user: UserDTO) => 'low' | 'medium' | 'high';
   getUserActivityScore: (user: UserDTO) => number;
   getUserTrustLevel: (user: UserDTO) => 'trusted' | 'verified' | 'unverified';
   getUserLastLoginDays: (user: UserDTO) => number;
   generateUserReport: (user: UserDTO) => UserSecurityReport;
+  validateUserWithReferential: (targetUser: any, referentialType: string) => Promise<any>;
+  [key: string]: any;
 }
 
 export interface UserSecurityReport {

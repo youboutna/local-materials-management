@@ -45,7 +45,7 @@ export function useUpdateProjectStatusHex() {
   return useMutation({
     mutationFn: async ({ projectId, status }: { projectId: string; status: string }) => {
       const service = new ProjectService(RepositoryFactory.getProjectRepository());
-      await service.updateProject(projectId, { status });
+      await service.updateProject(projectId, { status } as any);
     },
     onSuccess: (_, { projectId }) => {
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });
