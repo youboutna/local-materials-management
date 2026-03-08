@@ -1,6 +1,6 @@
 // @ts-nocheck
 // Supabase Adapter for Document Repository - Fixed for DB schema
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
 import { Document, DocumentType, DocumentStatus } from '@/domain/entities/Document';
 

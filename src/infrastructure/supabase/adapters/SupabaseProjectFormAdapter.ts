@@ -4,7 +4,7 @@
  * Implements the IProjectFormRepository using Supabase
  * Following hexagonal architecture principles
  */
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { IProjectFormRepository } from '@/domain/repositories/IProjectFormRepository';
 
 // Import workflow DTOs (following "similitude des voisins le plus proche")

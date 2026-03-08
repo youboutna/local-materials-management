@@ -1,6 +1,6 @@
 // @ts-nocheck
 // Supabase Adapter for Tender Repository
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { ITenderRepository } from '@/domain/repositories/ITenderRepository';
 import { Tender, TenderStatus, SelectionMode, MarketType } from '@/domain/entities/Tender';
 

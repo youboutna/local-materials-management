@@ -4,7 +4,7 @@
  * Implements IBankGuaranteeRepository using Supabase
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { IBankGuaranteeRepository } from '@/domain/repositories/IBankGuaranteeRepository';
 import { BankGuaranteeDTO, CreateBankGuaranteeDTO, UpdateBankGuaranteeDTO } from '@/dtos/bank-guarantees';
 import { BankGuaranteeQueryOptions } from '@/domain/repositories/IBankGuaranteeRepository';

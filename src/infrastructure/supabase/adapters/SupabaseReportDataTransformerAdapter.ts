@@ -4,7 +4,7 @@
  * Implements the IReportDataTransformerRepository using Supabase
  * Following hexagonal architecture: Adapter → Entity → Transformer → DTO
  */
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { IReportDataTransformerRepository } from '@/domain/repositories/IReportDataTransformerRepository';
 import { 
   ProjectReportDTO,
