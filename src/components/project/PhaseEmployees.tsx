@@ -16,13 +16,13 @@ interface PhaseEmployeesProps {
 }
 
 interface EmployeeFormData {
-  employee_name: string;
-  employee_role: string;
-  employee_contact: string;
-  daily_rate: string;
-  start_date: string;
-  end_date: string;
-  is_primary_supplier: boolean;
+  employeeName: string;
+  employeeRole: string;
+  employeeContact: string;
+  dailyRate: string;
+  startDate: string;
+  endDate: string;
+  isPrimarySupplier: boolean;
 }
 
 const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
