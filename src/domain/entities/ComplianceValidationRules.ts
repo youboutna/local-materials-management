@@ -61,7 +61,7 @@ export class ComplianceValidationEngine {
       description: 'Compliance item must have a responsible person assigned',
       type: 'regulatory' as ComplianceType,
       required: true,
-      validator: (item) => item.responsible && item.responsible.trim().length > 0,
+      validator: (item) => !!(item.responsible && item.responsible.trim().length > 0),
       errorMessage: 'Responsible person is required'
     },
     {
