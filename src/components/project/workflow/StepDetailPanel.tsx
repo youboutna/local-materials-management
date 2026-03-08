@@ -69,6 +69,7 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
   const { data: project } = useQuery({
     queryKey: ['project-for-scheduler', projectId],
     queryFn: async () => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('projects')
         .select('id, title, location, status, project_reference, budget, progress, main_contractor')
