@@ -49,13 +49,14 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
   const createSecretMutation = useMutation({
     mutationFn: async () => {
       const dto: CreateSharingSecretDTO = {
-        tender_id: tenderId,
-        supplier_email: supplierEmail || undefined,
-        expires_at: TenderSharingService.getDefaultExpirationDate(expirationDays),
-        max_access_count: maxAccess,
-        workflow_phase: workflowPhase,
-        workflow_stage: workflowStage,
-        allowed_document_ids: documentIds.length > 0 ? documentIds : undefined
+        tenderId: tenderId,
+        supplierEmail: supplierEmail || undefined,
+        expiresAt: new Date(Date.now() + expirationDays * 24 * 60 * 60 * 1000).toISOString(),
+        maxAccessCount: maxAccess,
+        workflowPhase: workflowPhase,
+        workflowStage: workflowStage,
+        allowedDocumentIds: documentIds.length > 0 ? documentIds : undefined,
+        sharedBy: null
       };
       
       return await TenderSharingService.createSharingSecret(dto);
