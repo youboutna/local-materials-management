@@ -109,7 +109,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, projectId }) => {
           <Card key={index}>
             <CardHeader>
               <CardTitle className="flex justify-between items-center">
-                <span>{task.name}</span>
+                <span>{task.title}</span>
                 <Badge className={getStatusColor(task.status)}>
                   {task.status === 'completed' ? 'Terminée' : 
                    task.status === 'in_progress' ? 'En cours' : 
