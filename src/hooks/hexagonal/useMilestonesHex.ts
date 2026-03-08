@@ -31,7 +31,7 @@ export function useMilestonesHex(projectId?: string, phaseId?: string) {
 
     try {
       const milestoneRepo = RepositoryFactory.getMilestoneRepository();
-      const data = await milestoneRepo.findByProject(projectId, phaseId);
+      const data = await milestoneRepo.findByProjectId(projectId);
 
       setMilestones((data || []).map((m: any) => ({
         id: m.id,
