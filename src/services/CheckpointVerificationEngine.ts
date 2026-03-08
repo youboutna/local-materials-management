@@ -257,14 +257,14 @@ export class CheckpointVerificationEngine {
       const isFailed = docStatus === 'rejected';
 
       items.push({
-        id: document.id,
+        id: document.id || '',
         category: 'document',
-        title: document.title,
+        title: document.title || '',
         description: document.description || undefined,
         status: isVerified ? 'verified' : isFailed ? 'failed' : 'in_progress',
         required: true,
         weight: 0.2 / requiredDocumentIds.length,
-        reference_id: document.id,
+        reference_id: document.id || '',
         reference_type: 'document',
         evidence_urls: document.file_url ? [document.file_url] : undefined,
       });
