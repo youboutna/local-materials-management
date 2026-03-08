@@ -662,19 +662,8 @@ export class ProjectTransformer {
       createdAt: projectData.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
 
-      // Workflow step tracking (UI-only, not stored in domain)
-      currentStage: workflowData.currentStep,
-      completedSteps: workflowData.completedSteps,
-      stepValidation: workflowData.stepValidation,
-      workflowState: workflowData.workflowState,
-
-      // Step-specific collections
-      stakeholdersData: workflowData.stakeholdersData,
-      locationData: workflowData.locationData,
-      phasesData: workflowData.phasesData,
-      risksData: workflowData.risksData,
-      complianceData: workflowData.complianceData,
-      validationData: workflowData.validationData,
+      // Workflow step tracking stored as currentStage (ConstructionStage)
+      currentStage: String(workflowData.currentStep) as any,
 
       // Convert related data to domain collections
       phases: relatedData?.phases ? PhaseTransformer.manyToDTO(relatedData.phases) : [],
