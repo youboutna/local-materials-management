@@ -13,5 +13,5 @@ export type {
   PVTemplate,
   PVSection,
   GeneratedPV,
-  InspectionExecutionState,
+  InspectionExecutionData,
 } from '@/types/inspection-execution';
