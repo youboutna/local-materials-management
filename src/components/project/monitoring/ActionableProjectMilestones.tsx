@@ -243,7 +243,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
         title: "Programmation de paiement",
         description: `Notification envoyée pour programmer le paiement du jalon "${milestone.title}".`,
       });
-      navigate(`/payment-control?schedule=true&milestone=${milestone.id}${milestone.phase_id ? `&phase=${milestone.phase_id}` : ''}`);
+      navigate(`/payment-control?schedule=true&milestone=${milestone.id}${(milestone as any).phaseId ? `&phase=${(milestone as any).phaseId}` : ''}`);
     }
     setActionDialog({ open: false, milestone: null, action: null });
   };
