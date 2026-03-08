@@ -169,12 +169,12 @@ export function useSuppliersSelector(searchTerm?: string, enabled?: boolean) {
       return result.suppliers.map(supplier => ({
         id: supplier.id,
         name: supplier.name,
-        contact_person: supplier.contacts[0]?.name || null,
-        phone: supplier.phone,
-        email: supplier.email,
-        category: supplier.category,
-        rating: supplier.rating?.overall || null,
-        is_active: supplier.isActive()
+        contact_person: null,
+        phone: null,
+        email: null,
+        category: supplier.category || null,
+        rating: supplier.rating || null,
+        is_active: supplier.isActive
       }));
     },
     enabled: enabled !== false,
