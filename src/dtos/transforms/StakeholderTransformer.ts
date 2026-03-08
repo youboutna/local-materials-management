@@ -22,7 +22,7 @@ export class StakeholderTransformer {
    * Batch: DTOs → Domain Entities
    */
   static manyFromDTO(dtos: StakeholderDTO[]): Stakeholder[] {
-    return dtos.map(dto => this.toEntity(dto));
+    return dtos.map(dto => this.fromCreateDTOToEntity(dto as any));
   }
 
   // Entity → DTO
