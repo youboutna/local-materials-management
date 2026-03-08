@@ -240,7 +240,7 @@ export class ProjectTransformer {
      // workspaceId: undefined, // Not in entity
       createdBy: project.createdBy || undefined,
       taskCount: project.tasks?.length || 0,
-      completedTasks: project.tasks?.filter(t => t.status === 'completed' || t.status === 'done' || t.status === 'validated').length || 0,
+      completedTasks: project.tasks?.filter(t => (t.status as string) === 'completed' || (t.status as string) === 'done' || (t.status as string) === 'validated').length || 0,
       overdueTasks: project.tasks?.filter(t => t.dueDate && new Date(t.dueDate) < new Date()).length || 0,
       riskCount: project.risks?.length || 0,
       highRiskCount: project.risks?.filter(r => r.probability * r.impact > 0.7).length || 0,
