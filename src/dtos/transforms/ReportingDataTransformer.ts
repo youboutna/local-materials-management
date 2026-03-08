@@ -8,7 +8,7 @@ import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { TaskDTO } from '@/dtos/entities/TaskDTO';
 import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 import { PaymentDTO } from '@/dtos/entities/PaymentDTO';
-import { RiskDTO } from '@/dtos/entities/RiskDTO';
+import { RiskDTO, RiskStatus } from '@/dtos/entities/RiskDTO';
 
 // Reporting-specific DTOs
 export interface ProjectReportDTO {
@@ -225,10 +225,10 @@ export class ReportingDataTransformer {
         phaseId: payment.phaseId,
         contractorId: payment.contractorId,
         contractorName: payment.contractorName,
-        status: this.mapPaymentStatus(payment.status),
-        dueDate: new Date(payment.dueDate || Date.now()),
-        paidDate: payment.paidDate ? new Date(payment.paidDate) : undefined,
-        description: payment.description || ''
+        status: this.mapPaymentStatus(payment.status || 'pending'),
+        dueDate: new Date(payment.paymentDate || Date.now()),
+        paidDate: payment.status === 'paid' ? new Date(payment.paymentDate) : undefined,
+        description: `Payment for ${payment.contractorName}`
       })),
       bankGuarantees: [], // Will be populated from bank guarantee repository
       insuranceCoverage: [] // Will be populated from insurance repository
@@ -246,10 +246,10 @@ export class ReportingDataTransformer {
       risks,
       mitigationStrategies: risks.map(risk => ({
         riskId: risk.id,
-        strategy: risk.mitigation || 'No mitigation strategy defined',
-        assignedTo: risk.assignedTo,
-        dueDate: risk.dueDate ? new Date(risk.dueDate) : undefined,
-        status: risk.status === 'resolved' ? 'completed' : 'planned'
+        strategy: risk.mitigationStrategy || 'No mitigation strategy defined',
+        assignedTo: risk.owner,
+        dueDate: risk.identifiedDate ? new Date(risk.identifiedDate) : undefined,
+        status: risk.status === RiskStatus.RESOLVED ? 'completed' as const : 'planned' as const
       }))
     };
   }
@@ -278,7 +278,7 @@ export class ReportingDataTransformer {
     if (risks.length === 0) return 'low';
     
     const highRiskCount = risks.filter(risk => 
-      risk.priority === 'high' || risk.priority === 'critical'
+      (risk.probability || 0) > 0.7 || (risk.impact || 0) > 0.7
     ).length;
     
     const totalRisk = risks.reduce((sum, risk) => {
@@ -323,7 +323,7 @@ export class ReportingDataTransformer {
         id: risk.id,
         title: risk.title,
         description: risk.description,
-        severity: String(risk.priority),
+        severity: (risk.probability || 0) > 0.7 ? 'high' : 'medium',
         status: risk.status
       }))
     };

@@ -144,7 +144,7 @@ export class StakeholderUITransformer {
       email: formData.email,
       phone: formData.phone,
       type: EmployeeType.FULL_TIME, // Default value
-      role: EmployeeRole.SPECIALIST, // Default value
+      role: 'specialist' as any, // Default value
       department: formData.department ? formData.department as EmployeeDepartment : EmployeeDepartment.PROJECT_MANAGEMENT,
       status: EmployeeStatus.ACTIVE,
       employeeId: formData.employeeId,

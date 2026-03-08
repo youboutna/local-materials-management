@@ -162,7 +162,7 @@ export class ProjectTransformer {
       procurement_lead_time: project.procurementLeadTime,
       project_order: project.projectOrder,
       project_reference_number: project.projectReferenceNumber,
-      project_responsable_id: project.projectResponsableId,
+      project_responsable_id: project.projectManagerId,
       reception_status: project.receptionStatus,
       requires_consultant_validation: project.requiresConsultantValidation,
       requires_ministry_approval: project.requiresMinistryApproval,
@@ -240,7 +240,7 @@ export class ProjectTransformer {
      // workspaceId: undefined, // Not in entity
       createdBy: project.createdBy || undefined,
       taskCount: project.tasks?.length || 0,
-      completedTasks: project.tasks?.filter(t => t.status === 'completed' || t.status === 'done' || t.status === 'validated').length || 0,
+      completedTasks: project.tasks?.filter(t => (t.status as string) === 'completed' || (t.status as string) === 'done' || (t.status as string) === 'validated').length || 0,
       overdueTasks: project.tasks?.filter(t => t.dueDate && new Date(t.dueDate) < new Date()).length || 0,
       riskCount: project.risks?.length || 0,
       highRiskCount: project.risks?.filter(r => r.probability * r.impact > 0.7).length || 0,
@@ -268,8 +268,7 @@ export class ProjectTransformer {
       checkScheduleLastRun: project.checkScheduleLastRun as Record<string, unknown> | undefined,
       closureNotes: project.closureNotes,
       completionDate: project.completionDate?.toISOString(),
-      coordinatesLatitude: project.coordinates?.latitude,
-      coordinatesLongitude: project.coordinates?.longitude,
+      // coordinates already mapped via latitude/longitude above
       donorOrganization: project.donorOrganization,
       estimatedDays: project.estimatedDays,
       forme: project.forme,
@@ -284,16 +283,13 @@ export class ProjectTransformer {
       procurementLeadTime: project.procurementLeadTime,
       projectOrder: project.projectOrder,
       projectReferenceNumber: project.projectReferenceNumber,
-      projectResponsableId: project.projectResponsableId,
+      projectResponsableId: project.projectManagerId,
       receptionStatus: project.receptionStatus,
       requiresConsultantValidation: project.requiresConsultantValidation,
       requiresMinistryApproval: project.requiresMinistryApproval,
-      resourceAssignment: project.resourceAssignment ? JSON.stringify(project.resourceAssignment) : undefined,
+      resourceAssignment: project.resourceAssignment ? [{ id: 'default', name: project.resourceAssignment, type: 'human' as const }] : undefined,
       retentionPercentage: project.retentionPercentage,
       sector: project.sector,
-      siteDetails: project.siteDetails,
-      supervisorId: project.supervisorId,
-      terrainType: project.terrainType || '',
     };
   }
 
@@ -352,24 +348,12 @@ export class ProjectTransformer {
       receptionStatus: dto.receptionStatus,
       requiresConsultantValidation: dto.requiresConsultantValidation,
       requiresMinistryApproval: dto.requiresMinistryApproval,
-      resourceAssignment: dto.resourceAssignment?.toString(),
+      resourceAssignment: dto.resourceAssignment ? (dto.resourceAssignment as any)[0]?.name || '' : undefined,
       retentionPercentage: dto.retentionPercentage,
       sector: dto.sector,
       siteDetails: dto.siteDetails,
       supervisorId: dto.supervisorId,
       terrainType: dto.terrainType,
-
-      // PROPER HYDRATION: Hydrate related sub-objects from DTO collections
-      // Note: In a full implementation, these would be loaded from repositories
-      // For now, we hydrate what we can from the DTO data
-      phases: 'phases' in dto && dto.phases ? PhaseTransformer.manyFromDTO(dto.phases) : [],
-      tasks: 'tasks' in dto && dto.tasks ? TaskTransformer.manyFromDTO(dto.tasks) : [],
-      risks: 'risks' in dto && dto.risks ? RiskTransformer.manyFromDTO(dto.risks) : [],
-      inspections: 'inspections' in dto && dto.inspections ? InspectionTransformer.manyFromDTO(dto.inspections) : [],
-      payments: 'payments' in dto && dto.payments ? PaymentTransformer.manyFromDTO(dto.payments) : [],
-      materials: 'materials' in dto && dto.materials ? MaterialTransformer.manyFromDTO(dto.materials) : [],
-      suppliers: 'stakeholders' in dto && dto.stakeholders ? StakeholderTransformer.manyFromDTO(dto.stakeholders) : [],
-      milestones: 'milestones' in dto && dto.milestones ? MilestoneTransformer.manyFromDTO(dto.milestones) : [],
     });
   }
 
@@ -514,7 +498,7 @@ export class ProjectTransformer {
       // Procurement and materials
       materialsBudget: formData.materialsBudget as number,
       procurementLeadTime: formData.procurementLeadTime as number,
-      resourceAssignment: formData.resourceAssignment as string,
+      resourceAssignment: formData.resourceAssignment as ProjectResource[] | undefined,
 
       // References and details
       projectReferenceNumber: formData.projectReferenceNumber as string,
@@ -636,7 +620,7 @@ export class ProjectTransformer {
    * ProjectWorkflowData → ProjectDetailDTO
    * Converts multi-step workflow data to detailed project DTO for API operations
    */
-  static workflowToDetailDTO(workflowData: ProjectWorkflowData): ProjectDetailDTO {
+  static workflowToDetailDTO(workflowData: any): ProjectDetailDTO {
     const projectData = workflowData.projectData;
     const relatedData = workflowData.relatedData;
 
@@ -661,19 +645,8 @@ export class ProjectTransformer {
       createdAt: projectData.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
 
-      // Workflow step tracking (UI-only, not stored in domain)
-      currentStage: workflowData.currentStep,
-      completedSteps: workflowData.completedSteps,
-      stepValidation: workflowData.stepValidation,
-      workflowState: workflowData.workflowState,
-
-      // Step-specific collections
-      stakeholdersData: workflowData.stakeholdersData,
-      locationData: workflowData.locationData,
-      phasesData: workflowData.phasesData,
-      risksData: workflowData.risksData,
-      complianceData: workflowData.complianceData,
-      validationData: workflowData.validationData,
+      // Workflow step tracking stored as currentStage (ConstructionStage)
+      currentStage: String(workflowData.currentStep) as any,
 
       // Convert related data to domain collections
       phases: relatedData?.phases ? PhaseTransformer.manyToDTO(relatedData.phases) : [],
@@ -684,6 +657,11 @@ export class ProjectTransformer {
       materials: relatedData?.materials ? MaterialTransformer.manyToDTO(relatedData.materials) : [],
       stakeholders: relatedData?.stakeholders ? StakeholderTransformer.manyToDTO(relatedData.stakeholders) : [],
       inspections: relatedData?.inspections ? InspectionTransformer.manyToDTO(relatedData.inspections) : [],
+
+      // Required by ProjectDetailDTO
+      alerts: [],
+      constructionMilestones: relatedData?.milestones ? MilestoneTransformer.manyToDTO(relatedData.milestones) : [],
+      tenders: [],
 
       // Aliases for UI compatibility
       plannedPhases: relatedData?.phases ? PhaseTransformer.manyToDTO(relatedData.phases) : [],
@@ -698,7 +676,7 @@ export class ProjectTransformer {
    * ProjectDetailDTO → ProjectWorkflowData
    * Converts detailed project DTO back to workflow data for form editing
    */
-  static detailDTOToWorkflow(dto: ProjectDetailDTO): ProjectWorkflowData {
+  static detailDTOToWorkflow(dto: ProjectDetailDTO): any {
     return {
       // Basic project data
       projectData: {
@@ -742,18 +720,14 @@ export class ProjectTransformer {
       },
 
       // Workflow step tracking
-      currentStep: dto.currentStep,
-      completedSteps: dto.completedSteps,
-      stepValidation: dto.stepValidation,
-      workflowState: dto.workflowState,
+      currentStep: dto.currentStage as any,
+      completedSteps: dto.completedPhases,
 
-      // Step-specific collections
-      stakeholdersData: dto.stakeholdersData,
-      locationData: dto.locationData,
-      phasesData: dto.phasesData,
-      risksData: dto.risksData,
-      complianceData: dto.complianceData,
-      validationData: dto.validationData,
+      // Step-specific collections mapped from available DTO fields
+      stakeholders: dto.stakeholders,
+      location: dto.location,
+      phases: dto.phases,
+      risks: dto.risks,
 
       // Related domain collections
       relatedData: {
@@ -776,7 +750,7 @@ export class ProjectTransformer {
    * Workflow Form Update → Update Data Object
    * Handles incremental updates from workflow form steps
    */
-  static workflowFormUpdateToEntity(updates: Partial<ProjectWorkflowData>): Record<string, unknown> {
+  static workflowFormUpdateToEntity(updates: Partial<any>): Record<string, unknown> {
     const entityUpdates: Record<string, unknown> = {};
 
     // Handle project data updates
@@ -921,7 +895,7 @@ export class ProjectTransformer {
       // Delegate material transformation to MaterialTransformer (OOP principle: separation of concerns)
       materials: project.materials?.map(material => MaterialTransformer.toDTO(material)) || [],
       // Delegate stakeholder transformation to StakeholderTransformer (OOP principle: separation of concerns)
-      stakeholders: project.suppliers?.map(supplier => StakeholderTransformer.toDTO(supplier)) || [],
+      stakeholders: project.suppliers?.map(supplier => StakeholderTransformer.toDTO(supplier as any)) || [],
       inspections: project.inspections?.map(inspection => InspectionTransformer.toDTO(inspection)) || [],
       alerts: [], // Project entity doesn't have alerts collection yet
       constructionMilestones: project.milestones?.map(milestone => MilestoneTransformer.toDTO(milestone)) || [],

@@ -28,7 +28,7 @@ import {
 } from '@/dtos/workflows/ProjectWorkflowDTOs';
 
 // Import entity DTOs (following "similitude des voisins le plus proche")
-import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+import { ProjectDTO, ProjectStatus, ConstructionStage } from '@/dtos/entities/ProjectDTO';
 import { PhaseDTO, PhaseStatus, PhaseType, PhasePriority } from '@/dtos/entities/PhaseDTO';
 import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
 import { RiskDTO, RiskCategory, RiskStatus } from '@/dtos/entities/RiskDTO';
@@ -184,7 +184,7 @@ export class ProjectWorkflowTransforms {
       updatedAt: new Date().toISOString()
     })) || [];
 
-    const processedPhases = entity.phases?.map(phase => ({
+    const processedPhases: PhaseDTO[] = entity.phases?.map(phase => ({
       id: phase.phase_id,
       name: phase.phase_name,
       description: `Phase ${phase.phase_name} for project ${entity.project_title}`,
@@ -195,7 +195,10 @@ export class ProjectWorkflowTransforms {
       status: this.calculatePhaseStatus(phase.phase_start_date, phase.phase_end_date, progressPercentage) as PhaseStatus,
       progress: this.calculatePhaseProgress(phase.phase_start_date, phase.phase_end_date),
       type: PhaseType.STRUCTURAL,
-      priority: PhasePriority.MEDIUM
+      priority: PhasePriority.MEDIUM,
+      projectId: entity.project_id || '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     })) || [];
 
     return {
@@ -338,7 +341,7 @@ export class ProjectWorkflowTransforms {
       budget: (formData.budget as number) || 0,
       startDate: (formData.startDate as string) || '',
       endDate: (formData.endDate as string) || '',
-      status: 'draft' as const,
+      status: ProjectStatus.DRAFT,
       thumbnail: (formData.thumbnail as string) || ''
     };
   }
@@ -421,7 +424,7 @@ export class ProjectWorkflowTransforms {
       budget: formData.budget as number,
       startDate: formData.startDate as string,
       endDate: formData.endDate as string,
-      status: formData.status as string,
+      status: formData.status as ProjectStatus | undefined,
       progress: formData.progress as number,
       thumbnail: formData.thumbnail as string,
       teamSize: formData.teamSize as number,
@@ -430,11 +433,11 @@ export class ProjectWorkflowTransforms {
       selectionMode: formData.selection_mode as string,
       projectReference: formData.project_reference as string,
       mainContractor: formData.main_contractor as string,
-      engineeringConsultant: formData.engineering_consultant as string,
+      // engineeringConsultant removed - not in UpdateProjectDTO
       allowsInitialPayment: formData.allows_initial_payment as boolean,
       initialPaymentPercentage: formData.initial_payment_percentage as number,
       currentPhase: formData.current_phase as string,
-      currentStage: formData.current_stage as string,
+      currentStage: formData.current_stage as ConstructionStage | undefined,
       coordinates: formData.coordinates as { latitude: number; longitude: number }
     };
   }

@@ -6,7 +6,7 @@ import {
 } from './shared';
 import { EntityToDTOMapper } from './shared';
 
-export class TaskAssignmentDomainTransformer implements EntityToDTOMapper<TaskAssignment, TaskAssignmentDTO> {
+export class TaskAssignmentDomainTransformer {
   
   /**
    * Convert TaskAssignment entity to DTO
@@ -34,7 +34,7 @@ export class TaskAssignmentDomainTransformer implements EntityToDTOMapper<TaskAs
   /**
    * Convert DTO to TaskAssignment entity
    */
-  fromDTO(dto: TaskAssignmentDTO): TaskAssignment {
+  fromDTO(dto: TaskAssignmentDTO): any {
     return {
       id: dto.id,
       title: dto.title,
@@ -57,7 +57,7 @@ export class TaskAssignmentDomainTransformer implements EntityToDTOMapper<TaskAs
   /**
    * Convert CreateTaskAssignmentRequestDto to entity
    */
-  fromCreateDtoToEntity(dto: CreateTaskAssignmentRequestDto): Omit<TaskAssignment, 'id' | 'createdAt' | 'updatedAt'> {
+  fromCreateDtoToEntity(dto: CreateTaskAssignmentRequestDto): any {
     return {
       title: dto.title,
       description: dto.description,

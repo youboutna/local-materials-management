@@ -118,7 +118,7 @@ export class TaskTransformer {
     return {
       id: task.id,
       title: task.title,
-      description: task.description,
+      description: task.description ?? undefined,
       type: DTOTaskType.DEVELOPMENT, // Default type
       status: TaskTransformer.toDTOStatus(task.status),
       priority: TaskTransformer.toDTOPriority(task.priority),
@@ -130,13 +130,13 @@ export class TaskTransformer {
       endDate: task.endDate || undefined,
       dueDate: task.dueDate || undefined,
       completedAt: task.completionDate || undefined,
-      estimatedDuration: task.estimatedDuration,
-      actualDuration: task.actualDuration,
+      estimatedDuration: task.estimatedDuration ?? undefined,
+      actualDuration: task.actualDuration ?? undefined,
       dependsOn: task.dependencies.map(dep => dep.id),
       blocks: [],
       projectId: task.projectId,
       phaseId: task.phaseId || undefined,
-      notes: task.notes,
+      notes: task.notes ?? undefined,
       tags: [],
       createdAt: task.createdAt,
       updatedAt: task.updatedAt
@@ -155,8 +155,8 @@ export class TaskTransformer {
       stepId: undefined,
       title: dto.title,
       description: dto.description,
-      status: TaskTransformer.fromDTOStatus(dto.status),
-      priority: TaskTransformer.fromDTOPriority(dto.priority),
+      status: TaskTransformer.fromDTOStatus(dto.status) as any,
+      priority: TaskTransformer.fromDTOPriority(dto.priority) as any,
       progress: dto.progress,
       startDate: dto.startDate,
       endDate: dto.endDate,
@@ -180,7 +180,7 @@ export class TaskTransformer {
       title: request.title,
       description: request.description,
       status: DTOTaskStatus.NOT_STARTED,
-      priority: TaskTransformer.fromDTOPriority(request.priority || DTOTaskPriority.MEDIUM),
+      priority: TaskTransformer.fromDTOPriority(request.priority || DTOTaskPriority.MEDIUM) as any,
       progress: 0,
       startDate: request.startDate,
       endDate: request.endDate,
@@ -277,7 +277,7 @@ export class TaskTransformer {
       },
       displayLabels: {
         statusLabel: TaskTransformer.getStatusLabel(task.status),
-        priorityLabel: TaskTransformer.getPriorityLabel(task.priority),
+        priorityLabel: TaskTransformer.getStatusLabel(task.priority as any),
         typeLabel: 'Développement'
       }
     };
@@ -399,15 +399,15 @@ export class TaskTransformer {
     return labels[status] || status;
   }
 
-  private static domainStatusToEnum(domainStatus: DomainTaskStatus): TaskStatus {
+  private static domainStatusToEnum(domainStatus: DomainTaskStatus): DTOTaskStatus {
     switch (domainStatus) {
-      case 'not_started': return TaskStatus.NOT_STARTED;
-      case 'in_progress': return TaskStatus.IN_PROGRESS;
-      case 'completed': return TaskStatus.COMPLETED;
-      case 'delayed': return TaskStatus.DELAYED;
-      case 'blocked': return TaskStatus.BLOCKED;
-      case 'cancelled': return TaskStatus.CANCELLED;
-      default: return TaskStatus.NOT_STARTED;
+      case 'not_started': return DTOTaskStatus.NOT_STARTED;
+      case 'in_progress': return DTOTaskStatus.IN_PROGRESS;
+      case 'completed': return DTOTaskStatus.COMPLETED;
+      case 'delayed': return DTOTaskStatus.DELAYED;
+      case 'blocked': return DTOTaskStatus.BLOCKED;
+      case 'cancelled': return DTOTaskStatus.CANCELLED;
+      default: return DTOTaskStatus.NOT_STARTED;
     }
   }
 

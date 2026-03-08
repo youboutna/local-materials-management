@@ -171,7 +171,9 @@ export class ReceptionTransformer {
       isRequired: entity.isRequired,
       isSubmitted: entity.isSubmitted,
       validationStatus: entity.validationStatus,
-      validationNotes: entity.validationNotes
+      validationNotes: entity.validationNotes,
+      createdAt: entity.uploadedAt.toISOString(),
+      updatedAt: entity.uploadedAt.toISOString()
     };
   }
 
@@ -191,7 +193,9 @@ export class ReceptionTransformer {
       findings: entity.findings.map(f => this.findingToDTO(f)),
       recommendations: entity.recommendations,
       nextInspectionDate: entity.nextInspectionDate?.toISOString(),
-      requiresFollowUp: entity.requiresFollowUp
+      requiresFollowUp: entity.requiresFollowUp,
+      createdAt: entity.scheduledDate.toISOString(),
+      updatedAt: entity.scheduledDate.toISOString()
     };
   }
 

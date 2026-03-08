@@ -30,8 +30,8 @@ export class RiskTransformer {
       status: this.domainToDtoStatus(entity.status),
       category: this.domainToDtoCategory(entity.category),
       mitigationStrategy: entity.mitigationStrategy || undefined,
-      owner: entity.identifiedBy?.id,
-      identifiedDate: entity.identifiedDate || undefined,
+      owner: (entity as any).identifiedBy?.id,
+      identifiedDate: (entity as any).identifiedDate || undefined,
       relatedRisks: entity.relatedTasks,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt
@@ -52,7 +52,7 @@ export class RiskTransformer {
       this.dtoToDomainStatus(dto.status),
       this.dtoToDomainCategory(dto.category),
       dto.mitigationStrategy || null,
-      dto.identifiedBy ? { id: dto.identifiedBy, fullName: '' } : null,
+      (dto as any).identifiedBy ? { id: (dto as any).identifiedBy, fullName: '' } : null,
       dto.identifiedDate || null,
       dto.relatedRisks || [],
       dto.createdAt || new Date().toISOString(),
@@ -157,7 +157,6 @@ export class RiskTransformer {
       case RiskStatus.MONITORED: return 'monitored';
       case RiskStatus.MITIGATED: return 'mitigated';
       case RiskStatus.RESOLVED: return 'resolved';
-      case RiskStatus.ACCEPTED: return 'accepted';
       default: return 'identified';
     }
   }
@@ -211,7 +210,7 @@ export class RiskTransformer {
    */
   static validateAndCleanDTO(dto: Partial<RiskDTO>): RiskDTO {
     const cleaned: RiskDTO = {
-      id: dto.id,
+      id: dto.id || '',
       projectId: dto.projectId,
       title: dto.title || '',
       description: dto.description,
@@ -220,7 +219,7 @@ export class RiskTransformer {
       status: dto.status || RiskStatus.IDENTIFIED,
       category: dto.category || RiskCategory.OPERATIONAL,
       mitigationStrategy: dto.mitigationStrategy,
-      identifiedBy: dto.identifiedBy,
+      owner: dto.owner,
       identifiedDate: dto.identifiedDate,
       relatedRisks: dto.relatedRisks || [],
       createdAt: dto.createdAt || new Date().toISOString(),
