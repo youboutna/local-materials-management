@@ -79,7 +79,7 @@ export function usePaymentActionsHex() {
         notification.recipientId,
         notification.title,
         notification.message,
-        notification.type
+        notification.type as any
       );
     },
     onSuccess: () => {
