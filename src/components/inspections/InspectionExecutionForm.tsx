@@ -45,7 +45,7 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const { uploadDocumentsMutation, updateInspectionMutation } = useInspectionExecutionHex();
+  const { uploadDocuments, updateInspection, isUploading: hookIsUploading } = useInspectionExecutionHex();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
