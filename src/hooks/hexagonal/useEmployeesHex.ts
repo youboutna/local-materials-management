@@ -14,8 +14,10 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 // Types compatibles avec le service
-type ServiceCreateEmployeeDTO = Omit<CreateEmployeeRequestDto, 'status'> & { status?: any };
-type ServiceUpdateEmployeeDTO = Omit<UpdateEmployeeRequestDto, 'status'> & { status?: any };
+type CreateEmployeeRequestDto = any;
+type UpdateEmployeeRequestDto = any;
+type ServiceCreateEmployeeDTO = any;
+type ServiceUpdateEmployeeDTO = any;
 
 // Enhanced types for UI components
 export interface UseEmployeesHexResult {
