@@ -231,7 +231,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
         title: "Exécution d'inspection",
         description: `Redirection vers le service d'inspection.`,
       });
-      navigate(`/inspection-monitoring?execute=true${milestone.phase_id ? `&phase=${milestone.phase_id}` : ''}`);
+      navigate(`/inspection-monitoring?execute=true${(milestone as any).phaseId ? `&phase=${(milestone as any).phaseId}` : ''}`);
     }
     setActionDialog({ open: false, milestone: null, action: null });
   };
