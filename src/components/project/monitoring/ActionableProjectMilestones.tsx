@@ -506,8 +506,8 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
             </DialogTitle>
           <DialogDescription>
               {actionDialog.milestone?.title}
-              {(actionDialog.milestone as MilestoneSummaryDTO)?.phase_name && (
-                <span className="text-muted-foreground"> — {(actionDialog.milestone as MilestoneSummaryDTO).phase_name}</span>
+              {(actionDialog.milestone as any)?.phaseName && (
+                <span className="text-muted-foreground"> — {(actionDialog.milestone as any).phaseName}</span>
               )}
             </DialogDescription>
           </DialogHeader>
