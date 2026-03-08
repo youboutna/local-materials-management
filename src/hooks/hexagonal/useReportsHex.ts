@@ -224,10 +224,11 @@ export function useRiskAssessmentHex(projectId: string): UseRiskAssessmentResult
     queryKey: ['risk-assessment', projectId],
     queryFn: async (): Promise<any> => {
       if (!projectId) throw new Error('Project ID is required');
-      return await reportService.generateRiskAssessment({
+      // ReportService doesn't have generateRiskAssessment - use generateProjectReport with risk type
+      return await reportService.generateProjectReport({
         projectId,
-        includeMitigation: true,
-        severity: 'medium'
+        reportType: 'risk_assessment',
+        includeRisks: true
       });
     },
     enabled: !!projectId
@@ -235,7 +236,11 @@ export function useRiskAssessmentHex(projectId: string): UseRiskAssessmentResult
 
   const generateAssessmentMutation = useMutation({
     mutationFn: async (data: GenerateRiskAssessmentRequestDto): Promise<any> => {
-      return await reportService.generateRiskAssessment(data);
+      return await reportService.generateProjectReport({
+        projectId: data.projectId,
+        reportType: 'risk_assessment',
+        includeRisks: true
+      });
     },
     onSuccess: () => {
       toast.success('Évaluation des risques générée');
