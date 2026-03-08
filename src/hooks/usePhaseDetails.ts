@@ -163,7 +163,7 @@ export function usePhaseDetails(phaseId: string | undefined) {
         status: (updates.status === 'delayed' ? 'in_progress' : updates.status) as PhaseStatus
       };
       // Filter out steps property since UpdatePhaseDTO doesn't accept it
-      const { steps, ...validUpdates } = convertedUpdates as Omit<UpdatePhaseDTO, 'steps'>;
+      const { steps, ...validUpdates } = convertedUpdates as any;
       return phaseService.updatePhase(phaseId, validUpdates);
     },
     onSuccess: () => {
