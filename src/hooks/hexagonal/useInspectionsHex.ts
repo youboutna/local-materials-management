@@ -122,15 +122,15 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
       try {
         // Convert to service-compatible format
         const serviceData: ServiceCreateInspectionDTO = { ...inspectionData };
-        const partial: Partial<Inspection> = {
+        const partial = {
           projectId: serviceData.projectId,
-          inspector: serviceData.inspector,
+          inspector: serviceData.inspector as any,
           date: serviceData.date,
           comments: serviceData.comments,
           phaseId: serviceData.phaseId,
           stepId: (serviceData as unknown as { stepId?: string }).stepId,
         };
-        const createdInspection = await inspectionService.createInspection(partial);
+        const createdInspection = await inspectionService.createInspection(partial as any);
         return createdInspection;
       } catch (error) {
         console.error('Error creating inspection:', error);
