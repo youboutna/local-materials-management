@@ -199,14 +199,14 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
           ${ReportFormatting.generateSectionHeader('Résultats de l\'Inspection', undefined, 'linear-gradient(135deg, #059669 0%, #10b981 100%)')}
           <div style="background: #ecfdf5; padding: 20px; border-radius: 8px;">
             <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-              ${reportData.inspection.status === 'passed' || reportData.inspection.status === 'approved' ? 
+              ${String(reportData.inspection.status) === 'passed' || String(reportData.inspection.status) === 'approved' ? 
                 '<div style="width: 40px; height: 40px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;">✓</div>' :
                 '<div style="width: 40px; height: 40px; background: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;">!</div>'
               }
               <div>
                 <h3 style="margin: 0; color: #374151; font-size: 18px;">
-                  ${reportData.inspection.status === 'passed' || reportData.inspection.status === 'approved' ? 'Inspection Réussie' : 
-                    reportData.inspection.status === 'failed' || reportData.inspection.status === 'requires_changes' ? 'Inspection Échouée - Actions Requises' :
+                  ${String(reportData.inspection.status) === 'passed' || String(reportData.inspection.status) === 'approved' ? 'Inspection Réussie' : 
+                    String(reportData.inspection.status) === 'failed' || String(reportData.inspection.status) === 'requires_changes' ? 'Inspection Échouée - Actions Requises' :
                     'Inspection en Cours'}
                 </h3>
                 <p style="margin: 5px 0 0 0; color: #6b7280;">Progression: ${(reportData.inspection as any).progressAtInspection || (reportData.inspection as any).progress_at_inspection || 0}%</p>
