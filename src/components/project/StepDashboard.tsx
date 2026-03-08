@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { FileText, Calendar, Users, CheckCircle, AlertTriangle, DollarSign } from 'lucide-react';
 import WorkflowKanban from './workflow/WorkflowKanban';
 import { MilestoneItem, mapMilestoneToDecisionNode, DecisionNode } from '@/types/unified-workflow';
-import { PhaseStepDTO, PhaseDTO } from '@/types/phase-dto';
+import { PhaseStepDTO, PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { AuditEntry } from '@/hooks/useAuditEntries';
 import { StepItem } from '@/types/unified-workflow';
 

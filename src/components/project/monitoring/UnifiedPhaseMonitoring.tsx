@@ -800,7 +800,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
             <DialogDescription className="space-y-1">
               <span className="block font-medium">{actionDialog.milestone?.title}</span>
               <span className="text-xs">
-                Date cible: {actionDialog.milestone && format(parseISO(actionDialog.milestone.target_date), 'd MMMM yyyy', { locale: fr })}
+                Date cible: {actionDialog.milestone && format(parseISO(actionDialog.milestone.targetDate), 'd MMMM yyyy', { locale: fr })}
               </span>
             </DialogDescription>
           </DialogHeader>
