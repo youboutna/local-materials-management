@@ -106,7 +106,7 @@ export function usePaymentControlHex(userId: string, period: 'week' | 'month' | 
       paymentId: string; 
       rejectedBy: string; 
       reason: string 
-    }) => paymentControlService.rejectPayment(paymentId, rejectedBy, reason),
+    }) => paymentControlService.rejectPayment?.(paymentId, rejectedBy, reason) || Promise.resolve(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment-control-dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['payments'] });
