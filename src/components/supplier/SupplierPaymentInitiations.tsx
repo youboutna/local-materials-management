@@ -57,7 +57,7 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
   const fetchInitiations = async () => {
     setLoading(true);
     try {
-      const data = await PaymentInitiationService.getSupplierInitiations(supplierId);
+      const data = await PaymentInitiationService.getPendingInitiations(supplierId);
       setInitiations(data);
     } catch (error) {
       console.error('Error fetching initiations:', error);
