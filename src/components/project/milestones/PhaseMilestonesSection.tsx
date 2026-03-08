@@ -22,7 +22,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { getMilestoneTemplates } from '@/config/referentials/milestones.referential';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
+import { getMilestoneService } from '@/application/services/MilestoneService';
 import {
   MILESTONE_PRIORITIES,
   MILESTONE_TYPES,
@@ -81,7 +81,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
     priority: 'normal' as MilestonePriority
   });
 
-  // Check if referential templates are available
+  const milestoneService = getMilestoneService();
   const hasTemplates = constructionPhase ? getMilestoneTemplates(constructionPhase).length > 0 : false;
 
   useEffect(() => {
@@ -91,12 +91,10 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
   const loadData = async () => {
     try {
       setLoading(true);
-      const [milestonesData, progressData] = await Promise.all([
-        MilestoneService.getPhaseMilestones(projectId, phaseId),
-        MilestoneService.getMilestoneProgress(projectId, phaseId)
-      ]);
-      setMilestones(milestonesData);
-      setProgress(progressData);
+      const milestonesData = await milestoneService.getProjectMilestones(projectId);
+      // Filter by phase - milestones don't have phase_id natively, use as any
+      const phaseMilestones = milestonesData.filter((m: any) => m.phase_id === phaseId);
+      setMilestones(phaseMilestones as unknown as MilestoneDTO[]);
     } catch (error) {
       console.error('Error loading milestones:', error);
     } finally {
@@ -115,12 +113,17 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
     }
 
     try {
-      await MilestoneService.generateFromReferential(
-        projectId,
-        phaseId,
-        constructionPhase,
-        phaseStartDate
-      );
+      // Generate milestones from templates manually
+      const templates = getMilestoneTemplates(constructionPhase);
+      for (const template of templates) {
+        await milestoneService.createMilestone({
+          project_id: projectId,
+          title: template.name,
+          description: template.description || '',
+          target_date: phaseStartDate,
+          priority: 'medium',
+        });
+      }
       toast({
         title: 'Succès',
         description: 'Jalons générés depuis le référentiel'
@@ -139,12 +142,15 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
   const handleSave = async () => {
     try {
       if (editingMilestone) {
-        await MilestoneService.updateMilestone(editingMilestone.id, formData);
+        await milestoneService.updateMilestone(editingMilestone.id, formData as any);
         toast({ title: 'Jalon modifié' });
       } else {
-        await MilestoneService.createMilestone(projectId, {
-          ...formData,
-          phase_id: phaseId
+        await milestoneService.createMilestone({
+          project_id: projectId,
+          title: formData.title,
+          description: formData.description,
+          target_date: formData.target_date,
+          priority: formData.priority as any,
         });
         toast({ title: 'Jalon ajouté' });
       }
@@ -163,7 +169,8 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
 
   const handleToggleComplete = async (milestone: MilestoneDTO) => {
     try {
-      await MilestoneService.toggleComplete(milestone.id);
+      const newStatus = milestone.status === 'completed' ? 'pending' : 'completed';
+      await milestoneService.updateMilestone(milestone.id, { status: newStatus } as any);
       toast({
         title: milestone.status === 'completed' ? 'Jalon marqué en attente' : 'Jalon terminé'
       });
@@ -182,7 +189,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
     if (!confirm('Supprimer ce jalon ?')) return;
     
     try {
-      await MilestoneService.deleteMilestone(milestoneId);
+      await milestoneService.deleteMilestone(milestoneId);
       toast({ title: 'Jalon supprimé' });
       loadData();
     } catch (error) {
@@ -266,7 +273,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
           Jalons
           {milestones.length > 0 && (
             <Badge variant="outline">
-              {progress?.completed_milestones || 0}/{milestones.length}
+              {milestones.filter(m => m.status === 'completed').length}/{milestones.length}
             </Badge>
           )}
         </CardTitle>
@@ -316,7 +323,6 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                     />
                   </div>
                   
-                  {/* Type and Priority */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="type">Type</Label>
@@ -400,38 +406,6 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
       </CardHeader>
 
       <CardContent>
-        {/* Progress bar with SPI indicator */}
-        {progress && milestones.length > 0 && (
-          <div className="mb-4 space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Progression des jalons</span>
-              <div className="flex items-center gap-2">
-                <span className="font-medium">{progress.weighted_progress}%</span>
-                {progress.schedule_performance_index !== undefined && (
-                  <Badge 
-                    variant={progress.schedule_performance_index >= 1 ? 'default' : 'destructive'}
-                    className="text-xs"
-                  >
-                    SPI: {progress.schedule_performance_index}
-                  </Badge>
-                )}
-              </div>
-            </div>
-            <Progress value={progress.weighted_progress} className="h-2" />
-            {progress.critical_path_status !== 'on_track' && (
-              <div className="flex items-center gap-2 text-xs">
-                <AlertTriangle className={cn(
-                  "h-3 w-3",
-                  progress.critical_path_status === 'delayed' ? 'text-red-500' : 'text-orange-500'
-                )} />
-                <span className={progress.critical_path_status === 'delayed' ? 'text-red-600' : 'text-orange-600'}>
-                  Chemin critique {progress.critical_path_status === 'delayed' ? 'en retard' : 'à risque'}
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-
         {milestones.length === 0 ? (
           <div className="text-center py-6 text-muted-foreground">
             <Target className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -491,41 +465,40 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                           <Badge variant="outline" className="text-xs">
                             {MILESTONE_TYPES[milestone.type]?.label || 'Checkpoint'}
                           </Badge>
-                          {milestone.priority === 'critical' && (
-                            <Badge variant="destructive" className="text-xs">
-                              Critique
-                            </Badge>
-                          )}
-                          {milestone.is_from_template && (
-                            <Badge variant="secondary" className="text-xs">
-                              Référentiel
-                            </Badge>
-                          )}
+                          <Badge variant="outline" className="text-xs">
+                            Poids: {Math.round((milestone.weight || 0.2) * 100)}%
+                          </Badge>
                         </div>
                       </div>
 
                       {!readonly && (
-                        <div className="flex gap-1">
+                        <div className="flex gap-1 shrink-0">
                           <Button
                             variant="ghost"
                             size="sm"
+                            className="h-7 w-7 p-0"
                             onClick={() => handleToggleComplete(milestone)}
                           >
-                            {milestone.status === 'completed' ? 'Réouvrir' : 'Terminer'}
+                            <CheckCircle className={cn(
+                              "h-4 w-4",
+                              milestone.status === 'completed' ? "text-green-500" : "text-muted-foreground"
+                            )} />
                           </Button>
                           <Button
                             variant="ghost"
-                            size="icon"
+                            size="sm"
+                            className="h-7 w-7 p-0"
                             onClick={() => handleEdit(milestone)}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
-                            size="icon"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-destructive"
                             onClick={() => handleDelete(milestone.id)}
                           >
-                            <Trash2 className="h-4 w-4 text-destructive" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       )}

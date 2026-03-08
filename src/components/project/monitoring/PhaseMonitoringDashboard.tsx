@@ -207,7 +207,7 @@ const PhaseMonitoringDashboard: React.FC<PhaseMonitoringDashboardProps> = ({
         }}
         onMilestoneComplete={async (milestoneId) => {
           try {
-            await MilestoneService.updateMilestone(milestoneId, { status: 'completed' });
+            await getMilestoneService().updateMilestone(milestoneId, { status: 'completed' } as any);
             queryClient.invalidateQueries({ queryKey: ['phase-milestones-monitoring'] });
             toast({
               title: "Jalon terminé",

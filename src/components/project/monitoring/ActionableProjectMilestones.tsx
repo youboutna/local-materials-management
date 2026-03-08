@@ -264,7 +264,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
     const milestone = actionDialog.milestone;
     if (milestone) {
       try {
-        await MilestoneService.updateMilestone(milestone.id, { status: 'completed' });
+        await getMilestoneService().updateMilestone(milestone.id, { status: 'completed' } as any);
         queryClient.invalidateQueries({ queryKey: ['actionable-milestones'] });
         queryClient.invalidateQueries({ queryKey: ['project-milestone-progress'] });
         toast({
