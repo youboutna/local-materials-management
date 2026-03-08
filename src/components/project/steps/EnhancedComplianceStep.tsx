@@ -161,7 +161,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
     return (completedItems.length / complianceItems.length) * 100;
   };
 
-  const getSafeAttribute = (obj: Record<string, unknown>, camelKey: string, snakeKey: string, fallback: unknown = ''): unknown => {
+  const getSafeAttribute = (obj: any, camelKey: string, snakeKey: string, fallback: unknown = ''): unknown => {
     return obj?.[camelKey] ?? obj?.[snakeKey] ?? fallback;
   };
 
