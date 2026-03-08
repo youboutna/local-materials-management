@@ -74,7 +74,6 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
           deadline: formData.deadline || undefined,
           notes: formData.notes,
         } as any);
-        });
         toast({ title: "Succès", description: "Élément modifié" });
       } else {
         await createComplianceItem({
@@ -86,7 +85,6 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
           deadline: formData.deadline || undefined,
           notes: formData.notes,
         } as any);
-        });
         toast({ title: "Succès", description: "Élément ajouté" });
       }
 
