@@ -184,7 +184,7 @@ export class ProjectWorkflowTransforms {
       updatedAt: new Date().toISOString()
     })) || [];
 
-    const processedPhases = entity.phases?.map(phase => ({
+    const processedPhases: PhaseDTO[] = entity.phases?.map(phase => ({
       id: phase.phase_id,
       name: phase.phase_name,
       description: `Phase ${phase.phase_name} for project ${entity.project_title}`,
@@ -195,7 +195,10 @@ export class ProjectWorkflowTransforms {
       status: this.calculatePhaseStatus(phase.phase_start_date, phase.phase_end_date, progressPercentage) as PhaseStatus,
       progress: this.calculatePhaseProgress(phase.phase_start_date, phase.phase_end_date),
       type: PhaseType.STRUCTURAL,
-      priority: PhasePriority.MEDIUM
+      priority: PhasePriority.MEDIUM,
+      projectId: entity.project_id || '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     })) || [];
 
     return {
