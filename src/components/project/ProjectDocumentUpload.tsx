@@ -203,10 +203,11 @@ const ProjectDocumentUpload = ({
         }
       }
 
+      // Map camelCase form data to snake_case DB columns
       const documentInsert = {
         title: uploadData.title,
         description: uploadData.description,
-        document_type: uploadData.document_type,
+        document_type: uploadData.documentType,
         project_id: projectId,
         phase_id: phaseId,
         inspection_id: inspectionId,
@@ -225,6 +226,7 @@ const ProjectDocumentUpload = ({
         }
       };
 
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('documents')
         .insert(documentInsert as any)
