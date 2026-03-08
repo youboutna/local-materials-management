@@ -417,7 +417,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                           <User className="h-5 w-5 text-blue-600" />
                         </div>
                         <div>
-                          <h4 className="font-medium">{member.full_name}</h4>
+                          <h4 className="font-medium">{member.fullName || (member as any).full_name}</h4>
                           <p className="text-sm text-muted-foreground">
                             {member.position}
                           </p>
