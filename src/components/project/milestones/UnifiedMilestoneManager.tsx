@@ -193,16 +193,13 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
       
       for (const template of templates) {
         const targetDate = addDays(startDate, template.relative_offset_days);
-        await MilestoneService.createMilestone(projectId, {
+        await getMilestoneService().createMilestone({
+          project_id: projectId,
           title: template.name,
           description: template.description,
           target_date: format(targetDate, 'yyyy-MM-dd'),
-          type: template.type,
-          priority: template.priority,
-          weight: template.weight,
-          deliverables: template.deliverables,
-          phase_id: phaseId
-        }, true, template.id);
+          priority: template.priority as any,
+        });
       }
       
       toast({
