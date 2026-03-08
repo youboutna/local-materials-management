@@ -170,7 +170,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
   const saveCalculations = async () => {
     setLoading(true);
     try {
-      // First, delete existing calculations for this project
+      const { supabase } = await import('@/integrations/supabase/client');
       await supabase
         .from('quantity_takeoffs')
         .delete()
