@@ -293,7 +293,6 @@ export class ProjectTransformer {
       sector: project.sector,
       siteDetails: project.siteDetails,
       supervisorId: project.supervisorId,
-      terrainType: project.terrainType || '',
     };
   }
 
