@@ -767,7 +767,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                           {milestone.title}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {format(parseISO(milestone.target_date), 'd MMM yyyy', { locale: fr })}
+                          {format(parseISO(milestone.targetDate), 'd MMM yyyy', { locale: fr })}
                         </p>
                       </div>
                     </div>
