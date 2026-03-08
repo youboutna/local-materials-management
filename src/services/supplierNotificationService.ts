@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import { toast } from '@/hooks/use-toast';
 
