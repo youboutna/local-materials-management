@@ -173,13 +173,13 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
 
   const resetForm = () => {
     setFormData({
-      employee_name: '',
-      employee_role: '',
-      employee_contact: '',
-      daily_rate: '',
-      start_date: '',
-      end_date: '',
-      is_primary_supplier: false,
+      employeeName: '',
+      employeeRole: '',
+      employeeContact: '',
+      dailyRate: '',
+      startDate: '',
+      endDate: '',
+      isPrimarySupplier: false,
     });
     setEditingId(null);
   };
