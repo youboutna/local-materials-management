@@ -278,7 +278,7 @@ export class ReportingDataTransformer {
     if (risks.length === 0) return 'low';
     
     const highRiskCount = risks.filter(risk => 
-      risk.priority === 'high' || risk.priority === 'critical'
+      (risk.probability || 0) > 0.7 || (risk.impact || 0) > 0.7
     ).length;
     
     const totalRisk = risks.reduce((sum, risk) => {
