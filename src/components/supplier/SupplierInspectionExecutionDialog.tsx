@@ -134,7 +134,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
         if (pvResult && pvResult.blob) {
           const pdfFile = new File([pvResult.blob], pvResult.fileName, { type: 'application/pdf' });
           const pvPath = `inspections/${inspection.project_id}/${pvResult.fileName}`;
-          const pvUpload = await storage.upload(pdfFile, pvPath);
+          const pvUpload = await storage.uploadFile(pdfFile, pvPath);
 
           if (pvUpload.success) {
             const pvUrl = pvUpload.url || '';
