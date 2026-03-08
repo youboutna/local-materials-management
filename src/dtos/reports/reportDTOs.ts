@@ -414,7 +414,7 @@ export interface ProjectHealthScoreDTO {
 
 // =================== ENHANCED PHASE DTOs ===================
 
-export interface EnhancedPhaseDTO {
+export interface ReportEnhancedPhaseDTO {
   id: string;
   name: string;
   description?: string;
