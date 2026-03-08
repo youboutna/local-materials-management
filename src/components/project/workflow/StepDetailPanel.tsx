@@ -104,6 +104,7 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
     additionalData?: any
   ) => {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase
         .from('inspections')
         .insert({

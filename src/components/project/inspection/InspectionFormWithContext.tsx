@@ -348,7 +348,7 @@ export function InspectionFormWithContext({
               {/* Status */}
               <div>
                 <Label htmlFor="status">Statut</Label>
-                <Select value={status} onValueChange={(v: InspectionStatus) => setStatus(v)}>
+                <Select value={status} onValueChange={(v: InspectionStatusLocal) => setStatus(v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un statut" />
                   </SelectTrigger>

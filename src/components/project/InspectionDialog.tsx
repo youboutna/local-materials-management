@@ -173,7 +173,7 @@ export function InspectionDialog({ project, onInspectionCreated }: InspectionDia
               </Label>
               <Select
                 value={status}
-                onValueChange={(value: InspectionStatus) => setStatus(value)}
+                onValueChange={(value: InspectionStatusLocal) => setStatus(value)}
               >
                 <SelectTrigger className="col-span-4">
                   <SelectValue placeholder={t("inspection.dialog.select_status")} />
