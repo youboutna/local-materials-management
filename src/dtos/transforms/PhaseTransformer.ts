@@ -165,9 +165,7 @@ export class PhaseTransformer {
       assigned_to: dto.assigned_to,
       dependencies: dto.dependencies,
       weight: dto.weight,
-      // Note: materials property doesn't exist in PhaseTaskDTO
-      materials: [],
-    };
+    } as any;
   }
 
   // =================== Create Operations ===================
