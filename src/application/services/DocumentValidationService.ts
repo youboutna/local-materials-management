@@ -171,7 +171,7 @@ export class DocumentValidationService {
       }
 
       // Direct query with type suppression
-      const { data, error } = await (supabase as ExtendedSupabaseClient)
+      const { data, error } = await (supabase as any)
         .from('document_validation_logs')
         .select('*')
         .eq('submission_id', submissionId)
