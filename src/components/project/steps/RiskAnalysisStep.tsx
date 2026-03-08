@@ -98,7 +98,6 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
     setRisks(updatedRisks);
     onStepComplete({ risks: updatedRisks });
   };
-  };
 
   const getRiskScoreColor = (score: number | undefined) => {
     const safeScore = score || 0;
