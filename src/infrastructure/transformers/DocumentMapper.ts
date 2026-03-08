@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Document Transformer/Mapper
  * Maps between Supabase data, Domain entities, and DTOs

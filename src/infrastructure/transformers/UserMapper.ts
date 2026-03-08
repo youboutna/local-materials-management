@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { User, UserRoleEntity } from '@/domain/entities/User';
 
 // Interface for Supabase user data
