@@ -75,7 +75,7 @@ export const useFetchSupplierProfileHex = (user: SupabaseUser | null) => {
         nif: found.nif,
         category: found.category,
         status: found.status || 'active',
-        rating: found.rating,
+        rating: typeof found.rating === 'number' ? found.rating : (found.rating as any)?.overall || null,
         contacts: found.contacts || [],
         isVerified: found.isVerified || false,
         createdAt: found.createdAt,
