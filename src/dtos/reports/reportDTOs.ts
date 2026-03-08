@@ -262,14 +262,14 @@ export interface CashFlowDataDTO {
 
 // =================== RISK DTOs ===================
 
-export interface RiskAssessmentDTO {
+export interface ReportRiskAssessmentDTO {
   projectId: string;
   generatedAt: string;
   assessmentScope: string;
   
-  identifiedRisks: IdentifiedRiskDTO[];
-  riskMatrix: RiskMatrixDTO;
-  mitigationStrategies: MitigationStrategyDTO[];
+  identifiedRisks: any[];
+  riskMatrix: any;
+  mitigationStrategies: any[];
   overallRiskScore: number;
   riskTrend: 'increasing' | 'stable' | 'decreasing';
 }
