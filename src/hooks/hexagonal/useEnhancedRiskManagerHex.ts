@@ -141,7 +141,7 @@ export const useEnhancedRiskManagerHex = (
   const { data: employees = [], isLoading: employeesLoading } = useQuery({
     queryKey: ['employees-active'],
     queryFn: async (): Promise<Employee[]> => {
-      const data = await employeeRepo.findAll({ isActive: true });
+      const data = await employeeRepo.findAll();
       return (data || []).map((emp: any) => ({
         id: emp.id,
         full_name: emp.full_name || emp.fullName || '',
