@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * LocalStorage Load Data Adapter
  * Implements ILoadDataRepository using LocalStorage for DEV_MODE

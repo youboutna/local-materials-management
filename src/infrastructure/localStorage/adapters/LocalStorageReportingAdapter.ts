@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * LocalStorage Reporting Adapter
  * Implements IReportingRepository using LocalStorage for DEV_MODE

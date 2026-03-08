@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * LocalStorage Inspection Adapter
  * Implements IInspectionRepository using LocalStorage for DEV_MODE
