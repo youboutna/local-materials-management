@@ -284,15 +284,11 @@ export function usePhaseDetails(phaseId: string | undefined) {
     mutationFn: async (stepId: string) => {
       if (!phaseId || !phaseQuery.data) throw new Error('Phase data is required');
       
-      const updatedSteps = (phaseQuery.data?.steps || []).filter((step: PhaseStepDTO) => step.id !== stepId);
+      const existingSteps = (phaseQuery.data as any)?.steps || [];
+      const updatedSteps = existingSteps.filter((step: PhaseStepDTO) => step.id !== stepId);
       return phaseService.updatePhase(phaseId, { 
-        name: updates.name,
-        description: updates.description,
-        status: updates.status,
-        endDate: updates.endDate,
-        progress: updates.progress,
-        actualCost: updates.actualCost
-      });
+        status: phaseQuery.data?.status as any
+      } as any);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
