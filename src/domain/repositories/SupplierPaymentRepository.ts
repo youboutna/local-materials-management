@@ -24,16 +24,16 @@ export class SupplierPaymentRepository {
    * Create a payment request
    */
   async createPaymentRequest(
-    requestData: Omit<SupplierPaymentRequestEntity, 'id' | 'created_at' | 'updated_at' | 'approved_date' | 'paid_date'>
+    requestData: Omit<SupplierPaymentRequestEntity, 'id' | 'created_at' | 'updated_at' | 'approved_at' | 'approved_by'>
   ): Promise<SupplierPaymentRequestEntity> {
     const { data, error } = await supabase
       .from('supplier_payment_requests')
-      .insert(requestData)
+      .insert(requestData as any)
       .select()
       .single();
 
     if (error) throw error;
-    return data as SupplierPaymentRequestEntity;
+    return data as unknown as SupplierPaymentRequestEntity;
   }
 
   /**
