@@ -57,7 +57,7 @@ export class TaskAssignmentDomainTransformer {
   /**
    * Convert CreateTaskAssignmentRequestDto to entity
    */
-  fromCreateDtoToEntity(dto: CreateTaskAssignmentRequestDto): Omit<TaskAssignment, 'id' | 'createdAt' | 'updatedAt'> {
+  fromCreateDtoToEntity(dto: CreateTaskAssignmentRequestDto): any {
     return {
       title: dto.title,
       description: dto.description,

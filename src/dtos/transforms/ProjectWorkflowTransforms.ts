@@ -433,7 +433,7 @@ export class ProjectWorkflowTransforms {
       selectionMode: formData.selection_mode as string,
       projectReference: formData.project_reference as string,
       mainContractor: formData.main_contractor as string,
-      engineeringConsultant: formData.engineering_consultant as string,
+      // engineeringConsultant removed - not in UpdateProjectDTO
       allowsInitialPayment: formData.allows_initial_payment as boolean,
       initialPaymentPercentage: formData.initial_payment_percentage as number,
       currentPhase: formData.current_phase as string,

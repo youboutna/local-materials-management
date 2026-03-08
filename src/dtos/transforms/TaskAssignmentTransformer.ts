@@ -78,6 +78,8 @@ export class TaskAssignmentTransformer {
       priority: (data.priority || 'medium') as any,
       dueDate: data.due_date,
       completedAt: data.completed_at,
+      assignedAt: data.created_at,
+      progress: 0,
       createdAt: data.created_at,
       updatedAt: data.updated_at
     };
