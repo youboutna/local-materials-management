@@ -156,7 +156,7 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
             avatar_url: undefined, // AuthUser doesn't have avatar_url
             metadata: transformAuthUserToMetadata(userResult.user)
           },
-          expires_at: sessionResult.session.expires_at ? new Date(typeof sessionResult.session.expires_at === 'string' ? parseInt(sessionResult.session.expires_at) : sessionResult.session.expires_at * 1000).toISOString() : undefined,
+          expires_at: sessionResult.session.expiresAt ? new Date(typeof sessionResult.session.expiresAt === 'string' ? parseInt(sessionResult.session.expiresAt) : sessionResult.session.expiresAt * 1000).toISOString() : undefined,
           provider: config.provider
         };
         

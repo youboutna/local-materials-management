@@ -712,7 +712,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
             </div>
 
             {/* Show special message for quantitative estimate */}
-            {uploadFormData.subcategory === 'devis_quantitatif_estimatif' && (
+            {(uploadFormData.subcategory as string) === 'devis_quantitatif_estimatif' && (
               <div className="p-3 bg-blue-50 border border-blue-200 rounded">
                 <div className="flex items-start gap-2">
                   <Calculator className="h-4 w-4 text-blue-600 mt-0.5" />

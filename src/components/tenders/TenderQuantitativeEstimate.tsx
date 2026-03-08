@@ -94,9 +94,9 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
     
     try {
       await addItemMutation.mutateAsync({
-        ...newItem,
+        ...newItem as any,
         estimate_id: selectedEstimateId
-      });
+      } as any);
       setNewItem({
         quantity: 0,
         unit_price: 0,
