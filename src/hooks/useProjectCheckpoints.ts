@@ -150,15 +150,10 @@ interface ProjectDocument {
 
 
 interface ProjectPayment {
-
   id: string;
-
-  phase_id: string;
-
+  phase_id: string | null;
   amount: number;
-
-  date: string;
-
+  [key: string]: any;
 }
 
 
