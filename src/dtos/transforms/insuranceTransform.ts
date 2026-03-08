@@ -85,7 +85,6 @@ export const insuranceTransform = {
     status: formData.status,
     notes: formData.notes,
     certificate_url: undefined,
-    uploaded_by: uploadedBy
   }),
 
   /**
