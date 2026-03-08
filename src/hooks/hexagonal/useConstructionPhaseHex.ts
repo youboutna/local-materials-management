@@ -116,7 +116,7 @@ export function useConstructionPhaseHex(projectId?: string) {
       const phaseDTO = PhaseTransformer.toDTO(updatedPhase);
       
       setPhases(prev => prev.map(phase => 
-        phase.id === id ? phaseDTO as PhaseData : phase
+        phase.id === id ? phaseDTO as unknown as PhaseData : phase
       ));
       
       toast({
