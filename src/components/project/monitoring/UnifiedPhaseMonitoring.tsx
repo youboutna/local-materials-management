@@ -321,7 +321,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
       <Card className="overflow-hidden border-0 shadow-lg">
         <div className={cn(
           "p-6",
-          progress?.critical_path_status === 'delayed' 
+          (progress as any)?.critical_path_status === 'delayed' 
             ? "bg-gradient-to-br from-destructive/10 via-destructive/5 to-background" 
             : "bg-gradient-to-br from-primary/10 via-primary/5 to-background"
         )}>
@@ -330,11 +330,11 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
             <div className="flex items-center gap-3">
               <div className={cn(
                 "p-3 rounded-xl",
-                progress?.critical_path_status === 'delayed' ? "bg-destructive/10" : "bg-primary/10"
+                (progress as any)?.critical_path_status === 'delayed' ? "bg-destructive/10" : "bg-primary/10"
               )}>
                 <Layers className={cn(
                   "h-6 w-6",
-                  progress?.critical_path_status === 'delayed' ? "text-destructive" : "text-primary"
+                  (progress as any)?.critical_path_status === 'delayed' ? "text-destructive" : "text-primary"
                 )} />
               </div>
               <div>

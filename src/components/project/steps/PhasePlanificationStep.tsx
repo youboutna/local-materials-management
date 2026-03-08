@@ -48,8 +48,9 @@ const PhasePlanificationStep: React.FC<PhasePlanificationStepProps> = ({
           </Alert>
         ) : (
           <ConstructionPhaseManager
-            phases={phasesData}
-            onChange={handlePhasesChange}
+            phases={phasesData as any}
+            workflowData={{ relatedData: { phases: phasesData } } as any}
+            onStepComplete={(stepData: any) => handlePhasesChange(stepData?.phases || [])}
             projectBudget={parseFloat(formData.budget) || parseFloat(formData.estimated_budget) || 0}
             projectId={projectId || formData.id}
             referentialType={formData.referential_type}

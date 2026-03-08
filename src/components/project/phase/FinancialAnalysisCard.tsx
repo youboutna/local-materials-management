@@ -188,12 +188,12 @@ const FinancialAnalysisCard: React.FC<FinancialAnalysisCardProps> = ({
         </div>
 
         {/* Remaining Budget */}
-        {phaseCosts.remainingBudget > 0 && (
+        {remainingBudget > 0 && (
           <div className="pt-2 border-t">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Budget restant:</span>
               <span className="font-medium text-green-600">
-                {formatCurrency(phaseCosts.remainingBudget)}
+                {formatCurrency(remainingBudget)}
               </span>
             </div>
           </div>
