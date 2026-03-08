@@ -286,7 +286,7 @@ const ProjectDocumentUpload = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title || !formData.document_type) {
+    if (!formData.title || !formData.documentType) {
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs obligatoires.",
