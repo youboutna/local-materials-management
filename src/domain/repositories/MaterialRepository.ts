@@ -61,7 +61,7 @@ export class MaterialRepository {
       if (error) throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to add material to project', error);
       if (!data) throw new AppError(ErrorCode.NOT_FOUND, 'Material not added');
       
-      return data;
+      return data as unknown as ProjectMaterialEntity;
     } catch (error) {
       if (error instanceof AppError) throw error;
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to add material to project', error);
