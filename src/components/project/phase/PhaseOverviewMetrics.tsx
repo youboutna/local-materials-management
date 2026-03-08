@@ -163,11 +163,11 @@ const PhaseOverviewMetrics: React.FC<PhaseOverviewMetricsProps> = ({
             </div>
           </div>
           <div className="mt-3">
-            <p className="text-2xl font-bold">{calculateRemainingDays(phase.end_date)}</p>
+            <p className="text-2xl font-bold">{calculateRemainingDays(phase.endDate)}</p>
             <p className="text-sm text-muted-foreground">Jours restants</p>
           </div>
           <p className="text-xs text-blue-600 mt-2">
-            Fin: {formatDate(phase.end_date)}
+            Fin: {formatDate(phase.endDate)}
           </p>
         </div>
       </Card>
