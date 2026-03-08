@@ -275,9 +275,9 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
                           className={cn(
                             "relative pl-10 cursor-pointer hover:bg-muted/50 p-2 rounded-lg transition-colors",
                             milestone.status === 'completed' && "opacity-60",
-                            milestone.is_critical && milestone.status !== 'completed' && "border-l-2 border-red-400"
+                            milestone.isCritical && milestone.status !== 'completed' && "border-l-2 border-red-400"
                           )}
-                          onClick={() => onMilestoneClick?.(milestone.id, milestone.phase_id)}
+                          onClick={() => onMilestoneClick?.(milestone.id, milestone.phaseId)}
                         >
                           {/* Timeline dot */}
                           <div className={cn(
