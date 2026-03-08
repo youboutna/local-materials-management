@@ -4,7 +4,7 @@
  * Implements IInspectionPaymentValidationRepository using Supabase
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { 
   IInspectionPaymentValidationRepository, 
   PaymentRequest, 

@@ -4,7 +4,8 @@
  * Implements IInspectionPermissionRepository using Supabase
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { supabase as publicClient } from '@/integrations/supabase/client';
 import { 
   IInspectionPermissionRepository,
   PermissionContext,

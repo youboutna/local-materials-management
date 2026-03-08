@@ -5,7 +5,7 @@
  * Rule #9: DB → Transformer → Entity → Repository → Service
  * Adapter NEVER calls Entity.fromDatabase() — always uses Transformer
  */
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
 import { Material, MaterialCategory } from '@/domain/entities/Material';
 import { MaterialTransformer } from '@/dtos/transforms/MaterialTransformer';

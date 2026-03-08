@@ -4,7 +4,8 @@
  * Implements IInspectionPermissionRepository using Supabase
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { supabase as publicClient } from '@/integrations/supabase/client';
 import { 
   IInspectionPermissionRepository, 
   PermissionContext, 
@@ -155,7 +156,7 @@ export class SupabaseInspectionPermissionAdapter implements IInspectionPermissio
   async getUserRole(userId: string): Promise<string> {
     try {
       // Get user role from user_roles table
-      const { data, error } = await supabase
+      const { data, error } = await publicClient
         .from('user_roles')
         .select('role_name')
         .eq('user_id', userId)
@@ -174,7 +175,7 @@ export class SupabaseInspectionPermissionAdapter implements IInspectionPermissio
   async checkProjectAccess(userId: string, projectId: string): Promise<boolean> {
     try {
       // Check if user is assigned to project phase
-      const { data, error } = await supabase
+      const { data, error } = await publicClient
         .from('phase_employees')
         .select('id')
         .eq('employee_id', userId)

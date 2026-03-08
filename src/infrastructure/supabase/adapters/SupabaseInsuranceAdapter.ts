@@ -4,7 +4,7 @@
  * Implements IInsuranceRepository interface using Supabase client
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { InsuranceCertificateEntity } from '@/domain/entities/InsuranceCertificate.entity';
 import { IInsuranceRepository } from '@/domain/repositories/IInsuranceRepository';
 import { AppError, ErrorCode } from '@/utils/errorHandling';

@@ -4,7 +4,7 @@
  * Implements IParsedInvoiceRepository using Supabase
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { IParsedInvoiceRepository } from '@/domain/repositories/IParsedInvoiceRepository';
 import { ParsedInvoiceEntity, InvoiceStatus, InvoiceType } from '@/domain/entities/ParsedInvoice';
 

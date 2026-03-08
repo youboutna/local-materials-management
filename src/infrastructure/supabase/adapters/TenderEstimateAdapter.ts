@@ -6,7 +6,7 @@
 
 import { TenderEstimate, TenderEstimateItem } from '@/domain/entities/TenderEstimate';
 import { ITenderEstimateRepository } from '@/domain/repositories/ITenderEstimateRepository';
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { TenderEstimateFinancialData, TenderEstimateCostBreakdown } from '@/dtos/transforms/shared';
 
 export class TenderEstimateAdapter implements ITenderEstimateRepository {

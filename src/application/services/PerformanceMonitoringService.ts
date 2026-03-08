@@ -8,7 +8,7 @@
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { NotificationService } from '@/application/services/NotificationService';
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { 
   DatabaseMetricsDTO,
   PerformanceMetricsDTO, 

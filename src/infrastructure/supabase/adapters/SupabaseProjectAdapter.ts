@@ -5,7 +5,7 @@
  * Rule #9: DB → Entity → Repository → Service
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { Project } from '@/domain/entities';
 import { IProjectRepository, ProjectSummary, ProjectWithRelatedData } from '@/domain/repositories';
 import { ProjectTransformer } from '@/dtos/transforms/ProjectTransformer';

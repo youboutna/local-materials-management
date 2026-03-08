@@ -5,7 +5,7 @@
  * Handles both regular phases and construction phases with semantic logic
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { Phase, PhaseStep, PhaseTask, PhaseStatus } from '@/domain/entities';
 import { IPhaseRepository } from '@/domain/repositories';
 import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';

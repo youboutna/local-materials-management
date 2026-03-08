@@ -5,7 +5,7 @@
  * Rule #9: DB → Transformer → Entity → Repository → Service
  * Adapter NEVER calls `new Entity()` — always uses Transformer
  */
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { IEmployeeRepository } from '@/domain/repositories/IEmployeeRepository';
 import { Employee, EmployeeRole, Department } from '@/domain/entities';
 import { EmployeeTransformer } from '@/dtos/transforms/EmployeeTransformer';

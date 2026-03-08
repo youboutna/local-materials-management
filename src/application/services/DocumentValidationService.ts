@@ -4,7 +4,8 @@
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { supabase as supabaseClient } from '@/integrations/supabase/client';
 import type { ExtendedSupabaseClient } from '@/types/supabase-helpers';
 import { NotificationService } from './NotificationService';
 import { DocumentService } from './DocumentService';
@@ -74,7 +75,7 @@ export class DocumentValidationService {
       }
 
       // Call validation edge function
-      const { data, error } = await supabase.functions.invoke('validate-document', {
+      const { data, error } = await supabaseClient.functions.invoke('validate-document', {
         body: {
           document_id: request.documentId,
           submission_id: request.submissionId,
@@ -170,7 +171,7 @@ export class DocumentValidationService {
       }
 
       // Direct query with type suppression
-      const { data, error } = await (supabase as ExtendedSupabaseClient)
+      const { data, error } = await (supabase as any)
         .from('document_validation_logs')
         .select('*')
         .eq('submission_id', submissionId)

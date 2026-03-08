@@ -7,7 +7,7 @@
 import { TenderDocument, TenderDocumentCategory, TenderDocumentStatus } from '@/domain/entities/TenderDocument';
 import { ITenderDocumentRepository } from '@/domain/repositories/ITenderDocumentRepository';
 import { TenderDocumentTransformer } from '@/dtos/transforms/TenderDocumentTransformer';
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 
 export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository {
   

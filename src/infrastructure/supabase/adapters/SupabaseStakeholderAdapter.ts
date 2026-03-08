@@ -5,7 +5,7 @@
  * Following PROMPTS.md Rule #1: Arrow Flow and Rule #4: Type Safety
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { Stakeholder } from '@/domain/entities/Stakeholder';
 import { IStakeholderRepository } from '@/domain/repositories/IStakeholderRepository';
 

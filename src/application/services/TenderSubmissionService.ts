@@ -1,5 +1,6 @@
 import { SubmissionSecretService } from './SubmissionSecretService';
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { supabase as supabaseClient } from '@/integrations/supabase/client';
 import { sendTenderSubmissionNotification } from '@/services/tenderSubmissionNotificationService';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
@@ -283,7 +284,7 @@ export class TenderSubmissionService {
         const fileName = `${Date.now()}-${doc.file.name}`;
         const filePath = `tender-submissions/${submissionId}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabaseClient.storage
           .from('tender-documents')
           .upload(filePath, doc.file);
 
