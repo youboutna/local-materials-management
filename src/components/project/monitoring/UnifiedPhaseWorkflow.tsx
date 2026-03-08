@@ -293,10 +293,10 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
     });
 
     // Single loop for inspections
-    inspections.forEach(i => {
-      if (i.status === 'approved') {
+    inspections.forEach((i: any) => {
+      if (statusStr(i) === 'approved') {
         approvedInspections++;
-      } else if (['pending', 'in_progress', 'scheduled'].includes(i.status)) {
+      } else if (['pending', 'inprogress', 'scheduled'].includes(statusStr(i))) {
         pendingInspections++;
       }
     });
