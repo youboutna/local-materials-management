@@ -52,82 +52,52 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
       mitigationPlan: '',
       assignedTo: '',
       owner: '', // Primary risk owner
-      projectId: formData.id,
+      projectId: projectData.id,
       // Additional UI fields
       reviewDate: '',
       costs: 0,
       timelineImpact: 0
     };
     
-    // Call the appropriate callback based on mode
-    if (mode === 'create' && onRiskCreate) {
-      onRiskCreate(newRisk);
-    } else {
-      // Fallback to local state management for backward compatibility
-      const riskDTO: RiskDTO = {
-        id: Date.now().toString(),
-        ...newRisk,
-        status: RiskStatus.IDENTIFIED,
-        riskScore: newRisk.probability * newRisk.impact,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      
-      const updatedRisks = [...risks, riskDTO];
-      setRisks(updatedRisks);
-      onUpdate({ risks: updatedRisks });
-    }
+    // Fallback to local state management
+    const riskDTO: RiskDTO = {
+      id: Date.now().toString(),
+      ...newRisk,
+      status: RiskStatus.IDENTIFIED,
+      riskScore: newRisk.probability * newRisk.impact,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    const updatedRisks = [...risks, riskDTO];
+    setRisks(updatedRisks);
+    onStepComplete({ risks: updatedRisks });
   };
 
   const updateRisk = (id: string, updates: Partial<RiskDTO>) => {
-    // Call the appropriate callback based on mode
-    if (mode === 'edit' && onRiskUpdate) {
-      const updateData: UpdateRiskDTO = {
-        ...updates,
-        // Ensure all required fields are properly typed
-        title: updates.title,
-        description: updates.description,
-        category: updates.category,
-        probability: updates.probability,
-        impact: updates.impact,
-        mitigationStrategy: updates.mitigationStrategy,
-        mitigationPlan: updates.mitigationPlan,
-        owner: updates.owner,
-        reviewDate: updates.reviewDate,
-        costs: updates.costs,
-        timelineImpact: updates.timelineImpact
-      };
-      
-      onRiskUpdate(id, updateData);
-    } else {
-      // Fallback to local state management for backward compatibility
-      const updatedRisks = risks.map(risk => {
-        if (risk.id === id) {
-          const updated = { ...risk, ...updates };
-          // Recalculate risk score if probability or impact changed
-          if (updates.probability !== undefined || updates.impact !== undefined) {
-            updated.riskScore = (updated.probability || 0) * (updated.impact || 0);
-          }
-          return updated;
+    // Fallback to local state management
+    const updatedRisks = risks.map(risk => {
+      if (risk.id === id) {
+        const updated = { ...risk, ...updates };
+        // Recalculate risk score if probability or impact changed
+        if (updates.probability !== undefined || updates.impact !== undefined) {
+          updated.riskScore = (updated.probability || 0) * (updated.impact || 0);
         }
-        return risk;
-      });
-      
-      setRisks(updatedRisks);
-      onUpdate({ risks: updatedRisks });
-    }
+        return updated;
+      }
+      return risk;
+    });
+    
+    setRisks(updatedRisks);
+    onStepComplete({ risks: updatedRisks });
   };
 
   const removeRisk = (id: string) => {
-    // Call the appropriate callback based on mode
-    if (mode === 'edit' && onRiskDelete) {
-      onRiskDelete(id);
-    } else {
-      // Fallback to local state management for backward compatibility
-      const updatedRisks = risks.filter(risk => risk.id !== id);
-      setRisks(updatedRisks);
-      onUpdate({ risks: updatedRisks });
-    }
+    // Fallback to local state management
+    const updatedRisks = risks.filter(risk => risk.id !== id);
+    setRisks(updatedRisks);
+    onStepComplete({ risks: updatedRisks });
+  };
   };
 
   const getRiskScoreColor = (score: number | undefined) => {

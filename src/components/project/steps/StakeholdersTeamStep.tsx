@@ -248,20 +248,18 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
 
     const updatedTeamMembers = [...teamMembers, {
       ...teamMemberData,
-      id: Date.now().toString(), // Generate temporary ID
+      id: Date.now().toString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      isActive: true, // Add missing required property
+      isActive: true,
     } as EmployeeDTO];
     setTeamMembers(updatedTeamMembers);
     setNewTeamMember({});
-    onUpdate({ teamMembers: updatedTeamMembers });
+    notifyUpdate(localStakeholders as any);
   };
 
   const removeTeamMember = (id: string) => {
-    const updatedTeamMembers = teamMembers.filter((t) => t.id !== id);
-    setTeamMembers(updatedTeamMembers);
-    onUpdate({ teamMembers: updatedTeamMembers });
+    handleTeamMemberDelete(id);
   };
 
   return (
