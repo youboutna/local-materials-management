@@ -118,15 +118,15 @@ export function usePhaseWorkflow(projectId: string, phaseId: string, phase?: Pha
     queryKey: ['workflow-inspections', phaseId],
     queryFn: async (): Promise<InspectionRecord[]> => {
       const inspections = await inspectionService.getInspectionsByPhase(phaseId);
-      return inspections.map((inspection: InspectionDTO) => ({
+      return (inspections as any[]).map((inspection: any) => ({
         id: inspection.id,
-        status: inspection.status,
-        progress_at_inspection: inspection.progressAtInspection || 0,
-        date: inspection.date,
-        inspector: inspection.inspector,
-        phase_id: inspection.phaseId,
-        project_id: inspection.projectId,
-        comments: inspection.comments,
+        status: String(inspection.status),
+        progress_at_inspection: inspection.progressAtInspection || inspection.progress_at_inspection || 0,
+        date: inspection.date || inspection.createdAt || '',
+        inspector: typeof inspection.inspector === 'string' ? inspection.inspector : (inspection.inspector?.name || ''),
+        phase_id: inspection.phaseId || inspection.phase_id || null,
+        project_id: inspection.projectId || inspection.project_id || '',
+        comments: inspection.comments || null,
       }));
     },
     enabled: !!phaseId,
