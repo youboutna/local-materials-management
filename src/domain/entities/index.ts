@@ -120,7 +120,7 @@ export { Certification } from './Certification';
 // ============================================================================
 
 export { Inspection, type InspectionStatus } from './Inspection';
-export type { InspectionDocument as InspectionDocumentType } from './Inspection';
+export type { InspectionParticipant } from './Inspection';
 export type { PaymentDocument as PaymentDocumentType } from './Payment';
 
 // ============================================================================
