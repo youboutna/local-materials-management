@@ -1,6 +1,5 @@
 /**
  * Workspaces Hook - Hexagonal Architecture
- * Rule #1: Form → DTO → Service → Domain → Adapter → DB
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -54,9 +53,6 @@ export interface UpdateWorkspaceDTO {
   capacity?: number;
 }
 
-/**
- * Main workspaces management hook
- */
 export function useWorkspacesHex(): UseWorkspacesHexResult {
   const queryClient = useQueryClient();
 
@@ -67,26 +63,22 @@ export function useWorkspacesHex(): UseWorkspacesHexResult {
     refetch
   } = useQuery({
     queryKey: ['workspaces'],
-    queryFn: async (): Promise<Array<{
-      id: string;
-      name: string;
-      location: string;
-      status: string;
-      contact_manager?: string;
-      contact_phone?: string;
-      facilities?: string[];
-      description?: string;
-      capacity?: number;
-      created_at?: string;
-      updated_at?: string;
-    }>> => {
-      try {
-        const workspaceRepository = RepositoryFactory.getWorkspaceRepository();
-        return await workspaceRepository.findAll();
-      } catch (err) {
-        console.error('Error fetching workspaces:', err);
-        throw err;
-      }
+    queryFn: async () => {
+      const workspaceRepository = RepositoryFactory.getWorkspaceRepository();
+      const result = await workspaceRepository.findAll();
+      return (result || []).map((w: any) => ({
+        id: w.id,
+        name: w.name || '',
+        location: w.location || '',
+        status: w.status || 'active',
+        contact_manager: w.contact?.manager,
+        contact_phone: w.contact?.phone,
+        facilities: w.facilities,
+        description: w.description,
+        capacity: w.capacity,
+        created_at: w.createdAt,
+        updated_at: w.updatedAt,
+      }));
     },
     retry: 3,
     retryDelay: 1000,
@@ -95,7 +87,7 @@ export function useWorkspacesHex(): UseWorkspacesHexResult {
   const createWorkspaceMutation = useMutation({
     mutationFn: async (data: CreateWorkspaceDTO) => {
       const workspaceRepository = RepositoryFactory.getWorkspaceRepository();
-      const createData = {
+      return await workspaceRepository.create({
         workspaceId: crypto.randomUUID(),
         workspaceCode: `WS-${Date.now()}`,
         name: data.name,
@@ -107,16 +99,14 @@ export function useWorkspacesHex(): UseWorkspacesHexResult {
           phone: data.contact_phone || ''
         } : undefined,
         facilities: data.facilities,
-        status: OperationalStatus.active
-      };
-      return await workspaceRepository.create(createData);
+        status: 'active' as any
+      } as any);
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['workspaces'] });
       toast.success(`L'espace de travail "${data?.name}" a été créé avec succès.`);
     },
-    onError: (error) => {
-      console.error('Error creating workspace:', error);
+    onError: () => {
       toast.error("Impossible de créer l'espace de travail.");
     }
   });
@@ -124,28 +114,24 @@ export function useWorkspacesHex(): UseWorkspacesHexResult {
   const updateWorkspaceMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateWorkspaceDTO }) => {
       const workspaceRepository = RepositoryFactory.getWorkspaceRepository();
-      const updateData: Partial<Workspace> = {
+      return await workspaceRepository.update(id, {
         name: data.name,
         location: data.location,
         description: data.description,
         capacity: data.capacity,
-        status: data.status === 'active' ? OperationalStatus.active :
-               data.status === 'inactive' ? OperationalStatus.inactive :
-               OperationalStatus.closed,
+        status: data.status as any,
         contact: data.contact_manager || data.contact_phone ? {
           manager: data.contact_manager || '',
           phone: data.contact_phone || ''
         } : undefined,
         facilities: data.facilities
-      };
-      return await workspaceRepository.update(id, updateData);
+      } as any);
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['workspaces'] });
       toast.success(`L'espace de travail "${data?.name}" a été mis à jour.`);
     },
-    onError: (error: Error) => {
-      console.error('Error updating workspace:', error);
+    onError: () => {
       toast.error("Impossible de mettre à jour l'espace de travail.");
     }
   });
