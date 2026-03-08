@@ -701,7 +701,7 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
                     <div>
                       <p className="font-medium text-success">Demande de paiement disponible</p>
                       <p className="text-sm text-muted-foreground">
-                        Inspection approuvée avec {latestApprovedInspection?.progress_at_inspection}% de progression
+                        Inspection approuvée avec {(latestApprovedInspection as any)?.progressAtInspection}% de progression
                       </p>
                     </div>
                   </div>
