@@ -30,15 +30,67 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
    * Transform Material entity to MaterialDTO (Domain → DTO)
    * Converts domain entity to data transfer object for UI/API
   */
+  /**
+   * Supabase Row (snake_case) → Domain Entity
+   * Moved from Material.fromDatabase() to respect hexagonal boundaries
+   */
   static fromSupabase(row: Record<string, unknown>): Material {
-    return Material.fromDatabase(row);
+    let timeline: { start: Date; end: Date; estimatedDuration?: number } | undefined;
+    if (row.timeline) {
+      const t = row.timeline as { start?: string; end?: string; estimatedDuration?: number };
+      timeline = { start: new Date(t.start as string), end: new Date(t.end as string), estimatedDuration: t.estimatedDuration ?? 7 };
+    }
+
+    return Material.create({
+      id: row.id as string,
+      name: row.name as string,
+      description: row.description as string,
+      category: row.category as any ?? 'other',
+      unit: row.unit as string ?? 'unit',
+      pricePerUnit: row.price_per_unit as number ?? 0,
+      availableQuantity: row.available_quantity as number ?? 0,
+      workspaceId: row.workspace_id as string,
+      coordinatesLatitude: row.coordinates_latitude as number,
+      coordinatesLongitude: row.coordinates_longitude as number,
+      adresse: row.adresse as string,
+    });
   }
 
   /**
-   * Domain Entity → DB row
+   * Domain Entity → Supabase Insert/Update Object (snake_case)
+   * Moved from Material.toDatabase() to respect hexagonal boundaries
    */
   static toSupabase(entity: Material): Record<string, unknown> {
-    return entity.toDatabase();
+    return {
+      id: entity.id,
+      name: entity.name,
+      description: entity.description,
+      quantity: entity.quantity,
+      unit: entity.unit,
+      min_quantity: entity.minQuantity,
+      workspace_id: entity.workspaceId,
+      price_per_unit: entity.pricePerUnit,
+      available_quantity: entity.availableQuantity,
+      origin_location: entity.originLocation,
+      category: entity.category,
+      subcategory: entity.subcategory,
+      localisation: entity.localisation,
+      forme: entity.forme,
+      adresse: entity.adresse,
+      gtin: entity.gtin,
+      sku: entity.sku,
+      ean: entity.ean,
+      asin: entity.asin,
+      image: entity.image,
+      coordinates_latitude: entity.coordinatesLatitude,
+      coordinates_longitude: entity.coordinatesLongitude,
+      multilang_labels: entity.multilangLabels,
+      supplier: entity.supplier,
+      timeline: entity.timeline,
+      last_restock: entity.lastRestock instanceof Date ? entity.lastRestock.toISOString() : entity.lastRestock,
+      material_status: entity.materialStatus,
+      tags: entity.tags,
+    };
   }
 
   /**

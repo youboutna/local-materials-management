@@ -24,6 +24,29 @@ export interface SupplierRating {
   overall: number;
 }
 
+/**
+ * SupplierProps - Pure data interface for factory creation
+ * Used by Transformers (infra layer) to build domain entities
+ * No infrastructure dependencies allowed
+ */
+export interface SupplierProps {
+  id: string;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  nif?: string | null;
+  category?: SupplierCategory | null;
+  status?: SupplierStatus;
+  rating?: SupplierRating | null;
+  contacts?: SupplierContact[];
+  isVerified?: boolean;
+  verifiedAt?: string | null;
+  workspaceId?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export class Supplier {
   // Private fields for encapsulation
   private _id: string;
@@ -59,7 +82,6 @@ export class Supplier {
     createdAt: string,
     updatedAt: string
   ) {
-    // Validate and assign private fields
     this._id = this.validateId(id);
     this._name = this.validateName(name);
     this._email = this.validateEmail(email);
@@ -165,86 +187,51 @@ export class Supplier {
 
   getContactInfo(): string {
     const contact = this.getPrimaryContact();
-    if (contact) {
-      return `${contact.name} - ${contact.email}`;
-    }
-    if (this._email) {
-      return this._email;
-    }
-    if (this._phone) {
-      return this._phone;
-    }
+    if (contact) return `${contact.name} - ${contact.email}`;
+    if (this._email) return this._email;
+    if (this._phone) return this._phone;
     return 'No contact info available';
   }
 
   // ============= Immutability Methods =============
   withStatus(newStatus: SupplierStatus): Supplier {
-    return new Supplier(
-      this._id,
-      this._name,
-      this._email,
-      this._phone,
-      this._address,
-      this._nif,
-      this._category,
-      this.validateStatus(newStatus),
-      this._rating,
-      this._contacts,
-      this._isVerified,
-      this._verifiedAt,
-      this._workspaceId,
-      this._createdAt,
-      new Date().toISOString()
-    );
+    return Supplier.create({
+      ...this.toProps(),
+      status: newStatus,
+      updatedAt: new Date().toISOString()
+    });
   }
 
   withRating(newRating: SupplierRating): Supplier {
-    return new Supplier(
-      this._id,
-      this._name,
-      this._email,
-      this._phone,
-      this._address,
-      this._nif,
-      this._category,
-      this._status,
-      newRating,
-      this._contacts,
-      this._isVerified,
-      this._verifiedAt,
-      this._workspaceId,
-      this._createdAt,
-      new Date().toISOString()
-    );
+    return Supplier.create({
+      ...this.toProps(),
+      rating: newRating,
+      updatedAt: new Date().toISOString()
+    });
   }
 
   // ============= Factory Methods =============
-  static create(params: {
-    id: string;
-    name: string;
-    email?: string;
-    phone?: string;
-    address?: string;
-    nif?: string;
-    category?: SupplierCategory;
-    workspaceId?: string;
-  }): Supplier {
+  /**
+   * Primary factory method - accepts SupplierProps (pure data)
+   * This is the ONLY way external code should create Supplier instances
+   */
+  static create(props: SupplierProps): Supplier {
     return new Supplier(
-      params.id,
-      params.name,
-      params.email || null,
-      params.phone || null,
-      params.address || null,
-      params.nif || null,
-      params.category || null,
-      'active',
-      null,
-      [],
-      false,
-      null,
-      params.workspaceId || null,
-      new Date().toISOString(),
-      new Date().toISOString()
+      props.id,
+      props.name,
+      props.email ?? null,
+      props.phone ?? null,
+      props.address ?? null,
+      props.nif ?? null,
+      props.category ?? null,
+      props.status ?? 'active',
+      props.rating ?? null,
+      props.contacts ?? [],
+      props.isVerified ?? false,
+      props.verifiedAt ?? null,
+      props.workspaceId ?? null,
+      props.createdAt ?? new Date().toISOString(),
+      props.updatedAt ?? new Date().toISOString()
     );
   }
 
@@ -269,47 +256,55 @@ export class Supplier {
     };
   }
 
+  /** Returns pure Props for immutability methods */
+  private toProps(): SupplierProps {
+    return {
+      id: this._id,
+      name: this._name,
+      email: this._email,
+      phone: this._phone,
+      address: this._address,
+      nif: this._nif,
+      category: this._category,
+      status: this._status,
+      rating: this._rating,
+      contacts: [...this._contacts],
+      isVerified: this._isVerified,
+      verifiedAt: this._verifiedAt,
+      workspaceId: this._workspaceId,
+      createdAt: this._createdAt,
+      updatedAt: this._updatedAt
+    };
+  }
+
   // ============= Validation Methods =============
   private validateId(id: string): string {
-    if (!id || id.trim().length === 0) {
-      throw new Error('Supplier ID is required');
-    }
+    if (!id || id.trim().length === 0) throw new Error('Supplier ID is required');
     return id.trim();
   }
 
   private validateName(name: string): string {
-    if (!name || name.trim().length === 0) {
-      throw new Error('Supplier name is required');
-    }
-    if (name.length > 200) {
-      throw new Error('Supplier name must be less than 200 characters');
-    }
+    if (!name || name.trim().length === 0) throw new Error('Supplier name is required');
+    if (name.length > 200) throw new Error('Supplier name must be less than 200 characters');
     return name.trim();
   }
 
   private validateEmail(email: string | null): string | null {
     if (!email) return null;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      throw new Error('Invalid email format');
-    }
+    if (!emailRegex.test(email)) throw new Error('Invalid email format');
     return email.trim();
   }
 
   private validateNif(nif: string | null): string | null {
     if (!nif) return null;
-    if (nif.length < 8 || nif.length > 20) {
-      throw new Error('NIF must be between 8 and 20 characters');
-    }
+    if (nif.length < 8 || nif.length > 20) throw new Error('NIF must be between 8 and 20 characters');
     return nif.trim();
   }
 
   private validateStatus(status: SupplierStatus): SupplierStatus {
     const validStatuses: SupplierStatus[] = ['active', 'inactive', 'suspended', 'blacklisted'];
-    
-    if (!validStatuses.includes(status)) {
-      throw new Error(`Invalid supplier status: ${status}`);
-    }
+    if (!validStatuses.includes(status)) throw new Error(`Invalid supplier status: ${status}`);
     return status;
   }
 }

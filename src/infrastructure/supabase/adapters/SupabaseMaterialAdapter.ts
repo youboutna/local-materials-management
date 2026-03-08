@@ -2,11 +2,13 @@
 /**
  * Supabase Adapter for Material Repository
  * Implements IMaterialRepository using Supabase
- * Rule #9: DB → Entity → Repository → Service
+ * Rule #9: DB → Transformer → Entity → Repository → Service
+ * Adapter NEVER calls Entity.fromDatabase() — always uses Transformer
  */
 import { supabase } from '@/integrations/supabase/client';
 import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
 import { Material, MaterialCategory } from '@/domain/entities/Material';
+import { MaterialTransformer } from '@/dtos/transforms/MaterialTransformer';
 import { Database } from '@/integrations/supabase/types';
 
 type MaterialRow = Database['public']['Tables']['materials']['Row'];
@@ -28,7 +30,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       .single();
 
     if (error || !data) return null;
-    return Material.fromDatabase(data as Record<string, unknown>);
+    return MaterialTransformer.fromSupabase(data as Record<string, unknown>);
   }
 
   async findAll(): Promise<Material[]> {
@@ -38,11 +40,11 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       .order('name', { ascending: true });
 
     if (error || !data) return [];
-    return data.map(d => Material.fromDatabase(d as Record<string, unknown>));
+    return data.map(d => MaterialTransformer.fromSupabase(d as Record<string, unknown>));
   }
 
   async save(material: Material): Promise<void> {
-    const dbData = material.toDatabase();
+    const dbData = MaterialTransformer.toSupabase(material);
     const { error } = await supabase.from('materials').insert(dbData as Database['public']['Tables']['materials']['Insert']);
     if (error) throw new Error(`Failed to save material: ${error.message}`);
   }
@@ -99,7 +101,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       .order('name', { ascending: true });
 
     if (error || !data) return [];
-    return data.map(d => Material.fromDatabase(d as Record<string, unknown>));
+    return data.map(d => MaterialTransformer.fromSupabase(d as Record<string, unknown>));
   }
 
   async findByWorkspace(workspaceId: string): Promise<Material[]> {
@@ -110,7 +112,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       .order('name', { ascending: true });
 
     if (error || !data) return [];
-    return data.map(d => Material.fromDatabase(d as Record<string, unknown>));
+    return data.map(d => MaterialTransformer.fromSupabase(d as Record<string, unknown>));
   }
 
   async findBySku(sku: string): Promise<Material | null> {
@@ -121,7 +123,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       .single();
 
     if (error || !data) return null;
-    return Material.fromDatabase(data as Record<string, unknown>);
+    return MaterialTransformer.fromSupabase(data as Record<string, unknown>);
   }
 
   async findByEan(ean: string): Promise<Material | null> {
@@ -132,7 +134,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       .single();
 
     if (error || !data) return null;
-    return Material.fromDatabase(data as Record<string, unknown>);
+    return MaterialTransformer.fromSupabase(data as Record<string, unknown>);
   }
 
   async search(query: string): Promise<Material[]> {
@@ -143,7 +145,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       .order('name', { ascending: true });
 
     if (error || !data) return [];
-    return data.map(d => Material.fromDatabase(d as Record<string, unknown>));
+    return data.map(d => MaterialTransformer.fromSupabase(d as Record<string, unknown>));
   }
 
   async findLowStock(threshold: number): Promise<Material[]> {
@@ -155,7 +157,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       .order('available_quantity', { ascending: true });
 
     if (error || !data) return [];
-    return data.map(d => Material.fromDatabase(d as Record<string, unknown>));
+    return data.map(d => MaterialTransformer.fromSupabase(d as Record<string, unknown>));
   }
 
   async findOutOfStock(): Promise<Material[]> {
@@ -166,7 +168,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       .order('name', { ascending: true });
 
     if (error || !data) return [];
-    return data.map(d => Material.fromDatabase(d as Record<string, unknown>));
+    return data.map(d => MaterialTransformer.fromSupabase(d as Record<string, unknown>));
   }
 
   async getTotalValue(): Promise<number> {
@@ -212,7 +214,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       projectId: pm.project_id as string,
       materialId: pm.material_id as string,
       quantity: pm.quantity as number,
-      material: pm.materials ? Material.fromDatabase(pm.materials as Record<string, unknown>) : null,
+      material: pm.materials ? MaterialTransformer.fromSupabase(pm.materials as Record<string, unknown>) : null,
     }));
   }
 

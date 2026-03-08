@@ -11,6 +11,32 @@ import { Permission, Department, EmployeeData, EmployeeRole } from '../types';
 // Re-export for backward compatibility
 export type { Permission, Department, EmployeeData, EmployeeRole };
 
+/**
+ * EmployeeProps - Pure data interface for factory creation
+ * Used by Transformers (infra layer) to build domain entities
+ * No infrastructure dependencies allowed
+ */
+export interface EmployeeProps {
+  id: string;
+  employeeId: string;
+  fullName: string;
+  email?: string | null;
+  phone?: string | null;
+  position?: string | null;
+  department?: Department | null;
+  role?: string;
+  hireDate?: string | null;
+  salary?: number | null;
+  isActive?: boolean;
+  userId?: string | null;
+  managerId?: string | null;
+  superiorId?: string | null;
+  skills?: string[];
+  certifications?: unknown[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export class Employee {
   // Private fields for encapsulation
   private _id: string;
@@ -32,6 +58,9 @@ export class Employee {
   private _teamMembers: Employee[];
   private _skills: string[];
   private _certifications: Certification[];
+  private _userId: string | null;
+  private _managerId: string | null;
+  private _superiorId: string | null;
   private _createdAt: string;
   private _updatedAt: string;
 
@@ -78,6 +107,9 @@ export class Employee {
     this._teamMembers = teamMembers || [];
     this._skills = skills || [];
     this._certifications = certifications || [];
+    this._userId = null;
+    this._managerId = null;
+    this._superiorId = null;
     this._createdAt = createdAt;
     this._updatedAt = updatedAt;
   }
@@ -102,6 +134,9 @@ export class Employee {
   get teamMembers(): Employee[] { return this._teamMembers; }
   get skills(): string[] { return this._skills; }
   get certifications(): Certification[] { return this._certifications; }
+  get userId(): string | null { return this._userId; }
+  get managerId(): string | null { return this._managerId; }
+  get superiorId(): string | null { return this._superiorId; }
   get createdAt(): string { return this._createdAt; }
   get updatedAt(): string { return this._updatedAt; }
 
@@ -135,7 +170,6 @@ export class Employee {
   }
 
   getProgressPercentage(): number {
-    // Calculate progress based on completed certifications and skills
     const totalSkills = this._skills.length;
     const completedCertifications = this._certifications.filter(cert => !cert.isExpired()).length;
     return totalSkills > 0 ? (completedCertifications / totalSkills) * 100 : 0;
@@ -259,29 +293,17 @@ export class Employee {
 
   // ============= Immutability Methods =============
   withRole(newRole: UserRole): Employee {
-    return new Employee(
-      this._id,
-      this._employeeId,
-      this._fullName,
-      this._email,
-      this._phone,
-      this._position,
-      this._department,
-      newRole,
-      this._hireDate,
-      this._salary,
-      this._isActive,
-      this._user,
-      this._manager,
-      this._superior,
-      this._directReports,
-      this._managedProjects,
-      this._teamMembers,
-      this._skills,
-      this._certifications,
-      this._createdAt,
-      new Date().toISOString()
+    const emp = new Employee(
+      this._id, this._employeeId, this._fullName, this._email, this._phone,
+      this._position, this._department, newRole, this._hireDate, this._salary,
+      this._isActive, this._user, this._manager, this._superior,
+      this._directReports, this._managedProjects, this._teamMembers,
+      this._skills, this._certifications, this._createdAt, new Date().toISOString()
     );
+    emp._userId = this._userId;
+    emp._managerId = this._managerId;
+    emp._superiorId = this._superiorId;
+    return emp;
   }
 
   withAdditionalPermission(permission: Permission): Employee {
@@ -293,51 +315,48 @@ export class Employee {
   }
 
   // ============= Factory Methods =============
-  static create(params: {
-    id: string;
-    employeeId: string;
-    fullName: string;
-    email?: string;
-    phone?: string;
-    position?: string;
-    department?: Department;
-    role?: string;
-    hireDate?: string;
-  }): Employee {
-    // Create dynamic role instance
-    const roleInstance = params.role 
+  /**
+   * Primary factory method - accepts EmployeeProps (pure data)
+   * This is the ONLY way external code should create Employee instances
+   */
+  static create(props: EmployeeProps): Employee {
+    const roleInstance = props.role 
       ? UserRole.create({
-          id: params.role,
-          name: params.role,
-          displayName: Employee.getRoleDisplayName(params.role),
-          level: Employee.getRoleLevel(params.role),
-          permissions: Employee.getRolePermissions(params.role)
+          id: props.role,
+          name: props.role,
+          displayName: Employee.getRoleDisplayName(props.role),
+          level: Employee.getRoleLevel(props.role),
+          permissions: Employee.getRolePermissions(props.role)
         })
-      : UserRole.worker(); // Default role
+      : UserRole.worker();
 
-    return new Employee(
-      params.id,
-      params.employeeId,
-      params.fullName,
-      params.email || null,
-      params.phone || null,
-      params.position || null,
-      params.department || null,
+    const emp = new Employee(
+      props.id,
+      props.employeeId,
+      props.fullName,
+      props.email ?? null,
+      props.phone ?? null,
+      props.position ?? null,
+      props.department ?? null,
       roleInstance,
-      params.hireDate || null,
-      null,
-      true,
+      props.hireDate ?? null,
+      props.salary ?? null,
+      props.isActive ?? true,
       null,           // user
       null,           // manager
       null,           // superior
       [],             // directReports
       [],             // managedProjects
       [],             // teamMembers
-      [],             // skills
+      props.skills || [],
       [],             // certifications
-      new Date().toISOString(),
-      new Date().toISOString()
+      props.createdAt || new Date().toISOString(),
+      props.updatedAt || new Date().toISOString()
     );
+    emp._userId = props.userId ?? null;
+    emp._managerId = props.managerId ?? null;
+    emp._superiorId = props.superiorId ?? null;
+    return emp;
   }
 
   // ============= Data Transformation Methods =============
@@ -440,17 +459,10 @@ export class Employee {
 
   private static getRoleLevel(role: string): number {
     const levels: Record<string, number> = {
-      admin: 10,
-      director: 9,
-      project_manager: 8,
-      technical_manager: 7,
-      engineering_consultant: 6,
-      supervisor: 5,
-      inspector: 5,
-      finance_manager: 7,
-      legal: 6,
-      worker: 3,
-      supplier: 2
+      admin: 10, director: 9, project_manager: 8,
+      technical_manager: 7, engineering_consultant: 6,
+      supervisor: 5, inspector: 5, finance_manager: 7,
+      legal: 6, worker: 3, supplier: 2
     };
     return levels[role] || 1;
   }
@@ -465,9 +477,7 @@ export class Employee {
       supervisor: ['execute_inspections', 'manage_team'],
       inspector: ['execute_inspections'],
       finance_manager: ['approve_payments'],
-      legal: [],
-      worker: [],
-      supplier: []
+      legal: [], worker: [], supplier: []
     };
     return permissions[role] || [];
   }

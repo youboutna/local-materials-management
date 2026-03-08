@@ -19,7 +19,7 @@ export { Milestone, type MilestoneDependency, type MilestoneDeliverable, type Mi
 // ============================================================================
 
 export { Employee } from './Employee';
-export type { EmployeeRole, Department, Permission } from './Employee';
+export type { EmployeeRole, Department, Permission, EmployeeProps } from './Employee';
 export { User, type UserRoleType, type AuthSession, type UserProfile } from './User';
 export { UserRole } from './UserRole';
 export { Position, type PositionPermissions } from './Position';
@@ -42,7 +42,7 @@ export type { TenderStatus, SelectionMode, MarketType } from './Tender';
 export { TenderEstimate, type ITenderEstimateItem as TenderEstimateItemInterface, type TenderEstimateRisk, type TenderEstimateMetrics, type CurrencyCode } from './TenderEstimate';
 export { TenderEstimateItem as TenderEstimateItemEntity, type TenderEstimateItemData } from './TenderEstimateItem';
 export { TenderSubmission } from './TenderSubmission';
-export { Supplier, type SupplierStatus, type SupplierCategory, type SupplierContact, type SupplierRating } from './Supplier';
+export { Supplier, type SupplierStatus, type SupplierCategory, type SupplierContact, type SupplierRating, type SupplierProps } from './Supplier';
 export { Material, type MaterialCategory } from './Material';
 export { Risk } from './Risk';
 export type { RiskStatus, RiskLevel, RiskCategory } from './RiskTypesExport';
