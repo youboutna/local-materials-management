@@ -30,7 +30,7 @@ import { MaterialDTO } from "@/dtos/entities/MaterialDTO";
 
 interface EnhancedComplianceStepProps {
   workflowData: ProjectWorkflowData | null;
-  onStepComplete: (stepData: { compliance: ComplianceDataDTO, relatedData: StepRelatedDataDTO }) => void;
+  onStepComplete: (stepData: { compliance: ComplianceDataDTO }) => void;
   isEditing?: boolean;
   mode?: 'create' | 'edit';
 }
@@ -67,7 +67,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
   const loadComplianceData = useCallback(async () => {
     try {
       // Load bank guarantees using service - Correct method name
-      const guaranteesData = await bankGuaranteeService.getByProjectId(projectData.id || '');
+      const guaranteesData = await BankGuaranteeService.getByProjectId(projectData.id || '');
       setBankGuarantees(guaranteesData);
 
       // Load insurance policies using service - Correct method name
@@ -160,7 +160,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
     return (completedItems.length / complianceItems.length) * 100;
   };
 
-  const getSafeAttribute = (obj: Record<string, unknown>, camelKey: string, snakeKey: string, fallback: unknown = ''): unknown => {
+  const getSafeAttribute = (obj: any, camelKey: string, snakeKey: string, fallback: unknown = ''): unknown => {
     return obj?.[camelKey] ?? obj?.[snakeKey] ?? fallback;
   };
 
@@ -342,12 +342,12 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
                   {insurancePolicies.map((policy) => (
                     <div key={policy.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
-                        <h4 className="font-medium">{policy.insuranceCompany || policy.insurance_company || 'Compagnie inconnue'}</h4>
+                        <h4 className="font-medium">{policy.insuranceCompany || (policy as any).insurance_company || 'Compagnie inconnue'}</h4>
                         <p className="text-sm text-gray-600">
-                          {policy.insuranceType || policy.insurance_type || 'Type inconnu'} - {policy.policyNumber || policy.policy_number || 'N° inconnu'}
+                          {policy.insuranceType || (policy as any).insurance_type || 'Type inconnu'} - {policy.policyNumber || (policy as any).policy_number || 'N° inconnu'}
                         </p>
                         <p className="text-xs text-gray-500">
-                          Valide jusqu'au: {new Date(policy.validUntil || policy.valid_until || new Date().toISOString()).toLocaleDateString()}
+                          Valide jusqu'au: {new Date(policy.validUntil || (policy as any).valid_until || new Date().toISOString()).toLocaleDateString()}
                         </p>
                       </div>
                       <Badge className={getStatusColor(policy.status || policy.status || 'unknown')}>
@@ -385,12 +385,12 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
                   {bankGuarantees.map((guarantee) => (
                     <div key={guarantee.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
-                        <h4 className="font-medium">{guarantee.guarantor || guarantee.guarantor || 'Garant inconnu'}</h4>
+                        <h4 className="font-medium">{guarantee.issuingBank || (guarantee as any).issuing_bank || 'Garant inconnu'}</h4>
                         <p className="text-sm text-gray-600">
-                          {guarantee.guaranteeType || guarantee.guarantee_type || 'Type inconnu'} - {guarantee.coverageAmount || guarantee.coverage_amount || 0?.toLocaleString()}€
+                          {guarantee.guaranteeType || guarantee.type || 'Type inconnu'} - {(guarantee.guaranteeAmount || guarantee.amount || 0)?.toLocaleString()}€
                         </p>
                         <p className="text-xs text-gray-500">
-                          Valide jusqu'au: {new Date(guarantee.validUntil || guarantee.valid_until || new Date().toISOString()).toLocaleDateString()}
+                          Valide jusqu'au: {new Date(guarantee.expiryDate || (guarantee as any).expiry_date || new Date().toISOString()).toLocaleDateString()}
                         </p>
                       </div>
                       <Badge className={getStatusColor(guarantee.status || guarantee.status || 'unknown')}>

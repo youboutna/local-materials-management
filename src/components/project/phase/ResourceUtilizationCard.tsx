@@ -80,7 +80,7 @@ const ResourceUtilizationCard: React.FC<ResourceUtilizationCardProps> = ({ phase
           </div>
         </div>
         
-        {resources.hasResourceIssues && (
+        {(resources.efficiency < 50 || resources.totalEmployees === 0) && (
           <Alert className="py-2 border-amber-200 bg-amber-50">
             <AlertTriangle className="h-4 w-4 text-amber-600" />
             <AlertDescription className="text-xs text-amber-700">

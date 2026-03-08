@@ -484,11 +484,13 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
                 location: selectedProject?.location || '',
                 notes: ''
               })) } as any}
+              phases={phases as any}
+              projectId={selectedProject?.id}
               onStepComplete={(stepData: any) => {
-                // Mettre à jour les phases
-                setPhases(updatedPhases.map(up => ({
+                const newPhases = stepData?.phases || phases;
+                setPhases(newPhases.map((up: any) => ({
                   id: up.id,
-                  name: up.title,
+                  name: up.title || up.name,
                   description: up.description,
                   startDate: up.startDate,
                   endDate: up.endDate,

@@ -202,6 +202,8 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
         workflowData={{ phases } as any}
         onStepComplete={(stepData: any) => handlePhasesChange(stepData?.phases || [])}
         projectBudget={projectBudget}
+        phases={phases as any}
+        projectId={projectId}
       />
     </div>
   );

@@ -376,7 +376,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 placeholder="15"
                 min="0"
                 max="100"
-                value={String(formData.initialPaymentPercentage || "")}
+                value={String((projectData as any).initialPaymentPercentage || "")}
                 onChange={(e) =>
                   handleUpdate({
                     initialPaymentPercentage:

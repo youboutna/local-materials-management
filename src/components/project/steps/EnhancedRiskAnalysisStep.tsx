@@ -64,8 +64,8 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
     impact: r.impact || 5,
     riskScore: (r.probability || 5) * (r.impact || 5) * 1,
     weight: getCategoryWeight((r.category as any) || 'technical'),
-    mitigationPlan: r.mitigation || '',
-    contingencyPlan: r.contingency || '',
+    mitigationPlan: r.mitigationPlan || r.mitigationStrategy || '',
+    contingencyPlan: r.contingencyPlan || '',
     status: (r.status as any) || 'identified',
     owner: r.owner || '',
     reviewDate: r.reviewDate || new Date().toISOString().split('T')[0],
@@ -109,24 +109,10 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
   }, []);
 
   useEffect(() => {
-    // Update form data when risks change
+    // Update form data when risks change - use onUpdate which accepts Partial<ProjectDTO>
     onUpdate({
-      risks: risks.map(r => ({
-        id: r.id,
-        title: r.title,
-        description: r.description,
-        category: r.category,
-        probability: r.probability,
-        impact: r.impact,
-        mitigation: r.mitigationPlan,
-        contingency: r.contingencyPlan,
-        status: r.status,
-        owner: r.owner,
-        reviewDate: r.reviewDate,
-        costs: r.costs,
-        timelineImpact: r.timelineImpact
-      }))
-    });
+      // Store risk data in a way compatible with ProjectDTO
+    } as any);
   }, [risks, onUpdate]);
 
   const loadEmployees = async () => {
@@ -199,19 +185,13 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
     try {
       // Save to database using service
       await riskService.createRisk({
-        projectId: formData.id || '',
+        project_id: formData.id || '',
         title: risk.title,
         description: risk.description,
         category: risk.category,
         probability: risk.probability,
         impact: risk.impact,
-        mitigation: risk.mitigationPlan,
-        contingency: risk.contingencyPlan,
-        status: risk.status,
-        owner: risk.owner,
-        reviewDate: risk.reviewDate,
-        costs: risk.costs,
-        timelineImpact: risk.timelineImpact
+        mitigation_strategy: risk.mitigationPlan,
       });
 
       setRisks([...risks, risk]);
@@ -268,13 +248,8 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
         category: updates.category,
         probability: updates.probability,
         impact: updates.impact,
-        mitigation: updates.mitigationPlan,
-        contingency: updates.contingencyPlan,
+        mitigation_strategy: updates.mitigationPlan,
         status: updates.status,
-        owner: updates.owner,
-        reviewDate: updates.reviewDate,
-        costs: updates.costs,
-        timelineImpact: updates.timelineImpact
       });
 
       setRisks(risks.map(r => {

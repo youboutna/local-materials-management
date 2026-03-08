@@ -86,7 +86,7 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
     queryFn: async () => {
       const inspections = await inspectionService.getInspectionsByPhase(phaseId);
 
-      const approvedCount = inspections.filter((i) => i.status === 'approved').length;
+      const approvedCount = inspections.filter((i) => (i.status as string) === 'approved').length;
       return {
         inspections,
         totalCount: inspections.length,
@@ -366,21 +366,21 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
                     >
                       <div className={cn(
                         'p-2 rounded-full',
-                        inspection.status === 'approved' ? 'bg-success/10 text-success' :
-                        inspection.status === 'rejected' ? 'bg-destructive/10 text-destructive' :
+                        (inspection.status as string) === 'approved' ? 'bg-success/10 text-success' :
+                        (inspection.status as string) === 'rejected' ? 'bg-destructive/10 text-destructive' :
                         'bg-muted text-muted-foreground'
                       )}>
                         <ClipboardCheck className="h-4 w-4" />
                       </div>
                       <div className="flex-1">
-                        <div className="font-medium text-sm">{inspection.inspector}</div>
+                        <div className="font-medium text-sm">{typeof inspection.inspector === 'string' ? inspection.inspector : (inspection.inspector as any)?.name || 'Inspector'}</div>
                         <div className="text-xs text-muted-foreground">
                           {formatDate(inspection.date)} • {inspection.progressAtInspection}%
                         </div>
                       </div>
                       <Badge variant={
-                        inspection.status === 'approved' ? 'default' :
-                        inspection.status === 'rejected' ? 'destructive' : 'secondary'
+                        (inspection.status as string) === 'approved' ? 'default' :
+                        (inspection.status as string) === 'rejected' ? 'destructive' : 'secondary'
                       }>
                         {inspection.status}
                       </Badge>

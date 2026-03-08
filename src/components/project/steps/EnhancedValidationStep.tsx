@@ -153,11 +153,11 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
         documents: uploadedFiles.map(file => ({
           id: `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           name: file.name,
-          type: file.type as 'certificate' | 'checklist' | 'photo' | 'report' | 'scan',
+          type: file.type as any,
           url: `mock-url/${file.name}`,
           size: file.size,
           uploadedAt: new Date().toISOString()
-        }))
+        })) as any
       };
 
       // Mock service call - in real implementation, use ReceptionService
@@ -316,7 +316,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
             <CardContent className="space-y-4">
               <div>
                 <Label htmlFor="project-status">Statut du Projet</Label>
-                <Select value={formData.status || ""} onValueChange={(value) => onUpdate({ status: value })}>
+                <Select value={formData.status || ""} onValueChange={(value) => onUpdate({ status: value } as any)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner le statut" />
                   </SelectTrigger>
@@ -369,7 +369,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="reception-type">Type de Réception</Label>
-                    <Select value={selectedReceptionType} onValueChange={setSelectedReceptionType}>
+                    <Select value={selectedReceptionType} onValueChange={(value) => setSelectedReceptionType(value as ReceptionType | '')}>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionner le type" />
                       </SelectTrigger>

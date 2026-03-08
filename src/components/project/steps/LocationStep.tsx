@@ -86,8 +86,8 @@ const LocationStep: React.FC<LocationStepProps> = ({
               <label className="block text-sm font-medium mb-2">Zone géographique</label>
               <select 
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                value={formData.geographic_zone || ''}
-                onChange={(e) => onUpdate({ geographic_zone: e.target.value })}
+                value={(formData as any).geographicZone || (formData as any).geographic_zone || ''}
+                onChange={(e) => onUpdate({ geographicZone: e.target.value } as any)}
               >
                 <option value="">Sélectionner une zone</option>
                 <option value="urban">Zone urbaine</option>
@@ -102,8 +102,8 @@ const LocationStep: React.FC<LocationStepProps> = ({
               <label className="block text-sm font-medium mb-2">Type de terrain</label>
               <select 
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                value={formData.terrain_type || ''}
-                onChange={(e) => onUpdate({ terrain_type: e.target.value })}
+                value={(formData as any).terrainType || (formData as any).terrain_type || ''}
+                onChange={(e) => onUpdate({ terrainType: e.target.value } as any)}
               >
                 <option value="">Sélectionner le type</option>
                 <option value="flat">Terrain plat</option>

@@ -154,12 +154,10 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
   const loadMilestones = async () => {
     try {
       setLoading(true);
-      const [milestonesData, progressData] = await Promise.all([
-        MilestoneService.getPhaseMilestones(projectId, phaseId),
-        MilestoneService.getMilestoneProgress(projectId, phaseId)
-      ]);
-      setMilestones(milestonesData);
-      setProgress(progressData);
+      const milestoneService = getMilestoneService();
+      const milestonesData = await milestoneService.getProjectMilestones(projectId);
+      setMilestones(milestonesData as any);
+      setProgress(null);
     } catch (error) {
       console.error('Error loading milestones:', error);
     } finally {
@@ -206,10 +204,12 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
 
   const handleSaveMilestone = async () => {
     try {
-      await MilestoneService.createMilestone(projectId, {
+      const milestoneService = getMilestoneService();
+      await milestoneService.createMilestone({
         ...formData,
-        phase_id: phaseId
-      });
+        phaseId: phaseId,
+        projectId: projectId,
+      } as any);
       toast({ title: 'Jalon ajouté avec succès' });
       setIsDialogOpen(false);
       loadMilestones();
