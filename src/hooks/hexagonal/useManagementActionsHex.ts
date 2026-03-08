@@ -42,7 +42,7 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
 
     // Process pending/in-progress inspections
     const pendingInspections = allInspections
-      .filter(i => ['in_progress', 'scheduled'].includes(i.status))
+      .filter(i => ['in_progress', 'scheduled'].includes(i.status as string))
       .slice(0, 5);
 
     pendingInspections.forEach(inspection => {
