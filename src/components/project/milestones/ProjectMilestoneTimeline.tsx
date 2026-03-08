@@ -139,7 +139,7 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
 
   // Group milestones by phase
   const groupedMilestones = milestones.reduce((acc, m) => {
-    const key = m.phase_name || 'Projet global';
+    const key = m.phaseDame || 'Projet global';
     if (!acc[key]) acc[key] = [];
     acc[key].push(m);
     return acc;
