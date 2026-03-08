@@ -280,7 +280,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
         
         {!readonly && (
           <div className="flex gap-2">
-            {hasTemplates && milestones.filter(m => m.is_from_template).length === 0 && (
+            {hasTemplates && milestones.filter(m => m.isFromTemplate).length === 0 && (
               <Button
                 variant="outline"
                 size="sm"
