@@ -104,6 +104,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
           documents: documents
         }
       });
+      });
     }
   }, [complianceItems, insurancePolicies, bankGuarantees, documents, onStepComplete]);
 
