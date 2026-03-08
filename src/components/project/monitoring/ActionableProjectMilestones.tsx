@@ -386,7 +386,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                         status.bgColor,
                         status.borderColor
                       )}
-                      onClick={() => onMilestoneClick?.(milestone.id, milestone.phase_id)}
+                      onClick={() => onMilestoneClick?.(milestone.id, (milestone as any).phaseId)}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-start gap-3 flex-1 min-w-0">
