@@ -71,7 +71,7 @@ export const usePasswordManagement = () => {
         
         // Sign out and redirect to login using AuthService
         const authService = new AuthService();
-        await authService.logout();
+        await authService.signOut();
         navigate('/auth');
         
         return { success: true };
