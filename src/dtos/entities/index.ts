@@ -88,3 +88,16 @@ export * from './ProjectDTO';
 
 export * from './SupplierPaymentDTO';
 
+// Payment initiation DTOs
+export * from './PaymentInitiationDTO';
+
+// Material categories
+export * from './MaterialCategoryDTO';
+
+// Notification types
+export * from './NotificationTypeDTO';
+
+// Unified workflow
+export * from './UnifiedWorkflowDTO';
+
+

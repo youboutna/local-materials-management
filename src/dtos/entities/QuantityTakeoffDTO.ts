@@ -101,14 +101,13 @@ export interface QuantityCalculationParams {
 }
 
 /**
- * Calculate quantity with wastage factor
+ * Calculate quantity with wastage factor (advanced)
  */
-export function calculateQuantity(params: QuantityCalculationParams): QuantityCalculationResult {
+export function calculateQuantityAdvanced(params: QuantityCalculationParams): QuantityCalculationResult {
   const {
     length = 0,
     width = 0,
     height = 0,
-    depth = 0,
     area = 0,
     volume = 0,
     weight = 0,
@@ -116,7 +115,6 @@ export function calculateQuantity(params: QuantityCalculationParams): QuantityCa
     wastageFactor = 0.1
   } = params;
 
-  // Calculate base quantity
   let baseQuantity = 0;
   if (area > 0) baseQuantity = area;
   else if (volume > 0) baseQuantity = volume;
@@ -125,7 +123,6 @@ export function calculateQuantity(params: QuantityCalculationParams): QuantityCa
   else if (count > 0) baseQuantity = count;
   else if (weight > 0) baseQuantity = weight;
 
-  // Calculate wastage
   const wastageQuantity = baseQuantity * wastageFactor;
   const totalWithWastage = baseQuantity + wastageQuantity;
 
@@ -142,3 +139,19 @@ export function calculateQuantity(params: QuantityCalculationParams): QuantityCa
     totalWithWastage
   };
 }
+
+/**
+ * Simple quantity calculation (legacy compatible)
+ * Used by MetreCalculator and QuantityTakeoffForm
+ */
+export const calculateQuantity = (
+  length: number, 
+  width?: number, 
+  height?: number, 
+  unit?: string
+): number => {
+  if (unit === 'm³') return length * (width ?? 1) * (height ?? 1);
+  if (unit === 'm²') return length * (width ?? 1);
+  if (unit === 'm') return length;
+  return 1;
+};
