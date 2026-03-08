@@ -51,6 +51,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
   const [loading, setLoading] = useState(false);
   const [reportData, setReportData] = useState<InspectionReportData | null>(null);
   const [metrics, setMetrics] = useState<InspectionMetrics | null>(null);
+  const inspectionService = new InspectionReportingService();
   const [reportConfig, setReportConfig] = useState<LocalInspectionReportConfig>({
     title: `Rapport d'inspection - ${inspection.title || inspection.id}`,
     recipientEmail: '',
