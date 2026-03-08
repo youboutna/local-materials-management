@@ -316,7 +316,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
             <CardContent className="space-y-4">
               <div>
                 <Label htmlFor="project-status">Statut du Projet</Label>
-                <Select value={formData.status || ""} onValueChange={(value) => onUpdate({ status: value })}>
+                <Select value={formData.status || ""} onValueChange={(value) => onUpdate({ status: value } as any)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner le statut" />
                   </SelectTrigger>
