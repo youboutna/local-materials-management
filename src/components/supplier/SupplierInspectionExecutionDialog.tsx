@@ -302,9 +302,9 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
             Compléter l'inspection
           </DialogTitle>
           <DialogDescription>
-            Projet: {inspection.projects?.title}
+            Projet: {(inspection as any).projects?.title || inspection.projectId || ''}
             <br />
-            Date: {new Date(inspection.date).toLocaleDateString('fr-FR')}
+            Date: {new Date(inspection.date || inspection.scheduledDate || '').toLocaleDateString('fr-FR')}
           </DialogDescription>
         </DialogHeader>
 

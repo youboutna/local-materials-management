@@ -73,8 +73,8 @@ export const SupplierTenderAccessGuard: React.FC<SupplierTenderAccessGuardProps>
         description: 'Vous avez accès aux détails de l\'appel d\'offres et pouvez soumettre votre candidature.',
       });
 
-      if (validation.tender_id) {
-        onAccessGranted(validation.tender_id, email);
+      if (validation.tenderId) {
+        onAccessGranted(validation.tenderId, email);
       }
     } catch (error: any) {
       console.error('Validation error:', error);

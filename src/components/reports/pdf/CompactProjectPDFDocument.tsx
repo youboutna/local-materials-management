@@ -4,6 +4,10 @@ import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
+// Local types for PDF rendering
+type EVMMetrics = Record<string, any>;
+type PERTAnalysis = Record<string, any>;
+
 // Local type for PDF rendering - compatible with both ProjectDTO and ProjectData
 type ProjectData = ProjectDTO & {
   resources?: Array<{ type?: string; name?: string }>;

@@ -405,10 +405,10 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
                               <div className="font-medium">{doc.title}</div>
                               <div className="flex items-center gap-2 text-sm text-gray-500">
                                 <Badge variant="outline">
-                                  {DOCUMENT_TYPES.find(t => t.value === doc.document_type)?.label || doc.document_type}
+                                  {DOCUMENT_TYPES.find(t => t.value === ((doc as any).document_type || doc.documentType))?.label || (doc as any).document_type || doc.documentType}
                                 </Badge>
                                 <span>•</span>
-                                <span>{doc.created_at ? new Date(doc.created_at).toLocaleDateString('fr-FR') : 'Date inconnue'}</span>
+                                <span>{(doc.createdAt || (doc as any).created_at) ? new Date(doc.createdAt || (doc as any).created_at).toLocaleDateString('fr-FR') : 'Date inconnue'}</span>
                               </div>
                               {doc.description && (
                                 <div className="text-sm text-gray-600 mt-1">{doc.description}</div>

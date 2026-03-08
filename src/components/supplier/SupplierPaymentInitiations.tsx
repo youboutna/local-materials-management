@@ -97,7 +97,7 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
 
     setSubmitting(true);
     try {
-      await PaymentInitiationService.supplierComplete({
+      await PaymentInitiationService.handleSupplierCompletion({
         notification_id: selectedInitiation.id,
         final_amount: numAmount,
         description,

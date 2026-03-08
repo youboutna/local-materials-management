@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { FileText, Download, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSupplierDocumentsHex } from '@/hooks/hexagonal'
-import type { Supplier } from '@/dtos/entities/SupplierDTO';
+import type { SupplierDTO as Supplier } from '@/dtos/entities/SupplierDTO';
 import type { SupplierDocument } from '@/hooks/hexagonal';
 
 interface SupplierDocumentsListProps {

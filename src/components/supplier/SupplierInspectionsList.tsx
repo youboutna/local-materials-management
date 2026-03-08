@@ -151,11 +151,11 @@ export const SupplierInspectionsList: React.FC<SupplierInspectionsListProps> = (
                           </span>
                         </div>
 
-                        {inspection.projects?.status && (
+                        {(inspection as any).projects?.status && (
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-muted-foreground">Projet:</span>
                             <Badge variant="outline" className="text-xs">
-                              {inspection.projects.status}
+                              {(inspection as any).projects.status}
                             </Badge>
                           </div>
                         )}
