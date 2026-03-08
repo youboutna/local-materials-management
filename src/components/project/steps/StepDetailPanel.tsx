@@ -86,7 +86,7 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
     queryFn: async () => {
       const inspections = await inspectionService.getInspectionsByPhase(phaseId);
 
-      const approvedCount = inspections.filter((i) => i.status === 'approved').length;
+      const approvedCount = inspections.filter((i) => (i.status as string) === 'approved').length;
       return {
         inspections,
         totalCount: inspections.length,
