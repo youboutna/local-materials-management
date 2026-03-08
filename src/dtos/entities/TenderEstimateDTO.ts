@@ -290,11 +290,7 @@ export interface TenderEstimateStatsDto {
   estimates_by_submitter: Record<string, number>;
 }
 
-export interface TenderEstimateValidationDto {
-  is_valid: boolean;
-  errors: string[] | TenderEstimateValidationErrorDto[];
-  warnings: string[] | TenderEstimateValidationWarningDto[];
-}
+// TenderEstimateValidationDto already defined above
 
 export interface TenderEstimateValidationErrorDto {
   field: string;
