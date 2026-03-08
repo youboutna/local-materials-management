@@ -163,8 +163,8 @@ export function usePaymentBlocksHex(projectId?: string) {
     setError(null);
 
     try {
-      // Use static method - PaymentBlockingService has static methods only
-      const data = await PaymentBlockingService.getPaymentBlocks(projectId);
+      const blockingService = new PaymentBlockingService();
+      const data = await blockingService.getPaymentBlocks(projectId);
       
       setBlocks(data.map(b => ({
         id: b.id,
