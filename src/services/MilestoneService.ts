@@ -86,12 +86,12 @@ export class MilestoneService {
       }, {} as Record<string, string>);
     }
 
-    return (milestones || []).map(m => {
+    return (milestones || []).filter(m => m.id).map(m => {
       const deps = m.dependencies as any;
       return {
-        id: m.id,
-        title: m.title,
-        target_date: m.target_date,
+        id: m.id!,
+        title: m.title || '',
+        target_date: m.target_date || '',
         completed_date: m.completed_date || undefined,
         status: m.status as MilestoneSummaryDTO['status'],
         type: deps?.type || 'checkpoint',

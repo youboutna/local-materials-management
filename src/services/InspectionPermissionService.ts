@@ -312,7 +312,7 @@ export class InspectionPermissionService {
         .select('id')
         .eq('project_id', projectId);
 
-      return phases?.map(p => p.id) || [];
+      return (phases?.map(p => p.id).filter(Boolean) as string[]) || [];
     } catch {
       return [];
     }

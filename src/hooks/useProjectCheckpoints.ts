@@ -531,11 +531,11 @@ export function useProjectCheckpoints(projectId: string | undefined): ProjectChe
 
       allVerified: allPhasesVerified,
 
-      hasCompletedInspection: inspections.some((i: InspectionResult) => i.status === 'completed'),
+      hasCompletedInspection: inspections.some((i: any) => i.status === 'completed'),
 
       hasDocuments: documents.length > 0,
 
-      hasPV: documents.some((d: ProjectDocument) => d.type?.toLowerCase().includes('pv') ?? false),
+      hasPV: documents.some((d: any) => (d as any).type?.toLowerCase().includes('pv') ?? false),
 
       budgetConsumed: totalPaid,
 

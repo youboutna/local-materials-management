@@ -18,25 +18,25 @@ import { supabase } from './client';
  * Tables: projects, project_phases, inspections, payments, documents,
  *         tenders, materials, employees, suppliers, task_assignments, etc.
  */
-export const btpClient = supabase.schema('btp');
+export const btpClient = supabase.schema('btp' as any);
 
 /**
  * Fishing schema client
  * Tables: fishing_missions, vessels, catch_records, fishing_licenses, etc.
  */
-export const fishingClient = supabase.schema('fishing');
+export const fishingClient = supabase.schema('fishing' as any);
 
 /**
  * Health schema client
  * Tables: patients, prescriptions, health_claims, medical_acts, etc.
  */
-export const healthClient = supabase.schema('health');
+export const healthClient = supabase.schema('health' as any);
 
 /**
  * Fuel Stations schema client
  * Tables: service_stations, hse_evaluations, authorization_requests, etc.
  */
-export const fuelStationsClient = supabase.schema('fuel_stations');
+export const fuelStationsClient = supabase.schema('fuel_stations' as any);
 
 /**
  * Schema name constants for reference

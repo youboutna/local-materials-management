@@ -349,14 +349,14 @@ export class CheckpointVerificationEngine {
     const isVerified = pvStatus === 'archived' || pvStatus === 'pending_review';
     
     return {
-      id: pv.id,
+      id: pv.id || '',
       category: 'service_fait',
       title: 'PV de service fait',
-      description: pv.title,
+      description: pv.title || undefined,
       status: isVerified ? 'verified' : 'in_progress',
       required: true,
       weight: 0.2,
-      reference_id: pv.id,
+      reference_id: pv.id || '',
       reference_type: 'pv',
       evidence_urls: pv.file_url ? [pv.file_url] : undefined,
     };
