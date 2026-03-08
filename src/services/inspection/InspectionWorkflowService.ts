@@ -275,7 +275,7 @@ export class InspectionWorkflowService {
 
       if (error) throw error;
 
-      return { success: true, inspectionId: data.id };
+      return { success: true, inspectionId: data.id || undefined };
     } catch (error) {
       console.error('[InspectionWorkflowService] Error scheduling:', error);
       return { success: false, error: (error as Error).message };

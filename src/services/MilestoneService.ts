@@ -178,7 +178,7 @@ export class MilestoneService {
       weighted_progress: Math.round(weightedProgress),
       schedule_performance_index: Math.round(spi * 100) / 100,
       critical_path_status: criticalPathStatus,
-      critical_path_float_days: criticalDelayed.length > 0 ? -differenceInDays(today, parseISO(criticalDelayed[0].target_date)) : undefined,
+      critical_path_float_days: criticalDelayed.length > 0 ? -differenceInDays(today, parseISO(criticalDelayed[0].target_date || '')) : undefined,
       next_milestone: nextMilestone,
       overdue_milestones: delayed.map(m => this.mapToSummary(m)),
       upcoming_milestones: upcoming.map(m => this.mapToSummary(m))

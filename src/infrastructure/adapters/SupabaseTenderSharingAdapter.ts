@@ -133,7 +133,7 @@ export class SupabaseTenderSharingAdapter implements ITenderSharingRepository {
 
   async getSharingSecretsByTenderId(tenderId: string): Promise<TenderSharingSecretDTO[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('tender_sharing_secrets')
         .select('*')
         .eq('tender_id' as any, tenderId)

@@ -149,7 +149,7 @@ export const assessInsuranceRisk = async (
 
   // Check expiration dates
   certificates.forEach(cert => {
-    const expiryDate = new Date(cert.valid_until);
+    const expiryDate = new Date(cert.valid_until || '');
     
     if (expiryDate <= now) {
       riskFactors.push(`Assurance ${cert.coverage_type} expirée`);
