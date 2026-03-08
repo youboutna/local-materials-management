@@ -100,7 +100,6 @@ export const insuranceTransform = {
     valid_until: updateData.valid_until || updateData.validUntil,
     status: updateData.status,
     notes: updateData.notes,
-    updated_by: updateData.updated_by || updateData.updatedBy,
     updated_at: new Date().toISOString()
   }),
 
