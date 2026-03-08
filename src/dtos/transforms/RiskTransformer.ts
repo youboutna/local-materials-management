@@ -30,8 +30,8 @@ export class RiskTransformer {
       status: this.domainToDtoStatus(entity.status),
       category: this.domainToDtoCategory(entity.category),
       mitigationStrategy: entity.mitigationStrategy || undefined,
-      owner: entity.identifiedBy?.id,
-      identifiedDate: entity.identifiedDate || undefined,
+      owner: (entity as any).identifiedBy?.id,
+      identifiedDate: (entity as any).identifiedDate || undefined,
       relatedRisks: entity.relatedTasks,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt
