@@ -41,7 +41,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
   // Fetch existing secrets
   const { data: secrets, isLoading } = useQuery({
     queryKey: ['tender-sharing-secrets', tenderId],
-    queryFn: () => TenderSharingService.getSecretsForTender(tenderId),
+    queryFn: () => TenderSharingService.getTenderSharingSecrets(tenderId),
     enabled: isOpen
   });
 
