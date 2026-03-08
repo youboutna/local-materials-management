@@ -6,7 +6,7 @@
 
 import { TaskAssignment } from '@/domain/entities/Workspace';
 import { ITaskAssignmentRepository } from '@/domain/repositories/ITaskAssignmentRepository';
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { TaskAssignmentTransformer } from '@/dtos/transforms/TaskAssignmentTransformer';
 
 export class TaskAssignmentAdapter implements ITaskAssignmentRepository {

@@ -4,7 +4,7 @@
  * Implements the compliance repository interface using Supabase
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { IComplianceRepository } from '@/domain/repositories/IComplianceRepository';
 import { ComplianceItem, ComplianceDocument, ComplianceNote, ComplianceAuditEntry } from '@/domain/entities/Compliance';
 import { ComplianceTransformer } from '@/dtos/transforms/ComplianceTransformer';

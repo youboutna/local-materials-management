@@ -5,7 +5,7 @@
  * Following hexagonal architecture: Adapter → Repository Interface
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { fuelStationsClient as supabase } from '@/integrations/supabase/schema-clients';
 import { Json } from '@/integrations/supabase/types';
 
 // Database row interface matching monitoring_alerts table

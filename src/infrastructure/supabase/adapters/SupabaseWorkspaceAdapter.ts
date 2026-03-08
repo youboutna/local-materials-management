@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { Json } from '@/integrations/supabase/types';
 
 // Database row interface for workspaces table

@@ -6,7 +6,7 @@
 
 import { IEmployeeRepository, SearchEmployeesOptions, SearchEmployeesResult } from '@/domain/repositories/IEmployeeRepository';
 import { Employee } from '@/domain/entities/EmployeeEntity';
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { AppError, ErrorLogger } from '@/utils/errorHandling';
 
 export class SupabaseEmployeeAdapter implements IEmployeeRepository {

@@ -5,7 +5,7 @@
  * Following hexagonal architecture principles
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { ISupplierPaymentRepository } from '@/domain/repositories/ISupplierPaymentRepository';
 import { SupplierPaymentRequestDTO } from '@/dtos/entities/SupplierPaymentDTO';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
