@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { DocumentService } from '@/application/services/DocumentService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
