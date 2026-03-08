@@ -472,35 +472,21 @@ export type {
 // Export commonly used DTOs
 export type {
   CreateProjectRequestDTO as CreateProjectRequestDto,
-  UpdateProjectRequestDTO as UpdateProjectRequestDto,
-  CreatePhaseRequestDTO as CreatePhaseRequestDto,
-  UpdatePhaseRequestDTO as UpdatePhaseRequestDto,
-  CreateTaskRequestDTO as CreateTaskRequestDto,
-  UpdateTaskRequestDTO as UpdateTaskRequestDto,
+  CreatePaymentRequestDTO as CreatePaymentRequestDto,
+  UpdatePaymentRequestDTO as UpdatePaymentRequestDto,
   CreateEmployeeRequestDTO as CreateEmployeeRequestDto,
   UpdateEmployeeRequestDTO as UpdateEmployeeRequestDto,
-  CreateMilestoneRequestDTO as CreateMilestoneRequestDto,
-  UpdateMilestoneRequestDTO as UpdateMilestoneRequestDto,
-  CreateTenderRequestDTO as CreateTenderRequestDto,
-  UpdateTenderRequestDTO as UpdateTenderRequestDto,
-  BankGuaranteeDTO,
-  CreateBankGuaranteeRequestDTO as CreateBankGuaranteeRequestDto,
-  UpdateBankGuaranteeRequestDTO as UpdateBankGuaranteeRequestDto,
-  PaymentScheduleDTO,
-  CreatePaymentScheduleRequestDTO as CreatePaymentScheduleRequestDto,
-  UpdatePaymentScheduleRequestDTO as UpdatePaymentScheduleRequestDto
+  CreateStakeholderRequestDTO as CreateStakeholderRequestDto,
+  UpdateStakeholderRequestDTO as UpdateStakeholderRequestDto,
+  CreateInsuranceRequestDTO as CreateInsuranceRequestDto,
+  UpdateInsuranceRequestDTO as UpdateInsuranceRequestDto,
 } from '@/dtos/entities';
 
 export type {
-  SupplierResponseDto,
   UserResponseDto,
-  TaskAssignmentResponseDto,
-  DocumentResponseDto,
-  ProjectResponseDto,
-  MaterialResponseDto,
-  InspectionResponseDto,
-  AuthResponseDto
- } from '@/dtos/entities';
+  DocumentResponseDTO as DocumentResponseDto,
+  AuthResponse as AuthResponseDto
+} from '@/dtos/entities';
 
 // Specialized type exports
 export type { CreateInspectionData } from './useInspectionDialogHex';

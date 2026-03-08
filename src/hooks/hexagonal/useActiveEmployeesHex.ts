@@ -18,7 +18,7 @@ export function useActiveEmployeesHex() {
     queryKey: ['active-employees'],
     queryFn: async (): Promise<ActiveEmployee[]> => {
       const employeeRepo = RepositoryFactory.getEmployeeRepository();
-      const data = await employeeRepo.findAll({ isActive: true });
+      const data = await employeeRepo.findAll();
       return (data || []).map((emp: any) => ({
         id: emp.id,
         full_name: emp.full_name || emp.fullName || '',

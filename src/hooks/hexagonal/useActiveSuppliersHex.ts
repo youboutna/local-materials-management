@@ -24,7 +24,7 @@ export function useActiveSuppliersHex() {
       return result.suppliers.map(supplier => ({
         id: supplier.id,
         name: supplier.name,
-        contact_person: supplier.contacts[0]?.name,
+        contact_person: undefined,
         type: supplier.category || undefined
       }));
     },

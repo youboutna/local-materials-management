@@ -6,7 +6,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { EmployeeService } from '@/application/services/EmployeeService';
-import { EmployeeTransformer } from '@/dtos/transforms/EmployeeTransformer';
 import { 
   EmployeeDTO, 
   CreateEmployeeDTO, 
@@ -28,7 +27,6 @@ export interface EmployeeFormData {
 
 // Hook: Fetch employees with search
 export function useEmployeesList(searchTerm: string = '') {
-  const queryClient = useQueryClient();
   const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
 
   return useQuery({
@@ -36,7 +34,7 @@ export function useEmployeesList(searchTerm: string = '') {
     queryFn: async (): Promise<EmployeeDTO[]> => {
       const searchOptions = { searchTerm };
       const searchResult = await employeeService.searchEmployees(searchOptions);
-      return searchResult.employees.map(employee => EmployeeTransformer.toDTO(employee));
+      return searchResult.employees as unknown as EmployeeDTO[];
     }
   });
 }
@@ -48,10 +46,8 @@ export function useCreateEmployee() {
 
   return useMutation({
     mutationFn: async (employeeData: CreateEmployeeDTO): Promise<EmployeeDTO> => {
-      // Convert DTO to entity using the correct method
-      const employee = EmployeeTransformer.fromCreateDTOToEntity(employeeData);
-      const createdEmployee = await employeeService.createEmployee(employee);
-      return EmployeeTransformer.toDTO(createdEmployee);
+      const createdEmployee = await employeeService.createEmployee(employeeData as any);
+      return createdEmployee as unknown as EmployeeDTO;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees-management'] });
@@ -66,10 +62,8 @@ export function useUpdateEmployee() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateEmployeeDTO }): Promise<EmployeeDTO> => {
-      // Convert DTO to entity partial using the correct method
-      const employeeUpdates = EmployeeTransformer.fromUpdateDTOToEntity(data);
-      const updatedEmployee = await employeeService.updateEmployee(id, employeeUpdates);
-      return EmployeeTransformer.toDTO(updatedEmployee);
+      const updatedEmployee = await employeeService.updateEmployee(id, data as any);
+      return updatedEmployee as unknown as EmployeeDTO;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees-management'] });
@@ -83,8 +77,9 @@ export function useDeleteEmployee() {
   const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
 
   return useMutation({
-    mutationFn: async (id: string): Promise<void> => {
+    mutationFn: async (id: string) => {
       await employeeService.deleteEmployee(id);
+      return true;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees-management'] });

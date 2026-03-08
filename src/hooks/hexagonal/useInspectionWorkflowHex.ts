@@ -79,7 +79,7 @@ export function useInspectionWorkflowHex(): UseInspectionWorkflowHexResult {
         inspector: input.inspector,
         date: input.date,
         comments: input.comments,
-      });
+      } as any);
 
       toast({
         title: 'Demande créée',
@@ -112,13 +112,12 @@ export function useInspectionWorkflowHex(): UseInspectionWorkflowHexResult {
         return { success: false };
       }
 
-      const updates: Partial<Inspection> = {
-        status: 'scheduled' as InspectionStatus,
+      const updates = {
+        status: 'scheduled',
         comments: input.comments || undefined,
-        updatedAt: new Date().toISOString(),
       };
 
-      await inspectionService.updateInspection(input.inspectionId, updates);
+      await inspectionService.updateInspection(input.inspectionId, updates as any);
 
       toast({
         title: 'Inspection programmée',
@@ -151,14 +150,13 @@ export function useInspectionWorkflowHex(): UseInspectionWorkflowHexResult {
         return { success: false };
       }
 
-      const updates: Partial<Inspection> = {
-        status: input.status as InspectionStatus,
+      const updates = {
+        status: input.status,
         progressAtInspection: input.progressAtInspection,
         comments: input.comments || undefined,
-        updatedAt: new Date().toISOString(),
       };
 
-      await inspectionService.updateInspection(input.inspectionId, updates);
+      await inspectionService.updateInspection(input.inspectionId, updates as any);
 
       const canTriggerPayment = input.status === 'approved' && (input.progressAtInspection ?? 0) >= 25;
 

@@ -28,8 +28,8 @@ async function fetchBankGuaranteeForProject(projectId: string): Promise<BankGuar
   }
 
   try {
-    const service = new BankGuaranteeService(RepositoryFactory.getBankGuaranteeRepository());
-    const guarantee = await service.getActiveGuaranteeForProject(projectId);
+    const guarantees = await BankGuaranteeService.getByProjectId(projectId);
+    const guarantee = guarantees.find(g => g.status === 'active') || guarantees[0];
 
     if (!guarantee) {
       return {
@@ -44,11 +44,11 @@ async function fetchBankGuaranteeForProject(projectId: string): Promise<BankGuar
 
     return {
       projectId,
-      contractorId: guarantee.contractorId || '',
-      bankLiaisonEmail: guarantee.bankName 
-        ? `contact@${guarantee.bankName.toLowerCase().replace(/\s+/g, '')}.mr`
+      contractorId: guarantee.contractorId || guarantee.contractor_id || '',
+      bankLiaisonEmail: (guarantee.issuingBank || guarantee.bank_name)
+        ? `contact@${(guarantee.issuingBank || guarantee.bank_name || '').toLowerCase().replace(/\s+/g, '')}.mr`
         : '',
-      guaranteeAmount: guarantee.guaranteeAmount || 0,
+      guaranteeAmount: guarantee.guaranteeAmount || guarantee.amount || 0,
       delayPercentage: 0,
       contractClause: 'Article 15.3 - Garantie de bonne exécution',
     };

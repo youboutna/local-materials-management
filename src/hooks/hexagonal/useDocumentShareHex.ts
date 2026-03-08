@@ -29,7 +29,7 @@ export function useTenderDocumentsForShare(tenderId: string, isOpen: boolean) {
     queryKey: ['tender-documents', tenderId],
     queryFn: async (): Promise<SharedDocument[]> => {
       const docRepo = RepositoryFactory.getDocumentRepository();
-      const data = await docRepo.findByType('tender');
+      const data = await docRepo.findByType('other' as any);
       return (data || []) as unknown as SharedDocument[];
     },
     enabled: isOpen && !!tenderId
@@ -46,8 +46,8 @@ export function useShareDocuments(tenderId: string) {
         throw new Error('Aucun document sélectionné');
       }
 
-      const authService = new AuthService();
-      const user = await authService.getCurrentUser();
+      const authService = new AuthService(RepositoryFactory.getAuthRepository());
+      const currentUser = await authService.getCurrentUser();
       const docRepo = RepositoryFactory.getDocumentRepository();
       
       for (const docId of documentIds) {
@@ -57,7 +57,7 @@ export function useShareDocuments(tenderId: string) {
           metadata: {
             tender_id: tenderId,
             phase: phase,
-            shared_by: user.user?.id
+            shared_by: currentUser?.id
           }
         } as any);
       }

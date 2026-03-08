@@ -22,7 +22,8 @@ export function useCreateInspectionHex() {
 
   return useMutation({
     mutationFn: async (data: CreateInspectionData) => {
-      return await InspectionService.createInspection({
+      const service = new InspectionService();
+      return await service.createInspection({
         projectId: data.project_id,
         date: data.date,
         status: data.status as any,
@@ -44,7 +45,7 @@ export function useUpdateProjectStatusHex() {
   return useMutation({
     mutationFn: async ({ projectId, status }: { projectId: string; status: string }) => {
       const service = new ProjectService(RepositoryFactory.getProjectRepository());
-      await service.updateProject(projectId, { status });
+      await service.updateProject(projectId, { status } as any);
     },
     onSuccess: (_, { projectId }) => {
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });

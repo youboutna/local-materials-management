@@ -25,7 +25,7 @@ export function useAuth() {
   const { data: session } = useQuery({
     queryKey: ['auth', 'session'],
     queryFn: async () => {
-      const sessionData = await authService.getSession();
+      const { session: sessionData } = await authService.getCurrentSession();
       return sessionData;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -33,13 +33,12 @@ export function useAuth() {
 
   const setSession = async (sessionData: { access_token: string; refresh_token: string }) => {
     try {
-      // Build a complete session object for the auth service
       const result = await authService.setSession({
         access_token: sessionData.access_token,
         refresh_token: sessionData.refresh_token,
-        expires_at: Math.floor(Date.now() / 1000) + 3600, // Default 1 hour expiry
-        user: null as AuthUser | null // Will be populated by auth service
-      } as AuthSession);
+        expires_at: String(Math.floor(Date.now() / 1000) + 3600),
+        user: null as unknown as AuthUser
+      });
       refetch();
       return { session: result, error: null };
     } catch (error) {
@@ -50,7 +49,7 @@ export function useAuth() {
 
   const getSession = async () => {
     try {
-      const result = await authService.getSession();
+      const { session: result } = await authService.getCurrentSession();
       return { data: { session: result }, error: null };
     } catch (error) {
       console.error('Error getting session:', error);

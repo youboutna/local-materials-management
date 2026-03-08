@@ -21,10 +21,10 @@ export function useDevModeData<T>(entityType: string, filters?: Record<string, u
         return [] as T[];
       }
       
-      return await localStorageAdapter.getTestData(entityType, filters) as T[];
+      return (localStorageAdapter.get<T[]>(entityType) || []) as T[];
     },
     enabled: shouldUseMockData(),
-    staleTime: DEV_CONFIG.mockApiDelay * 2,
+    staleTime: DEV_CONFIG.API_DELAY.DEFAULT * 2,
   });
 }
 
@@ -43,7 +43,6 @@ export function useDevModeCreate<T>(entityType: string) {
       
       await simulateApiDelay();
       
-      // Create new item with ID and timestamps
       const newItem = {
         ...data,
         id: crypto.randomUUID(),
@@ -51,16 +50,14 @@ export function useDevModeCreate<T>(entityType: string) {
         updated_at: new Date().toISOString(),
       } as T;
       
-      // Get existing data and add new item
-      const existingData = await localStorageAdapter.getTestData(entityType);
+      const existingData = localStorageAdapter.get<T[]>(entityType) || [];
       const updatedData = [...existingData, newItem];
       
-      // Save to localStorage
-      await localStorageAdapter.saveData(entityType, updatedData);
+      localStorageAdapter.set(entityType, updatedData);
       
       return newItem;
     },
-    onSuccess: (newItem) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dev-mode'] });
       toast({
         title: 'DEV_MODE',
@@ -90,7 +87,11 @@ export function useDevModeUpdate<T>(entityType: string) {
         throw new Error('DEV_MODE is not enabled');
       }
       
-      await localStorageAdapter.updateItem(entityType, id, updates as Record<string, unknown>);
+      const items = localStorageAdapter.get<(T & { id: string })[]>(entityType) || [];
+      const updatedItems = items.map(item => 
+        item.id === id ? { ...item, ...updates, updated_at: new Date().toISOString() } : item
+      );
+      localStorageAdapter.set(entityType, updatedItems);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dev-mode'] });
@@ -122,7 +123,9 @@ export function useDevModeDelete(entityType: string) {
         throw new Error('DEV_MODE is not enabled');
       }
       
-      await localStorageAdapter.deleteItem(entityType, id);
+      const items = localStorageAdapter.get<{ id: string }[]>(entityType) || [];
+      const filtered = items.filter(item => item.id !== id);
+      localStorageAdapter.set(entityType, filtered);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dev-mode'] });
@@ -148,7 +151,7 @@ export function useDevModeManagement() {
   const localStorageAdapter = new LocalStorageAdapter();
   
   const clearAllData = () => {
-    localStorageAdapter.clearAllData();
+    localStorageAdapter.clear();
     toast({
       title: 'DEV_MODE',
       description: 'All mock data cleared from localStorage',
@@ -156,13 +159,15 @@ export function useDevModeManagement() {
   };
   
   const getStorageStats = () => {
-    return localStorageAdapter.getStorageStats();
+    return {
+      totalSize: localStorageAdapter.getStorageSize(),
+      keys: localStorageAdapter.getKeys(),
+    };
   };
   
   return {
     clearAllData,
     getStorageStats,
     isDevMode: shouldUseMockData(),
-    config: DEV_CONFIG,
   };
 }

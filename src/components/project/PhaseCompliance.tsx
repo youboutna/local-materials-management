@@ -72,9 +72,8 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
           status: formData.status,
           priority: formData.priority,
           deadline: formData.deadline || undefined,
-          responsiblePerson: formData.responsiblePerson,
           notes: formData.notes,
-        });
+        } as any);
         toast({ title: "Succès", description: "Élément modifié" });
       } else {
         await createComplianceItem({
@@ -84,9 +83,8 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
           status: formData.status,
           priority: formData.priority,
           deadline: formData.deadline || undefined,
-          responsiblePerson: formData.responsiblePerson,
           notes: formData.notes,
-        });
+        } as any);
         toast({ title: "Succès", description: "Élément ajouté" });
       }
 

@@ -12,6 +12,7 @@ export interface AssigneeDetails {
   type: 'employee' | 'supplier' | 'user' | '';
   name: string;
   email: string;
+  [key: string]: any;
 }
 
 async function fetchAssigneeDetails(assigneeId: string): Promise<AssigneeDetails> {
@@ -27,7 +28,7 @@ async function fetchAssigneeDetails(assigneeId: string): Promise<AssigneeDetails
   const employee = employeesResult.employees.find((e) => e.id === assigneeId);
   if (employee) {
     return {
-      type: 'employee',
+      type: 'employee' as const,
       name: employee.fullName,
       email: employee.email || '',
     };
@@ -37,11 +38,10 @@ async function fetchAssigneeDetails(assigneeId: string): Promise<AssigneeDetails
   const suppliersResult = await supplierService.searchSuppliers({});
   const supplier = suppliersResult.suppliers.find((s) => s.id === assigneeId);
   if (supplier) {
-    const primaryContact = supplier.getPrimaryContact();
     return {
       type: 'supplier',
-      name: primaryContact?.name || supplier.name,
-      email: primaryContact?.email || supplier.email || '',
+      name: supplier.name,
+      email: '',
     };
   }
 

@@ -217,7 +217,7 @@ export class PaymentBlockingValidation {
 
     if (activeBlocks.length > 0) {
       throw new AppError(
-        ErrorCode.CONFLICT,
+        ErrorCode.BUSINESS_RULE_VIOLATION,
         'Payment request already has an active block'
       );
     }

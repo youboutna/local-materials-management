@@ -341,7 +341,7 @@ export class TenderEstimateValidation {
 
     if (activeEstimates.length > 0) {
       throw new AppError(
-        ErrorCode.CONFLICT,
+        ErrorCode.BUSINESS_RULE_VIOLATION,
         'User already has an active estimate for this tender'
       );
     }
