@@ -1,209 +1,186 @@
 /**
  * Inspection Permission Domain Transformer
- * Handles conversion between DTOs and Repository types
- * Following hexagonal architecture principles
+ * Handles permission-based transformations for inspection workflows
  */
 
-import { 
-  PermissionContext, 
-  AssignableInspector, 
-  PermissionResult 
-} from '@/domain/repositories/IInspectionPermissionRepository';
-import {
-  PermissionContextDTO,
-  AssignableInspectorDTO,
-  PermissionResultDTO
-} from '@/dtos/entities/InspectionPermissionDTO';
+import { InspectionDTO, InspectionStatus } from '@/dtos/entities/InspectionDTO';
+
+// Permission result interface
+interface PermissionResult {
+  hasPermission: boolean;
+  reason?: string;
+  requiredRole?: string;
+  availableActions?: string[];
+}
+
+// Permission request interface
+interface PermissionRequest {
+  userId: string;
+  userRole: string;
+  inspectionId: string;
+  action: string;
+  inspectionStatus?: InspectionStatus;
+}
+
+// Permission action DTO
+interface PermissionActionDTO {
+  action: string;
+  allowed: boolean;
+  reason?: string;
+  requiresApproval: boolean;
+  approvalRoles?: string[];
+}
 
 export class InspectionPermissionDomainTransformer {
-  
   /**
-   * Convert DTO to repository context
+   * Check if user has permission for inspection action
    */
-  static toRepositoryContext(dto: PermissionContextDTO): PermissionContext {
-    return {
-      userId: dto.userId,
-      projectId: dto.projectId,
-      phaseId: dto.phaseId,
-      inspectionType: dto.inspectionType
+  static checkPermission(request: PermissionRequest): PermissionResult {
+    const { userRole, action, inspectionStatus } = request;
+
+    // Admin has all permissions
+    if (userRole === 'admin' || userRole === 'director') {
+      return { hasPermission: true };
+    }
+
+    // Define action permissions by role
+    const rolePermissions: Record<string, string[]> = {
+      inspector: ['view', 'update', 'submit', 'add_comment', 'upload_document'],
+      supervisor: ['view', 'update', 'submit', 'approve', 'reject', 'add_comment', 'upload_document', 'assign'],
+      project_manager: ['view', 'approve', 'reject', 'add_comment', 'reassign'],
+      viewer: ['view']
     };
-  }
 
-  /**
-   * Convert repository context to DTO
-   */
-  static toPermissionContextDTO(context: PermissionContext): PermissionContextDTO {
-    return {
-      userId: context.userId,
-      projectId: context.projectId,
-      phaseId: context.phaseId,
-      inspectionType: context.inspectionType
-    };
-  }
+    const allowedActions = rolePermissions[userRole] || [];
+    const hasPermission = allowedActions.includes(action);
 
-  /**
-   * Convert repository result to DTO
-   */
-  static toPermissionResultDTO(result: PermissionResult): PermissionResultDTO {
-    return {
-      hasPermission: result.hasPermission,
-      reason: result.reason,
-      alternativeInspectors: result.alternativeInspectors?.map(inspector => 
-        this.toAssignableInspectorDTO(inspector)
-      ),
-      suggestedActions: this.generateSuggestedActions(result),
-      requiresApproval: this.determineApprovalRequirement(result),
-      approvalRequiredFrom: this.getApprovalRoles(result)
-    };
-  }
+    if (!hasPermission) {
+      return {
+        hasPermission: false,
+        reason: `Role '${userRole}' does not have permission for action '${action}'`,
+        requiredRole: this.getRequiredRole(action)
+      };
+    }
 
-  /**
-   * Convert repository inspector to DTO
-   */
-  static toAssignableInspectorDTO(inspector: AssignableInspector): AssignableInspectorDTO {
-    return {
-      id: inspector.id,
-      name: inspector.name,
-      email: inspector.email,
-      role: inspector.role,
-      specializations: inspector.specializations,
-      certifications: inspector.certifications,
-      maxConcurrentInspections: inspector.maxConcurrentInspections,
-      currentInspections: inspector.currentInspections,
-      availabilityStatus: this.determineAvailabilityStatus(inspector),
-      lastInspectionDate: this.generateLastInspectionDate(inspector),
-      averageRating: this.generateAverageRating(inspector),
-      inspectionCount: inspector.currentInspections,
-      isDefault: this.determineDefaultInspector(inspector),
-      isEngineeringConsultant: this.determineEngineeringConsultant(inspector),
-      isTechnicalManager: this.determineTechnicalManager(inspector)
-    };
-  }
-
-  /**
-   * Convert DTO to repository inspector (if needed)
-   */
-  static toAssignableInspector(dto: AssignableInspectorDTO): AssignableInspector {
-    return {
-      id: dto.id,
-      name: dto.name,
-      email: dto.email,
-      role: dto.role,
-      specializations: dto.specializations,
-      certifications: dto.certifications,
-      maxConcurrentInspections: dto.maxConcurrentInspections,
-      currentInspections: dto.currentInspections
-    };
-  }
-
-  // ============= Private Helper Methods =============
-
-  /**
-   * Generate suggested actions based on permission result
-   */
-  private static generateSuggestedActions(result: PermissionResult): string[] {
-    const actions: string[] = [];
-    
-    if (!result.hasPermission) {
-      if (result.reason?.includes('permission')) {
-        actions.push('Contact project manager for permission');
-        actions.push('Request temporary access rights');
-      }
-      if (result.reason?.includes('certification')) {
-        actions.push('Update inspector certifications');
-        actions.push('Schedule certification renewal');
-      }
-      if (result.reason?.includes('availability')) {
-        actions.push('Choose alternative inspector');
-        actions.push('Schedule for later date');
+    // Status-based restrictions
+    if (inspectionStatus) {
+      const statusRestrictions = this.getStatusRestrictions(inspectionStatus);
+      if (!statusRestrictions.allowedActions.includes(action)) {
+        return {
+          hasPermission: false,
+          reason: `Action '${action}' not allowed when inspection status is '${inspectionStatus}'`,
+          availableActions: statusRestrictions.allowedActions
+        };
       }
     }
-    
-    return actions;
+
+    return { hasPermission: true };
+  }
+
+  /**
+   * Get required role for an action
+   */
+  private static getRequiredRole(action: string): string {
+    const actionRoles: Record<string, string> = {
+      approve: 'supervisor',
+      reject: 'supervisor',
+      assign: 'supervisor',
+      reassign: 'project_manager',
+      delete: 'admin'
+    };
+    return actionRoles[action] || 'inspector';
+  }
+
+  /**
+   * Get status restrictions
+   */
+  private static getStatusRestrictions(status: InspectionStatus): { allowedActions: string[] } {
+    const restrictions: Record<InspectionStatus, string[]> = {
+      [InspectionStatus.SCHEDULED]: ['view', 'update', 'cancel', 'add_comment'],
+      [InspectionStatus.PENDING]: ['view', 'update', 'submit', 'add_comment', 'upload_document'],
+      [InspectionStatus.PLANNED]: ['view', 'update', 'submit', 'add_comment'],
+      [InspectionStatus.IN_PROGRESS]: ['view', 'update', 'submit', 'add_comment', 'upload_document'],
+      [InspectionStatus.COMPLETED]: ['view', 'approve', 'reject', 'add_comment'],
+      [InspectionStatus.REQUIRES_REVIEW]: ['view', 'approve', 'reject', 'add_comment'],
+      [InspectionStatus.REQUIRES_CHANGES]: ['view', 'update', 'submit', 'add_comment'],
+      [InspectionStatus.APPROVED]: ['view', 'add_comment'],
+      [InspectionStatus.REJECTED]: ['view', 'add_comment', 'resubmit'],
+      [InspectionStatus.CANCELLED]: ['view']
+    };
+    return { allowedActions: restrictions[status] || ['view'] };
+  }
+
+  /**
+   * Transform permission result to action DTOs
+   */
+  static toPermissionActions(result: PermissionResult, availableActions: string[]): PermissionActionDTO[] {
+    return availableActions.map(action => ({
+      action,
+      allowed: result.hasPermission || (result.availableActions?.includes(action) ?? false),
+      reason: result.hasPermission ? undefined : result.reason,
+      requiresApproval: this.determineApprovalRequirement(result, action),
+      approvalRoles: this.getApprovalRoles(result, action)
+    }));
   }
 
   /**
    * Determine if approval is required
    */
-  private static determineApprovalRequirement(result: PermissionResult): boolean {
+  private static determineApprovalRequirement(result: PermissionResult, _action: string): boolean {
     return !result.hasPermission && 
            (result.reason?.includes('high_value') || 
             result.reason?.includes('critical') ||
-            result.reason?.includes('special'));
+            result.reason?.includes('special')) || false;
   }
 
   /**
    * Get roles that need to approve
    */
-  private static getApprovalRoles(result: PermissionResult): string[] {
+  private static getApprovalRoles(result: PermissionResult, action: string): string[] {
     const roles: string[] = [];
     
-    if (result.reason?.includes('project')) {
-      roles.push('project_manager');
-    }
-    if (result.reason?.includes('technical')) {
-      roles.push('technical_manager');
-    }
-    if (result.reason?.includes('high_value')) {
-      roles.push('director');
+    if (action === 'approve' || action === 'reject') {
+      roles.push('supervisor', 'project_manager');
     }
     
-    return roles;
-  }
-
-  /**
-   * Determine availability status based on current assignments
-   */
-  private static determineAvailabilityStatus(inspector: AssignableInspector): 'available' | 'busy' | 'unavailable' {
-    const ratio = inspector.currentInspections / inspector.maxConcurrentInspections;
+    if (result.requiredRole) {
+      roles.push(result.requiredRole);
+    }
     
-    if (ratio >= 1) return 'unavailable';
-    if (ratio >= 0.8) return 'busy';
-    return 'available';
+    return [...new Set(roles)];
   }
 
   /**
-   * Generate last inspection date (mock for now)
+   * Get available actions for inspection based on status and user role
    */
-  private static generateLastInspectionDate(inspector: AssignableInspector): string {
-    const daysAgo = Math.floor(Math.random() * 30);
-    const date = new Date();
-    date.setDate(date.getDate() - daysAgo);
-    return date.toISOString().split('T')[0];
+  static getAvailableActions(inspection: InspectionDTO, userRole: string): string[] {
+    const request: PermissionRequest = {
+      userId: '',
+      userRole,
+      inspectionId: inspection.id,
+      action: 'view',
+      inspectionStatus: inspection.status
+    };
+
+    const allActions = ['view', 'update', 'submit', 'approve', 'reject', 'add_comment', 'upload_document', 'assign', 'cancel'];
+    
+    return allActions.filter(action => {
+      const result = this.checkPermission({ ...request, action });
+      return result.hasPermission;
+    });
   }
 
   /**
-   * Generate average rating (mock for now)
+   * Validate bulk permission check
    */
-  private static generateAverageRating(inspector: AssignableInspector): number {
-    // Base rating on experience (current inspections)
-    const baseRating = 3.5;
-    const experienceBonus = Math.min(inspector.currentInspections * 0.1, 1.5);
-    return Math.min(baseRating + experienceBonus, 5.0);
-  }
-
-  /**
-   * Determine if inspector is default
-   */
-  private static determineDefaultInspector(inspector: AssignableInspector): boolean {
-    // Default inspector has high rating and availability
-    return inspector.currentInspections > 5 && 
-           inspector.currentInspections < inspector.maxConcurrentInspections;
-  }
-
-  /**
-   * Determine if inspector is engineering consultant
-   */
-  private static determineEngineeringConsultant(inspector: AssignableInspector): boolean {
-    return inspector.role === 'engineering_consultant' || 
-           inspector.specializations.includes('technical');
-  }
-
-  /**
-   * Determine if inspector is technical manager
-   */
-  private static determineTechnicalManager(inspector: AssignableInspector): boolean {
-    return inspector.role === 'technical_manager' || 
-           inspector.specializations.includes('management');
+  static checkBulkPermissions(requests: PermissionRequest[]): Map<string, PermissionResult> {
+    const results = new Map<string, PermissionResult>();
+    
+    for (const request of requests) {
+      const key = `${request.inspectionId}:${request.action}`;
+      results.set(key, this.checkPermission(request));
+    }
+    
+    return results;
   }
 }

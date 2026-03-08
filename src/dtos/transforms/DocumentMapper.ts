@@ -58,6 +58,7 @@ export class DocumentMapper {
    * Transform CreateDocumentDTO to domain entity
    */
   static toDomainFromCreateDto(requestDto: CreateDocumentDTO, uploadedBy: string): Document {
+    const now = new Date().toISOString();
     return new Document(
       crypto.randomUUID(),
       requestDto.projectId || null,
@@ -67,8 +68,8 @@ export class DocumentMapper {
       requestDto.supplierId || null,
       requestDto.title,
       requestDto.description || null,
-      requestDto.documentType as any,
-      requestDto.status || 'draft',
+      requestDto.documentType as DocumentType,
+      (requestDto.status || 'draft') as DocumentStatus,
       requestDto.fileName || null,
       requestDto.fileUrl || null,
       requestDto.fileSize || null,
@@ -79,8 +80,8 @@ export class DocumentMapper {
       requestDto.deadlineDate || null,
       requestDto.assignedTo || null,
       uploadedBy,
-      new Date().toISOString(),
-      new Date().toISOString()
+      now,
+      now
     );
   }
 
