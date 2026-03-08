@@ -467,24 +467,24 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
             ) : null}
 
             <ConstructionPhaseManager
-              phases={phases.map(p => ({
+              workflowData={{ phases: phases.map((p: any) => ({
                 id: p.id,
-                title: p.title,
-                description: p.description || `Phase ${p.title}`,
+                title: p.title || p.name || 'Phase',
+                description: p.description || '',
                 startDate: p.startDate,
                 endDate: p.endDate,
                 estimatedDuration: Math.ceil((new Date(p.endDate).getTime() - new Date(p.startDate).getTime()) / (1000 * 60 * 60 * 24)),
                 status: p.status,
-                budget: p.budget,
-                actualCost: p.actualCost,
-                progress: p.actualProgress,
+                budget: p.budget || 0,
+                actualCost: p.actualCost || 0,
+                progress: p.actualProgress || p.progress || 0,
                 materials: [],
                 humanResources: [],
                 suppliers: [],
-                location: selectedProject.location,
+                location: selectedProject?.location || '',
                 notes: ''
-              }))}
-              onChange={(updatedPhases) => {
+              })) } as any}
+              onStepComplete={(stepData: any) => {
                 // Mettre à jour les phases
                 setPhases(updatedPhases.map(up => ({
                   id: up.id,

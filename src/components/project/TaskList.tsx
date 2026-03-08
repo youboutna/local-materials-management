@@ -109,7 +109,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, projectId }) => {
           <Card key={index}>
             <CardHeader>
               <CardTitle className="flex justify-between items-center">
-                <span>{task.name}</span>
+                <span>{task.title}</span>
                 <Badge className={getStatusColor(task.status)}>
                   {task.status === 'completed' ? 'Terminée' : 
                    task.status === 'in_progress' ? 'En cours' : 
@@ -134,11 +134,11 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, projectId }) => {
                   </div>
                 </div>
 
-                {task.dependencies && Array.isArray(task.dependencies) && task.dependencies.length > 0 && (
+                {task.dependsOn && Array.isArray(task.dependsOn) && task.dependsOn.length > 0 && (
                   <div>
                     <h4 className="text-sm font-medium mb-1">Dépendances:</h4>
                     <div className="flex gap-1 flex-wrap">
-                      {task.dependencies.map((depId: string, depIndex: number) => (
+                      {task.dependsOn.map((depId: string, depIndex: number) => (
                         <Badge key={depIndex} variant="outline" className="text-xs">
                           Tâche #{typeof depId === 'string' ? depId.slice(-4) : depIndex}
                         </Badge>

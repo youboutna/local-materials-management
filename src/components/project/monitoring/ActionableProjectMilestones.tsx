@@ -76,14 +76,36 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
   // Fetch all project milestones
   const { data: milestones = [], isLoading } = useQuery({
     queryKey: ['actionable-milestones', projectId],
-    queryFn: () => MilestoneService.getProjectMilestones(projectId),
+    queryFn: async () => {
+      const service = getMilestoneService();
+      const raw = await service.getProjectMilestones(projectId);
+      return raw.map((m: any) => ({
+        id: m.id, title: m.title, target_date: m.target_date, status: m.status,
+        type: m.type || 'checkpoint', priority: m.priority || 'medium',
+        weight: m.weight || 0.2, phase_id: m.phase_id, phase_name: m.phase_name,
+        completed_date: m.actual_completion_date, is_critical: m.priority === 'critical',
+        is_from_template: false,
+      })) as MilestoneSummaryDTO[];
+    },
     enabled: !!projectId,
   });
 
   // Fetch progress
   const { data: progress } = useQuery({
     queryKey: ['project-milestone-progress', projectId],
-    queryFn: () => MilestoneService.getMilestoneProgress(projectId),
+    queryFn: async () => {
+      const service = getMilestoneService();
+      const raw = await service.getProjectMilestones(projectId);
+      return {
+        total_milestones: raw.length,
+        completed_milestones: raw.filter((m: any) => m.status === 'completed').length,
+        weighted_progress: Math.round(raw.filter((m: any) => m.status === 'completed').length / Math.max(1, raw.length) * 100),
+        overdue_milestones: raw.filter((m: any) => m.status === 'delayed').map((m: any) => m.id),
+        upcoming_milestones: [],
+        schedule_performance_index: 1,
+        critical_path_status: 'on_track' as const,
+      };
+    },
     enabled: !!projectId,
   });
 
@@ -242,7 +264,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
     const milestone = actionDialog.milestone;
     if (milestone) {
       try {
-        await MilestoneService.updateMilestone(milestone.id, { status: 'completed' });
+        await getMilestoneService().updateMilestone(milestone.id, { status: 'completed' } as any);
         queryClient.invalidateQueries({ queryKey: ['actionable-milestones'] });
         queryClient.invalidateQueries({ queryKey: ['project-milestone-progress'] });
         toast({

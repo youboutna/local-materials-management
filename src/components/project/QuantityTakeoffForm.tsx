@@ -1,6 +1,6 @@
 /**
  * QuantityTakeoffForm - Quantity calculation form
- * MIGRATED TO HEXAGONAL ARCHITECTURE
+ * Uses local snake_case types matching DB schema for quantity_takeoffs table
  */
 
 import React, { useState, useEffect } from 'react';
@@ -11,42 +11,48 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { calculateQuantity, CreateQuantityTakeoffData } from '@/dtos/entities/QuantityTakeoffDTO';
-import { useMaterialsForTakeoff, useCreateQuantityTakeoff } from '@/hooks/hexagonal';
+import { calculateQuantity } from '@/types/quantityTakeoff';
+import { useMaterialsForTakeoff } from '@/hooks/hexagonal';
+import { supabase } from '@/integrations/supabase/client';
 
 interface QuantityTakeoffFormProps {
   projectId: string;
   onSubmitSuccess?: () => void;
 }
 
+interface FormData {
+  materialId: string;
+  elementType: string;
+  unit: 'm³' | 'm²' | 'm' | 'unité';
+  length: number;
+  width: number;
+  height: number;
+  note: string;
+}
+
 const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffFormProps) => {
-  const [formData, setFormData] = useState<Omit<CreateQuantityTakeoffData, 'projectId'>>({
+  const [formData, setFormData] = useState<FormData>({
     materialId: '',
-    description: '',
+    elementType: '',
     unit: 'm³',
-    quantity: 0,
-    unitPrice: 0,
-    location: '',
-    calculatedBy: ''
+    length: 0,
+    width: 0,
+    height: 0,
+    note: ''
   });
   const [calculatedQuantity, setCalculatedQuantity] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
 
-  // Use hexagonal hooks
   const { data: materials } = useMaterialsForTakeoff();
-  const createMutation = useCreateQuantityTakeoff(projectId);
 
   useEffect(() => {
-    const quantity = calculateQuantity({
-      quantity: formData.quantity,
-      unit: formData.unit,
-      wastageFactor: 0.1
-    });
-    setCalculatedQuantity(quantity.totalWithWastage);
-  }, [formData.quantity, formData.unit]);
+    const qty = calculateQuantity(formData.length, formData.width, formData.height, formData.unit);
+    setCalculatedQuantity(qty);
+  }, [formData.length, formData.width, formData.height, formData.unit]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.material_id || !formData.element_type) {
+    if (!formData.materialId || !formData.elementType) {
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs requis.",
@@ -56,20 +62,28 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
     }
 
     try {
-      await createMutation.mutateAsync({
-        ...formData,
-        quantity: calculatedQuantity
+      setSubmitting(true);
+      const { error } = await supabase.from('quantity_takeoffs').insert({
+        project_id: projectId,
+        material_id: formData.materialId,
+        element_type: formData.elementType,
+        unit: formData.unit,
+        length: formData.length,
+        width: formData.width || null,
+        height: formData.height || null,
+        note: formData.note || null,
       });
+
+      if (error) throw error;
 
       toast({
         title: "Métré créé",
         description: `Métré créé avec succès. Quantité calculée: ${calculatedQuantity} ${formData.unit}`,
       });
 
-      // Reset form
       setFormData({
-        material_id: '',
-        element_type: '',
+        materialId: '',
+        elementType: '',
         unit: 'm³',
         length: 0,
         width: 0,
@@ -85,10 +99,12 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
         description: "Impossible de créer le métré. Veuillez réessayer.",
         variant: "destructive",
       });
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const updateFormData = (field: string, value: any) => {
+  const updateFormData = (field: keyof FormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -101,7 +117,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="material">Matériau</Label>
-            <Select value={formData.material_id} onValueChange={(value) => updateFormData('material_id', value)}>
+            <Select value={formData.materialId} onValueChange={(value) => updateFormData('materialId', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un matériau..." />
               </SelectTrigger>
@@ -116,12 +132,12 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
           </div>
 
           <div>
-            <Label htmlFor="element_type">Type d'élément</Label>
+            <Label htmlFor="elementType">Type d'élément</Label>
             <Input
-              id="element_type"
+              id="elementType"
               type="text"
-              value={formData.element_type}
-              onChange={(e) => updateFormData('element_type', e.target.value)}
+              value={formData.elementType}
+              onChange={(e) => updateFormData('elementType', e.target.value)}
               placeholder="Ex: Mur, Dalle, Poutre..."
               required
             />
@@ -192,14 +208,14 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
             />
           </div>
 
-          <div className="bg-gray-50 p-4 rounded-lg">
+          <div className="bg-muted p-4 rounded-lg">
             <div className="text-lg font-semibold">
               Quantité calculée: {calculatedQuantity.toFixed(2)} {formData.unit}
             </div>
           </div>
 
-          <Button type="submit" disabled={createMutation.isPending} className="w-full">
-            {createMutation.isPending ? 'Création...' : 'Créer Métré'}
+          <Button type="submit" disabled={submitting} className="w-full">
+            {submitting ? 'Création...' : 'Créer Métré'}
           </Button>
         </form>
       </CardContent>

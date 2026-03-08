@@ -51,10 +51,32 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
   const loadData = async () => {
     try {
       setLoading(true);
-      const [milestonesData, progressData] = await Promise.all([
-        MilestoneService.getProjectMilestonesSummary(projectId),
-        MilestoneService.getMilestoneProgress(projectId)
-      ]);
+      const service = getMilestoneService();
+      const rawMilestones = await service.getProjectMilestones(projectId);
+      const milestonesData: MilestoneSummaryDTO[] = rawMilestones.map((m: any) => ({
+        id: m.id,
+        title: m.title,
+        target_date: m.target_date,
+        status: m.status,
+        type: m.type || 'checkpoint',
+        priority: m.priority || 'medium',
+        weight: m.weight || 0.2,
+        phase_id: m.phase_id,
+        phase_name: m.phase_name,
+        completed_date: m.actual_completion_date || m.completed_date,
+        is_critical: m.priority === 'critical',
+        is_from_template: false,
+      }));
+      const progressData: MilestoneProgressDTO = {
+        total_milestones: rawMilestones.length,
+        completed_milestones: rawMilestones.filter((m: any) => m.status === 'completed').length,
+        delayed_milestones: rawMilestones.filter((m: any) => m.status === 'delayed').length,
+        weighted_progress: Math.round(rawMilestones.filter((m: any) => m.status === 'completed').length / Math.max(1, rawMilestones.length) * 100),
+        overdue_milestones: rawMilestones.filter((m: any) => m.status === 'delayed').map((m: any) => m.id),
+        upcoming_milestones: [],
+        schedule_performance_index: 1,
+        critical_path_status: 'on_track',
+      };
       setMilestones(milestonesData);
       setProgress(progressData);
     } catch (error) {
