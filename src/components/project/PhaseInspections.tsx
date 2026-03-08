@@ -15,7 +15,6 @@ import { Plus, ClipboardCheck, Trash2, Calendar, User, ExternalLink, Upload, Pen
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { useProjectProgressSync } from '@/hooks/useProjectProgressSync';
 import { InspectorSelector } from '@/components/selectors/InspectorSelector';
-import { supabase } from '@/integrations/supabase/client';
 
 interface PhaseInspectionsProps {
   phaseId: string;
@@ -26,7 +25,7 @@ interface InspectionFormData {
   inspector: string;
   date: string;
   status: string;
-  progress_at_inspection: string;
+  progressAtInspection: string;
   comments: string;
   documents?: File[];
 }
@@ -39,7 +38,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
     inspector: '',
     date: new Date().toISOString().split('T')[0],
     status: 'pending',
-    progress_at_inspection: '',
+    progressAtInspection: '',
     comments: '',
     documents: [],
   });
@@ -54,6 +53,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
   const { data: inspections, isLoading } = useQuery({
     queryKey: ['phase-inspections', phaseId],
     queryFn: async () => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('inspections')
         .select('*')
@@ -76,7 +76,6 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
           const folder = `inspections/${projectId}`;
 
           const uploadResult = await uploadFile({ file, folder });
-
           const publicUrl = getPublicUrl(uploadResult.path);
 
           return {
@@ -90,6 +89,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
         documentsData = { validation_documents: uploadedDocs };
       }
 
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('inspections')
         .insert({
@@ -98,7 +98,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
           inspector: inspectionData.inspector,
           date: new Date(inspectionData.date).toISOString(),
           status: inspectionData.status,
-          progress_at_inspection: parseInt(inspectionData.progress_at_inspection) || 0,
+          progress_at_inspection: parseInt(inspectionData.progressAtInspection) || 0,
           comments: inspectionData.comments,
           documents: documentsData,
         })
@@ -123,6 +123,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
 
   const deleteInspectionMutation = useMutation({
     mutationFn: async (id: string) => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase
         .from('inspections')
         .delete()
@@ -142,7 +143,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
       inspector: '',
       date: new Date().toISOString().split('T')[0],
       status: 'pending',
-      progress_at_inspection: '',
+      progressAtInspection: '',
       comments: '',
       documents: [],
     });
@@ -151,7 +152,6 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation
     if (!formData.inspector.trim()) {
       toast({
         title: 'Erreur de validation',
@@ -170,7 +170,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
       return;
     }
     
-    if (formData.progress_at_inspection && (parseInt(formData.progress_at_inspection) < 0 || parseInt(formData.progress_at_inspection) > 100)) {
+    if (formData.progressAtInspection && (parseInt(formData.progressAtInspection) < 0 || parseInt(formData.progressAtInspection) > 100)) {
       toast({
         title: 'Erreur de validation',
         description: 'La progression doit être entre 0 et 100%',
@@ -188,7 +188,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       case 'rejected': return 'bg-red-100 text-red-800';
       case 'completed': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -286,14 +286,14 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="progress_at_inspection">Progression observée (%)</Label>
+                    <Label htmlFor="progressAtInspection">Progression observée (%)</Label>
                     <Input
-                      id="progress_at_inspection"
+                      id="progressAtInspection"
                       type="number"
                       min="0"
                       max="100"
-                      value={formData.progress_at_inspection}
-                      onChange={(e) => setFormData({ ...formData, progress_at_inspection: e.target.value })}
+                      value={formData.progressAtInspection}
+                      onChange={(e) => setFormData({ ...formData, progressAtInspection: e.target.value })}
                     />
                   </div>
                 </div>
