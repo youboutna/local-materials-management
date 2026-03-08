@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -161,7 +160,7 @@ const ProjectDocumentUpload = ({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    document_type: '' as DocumentType,
+    documentType: '' as DocumentType,
     status: 'draft' as const
   });
   const [file, setFile] = useState<File | null>(null);
@@ -204,10 +203,11 @@ const ProjectDocumentUpload = ({
         }
       }
 
+      // Map camelCase form data to snake_case DB columns
       const documentInsert = {
         title: uploadData.title,
         description: uploadData.description,
-        document_type: uploadData.document_type,
+        document_type: uploadData.documentType,
         project_id: projectId,
         phase_id: phaseId,
         inspection_id: inspectionId,
@@ -226,6 +226,7 @@ const ProjectDocumentUpload = ({
         }
       };
 
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('documents')
         .insert(documentInsert as any)
@@ -250,7 +251,7 @@ const ProjectDocumentUpload = ({
       setFormData({
         title: '',
         description: '',
-        document_type: '' as DocumentType,
+        documentType: '' as DocumentType,
         status: 'draft'
       });
       setFile(null);
@@ -268,7 +269,7 @@ const ProjectDocumentUpload = ({
 
   const handleCategoryChange = (category: keyof typeof DOCUMENT_CATEGORIES) => {
     setSelectedCategory(category);
-    setFormData(prev => ({ ...prev, document_type: '' as DocumentType }));
+    setFormData(prev => ({ ...prev, documentType: '' as DocumentType }));
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -285,7 +286,7 @@ const ProjectDocumentUpload = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title || !formData.document_type) {
+    if (!formData.title || !formData.documentType) {
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs obligatoires.",
@@ -361,7 +362,7 @@ const ProjectDocumentUpload = ({
 
             <div className="space-y-2">
               <Label htmlFor="document_type">Type de Document *</Label>
-              <Select value={formData.document_type} onValueChange={(value) => handleInputChange('document_type', value)}>
+              <Select value={formData.documentType} onValueChange={(value) => handleInputChange('documentType', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionnez le type" />
                 </SelectTrigger>

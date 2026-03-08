@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Calculator, FileSpreadsheet } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -41,6 +40,7 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
 
   const fetchQuantityTakeoffs = async () => {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('quantity_takeoffs')
         .select(`
@@ -98,6 +98,7 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
   // Fetch project materials and automatically generate takeoffs
   const fetchProjectMaterials = async () => {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data: projectMaterials, error } = await supabase
         .from('project_materials')
         .select(`

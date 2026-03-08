@@ -224,31 +224,31 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
          resolvedIssues: 0,
          criticalIssues: 0,
          // Cost analysis (camelCase)
-         budgetUtilization: (typedCostAnalysis.actual_cost || 0) / (typedCostAnalysis.total_budget || 1) * 100,
-         remainingBudget: typedCostAnalysis.remaining_budget || 0,
-         actualCost: typedCostAnalysis.actual_cost || 0,
-         totalBudget: typedCostAnalysis.total_budget || 0,
-         cpi: typedCostAnalysis.cost_performance_index || 0,
-         earnedValue: typedCostAnalysis.actual_cost || 0,
-         costVariance: typedCostAnalysis.cost_variance || 0,
-         // Performance metrics (camelCase)
-         progressPercentage: typedAnalytics.progress_percentage || 0,
-         milestoneCompletion: typedAnalytics.milestone_completion || 0,
-         schedulePerformance: typedAnalytics.schedule_performance || 0,
-         costEfficiency: typedAnalytics.cost_efficiency || 0,
-         qualityScore: typedAnalytics.quality_score || 0,
-         riskScore: typedAnalytics.risk_score || 0,
-         spi: (typedAnalytics.schedule_performance || 0) / 100,
-         inspectionPassRate: typedAnalytics.quality_score || 0,
+         budgetUtilization: (typedCostAnalysis.actualCost || typedCostAnalysis.actual_cost || 0) / (typedCostAnalysis.totalBudget || typedCostAnalysis.total_budget || 1) * 100,
+         remainingBudget: typedCostAnalysis.remainingBudget || typedCostAnalysis.remaining_budget || 0,
+         actualCost: typedCostAnalysis.actualCost || typedCostAnalysis.actual_cost || 0,
+         totalBudget: typedCostAnalysis.totalBudget || typedCostAnalysis.total_budget || 0,
+         cpi: typedCostAnalysis.costPerformanceIndex || typedCostAnalysis.cost_performance_index || 0,
+         earnedValue: typedCostAnalysis.actualCost || typedCostAnalysis.actual_cost || 0,
+         costVariance: typedCostAnalysis.costVariance || typedCostAnalysis.cost_variance || 0,
+         // Performance metrics (camelCase with dual-casing fallback)
+         progressPercentage: typedAnalytics.progressPercentage || typedAnalytics.progress_percentage || 0,
+         milestoneCompletion: typedAnalytics.milestoneCompletion || typedAnalytics.milestone_completion || 0,
+         schedulePerformance: typedAnalytics.schedulePerformance || typedAnalytics.schedule_performance || 0,
+         costEfficiency: typedAnalytics.costEfficiency || typedAnalytics.cost_efficiency || 0,
+         qualityScore: typedAnalytics.qualityScore || typedAnalytics.quality_score || 0,
+         riskScore: typedAnalytics.riskScore || typedAnalytics.risk_score || 0,
+         spi: (typedAnalytics.schedulePerformance || typedAnalytics.schedule_performance || 0) / 100,
+         inspectionPassRate: typedAnalytics.qualityScore || typedAnalytics.quality_score || 0,
          healthScore: Math.round(
-           ((typedAnalytics.progress_percentage || 0) + 
-            (typedAnalytics.quality_score || 0) + 
-            (typedAnalytics.schedule_performance || 0)) / 3
+           ((typedAnalytics.progressPercentage || typedAnalytics.progress_percentage || 0) + 
+            (typedAnalytics.qualityScore || typedAnalytics.quality_score || 0) + 
+            (typedAnalytics.schedulePerformance || typedAnalytics.schedule_performance || 0)) / 3
          ),
          remainingDays: Math.max(0, 30),
          elapsedDays: 45,
-         overallProgress: typedAnalytics.progress_percentage || 0,
-         scheduleVariance: typedAnalytics.timeline_variance || 0
+         overallProgress: typedAnalytics.progressPercentage || typedAnalytics.progress_percentage || 0,
+         scheduleVariance: typedAnalytics.timelineVariance || typedAnalytics.timeline_variance || 0
        };
     },
     enabled: !!projectId && !!projectDetail,

@@ -18,7 +18,7 @@ import {
   Target,
   TrendingUp,
 } from "lucide-react";
-import { PhaseDTO } from "@/types/phase-dto";
+import { PhaseDTO } from "@/dtos/entities/PhaseDTO";
 import {
   formatCurrency,
   formatDate,
@@ -109,7 +109,7 @@ const PhaseOverviewMetrics: React.FC<PhaseOverviewMetricsProps> = ({
           </div>
           
           <div className="mt-3">
-            <p className="text-2xl font-bold">{formatCurrency(phase.estimated_cost)}</p>
+            <p className="text-2xl font-bold">{formatCurrency(phase.estimatedCost)}</p>
             <p className="text-sm text-muted-foreground">Budget estimé</p>
           </div>
           
@@ -140,7 +140,7 @@ const PhaseOverviewMetrics: React.FC<PhaseOverviewMetricsProps> = ({
                 <span>Total:</span>
                 <span className={cn(
                   "font-bold",
-                  phaseCosts.totalSpent > (phase.estimated_cost || 0) 
+                  phaseCosts.totalSpent > (phase.estimatedCost || 0) 
                     ? "text-red-600" 
                     : "text-green-600"
                 )}>
@@ -163,11 +163,11 @@ const PhaseOverviewMetrics: React.FC<PhaseOverviewMetricsProps> = ({
             </div>
           </div>
           <div className="mt-3">
-            <p className="text-2xl font-bold">{calculateRemainingDays(phase.end_date)}</p>
+            <p className="text-2xl font-bold">{calculateRemainingDays(phase.endDate)}</p>
             <p className="text-sm text-muted-foreground">Jours restants</p>
           </div>
           <p className="text-xs text-blue-600 mt-2">
-            Fin: {formatDate(phase.end_date)}
+            Fin: {formatDate(phase.endDate)}
           </p>
         </div>
       </Card>

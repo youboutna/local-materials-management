@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Users, Edit2, Trash2, Star } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useQuery as useSuppliersQuery } from '@tanstack/react-query'; // Add this import
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 interface PhaseEmployeesProps {
@@ -18,26 +16,26 @@ interface PhaseEmployeesProps {
 }
 
 interface EmployeeFormData {
-  employee_name: string;
-  employee_role: string;
-  employee_contact: string;
-  daily_rate: string;
-  start_date: string;
-  end_date: string;
-  is_primary_supplier: boolean;
+  employeeName: string;
+  employeeRole: string;
+  employeeContact: string;
+  dailyRate: string;
+  startDate: string;
+  endDate: string;
+  isPrimarySupplier: boolean;
 }
 
 const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<EmployeeFormData>({
-    employee_name: '',
-    employee_role: '',
-    employee_contact: '',
-    daily_rate: '',
-    start_date: '',
-    end_date: '',
-    is_primary_supplier: false,
+    employeeName: '',
+    employeeRole: '',
+    employeeContact: '',
+    dailyRate: '',
+    startDate: '',
+    endDate: '',
+    isPrimarySupplier: false,
   });
   const [memberType, setMemberType] = useState<'employee' | 'supplier'>('employee');
   const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null);
@@ -49,6 +47,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
   const { data: employees, isLoading } = useQuery({
     queryKey: ['phase-employees', phaseId],
     queryFn: async () => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('phase_employees')
         .select('*')
@@ -60,7 +59,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
     },
   });
 
-  const { data: suppliersList } = useSuppliersQuery({
+  const { data: suppliersList } = useQuery({
     queryKey: ['suppliers'],
     queryFn: async () => {
       const { SupplierService } = await import('@/application/services/SupplierService');
@@ -82,6 +81,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
   const { data: employeesList, isLoading: isEmployeesLoading } = useQuery({
     queryKey: ['employees', employeeSearch],
     queryFn: async () => {
+      const { supabase } = await import('@/integrations/supabase/client');
       let query = supabase
         .from('employees')
         .select('id, full_name, position, email, phone')
@@ -99,17 +99,18 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
 
   const addEmployeeMutation = useMutation({
     mutationFn: async (employeeData: EmployeeFormData) => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('phase_employees')
         .insert({
           phase_id: phaseId,
-          employee_name: employeeData.employee_name,
-          employee_role: employeeData.employee_role,
-          employee_contact: employeeData.employee_contact,
-          daily_rate: employeeData.daily_rate ? parseFloat(employeeData.daily_rate) : null,
-          start_date: employeeData.start_date || null,
-          end_date: employeeData.end_date || null,
-          is_primary_supplier: employeeData.is_primary_supplier,
+          employee_name: employeeData.employeeName,
+          employee_role: employeeData.employeeRole,
+          employee_contact: employeeData.employeeContact,
+          daily_rate: employeeData.dailyRate ? parseFloat(employeeData.dailyRate) : null,
+          start_date: employeeData.startDate || null,
+          end_date: employeeData.endDate || null,
+          is_primary_supplier: employeeData.isPrimarySupplier,
         })
         .select()
         .single();
@@ -127,14 +128,15 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
 
   const updateEmployeeMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<EmployeeFormData> }) => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const updateData = {
-        employee_name: data.employee_name,
-        employee_role: data.employee_role,
-        employee_contact: data.employee_contact,
-        daily_rate: data.daily_rate ? parseFloat(data.daily_rate) : null,
-        start_date: data.start_date || null,
-        end_date: data.end_date || null,
-        is_primary_supplier: data.is_primary_supplier,
+        employee_name: data.employeeName,
+        employee_role: data.employeeRole,
+        employee_contact: data.employeeContact,
+        daily_rate: data.dailyRate ? parseFloat(data.dailyRate) : null,
+        start_date: data.startDate || null,
+        end_date: data.endDate || null,
+        is_primary_supplier: data.isPrimarySupplier,
       };
       
       const { error } = await supabase
@@ -155,6 +157,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
 
   const deleteEmployeeMutation = useMutation({
     mutationFn: async (id: string) => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase
         .from('phase_employees')
         .delete()
@@ -170,13 +173,13 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
 
   const resetForm = () => {
     setFormData({
-      employee_name: '',
-      employee_role: '',
-      employee_contact: '',
-      daily_rate: '',
-      start_date: '',
-      end_date: '',
-      is_primary_supplier: false,
+      employeeName: '',
+      employeeRole: '',
+      employeeContact: '',
+      dailyRate: '',
+      startDate: '',
+      endDate: '',
+      isPrimarySupplier: false,
     });
     setEditingId(null);
   };
@@ -192,13 +195,13 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
 
   const startEdit = (employee: any) => {
     setFormData({
-      employee_name: employee.employee_name || '',
-      employee_role: employee.employee_role || '',
-      employee_contact: employee.employee_contact || '',
-      daily_rate: employee.daily_rate?.toString() || '',
-      start_date: employee.start_date || '',
-      end_date: employee.end_date || '',
-      is_primary_supplier: employee.is_primary_supplier || false,
+      employeeName: employee.employee_name || '',
+      employeeRole: employee.employee_role || '',
+      employeeContact: employee.employee_contact || '',
+      dailyRate: employee.daily_rate?.toString() || '',
+      startDate: employee.start_date || '',
+      endDate: employee.end_date || '',
+      isPrimarySupplier: employee.is_primary_supplier || false,
     });
     setEditingId(employee.id);
     setIsAdding(true);
@@ -244,9 +247,9 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                         setSelectedSupplierId(null);
                         setFormData({
                           ...formData,
-                          employee_name: '',
-                          employee_role: '',
-                          employee_contact: '',
+                          employeeName: '',
+                          employeeRole: '',
+                          employeeContact: '',
                         });
                       }}
                     />
@@ -260,9 +263,9 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                         setMemberType('supplier');
                         setFormData({
                           ...formData,
-                          employee_name: '',
-                          employee_role: '',
-                          employee_contact: '',
+                          employeeName: '',
+                          employeeRole: '',
+                          employeeContact: '',
                         });
                       }}
                     />
@@ -276,16 +279,16 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                     <Label htmlFor="supplier_select">Sélectionner un fournisseur/consultant *</Label>
                     <Input
                       id="supplier_select"
-                      value={formData.employee_name}
+                      value={formData.employeeName}
                       onChange={e => {
                         const supplier = suppliersList?.find((s: any) => s.name === e.target.value);
                         setSelectedSupplierId(supplier?.id || null);
                         const contactPerson = supplier?.contactPerson || supplier?.contact_person;
                         setFormData({
                           ...formData,
-                          employee_name: supplier?.name || e.target.value,
-                          employee_role: 'Consultant externe',
-                          employee_contact: contactPerson || supplier?.email || supplier?.phone || '',
+                          employeeName: supplier?.name || e.target.value,
+                          employeeRole: 'Consultant externe',
+                          employeeContact: contactPerson || supplier?.email || supplier?.phone || '',
                         });
                       }}
                       required={memberType === 'supplier'}
@@ -305,16 +308,15 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                     <Label htmlFor="employee_name">Nom complet *</Label>
                     <Input
                       id="employee_name"
-                      value={formData.employee_name}
+                      value={formData.employeeName}
                       onChange={e => {
                         setEmployeeSearch(e.target.value);
-                        // Find the employee by full_name
                         const emp = employeesList?.find(emp => emp.full_name === e.target.value);
                         setFormData({
                           ...formData,
-                          employee_name: e.target.value,
-                          employee_role: emp?.position || '', // Use position for role/fonction
-                          employee_contact: emp?.email || emp?.phone || '',
+                          employeeName: e.target.value,
+                          employeeRole: emp?.position || '',
+                          employeeContact: emp?.email || emp?.phone || '',
                         });
                       }}
                       required
@@ -335,8 +337,8 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                     <Label htmlFor="employee_role">Rôle/Fonction *</Label>
                     <Input
                       id="employee_role"
-                      value={formData.employee_role}
-                      onChange={(e) => setFormData({ ...formData, employee_role: e.target.value })}
+                      value={formData.employeeRole}
+                      onChange={(e) => setFormData({ ...formData, employeeRole: e.target.value })}
                       required
                       placeholder="Ex: Chef de chantier, Maçon, etc."
                       disabled={memberType === 'supplier'}
@@ -349,8 +351,8 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                     <Label htmlFor="employee_contact">Contact</Label>
                     <Input
                       id="employee_contact"
-                      value={formData.employee_contact}
-                      onChange={(e) => setFormData({ ...formData, employee_contact: e.target.value })}
+                      value={formData.employeeContact}
+                      onChange={(e) => setFormData({ ...formData, employeeContact: e.target.value })}
                       placeholder="Téléphone ou email"
                       disabled={memberType === 'supplier'}
                     />
@@ -361,8 +363,8 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                       id="daily_rate"
                       type="number"
                       step="0.01"
-                      value={formData.daily_rate}
-                      onChange={(e) => setFormData({ ...formData, daily_rate: e.target.value })}
+                      value={formData.dailyRate}
+                      onChange={(e) => setFormData({ ...formData, dailyRate: e.target.value })}
                     />
                   </div>
                 </div>
@@ -373,8 +375,8 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                     <Input
                       id="start_date"
                       type="date"
-                      value={formData.start_date}
-                      onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                      value={formData.startDate}
+                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                     />
                   </div>
                   <div>
@@ -382,8 +384,8 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                     <Input
                       id="end_date"
                       type="date"
-                      value={formData.end_date}
-                      onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                      value={formData.endDate}
+                      onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                     />
                   </div>
                 </div>
@@ -391,9 +393,9 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="is_primary_supplier"
-                    checked={formData.is_primary_supplier}
+                    checked={formData.isPrimarySupplier}
                     onCheckedChange={(checked) => 
-                      setFormData({ ...formData, is_primary_supplier: !!checked })
+                      setFormData({ ...formData, isPrimarySupplier: !!checked })
                     }
                   />
                   <Label htmlFor="is_primary_supplier" className="flex items-center gap-2">

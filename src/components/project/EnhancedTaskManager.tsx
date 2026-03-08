@@ -25,7 +25,7 @@ import {
   ProjectTask,
   ProjectPhase as TaskProjectPhase
 } from '@/hooks/hexagonal/useEnhancedTasksHex';
-import { supabase } from '@/integrations/supabase/client';
+// supabase removed - using hexagonal hooks
 
 interface Task {
   id: string;
@@ -176,6 +176,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   const { data: dependencies = [] } = useQuery({
     queryKey: ['task-dependencies', projectId],
     queryFn: async (): Promise<TaskDependency[]> => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('task_dependencies')
         .select('*')
@@ -198,6 +199,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   const { data: employees = [] } = useQuery({
     queryKey: ['employees-active'],
     queryFn: async (): Promise<Employee[]> => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('employees')
         .select('id, full_name, position')
@@ -212,6 +214,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   const { data: suppliers = [] } = useQuery({
     queryKey: ['suppliers-active'],
     queryFn: async (): Promise<Supplier[]> => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('suppliers')
         .select('id, name, contact_person')
@@ -229,6 +232,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   const { data: projectData } = useQuery({
     queryKey: ['project-contractor', projectId],
     queryFn: async () => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('projects')
         .select('main_contractor')
@@ -244,6 +248,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   // Create task mutation
   const createTaskMutation = useMutation({
     mutationFn: async (data: Partial<TaskAssignmentExtended>) => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase
         .from('task_assignments')
         .insert([{
@@ -279,6 +284,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
         ...data,
         title: data.title || undefined,
       };
+      const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase
         .from('task_assignments')
         .update(updateData)
@@ -307,6 +313,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   // Delete task mutation
   const deleteTaskMutation = useMutation({
     mutationFn: async (id: string) => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase
         .from('task_assignments')
         .delete()
@@ -504,6 +511,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
       }
 
       if (tasksToCreate.length > 0) {
+        const { supabase } = await import('@/integrations/supabase/client');
         const { data, error } = await supabase
           .from('task_assignments')
           .insert(tasksToCreate as any)
