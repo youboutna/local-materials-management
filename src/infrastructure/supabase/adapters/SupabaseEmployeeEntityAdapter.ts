@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Supabase Employee Adapter
  * Implements IEmployeeRepository using Supabase

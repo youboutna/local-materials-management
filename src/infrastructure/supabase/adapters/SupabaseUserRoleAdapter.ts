@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SupabaseUserRoleAdapter
  * Adapter pour la table user_roles

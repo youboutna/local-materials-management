@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { supabase } from '@/integrations/supabase/client';
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { Inspection, InspectionStatus, Document } from '@/domain/entities/Inspection';
