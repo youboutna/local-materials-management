@@ -30,7 +30,7 @@ import { MaterialDTO } from "@/dtos/entities/MaterialDTO";
 
 interface EnhancedComplianceStepProps {
   workflowData: ProjectWorkflowData | null;
-  onStepComplete: (stepData: { compliance: ComplianceDataDTO, relatedData: StepRelatedDataDTO }) => void;
+  onStepComplete: (stepData: { compliance: ComplianceDataDTO }) => void;
   isEditing?: boolean;
   mode?: 'create' | 'edit';
 }
