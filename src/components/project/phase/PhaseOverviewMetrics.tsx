@@ -18,7 +18,7 @@ import {
   Target,
   TrendingUp,
 } from "lucide-react";
-import { PhaseDTO } from "@/types/phase-dto";
+import { PhaseDTO } from "@/dtos/entities/PhaseDTO";
 import {
   formatCurrency,
   formatDate,
