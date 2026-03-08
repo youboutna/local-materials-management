@@ -1,14 +1,14 @@
 // Repository pattern for Tender CRUD operations
 import { supabase } from '@/integrations/supabase/client';
-import { TenderDTO as TenderEntity, TenderSubmissionDTO as TenderSubmissionEntity } from '@/dtos/entities/TenderDTO';
+
+// Use raw DB types instead of camelCase DTOs for direct Supabase access
+type TenderRow = Record<string, unknown> & { id: string; created_at: string; updated_at: string };
+type TenderSubmissionRow = Record<string, unknown> & { id: string };
 
 export class TenderRepository {
   // ============= Tender CRUD =============
   
-  /**
-   * Find tender by ID
-   */
-  async findById(id: string): Promise<TenderEntity | null> {
+  async findById(id: string): Promise<TenderRow | null> {
     const { data, error } = await supabase
       .from('tenders')
       .select('*')
@@ -16,26 +16,20 @@ export class TenderRepository {
       .maybeSingle();
     
     if (error) throw error;
-    return data as TenderEntity | null;
+    return data as TenderRow | null;
   }
 
-  /**
-   * Find all tenders
-   */
-  async findAll(): Promise<TenderEntity[]> {
+  async findAll(): Promise<TenderRow[]> {
     const { data, error } = await supabase
       .from('tenders')
       .select('*')
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return (data || []) as TenderEntity[];
+    return (data || []) as TenderRow[];
   }
 
-  /**
-   * Find tenders by status
-   */
-  async findByStatus(status: 'draft' | 'published' | 'closed' | 'awarded'): Promise<TenderEntity[]> {
+  async findByStatus(status: 'draft' | 'published' | 'closed' | 'awarded'): Promise<TenderRow[]> {
     const { data, error } = await supabase
       .from('tenders')
       .select('*')
@@ -43,13 +37,10 @@ export class TenderRepository {
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return (data || []) as TenderEntity[];
+    return (data || []) as TenderRow[];
   }
 
-  /**
-   * Search tenders
-   */
-  async search(searchTerm: string): Promise<TenderEntity[]> {
+  async search(searchTerm: string): Promise<TenderRow[]> {
     const { data, error } = await supabase
       .from('tenders')
       .select('*')
@@ -57,13 +48,10 @@ export class TenderRepository {
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return (data || []) as TenderEntity[];
+    return (data || []) as TenderRow[];
   }
 
-  /**
-   * Find published tenders in phase 2 with valid deadline
-   */
-  async findPublishedPhase2WithValidDeadline(): Promise<TenderEntity[]> {
+  async findPublishedPhase2WithValidDeadline(): Promise<TenderRow[]> {
     const { data, error } = await supabase
       .from('tenders')
       .select('*')
@@ -73,41 +61,32 @@ export class TenderRepository {
       .order('deadline_date', { ascending: true });
     
     if (error) throw error;
-    return (data || []) as TenderEntity[];
+    return (data || []) as TenderRow[];
   }
 
-  /**
-   * Create tender
-   */
-  async create(tenderData: Omit<TenderEntity, 'id' | 'created_at' | 'updated_at'>): Promise<TenderEntity> {
+  async create(tenderData: Record<string, unknown>): Promise<TenderRow> {
     const { data, error } = await supabase
       .from('tenders')
-      .insert(tenderData)
+      .insert(tenderData as any)
       .select()
       .single();
     
     if (error) throw error;
-    return data as TenderEntity;
+    return data as TenderRow;
   }
 
-  /**
-   * Update tender
-   */
-  async update(id: string, tenderData: Partial<TenderEntity>): Promise<TenderEntity> {
+  async update(id: string, tenderData: Record<string, unknown>): Promise<TenderRow> {
     const { data, error } = await supabase
       .from('tenders')
-      .update(tenderData)
+      .update(tenderData as any)
       .eq('id', id)
       .select()
       .single();
     
     if (error) throw error;
-    return data as TenderEntity;
+    return data as TenderRow;
   }
 
-  /**
-   * Delete tender
-   */
   async delete(id: string): Promise<void> {
     const { error } = await supabase
       .from('tenders')
@@ -119,10 +98,7 @@ export class TenderRepository {
 
   // ============= Tender Submissions =============
 
-  /**
-   * Find submissions for a tender
-   */
-  async findSubmissionsByTenderId(tenderId: string): Promise<TenderSubmissionEntity[]> {
+  async findSubmissionsByTenderId(tenderId: string): Promise<TenderSubmissionRow[]> {
     const { data, error } = await supabase
       .from('tender_submissions')
       .select('*')
@@ -130,13 +106,10 @@ export class TenderRepository {
       .order('submission_date', { ascending: false });
     
     if (error) throw error;
-    return data as unknown as TenderSubmissionEntity[];
+    return (data || []) as TenderSubmissionRow[];
   }
 
-  /**
-   * Find submission by ID
-   */
-  async findSubmissionById(id: string): Promise<TenderSubmissionEntity | null> {
+  async findSubmissionById(id: string): Promise<TenderSubmissionRow | null> {
     const { data, error } = await supabase
       .from('tender_submissions')
       .select('*')
@@ -144,12 +117,9 @@ export class TenderRepository {
       .maybeSingle();
     
     if (error) throw error;
-    return data as unknown as TenderSubmissionEntity | null;
+    return data as TenderSubmissionRow | null;
   }
 
-  /**
-   * Create tender submission
-   */
   async createSubmission(submissionData: {
     tender_id: string;
     user_id: string;
@@ -157,7 +127,7 @@ export class TenderRepository {
     supplier_email?: string | null;
     status?: string;
     submission_date?: string;
-  }): Promise<TenderSubmissionEntity> {
+  }): Promise<TenderSubmissionRow> {
     const { data, error } = await supabase
       .from('tender_submissions')
       .insert(submissionData)
@@ -165,27 +135,21 @@ export class TenderRepository {
       .single();
     
     if (error) throw error;
-    return data as unknown as TenderSubmissionEntity;
+    return data as TenderSubmissionRow;
   }
 
-  /**
-   * Update tender submission
-   */
-  async updateSubmission(id: string, submissionData: Partial<TenderSubmissionEntity>): Promise<TenderSubmissionEntity> {
+  async updateSubmission(id: string, submissionData: Record<string, unknown>): Promise<TenderSubmissionRow> {
     const { data, error } = await supabase
       .from('tender_submissions')
-      .update(submissionData)
+      .update(submissionData as any)
       .eq('id', id)
       .select()
       .single();
     
     if (error) throw error;
-    return data as unknown as TenderSubmissionEntity;
+    return data as TenderSubmissionRow;
   }
 
-  /**
-   * Delete tender submission
-   */
   async deleteSubmission(id: string): Promise<void> {
     const { error } = await supabase
       .from('tender_submissions')

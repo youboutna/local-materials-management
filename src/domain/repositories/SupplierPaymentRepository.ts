@@ -86,7 +86,7 @@ export class SupplierPaymentRepository {
       .single();
 
     if (error) throw error;
-    return data as SupplierPaymentRequestEntity;
+    return data as unknown as SupplierPaymentRequestEntity;
   }
 
   /**
