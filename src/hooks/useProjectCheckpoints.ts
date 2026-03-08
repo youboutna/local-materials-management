@@ -142,17 +142,9 @@ interface ProjectCheckpointsResult {
 
 
 interface ProjectDocument {
-
   id: string;
-
-  phase_id: string;
-
-  type: string;
-
-  url: string;
-
-  uploaded_at: string;
-
+  phase_id: string | null;
+  [key: string]: any;
 }
 
 
