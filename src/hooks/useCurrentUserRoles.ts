@@ -26,13 +26,13 @@ export const useCurrentUserRoles = (): UserRolesResult => {
   const [userRoles, setUserRoles] = useState<SomelecRole[]>([]);
 
   const isAppRole = (role: string): role is SomelecRole => {
-    return ['admin', 'manager', 'editor', 'viewer'].includes(role);
+    return Object.values(SomelecRole).includes(role as SomelecRole);
   };
 
   useEffect(() => {
-    const roles = profile?.role ? 
-      [isAppRole(profile.role) ? profile.role : 'viewer'] : 
-      ['viewer'];
+    const roles: SomelecRole[] = profile?.role ? 
+      [isAppRole(profile.role) ? profile.role as SomelecRole : SomelecRole.AGENT] : 
+      [SomelecRole.AGENT];
     setUserRoles(roles);
   }, [profile?.role]);
 
