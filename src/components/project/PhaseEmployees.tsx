@@ -81,6 +81,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
   const { data: employeesList, isLoading: isEmployeesLoading } = useQuery({
     queryKey: ['employees', employeeSearch],
     queryFn: async () => {
+      const { supabase } = await import('@/integrations/supabase/client');
       let query = supabase
         .from('employees')
         .select('id, full_name, position, email, phone')
