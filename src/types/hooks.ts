@@ -5,13 +5,21 @@
  */
 
 import { UserResponseDto } from '@/dtos/entities/EmployeeDTO';
-import { TaskAssignmentDTO } from '@/dtos/entities/TaskDTO';
-import { DocumentResponseDto } from '@/dtos/entities/DocumentDTO';
-import { ProjectResponseDto } from '@/dtos/entities/ProjectDTO';
-import { MaterialResponseDto } from '@/dtos/entities/MaterialDTO';
-import { InspectionResponseDto } from '@/dtos/entities/InspectionDTO';
-import { AuthResponseDto } from '@/dtos/entities/AuthDTO';
+import { TaskDTO } from '@/dtos/entities/TaskDTO';
+import { DocumentResponseDTO } from '@/dtos/entities/DocumentDTO';
+import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
+import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
+import { AuthResponse } from '@/dtos/entities/AuthDTO';
 import { StakeholderResponseDTO as SupplierResponseDto } from '@/dtos/entities/StakeholderDTO';
+
+// Re-export aliased types for backward compatibility
+type TaskAssignmentDTO = TaskDTO;
+type DocumentResponseDto = DocumentResponseDTO;
+type ProjectResponseDto = ProjectDTO;
+type MaterialResponseDto = MaterialDTO;
+type InspectionResponseDto = InspectionDTO;
+type AuthResponseDto = AuthResponse;
 
 type UseQueryOptions<T> = {
   enabled?: boolean;

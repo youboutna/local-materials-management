@@ -100,7 +100,7 @@ export function findRegionByLocation(location: string): Region | undefined {
  * Get regions with their capitals for display purposes
  * @returns Array of regions with capital information
  */
-export function getRegionsWithCapitals(): Array<Region & { capital: City }> {
+export function getRegionsWithCapitals(): Array<Region & { capital: City | null }> {
   return MAURITANIA_REGIONS.map(region => {
     const capital = getWilayaCapital(region.code);
     return { ...region, capital: capital || null };
