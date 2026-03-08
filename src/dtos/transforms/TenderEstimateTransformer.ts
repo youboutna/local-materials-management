@@ -212,16 +212,19 @@ export class TenderEstimateTransformer {
     }>;
   }): TenderEstimateComparisonDto {
     return {
-      original_estimate: comparison.estimate_1,
-      revised_estimate: comparison.estimate_2,
-      differences: {
-        amount_change: comparison.price_difference,
-        percentage_change: comparison.price_difference_percentage,
-        changed_fields: comparison.item_differences.map(d => d.field),
-      },
+      estimate_1: comparison.estimate_1,
+      estimate_2: comparison.estimate_2,
       price_difference: comparison.price_difference,
-      price_difference_percentage: comparison.price_difference_percentage
-    };
+      price_difference_percentage: comparison.price_difference_percentage,
+      item_differences: comparison.item_differences.map(d => ({
+        item_code: d.field,
+        description: d.message,
+        estimate_1_price: 0,
+        estimate_2_price: 0,
+        price_difference: 0,
+        price_difference_percentage: 0,
+      })),
+    } as TenderEstimateComparisonDto;
   }
 
   /**

@@ -1,5 +1,4 @@
 import { Workspace, OperationalStatus } from '@/domain/entities/Workspace';
-import { GeographicUnit } from '@/utils/mauritania';
 import { WorkspaceDTO, CreateWorkspaceRequestDTO, UpdateWorkspaceRequestDTO } from '@/dtos/entities/WorkspaceDTO';
 
 export class WorkspaceTransformer {
@@ -10,16 +9,13 @@ export class WorkspaceTransformer {
       workspaceCode: workspace.workspaceCode,
       name: workspace.name,
       location: {
-        code: workspace.location.code,
-        name: workspace.location.name,
-        nameAr: workspace.location.nameAr,
-        type: this.getGeographicType(workspace.location),
-        parentCode: this.getParentCode(workspace.location),
-        population: workspace.location.population,
-        coordinates: workspace.location.lat && workspace.location.lng ? {
-          latitude: workspace.location.lat,
-          longitude: workspace.location.lng
-        } : undefined
+        code: workspace.location || '',
+        name: workspace.location || '',
+        nameAr: '',
+        type: 'city',
+        parentCode: undefined,
+        population: undefined,
+        coordinates: undefined
       },
       description: workspace.description,
       capacity: workspace.capacity,
@@ -32,20 +28,11 @@ export class WorkspaceTransformer {
   }
 
   static fromCreateDTO(dto: CreateWorkspaceRequestDTO): Omit<Workspace, 'id'> {
-    const geographicUnit: GeographicUnit = {
-      code: dto.location.code,
-      name: dto.location.name,
-      nameAr: dto.location.nameAr,
-      lat: dto.location.coordinates?.latitude || 0,
-      lng: dto.location.coordinates?.longitude || 0,
-      population: dto.location.population
-    };
-
     return {
       workspaceId: dto.workspaceId,
       workspaceCode: dto.workspaceCode,
       name: dto.name,
-      location: geographicUnit,
+      location: dto.location?.name || '',
       description: dto.description,
       capacity: dto.capacity,
       contact: dto.contact,
@@ -70,36 +57,19 @@ export class WorkspaceTransformer {
     };
 
     if (dto.location) {
-      const geographicUnit: GeographicUnit = {
-        code: dto.location.code,
-        name: dto.location.name,
-        nameAr: dto.location.nameAr,
-        lat: dto.location.coordinates?.latitude || 0,
-        lng: dto.location.coordinates?.longitude || 0,
-        population: dto.location.population
-      };
-      result.location = geographicUnit;
+      result.location = dto.location?.name || '';
     }
 
     return result;
   }
 
   static toEntity(dto: WorkspaceDTO): Workspace {
-    const geographicUnit: GeographicUnit = {
-      code: dto.location.code,
-      name: dto.location.name,
-      nameAr: dto.location.nameAr,
-      lat: dto.location.coordinates?.latitude || 0,
-      lng: dto.location.coordinates?.longitude || 0,
-      population: dto.location.population
-    };
-
     return {
       id: dto.id,
       workspaceId: dto.workspaceId,
       workspaceCode: dto.workspaceCode,
       name: dto.name,
-      location: geographicUnit,
+      location: dto.location?.name || '',
       description: dto.description,
       capacity: dto.capacity,
       contact: dto.contact,
@@ -112,20 +82,5 @@ export class WorkspaceTransformer {
 
   static fromEntity(entity: Workspace): WorkspaceDTO {
     return this.toDTO(entity);
-  }
-
-  // Helper methods to determine geographic type and parent code
-  private static getGeographicType(location: GeographicUnit): 'region' | 'city' | 'port' | 'university' {
-    // This is a simplified logic - you may need to enhance this based on your specific requirements
-    if (location.economicImportance === 'capital') return 'region';
-    if (location.economicImportance === 'economic') return 'city';
-    // You could add more sophisticated logic here based on your data
-    return 'city';
-  }
-
-  private static getParentCode(location: GeographicUnit): string | undefined {
-    // This would need to be implemented based on your geographic hierarchy
-    // For now, returning undefined as it's optional
-    return undefined;
   }
 }
