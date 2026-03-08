@@ -366,8 +366,8 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
                     >
                       <div className={cn(
                         'p-2 rounded-full',
-                        inspection.status === 'approved' ? 'bg-success/10 text-success' :
-                        inspection.status === 'rejected' ? 'bg-destructive/10 text-destructive' :
+                        (inspection.status as string) === 'approved' ? 'bg-success/10 text-success' :
+                        (inspection.status as string) === 'rejected' ? 'bg-destructive/10 text-destructive' :
                         'bg-muted text-muted-foreground'
                       )}>
                         <ClipboardCheck className="h-4 w-4" />
