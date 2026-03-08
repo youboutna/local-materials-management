@@ -362,7 +362,7 @@ const ProjectDocumentUpload = ({
 
             <div className="space-y-2">
               <Label htmlFor="document_type">Type de Document *</Label>
-              <Select value={formData.document_type} onValueChange={(value) => handleInputChange('document_type', value)}>
+              <Select value={formData.documentType} onValueChange={(value) => handleInputChange('documentType', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionnez le type" />
                 </SelectTrigger>
