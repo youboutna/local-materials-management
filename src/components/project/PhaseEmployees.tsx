@@ -362,8 +362,8 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                       id="daily_rate"
                       type="number"
                       step="0.01"
-                      value={formData.daily_rate}
-                      onChange={(e) => setFormData({ ...formData, daily_rate: e.target.value })}
+                      value={formData.dailyRate}
+                      onChange={(e) => setFormData({ ...formData, dailyRate: e.target.value })}
                     />
                   </div>
                 </div>
