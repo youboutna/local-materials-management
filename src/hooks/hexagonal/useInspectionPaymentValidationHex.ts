@@ -49,8 +49,8 @@ export function useInspectionPaymentValidationHex(inspectionId: string) {
       const result = await paymentRequestService.getPaymentRequestsByProject(inspection.projectId);
       // Filter payment requests related to this inspection (using description or notes)
       return result.filter(payment => 
-        payment.description?.includes(inspectionId) || 
-        payment.notes?.includes(inspectionId)
+        (payment as any).description?.includes(inspectionId) || 
+        (payment as any).notes?.includes(inspectionId)
       );
     },
     enabled: !!inspection?.projectId,
