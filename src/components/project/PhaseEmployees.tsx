@@ -195,12 +195,13 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
 
   const startEdit = (employee: any) => {
     setFormData({
-      employee_name: employee.employee_name || '',
-      employee_role: employee.employee_role || '',
-      employee_contact: employee.employee_contact || '',
-      daily_rate: employee.daily_rate?.toString() || '',
-      start_date: employee.start_date || '',
-      end_date: employee.end_date || '',
+      employeeName: employee.employee_name || '',
+      employeeRole: employee.employee_role || '',
+      employeeContact: employee.employee_contact || '',
+      dailyRate: employee.daily_rate?.toString() || '',
+      startDate: employee.start_date || '',
+      endDate: employee.end_date || '',
+      isPrimarySupplier: employee.is_primary_supplier || false,
       is_primary_supplier: employee.is_primary_supplier || false,
     });
     setEditingId(employee.id);
