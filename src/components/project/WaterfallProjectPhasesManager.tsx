@@ -59,6 +59,7 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
       try {
         const { supabase } = await import('@/integrations/supabase/client');
         const { data: phasesData } = await supabase
+          .from('project_phases')
           .select('*')
           .eq('project_id', selectedProject.id)
           .order('start_date', { ascending: true });
