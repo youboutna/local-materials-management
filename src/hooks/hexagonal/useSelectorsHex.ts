@@ -194,27 +194,27 @@ export function useMaterialsSelector(options?: {
         RepositoryFactory.getMaterialRepository()
       );
       
-      let materials: Material[] = [];
+      let materials: any[] = [];
       
       if (options?.searchTerm) {
-        materials = await materialService.searchMaterials(options.searchTerm);
+        materials = await materialService.searchMaterials(options.searchTerm) as any[];
       } else {
-        materials = await materialService.getAllMaterials();
+        materials = await materialService.getAllMaterials() as any[];
       }
       
       if (options?.category && options.category !== 'all') {
-        materials = materials.filter(m => m.category === options.category);
+        materials = materials.filter((m: any) => m.category === options.category);
       }
       
-      return materials.map(material => ({
+      return materials.map((material: any) => ({
         id: material.id,
         name: material.name,
-        description: material.description,
+        description: material.description || '',
         category: material.category,
         unit: material.unit,
-        price_per_unit: material.pricePerUnit,
-        available_quantity: material.availableQuantity,
-        origin_location: material.coordinates ? `${material.coordinates.latitude}, ${material.coordinates.longitude}` : null
+        price_per_unit: material.pricePerUnit || material.price_per_unit || 0,
+        available_quantity: material.availableQuantity || material.available_quantity || 0,
+        origin_location: material.originLocation || null
       }));
     },
     enabled: options?.enabled !== false,
