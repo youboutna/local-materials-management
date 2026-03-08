@@ -307,16 +307,15 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                     <Label htmlFor="employee_name">Nom complet *</Label>
                     <Input
                       id="employee_name"
-                      value={formData.employee_name}
+                      value={formData.employeeName}
                       onChange={e => {
                         setEmployeeSearch(e.target.value);
-                        // Find the employee by full_name
                         const emp = employeesList?.find(emp => emp.full_name === e.target.value);
                         setFormData({
                           ...formData,
-                          employee_name: e.target.value,
-                          employee_role: emp?.position || '', // Use position for role/fonction
-                          employee_contact: emp?.email || emp?.phone || '',
+                          employeeName: e.target.value,
+                          employeeRole: emp?.position || '',
+                          employeeContact: emp?.email || emp?.phone || '',
                         });
                       }}
                       required
