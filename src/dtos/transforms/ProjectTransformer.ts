@@ -358,18 +358,20 @@ export class ProjectTransformer {
       supervisorId: dto.supervisorId,
       terrainType: dto.terrainType,
 
-      // PROPER HYDRATION: Hydrate related sub-objects from DTO collections
-      // Note: In a full implementation, these would be loaded from repositories
-      // For now, we hydrate what we can from the DTO data
-      phases: 'phases' in dto && dto.phases ? PhaseTransformer.manyFromDTO(dto.phases) : [],
-      tasks: 'tasks' in dto && dto.tasks ? TaskTransformer.manyFromDTO(dto.tasks) : [],
-      risks: 'risks' in dto && dto.risks ? RiskTransformer.manyFromDTO(dto.risks) : [],
-      inspections: 'inspections' in dto && dto.inspections ? InspectionTransformer.manyFromDTO(dto.inspections) : [],
-      payments: 'payments' in dto && dto.payments ? PaymentTransformer.manyFromDTO(dto.payments) : [],
-      materials: 'materials' in dto && dto.materials ? MaterialTransformer.manyFromDTO(dto.materials) : [],
-      suppliers: 'stakeholders' in dto && dto.stakeholders ? StakeholderTransformer.manyFromDTO(dto.stakeholders) : [],
-      milestones: 'milestones' in dto && dto.milestones ? MilestoneTransformer.manyFromDTO(dto.milestones) : [],
     });
+
+    // Hydrate related sub-objects if available on extended DTO
+    const extDto = dto as any;
+    if (extDto.phases) project['_phases'] = PhaseTransformer.manyFromDTO(extDto.phases);
+    if (extDto.tasks) project['_tasks'] = TaskTransformer.manyFromDTO(extDto.tasks);
+    if (extDto.risks) project['_risks'] = RiskTransformer.manyFromDTO(extDto.risks);
+    if (extDto.inspections) project['_inspections'] = InspectionTransformer.manyFromDTO(extDto.inspections);
+    if (extDto.payments) project['_payments'] = PaymentTransformer.manyFromDTO(extDto.payments);
+    if (extDto.materials) project['_materials'] = MaterialTransformer.manyFromDTO(extDto.materials);
+    if (extDto.stakeholders) project['_suppliers'] = StakeholderTransformer.manyFromDTO(extDto.stakeholders) as any;
+    if (extDto.milestones) project['_milestones'] = MilestoneTransformer.manyFromDTO(extDto.milestones);
+
+    return project;
   }
 
   /**
