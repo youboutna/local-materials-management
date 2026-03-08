@@ -79,7 +79,7 @@ export function useInspectionWorkflowHex(): UseInspectionWorkflowHexResult {
         inspector: input.inspector,
         date: input.date,
         comments: input.comments,
-      });
+      } as any);
 
       toast({
         title: 'Demande créée',
