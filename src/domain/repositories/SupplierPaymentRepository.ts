@@ -75,9 +75,7 @@ export class SupplierPaymentRepository {
     const updateData: any = { status, ...additionalData };
 
     if (status === 'approved') {
-      updateData.approved_date = new Date().toISOString();
-    } else if (status === 'paid') {
-      updateData.paid_date = new Date().toISOString();
+      updateData.approved_at = new Date().toISOString();
     }
 
     const { data, error } = await supabase
