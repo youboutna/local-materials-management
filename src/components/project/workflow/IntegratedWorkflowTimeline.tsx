@@ -247,12 +247,12 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
         type: 'milestone',
         id: m.id,
         title: m.title,
-        date: m.target_date,
+        date: m.targetDate,
         status: m.status,
         data: m,
         milestoneType: m.type,
         priority: m.priority,
-        isCritical: m.is_critical,
+        isCritical: m.isCritical,
       });
     });
 
