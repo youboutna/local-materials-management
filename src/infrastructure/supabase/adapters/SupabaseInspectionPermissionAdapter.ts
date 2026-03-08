@@ -175,7 +175,7 @@ export class SupabaseInspectionPermissionAdapter implements IInspectionPermissio
   async checkProjectAccess(userId: string, projectId: string): Promise<boolean> {
     try {
       // Check if user is assigned to project phase
-      const { data, error } = await supabase
+      const { data, error } = await publicClient
         .from('phase_employees')
         .select('id')
         .eq('employee_id', userId)
