@@ -203,7 +203,7 @@ export const MilestonePositionEditor: React.FC<MilestonePositionEditorProps> = (
                     <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {format(parseISO(milestone.target_date), 'dd/MM/yyyy')}
+                        {format(parseISO(milestone.targetDate), 'dd/MM/yyyy')}
                       </span>
                       <span>Poids: {(milestone.weight * 100).toFixed(0)}%</span>
                       <span className="text-xs">{MILESTONE_TYPES[milestone.type].label}</span>

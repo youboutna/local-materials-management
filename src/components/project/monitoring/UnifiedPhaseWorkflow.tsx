@@ -513,7 +513,7 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
                                 {milestone.title}
                               </p>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <span>{format(parseISO(milestone.target_date), 'd MMM yyyy', { locale: fr })}</span>
+                                <span>{format(parseISO(milestone.targetDate), 'd MMM yyyy', { locale: fr })}</span>
                                 <Badge variant="outline" className="text-xs h-4">
                                   {MILESTONE_TYPES[milestone.type]?.label}
                                 </Badge>
