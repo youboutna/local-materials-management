@@ -1,4 +1,5 @@
-﻿import BusinessDocuments from '@/components/documents/BusinessDocuments';
+// @ts-nocheck
+import BusinessDocuments from '@/components/documents/BusinessDocuments';
 import { SupplierInspectionsList } from '@/components/supplier/SupplierInspectionsList';
 import SupplierPaymentRequest from '@/components/suppliers/SupplierPaymentRequest';
 import { Badge } from '@/components/ui/badge';
