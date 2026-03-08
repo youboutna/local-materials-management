@@ -152,8 +152,8 @@ export function usePaymentActionsHex() {
     mutationFn: async ({ values, metadata }: { values: EmailRequest; metadata: ActionMetadata }) => {
       await notificationService.sendEmail({
         to: values.recipientIds,
-        subject: values.title,
-        body: values.message
+        subject: values.subject,
+        body: values.body
       });
     },
     onSuccess: () => {
