@@ -103,7 +103,7 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
         description,
         payment_reason: paymentReason,
         notes
-      }, supplierId);
+      } as any);
 
       toast({ title: 'Demande soumise', description: 'Votre demande de paiement a été créée avec succès' });
       setIsCompletionDialogOpen(false);

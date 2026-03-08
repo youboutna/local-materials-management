@@ -462,7 +462,7 @@ const PublicProcurementWorkflow: React.FC<PublicProcurementWorkflowProps> = ({ s
     
     setLoading(true);
     try {
-      const progress = await WorkflowService.calculateEntityProgress(selectedTender.id, 'tender');
+      const progress = await workflowSvc.calculateEntityProgress(selectedTender.id, 'tender');
       setPhaseProgress(progress);
     } catch (error) {
       console.error('Error loading workflow progress:', error);

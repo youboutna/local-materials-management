@@ -157,7 +157,9 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
           fileSize: selectedFile.size,
           mimeType: selectedFile.type,
           uploadedBy: user.id,
-          status: 'draft'
+          status: 'draft',
+          category: 'general',
+          subcategory: 'other'
         });
 
         console.info('ENHANCED_DOCUMENT_SHARING_006: Document created successfully', {
