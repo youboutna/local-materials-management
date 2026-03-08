@@ -80,11 +80,11 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
       const service = getMilestoneService();
       const raw = await service.getProjectMilestones(projectId);
       return raw.map((m: any) => ({
-        id: m.id, title: m.title, target_date: m.target_date, status: m.status,
-        type: m.type || 'checkpoint', priority: m.priority || 'medium',
-        weight: m.weight || 0.2, phase_id: m.phase_id, phase_name: m.phase_name,
-        completed_date: m.actual_completion_date, is_critical: m.priority === 'critical',
-        is_from_template: false,
+        id: m.id, title: m.title, targetDate: m.target_date || m.targetDate, status: m.status,
+        type: m.type || 'checkpoint', priority: m.priority || 'normal',
+        weight: m.weight || 0.2, phaseId: m.phase_id || m.phaseId, phaseName: m.phase_name || m.phaseName,
+        completedDate: m.actual_completion_date || m.completedDate, isCritical: m.priority === 'critical',
+        isFromTemplate: false,
       })) as MilestoneSummaryDTO[];
     },
     enabled: !!projectId,
