@@ -284,8 +284,8 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
 
   const handleViewPhase = () => {
     const milestone = actionDialog.milestone;
-    if (milestone?.phase_id) {
-      navigate(`/projects/${projectId}/phases/${milestone.phase_id}`);
+    if ((milestone as any)?.phaseId) {
+      navigate(`/projects/${projectId}/phases/${(milestone as any).phaseId}`);
     }
     setActionDialog({ open: false, milestone: null, action: null });
   };
