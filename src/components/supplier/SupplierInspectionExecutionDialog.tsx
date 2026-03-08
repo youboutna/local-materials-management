@@ -196,10 +196,10 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
         await createNotification(
           projectData.created_by,
           'Inspection complétée',
-          `L'inspection du ${new Date(inspection.date).toLocaleDateString('fr-FR')} a été complétée avec un taux d'avancement de ${progress}%`,
-          'inspection',
+          `L'inspection du ${new Date(inspection.date || inspection.scheduledDate || '').toLocaleDateString('fr-FR')} a été complétée avec un taux d'avancement de ${progress}%`,
+          'info' as any,
           inspection.id,
-          { progress, project_id: inspection.project_id, documents: uploadedDocs }
+          { progress, project_id: inspection.projectId || inspection.project_id, documents: uploadedDocs }
         );
       }
 
