@@ -153,7 +153,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
   // Status helper
   const getStatusInfo = (milestone: MilestoneSummaryDTO) => {
     const today = new Date();
-    const targetDate = parseISO(milestone.target_date);
+    const targetDate = parseISO(milestone.targetDate);
     
     if (milestone.status === 'completed') {
       return { 

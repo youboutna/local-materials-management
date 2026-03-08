@@ -239,7 +239,7 @@ const UnifiedCascadeWorkflow: React.FC<UnifiedCascadeWorkflowProps> = ({
         steps={phaseSteps}
         phaseStartDate={(phase as any).startDate || (phase as any).start_date}
         phaseEndDate={(phase as any).endDate || (phase as any).end_date}
-        onStepClick={(step) => setSelectedStep(step)}
+        onStepClick={(step) => setSelectedStep(step as any)}
         onMilestoneClick={(id) => onMilestoneAction?.('edit', { id })}
       />
 
