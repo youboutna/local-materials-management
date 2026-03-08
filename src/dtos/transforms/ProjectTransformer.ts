@@ -355,19 +355,6 @@ export class ProjectTransformer {
       supervisorId: dto.supervisorId,
       terrainType: dto.terrainType,
     });
-
-    // Hydrate related sub-objects if available on extended DTO
-    const extDto = dto as any;
-    if (extDto.phases) result['_phases'] = PhaseTransformer.manyFromDTO(extDto.phases);
-    if (extDto.tasks) result['_tasks'] = TaskTransformer.manyFromDTO(extDto.tasks);
-    if (extDto.risks) result['_risks'] = RiskTransformer.manyFromDTO(extDto.risks);
-    if (extDto.inspections) result['_inspections'] = InspectionTransformer.manyFromDTO(extDto.inspections);
-    if (extDto.payments) result['_payments'] = PaymentTransformer.manyFromDTO(extDto.payments);
-    if (extDto.materials) result['_materials'] = MaterialTransformer.manyFromDTO(extDto.materials);
-    if (extDto.stakeholders) result['_suppliers'] = StakeholderTransformer.manyFromDTO(extDto.stakeholders) as any;
-    if (extDto.milestones) result['_milestones'] = MilestoneTransformer.manyFromDTO(extDto.milestones);
-
-    return result;
   }
 
   /**
