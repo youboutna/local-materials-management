@@ -8,7 +8,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DecisionNode, mapMilestoneToDecisionNode, StepItem, mapStepToStepItem } from '@/types/unified-workflow';
-import { PhaseDTO, PhaseStepDTO } from '@/types/phase-dto';
+import { PhaseDTO, PhaseStepDTO } from '@/dtos/entities/PhaseDTO';
 
 interface UnifiedPhaseWorkflowProps {
   projectId: string;

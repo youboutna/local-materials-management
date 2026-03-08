@@ -309,7 +309,7 @@ const StepDashboard: React.FC<StepDashboardProps> = ({
               <div>Contribue à {'30%'} de la phase</div>
               <div>Impact projet: {'+1.2%'}</div>
               <div>Dépendances: {phase?.dependencies?.length ?? 0}</div>
-              <div className="mt-2">Budget: {formatCurrency(phase?.estimated_cost || 0)}</div>
+              <div className="mt-2">Budget: {formatCurrency(phase?.estimatedCost || 0)}</div>
             </div>
           </div>
         </div>
