@@ -45,31 +45,15 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
    * Transform DocumentDTO to Document entity (DTO → Domain Entity)
    */
   static toEntity(dto: DocumentDTO): Document {
-    return new Document(
-      dto.id,
-      dto.projectId ?? null,
-      dto.phaseId ?? null,
-      dto.inspectionId ?? null,
-      dto.paymentId ?? null,
-      dto.supplierId ?? null,
-      dto.title || '',
-      dto.description ?? null,
-      (dto.documentType || 'other') as DocumentType,
-      (dto.status || 'draft') as DocumentStatus,
-      dto.fileName ?? null,
-      dto.fileUrl ?? null,
-      dto.fileSize ?? null,
-      dto.mimeType ?? null,
-      dto.tags || [],
-      dto.isInternalOnly || false,
-      dto.isSharedWithSuppliers || false,
-      dto.deadlineDate ?? null,
-      dto.assignedTo ?? null,
-      dto.uploadedBy ?? null,
-      dto.createdAt || new Date().toISOString(),
-      dto.updatedAt || new Date().toISOString(),
-      dto.metadata ?? null
-    );
+    return Document.create({
+      id: dto.id,
+      title: dto.title || '',
+      projectId: dto.projectId || undefined,
+      phaseId: dto.phaseId || undefined,
+      documentType: (dto.documentType || 'other') as DocumentType,
+      description: dto.description || undefined,
+      tags: dto.tags
+    });
   }
 
   /**
