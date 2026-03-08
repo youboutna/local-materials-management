@@ -118,7 +118,7 @@ export class TaskTransformer {
     return {
       id: task.id,
       title: task.title,
-      description: task.description,
+      description: task.description ?? undefined,
       type: DTOTaskType.DEVELOPMENT, // Default type
       status: TaskTransformer.toDTOStatus(task.status),
       priority: TaskTransformer.toDTOPriority(task.priority),
