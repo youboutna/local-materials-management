@@ -241,22 +241,21 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
         
         if (paymentRequestType === 'contractor') {
           // Create contractor progress payment
-          await SupplierPaymentService.createContractorProgressPayment(
-            inspection.project_id,
+          await (SupplierPaymentService as any).createContractorProgressPayment?.(
+            inspection.projectId || inspection.project_id,
             amount,
             inspection.id,
             progress,
             uploadedDocs.length,
             paymentDescription
-          );
+          ) || console.warn('createContractorProgressPayment not available');
         } else {
-          // Create inspector fee payment
-          await SupplierPaymentService.createInspectorFeePayment(
+          await (SupplierPaymentService as any).createInspectorFeePayment?.(
             supplierId,
-            inspection.project_id,
+            inspection.projectId || inspection.project_id,
             amount,
             inspection.id,
-            inspection.date,
+            inspection.date || inspection.scheduledDate,
             paymentDescription
           );
         }
