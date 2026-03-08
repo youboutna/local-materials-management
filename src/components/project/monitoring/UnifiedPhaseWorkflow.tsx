@@ -102,7 +102,17 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
   // Fetch milestones
   const { data: milestones = [], isLoading: milestonesLoading } = useQuery({
     queryKey: ['phase-milestones-workflow', projectId, phaseId],
-    queryFn: () => MilestoneService.getPhaseMilestones(projectId, phaseId),
+    queryFn: async () => {
+      const service = getMilestoneService();
+      const raw = await service.getProjectMilestones(projectId);
+      return raw.filter((m: any) => m.phase_id === phaseId).map((m: any) => ({
+        id: m.id, title: m.title, target_date: m.target_date, status: m.status,
+        type: m.type || 'checkpoint', priority: m.priority || 'medium',
+        weight: m.weight || 0.2, phase_id: m.phase_id, phase_name: m.phase_name,
+        completed_date: m.actual_completion_date, is_critical: m.priority === 'critical',
+        is_from_template: false,
+      })) as MilestoneSummaryDTO[];
+    },
     enabled: !!projectId && !!phaseId,
   });
 
