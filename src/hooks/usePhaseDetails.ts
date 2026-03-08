@@ -117,13 +117,15 @@ export function usePhaseDetails(phaseId: string | undefined) {
         const passedInspections = inspectionsData?.filter(
           (i) => i.status === 'approved' || i.status === 'completed'
         ).length || 0;
-        const totalPayments = paymentsData?.data?.length || 0;
-        const totalPaymentAmount = paymentsData?.data?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+        const totalPayments = (paymentsData as any)?.length || (paymentsData as any)?.data?.length || 0;
+        const paymentArr = Array.isArray(paymentsData) ? paymentsData : (paymentsData as any)?.data || [];
+        const totalPaymentAmount = paymentArr.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
 
         // Calculate steps progress from phase DTO
         const phase = phaseQuery.data;
-        const stepsCount = phase?.steps?.length || 0;
-        const completedSteps = phase?.steps?.filter((s) => s.status === 'completed').length || 0;
+        const stepsArr = (phase as any)?.steps || [];
+        const stepsCount = stepsArr.length;
+        const completedSteps = stepsArr.filter((s: any) => s.status === 'completed').length;
         const milestoneProgress = stepsCount > 0 ? (completedSteps / stepsCount) * 100 : 0;
 
         return {
