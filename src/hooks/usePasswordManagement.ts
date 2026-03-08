@@ -69,9 +69,9 @@ export const usePasswordManagement = () => {
           description: "Votre mot de passe a été mis à jour avec succès.",
         });
         
-        // Sign out and redirect to login using AuthService
-        const authService = new AuthService();
-        await authService.signOut();
+        // Sign out and redirect to login
+        const { supabase: sb } = await import('@/integrations/supabase/client');
+        await sb.auth.signOut();
         navigate('/auth');
         
         return { success: true };
