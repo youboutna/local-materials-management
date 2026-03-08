@@ -67,7 +67,7 @@ export class DocumentMapper {
       requestDto.supplierId || null,
       requestDto.title,
       requestDto.description || null,
-      requestDto.documentType,
+      requestDto.documentType as any,
       requestDto.status || 'draft',
       requestDto.fileName || null,
       requestDto.fileUrl || null,
