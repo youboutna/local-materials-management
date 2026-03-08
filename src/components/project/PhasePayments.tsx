@@ -368,7 +368,7 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
                 
                 <div className="flex flex-wrap gap-2 mb-2">
                   <Badge variant="secondary">
-                    {getPaymentMethodLabel(payment.payment_method)}
+                    {getPaymentMethodLabel(payment.payment_method || '')}
                   </Badge>
                   <Badge variant="outline" className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
