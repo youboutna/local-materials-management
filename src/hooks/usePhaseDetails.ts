@@ -460,11 +460,11 @@ export function usePhaseDetails(phaseId: string | undefined) {
         let semanticOrder = 0;
         
         // Use stored orderIndex if available, otherwise calculate from referential
-        if (phase.orderIndex !== undefined) {
-          semanticOrder = phase.orderIndex * 100; // Base order from stored referential
+        if (phase.orderIndex !== undefined && phase.orderIndex !== null) {
+          semanticOrder = (phase.orderIndex || 0) * 100;
           
           // Add semantic category offset based on phase type
-          const semanticCategory = getSemanticCategory(phase.type);
+          const semanticCategory = getSemanticCategory((phase as any).type);
           switch (semanticCategory) {
             case 'planning':
               semanticOrder += 0; // Planning: 0-99
