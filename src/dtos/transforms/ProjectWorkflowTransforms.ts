@@ -341,7 +341,7 @@ export class ProjectWorkflowTransforms {
       budget: (formData.budget as number) || 0,
       startDate: (formData.startDate as string) || '',
       endDate: (formData.endDate as string) || '',
-      status: 'draft' as const,
+      status: ProjectStatus.DRAFT,
       thumbnail: (formData.thumbnail as string) || ''
     };
   }
