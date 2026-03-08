@@ -19,7 +19,7 @@ export { Milestone, type MilestoneDependency, type MilestoneDeliverable, type Mi
 // ============================================================================
 
 export { Employee } from './Employee';
-export type { EmployeeRole, Department, Permission } from './Employee';
+export type { EmployeeRole, Department, Permission, EmployeeProps } from './Employee';
 export { User, type UserRoleType, type AuthSession, type UserProfile } from './User';
 export { UserRole } from './UserRole';
 export { Position, type PositionPermissions } from './Position';
