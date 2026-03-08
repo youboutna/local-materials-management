@@ -158,8 +158,8 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
     if (!selectedProject) return;
 
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       if (currentPhase.id) {
-        // Mise à jour d'une phase existante
         const { error } = await supabase
           .from('project_phases')
           .update({
