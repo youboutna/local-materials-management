@@ -153,11 +153,11 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
         documents: uploadedFiles.map(file => ({
           id: `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           name: file.name,
-          type: file.type as 'certificate' | 'checklist' | 'photo' | 'report' | 'scan',
+          type: file.type as any,
           url: `mock-url/${file.name}`,
           size: file.size,
           uploadedAt: new Date().toISOString()
-        }))
+        })) as any
       };
 
       // Mock service call - in real implementation, use ReceptionService
