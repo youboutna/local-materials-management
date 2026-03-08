@@ -121,7 +121,7 @@ const FinancialAnalysisCard: React.FC<FinancialAnalysisCardProps> = ({
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Dépensé:</span>
-            <span className="font-medium text-amber-600">{formatCurrency(phaseCosts.totalSpent)}</span>
+            <span className="font-medium text-amber-600">{formatCurrency(totalSpent)}</span>
           </div>
           <Separator className="my-2" />
           <div className="flex justify-between font-medium">
