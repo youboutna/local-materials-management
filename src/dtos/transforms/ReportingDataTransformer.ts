@@ -8,7 +8,7 @@ import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { TaskDTO } from '@/dtos/entities/TaskDTO';
 import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 import { PaymentDTO } from '@/dtos/entities/PaymentDTO';
-import { RiskDTO } from '@/dtos/entities/RiskDTO';
+import { RiskDTO, RiskStatus } from '@/dtos/entities/RiskDTO';
 
 // Reporting-specific DTOs
 export interface ProjectReportDTO {

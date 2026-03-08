@@ -733,18 +733,14 @@ export class ProjectTransformer {
       },
 
       // Workflow step tracking
-      currentStep: dto.currentStep,
-      completedSteps: dto.completedSteps,
-      stepValidation: dto.stepValidation,
-      workflowState: dto.workflowState,
+      currentStep: dto.currentStage as any,
+      completedSteps: dto.completedPhases,
 
-      // Step-specific collections
-      stakeholdersData: dto.stakeholdersData,
-      locationData: dto.locationData,
-      phasesData: dto.phasesData,
-      risksData: dto.risksData,
-      complianceData: dto.complianceData,
-      validationData: dto.validationData,
+      // Step-specific collections mapped from available DTO fields
+      stakeholders: dto.stakeholders,
+      location: dto.location,
+      phases: dto.phases,
+      risks: dto.risks,
 
       // Related domain collections
       relatedData: {
