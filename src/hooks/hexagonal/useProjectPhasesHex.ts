@@ -45,7 +45,7 @@ export function useProjectPhasesHex(projectId?: string) {
     queryKey: ['project-phases-hex', projectId],
     queryFn: async (): Promise<ProjectPhase[]> => {
       const phaseRepo = RepositoryFactory.getPhaseRepository();
-      const data = await phaseRepo.findByProject(projectId!);
+      const data = await phaseRepo.findByProjectId(projectId!);
       return (data || []).map((p: any) => ({
         id: p.id,
         name: p.phase_name || p.name || '',
