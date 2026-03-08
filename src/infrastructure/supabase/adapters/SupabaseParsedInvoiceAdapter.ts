@@ -366,31 +366,31 @@ export class SupabaseParsedInvoiceAdapter implements IParsedInvoiceRepository {
   private mapRowToEntity(row: any): ParsedInvoiceEntity {
     const supplierInfo = row.supplier_info as any;
     
-    return new ParsedInvoiceEntity(
-      row.id,
-      row.file_name || 'unknown',
-      row.file_name || 'unknown',
-      '', // filePath - not stored in parsed_invoices
-      0, // fileSize - not stored
-      'application/pdf', // mimeType - default
-      row.invoice_number,
-      row.invoice_date,
-      null, // dueDate - not stored
-      row.total_amount,
-      'EUR', // currency - default
-      supplierInfo?.supplier_id || null,
-      null, // projectId - not directly stored, use tender_id
-      row.tender_id,
-      'supplier_invoice', // invoiceType - default
-      (row.parsing_status as InvoiceStatus) || 'pending',
-      row.parsed_data,
-      row.parsing_errors ? [row.parsing_errors] : null,
-      null, // validationErrors - not stored
-      row.created_at,
-      'system', // uploadedBy - default
-      row.created_at,
-      row.updated_at
-    );
+    return ParsedInvoiceEntity.create({
+      id: row.id,
+      fileName: row.file_name || 'unknown',
+      originalFileName: row.file_name || 'unknown',
+      filePath: '', // filePath - not stored in parsed_invoices
+      fileSize: 0, // fileSize - not stored
+      mimeType: 'application/pdf', // mimeType - default
+      invoiceNumber: row.invoice_number,
+      invoiceDate: row.invoice_date,
+      dueDate: null, // dueDate - not stored
+      amount: row.total_amount,
+      currency: 'EUR', // currency - default
+      supplierId: supplierInfo?.supplier_id || null,
+      projectId: null, // projectId - not directly stored, use tender_id
+      tenderId: row.tender_id,
+      invoiceType: 'supplier_invoice', // invoiceType - default
+      status: (row.parsing_status as InvoiceStatus) || 'pending',
+      extractedData: row.parsed_data,
+      parsingErrors: row.parsing_errors ? [row.parsing_errors] : null,
+      validationErrors: null, // validationErrors - not stored
+      processedAt: row.created_at,
+      uploadedBy: 'system', // uploadedBy - default
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    });
   }
 
   /**

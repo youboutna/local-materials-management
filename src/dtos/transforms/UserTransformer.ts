@@ -131,16 +131,16 @@ export class UserTransformer {
     const id = 'id' in dto ? (dto.id as string) : '';
     const revokedAt = 'revokedAt' in dto ? (dto.revokedAt as string) : undefined;
     const expiresAt = 'expiresAt' in dto ? (dto.expiresAt as string) : undefined;
-    return new UserRoleEntity(
-      id || '',
-      dto.userId || '',
-      dto.roleName as SomelecRole,
-      dto.status as UserRoleStatus,
-      new Date(),
-      dto.assignedBy,
-      revokedAt ? new Date(revokedAt) : undefined,
-      expiresAt ? new Date(expiresAt) : undefined
-    );
+    return UserRoleEntity.create({
+      id: id || '',
+      userId: dto.userId || '',
+      roleName: dto.roleName as SomelecRole,
+      status: dto.status as UserRoleStatus,
+      assignedAt: new Date(),
+      assignedBy: dto.assignedBy,
+      revokedAt: revokedAt ? new Date(revokedAt) : undefined,
+      expiresAt: expiresAt ? new Date(expiresAt) : undefined
+    });
   }
 
   /**

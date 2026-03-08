@@ -597,15 +597,15 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
     // Derive status from assigned_at since status column doesn't exist
     const status = row.assigned_at ? UserRoleStatus.ACTIVE : UserRoleStatus.REVOKED;
     
-    return new UserRoleEntity(
-      row.id,
-      row.user_id,
-      row.role_name,
+    return UserRoleEntity.create({
+      id: row.id,
+      userId: row.user_id,
+      roleName: row.role_name,
       status,
-      new Date(row.assigned_at || new Date()), // Fallback to current date if null
-      row.assigned_by,
-      undefined, // revoked_at doesn't exist in table
-      undefined  // expires_at doesn't exist in table
-    );
+      assignedAt: new Date(row.assigned_at || new Date()), // Fallback to current date if null
+      assignedBy: row.assigned_by,
+      revokedAt: undefined, // revoked_at doesn't exist in table
+      expiresAt: undefined  // expires_at doesn't exist in table
+    });
   }
 }

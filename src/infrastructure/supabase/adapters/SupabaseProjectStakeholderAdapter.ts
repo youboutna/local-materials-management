@@ -285,27 +285,27 @@ export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRep
   // ============= Helper Methods =============
 
   private mapToEntity(data: ProjectStakeholderRow): ProjectStakeholderEntity {
-    return new ProjectStakeholderEntity(
-      data.id,
-      data.project_id,
-      data.stakeholder_type,
-      data.stakeholder_entity_type,
-      data.employee_id || null,
-      data.supplier_id || null,
-      data.external_name || null,
-      data.external_email || null,
-      data.external_phone || null,
-      data.role_description || null,
-      data.responsibilities || null,
-      data.is_active ?? true,
-      data.start_date || null,
-      data.end_date || null,
-      data.hourly_rate || null,
-      data.contract_type || null,
-      data.notes || null,
-      data.created_at,
-      data.updated_at
-    );
+    return ProjectStakeholderEntity.create({
+      id: data.id,
+      projectId: data.project_id,
+      stakeholderType: data.stakeholder_type,
+      stakeholderEntityType: data.stakeholder_entity_type,
+      employeeId: data.employee_id || null,
+      supplierId: data.supplier_id || null,
+      externalName: data.external_name || null,
+      externalEmail: data.external_email || null,
+      externalPhone: data.external_phone || null,
+      roleDescription: data.role_description || null,
+      responsibilities: data.responsibilities || null,
+      isActive: data.is_active ?? true,
+      startDate: data.start_date || null,
+      endDate: data.end_date || null,
+      hourlyRate: data.hourly_rate || null,
+      contractType: data.contract_type || null,
+      notes: data.notes || null,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    });
   }
 
   private mapToSupabase(entity: Partial<ProjectStakeholderEntity>): ProjectStakeholderInsertData {
