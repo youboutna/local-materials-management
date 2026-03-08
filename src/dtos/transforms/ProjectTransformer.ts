@@ -766,7 +766,7 @@ export class ProjectTransformer {
    * Workflow Form Update → Update Data Object
    * Handles incremental updates from workflow form steps
    */
-  static workflowFormUpdateToEntity(updates: Partial<ProjectWorkflowData>): Record<string, unknown> {
+  static workflowFormUpdateToEntity(updates: Partial<any>): Record<string, unknown> {
     const entityUpdates: Record<string, unknown> = {};
 
     // Handle project data updates
