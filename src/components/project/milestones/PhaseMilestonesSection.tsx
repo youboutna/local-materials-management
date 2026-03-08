@@ -231,7 +231,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
 
   const getStatusInfo = (milestone: MilestoneDTO) => {
     const today = new Date();
-    const targetDate = parseISO(milestone.target_date);
+    const targetDate = parseISO(milestone.targetDate);
     
     if (milestone.status === 'completed') {
       return { icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-100' };
