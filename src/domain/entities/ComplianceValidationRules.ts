@@ -280,10 +280,10 @@ export class ComplianceValidationEngine {
   static getComplianceLevelRecommendation(item: ComplianceItem): ComplianceLevel {
     const score = this.calculateComplianceScore(item);
     
-    if (score >= 90) return 'full';
-    if (score >= 75) return 'substantial';
-    if (score >= 50) return 'partial';
-    return 'minimal';
+    if (score >= 90) return 'full' as ComplianceLevel;
+    if (score >= 75) return 'partial' as ComplianceLevel;
+    if (score >= 50) return 'partial' as ComplianceLevel;
+    return 'partial' as ComplianceLevel;
   }
 
   /**

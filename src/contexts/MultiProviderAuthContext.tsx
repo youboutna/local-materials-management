@@ -50,8 +50,11 @@ export function MultiProviderAuthProvider({ children }: { children: ReactNode })
       if (result && result.session) {
         // Create an AuthSession from AuthManagerSession
         const authSession: AuthSession = {
-          access_token: '',  // AuthManagerSession doesn't expose token directly
-          expiresAt: result.session.expiresAt ? new Date(result.session.expiresAt).toISOString() : undefined,
+          access_token: '',
+          accessToken: '',
+          refreshToken: '',
+          tokenType: 'bearer',
+          expiresAt: result.session.expiresAt ? new Date(result.session.expiresAt).getTime() : 0,
           user: userResult.user || {
             id: '',
             email: '',
