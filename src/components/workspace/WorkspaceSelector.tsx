@@ -50,6 +50,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const selectedWorkspace = workspaces.find(w => w.id === selectedWorkspaceId);
+  const { toast } = require('@/hooks/use-toast').useToast ? require('@/hooks/use-toast') : { toast: (...args: any[]) => console.log(...args) };
 
   const regions = getRegionsWithCapitals();
   
