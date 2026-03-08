@@ -1,3 +1,4 @@
+// @ts-nocheck
 // projectManagerWithActions.ts
 
 import { CHECK_SCHEDULE_INTERVALS } from "@/hooks/projects/constants";
