@@ -408,10 +408,10 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                             <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                               <StatusIcon className={cn("h-3 w-3", status.color)} />
                               <span className={status.color}>{status.label}</span>
-                              {(milestone as MilestoneSummaryDTO).phase_name && (
+                              {(milestone as any).phaseName && (
                                 <>
                                   <span>•</span>
-                                  <span className="truncate">{(milestone as MilestoneSummaryDTO).phase_name}</span>
+                                  <span className="truncate">{(milestone as any).phaseName}</span>
                                 </>
                               )}
                             </div>
