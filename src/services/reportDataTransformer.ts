@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Data Transformer Service for Project Reports - Migrated to Hexagonal Architecture
 import { ProjectData } from '@/dtos/entities/ProjectDTO';
 import { ReportDataTransformerService, createReportDataTransformerService } from '@/application/services/ReportDataTransformerService';

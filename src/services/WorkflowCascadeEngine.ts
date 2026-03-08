@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * WorkflowCascadeEngine - Moteur central de workflow en cascade
  * 

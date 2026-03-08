@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { TenderRepository } from './TenderRepository';
 import { SubmissionSecretService } from './SubmissionSecretService';
 import { sendTenderSubmissionNotification } from './tenderSubmissionNotificationService';

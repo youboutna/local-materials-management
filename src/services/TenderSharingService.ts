@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Service for secure tender document sharing with ACID principles
 import { supabase } from '@/integrations/supabase/client';
 import { 

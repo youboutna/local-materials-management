@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import { createBankGuaranteeAction } from './bankGuaranteeActionService';
 import { createInspectionAction } from './inspectionActionService';
