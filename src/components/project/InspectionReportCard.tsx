@@ -36,21 +36,23 @@ export function InspectionReportCard({ project }: InspectionReportCardProps) {
   
   const latestInspection = sortedInspections[0];
   
-  const getStatusColor = (status: InspectionStatus) => {
-    switch (status) {
-      case 'approved': return 'bg-green-500';
-      case 'requires_changes': return 'bg-amber-500';
-      case 'rejected': return 'bg-red-500';
-      default: return 'bg-gray-500';
+  const getStatusColor = (status: InspectionStatus | string) => {
+    const s = String(status);
+    switch (s) {
+      case 'approved': return 'bg-success';
+      case 'requires_changes': return 'bg-warning';
+      case 'rejected': return 'bg-destructive';
+      default: return 'bg-muted';
     }
   };
   
-  const getStatusText = (status: InspectionStatus) => {
-    switch (status) {
+  const getStatusText = (status: InspectionStatus | string) => {
+    const s = String(status);
+    switch (s) {
       case 'approved': return 'APPROUVÉE';
       case 'requires_changes': return 'MODIFICATIONS REQUISES';
       case 'rejected': return 'REJETÉE';
-      default: return status.toUpperCase();
+      default: return s.toUpperCase();
     }
   };
   
