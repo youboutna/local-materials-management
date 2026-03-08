@@ -206,17 +206,17 @@ export class CheckpointVerificationEngine {
       }
 
       items.push({
-        id: inspection.id,
+        id: inspection.id || '',
         category: 'inspection',
-        title: `Inspection du ${new Date(inspection.date).toLocaleDateString('fr-FR')}`,
+        title: `Inspection du ${new Date(inspection.date || '').toLocaleDateString('fr-FR')}`,
         description: inspection.comments || undefined,
         status: inspection.status === 'approved' ? 'verified' : 
                 inspection.status === 'rejected' ? 'failed' : 'in_progress',
         required: true,
         weight: 0.3 / requiredInspectionIds.length,
-        reference_id: inspection.id,
+        reference_id: inspection.id || '',
         reference_type: 'inspection',
-        verified_at: inspection.status === 'approved' ? inspection.date : undefined,
+        verified_at: inspection.status === 'approved' ? (inspection.date || undefined) : undefined,
       });
     }
 
