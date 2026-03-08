@@ -79,7 +79,7 @@ export const insuranceTransform = {
     insurance_company: formData.insurance_company || formData.insuranceCompany,
     policy_number: formData.policy_number || formData.policyNumber,
     coverage_amount: formData.coverage_amount ?? formData.coverageAmount,
-    coverage_type: formData.coverage_type || formData.coverageType,
+    coverage_type: (formData.coverage_type || formData.coverageType) as any,
     valid_from: formData.valid_from || formData.validFrom,
     valid_until: formData.valid_until || formData.validUntil,
     status: formData.status,
