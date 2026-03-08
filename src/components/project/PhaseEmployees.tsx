@@ -278,16 +278,16 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                     <Label htmlFor="supplier_select">Sélectionner un fournisseur/consultant *</Label>
                     <Input
                       id="supplier_select"
-                      value={formData.employee_name}
+                      value={formData.employeeName}
                       onChange={e => {
                         const supplier = suppliersList?.find((s: any) => s.name === e.target.value);
                         setSelectedSupplierId(supplier?.id || null);
                         const contactPerson = supplier?.contactPerson || supplier?.contact_person;
                         setFormData({
                           ...formData,
-                          employee_name: supplier?.name || e.target.value,
-                          employee_role: 'Consultant externe',
-                          employee_contact: contactPerson || supplier?.email || supplier?.phone || '',
+                          employeeName: supplier?.name || e.target.value,
+                          employeeRole: 'Consultant externe',
+                          employeeContact: contactPerson || supplier?.email || supplier?.phone || '',
                         });
                       }}
                       required={memberType === 'supplier'}
