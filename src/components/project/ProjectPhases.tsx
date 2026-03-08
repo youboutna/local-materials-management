@@ -199,7 +199,7 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
       )}
       
       <ConstructionPhaseManager
-        phases={phases}
+        phases={phases as any}
         onChange={handlePhasesChange}
         projectBudget={projectBudget}
       />

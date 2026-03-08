@@ -70,6 +70,7 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
       const progressData: MilestoneProgressDTO = {
         total_milestones: rawMilestones.length,
         completed_milestones: rawMilestones.filter((m: any) => m.status === 'completed').length,
+        delayed_milestones: rawMilestones.filter((m: any) => m.status === 'delayed').length,
         weighted_progress: Math.round(rawMilestones.filter((m: any) => m.status === 'completed').length / Math.max(1, rawMilestones.length) * 100),
         overdue_milestones: rawMilestones.filter((m: any) => m.status === 'delayed').map((m: any) => m.id),
         upcoming_milestones: [],

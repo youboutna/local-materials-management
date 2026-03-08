@@ -266,7 +266,7 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
   // Mark milestone as complete
   const completeMilestoneMutation = useMutation({
     mutationFn: async (milestoneId: string) => {
-      await MilestoneService.updateMilestone(milestoneId, { status: 'completed' });
+      await getMilestoneService().updateMilestone(milestoneId, { status: 'completed' } as any);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-milestones-workflow'] });

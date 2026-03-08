@@ -519,9 +519,10 @@ const TimelineView: React.FC<TimelineViewProps> = ({
 interface ListViewProps {
   milestones: MilestoneSummaryDTO[];
   getStatusInfo: (m: MilestoneSummaryDTO) => {
-    status: string;
-    color: string;
     icon: React.ComponentType<any>;
+    color: string;
+    bgColor: string;
+    borderColor: string;
     label: string;
   };
   getTypeIcon: (type: MilestoneType) => React.ComponentType<any>;

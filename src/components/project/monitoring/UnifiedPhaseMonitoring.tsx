@@ -245,7 +245,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
     const milestone = actionDialog.milestone;
     if (milestone) {
       try {
-        await MilestoneService.updateMilestone(milestone.id, { status: 'completed' });
+        await getMilestoneService().updateMilestone(milestone.id, { status: 'completed' } as any);
         // Invalidate all related queries including validation cache
         queryClient.invalidateQueries({ queryKey: ['unified-milestones'] });
         queryClient.invalidateQueries({ queryKey: ['milestone-progress'] });
