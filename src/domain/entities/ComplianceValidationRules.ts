@@ -52,7 +52,7 @@ export class ComplianceValidationEngine {
       description: 'Compliance item must have a description',
       type: 'regulatory' as ComplianceType,
       required: true,
-      validator: (item) => item.description && item.description.trim().length > 10,
+      validator: (item) => !!(item.description && item.description.trim().length > 10),
       errorMessage: 'Description must be at least 10 characters long'
     },
     {
