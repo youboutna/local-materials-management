@@ -725,7 +725,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                           <div className="flex items-center gap-3 mt-1.5 text-sm text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <Calendar className="h-3.5 w-3.5" />
-                              {format(parseISO(milestone.target_date), 'd MMMM yyyy', { locale: fr })}
+                              {format(parseISO(milestone.targetDate), 'd MMMM yyyy', { locale: fr })}
                             </span>
                             <Badge variant="outline" className="text-xs">
                               {MILESTONE_TYPES[milestone.type]?.label}
