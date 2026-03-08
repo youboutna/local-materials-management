@@ -386,12 +386,12 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
                   {bankGuarantees.map((guarantee) => (
                     <div key={guarantee.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
-                        <h4 className="font-medium">{guarantee.guarantor || guarantee.guarantor || 'Garant inconnu'}</h4>
+                        <h4 className="font-medium">{guarantee.issuingBank || (guarantee as any).issuing_bank || 'Garant inconnu'}</h4>
                         <p className="text-sm text-gray-600">
-                          {guarantee.guaranteeType || guarantee.guarantee_type || 'Type inconnu'} - {guarantee.coverageAmount || guarantee.coverage_amount || 0?.toLocaleString()}€
+                          {guarantee.guaranteeType || guarantee.type || 'Type inconnu'} - {(guarantee.guaranteeAmount || guarantee.amount || 0)?.toLocaleString()}€
                         </p>
                         <p className="text-xs text-gray-500">
-                          Valide jusqu'au: {new Date(guarantee.validUntil || guarantee.valid_until || new Date().toISOString()).toLocaleDateString()}
+                          Valide jusqu'au: {new Date(guarantee.expiryDate || (guarantee as any).expiry_date || new Date().toISOString()).toLocaleDateString()}
                         </p>
                       </div>
                       <Badge className={getStatusColor(guarantee.status || guarantee.status || 'unknown')}>

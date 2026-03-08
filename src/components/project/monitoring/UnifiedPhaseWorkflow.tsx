@@ -563,7 +563,7 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
                                         {inspection.documents && typeof inspection.documents === 'object' && 
                                          !Array.isArray(inspection.documents) && 
                                          'validation_documents' in inspection.documents && 
-                                         (inspection.documents as { validation_documents?: unknown[] }).validation_documents?.length > 0 && (
+                                         ((inspection.documents as { validation_documents?: unknown[] })?.validation_documents?.length ?? 0) > 0 && (
                                           <Badge variant="outline" className="text-xs">
                                             <FileText className="h-3 w-3 mr-1" />
                                             {(inspection.documents as { validation_documents: unknown[] }).validation_documents.length}

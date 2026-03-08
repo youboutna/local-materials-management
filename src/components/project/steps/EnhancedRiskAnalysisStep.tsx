@@ -248,13 +248,8 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
         category: updates.category,
         probability: updates.probability,
         impact: updates.impact,
-        mitigation: updates.mitigationPlan,
-        contingency: updates.contingencyPlan,
+        mitigation_strategy: updates.mitigationPlan,
         status: updates.status,
-        owner: updates.owner,
-        reviewDate: updates.reviewDate,
-        costs: updates.costs,
-        timelineImpact: updates.timelineImpact
       });
 
       setRisks(risks.map(r => {

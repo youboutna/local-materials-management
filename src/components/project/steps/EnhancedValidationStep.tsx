@@ -369,7 +369,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="reception-type">Type de Réception</Label>
-                    <Select value={selectedReceptionType} onValueChange={setSelectedReceptionType}>
+                    <Select value={selectedReceptionType} onValueChange={(value) => setSelectedReceptionType(value as ReceptionType | '')}>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionner le type" />
                       </SelectTrigger>
