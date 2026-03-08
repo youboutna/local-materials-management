@@ -99,17 +99,18 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
 
   const addEmployeeMutation = useMutation({
     mutationFn: async (employeeData: EmployeeFormData) => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('phase_employees')
         .insert({
           phase_id: phaseId,
-          employee_name: employeeData.employee_name,
-          employee_role: employeeData.employee_role,
-          employee_contact: employeeData.employee_contact,
-          daily_rate: employeeData.daily_rate ? parseFloat(employeeData.daily_rate) : null,
-          start_date: employeeData.start_date || null,
-          end_date: employeeData.end_date || null,
-          is_primary_supplier: employeeData.is_primary_supplier,
+          employee_name: employeeData.employeeName,
+          employee_role: employeeData.employeeRole,
+          employee_contact: employeeData.employeeContact,
+          daily_rate: employeeData.dailyRate ? parseFloat(employeeData.dailyRate) : null,
+          start_date: employeeData.startDate || null,
+          end_date: employeeData.endDate || null,
+          is_primary_supplier: employeeData.isPrimarySupplier,
         })
         .select()
         .single();
