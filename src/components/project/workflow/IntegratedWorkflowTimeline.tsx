@@ -205,7 +205,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
   const handleSaveMilestone = async () => {
     try {
       const milestoneService = getMilestoneService();
-      await milestoneService.createMilestone(projectId, {
+      await milestoneService.createMilestone({
         ...formData,
         phase_id: phaseId
       });
