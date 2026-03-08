@@ -318,7 +318,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
       <Card className="overflow-hidden">
         <div className={cn(
           "p-4",
-          progress?.critical_path_status === 'delayed' 
+          progress?.criticalPath_status === 'delayed' 
             ? "bg-gradient-to-r from-destructive/10 to-transparent" 
             : "bg-gradient-to-r from-primary/10 to-transparent"
         )}>
