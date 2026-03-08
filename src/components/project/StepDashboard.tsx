@@ -166,9 +166,9 @@ const StepDashboard: React.FC<StepDashboardProps> = ({
           <div>
             <h3 className="text-lg font-bold flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" />
-              {phase?.phase_name || 'Étape'}</h3>
+              {phase?.name || 'Étape'}</h3>
             <p className="text-sm text-muted-foreground">
-              Phase: {phase?.phase_name || '—'} • Projet: {phase?.project_id || '—'}
+              Phase: {phase?.name || '—'} • Projet: {phase?.projectId || '—'}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               Responsable: {'—'} • Équipe: {'—'} personnes
