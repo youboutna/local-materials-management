@@ -6,7 +6,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { StakeholderService, StakeholderListResult } from '@/application/services/StakeholderService';
+import { StakeholderService } from '@/application/services/StakeholderService';
+import { StakeholderListResult } from '@/dtos/entities/StakeholderDTO';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { 
   CreateStakeholderRequestDTO, 
