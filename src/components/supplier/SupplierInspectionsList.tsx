@@ -117,7 +117,7 @@ export const SupplierInspectionsList: React.FC<SupplierInspectionsListProps> = (
                       <div className="flex items-center gap-2">
                         <FileText className="h-5 w-5 text-primary" />
                         <h3 className="font-medium text-lg">
-                          {inspection.projects?.title || 'Projet inconnu'}
+                          {(inspection as any).projects?.title || inspection.projectId || 'Projet inconnu'}
                         </h3>
                       </div>
 
