@@ -35,8 +35,6 @@ export class NotificationTransformer {
    * Transform create request DTO to domain entity
    */
   static fromCreateDtoToDomain(dto: CreateNotificationRequestDTO): Omit<NotificationData, 'id' | 'created_at' | 'updated_at'> {
-    const now = new Date().toISOString();
-    
     return {
       recipient_id: dto.recipient_id,
       title: dto.title,
@@ -47,8 +45,6 @@ export class NotificationTransformer {
       expires_at: dto.expires_at || null,
       action_url: dto.action_url || null,
       metadata: dto.metadata || null,
-      created_at: now,
-      updated_at: now,
     };
   }
 

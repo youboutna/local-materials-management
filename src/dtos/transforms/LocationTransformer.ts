@@ -157,7 +157,9 @@ export class LocationTransformer {
       },
       parentCode: 'parentCode' in unit ? unit.parentCode : undefined,
       economicImportance: unit.economicImportance,
-      population: unit.population
+      population: unit.population,
+      createdAt: now,
+      updatedAt: now
     };
   }
 

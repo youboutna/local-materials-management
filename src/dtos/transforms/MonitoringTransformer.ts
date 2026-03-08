@@ -28,7 +28,6 @@ export class MonitoringTransformer {
     return {
       id: crypto.randomUUID(),
       userId: data.userId,
-      title: data.title || 'Dashboard',
       widgets: data.widgets || [],
       filters: data.filters || {
         dateRange: { start: '', end: '' },
@@ -41,7 +40,7 @@ export class MonitoringTransformer {
       lastRefresh: now,
       createdAt: now,
       updatedAt: now
-    };
+    } as MonitoringDashboardDTO;
   }
 
   /**

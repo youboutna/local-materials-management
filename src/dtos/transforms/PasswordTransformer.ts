@@ -3,6 +3,22 @@
  * Handles conversion between password entities and DTOs
  */
 
+export interface PasswordResetRequestDTO {
+  email: string;
+  redirectUrl?: string;
+}
+
+export interface PasswordUpdateRequestDTO {
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface PasswordValidationResultDTO {
+  valid: boolean;
+  email?: string;
+  error?: string;
+}
+
 export class PasswordTransformer {
   static toResetRequestDTO(email: string, redirectUrl?: string): PasswordResetRequestDTO {
     return {

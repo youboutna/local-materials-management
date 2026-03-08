@@ -676,7 +676,7 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
     // Convert to full DTO for validation
     const fullDTO: PaymentDTO = {
       ...dto,
-      id: dto.id || crypto.randomUUID(),
+      id: (dto as any).id || crypto.randomUUID(),
       status: 'pending', // Default status for new payments
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()

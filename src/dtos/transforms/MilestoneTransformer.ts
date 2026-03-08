@@ -546,7 +546,7 @@ export class MilestoneTransformer {
   private static getBadgeVariant(status: DTOStatus, daysRemaining: number): string {
     if (status === 'completed') return 'success';
     if (status === 'delayed') return 'danger';
-    if (daysRemaining < 0 && status !== 'completed') return 'warning';
+    if (daysRemaining < 0 && (status as string) !== 'completed') return 'warning';
     if (status === 'in_progress') return 'primary';
     return 'secondary';
   }
