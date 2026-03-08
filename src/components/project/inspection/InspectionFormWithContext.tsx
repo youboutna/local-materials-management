@@ -70,7 +70,7 @@ export function InspectionFormWithContext({
   const [date, setDate] = useState<Date>(new Date());
   const [inspectorId, setInspectorId] = useState('');
   const [inspectorName, setInspectorName] = useState('');
-  const [status, setStatus] = useState<InspectionStatus>('pending');
+  const [status, setStatus] = useState<InspectionStatusLocal>('pending');
   const [inspectionType, setInspectionType] = useState('progress');
   const [comments, setComments] = useState('');
   const [progress, setProgress] = useState(0);
