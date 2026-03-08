@@ -251,7 +251,7 @@ const ProjectDocumentUpload = ({
       setFormData({
         title: '',
         description: '',
-        document_type: '' as DocumentType,
+        documentType: '' as DocumentType,
         status: 'draft'
       });
       setFile(null);

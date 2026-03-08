@@ -40,6 +40,7 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
 
   const fetchQuantityTakeoffs = async () => {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('quantity_takeoffs')
         .select(`
