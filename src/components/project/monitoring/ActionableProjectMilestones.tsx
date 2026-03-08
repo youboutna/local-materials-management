@@ -208,7 +208,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
 
   const handleNavigateToPayment = () => {
     const milestone = actionDialog.milestone;
-    navigate(`/payment-control${milestone?.phase_id ? `?phase=${milestone.phase_id}` : ''}`);
+    navigate(`/payment-control${(milestone as any)?.phaseId ? `?phase=${(milestone as any).phaseId}` : ''}`);
     setActionDialog({ open: false, milestone: null, action: null });
   };
 
