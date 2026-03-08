@@ -52,7 +52,7 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
       phaseId: dto.phaseId || undefined,
       documentType: (dto.documentType || 'other') as DocumentType,
       description: dto.description || undefined,
-      tags: dto.tags
+      tags: dto.tags || []
     });
   }
 
