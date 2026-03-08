@@ -516,7 +516,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                                   <div className="flex items-center gap-2 mt-1">
                                     <Avatar className="h-6 w-6">
                                       <AvatarFallback className="text-xs">
-                                        {employee.full_name.split(' ').map(n => n[0]).join('')}
+                                        {(employee.full_name || '').split(' ').map(n => n[0]).join('')}
                                       </AvatarFallback>
                                     </Avatar>
                                     <span className="text-sm text-muted-foreground">

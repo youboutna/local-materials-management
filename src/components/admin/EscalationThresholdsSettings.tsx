@@ -51,7 +51,7 @@ const EscalationThresholdsSettings: React.FC = () => {
         .order('threshold_value', { ascending: true });
 
       if (error) throw error;
-      setThresholds(data || []);
+      setThresholds((data || []).filter(d => d.id) as EscalationThreshold[]);
     } catch (error) {
       console.error('Error loading thresholds:', error);
       toast({

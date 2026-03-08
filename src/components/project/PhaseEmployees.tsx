@@ -326,7 +326,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                     />
                     <datalist id="employee-list">
                       {employeesList?.map(emp => (
-                        <option key={emp.id} value={emp.full_name} />
+                        <option key={emp.id} value={emp.full_name || ''} />
                       ))}
                     </datalist>
                   </div>

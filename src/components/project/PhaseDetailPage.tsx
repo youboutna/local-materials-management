@@ -74,7 +74,7 @@ const PhaseDetailPage: React.FC = () => {
         throw phaseError;
       }
 
-      setPhase(phaseData);
+      setPhase(phaseData as any);
 
       // Load related materials and tasks
       await Promise.all([

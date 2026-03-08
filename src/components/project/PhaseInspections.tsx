@@ -412,14 +412,14 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
                 </div>
                 
                 <div className="flex flex-wrap gap-2">
-                  <Badge className={getStatusColor(inspection.status)}>
-                    {getStatusLabel(inspection.status)}
+                  <Badge className={getStatusColor(inspection.status || '')}>
+                    {getStatusLabel(inspection.status || '')}
                   </Badge>
                   <Badge variant="outline" className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-                    {new Date(inspection.date).toLocaleDateString()}
+                    {new Date(inspection.date || '').toLocaleDateString()}
                   </Badge>
-                  {inspection.progress_at_inspection > 0 && (
+                  {(inspection.progress_at_inspection || 0) > 0 && (
                     <Badge variant="secondary">
                       Progression: {inspection.progress_at_inspection}%
                     </Badge>
