@@ -164,7 +164,7 @@ export class MilestoneService {
 
     const pending = milestones.filter(m => m.status !== 'completed');
     const upcoming = pending.filter(m => {
-      const targetDate = parseISO(m.target_date);
+      const targetDate = parseISO(m.target_date || '');
       const daysUntil = differenceInDays(targetDate, today);
       return daysUntil >= 0 && daysUntil <= 14;
     });
