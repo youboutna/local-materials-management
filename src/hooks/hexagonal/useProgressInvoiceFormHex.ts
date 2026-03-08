@@ -56,7 +56,7 @@ export const useProgressInvoiceFormHex = (projectId?: string) => {
     queryFn: async (): Promise<Inspection[]> => {
       if (!projectId) return [];
       const inspectionRepo = RepositoryFactory.getInspectionRepository();
-      const data = await inspectionRepo.findByProject(projectId);
+      const data = await inspectionRepo.findByProjectId(projectId);
       return ((data || []) as any[]).filter((i: any) => i.status === 'approved') as Inspection[];
     },
     enabled: !!projectId,
@@ -67,8 +67,6 @@ export const useProgressInvoiceFormHex = (projectId?: string) => {
     queryKey: ['previous-progress', projectId],
     queryFn: async (): Promise<number> => {
       if (!projectId) return 0;
-      // This would ideally come from a ProgressInvoiceRepository
-      // For now return 0 as progress_invoices table may not exist
       return 0;
     },
     enabled: !!projectId,
@@ -80,14 +78,12 @@ export const useProgressInvoiceFormHex = (projectId?: string) => {
       if (data.progress_percentage <= previousProgress) {
         throw new Error(`Le taux d'avancement doit être supérieur à ${previousProgress}%`);
       }
-      // Progress invoice creation would go through a dedicated service
-      // For now, throw not implemented
       throw new Error('Progress invoice service not yet migrated to hexagonal');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['progress-invoices'] });
       queryClient.invalidateQueries({ queryKey: ['previous-progress', projectId] });
-      toast({ title: 'Facture créée', description: 'La facture d\'avancement a été soumise avec succès' });
+      toast({ title: 'Facture créée', description: "La facture d'avancement a été soumise avec succès" });
     },
     onError: (error: any) => {
       toast({ title: 'Erreur', description: error.message || 'Impossible de créer la facture', variant: 'destructive' });
@@ -100,9 +96,8 @@ export const useProgressInvoiceFormHex = (projectId?: string) => {
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `progress_invoices/${fileName}`;
       const storageService = new StorageService();
-      const { error } = await storageService.uploadFile('documents', filePath, file);
-      if (error) throw error;
-      return storageService.getPublicUrl('documents', filePath);
+      const result = await storageService.uploadFile({ bucket: 'documents', path: filePath, file });
+      return result.publicUrl;
     },
     onSuccess: () => {
       toast({ title: 'Document téléchargé', description: 'Le document a été ajouté à la facture' });

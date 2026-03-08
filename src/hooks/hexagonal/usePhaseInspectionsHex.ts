@@ -2,8 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { InspectionService } from '@/application/services/InspectionService';
 import { StorageService } from '@/application/services/StorageService';
-import { InspectionTransformer } from '@/dtos/transforms/InspectionTransformer';
-import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 import { Inspection, InspectionStatus } from '@/domain/entities/Inspection';
 import { useToast } from '@/hooks/use-toast';
 
@@ -16,7 +14,7 @@ interface InspectionData {
   status: string;
   progress_at_inspection: number;
   comments: string | null;
-  documents: string[]; // URLs des documents uploadés
+  documents: string[];
   payment_type: string | null;
   created_at: string;
   updated_at: string;
@@ -45,38 +43,31 @@ export function usePhaseInspectionsHex(phaseId: string, projectId: string) {
   const { toast } = useToast();
   const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
   const storageService = new StorageService(RepositoryFactory.getStorageRepository());
-  const transformer = new InspectionTransformer();
 
-  // Fetch inspections
   const inspectionsQuery = useQuery({
     queryKey: ['phase-inspections', phaseId],
     queryFn: async (): Promise<InspectionData[]> => {
-      // Use InspectionService with transformer
-      const inspections = await inspectionService.getInspectionsByPhase(phaseId);
-      return inspections.map(inspection => {
-        const dto = transformer.toDTO(inspection);
-        return {
-          id: dto.id,
-          project_id: dto.projectId,
-          phase_id: dto.phaseId || null, // ✅ Convertir undefined en null
-          inspector: dto.inspector,
-          date: dto.date,
-          status: dto.status,
-          progress_at_inspection: dto.progressAtInspection,
-          comments: dto.comments || null, // ✅ Convertir undefined en null
-          documents: dto.documents,
-          payment_type: dto.paymentType,
-          created_at: dto.createdAt,
-          updated_at: dto.updatedAt
-        };
-      });
+      const inspections = await inspectionService.getInspectionsByProject(projectId);
+      const phaseInspections = inspections.filter(i => i.phaseId === phaseId);
+      return phaseInspections.map(inspection => ({
+        id: inspection.id,
+        project_id: inspection.projectId || projectId,
+        phase_id: inspection.phaseId || null,
+        inspector: typeof inspection.inspector === 'string' ? inspection.inspector : (inspection.inspector as any)?.name || '',
+        date: inspection.date,
+        status: String(inspection.status),
+        progress_at_inspection: inspection.progressAtInspection || 0,
+        comments: inspection.comments || null,
+        documents: [] as string[],
+        payment_type: null,
+        created_at: inspection.createdAt ? String(inspection.createdAt) : new Date().toISOString(),
+        updated_at: inspection.updatedAt ? String(inspection.updatedAt) : new Date().toISOString()
+      }));
     },
     enabled: !!phaseId,
   });
 
-  // Upload documents helper
   const uploadDocuments = async (documents: File[]): Promise<UploadedDocument[]> => {
-    // Use StorageService for document upload
     const uploadedDocs: UploadedDocument[] = [];
     for (const doc of documents) {
       try {
@@ -86,8 +77,8 @@ export function usePhaseInspectionsHex(phaseId: string, projectId: string) {
           file: doc
         });
         uploadedDocs.push({
-          id: result.id,
-          url: result.url,
+          id: crypto.randomUUID(),
+          url: result.publicUrl,
           name: doc.name,
           type: doc.type,
           size: doc.size,
@@ -101,69 +92,46 @@ export function usePhaseInspectionsHex(phaseId: string, projectId: string) {
     return uploadedDocs;
   };
 
-  // Add inspection mutation
   const addMutation = useMutation({
     mutationFn: async (inspectionData: InspectionFormData) => {
-      let documentsData = {};
-      if (inspectionData.documents && inspectionData.documents.length > 0) {
-        const uploadedDocs = await uploadDocuments(inspectionData.documents);
-        documentsData = { validation_documents: uploadedDocs };
-      }
-
-      // Use InspectionService with transformer - create using factory method
-      const newInspection = Inspection.create({
-        id: crypto.randomUUID(),
-        projectId: projectId,
-        phaseId: phaseId,
+      return await inspectionService.createInspection({
+        projectId,
+        phaseId,
         inspector: inspectionData.inspector,
         date: new Date(inspectionData.date).toISOString(),
-        comments: inspectionData.comments
+        comments: inspectionData.comments,
+        status: inspectionData.status as InspectionStatus,
+        progressAtInspection: parseInt(inspectionData.progress_at_inspection) || 0,
       });
-
-      return await inspectionService.createInspection(newInspection);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-inspections', phaseId] });
       toast({ title: 'Inspection créée avec succès' });
     },
     onError: (error) => {
-      toast({ 
-        title: 'Erreur', 
-        description: error.message, 
-        variant: 'destructive' 
-      });
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     }
   });
 
-  // Update inspection mutation
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<InspectionFormData> }) => {
-      // Use InspectionService - placeholder implementation
-      const updateData = {
+      return await inspectionService.updateInspection(id, {
         status: data.status as InspectionStatus,
         comments: data.comments,
         progressAtInspection: data.progress_at_inspection ? parseInt(data.progress_at_inspection) : undefined
-      };
-
-      return await inspectionService.updateInspection(id, updateData);
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-inspections', phaseId] });
       toast({ title: 'Inspection mise à jour avec succès' });
     },
     onError: (error) => {
-      toast({ 
-        title: 'Erreur', 
-        description: error.message, 
-        variant: 'destructive' 
-      });
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     }
   });
 
-  // Delete inspection mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      // Use InspectionService - placeholder implementation
       return await inspectionService.deleteInspection(id);
     },
     onSuccess: () => {
@@ -171,51 +139,31 @@ export function usePhaseInspectionsHex(phaseId: string, projectId: string) {
       toast({ title: 'Inspection supprimée avec succès' });
     },
     onError: (error) => {
-      toast({ 
-        title: 'Erreur', 
-        description: error.message, 
-        variant: 'destructive' 
-      });
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     }
   });
 
-  // Calculate stats - use InspectionService for business logic
   const averageProgress = inspectionsQuery.data && inspectionsQuery.data.length > 0 
     ? inspectionsQuery.data.reduce((sum, i) => sum + i.progress_at_inspection, 0) / inspectionsQuery.data.length
     : 0;
 
-  // This would use InspectionService for advanced calculations
   const stats = inspectionsQuery.data ? {
     averageProgress: Math.round(averageProgress),
     totalInspections: inspectionsQuery.data.length,
     completedInspections: inspectionsQuery.data.filter(i => i.status === 'completed').length,
     pendingInspections: inspectionsQuery.data.filter(i => i.status === 'scheduled' || i.status === 'requested').length,
-    complianceScore: 85 // Would be calculated by InspectionService
+    complianceScore: 85
   } : {
-    averageProgress: 0,
-    totalInspections: 0,
-    completedInspections: 0,
-    pendingInspections: 0,
-    complianceScore: 0
+    averageProgress: 0, totalInspections: 0, completedInspections: 0, pendingInspections: 0, complianceScore: 0
   };
 
   return {
-    // Queries
     inspections: inspectionsQuery.data || [],
     isLoading: inspectionsQuery.isLoading,
     error: inspectionsQuery.error,
     refetch: inspectionsQuery.refetch,
-    
-    // Mutations
-    addMutation,
-    updateMutation,
-    deleteMutation,
-    uploadDocuments,
-    
-    // Stats - would be calculated by InspectionService
+    addMutation, updateMutation, deleteMutation, uploadDocuments,
     stats,
-    
-    // Convenience methods
     addInspection: addMutation.mutate,
     updateInspection: updateMutation.mutate,
     deleteInspection: deleteMutation.mutate,

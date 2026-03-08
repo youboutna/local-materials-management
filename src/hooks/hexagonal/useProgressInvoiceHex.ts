@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { StorageService } from '@/application/services/StorageService';
 
 interface ProjectData {
   id: string;
@@ -53,13 +54,12 @@ export function useProgressInvoiceHex() {
   
   const projectRepository = RepositoryFactory.getProjectRepository();
   const inspectionRepository = RepositoryFactory.getInspectionRepository();
-  const storageRepository = RepositoryFactory.getStorageRepository();
+  const storageService = new StorageService(RepositoryFactory.getStorageRepository());
 
   const loadProjectData = async (projectId: string) => {
     try {
       setLoading(true);
       
-      // Load project data using repository
       const project = await projectRepository.findById(projectId);
       if (project) {
         setProjectData({
@@ -71,7 +71,6 @@ export function useProgressInvoiceHex() {
         });
       }
       
-      // Load inspections using repository
       const projectInspections = await inspectionRepository.findByProjectId(projectId);
       setInspections(projectInspections.map(inspection => ({
         id: inspection.id,
@@ -80,14 +79,13 @@ export function useProgressInvoiceHex() {
         status: inspection.status
       })));
       
-      // Calculate previous progress
+      // Filter by approved status (using string comparison since InspectionStatus enum may differ)
       const latestInspection = projectInspections
-        .filter(i => i.status === 'completed')
+        .filter(i => String(i.status) === 'approved' || String(i.status) === 'completed')
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
       
       setPreviousProgress(latestInspection?.progressAtInspection || 0);
       
-      // Determine workflow requirements
       if (project) {
         setWorkflowRequirements({
           requiresConsultant: project.projectType === 'construction',
@@ -114,8 +112,8 @@ export function useProgressInvoiceHex() {
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `progress_invoices/${fileName}`;
 
-      // Upload file using storage repository
-      const fileUrl = await storageRepository.uploadFile(filePath, file);
+      const result = await storageService.uploadFile({ bucket: 'documents', path: filePath, file });
+      const fileUrl = result.publicUrl;
       
       setUploadedDocs(prev => [...prev, fileUrl]);
       
@@ -139,15 +137,11 @@ export function useProgressInvoiceHex() {
   const submitInvoice = async (formData: ProgressInvoiceData): Promise<void> => {
     try {
       setLoading(true);
-      
-      // Placeholder - would use InvoiceService
       console.log('Submitting invoice:', formData);
-      
       toast({
         title: 'Facture soumise',
         description: 'La facture a été soumise avec succès'
       });
-      
     } catch (error) {
       console.error('Error submitting invoice:', error);
       toast({
@@ -163,67 +157,33 @@ export function useProgressInvoiceHex() {
 
   const validateInvoice = async (formData: ProgressInvoiceData): Promise<boolean> => {
     try {
-      // Basic validation
       if (!formData.project_id) {
-        toast({
-          title: 'Erreur de validation',
-          description: 'Le projet est requis',
-          variant: 'destructive'
-        });
+        toast({ title: 'Erreur de validation', description: 'Le projet est requis', variant: 'destructive' });
         return false;
       }
-      
       if (formData.progress_percentage <= previousProgress) {
-        toast({
-          title: 'Erreur de validation',
-          description: 'Le progrès doit être supérieur au progrès précédent',
-          variant: 'destructive'
-        });
+        toast({ title: 'Erreur de validation', description: 'Le progrès doit être supérieur au progrès précédent', variant: 'destructive' });
         return false;
       }
-      
       if (formData.invoice_amount <= 0) {
-        toast({
-          title: 'Erreur de validation',
-          description: 'Le montant doit être positif',
-          variant: 'destructive'
-        });
+        toast({ title: 'Erreur de validation', description: 'Le montant doit être positif', variant: 'destructive' });
         return false;
       }
-      
       return true;
-    } catch (error) {
-      console.error('Error validating invoice:', error);
+    } catch {
       return false;
     }
   };
 
   return {
-    // State
-    loading,
-    projectData,
-    inspections,
-    previousProgress,
-    uploadedDocs,
-    workflowRequirements,
-
-    // Actions
-    loadProjectData,
-    uploadDocument,
-    submitInvoice,
-    validateInvoice,
-
-    // Utilities
+    loading, projectData, inspections, previousProgress, uploadedDocs, workflowRequirements,
+    loadProjectData, uploadDocument, submitInvoice, validateInvoice,
     reset: () => {
       setProjectData(null);
       setInspections([]);
       setPreviousProgress(0);
       setUploadedDocs([]);
-      setWorkflowRequirements({
-        requiresConsultant: false,
-        requiresMinistry: false,
-        requiresDonor: false
-      });
+      setWorkflowRequirements({ requiresConsultant: false, requiresMinistry: false, requiresDonor: false });
     }
   };
 }

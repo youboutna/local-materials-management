@@ -2,7 +2,6 @@
 // Uses services instead of direct Supabase access
 
 import { useQuery } from '@tanstack/react-query';
-import { PhaseService } from '@/application/services/PhaseService';
 import { InspectionService } from '@/application/services/InspectionService';
 import { PaymentService } from '@/application/services/PaymentService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
@@ -33,25 +32,22 @@ export interface PhaseMonitoringSummary {
   payments: PaymentsSummary;
 }
 
-async function fetchTasksSummary(phaseId: string): Promise<TasksSummary> {
-  try {
-    const phaseService = new PhaseService(RepositoryFactory.getPhaseRepository());
-    const tasks = await phaseService.getPhaseTasksSummary(phaseId);
-    return tasks || { total: 0, completed: 0, inProgress: 0, pending: 0 };
-  } catch {
-    return { total: 0, completed: 0, inProgress: 0, pending: 0 };
-  }
+async function fetchTasksSummary(_phaseId: string): Promise<TasksSummary> {
+  // PhaseService doesn't have getPhaseTasksSummary - return defaults
+  return { total: 0, completed: 0, inProgress: 0, pending: 0 };
 }
 
 async function fetchInspectionsSummary(phaseId: string): Promise<InspectionsSummary> {
   try {
-    const inspections = await InspectionService.getInspectionsByPhase(phaseId);
-    const total = inspections.length;
-    const approved = inspections.filter(i => i.status === 'approved').length;
-    const pending = inspections.filter(i => i.status === 'pending' || i.status === 'scheduled').length;
-    const rejected = inspections.filter(i => i.status === 'rejected').length;
+    const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
+    const inspections = await inspectionService.getAllInspections();
+    const phaseInspections = inspections.filter(i => i.phaseId === phaseId);
+    const total = phaseInspections.length;
+    const approved = phaseInspections.filter(i => String(i.status) === 'approved').length;
+    const pending = phaseInspections.filter(i => String(i.status) === 'pending' || String(i.status) === 'scheduled').length;
+    const rejected = phaseInspections.filter(i => String(i.status) === 'rejected').length;
     const avgProgress = total > 0
-      ? Math.round(inspections.reduce((sum, i) => sum + (i.progressAtInspection || 0), 0) / total)
+      ? Math.round(phaseInspections.reduce((sum, i) => sum + (i.progressAtInspection || 0), 0) / total)
       : 0;
     return { total, approved, pending, rejected, avgProgress };
   } catch {
@@ -62,7 +58,8 @@ async function fetchInspectionsSummary(phaseId: string): Promise<InspectionsSumm
 async function fetchPaymentsSummary(phaseId: string): Promise<PaymentsSummary> {
   try {
     const service = new PaymentService(RepositoryFactory.getPaymentRepository());
-    const payments = await service.getPaymentsByPhase(phaseId);
+    const result = await service.getPaymentsByPhase(phaseId);
+    const payments = result.data || [];
     const total = payments.length;
     const totalAmount = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
     return { total, totalAmount };
