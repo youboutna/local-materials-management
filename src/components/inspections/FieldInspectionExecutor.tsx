@@ -104,7 +104,7 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
     participants: [],
     summary: '',
     recommendations: [],
-    progressPercentage: inspection.progress_at_inspection,
+    progressPercentage: inspection.progressAtInspection ?? inspection.progress_at_inspection ?? 0,
     overallConformity: 'conforme',
   });
 

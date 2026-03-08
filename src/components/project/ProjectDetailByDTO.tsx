@@ -239,16 +239,16 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
          qualityScore: typedAnalytics.qualityScore || typedAnalytics.quality_score || 0,
          riskScore: typedAnalytics.riskScore || typedAnalytics.risk_score || 0,
          spi: (typedAnalytics.schedulePerformance || typedAnalytics.schedule_performance || 0) / 100,
-         inspectionPassRate: typedAnalytics.quality_score || 0,
+         inspectionPassRate: typedAnalytics.qualityScore || typedAnalytics.quality_score || 0,
          healthScore: Math.round(
-           ((typedAnalytics.progress_percentage || 0) + 
-            (typedAnalytics.quality_score || 0) + 
-            (typedAnalytics.schedule_performance || 0)) / 3
+           ((typedAnalytics.progressPercentage || typedAnalytics.progress_percentage || 0) + 
+            (typedAnalytics.qualityScore || typedAnalytics.quality_score || 0) + 
+            (typedAnalytics.schedulePerformance || typedAnalytics.schedule_performance || 0)) / 3
          ),
          remainingDays: Math.max(0, 30),
          elapsedDays: 45,
-         overallProgress: typedAnalytics.progress_percentage || 0,
-         scheduleVariance: typedAnalytics.timeline_variance || 0
+         overallProgress: typedAnalytics.progressPercentage || typedAnalytics.progress_percentage || 0,
+         scheduleVariance: typedAnalytics.timelineVariance || typedAnalytics.timeline_variance || 0
        };
     },
     enabled: !!projectId && !!projectDetail,
