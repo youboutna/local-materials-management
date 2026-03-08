@@ -38,7 +38,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
   supplierId
 }) => {
   const [progress, setProgress] = useState(inspection?.progressAtInspection || inspection?.progress_at_inspection || 0);
-  const [comments, setComments] = useState(inspection?.inspectorComments || (inspection as any)?.comments || '');
+  const [comments, setComments] = useState((inspection as any)?.inspectorComments || (inspection as any)?.comments || '');
   const [documents, setDocuments] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createPaymentRequest, setCreatePaymentRequest] = useState(true);
