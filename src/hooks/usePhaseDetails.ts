@@ -94,7 +94,7 @@ export function usePhaseDetails(phaseId: string | undefined) {
           paymentsData,
           documentsData,
         ] = await Promise.all([
-          materialService.getMaterialsByPhase(phaseId),
+          materialService.getAllMaterials().then(m => m || []),
           taskService.getTasksByPhase(phaseId),
           inspectionService.getInspectionsByPhase(phaseId),
           employeeService.getEmployeesByPhase(phaseId),
