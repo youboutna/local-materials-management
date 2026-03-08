@@ -14,12 +14,8 @@ import {
   Clock,
   AlertCircle
 } from 'lucide-react';
-import { standardWorkflow } from '@/dtos/entities/ProjectReportDTO';
+import { standardWorkflow, WorkflowPhase, WorkflowStage } from '@/types/workflow';
 import { getWorkflowService, WorkflowService, PhaseProgress } from '@/application/services/WorkflowService';
-
-// Local workflow types with code/label for UI
-interface LocalWorkflowPhase { id: string; name: string; code?: string; label?: string; description?: string; order_index: number; stages: LocalWorkflowStage[]; created_at: string; updated_at: string; }
-interface LocalWorkflowStage { id: string; name: string; code?: string; label?: string; description?: string; order_index: number; steps: any[]; tasks?: any[]; phase_id?: string; created_at: string; updated_at: string; }
 
 // Define types for procurement phases and stages
 export type ProcurementPhase =
