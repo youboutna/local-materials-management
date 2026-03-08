@@ -180,7 +180,7 @@ export class TaskTransformer {
       title: request.title,
       description: request.description,
       status: DTOTaskStatus.NOT_STARTED,
-      priority: TaskTransformer.fromDTOPriority(request.priority || DTOTaskPriority.MEDIUM),
+      priority: TaskTransformer.fromDTOPriority(request.priority || DTOTaskPriority.MEDIUM) as any,
       progress: 0,
       startDate: request.startDate,
       endDate: request.endDate,
