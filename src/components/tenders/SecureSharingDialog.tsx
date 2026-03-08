@@ -193,7 +193,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
           <div className="space-y-3">
             <h3 className="font-semibold flex items-center gap-2">
               <Users className="h-4 w-4" />
-              Codes de partage actifs ({secrets?.filter(s => s.is_active).length || 0})
+              Codes de partage actifs ({secrets?.filter(s => s.isActive).length || 0})
             </h3>
 
             {isLoading ? (
