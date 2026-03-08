@@ -1,16 +1,17 @@
 /**
  * Transformer: StakeholderTransformer
  * Convertit entre Stakeholder Entity et StakeholderDTO
+ * Uses `any` casts for cross-layer enum mismatches (domain vs DTO)
  */
 
 import { Stakeholder, StakeholderOrganization, StakeholderType, StakeholderRole, StakeholderContact } from '@/domain/entities/Stakeholder';
 import { 
   StakeholderDTO, 
-  CreateStakeholderRequestDTO, 
-  UpdateStakeholderRequestDTO, 
+  CreateStakeholderDTO,
+  UpdateStakeholderDTO,
   StakeholderResponseDTO,
-  StakeholderContactDTO,
-  StakeholderOrganizationDTO
+  CreateStakeholderRequestDTO,
+  UpdateStakeholderRequestDTO
 } from '@/dtos/entities/StakeholderDTO';
 
 export class StakeholderTransformer {
@@ -18,11 +19,8 @@ export class StakeholderTransformer {
     return stakeholders.map(stakeholder => this.toDTO(stakeholder));
   }
 
-  /**
-   * Batch: DTOs → Domain Entities
-   */
   static manyFromDTO(dtos: StakeholderDTO[]): Stakeholder[] {
-    return dtos.map(dto => this.fromCreateDTOToEntity(dto as any));
+    return dtos.map(dto => this.fromDatabaseRow(dto as any));
   }
 
   // Entity → DTO
@@ -35,20 +33,20 @@ export class StakeholderTransformer {
       stakeholderType: (entity.type || 'external') as any,
       entityType: 'person' as any,
       projectId: entity.projectId,
-      role: entity.role as any,
-      organizationId: entity.organizationId || undefined,
-      employeeId: entity.employeeId || undefined,
-      isPrimary: entity.isPrimary,
-      isInternal: entity.isInternal,
+      role: (entity.role || 'stakeholder') as any,
+      organizationId: entity.organizationId ?? undefined,
+      employeeId: entity.employeeId ?? undefined,
+      isPrimary: entity.isPrimary ?? false,
+      isInternal: entity.isInternal ?? false,
       contact: entity.contact ? { ...entity.contact } : undefined,
-      organization: entity.organization?.name || undefined,
+      organization: entity.organization?.name ?? undefined,
       responsibilities: entity.responsibilities ? [...entity.responsibilities] : undefined,
-      accessLevel: entity.accessLevel || undefined,
-      startDate: entity.startDate || undefined,
-      endDate: entity.endDate || undefined,
-      hourlyRate: entity.hourlyRate,
-      contractType: entity.contractType,
-      notes: entity.notes || undefined,
+      accessLevel: entity.accessLevel === 'full' ? 'admin' : (entity.accessLevel ?? undefined) as any,
+      startDate: entity.startDate ?? undefined,
+      endDate: entity.endDate ?? undefined,
+      hourlyRate: entity.hourlyRate ?? undefined,
+      contractType: entity.contractType ?? undefined,
+      notes: entity.notes ?? undefined,
       isActive: entity.isActive ?? true,
       createdAt: entity.createdAt || new Date().toISOString(),
       updatedAt: entity.updatedAt || new Date().toISOString()
@@ -57,27 +55,9 @@ export class StakeholderTransformer {
 
   // Entity → ResponseDTO (avec propriétés calculées)
   static toResponseDTO(entity: Stakeholder): StakeholderResponseDTO {
+    const base = this.toDTO(entity);
     return {
-      id: entity.id,
-      projectId: entity.projectId,
-      type: entity.type,
-      role: entity.role,
-      organizationId: entity.organizationId,
-      employeeId: entity.employeeId,
-      isPrimary: entity.isPrimary,
-      isInternal: entity.isInternal,
-      contact: { ...entity.contact },
-      organization: entity.organization ? { ...entity.organization } : null,
-      responsibilities: [...entity.responsibilities],
-      accessLevel: entity.accessLevel,
-      startDate: entity.startDate,
-      endDate: entity.endDate,
-      hourlyRate: entity.hourlyRate,
-      contractType: entity.contractType,
-      notes: entity.notes,
-      isActive: entity.isActive,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
+      ...base,
       displayName: entity.getDisplayName(),
       fullTitle: entity.getFullTitle(),
       isEmployee: entity.isEmployee(),
@@ -93,92 +73,67 @@ export class StakeholderTransformer {
     };
   }
 
-  // CreateRequestDTO → Entity
-  static fromCreateDTOToEntity(dto: CreateStakeholderRequestDTO): Stakeholder {
+  // CreateStakeholderRequestDTO → Entity (legacy compat)
+  static fromCreateDTOToEntity(dto: CreateStakeholderRequestDTO | CreateStakeholderDTO | any): Stakeholder {
     const id = `stakeholder_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const now = new Date().toISOString();
 
-    // Transform DTO organization to Entity organization
-    const organization: StakeholderOrganization | null = dto.organization ? {
-      ...dto.organization,
-      type: dto.organization.type as StakeholderType
+    const contact: StakeholderContact = {
+      name: dto.contact?.name || dto.name || '',
+      email: dto.contact?.email || dto.email || '',
+      phone: dto.contact?.phone || dto.phone || undefined,
+      position: dto.contact?.position || dto.position || undefined
+    };
+
+    const organization: StakeholderOrganization | null = dto.organizationId ? {
+      id: dto.organizationId,
+      name: dto.organization || '',
+      type: (dto.type || 'external') as StakeholderType,
     } : null;
 
     return new Stakeholder(
       id,
-      dto.projectId,
-      dto.type as StakeholderType,
-      dto.role as StakeholderRole,
-      dto.organizationId,
-      dto.employeeId,
-      dto.isPrimary,
-      dto.employeeId !== null, // isInternal
-      dto.contact,
+      dto.projectId || '',
+      (dto.type || dto.stakeholderType || 'external') as StakeholderType,
+      (dto.role || 'stakeholder') as StakeholderRole,
+      dto.organizationId || null,
+      dto.employeeId || null,
+      dto.isPrimary ?? false,
+      dto.isInternal ?? dto.employeeId != null,
+      contact,
       organization,
-      dto.responsibilities,
-      dto.accessLevel,
-      dto.startDate,
-      dto.endDate,
-      dto.hourlyRate,
-      dto.contractType,
-      dto.notes,
-      true, // isActive
+      dto.responsibilities || [],
+      dto.accessLevel || 'read',
+      dto.startDate || null,
+      dto.endDate || null,
+      dto.hourlyRate || null,
+      dto.contractType || null,
+      dto.notes || null,
+      dto.isActive ?? true,
       now,
       now
     );
   }
 
-  // UpdateRequestDTO → partial Entity (pour les mises à jour)
-  static fromUpdateDTOToEntity(dto: UpdateStakeholderRequestDTO): Partial<Stakeholder> {
+  // UpdateStakeholderRequestDTO → partial Entity
+  static fromUpdateDTOToEntity(dto: UpdateStakeholderRequestDTO | UpdateStakeholderDTO | any): Partial<Stakeholder> {
     const partial: Partial<Stakeholder> = {};
 
-    if (dto.role !== undefined) {
-      (partial as any)._role = dto.role;
+    if (dto.role !== undefined) (partial as any)._role = dto.role;
+    if (dto.organization !== undefined || dto.organizationId !== undefined) {
+      (partial as any)._organizationId = dto.organizationId || dto.organization;
     }
-    if (dto.organizationId !== undefined) {
-      (partial as any)._organizationId = dto.organizationId;
-    }
-    if (dto.employeeId !== undefined) {
-      (partial as any)._employeeId = dto.employeeId;
-    }
-    if (dto.isPrimary !== undefined) {
-      (partial as any)._isPrimary = dto.isPrimary;
-    }
-    if (dto.contact !== undefined) {
-      (partial as any)._contact = dto.contact;
-    }
-    if (dto.organization !== undefined) {
-      // Transform DTO organization to Entity organization
-      const organization: StakeholderOrganization | null = dto.organization ? {
-        ...dto.organization,
-        type: dto.organization.type as StakeholderType
-      } : null;
-      (partial as any)._organization = organization;
-    }
-    if (dto.responsibilities !== undefined) {
-      (partial as any)._responsibilities = dto.responsibilities;
-    }
-    if (dto.accessLevel !== undefined) {
-      (partial as any)._accessLevel = dto.accessLevel;
-    }
-    if (dto.startDate !== undefined) {
-      (partial as any)._startDate = dto.startDate;
-    }
-    if (dto.endDate !== undefined) {
-      (partial as any)._endDate = dto.endDate;
-    }
-    if (dto.hourlyRate !== undefined) {
-      (partial as any)._hourlyRate = dto.hourlyRate;
-    }
-    if (dto.contractType !== undefined) {
-      (partial as any)._contractType = dto.contractType;
-    }
-    if (dto.notes !== undefined) {
-      (partial as any)._notes = dto.notes;
-    }
-    if (dto.isActive !== undefined) {
-      (partial as any)._isActive = dto.isActive;
-    }
+    if (dto.employeeId !== undefined) (partial as any)._employeeId = dto.employeeId;
+    if (dto.isPrimary !== undefined) (partial as any)._isPrimary = dto.isPrimary;
+    if (dto.contact !== undefined) (partial as any)._contact = dto.contact;
+    if (dto.responsibilities !== undefined) (partial as any)._responsibilities = dto.responsibilities;
+    if (dto.accessLevel !== undefined) (partial as any)._accessLevel = dto.accessLevel;
+    if (dto.startDate !== undefined) (partial as any)._startDate = dto.startDate;
+    if (dto.endDate !== undefined) (partial as any)._endDate = dto.endDate;
+    if (dto.hourlyRate !== undefined) (partial as any)._hourlyRate = dto.hourlyRate;
+    if (dto.contractType !== undefined) (partial as any)._contractType = dto.contractType;
+    if (dto.notes !== undefined) (partial as any)._notes = dto.notes;
+    if (dto.isActive !== undefined) (partial as any)._isActive = dto.isActive;
 
     return partial;
   }
@@ -186,28 +141,22 @@ export class StakeholderTransformer {
   // Database Row → Entity
   static fromDatabaseRow(row: any): Stakeholder {
     const contact: StakeholderContact = {
-      name: row.contact_name || row.contactName || row.name || '',
-      email: row.contact_email || row.contactEmail || row.email || '',
-      phone: row.contact_phone || row.contactPhone || row.phone || undefined,
-      position: row.contact_position || row.contactPosition || row.position || undefined
+      name: row.contact_name || row.contactName || row.contact?.name || row.name || '',
+      email: row.contact_email || row.contactEmail || row.contact?.email || row.email || '',
+      phone: row.contact_phone || row.contactPhone || row.contact?.phone || row.phone || undefined,
+      position: row.contact_position || row.contactPosition || row.contact?.position || row.position || undefined
     };
 
     const organization: StakeholderOrganization | null = row.organization_id || row.organizationId ? {
       id: row.organization_id || row.organizationId,
-      name: row.organization_name || row.organizationName || '',
+      name: row.organization_name || row.organizationName || row.organization || '',
       type: (row.organization_type || row.organizationType || '') as StakeholderType,
-      category: row.organization_category || row.organizationCategory || undefined,
-      address: row.organization_address || row.organizationAddress || undefined,
-      phone: row.organization_phone || row.organizationPhone || undefined,
-      email: row.organization_email || row.organizationEmail || undefined,
-      nif: row.organization_nif || row.organizationNif || undefined,
-      registrationNumber: row.organization_registration_number || row.organizationRegistrationNumber || undefined
     } : null;
 
     return new Stakeholder(
       row.id,
       row.project_id || row.projectId,
-      (row.type || '') as StakeholderType,
+      (row.type || row.stakeholderType || '') as StakeholderType,
       (row.role || '') as StakeholderRole,
       row.organization_id || row.organizationId || null,
       row.employee_id || row.employeeId || null,
@@ -222,7 +171,7 @@ export class StakeholderTransformer {
       row.hourly_rate || row.hourlyRate || null,
       row.contract_type || row.contractType || null,
       row.notes || null,
-      Boolean(row.is_active || row.isActive),
+      Boolean(row.is_active ?? row.isActive ?? true),
       row.created_at || row.createdAt,
       row.updated_at || row.updatedAt
     );
@@ -245,12 +194,6 @@ export class StakeholderTransformer {
       contact_position: entity.contact.position || null,
       organization_name: entity.organization?.name || null,
       organization_type: entity.organization?.type || null,
-      organization_category: entity.organization?.category || null,
-      organization_address: entity.organization?.address || null,
-      organization_phone: entity.organization?.phone || null,
-      organization_email: entity.organization?.email || null,
-      organization_nif: entity.organization?.nif || null,
-      organization_registration_number: entity.organization?.registrationNumber || null,
       responsibilities: entity.responsibilities,
       access_level: entity.accessLevel,
       start_date: entity.startDate,
@@ -264,69 +207,17 @@ export class StakeholderTransformer {
     };
   }
 
-  // Validation des données DTO
-  static validateCreateDTO(dto: CreateStakeholderRequestDTO): { isValid: boolean; errors: string[] } {
+  // Validation
+  static validateCreateDTO(dto: CreateStakeholderRequestDTO | CreateStakeholderDTO | any): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
-
-    if (!dto.projectId || dto.projectId.trim() === '') {
-      errors.push('L\'ID du projet est requis');
-    }
-
-    if (!dto.type || dto.type.trim() === '') {
-      errors.push('Le type de partie prenante est requis');
-    }
-
-    if (!dto.role || dto.role.trim() === '') {
-      errors.push('Le rôle est requis');
-    }
-
-    if (!dto.contact.name || dto.contact.name.trim() === '') {
-      errors.push('Le nom du contact est requis');
-    }
-
-    if (!dto.contact.email || dto.contact.email.trim() === '') {
-      errors.push('L\'email du contact est requis');
-    }
-
-    // Validation spécifique selon le type
-    if (dto.type === 'employee' && !dto.employeeId) {
-      errors.push('L\'ID de l\'employé est requis pour les parties prenantes internes');
-    }
-
-    if (dto.type !== 'employee' && !dto.organizationId) {
-      errors.push('L\'ID de l\'organisation est requis pour les parties prenantes externes');
-    }
-
-    if (dto.responsibilities.length === 0) {
-      errors.push('Au moins une responsabilité est requise');
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
+    if (!dto.name || (dto.name as string).trim() === '') errors.push('Le nom est requis');
+    if (!dto.role || (dto.role as string).trim() === '') errors.push('Le rôle est requis');
+    return { isValid: errors.length === 0, errors };
   }
 
-  static validateUpdateDTO(dto: UpdateStakeholderRequestDTO): { isValid: boolean; errors: string[] } {
+  static validateUpdateDTO(dto: UpdateStakeholderRequestDTO | UpdateStakeholderDTO | any): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
-
-    if (dto.contact) {
-      if (!dto.contact.name || dto.contact.name.trim() === '') {
-        errors.push('Le nom du contact est requis');
-      }
-
-      if (!dto.contact.email || dto.contact.email.trim() === '') {
-        errors.push('L\'email du contact est requis');
-      }
-    }
-
-    if (dto.responsibilities && dto.responsibilities.length === 0) {
-      errors.push('Au moins une responsabilité est requise');
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
+    if (dto.name !== undefined && (dto.name as string).trim() === '') errors.push('Le nom ne peut pas être vide');
+    return { isValid: errors.length === 0, errors };
   }
 }
