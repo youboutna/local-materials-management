@@ -297,7 +297,7 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
                                   {milestone.title}
                                 </p>
                                 <TypeIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                                {milestone.is_critical && (
+                                {milestone.isCritical && (
                                   <Badge variant="destructive" className="text-xs">
                                     Critique
                                   </Badge>
@@ -306,13 +306,13 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
                               <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground flex-wrap">
                                 <Calendar className="h-3 w-3" />
                                 <span>
-                                  {format(parseISO(milestone.target_date), 'd MMM yyyy', { locale: fr })}
+                                  {format(parseISO(milestone.targetDate), 'd MMM yyyy', { locale: fr })}
                                 </span>
-                                {milestone.completed_date && (
+                                {milestone.completedDate && (
                                   <>
                                     <span>•</span>
                                     <span className="text-green-600">
-                                      Terminé le {format(parseISO(milestone.completed_date), 'd MMM', { locale: fr })}
+                                      Terminé le {format(parseISO(milestone.completedDate), 'd MMM', { locale: fr })}
                                     </span>
                                   </>
                                 )}
