@@ -105,8 +105,8 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
     
     if (!reportData) return '';
     
-    const qualityScore = InspectionReportingService.calculateQualityScore([reportData.inspection]);
-    const timeline = reportData.inspection ? InspectionReportingService.generateInspectionTimeline([reportData.inspection]) : [];
+    const qualityScore = inspectionService.calculateQualityScore([reportData.inspection]);
+    const timeline = reportData.inspection ? inspectionService.generateInspectionTimeline([reportData.inspection]) : [];
     
     return `
       <div id="inspection-report-content" style="font-family: 'Arial', sans-serif; max-width: 170mm; margin: 0 auto; padding: 0; background: white; color: #333; line-height: 1.4;">
