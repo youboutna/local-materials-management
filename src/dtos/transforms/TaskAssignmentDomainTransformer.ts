@@ -34,7 +34,7 @@ export class TaskAssignmentDomainTransformer {
   /**
    * Convert DTO to TaskAssignment entity
    */
-  fromDTO(dto: TaskAssignmentDTO): TaskAssignment {
+  fromDTO(dto: TaskAssignmentDTO): any {
     return {
       id: dto.id,
       title: dto.title,
