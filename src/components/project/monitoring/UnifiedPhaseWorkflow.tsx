@@ -41,13 +41,12 @@ import { cn } from '@/lib/utils';
 import { format, parseISO, differenceInDays, isBefore } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
-import { MilestoneSummaryDTO, MILESTONE_TYPES } from '@/types/milestone-dto';
+import { MilestoneSummaryDTO, MILESTONE_TYPES } from '@/dtos/entities/MilestoneDTO';
 import { MilestoneActionContext } from '@/components/project/milestones/MilestoneCheckpointActions';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { InspectionFormWithContext } from '@/components/project/inspection';
 import { PaymentFormWithContext } from '@/components/project/payment';
-import { getInspectionApprovalSyncService } from '@/services/InspectionApprovalSyncService';
+import { InspectionApprovalSyncService } from '@/application/services/InspectionApprovalSyncService';
 
 // Workflow stage types
 type WorkflowStage = 'scheduled' | 'in_progress' | 'documents_pending' | 'validation_pending' | 'approved' | 'rejected' | 'payment_available';

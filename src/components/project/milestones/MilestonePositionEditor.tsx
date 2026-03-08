@@ -25,8 +25,7 @@ import {
   ChevronDown,
   AlertTriangle
 } from 'lucide-react';
-import { MilestoneDTO, MILESTONE_TYPES, MILESTONE_PRIORITIES, MilestonePriority, MilestoneType } from '@/types/milestone-dto';
-import { GeneratedMilestoneDTO } from '@/services/MilestoneGeneratorService';
+import { MilestoneDTO, MILESTONE_TYPES, MILESTONE_PRIORITIES, MilestonePriority, MilestoneType, GeneratedMilestoneDTO } from '@/dtos/entities/MilestoneDTO';
 import { format, parseISO, addDays, differenceInDays } from 'date-fns';
 
 interface MilestonePositionEditorProps {
