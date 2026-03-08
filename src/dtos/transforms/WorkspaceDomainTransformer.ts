@@ -1,4 +1,4 @@
-import { Workspace, ProjectAlert, Action } from '@/domain/entities/Workspace';
+import { Workspace, ProjectAlert, Action, OperationalStatus } from '@/domain/entities/Workspace';
 import { 
   WorkspaceDTO, 
   CreateWorkspaceRequestDto, 
@@ -12,104 +12,93 @@ import {
 } from './shared';
 import { EntityToDTOMapper } from './shared';
 
-export class WorkspaceDomainTransformer implements EntityToDTOMapper<Workspace, WorkspaceDTO> {
+export class WorkspaceDomainTransformer {
   
-  /**
-   * Convert Workspace entity to DTO
-   */
   toDTO(entity: Workspace): WorkspaceDTO {
     return {
       id: entity.id,
       name: entity.name,
       location: entity.location,
-      status: entity.status,
-      contact_manager: entity.contactManager,
-      contact_phone: entity.contactPhone,
-      facilities: entity.facilities,
+      status: entity.status || OperationalStatus.active,
+      contact_manager: entity.contact?.manager,
+      contact_phone: entity.contact?.phone,
+      facilities: entity.facilities as any,
       created_at: entity.createdAt.toISOString(),
       updated_at: entity.updatedAt.toISOString()
     };
   }
 
-  /**
-   * Convert DTO to Workspace entity
-   */
-  fromDTO(dto: WorkspaceDTO): Workspace {
+  fromDTO(dto: WorkspaceDTO): any {
     return {
       id: dto.id,
       name: dto.name,
       location: dto.location,
-      status: dto.status,
-      contactManager: dto.contact_manager,
-      contactPhone: dto.contact_phone,
+      status: dto.status as OperationalStatus,
+      contact: {
+        manager: dto.contact_manager,
+        phone: dto.contact_phone,
+      },
       facilities: dto.facilities,
       createdAt: new Date(dto.created_at),
       updatedAt: new Date(dto.updated_at)
     };
   }
 
-  /**
-   * Convert CreateWorkspaceRequestDto to entity
-   */
-  fromCreateDtoToEntity(dto: CreateWorkspaceRequestDto): Omit<Workspace, 'id' | 'createdAt' | 'updatedAt'> {
+  fromCreateDtoToEntity(dto: CreateWorkspaceRequestDto): any {
     return {
       name: dto.name,
       location: dto.location,
-      status: dto.status || 'active',
-      contactManager: dto.contact_manager,
-      contactPhone: dto.contact_phone,
+      status: (dto.status || 'active') as OperationalStatus,
+      contact: {
+        manager: dto.contact_manager,
+        phone: dto.contact_phone,
+      },
       facilities: dto.facilities
     };
   }
 
-  /**
-   * Convert UpdateWorkspaceRequestDto to partial entity
-   */
-  fromUpdateDtoToEntity(dto: UpdateWorkspaceRequestDto): Partial<Workspace> {
+  fromUpdateDtoToEntity(dto: UpdateWorkspaceRequestDto): any {
     return {
       name: dto.name,
       location: dto.location,
-      status: dto.status,
-      contactManager: dto.contact_manager,
-      contactPhone: dto.contact_phone,
+      status: dto.status as OperationalStatus | undefined,
+      contact: dto.contact_manager ? {
+        manager: dto.contact_manager,
+        phone: dto.contact_phone,
+      } : undefined,
       facilities: dto.facilities
     };
   }
 
-  /**
-   * Convert array of entities to DTOs
-   */
+  fromEntityToDTO(entity: Workspace): WorkspaceDTO {
+    return this.toDTO(entity);
+  }
+
   fromDtosToAdapter(dtos: WorkspaceDTO[]): WorkspaceDTO[] {
     return dtos;
   }
 
-  /**
-   * Convert entity to response DTO
-   */
   toResponseDto(entity: Workspace): WorkspaceDTO {
     return this.toDTO(entity);
   }
 
-  /**
-   * Convert request DTO to entity
-   */
   toRequestDto(dto: any): WorkspaceDTO {
     return dto;
   }
 
-  /**
-   * Convert to update DTO
-   */
   toUpdateDto(dto: any): Partial<UpdateWorkspaceRequestDto> {
     return dto;
   }
+
+  validate(dto: WorkspaceDTO): { isValid: boolean; errors: string[]; fieldErrors?: Record<string, string[]> } {
+    const errors: string[] = [];
+    if (!dto.name) errors.push('Name is required');
+    return { isValid: errors.length === 0, errors };
+  }
 }
 
-export class ProjectAlertDomainTransformer implements EntityToDTOMapper<ProjectAlert, ProjectAlertDTO> {
+export class ProjectAlertDomainTransformer {
   
-  /**
-   * Convert ProjectAlert entity to DTO
-   */
   toDTO(entity: ProjectAlert): ProjectAlertDTO {
     return {
       id: entity.id,
@@ -127,17 +116,14 @@ export class ProjectAlertDomainTransformer implements EntityToDTOMapper<ProjectA
       resolved_at: entity.resolvedAt?.toISOString(),
       resolved_by: entity.resolvedBy,
       assigned_actions: entity.assignedActions,
-      action_proofs: entity.actionProofs,
+      action_proofs: entity.actionProofs as any,
       metadata: entity.metadata,
       created_at: entity.createdAt.toISOString(),
       updated_at: entity.updatedAt.toISOString()
     };
   }
 
-  /**
-   * Convert DTO to ProjectAlert entity
-   */
-  fromDTO(dto: ProjectAlertDTO): ProjectAlert {
+  fromDTO(dto: ProjectAlertDTO): any {
     return {
       id: dto.id,
       projectId: dto.project_id,
@@ -161,10 +147,7 @@ export class ProjectAlertDomainTransformer implements EntityToDTOMapper<ProjectA
     };
   }
 
-  /**
-   * Convert CreateProjectAlertRequestDto to entity
-   */
-  fromCreateDtoToEntity(dto: CreateProjectAlertRequestDto): Omit<ProjectAlert, 'id' | 'createdAt' | 'updatedAt'> {
+  fromCreateDtoToEntity(dto: CreateProjectAlertRequestDto): any {
     return {
       projectId: dto.project_id,
       title: dto.title,
@@ -178,10 +161,7 @@ export class ProjectAlertDomainTransformer implements EntityToDTOMapper<ProjectA
     };
   }
 
-  /**
-   * Convert UpdateProjectAlertRequestDto to partial entity
-   */
-  fromUpdateDtoToEntity(dto: UpdateProjectAlertRequestDto): Partial<ProjectAlert> {
+  fromUpdateDtoToEntity(dto: UpdateProjectAlertRequestDto): any {
     return {
       title: dto.title,
       description: dto.description,
@@ -197,40 +177,35 @@ export class ProjectAlertDomainTransformer implements EntityToDTOMapper<ProjectA
     };
   }
 
-  /**
-   * Convert array of entities to DTOs
-   */
+  fromEntityToDTO(entity: ProjectAlert): ProjectAlertDTO {
+    return this.toDTO(entity);
+  }
+
   fromDtosToAdapter(dtos: ProjectAlertDTO[]): ProjectAlertDTO[] {
     return dtos;
   }
 
-  /**
-   * Convert entity to response DTO
-   */
   toResponseDto(entity: ProjectAlert): ProjectAlertDTO {
     return this.toDTO(entity);
   }
 
-  /**
-   * Convert request DTO to entity
-   */
   toRequestDto(dto: any): ProjectAlertDTO {
     return dto;
   }
 
-  /**
-   * Convert to update DTO
-   */
   toUpdateDto(dto: any): Partial<UpdateProjectAlertRequestDto> {
     return dto;
   }
+
+  validate(dto: ProjectAlertDTO): { isValid: boolean; errors: string[]; fieldErrors?: Record<string, string[]> } {
+    const errors: string[] = [];
+    if (!dto.title) errors.push('Title is required');
+    return { isValid: errors.length === 0, errors };
+  }
 }
 
-export class ActionDomainTransformer implements EntityToDTOMapper<Action, ActionDTO> {
+export class ActionDomainTransformer {
   
-  /**
-   * Convert Action entity to DTO
-   */
   toDTO(entity: Action): ActionDTO {
     return {
       id: entity.id,
@@ -241,9 +216,6 @@ export class ActionDomainTransformer implements EntityToDTOMapper<Action, Action
     };
   }
 
-  /**
-   * Convert DTO to Action entity
-   */
   fromDTO(dto: ActionDTO): Action {
     return {
       id: dto.id,
@@ -254,9 +226,6 @@ export class ActionDomainTransformer implements EntityToDTOMapper<Action, Action
     };
   }
 
-  /**
-   * Convert CreateActionRequestDto to entity
-   */
   fromCreateDtoToEntity(dto: CreateActionRequestDto): Omit<Action, 'id' | 'createdAt' | 'updatedAt'> {
     return {
       actionType: dto.action_type,
@@ -264,9 +233,6 @@ export class ActionDomainTransformer implements EntityToDTOMapper<Action, Action
     };
   }
 
-  /**
-   * Convert UpdateActionRequestDto to partial entity
-   */
   fromUpdateDtoToEntity(dto: UpdateActionRequestDto): Partial<Action> {
     return {
       actionType: dto.action_type,
@@ -274,31 +240,29 @@ export class ActionDomainTransformer implements EntityToDTOMapper<Action, Action
     };
   }
 
-  /**
-   * Convert array of entities to DTOs
-   */
+  fromEntityToDTO(entity: Action): ActionDTO {
+    return this.toDTO(entity);
+  }
+
   fromDtosToAdapter(dtos: ActionDTO[]): ActionDTO[] {
     return dtos;
   }
 
-  /**
-   * Convert entity to response DTO
-   */
   toResponseDto(entity: Action): ActionDTO {
     return this.toDTO(entity);
   }
 
-  /**
-   * Convert request DTO to entity
-   */
   toRequestDto(dto: any): ActionDTO {
     return dto;
   }
 
-  /**
-   * Convert to update DTO
-   */
   toUpdateDto(dto: any): Partial<UpdateActionRequestDto> {
     return dto;
+  }
+
+  validate(dto: ActionDTO): { isValid: boolean; errors: string[]; fieldErrors?: Record<string, string[]> } {
+    const errors: string[] = [];
+    if (!dto.message) errors.push('Message is required');
+    return { isValid: errors.length === 0, errors };
   }
 }

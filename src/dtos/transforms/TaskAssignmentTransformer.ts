@@ -56,9 +56,13 @@ export class TaskAssignmentTransformer {
       dto.assignedTo,
       dto.assignedBy,
       dto.assigneeType as unknown as 'supplier' | 'employee' | 'user' | undefined,
-      dto.status as unknown as 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'archived',
-      dto.priority as unknown as 'low' | 'medium' | 'high' | 'urgent',
+      undefined, // assigneeName
+      undefined, // assigneeEmail
+      (dto.status as unknown as 'pending' | 'in_progress' | 'completed' | 'cancelled') || 'pending',
+      (dto.priority as unknown as 'low' | 'medium' | 'high' | 'urgent') || 'medium',
       dto.dueDate ? new Date(dto.dueDate) : undefined,
+      dto.completedAt ? new Date(dto.completedAt) : undefined,
+      undefined, // notes
       new Date(dto.createdAt),
       new Date(dto.updatedAt)
     );

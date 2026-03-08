@@ -8,9 +8,6 @@ import { EntityToDTOMapper } from './shared';
 
 export class TaskAssignmentDomainTransformer {
   
-  /**
-   * Convert TaskAssignment entity to DTO
-   */
   toDTO(entity: TaskAssignment): TaskAssignmentDTO {
     return {
       id: entity.id,
@@ -31,9 +28,6 @@ export class TaskAssignmentDomainTransformer {
     };
   }
 
-  /**
-   * Convert DTO to TaskAssignment entity
-   */
   fromDTO(dto: TaskAssignmentDTO): any {
     return {
       id: dto.id,
@@ -54,9 +48,6 @@ export class TaskAssignmentDomainTransformer {
     };
   }
 
-  /**
-   * Convert CreateTaskAssignmentRequestDto to entity
-   */
   fromCreateDtoToEntity(dto: CreateTaskAssignmentRequestDto): any {
     return {
       title: dto.title,
@@ -73,10 +64,7 @@ export class TaskAssignmentDomainTransformer {
     };
   }
 
-  /**
-   * Convert UpdateTaskAssignmentRequestDto to partial entity
-   */
-  fromUpdateDtoToEntity(dto: UpdateTaskAssignmentRequestDto): Partial<TaskAssignment> {
+  fromUpdateDtoToEntity(dto: UpdateTaskAssignmentRequestDto): any {
     return {
       title: dto.title,
       description: dto.description,
@@ -92,37 +80,22 @@ export class TaskAssignmentDomainTransformer {
     };
   }
 
-  /**
-   * Convert array of entities to DTOs
-   */
   fromDtosToAdapter(dtos: TaskAssignmentDTO[]): TaskAssignmentDTO[] {
     return dtos;
   }
 
-  /**
-   * Convert entity to response DTO
-   */
   toResponseDto(entity: TaskAssignment): TaskAssignmentDTO {
     return this.toDTO(entity);
   }
 
-  /**
-   * Convert request DTO to entity
-   */
   toRequestDto(dto: any): TaskAssignmentDTO {
     return dto;
   }
 
-  /**
-   * Convert to update DTO
-   */
   toUpdateDto(dto: any): Partial<UpdateTaskAssignmentRequestDto> {
     return dto;
   }
 
-  /**
-   * Validate task assignment data
-   */
   validate(data: CreateTaskAssignmentRequestDto | UpdateTaskAssignmentRequestDto): {
     isValid: boolean;
     errors: string[];
@@ -155,9 +128,6 @@ export class TaskAssignmentDomainTransformer {
     };
   }
 
-  /**
-   * Convert entity to database format (for legacy compatibility)
-   */
   toDatabaseFormat(entity: TaskAssignment): any {
     return {
       id: entity.id,
@@ -178,10 +148,7 @@ export class TaskAssignmentDomainTransformer {
     };
   }
 
-  /**
-   * Convert database format to entity (for legacy compatibility)
-   */
-  fromDatabaseFormat(dbData: any): TaskAssignment {
+  fromDatabaseFormat(dbData: any): any {
     return {
       id: dbData.id,
       title: dbData.title,
