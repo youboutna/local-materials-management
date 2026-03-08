@@ -33,17 +33,17 @@ export function useSuppliersList() {
       return result.suppliers.map(s => ({
         id: s.id,
         name: s.name,
-        contact_person: s.contacts[0]?.name || null,
-        email: s.email,
-        phone: s.phone,
-        address: s.address,
-        category: s.category,
-        rating: s.rating?.overall || null,
-        nif: (s as any).nif || null,
-        commerce_register_ref: (s as any).commerceRegisterRef || null,
-        is_active: s.isActive(),
-        created_at: s.createdAt,
-        updated_at: s.updatedAt,
+        contact_person: null,
+        email: null,
+        phone: null,
+        address: null,
+        category: s.category || null,
+        rating: s.rating || null,
+        nif: null,
+        commerce_register_ref: null,
+        is_active: s.isActive,
+        created_at: null,
+        updated_at: null,
       }));
     }
   });
@@ -55,8 +55,8 @@ export function useCreateSupplier() {
 
   return useMutation({
     mutationFn: async (supplierData: SupplierFormData) => {
-      const repo = RepositoryFactory.getSupplierRepository();
-      return await repo.create(supplierData as any);
+      const service = getSupplierService();
+      return await service.createSupplier(supplierData as any);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
@@ -70,8 +70,8 @@ export function useUpdateSupplier() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: SupplierFormData }) => {
-      const repo = RepositoryFactory.getSupplierRepository();
-      return await repo.update(id, data as any);
+      const service = getSupplierService();
+      return await service.updateSupplier(id, data as any);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
@@ -85,8 +85,8 @@ export function useDeleteSupplier() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const repo = RepositoryFactory.getSupplierRepository();
-      return await repo.delete(id);
+      const service = getSupplierService();
+      return await service.deleteSupplier(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });

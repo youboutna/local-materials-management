@@ -1,13 +1,36 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import { UserService } from '@/application/services/UserService';
-import { UserMapper } from '@/infrastructure/transformers/UserMapper';
-import { UserTransformer, UserResponseDto, CreateUserRequestDto, UpdateUserRequestDto } from '@/dtos/transforms/UserTransformer';
-import { User } from '@/domain/entities/User';
-import { SomelecRole } from '@/domain/entities/User';
 import { toast } from 'sonner';
 
-// Types pour les hooks
+export interface UserResponseDto {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role?: string;
+  isActive: boolean;
+  fullName?: string;
+  avatar?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateUserRequestDto {
+  fullName: string;
+  email: string;
+  phone?: string;
+  role?: string;
+  avatar?: string;
+}
+
+export interface UpdateUserRequestDto {
+  fullName?: string;
+  phone?: string;
+  role?: string;
+  avatar?: string;
+}
+
 export interface UseUsersHexResult {
   users: UserResponseDto[];
   isLoading: boolean;
@@ -21,19 +44,11 @@ export interface UseUsersHexResult {
   isDeleting: boolean;
 }
 
-/**
- * Hook principal pour la gestion des utilisateurs
- * Architecture hexagonale complète avec mocks centralisés
- */
 export function useUsersHex(): UseUsersHexResult {
   const queryClient = useQueryClient();
-  
-  // [Factory] → [Adapter] → [Service] → [Transformers] → [Entities]
-  // Utilisation de l'architecture existante
   const userRepository = RepositoryFactory.getUserRepository();
   const userService = new UserService(userRepository);
 
-  // Query pour la liste des utilisateurs
   const {
     data: users = [],
     isLoading,
@@ -42,98 +57,67 @@ export function useUsersHex(): UseUsersHexResult {
   } = useQuery({
     queryKey: ['users'],
     queryFn: async (): Promise<UserResponseDto[]> => {
-      try {
-        // Flux hexagonal complet - géré automatiquement par RepositoryFactory
-        // [Factory] → [Adapter] → [Service] → [Transformers] → [Persistence]
-        const users = await userService.getAllUsers();
-        
-        // [Transformers]: Entities → DTOs
-        // Utilisation du Transformer existant : UserTransformer
-        return UserTransformer.toResponseDtoArray(users);
-      } catch (error) {
-        console.error('Error fetching users:', error);
-        throw new Error(error instanceof Error ? error.message : 'Failed to fetch users');
-      }
+      const allUsers = await userService.getAllUsers();
+      return allUsers.map((u: any) => ({
+        id: u.id,
+        name: u.name || u.fullName || '',
+        email: u.email || '',
+        phone: u.phone,
+        role: u.role,
+        isActive: u.isActive ?? true,
+        fullName: u.fullName || u.name,
+        avatar: u.avatar || u.image,
+        createdAt: u.createdAt ? String(u.createdAt) : undefined,
+        updatedAt: u.updatedAt ? String(u.updatedAt) : undefined,
+      }));
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
   const createMutation = useMutation({
-    mutationFn: async (userData: CreateUserRequestDto): Promise<UserResponseDto> => {
-      try {
-        // Convert DTO to User entity for service
-        const userEntity: Omit<User, 'id'> = {
-          name: userData.fullName,
-          email: userData.email,
-          phone: userData.phone || '',
-          role: userData.role as SomelecRole, // Cast to SomelecRole enum
-          image: userData.avatar || '',
-          workspaceIds: [],
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          userRoles: [],
-          fullName: userData.fullName,
-          avatar: userData.avatar || '',
-          lastLogin: undefined
-        };
-
-        const createdUser = await userService.createUser(userEntity);
-        
-        return UserTransformer.toResponseDto(createdUser);
-      } catch (error) {
-        console.error('Error creating user:', error);
-        throw new Error(error instanceof Error ? error.message : 'Failed to create user');
-      }
+    mutationFn: async (userData: CreateUserRequestDto) => {
+      return await userService.createUser({
+        name: userData.fullName,
+        email: userData.email,
+        phone: userData.phone || '',
+        role: userData.role as any,
+        image: userData.avatar || '',
+        fullName: userData.fullName,
+        avatar: userData.avatar || '',
+      } as any);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       toast.success("Utilisateur créé avec succès");
     },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    }
+    onError: (error: Error) => { toast.error(error.message); }
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: UpdateUserRequestDto }): Promise<UserResponseDto> => {
-      try {
-        // Flux hexagonal complet - géré automatiquement par RepositoryFactory
-        const updateData = UserTransformer.toUpdateData(updates); // Application: Request DTO → Domain
-        const updatedUser = await userService.updateUser(id, updateData as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-        
-        return UserTransformer.toResponseDto(updatedUser as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-      } catch (error) {
-        console.error('Error updating user:', error);
-        throw new Error(error instanceof Error ? error.message : 'Failed to update user');
-      }
+    mutationFn: async ({ id, updates }: { id: string; updates: UpdateUserRequestDto }) => {
+      return await userService.updateUser(id, {
+        fullName: updates.fullName,
+        phone: updates.phone,
+        role: updates.role as any,
+        avatar: updates.avatar,
+      } as any);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       toast.success("Utilisateur mis à jour avec succès");
     },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    }
+    onError: (error: Error) => { toast.error(error.message); }
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string): Promise<void> => {
-      try {
-        // Flux hexagonal complet - géré automatiquement par RepositoryFactory
-        await userService.deleteUser(id);
-      } catch (error) {
-        console.error('Error deleting user:', error);
-        throw new Error(error instanceof Error ? error.message : 'Failed to delete user');
-      }
+    mutationFn: async (id: string) => {
+      await userService.deleteUser(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       toast.success("Utilisateur supprimé avec succès");
     },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    }
+    onError: (error: Error) => { toast.error(error.message); }
   });
 
   return {

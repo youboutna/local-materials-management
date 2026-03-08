@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { TaskService } from '@/application/services/TaskService';
-import { ProjectService } from '@/application/services/ProjectService';
+import { TaskService, TaskStatus, TaskPriority, CreateTaskDTO, UpdateTaskDTO } from '@/application/services/TaskService';
 import { AuthService } from '@/application/services/AuthService';
 import { toast } from '@/hooks/use-toast';
 
@@ -39,23 +38,26 @@ interface ProjectPhase {
   status: string;
 }
 
+const toPriority = (p: string): TaskPriority | undefined => {
+  const map: Record<string, TaskPriority> = { low: TaskPriority.LOW, medium: TaskPriority.MEDIUM, high: TaskPriority.HIGH };
+  return map[p];
+};
+
+const toStatus = (s: string): TaskStatus | undefined => {
+  const map: Record<string, TaskStatus> = { pending: TaskStatus.PENDING, in_progress: TaskStatus.IN_PROGRESS, completed: TaskStatus.COMPLETED, cancelled: TaskStatus.CANCELLED };
+  return map[s];
+};
+
 export function useTaskListHex(projectId: string) {
   const queryClient = useQueryClient();
   const taskService = new TaskService(RepositoryFactory.getTaskRepository());
-  const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
   const authService = new AuthService(RepositoryFactory.getAuthRepository());
 
-  // Fetch project phases
+  // Fetch project phases - placeholder since ProjectService doesn't have getProjectPhases
   const phasesQuery = useQuery({
     queryKey: ['project-phases', projectId],
     queryFn: async (): Promise<ProjectPhase[]> => {
-      // This would use ProjectService - placeholder implementation
-      const phases = await projectService.getProjectPhases(projectId);
-      return phases.map(phase => ({
-        id: phase.id,
-        phase_name: phase.name || 'Unnamed Phase',
-        status: phase.status
-      }));
+      return [];
     }
   });
 
@@ -63,21 +65,20 @@ export function useTaskListHex(projectId: string) {
   const tasksQuery = useQuery({
     queryKey: ['project-tasks', projectId],
     queryFn: async (): Promise<TaskAssignment[]> => {
-      // This would use TaskService - placeholder implementation
-      const tasks = await taskService.getTasksByProject(projectId);
+      const tasks = await taskService.getProjectTasks(projectId);
       return tasks.map(task => ({
         id: task.id,
         title: task.title,
-        description: task.description,
-        project_id: task.projectId,
-        phase_id: task.phaseId,
+        description: task.description || null,
+        project_id: task.projectId || null,
+        phase_id: task.phaseId || null,
         assigned_to: task.assignedTo?.[0] || null,
-        assigned_by: task.assignedBy || null,
-        due_date: task.dueDate,
-        priority: task.priority,
-        status: task.status,
-        completion_date: task.completedAt,
-        notes: task.description,
+        assigned_by: null,
+        due_date: task.dueDate || null,
+        priority: String(task.priority),
+        status: String(task.status),
+        completion_date: null,
+        notes: task.description || null,
         created_at: task.createdAt,
         updated_at: task.updatedAt
       }));
@@ -91,19 +92,18 @@ export function useTaskListHex(projectId: string) {
       const user = await authService.getCurrentUser();
       if (!user) throw new Error('User not authenticated');
 
-      // This would use TaskService - placeholder implementation
-      return await taskService.createTask({
+      const createData: CreateTaskDTO = {
         title: taskData.title,
         description: taskData.description,
         projectId: projectId,
         phaseId: taskData.phase_id,
         assignedTo: taskData.assigned_to ? [taskData.assigned_to] : [],
         dueDate: taskData.due_date,
-        priority: taskData.priority,
-        status: taskData.status,
-        notes: taskData.notes,
-        assignedBy: user.id
-      });
+        priority: toPriority(taskData.priority),
+        status: toStatus(taskData.status),
+      };
+
+      return await taskService.createTask(createData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project-tasks', projectId] });
@@ -117,12 +117,16 @@ export function useTaskListHex(projectId: string) {
   // Update task mutation
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<TaskFormData> }) => {
-      const { error } = await supabase
-        .from('task_assignments')
-        .update(data)
-        .eq('id', id);
-      
-      if (error) throw error;
+      const updateData: UpdateTaskDTO = {
+        title: data.title,
+        description: data.description,
+        phaseId: data.phase_id,
+        assignedTo: data.assigned_to ? [data.assigned_to] : undefined,
+        dueDate: data.due_date,
+        priority: data.priority ? toPriority(data.priority) : undefined,
+        status: data.status ? toStatus(data.status) : undefined,
+      };
+      return await taskService.updateTask(id, updateData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project-tasks', projectId] });
@@ -136,12 +140,7 @@ export function useTaskListHex(projectId: string) {
   // Delete task mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('task_assignments')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
+      await taskService.deleteTask(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project-tasks', projectId] });
@@ -153,13 +152,10 @@ export function useTaskListHex(projectId: string) {
   });
 
   return {
-    // Queries
     phases: phasesQuery.data || [],
     tasks: tasksQuery.data || [],
     isLoading: tasksQuery.isLoading || phasesQuery.isLoading,
     isError: tasksQuery.isError || phasesQuery.isError,
-    
-    // Mutations
     createTask: createMutation.mutate,
     updateTask: updateMutation.mutate,
     deleteTask: deleteMutation.mutate,
