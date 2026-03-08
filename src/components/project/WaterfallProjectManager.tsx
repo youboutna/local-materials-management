@@ -83,7 +83,7 @@ const WaterfallProjectManager = () => {
       if (!selectedProject) return;
 
       try {
-        // Récupérer les phases spécifiques au projet sélectionné
+        const { supabase } = await import('@/integrations/supabase/client');
         const { data: phasesData } = await supabase
           .from('project_phases')
           .select('*')
