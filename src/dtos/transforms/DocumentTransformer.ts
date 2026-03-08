@@ -60,28 +60,16 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
    * Transform CreateDocumentDTO to Document entity
    */
   static fromCreateDTOToEntity(dto: CreateDocumentDTO): Document {
-    const now = new Date().toISOString();
-    return new Document(
-      crypto.randomUUID(),
-      dto.projectId ?? null,
-      dto.phaseId ?? null,
-      dto.inspectionId ?? null,
-      dto.paymentId ?? null,
-      dto.supplierId ?? null,
-      dto.title || '',
-      dto.description ?? null,
-      (dto.documentType || 'other') as DocumentType,
-      'draft' as DocumentStatus,
-      dto.fileName ?? null,
-      dto.fileUrl ?? null,
-      dto.fileSize ?? null,
-      dto.mimeType ?? null,
-      dto.tags || [],
-      dto.isInternalOnly || false,
-      dto.isSharedWithSuppliers || false,
-      dto.deadlineDate ?? null,
-      dto.assignedTo ?? null,
-      dto.uploadedBy ?? null,
+    return Document.create({
+      id: crypto.randomUUID(),
+      title: dto.title || '',
+      projectId: dto.projectId || undefined,
+      phaseId: dto.phaseId || undefined,
+      documentType: (dto.documentType || 'other') as DocumentType,
+      description: dto.description || undefined,
+      tags: dto.tags
+    });
+  }
       now,
       now,
       dto.metadata ?? null
