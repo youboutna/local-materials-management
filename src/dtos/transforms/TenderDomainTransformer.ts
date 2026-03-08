@@ -163,27 +163,16 @@ export class TenderDomainTransformer {
    * Transform TenderUpdateDTO to Tender entity (merge with existing)
    */
   static toEntityFromUpdate(id: string, dto: TenderUpdateDTO, existingEntity: Tender): Tender {
-    return new Tender(
+    return Tender.create({
       id,
-      existingEntity.projectId,
-      dto.title ?? existingEntity.title,
-      dto.description ?? existingEntity.description,
-      existingEntity.tenderNumber,
-      dto.status ?? existingEntity.status,
-      dto.selectionMode ?? existingEntity.selectionMode,
-      dto.marketType ?? existingEntity.marketType,
-      dto.financingSource ?? existingEntity.financingSource,
-      dto.projectReference ?? existingEntity.projectReference,
-      dto.publicationDate ?? existingEntity.publicationDate,
-      dto.deadlineDate ?? existingEntity.deadlineDate,
-      dto.launchDate ?? existingEntity.launchDate,
-      dto.attributionDate ?? existingEntity.attributionDate,
-      dto.budgetMin ?? existingEntity.budgetMin,
-      dto.budgetMax ?? existingEntity.budgetMax,
-      dto.evaluationCriteria ?? existingEntity.evaluationCriteria,
-      dto.eligibilityRequirements ?? existingEntity.eligibilityRequirements,
-      existingEntity.createdAt,
-      new Date().toISOString()
-    );
+      projectId: existingEntity.projectId || undefined,
+      title: dto.title ?? existingEntity.title,
+      description: dto.description ?? existingEntity.description ?? undefined,
+      selectionMode: dto.selectionMode ?? existingEntity.selectionMode ?? undefined,
+      marketType: dto.marketType ?? existingEntity.marketType ?? undefined,
+      deadlineDate: dto.deadlineDate ?? existingEntity.deadlineDate ?? undefined,
+      budgetMin: dto.budgetMin ?? existingEntity.budgetMin ?? undefined,
+      budgetMax: dto.budgetMax ?? existingEntity.budgetMax ?? undefined
+    });
   }
 }

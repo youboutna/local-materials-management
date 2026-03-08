@@ -59,22 +59,17 @@ export class RiskTransformer {
    * Transformer CreateRiskDTO en entité Risk
    */
   static fromCreateRequestToEntity(request: CreateRiskDTO): Risk {
-    return new Risk(
-      crypto.randomUUID(),
-      request.projectId ? { id: request.projectId, title: '' } : null,
-      request.title,
-      request.description || null,
-      request.probability,
-      request.impact,
-      this.dtoToDomainStatus('identified' as RiskStatus), // Default status for new risks
-      this.dtoToDomainCategory(request.category),
-      request.mitigationStrategy || null,
-      request.owner ? { id: request.owner, fullName: '' } : null,
-      new Date().toISOString(),
-      [],
-      new Date().toISOString(),
-      new Date().toISOString()
-    );
+    return Risk.create({
+      id: crypto.randomUUID(),
+      project: request.projectId ? { id: request.projectId, title: '' } : null,
+      title: request.title,
+      description: request.description || undefined,
+      probability: request.probability,
+      impact: request.impact,
+      status: this.dtoToDomainStatus('identified' as RiskStatus),
+      category: this.dtoToDomainCategory(request.category),
+      identifiedBy: request.owner ? { id: request.owner, fullName: '' } : null
+    });
   }
 
   /**
