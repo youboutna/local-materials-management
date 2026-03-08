@@ -336,20 +336,20 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
-              {progress?.schedule_performance_index !== undefined && (
+              {progress?.schedulePerformance_index !== undefined && (
                 <Badge 
-                  variant={progress.schedule_performance_index >= 1 ? 'default' : 'destructive'}
+                  variant={progress.schedulePerformance_index >= 1 ? 'default' : 'destructive'}
                   className={cn(
                     "flex items-center gap-1",
-                    progress.schedule_performance_index >= 1 && "bg-green-600"
+                    progress.schedulePerformance_index >= 1 && "bg-green-600"
                   )}
                 >
-                  {progress.schedule_performance_index >= 1 ? (
+                  {progress.schedulePerformance_index >= 1 ? (
                     <TrendingUp className="h-3 w-3" />
                   ) : (
                     <TrendingDown className="h-3 w-3" />
                   )}
-                  SPI: {progress.schedule_performance_index}
+                  SPI: {progress.schedulePerformance_index}
                 </Badge>
               )}
               <Button size="sm" variant="outline" onClick={handleAddMilestone}>
