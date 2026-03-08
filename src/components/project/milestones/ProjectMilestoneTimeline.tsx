@@ -185,7 +185,7 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
             Jalons du Projet (Timeline)
             {progress && (
               <Badge variant="outline" className="ml-2">
-                {progress.completed_milestones}/{progress.total_milestones}
+                {progress.completedMilestones}/{progress.totalMilestones}
               </Badge>
             )}
           </CardTitle>
