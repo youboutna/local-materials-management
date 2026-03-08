@@ -542,24 +542,24 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
                               </h5>
                               {inspections.length > 0 ? (
                                 <div className="space-y-2">
-                                  {inspections.slice(0, 3).map(inspection => (
+                                  {inspections.slice(0, 3).map((inspection: any) => (
                                     <div key={inspection.id} className="flex items-center justify-between p-2 bg-background rounded border">
                                       <div className="flex items-center gap-2">
                                         <Badge variant={
-                                          inspection.status === 'approved' ? 'default' :
-                                          inspection.status === 'rejected' ? 'destructive' : 'secondary'
+                                          statusStr(inspection) === 'approved' ? 'default' :
+                                          statusStr(inspection) === 'rejected' ? 'destructive' : 'secondary'
                                         } className="text-xs">
-                                          {inspection.status === 'approved' ? 'Approuvée' :
-                                           inspection.status === 'rejected' ? 'Rejetée' :
-                                           inspection.status === 'in_progress' ? 'En cours' : 'En attente'}
+                                          {statusStr(inspection) === 'approved' ? 'Approuvée' :
+                                           statusStr(inspection) === 'rejected' ? 'Rejetée' :
+                                           statusStr(inspection) === 'inprogress' ? 'En cours' : 'En attente'}
                                         </Badge>
-                                        <span className="text-sm">{inspection.inspector}</span>
+                                        <span className="text-sm">{typeof inspection.inspector === 'object' ? inspection.inspector?.name || '' : inspection.inspector}</span>
                                         <span className="text-xs text-muted-foreground">
                                           {format(parseISO(inspection.date), 'd MMM', { locale: fr })}
                                         </span>
                                       </div>
                                       <div className="flex items-center gap-2">
-                                        <span className="text-sm font-medium">{inspection.progress_at_inspection}%</span>
+                                        <span className="text-sm font-medium">{inspection.progressAtInspection}%</span>
                                         {inspection.documents && typeof inspection.documents === 'object' && 
                                          !Array.isArray(inspection.documents) && 
                                          'validation_documents' in inspection.documents && 
