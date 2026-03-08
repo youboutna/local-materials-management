@@ -207,7 +207,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
   }
 
   const averageProgress = inspections && inspections.length > 0 
-    ? inspections.reduce((sum, inspection) => sum + inspection.progress_at_inspection, 0) / inspections.length
+    ? inspections.reduce((sum, inspection) => sum + (inspection.progress_at_inspection || 0), 0) / inspections.length
     : 0;
     
   const totalPages = Math.ceil((inspections?.length || 0) / pageSize);
