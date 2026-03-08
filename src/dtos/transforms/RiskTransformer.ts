@@ -157,7 +157,6 @@ export class RiskTransformer {
       case RiskStatus.MONITORED: return 'monitored';
       case RiskStatus.MITIGATED: return 'mitigated';
       case RiskStatus.RESOLVED: return 'resolved';
-      case RiskStatus.ACCEPTED: return 'accepted';
       default: return 'identified';
     }
   }
