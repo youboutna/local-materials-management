@@ -81,7 +81,7 @@ export class MilestoneService {
         .in('id', phaseIds);
       
       phaseMap = (phases || []).reduce((acc, p) => {
-        acc[p.id] = p.phase_name || 'Phase sans nom';
+        if (p.id) acc[p.id] = p.phase_name || 'Phase sans nom';
         return acc;
       }, {} as Record<string, string>);
     }
