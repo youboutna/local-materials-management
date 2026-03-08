@@ -350,8 +350,8 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                     <Label htmlFor="employee_contact">Contact</Label>
                     <Input
                       id="employee_contact"
-                      value={formData.employee_contact}
-                      onChange={(e) => setFormData({ ...formData, employee_contact: e.target.value })}
+                      value={formData.employeeContact}
+                      onChange={(e) => setFormData({ ...formData, employeeContact: e.target.value })}
                       placeholder="Téléphone ou email"
                       disabled={memberType === 'supplier'}
                     />
