@@ -41,11 +41,11 @@ async function fetchInspectionsSummary(phaseId: string): Promise<InspectionsSumm
   try {
     const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
     const inspections = await inspectionService.getAllInspections();
-    const phaseInspections = inspections.filter(i => i.phase?.id === phaseId);
+    const phaseInspections = inspections.filter(i => i.phaseId === phaseId);
     const total = phaseInspections.length;
-    const approved = phaseInspections.filter(i => i.status === 'approved').length;
-    const pending = phaseInspections.filter(i => i.status === 'pending' || i.status === 'scheduled').length;
-    const rejected = phaseInspections.filter(i => i.status === 'rejected').length;
+    const approved = phaseInspections.filter(i => String(i.status) === 'approved').length;
+    const pending = phaseInspections.filter(i => String(i.status) === 'pending' || String(i.status) === 'scheduled').length;
+    const rejected = phaseInspections.filter(i => String(i.status) === 'rejected').length;
     const avgProgress = total > 0
       ? Math.round(phaseInspections.reduce((sum, i) => sum + (i.progressAtInspection || 0), 0) / total)
       : 0;

@@ -48,20 +48,20 @@ export function usePhaseInspectionsHex(phaseId: string, projectId: string) {
     queryKey: ['phase-inspections', phaseId],
     queryFn: async (): Promise<InspectionData[]> => {
       const inspections = await inspectionService.getInspectionsByProject(projectId);
-      const phaseInspections = inspections.filter(i => i.phase?.id === phaseId);
+      const phaseInspections = inspections.filter(i => i.phaseId === phaseId);
       return phaseInspections.map(inspection => ({
         id: inspection.id,
-        project_id: inspection.project?.id || projectId,
-        phase_id: inspection.phase?.id || null,
-        inspector: typeof inspection.inspector === 'string' ? inspection.inspector : inspection.inspector?.name || '',
+        project_id: inspection.projectId || projectId,
+        phase_id: inspection.phaseId || null,
+        inspector: typeof inspection.inspector === 'string' ? inspection.inspector : (inspection.inspector as any)?.name || '',
         date: inspection.date,
-        status: inspection.status,
+        status: String(inspection.status),
         progress_at_inspection: inspection.progressAtInspection || 0,
         comments: inspection.comments || null,
-        documents: [],
+        documents: [] as string[],
         payment_type: null,
-        created_at: inspection.createdAt || new Date().toISOString(),
-        updated_at: inspection.updatedAt || new Date().toISOString()
+        created_at: inspection.createdAt ? String(inspection.createdAt) : new Date().toISOString(),
+        updated_at: inspection.updatedAt ? String(inspection.updatedAt) : new Date().toISOString()
       }));
     },
     enabled: !!phaseId,
