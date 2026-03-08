@@ -373,7 +373,7 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
                         <ClipboardCheck className="h-4 w-4" />
                       </div>
                       <div className="flex-1">
-                        <div className="font-medium text-sm">{inspection.inspector}</div>
+                        <div className="font-medium text-sm">{typeof inspection.inspector === 'string' ? inspection.inspector : (inspection.inspector as any)?.name || 'Inspector'}</div>
                         <div className="text-xs text-muted-foreground">
                           {formatDate(inspection.date)} • {inspection.progressAtInspection}%
                         </div>
