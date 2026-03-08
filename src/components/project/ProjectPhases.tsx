@@ -199,8 +199,8 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
       )}
       
       <ConstructionPhaseManager
-        phases={phases as any}
-        onChange={handlePhasesChange}
+        workflowData={{ phases } as any}
+        onStepComplete={(stepData: any) => handlePhasesChange(stepData?.phases || [])}
         projectBudget={projectBudget}
       />
     </div>
