@@ -63,9 +63,11 @@ export class SupabaseAuthAdapter implements IAuthRepository {
    */
   async signIn(credentials: LoginCredentials): Promise<{ session: AuthSession | null; error: Error | null }> {
     try {
+      const email = String(credentials.email || '').trim();
+
       const { data: { session }, error } = await supabase.auth.signInWithPassword({
-        email: credentials.email,
-        password: credentials.password
+        email,
+        password: credentials.password,
       });
       
       if (error) {

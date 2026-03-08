@@ -99,7 +99,7 @@ export function useAuthHex(): UseAuthHexResult {
     },
     onError: (error: any) => {
       console.error('Login error:', error);
-      toast.error("Échec de la connexion. Veuillez vérifier vos identifiants.");
+      toast.error(error?.message || "Échec de la connexion. Veuillez vérifier vos identifiants.");
     }
   });
 
