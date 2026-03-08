@@ -128,14 +128,15 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
 
   const updateEmployeeMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<EmployeeFormData> }) => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const updateData = {
-        employee_name: data.employee_name,
-        employee_role: data.employee_role,
-        employee_contact: data.employee_contact,
-        daily_rate: data.daily_rate ? parseFloat(data.daily_rate) : null,
-        start_date: data.start_date || null,
-        end_date: data.end_date || null,
-        is_primary_supplier: data.is_primary_supplier,
+        employee_name: data.employeeName,
+        employee_role: data.employeeRole,
+        employee_contact: data.employeeContact,
+        daily_rate: data.dailyRate ? parseFloat(data.dailyRate) : null,
+        start_date: data.startDate || null,
+        end_date: data.endDate || null,
+        is_primary_supplier: data.isPrimarySupplier,
       };
       
       const { error } = await supabase
@@ -156,6 +157,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
 
   const deleteEmployeeMutation = useMutation({
     mutationFn: async (id: string) => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase
         .from('phase_employees')
         .delete()
