@@ -154,9 +154,10 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
   const loadMilestones = async () => {
     try {
       setLoading(true);
+      const milestoneService = getMilestoneService();
       const [milestonesData, progressData] = await Promise.all([
-        MilestoneService.getPhaseMilestones(projectId, phaseId),
-        MilestoneService.getMilestoneProgress(projectId, phaseId)
+        milestoneService.getPhaseMilestones(projectId, phaseId),
+        milestoneService.getMilestoneProgress(projectId, phaseId)
       ]);
       setMilestones(milestonesData);
       setProgress(progressData);
