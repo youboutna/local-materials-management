@@ -20,74 +20,54 @@ export class InspectionPermissionService {
     private inspectionPermissionRepository: IInspectionPermissionRepository
   ) {}
   
-  /**
-   * Check if user has permission to schedule inspection
-   */
   async checkSchedulingPermission(params: { context: PermissionContextDTO }): Promise<PermissionResultDTO> {
-    const repositoryContext = this.toRepositoryContext(params.context);
+    const repositoryContext: PermissionContext = {
+      userId: params.context.userId,
+      projectId: params.context.projectId,
+      phaseId: params.context.phaseId,
+      inspectionType: params.context.inspectionType
+    };
     const result = await this.inspectionPermissionRepository.checkSchedulingPermission(repositoryContext);
-    return this.toPermissionResultDTO(result);
+    return {
+      hasPermission: result.hasPermission,
+      reason: result.reason
+    };
   }
 
-  /**
-   * Get assignable inspectors for inspection
-   */
   async getAssignableInspectors(params: { context: PermissionContextDTO }): Promise<AssignableInspectorDTO[]> {
-    const repositoryContext = this.toRepositoryContext(params.context);
+    const repositoryContext: PermissionContext = {
+      userId: params.context.userId,
+      projectId: params.context.projectId,
+      phaseId: params.context.phaseId,
+      inspectionType: params.context.inspectionType
+    };
     const inspectors = await this.inspectionPermissionRepository.getAssignableInspectors(repositoryContext);
-    return inspectors.map(inspector => this.toAssignableInspectorDTO(inspector));
+    return inspectors.map(inspector => ({
+      id: inspector.id,
+      name: inspector.name,
+      email: inspector.email,
+      role: inspector.role,
+      specializations: inspector.specializations,
+      certifications: inspector.certifications,
+      maxConcurrentInspections: inspector.maxConcurrentInspections,
+      currentInspections: inspector.currentInspections
+    }));
   }
 
-  /**
-   * Validate inspector assignment
-   */
   async validateInspectorAssignment(params: { 
     inspectorId: string; 
     context: PermissionContextDTO 
   }): Promise<PermissionResultDTO> {
-    const repositoryContext = this.toRepositoryContext(params.context);
-    const result = await this.inspectionPermissionRepository.validateInspectorAssignment(params.inspectorId, repositoryContext);
-    return this.toPermissionResultDTO(result);
-  }
-
-  /**
-   * Transform DTO context to repository context
-   */
-  private toRepositoryContext(dto: PermissionContextDTO): PermissionContext {
-    return {
-      userId: dto.userId,
-      userRole: dto.userRole,
-      projectId: dto.projectId,
-      phaseId: dto.phaseId,
-      inspectionId: dto.inspectionId,
-      action: dto.action
+    const repositoryContext: PermissionContext = {
+      userId: params.context.userId,
+      projectId: params.context.projectId,
+      phaseId: params.context.phaseId,
+      inspectionType: params.context.inspectionType
     };
-  }
-
-  /**
-   * Transform repository result to DTO
-   */
-  private toPermissionResultDTO(result: PermissionResult): PermissionResultDTO {
+    const result = await this.inspectionPermissionRepository.validateInspectorAssignment(params.inspectorId, repositoryContext);
     return {
       hasPermission: result.hasPermission,
-      reason: result.reason,
-      requiredRole: result.requiredRole,
-      availableActions: result.availableActions
-    };
-  }
-
-  /**
-   * Transform assignable inspector to DTO
-   */
-  private toAssignableInspectorDTO(inspector: AssignableInspector): AssignableInspectorDTO {
-    return {
-      id: inspector.id,
-      name: inspector.name,
-      role: inspector.role,
-      department: inspector.department,
-      availability: inspector.availability,
-      currentWorkload: inspector.currentWorkload,
-      skills: inspector.skills
+      reason: result.reason
     };
   }
 }

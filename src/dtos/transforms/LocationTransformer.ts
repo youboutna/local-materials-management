@@ -144,6 +144,7 @@ export class LocationTransformer {
    * Convert Mauritania geographic unit to LocationDTO
    */
   static fromGeographicUnit(unit: any): LocationDTO {
+    const now = new Date().toISOString();
     return {
       id: unit.code,
       code: unit.code,

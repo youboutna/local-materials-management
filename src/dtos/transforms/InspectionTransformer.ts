@@ -460,7 +460,7 @@ export class InspectionTransformer {
 
     return documents.map((docId, index) => {
       // Classify document type based on naming convention or index
-      let type: typeof documentTypes[number] = 'other';
+      let type: typeof documentTypes[number] = 'report';
       let name = `Document ${docId}`;
 
       if (docId.includes('certificate') || docId.includes('certificat')) {
