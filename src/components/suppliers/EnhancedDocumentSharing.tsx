@@ -84,8 +84,8 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
       doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (doc.description && doc.description.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesType = !selectedDocumentType || doc.document_type === selectedDocumentType;
-    const matchesProject = !selectedProject || doc.project_id === selectedProject;
+    const matchesType = !selectedDocumentType || (doc as any).document_type === selectedDocumentType || doc.documentType === selectedDocumentType;
+    const matchesProject = !selectedProject || (doc as any).project_id === selectedProject || doc.projectId === selectedProject;
     
     return matchesSearch && matchesType && matchesProject;
   }) || [];
