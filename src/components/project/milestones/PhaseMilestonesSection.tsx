@@ -207,7 +207,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
     setFormData({
       title: milestone.title,
       description: milestone.description || '',
-      target_date: milestone.target_date,
+      target_date: milestone.targetDate,
       weight: milestone.weight,
       notes: milestone.notes || '',
       type: milestone.type || 'checkpoint',
