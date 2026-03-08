@@ -159,15 +159,10 @@ interface ProjectPayment {
 
 
 interface ProjectMilestone {
-
   id: string;
-
-  phase_id: string;
-
-  status: 'pending' | 'completed';
-
-  due_date: string;
-
+  phase_id: string | null;
+  status: string;
+  [key: string]: any;
 }
 
 

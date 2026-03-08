@@ -528,7 +528,7 @@ export function usePhaseDetails(phaseId: string | undefined) {
         
         return {
           id: phase.id,
-          name: phase.title || (phase as any).name || '',
+          name: (phase as any).title || (phase as any).name || '',
           order: semanticOrder,
           status: phase.status,
           progress: phase.progress,
