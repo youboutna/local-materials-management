@@ -7,10 +7,13 @@ import { Phase } from './Phase';
 import { Document } from './Document';
 import { TimeLine } from './Project';
 
-// Align with DTO enum for architectural consistency
-import { TaskStatus as DTOTaskStatus, TaskPriority as DTOTaskPriority } from '@/dtos/entities/TaskDTO';
-export type TaskStatus = DTOTaskStatus;
-export type TaskPriority = DTOTaskPriority;
+// Import enums as values for runtime usage
+import { TaskStatus as TaskStatusEnum, TaskPriority as TaskPriorityEnum } from '@/dtos/entities/TaskDTO';
+export type TaskStatus = TaskStatusEnum;
+export type TaskPriority = TaskPriorityEnum;
+// Re-export enum values for runtime
+export const TaskStatusValues = TaskStatusEnum;
+export const TaskPriorityValues = TaskPriorityEnum;
 
 export class Task {
   // Private fields for encapsulation
