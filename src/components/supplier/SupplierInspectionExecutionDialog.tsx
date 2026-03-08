@@ -188,7 +188,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
       const { data: projectData } = await supabase
         .from('projects')
         .select('created_by')
-        .eq('id', inspection.project_id)
+        .eq('id', inspection.projectId || inspection.project_id || '')
         .single();
 
       // Notify project manager
