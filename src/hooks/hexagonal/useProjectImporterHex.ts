@@ -35,8 +35,9 @@ export function useImportProjectsHex() {
 
       for (const projectData of projects) {
         try {
-          // Check if project already exists
-          const existing = await projectRepo.findByTitle(projectData.title);
+          // Check if project already exists by fetching all and filtering
+          const allProjects = await projectRepo.findAll();
+          const existing = allProjects.find(p => (p as any).title === projectData.title);
 
           if (!existing) {
             const data = await projectRepo.create({

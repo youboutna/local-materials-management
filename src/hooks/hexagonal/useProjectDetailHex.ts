@@ -1,7 +1,6 @@
-﻿/**
- * Hook RefactorisÃ© pour ProjectDetailByDTO
- * Utilise l'architecture hexagonale complÃ¨te
- * Ã‰limine tous les appels directs aux services
+/**
+ * Hook Refactorisé pour ProjectDetailByDTO
+ * Utilise l'architecture hexagonale complète
  */
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -9,21 +8,18 @@ import { toast } from 'sonner';
 import { useProjectsHex } from '@/hooks/hexagonal'
 import { useProjectPhasesHex } from '@/hooks/hexagonal';
 
-// Types pour le composant
 interface ProjectDetailByDTOProps {
   projectId?: string;
   onEdit?: () => void;
   onClose?: () => void;
 }
 
-export function useProjectDetail(projectId: string | null) {
+export function useProjectDetail(projectId: string | undefined) {
   const queryClient = useQueryClient();
   
-  // Utiliser le hook hexagonal pour les projets
   const { projects } = useProjectsHex();
   const project = projects.find(p => p.id === projectId);
   
-  // Utiliser le hook hexagonal pour les phases
   const { phases: projectPhases } = useProjectPhasesHex(projectId);
   
   return {
@@ -37,8 +33,7 @@ export function useProjectDetail(projectId: string | null) {
   };
 }
 
-export function useProjectAnalytics(projectId: string | null, projectDetail: any) {
-  // Simulation pour l'instant - Ã  remplacer par le vrai hook
+export function useProjectAnalytics(projectId: string | undefined, projectDetail: any) {
   return {
     analytics: null,
     kpiMetrics: null,
@@ -49,8 +44,7 @@ export function useProjectAnalytics(projectId: string | null, projectDetail: any
   };
 }
 
-export function useMilestones(projectId: string | null) {
-  // Simulation pour l'instant - Ã  remplacer par le vrai hook
+export function useMilestones(projectId: string | undefined) {
   return {
     milestoneProgress: null,
     isLoading: false,

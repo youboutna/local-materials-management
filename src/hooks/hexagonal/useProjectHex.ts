@@ -64,7 +64,8 @@ export interface UseProjectByIdHexResult {
 function useProjectService() {
   return useMemo(() => {
     const repository = RepositoryFactory.getProjectRepository();
-    return new ProjectService(repository);
+    const stakeholderRepo = RepositoryFactory.getProjectStakeholderRepository();
+    return new ProjectService(repository, stakeholderRepo);
   }, []);
 }
 
@@ -276,7 +277,7 @@ export function useProjectFormHex() {
   }, [projectService, queryClient]);
 
   const updateFromForm = useCallback(async (id: string, formData: Record<string, unknown>): Promise<ProjectDTO | null> => {
-    const request = ProjectTransformer.formToUpdateRequest(formData);
+    const request = ProjectTransformer.formToCreateRequest(formData) as unknown as UpdateProjectDTO;
     const result = await projectService.update(id, request);
     queryClient.invalidateQueries({ queryKey: ['projects-hex'] });
     toast.success('Projet mis à jour avec succès');

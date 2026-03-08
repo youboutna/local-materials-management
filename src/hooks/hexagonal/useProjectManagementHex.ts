@@ -1,3 +1,4 @@
+import React, { useState, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 
@@ -18,6 +19,9 @@ import {
   ProjectStatus 
 } from '@/dtos/entities/ProjectDTO';
 
+// Singleton service instance
+const projectManagementService = new ProjectManagementService();
+
 // Query keys
 export const PROJECT_KEYS = {
   all: ['projects'] as const,
@@ -30,68 +34,50 @@ export const PROJECT_KEYS = {
   workflow: (id: string) => [...PROJECT_KEYS.all, 'workflow', id] as const,
 };
 
-/**
- * Hook for getting all projects with filtering
- */
 export function useProjects(filters?: ProjectFilterDTO) {
   return useQuery({
     queryKey: PROJECT_KEYS.list(filters || {}),
     queryFn: () => projectManagementService.getAllProjects(filters),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }
 
-/**
- * Hook for getting project overview
- */
 export function useProjectOverview(projectId: string) {
   return useQuery({
     queryKey: PROJECT_KEYS.overview(projectId),
     queryFn: () => projectManagementService.getProjectOverview(projectId),
     enabled: !!projectId,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 2 * 60 * 1000,
   });
 }
 
-/**
- * Hook for getting detailed project information
- */
 export function useProjectDetail(projectId: string) {
   return useQuery({
     queryKey: PROJECT_KEYS.detail(projectId),
     queryFn: () => projectManagementService.getProjectDetails(projectId),
     enabled: !!projectId,
-    staleTime: 1 * 60 * 1000, // 1 minute
+    staleTime: 1 * 60 * 1000,
   });
 }
 
-/**
- * Hook for getting project metrics
- */
 export function useProjectMetrics() {
   return useQuery({
     queryKey: PROJECT_KEYS.metrics(),
     queryFn: () => projectManagementService.getProjectMetrics(),
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
+    staleTime: 10 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
   });
 }
 
-/**
- * Hook for getting project workflow
- */
 export function useProjectWorkflow(projectId: string) {
   return useQuery({
     queryKey: PROJECT_KEYS.workflow(projectId),
     queryFn: () => projectManagementService.getProjectWorkflow(projectId),
     enabled: !!projectId,
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 30 * 1000,
   });
 }
 
-/**
- * Hook for creating a project
- */
 export function useCreateProject() {
   const queryClient = useQueryClient();
 
@@ -102,11 +88,8 @@ export function useCreateProject() {
         title: "Project Created",
         description: `Project "${project.title}" has been created successfully.`,
       });
-      
-      // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.metrics() });
-      
       return project;
     },
     onError: (error: any) => {
@@ -119,9 +102,6 @@ export function useCreateProject() {
   });
 }
 
-/**
- * Hook for updating a project
- */
 export function useUpdateProject() {
   const queryClient = useQueryClient();
 
@@ -133,13 +113,10 @@ export function useUpdateProject() {
         title: "Project Updated",
         description: `Project "${project.title}" has been updated successfully.`,
       });
-      
-      // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.detail(variables.projectId) });
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.overview(variables.projectId) });
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.metrics() });
-      
       return project;
     },
     onError: (error: any) => {
@@ -152,9 +129,6 @@ export function useUpdateProject() {
   });
 }
 
-/**
- * Hook for deleting a project
- */
 export function useDeleteProject() {
   const queryClient = useQueryClient();
 
@@ -163,109 +137,61 @@ export function useDeleteProject() {
       const action: ProjectActionDTO = {
         type: 'delete',
         projectId,
-        userId: 'current-user' // This should come from auth context
+        userId: 'current-user'
       };
       return projectManagementService.executeProjectAction(action);
     },
     onSuccess: (_, projectId) => {
-      toast({
-        title: "Project Deleted",
-        description: "Project has been deleted successfully.",
-      });
-      
-      // Invalidate related queries
+      toast({ title: "Project Deleted", description: "Project has been deleted successfully." });
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.metrics() });
-      
-      // Remove specific project from cache
       queryClient.removeQueries({ queryKey: PROJECT_KEYS.detail(projectId) });
       queryClient.removeQueries({ queryKey: PROJECT_KEYS.overview(projectId) });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete project",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message || "Failed to delete project", variant: "destructive" });
     },
   });
 }
 
-/**
- * Hook for archiving a project
- */
 export function useArchiveProject() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (projectId: string) => {
-      const action: ProjectActionDTO = {
-        type: 'archive',
-        projectId,
-        userId: 'current-user' // This should come from auth context
-      };
+      const action: ProjectActionDTO = { type: 'archive', projectId, userId: 'current-user' };
       return projectManagementService.executeProjectAction(action);
     },
     onSuccess: (_, projectId) => {
-      toast({
-        title: "Project Archived",
-        description: "Project has been archived successfully.",
-      });
-      
-      // Invalidate related queries
+      toast({ title: "Project Archived", description: "Project has been archived successfully." });
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.detail(projectId) });
-      queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.overview(projectId) });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to archive project",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message || "Failed to archive project", variant: "destructive" });
     },
   });
 }
 
-/**
- * Hook for restoring a project
- */
 export function useRestoreProject() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (projectId: string) => {
-      const action: ProjectActionDTO = {
-        type: 'restore',
-        projectId,
-        userId: 'current-user' // This should come from auth context
-      };
+      const action: ProjectActionDTO = { type: 'restore', projectId, userId: 'current-user' };
       return projectManagementService.executeProjectAction(action);
     },
     onSuccess: (_, projectId) => {
-      toast({
-        title: "Project Restored",
-        description: "Project has been restored successfully.",
-      });
-      
-      // Invalidate related queries
+      toast({ title: "Project Restored", description: "Project has been restored successfully." });
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.detail(projectId) });
-      queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.overview(projectId) });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to restore project",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message || "Failed to restore project", variant: "destructive" });
     },
   });
 }
 
-/**
- * Hook for updating project status
- */
 export function useUpdateProjectStatus() {
   const queryClient = useQueryClient();
 
@@ -280,17 +206,12 @@ export function useUpdateProjectStatus() {
         projectId,
         data: { status },
         reason,
-        userId: 'current-user' // This should come from auth context
+        userId: 'current-user'
       };
       return projectManagementService.executeProjectAction(action);
     },
     onSuccess: (_, variables) => {
-      toast({
-        title: "Status Updated",
-        description: `Project status has been updated successfully.`,
-      });
-      
-      // Invalidate related queries
+      toast({ title: "Status Updated", description: `Project status has been updated successfully.` });
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.detail(variables.projectId) });
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.overview(variables.projectId) });
@@ -298,18 +219,11 @@ export function useUpdateProjectStatus() {
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.metrics() });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update project status",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message || "Failed to update project status", variant: "destructive" });
     },
   });
 }
 
-/**
- * Hook for bulk project operations
- */
 export function useBulkProjectOperations() {
   const queryClient = useQueryClient();
 
@@ -321,32 +235,17 @@ export function useBulkProjectOperations() {
     }) => {
       return Promise.all(
         projectIds.map(projectId => {
-          const action: ProjectActionDTO = {
-            type: 'update',
-            projectId,
-            data: { status },
-            reason,
-            userId: 'current-user'
-          };
+          const action: ProjectActionDTO = { type: 'update', projectId, data: { status }, reason, userId: 'current-user' };
           return projectManagementService.executeProjectAction(action);
         })
       );
     },
     onSuccess: (_, variables) => {
-      toast({
-        title: "Bulk Update Completed",
-        description: `${variables.projectIds.length} projects have been updated.`,
-      });
-      
-      // Invalidate all project queries
+      toast({ title: "Bulk Update Completed", description: `${variables.projectIds.length} projects have been updated.` });
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.all });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update projects",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message || "Failed to update projects", variant: "destructive" });
     },
   });
 
@@ -354,42 +253,23 @@ export function useBulkProjectOperations() {
     mutationFn: (projectIds: string[]) => {
       return Promise.all(
         projectIds.map(projectId => {
-          const action: ProjectActionDTO = {
-            type: 'archive',
-            projectId,
-            userId: 'current-user'
-          };
+          const action: ProjectActionDTO = { type: 'archive', projectId, userId: 'current-user' };
           return projectManagementService.executeProjectAction(action);
         })
       );
     },
     onSuccess: (_, projectIds) => {
-      toast({
-        title: "Bulk Archive Completed",
-        description: `${projectIds.length} projects have been archived.`,
-      });
-      
-      // Invalidate all project queries
+      toast({ title: "Bulk Archive Completed", description: `${projectIds.length} projects have been archived.` });
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.all });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to archive projects",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message || "Failed to archive projects", variant: "destructive" });
     },
   });
 
-  return {
-    bulkUpdateStatus,
-    bulkArchive
-  };
+  return { bulkUpdateStatus, bulkArchive };
 }
 
-/**
- * Hook for project search and filtering
- */
 export function useProjectSearch() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<ProjectFilterDTO>({});
@@ -398,9 +278,7 @@ export function useProjectSearch() {
 
   const filteredProjects = React.useMemo(() => {
     if (!projects) return [];
-    
     if (!searchTerm) return projects;
-
     return projects.filter(project =>
       project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       project.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -417,20 +295,9 @@ export function useProjectSearch() {
     setSearchTerm('');
   }, []);
 
-  return {
-    projects: filteredProjects,
-    isLoading,
-    searchTerm,
-    setSearchTerm,
-    filters,
-    updateFilters,
-    clearFilters
-  };
+  return { projects: filteredProjects, isLoading, searchTerm, setSearchTerm, filters, updateFilters, clearFilters };
 }
 
-/**
- * Hook for project statistics and analytics
- */
 export function useProjectStatistics() {
   const { data: metrics } = useProjectMetrics();
   const { data: projects } = useProjects();
@@ -460,30 +327,18 @@ export function useProjectStatistics() {
       )
     };
 
-    return {
-      metrics,
-      statusTrends,
-      budgetAnalysis,
-      performanceMetrics
-    };
+    return { metrics, statusTrends, budgetAnalysis, performanceMetrics };
   }, [metrics, projects]);
 }
 
-/**
- * Hook for project workflow management
- */
 export function useProjectWorkflowManager(projectId: string) {
   const { data: workflow, isLoading } = useProjectWorkflow(projectId);
   const updateStatus = useUpdateProjectStatus();
 
   const advanceWorkflow = React.useCallback(async () => {
     if (!workflow) return;
-
-    // This would contain logic to advance to next workflow step
     const nextStep = workflow.currentStep + 1;
     if (nextStep <= workflow.totalSteps) {
-      // Update project status based on workflow step
-      // This is a simplified example - actual implementation would be more complex
       await updateStatus.mutateAsync({
         projectId,
         status: ProjectStatus.EN_COURS,
@@ -493,7 +348,6 @@ export function useProjectWorkflowManager(projectId: string) {
   }, [workflow, projectId, updateStatus]);
 
   const blockWorkflow = React.useCallback(async (reason: string) => {
-    // This would contain logic to block workflow
     await updateStatus.mutateAsync({
       projectId,
       status: ProjectStatus.SUSPENDU,
@@ -501,10 +355,5 @@ export function useProjectWorkflowManager(projectId: string) {
     });
   }, [projectId, updateStatus]);
 
-  return {
-    workflow,
-    isLoading,
-    advanceWorkflow,
-    blockWorkflow
-  };
+  return { workflow, isLoading, advanceWorkflow, blockWorkflow };
 }

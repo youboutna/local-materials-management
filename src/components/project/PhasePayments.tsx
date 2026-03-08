@@ -334,7 +334,7 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
                       {payment.amount.toLocaleString()} MRU
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      {payment.contractor_name} - {payment.contractor_contact}
+                      {payment.contractor_name || ''}
                     </p>
                   </div>
                   <div className="flex gap-1">
@@ -368,11 +368,11 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
                 
                 <div className="flex flex-wrap gap-2 mb-2">
                   <Badge variant="secondary">
-                    {getPaymentMethodLabel(payment.payment_method)}
+                    {getPaymentMethodLabel(payment.payment_method || '')}
                   </Badge>
                   <Badge variant="outline" className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-                    {new Date(payment.payment_date).toLocaleDateString()}
+                    {payment.payment_date ? new Date(payment.payment_date).toLocaleDateString() : 'N/A'}
                   </Badge>
                   {payment.progress_at_payment && (
                     <Badge>
