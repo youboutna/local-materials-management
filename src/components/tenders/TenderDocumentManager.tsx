@@ -417,7 +417,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
      }));
      
      // Show quantitative estimate component for "devis_quantitatif_estimatif"
-     if (value === 'devis_quantitatif_estimatif') {
+     if ((value as string) === 'devis_quantitatif_estimatif') {
        setShowQuantitativeEstimate(true);
      } else {
        setShowQuantitativeEstimate(false);
