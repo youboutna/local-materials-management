@@ -171,16 +171,16 @@ export class CheckpointVerificationEngine {
       }
 
       return [{
-        id: inspections[0].id,
+        id: inspections[0].id || '',
         category: 'inspection',
         title: `Inspection à ${inspections[0].progress_at_inspection}%`,
         description: `Inspecteur: ${inspections[0].inspector}`,
         status: 'verified',
         required: true,
         weight: 0.3,
-        reference_id: inspections[0].id,
+        reference_id: inspections[0].id || '',
         reference_type: 'inspection',
-        verified_at: inspections[0].date,
+        verified_at: inspections[0].date || undefined,
       }];
     }
 
