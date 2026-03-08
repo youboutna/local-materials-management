@@ -191,7 +191,7 @@ export interface TenderSubmissionDTO {
   id: string;
   tenderId: string;
   supplierId: string;
-  status: string;
+  status: TenderSubmissionStatus | string;
   submittedAt: string;
   documents?: TenderDocumentDTO[];
 }
