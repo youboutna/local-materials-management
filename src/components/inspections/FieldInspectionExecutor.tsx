@@ -57,12 +57,15 @@ interface LocalObservation {
 interface FieldInspectionExecutorProps {
   inspection: {
     id: string;
-    project_id: string;
+    projectId?: string;
+    project_id?: string;
+    phaseId?: string | null;
     phase_id?: string | null;
     date: string;
     inspector: string;
     status: string;
-    progress_at_inspection: number;
+    progressAtInspection?: number;
+    progress_at_inspection?: number;
     comments?: string | null;
   };
   projectTitle: string;
