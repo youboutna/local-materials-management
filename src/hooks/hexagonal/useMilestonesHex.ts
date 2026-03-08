@@ -63,7 +63,7 @@ export function useMilestonesHex(projectId?: string, phaseId?: string) {
       const milestoneRepo = RepositoryFactory.getMilestoneRepository();
       const result = await milestoneRepo.create({
         project_id: milestone.projectId,
-        phase_id: milestone.phaseId || null,
+        phase_id: milestone.phaseId || undefined,
         title: milestone.title,
         description: milestone.description,
         target_date: milestone.targetDate,
