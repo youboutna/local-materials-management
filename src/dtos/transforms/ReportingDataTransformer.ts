@@ -246,10 +246,10 @@ export class ReportingDataTransformer {
       risks,
       mitigationStrategies: risks.map(risk => ({
         riskId: risk.id,
-        strategy: risk.mitigation || 'No mitigation strategy defined',
-        assignedTo: risk.assignedTo,
-        dueDate: risk.dueDate ? new Date(risk.dueDate) : undefined,
-        status: risk.status === 'resolved' ? 'completed' : 'planned'
+        strategy: risk.mitigationStrategy || 'No mitigation strategy defined',
+        assignedTo: risk.owner,
+        dueDate: risk.identifiedDate ? new Date(risk.identifiedDate) : undefined,
+        status: risk.status === RiskStatus.RESOLVED ? 'completed' as const : 'planned' as const
       }))
     };
   }
