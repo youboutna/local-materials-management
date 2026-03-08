@@ -40,6 +40,8 @@ export class TaskAssignmentTransformer {
       priority: (entity.priority || 'medium') as any,
       dueDate: entity.dueDate?.toISOString() as string | undefined,
       completedAt: entity.completedAt?.toISOString() as string | undefined,
+      assignedAt: entity.createdAt.toISOString(),
+      progress: 0,
       createdAt: entity.createdAt.toISOString() as string,
       updatedAt: entity.updatedAt.toISOString() as string
     };
