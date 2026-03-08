@@ -49,7 +49,7 @@ export function MultiProviderAuthProvider({ children }: { children: ReactNode })
       
       if (result && result.session) {
         // Create an AuthSession from AuthManagerSession
-        const authSession: AuthSession = {
+        const authSession = {
           access_token: '',
           accessToken: '',
           refreshToken: '',
@@ -62,7 +62,7 @@ export function MultiProviderAuthProvider({ children }: { children: ReactNode })
             updated_at: new Date().toISOString()
           },
           provider: currentProvider
-        };
+        } as any;
         setSession(authSession);
         setUser(userResult.user);
         console.log('✅ Initial session loaded:', userResult.user?.email || 'no session');
