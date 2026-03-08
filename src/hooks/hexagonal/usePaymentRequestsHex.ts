@@ -51,7 +51,7 @@ export const usePaymentRequestsHex = () => {
       return requests.map(r => ({
         id: r.id,
         supplier_id: r.supplierId || '',
-        project_id: r.projectId || '',
+        project_id: '',
         amount: r.amount,
         description: r.workDescription || '',
         payment_reason: r.paymentType || '',

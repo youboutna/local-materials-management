@@ -55,12 +55,12 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
   // Transform payments to PaymentMilestone format
   const payments: PaymentMilestone[] = (rawPayments || []).map(p => ({
     id: p.id,
-    title: `Paiement ${p.transactionId || p.id.slice(0, 8)}`,
-    dueDate: p.paymentDate || new Date().toISOString(),
+    title: `Paiement ${p.id.slice(0, 8)}`,
+    dueDate: p.createdAt || new Date().toISOString(),
     amount: p.amount || 0,
-    status: 'pending' as const,
-    progressRequired: p.progressAtPayment || 0,
-    currentProgress: p.progressAtPayment || 0,
+    status: (p.status || 'pending') as 'pending',
+    progressRequired: 0,
+    currentProgress: 0,
     phaseName: undefined
   }));
   
