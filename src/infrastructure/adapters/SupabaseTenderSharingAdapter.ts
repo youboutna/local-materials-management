@@ -56,22 +56,25 @@ export class SupabaseTenderSharingAdapter implements ITenderSharingRepository {
 
   async createSharingSecret(dto: CreateSharingSecretDTO): Promise<TenderSharingSecretDTO> {
     try {
+      const insertData: any = {
+        tender_id: dto.tenderId,
+        secret_code: await this.generateSecretCode(),
+        shared_by: dto.sharedBy,
+        supplier_email: dto.supplierEmail,
+        supplier_id: dto.supplierId,
+        expires_at: dto.expiresAt,
+        is_active: true,
+        access_count: 0,
+        max_access_count: dto.maxAccessCount || 50,
+        workflow_phase: dto.workflowPhase,
+        workflow_stage: dto.workflowStage,
+        allowed_document_ids: dto.allowedDocumentIds,
+        metadata: (dto.metadata || {}),
+      };
+
       const { data, error } = await supabase
         .from('tender_sharing_secrets')
-        .insert([{
-          secret_code: await this.generateSecretCode(),
-          shared_by: dto.sharedBy,
-          supplier_email: dto.supplierEmail,
-          supplier_id: dto.supplierId,
-          expires_at: dto.expiresAt,
-          is_active: true,
-          access_count: 0,
-          max_access_count: dto.maxAccessCount || 50,
-          workflow_phase: dto.workflowPhase,
-          workflow_stage: dto.workflowStage,
-          allowed_document_ids: dto.allowedDocumentIds,
-          metadata: (dto.metadata || {}) as any,
-        }])
+        .insert([insertData])
         .select()
         .single();
 
