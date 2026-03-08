@@ -2,11 +2,13 @@
 /**
  * Supabase Adapter for Material Repository
  * Implements IMaterialRepository using Supabase
- * Rule #9: DB → Entity → Repository → Service
+ * Rule #9: DB → Transformer → Entity → Repository → Service
+ * Adapter NEVER calls Entity.fromDatabase() — always uses Transformer
  */
 import { supabase } from '@/integrations/supabase/client';
 import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
 import { Material, MaterialCategory } from '@/domain/entities/Material';
+import { MaterialTransformer } from '@/dtos/transforms/MaterialTransformer';
 import { Database } from '@/integrations/supabase/types';
 
 type MaterialRow = Database['public']['Tables']['materials']['Row'];
