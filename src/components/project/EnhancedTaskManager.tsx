@@ -176,6 +176,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   const { data: dependencies = [] } = useQuery({
     queryKey: ['task-dependencies', projectId],
     queryFn: async (): Promise<TaskDependency[]> => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('task_dependencies')
         .select('*')
