@@ -208,7 +208,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
         emp.position?.toLowerCase().includes('ingénieur')
       );
       
-      if (projectEngConsultant && !selectedInspector) {
+      if (projectEngConsultant && !selectedInspector && projectEngConsultant.id) {
         setSelectedInspector(projectEngConsultant.id);
       }
     }
