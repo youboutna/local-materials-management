@@ -637,7 +637,7 @@ export class ProjectTransformer {
    * ProjectWorkflowData → ProjectDetailDTO
    * Converts multi-step workflow data to detailed project DTO for API operations
    */
-  static workflowToDetailDTO(workflowData: ProjectWorkflowData): ProjectDetailDTO {
+  static workflowToDetailDTO(workflowData: any): ProjectDetailDTO {
     const projectData = workflowData.projectData;
     const relatedData = workflowData.relatedData;
 
