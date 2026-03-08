@@ -80,7 +80,7 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
   // Create estimate
   const handleCreateEstimate = async () => {
     try {
-      await createEstimateMutation.mutateAsync(estimateData);
+      await createEstimateMutation.mutateAsync(estimateData as any);
       setSelectedEstimateId(null);
       setIsCreateEstimateOpen(false);
     } catch (error) {
