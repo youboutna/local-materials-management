@@ -85,7 +85,7 @@ export function useStakeholdersHex(projectId?: string) {
     onSuccess: (result) => {
       toast({
         title: 'Partie prenante ajoutée',
-        description: `${result.displayName} a été ajouté au projet avec succès.`,
+        description: `${result.name} a été ajouté au projet avec succès.`,
         className: 'bg-green-100 border-green-300 text-green-800',
       });
 
