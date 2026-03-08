@@ -52,7 +52,7 @@ export class RiskTransformer {
       this.dtoToDomainStatus(dto.status),
       this.dtoToDomainCategory(dto.category),
       dto.mitigationStrategy || null,
-      dto.identifiedBy ? { id: dto.identifiedBy, fullName: '' } : null,
+      (dto as any).identifiedBy ? { id: (dto as any).identifiedBy, fullName: '' } : null,
       dto.identifiedDate || null,
       dto.relatedRisks || [],
       dto.createdAt || new Date().toISOString(),
