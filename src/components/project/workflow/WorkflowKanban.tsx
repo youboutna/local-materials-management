@@ -39,8 +39,8 @@ import {
   Zap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { PhaseStepDTO } from '@/types/phase-dto';
-import { StepItem } from '@/types/unified-workflow';
+import { PhaseStepDTO } from '@/dtos/entities/PhaseDTO';
+import type { StepItem } from '@/dtos/workflows/UnifiedWorkflowDTO';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 

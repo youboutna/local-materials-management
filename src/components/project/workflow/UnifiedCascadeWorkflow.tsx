@@ -24,7 +24,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { PhaseDTO, PhaseStepDTO } from '@/types/phase-dto';
+import { PhaseDTO, PhaseStepDTO } from '@/dtos/entities/PhaseDTO';
 import StepDetailPanel from './StepDetailPanel';
 import IntegratedWorkflowTimeline from './IntegratedWorkflowTimeline';
 

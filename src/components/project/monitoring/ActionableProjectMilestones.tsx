@@ -38,7 +38,7 @@ import {
   TrendingDown
 } from 'lucide-react';
 import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
-import { MilestoneSummaryDTO, MilestoneType } from '@/types/milestone-dto';
+import { MilestoneSummaryDTO, MilestoneType } from '@/dtos/entities/MilestoneDTO';
 import { format, parseISO, isBefore, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';

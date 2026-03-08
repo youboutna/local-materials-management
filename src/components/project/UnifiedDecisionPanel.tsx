@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DocumentService } from '@/application/services/DocumentService';
 import { MilestoneService } from '@/application/services/MilestoneService';
-import { DecisionNode } from '@/types/unified-workflow';
+import type { DecisionNode } from '@/dtos/workflows/UnifiedWorkflowDTO';
 import { useAuth } from '@/contexts/use-auth';
 
 interface UnifiedDecisionPanelProps {

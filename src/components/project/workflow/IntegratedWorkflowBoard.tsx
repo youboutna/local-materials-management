@@ -1,9 +1,9 @@
 import React from 'react';
 import WorkflowKanban from './WorkflowKanban';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MilestoneItem, StepItem, mapMilestoneToDecisionNode } from '@/types/unified-workflow';
-import { DecisionNode } from '@/types/unified-workflow';
-import { PhaseStepDTO } from '@/types/phase-dto';
+import type { MilestoneItem, StepItem, DecisionNode } from '@/dtos/workflows/UnifiedWorkflowDTO';
+import { mapMilestoneToDecisionNode } from '@/types/unified-workflow';
+import { PhaseStepDTO } from '@/dtos/entities/PhaseDTO';
 
 type StepWorkflowStatus = {
   inspectionStatus?: string;
