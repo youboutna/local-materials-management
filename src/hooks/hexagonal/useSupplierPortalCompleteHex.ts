@@ -110,7 +110,7 @@ export function useSupplierAuthHex() {
   const signUpMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
       const authService = new AuthService(RepositoryFactory.getAuthRepository());
-      await authService.register({ email: email.trim(), password, fullName: email.split('@')[0] });
+      await authService.register({ email: email.trim(), password, full_name: email.split('@')[0] } as any);
       return { success: true };
     },
     onSuccess: () => {
