@@ -95,16 +95,16 @@ export function useBankGuaranteesHex(projectId?: string) {
       // Transform BankGuaranteeDTO to BankGuarantee
       const transformedData = data.map(dto => ({
         id: dto.id,
-        projectId: dto.project_id,
-        contractorId: dto.contractor_id,
-        bankName: dto.bank_name,
-        guaranteeType: dto.guarantee_type,
-        guaranteeAmount: dto.guarantee_amount,
-        issueDate: dto.issue_date,
-        expiryDate: dto.expiry_date,
-        status: dto.status,
-        createdAt: dto.created_at,
-        updatedAt: dto.updated_at,
+        projectId: dto.project_id || '',
+        contractorId: dto.contractor_id || '',
+        bankName: dto.bank_name || '',
+        guaranteeType: dto.guarantee_type || '',
+        guaranteeAmount: dto.guarantee_amount || 0,
+        issueDate: dto.issue_date || '',
+        expiryDate: dto.expiry_date || '',
+        status: dto.status || '',
+        createdAt: dto.created_at || '',
+        updatedAt: dto.updated_at || '',
       }));
       setGuarantees(transformedData);
     } catch (err) {
