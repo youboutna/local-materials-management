@@ -162,7 +162,7 @@ export class ProjectTransformer {
       procurement_lead_time: project.procurementLeadTime,
       project_order: project.projectOrder,
       project_reference_number: project.projectReferenceNumber,
-      project_responsable_id: project.projectResponsableId,
+      project_responsable_id: project.projectManagerId,
       reception_status: project.receptionStatus,
       requires_consultant_validation: project.requiresConsultantValidation,
       requires_ministry_approval: project.requiresMinistryApproval,
