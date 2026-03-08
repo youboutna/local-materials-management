@@ -284,7 +284,7 @@ export class TenderSubmissionService {
         const fileName = `${Date.now()}-${doc.file.name}`;
         const filePath = `tender-submissions/${submissionId}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabaseClient.storage
           .from('tender-documents')
           .upload(filePath, doc.file);
 

@@ -75,7 +75,7 @@ export class DocumentValidationService {
       }
 
       // Call validation edge function
-      const { data, error } = await supabase.functions.invoke('validate-document', {
+      const { data, error } = await supabaseClient.functions.invoke('validate-document', {
         body: {
           document_id: request.documentId,
           submission_id: request.submissionId,
