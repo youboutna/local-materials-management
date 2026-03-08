@@ -48,12 +48,13 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
   const [showInvoiceActions, setShowInvoiceActions] = useState(false);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
 
-  const [newItem, setNewItem] = useState<EstimateItem>({
+  const [newItem, setNewItem] = useState<Record<string, any>>({
     quantity: 0,
-    unitPrice: 0,
-    totalPrice: 0,
+    unit_price: 0,
+    total_price: 0,
     description: '',
-    itemType: 'material'
+    item_type: 'material',
+    material_id: ''
   });
 
   const [estimateData, setEstimateData] = useState<Omit<TenderEstimate, 'id'>>({
