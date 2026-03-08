@@ -53,17 +53,17 @@ export const calculateInsuranceMetrics = async (
   thirtyDaysFromNow.setDate(now.getDate() + 30);
 
   const activeCertificates = certificates.filter(cert => 
-    cert.status === 'active' && new Date(cert.valid_until) > now
+    cert.status === 'active' && new Date(cert.valid_until || '') > now
   );
 
   const expiringCertificates = certificates.filter(cert =>
     cert.status === 'active' && 
-    new Date(cert.valid_until) > now &&
-    new Date(cert.valid_until) <= thirtyDaysFromNow
+    new Date(cert.valid_until || '') > now &&
+    new Date(cert.valid_until || '') <= thirtyDaysFromNow
   );
 
   const expiredCertificates = certificates.filter(cert =>
-    new Date(cert.valid_until) <= now
+    new Date(cert.valid_until || '') <= now
   );
 
   const totalCoverage = certificates.reduce((sum, cert) => 
