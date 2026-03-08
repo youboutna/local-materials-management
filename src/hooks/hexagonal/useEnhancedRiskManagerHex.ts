@@ -155,7 +155,7 @@ export const useEnhancedRiskManagerHex = (
   const { data: suppliers = [], isLoading: suppliersLoading } = useQuery({
     queryKey: ['suppliers-active'],
     queryFn: async (): Promise<Supplier[]> => {
-      const data = await supplierRepo.findAll({ isActive: true });
+      const data = await supplierRepo.findAll();
       return (data || []).map((s: any) => ({
         id: s.id,
         name: s.name || '',
