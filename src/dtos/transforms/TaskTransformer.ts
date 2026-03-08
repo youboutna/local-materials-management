@@ -136,7 +136,7 @@ export class TaskTransformer {
       blocks: [],
       projectId: task.projectId,
       phaseId: task.phaseId || undefined,
-      notes: task.notes,
+      notes: task.notes ?? undefined,
       tags: [],
       createdAt: task.createdAt,
       updatedAt: task.updatedAt
