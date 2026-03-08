@@ -284,6 +284,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
         ...data,
         title: data.title || undefined,
       };
+      const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase
         .from('task_assignments')
         .update(updateData)
