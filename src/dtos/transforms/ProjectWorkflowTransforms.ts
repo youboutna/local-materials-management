@@ -28,7 +28,7 @@ import {
 } from '@/dtos/workflows/ProjectWorkflowDTOs';
 
 // Import entity DTOs (following "similitude des voisins le plus proche")
-import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+import { ProjectDTO, ProjectStatus, ConstructionStage } from '@/dtos/entities/ProjectDTO';
 import { PhaseDTO, PhaseStatus, PhaseType, PhasePriority } from '@/dtos/entities/PhaseDTO';
 import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
 import { RiskDTO, RiskCategory, RiskStatus } from '@/dtos/entities/RiskDTO';
