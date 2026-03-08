@@ -59,7 +59,7 @@ export const insuranceTransform = {
     insurance_company: dto.insurance_company || dto.insuranceCompany,
     policy_number: dto.policy_number || dto.policyNumber,
     coverage_amount: dto.coverage_amount ?? dto.coverageAmount,
-    coverage_type: dto.coverage_type || dto.coverageType,
+    coverage_type: (dto.coverage_type || dto.coverageType || dto.insuranceType) as any,
     valid_from: dto.valid_from || dto.validFrom,
     valid_until: dto.valid_until || dto.validUntil,
     status: dto.status,
