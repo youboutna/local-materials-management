@@ -1,49 +1,43 @@
 // @ts-nocheck
-// Supabase Adapter for Employee Repository
+/**
+ * Supabase Adapter for Employee Repository
+ * Implements IEmployeeRepository using Supabase
+ * Rule #9: DB → Entity → Repository → Service
+ */
 import { supabase } from '@/integrations/supabase/client';
 import { IEmployeeRepository } from '@/domain/repositories/IEmployeeRepository';
-import { Employee, EmployeeRole, Department, Certification, UserRole } from '@/domain/entities';
+import { Employee, EmployeeRole, Department } from '@/domain/entities';
+import { Database } from '@/integrations/supabase/types';
 
-interface EmployeeOperationParams {
-  id: string;
-  name: string;
-  role: UserRole;
-  email: string;
-}
+type EmployeeRow = Database['public']['Tables']['employees']['Row'];
 
-interface EmployeeDB {
-  id: string;
-  employee_id: string;
-  full_name: string;
-  email: string;
-  phone: string;
-  position: string;
-  department_id: string;
-  hire_date: string;
-  termination_date: string;
-  role_level: number;
-  manager_id: string;
-  superior_id: string;
-  is_active: boolean;
-  salary: number;
-  vacation_days: number;
-  sick_days: number;
-  certifications: Certification[];
-  skills: string[];
-}
-
-function mapToEmployee(dbEmployee: EmployeeDB): Employee {
+function mapToEmployee(data: EmployeeRow): Employee {
   return {
-    ...dbEmployee,
-    role: new UserRole(dbEmployee.role_level)
-  };
+    id: data.id,
+    employeeId: data.employee_id,
+    fullName: data.full_name,
+    email: data.email || '',
+    phone: data.phone || '',
+    position: data.position || '',
+    department: data.department || '',
+    hireDate: data.hire_date || '',
+    managerId: data.manager_id || null,
+    superiorId: data.superior_id || null,
+    isActive: data.is_active ?? true,
+    salary: data.salary || 0,
+    skills: data.skills || [],
+    certifications: (data.certifications as unknown[]) || [],
+    userId: data.user_id || null,
+    createdAt: data.created_at || new Date().toISOString(),
+    updatedAt: data.updated_at || new Date().toISOString(),
+  } as Employee;
 }
 
 export class SupabaseEmployeeAdapter implements IEmployeeRepository {
   async findById(id: string): Promise<Employee | null> {
     const { data, error } = await supabase
-      .from<EmployeeDB>('employees')
-      .select()
+      .from('employees')
+      .select('*')
       .eq('id', id)
       .single();
 
@@ -53,8 +47,8 @@ export class SupabaseEmployeeAdapter implements IEmployeeRepository {
 
   async findByEmployeeId(employeeId: string): Promise<Employee | null> {
     const { data, error } = await supabase
-      .from<EmployeeDB>('employees')
-      .select()
+      .from('employees')
+      .select('*')
       .eq('employee_id', employeeId)
       .single();
 
@@ -64,8 +58,8 @@ export class SupabaseEmployeeAdapter implements IEmployeeRepository {
 
   async findByUserId(userId: string): Promise<Employee | null> {
     const { data, error } = await supabase
-      .from<EmployeeDB>('employees')
-      .select()
+      .from('employees')
+      .select('*')
       .eq('user_id', userId)
       .single();
 
@@ -75,12 +69,12 @@ export class SupabaseEmployeeAdapter implements IEmployeeRepository {
 
   async findAll(): Promise<Employee[]> {
     const { data, error } = await supabase
-      .from<EmployeeDB>('employees')
-      .select()
+      .from('employees')
+      .select('*')
       .order('full_name');
 
     if (error || !data) return [];
-    return data.map(d => mapToEmployee(d));
+    return data.map(mapToEmployee);
   }
 
   async save(employee: Employee): Promise<void> {
@@ -101,15 +95,14 @@ export class SupabaseEmployeeAdapter implements IEmployeeRepository {
         salary: employee.salary,
         user_id: employee.userId,
         skills: employee.skills,
-        certifications: employee.certifications as any,
-        role_level: employee.role.level
+        certifications: employee.certifications as unknown as Database['public']['Tables']['employees']['Insert']['certifications'],
       }]);
 
     if (error) throw new Error(`Failed to save employee: ${error.message}`);
   }
 
   async update(id: string, data: Partial<Employee>): Promise<void> {
-    const updateData: Record<string, any> = {};
+    const updateData: Record<string, unknown> = {};
     if (data.fullName !== undefined) updateData.full_name = data.fullName;
     if (data.email !== undefined) updateData.email = data.email;
     if (data.phone !== undefined) updateData.phone = data.phone;
@@ -120,11 +113,11 @@ export class SupabaseEmployeeAdapter implements IEmployeeRepository {
     if (data.certifications !== undefined) updateData.certifications = data.certifications;
     if (data.managerId !== undefined) updateData.manager_id = data.managerId;
     if (data.superiorId !== undefined) updateData.superior_id = data.superiorId;
-    if (data.role !== undefined) updateData.role_level = data.role.level;
+    if (data.salary !== undefined) updateData.salary = data.salary;
 
     const { error } = await supabase
       .from('employees')
-      .update(updateData)
+      .update(updateData as Database['public']['Tables']['employees']['Update'])
       .eq('id', id);
 
     if (error) throw new Error(`Failed to update employee: ${error.message}`);
@@ -140,147 +133,134 @@ export class SupabaseEmployeeAdapter implements IEmployeeRepository {
   }
 
   async findByRole(_role: EmployeeRole): Promise<Employee[]> {
-    // Role is not stored in DB - filter by position pattern
     const { data, error } = await supabase
-      .from<EmployeeDB>('employees')
-      .select()
+      .from('employees')
+      .select('*')
       .eq('is_active', true)
       .order('full_name');
 
     if (error || !data) return [];
-    return data.map(d => mapToEmployee(d));
+    return data.map(mapToEmployee);
   }
 
   async findByDepartment(department: Department): Promise<Employee[]> {
     const { data, error } = await supabase
-      .from<EmployeeDB>('employees')
-      .select()
-      .eq('department', department)
+      .from('employees')
+      .select('*')
+      .eq('department', department as string)
       .order('full_name');
 
     if (error || !data) return [];
-    return data.map(d => mapToEmployee(d));
+    return data.map(mapToEmployee);
   }
 
   async findActive(): Promise<Employee[]> {
     const { data, error } = await supabase
-      .from<EmployeeDB>('employees')
-      .select()
+      .from('employees')
+      .select('*')
       .eq('is_active', true)
       .order('full_name');
 
     if (error || !data) return [];
-    return data.map(d => mapToEmployee(d));
+    return data.map(mapToEmployee);
   }
 
   async findByManager(managerId: string): Promise<Employee[]> {
     const { data, error } = await supabase
-      .from<EmployeeDB>('employees')
-      .select()
+      .from('employees')
+      .select('*')
       .eq('manager_id', managerId)
       .order('full_name');
 
     if (error || !data) return [];
-    return data.map(d => mapToEmployee(d));
+    return data.map(mapToEmployee);
   }
 
   async findBySuperior(superiorId: string): Promise<Employee[]> {
     const { data, error } = await supabase
-      .from<EmployeeDB>('employees')
-      .select()
+      .from('employees')
+      .select('*')
       .eq('superior_id', superiorId)
       .order('full_name');
 
     if (error || !data) return [];
-    return data.map(d => mapToEmployee(d));
+    return data.map(mapToEmployee);
   }
 
   async search(query: string): Promise<Employee[]> {
     const { data, error } = await supabase
-      .from<EmployeeDB>('employees')
-      .select()
+      .from('employees')
+      .select('*')
       .or(`full_name.ilike.%${query}%,email.ilike.%${query}%,employee_id.ilike.%${query}%`)
       .order('full_name');
 
     if (error || !data) return [];
-    return data.map(d => mapToEmployee(d));
+    return data.map(mapToEmployee);
   }
 
   async findInspectors(): Promise<Employee[]> {
     const { data, error } = await supabase
-      .from<EmployeeDB>('employees')
-      .select()
+      .from('employees')
+      .select('*')
       .eq('is_active', true)
       .ilike('position', '%inspector%')
       .order('full_name');
 
     if (error || !data) return [];
-    return data.map(d => mapToEmployee(d));
+    return data.map(mapToEmployee);
   }
 
   async findProjectManagers(): Promise<Employee[]> {
     const { data, error } = await supabase
-      .from<EmployeeDB>('employees')
-      .select()
+      .from('employees')
+      .select('*')
       .eq('is_active', true)
       .or('position.ilike.%manager%,position.ilike.%chef%,position.ilike.%responsable%')
       .order('full_name');
 
     if (error || !data) return [];
-    return data.map(d => mapToEmployee(d));
+    return data.map(mapToEmployee);
   }
 
   async findApprovers(): Promise<Employee[]> {
     const { data, error } = await supabase
-      .from<EmployeeDB>('employees')
-      .select()
+      .from('employees')
+      .select('*')
       .eq('is_active', true)
       .or('position.ilike.%director%,position.ilike.%manager%,position.ilike.%chef%')
       .order('full_name');
 
     if (error || !data) return [];
-    return data.map(d => mapToEmployee(d));
+    return data.map(mapToEmployee);
   }
 
   async getDirectReports(employeeId: string): Promise<Employee[]> {
     const { data, error } = await supabase
-      .from<EmployeeDB>('employees')
-      .select()
+      .from('employees')
+      .select('*')
       .or(`manager_id.eq.${employeeId},superior_id.eq.${employeeId}`)
       .eq('is_active', true)
       .order('full_name');
 
     if (error || !data) return [];
-    return data.map(d => mapToEmployee(d));
+    return data.map(mapToEmployee);
   }
 
   async getTeamHierarchy(managerId: string): Promise<Employee[]> {
-    // Recursive team fetch - simplified for now
     return this.getDirectReports(managerId);
   }
 
-  async updateEmployee(params: EmployeeOperationParams): Promise<Employee> {
-    const { id, name, role, email } = params;
-    const updateData: Record<string, any> = {
-      full_name: name,
-      role_level: role.level,
-      email
-    };
+  async updateEmployee(params: { id: string; name: string; email: string }): Promise<Employee> {
+    const { id, name, email } = params;
 
     const { data, error } = await supabase
       .from('employees')
-      .update(updateData)
+      .update({ full_name: name, email })
       .eq('id', id)
+      .select()
       .single();
 
     if (error || !data) throw new Error(`Failed to update employee: ${error?.message}`);
     return mapToEmployee(data);
-  }
-
-  async updateEmployeeRole(id: string, role: UserRole): Promise<void> {
-    await supabase
-      .from('employees')
-      .update({ role_level: role.level })
-      .eq('id', id);
   }
 }

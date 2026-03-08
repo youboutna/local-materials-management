@@ -7,6 +7,9 @@
 import { supabase } from '@/integrations/supabase/client';
 import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
 import { Material, MaterialCategory } from '@/domain/entities/Material';
+import { Database } from '@/integrations/supabase/types';
+
+type MaterialRow = Database['public']['Tables']['materials']['Row'];
 
 interface ProjectMaterialData {
   id: string;
@@ -39,52 +42,14 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
   }
 
   async save(material: Material): Promise<void> {
-    const dbData = material.toDatabase() as {
-      adresse?: string | null;
-      asin?: string | null;
-      available_quantity?: number;
-      category: string;
-      coordinates_latitude?: number | null;
-      coordinates_longitude?: number | null;
-      created_at: string;
-      description: string; // Required for Supabase
-      ean?: string | null;
-      forme?: string;
-      gtin?: string | null;
-      id: string;
-      image?: string;
-      localisation,
-      min_quantity?: number;
-      multilang_labels?: Record<string, string>;
-      name: string;
-      origin_location?: string;
-      price_per_unit: number;
-      quantity: number;
-      sku?: string | null;
-      subcategory?: string;
-      supplier?: unknown; // Supabase Json type
-      supplier_id?: string;
-      material_code?: string;
-      minimum_stock?: number;
-      maximum_stock?: number;
-      lead_time_days?: number;
-      quality_grade?: string;
-      technical_specifications?: unknown; // Supabase Json type
-      material_status?: string;
-      tags?: unknown; // Supabase Json array type
-      timeline?: unknown; // Supabase Json type
-      unit: string;
-      updated_at: string;
-      workspace_id?: string;
-    };
-    const { error } = await supabase.from('materials').insert(dbData);
+    const dbData = material.toDatabase();
+    const { error } = await supabase.from('materials').insert(dbData as Database['public']['Tables']['materials']['Insert']);
     if (error) throw new Error(`Failed to save material: ${error.message}`);
   }
 
   async update(id: string, data: Partial<Material>): Promise<void> {
     const updateData: Record<string, unknown> = {};
 
-    // Map all possible fields from domain entity to database schema
     if (data.name !== undefined) updateData.name = data.name;
     if (data.description !== undefined) updateData.description = data.description;
     if (data.category !== undefined) updateData.category = data.category;
@@ -109,21 +74,13 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
     if (data.multilangLabels !== undefined) updateData.multilang_labels = data.multilangLabels;
     if (data.supplier !== undefined) updateData.supplier = data.supplier;
     if (data.timeline !== undefined) updateData.timeline = data.timeline;
-    if (data.lastRestock !== undefined) updateData.last_restock = data.lastRestock.toISOString();
-    // New fields
-    if (data.supplierId !== undefined) updateData.supplier_id = data.supplierId;
-    if (data.materialCode !== undefined) updateData.material_code = data.materialCode;
-    if (data.minimumStock !== undefined) updateData.minimum_stock = data.minimumStock;
-    if (data.maximumStock !== undefined) updateData.maximum_stock = data.maximumStock;
-    if (data.leadTimeDays !== undefined) updateData.lead_time_days = data.leadTimeDays;
-    if (data.qualityGrade !== undefined) updateData.quality_grade = data.qualityGrade;
-    if (data.technicalSpecifications !== undefined) updateData.technical_specifications = data.technicalSpecifications;
+    if (data.lastRestock !== undefined) updateData.last_restock = data.lastRestock instanceof Date ? data.lastRestock.toISOString() : data.lastRestock;
     if (data.materialStatus !== undefined) updateData.material_status = data.materialStatus;
     if (data.tags !== undefined) updateData.tags = data.tags;
 
     const { error } = await supabase
       .from('materials')
-      .update(updateData)
+      .update(updateData as Database['public']['Tables']['materials']['Update'])
       .eq('id', id);
 
     if (error) throw new Error(`Failed to update material: ${error.message}`);
@@ -138,7 +95,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
     const { data, error } = await supabase
       .from('materials')
       .select('*')
-      .eq('category', category)
+      .eq('category', category as string)
       .order('name', { ascending: true });
 
     if (error || !data) return [];
@@ -250,11 +207,11 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       .eq('project_id', projectId);
 
     if (error) throw error;
-    return (data || []).map(pm => ({
-      id: pm.id,
-      projectId: pm.project_id,
-      materialId: pm.material_id,
-      quantity: pm.quantity,
+    return (data || []).map((pm: Record<string, unknown>) => ({
+      id: pm.id as string,
+      projectId: pm.project_id as string,
+      materialId: pm.material_id as string,
+      quantity: pm.quantity as number,
       material: pm.materials ? Material.fromDatabase(pm.materials as Record<string, unknown>) : null,
     }));
   }
