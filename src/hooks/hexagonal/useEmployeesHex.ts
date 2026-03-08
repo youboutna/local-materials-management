@@ -112,7 +112,7 @@ export function useEmployeesHex(): UseEmployeesHexResult {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
-      toast.success(`L'employé "${data.name}" a été mis à jour avec succès.`);
+      toast.success(`L'employé "${data.fullName || data.full_name || ''}" a été mis à jour avec succès.`);
     },
     onError: (error) => {
       console.error('Error updating employee:', error);
