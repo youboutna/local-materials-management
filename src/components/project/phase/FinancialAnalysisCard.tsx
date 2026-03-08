@@ -63,14 +63,20 @@ const FinancialAnalysisCard: React.FC<FinancialAnalysisCardProps> = ({
     );
   }
 
+  // Derive financial health from budget utilization
+  const financialHealth = phaseCosts.budgetUtilization > 90 ? 'critical' 
+    : phaseCosts.budgetUtilization > 75 ? 'warning' : 'healthy';
+  const totalSpent = phaseCosts.totalPayments + phaseCosts.totalExpenses;
+  const remainingBudget = Math.max(0, estimatedCost - totalSpent);
+
   if (compact) {
     return (
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center justify-between">
             <span>Budget</span>
-            <Badge variant="outline" className={getFinancialHealthColor(phaseCosts.financialHealth)}>
-              {getFinancialHealthLabel(phaseCosts.financialHealth)}
+            <Badge variant="outline" className={getFinancialHealthColor(financialHealth)}>
+              {getFinancialHealthLabel(financialHealth)}
             </Badge>
           </CardTitle>
         </CardHeader>
