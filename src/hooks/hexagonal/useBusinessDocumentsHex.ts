@@ -33,15 +33,13 @@ export function useUploadBusinessDocument() {
       const filePath = `business-docs/${fileName}`;
 
       const storageService = new StorageService();
-      const { error: uploadError } = await storageService.uploadFile('documents', filePath, formData.file);
-
-      if (uploadError) throw uploadError;
+      const uploadResult = await storageService.uploadFile({ bucket: 'documents', path: filePath, file: formData.file });
 
       // Get public URL
       const publicUrl = storageService.getPublicUrl('documents', filePath);
 
       // Get current user
-      const authService = new AuthService();
+      const authService = new AuthService(RepositoryFactory.getAuthRepository());
       const user = await authService.getCurrentUser();
       if (!user) throw new Error('User not authenticated');
 

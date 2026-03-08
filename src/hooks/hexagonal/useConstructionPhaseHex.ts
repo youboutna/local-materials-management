@@ -212,7 +212,7 @@ export function useConstructionPhaseHex(projectId?: string) {
       setError(null);
       
       // Convert template to PhaseDTO structure
-      const phaseData: PhaseDTO = {
+      const phaseData = {
         id: Date.now().toString(),
         name: templateData.label || 'New Phase',
         description: templateData.description || '',
@@ -220,18 +220,22 @@ export function useConstructionPhaseHex(projectId?: string) {
         startDate: new Date().toISOString().split('T')[0],
         endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         estimatedDuration: templateData.estimatedDuration || 30,
-        status: 'not_started' as any, // Cast to any for now
+        status: 'not_started' as any,
+        type: 'construction' as any,
+        priority: 'medium' as any,
         budget: templateData.budget || 0,
         actualCost: 0,
-        progress: 0
-      };
+        progress: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } as PhaseDTO;
       
       const newPhase = await phaseService.createPhase(phaseData, projectId);
       
       // Convert domain entity back to DTO for UI
-      const phaseDTO = phaseService.toDTO(newPhase);
+      const phaseDTO = PhaseTransformer.toDTO(newPhase);
       
-      setPhases(prev => [...prev, phaseDTO]);
+      setPhases(prev => [...prev, phaseDTO as unknown as PhaseData]);
       
       toast({
         title: "Success",

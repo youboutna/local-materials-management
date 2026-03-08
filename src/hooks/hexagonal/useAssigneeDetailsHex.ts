@@ -29,7 +29,7 @@ async function fetchAssigneeDetails(assigneeId: string): Promise<AssigneeDetails
     return {
       type: 'employee',
       name: employee.fullName,
-      email: employee.email || '',
+      email: employee.email ?? '',
     };
   }
 
@@ -37,11 +37,10 @@ async function fetchAssigneeDetails(assigneeId: string): Promise<AssigneeDetails
   const suppliersResult = await supplierService.searchSuppliers({});
   const supplier = suppliersResult.suppliers.find((s) => s.id === assigneeId);
   if (supplier) {
-    const primaryContact = supplier.getPrimaryContact();
     return {
       type: 'supplier',
-      name: primaryContact?.name || supplier.name,
-      email: primaryContact?.email || supplier.email || '',
+      name: supplier.name,
+      email: '',
     };
   }
 

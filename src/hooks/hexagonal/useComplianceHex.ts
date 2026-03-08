@@ -109,7 +109,7 @@ export function useComplianceHex(projectId?: string) {
   }, [complianceItems]);
 
   const getComplianceAlerts = useCallback(() => {
-    const alerts = [];
+    const alerts: ComplianceAlert[] = [];
     
     // High priority pending items
     const highPriorityPending = complianceItems.filter(

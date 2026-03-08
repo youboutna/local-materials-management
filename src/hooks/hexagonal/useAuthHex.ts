@@ -459,7 +459,7 @@ export function useLoginHex() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
-      toast.success(`Bienvenue ${data.user?.name || data.user?.email || ''}!`);
+      toast.success(`Bienvenue ${data.user?.email || ''}!`);
       navigate('/dashboard');
     },
     onError: (error: any) => {

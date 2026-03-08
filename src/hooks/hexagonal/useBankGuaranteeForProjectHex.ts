@@ -28,8 +28,8 @@ async function fetchBankGuaranteeForProject(projectId: string): Promise<BankGuar
   }
 
   try {
-    const service = new BankGuaranteeService(RepositoryFactory.getBankGuaranteeRepository());
-    const guarantee = await service.getActiveGuaranteeForProject(projectId);
+    const guarantees = await BankGuaranteeService.getByProjectId(projectId);
+    const guarantee = guarantees.find(g => g.status === 'active') || guarantees[0];
 
     if (!guarantee) {
       return {
