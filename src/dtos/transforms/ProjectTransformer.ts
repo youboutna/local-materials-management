@@ -688,7 +688,7 @@ export class ProjectTransformer {
    * ProjectDetailDTO → ProjectWorkflowData
    * Converts detailed project DTO back to workflow data for form editing
    */
-  static detailDTOToWorkflow(dto: ProjectDetailDTO): ProjectWorkflowData {
+  static detailDTOToWorkflow(dto: ProjectDetailDTO): any {
     return {
       // Basic project data
       projectData: {
