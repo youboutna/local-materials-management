@@ -85,7 +85,7 @@ export function useConfiguration(): UseConfigurationReturn {
 
   // Validate configuration
   const validateConfig = useCallback((_config: DeploymentConfig) => {
-    return { isValid: true, errors: [] as string[] };
+    return { valid: true, errors: [] as string[] };
   }, []);
 
   // Get OAuth configuration

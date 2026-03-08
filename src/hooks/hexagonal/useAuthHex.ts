@@ -397,7 +397,7 @@ export function useAuthHex(): UseAuthHexResult {
     getUserActivityScore,
     getUserTrustLevel,
     getUserLastLoginDays,
-    getUserAnalytics,
+    
     validateUserWithReferential: async (targetUser: any, referentialType: string) => {
       try {
         switch (referentialType) {

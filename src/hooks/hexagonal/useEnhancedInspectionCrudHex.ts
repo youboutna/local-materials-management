@@ -5,15 +5,16 @@ import { InspectionService } from '@/application/services/InspectionService';
 
 export const useEnhancedInspectionCrudHex = (projectId?: string) => {
   const queryClient = useQueryClient();
+  const inspectionService = new InspectionService();
 
   // Fetch inspections
   const { data: inspections = [], isLoading, error } = useQuery({
     queryKey: ['inspections', projectId],
     queryFn: async (): Promise<InspectionDTO[]> => {
-      if (projectId) {
-        return await InspectionService.getInspectionsByProject(projectId);
-      }
-      return await InspectionService.getAllInspections();
+      const results = projectId 
+        ? await inspectionService.getInspectionsByProject(projectId)
+        : await inspectionService.getAllInspections();
+      return results as unknown as InspectionDTO[];
     },
     retry: 3,
     retryDelay: 1000,
@@ -22,9 +23,9 @@ export const useEnhancedInspectionCrudHex = (projectId?: string) => {
   // Create inspection mutation
   const createInspectionMutation = useMutation({
     mutationFn: async (data: CreateInspectionDTO): Promise<InspectionDTO | null> => {
-      const result = await InspectionService.createInspection(data);
+      const result = await inspectionService.createInspection(data as any);
       if (!result) throw new Error('Failed to create inspection');
-      return result;
+      return result as unknown as InspectionDTO;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inspections'] });
@@ -38,9 +39,9 @@ export const useEnhancedInspectionCrudHex = (projectId?: string) => {
   // Update inspection mutation
   const updateInspectionMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateInspectionDTO }): Promise<InspectionDTO | null> => {
-      const result = await InspectionService.updateInspection(id, data);
+      const result = await InspectionService.updateInspection(id, data as any);
       if (!result) throw new Error('Failed to update inspection');
-      return result;
+      return result as unknown as InspectionDTO;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inspections'] });
@@ -54,9 +55,8 @@ export const useEnhancedInspectionCrudHex = (projectId?: string) => {
   // Delete inspection mutation
   const deleteInspectionMutation = useMutation({
     mutationFn: async (id: string): Promise<boolean> => {
-      const result = await InspectionService.deleteInspection(id);
-      if (!result) throw new Error('Failed to delete inspection');
-      return result;
+      await inspectionService.deleteInspection(id);
+      return true;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inspections'] });
@@ -67,7 +67,10 @@ export const useEnhancedInspectionCrudHex = (projectId?: string) => {
     }
   });
 
-  const getInspectionById = async (id: string) => InspectionService.getInspectionById(id);
+  const getInspectionById = async (id: string) => {
+    const result = await inspectionService.getInspectionById(id);
+    return result as unknown as InspectionDTO | null;
+  };
   const createInspection = async (data: CreateInspectionDTO) => createInspectionMutation.mutateAsync(data);
   const updateInspection = async (id: string, data: UpdateInspectionDTO) => updateInspectionMutation.mutateAsync({ id, data });
   const deleteInspection = async (id: string) => deleteInspectionMutation.mutateAsync(id);

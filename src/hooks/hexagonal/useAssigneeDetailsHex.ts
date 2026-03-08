@@ -27,9 +27,9 @@ async function fetchAssigneeDetails(assigneeId: string): Promise<AssigneeDetails
   const employee = employeesResult.employees.find((e) => e.id === assigneeId);
   if (employee) {
     return {
-      type: 'employee',
+      type: 'employee' as const,
       name: employee.fullName,
-      email: employee.email ?? '',
+      email: employee.email || '',
     };
   }
 

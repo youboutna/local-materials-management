@@ -158,7 +158,7 @@ export const useDocumentUpdate = () => {
   );
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: UpdateDocumentRequestDto }) => {
+    mutationFn: async ({ id, data }: { id: string; data: UpdateDocumentDTO }) => {
       return await documentService.updateDocument(id, data);
     },
     onSuccess: () => {

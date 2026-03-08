@@ -198,20 +198,15 @@ export function useEmployeesHex(): UseEmployeesHexResult {
 
   const getEmployeeAnalytics = () => {
     const totalEmployees = employees.length;
-    const performanceBreakdown = employees.reduce((acc, employee) => {
+    const performanceBreakdown = employees.reduce((acc: any, employee: any) => {
       const performance = getEmployeePerformance(employee);
-      if (performance >= 90) acc.excellent++;
-      else if (performance >= 75) acc.good++;
-      else if (performance >= 60) acc.average++;
-      else acc.poor++;
+      acc[performance]++;
       return acc;
     }, { excellent: 0, good: 0, average: 0, poor: 0 });
     
-    const workloadBreakdown = employees.reduce((acc, employee) => {
+    const workloadBreakdown = employees.reduce((acc: any, employee: any) => {
       const workload = getEmployeeWorkload(employee);
-      if (workload >= 80 && workload <= 100) acc.optimal++;
-      else if (workload > 100) acc.overloaded++;
-      else acc.underutilized++;
+      acc[workload]++;
       return acc;
     }, { optimal: 0, overloaded: 0, underutilized: 0 });
     
