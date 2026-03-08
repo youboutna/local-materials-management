@@ -426,8 +426,8 @@ export class Task {
   }
 
   private validateStatus(status: TaskStatus): TaskStatus {
-    const validStatuses = Object.values(TaskStatus);
-    if (!validStatuses.includes(status)) {
+    const validStatuses = Object.values(TaskStatusValues);
+    if (!validStatuses.includes(status as any)) {
       throw new Error(`Invalid task status: ${status}`);
     }
     return status;

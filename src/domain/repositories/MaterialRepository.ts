@@ -1,5 +1,14 @@
 import { supabase } from '@/integrations/supabase/client';
-import { MaterialEntity, ProjectMaterialEntity } from '@/dtos/entities/MaterialDTO';
+import { MaterialDTO as MaterialEntity } from '@/dtos/entities/MaterialDTO';
+
+// Local type for project_materials table rows
+interface ProjectMaterialEntity {
+  id: string;
+  project_id: string;
+  material_id: string;
+  quantity: number;
+  [key: string]: unknown;
+}
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export class MaterialRepository {

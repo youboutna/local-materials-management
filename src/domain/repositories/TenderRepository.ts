@@ -1,6 +1,6 @@
 // Repository pattern for Tender CRUD operations
 import { supabase } from '@/integrations/supabase/client';
-import { TenderEntity, TenderSubmissionEntity } from '@/dtos/entities/TenderDTO';
+import { TenderDTO as TenderEntity, TenderSubmissionDTO as TenderSubmissionEntity } from '@/dtos/entities/TenderDTO';
 
 export class TenderRepository {
   // ============= Tender CRUD =============

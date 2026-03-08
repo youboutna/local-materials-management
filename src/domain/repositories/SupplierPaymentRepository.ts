@@ -1,6 +1,23 @@
 // Repository for Supplier Payment Requests
 import { supabase } from '@/integrations/supabase/client';
-import { SupplierPaymentRequestEntity } from '@/dtos/entities/TenderDTO';
+// Local type for supplier_payment_requests table rows
+interface SupplierPaymentRequestEntity {
+  id: string;
+  supplier_id: string;
+  project_id: string | null;
+  amount: number;
+  description: string;
+  payment_reason: string;
+  supporting_documents: string[];
+  status: string;
+  requested_date: string;
+  notes: string | null;
+  approved_date: string | null;
+  paid_date: string | null;
+  created_at: string;
+  updated_at: string;
+  [key: string]: unknown;
+}
 
 export class SupplierPaymentRepository {
   /**
