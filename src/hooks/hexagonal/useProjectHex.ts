@@ -64,7 +64,8 @@ export interface UseProjectByIdHexResult {
 function useProjectService() {
   return useMemo(() => {
     const repository = RepositoryFactory.getProjectRepository();
-    return new ProjectService(repository);
+    const stakeholderRepo = RepositoryFactory.getProjectStakeholderRepository();
+    return new ProjectService(repository, stakeholderRepo);
   }, []);
 }
 
