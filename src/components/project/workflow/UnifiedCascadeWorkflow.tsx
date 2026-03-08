@@ -82,7 +82,7 @@ const UnifiedCascadeWorkflow: React.FC<UnifiedCascadeWorkflowProps> = ({
   
   const phaseSteps = steps.length > 0 ? steps : (phase.steps || []);
   const phaseProgress = phase.progress || 0;
-  const contractAmount = phase.estimated_cost || 0;
+  const contractAmount = (phase as any).estimatedCost || (phase as any).estimated_cost || 0;
   const { stepProgress, lastApprovedProgress, totalPaid, pendingInspections } = workflowMetrics;
 
   // Calcul décompte Mauritanie
