@@ -59,7 +59,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
     },
   });
 
-  const { data: suppliersList } = useSuppliersQuery({
+  const { data: suppliersList } = useQuery({
     queryKey: ['suppliers'],
     queryFn: async () => {
       const { SupplierService } = await import('@/application/services/SupplierService');
