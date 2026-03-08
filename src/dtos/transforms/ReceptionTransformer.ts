@@ -171,7 +171,9 @@ export class ReceptionTransformer {
       isRequired: entity.isRequired,
       isSubmitted: entity.isSubmitted,
       validationStatus: entity.validationStatus,
-      validationNotes: entity.validationNotes
+      validationNotes: entity.validationNotes,
+      createdAt: entity.uploadedAt.toISOString(),
+      updatedAt: entity.uploadedAt.toISOString()
     };
   }
 
