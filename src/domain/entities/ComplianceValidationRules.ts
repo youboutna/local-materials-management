@@ -164,7 +164,7 @@ export class ComplianceValidationEngine {
       score -= 5;
     }
 
-    if (item.type === 'bank_guarantee' && (!item.amount || item.amount <= 0)) {
+    if (item.type === 'bank_guarantee' && (!(item as any).amount || (item as any).amount <= 0)) {
       errors.push('Bank guarantee amount must be greater than 0');
       score -= 30;
     }
