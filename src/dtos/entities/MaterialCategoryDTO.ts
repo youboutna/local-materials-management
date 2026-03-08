@@ -3,7 +3,7 @@
  * Migrated from @/types/materialCategories
  */
 
-export interface MaterialCategory {
+export interface MaterialCategoryConfig {
   id: string;
   name: string;
   description?: string;
