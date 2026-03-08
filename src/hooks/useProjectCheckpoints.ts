@@ -55,13 +55,10 @@ interface ProjectCheckpoint {
 
 
 interface InspectionResult {
-
   id: string;
-
-  status: 'pending' | 'completed';
-
-  phase_id: string;
-
+  status: string;
+  phase_id: string | null;
+  [key: string]: any;
 }
 
 
