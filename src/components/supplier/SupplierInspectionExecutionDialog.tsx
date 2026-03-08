@@ -225,10 +225,10 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
               await createNotification(
                 employee.user_id,
                 'Résultats d\'inspection disponibles',
-                `Inspection complétée: ${inspection.projects?.title} - ${progress}% d'avancement`,
-                'inspection',
+                `Inspection complétée: ${(inspection as any).projects?.title || inspection.projectId || ''} - ${progress}% d'avancement`,
+                'info' as any,
                 inspection.id,
-                { progress, project_id: inspection.project_id, documents: uploadedDocs }
+                { progress, project_id: inspection.projectId || inspection.project_id, documents: uploadedDocs }
               );
             }
           }
