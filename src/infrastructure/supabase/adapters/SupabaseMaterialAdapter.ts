@@ -214,7 +214,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       projectId: pm.project_id as string,
       materialId: pm.material_id as string,
       quantity: pm.quantity as number,
-      material: pm.materials ? Material.fromDatabase(pm.materials as Record<string, unknown>) : null,
+      material: pm.materials ? MaterialTransformer.fromSupabase(pm.materials as Record<string, unknown>) : null,
     }));
   }
 
