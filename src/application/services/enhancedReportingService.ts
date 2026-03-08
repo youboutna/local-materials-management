@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { supabase as publicClient } from '@/integrations/supabase/client';
 import { ProjectDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import { ProjectCalculationService } from '@/application/services/ProjectCalculationService';

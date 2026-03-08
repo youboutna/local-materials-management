@@ -4,7 +4,7 @@
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import type { ExtendedSupabaseClient } from '@/types/supabase-helpers';
 import { NotificationService } from './NotificationService';
 import { DocumentService } from './DocumentService';
