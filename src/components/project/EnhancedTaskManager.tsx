@@ -313,6 +313,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   // Delete task mutation
   const deleteTaskMutation = useMutation({
     mutationFn: async (id: string) => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase
         .from('task_assignments')
         .delete()
