@@ -80,7 +80,7 @@ export const calculateInsuranceMetrics = async (
 
   // Group by insurance company
   const companyStats = certificates.reduce((acc, cert) => {
-    const company = cert.insurance_company;
+    const company = cert.insurance_company || 'Inconnu';
     if (!acc[company]) {
       acc[company] = { count: 0, totalCoverage: 0 };
     }
