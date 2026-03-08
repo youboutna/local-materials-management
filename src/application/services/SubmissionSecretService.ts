@@ -217,8 +217,8 @@ export class SubmissionSecretService {
         throw new AppError(ErrorCode.NOT_FOUND, 'Secret not found');
       }
 
-      entity.isActive = false;
-      await this.repository.save(entity);
+      const deactivated = entity.deactivate();
+      await this.repository.save(deactivated);
     } catch (error) {
       console.error('SubmissionSecretService.deactivateSecret failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to deactivate secret');
