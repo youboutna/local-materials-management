@@ -327,12 +327,12 @@ export function useStakeholdersHex(projectId?: string) {
   };
 
   // Filtrage des parties prenantes
-  const getEmployees = () => stakeholders.filter(s => s.isEmployee);
-  const getExternalStakeholders = () => stakeholders.filter(s => s.isExternal);
-  const getSuppliers = () => stakeholders.filter(s => s.isSupplier);
-  const getInspectors = () => stakeholders.filter(s => s.isInspector);
-  const getManagers = () => stakeholders.filter(s => s.isManager);
-  const getActiveStakeholders = () => stakeholders.filter(s => s.isActiveInProject);
+  const getEmployees = () => stakeholders.filter(s => s.employeeId);
+  const getExternalStakeholders = () => stakeholders.filter(s => !s.isInternal);
+  const getSuppliers = () => stakeholders.filter(s => s.stakeholderType === 'vendor' as any);
+  const getInspectors = () => stakeholders.filter(s => s.role === 'inspector' as any);
+  const getManagers = () => stakeholders.filter(s => s.role === 'project_manager' as any);
+  const getActiveStakeholders = () => stakeholders.filter(s => s.isActive);
   const getPrimaryStakeholders = () => stakeholders.filter(s => s.isPrimary);
 
   return {

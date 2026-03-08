@@ -277,10 +277,11 @@ export function useComplianceReportHex(projectId: string): UseComplianceReportRe
     queryKey: ['compliance-report', projectId],
     queryFn: async (): Promise<any> => {
       if (!projectId) throw new Error('Project ID is required');
-      return await reportService.generateComplianceReport({
+      // ReportService doesn't have generateComplianceReport - use generateProjectReport with compliance type
+      return await reportService.generateProjectReport({
         projectId,
-        includeRecommendations: true,
-        includeHistory: true
+        reportType: 'compliance',
+        includeCompliance: true
       });
     },
     enabled: !!projectId
@@ -288,7 +289,11 @@ export function useComplianceReportHex(projectId: string): UseComplianceReportRe
 
   const generateReportMutation = useMutation({
     mutationFn: async (data: GenerateComplianceReportRequestDto): Promise<any> => {
-      return await reportService.generateComplianceReport(data);
+      return await reportService.generateProjectReport({
+        projectId: data.projectId,
+        reportType: 'compliance',
+        includeCompliance: true
+      });
     },
     onSuccess: () => {
       toast.success('Rapport de conformité généré');

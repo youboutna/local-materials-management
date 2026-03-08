@@ -13,9 +13,9 @@ import { UserService } from '@/application/services/UserService';
 import { ProjectService } from '@/application/services/ProjectService';
 import { MaterialService } from '@/application/services/MaterialService';
 import { EmployeeService } from '@/application/services/EmployeeService';
-import { Material } from '@/domain/entities/Material';
-import { Supplier } from '@/domain/entities/Supplier';
-import { Employee } from '@/domain/entities/Employee';
+import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
+import { SupplierDTO } from '@/dtos/entities/SupplierDTO';
+import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
 
 // Configuration commune pour éviter les appels en continu
 const COMMON_QUERY_OPTIONS = {

@@ -38,7 +38,7 @@ export interface UseProjectsEnhancedResult {
 
 // Helper functions for project calculations
 function getProjectHealthStatus(project: ProjectDTO): 'healthy' | 'warning' | 'critical' {
-  if (project.progress >= 80 && project.status !== 'en_retard') return 'healthy';
+  if (project.progress >= 80 && project.status !== 'en_retard' && project.status !== 'suspendu') return 'healthy';
   if (project.progress >= 40) return 'warning';
   return 'critical';
 }

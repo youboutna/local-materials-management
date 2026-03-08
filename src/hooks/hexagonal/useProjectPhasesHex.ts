@@ -66,7 +66,7 @@ export function useProjectPhasesHex(projectId?: string) {
     mutationFn: async (phasesData: PhaseFormData[]) => {
       const phaseRepo = RepositoryFactory.getPhaseRepository();
       // Create phases one by one since createMany doesn't exist
-      const results = [];
+      const results: any[] = [];
       for (const phaseData of phasesData) {
         const result = await phaseRepo.create(phaseData as any);
         results.push(result);

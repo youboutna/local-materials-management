@@ -126,7 +126,7 @@ export function useSupplierPortalHex(selectedTenderId?: string) {
         {
           tender_id: tender.id,
           user_id: user.id,
-          supplier_name: profile?.full_name || 'Fournisseur',
+          supplier_name: profile?.fullName || 'Fournisseur',
           supplier_email: user.email || '',
           submission_date: new Date().toISOString(),
           status: 'submitted'
