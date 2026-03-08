@@ -127,8 +127,8 @@ export class ComplianceValidationEngine {
       name: 'Require Documents for Critical',
       condition: (item) => 
         ['regulatory', 'financial', 'environmental'].includes(item.type) && 
-        item.riskLevel === 'critical' && 
-        (!item.documents || item.documents.length === 0),
+        item.riskLevel === 'critical' &&
+        (!(item as any).documents || (item as any).documents.length === 0),
       action: 'Critical compliance items require supporting documents',
       priority: 'high'
     }
