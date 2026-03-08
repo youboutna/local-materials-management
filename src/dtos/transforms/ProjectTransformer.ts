@@ -515,7 +515,7 @@ export class ProjectTransformer {
       // Procurement and materials
       materialsBudget: formData.materialsBudget as number,
       procurementLeadTime: formData.procurementLeadTime as number,
-      resourceAssignment: formData.resourceAssignment as string,
+      resourceAssignment: formData.resourceAssignment as ProjectResource[] | undefined,
 
       // References and details
       projectReferenceNumber: formData.projectReferenceNumber as string,
