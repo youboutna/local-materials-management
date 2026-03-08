@@ -227,6 +227,7 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
     if (!confirm('Êtes-vous sûr de vouloir supprimer cette phase?')) return;
 
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase
         .from('project_phases')
         .delete()
