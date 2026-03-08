@@ -1,6 +1,5 @@
 /**
  * useProjectEditHex - Hook Hexagonal pour l'Édition de Projets
- * Pont intelligent entre l'UI et le service hexagonal
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -8,7 +7,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 
 // Import DTOs
-import { ProjectDTO, UpdateProjectDTO, CreateProjectDTO } from "@/dtos/entities/ProjectDTO";
+import { ProjectDTO, UpdateProjectDTO } from "@/dtos/entities/ProjectDTO";
 import { PhaseDTO } from "@/dtos/entities/PhaseDTO";
 import { ProjectWorkflowData, SaveResult, ValidationResult } from "@/dtos/workflows/ProjectWorkflowDTOs";
 
@@ -56,42 +55,34 @@ export interface ProjectEditFormData extends ProjectEditUIState {
   id?: string;
 }
 
-/**
- * Step 1: Load project data from database
- */
 async function loadProjectForEdit(projectId: string): Promise<ProjectEditFormData | null> {
   try {
-    // Initialize services with proper repository dependencies
     const projectService = new ProjectService(
       RepositoryFactory.getProjectRepository(),
       RepositoryFactory.getProjectStakeholderRepository()
     );
     const referentialService = ReferentialService.getInstance();
     
-    // Step 7: Adapter returns Entity from Supabase
     const projectDetail = await projectService.getProjectWithDetails(projectId);
     if (!projectDetail) return null;
 
-    // Load stakeholders
     const projectStakeholderService = new ProjectStakeholderService(
       RepositoryFactory.getProjectRepository(),
       RepositoryFactory.getProjectStakeholderRepository()
     );
     const stakeholdersData = await projectStakeholderService.getProjectStakeholders(projectId);
 
-    // Validate project referential if exists
     if (projectDetail.projectReference) {
       try {
         const referential = await referentialService.getReferential(projectDetail.projectReference as any);
         if (!referential) {
-          console.warn(`Referential ${projectDetail.projectReference} not found, using default values`);
+          console.warn(`Referential ${projectDetail.projectReference} not found`);
         }
       } catch (error) {
         console.error('Error validating project referential:', error);
       }
     }
 
-    // Map stakeholders to form format
     const delegation: Record<string, string> = {};
     const externalStakeholders: any[] = [];
 
@@ -114,7 +105,6 @@ async function loadProjectForEdit(projectId: string): Promise<ProjectEditFormDat
       }
     });
 
-    // Transform project detail to form data with proper referential validation
     return {
       id: projectDetail.id,
       title: projectDetail.title || '',
@@ -154,12 +144,10 @@ async function loadProjectForEdit(projectId: string): Promise<ProjectEditFormDat
 export function useProjectEditHex(projectId?: string) {
   const queryClient = useQueryClient();
   
-  // Step 9: Local state for form data
   const [formData, setFormData] = useState<ProjectEditFormData | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [originalData, setOriginalData] = useState<ProjectEditFormData | null>(null);
 
-  // Step 1: Load project data via query
   const { 
     data: loadedData, 
     isLoading, 
@@ -172,7 +160,6 @@ export function useProjectEditHex(projectId?: string) {
     staleTime: 60_000,
   });
 
-  // Step 9: Update local state when data loads
   useEffect(() => {
     if (loadedData && !formData) {
       setFormData(loadedData);
@@ -180,57 +167,53 @@ export function useProjectEditHex(projectId?: string) {
     }
   }, [loadedData, formData]);
 
-  // Step 2: Transform form data to UpdateProjectDTO
   const transformFormToUpdateRequest = useCallback((data: ProjectEditFormData): UpdateProjectDTO => {
-    return ProjectWorkflowTransforms.formToUpdateRequest(data as Record<string, unknown>);
+    return ProjectWorkflowTransforms.formToUpdateRequest(data as unknown as Record<string, unknown>);
   }, []);
 
-  // Steps 2-8: Save project mutation with referential validation
   const saveMutation = useMutation({
     mutationFn: async (data: ProjectEditFormData): Promise<SaveResult> => {
       if (!projectId) throw new Error("Project ID required");
 
       try {
-        // Initialize services
         const projectService = new ProjectService(
           RepositoryFactory.getProjectRepository(),
           RepositoryFactory.getProjectStakeholderRepository()
         );
         const referentialService = ReferentialService.getInstance();
         
-        // Step 2: Transform form data to UpdateProjectDTO
         const updateRequest = transformFormToUpdateRequest(data);
         
-        // Step 3: Validate project referential if exists
         if (data.project_reference) {
           try {
             const referential = await referentialService.getReferential(data.project_reference as any);
             if (!referential) {
               throw new Error(`Referential ${data.project_reference} not found`);
             }
-            console.log('✅ Project referential validated:', referential.code);
           } catch (error) {
             console.error('❌ Referential validation failed:', error);
             throw new Error(`Invalid project referential: ${data.project_reference}`);
           }
         }
 
-        // Step 4: Update project via service
         const updatedProject = await projectService.update(projectId, updateRequest);
         if (!updatedProject) {
           throw new Error("Failed to update project");
         }
 
-        // Step 5: Update phases if provided
+        // Update phases if provided
         if (data.phases && data.phases.length > 0) {
           const phaseService = new PhaseService(RepositoryFactory.getPhaseRepository());
-          await phaseService.saveProjectPhases(projectId, data.phases);
+          // Use available phase methods instead of non-existent saveProjectPhases
+          for (const phase of data.phases) {
+            if (phase.id) {
+              await phaseService.updatePhase(phase.id, phase);
+            } else {
+              await phaseService.createPhase({ ...phase, projectId });
+            }
+          }
         }
 
-        // Step 6-7: Database operation completed, adapter returns entity
-        console.log('✅ Project saved successfully:', updatedProject.id);
-
-        // Step 8: Service returns DTO, hook updates state
         return {
           success: true,
           data: {
@@ -239,25 +222,13 @@ export function useProjectEditHex(projectId?: string) {
             status: updatedProject.status,
             progress: updatedProject.progress || 0,
             updatedAt: updatedProject.updatedAt
-          },
-          metadata: {
-            lastSavedAt: new Date().toISOString(),
-            totalSteps: 7,
-            completedSteps: 0,
-            progressPercentage: formData?.progress || 0
           }
         };
       } catch (error) {
         console.error('❌ Save project error:', error);
         return {
           success: false,
-          errors: [error instanceof Error ? error.message : 'Unknown error occurred'],
-          metadata: {
-            lastSavedAt: new Date().toISOString(),
-            totalSteps: 7,
-            completedSteps: 0,
-            progressPercentage: formData?.progress || 0
-          }
+          errors: [error instanceof Error ? error.message : 'Unknown error occurred']
         };
       }
     },
@@ -268,7 +239,6 @@ export function useProjectEditHex(projectId?: string) {
           description: "Projet sauvegardé avec succès",
         });
         setIsDirty(false);
-        // Invalidate related queries
         queryClient.invalidateQueries({ queryKey: ["project-edit-hex", projectId] });
         queryClient.invalidateQueries({ queryKey: ["project-materials", projectId] });
       }
@@ -282,21 +252,11 @@ export function useProjectEditHex(projectId?: string) {
     },
   });
 
-  // Validate form data
   const validateFormData = useCallback((data: ProjectEditFormData): ValidationResult => {
     const errors: string[] = [];
-    const warnings: string[] = [];
 
     if (!data.title?.trim()) {
       errors.push("Le titre est obligatoire");
-    }
-
-    if (!data.location?.trim()) {
-      warnings.push("La localisation est recommandée");
-    }
-
-    if (data.budget <= 0) {
-      warnings.push("Le budget devrait être supérieur à 0");
     }
 
     if (data.startDate && data.endDate) {
@@ -310,11 +270,9 @@ export function useProjectEditHex(projectId?: string) {
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
     };
   }, []);
 
-  // Save with validation
   const saveProject = useCallback(async (): Promise<SaveResult> => {
     if (!formData) {
       return { success: false, errors: ["No form data"] };
@@ -328,7 +286,6 @@ export function useProjectEditHex(projectId?: string) {
     return saveMutation.mutateAsync(formData);
   }, [formData, validateFormData, saveMutation]);
 
-  // Reset form to original data
   const resetForm = useCallback(() => {
     if (originalData) {
       setFormData(originalData);
@@ -336,7 +293,6 @@ export function useProjectEditHex(projectId?: string) {
     }
   }, [originalData]);
 
-  // Update form data
   const updateFormData = useCallback((updates: Partial<ProjectEditFormData>) => {
     setFormData(prev => {
       if (!prev) return prev;
@@ -346,63 +302,24 @@ export function useProjectEditHex(projectId?: string) {
     });
   }, []);
 
-  // Transform to UI state
   const uiState = useCallback((): ProjectEditUIState | null => {
     if (!formData) return null;
-
-    // Use transformer for UI conversion
-    return {
-      id: formData.id,
-      title: formData.title,
-      description: formData.description,
-      location: formData.location,
-      status: formData.status,
-      budget: formData.budget,
-      progress: formData.progress,
-      startDate: formData.startDate,
-      endDate: formData.endDate,
-      thumbnail: formData.thumbnail,
-      teamSize: formData.teamSize,
-      financing_source: formData.financing_source,
-      market_type: formData.market_type,
-      selection_mode: formData.selection_mode,
-      project_reference: formData.project_reference,
-      main_contractor: formData.main_contractor,
-      engineering_consultant: formData.engineering_consultant,
-      allows_initial_payment: formData.allows_initial_payment,
-      initial_payment_percentage: formData.initial_payment_percentage,
-      current_phase: formData.current_phase,
-      current_stage: formData.current_stage,
-      coordinates: formData.coordinates,
-      phases: formData.phases,
-      stakeholders: formData.stakeholders,
-      delegation: formData.delegation,
-      materials: formData.materials
-    };
+    return { ...formData };
   }, [formData]);
 
   return {
-    // Data
     formData,
     uiState,
     originalData,
-    
-    // Loading states
     isLoading,
     isSaving: saveMutation.isPending,
     error,
-    
-    // Actions
     saveProject,
     refetch,
     resetForm,
     updateFormData,
     validateFormData,
-    
-    // State
     isDirty,
-    
-    // Direct mutation access for advanced use
     saveMutation,
   };
 }

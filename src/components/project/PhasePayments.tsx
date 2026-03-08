@@ -372,7 +372,7 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
                   </Badge>
                   <Badge variant="outline" className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-                    {new Date(payment.payment_date).toLocaleDateString()}
+                    {payment.payment_date ? new Date(payment.payment_date).toLocaleDateString() : 'N/A'}
                   </Badge>
                   {payment.progress_at_payment && (
                     <Badge>
