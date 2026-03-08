@@ -129,7 +129,21 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
   // Fetch progress
   const { data: progress } = useQuery({
     queryKey: ['milestone-progress', projectId, phaseId],
-    queryFn: () => MilestoneService.getMilestoneProgress(projectId, phaseId),
+    queryFn: async () => {
+      const service = getMilestoneService();
+      const raw = await service.getProjectMilestones(projectId);
+      const filtered = raw.filter((m: any) => m.phase_id === phaseId);
+      return {
+        total_milestones: filtered.length,
+        completed_milestones: filtered.filter((m: any) => m.status === 'completed').length,
+        delayed_milestones: filtered.filter((m: any) => m.status === 'delayed').length,
+        weighted_progress: Math.round(filtered.filter((m: any) => m.status === 'completed').length / Math.max(1, filtered.length) * 100),
+        overdue_milestones: [],
+        upcoming_milestones: [],
+        schedule_performance_index: 1,
+        critical_path_status: 'on_track' as const,
+      };
+    },
     enabled: !!projectId && !!phaseId,
   });
 
