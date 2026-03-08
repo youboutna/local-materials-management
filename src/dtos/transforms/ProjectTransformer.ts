@@ -268,8 +268,7 @@ export class ProjectTransformer {
       checkScheduleLastRun: project.checkScheduleLastRun as Record<string, unknown> | undefined,
       closureNotes: project.closureNotes,
       completionDate: project.completionDate?.toISOString(),
-      coordinatesLatitude: project.coordinates?.latitude,
-      coordinatesLongitude: project.coordinates?.longitude,
+      // coordinates already mapped via latitude/longitude above
       donorOrganization: project.donorOrganization,
       estimatedDays: project.estimatedDays,
       forme: project.forme,
