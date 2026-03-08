@@ -207,7 +207,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
       const { data: stakeholders } = await supabase
         .from('project_stakeholders')
         .select('employee_id, supplier_id')
-        .eq('project_id', inspection.project_id)
+        .eq('project_id', inspection.projectId || inspection.project_id || '')
         .eq('stakeholder_entity_type', 'employee');
 
       // Notify contractors

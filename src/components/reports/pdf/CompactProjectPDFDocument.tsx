@@ -1,4 +1,4 @@
-import { EVMMetrics, PERTAnalysis, ProjectDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
+import { ProjectDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { ProjectReportDTO } from '@/dtos/entities/ProjectReportDTO';
 import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import { format } from 'date-fns';

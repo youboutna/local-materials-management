@@ -16,10 +16,10 @@ import { fr } from 'date-fns/locale';
 import { useNotifications } from '@/hooks/useNotifications';
 import { NotificationService } from '@/application/services/NotificationService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { getTenderReportingService, TenderReportingService, TenderReportData, TenderReportConfig as TenderReportConfigDTO, ReportGenerationResultDTO } from '@/application/services/TenderReportingService';
+import { TenderReportingService, TenderReportData } from '@/application/services/TenderReportingService';
 import { ReportFormatting } from '@/utils/reportFormatting';
 import { TenderPDFDocument } from './pdf/TenderPDFDocument';
-import { TenderDTO, TenderReportConfig as TenderReportConfigDTO, ReportGenerationResultDTO } from '@/dtos/reports/reportDTOs';
+import { TenderDTO } from '@/dtos/entities/TenderDTO';
 
 interface TenderReportGeneratorProps {
   tender: TenderDTO;

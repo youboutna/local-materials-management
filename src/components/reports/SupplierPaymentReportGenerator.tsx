@@ -15,10 +15,11 @@ import { fr } from 'date-fns/locale';
 import { useNotifications } from '@/hooks/useNotifications';
 import { NotificationService } from '@/application/services/NotificationService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { getSupplierPaymentReportingService, SupplierPaymentReportingService, SupplierPaymentReportData, SupplierPaymentReportConfig as SupplierPaymentReportConfigDTO, ReportGenerationResultDTO } from '@/application/services/SupplierPaymentReportingService';
+import { SupplierPaymentReportingService, SupplierPaymentReportData } from '@/application/services/SupplierPaymentReportingService';
 import { ReportFormatting } from '@/utils/reportFormatting';
 import { SupplierPaymentPDFDocument } from './pdf/SupplierPaymentPDFDocument';
-import { SupplierDTO, PaymentDTO, SupplierPaymentReportConfig, ReportGenerationResultDTO } from '@/dtos/reports/reportDTOs';
+import { SupplierDTO } from '@/dtos/entities/SupplierDTO';
+import { PaymentDTO } from '@/dtos/entities/PaymentDTO';
 
 interface SupplierPaymentReportGeneratorProps {
   supplier: SupplierDTO;
