@@ -671,6 +671,11 @@ export class ProjectTransformer {
       stakeholders: relatedData?.stakeholders ? StakeholderTransformer.manyToDTO(relatedData.stakeholders) : [],
       inspections: relatedData?.inspections ? InspectionTransformer.manyToDTO(relatedData.inspections) : [],
 
+      // Required by ProjectDetailDTO
+      alerts: [],
+      constructionMilestones: relatedData?.milestones ? MilestoneTransformer.manyToDTO(relatedData.milestones) : [],
+      tenders: [],
+
       // Aliases for UI compatibility
       plannedPhases: relatedData?.phases ? PhaseTransformer.manyToDTO(relatedData.phases) : [],
       expenses: relatedData?.payments ? PaymentTransformer.manyToDTO(relatedData.payments) : [],
