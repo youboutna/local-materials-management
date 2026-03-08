@@ -17,7 +17,7 @@ export interface MaterialSubcategory {
   unit: string;
 }
 
-export const MATERIAL_CATEGORIES: MaterialCategory[] = [
+export const MATERIAL_CATEGORIES: MaterialCategoryConfig[] = [
   {
     id: 'construction',
     name: 'Matériaux de construction',
