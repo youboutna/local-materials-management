@@ -26,7 +26,7 @@ export interface GetTenderByIdRequestDto {
 }
 
 export interface CreateTenderDocumentRequestDto {
-  data: CreateTenderDocumentDTO;
+  data: any; // CreateTenderDocumentDTO
 }
 
 export interface TenderSharingSecretDTO {

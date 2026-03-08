@@ -31,7 +31,7 @@ export interface CreateTenderSubmissionDTO extends BaseEntityDTO {
 /**
  * Interface for updating tender submissions
  */
-export interface UpdateTenderSubmissionDTO extends BaseEntityDTO {
+export interface UpdateTenderSubmissionDTO {
   id?: string;
   status?: 'submitted' | 'under_review' | 'approved' | 'rejected';
   documents?: UploadedDocument[];

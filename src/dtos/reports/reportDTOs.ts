@@ -630,7 +630,7 @@ export interface TenderEstimateDTO {
   profitMarginPercentage: number;
   validUntil: Date;
   tenderId: string;
-  tender: ApplicationTenderDTO;
+  tender: any; // ApplicationTenderDTO
   items: TenderEstimateItemDTO[];
   totals: TenderEstimateTotalsDTO;
   createdBy: string;

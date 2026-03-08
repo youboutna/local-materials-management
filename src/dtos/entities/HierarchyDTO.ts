@@ -120,9 +120,9 @@ export interface HierarchyValidationDTO {
 export interface HierarchySearchCriteriaDTO {
   projectId: string;
   nodeType?: HierarchyNode['type'];
-  status?: HierarchyNode['metadata']['status'];
+  status?: string;
   assignedTo?: string;
-  priority?: HierarchyNode['metadata']['priority'];
+  priority?: string;
   dateRange?: {
     startDate?: string;
     endDate?: string;

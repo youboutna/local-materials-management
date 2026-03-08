@@ -196,7 +196,7 @@ export interface TenderSubmissionDTO {
   documents?: TenderDocumentDTO[];
 }
 
-export interface TenderDocumentWithDetails extends TenderDocument {
+export interface TenderDocumentWithDetails extends TenderDocumentDTO {
   document?: {
     id: string;
     title: string;

@@ -40,7 +40,7 @@ export interface CreateQuantityTakeoffData extends BaseFormDTO<QuantityTakeoffDT
 /**
  * Update data for quantity takeoffs
  */
-export interface UpdateQuantityTakeoffData extends Partial<BaseFormDTO> {
+export interface UpdateQuantityTakeoffData extends Partial<BaseFormDTO<QuantityTakeoffDTO>> {
   quantity?: number;
   unit?: string;
   unitPrice?: number;

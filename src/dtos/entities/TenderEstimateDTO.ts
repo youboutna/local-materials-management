@@ -292,8 +292,8 @@ export interface TenderEstimateStatsDto {
 
 export interface TenderEstimateValidationDto {
   is_valid: boolean;
-  errors: TenderEstimateValidationErrorDto[];
-  warnings: TenderEstimateValidationWarningDto[];
+  errors: string[] | TenderEstimateValidationErrorDto[];
+  warnings: string[] | TenderEstimateValidationWarningDto[];
 }
 
 export interface TenderEstimateValidationErrorDto {

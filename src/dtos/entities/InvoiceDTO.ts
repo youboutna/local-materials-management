@@ -134,7 +134,7 @@ export interface InvoiceSearchCriteriaDTO {
   };
   searchText?: string;
   category?: string;
-  priority?: InvoiceDTO['metadata']['priority'];
+  priority?: 'low' | 'medium' | 'high';
 }
 
 export interface InvoiceSearchResultDTO {
