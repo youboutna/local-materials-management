@@ -33,6 +33,18 @@ export enum UserRole {
 }
 
 // UserRole Entity from UserRoleSomelec - Enhanced domain entity
+// Props interface for UserRoleEntity factory
+export interface UserRoleEntityProps {
+  id: string;
+  userId: string;
+  roleName: SomelecRole;
+  status?: UserRoleStatus;
+  assignedAt?: Date;
+  assignedBy?: string;
+  revokedAt?: Date;
+  expiresAt?: Date;
+}
+
 export class UserRoleEntity {
   private readonly _id: string;
   private readonly _userId: string;
@@ -61,6 +73,20 @@ export class UserRoleEntity {
     this._assignedBy = assignedBy;
     this._revokedAt = revokedAt ? new Date(revokedAt) : undefined;
     this._expiresAt = expiresAt ? new Date(expiresAt) : undefined;
+  }
+
+  // ============= Factory Method =============
+  static create(props: UserRoleEntityProps): UserRoleEntity {
+    return new UserRoleEntity(
+      props.id,
+      props.userId,
+      props.roleName,
+      props.status || UserRoleStatus.ACTIVE,
+      props.assignedAt || new Date(),
+      props.assignedBy,
+      props.revokedAt,
+      props.expiresAt
+    );
   }
 
   // Getters

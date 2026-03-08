@@ -256,6 +256,23 @@ export class Location {
     };
   }
 
+  // ============= Factory Method =============
+  static create(props: {
+    id: string;
+    code: string;
+    name: string;
+    nameAr: string;
+    type: LocationType;
+    coordinates?: Coordinates;
+    parentCode?: string;
+    economicImportance?: EconomicImportance;
+    population?: number;
+    createdAt?: Date;
+    updatedAt?: Date;
+  }): Location {
+    return new Location(props);
+  }
+
   private toRadians(degrees: number): number {
     return degrees * (Math.PI / 180);
   }
