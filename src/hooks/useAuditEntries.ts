@@ -52,11 +52,11 @@ const fetchAuditEntries = async (
     // Transform to AuditEntry format and limit to 10
     return inspections
       .slice(0, 10)
-      .map((inspection: AuditEntry) => ({
+      .map((inspection: any) => ({
         id: inspection.id,
         date: inspection.date || inspection.createdAt || '',
         status: inspection.status || '',
-        inspector: inspection.inspector || '',
+        inspector: typeof inspection.inspector === 'string' ? inspection.inspector : (inspection.inspector?.name || ''),
         comments: inspection.comments || null,
         created_at: inspection.createdAt || inspection.created_at || ''
       }));

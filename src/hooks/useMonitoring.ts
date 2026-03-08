@@ -1,7 +1,30 @@
 // useMonitoring.ts - Hook for centralized monitoring
 import { useState, useEffect, useCallback } from 'react';
-import { ProjectData, ActionLabels, EscalationRoles } from '@/dtos/entities/ProjectDTO';
-import { getMonitoringService, MonitoringService, MonitoringConfiguration, MonitoringMetrics, defaultMonitoringConfig } from '@/application/services/MonitoringService';
+import { MonitoringService } from '@/application/services/MonitoringService';
+
+interface MonitoringMetrics {
+  projectHealth: 'excellent' | 'good' | 'warning' | 'critical';
+  automationRate: number;
+  manualInterventionsRequired: number;
+}
+
+interface MonitoringConfiguration {
+  checkIntervals: {
+    insurance: number;
+    delays: number;
+    inspections: number;
+    financial: number;
+  };
+}
+
+const defaultMonitoringConfig: MonitoringConfiguration = {
+  checkIntervals: {
+    insurance: 24,
+    delays: 12,
+    inspections: 8,
+    financial: 24,
+  }
+};
 
 interface UseMonitoringResult {
   metrics: MonitoringMetrics | null;
@@ -21,7 +44,7 @@ interface UseMonitoringResult {
     costOptimizations: string[];
   };
   runMonitoring: () => Promise<void>;
-  validateProject: (project: ProjectData) => {
+  validateProject: (project: any) => {
     isValid: boolean;
     errors: string[];
     warnings: string[];
@@ -30,9 +53,9 @@ interface UseMonitoringResult {
 }
 
 export const useMonitoring = (
-  project: ProjectData,
-  roles: EscalationRoles,
-  actions: ActionLabels,
+  project: any,
+  roles?: any,
+  actions?: any,
   config: MonitoringConfiguration = defaultMonitoringConfig
 ): UseMonitoringResult => {
   const [metrics, setMetrics] = useState<MonitoringMetrics | null>(null);
@@ -62,44 +85,42 @@ export const useMonitoring = (
     costOptimizations: []
   });
 
-  const [monitoringService] = useState(() => 
-    new MonitoringService(project, roles, actions, config)
-  );
+  const monitoringService = new MonitoringService();
 
   const runMonitoring = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Run automated monitoring
-      const result = await monitoringService.runAutomatedMonitoring();
-      
-      setMetrics(result.metrics);
-      setAutomatedActions(result.automatedActions);
-      setManualActionsRequired(result.manualActionsRequired);
-      
-      // Get workflow suggestions
-      const suggestions = monitoringService.getWorkflowSuggestions(project);
-      setWorkflowSuggestions(suggestions);
-      
-      // Get performance optimizations
-      const optimizations = monitoringService.getPerformanceOptimizations();
-      setPerformanceOptimizations(optimizations);
-      
+      if (project?.id) {
+        const data = await monitoringService.getProjectMonitoringData(project.id);
+        setMetrics(data.metrics);
+        setAutomatedActions(data.metrics ? ['Auto-monitoring active'] : []);
+        setManualActionsRequired(data.alerts?.filter((a: any) => a.status === 'open').map((a: any) => a.title) || []);
+      }
     } catch (error) {
       console.error('Monitoring failed:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [monitoringService, project]);
+  }, [project?.id]);
 
-  const validateProject = useCallback((projectToValidate: ProjectData) => {
-    return monitoringService.validateAndCleanupProject(projectToValidate);
-  }, [monitoringService]);
+  const validateProject = useCallback((projectToValidate: any) => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    
+    if (!projectToValidate.title) errors.push('Title is required');
+    if (!projectToValidate.budget || projectToValidate.budget <= 0) warnings.push('Budget not set');
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+      fixedIssues: []
+    };
+  }, []);
 
-  // Auto-run monitoring on mount and periodically
   useEffect(() => {
     runMonitoring();
     
-    // Set up periodic monitoring based on configuration
     const minInterval = Math.min(
       config.checkIntervals.insurance,
       config.checkIntervals.delays,
@@ -107,7 +128,7 @@ export const useMonitoring = (
       config.checkIntervals.financial
     );
     
-    const intervalMs = minInterval * 60 * 60 * 1000; // Convert hours to milliseconds
+    const intervalMs = minInterval * 60 * 60 * 1000;
     const interval = setInterval(runMonitoring, intervalMs);
     
     return () => clearInterval(interval);

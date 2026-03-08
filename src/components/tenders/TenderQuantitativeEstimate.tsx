@@ -15,7 +15,6 @@ import { QuantitativeEstimateExporter } from '@/components/reports/QuantitativeE
 import { 
   useTenderQuantitativeEstimateHex,
   type EstimateItem,
-  type TenderEstimate
 } from '@/hooks/hexagonal'
 
 interface TenderQuantitativeEstimateProps {
