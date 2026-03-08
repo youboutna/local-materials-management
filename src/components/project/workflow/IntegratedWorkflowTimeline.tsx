@@ -51,8 +51,8 @@ import {
   MilestonePriority,
   MILESTONE_TYPES,
   MILESTONE_PRIORITIES 
-} from '@/types/milestone-dto';
-import { PhaseStepDTO } from '@/types/phase-dto';
+} from '@/dtos/entities/MilestoneDTO';
+import { PhaseStepDTO } from '@/dtos/entities/PhaseDTO';
 import { format, parseISO, isBefore, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';

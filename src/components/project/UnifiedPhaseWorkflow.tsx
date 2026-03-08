@@ -7,7 +7,7 @@ import UnifiedDecisionPanel from './UnifiedDecisionPanel';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DecisionNode, mapMilestoneToDecisionNode, StepItem, mapStepToStepItem } from '@/types/unified-workflow';
+import { DecisionNode, mapMilestoneToDecisionNode, StepItem, mapStepToStepItem } from '@/dtos/entities/UnifiedWorkflowDTO';
 import { PhaseDTO, PhaseStepDTO } from '@/dtos/entities/PhaseDTO';
 
 interface UnifiedPhaseWorkflowProps {

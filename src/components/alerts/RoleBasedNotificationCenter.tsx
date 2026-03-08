@@ -8,7 +8,7 @@ import { Bell, Eye, EyeOff, Clock, AlertTriangle, DollarSign, FileText, Users } 
 import { useNotifications } from '@/hooks/useNotifications';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { getNotificationLink } from '@/utils/notificationUtils';
-import { NotificationType } from '@/types/notification';
+import { NotificationType } from '@/dtos/entities/NotificationTypeDTO';
 
 const RoleBasedNotificationCenter: React.FC = () => {
   const navigate = useNavigate();

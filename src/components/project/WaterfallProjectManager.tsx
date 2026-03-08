@@ -18,8 +18,7 @@ import GanttDiagramWithMilestones from './GanttDiagramWithMilestones';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import WaterfallProjectKPIs from './WaterfallProjectKPIs';
 import { useProjects } from '@/hooks/projects/useProjects';
-import { supabase } from '@/integrations/supabase/client';
-import { EscalationRoles,ActionLabels, ProjectData } from '@/types/project';
+import type { EscalationRoles, ActionLabels, ProjectData } from '@/types/project';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
 

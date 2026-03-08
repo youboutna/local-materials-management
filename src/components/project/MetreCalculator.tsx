@@ -10,8 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calculator, Plus, Trash2, Save, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/repositories/RepositoryFactory';
-import { calculateQuantity } from '@/types/quantityTakeoff';
-import { supabase } from '@/integrations/supabase/client';
+import { calculateQuantity } from '@/dtos/entities/QuantityTakeoffDTO';
 
 // Local Material interface for UI usage
 interface LocalMaterial {

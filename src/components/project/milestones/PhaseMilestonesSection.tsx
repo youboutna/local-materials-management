@@ -30,7 +30,7 @@ import {
   MilestonePriority,
   MilestoneProgressDTO,
   MilestoneType
-} from '@/types/milestone-dto';
+} from '@/dtos/entities/MilestoneDTO';
 import { format, isBefore, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {

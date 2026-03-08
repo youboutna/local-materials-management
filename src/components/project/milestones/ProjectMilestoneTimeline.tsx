@@ -25,7 +25,7 @@ import {
   MilestoneType,
   MILESTONE_TYPES,
   MILESTONE_PRIORITIES
-} from '@/types/milestone-dto';
+} from '@/dtos/entities/MilestoneDTO';
 import { format, parseISO, isBefore, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';

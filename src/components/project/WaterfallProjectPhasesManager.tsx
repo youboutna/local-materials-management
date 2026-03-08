@@ -23,8 +23,7 @@ import WaterfallGanttChart from './WaterfallGanttChart';
 import WaterfallProjectKPIs from './WaterfallProjectKPIs';
 import ConstructionPhaseManager from './ConstructionPhaseManager';
 import { useProjects } from '@/hooks/projects/useProjects';
-import { supabase } from '@/integrations/supabase/client';
-import { ProjectData } from '@/types/project';
+import type { ProjectData } from '@/types/project';
 
 interface WaterfallProjectPhasesManagerProps {
   selectedProject: ProjectData | null;

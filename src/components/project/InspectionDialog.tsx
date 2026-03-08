@@ -17,7 +17,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useCreateInspectionHex, useUpdateProjectStatusHex } from '@/hooks/hexagonal';
-import { ProjectWithPayments, InspectionStatus } from '@/types/project';
+import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
+import type { ProjectWithPayments } from '@/types/project';
+type InspectionStatusLocal = 'approved' | 'requires_changes' | 'rejected' | 'pending';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { InspectorSelector } from '@/components/selectors/InspectorSelector';
 
