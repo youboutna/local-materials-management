@@ -50,18 +50,18 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
       const loadedPhases = await new PhaseService(null as any).getPhasesByProject(projectId);
       console.log('Loaded phases from database:', loadedPhases);
       // Map PhaseDTO to PhaseData with required fields
-      const mappedPhases: PhaseData[] = loadedPhases.map(phase => ({
+      const mappedPhases: PhaseData[] = loadedPhases.map((phase: any) => ({
         id: phase.id,
-        phase: phase.type as any,
-        title: phase.name || 'Phase',
+        phase: phase.type || phase.constructionPhase || '',
+        title: phase.name || phase.title || 'Phase',
         description: phase.description || '',
         startDate: phase.startDate || new Date().toISOString(),
         endDate: phase.endDate || new Date().toISOString(),
-        estimatedDuration: 0,
-        status: phase.status as any,
-        budget: 0,
-        actualCost: 0,
-        progress: 0,
+        estimatedDuration: phase.estimatedDuration || 0,
+        status: phase.status || 'not_started',
+        budget: phase.budget || 0,
+        actualCost: phase.actualCost || 0,
+        progress: phase.progress || 0,
         materials: [],
         humanResources: [],
         suppliers: [],
