@@ -5,7 +5,7 @@
  * Rule #3: Convert snake_case ↔ camelCase between entities and DTOs
  */
 
-// Import workflow DTOs (following "similitude des voisins le plus proche")
+// Import workflow DTOs
 import { 
   ProjectWorkflowData,
   WorkflowMetadataDTO,
@@ -15,12 +15,16 @@ import {
 } from '@/dtos/workflows/ProjectWorkflowDTOs';
 import { PhaseWorkflowDTO } from '@/dtos/workflows/PhaseWorkflowDTO';
 
-// Import entity DTOs (following "similitude des voisins le plus proche")
+// Import entity DTOs
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { PhaseDTO, PhaseType, PhasePriority, PhaseStatus } from '@/dtos/entities/PhaseDTO';
 import { RiskDTO, RiskCategory, RiskStatus } from '@/dtos/entities/RiskDTO';
 
 // Import request/response DTOs for workflow operations
+import { 
+  OnProgressUpdatedRequestDTO,
+  TriggerPaymentRequestDTO
+} from '@/dtos/entities/WorkflowDTO';
 
 // Domain entities for transformation
 interface WorkflowProgressUpdate {
@@ -127,10 +131,6 @@ interface PhaseWorkflowEntity {
 }
 
 export class WorkflowTransformer {
-  /**
-   * Convert workflow progress entity to DTO
-   * Rule #3: Entity (camelCase) → DTO (camelCase)
-   */
   static toProgressUpdateDTO(entity: WorkflowProgressUpdate): OnProgressUpdatedRequestDTO {
     return {
       phaseId: entity.phaseId,
@@ -138,10 +138,6 @@ export class WorkflowTransformer {
     };
   }
 
-  /**
-   * Convert progress update DTO to entity
-   * Rule #3: DTO (camelCase) → Entity (camelCase)
-   */
   static toProgressUpdateEntity(dto: OnProgressUpdatedRequestDTO): WorkflowProgressUpdate {
     return {
       phaseId: dto.phaseId,
@@ -149,10 +145,6 @@ export class WorkflowTransformer {
     };
   }
 
-  /**
-   * Convert workflow payment entity to DTO
-   * Rule #3: Entity (camelCase) → DTO (camelCase)
-   */
   static toPaymentRequestDTO(entity: WorkflowPaymentRequest): TriggerPaymentRequestDTO {
     return {
       phaseId: entity.phaseId,
@@ -160,10 +152,6 @@ export class WorkflowTransformer {
     };
   }
 
-  /**
-   * Convert payment request DTO to entity
-   * Rule #3: DTO (camelCase) → Entity (camelCase)
-   */
   static toPaymentRequestEntity(dto: TriggerPaymentRequestDTO): WorkflowPaymentRequest {
     return {
       phaseId: dto.phaseId,
@@ -171,10 +159,6 @@ export class WorkflowTransformer {
     };
   }
 
-  /**
-   * Convert project workflow entity to DTO
-   * Rule #3: Entity (snake_case) → DTO (camelCase)
-   */
   static toProjectWorkflowDTO(entity: ProjectWorkflowEntity): ProjectWorkflowData {
     return {
       projectId: entity.project_id || entity.id,
@@ -201,8 +185,8 @@ export class WorkflowTransformer {
           endDate: phase.end_date || phase.endDate || '',
           status: (phase.status as PhaseStatus) || PhaseStatus.PLANNING,
           progress: phase.progress || 0,
-          type: PhaseType.STRUCTURAL, // Default type for PhaseDTO
-          priority: PhasePriority.MEDIUM, // Default priority for PhaseDTO
+          type: PhaseType.STRUCTURAL,
+          priority: PhasePriority.MEDIUM,
         })) || [],
         risks: entity.risks?.map((risk) => ({
           id: risk.risk_id || risk.id || '',
@@ -210,7 +194,7 @@ export class WorkflowTransformer {
           probability: risk.risk_probability || risk.probability || 0.5,
           impact: risk.risk_impact || risk.impact || 0.5,
           description: risk.description || '',
-          category: RiskCategory.TECHNICAL, // Default category
+          category: RiskCategory.TECHNICAL,
           status: (risk.status as RiskStatus) || RiskStatus.IDENTIFIED,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
@@ -225,10 +209,6 @@ export class WorkflowTransformer {
     };
   }
 
-  /**
-   * Convert project workflow DTO to entity
-   * Rule #3: DTO (camelCase) → DB (snake_case)
-   */
   static toProjectWorkflowEntity(dto: ProjectWorkflowData): ProjectWorkflowEntity {
     return {
       project_id: dto.projectId,
@@ -266,10 +246,6 @@ export class WorkflowTransformer {
     };
   }
 
-  /**
-   * Convert phase workflow entity to DTO
-   * Rule #3: Entity (snake_case) → DTO (camelCase)
-   */
   static toPhaseWorkflowDTO(entity: PhaseWorkflowEntity): PhaseWorkflowDTO {
     return {
       id: entity.id,
@@ -316,10 +292,6 @@ export class WorkflowTransformer {
     } as PhaseWorkflowDTO;
   }
 
-  /**
-   * Convert phase workflow DTO to entity
-   * Rule #3: DTO (camelCase) → DB (snake_case)
-   */
   static toPhaseWorkflowEntity(dto: PhaseWorkflowDTO): PhaseWorkflowEntity {
     return {
       id: dto.id,

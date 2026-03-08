@@ -11,7 +11,7 @@ import {
   TenderDocumentResponseDTO,
   TenderDocumentListDTO,
   TenderDocumentStatsDTO
-} from './TenderDocumentDTO';
+} from '@/dtos/entities/TenderDocumentDTO';
 
 export class TenderDocumentTransformer {
   // Entity to DTO
@@ -37,9 +37,9 @@ export class TenderDocumentTransformer {
     return new TenderDocument(
       dto.id,
       dto.project_id,
-      dto.document_id,
-      dto.category,
-      dto.subcategory,
+      dto.document_id || '',
+      dto.category as any,
+      dto.subcategory as any,
       dto.is_required,
       dto.is_submitted,
       dto.submission_date ? new Date(dto.submission_date) : undefined,
@@ -55,12 +55,12 @@ export class TenderDocumentTransformer {
     return new TenderDocument(
       id,
       dto.project_id,
-      dto.document_id,
-      dto.category,
-      dto.subcategory,
+      dto.document_id || '',
+      dto.category as any,
+      dto.subcategory as any,
       dto.is_required ?? false,
       dto.is_submitted ?? false,
-      undefined, // submission_date not available in CreateDTO
+      undefined,
       undefined,
       dto.status ?? 'draft',
       new Date(),
@@ -72,9 +72,8 @@ export class TenderDocumentTransformer {
   static toResponseDTO(entity: TenderDocument, documentTitle?: string, documentUrl?: string): TenderDocumentResponseDTO {
     const dto = this.toDTO(entity);
     
-    // Calculate days until deadline (example: 30 days from creation)
     const createdAt = new Date(entity.createdAt);
-    const deadline = new Date(createdAt.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
+    const deadline = new Date(createdAt.getTime() + 30 * 24 * 60 * 60 * 1000);
     const today = new Date();
     const daysUntilDeadline = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     
@@ -105,8 +104,8 @@ export class TenderDocumentTransformer {
   // Update DTO to partial entity data
   static fromUpdateDtoToEntityData(dto: UpdateTenderDocumentDTO): Partial<TenderDocument> {
     return {
-      category: dto.category,
-      subcategory: dto.subcategory,
+      category: dto.category as any,
+      subcategory: dto.subcategory as any,
       isRequired: dto.is_required,
       isSubmitted: dto.is_submitted,
       submissionDate: dto.submission_date ? new Date(dto.submission_date) : undefined,
@@ -139,7 +138,6 @@ export class TenderDocumentTransformer {
           break;
         }
         case 'draft': {
-          // Check if overdue (more than 30 days since creation)
           const createdAt = new Date(doc.createdAt);
           const deadline = new Date(createdAt.getTime() + 30 * 24 * 60 * 60 * 1000);
           if (deadline < new Date()) {

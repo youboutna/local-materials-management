@@ -11,7 +11,8 @@ import { TenderStatus, SelectionMode, MarketType, EvaluationCriteria } from '@/d
 export class TenderDomainTransformer {
   /**
    * Transform Tender entity to TenderDTO
-   * Converts Date objects to ISO strings
+   * Entity has 20 constructor params; DTO has extra fields that don't exist on entity.
+   * Map only what the entity exposes.
    */
   static toDTO(entity: Tender): TenderDTO {
     return {
@@ -32,17 +33,18 @@ export class TenderDomainTransformer {
       attributionDate: entity.attributionDate,
       budgetMin: entity.budgetMin,
       budgetMax: entity.budgetMax,
-      estimatedValue: entity.estimatedValue,
-      contractDuration: entity.contractDuration,
+      // Fields not on entity — default to null
+      estimatedValue: null,
+      contractDuration: null,
       evaluationCriteria: entity.evaluationCriteria,
       eligibilityRequirements: entity.eligibilityRequirements,
-      evaluationDeadline: entity.evaluationDeadline,
-      awardCriteria: entity.awardCriteria,
-      currentPhase: entity.currentPhase,
-      currentStage: entity.currentStage,
-      tenderCategory: entity.tenderCategory,
-      procurementType: entity.procurementType,
-      weight: entity.weight,
+      evaluationDeadline: null,
+      awardCriteria: null,
+      currentPhase: null,
+      currentStage: null,
+      tenderCategory: null,
+      procurementType: null,
+      weight: null,
       // BaseEntityDTO fields
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
@@ -50,8 +52,7 @@ export class TenderDomainTransformer {
   }
 
   /**
-   * Transform TenderDTO to Tender entity
-   * Converts ISO strings to Date objects
+   * Transform TenderDTO to Tender entity (20 constructor args)
    */
   static fromDTO(dto: TenderDTO): Tender {
     return new Tender(
@@ -67,20 +68,12 @@ export class TenderDomainTransformer {
       dto.projectReference,
       dto.publicationDate,
       dto.deadlineDate,
-      dto.submissionDeadline,
       dto.launchDate,
       dto.attributionDate,
       dto.budgetMin,
       dto.budgetMax,
       dto.evaluationCriteria,
       dto.eligibilityRequirements,
-      dto.evaluationDeadline,
-      dto.awardCriteria,
-      dto.currentPhase,
-      dto.currentStage,
-      dto.tenderCategory,
-      dto.procurementType,
-      dto.contractDuration,
       dto.createdAt,
       dto.updatedAt
     );
@@ -88,7 +81,6 @@ export class TenderDomainTransformer {
 
   /**
    * Transform TenderCreateDTO to Tender entity
-   * Used for creating new tenders
    */
   static fromCreateDTO(dto: TenderCreateDTO): Tender {
     const now = new Date().toISOString();
@@ -105,20 +97,12 @@ export class TenderDomainTransformer {
       null,
       null,
       dto.deadlineDate || null,
-      dto.deadlineDate || null,
-      dto.launchDate || null,
+      null,
       null,
       dto.budgetMin || null,
       dto.budgetMax || null,
       dto.evaluationCriteria || [],
       dto.eligibilityRequirements || [],
-      null,
-      dto.awardCriteria || null,
-      null,
-      null,
-      dto.tenderCategory || null,
-      dto.procurementType || null,
-      null,
       now,
       now
     );
@@ -126,7 +110,6 @@ export class TenderDomainTransformer {
 
   /**
    * Transform Tender entity to TenderListDTO
-   * Used for list views with limited data
    */
   static toListDTO(entity: Tender): TenderListDTO {
     return {
@@ -145,7 +128,6 @@ export class TenderDomainTransformer {
 
   /**
    * Transform Tender entity to TenderSummaryDTO
-   * Used for dashboard summaries
    */
   static toSummaryDTO(entity: Tender): TenderSummaryDTO {
     return {
@@ -156,69 +138,50 @@ export class TenderDomainTransformer {
       daysUntilDeadline: entity.getDaysUntilDeadline(),
       isOverdue: entity.isDeadlinePassed(),
       budgetRange: entity.getBudgetRange(),
-      submissionCount: 0, // Would be calculated from repository
+      submissionCount: 0,
       createdAt: entity.createdAt,
     };
   }
 
   /**
    * Transform Tender entity to TenderUpdateDTO
-   * Used for partial updates
+   * null → undefined conversion for optional DTO fields
    */
   static toUpdateDTO(entity: Tender): TenderUpdateDTO {
     return {
       title: entity.title,
-      description: entity.description,
+      description: entity.description ?? undefined,
       status: entity.status,
-      selectionMode: entity.selectionMode,
-      marketType: entity.marketType,
-      financingSource: entity.financingSource,
-      projectReference: entity.projectReference,
-      publicationDate: entity.publicationDate,
-      deadlineDate: entity.deadlineDate,
-      submissionDeadline: entity.deadlineDate,
-      launchDate: entity.launchDate,
-      attributionDate: entity.attributionDate,
-      budgetMin: entity.budgetMin,
-      budgetMax: entity.budgetMax,
-      estimatedValue: entity.estimatedValue,
-      contractDuration: entity.contractDuration,
+      selectionMode: entity.selectionMode ?? undefined,
+      marketType: entity.marketType ?? undefined,
+      financingSource: entity.financingSource ?? undefined,
+      projectReference: entity.projectReference ?? undefined,
+      publicationDate: entity.publicationDate ?? undefined,
+      deadlineDate: entity.deadlineDate ?? undefined,
+      submissionDeadline: entity.deadlineDate ?? undefined,
+      launchDate: entity.launchDate ?? undefined,
+      attributionDate: entity.attributionDate ?? undefined,
+      budgetMin: entity.budgetMin ?? undefined,
+      budgetMax: entity.budgetMax ?? undefined,
       evaluationCriteria: entity.evaluationCriteria,
       eligibilityRequirements: entity.eligibilityRequirements,
-      evaluationDeadline: entity.evaluationDeadline,
-      awardCriteria: entity.awardCriteria,
-      currentPhase: entity.currentPhase,
-      currentStage: entity.currentStage,
-      tenderCategory: entity.tenderCategory,
-      procurementType: entity.procurementType,
-      weight: entity.weight,
     };
   }
 
-  /**
-   * Transform Tender entity to TenderDTO (alias for toDTO)
-   */
   static toResponseDto(entity: Tender): TenderDTO {
     return this.toDTO(entity);
   }
 
-  /**
-   * Transform TenderDTO to Tender entity (alias for fromDTO)
-   */
   static toEntity(dto: TenderDTO): Tender {
     return this.fromDTO(dto);
   }
 
-  /**
-   * Transform TenderCreateDTO to Tender entity (alias for fromCreateDTO)
-   */
   static toEntityFromCreate(dto: TenderCreateDTO): Tender {
     return this.fromCreateDTO(dto);
   }
 
   /**
-   * Transform TenderUpdateDTO to Tender entity
-   * Used for partial updates
+   * Transform TenderUpdateDTO to Tender entity (merge with existing)
    */
   static toEntityFromUpdate(id: string, dto: TenderUpdateDTO, existingEntity: Tender): Tender {
     return new Tender(
@@ -234,20 +197,12 @@ export class TenderDomainTransformer {
       dto.projectReference ?? existingEntity.projectReference,
       dto.publicationDate ?? existingEntity.publicationDate,
       dto.deadlineDate ?? existingEntity.deadlineDate,
-      dto.submissionDeadline ?? existingEntity.submissionDeadline,
       dto.launchDate ?? existingEntity.launchDate,
       dto.attributionDate ?? existingEntity.attributionDate,
       dto.budgetMin ?? existingEntity.budgetMin,
       dto.budgetMax ?? existingEntity.budgetMax,
       dto.evaluationCriteria ?? existingEntity.evaluationCriteria,
       dto.eligibilityRequirements ?? existingEntity.eligibilityRequirements,
-      dto.evaluationDeadline ?? existingEntity.evaluationDeadline,
-      dto.awardCriteria ?? existingEntity.awardCriteria,
-      dto.currentPhase ?? existingEntity.currentPhase,
-      dto.currentStage ?? existingEntity.currentStage,
-      dto.tenderCategory ?? existingEntity.tenderCategory,
-      dto.procurementType ?? existingEntity.procurementType,
-      dto.contractDuration ?? existingEntity.contractDuration,
       existingEntity.createdAt,
       new Date().toISOString()
     );

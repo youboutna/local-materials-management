@@ -10,11 +10,6 @@ import {
   TenderEstimateStatsDto,
   TenderEstimateValidationDto,
   TenderEstimateComparisonDto,
-  TenderEstimateValidationErrorDto,
-  TenderEstimateValidationWarningDto,
-  TenderEstimateRiskDto,
-  TenderEstimateMarginRulesDto,
-  EstimateTotalsDto
 } from '@/dtos/entities/TenderEstimateDTO';
 
 export class TenderEstimateTransformer {
@@ -25,14 +20,15 @@ export class TenderEstimateTransformer {
     return {
       id: entity.id,
       tender_id: entity.tenderId,
-      submitted_by: entity.submittedBy,
+      submitted_by: entity.submittedBy || '',
       submission_date: entity.submissionDate,
       status: entity.status,
       total_amount: entity.totalAmount,
       currency: entity.currency,
       validity_period: entity.validityPeriod,
       notes: entity.notes,
-      // Financial fields (Entity camelCase → DTO camelCase - PROMPTS.md Rule #3)
+      estimate_type: entity.estimateType,
+      // Financial fields
       subtotal: entity.subtotal,
       taxRate: entity.taxRate,
       taxAmount: entity.taxAmount,
@@ -49,7 +45,7 @@ export class TenderEstimateTransformer {
       totalLaborCost: entity.totalLaborCost,
       totalEquipmentCost: entity.totalEquipmentCost,
       // Business logic calculated fields
-      margin_rules: entity.marginRules || undefined,
+      margin_rules: undefined,
       risk_assessment: entity.riskAssessment || undefined,
       created_at: entity.createdAt,
       updated_at: entity.updatedAt
@@ -60,39 +56,32 @@ export class TenderEstimateTransformer {
    * Transform DTO to Domain Entity
    */
   static toTenderEstimateEntity(dto: TenderEstimateDTO): TenderEstimate {
-    return {
-      id: dto.id,
-      tenderId: dto.tender_id,
-      status: dto.status,
-      currency: dto.currency as CurrencyCode,
-      estimateType: dto.estimateType || 'standard',
-      totalAmount: dto.total_amount,
-      validityPeriod: dto.validity_period,
-      notes: dto.notes,
-      // Financial fields (DTO camelCase → Entity camelCase - PROMPTS.md Rule #3)
-      subtotal: dto.subtotal,
-      taxRate: dto.taxRate,
-      taxAmount: dto.taxAmount,
-      totalWithTax: dto.totalWithTax,
-      discountRate: dto.discountRate,
-      discountAmount: dto.discountAmount,
-      overheadPercentage: dto.overheadPercentage,
-      overheadAmount: dto.overheadAmount,
-      profitMarginPercentage: dto.profitMarginPercentage,
-      profitMarginAmount: dto.profitMarginAmount,
-      finalTotal: dto.finalTotal,
-      // Cost breakdown fields
-      totalMaterialsCost: dto.totalMaterialsCost,
-      totalLaborCost: dto.totalLaborCost,
-      totalEquipmentCost: dto.totalEquipmentCost,
-      // Business logic fields
-      marginRules: dto.margin_rules,
-      riskAssessment: dto.risk_assessment,
-      submittedBy: dto.submitted_by,
-      submissionDate: dto.submission_date,
-      createdAt: dto.created_at,
-      updatedAt: dto.updated_at
-    };
+    return new TenderEstimate(
+      dto.id,
+      dto.tender_id,
+      dto.status,
+      dto.currency as CurrencyCode,
+      dto.estimate_type || 'standard',
+      dto.created_at,
+      dto.updated_at,
+      {
+        submittedBy: dto.submitted_by,
+        subtotal: dto.subtotal ?? undefined,
+        taxRate: dto.taxRate ?? undefined,
+        taxAmount: dto.taxAmount ?? undefined,
+        totalWithTax: dto.totalWithTax ?? undefined,
+        finalTotal: dto.finalTotal ?? undefined,
+        discountRate: dto.discountRate ?? undefined,
+        discountAmount: dto.discountAmount ?? undefined,
+        totalMaterialsCost: dto.totalMaterialsCost ?? undefined,
+        totalLaborCost: dto.totalLaborCost ?? undefined,
+        totalEquipmentCost: dto.totalEquipmentCost ?? undefined,
+        overheadPercentage: dto.overheadPercentage ?? undefined,
+        overheadAmount: dto.overheadAmount ?? undefined,
+        profitMarginPercentage: dto.profitMarginPercentage ?? undefined,
+        profitMarginAmount: dto.profitMarginAmount ?? undefined,
+      }
+    );
   }
 
   /**
@@ -113,8 +102,7 @@ export class TenderEstimateTransformer {
       item_type: entity.itemType || 'material',
       materialId: entity.materialId,
       itemType: entity.itemType || 'material',
-      // Business logic calculated fields
-      margin_percentage: 0, // Default value since method doesn't exist
+      margin_percentage: 0,
       line_total: entity.totalPrice,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -125,20 +113,20 @@ export class TenderEstimateTransformer {
    * Transform DTO to Domain Entity
    */
   static toTenderEstimateItemEntity(dto: TenderEstimateItemDTO): TenderEstimateItem {
-    return {
-      id: dto.id,
-      estimateId: dto.estimate_id,
-      itemCode: dto.item_code,
-      description: dto.description,
-      unit: dto.unit,
-      quantity: dto.quantity,
-      unitPrice: dto.unit_price,
-      totalPrice: dto.total_price,
-      category: dto.category,
-      specifications: dto.specifications,
-      createdAt: dto.created_at,
-      updatedAt: dto.updated_at
-    };
+    return new TenderEstimateItem(
+      dto.id,
+      dto.estimate_id,
+      dto.item_code,
+      dto.description,
+      dto.unit,
+      dto.quantity,
+      dto.unit_price,
+      dto.total_price,
+      dto.category,
+      dto.specifications,
+      dto.materialId,
+      dto.itemType
+    );
   }
 
   /**
@@ -179,7 +167,7 @@ export class TenderEstimateTransformer {
     byStatus: Record<string, number>,
     byCurrency: Record<string, number>,
     totalValue: number,
-    recentEstimates: TenderEstimate[]
+    recentEstimates: TenderEstimateDTO[]
   }): TenderEstimateStatsDto {
     return {
       total_estimates: stats.totalEstimates,
@@ -202,17 +190,8 @@ export class TenderEstimateTransformer {
   }): TenderEstimateValidationDto {
     return {
       is_valid: validation.isValid,
-      errors: validation.errors.map(error => ({
-        field: error.field,
-        message: error.message,
-        severity: 'error' as const
-      })),
-      warnings: validation.warnings.map(warning => ({
-        field: warning.field,
-        message: warning.message,
-        severity: 'warning' as const,
-        recommendation: warning.recommendation
-      }))
+      errors: validation.errors.map(error => error.message),
+      warnings: validation.warnings.map(warning => warning.message)
     };
   }
 
@@ -234,7 +213,11 @@ export class TenderEstimateTransformer {
     return {
       original_estimate: comparison.estimate_1,
       revised_estimate: comparison.estimate_2,
-      differences: comparison.item_differences,
+      differences: {
+        amount_change: comparison.price_difference,
+        percentage_change: comparison.price_difference_percentage,
+        changed_fields: comparison.item_differences.map(d => d.field),
+      },
       price_difference: comparison.price_difference,
       price_difference_percentage: comparison.price_difference_percentage
     };
@@ -275,9 +258,6 @@ export class TenderEstimateTransformer {
     };
   }
 
-  /**
-   * Format currency amount
-   */
   static formatCurrency(amount: number, currency: string = 'MRU'): string {
     return new Intl.NumberFormat('fr-MR', {
       style: 'currency',
@@ -285,9 +265,6 @@ export class TenderEstimateTransformer {
     }).format(amount);
   }
 
-  /**
-   * Format date for display
-   */
   static formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString('fr-MR', {
       year: 'numeric',
@@ -296,18 +273,12 @@ export class TenderEstimateTransformer {
     });
   }
 
-  /**
-   * Calculate validity expiry date
-   */
   static calculateExpiryDate(submissionDate: string, validityPeriod: number): string {
     const date = new Date(submissionDate);
     date.setDate(date.getDate() + validityPeriod);
     return date.toISOString();
   }
 
-  /**
-   * Check if estimate is expired
-   */
   static isExpired(submissionDate: string, validityPeriod: number): boolean {
     const expiryDate = this.calculateExpiryDate(submissionDate, validityPeriod);
     return new Date() > new Date(expiryDate);
