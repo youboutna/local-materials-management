@@ -59,7 +59,6 @@ export class StakeholderTransformer {
     return {
       ...base,
     };
-    };
   }
 
   // CreateStakeholderRequestDTO → Entity (legacy compat)
