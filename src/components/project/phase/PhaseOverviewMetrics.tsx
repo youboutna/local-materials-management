@@ -109,7 +109,7 @@ const PhaseOverviewMetrics: React.FC<PhaseOverviewMetricsProps> = ({
           </div>
           
           <div className="mt-3">
-            <p className="text-2xl font-bold">{formatCurrency(phase.estimated_cost)}</p>
+            <p className="text-2xl font-bold">{formatCurrency(phase.estimatedCost)}</p>
             <p className="text-sm text-muted-foreground">Budget estimé</p>
           </div>
           
