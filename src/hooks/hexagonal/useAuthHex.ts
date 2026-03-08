@@ -383,7 +383,7 @@ export function useAuthHex(): UseAuthHexResult {
   return {
     user,
     isLoading,
-    error,
+    error: error ? (error as Error).message : null,
     refetch,
     login: loginMutation.mutate,
     register: registerMutation.mutate,
