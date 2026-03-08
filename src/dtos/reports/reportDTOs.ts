@@ -3,59 +3,64 @@
  * Centralized DTOs for all reporting operations following hexagonal principles
  */
 
-// Import all reporting-related DTOs from entities
-import { TenderDTO } from '@/dtos/entities/TenderDTO';
-import { SupplierDTO } from '@/dtos/entities/SupplierDTO';
-import { PaymentDTO } from '@/dtos/entities/PaymentDTO';
-import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
-import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
-import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
-import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
-import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
+// Import entity DTOs as Application-prefixed aliases
+import { TenderDTO as ApplicationTenderDTO } from '@/dtos/entities/TenderDTO';
+import { SupplierDTO as ApplicationSupplierDTO } from '@/dtos/entities/SupplierDTO';
+import { PaymentDTO as ApplicationPaymentDTO } from '@/dtos/entities/PaymentDTO';
+import { InspectionDTO as ApplicationInspectionDTO } from '@/dtos/entities/InspectionDTO';
+import { ProjectDTO as ApplicationProjectDTO } from '@/dtos/entities/ProjectDTO';
+import { DocumentDTO as ApplicationDocumentDTO } from '@/dtos/entities/DocumentDTO';
+import { EmployeeDTO as ApplicationEmployeeDTO } from '@/dtos/entities/EmployeeDTO';
+import { MaterialDTO as ApplicationMaterialDTO } from '@/dtos/entities/MaterialDTO';
 
-// Import additional DTOs from ProjectReportDTO
+// Import available types from ProjectReportDTO
 import { 
-  CostCalculation,
-  EnhancedPhaseDTO,
   NotificationMetadata,
   NotificationType,
   TaskType,
   TaskAssignment,
   Notification,
   RiskItemDTO,
-  MilestoneDTO,
-  PerformanceMetricsDTO
 } from '@/dtos/entities/ProjectReportDTO';
 
-// Import remaining DTOs from ProjectReportDTO
-import {
-  ProjectAnalyticsDTO,
-  ProgressMetricsDTO,
-  BudgetMetricsDTO,
-  ScheduleMetricsDTO,
-  QualityMetricsDTO,
-  RiskAssessmentDTO,
-  IdentifiedRiskDTO,
-  RiskMatrixDTO,
-  MitigationStrategyDTO,
-  ComplianceReportDTO,
-  ComplianceItemDTO,
-  ComplianceRecommendationDTO,
-  ComplianceHistoryDTO,
-  DocumentSummaryDTO,
-  DocumentSummaryItemDTO,
-  ProjectHealthScoreDTO,
-  ConstructionMilestoneDTO,
-  PhaseStepDTO,
-  PhaseTaskDTO,
-  PhaseMilestoneDTO,
-  TrendDataDTO,
-  ComparisonDataDTO,
-  VarianceAnalysisDTO,
-  VarianceCauseDTO,
-  FinancialProjectionDTO,
-  CashFlowDataDTO
-} from '@/dtos/entities/ProjectReportDTO';
+// Re-export imported types for downstream usage
+export type { NotificationMetadata, NotificationType, TaskType, TaskAssignment, Notification, RiskItemDTO };
+
+// Local type definitions for types not in ProjectReportDTO
+export interface CostCalculation {
+  directCosts: number;
+  indirectCosts: number;
+  totalCost: number;
+  contingencyPercentage: number;
+  contingencyAmount: number;
+}
+
+export interface EnhancedPhaseDTO {
+  id: string;
+  name: string;
+  status: string;
+  progress: number;
+  budget: number;
+  spent: number;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface ProjectAnalyticsDTO {
+  projectId: string;
+  totalBudget: number;
+  totalSpent: number;
+  progress: number;
+  taskCompletion: number;
+}
+
+export interface RiskAssessmentDTO {
+  id: string;
+  projectId: string;
+  overallScore: number;
+  riskLevel: string;
+  identifiedRisks: number;
+}
 
 // =================== BASE REPORT DTOs ===================
 
