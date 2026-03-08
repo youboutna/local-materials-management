@@ -225,10 +225,10 @@ export class ReportingDataTransformer {
         phaseId: payment.phaseId,
         contractorId: payment.contractorId,
         contractorName: payment.contractorName,
-        status: this.mapPaymentStatus(payment.status),
-        dueDate: new Date(payment.dueDate || Date.now()),
-        paidDate: payment.paidDate ? new Date(payment.paidDate) : undefined,
-        description: payment.description || ''
+        status: this.mapPaymentStatus(payment.status || 'pending'),
+        dueDate: new Date(payment.paymentDate || Date.now()),
+        paidDate: payment.status === 'paid' ? new Date(payment.paymentDate) : undefined,
+        description: `Payment for ${payment.contractorName}`
       })),
       bankGuarantees: [], // Will be populated from bank guarantee repository
       insuranceCoverage: [] // Will be populated from insurance repository
