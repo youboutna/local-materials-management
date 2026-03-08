@@ -246,9 +246,9 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                         setSelectedSupplierId(null);
                         setFormData({
                           ...formData,
-                          employee_name: '',
-                          employee_role: '',
-                          employee_contact: '',
+                          employeeName: '',
+                          employeeRole: '',
+                          employeeContact: '',
                         });
                       }}
                     />
