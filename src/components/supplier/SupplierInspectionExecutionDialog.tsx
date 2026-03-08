@@ -83,7 +83,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
         const fileName = `${inspection.id}_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
         const destPath = `inspections/${inspection.projectId || (inspection as any).project_id}/${fileName}`;
 
-        const uploadRes = await storage.upload(file, destPath);
+        const uploadRes = await storage.uploadFile(file, destPath);
         if (!uploadRes.success) throw new Error(uploadRes.error || 'Upload failed');
 
         const publicUrl = uploadRes.url || '';
