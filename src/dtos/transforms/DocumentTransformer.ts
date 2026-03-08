@@ -69,9 +69,7 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
       description: dto.description || undefined,
       tags: dto.tags
     });
-
-
-
+  }
   /**
    * Transform UpdateDocumentDTO to partial Document entity
    */
