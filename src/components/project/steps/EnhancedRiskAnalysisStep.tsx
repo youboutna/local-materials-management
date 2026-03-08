@@ -185,19 +185,13 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
     try {
       // Save to database using service
       await riskService.createRisk({
-        projectId: formData.id || '',
+        project_id: formData.id || '',
         title: risk.title,
         description: risk.description,
         category: risk.category,
         probability: risk.probability,
         impact: risk.impact,
-        mitigation: risk.mitigationPlan,
-        contingency: risk.contingencyPlan,
-        status: risk.status,
-        owner: risk.owner,
-        reviewDate: risk.reviewDate,
-        costs: risk.costs,
-        timelineImpact: risk.timelineImpact
+        mitigation_strategy: risk.mitigationPlan,
       });
 
       setRisks([...risks, risk]);
