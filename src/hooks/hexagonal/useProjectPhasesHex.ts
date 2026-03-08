@@ -45,7 +45,7 @@ export function useProjectPhasesHex(projectId?: string) {
     queryKey: ['project-phases-hex', projectId],
     queryFn: async (): Promise<ProjectPhase[]> => {
       const phaseRepo = RepositoryFactory.getPhaseRepository();
-      const data = await phaseRepo.findByProject(projectId!);
+      const data = await phaseRepo.findByProjectId(projectId!);
       return (data || []).map((p: any) => ({
         id: p.id,
         name: p.phase_name || p.name || '',
@@ -65,7 +65,13 @@ export function useProjectPhasesHex(projectId?: string) {
   const createPhasesMutation = useMutation({
     mutationFn: async (phasesData: PhaseFormData[]) => {
       const phaseRepo = RepositoryFactory.getPhaseRepository();
-      return await phaseRepo.createMany(phasesData);
+      // Create phases one by one since createMany doesn't exist
+      const results: any[] = [];
+      for (const phaseData of phasesData) {
+        const result = await phaseRepo.create(phaseData as any);
+        results.push(result);
+      }
+      return results;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project-phases-hex', projectId] });

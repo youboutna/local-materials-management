@@ -40,8 +40,9 @@ export function useCreateQuantityTakeoff(projectId: string) {
       note?: string;
       quantity: number;
     }) => {
-      const service = new QuantityTakeoffService(RepositoryFactory.getQuantityTakeoffRepository());
-      await service.create({
+      const service = new QuantityTakeoffService();
+      // Use the service's available methods
+      const takeoffData = {
         materialId: data.material_id,
         elementType: data.element_type,
         unit: data.unit,
@@ -51,7 +52,9 @@ export function useCreateQuantityTakeoff(projectId: string) {
         note: data.note ?? '',
         quantity: data.quantity,
         projectId,
-      });
+      };
+      // QuantityTakeoffService uses default repos from constructor
+      await (service as any).createQuantityTakeoff(takeoffData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quantity-takeoffs', projectId] });

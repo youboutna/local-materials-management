@@ -5,8 +5,7 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { RealtimeService } from '@/application/services/RealtimeService';
+import { RealtimeService, SubscribeToSubmissionUpdatesRequestDto, SubscribeToDocumentUpdatesRequestDto, SubscribeToNotificationUpdatesRequestDto } from '@/application/services/RealtimeService';
 import type { RealtimePayload } from '@/domain/repositories/IRealtimeRepository';
 
 export interface UseRealtimeOptions {
@@ -24,8 +23,7 @@ export const useRealtimeHex = (options: UseRealtimeOptions = {}) => {
 
   // Initialize service
   useEffect(() => {
-    const realtimeAdapter = RepositoryFactory.getRealtimeAdapter();
-    realtimeServiceRef.current = new RealtimeService(realtimeAdapter);
+    realtimeServiceRef.current = new RealtimeService();
 
     return () => {
       // Cleanup on unmount
@@ -47,7 +45,6 @@ export const useRealtimeHex = (options: UseRealtimeOptions = {}) => {
     if (processed.isNew && options.onSubmissionInsert) {
       options.onSubmissionInsert(payload);
       
-      // Default toast for new submissions
       toast({
         title: "Nouvelle soumission",
         description: "Votre soumission a été enregistrée avec succès.",
@@ -55,7 +52,6 @@ export const useRealtimeHex = (options: UseRealtimeOptions = {}) => {
     } else if (processed.statusChanged && options.onSubmissionUpdate) {
       options.onSubmissionUpdate(payload);
       
-      // Default toast for status changes
       if (processed.newStatus !== processed.oldStatus) {
         const statusLabels = {
           submitted: 'Soumise',
@@ -77,10 +73,10 @@ export const useRealtimeHex = (options: UseRealtimeOptions = {}) => {
     if (!options.userId || !realtimeServiceRef.current) return;
 
     try {
-      const subscriptionId = await realtimeServiceRef.current.subscribeToSubmissionUpdates(
-        options.userId,
-        handleSubmissionUpdate
-      );
+      const subscriptionId = await realtimeServiceRef.current.subscribeToSubmissionUpdates({
+        userId: options.userId,
+        callback: handleSubmissionUpdate
+      });
       
       subscriptionIdsRef.current.push(subscriptionId);
       console.log('Realtime subscription set up for user:', options.userId);
@@ -94,10 +90,10 @@ export const useRealtimeHex = (options: UseRealtimeOptions = {}) => {
     if (!realtimeServiceRef.current) return;
 
     try {
-      const subscriptionId = await realtimeServiceRef.current.subscribeToDocumentUpdates(
+      const subscriptionId = await realtimeServiceRef.current.subscribeToDocumentUpdates({
         submissionId,
-        options.onDocumentChange || (() => {})
-      );
+        callback: options.onDocumentChange || (() => {})
+      });
       
       subscriptionIdsRef.current.push(subscriptionId);
       console.log('Document subscription set up for submission:', submissionId);
@@ -111,10 +107,10 @@ export const useRealtimeHex = (options: UseRealtimeOptions = {}) => {
     if (!options.userId || !realtimeServiceRef.current) return;
 
     try {
-      const subscriptionId = await realtimeServiceRef.current.subscribeToNotificationUpdates(
-        options.userId,
-        options.onNotificationChange || (() => {})
-      );
+      const subscriptionId = await realtimeServiceRef.current.subscribeToNotificationUpdates({
+        userId: options.userId,
+        callback: options.onNotificationChange || (() => {})
+      });
       
       subscriptionIdsRef.current.push(subscriptionId);
       console.log('Notification subscription set up for user:', options.userId);

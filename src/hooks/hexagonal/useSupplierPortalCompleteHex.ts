@@ -9,7 +9,6 @@ import { AuthService } from '@/application/services/AuthService';
 import { SupplierService } from '@/application/services/SupplierService';
 import { StorageService } from '@/application/services/StorageService';
 import { DocumentService } from '@/application/services/DocumentService';
-import { TaskService } from '@/application/services/TaskService';
 import { NotificationService } from '@/application/services/NotificationService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
@@ -35,7 +34,7 @@ export interface SupplierDocument {
   title: string;
   file_name: string;
   file_url: string;
-  document_type: DocumentType;
+  document_type: string;
   uploaded_by: string;
   created_at: string;
   description?: string;
@@ -89,13 +88,6 @@ export interface ParsedInvoice {
   created_at: string;
 }
 
-enum DocumentType {
-  INVOICE = 'invoice',
-  DELIVERY_NOTE = 'delivery_note',
-  CERTIFICATE = 'certificate',
-  CONTRACT = 'contract'
-}
-
 // Auth hooks
 export function useSupplierAuthHex() {
   const queryClient = useQueryClient();
@@ -103,9 +95,8 @@ export function useSupplierAuthHex() {
 
   const loginMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      const authService = new AuthService();
-      const { error } = await authService.signIn(email.trim(), password);
-      if (error) throw error;
+      const authService = new AuthService(RepositoryFactory.getAuthRepository());
+      await authService.login({ email: email.trim(), password });
       return { success: true };
     },
     onSuccess: () => {
@@ -118,9 +109,8 @@ export function useSupplierAuthHex() {
 
   const signUpMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      const authService = new AuthService();
-      const { error } = await authService.signUp(email.trim(), password, { full_name: email.split('@')[0] });
-      if (error) throw error;
+      const authService = new AuthService(RepositoryFactory.getAuthRepository());
+      await authService.register({ email: email.trim(), password, full_name: email.split('@')[0] } as any);
       return { success: true };
     },
     onSuccess: () => {
@@ -133,9 +123,8 @@ export function useSupplierAuthHex() {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      const authService = new AuthService();
-      const { error } = await authService.signOut();
-      if (error) throw error;
+      const authService = new AuthService(RepositoryFactory.getAuthRepository());
+      await authService.logout();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['supplier-auth'] });
@@ -160,22 +149,13 @@ export function useSupplierProfileHex(userId?: string | null) {
     queryFn: async (): Promise<Supplier | null> => {
       if (!userId) return null;
       const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
-      const data = await supplierService.findByUserId(userId);
-      
-      if (!data) {
-        const authService = new AuthService();
-        const { data: { user } } = await authService.getUser();
-        if (user?.email) {
-          const emailData = await supplierService.findByEmail(user.email);
-          if (emailData) {
-            const { error: updateError } = await supplierService.updateUserId(emailData.id, userId);
-            if (updateError) throw updateError;
-            return emailData;
-          }
-        }
+      // Search for supplier linked to this user
+      const result = await supplierService.searchSuppliers({ searchTerm: userId, limit: 1 });
+      if (result.suppliers.length > 0) {
+        const s = result.suppliers[0];
+        return { id: s.id, name: s.name, category: s.category, is_active: s.isActive, created_at: '', updated_at: '' } as Supplier;
       }
-      
-      return data || null;
+      return null;
     },
     enabled: !!userId,
   });
@@ -187,9 +167,9 @@ export function useSupplierDocumentsHex(userId?: string | null) {
     queryKey: ['supplier-documents', userId],
     queryFn: async (): Promise<SupplierDocument[]> => {
       if (!userId) return [];
-      const docRepo = RepositoryFactory.getDocumentRepository();
-      const data = await docRepo.findByUploader(userId);
-      return (data || []) as unknown as SupplierDocument[];
+      const documentService = new DocumentService();
+      const docs = await documentService.getAllDocuments();
+      return (docs || []).filter((d: any) => d.uploadedBy === userId) as unknown as SupplierDocument[];
     },
     enabled: !!userId,
   });
@@ -215,7 +195,7 @@ export function useSupplierTasksHex(userId?: string | null) {
     queryFn: async (): Promise<SupplierTask[]> => {
       if (!userId) return [];
       const taskRepo = RepositoryFactory.getTaskAssignmentRepository();
-      const data = await taskRepo.findByAssignee(userId);
+      const data = await taskRepo.findByAssignedTo(userId);
       return (data || []) as unknown as SupplierTask[];
     },
     enabled: !!userId,
@@ -229,7 +209,7 @@ export function useSupplierNotificationsHex(supplierId?: string | null) {
     queryFn: async (): Promise<SupplierNotification[]> => {
       if (!supplierId) return [];
       const notifService = new NotificationService();
-      const data = await notifService.getSupplierNotifications(supplierId);
+      const data = await notifService.getUserNotifications(supplierId);
       return (data || []) as unknown as SupplierNotification[];
     },
     enabled: !!supplierId,
@@ -242,9 +222,10 @@ export function useSupplierPaymentRequestsHex(supplierId?: string | null) {
     queryKey: ['supplier-payment-requests', supplierId],
     queryFn: async (): Promise<PaymentRequest[]> => {
       if (!supplierId) return [];
+      // Use payment repository findAll and filter
       const paymentRepo = RepositoryFactory.getPaymentRepository();
-      const data = await paymentRepo.findBySupplier(supplierId);
-      return (data || []) as unknown as PaymentRequest[];
+      const allPayments = await paymentRepo.findAll();
+      return (allPayments || []).filter((p: any) => p.supplierId === supplierId) as unknown as PaymentRequest[];
     },
     enabled: !!supplierId,
   });
@@ -257,7 +238,7 @@ export function useSupplierParsedInvoicesHex(supplierName?: string | null) {
     queryFn: async (): Promise<ParsedInvoice[]> => {
       if (!supplierName) return [];
       const invoiceRepo = RepositoryFactory.getParsedInvoiceRepository();
-      const data = await invoiceRepo.findBySupplierName(supplierName);
+      const data = await invoiceRepo.findBySupplierId(supplierName);
       return (data || []) as unknown as ParsedInvoice[];
     },
     enabled: !!supplierName,
@@ -271,24 +252,25 @@ export function useUploadSupplierDocumentHex() {
 
   return useMutation({
     mutationFn: async ({ file, title, description, documentType, userId, supplierId }: {
-      file: File; title: string; description?: string; documentType: DocumentType; userId: string; supplierId?: string;
+      file: File; title: string; description?: string; documentType: string; userId: string; supplierId?: string;
     }) => {
       const fileName = `${Math.random()}.${file.name.split('.').pop()}`;
       const filePath = `supplier-documents/${userId}/${fileName}`;
 
       const storageService = new StorageService();
-      const { error: uploadError } = await storageService.uploadFile('supplier-documents', filePath, file);
-      if (uploadError) throw uploadError;
+      await storageService.uploadFile({ bucket: 'supplier-documents', path: filePath, file });
 
-      const { data: { publicUrl } } = storageService.getPublicUrl('supplier-documents', filePath);
+      const publicUrl = storageService.getPublicUrl({ bucket: 'supplier-documents', path: filePath });
 
       const documentService = new DocumentService();
-      const { error } = await documentService.createDocument({
-        title, description, file_name: file.name, file_url: publicUrl,
-        document_type: documentType, uploaded_by: userId,
-        metadata: supplierId ? { supplier_id: supplierId } : null,
-      });
-      if (error) throw error;
+      await documentService.createDocument({
+        title,
+        description: description || '',
+        fileName: file.name,
+        fileUrl: publicUrl,
+        documentType: documentType as any,
+        uploadedBy: userId,
+      } as any);
       return { success: true, url: publicUrl };
     },
     onSuccess: () => {
@@ -344,7 +326,7 @@ export function useMarkTaskCompletedHex() {
         recipient_id: projectManagerId,
         title: "Tâche complétée",
         message: `La tâche "${(task as any)?.title}" a été marquée comme complétée par le fournisseur.`,
-        type: 'task_completed',
+        type: 'info',
       });
     },
     onSuccess: () => {

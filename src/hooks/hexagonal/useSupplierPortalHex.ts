@@ -5,8 +5,10 @@ import { TenderDocumentDTO } from '@/dtos/entities/TenderDocumentDTO';
 import { UserService } from '@/application/services/UserService';
 import { AuthService } from '@/application/services/AuthService';
 import { DocumentService } from '@/application/services/DocumentService';
-import { RepositoryFactory } from '@/repositories/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { useToast } from '@/hooks/use-toast';
+
+interface PublicTender { id: string; title: string; description?: string; deadline_date?: string; status?: string; }
 
 interface SubmitBidParams {
   tender: PublicTender;
@@ -124,7 +126,7 @@ export function useSupplierPortalHex(selectedTenderId?: string) {
         {
           tender_id: tender.id,
           user_id: user.id,
-          supplier_name: profile?.full_name || 'Fournisseur',
+          supplier_name: profile?.fullName || 'Fournisseur',
           supplier_email: user.email || '',
           submission_date: new Date().toISOString(),
           status: 'submitted'

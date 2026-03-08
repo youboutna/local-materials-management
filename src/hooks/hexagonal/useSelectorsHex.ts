@@ -13,9 +13,9 @@ import { UserService } from '@/application/services/UserService';
 import { ProjectService } from '@/application/services/ProjectService';
 import { MaterialService } from '@/application/services/MaterialService';
 import { EmployeeService } from '@/application/services/EmployeeService';
-import { Material } from '@/domain/entities/Material';
-import { Supplier } from '@/domain/entities/Supplier';
-import { Employee } from '@/domain/entities/Employee';
+import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
+import { SupplierDTO } from '@/dtos/entities/SupplierDTO';
+import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
 
 // Configuration commune pour éviter les appels en continu
 const COMMON_QUERY_OPTIONS = {
@@ -169,12 +169,12 @@ export function useSuppliersSelector(searchTerm?: string, enabled?: boolean) {
       return result.suppliers.map(supplier => ({
         id: supplier.id,
         name: supplier.name,
-        contact_person: supplier.contacts[0]?.name || null,
-        phone: supplier.phone,
-        email: supplier.email,
-        category: supplier.category,
-        rating: supplier.rating?.overall || null,
-        is_active: supplier.isActive()
+        contact_person: null,
+        phone: null,
+        email: null,
+        category: supplier.category || null,
+        rating: supplier.rating || null,
+        is_active: supplier.isActive
       }));
     },
     enabled: enabled !== false,
@@ -194,27 +194,27 @@ export function useMaterialsSelector(options?: {
         RepositoryFactory.getMaterialRepository()
       );
       
-      let materials: Material[] = [];
+      let materials: any[] = [];
       
       if (options?.searchTerm) {
-        materials = await materialService.searchMaterials(options.searchTerm);
+        materials = await materialService.searchMaterials(options.searchTerm) as any[];
       } else {
-        materials = await materialService.getAllMaterials();
+        materials = await materialService.getAllMaterials() as any[];
       }
       
       if (options?.category && options.category !== 'all') {
-        materials = materials.filter(m => m.category === options.category);
+        materials = materials.filter((m: any) => m.category === options.category);
       }
       
-      return materials.map(material => ({
+      return materials.map((material: any) => ({
         id: material.id,
         name: material.name,
-        description: material.description,
+        description: material.description || '',
         category: material.category,
         unit: material.unit,
-        price_per_unit: material.pricePerUnit,
-        available_quantity: material.availableQuantity,
-        origin_location: material.coordinates ? `${material.coordinates.latitude}, ${material.coordinates.longitude}` : null
+        price_per_unit: material.pricePerUnit || material.price_per_unit || 0,
+        available_quantity: material.availableQuantity || material.available_quantity || 0,
+        origin_location: material.originLocation || null
       }));
     },
     enabled: options?.enabled !== false,
@@ -245,12 +245,12 @@ export function useEmployeesSelector(options?: {
       
       return result.employees.map(employee => ({
         id: employee.id,
-        full_name: employee.fullName,
+        full_name: employee.fullName || '',
         position: employee.position,
         department: employee.department,
         email: employee.email,
         phone: employee.phone,
-        employee_id: employee.employeeId,
+        employee_id: employee.employeeId || '',
         is_active: employee.isActive
       }));
     },

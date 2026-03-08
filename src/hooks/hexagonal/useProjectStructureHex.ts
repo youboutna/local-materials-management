@@ -51,7 +51,7 @@ export function useProjectStructureHex(projectId: string) {
       if (!projectData) return null;
 
       // Fetch phases
-      const phasesData = await phaseRepo.findByProject(projectId);
+      const phasesData = await phaseRepo.findByProjectId(projectId);
 
       const phases: Phase[] = (phasesData || []).map((phase: any) => ({
         id: phase.id,

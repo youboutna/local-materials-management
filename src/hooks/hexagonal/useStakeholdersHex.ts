@@ -6,7 +6,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { StakeholderService, StakeholderListResult } from '@/application/services/StakeholderService';
+import { StakeholderService } from '@/application/services/StakeholderService';
+import { StakeholderListResult } from '@/dtos/entities/StakeholderDTO';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { 
   CreateStakeholderRequestDTO, 
@@ -16,7 +17,7 @@ import {
 
 export function useStakeholdersHex(projectId?: string) {
   const queryClient = useQueryClient();
-  const stakeholderService = new StakeholderService(RepositoryFactory.getProjectStakeholderRepository());
+  const stakeholderService = new StakeholderService(RepositoryFactory.getStakeholderRepository());
 
   // Query pour récupérer les parties prenantes d'un projet
   const {
@@ -84,7 +85,7 @@ export function useStakeholdersHex(projectId?: string) {
     onSuccess: (result) => {
       toast({
         title: 'Partie prenante ajoutée',
-        description: `${result.displayName} a été ajouté au projet avec succès.`,
+        description: `${result.name} a été ajouté au projet avec succès.`,
         className: 'bg-green-100 border-green-300 text-green-800',
       });
 
@@ -151,7 +152,7 @@ export function useStakeholdersHex(projectId?: string) {
     onSuccess: (result) => {
       toast({
         title: 'Partie prenante mise à jour',
-        description: `${result.displayName} a été mis à jour avec succès.`,
+        description: `${result.name} a été mis à jour avec succès.`,
         className: 'bg-blue-100 border-blue-300 text-blue-800',
       });
 
@@ -284,7 +285,7 @@ export function useStakeholdersHex(projectId?: string) {
     onSuccess: (result) => {
       toast({
         title: 'Statut mis à jour',
-        description: `${result.displayName} est maintenant ${result.isActive ? 'actif' : 'inactif'}.`,
+        description: `${result.name} est maintenant ${result.isActive ? 'actif' : 'inactif'}.`,
         className: result.isActive ? 'bg-green-100 border-green-300 text-green-800' : 'bg-gray-100 border-gray-300 text-gray-800',
       });
 
@@ -326,12 +327,12 @@ export function useStakeholdersHex(projectId?: string) {
   };
 
   // Filtrage des parties prenantes
-  const getEmployees = () => stakeholders.filter(s => s.isEmployee);
-  const getExternalStakeholders = () => stakeholders.filter(s => s.isExternal);
-  const getSuppliers = () => stakeholders.filter(s => s.isSupplier);
-  const getInspectors = () => stakeholders.filter(s => s.isInspector);
-  const getManagers = () => stakeholders.filter(s => s.isManager);
-  const getActiveStakeholders = () => stakeholders.filter(s => s.isActiveInProject);
+  const getEmployees = () => stakeholders.filter(s => s.employeeId);
+  const getExternalStakeholders = () => stakeholders.filter(s => !s.isInternal);
+  const getSuppliers = () => stakeholders.filter(s => s.stakeholderType === 'vendor' as any);
+  const getInspectors = () => stakeholders.filter(s => s.role === 'inspector' as any);
+  const getManagers = () => stakeholders.filter(s => s.role === 'project_manager' as any);
+  const getActiveStakeholders = () => stakeholders.filter(s => s.isActive);
   const getPrimaryStakeholders = () => stakeholders.filter(s => s.isPrimary);
 
   return {
