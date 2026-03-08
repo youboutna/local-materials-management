@@ -202,7 +202,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
 
   const handleNavigateToInspection = () => {
     const milestone = actionDialog.milestone;
-    navigate(`/inspection-monitoring${milestone?.phase_id ? `?phase=${milestone.phase_id}` : ''}`);
+    navigate(`/inspection-monitoring${(milestone as any)?.phaseId ? `?phase=${(milestone as any).phaseId}` : ''}`);
     setActionDialog({ open: false, milestone: null, action: null });
   };
 
