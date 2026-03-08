@@ -279,30 +279,14 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
   }
 
   static toEntityFromDatabaseRow(row: Record<string, unknown>): Document {
-    return new Document(
-      row.id as string,
-      (row.project_id ?? null) as string | null,
-      (row.phase_id ?? null) as string | null,
-      (row.inspection_id ?? null) as string | null,
-      (row.payment_id ?? null) as string | null,
-      (row.supplier_id ?? null) as string | null,
-      (row.title as string) || '',
-      (row.description ?? null) as string | null,
-      ((row.document_type as string) || 'other') as DocumentType,
-      ((row.status as string) || 'draft') as DocumentStatus,
-      (row.file_name ?? null) as string | null,
-      (row.file_url ?? null) as string | null,
-      (row.file_size ?? null) as number | null,
-      (row.mime_type ?? null) as string | null,
-      (row.tags as string[]) || [],
-      Boolean(row.is_internal_only),
-      Boolean(row.is_shared_with_suppliers),
-      (row.deadline_date ?? null) as string | null,
-      (row.assigned_to ?? null) as string | null,
-      (row.uploaded_by ?? null) as string | null,
-      (row.created_at as string) || new Date().toISOString(),
-      (row.updated_at as string) || new Date().toISOString(),
-      (row.metadata ?? null) as Record<string, unknown> | null
-    );
+    return Document.create({
+      id: row.id as string,
+      projectId: (row.project_id ?? undefined) as string | undefined,
+      phaseId: (row.phase_id ?? undefined) as string | undefined,
+      title: (row.title as string) || '',
+      description: (row.description ?? undefined) as string | undefined,
+      documentType: ((row.document_type as string) || 'other') as DocumentType,
+      tags: (row.tags as string[]) || []
+    });
   }
 }
