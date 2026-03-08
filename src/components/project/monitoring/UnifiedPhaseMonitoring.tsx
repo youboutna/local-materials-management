@@ -281,7 +281,6 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
           priority: template.priority as any,
         });
       }
-      }
       
       toast({
         title: "Jalons créés",
