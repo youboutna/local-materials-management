@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Users, Edit2, Trash2, Star } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useQuery as useSuppliersQuery } from '@tanstack/react-query'; // Add this import
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 interface PhaseEmployeesProps {
