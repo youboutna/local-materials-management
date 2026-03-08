@@ -125,8 +125,8 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
       // Generate and upload PV (procès-verbal) PDF and persist via DocumentService
       try {
         const pvResult = await generatePVPDF({
-          title: `PV - Inspection ${new Date(inspection.date).toLocaleDateString('fr-FR')}`,
-          phaseName: inspection.projects?.title || inspection.project_id,
+          title: `PV - Inspection ${new Date(inspection.date || inspection.scheduledDate || '').toLocaleDateString('fr-FR')}`,
+          phaseName: (inspection as any).projects?.title || inspection.projectId || inspection.project_id || '',
           decompte: { netPayable: 0, payablePercentage: progress },
           autoSave: false,
         });
