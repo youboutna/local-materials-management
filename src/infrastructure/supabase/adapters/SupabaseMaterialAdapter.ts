@@ -134,7 +134,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       .single();
 
     if (error || !data) return null;
-    return Material.fromDatabase(data as Record<string, unknown>);
+    return MaterialTransformer.fromSupabase(data as Record<string, unknown>);
   }
 
   async search(query: string): Promise<Material[]> {
