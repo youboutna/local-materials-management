@@ -122,30 +122,9 @@ export function useReceptionManagement({ projectId }: UseReceptionManagementProp
       return await receptionService.approveProvisionalReception(receptionId, {
         findings: data.findings,
         conditions: data.conditions,
-        validUntil: data.validUntil || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
         notes: data.notes,
         approvedBy: data.approvedBy,
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['receptions', projectId] });
-      queryClient.invalidateQueries({ queryKey: ['reception-workflow', projectId] });
-      toast({ title: "Réception Provisoire Approuvée", description: "La réception provisoire a été approuvée avec succès" });
-    },
-    onError: (error: any) => {
-      toast({ title: "Erreur", description: error.message || "Échec de l'approbation", variant: "destructive" });
-    }
-  });
-
-  const approveDefinitiveReceptionMutation = useMutation({
-    mutationFn: async ({ receptionId, data }: { receptionId: string; data: ApproveReceptionData }): Promise<ReceptionDTO> => {
-      return await receptionService.approveDefinitiveReception(receptionId, {
-        findings: data.findings,
-        conditions: data.conditions,
-        validUntil: data.validUntil || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-        notes: data.notes,
-        approvedBy: data.approvedBy,
-      });
+      } as any);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['receptions', projectId] });
