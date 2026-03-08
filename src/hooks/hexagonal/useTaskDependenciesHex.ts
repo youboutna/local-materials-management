@@ -22,8 +22,9 @@ export function useTaskDependenciesHex(taskIds: string[]) {
     queryFn: async (): Promise<TaskDependency[]> => {
       if (!taskIds || taskIds.length === 0) return [];
       
-      const service = new TaskService(RepositoryFactory.getTaskRepository());
-      return await service.getTaskDependencies(taskIds);
+      // TaskService doesn't have getTaskDependencies yet - placeholder
+      // Dependencies would need a dedicated repository
+      return [];
     },
     enabled: !!taskIds && taskIds.length > 0,
   });

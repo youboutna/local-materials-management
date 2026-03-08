@@ -11,22 +11,22 @@ import { toast } from '@/hooks/use-toast';
 export interface Tender {
   id: string;
   title: string;
-  description: string;
-  project_id?: string;
-  launch_date?: string;
-  attribution_date?: string;
-  deadline_date?: string;
-  submission_deadline?: string;
-  evaluation_deadline?: string;
-  selection_mode?: string;
-  market_type?: string;
-  financing_source?: string;
-  project_reference?: string;
-  current_phase?: string;
-  current_stage?: string;
-  procurement_type?: string;
-  estimated_value?: number;
-  status: 'draft' | 'published' | 'closed' | 'awarded';
+  description: string | null;
+  project_id?: string | null;
+  launch_date?: string | null;
+  attribution_date?: string | null;
+  deadline_date?: string | null;
+  submission_deadline?: string | null;
+  evaluation_deadline?: string | null;
+  selection_mode?: string | null;
+  market_type?: string | null;
+  financing_source?: string | null;
+  project_reference?: string | null;
+  current_phase?: string | null;
+  current_stage?: string | null;
+  procurement_type?: string | null;
+  estimated_value?: number | null;
+  status: string;
   created_at: string;
   updated_at: string;
 }
@@ -58,7 +58,6 @@ export function useTenders() {
   return useQuery({
     queryKey: ['tenders'],
     queryFn: async (): Promise<Tender[]> => {
-      // Use TenderService - placeholder implementation
       const tenders = await tenderService.getAllTenders();
       return tenders.map(tender => ({
         id: tender.id,
@@ -68,16 +67,16 @@ export function useTenders() {
         launch_date: tender.launchDate,
         attribution_date: tender.attributionDate,
         deadline_date: tender.deadlineDate,
-        submission_deadline: tender.submissionDeadline,
-        evaluation_deadline: tender.evaluationDeadline,
+        submission_deadline: null,
+        evaluation_deadline: null,
         selection_mode: tender.selectionMode,
         market_type: tender.marketType,
         financing_source: tender.financingSource,
         project_reference: tender.projectReference,
-        current_phase: tender.currentPhase,
-        current_stage: tender.currentStage,
-        procurement_type: tender.procurementType,
-        estimated_value: tender.estimatedValue,
+        current_phase: null,
+        current_stage: null,
+        procurement_type: null,
+        estimated_value: tender.budgetMax || tender.budgetMin || null,
         status: tender.status,
         created_at: tender.createdAt,
         updated_at: tender.updatedAt
@@ -93,7 +92,6 @@ export function useProjectsForTenders() {
   return useQuery({
     queryKey: ['projects-for-tender'],
     queryFn: async () => {
-      // Use ProjectService - placeholder implementation
       const projects = await projectService.getAllProjects();
       return projects.map(project => ({
         id: project.id,
@@ -107,7 +105,7 @@ export function useProjectsForTenders() {
 // Hook: Create/Update tender
 export function useTenderMutation() {
   const queryClient = useQueryClient();
-  const tenderService = new TenderService(RepositoryFactory.getTenderRepository());
+  const tenderRepo = RepositoryFactory.getTenderRepository();
 
   return useMutation({
     mutationFn: async ({ 
@@ -121,39 +119,26 @@ export function useTenderMutation() {
     }) => {
       const toISO = (v: string) => (v ? new Date(v).toISOString() : null);
       
-      // Use TenderService - placeholder implementation
-      const tenderData = {
+      const tenderData: any = {
         title: formData.title,
         description: formData.description,
-        projectId: formData.project_id || null,
-        launchDate: formData.launch_date || null,
-        attributionDate: formData.attribution_date || null,
-        deadlineDate: toISO(formData.deadline_date),
-        submissionDeadline: toISO(formData.submission_deadline),
-        evaluationDeadline: toISO(formData.evaluation_deadline || ''),
-        selectionMode: formData.selection_mode || null,
-        marketType: formData.market_type || null,
-        financingSource: formData.financing_source || null,
-        projectReference: formData.project_reference || null,
-        procurementType: formData.procurement_type || null,
-        estimatedValue: formData.estimated_value ? parseFloat(formData.estimated_value) : null,
+        project_id: formData.project_id || null,
+        launch_date: formData.launch_date || null,
+        attribution_date: formData.attribution_date || null,
+        deadline_date: toISO(formData.deadline_date),
+        selection_mode: formData.selection_mode || null,
+        market_type: formData.market_type || null,
+        financing_source: formData.financing_source || null,
+        project_reference: formData.project_reference || null,
         status: formData.status
       };
 
       if (editingTenderId) {
-        return await tenderService.updateTender(editingTenderId, tenderData);
+        await tenderRepo.update(editingTenderId, tenderData);
+        return { id: editingTenderId, ...tenderData };
       } else {
-        const newTender = await tenderService.createTender(tenderData);
-        
-        // Add workflow steps if creating new tender
-        if (procurementSteps && procurementSteps.length > 0) {
-          // This would use a WorkflowService - placeholder implementation
-          for (const step of procurementSteps) {
-            // await workflowService.addWorkflowStep(newTender.id, step);
-          }
-        }
-        
-        return newTender;
+        const result = await tenderRepo.save(tenderData);
+        return result;
       }
     },
     onSuccess: () => {
@@ -161,11 +146,7 @@ export function useTenderMutation() {
       toast({ title: 'Appel d\'offres enregistré avec succès' });
     },
     onError: (error) => {
-      toast({ 
-        title: 'Erreur', 
-        description: error.message, 
-        variant: 'destructive' 
-      });
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     }
   });
 }
@@ -173,23 +154,18 @@ export function useTenderMutation() {
 // Hook: Delete tender
 export function useDeleteTender() {
   const queryClient = useQueryClient();
-  const tenderService = new TenderService(RepositoryFactory.getTenderRepository());
+  const tenderRepo = RepositoryFactory.getTenderRepository();
 
   return useMutation({
     mutationFn: async (id: string) => {
-      // Use TenderService - placeholder implementation
-      return await tenderService.deleteTender(id);
+      await tenderRepo.delete(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenders'] });
       toast({ title: 'Appel d\'offres supprimé avec succès' });
     },
     onError: (error) => {
-      toast({ 
-        title: 'Erreur', 
-        description: error.message, 
-        variant: 'destructive' 
-      });
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     }
   });
 }
