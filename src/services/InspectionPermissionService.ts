@@ -165,14 +165,14 @@ export class InspectionPermissionService {
 
         // Determine default inspector: priorité à l'ingénieur conseil
         if (isEngineeringConsultant && !defaultInspectorId) {
-          defaultInspectorId = emp.id;
+          defaultInspectorId = emp.id || '';
         } else if (isTechnicalManager && !defaultInspectorId) {
-          defaultInspectorId = emp.id;
+          defaultInspectorId = emp.id || '';
         }
 
         allInspectors.push({
-          id: emp.id,
-          name: emp.full_name,
+          id: emp.id || '',
+          name: emp.full_name || '',
           position: emp.position || undefined,
           department: emp.department || undefined,
           type: 'employee',
