@@ -22,7 +22,8 @@ export function useCreateInspectionHex() {
 
   return useMutation({
     mutationFn: async (data: CreateInspectionData) => {
-      return await InspectionService.createInspection({
+      const service = new InspectionService();
+      return await service.createInspection({
         projectId: data.project_id,
         date: data.date,
         status: data.status as any,
