@@ -417,41 +417,28 @@ export function useAuthHex(): UseAuthHexResult {
         return { isValid: false, errors: ['Validation failed'], warnings: [] };
       }
     },
-    generateUserReport: (targetUser: any) => {
+    generateUserReport: (targetUser: UserDTO): UserSecurityReport => {
       try {
-        const analytics = getUserAnalytics();
         const securityLevel = getUserSecurityLevel(targetUser);
         const activityScore = getUserActivityScore(targetUser);
         const trustLevel = getUserTrustLevel(targetUser);
+        const lastLoginDays = getUserLastLoginDays(targetUser);
         
         return {
-          user: {
-            ...targetUser,
-            securityLevel,
-            activityScore,
-            trustLevel,
-            lastLoginDays: getUserLastLoginDays(targetUser)
-          },
-          generatedAt: new Date().toISOString(),
-          reportType: 'User Analysis Report',
-          summary: {
-            securityLevel: analytics.securityLevel,
-            activityScore: analytics.activityScore
-          },
+          securityLevel,
+          trustLevel,
+          activityScore,
+          lastLoginDays,
           recommendations: generateUserRecommendations(targetUser, securityLevel, activityScore),
-          compliance: {
-            isValid: true,
-            lastValidated: new Date().toISOString(),
-            validatedBy: 'AuthSystem'
-          }
         };
       } catch (error) {
         console.error('Report generation error:', error);
         return { 
-          user: targetUser, 
-          generatedAt: new Date().toISOString(),
-          error: 'Report generation failed',
-          status: 'error'
+          securityLevel: 'low',
+          trustLevel: 'unverified',
+          activityScore: 0,
+          lastLoginDays: 999,
+          recommendations: ['Report generation failed'],
         };
       }
     }
