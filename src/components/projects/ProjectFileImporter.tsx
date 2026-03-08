@@ -74,13 +74,13 @@ export default function ProjectFileImporter({
   };
 
   const validateFile = (file: File): string | null => {
-    if (file.size > IMPORT_OPTIONS.maxFileSize) {
+    if (IMPORT_OPTIONS.maxFileSize && file.size > IMPORT_OPTIONS.maxFileSize) {
       return `${t("projects.import.fileTooLarge")} ${formatFileSize(
-        IMPORT_OPTIONS.maxFileSize
+        IMPORT_OPTIONS.maxFileSize!
       )}`;
     }
 
-    if (!IMPORT_OPTIONS.allowedFormats.includes(file.type)) {
+    if (IMPORT_OPTIONS.allowedFormats && !IMPORT_OPTIONS.allowedFormats.includes(file.type)) {
       return t("projects.import.unsupportedFormat");
     }
 
