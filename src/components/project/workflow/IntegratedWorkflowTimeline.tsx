@@ -363,9 +363,9 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
             <div className="mt-4 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Progression pondérée</span>
-                <span className="font-medium">{progress.weighted_progress}%</span>
+                <span className="font-medium">{progress.weightedProgress}%</span>
               </div>
-              <Progress value={progress.weighted_progress} className="h-2" />
+              <Progress value={progress.weightedProgress} className="h-2" />
             </div>
           )}
 
