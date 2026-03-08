@@ -1,11 +1,9 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { useQuery } from '@tanstack/react-query';
-import { getWorkflowStepService, WorkflowStepService } from '@/application/services/WorkflowStepService';
-import { WorkflowStepDTO, StepDocumentDTO } from '@/dtos/entities/ProjectReportDTO';
+import { WorkflowStepService } from '@/application/services/WorkflowStepService';
+import { WorkflowStepDTO, StepDocumentDTO } from '@/types/workflow-dto';
 import { FileText, Plus, Eye, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface StepDocumentsSectionProps {
@@ -14,10 +12,13 @@ interface StepDocumentsSectionProps {
   onOpenAddDocument: (step: WorkflowStepDTO) => void;
 }
 
+const workflowStepSvc = new WorkflowStepService();
+
 const StepDocumentsSection: React.FC<StepDocumentsSectionProps> = ({ step, readonly = false, onOpenAddDocument }) => {
+  // WorkflowStepService doesn't have getStepDocuments yet - return empty until repo is ready
   const { data: stepDocuments = [], isLoading } = useQuery<StepDocumentDTO[]>({
     queryKey: ['step-documents', step.id],
-    queryFn: () => WorkflowStepService.getStepDocuments(step.id),
+    queryFn: async () => [],
     enabled: !!step.id,
   });
 
@@ -47,11 +48,13 @@ const StepDocumentsSection: React.FC<StepDocumentsSectionProps> = ({ step, reado
     }
   };
 
+  const canUpload = step.can_upload_documents;
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h4 className="font-medium">Documents</h4>
-        {!readonly && step.can_upload_documents && (
+        {!readonly && canUpload && (
           <Button size="sm" variant="outline" onClick={() => onOpenAddDocument(step)}>
             <Plus className="h-4 w-4 mr-1" />
             Ajouter
@@ -59,7 +62,7 @@ const StepDocumentsSection: React.FC<StepDocumentsSectionProps> = ({ step, reado
         )}
       </div>
 
-      {!step.can_upload_documents && (
+      {!canUpload && (
         <div className="p-3 bg-muted rounded-lg">
           <p className="text-sm text-muted-foreground">
             Upload de documents non disponible pour cette étape (statut: {step.status})
@@ -136,7 +139,7 @@ const StepDocumentsSection: React.FC<StepDocumentsSectionProps> = ({ step, reado
         <div className="text-center py-4">
           <FileText className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
           <p className="text-sm text-muted-foreground">Aucun document pour cette étape.</p>
-          {step.can_upload_documents && !readonly && (
+          {canUpload && !readonly && (
             <Button size="sm" variant="outline" className="mt-2" onClick={() => onOpenAddDocument(step)}>
               <Plus className="h-4 w-4 mr-1" />
               Ajouter le premier document

@@ -486,7 +486,7 @@ const PublicProcurementWorkflow: React.FC<PublicProcurementWorkflowProps> = ({ s
         newStatus = 'pending';
       }
 
-      await WorkflowService.updateStageStatus(
+      await workflowSvc.updateStageStatus(
         selectedTender.id,
         'tender',
         phase.code,
