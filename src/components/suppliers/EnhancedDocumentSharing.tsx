@@ -149,14 +149,14 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
         // Create document record using hexagonal hook
         await createDocument({
           title: uploadFormData.title,
-          document_type: 'contract',
+          documentType: 'contract' as any,
           description: uploadFormData.description,
-          project_id: uploadFormData.project_id || null,
-          file_url: uploadResult.url,
-          file_name: selectedFile.name,
-          file_size: selectedFile.size,
-          mime_type: selectedFile.type,
-          uploaded_by: user.id,
+          projectId: uploadFormData.project_id || null,
+          fileUrl: uploadResult.url,
+          fileName: selectedFile.name,
+          fileSize: selectedFile.size,
+          mimeType: selectedFile.type,
+          uploadedBy: user.id,
           status: 'draft'
         });
 
