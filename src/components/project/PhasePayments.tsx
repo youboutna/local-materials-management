@@ -334,7 +334,7 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
                       {payment.amount.toLocaleString()} MRU
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      {payment.contractor_name} - {payment.contractor_contact}
+                      {payment.contractor_name || ''}
                     </p>
                   </div>
                   <div className="flex gap-1">
