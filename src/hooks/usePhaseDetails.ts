@@ -481,7 +481,7 @@ export function usePhaseDetails(phaseId: string | undefined) {
           }
         } else {
           // Fallback: calculate from referential if no stored orderIndex
-          const referentialInfo = await getReferentialInfo(phase.type);
+          const referentialInfo = await getReferentialInfo((phase as any).type);
           if (referentialInfo) {
             const phaseCode = referentialInfo.phaseInfo.code;
             const baseOrder = referentialInfo.phaseInfo.order * 100;
