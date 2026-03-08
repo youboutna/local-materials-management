@@ -105,7 +105,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
 
   const fetchExistingCalculations = async () => {
     try {
-      // Fetch from quantity_takeoffs table
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('quantity_takeoffs')
         .select('*')
