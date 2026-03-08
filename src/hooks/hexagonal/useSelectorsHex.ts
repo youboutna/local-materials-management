@@ -245,12 +245,12 @@ export function useEmployeesSelector(options?: {
       
       return result.employees.map(employee => ({
         id: employee.id,
-        full_name: employee.fullName,
+        full_name: employee.fullName || '',
         position: employee.position,
         department: employee.department,
         email: employee.email,
         phone: employee.phone,
-        employee_id: employee.employeeId,
+        employee_id: employee.employeeId || '',
         is_active: employee.isActive
       }));
     },
