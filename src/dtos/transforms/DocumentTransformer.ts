@@ -146,7 +146,7 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
       errors.push('Document type is required');
     }
     
-    if (document.fileSize !== undefined && document.fileSize < 0) {
+    if (document.fileSize !== undefined && document.fileSize !== null && document.fileSize < 0) {
       errors.push('Document size cannot be negative');
     }
     

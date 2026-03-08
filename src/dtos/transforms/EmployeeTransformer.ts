@@ -7,6 +7,7 @@
 import { Employee } from '@/domain/entities/Employee';
 import { EmployeeDTO, CreateEmployeeDTO, UpdateEmployeeDTO, EmployeeDepartment, EmployeeRole, EmployeeType, EmployeeStatus } from '@/dtos/entities/EmployeeDTO';
 import { EntityToDTOMapper, ValidationResult } from '@/dtos/transforms/shared';
+import { Department } from '@/domain/types';
 
 export class EmployeeTransformer implements EntityToDTOMapper<Employee, EmployeeDTO> {
   /**
@@ -21,7 +22,7 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
       email: entity.email ?? undefined,
       phone: entity.phone ?? undefined,
       position: entity.position ?? undefined,
-      department: (entity.department as unknown as EmployeeDepartment) || EmployeeDepartment.ENGINEERING,
+      department: this.toDTODepartment(entity.department),
       type: EmployeeType.FULL_TIME,
       role: EmployeeRole.SPECIALIST,
       status: entity.isActive ? EmployeeStatus.ACTIVE : EmployeeStatus.INACTIVE,
@@ -45,8 +46,8 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
       dto.email ?? null,
       dto.phone ?? null,
       dto.position ?? null,
-      (dto.department as unknown as string) ?? null,
-      { name: 'employee', level: 1 },
+      this.toDomainDepartment(dto.department),
+      { name: 'employee', level: 1 } as any,
       dto.startDate ?? null,
       dto.salary ?? null,
       dto.isActive !== undefined ? dto.isActive : dto.status === EmployeeStatus.ACTIVE,
@@ -57,7 +58,7 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
       [],
       [],
       dto.skills || [],
-      dto.certifications || [],
+      [],
       dto.createdAt || new Date().toISOString(),
       dto.updatedAt || new Date().toISOString()
     );
@@ -75,8 +76,8 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
       dto.email ?? null,
       dto.phone ?? null,
       dto.position ?? null,
-      (dto.department as unknown as string) ?? null,
-      { name: 'employee', level: 1 },
+      this.toDomainDepartment(dto.department),
+      { name: 'employee', level: 1 } as any,
       dto.startDate ?? null,
       dto.salary ?? null,
       dto.status === EmployeeStatus.ACTIVE,
@@ -87,7 +88,7 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
       [],
       [],
       dto.skills || [],
-      dto.certifications || [],
+      [],
       now,
       now
     );
@@ -108,14 +109,57 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
     if (dto.email !== undefined) result.email = dto.email;
     if (dto.phone !== undefined) result.phone = dto.phone;
     if (dto.position !== undefined) result.position = dto.position;
-    if (dto.department !== undefined) result.department = dto.department;
-    if (dto.startDate !== undefined) result.hireDate = dto.startDate;
+    if (dto.department !== undefined) result.department = this.toDomainDepartment(dto.department);
     if (dto.salary !== undefined) result.salary = dto.salary;
     if (dto.status !== undefined) result.isActive = dto.status === EmployeeStatus.ACTIVE;
     if (dto.skills !== undefined) result.skills = dto.skills;
     if (dto.certifications !== undefined) result.certifications = dto.certifications;
 
     return result as Partial<Employee>;
+  }
+
+  /**
+   * Convert DTO department to domain Department type
+   */
+  private static toDomainDepartment(dept?: EmployeeDepartment): Department | null {
+    if (!dept) return null;
+    
+    const mapping: Record<EmployeeDepartment, Department> = {
+      [EmployeeDepartment.ENGINEERING]: 'engineering',
+      [EmployeeDepartment.DESIGN]: 'engineering',
+      [EmployeeDepartment.PROJECT_MANAGEMENT]: 'administration',
+      [EmployeeDepartment.QUALITY_ASSURANCE]: 'quality',
+      [EmployeeDepartment.OPERATIONS]: 'construction',
+      [EmployeeDepartment.FINANCE]: 'finance',
+      [EmployeeDepartment.HUMAN_RESOURCES]: 'administration',
+      [EmployeeDepartment.MARKETING]: 'administration',
+      [EmployeeDepartment.SALES]: 'administration',
+      [EmployeeDepartment.ADMINISTRATION]: 'administration',
+      [EmployeeDepartment.LEGAL]: 'administration',
+      [EmployeeDepartment.PROCUREMENT]: 'procurement',
+      [EmployeeDepartment.MAINTENANCE]: 'construction',
+      [EmployeeDepartment.SECURITY]: 'administration'
+    };
+    
+    return mapping[dept] || 'administration';
+  }
+
+  /**
+   * Convert domain Department to DTO EmployeeDepartment
+   */
+  private static toDTODepartment(dept: Department | null): EmployeeDepartment {
+    if (!dept) return EmployeeDepartment.ENGINEERING;
+    
+    const mapping: Record<Department, EmployeeDepartment> = {
+      'engineering': EmployeeDepartment.ENGINEERING,
+      'construction': EmployeeDepartment.OPERATIONS,
+      'quality': EmployeeDepartment.QUALITY_ASSURANCE,
+      'administration': EmployeeDepartment.ADMINISTRATION,
+      'finance': EmployeeDepartment.FINANCE,
+      'procurement': EmployeeDepartment.PROCUREMENT
+    };
+    
+    return mapping[dept] || EmployeeDepartment.ENGINEERING;
   }
 
   /**
@@ -208,6 +252,9 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
   }
 
   static toEntityFromDatabaseRow(row: Record<string, unknown>): Employee {
+    const deptStr = row.department as string | null;
+    const domainDept: Department | null = deptStr as Department | null;
+    
     return new Employee(
       row.id as string,
       (row.employee_id as string) || (row.id as string),
@@ -215,8 +262,8 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
       (row.email ?? null) as string | null,
       (row.phone ?? null) as string | null,
       (row.position ?? null) as string | null,
-      (row.department ?? null) as string | null,
-      { name: 'employee', level: 1 },
+      domainDept,
+      { name: 'employee', level: 1 } as any,
       (row.hire_date ?? row.start_date ?? null) as string | null,
       row.salary !== undefined ? Number(row.salary) : null,
       row.is_active !== undefined ? Boolean(row.is_active) : true,
@@ -227,7 +274,7 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
       [],
       [],
       (row.skills as string[]) || [],
-      (row.certifications as string[]) || [],
+      [],
       (row.created_at as string) || new Date().toISOString(),
       (row.updated_at as string) || new Date().toISOString()
     );

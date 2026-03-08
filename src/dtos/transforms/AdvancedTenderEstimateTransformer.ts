@@ -3,8 +3,8 @@
  * Transforms between TenderEstimate entities and DTOs with advanced calculations
  */
 
-import { TenderEstimate } from '@/domain/entities/TenderEstimate';
-import { TenderEstimateDTO, CreateTenderEstimateDTO, UpdateTenderEstimateDTO } from '@/dtos/entities/TenderEstimateDTO';
+import { TenderEstimate, CurrencyCode } from '@/domain/entities/TenderEstimate';
+import { TenderEstimateDTO } from '@/dtos/entities/TenderEstimateDTO';
 
 // Type for price range distribution
 interface PriceRangeDistribution {
@@ -21,16 +21,33 @@ export class AdvancedTenderEstimateTransformer {
   static toDTO(entity: TenderEstimate): TenderEstimateDTO {
     return {
       id: entity.id,
-      tenderId: entity.tenderId,
-      description: entity.description,
-      quantity: entity.quantity,
-      unit: entity.unit,
-      unitPrice: entity.unitPrice,
-      totalPrice: entity.totalPrice,
-      category: entity.category,
+      tender_id: entity.tenderId,
+      submitted_by: entity.submittedBy || '',
+      submission_date: entity.createdAt,
+      status: entity.status,
+      total_amount: entity.totalAmount,
+      currency: entity.currency,
+      validity_period: entity.validityPeriod,
       notes: entity.notes,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt
+      estimate_type: entity.estimateType,
+      // Financial fields
+      subtotal: entity.subtotal,
+      taxRate: entity.taxRate,
+      taxAmount: entity.taxAmount,
+      totalWithTax: entity.totalWithTax,
+      finalTotal: entity.finalTotal,
+      discountRate: entity.discountRate,
+      discountAmount: entity.discountAmount,
+      overheadPercentage: entity.overheadPercentage,
+      overheadAmount: entity.overheadAmount,
+      profitMarginPercentage: entity.profitMarginPercentage,
+      profitMarginAmount: entity.profitMarginAmount,
+      // Cost breakdown
+      totalMaterialsCost: entity.totalMaterialsCost,
+      totalLaborCost: entity.totalLaborCost,
+      totalEquipmentCost: entity.totalEquipmentCost,
+      created_at: entity.createdAt,
+      updated_at: entity.updatedAt
     };
   }
 
@@ -38,64 +55,32 @@ export class AdvancedTenderEstimateTransformer {
    * Transform DTO to TenderEstimate entity
    */
   static toEntity(dto: TenderEstimateDTO): TenderEstimate {
-    return TenderEstimate.create({
-      id: dto.id,
-      tenderId: dto.tenderId,
-      description: dto.description,
-      quantity: dto.quantity,
-      unit: dto.unit,
-      unitPrice: dto.unitPrice,
-      totalPrice: dto.totalPrice,
-      category: dto.category,
-      notes: dto.notes,
-      createdAt: dto.createdAt,
-      updatedAt: dto.updatedAt
-    });
-  }
-
-  /**
-   * Transform CreateDTO to entity
-   */
-  static fromCreateDTO(dto: CreateTenderEstimateDTO): TenderEstimate {
-    const now = new Date().toISOString();
-    return TenderEstimate.create({
-      id: crypto.randomUUID(),
-      tenderId: dto.tenderId,
-      description: dto.description,
-      quantity: dto.quantity,
-      unit: dto.unit,
-      unitPrice: dto.unitPrice,
-      totalPrice: dto.quantity * dto.unitPrice,
-      category: dto.category,
-      notes: dto.notes,
-      createdAt: now,
-      updatedAt: now
-    });
-  }
-
-  /**
-   * Transform UpdateDTO to partial entity
-   */
-  static fromUpdateDTO(dto: UpdateTenderEstimateDTO): Partial<TenderEstimate> {
-    const result: Record<string, unknown> = {
-      updatedAt: new Date().toISOString()
-    };
-
-    if (dto.description !== undefined) result.description = dto.description;
-    if (dto.quantity !== undefined) result.quantity = dto.quantity;
-    if (dto.unit !== undefined) result.unit = dto.unit;
-    if (dto.unitPrice !== undefined) result.unitPrice = dto.unitPrice;
-    if (dto.category !== undefined) result.category = dto.category;
-    if (dto.notes !== undefined) result.notes = dto.notes;
-
-    // Recalculate total if quantity or unitPrice changed
-    if (dto.quantity !== undefined || dto.unitPrice !== undefined) {
-      const quantity = dto.quantity ?? 0;
-      const unitPrice = dto.unitPrice ?? 0;
-      result.totalPrice = quantity * unitPrice;
-    }
-
-    return result as Partial<TenderEstimate>;
+    return new TenderEstimate(
+      dto.id,
+      dto.tender_id,
+      dto.status,
+      dto.currency as CurrencyCode,
+      dto.estimate_type || 'standard',
+      dto.created_at,
+      dto.updated_at,
+      {
+        submittedBy: dto.submitted_by,
+        subtotal: dto.subtotal,
+        taxAmount: dto.taxAmount ?? dto.tax_amount ?? undefined,
+        taxRate: dto.taxRate ?? dto.tax_rate ?? undefined,
+        totalWithTax: dto.totalWithTax ?? dto.total_with_tax ?? undefined,
+        finalTotal: dto.finalTotal ?? dto.final_total ?? undefined,
+        discountRate: dto.discountRate,
+        discountAmount: dto.discountAmount,
+        totalMaterialsCost: dto.totalMaterialsCost ?? dto.total_materials_cost ?? undefined,
+        totalLaborCost: dto.totalLaborCost ?? dto.total_labor_cost ?? undefined,
+        totalEquipmentCost: dto.totalEquipmentCost ?? dto.total_equipment_cost ?? undefined,
+        overheadPercentage: dto.overheadPercentage ?? dto.overhead_percentage ?? undefined,
+        overheadAmount: dto.overheadAmount ?? dto.overhead_amount ?? undefined,
+        profitMarginPercentage: dto.profitMarginPercentage ?? dto.profit_margin_percentage ?? undefined,
+        profitMarginAmount: dto.profitMarginAmount ?? dto.profit_margin_amount ?? undefined
+      }
+    );
   }
 
   /**
@@ -132,13 +117,13 @@ export class AdvancedTenderEstimateTransformer {
       };
     }
 
-    const totalValue = estimates.reduce((sum, e) => sum + (e.totalPrice || 0), 0);
-    const totalUnitPrice = estimates.reduce((sum, e) => sum + (e.unitPrice || 0), 0);
+    const totalValue = estimates.reduce((sum, e) => sum + (e.totalAmount || 0), 0);
+    const avgPrice = totalValue / estimates.length;
     
     const categories: Record<string, number> = {};
     estimates.forEach(e => {
-      const cat = e.category || 'uncategorized';
-      categories[cat] = (categories[cat] || 0) + (e.totalPrice || 0);
+      const cat = e.estimateType || 'uncategorized';
+      categories[cat] = (categories[cat] || 0) + (e.totalAmount || 0);
     });
 
     const priceRanges = this.calculatePriceDistribution(estimates);
@@ -146,7 +131,7 @@ export class AdvancedTenderEstimateTransformer {
     return {
       totalItems: estimates.length,
       totalValue,
-      averageUnitPrice: totalUnitPrice / estimates.length,
+      averageUnitPrice: avgPrice,
       categories,
       priceRanges
     };
@@ -156,7 +141,7 @@ export class AdvancedTenderEstimateTransformer {
    * Calculate price distribution ranges
    */
   private static calculatePriceDistribution(estimates: TenderEstimate[]): PriceRangeDistribution[] {
-    const prices = estimates.map(e => e.unitPrice || 0).filter(p => p > 0);
+    const prices = estimates.map(e => e.totalAmount || 0).filter(p => p > 0);
     
     if (prices.length === 0) return [];
 
@@ -205,11 +190,11 @@ export class AdvancedTenderEstimateTransformer {
     score += Math.min(estimates.length * 2, 30);
 
     // Factor 2: Category diversity
-    const categories = new Set(estimates.map(e => e.category).filter(Boolean));
+    const categories = new Set(estimates.map(e => e.estimateType).filter(Boolean));
     score += Math.min(categories.size * 5, 25);
 
     // Factor 3: Price variation
-    const prices = estimates.map(e => e.unitPrice || 0);
+    const prices = estimates.map(e => e.totalAmount || 0);
     const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
     const variance = prices.reduce((sum, p) => sum + Math.pow(p - avgPrice, 2), 0) / prices.length;
     const stdDev = Math.sqrt(variance);
@@ -217,7 +202,7 @@ export class AdvancedTenderEstimateTransformer {
     score += Math.min(coefficientOfVariation * 20, 25);
 
     // Factor 4: Total value
-    const totalValue = estimates.reduce((sum, e) => sum + (e.totalPrice || 0), 0);
+    const totalValue = estimates.reduce((sum, e) => sum + (e.totalAmount || 0), 0);
     if (totalValue > 1000000) score += 20;
     else if (totalValue > 100000) score += 15;
     else if (totalValue > 10000) score += 10;
@@ -230,18 +215,31 @@ export class AdvancedTenderEstimateTransformer {
    * Transform from database row
    */
   static toEntityFromDatabaseRow(row: Record<string, unknown>): TenderEstimate {
-    return TenderEstimate.create({
-      id: row.id as string,
-      tenderId: (row.tender_id as string) || '',
-      description: (row.description as string) || '',
-      quantity: Number(row.quantity) || 0,
-      unit: (row.unit as string) || '',
-      unitPrice: Number(row.unit_price) || 0,
-      totalPrice: Number(row.total_price) || 0,
-      category: (row.category as string) || undefined,
-      notes: (row.notes as string) || undefined,
-      createdAt: (row.created_at as string) || new Date().toISOString(),
-      updatedAt: (row.updated_at as string) || new Date().toISOString()
-    });
+    return new TenderEstimate(
+      row.id as string,
+      (row.tender_id as string) || '',
+      (row.status as TenderEstimate['status']) || 'draft',
+      (row.currency as CurrencyCode) || 'MRU',
+      (row.estimate_type as string) || 'standard',
+      (row.created_at as string) || new Date().toISOString(),
+      (row.updated_at as string) || new Date().toISOString(),
+      {
+        submittedBy: row.submitted_by as string,
+        subtotal: row.subtotal as number,
+        taxAmount: row.tax_amount as number,
+        taxRate: row.tax_rate as number,
+        totalWithTax: row.total_with_tax as number,
+        finalTotal: row.final_total as number,
+        discountRate: row.discount_rate as number,
+        discountAmount: row.discount_amount as number,
+        totalMaterialsCost: row.total_materials_cost as number,
+        totalLaborCost: row.total_labor_cost as number,
+        totalEquipmentCost: row.total_equipment_cost as number,
+        overheadPercentage: row.overhead_percentage as number,
+        overheadAmount: row.overhead_amount as number,
+        profitMarginPercentage: row.profit_margin_percentage as number,
+        profitMarginAmount: row.profit_margin_amount as number
+      }
+    );
   }
 }
