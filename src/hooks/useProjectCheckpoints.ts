@@ -427,17 +427,17 @@ export function useProjectCheckpoints(projectId: string | undefined): ProjectChe
 
       const phaseBudget = phase.estimated_cost ?? 0;
 
-      const phasePaid = phasePayments.reduce((sum: number, p: ProjectPayment) => sum + (p.amount ?? 0), 0);
+      const phasePaid = phasePayments.reduce((sum: number, p: any) => sum + ((p as any).amount ?? 0), 0);
 
       
 
       // Calculate verification status
 
-      const hasCompletedInspection = phaseInspections.some((i: InspectionResult) => i.status === 'completed');
+      const hasCompletedInspection = phaseInspections.some((i: any) => i.status === 'completed');
 
       const hasDocuments = phaseDocuments.length > 0;
 
-      const hasPV = phaseDocuments.some((d: ProjectDocument) => d.type?.toLowerCase().includes('pv') ?? false);
+      const hasPV = phaseDocuments.some((d: any) => (d as any).type?.toLowerCase().includes('pv') ?? false);
 
       
 
@@ -457,7 +457,7 @@ export function useProjectCheckpoints(projectId: string | undefined): ProjectChe
 
       };
 
-      phaseVerificationsMap.set(phase.id, phaseVerification);
+      phaseVerificationsMap.set(phase.id || '', phaseVerification);
 
 
 
@@ -487,7 +487,7 @@ export function useProjectCheckpoints(projectId: string | undefined): ProjectChe
 
       };
 
-      phaseDecomptesMap.set(phase.id, phaseDecompte);
+      phaseDecomptesMap.set(phase.id || '', phaseDecompte);
 
 
 
@@ -531,11 +531,11 @@ export function useProjectCheckpoints(projectId: string | undefined): ProjectChe
 
       allVerified: allPhasesVerified,
 
-      hasCompletedInspection: inspections.some((i: InspectionResult) => i.status === 'completed'),
+      hasCompletedInspection: inspections.some((i: any) => i.status === 'completed'),
 
       hasDocuments: documents.length > 0,
 
-      hasPV: documents.some((d: ProjectDocument) => d.type?.toLowerCase().includes('pv') ?? false),
+      hasPV: documents.some((d: any) => (d as any).type?.toLowerCase().includes('pv') ?? false),
 
       budgetConsumed: totalPaid,
 

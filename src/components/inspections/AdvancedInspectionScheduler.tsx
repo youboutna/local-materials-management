@@ -208,7 +208,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
         emp.position?.toLowerCase().includes('ingénieur')
       );
       
-      if (projectEngConsultant && !selectedInspector) {
+      if (projectEngConsultant && !selectedInspector && projectEngConsultant.id) {
         setSelectedInspector(projectEngConsultant.id);
       }
     }
@@ -443,7 +443,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
                           const isResponsable = inspector.position?.toLowerCase().includes('responsable');
                           
                           return (
-                            <SelectItem key={inspector.id} value={inspector.id}>
+                            <SelectItem key={inspector.id || ''} value={inspector.id || ''}>
                               <div className="flex flex-col w-full">
                                 <div className="flex items-center gap-2">
                                   <span className="font-medium">{inspector.full_name}</span>

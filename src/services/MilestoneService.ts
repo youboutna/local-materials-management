@@ -81,17 +81,17 @@ export class MilestoneService {
         .in('id', phaseIds);
       
       phaseMap = (phases || []).reduce((acc, p) => {
-        acc[p.id] = p.phase_name || 'Phase sans nom';
+        if (p.id) acc[p.id] = p.phase_name || 'Phase sans nom';
         return acc;
       }, {} as Record<string, string>);
     }
 
-    return (milestones || []).map(m => {
+    return (milestones || []).filter(m => m.id).map(m => {
       const deps = m.dependencies as any;
       return {
-        id: m.id,
-        title: m.title,
-        target_date: m.target_date,
+        id: m.id!,
+        title: m.title || '',
+        target_date: m.target_date || '',
         completed_date: m.completed_date || undefined,
         status: m.status as MilestoneSummaryDTO['status'],
         type: deps?.type || 'checkpoint',
@@ -164,7 +164,7 @@ export class MilestoneService {
 
     const pending = milestones.filter(m => m.status !== 'completed');
     const upcoming = pending.filter(m => {
-      const targetDate = parseISO(m.target_date);
+      const targetDate = parseISO(m.target_date || '');
       const daysUntil = differenceInDays(targetDate, today);
       return daysUntil >= 0 && daysUntil <= 14;
     });
@@ -178,7 +178,7 @@ export class MilestoneService {
       weighted_progress: Math.round(weightedProgress),
       schedule_performance_index: Math.round(spi * 100) / 100,
       critical_path_status: criticalPathStatus,
-      critical_path_float_days: criticalDelayed.length > 0 ? -differenceInDays(today, parseISO(criticalDelayed[0].target_date)) : undefined,
+      critical_path_float_days: criticalDelayed.length > 0 ? -differenceInDays(today, parseISO(criticalDelayed[0].target_date || '')) : undefined,
       next_milestone: nextMilestone,
       overdue_milestones: delayed.map(m => this.mapToSummary(m)),
       upcoming_milestones: upcoming.map(m => this.mapToSummary(m))

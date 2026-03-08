@@ -61,7 +61,7 @@ const DocumentSelector: React.FC<DocumentSelectorProps> = ({
 
       const { data, error } = await query;
       if (error) throw error;
-      return data || [];
+      return (data || []).filter(d => d.id) as any[];
     },
   });
 

@@ -53,17 +53,17 @@ export const calculateInsuranceMetrics = async (
   thirtyDaysFromNow.setDate(now.getDate() + 30);
 
   const activeCertificates = certificates.filter(cert => 
-    cert.status === 'active' && new Date(cert.valid_until) > now
+    cert.status === 'active' && new Date(cert.valid_until || '') > now
   );
 
   const expiringCertificates = certificates.filter(cert =>
     cert.status === 'active' && 
-    new Date(cert.valid_until) > now &&
-    new Date(cert.valid_until) <= thirtyDaysFromNow
+    new Date(cert.valid_until || '') > now &&
+    new Date(cert.valid_until || '') <= thirtyDaysFromNow
   );
 
   const expiredCertificates = certificates.filter(cert =>
-    new Date(cert.valid_until) <= now
+    new Date(cert.valid_until || '') <= now
   );
 
   const totalCoverage = certificates.reduce((sum, cert) => 
@@ -80,7 +80,7 @@ export const calculateInsuranceMetrics = async (
 
   // Group by insurance company
   const companyStats = certificates.reduce((acc, cert) => {
-    const company = cert.insurance_company;
+    const company = cert.insurance_company || 'Inconnu';
     if (!acc[company]) {
       acc[company] = { count: 0, totalCoverage: 0 };
     }
@@ -149,7 +149,7 @@ export const assessInsuranceRisk = async (
 
   // Check expiration dates
   certificates.forEach(cert => {
-    const expiryDate = new Date(cert.valid_until);
+    const expiryDate = new Date(cert.valid_until || '');
     
     if (expiryDate <= now) {
       riskFactors.push(`Assurance ${cert.coverage_type} expirée`);

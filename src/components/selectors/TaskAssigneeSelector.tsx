@@ -56,9 +56,9 @@ const TaskAssigneeSelector: React.FC<TaskAssigneeSelectorProps> = ({
       const { data: employees } = await employeeQuery.limit(25);
       
       if (employees) {
-        assigneeList.push(...employees.map(emp => ({
-          id: emp.id,
-          name: emp.full_name,
+        assigneeList.push(...employees.filter(emp => emp.id && emp.full_name).map(emp => ({
+          id: emp.id!,
+          name: emp.full_name!,
           email: emp.email || '',
           type: 'employee' as const,
           role: emp.position || undefined,

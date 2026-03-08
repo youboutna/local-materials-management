@@ -65,22 +65,25 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
       if (error) throw error;
       
       // Transform the data to match our interface
-      const transformedTakeoffs: QuantityTakeoff[] = (data || []).map(item => ({
-        id: item.id,
-        element_type: item.element_type,
-        unit: item.unit,
-        length: item.length,
-        width: item.width || undefined,
-        height: item.height || undefined,
-        quantity: item.quantity,
-        note: item.note || undefined,
-        material: {
-          id: item.material.id,
-          name: item.material.name,
-          unit: item.material.unit,
-          price_per_unit: item.material.price_per_unit
-        }
-      }));
+      const transformedTakeoffs: QuantityTakeoff[] = (data || []).filter(item => item.id).map(item => {
+        const mat = item.material as any;
+        return {
+          id: item.id!,
+          element_type: item.element_type || '',
+          unit: item.unit || '',
+          length: item.length || 0,
+          width: item.width || undefined,
+          height: item.height || undefined,
+          quantity: item.quantity || 0,
+          note: item.note || undefined,
+          material: {
+            id: mat?.id || '',
+            name: mat?.name || '',
+            unit: mat?.unit || '',
+            price_per_unit: mat?.price_per_unit || 0
+          }
+        };
+      });
       
       setTakeoffs(transformedTakeoffs);
     } catch (error) {
@@ -117,17 +120,20 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
 
       // Auto-generate takeoffs for project materials
       if (projectMaterials && projectMaterials.length > 0) {
-        const autoTakeoffs = projectMaterials.map(pm => ({
-          project_id: projectId,
-          material_id: pm.material.id,
-          element_type: pm.material.category || 'Material',
-          unit: pm.material.unit,
-          length: 1,
-          width: pm.material.unit === 'm²' || pm.material.unit === 'm³' ? 1 : undefined,
-          height: pm.material.unit === 'm³' ? 1 : undefined,
-          quantity: pm.quantity,
-          note: `Auto-généré depuis les matériaux du projet`
-        }));
+        const autoTakeoffs = projectMaterials.map(pm => {
+          const mat = pm.material as any;
+          return {
+            project_id: projectId,
+            material_id: mat?.id || '',
+            element_type: mat?.category || 'Material',
+            unit: mat?.unit || '',
+            length: 1,
+            width: mat?.unit === 'm²' || mat?.unit === 'm³' ? 1 : undefined,
+            height: mat?.unit === 'm³' ? 1 : undefined,
+            quantity: pm.quantity,
+            note: `Auto-généré depuis les matériaux du projet`
+          };
+        });
 
         // Check if auto-takeoffs already exist to avoid duplicates
         const { data: existingTakeoffs } = await supabase

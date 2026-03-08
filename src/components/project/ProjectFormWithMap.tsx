@@ -157,7 +157,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
           .order('full_name');
 
         if (error) throw error;
-        setEmployees(data || []);
+        setEmployees((data || []).filter(d => d.id && d.full_name).map(d => ({ id: d.id!, full_name: d.full_name!, position: d.position || '', department: d.department || '' })) as Employee[]);
       } catch (error) {
         console.error('Error fetching employees:', error);
       } finally {

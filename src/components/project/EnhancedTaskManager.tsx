@@ -206,7 +206,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
         .eq('is_active', true);
       
       if (error) throw error;
-      return data || [];
+      return (data || []).filter(d => d.id && d.full_name).map(d => ({ id: d.id!, full_name: d.full_name!, position: d.position || '' }));
     },
   });
 
@@ -221,10 +221,11 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
         .eq('is_active', true);
       
       if (error) throw error;
-      return data?.map(supplier => ({
-        ...supplier,
+      return (data || []).filter(d => d.id && d.name).map(supplier => ({
+        id: supplier.id!,
+        name: supplier.name!,
         contact_person: supplier.contact_person || undefined
-      })) || [];
+      }));
     },
   });
 

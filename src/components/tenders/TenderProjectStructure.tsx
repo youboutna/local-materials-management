@@ -132,8 +132,8 @@ const TenderProjectStructure: React.FC<TenderProjectStructureProps> = ({
       }));
 
       setProject({
-        id: projectData.id,
-        title: projectData.title,
+        id: projectData.id || '',
+        title: projectData.title || '',
         description: projectData.description || undefined,
         status: projectData.status || 'en attente',
         progress: projectData.progress || 0,

@@ -120,8 +120,11 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
 
       if (error) throw error;
       
-      return data?.map(phase => ({
+      return (data || []).filter(phase => phase.id).map(phase => ({
         ...phase,
+        id: phase.id!,
+        name: phase.phase_name || '',
+        status: phase.status || 'planned',
         documents_count: Array.isArray(phase.documents_count) ? phase.documents_count?.[0]?.count || 0 : 0,
         tasks_count: Array.isArray(phase.tasks_count) ? phase.tasks_count?.[0]?.count || 0 : 0,
         inspections_count: Array.isArray(phase.inspections_count) ? phase.inspections_count?.[0]?.count || 0 : 0,
@@ -129,7 +132,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
         location: (phase as any).location || null,
         stakeholders: [],
         team_delegation: (phase as any).team_delegation || {},
-      })) || [];
+      })) as Phase[];
     },
     enabled: !!projectId && projectId !== 'new-project',
   });
@@ -513,7 +516,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                                   <div className="flex items-center gap-2 mt-1">
                                     <Avatar className="h-6 w-6">
                                       <AvatarFallback className="text-xs">
-                                        {employee.full_name.split(' ').map(n => n[0]).join('')}
+                                        {(employee.full_name || '').split(' ').map(n => n[0]).join('')}
                                       </AvatarFallback>
                                     </Avatar>
                                     <span className="text-sm text-muted-foreground">

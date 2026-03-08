@@ -119,8 +119,8 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         updated_at: doc.created_at,
         document: doc.document,
         step_info: {
-          step_title: doc.step?.title,
-          step_number: doc.step?.step_number
+          step_title: (doc.step as any)?.title,
+          step_number: (doc.step as any)?.step_number
         }
       }));
     },

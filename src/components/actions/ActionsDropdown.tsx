@@ -71,24 +71,24 @@ export const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
           .eq('is_active', true)
       ]);
 
-      setAvailableEmployees((employeesData.data || []).map(emp => ({
-        id: emp.id,
-        full_name: emp.full_name,
+      setAvailableEmployees((employeesData.data || []).filter(emp => emp.id && emp.full_name).map(emp => ({
+        id: emp.id!,
+        full_name: emp.full_name!,
         email: emp.email || undefined,
         position: emp.position || undefined,
       })));
       
       // Combine employees and suppliers as potential recipients
       const recipients = [
-        ...(employeesData.data || []).map(emp => ({
-          id: emp.id,
-          name: emp.full_name,
+        ...(employeesData.data || []).filter(emp => emp.id && emp.full_name).map(emp => ({
+          id: emp.id!,
+          name: emp.full_name!,
           email: emp.email || undefined,
           phone: emp.phone || undefined,
         })),
-        ...(suppliersData.data || []).map(supplier => ({
-          id: supplier.id,
-          name: supplier.name,
+        ...(suppliersData.data || []).filter(s => s.id && s.name).map(supplier => ({
+          id: supplier.id!,
+          name: supplier.name!,
           email: supplier.email || undefined,
           phone: supplier.phone || undefined,
         }))

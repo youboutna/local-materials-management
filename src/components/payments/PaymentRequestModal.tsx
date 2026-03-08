@@ -130,9 +130,9 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
       if (projectDocs) {
         for (const doc of projectDocs) {
           docs.push({
-            id: doc.id,
-            type: doc.document_type,
-            title: doc.title,
+            id: doc.id || '',
+            type: doc.document_type || '',
+            title: doc.title || '',
             file_url: doc.file_url || undefined,
             created_at: doc.created_at || '',
             status: doc.status || undefined,

@@ -171,16 +171,16 @@ export class CheckpointVerificationEngine {
       }
 
       return [{
-        id: inspections[0].id,
+        id: inspections[0].id || '',
         category: 'inspection',
         title: `Inspection à ${inspections[0].progress_at_inspection}%`,
         description: `Inspecteur: ${inspections[0].inspector}`,
         status: 'verified',
         required: true,
         weight: 0.3,
-        reference_id: inspections[0].id,
+        reference_id: inspections[0].id || '',
         reference_type: 'inspection',
-        verified_at: inspections[0].date,
+        verified_at: inspections[0].date || undefined,
       }];
     }
 
@@ -206,17 +206,17 @@ export class CheckpointVerificationEngine {
       }
 
       items.push({
-        id: inspection.id,
+        id: inspection.id || '',
         category: 'inspection',
-        title: `Inspection du ${new Date(inspection.date).toLocaleDateString('fr-FR')}`,
+        title: `Inspection du ${new Date(inspection.date || '').toLocaleDateString('fr-FR')}`,
         description: inspection.comments || undefined,
         status: inspection.status === 'approved' ? 'verified' : 
                 inspection.status === 'rejected' ? 'failed' : 'in_progress',
         required: true,
         weight: 0.3 / requiredInspectionIds.length,
-        reference_id: inspection.id,
+        reference_id: inspection.id || '',
         reference_type: 'inspection',
-        verified_at: inspection.status === 'approved' ? inspection.date : undefined,
+        verified_at: inspection.status === 'approved' ? (inspection.date || undefined) : undefined,
       });
     }
 
@@ -257,14 +257,14 @@ export class CheckpointVerificationEngine {
       const isFailed = docStatus === 'rejected';
 
       items.push({
-        id: document.id,
+        id: document.id || '',
         category: 'document',
-        title: document.title,
+        title: document.title || '',
         description: document.description || undefined,
         status: isVerified ? 'verified' : isFailed ? 'failed' : 'in_progress',
         required: true,
         weight: 0.2 / requiredDocumentIds.length,
-        reference_id: document.id,
+        reference_id: document.id || '',
         reference_type: 'document',
         evidence_urls: document.file_url ? [document.file_url] : undefined,
       });
@@ -349,14 +349,14 @@ export class CheckpointVerificationEngine {
     const isVerified = pvStatus === 'archived' || pvStatus === 'pending_review';
     
     return {
-      id: pv.id,
+      id: pv.id || '',
       category: 'service_fait',
       title: 'PV de service fait',
-      description: pv.title,
+      description: pv.title || undefined,
       status: isVerified ? 'verified' : 'in_progress',
       required: true,
       weight: 0.2,
-      reference_id: pv.id,
+      reference_id: pv.id || '',
       reference_type: 'pv',
       evidence_urls: pv.file_url ? [pv.file_url] : undefined,
     };
