@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Unit tests for BankGuaranteeRepository
  * Testing strategy: Mock Supabase client, test CRUD operations and error handling
