@@ -143,7 +143,7 @@ const UnifiedCascadeWorkflow: React.FC<UnifiedCascadeWorkflowProps> = ({
         <StepDetailPanel
           step={selectedStep}
           phaseId={phase.id}
-          projectId={phase.project_id}
+          projectId={(phase as any).projectId || (phase as any).project_id}
           onClose={() => setSelectedStep(null)}
           onUpdateProgress={handleUpdateProgress}
           onScheduleInspection={(stepId) => onScheduleInspection(stepId)}
