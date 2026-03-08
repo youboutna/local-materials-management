@@ -206,7 +206,7 @@ export const SupplierSecureAccessPortal = () => {
               <CardContent>
                 <div className="flex gap-2">
                   <Badge>{tenderData.status}</Badge>
-                  <Badge variant="outline">{tenderData.submission_type}</Badge>
+                  <Badge variant="outline">{tenderData.submission_type || tenderData.status}</Badge>
                 </div>
               </CardContent>
             </Card>

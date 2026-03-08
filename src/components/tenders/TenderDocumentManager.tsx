@@ -16,7 +16,8 @@ import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import TenderQuantitativeEstimate from './TenderQuantitativeEstimate';
 import { parsePdf, calculateAdvancedQuantities } from '@/utils/btpCalculations';
-import { TenderDocumentWithDetails, TENDER_CATEGORY_LABELS, TENDER_DOCUMENT_LABELS, ADMINISTRATIVE_SUBCATEGORY_GROUPS } from '@/dtos';
+import { TenderDocumentWithDetails } from '@/hooks/hexagonal/useTenderDocumentsHex';
+import { TENDER_CATEGORY_LABELS, TENDER_DOCUMENT_LABELS, ADMINISTRATIVE_SUBCATEGORY_GROUPS } from '@/dtos';
 import { TenderDocumentCategory, TenderDocumentSubcategory } from './PublicProcurementWorkflow';
 
 interface TenderDocumentManagerProps {
