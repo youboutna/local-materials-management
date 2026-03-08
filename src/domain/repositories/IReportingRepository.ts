@@ -1,5 +1,11 @@
 import { ProjectReportDTO, EnhancedPhaseDTO, ProjectAnalyticsDTO, FinancialMetricsDTO, RiskAssessmentDTO, RiskItemDTO } from '@/dtos/entities/ProjectReportDTO';
 
+// Local type for report transformation input
+export type ProjectData = {
+  id: string;
+  title: string;
+  [key: string]: any;
+};
 export interface IReportingRepository {
   // Project phases data
   getProjectPhases(projectId: string): Promise<EnhancedPhaseDTO[]>;

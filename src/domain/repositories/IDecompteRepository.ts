@@ -10,9 +10,17 @@ import {
   DecompteLineDTO,
   DecompteStatus,
   PaymentType,
-  MauritaniaBusinessRulesDTO,
 } from '@/dtos/entities';
 import { MilestoneDTO } from '@/dtos/entities';
+
+// Local definition for business rules
+export interface MauritaniaBusinessRulesDTO {
+  retentionRate: number;
+  advancePaymentRate: number;
+  penaltyDailyRate: number;
+  maxRetentionAmount: number;
+  inspectionRequired: boolean;
+}
 
 // Types internes pour le calcul des décomptes
 export interface ProjectFinancials {

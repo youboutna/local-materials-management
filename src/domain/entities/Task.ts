@@ -7,10 +7,13 @@ import { Phase } from './Phase';
 import { Document } from './Document';
 import { TimeLine } from './Project';
 
-// Align with DTO enum for architectural consistency
-import { TaskStatus as DTOTaskStatus, TaskPriority as DTOTaskPriority } from '@/dtos/entities/TaskDTO';
-export type TaskStatus = DTOTaskStatus;
-export type TaskPriority = DTOTaskPriority;
+// Import enums as values for runtime usage
+import { TaskStatus as TaskStatusEnum, TaskPriority as TaskPriorityEnum } from '@/dtos/entities/TaskDTO';
+export type TaskStatus = TaskStatusEnum;
+export type TaskPriority = TaskPriorityEnum;
+// Re-export enum values for runtime
+export const TaskStatusValues = TaskStatusEnum;
+export const TaskPriorityValues = TaskPriorityEnum;
 
 export class Task {
   // Private fields for encapsulation
@@ -347,8 +350,8 @@ export class Task {
       params.stepId || null,
       params.title,
       params.description || null,
-      params.status || TaskStatus.NOT_STARTED,
-      params.priority || TaskPriority.MEDIUM,
+      params.status || TaskStatusValues.NOT_STARTED,
+      params.priority || TaskPriorityValues.MEDIUM,
       params.progress || 0,
       params.startDate || null,
       params.endDate || null,
@@ -423,11 +426,17 @@ export class Task {
   }
 
   private validateStatus(status: TaskStatus): TaskStatus {
-    const validStatuses = Object.values(TaskStatus);
-    if (!validStatuses.includes(status)) {
+    const validStatuses = Object.values(TaskStatusValues);
+    if (!validStatuses.includes(status as any)) {
       throw new Error(`Invalid task status: ${status}`);
     }
     return status;
+  }
+
+  private validateProgress(progress: number): number {
+    if (progress < 0) return 0;
+    if (progress > 100) return 100;
+    return progress;
   }
 
   private validateDuration(duration: number | null): number | null {

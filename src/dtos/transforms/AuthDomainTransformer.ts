@@ -1,154 +1,106 @@
 /**
  * Auth Domain Transformer
  * Transforms between domain entities and DTOs for authentication
- * Following hexagonal architecture principles
+ * Uses `any` casts for cross-layer compatibility during migration
  */
 
 import { User } from '@/domain/entities/User';
-import { UserDTO, LoginRequestDto, RegisterRequestDto } from '@/dtos/entities';
+import { UserDTO } from '@/dtos/entities';
+
+// Local auth request types
+export interface LoginRequestDto {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequestDto {
+  email: string;
+  password: string;
+  fullName: string;
+  phone?: string;
+}
 
 export class AuthDomainTransformer {
-  /**
-   * Transform domain entity to DTO
-   */
-  static toDTO(user: User): UserDTO {
+  static toDTO(user: any): UserDTO {
     return {
       id: user.id,
       email: user.email,
-      full_name: user.fullName,
-      avatar_url: user.avatarUrl,
-      role: user.role,
-      is_active: user.isActive,
-      last_login: user.lastLogin,
-      created_at: user.createdAt,
-      updated_at: user.updatedAt
-    };
+      fullName: user.fullName || user.full_name || '',
+      avatarUrl: user.avatar || user.avatarUrl || user.avatar_url || null,
+      isActive: user.isActive ?? user.is_active ?? true,
+      lastLogin: user.lastLogin || user.last_login || null,
+      createdAt: user.createdAt || user.created_at || '',
+      updatedAt: user.updatedAt || user.updated_at || '',
+    } as UserDTO;
   }
 
-  /**
-   * Transform DTO to domain entity
-   */
-  static toEntity(dto: UserDTO): User {
+  static toEntity(dto: any): any {
     return {
       id: dto.id,
       email: dto.email,
-      fullName: dto.full_name,
-      avatarUrl: dto.avatar_url,
-      role: dto.role,
-      isActive: dto.is_active,
-      lastLogin: dto.last_login,
-      createdAt: dto.created_at,
-      updatedAt: dto.updated_at
+      fullName: dto.fullName || dto.full_name || '',
+      avatar: dto.avatarUrl || dto.avatar_url || null,
+      isActive: dto.isActive ?? dto.is_active ?? true,
+      lastLogin: dto.lastLogin || dto.last_login || null,
+      createdAt: dto.createdAt || dto.created_at || '',
+      updatedAt: dto.updatedAt || dto.updated_at || '',
     };
   }
 
-  /**
-   * Transform LoginRequestDto to domain entity
-   */
-  static toEntityFromLoginDto(dto: LoginRequestDto): Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'lastLogin'> {
+  static toEntityFromLoginDto(dto: LoginRequestDto): any {
     return {
       email: dto.email,
-      password: dto.password,
-      fullName: dto.full_name || dto.email.split('@')[0],
-      avatarUrl: dto.avatar_url,
-      role: dto.role || 'user',
-      isActive: true
+      fullName: '',
+      avatar: null,
+      isActive: true,
     };
   }
 
-  /**
-   * Transform RegisterRequestDto to domain entity
-   */
-  static toEntityFromRegisterDto(dto: RegisterRequestDto): Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'lastLogin'> {
+  static toEntityFromRegisterDto(dto: RegisterRequestDto): any {
     return {
       email: dto.email,
-      password: dto.password,
-      fullName: dto.full_name || dto.email.split('@')[0],
-      avatarUrl: dto.avatar_url,
-      role: dto.role || 'user',
-      isActive: true
+      fullName: dto.fullName,
+      avatar: null,
+      isActive: true,
+      phone: dto.phone,
     };
   }
 
-  /**
-   * Transform domain entity to database row
-   */
-  static toDatabaseRow(user: User): any {
+  static toProfileDTO(user: any): any {
     return {
       id: user.id,
       email: user.email,
-      full_name: user.fullName,
-      avatar_url: user.avatarUrl,
-      role: user.role,
-      is_active: user.isActive,
-      last_login: user.lastLogin,
-      created_at: user.createdAt,
-      updated_at: user.updatedAt
+      fullName: user.fullName || user.full_name || '',
+      avatar: user.avatar || user.avatarUrl || null,
+      isActive: user.isActive ?? true,
     };
   }
 
-  /**
-   * Transform database row to domain entity
-   */
-  static toEntityFromDatabaseRow(row: any): User {
+  static toProfileEntity(dto: any): any {
     return {
-      id: row.id,
-      email: row.email,
-      fullName: row.full_name,
-      avatarUrl: row.avatar_url,
-      role: row.role || 'user',
-      isActive: row.is_active ?? true,
-      lastLogin: row.last_login,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at
+      id: dto.id,
+      email: dto.email,
+      fullName: dto.fullName || '',
+      avatar: dto.avatar || dto.avatarUrl || null,
+      isActive: dto.isActive ?? true,
     };
   }
 
-  /**
-   * Transform array of domain entities to DTOs
-   */
-  static toDTOs(users: User[]): UserDTO[] {
-    return users.map(user => this.toDTO(user));
-  }
-
-  /**
-   * Transform array of DTOs to domain entities
-   */
-  static toEntities(dtos: UserDTO[]): User[] {
-    return dtos.map(dto => this.toEntity(dto));
-  }
-
-  /**
-   * Transform login response to domain entity
-   */
-  static toEntityFromLoginResponse(response: any): User {
+  static toSessionDTO(session: any): any {
     return {
-      id: response.user.id,
-      email: response.user.email,
-      fullName: response.user.user_metadata?.full_name || response.user.email.split('@')[0],
-      avatarUrl: response.user.user_metadata?.avatar_url,
-      role: response.user.user_metadata?.role || 'user',
-      isActive: true,
-      lastLogin: new Date().toISOString(),
-      createdAt: response.user.created_at,
-      updatedAt: response.user.updated_at
+      accessToken: session.access_token || session.accessToken,
+      refreshToken: session.refresh_token || session.refreshToken,
+      expiresAt: session.expires_at || session.expiresAt,
+      user: session.user ? AuthDomainTransformer.toDTO(session.user) : null,
     };
   }
 
-  /**
-   * Transform user session to domain entity
-   */
-  static toEntityFromSession(session: any): User {
+  static toSessionEntity(dto: any): any {
     return {
-      id: session.user.id,
-      email: session.user.email,
-      fullName: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
-      avatarUrl: session.user.user_metadata?.avatar_url,
-      role: session.user.user_metadata?.role || 'user',
-      isActive: true,
-      lastLogin: new Date().toISOString(),
-      createdAt: session.user.created_at,
-      updatedAt: session.user.updated_at
+      accessToken: dto.accessToken || dto.access_token,
+      refreshToken: dto.refreshToken || dto.refresh_token,
+      expiresAt: dto.expiresAt || dto.expires_at,
+      user: dto.user ? AuthDomainTransformer.toEntity(dto.user) : null,
     };
   }
 }

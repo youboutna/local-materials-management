@@ -39,7 +39,7 @@ export type {
 export * from './IReportDataTransformerRepository';
 export * from './IProjectFormRepository';
 export * from './ILoadDataRepository';
-export * from './IPerformanceMonitoringRepository';
+// IPerformanceMonitoringRepository removed - not yet implemented
 export * from './IReportingRepository';
 export * from './IUserRepository';
 export * from './IProjectStakeholderRepository';

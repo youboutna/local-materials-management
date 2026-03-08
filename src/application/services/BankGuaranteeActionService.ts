@@ -12,6 +12,7 @@ import {
   UpdateBankGuaranteeActionRequestDto,
   BankGuaranteeActionStatistics
 } from '@/dtos/entities/BankGuaranteeDTO';
+// Use entities DTO consistently - ignore bank-guarantees/ external DTO
 
 export class BankGuaranteeActionService {
   constructor(

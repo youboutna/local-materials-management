@@ -58,14 +58,7 @@ export interface TenderDTO extends BaseEntityDTO {
   weight: number | null;
 }
 
-export interface TenderSubmissionDTO {
-  id: string;
-  tenderId: string;
-  supplierId: string;
-  status: TenderSubmissionStatus;
-  submittedAt: string;
-  documents?: TenderDocumentDTO[];
-}
+// TenderSubmissionDTO defined below at line ~190
 
 export interface TenderCreateDTO {
   projectId?: string;
@@ -191,12 +184,12 @@ export interface TenderSubmissionDTO {
   id: string;
   tenderId: string;
   supplierId: string;
-  status: string;
+  status: TenderSubmissionStatus | string;
   submittedAt: string;
   documents?: TenderDocumentDTO[];
 }
 
-export interface TenderDocumentWithDetails extends TenderDocument {
+export interface TenderDocumentWithDetails extends TenderDocumentDTO {
   document?: {
     id: string;
     title: string;

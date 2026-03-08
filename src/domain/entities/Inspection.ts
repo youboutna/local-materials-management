@@ -1,7 +1,16 @@
 // Domain Entity: Inspection
 // Pure business logic without infrastructure concerns
 
-import { InspectionObservation, InspectionParticipant } from '../repositories/IInspectionRepository';
+import { InspectionObservation } from '../repositories/IInspectionRepository';
+
+// Local definition for InspectionParticipant
+export interface InspectionParticipant {
+  id: string;
+  name: string;
+  role: string;
+  email?: string;
+  phone?: string;
+}
 
 export enum InspectionStatus {
   Approved = "Approved",

@@ -4,8 +4,8 @@
  */
 
 import { BankGuaranteeDTO } from '@/dtos/entities/BankGuaranteeDTO';
-import { CreateBankGuaranteeDTO } from '@/dtos/bank-guarantees/CreateBankGuaranteeDTO';
-import { UpdateBankGuaranteeDTO } from '@/dtos/bank-guarantees/UpdateBankGuaranteeDTO';
+import { CreateBankGuaranteeDTO } from '@/dtos/bank-guarantees/CreateBankGuaranteeDto';
+import { UpdateBankGuaranteeDTO } from '@/dtos/bank-guarantees/UpdateBankGuaranteeDto';
 
 /**
  * Options for querying bank guarantees

@@ -1,5 +1,14 @@
 import { supabase } from '@/integrations/supabase/client';
-import { MaterialEntity, ProjectMaterialEntity } from '@/dtos/entities/MaterialDTO';
+import { MaterialDTO as MaterialEntity } from '@/dtos/entities/MaterialDTO';
+
+// Local type for project_materials table rows
+interface ProjectMaterialEntity {
+  id: string;
+  project_id: string;
+  material_id: string;
+  quantity: number;
+  [key: string]: unknown;
+}
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export class MaterialRepository {
@@ -11,7 +20,7 @@ export class MaterialRepository {
         .order('name');
 
       if (error) throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch materials', error);
-      return (data || []) as MaterialEntity[];
+      return (data || []) as unknown as MaterialEntity[];
     } catch (error) {
       if (error instanceof AppError) throw error;
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch materials', error);
@@ -26,7 +35,7 @@ export class MaterialRepository {
         .eq('project_id', projectId);
 
       if (error) throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch project materials', error);
-      return (data || []) as (ProjectMaterialEntity & { materials: MaterialEntity })[];
+      return (data || []) as unknown as (ProjectMaterialEntity & { materials: MaterialEntity })[];
     } catch (error) {
       if (error instanceof AppError) throw error;
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch project materials', error);

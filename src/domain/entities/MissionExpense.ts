@@ -19,40 +19,31 @@ export enum MissionExpenseCategory {
   OTHER = 'other'
 }
 
-export interface MissionExpense {
-  // Core identification
+export interface IMissionExpense {
   readonly id: string;
   readonly missionId: string;
   readonly recordedBy: string;
   readonly recordedAt: string;
   readonly updatedAt: string;
-
-  // Expense details
   readonly amount: number;
   readonly category: MissionExpenseCategory;
   readonly description: string;
   readonly receiptUrl?: string;
   readonly receiptNumber?: string;
-
-  // Status and approval
   readonly status: MissionExpenseStatus;
   readonly approvedAt?: string;
   readonly approvedBy?: string;
-
-  // Financial details
   readonly currency: string;
   readonly exchangeRate?: number;
   readonly originalAmount?: number;
   readonly originalCurrency?: string;
-
-  // Metadata
   readonly notes?: string;
   readonly tags?: string[];
   readonly location?: string;
   readonly projectPhase?: string;
 }
 
-export class MissionExpense implements MissionExpense {
+export class MissionExpense implements IMissionExpense {
   constructor(
     public readonly id: string,
     public readonly missionId: string,
@@ -62,11 +53,11 @@ export class MissionExpense implements MissionExpense {
     public readonly amount: number,
     public readonly category: MissionExpenseCategory,
     public readonly description: string,
-    public readonly receiptUrl?: string,
-    public readonly receiptNumber?: string,
+    public readonly receiptUrl: string | undefined,
+    public readonly receiptNumber: string | undefined,
     public readonly status: MissionExpenseStatus,
-    public readonly approvedAt?: string,
-    public readonly approvedBy?: string,
+    public readonly approvedAt: string | undefined,
+    public readonly approvedBy: string | undefined,
     public readonly currency: string = 'MRU',
     public readonly exchangeRate?: number,
     public readonly originalAmount?: number,

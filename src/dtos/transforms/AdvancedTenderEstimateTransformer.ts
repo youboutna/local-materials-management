@@ -29,7 +29,7 @@ export class AdvancedTenderEstimateTransformer {
    * Transform Domain Entity to Comprehensive DTO
    */
   static toTenderEstimateDTO(entity: TenderEstimate): TenderEstimateDTO {
-    const plainObject = entity.toPlainObject();
+    const plainObject = entity.toPlainObject() as Record<string, any>;
     
     return {
       // Core fields

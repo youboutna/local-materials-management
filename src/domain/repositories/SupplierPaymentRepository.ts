@@ -1,22 +1,39 @@
 // Repository for Supplier Payment Requests
 import { supabase } from '@/integrations/supabase/client';
-import { SupplierPaymentRequestEntity } from '@/dtos/entities/TenderDTO';
+// Local type for supplier_payment_requests table rows (snake_case matching DB)
+interface SupplierPaymentRequestEntity {
+  id: string;
+  supplier_id: string;
+  project_id: string | null;
+  amount: number;
+  description: string;
+  payment_reason: string;
+  supporting_documents: string[];
+  status: string;
+  requested_date: string;
+  notes: string | null;
+  approved_at: string | null;
+  approved_by: string | null;
+  created_at: string;
+  updated_at: string;
+  [key: string]: unknown;
+}
 
 export class SupplierPaymentRepository {
   /**
    * Create a payment request
    */
   async createPaymentRequest(
-    requestData: Omit<SupplierPaymentRequestEntity, 'id' | 'created_at' | 'updated_at' | 'approved_date' | 'paid_date'>
+    requestData: Omit<SupplierPaymentRequestEntity, 'id' | 'created_at' | 'updated_at' | 'approved_at' | 'approved_by'>
   ): Promise<SupplierPaymentRequestEntity> {
     const { data, error } = await supabase
       .from('supplier_payment_requests')
-      .insert(requestData)
+      .insert(requestData as any)
       .select()
       .single();
 
     if (error) throw error;
-    return data as SupplierPaymentRequestEntity;
+    return data as unknown as SupplierPaymentRequestEntity;
   }
 
   /**
@@ -30,7 +47,7 @@ export class SupplierPaymentRepository {
       .order('requested_date', { ascending: false });
 
     if (error) throw error;
-    return (data || []) as SupplierPaymentRequestEntity[];
+    return (data || []) as unknown as SupplierPaymentRequestEntity[];
   }
 
   /**
@@ -44,7 +61,7 @@ export class SupplierPaymentRepository {
       .order('requested_date', { ascending: false });
 
     if (error) throw error;
-    return (data || []) as SupplierPaymentRequestEntity[];
+    return (data || []) as unknown as SupplierPaymentRequestEntity[];
   }
 
   /**
@@ -58,9 +75,7 @@ export class SupplierPaymentRepository {
     const updateData: any = { status, ...additionalData };
 
     if (status === 'approved') {
-      updateData.approved_date = new Date().toISOString();
-    } else if (status === 'paid') {
-      updateData.paid_date = new Date().toISOString();
+      updateData.approved_at = new Date().toISOString();
     }
 
     const { data, error } = await supabase
@@ -71,7 +86,7 @@ export class SupplierPaymentRepository {
       .single();
 
     if (error) throw error;
-    return data as SupplierPaymentRequestEntity;
+    return data as unknown as SupplierPaymentRequestEntity;
   }
 
   /**

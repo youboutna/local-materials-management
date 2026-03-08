@@ -4,7 +4,7 @@
  * Architecture hexagonale pure - aucune dépendance externe
  */
 
-import { UserRole, SomelecRole, UserRoleStatus } from '../entities/UserRoleSomelec';
+import { SomelecRole, UserRoleEntity as UserRole, UserRoleStatus } from '../entities/User';
 
 export interface AssignRoleOptions {
   assignedBy?: string;
