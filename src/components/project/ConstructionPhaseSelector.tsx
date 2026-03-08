@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
-import { ConstructionPhase, ConstructionStage } from '@/types/project';
+import { ConstructionPhase, ConstructionStage } from '@/dtos/entities/ProjectDTO';
 import ConstructionPhaseManager from './ConstructionPhaseManager';
 
 interface ConstructionPhaseSelectorProps {
@@ -20,8 +20,8 @@ const CONSTRUCTION_PHASES: { value: ConstructionPhase; label: string; descriptio
   { value: 'pre_construction', label: 'Pré-construction', description: 'Planification et conception' },
   { value: 'site_preparation', label: 'Préparation du site', description: 'Nettoyage et terrassement' },
   { value: 'foundation', label: 'Fondation', description: 'Travaux de fondation' },
-  { value: 'framing', label: 'Charpente', description: 'Structure principale' },
-  { value: 'structural_work', label: 'Gros œuvre', description: 'Travaux structurels' },
+  { value: 'structure', label: 'Structure', description: 'Structure principale' },
+  { value: 'exterior', label: 'Extérieur', description: 'Travaux extérieurs' },
   { value: 'finishing', label: 'Finitions', description: 'Travaux de finition' },
   { value: 'post_construction', label: 'Post-construction', description: 'Inspections finales' },
   { value: 'handover', label: 'Livraison', description: 'Remise des clés' }

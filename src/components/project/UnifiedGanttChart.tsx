@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { format, differenceInDays, addMonths, subMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { getGanttPertService, GanttPhaseData, GanttMilestoneData, UnifiedGanttData } from '@/services/GanttPertDataService';
+import { getGanttPertService, GanttPhaseData, GanttMilestoneData, UnifiedGanttData } from '@/application/services/GanttPertDataService';
 import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { useQuery } from '@tanstack/react-query';
 

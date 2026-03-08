@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { PaymentTransferForm } from './PaymentTransferForm';
-import { ProjectWithPayments } from '@/types/project';
+import { ProjectWithPayments } from '@/dtos/entities/ProjectDTO';
 import { useCreateProjectPayment } from '@/hooks/useProjectPayments';
 
 interface PaymentDialogProps {

@@ -45,7 +45,7 @@ import {
   PlusCircle
 } from 'lucide-react';
 import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
-import { MilestoneSummaryDTO, MilestoneType, MILESTONE_TYPES, MilestoneProgressDTO } from '@/types/milestone-dto';
+import { MilestoneSummaryDTO, MilestoneType, MILESTONE_TYPES, MilestoneProgressDTO } from '@/dtos/entities/MilestoneDTO';
 import { format, parseISO, isBefore, differenceInDays, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -116,11 +116,11 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
       const service = getMilestoneService();
       const raw = await service.getProjectMilestones(projectId);
       return raw.filter((m: any) => m.phase_id === phaseId).map((m: any) => ({
-        id: m.id, title: m.title, target_date: m.target_date, status: m.status,
-        type: m.type || 'checkpoint', priority: m.priority || 'medium',
-        weight: m.weight || 0.2, phase_id: m.phase_id, phase_name: m.phase_name,
-        completed_date: m.actual_completion_date, is_critical: m.priority === 'critical',
-        is_from_template: false,
+        id: m.id, title: m.title, targetDate: m.target_date || m.targetDate, status: m.status,
+        type: m.type || 'checkpoint', priority: m.priority || 'normal',
+        weight: m.weight || 0.2, phaseId: m.phase_id || m.phaseId, phaseName: m.phase_name || m.phaseName,
+        completedDate: m.actual_completion_date || m.completedDate, isCritical: m.priority === 'critical',
+        isFromTemplate: false,
       })) as MilestoneSummaryDTO[];
     },
     enabled: !!projectId && !!phaseId,
@@ -153,7 +153,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
   // Status helper
   const getStatusInfo = (milestone: MilestoneSummaryDTO) => {
     const today = new Date();
-    const targetDate = parseISO(milestone.target_date);
+    const targetDate = parseISO(milestone.targetDate);
     
     if (milestone.status === 'completed') {
       return { 
@@ -571,7 +571,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                           <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
                             <span className="flex items-center gap-1">
                               <Calendar className="h-3.5 w-3.5" />
-                              {format(parseISO(milestone.target_date), 'd MMM yyyy', { locale: fr })}
+                              {format(parseISO(milestone.targetDate), 'd MMM yyyy', { locale: fr })}
                             </span>
                             <Badge className={cn(status.bgColor, status.color, "border-0 text-xs font-medium")}>
                               {status.label}
@@ -725,7 +725,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                           <div className="flex items-center gap-3 mt-1.5 text-sm text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <Calendar className="h-3.5 w-3.5" />
-                              {format(parseISO(milestone.target_date), 'd MMMM yyyy', { locale: fr })}
+                              {format(parseISO(milestone.targetDate), 'd MMMM yyyy', { locale: fr })}
                             </span>
                             <Badge variant="outline" className="text-xs">
                               {MILESTONE_TYPES[milestone.type]?.label}
@@ -767,7 +767,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                           {milestone.title}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {format(parseISO(milestone.target_date), 'd MMM yyyy', { locale: fr })}
+                          {format(parseISO(milestone.targetDate), 'd MMM yyyy', { locale: fr })}
                         </p>
                       </div>
                     </div>
@@ -800,7 +800,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
             <DialogDescription className="space-y-1">
               <span className="block font-medium">{actionDialog.milestone?.title}</span>
               <span className="text-xs">
-                Date cible: {actionDialog.milestone && format(parseISO(actionDialog.milestone.target_date), 'd MMMM yyyy', { locale: fr })}
+                Date cible: {actionDialog.milestone && format(parseISO(actionDialog.milestone.targetDate), 'd MMMM yyyy', { locale: fr })}
               </span>
             </DialogDescription>
           </DialogHeader>

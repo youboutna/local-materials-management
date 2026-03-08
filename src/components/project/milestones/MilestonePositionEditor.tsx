@@ -25,8 +25,7 @@ import {
   ChevronDown,
   AlertTriangle
 } from 'lucide-react';
-import { MilestoneDTO, MILESTONE_TYPES, MILESTONE_PRIORITIES, MilestonePriority, MilestoneType } from '@/types/milestone-dto';
-import { GeneratedMilestoneDTO } from '@/services/MilestoneGeneratorService';
+import { MilestoneDTO, MILESTONE_TYPES, MILESTONE_PRIORITIES, MilestonePriority, MilestoneType, GeneratedMilestoneDTO } from '@/dtos/entities/MilestoneDTO';
 import { format, parseISO, addDays, differenceInDays } from 'date-fns';
 
 interface MilestonePositionEditorProps {
@@ -56,22 +55,22 @@ export const MilestonePositionEditor: React.FC<MilestonePositionEditorProps> = (
 }) => {
   const [editingMilestone, setEditingMilestone] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<{
-    target_date: string;
+    targetDate: string;
     weight: number;
-    phase_id: string;
+    phaseId: string;
     priority: MilestonePriority;
   } | null>(null);
 
   const sortedMilestones = [...milestones].sort((a, b) => 
-    new Date(a.target_date).getTime() - new Date(b.target_date).getTime()
+    new Date(a.targetDate).getTime() - new Date(b.targetDate).getTime()
   );
 
   const handleEditStart = (milestone: MilestoneDTO | GeneratedMilestoneDTO) => {
-    setEditingMilestone('id' in milestone ? milestone.id : milestone.templateId);
+    setEditingMilestone('id' in milestone ? milestone.id : milestone.templateId || null);
     setEditForm({
-      target_date: milestone.target_date,
+      targetDate: milestone.targetDate,
       weight: milestone.weight,
-      phase_id: 'phase_id' in milestone ? milestone.phase_id || '' : '',
+      phaseId: 'phaseId' in milestone ? milestone.phaseId || '' : '',
       priority: milestone.priority
     });
   };
@@ -204,7 +203,7 @@ export const MilestonePositionEditor: React.FC<MilestonePositionEditorProps> = (
                     <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {format(parseISO(milestone.target_date), 'dd/MM/yyyy')}
+                        {format(parseISO(milestone.targetDate), 'dd/MM/yyyy')}
                       </span>
                       <span>Poids: {(milestone.weight * 100).toFixed(0)}%</span>
                       <span className="text-xs">{MILESTONE_TYPES[milestone.type].label}</span>
@@ -261,16 +260,16 @@ export const MilestonePositionEditor: React.FC<MilestonePositionEditorProps> = (
                   <Label>Date cible</Label>
                   <Input
                     type="date"
-                    value={editForm.target_date}
-                    onChange={(e) => setEditForm({ ...editForm, target_date: e.target.value })}
+                    value={editForm.targetDate}
+                    onChange={(e) => setEditForm({ ...editForm, targetDate: e.target.value })}
                   />
                 </div>
 
                 <div>
                   <Label>Phase associée</Label>
                   <Select 
-                    value={editForm.phase_id} 
-                    onValueChange={(value) => setEditForm({ ...editForm, phase_id: value })}
+                    value={editForm.phaseId} 
+                    onValueChange={(value) => setEditForm({ ...editForm, phaseId: value })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner une phase" />

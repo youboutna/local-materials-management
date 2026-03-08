@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PVGeneratorService } from '@/application/services/PVGeneratorService';
-import { GeneratedPV, PVType } from '@/types/inspection-execution';
+import type { GeneratedPV, PVType } from '@/dtos/workflows/InspectionExecutionDTO';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 

@@ -38,7 +38,7 @@ import {
   TrendingDown
 } from 'lucide-react';
 import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
-import { MilestoneSummaryDTO, MilestoneType } from '@/types/milestone-dto';
+import { MilestoneSummaryDTO, MilestoneType } from '@/dtos/entities/MilestoneDTO';
 import { format, parseISO, isBefore, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -80,11 +80,11 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
       const service = getMilestoneService();
       const raw = await service.getProjectMilestones(projectId);
       return raw.map((m: any) => ({
-        id: m.id, title: m.title, target_date: m.target_date, status: m.status,
-        type: m.type || 'checkpoint', priority: m.priority || 'medium',
-        weight: m.weight || 0.2, phase_id: m.phase_id, phase_name: m.phase_name,
-        completed_date: m.actual_completion_date, is_critical: m.priority === 'critical',
-        is_from_template: false,
+        id: m.id, title: m.title, targetDate: m.target_date || m.targetDate, status: m.status,
+        type: m.type || 'checkpoint', priority: m.priority || 'normal',
+        weight: m.weight || 0.2, phaseId: m.phase_id || m.phaseId, phaseName: m.phase_name || m.phaseName,
+        completedDate: m.actual_completion_date || m.completedDate, isCritical: m.priority === 'critical',
+        isFromTemplate: false,
       })) as MilestoneSummaryDTO[];
     },
     enabled: !!projectId,
@@ -112,7 +112,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
   // Status helper
   const getStatusInfo = (milestone: MilestoneSummaryDTO) => {
     const today = new Date();
-    const targetDate = parseISO(milestone.target_date);
+    const targetDate = parseISO(milestone.targetDate);
     
     if (milestone.status === 'completed') {
       return { 
@@ -202,13 +202,13 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
 
   const handleNavigateToInspection = () => {
     const milestone = actionDialog.milestone;
-    navigate(`/inspection-monitoring${milestone?.phase_id ? `?phase=${milestone.phase_id}` : ''}`);
+    navigate(`/inspection-monitoring${(milestone as any)?.phaseId ? `?phase=${(milestone as any).phaseId}` : ''}`);
     setActionDialog({ open: false, milestone: null, action: null });
   };
 
   const handleNavigateToPayment = () => {
     const milestone = actionDialog.milestone;
-    navigate(`/payment-control${milestone?.phase_id ? `?phase=${milestone.phase_id}` : ''}`);
+    navigate(`/payment-control${(milestone as any)?.phaseId ? `?phase=${(milestone as any).phaseId}` : ''}`);
     setActionDialog({ open: false, milestone: null, action: null });
   };
 
@@ -219,7 +219,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
         title: "Programmation d'inspection",
         description: `Notification envoyée pour programmer l'inspection du jalon "${milestone.title}".`,
       });
-      navigate(`/inspection-monitoring?schedule=true&milestone=${milestone.id}${milestone.phase_id ? `&phase=${milestone.phase_id}` : ''}`);
+      navigate(`/inspection-monitoring?schedule=true&milestone=${milestone.id}${(milestone as any).phaseId ? `&phase=${(milestone as any).phaseId}` : ''}`);
     }
     setActionDialog({ open: false, milestone: null, action: null });
   };
@@ -231,7 +231,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
         title: "Exécution d'inspection",
         description: `Redirection vers le service d'inspection.`,
       });
-      navigate(`/inspection-monitoring?execute=true${milestone.phase_id ? `&phase=${milestone.phase_id}` : ''}`);
+      navigate(`/inspection-monitoring?execute=true${(milestone as any).phaseId ? `&phase=${(milestone as any).phaseId}` : ''}`);
     }
     setActionDialog({ open: false, milestone: null, action: null });
   };
@@ -243,7 +243,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
         title: "Programmation de paiement",
         description: `Notification envoyée pour programmer le paiement du jalon "${milestone.title}".`,
       });
-      navigate(`/payment-control?schedule=true&milestone=${milestone.id}${milestone.phase_id ? `&phase=${milestone.phase_id}` : ''}`);
+      navigate(`/payment-control?schedule=true&milestone=${milestone.id}${(milestone as any).phaseId ? `&phase=${(milestone as any).phaseId}` : ''}`);
     }
     setActionDialog({ open: false, milestone: null, action: null });
   };
@@ -255,7 +255,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
         title: "Traitement de paiement",
         description: `Redirection vers le contrôle des paiements.`,
       });
-      navigate(`/payment-control?execute=true${milestone.phase_id ? `&phase=${milestone.phase_id}` : ''}`);
+      navigate(`/payment-control?execute=true${(milestone as any).phaseId ? `&phase=${(milestone as any).phaseId}` : ''}`);
     }
     setActionDialog({ open: false, milestone: null, action: null });
   };
@@ -284,8 +284,8 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
 
   const handleViewPhase = () => {
     const milestone = actionDialog.milestone;
-    if (milestone?.phase_id) {
-      navigate(`/projects/${projectId}/phases/${milestone.phase_id}`);
+    if ((milestone as any)?.phaseId) {
+      navigate(`/projects/${projectId}/phases/${(milestone as any).phaseId}`);
     }
     setActionDialog({ open: false, milestone: null, action: null });
   };
@@ -386,7 +386,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                         status.bgColor,
                         status.borderColor
                       )}
-                      onClick={() => onMilestoneClick?.(milestone.id, milestone.phase_id)}
+                      onClick={() => onMilestoneClick?.(milestone.id, (milestone as any).phaseId)}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -408,10 +408,10 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                             <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                               <StatusIcon className={cn("h-3 w-3", status.color)} />
                               <span className={status.color}>{status.label}</span>
-                              {(milestone as MilestoneSummaryDTO).phase_name && (
+                              {(milestone as any).phaseName && (
                                 <>
                                   <span>•</span>
-                                  <span className="truncate">{(milestone as MilestoneSummaryDTO).phase_name}</span>
+                                  <span className="truncate">{(milestone as any).phaseName}</span>
                                 </>
                               )}
                             </div>
@@ -506,8 +506,8 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
             </DialogTitle>
           <DialogDescription>
               {actionDialog.milestone?.title}
-              {(actionDialog.milestone as MilestoneSummaryDTO)?.phase_name && (
-                <span className="text-muted-foreground"> — {(actionDialog.milestone as MilestoneSummaryDTO).phase_name}</span>
+              {(actionDialog.milestone as any)?.phaseName && (
+                <span className="text-muted-foreground"> — {(actionDialog.milestone as any).phaseName}</span>
               )}
             </DialogDescription>
           </DialogHeader>

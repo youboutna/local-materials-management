@@ -2,7 +2,7 @@ import React from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { PDFDocument, PDFSection, PDFCard, PDFRow, PDFCol, PDFText, PDFTable, PDFMetricCard } from './PDFDocument';
-import { InspectionMetrics } from '@/services/inspectionReportingService';
+import { InspectionMetrics } from '@/application/services/InspectionReportingService';
 
 interface InspectionPDFDocumentProps {
   inspection: any;

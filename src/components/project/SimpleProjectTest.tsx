@@ -1,32 +1,19 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ProjectService } from '@/application/services/ProjectService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 const SimpleProjectTest = () => {
   const { projectId } = useParams<{ projectId: string }>();
 
-  // Simple direct Supabase query without complex transformations
   const { data: project, isLoading, error } = useQuery({
     queryKey: ['simple-project', projectId],
     queryFn: async () => {
-      console.log('🔍 Simple test: fetching project', projectId);
       if (!projectId) throw new Error('No project ID');
-      
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, title, description, progress, budget, location, team_size')
-        .eq('id', projectId)
-        .maybeSingle();
-
-      if (error) {
-        console.error('❌ Supabase error:', error);
-        throw error;
-      }
-
-      console.log('✅ Simple test result:', data);
-      return data;
+      const service = new ProjectService(RepositoryFactory.getProjectRepository());
+      return await service.getProjectById(projectId);
     },
     enabled: !!projectId,
   });
@@ -49,7 +36,7 @@ const SimpleProjectTest = () => {
       <div className="container mx-auto py-8">
         <Card>
           <CardContent className="p-8 text-center">
-            <p className="text-red-600">Erreur: {error.message}</p>
+            <p className="text-destructive">Erreur: {(error as Error).message}</p>
           </CardContent>
         </Card>
       </div>
@@ -82,7 +69,7 @@ const SimpleProjectTest = () => {
             <p><strong>Progression:</strong> {project.progress}%</p>
             <p><strong>Budget:</strong> {project.budget?.toLocaleString()} MRU</p>
             <p><strong>Localisation:</strong> {project.location}</p>
-            <p><strong>Équipe:</strong> {project.team_size} membres</p>
+            <p><strong>Équipe:</strong> {project.teamSize} membres</p>
           </div>
         </CardContent>
       </Card>

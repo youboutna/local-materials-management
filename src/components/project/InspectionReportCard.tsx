@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { FileText, ChevronDown, ChevronUp, Percent, ClipboardCheck } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { format } from 'date-fns';
-import { ProjectWithPayments, InspectionStatus } from '@/types/project';
+import { ProjectWithPayments } from '@/dtos/entities/ProjectDTO';
+import { InspectionStatus } from '@/dtos/entities/InspectionDTO';
 
 interface InspectionReportCardProps {
   project: ProjectWithPayments;
@@ -35,21 +36,23 @@ export function InspectionReportCard({ project }: InspectionReportCardProps) {
   
   const latestInspection = sortedInspections[0];
   
-  const getStatusColor = (status: InspectionStatus) => {
-    switch (status) {
-      case 'approved': return 'bg-green-500';
-      case 'requires_changes': return 'bg-amber-500';
-      case 'rejected': return 'bg-red-500';
-      default: return 'bg-gray-500';
+  const getStatusColor = (status: InspectionStatus | string) => {
+    const s = String(status);
+    switch (s) {
+      case 'approved': return 'bg-success';
+      case 'requires_changes': return 'bg-warning';
+      case 'rejected': return 'bg-destructive';
+      default: return 'bg-muted';
     }
   };
   
-  const getStatusText = (status: InspectionStatus) => {
-    switch (status) {
+  const getStatusText = (status: InspectionStatus | string) => {
+    const s = String(status);
+    switch (s) {
       case 'approved': return 'APPROUVÉE';
       case 'requires_changes': return 'MODIFICATIONS REQUISES';
       case 'rejected': return 'REJETÉE';
-      default: return status.toUpperCase();
+      default: return s.toUpperCase();
     }
   };
   

@@ -41,13 +41,12 @@ import { cn } from '@/lib/utils';
 import { format, parseISO, differenceInDays, isBefore } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
-import { MilestoneSummaryDTO, MILESTONE_TYPES } from '@/types/milestone-dto';
+import { MilestoneSummaryDTO, MILESTONE_TYPES } from '@/dtos/entities/MilestoneDTO';
 import { MilestoneActionContext } from '@/components/project/milestones/MilestoneCheckpointActions';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { InspectionFormWithContext } from '@/components/project/inspection';
 import { PaymentFormWithContext } from '@/components/project/payment';
-import { getInspectionApprovalSyncService } from '@/services/InspectionApprovalSyncService';
+import { InspectionApprovalSyncService } from '@/application/services/InspectionApprovalSyncService';
 
 // Workflow stage types
 type WorkflowStage = 'scheduled' | 'in_progress' | 'documents_pending' | 'validation_pending' | 'approved' | 'rejected' | 'payment_available';
@@ -106,34 +105,32 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
       const service = getMilestoneService();
       const raw = await service.getProjectMilestones(projectId);
       return raw.filter((m: any) => m.phase_id === phaseId).map((m: any) => ({
-        id: m.id, title: m.title, target_date: m.target_date, status: m.status,
-        type: m.type || 'checkpoint', priority: m.priority || 'medium',
-        weight: m.weight || 0.2, phase_id: m.phase_id, phase_name: m.phase_name,
-        completed_date: m.actual_completion_date, is_critical: m.priority === 'critical',
-        is_from_template: false,
+        id: m.id, title: m.title, targetDate: m.target_date || m.targetDate, status: m.status,
+        type: m.type || 'checkpoint', priority: m.priority || 'normal',
+        weight: m.weight || 0.2, phaseId: m.phase_id || m.phaseId, phaseName: m.phase_name,
+        completedDate: m.actual_completion_date || m.completedDate, isCritical: m.priority === 'critical',
+        isFromTemplate: false,
       })) as MilestoneSummaryDTO[];
     },
     enabled: !!projectId && !!phaseId,
   });
 
-  // Fetch inspections for this phase
+  // Fetch inspections for this phase via InspectionService
   const { data: inspections = [], isLoading: inspectionsLoading } = useQuery({
     queryKey: ['phase-inspections-workflow', phaseId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('inspections')
-        .select('*')
-        .eq('phase_id', phaseId)
-        .order('date', { ascending: false });
-      if (error) throw error;
-      return data || [];
+      const { InspectionService } = await import('@/application/services/InspectionService');
+      const { RepositoryFactory } = await import('@/infrastructure/supabase/RepositoryFactory');
+      const service = new InspectionService(RepositoryFactory.getInspectionRepository());
+      return await service.getInspectionsByPhase(phaseId);
     },
   });
 
-  // Fetch payments for this phase
+  // Fetch payments for this phase via PaymentService
   const { data: payments = [] } = useQuery({
     queryKey: ['phase-payments-workflow', phaseId],
     queryFn: async () => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('payments')
         .select('*')
@@ -144,19 +141,22 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
     },
   });
 
+  // Helper to normalize status for comparison (domain entity uses enum, DB uses string)
+  const statusStr = (i: any) => String(i.status).toLowerCase();
+
   // Get latest approved inspection
   const latestApprovedInspection = useMemo(() => {
-    return inspections.find(i => i.status === 'approved');
+    return inspections.find((i: any) => statusStr(i) === 'approved');
   }, [inspections]);
 
   // Check if payment is available (after approved inspection with progress >= 25%)
   const isPaymentAvailable = useMemo(() => {
-    return latestApprovedInspection && latestApprovedInspection.progress_at_inspection >= 25;
+    return latestApprovedInspection && (latestApprovedInspection as any).progressAtInspection >= 25;
   }, [latestApprovedInspection]);
 
   // Check if guarantees release is triggered (progress >= 100%)
   const isGuaranteeReleaseTriggered = useMemo(() => {
-    return latestApprovedInspection && latestApprovedInspection.progress_at_inspection >= 100;
+    return latestApprovedInspection && (latestApprovedInspection as any).progressAtInspection >= 100;
   }, [latestApprovedInspection]);
 
   // Get current workflow stage for the phase
@@ -164,13 +164,13 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
     if (isPaymentAvailable) return 'payment_available';
     if (latestApprovedInspection) return 'approved';
     
-    const pendingInspection = inspections.find(i => i.status === 'in_progress' || i.status === 'pending');
+    const pendingInspection = inspections.find((i: any) => statusStr(i) === 'inprogress' || statusStr(i) === 'pending');
     if (pendingInspection) {
-      if (pendingInspection.status === 'in_progress') return 'in_progress';
+      if (statusStr(pendingInspection) === 'inprogress') return 'in_progress';
       return 'validation_pending';
     }
     
-    const scheduledInspection = inspections.find(i => i.status === 'scheduled');
+    const scheduledInspection = inspections.find((i: any) => statusStr(i) === 'scheduled');
     if (scheduledInspection) return 'scheduled';
     
     return 'scheduled';
@@ -179,7 +179,7 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
   // Get milestone status with workflow context
   const getMilestoneWorkflowStatus = useCallback((milestone: MilestoneSummaryDTO) => {
     const today = new Date();
-    const targetDate = parseISO(milestone.target_date);
+    const targetDate = parseISO(milestone.targetDate);
     
     if (milestone.status === 'completed') {
       return {
@@ -253,11 +253,11 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
 
     const paymentContext: MilestoneActionContext = {
       milestoneId: context?.milestoneId || '',
-      milestoneTitle: context?.milestoneTitle || `Paiement suite à inspection (${latestApprovedInspection?.progress_at_inspection}%)`,
+      milestoneTitle: context?.milestoneTitle || `Paiement suite à inspection (${(latestApprovedInspection as any)?.progressAtInspection}%)`,
       milestoneType: context?.milestoneType || 'checkpoint',
       phaseId,
       phaseName,
-      suggestedProgress: latestApprovedInspection?.progress_at_inspection
+      suggestedProgress: (latestApprovedInspection as any)?.progressAtInspection
     };
     setSelectedContext(paymentContext);
     setPaymentDialogOpen(true);
@@ -293,10 +293,10 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
     });
 
     // Single loop for inspections
-    inspections.forEach(i => {
-      if (i.status === 'approved') {
+    inspections.forEach((i: any) => {
+      if (statusStr(i) === 'approved') {
         approvedInspections++;
-      } else if (['pending', 'in_progress', 'scheduled'].includes(i.status)) {
+      } else if (['pending', 'inprogress', 'scheduled'].includes(statusStr(i))) {
         pendingInspections++;
       }
     });
@@ -516,7 +516,7 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
                                 {milestone.title}
                               </p>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <span>{format(parseISO(milestone.target_date), 'd MMM yyyy', { locale: fr })}</span>
+                                <span>{format(parseISO(milestone.targetDate), 'd MMM yyyy', { locale: fr })}</span>
                                 <Badge variant="outline" className="text-xs h-4">
                                   {MILESTONE_TYPES[milestone.type]?.label}
                                 </Badge>
@@ -542,24 +542,24 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
                               </h5>
                               {inspections.length > 0 ? (
                                 <div className="space-y-2">
-                                  {inspections.slice(0, 3).map(inspection => (
+                                  {inspections.slice(0, 3).map((inspection: any) => (
                                     <div key={inspection.id} className="flex items-center justify-between p-2 bg-background rounded border">
                                       <div className="flex items-center gap-2">
                                         <Badge variant={
-                                          inspection.status === 'approved' ? 'default' :
-                                          inspection.status === 'rejected' ? 'destructive' : 'secondary'
+                                          statusStr(inspection) === 'approved' ? 'default' :
+                                          statusStr(inspection) === 'rejected' ? 'destructive' : 'secondary'
                                         } className="text-xs">
-                                          {inspection.status === 'approved' ? 'Approuvée' :
-                                           inspection.status === 'rejected' ? 'Rejetée' :
-                                           inspection.status === 'in_progress' ? 'En cours' : 'En attente'}
+                                          {statusStr(inspection) === 'approved' ? 'Approuvée' :
+                                           statusStr(inspection) === 'rejected' ? 'Rejetée' :
+                                           statusStr(inspection) === 'inprogress' ? 'En cours' : 'En attente'}
                                         </Badge>
-                                        <span className="text-sm">{inspection.inspector}</span>
+                                        <span className="text-sm">{typeof inspection.inspector === 'object' ? inspection.inspector?.name || '' : inspection.inspector}</span>
                                         <span className="text-xs text-muted-foreground">
                                           {format(parseISO(inspection.date), 'd MMM', { locale: fr })}
                                         </span>
                                       </div>
                                       <div className="flex items-center gap-2">
-                                        <span className="text-sm font-medium">{inspection.progress_at_inspection}%</span>
+                                        <span className="text-sm font-medium">{inspection.progressAtInspection}%</span>
                                         {inspection.documents && typeof inspection.documents === 'object' && 
                                          !Array.isArray(inspection.documents) && 
                                          'validation_documents' in inspection.documents && 
@@ -701,7 +701,7 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
                     <div>
                       <p className="font-medium text-success">Demande de paiement disponible</p>
                       <p className="text-sm text-muted-foreground">
-                        Inspection approuvée avec {latestApprovedInspection?.progress_at_inspection}% de progression
+                        Inspection approuvée avec {(latestApprovedInspection as any)?.progressAtInspection}% de progression
                       </p>
                     </div>
                   </div>

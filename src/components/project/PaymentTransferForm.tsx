@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ProjectWithPayments } from '@/types/project';
+import { ProjectWithPayments } from '@/dtos/entities/ProjectDTO';
 import { usePaymentTransferValidation } from '@/hooks/hexagonal/usePaymentTransferValidation';
 import { AlertCircle, AlertTriangle, CreditCard, Building, Smartphone, Banknote } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";

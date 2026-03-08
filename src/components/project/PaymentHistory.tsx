@@ -1,10 +1,10 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Payment } from '@/types/project';
+import { PaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { format } from 'date-fns';
 
 interface PaymentHistoryProps {
-  payments: Payment[];
+  payments: PaymentDTO[];
 }
 
 export function PaymentHistory({ payments }: PaymentHistoryProps) {
@@ -36,12 +36,12 @@ export function PaymentHistory({ payments }: PaymentHistoryProps) {
               <div>
                 <p className="font-medium">{payment.amount.toLocaleString()} MRU</p>
                 <p className="text-sm text-muted-foreground">
-                  {format(new Date(payment.payment_date), 'dd/MM/yyyy')} • {payment.payment_method}
+                  {format(new Date(payment.paymentDate), 'dd/MM/yyyy')} • {payment.paymentMethod}
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-medium">#{payment.transaction_id}</p>
-                <p className="text-xs text-muted-foreground">Progression: {payment.progress_at_payment}%</p>
+                <p className="text-sm font-medium">#{payment.transactionId}</p>
+                <p className="text-xs text-muted-foreground">Progression: {payment.progressAtPayment}%</p>
               </div>
             </div>
           ))}

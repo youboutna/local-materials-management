@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { DocumentService } from '@/application/services/DocumentService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,6 +44,8 @@ const DocumentSelector: React.FC<DocumentSelectorProps> = ({
   const { data: documents, isLoading } = useQuery({
     queryKey: ['documents', searchTerm, documentType],
     queryFn: async (): Promise<Document[]> => {
+      // Use dynamic import to avoid top-level supabase import
+      const { supabase } = await import('@/integrations/supabase/client');
       let query = supabase
         .from('documents')
         .select('id, title, description, document_type, file_name, file_size, status, created_at, uploaded_by')

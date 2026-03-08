@@ -15,7 +15,7 @@ import {
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
-import { getGanttPertService, UnifiedPERTData } from '@/services/GanttPertDataService';
+import { getGanttPertService, UnifiedPERTData } from '@/application/services/GanttPertDataService';
 import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { useQuery } from '@tanstack/react-query';
 

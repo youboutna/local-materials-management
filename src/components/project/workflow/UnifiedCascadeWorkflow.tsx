@@ -24,7 +24,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { PhaseDTO, PhaseStepDTO } from '@/types/phase-dto';
+import { PhaseDTO, PhaseStepDTO } from '@/dtos/entities/PhaseDTO';
 import StepDetailPanel from './StepDetailPanel';
 import IntegratedWorkflowTimeline from './IntegratedWorkflowTimeline';
 
@@ -82,7 +82,7 @@ const UnifiedCascadeWorkflow: React.FC<UnifiedCascadeWorkflowProps> = ({
   
   const phaseSteps = steps.length > 0 ? steps : (phase.steps || []);
   const phaseProgress = phase.progress || 0;
-  const contractAmount = phase.estimated_cost || 0;
+  const contractAmount = (phase as any).estimatedCost || (phase as any).estimated_cost || 0;
   const { stepProgress, lastApprovedProgress, totalPaid, pendingInspections } = workflowMetrics;
 
   // Calcul décompte Mauritanie
@@ -143,7 +143,7 @@ const UnifiedCascadeWorkflow: React.FC<UnifiedCascadeWorkflowProps> = ({
         <StepDetailPanel
           step={selectedStep}
           phaseId={phase.id}
-          projectId={phase.project_id}
+          projectId={(phase as any).projectId || (phase as any).project_id}
           onClose={() => setSelectedStep(null)}
           onUpdateProgress={handleUpdateProgress}
           onScheduleInspection={(stepId) => onScheduleInspection(stepId)}
@@ -239,7 +239,7 @@ const UnifiedCascadeWorkflow: React.FC<UnifiedCascadeWorkflowProps> = ({
         steps={phaseSteps}
         phaseStartDate={(phase as any).startDate || (phase as any).start_date}
         phaseEndDate={(phase as any).endDate || (phase as any).end_date}
-        onStepClick={(step) => setSelectedStep(step)}
+        onStepClick={(step) => setSelectedStep(step as any)}
         onMilestoneClick={(id) => onMilestoneAction?.('edit', { id })}
       />
 
