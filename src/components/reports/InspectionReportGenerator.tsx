@@ -68,8 +68,8 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
       try {
         setLoading(true);
         const [data, projectMetrics] = await Promise.all([
-          InspectionReportingService.fetchInspectionReportData(inspection.id),
-          InspectionReportingService.calculateInspectionMetrics(project?.id)
+          inspectionService.fetchInspectionReportData(inspection.id),
+          inspectionService.calculateInspectionMetrics(project?.id)
         ]);
         setReportData(data);
         setMetrics(projectMetrics);

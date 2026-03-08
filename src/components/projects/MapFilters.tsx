@@ -47,7 +47,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
   }, [originalLocations]);
 
   // Get budget range from projects
-  const budgets = originalLocations.map(p => p.budget);
+  const budgets = originalLocations.map(p => p.budget ?? 0);
   const minBudget = Math.min(...budgets);
   const maxBudget = Math.max(...budgets);
 

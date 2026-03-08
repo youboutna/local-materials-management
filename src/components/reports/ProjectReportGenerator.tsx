@@ -90,8 +90,8 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
   const reportingServiceInstance = useMemo(() => new ReportingService(), []);
 
   // Generate complete project report using ReportingService
-  const generateCompleteReport = async (project: ProjectData) => {
-    return await reportingServiceInstance.generateCompleteProjectReport({ project });
+  const generateCompleteReport = async (proj: any) => {
+    return await reportingServiceInstance.generateCompleteProjectReport({ project: proj });
   };
 
   // Load all report data on component mount

@@ -777,7 +777,7 @@ export default function ProjectFileImporter({
             {t("projects.import.supportedFormats")}: Excel (.xlsx, .xls), JSON
             (.json), CSV (.csv).
             {t("projects.import.maxSize")}:{" "}
-            {formatFileSize(IMPORT_OPTIONS.maxFileSize)}
+            {formatFileSize(IMPORT_OPTIONS.maxFileSize || 10 * 1024 * 1024)}
           </AlertDescription>
         </Alert>
 
