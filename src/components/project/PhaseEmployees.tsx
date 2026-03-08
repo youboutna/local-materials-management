@@ -29,13 +29,13 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<EmployeeFormData>({
-    employee_name: '',
-    employee_role: '',
-    employee_contact: '',
-    daily_rate: '',
-    start_date: '',
-    end_date: '',
-    is_primary_supplier: false,
+    employeeName: '',
+    employeeRole: '',
+    employeeContact: '',
+    dailyRate: '',
+    startDate: '',
+    endDate: '',
+    isPrimarySupplier: false,
   });
   const [memberType, setMemberType] = useState<'employee' | 'supplier'>('employee');
   const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null);
