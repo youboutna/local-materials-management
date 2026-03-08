@@ -179,10 +179,10 @@ export const useEnhancedRiskManagerHex = (
 
   const createRiskMutation = useMutation({
     mutationFn: async (data: Partial<ProjectRisk>) => {
-      return await riskRepo.create({
+      await riskRepo.save({
         ...data,
         project_id: data.project_id || '',
-      });
+      } as any);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['enhanced-project-risks', projectId] });
