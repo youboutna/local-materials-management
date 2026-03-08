@@ -255,7 +255,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
         title: "Traitement de paiement",
         description: `Redirection vers le contrôle des paiements.`,
       });
-      navigate(`/payment-control?execute=true${milestone.phase_id ? `&phase=${milestone.phase_id}` : ''}`);
+      navigate(`/payment-control?execute=true${(milestone as any).phaseId ? `&phase=${(milestone as any).phaseId}` : ''}`);
     }
     setActionDialog({ open: false, milestone: null, action: null });
   };
