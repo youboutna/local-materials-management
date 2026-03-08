@@ -56,6 +56,7 @@ export const usePasswordManagement = () => {
     setLoading(true);
     try {
       const request: PasswordUpdateRequestDTO = {
+        userId: 'current',
         newPassword,
         confirmPassword
       };
