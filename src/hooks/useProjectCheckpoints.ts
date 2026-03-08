@@ -457,7 +457,7 @@ export function useProjectCheckpoints(projectId: string | undefined): ProjectChe
 
       };
 
-      phaseVerificationsMap.set(phase.id, phaseVerification);
+      phaseVerificationsMap.set(phase.id || '', phaseVerification);
 
 
 
