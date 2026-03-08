@@ -343,12 +343,12 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
                   {insurancePolicies.map((policy) => (
                     <div key={policy.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
-                        <h4 className="font-medium">{policy.insuranceCompany || policy.insurance_company || 'Compagnie inconnue'}</h4>
+                        <h4 className="font-medium">{policy.insuranceCompany || (policy as any).insurance_company || 'Compagnie inconnue'}</h4>
                         <p className="text-sm text-gray-600">
-                          {policy.insuranceType || policy.insurance_type || 'Type inconnu'} - {policy.policyNumber || policy.policy_number || 'N° inconnu'}
+                          {policy.insuranceType || (policy as any).insurance_type || 'Type inconnu'} - {policy.policyNumber || (policy as any).policy_number || 'N° inconnu'}
                         </p>
                         <p className="text-xs text-gray-500">
-                          Valide jusqu'au: {new Date(policy.validUntil || policy.valid_until || new Date().toISOString()).toLocaleDateString()}
+                          Valide jusqu'au: {new Date(policy.validUntil || (policy as any).valid_until || new Date().toISOString()).toLocaleDateString()}
                         </p>
                       </div>
                       <Badge className={getStatusColor(policy.status || policy.status || 'unknown')}>
