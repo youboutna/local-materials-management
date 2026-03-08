@@ -43,7 +43,7 @@ export class ComplianceValidationEngine {
       description: 'Compliance item must have a title',
       type: 'regulatory' as ComplianceType,
       required: true,
-      validator: (item) => item.title && item.title.trim().length > 0,
+      validator: (item) => !!(item.title && item.title.trim().length > 0),
       errorMessage: 'Title is required and cannot be empty'
     },
     {
