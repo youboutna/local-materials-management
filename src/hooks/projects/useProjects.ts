@@ -175,8 +175,8 @@ export const useProjects = (): UseProjectsResult => {
   };
 
   const getProjectDuration = (project: ProjectData): string => {
-    const start = project.startDate || project.start_date;
-    const end = project.endDate || project.end_date;
+    const start = project.startDate;
+    const end = project.endDate;
     if (!start || !end) return 'N/A';
     
     const startDate = new Date(start);
