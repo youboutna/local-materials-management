@@ -65,7 +65,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
       queryClient.invalidateQueries({ queryKey: ['tender-sharing-secrets', tenderId] });
       toast({
         title: 'Code de partage créé',
-        description: `Code: ${data.secret_code}`,
+        description: `Code: ${data.secretCode}`,
       });
       setSupplierEmail('');
     },
