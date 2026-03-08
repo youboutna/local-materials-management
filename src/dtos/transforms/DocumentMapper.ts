@@ -5,6 +5,7 @@
  */
 
 import { Document } from '@/domain/entities/Document';
+import { DocumentType as DTODocumentType, DocumentStatus as DTODocumentStatus } from '@/dtos/entities/DocumentDTO';
 import { DocumentDTO, CreateDocumentDTO, UpdateDocumentDTO, DocumentResponseDTO } from '@/dtos/entities/DocumentDTO';
 
 export class DocumentMapper {
