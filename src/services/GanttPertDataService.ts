@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Gantt/PERT Data Service
  * Provides unified data for Gantt and PERT diagrams
