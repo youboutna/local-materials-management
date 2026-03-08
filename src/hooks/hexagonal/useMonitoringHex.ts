@@ -191,8 +191,8 @@ export function usePaymentBlocksHex(projectId?: string) {
 
   const resolveBlock = useCallback(async (blockId: string, resolvedBy: string): Promise<boolean> => {
     try {
-      // Use static method
-      await PaymentBlockingService.resolvePaymentBlock(blockId, '', resolvedBy);
+      const blockingService = new PaymentBlockingService();
+      await blockingService.resolvePaymentBlock({ block_id: blockId, resolution_notes: '', resolved_by: resolvedBy } as any);
       await fetchBlocks();
       return true;
     } catch (err) {
