@@ -399,15 +399,15 @@ export class TaskTransformer {
     return labels[status] || status;
   }
 
-  private static domainStatusToEnum(domainStatus: DomainTaskStatus): TaskStatus {
+  private static domainStatusToEnum(domainStatus: DomainTaskStatus): DTOTaskStatus {
     switch (domainStatus) {
-      case 'not_started': return TaskStatus.NOT_STARTED;
-      case 'in_progress': return TaskStatus.IN_PROGRESS;
-      case 'completed': return TaskStatus.COMPLETED;
-      case 'delayed': return TaskStatus.DELAYED;
-      case 'blocked': return TaskStatus.BLOCKED;
-      case 'cancelled': return TaskStatus.CANCELLED;
-      default: return TaskStatus.NOT_STARTED;
+      case 'not_started': return DTOTaskStatus.NOT_STARTED;
+      case 'in_progress': return DTOTaskStatus.IN_PROGRESS;
+      case 'completed': return DTOTaskStatus.COMPLETED;
+      case 'delayed': return DTOTaskStatus.DELAYED;
+      case 'blocked': return DTOTaskStatus.BLOCKED;
+      case 'cancelled': return DTOTaskStatus.CANCELLED;
+      default: return DTOTaskStatus.NOT_STARTED;
     }
   }
 

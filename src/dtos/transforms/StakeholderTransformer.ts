@@ -53,23 +53,12 @@ export class StakeholderTransformer {
     };
   }
 
-  // Entity → ResponseDTO (avec propriétés calculées)
+  // Entity → ResponseDTO
   static toResponseDTO(entity: Stakeholder): StakeholderResponseDTO {
     const base = this.toDTO(entity);
     return {
       ...base,
-      displayName: entity.getDisplayName(),
-      fullTitle: entity.getFullTitle(),
-      isEmployee: entity.isEmployee(),
-      isExternal: entity.isExternal(),
-      isSupplier: entity.isSupplier(),
-      isInspector: entity.isInspector(),
-      isManager: entity.isManager(),
-      canRead: entity.canRead(),
-      canWrite: entity.canWrite(),
-      canAdmin: entity.canAdmin(),
-      hasFullAccess: entity.hasFullAccess(),
-      isActiveInProject: entity.isActiveInProject()
+    };
     };
   }
 

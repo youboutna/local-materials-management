@@ -437,7 +437,7 @@ export class ProjectWorkflowTransforms {
       allowsInitialPayment: formData.allows_initial_payment as boolean,
       initialPaymentPercentage: formData.initial_payment_percentage as number,
       currentPhase: formData.current_phase as string,
-      currentStage: formData.current_stage as string,
+      currentStage: formData.current_stage as ConstructionStage | undefined,
       coordinates: formData.coordinates as { latitude: number; longitude: number }
     };
   }
