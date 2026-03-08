@@ -406,9 +406,10 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
 interface TimelineViewProps {
   groupedMilestones: Record<string, MilestoneSummaryDTO[]>;
   getStatusInfo: (m: MilestoneSummaryDTO) => {
-    status: string;
-    color: string;
     icon: React.ComponentType<any>;
+    color: string;
+    bgColor: string;
+    borderColor: string;
     label: string;
   };
   getTypeIcon: (type: MilestoneType) => React.ComponentType<any>;
