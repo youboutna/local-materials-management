@@ -39,6 +39,7 @@ const TaskAssigneeSelector: React.FC<TaskAssigneeSelectorProps> = ({
   const { data: assignees, isLoading } = useQuery({
     queryKey: ['task-assignees', projectId, searchTerm],
     queryFn: async (): Promise<Assignee[]> => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const assigneeList: Assignee[] = [];
 
       // Fetch employees
