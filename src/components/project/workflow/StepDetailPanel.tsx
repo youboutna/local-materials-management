@@ -78,11 +78,11 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
       
       if (error) throw error;
       return {
-        id: data.id,
-        title: data.title,
+        id: data.id || '',
+        title: data.title || '',
         location: data.location || undefined,
         status: data.status || undefined,
-        project_reference: data.project_reference,
+        project_reference: data.project_reference || '',
         budget: data.budget || undefined,
         progress: data.progress || undefined,
         contractor_name: data.main_contractor || undefined,

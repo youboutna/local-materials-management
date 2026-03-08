@@ -83,7 +83,7 @@ export class MaterialRepository {
       if (error) throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to update project material', error);
       if (!data) throw new AppError(ErrorCode.NOT_FOUND, 'Project material not found');
       
-      return data;
+      return data as unknown as ProjectMaterialEntity;
     } catch (error) {
       if (error instanceof AppError) throw error;
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to update project material', error);

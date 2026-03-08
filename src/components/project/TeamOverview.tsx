@@ -112,10 +112,13 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
       }
       
       console.log('✅ Phases fetched (TeamOverview):', data);
-      return data?.map(phase => ({
+      return (data || []).filter(p => p.id).map(phase => ({
         ...phase,
+        id: phase.id!,
+        phase_name: phase.phase_name || '',
+        status: phase.status || 'planned',
         construction_phase: phase.construction_phase || undefined
-      })) || [];
+      })) as any[];
     },
     enabled: !!projectId && !propPhases,
   });

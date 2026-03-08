@@ -166,7 +166,7 @@ export function InspectionFormWithContext({
             title: 'Nouvelle inspection créée',
             message: `Inspection ${inspectionTypeLabel} programmée pour le ${format(date, 'dd/MM/yyyy')} - Projet: ${context?.project.title || projectId}`,
             type: 'info',
-            related_id: inspection.id,
+            related_id: inspection.id || undefined,
             metadata: {
               project_id: projectId,
               inspection_type: inspectionType,

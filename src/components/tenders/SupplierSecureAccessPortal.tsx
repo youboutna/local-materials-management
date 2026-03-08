@@ -249,7 +249,7 @@ export const SupplierSecureAccessPortal = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleDownload({ id: doc.id, title: doc.title, file_url: doc.file_url! })}
+                              onClick={() => handleDownload({ id: doc.id || '', title: doc.title || '', file_url: doc.file_url! })}
                             >
                               <Download className="h-4 w-4 mr-1" />
                               {t('common.download')}

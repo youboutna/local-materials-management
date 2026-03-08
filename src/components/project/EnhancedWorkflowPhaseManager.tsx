@@ -123,7 +123,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
       return (data || []).filter(phase => phase.id).map(phase => ({
         ...phase,
         id: phase.id!,
-        name: phase.name || '',
+        name: phase.phase_name || '',
         status: phase.status || 'planned',
         documents_count: Array.isArray(phase.documents_count) ? phase.documents_count?.[0]?.count || 0 : 0,
         tasks_count: Array.isArray(phase.tasks_count) ? phase.tasks_count?.[0]?.count || 0 : 0,

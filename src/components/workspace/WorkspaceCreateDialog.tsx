@@ -63,7 +63,7 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({
 
       // Notify parent component
       if (onWorkspaceCreated && data) {
-        onWorkspaceCreated(data.id);
+        onWorkspaceCreated(data.id || '');
       }
 
       setOpen(false);
