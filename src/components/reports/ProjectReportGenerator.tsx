@@ -52,11 +52,11 @@ interface ReportConfig {
 export function ProjectReportGenerator({ project, onClose }: ProjectReportGeneratorProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [reportData, setReportData] = useState<ReportData | null>(null);
-  const [costCalculation, setCostCalculation] = useState<CostCalculation | null>(null);
-  const [evmMetrics, setEvmMetrics] = useState<EVMMetrics | null>(null);
-  const [pertAnalysis, setPertAnalysis] = useState<PERTAnalysis | null>(null);
-  const [enrichedData, setEnrichedData] = useState<ProjectReportDTO | null>(null);
+  const [reportData, setReportData] = useState<any>(null);
+  const [costCalculation, setCostCalculation] = useState<any>(null);
+  const [evmMetrics, setEvmMetrics] = useState<any>(null);
+  const [pertAnalysis, setPertAnalysis] = useState<any>(null);
+  const [enrichedData, setEnrichedData] = useState<any>(null);
   
   const [reportConfig, setReportConfig] = useState<ReportConfig>({
     title: `Rapport de projet - ${project.title}`,
