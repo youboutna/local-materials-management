@@ -210,7 +210,7 @@ export class RiskTransformer {
    */
   static validateAndCleanDTO(dto: Partial<RiskDTO>): RiskDTO {
     const cleaned: RiskDTO = {
-      id: dto.id,
+      id: dto.id || '',
       projectId: dto.projectId,
       title: dto.title || '',
       description: dto.description,
