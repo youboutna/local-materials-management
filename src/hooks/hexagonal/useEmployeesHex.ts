@@ -88,7 +88,7 @@ export function useEmployeesHex(): UseEmployeesHexResult {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
-      toast.success(`L'employé "${data.fullName || data.full_name || ''}" a été créé avec succès.`);
+      toast.success(`L'employé "${(data as any).fullName || (data as any).full_name || ''}" a été créé avec succès.`);
       navigate('/employees');
     },
     onError: (error) => {
