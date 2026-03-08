@@ -47,7 +47,7 @@ export const useCurrentUserRoles = (): UserRolesResult => {
 
   const currentUser: UserDTO | null = profile ? {
     id: profile.id,
-    email: profile.email || '',
+    email: '',
     fullName: profile.full_name || '',
     primaryRole: profile.role || 'user',
     phone: profile.phone || undefined,

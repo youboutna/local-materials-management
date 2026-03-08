@@ -492,8 +492,8 @@ export type {
 export type { CreateInspectionData } from './useInspectionDialogHex';
 export type { ProjectImportData } from './useProjectImporterHex';
 export type { CreateUserData, UpdateUserData } from './useUserManagementDialogHex';
-export type { TenderEstimate, EstimateItem } from './useTenderEstimateHex';
-export type { TenderEstimate as TenderQuantitativeEstimate, EstimateItem as QuantitativeEstimateItem } from './useTenderQuantitativeEstimateHex';
+export type { EstimateItem } from './useTenderEstimateHex';
+export type { EstimateItem as QuantitativeEstimateItem } from './useTenderQuantitativeEstimateHex';
 export type { UsePhaseDocumentsResult } from './usePhaseDocumentsHex';
 export type { ProjectDetails, Phase as ProjectPhaseDetails, Step as PhaseStep } from './useProjectStructureHex';
 export type { TenderDocumentUploadData, TenderCategory, TenderSubcategory } from './useTenderDocumentUploadHex';

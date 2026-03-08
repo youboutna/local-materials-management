@@ -16,7 +16,7 @@ export function useDebounce<T>(
     leading = false,
     trailing = true,
     maxWait,
-  } = { delay, ...options };
+  } = options || {};
   
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
   const firstUpdate = useRef(true);
