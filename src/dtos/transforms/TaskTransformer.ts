@@ -277,7 +277,7 @@ export class TaskTransformer {
       },
       displayLabels: {
         statusLabel: TaskTransformer.getStatusLabel(task.status),
-        priorityLabel: TaskTransformer.getPriorityLabel(task.priority),
+        priorityLabel: TaskTransformer.getStatusLabel(task.priority as any),
         typeLabel: 'Développement'
       }
     };
