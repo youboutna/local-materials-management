@@ -50,8 +50,11 @@ export const SupplierTenderAccessGuard: React.FC<SupplierTenderAccessGuardProps>
 
       // Log the access
       await TenderSharingService.logAccess({
-        sharing_secret_id: secretCode,
-        action_type: 'view',
+        sharingSecretId: secretCode,
+        actionType: 'view',
+        accessedAt: new Date().toISOString(),
+        accessedBy: null,
+        sharedBy: null,
         metadata: {
           access_type: 'supplier_tender_portal',
           timestamp: new Date().toISOString()
