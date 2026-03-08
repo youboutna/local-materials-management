@@ -418,21 +418,21 @@ export class TaskAssignmentAdapter implements ITaskAssignmentRepository {
    */
   private mapRowToEntity(row: any): TaskAssignment {
     const dto = TaskAssignmentTransformer.fromRepository(row);
-    return new TaskAssignment(
-      dto.id,
-      dto.title,
-      dto.description,
-      dto.projectId,
-      dto.assignedTo,
-      dto.assignedBy,
-      dto.assigneeType as 'supplier' | 'employee' | 'user' | undefined,
-      dto.assigneeEmail,
-      dto.status,
-      dto.priority,
-      dto.dueDate ? new Date(dto.dueDate) : undefined,
-      dto.completedAt ? new Date(dto.completedAt) : undefined,
-      new Date(dto.createdAt),
-      new Date(dto.updatedAt)
-    );
+    return TaskAssignment.create({
+      id: dto.id,
+      title: dto.title,
+      description: dto.description,
+      projectId: dto.projectId,
+      assignedTo: dto.assignedTo,
+      assignedBy: dto.assignedBy,
+      assigneeType: dto.assigneeType as 'supplier' | 'employee' | 'user' | undefined,
+      assigneeEmail: dto.assigneeEmail,
+      status: dto.status as any,
+      priority: dto.priority as any,
+      dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
+      completedAt: dto.completedAt ? new Date(dto.completedAt) : undefined,
+      createdAt: new Date(dto.createdAt),
+      updatedAt: new Date(dto.updatedAt)
+    });
   }
 }

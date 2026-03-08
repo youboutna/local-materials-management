@@ -41,6 +41,29 @@ export interface ProjectStakeholder {
   updatedAt: string;
 }
 
+// Props interface for ProjectStakeholderEntity factory
+export interface ProjectStakeholderEntityProps {
+  id: string;
+  projectId: string;
+  stakeholderType: StakeholderType;
+  stakeholderEntityType: StakeholderEntityType;
+  employeeId?: string | null;
+  supplierId?: string | null;
+  externalName?: string | null;
+  externalEmail?: string | null;
+  externalPhone?: string | null;
+  roleDescription?: string | null;
+  responsibilities?: string[] | null;
+  isActive?: boolean;
+  startDate?: string | null;
+  endDate?: string | null;
+  hourlyRate?: number | null;
+  contractType?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export class ProjectStakeholderEntity implements ProjectStakeholder {
   constructor(
     public readonly id: string,
@@ -63,6 +86,31 @@ export class ProjectStakeholderEntity implements ProjectStakeholder {
     public readonly createdAt: string,
     public readonly updatedAt: string
   ) {}
+
+  // ============= Factory Method =============
+  static create(props: ProjectStakeholderEntityProps): ProjectStakeholderEntity {
+    return new ProjectStakeholderEntity(
+      props.id,
+      props.projectId,
+      props.stakeholderType,
+      props.stakeholderEntityType,
+      props.employeeId ?? null,
+      props.supplierId ?? null,
+      props.externalName ?? null,
+      props.externalEmail ?? null,
+      props.externalPhone ?? null,
+      props.roleDescription ?? null,
+      props.responsibilities ?? null,
+      props.isActive ?? true,
+      props.startDate ?? null,
+      props.endDate ?? null,
+      props.hourlyRate ?? null,
+      props.contractType ?? null,
+      props.notes ?? null,
+      props.createdAt,
+      props.updatedAt
+    );
+  }
 
   // Business logic methods
   isEmployee(): boolean {

@@ -84,6 +84,26 @@ export interface ITaskAssignment {
   updatedAt: Date;
 }
 
+// Props interface for TaskAssignment factory
+export interface TaskAssignmentProps {
+  id: string;
+  title: string;
+  description?: string;
+  projectId?: string;
+  assignedTo?: string;
+  assignedBy?: string;
+  assigneeType?: "supplier" | "employee" | "user";
+  assigneeName?: string;
+  assigneeEmail?: string;
+  status?: "pending" | "in_progress" | "completed" | "cancelled";
+  priority?: "low" | "medium" | "high" | "urgent";
+  dueDate?: Date;
+  completedAt?: Date;
+  notes?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 // Class implementation for TaskAssignment
 export class TaskAssignment implements ITaskAssignment {
   constructor(
@@ -111,6 +131,28 @@ export class TaskAssignment implements ITaskAssignment {
     if (!title || title.trim().length === 0) {
       throw new Error('Task title is required');
     }
+  }
+
+  // ============= Factory Method =============
+  static create(props: TaskAssignmentProps): TaskAssignment {
+    return new TaskAssignment(
+      props.id,
+      props.title,
+      props.description,
+      props.projectId,
+      props.assignedTo,
+      props.assignedBy,
+      props.assigneeType,
+      props.assigneeName,
+      props.assigneeEmail,
+      props.status || 'pending',
+      props.priority || 'medium',
+      props.dueDate,
+      props.completedAt,
+      props.notes,
+      props.createdAt || new Date(),
+      props.updatedAt || new Date()
+    );
   }
 
   // Business logic methods

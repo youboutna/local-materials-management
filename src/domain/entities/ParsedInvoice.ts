@@ -43,6 +43,33 @@ export interface ParsedInvoice {
   updatedAt: string;
 }
 
+// Props interface for ParsedInvoiceEntity factory
+export interface ParsedInvoiceProps {
+  id: string;
+  fileName: string;
+  originalFileName: string;
+  filePath: string;
+  fileSize: number;
+  mimeType: string;
+  invoiceNumber?: string | null;
+  invoiceDate?: string | null;
+  dueDate?: string | null;
+  amount?: number | null;
+  currency?: string | null;
+  supplierId?: string | null;
+  projectId?: string | null;
+  tenderId?: string | null;
+  invoiceType: InvoiceType;
+  status: InvoiceStatus;
+  extractedData?: Record<string, any> | null;
+  parsingErrors?: string[] | null;
+  validationErrors?: string[] | null;
+  processedAt?: string | null;
+  uploadedBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export class ParsedInvoiceEntity implements ParsedInvoice {
   constructor(
     public readonly id: string,
@@ -69,6 +96,35 @@ export class ParsedInvoiceEntity implements ParsedInvoice {
     public readonly createdAt: string,
     public readonly updatedAt: string
   ) {}
+
+  // ============= Factory Method =============
+  static create(props: ParsedInvoiceProps): ParsedInvoiceEntity {
+    return new ParsedInvoiceEntity(
+      props.id,
+      props.fileName,
+      props.originalFileName,
+      props.filePath,
+      props.fileSize,
+      props.mimeType,
+      props.invoiceNumber ?? null,
+      props.invoiceDate ?? null,
+      props.dueDate ?? null,
+      props.amount ?? null,
+      props.currency ?? null,
+      props.supplierId ?? null,
+      props.projectId ?? null,
+      props.tenderId ?? null,
+      props.invoiceType,
+      props.status,
+      props.extractedData ?? null,
+      props.parsingErrors ?? null,
+      props.validationErrors ?? null,
+      props.processedAt ?? null,
+      props.uploadedBy,
+      props.createdAt,
+      props.updatedAt
+    );
+  }
 
   // Business logic methods
   isPending(): boolean {
