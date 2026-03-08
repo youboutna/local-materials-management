@@ -207,8 +207,9 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
       const milestoneService = getMilestoneService();
       await milestoneService.createMilestone({
         ...formData,
-        phase_id: phaseId
-      });
+        phaseId: phaseId,
+        projectId: projectId,
+      } as any);
       toast({ title: 'Jalon ajouté avec succès' });
       setIsDialogOpen(false);
       loadMilestones();
