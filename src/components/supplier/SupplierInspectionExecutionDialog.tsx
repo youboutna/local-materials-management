@@ -140,7 +140,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
             const pvUrl = pvUpload.url || '';
             try {
               const pvDocRecord = await documentService.createDocument({
-                title: `PV - Inspection ${new Date(inspection.date).toLocaleDateString('fr-FR')}`,
+                title: `PV - Inspection ${new Date(inspection.date || inspection.scheduledDate || '').toLocaleDateString('fr-FR')}`,
                 description: `Procès-verbal généré lors de la validation de l'inspection`,
                 documentType: 'pv' as any,
                 projectId: inspection.project_id,
