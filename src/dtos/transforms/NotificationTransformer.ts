@@ -22,7 +22,7 @@ export class NotificationTransformer {
       message: entity.message,
       type: entity.type as 'info' | 'success' | 'warning' | 'error' | 'system',
       read: entity.read || false,
-      created_at: entity.created_at,
+      created_at: entity.created_at || new Date().toISOString(),
       updated_at: entity.updated_at,
       priority: entity.priority as 'low' | 'medium' | 'high' || undefined,
       expires_at: entity.expires_at || undefined,
