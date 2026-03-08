@@ -98,6 +98,7 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
   // Fetch project materials and automatically generate takeoffs
   const fetchProjectMaterials = async () => {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data: projectMaterials, error } = await supabase
         .from('project_materials')
         .select(`
