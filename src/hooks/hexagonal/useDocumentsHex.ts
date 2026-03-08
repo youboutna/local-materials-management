@@ -62,7 +62,7 @@ export function useDocumentsHex(filters?: DocumentFilters): UseDocumentsHexResul
 
   // Create document mutation
   const createDocumentMutation = useMutation({
-    mutationFn: async (documentData: CreateDocumentRequestDto) => {
+    mutationFn: async (documentData: CreateDocumentDTO) => {
       return await documentService.createDocument(documentData);
     },
     onSuccess: () => {
