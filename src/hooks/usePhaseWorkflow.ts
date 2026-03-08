@@ -136,16 +136,17 @@ export function usePhaseWorkflow(projectId: string, phaseId: string, phase?: Pha
   const { data: payments = [], isLoading: paymentsLoading } = useQuery({
     queryKey: ['workflow-payments', phaseId],
     queryFn: async (): Promise<PaymentRecord[]> => {
-      const payments = await paymentService.getPaymentsByPhase(phaseId);
-      return payments.map((payment: PaymentDTO) => ({
+      const result = await paymentService.getPaymentsByPhase(phaseId);
+      const paymentsArr = Array.isArray(result) ? result : (result as any)?.data || [];
+      return paymentsArr.map((payment: any) => ({
         id: payment.id,
         amount: payment.amount,
-        payment_date: payment.paymentDate,
-        phase_id: payment.phaseId,
-        project_id: payment.projectId,
-        contractor_name: payment.contractorName || '',
-        progress_at_payment: payment.progressAtPayment || 0,
-        payment_method: payment.paymentMethod,
+        payment_date: payment.paymentDate || payment.payment_date || '',
+        phase_id: payment.phaseId || payment.phase_id || null,
+        project_id: payment.projectId || payment.project_id || '',
+        contractor_name: payment.contractorName || payment.contractor_name || '',
+        progress_at_payment: payment.progressAtPayment || payment.progress_at_payment || 0,
+        payment_method: payment.paymentMethod || payment.payment_method || '',
       }));
     },
     enabled: !!phaseId,
