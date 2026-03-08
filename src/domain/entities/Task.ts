@@ -433,6 +433,12 @@ export class Task {
     return status;
   }
 
+  private validateProgress(progress: number): number {
+    if (progress < 0) return 0;
+    if (progress > 100) return 100;
+    return progress;
+  }
+
   private validateDuration(duration: number | null): number | null {
     if (duration !== null && duration < 0) {
       throw new Error('Duration must be positive');

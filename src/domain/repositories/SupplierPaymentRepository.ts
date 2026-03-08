@@ -61,7 +61,7 @@ export class SupplierPaymentRepository {
       .order('requested_date', { ascending: false });
 
     if (error) throw error;
-    return (data || []) as SupplierPaymentRequestEntity[];
+    return (data || []) as unknown as SupplierPaymentRequestEntity[];
   }
 
   /**

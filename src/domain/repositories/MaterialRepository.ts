@@ -35,7 +35,7 @@ export class MaterialRepository {
         .eq('project_id', projectId);
 
       if (error) throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch project materials', error);
-      return (data || []) as (ProjectMaterialEntity & { materials: MaterialEntity })[];
+      return (data || []) as unknown as (ProjectMaterialEntity & { materials: MaterialEntity })[];
     } catch (error) {
       if (error instanceof AppError) throw error;
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch project materials', error);
