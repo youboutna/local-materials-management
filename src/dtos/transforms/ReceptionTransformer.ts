@@ -193,7 +193,9 @@ export class ReceptionTransformer {
       findings: entity.findings.map(f => this.findingToDTO(f)),
       recommendations: entity.recommendations,
       nextInspectionDate: entity.nextInspectionDate?.toISOString(),
-      requiresFollowUp: entity.requiresFollowUp
+      requiresFollowUp: entity.requiresFollowUp,
+      createdAt: entity.scheduledDate.toISOString(),
+      updatedAt: entity.scheduledDate.toISOString()
     };
   }
 

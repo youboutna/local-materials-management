@@ -26,28 +26,32 @@ export class StakeholderTransformer {
   }
 
   // Entity → DTO
-  static toDTO(entity: Stakeholder): StakeholderDTO {
+  static toDTO(entity: Stakeholder | any): StakeholderDTO {
     return {
       id: entity.id,
+      name: entity.contact?.name || entity.name || '',
+      email: entity.contact?.email || entity.email || undefined,
+      phone: entity.contact?.phone || entity.phone || undefined,
+      stakeholderType: (entity.type || 'external') as any,
+      entityType: 'person' as any,
       projectId: entity.projectId,
-      type: entity.type,
-      role: entity.role,
-      organizationId: entity.organizationId,
-      employeeId: entity.employeeId,
+      role: entity.role as any,
+      organizationId: entity.organizationId || undefined,
+      employeeId: entity.employeeId || undefined,
       isPrimary: entity.isPrimary,
       isInternal: entity.isInternal,
-      contact: { ...entity.contact },
-      organization: entity.organization ? { ...entity.organization } : null,
-      responsibilities: [...entity.responsibilities],
-      accessLevel: entity.accessLevel,
-      startDate: entity.startDate,
-      endDate: entity.endDate,
+      contact: entity.contact ? { ...entity.contact } : undefined,
+      organization: entity.organization?.name || undefined,
+      responsibilities: entity.responsibilities ? [...entity.responsibilities] : undefined,
+      accessLevel: entity.accessLevel || undefined,
+      startDate: entity.startDate || undefined,
+      endDate: entity.endDate || undefined,
       hourlyRate: entity.hourlyRate,
       contractType: entity.contractType,
-      notes: entity.notes,
-      isActive: entity.isActive,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt
+      notes: entity.notes || undefined,
+      isActive: entity.isActive ?? true,
+      createdAt: entity.createdAt || new Date().toISOString(),
+      updatedAt: entity.updatedAt || new Date().toISOString()
     };
   }
 

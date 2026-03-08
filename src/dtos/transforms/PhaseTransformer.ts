@@ -75,10 +75,7 @@ export class PhaseTransformer {
       actual_duration_days: step.actual_duration_days,
       start_date: step.start_date ? new Date(step.start_date).toISOString().split('T')[0] : undefined,
       end_date: step.end_date ? new Date(step.end_date).toISOString().split('T')[0] : undefined,
-      estimated_cost: 0,
-      actual_cost: 0,
-      assigned_to: [], // Default value - not in PhaseStep interface
-      dependencies: [], // Default value - not in PhaseStep interface
+      // estimated_cost, actual_cost, assigned_to, dependencies not in PhaseStepDTO
       tasks: step.tasks.map(task => this.taskToDTO(task))
     };
   }

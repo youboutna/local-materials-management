@@ -219,7 +219,7 @@ export class RiskTransformer {
       status: dto.status || RiskStatus.IDENTIFIED,
       category: dto.category || RiskCategory.OPERATIONAL,
       mitigationStrategy: dto.mitigationStrategy,
-      identifiedBy: dto.identifiedBy,
+      identifiedBy: (dto as any).identifiedBy,
       identifiedDate: dto.identifiedDate,
       relatedRisks: dto.relatedRisks || [],
       createdAt: dto.createdAt || new Date().toISOString(),

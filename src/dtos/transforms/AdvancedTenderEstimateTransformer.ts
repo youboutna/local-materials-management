@@ -66,7 +66,7 @@ export class AdvancedTenderEstimateTransformer {
       {
         submittedBy: dto.submitted_by,
         subtotal: dto.subtotal,
-        taxAmount: dto.taxAmount ?? (dto.tax_amount != null ? dto.tax_amount : undefined),
+        taxAmount: dto.taxAmount ?? (dto.tax_amount != null ? dto.tax_amount : undefined) ?? undefined,
         taxRate: dto.taxRate ?? dto.tax_rate ?? undefined,
         totalWithTax: dto.totalWithTax ?? dto.total_with_tax ?? undefined,
         finalTotal: dto.finalTotal ?? dto.final_total ?? undefined,

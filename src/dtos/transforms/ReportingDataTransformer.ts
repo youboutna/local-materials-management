@@ -323,7 +323,7 @@ export class ReportingDataTransformer {
         id: risk.id,
         title: risk.title,
         description: risk.description,
-        severity: String(risk.priority),
+        severity: (risk.probability || 0) > 0.7 ? 'high' : 'medium',
         status: risk.status
       }))
     };

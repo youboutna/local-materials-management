@@ -911,7 +911,7 @@ export class ProjectTransformer {
       // Delegate material transformation to MaterialTransformer (OOP principle: separation of concerns)
       materials: project.materials?.map(material => MaterialTransformer.toDTO(material)) || [],
       // Delegate stakeholder transformation to StakeholderTransformer (OOP principle: separation of concerns)
-      stakeholders: project.suppliers?.map(supplier => StakeholderTransformer.toDTO(supplier)) || [],
+      stakeholders: project.suppliers?.map(supplier => StakeholderTransformer.toDTO(supplier as any)) || [],
       inspections: project.inspections?.map(inspection => InspectionTransformer.toDTO(inspection)) || [],
       alerts: [], // Project entity doesn't have alerts collection yet
       constructionMilestones: project.milestones?.map(milestone => MilestoneTransformer.toDTO(milestone)) || [],
