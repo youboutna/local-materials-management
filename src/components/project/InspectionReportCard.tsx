@@ -7,7 +7,7 @@ import { FileText, ChevronDown, ChevronUp, Percent, ClipboardCheck } from 'lucid
 import { Progress } from '@/components/ui/progress';
 import { format } from 'date-fns';
 import { ProjectWithPayments } from '@/dtos/entities/ProjectDTO';
-import { InspectionStatus } from '@/domain/entities/Inspection';
+import { InspectionStatus } from '@/dtos/entities/InspectionDTO';
 
 interface InspectionReportCardProps {
   project: ProjectWithPayments;
