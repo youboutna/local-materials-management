@@ -43,7 +43,7 @@ export class ComplianceValidationEngine {
       description: 'Compliance item must have a title',
       type: 'regulatory' as ComplianceType,
       required: true,
-      validator: (item) => item.title && item.title.trim().length > 0,
+      validator: (item) => !!(item.title && item.title.trim().length > 0),
       errorMessage: 'Title is required and cannot be empty'
     },
     {
@@ -52,7 +52,7 @@ export class ComplianceValidationEngine {
       description: 'Compliance item must have a description',
       type: 'regulatory' as ComplianceType,
       required: true,
-      validator: (item) => item.description && item.description.trim().length > 10,
+      validator: (item) => !!(item.description && item.description.trim().length > 10),
       errorMessage: 'Description must be at least 10 characters long'
     },
     {
@@ -61,7 +61,7 @@ export class ComplianceValidationEngine {
       description: 'Compliance item must have a responsible person assigned',
       type: 'regulatory' as ComplianceType,
       required: true,
-      validator: (item) => item.responsible && item.responsible.trim().length > 0,
+      validator: (item) => !!(item.responsible && item.responsible.trim().length > 0),
       errorMessage: 'Responsible person is required'
     },
     {
@@ -127,8 +127,8 @@ export class ComplianceValidationEngine {
       name: 'Require Documents for Critical',
       condition: (item) => 
         ['regulatory', 'financial', 'environmental'].includes(item.type) && 
-        item.riskLevel === 'critical' && 
-        (!item.documents || item.documents.length === 0),
+        item.riskLevel === 'critical' &&
+        (!(item as any).documents || (item as any).documents.length === 0),
       action: 'Critical compliance items require supporting documents',
       priority: 'high'
     }
@@ -164,7 +164,7 @@ export class ComplianceValidationEngine {
       score -= 5;
     }
 
-    if (item.type === 'bank_guarantee' && (!item.amount || item.amount <= 0)) {
+    if (item.type === 'bank_guarantee' && (!(item as any).amount || (item as any).amount <= 0)) {
       errors.push('Bank guarantee amount must be greater than 0');
       score -= 30;
     }
@@ -280,10 +280,10 @@ export class ComplianceValidationEngine {
   static getComplianceLevelRecommendation(item: ComplianceItem): ComplianceLevel {
     const score = this.calculateComplianceScore(item);
     
-    if (score >= 90) return 'full';
-    if (score >= 75) return 'substantial';
-    if (score >= 50) return 'partial';
-    return 'minimal';
+    if (score >= 90) return 'full' as ComplianceLevel;
+    if (score >= 75) return 'partial' as ComplianceLevel;
+    if (score >= 50) return 'partial' as ComplianceLevel;
+    return 'partial' as ComplianceLevel;
   }
 
   /**

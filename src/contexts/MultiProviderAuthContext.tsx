@@ -49,9 +49,12 @@ export function MultiProviderAuthProvider({ children }: { children: ReactNode })
       
       if (result && result.session) {
         // Create an AuthSession from AuthManagerSession
-        const authSession: AuthSession = {
-          access_token: '',  // AuthManagerSession doesn't expose token directly
-          expires_at: result.session.expiresAt ? new Date(result.session.expiresAt).toISOString() : undefined,
+        const authSession = {
+          access_token: '',
+          accessToken: '',
+          refreshToken: '',
+          tokenType: 'bearer',
+          expiresAt: result.session.expiresAt ? new Date(result.session.expiresAt).getTime() : 0,
           user: userResult.user || {
             id: '',
             email: '',
@@ -59,7 +62,7 @@ export function MultiProviderAuthProvider({ children }: { children: ReactNode })
             updated_at: new Date().toISOString()
           },
           provider: currentProvider
-        };
+        } as any;
         setSession(authSession);
         setUser(userResult.user);
         console.log('✅ Initial session loaded:', userResult.user?.email || 'no session');

@@ -16,7 +16,8 @@ import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import TenderQuantitativeEstimate from './TenderQuantitativeEstimate';
 import { parsePdf, calculateAdvancedQuantities } from '@/utils/btpCalculations';
-import { TenderDocumentWithDetails, TENDER_CATEGORY_LABELS, TENDER_DOCUMENT_LABELS, ADMINISTRATIVE_SUBCATEGORY_GROUPS } from '@/dtos';
+import { TenderDocumentWithDetails } from '@/hooks/hexagonal/useTenderDocumentsHex';
+import { TENDER_CATEGORY_LABELS, TENDER_DOCUMENT_LABELS, ADMINISTRATIVE_SUBCATEGORY_GROUPS } from '@/dtos';
 import { TenderDocumentCategory, TenderDocumentSubcategory } from './PublicProcurementWorkflow';
 
 interface TenderDocumentManagerProps {
@@ -412,11 +413,11 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
      setUploadFormData(prev => ({ 
        ...prev, 
        subcategory: value,
-       category: value === 'devis_quantitatif_estimatif' ? 'financial' : prev.category,
+      category: (value as string) === 'devis_quantitatif_estimatif' ? 'financial' : prev.category,
      }));
      
      // Show quantitative estimate component for "devis_quantitatif_estimatif"
-     if (value === 'devis_quantitatif_estimatif') {
+     if ((value as string) === 'devis_quantitatif_estimatif') {
        setShowQuantitativeEstimate(true);
      } else {
        setShowQuantitativeEstimate(false);
@@ -711,7 +712,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
             </div>
 
             {/* Show special message for quantitative estimate */}
-            {uploadFormData.subcategory === 'devis_quantitatif_estimatif' && (
+            {(uploadFormData.subcategory as string) === 'devis_quantitatif_estimatif' && (
               <div className="p-3 bg-blue-50 border border-blue-200 rounded">
                 <div className="flex items-start gap-2">
                   <Calculator className="h-4 w-4 text-blue-600 mt-0.5" />

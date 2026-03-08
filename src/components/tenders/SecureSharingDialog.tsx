@@ -193,7 +193,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
           <div className="space-y-3">
             <h3 className="font-semibold flex items-center gap-2">
               <Users className="h-4 w-4" />
-              Codes de partage actifs ({secrets?.filter(s => s.is_active).length || 0})
+              Codes de partage actifs ({secrets?.filter(s => s.isActive).length || 0})
             </h3>
 
             {isLoading ? (
@@ -203,20 +203,20 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
             ) : secrets && secrets.length > 0 ? (
               <div className="grid gap-3">
                 {secrets.map((secret) => (
-                  <Card key={secret.id} className={`${!secret.is_active ? 'opacity-50' : ''}`}>
+                  <Card key={secret.id} className={`${!secret.isActive ? 'opacity-50' : ''}`}>
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex-1 space-y-2">
                           <div className="flex items-center gap-3">
                             <code className="px-3 py-1.5 bg-muted rounded-md font-mono text-lg font-bold">
-                              {secret.secret_code}
+                              {secret.secretCode}
                             </code>
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => copyToClipboard(secret.secret_code)}
+                              onClick={() => copyToClipboard(secret.secretCode)}
                             >
-                              {copiedCode === secret.secret_code ? (
+                              {copiedCode === secret.secretCode ? (
                                 <Check className="h-4 w-4 text-green-600" />
                               ) : (
                                 <Copy className="h-4 w-4" />
@@ -225,26 +225,26 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                           </div>
                           
                           <div className="flex flex-wrap gap-2 text-xs">
-                            {secret.supplier_email && (
+                            {secret.supplierEmail && (
                               <Badge variant="outline">
                                 <Users className="h-3 w-3 mr-1" />
-                                {secret.supplier_email}
+                                {secret.supplierEmail}
                               </Badge>
                             )}
                             <Badge variant="outline">
                               <Clock className="h-3 w-3 mr-1" />
-                              Expire: {format(new Date(secret.expires_at), 'dd/MM/yyyy')}
+                              Expire: {format(new Date(secret.expiresAt), 'dd/MM/yyyy')}
                             </Badge>
                             <Badge variant="outline">
                               <Eye className="h-3 w-3 mr-1" />
-                              {secret.access_count}/{secret.max_access_count} accès
+                              {secret.accessCount}/{secret.maxAccessCount} accès
                             </Badge>
-                            {secret.workflow_stage && (
+                            {secret.workflowStage && (
                               <Badge variant="secondary">
-                                {secret.workflow_stage}
+                                {secret.workflowStage}
                               </Badge>
                             )}
-                            {secret.is_active ? (
+                            {secret.isActive ? (
                               <Badge variant="default">Actif</Badge>
                             ) : (
                               <Badge variant="destructive">Inactif</Badge>
@@ -252,7 +252,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                           </div>
                         </div>
                         
-                        {secret.is_active && (
+                        {secret.isActive && (
                           <Button
                             variant="outline"
                             size="sm"
