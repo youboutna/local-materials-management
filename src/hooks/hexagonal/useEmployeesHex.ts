@@ -52,7 +52,7 @@ export function useEmployeesHex(): UseEmployeesHexResult {
   // TODO: Implement EmployeeRepository in RepositoryFactory
   // For now, using a mock implementation
   const employeeRepository = {} as any; // RepositoryFactory.getEmployeeRepository();
-  const employeeService = new EmployeeService(employeeRepository, EmployeeTransformer);
+  const employeeService = new EmployeeService(employeeRepository);
 
   // Query for employees list
   const {
