@@ -39,7 +39,7 @@ export const SupplierTenderAccessGuard: React.FC<SupplierTenderAccessGuardProps>
     try {
       const validation = await TenderSharingService.validateSecret(secretCode.trim(), '');
       
-      if (!validation.is_valid) {
+      if (!validation.isValid) {
         toast({
           title: 'Code invalide',
           description: validation.message || 'Le code secret est invalide, expiré ou a atteint son nombre maximum d\'accès.',
