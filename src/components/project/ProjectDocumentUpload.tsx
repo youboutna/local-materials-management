@@ -269,7 +269,7 @@ const ProjectDocumentUpload = ({
 
   const handleCategoryChange = (category: keyof typeof DOCUMENT_CATEGORIES) => {
     setSelectedCategory(category);
-    setFormData(prev => ({ ...prev, document_type: '' as DocumentType }));
+    setFormData(prev => ({ ...prev, documentType: '' as DocumentType }));
   };
 
   const handleInputChange = (field: string, value: string) => {
