@@ -44,7 +44,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
   }
 
   async save(material: Material): Promise<void> {
-    const dbData = material.toDatabase();
+    const dbData = MaterialTransformer.toSupabase(material);
     const { error } = await supabase.from('materials').insert(dbData as Database['public']['Tables']['materials']['Insert']);
     if (error) throw new Error(`Failed to save material: ${error.message}`);
   }
