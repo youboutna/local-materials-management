@@ -169,9 +169,8 @@ export const useEnhancedRiskManagerHex = (
   const { data: riskTaskRelations = [], isLoading: relationsLoading } = useQuery({
     queryKey: ['risk-task-relations', projectId],
     queryFn: async (): Promise<RiskTaskRelation[]> => {
-      if (!currentRisks || currentRisks.length === 0) return [];
-      const data = await riskRepo.findTaskRelations(currentRisks.map(r => r.id));
-      return (data || []) as RiskTaskRelation[];
+      // Task relations not available in IRiskRepository - return empty
+      return [];
     },
     enabled: !!currentRisks && currentRisks.length > 0,
     retry: 3,
