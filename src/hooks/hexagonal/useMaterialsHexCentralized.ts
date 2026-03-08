@@ -1,14 +1,13 @@
 /**
  * Hexagonal Hook for Materials
  * Uses MaterialService with domain entities
- * Following hexagonal architecture principles
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { MaterialService } from '@/application/services/MaterialService';
 import { toast } from 'sonner';
-import { CreateMaterialRequestDto, UpdateMaterialRequestDto } from '@/dtos/transforms';
+import { CreateMaterialDTO, UpdateMaterialDTO } from '@/dtos/entities/MaterialDTO';
 
 export function useMaterials() {
   const queryClient = useQueryClient();
@@ -27,31 +26,31 @@ export function useMaterials() {
     queryFn: async () => {
       return await materialService.getAllMaterials();
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
   const createMutation = useMutation({
-    mutationFn: async (materialData: CreateMaterialRequestDto) => {
+    mutationFn: async (materialData: CreateMaterialDTO) => {
       return await materialService.createMaterial(materialData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['materials'] });
       toast.success('Matériel créé avec succès');
     },
-    onError: (error: Error) => {
+    onError: () => {
       toast.error('Échec de la création du matériel');
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: UpdateMaterialRequestDto }) => {
+    mutationFn: async ({ id, data }: { id: string; data: UpdateMaterialDTO }) => {
       return await materialService.updateMaterial(id, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['materials'] });
       toast.success('Matériel mis à jour avec succès');
     },
-    onError: (error: Error) => {
+    onError: () => {
       toast.error('Échec de la mise à jour du matériel');
     },
   });
@@ -64,7 +63,7 @@ export function useMaterials() {
       queryClient.invalidateQueries({ queryKey: ['materials'] });
       toast.success('Matériel supprimé avec succès');
     },
-    onError: (error: Error) => {
+    onError: () => {
       toast.error('Échec de la suppression du matériel');
     },
   });
@@ -91,11 +90,10 @@ export function useMaterialById(id: string) {
   return useQuery({
     queryKey: ['materials', 'id', id],
     queryFn: async () => {
-      const material = await materialService.getMaterialById(id);
-      return material;
+      return await materialService.getMaterialById(id);
     },
     enabled: !!id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -110,7 +108,7 @@ export function useMaterialsByCategory(category: string) {
       return await materialService.getMaterialsByCategory(category);
     },
     enabled: !!category,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -124,6 +122,6 @@ export function useLowStockMaterials() {
     queryFn: async () => {
       return await materialService.getLowStockMaterials();
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }

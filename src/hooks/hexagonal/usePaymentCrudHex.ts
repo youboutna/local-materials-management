@@ -71,7 +71,7 @@ export function usePaymentCrud() {
     const fileName = `receipt_${Date.now()}.${fileExt}`;
     const filePath = `payments/${fileName}`;
 
-    const uploadResult = await storageService.uploadFile('documents', filePath, file);
+    const uploadResult = await storageService.uploadFile({ bucket: 'documents', path: filePath, file });
     return uploadResult.publicUrl;
   };
 
@@ -80,7 +80,7 @@ export function usePaymentCrud() {
     const fileName = `invoice_${Date.now()}.${fileExt}`;
     const filePath = `payments/${fileName}`;
 
-    const uploadResult = await storageService.uploadFile('documents', filePath, file);
+    const uploadResult = await storageService.uploadFile({ bucket: 'documents', path: filePath, file });
     return uploadResult.publicUrl;
   };
 

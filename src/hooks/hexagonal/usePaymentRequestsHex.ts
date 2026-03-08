@@ -33,6 +33,11 @@ export interface PaymentRequest {
 export const usePaymentRequestsHex = () => {
   const queryClient = useQueryClient();
 
+  // Use getSupplierRepository and cast, since there's no dedicated supplier payment repo in factory
+  const getService = () => new SupplierPaymentService(
+    RepositoryFactory.getSupplierRepository() as any
+  );
+
   const {
     data: paymentRequests = [],
     isLoading,
@@ -41,18 +46,17 @@ export const usePaymentRequestsHex = () => {
   } = useQuery({
     queryKey: ['payment-requests-hex'],
     queryFn: async () => {
-      const service = new SupplierPaymentService(RepositoryFactory.getSupplierPaymentRepository());
-      const requests = await service.getAllPaymentRequests();
-      // Map from DTO to the expected interface
+      const service = getService();
+      const requests = await service.getPendingPaymentRequests();
       return requests.map(r => ({
         id: r.id,
         supplier_id: r.supplierId || '',
-        project_id: r.projectId || '',
+        project_id: '',
         amount: r.amount,
         description: r.workDescription || '',
         payment_reason: r.paymentType || '',
         status: r.status,
-        requested_date: r.requestedAt,
+        requested_date: r.requestedAt || r.createdAt || '',
         notes: r.comments || '',
         approved_by: r.validatedBy,
         approved_at: r.validatedAt,
@@ -63,8 +67,8 @@ export const usePaymentRequestsHex = () => {
 
   const approveMutation = useMutation({
     mutationFn: async ({ id, userId, notes }: { id: string; userId: string; notes?: string }) => {
-      const service = new SupplierPaymentService(RepositoryFactory.getSupplierPaymentRepository());
-      await service.approvePaymentRequest(id, userId, notes);
+      const service = getService();
+      await service.approvePaymentRequest({ id, validatedBy: userId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment-requests-hex'] });
@@ -77,8 +81,8 @@ export const usePaymentRequestsHex = () => {
 
   const rejectMutation = useMutation({
     mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
-      const service = new SupplierPaymentService(RepositoryFactory.getSupplierPaymentRepository());
-      await service.rejectPaymentRequest(id, reason);
+      const service = getService();
+      await service.rejectPaymentRequest({ id, rejectionReason: reason, validatedBy: 'system' });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment-requests-hex'] });

@@ -3,7 +3,7 @@
  * Uses services instead of direct Supabase access
  */
 import { useQuery } from '@tanstack/react-query';
-import { PaymentControlService } from '@/application/services/PaymentControlService';
+import { PaymentControlService } from '@/application/services/PaymentControlServiceWorking';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface PaymentStats {
@@ -17,14 +17,15 @@ async function fetchPaymentStats(): Promise<PaymentStats> {
   try {
     const service = new PaymentControlService(
       RepositoryFactory.getPaymentRepository(),
-      RepositoryFactory.getProjectRepository()
+      RepositoryFactory.getNotificationRepository()
     );
-    const stats = await service.getPaymentStats();
+    // Use the dashboard method to derive stats
+    const dashboard = await service.getPaymentControlDashboard('system', 'month');
     return {
-      blockedPayments: stats?.blockedPayments ?? 0,
-      expiredInsurances: stats?.expiredInsurances ?? 0,
-      delayedProjects: stats?.delayedProjects ?? 0,
-      missingDocuments: stats?.missingDocuments ?? 0,
+      blockedPayments: dashboard?.blockedPayments ?? 0,
+      expiredInsurances: 0,
+      delayedProjects: dashboard?.overduePayments ?? 0,
+      missingDocuments: 0,
     };
   } catch {
     return {
