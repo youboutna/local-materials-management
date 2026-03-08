@@ -17,7 +17,7 @@ import {
 
 export function useStakeholdersHex(projectId?: string) {
   const queryClient = useQueryClient();
-  const stakeholderService = new StakeholderService(RepositoryFactory.getProjectStakeholderRepository());
+  const stakeholderService = new StakeholderService(RepositoryFactory.getStakeholderRepository());
 
   // Query pour récupérer les parties prenantes d'un projet
   const {
