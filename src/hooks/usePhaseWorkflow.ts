@@ -358,12 +358,13 @@ export function usePhaseWorkflow(projectId: string, phaseId: string, phase?: Pha
     }) => {
       if (!phase) throw new Error('Phase data required');
       
-      const updatedSteps = phase.steps.map((step: WorkflowStep) => ({
+      const phaseSteps = (phase as any).steps || [];
+      const updatedSteps = phaseSteps.map((step: any) => ({
         ...step,
         status: step.status === 'delayed' ? 'in_progress' : step.status
       }));
 
-      const updateData: UpdatePhaseRequestDto = {
+      const updateData: any = {
         id: phaseId,
         steps: updatedSteps,
       };

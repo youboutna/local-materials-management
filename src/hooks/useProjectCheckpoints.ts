@@ -436,13 +436,13 @@ export function useProjectCheckpoints(projectId: string | undefined): ProjectChe
 
     for (const phase of phases) {
 
-      const phaseInspections = inspections.filter((i: InspectionResult) => i.phase_id === phase.id);
+      const phaseInspections = inspections.filter((i: any) => i.phase_id === phase.id);
 
-      const phaseDocuments = documents.filter((d: ProjectDocument) => d.phase_id === phase.id);
+      const phaseDocuments = documents.filter((d: any) => d.phase_id === phase.id);
 
-      const phasePayments = payments.filter((p: ProjectPayment) => p.phase_id === phase.id);
+      const phasePayments = payments.filter((p: any) => p.phase_id === phase.id);
 
-      const phaseMilestones = milestones.filter((m: ProjectMilestone) => m.phase_id === phase.id);
+      const phaseMilestones = milestones.filter((m: any) => m.phase_id === phase.id);
 
       
 

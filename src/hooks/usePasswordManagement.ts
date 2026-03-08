@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
-import { AuthService } from '@/application/services/AuthService';
 import { getPasswordService, PasswordService } from '@/application/services/PasswordService';
 import { PasswordResetRequestDTO, PasswordUpdateRequestDTO } from '@/dtos/entities/PasswordDTO';
 
