@@ -78,120 +78,72 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
   );
   const [newTeamMember, setNewTeamMember] = useState<Partial<EmployeeDTO>>({});
 
+  // Helper to update via onStepComplete
+  const notifyUpdate = (stakeholders: StakeholderDTO[]) => {
+    onStepComplete({ stakeholders: stakeholders as any });
+  };
+
   // Enhanced handlers for both create and edit workflows
   const handleStakeholderUpdate = (updates: Partial<StakeholderDTO>) => {
-    if (mode === "edit" && onStakeholderUpdate) {
-      // For edit mode, build UpdateStakeholderDTO
-      const updateData: UpdateStakeholderDTO = {
-        name: updates.name,
-        email: updates.email,
-        phone: updates.phone,
-        stakeholderType: updates.stakeholderType,
-        role: updates.role,
-        organizationId: updates.organizationId,
-        employeeId: updates.employeeId,
-        isPrimary: updates.isPrimary,
-        contact: updates.contact,
-        organization: updates.organization,
-        responsibilities: updates.responsibilities,
-        accessLevel: updates.accessLevel,
-        startDate: updates.startDate,
-        endDate: updates.endDate,
-        hourlyRate: updates.hourlyRate,
-        contractType: updates.contractType,
-        notes: updates.notes,
-        isActive: updates.isActive,
-        position: updates.position, // Added missing field
-      };
-
-      onStakeholderUpdate(updates.id || "", updateData);
-    } else {
-      // Fallback to local state management
-      const updatedStakeholders = localStakeholders.map((s) =>
-        s.id === updates.id ? { ...s, ...updates } : s
-      );
-      setLocalStakeholders(updatedStakeholders);
-      onUpdate({ stakeholders: updatedStakeholders });
-    }
+    const updatedStakeholders = localStakeholders.map((s) =>
+      s.id === updates.id ? { ...s, ...updates } : s
+    );
+    setLocalStakeholders(updatedStakeholders);
+    notifyUpdate(updatedStakeholders as any);
   };
 
   const handleStakeholderCreate = (stakeholderData: CreateStakeholderDTO) => {
-    if (mode === "create" && onStakeholderCreate) {
-      onStakeholderCreate(stakeholderData);
-    } else {
-      // Fallback to local state management
-      const newStakeholder: StakeholderDTO = {
-        id: Date.now().toString(),
-        ...stakeholderData,
-        isPrimary: stakeholderData.isPrimary || false, // ✅ Ensure boolean type
-        isInternal: stakeholderData.isInternal || false, // ✅ Ensure boolean type
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        isActive: true, // Add missing required property
-      };
+    const newStakeholderItem: StakeholderDTO = {
+      id: Date.now().toString(),
+      ...stakeholderData,
+      isPrimary: stakeholderData.isPrimary || false,
+      isInternal: stakeholderData.isInternal || false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      isActive: true,
+    };
 
-      const updatedStakeholders = [...localStakeholders, newStakeholder];
-      setLocalStakeholders(updatedStakeholders);
-      onUpdate({ stakeholders: updatedStakeholders });
-    }
+    const updatedStakeholders = [...localStakeholders, newStakeholderItem];
+    setLocalStakeholders(updatedStakeholders);
+    notifyUpdate(updatedStakeholders as any);
   };
 
   const handleStakeholderDelete = (stakeholderId: string) => {
-    if (mode === "edit" && onStakeholderDelete) {
-      onStakeholderDelete(stakeholderId);
-    } else {
-      // Fallback to local state management
-      const updatedStakeholders = localStakeholders.filter((s) => s.id !== stakeholderId);
-      setLocalStakeholders(updatedStakeholders);
-      onUpdate({ stakeholders: updatedStakeholders });
-    }
+    const updatedStakeholders = localStakeholders.filter((s) => s.id !== stakeholderId);
+    setLocalStakeholders(updatedStakeholders);
+    notifyUpdate(updatedStakeholders as any);
   };
 
   // Enhanced team member handlers
   const handleTeamMemberCreate = (teamMemberData: CreateEmployeeDTO) => {
-    if (mode === "create" && onTeamMemberCreate) {
-      onTeamMemberCreate(teamMemberData);
-    } else {
-      // Fallback to local state management
-      const newTeamMember: EmployeeDTO = {
-        id: Date.now().toString(),
-        ...teamMemberData,
-        startDate: new Date().toISOString(), // Use correct field name
-        department: EmployeeDepartment.ENGINEERING, // Use existing enum value
-        salary: 0,
-        isActive: true, // This is valid since isActive is optional in EmployeeDTO
-        createdAt: new Date().toISOString(), // Required by EmployeeDTO
-        updatedAt: new Date().toISOString(), // Required by EmployeeDTO
-      };
+    const newTeamMemberItem: EmployeeDTO = {
+      id: Date.now().toString(),
+      ...teamMemberData,
+      startDate: new Date().toISOString(),
+      department: EmployeeDepartment.ENGINEERING,
+      salary: 0,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
 
-      const updatedTeamMembers = [...teamMembers, newTeamMember];
-      setTeamMembers(updatedTeamMembers);
-      onUpdate({ teamMembers: updatedTeamMembers });
-    }
+    const updatedTeamMembers = [...teamMembers, newTeamMemberItem];
+    setTeamMembers(updatedTeamMembers);
+    notifyUpdate(localStakeholders as any);
   };
 
   const handleTeamMemberUpdate = (teamMemberId: string, updates: UpdateEmployeeDTO) => {
-    if (mode === "edit" && onTeamMemberUpdate) {
-      onTeamMemberUpdate(teamMemberId, updates);
-    } else {
-      // Fallback to local state management
-      const updatedTeamMembers = teamMembers.map((t) =>
-        t.id === teamMemberId ? { ...t, ...updates } : t
-      );
-      setTeamMembers(updatedTeamMembers);
-      onUpdate({ teamMembers: updatedTeamMembers });
-    }
+    const updatedTeamMembers = teamMembers.map((t) =>
+      t.id === teamMemberId ? { ...t, ...updates } : t
+    );
+    setTeamMembers(updatedTeamMembers);
+    notifyUpdate(localStakeholders as any);
   };
 
   const handleTeamMemberDelete = (teamMemberId: string) => {
-    if (mode === "edit" && onTeamMemberDelete) {
-      onTeamMemberDelete(teamMemberId);
-    } else {
-      // Fallback to local state management
-      const updatedTeamMembers = teamMembers.filter((t) => t.id !== teamMemberId);
-      setTeamMembers(updatedTeamMembers);
-      onUpdate({ teamMembers: updatedTeamMembers });
-    }
+    const updatedTeamMembers = teamMembers.filter((t) => t.id !== teamMemberId);
+    setTeamMembers(updatedTeamMembers);
+    notifyUpdate(localStakeholders as any);
   };
 
   // Helper functions using service layer validation
