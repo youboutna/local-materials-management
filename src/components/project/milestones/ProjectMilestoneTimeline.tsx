@@ -204,45 +204,45 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
             <div className="flex justify-between items-center text-sm">
               <span className="text-muted-foreground">Progression des jalons</span>
               <div className="flex items-center gap-2">
-                <span className="font-medium">{progress.weighted_progress}%</span>
-                {progress.schedule_performance_index !== undefined && (
+                <span className="font-medium">{progress.weightedProgress}%</span>
+                {progress.schedulePerformance_index !== undefined && (
                   <Badge 
-                    variant={progress.schedule_performance_index >= 1 ? 'default' : 'destructive'}
+                    variant={progress.schedulePerformance_index >= 1 ? 'default' : 'destructive'}
                     className="text-xs flex items-center gap-1"
                   >
-                    {progress.schedule_performance_index >= 1 ? (
+                    {progress.schedulePerformance_index >= 1 ? (
                       <TrendingUp className="h-3 w-3" />
                     ) : (
                       <TrendingDown className="h-3 w-3" />
                     )}
-                    SPI: {progress.schedule_performance_index}
+                    SPI: {progress.schedulePerformance_index}
                   </Badge>
                 )}
               </div>
             </div>
-            <Progress value={progress.weighted_progress} className="h-2" />
+            <Progress value={progress.weightedProgress} className="h-2" />
             
             {/* Status indicators */}
             <div className="flex flex-wrap gap-4 text-sm">
-              {progress.overdue_milestones && progress.overdue_milestones.length > 0 && (
+              {progress.overdueMilestones && progress.overdueMilestones.length > 0 && (
                 <div className="flex items-center gap-2 text-red-600">
                   <AlertTriangle className="h-4 w-4" />
-                  {progress.overdue_milestones.length} jalon(s) en retard
+                  {progress.overdueMilestones.length} jalon(s) en retard
                 </div>
               )}
-              {progress.upcoming_milestones && progress.upcoming_milestones.length > 0 && (
+              {progress.upcomingMilestones && progress.upcomingMilestones.length > 0 && (
                 <div className="flex items-center gap-2 text-orange-600">
                   <Clock className="h-4 w-4" />
-                  {progress.upcoming_milestones.length} jalon(s) à venir (14j)
+                  {progress.upcomingMilestones.length} jalon(s) à venir (14j)
                 </div>
               )}
-              {progress.critical_path_status !== 'on_track' && (
+              {progress.criticalPath_status !== 'on_track' && (
                 <div className={cn(
                   "flex items-center gap-2",
-                  progress.critical_path_status === 'delayed' ? 'text-red-600' : 'text-orange-600'
+                  progress.criticalPath_status === 'delayed' ? 'text-red-600' : 'text-orange-600'
                 )}>
                   <ShieldCheck className="h-4 w-4" />
-                  Chemin critique {progress.critical_path_status === 'delayed' ? 'en retard' : 'à risque'}
+                  Chemin critique {progress.criticalPath_status === 'delayed' ? 'en retard' : 'à risque'}
                 </div>
               )}
             </div>
