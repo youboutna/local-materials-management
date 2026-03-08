@@ -39,7 +39,7 @@ export { ProjectStakeholderEntity as DomainProjectStakeholder, type StakeholderT
 
 export { Tender, type EvaluationCriteria } from './Tender';
 export type { TenderStatus, SelectionMode, MarketType } from './Tender';
-export { TenderEstimate, type ITenderEstimateItem, type TenderEstimateRisk, type TenderEstimateMetrics, type CurrencyCode } from './TenderEstimate';
+export { TenderEstimate, type ITenderEstimateItem as TenderEstimateItemInterface, type TenderEstimateRisk, type TenderEstimateMetrics, type CurrencyCode } from './TenderEstimate';
 export { TenderEstimateItem, type TenderEstimateItemData } from './TenderEstimateItem';
 export { TenderSubmission } from './TenderSubmission';
 export { Supplier, type SupplierStatus, type SupplierCategory, type SupplierContact, type SupplierRating } from './Supplier';

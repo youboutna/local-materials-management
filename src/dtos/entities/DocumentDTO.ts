@@ -8,7 +8,6 @@ import { BaseEntityDTO } from '../shared';
 
 /**
  * Document type enumeration
- * Classification of document types
  */
 export enum DocumentType {
   CONTRACT = 'contract',
@@ -30,16 +29,16 @@ export enum DocumentType {
   CHECKLIST = 'checklist',
   FORM = 'form',
   TEMPLATE = 'template',
-  // Additional types for inspection and tender workflows
   PV = 'pv',
   SERVICE_REPORT = 'service_report',
   TENDER_DOCUMENT = 'tender_document',
-  SUPPORTING_DOCUMENT = 'supporting_document'
+  SUPPORTING_DOCUMENT = 'supporting_document',
+  CORRESPONDENCE = 'correspondence',
+  OTHER = 'other'
 }
 
 /**
  * Document status enumeration
- * Current state of document lifecycle
  */
 export enum DocumentStatus {
   DRAFT = 'draft',
@@ -53,7 +52,6 @@ export enum DocumentStatus {
 
 /**
  * Document priority enumeration
- * Priority levels for documents
  */
 export enum DocumentPriority {
   LOW = 'low',
@@ -62,17 +60,19 @@ export enum DocumentPriority {
   URGENT = 'urgent'
 }
 
+// Type alias for string union usage
+export type DocumentTypeUnion = `${DocumentType}`;
+
 /**
- * Main Document DTO
- * Core document data structure matching database row
+ * Main Document DTO - matches DB row in camelCase
  */
 export interface DocumentDTO extends BaseEntityDTO {
   id: string;
   assignedTo: string | null;
-  createdAt: string | null;
+  createdAt: string;
   deadlineDate: string | null;
   description: string | null;
-  documentType: string; // Using string instead of Database enum for compatibility
+  documentType: string;
   fileName: string | null;
   fileSize: number | null;
   fileUrl: string | null;
@@ -85,17 +85,16 @@ export interface DocumentDTO extends BaseEntityDTO {
   phaseId: string | null;
   projectId: string | null;
   sharedDate: string | null;
-  status: string | null; // Using string instead of Database enum for compatibility
+  status: string | null;
   supplierId: string | null;
   tags: string[] | null;
   title: string;
-  updatedAt: string | null;
+  updatedAt: string;
   uploadedBy: string | null;
 }
 
 /**
- * Document creation request interface
- * Input for creating new documents
+ * Create document request
  */
 export interface CreateDocumentDTO {
   assignedTo?: string | null;
@@ -119,40 +118,43 @@ export interface CreateDocumentDTO {
   tags?: string[] | null;
   title: string;
   uploadedBy?: string | null;
+  category?: string | null;
+  subcategory?: string | null;
 }
 
 /**
- * Document update request interface
- * Input for updating existing documents
+ * Update document request
  */
 export type UpdateDocumentDTO = Partial<CreateDocumentDTO>;
 
 /**
- * Document summary interface
- * Lightweight document representation for lists
+ * Document summary for lists
  */
-export interface DocumentSummaryDTO extends BaseEntityDTO {
+export interface DocumentSummaryDTO {
   id: string;
-  name: string;
-  type: DocumentType;
+  title: string;
+  documentType: DocumentType;
   status: DocumentStatus;
-  priority: DocumentPriority;
+  createdAt: string;
+  fileSize?: number | null;
+  isOverdue?: boolean;
+  needsReview?: boolean;
+  projectTitle?: string;
+  name?: string;
+  type?: DocumentType;
+  priority?: DocumentPriority;
   category?: string;
-  fileSize?: number;
   url?: string;
   projectId?: string;
   phaseId?: string;
   taskId?: string;
   isRequired?: boolean;
-  isOverdue?: boolean;
   tags?: string[];
-  projectTitle?: string;
   phaseName?: string;
 }
 
 /**
- * Document statistics interface
- * Performance metrics for document management
+ * Document statistics
  */
 export interface DocumentStatisticsDTO {
   totalDocuments: number;
@@ -161,16 +163,15 @@ export interface DocumentStatisticsDTO {
   expiredDocuments: number;
   totalSize?: number;
   averageFileSize?: number;
-  byType: Record<DocumentType, number>;
-  byStatus: Record<DocumentStatus, number>;
-  byPriority: Record<DocumentPriority, number>;
+  byType: Record<string, number>;
+  byStatus: Record<string, number>;
+  byPriority: Record<string, number>;
   byCategory: Record<string, number>;
   lastUpdated?: string;
 }
 
 /**
- * Document version interface
- * Version tracking data
+ * Document version tracking
  */
 export interface DocumentVersionDTO {
   id: string;
@@ -179,7 +180,7 @@ export interface DocumentVersionDTO {
   title: string;
   description?: string;
   changes?: string;
-  createdById?: string; // Employee ID only for DTO
+  createdById?: string;
   createdAt: string;
   isLatest?: boolean;
   downloadCount?: number;
@@ -187,39 +188,45 @@ export interface DocumentVersionDTO {
 }
 
 /**
- * Document access log interface
- * Access tracking for documents
+ * Document access log
  */
 export interface DocumentAccessLogDTO {
   id: string;
   documentId: string;
-  userId: string; // User ID only for DTO
+  userId: string;
   action: 'viewed' | 'downloaded' | 'uploaded' | 'updated' | 'deleted' | 'shared' | 'approved' | 'rejected';
   timestamp: string;
   ipAddress?: string;
   userAgent?: string;
   notes?: string;
-  duration?: number; // in seconds
+  duration?: number;
 }
 
 /**
- * Document filter interface
- * Filter criteria for document queries
+ * Document filter criteria
  */
 export interface DocumentFilterDTO {
   projectId?: string;
   phaseId?: string;
   taskId?: string;
+  inspectionId?: string;
   type?: DocumentType;
+  documentType?: DocumentType;
   status?: DocumentStatus;
   priority?: DocumentPriority;
   category?: string;
+  subcategory?: string;
   searchQuery?: string;
   tags?: string[];
   isRequired?: boolean;
   isOverdue?: boolean;
+  needsReview?: boolean;
+  uploadedBy?: string;
+  assignedTo?: string;
   accessLevel?: 'public' | 'internal' | 'confidential' | 'restricted';
   dateRange?: {
+    start?: string;
+    end?: string;
     startDate?: string;
     endDate?: string;
   };
@@ -229,118 +236,9 @@ export interface DocumentFilterDTO {
   };
 }
 
-export interface DocumentDTO extends BaseEntityDTO {
-  id: string;
-  assignedTo: string | null;
-  createdAt: string | null;
-  deadlineDate: string | null;
-  description: string | null;
-  fileName: string | null;
-  fileSize: number | null;
-  fileUrl: string | null;
-  id: string;
-  inspectionId: string | null;
-  isInternalOnly: boolean | null;
-  isSharedWithSuppliers: boolean | null;
-  metadata: Json | null;
-  mimeType: string | null;
-  paymentId: string | null;
-  phaseId: string | null;
-  projectId: string | null;
-  sharedDate: string | null;
-  status: documentStatus | null;
-  supplierId: string | null;
-  tags: string[] | null;
-  title: string;
-  updatedAt: string | null;
-  uploadedBy: string | null;
-}
-
-// 2. DTOs d'API (Adapter Layer)
-export class DocumentResponseDto {
-  constructor(
-    public id: string,
-    public title: string,
-    public description?: string,
-    public type: DocumentType,
-    public status: DocumentStatus,
-    public fileName?: string,
-    public fileUrl?: string,
-    public fileSize?: number,
-    public projectId?: string,
-    public assignedTo?: string,
-    public deadlineDate?: string,
-    public tags: string[],
-    public isInternalOnly: boolean,
-    public isSharedWithSuppliers: boolean,
-    public uploadedBy?: string,
-    public createdAt: string,
-    public updatedAt: string
-  ) {}
-}
-
-export class CreateDocumentRequestDto {
-  constructor(
-    public title: string,
-    public description?: string,
-    public type: DocumentType,
-    public projectId?: string,
-    public assignedTo?: string,
-    public deadlineDate?: string,
-    public tags?: string[],
-    public file?: any // Express.Multer.File
-  ) {}
-}
-
-export class UpdateDocumentRequestDto {
-  constructor(
-    public title?: string,
-    public description?: string,
-    public type?: DocumentType,
-    public status?: DocumentStatus,
-    public assignedTo?: string,
-    public deadlineDate?: string,
-    public tags?: string[]
-  ) {}
-}
-
-// Repository document interface for internal use
-export interface RepositoryDocument {
-  id: string;
-  title: string;
-  documentType: DocumentType;
-  projectId?: string;
-  phaseId?: string;
-  inspectionId?: string;
-  paymentId?: string;
-  supplierId?: string;
-  description?: string;
-  fileName?: string;
-  fileSize?: number;
-  fileUrl: string;
-  mimeType?: string;
-  status: string;
-  isInternalOnly: boolean;
-  isSharedWithSuppliers: boolean;
-  deadlineDate?: string;
-  assignedTo?: string;
-  metadata: Record<string, unknown>;
-  category?: string;
-  subcategory?: string;
-  createdAt: string;
-  updatedAt: string;
-  uploadedBy?: string;
-  tags: string[];
-}
-
-// Service DTOs for data exchange
-export interface DocumentSearchDto {
-  query: string;
-  projectId?: string;
-  tags?: string[];
-  documentType?: DocumentType;
-  status?: string;
-}
+/**
+ * Document details with relations
+ */
 export interface DocumentDetailsDTO extends DocumentDTO {
   projectDetails?: {
     id: string;
@@ -382,82 +280,51 @@ export interface DocumentDetailsDTO extends DocumentDTO {
   }>;
 }
 
-export interface DocumentSummaryDTO {
+/**
+ * Repository document interface for internal use
+ */
+export interface RepositoryDocument {
   id: string;
   title: string;
   documentType: DocumentType;
-  status: DocumentStatus;
-  createdAt: string;
-  fileSize: number | null;
-  isOverdue: boolean;
-  needsReview: boolean;
-  projectTitle?: string;
-}
-
-export interface CreateDocumentDTO {
-  projectId: string | null;
-  phaseId: string | null;
-  inspectionId: string | null;
-  paymentId: string | null;
-  supplierId: string | null;
-  title: string;
-  description: string | null;
-  documentType: DocumentType;
-  status: DocumentStatus;
-  fileName: string | null;
-  fileUrl: string | null;
-  fileSize: number | null;
-  mimeType: string | null;
-  tags: string[];
-  isInternalOnly: boolean;
-  isSharedWithSuppliers: boolean;
-  deadlineDate: string | null;
-  assignedTo: string | null;
-  uploadedBy: string | null;
-  category: string | null;
-  subcategory: string | null;
-  metadata: Record<string, unknown> | null;
-}
-
-export type UpdateDocumentDTO = Partial<CreateDocumentDTO>;
-
-export interface DocumentFilterDTO {
   projectId?: string;
   phaseId?: string;
   inspectionId?: string;
-  documentType?: DocumentType;
-  status?: DocumentStatus;
-  uploadedBy?: string;
+  paymentId?: string;
+  supplierId?: string;
+  description?: string;
+  fileName?: string;
+  fileSize?: number;
+  fileUrl: string;
+  mimeType?: string;
+  status: string;
+  isInternalOnly: boolean;
+  isSharedWithSuppliers: boolean;
+  deadlineDate?: string;
   assignedTo?: string;
-  tags?: string[];
+  metadata: Record<string, unknown>;
   category?: string;
   subcategory?: string;
-  dateRange?: {
-    start: string;
-    end: string;
-  };
-  searchQuery?: string;
-  isOverdue?: boolean;
-  needsReview?: boolean;
-}
-// Convert document types to enum for better type safety
-export enum DocumentType {
-  CONTRACT = 'contract',
-  INVOICE = 'invoice',
-  REPORT = 'report',
-  PLAN = 'plan',
-  PERMIT = 'permit',
-  PV = 'pv',
-  PHOTO = 'photo',
-  CERTIFICATE = 'certificate',
-  SPECIFICATION = 'specification',
-  CORRESPONDENCE = 'correspondence',
-  OTHER = 'other'
+  createdAt: string;
+  updatedAt: string;
+  uploadedBy?: string;
+  tags: string[];
 }
 
-// Type alias that references the enum values
-export type DocumentTypeUnion = `${DocumentType}`;
+/**
+ * Document search criteria
+ */
+export interface DocumentSearchDto {
+  query: string;
+  projectId?: string;
+  tags?: string[];
+  documentType?: DocumentType;
+  status?: string;
+}
 
+/**
+ * Document upload request
+ */
 export interface DocumentUploadDTO {
   title: string;
   description?: string;
@@ -475,6 +342,9 @@ export interface DocumentUploadDTO {
   metadata?: Record<string, unknown>;
 }
 
+/**
+ * Document share request
+ */
 export interface DocumentShareDTO {
   documentId: string;
   shareWith: string[];
@@ -487,6 +357,9 @@ export interface DocumentShareDTO {
   message?: string;
 }
 
+/**
+ * Simple document response
+ */
 export interface DocumentResponseDTO {
   id: string;
   fileName: string;

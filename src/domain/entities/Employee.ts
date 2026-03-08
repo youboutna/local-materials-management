@@ -142,7 +142,7 @@ export class Employee {
   }
 
   getActiveProjects(): Project[] {
-    return this._managedProjects.filter(p => p.isActive());
+    return this._managedProjects.filter(p => (p as any).status === 'active' || (p as any).status === 'in_progress');
   }
 
   getExpiringCertifications(daysAhead: number = 30): Certification[] {
