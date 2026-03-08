@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
-import { ConstructionPhase, ConstructionStage } from '@/types/project';
+import { ConstructionPhase, ConstructionStage } from '@/dtos/entities/ProjectDTO';
 import ConstructionPhaseManager from './ConstructionPhaseManager';
 
 interface ConstructionPhaseSelectorProps {

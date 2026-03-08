@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { FileText, ChevronDown, ChevronUp, Percent, ClipboardCheck } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { format } from 'date-fns';
-import { ProjectWithPayments, InspectionStatus } from '@/types/project';
+import { ProjectWithPayments } from '@/dtos/entities/ProjectDTO';
+import { InspectionStatus } from '@/domain/entities/Inspection';
 
 interface InspectionReportCardProps {
   project: ProjectWithPayments;
