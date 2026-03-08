@@ -1,9 +1,10 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { IPasswordService, IPasswordResetRequest, IPasswordUpdateRequest } from '@/application/services/IPasswordService';
+import { IPasswordService } from '@/application/services/IPasswordService';
+import { PasswordResetRequestDTO, PasswordUpdateRequestDTO, PasswordValidationResultDTO } from '@/dtos/entities/PasswordDTO';
 
 export class SupabasePasswordService implements IPasswordService {
-  async requestPasswordReset(request: IPasswordResetRequest): Promise<{ success: boolean; error?: string }> {
+  async requestPasswordReset(request: PasswordResetRequestDTO): Promise<{ success: boolean; error?: string }> {
     try {
       const redirectUrl = request.redirectUrl || `${window.location.origin}/reset-password`;
       
@@ -27,7 +28,7 @@ export class SupabasePasswordService implements IPasswordService {
     }
   }
 
-  async updatePassword(request: IPasswordUpdateRequest): Promise<{ success: boolean; error?: string }> {
+  async updatePassword(request: PasswordUpdateRequestDTO): Promise<{ success: boolean; error?: string }> {
     try {
       if (request.newPassword !== request.confirmPassword) {
         return { success: false, error: 'Les mots de passe ne correspondent pas.' };
@@ -39,7 +40,7 @@ export class SupabasePasswordService implements IPasswordService {
 
       console.log('Updating password...');
       
-      const { data,error } = await supabase.auth.updateUser({
+      const { data, error } = await supabase.auth.updateUser({
         password: request.newPassword
       });
 
@@ -48,7 +49,7 @@ export class SupabasePasswordService implements IPasswordService {
         return { success: false, error: error.message };
       }
 
-      console.log('Password updated successfully',data);
+      console.log('Password updated successfully', data);
       return { success: true };
     } catch (error: any) {
       console.error('Password update exception:', error);
@@ -56,7 +57,7 @@ export class SupabasePasswordService implements IPasswordService {
     }
   }
 
-  async validateResetToken(token: string): Promise<{ valid: boolean; email?: string; error?: string }> {
+  async validateResetToken(token: string): Promise<PasswordValidationResultDTO> {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       

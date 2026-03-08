@@ -198,6 +198,7 @@ export function validatePhaseTypeCompatibility(
     [PhaseType.FOUNDATION]: [PhaseType.STRUCTURAL],
     [PhaseType.STRUCTURAL]: [PhaseType.FOUNDATION, PhaseType.EXCAVATION],
     [PhaseType.EXCAVATION]: [PhaseType.FOUNDATION, PhaseType.STRUCTURAL],
+    [PhaseType.DEMOLITION]: [PhaseType.EXCAVATION, PhaseType.FOUNDATION],
     [PhaseType.ELECTRICAL]: [PhaseType.INTERIOR, PhaseType.FINISHING],
     [PhaseType.PLUMBING]: [PhaseType.INTERIOR, PhaseType.FINISHING],
     [PhaseType.HVAC]: [PhaseType.INTERIOR, PhaseType.FINISHING],
