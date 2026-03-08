@@ -617,15 +617,15 @@ export function useProjectCheckpoints(projectId: string | undefined): ProjectChe
 
   return {
 
-    phases,
+    phases: phases as any,
 
-    inspections,
+    inspections: inspections as any,
 
-    documents,
+    documents: documents as any,
 
-    payments,
+    payments: payments as any,
 
-    milestones,
+    milestones: milestones as any,
 
     ...computed,
 
