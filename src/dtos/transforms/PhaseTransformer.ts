@@ -57,8 +57,8 @@ export class PhaseTransformer {
       constructionPhase: phase.constructionPhase || undefined,
       constructionStage: phase.constructionStage || undefined,
       createdBy: phase.createdBy || undefined,
-      customPhaseData: phase.customPhaseData,
-      humanResources: phase.humanResources,
+      customPhaseData: phase.customPhaseData ?? undefined,
+      humanResources: phase.humanResources ? (phase.humanResources as unknown as Record<string, unknown>) : undefined,
       weight: phase.weight || undefined,
     };
   }
