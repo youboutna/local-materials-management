@@ -1,13 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { QuantityTakeoffService, QuantityTakeoffWithDetails } from '@/application/services/QuantityTakeoffService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export function useQuantityTakeoffsHex(projectId: string) {
   const queryClient = useQueryClient();
 
-  // Quantity takeoff service instance
-  const quantityTakeoffService = new QuantityTakeoffService(RepositoryFactory.getQuantityTakeoffRepository());
+  // Quantity takeoff service instance (uses default repos from constructor)
+  const quantityTakeoffService = new QuantityTakeoffService();
 
   // Fetch quantity takeoffs
   const { data: quantityTakeoffs, isLoading } = useQuery({

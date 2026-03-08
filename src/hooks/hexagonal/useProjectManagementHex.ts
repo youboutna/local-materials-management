@@ -282,7 +282,7 @@ export function useProjectSearch() {
     return projects.filter(project =>
       project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       project.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      (project as any).description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [projects, searchTerm]);
 

@@ -1,38 +1,14 @@
 /**
  * Enhanced Hook for Projects Management with Rich UI Features
- * Uses ProjectTransformer with advanced calculations and analytics
+ * Uses ProjectService with advanced calculations and analytics
  * Following hexagonal architecture principles with UI-specific enhancements
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { RepositoryFactory } from "@/repositories/RepositoryFactory";
+import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
 import { ProjectService } from "@/application/services/ProjectService";
-import { ProjectTransformer } from '@/dtos/transforms';
-import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
-
-// Types for project operations
-interface CreateProjectRequestDto {
-  title: string;
-  description?: string;
-  budget?: number;
-  startDate?: string;
-  endDate?: string;
-  location?: string;
-  status?: string;
-  progress?: number;
-}
-
-interface UpdateProjectRequestDto {
-  title?: string;
-  description?: string;
-  budget?: number;
-  startDate?: string;
-  endDate?: string;
-  location?: string;
-  status?: string;
-  progress?: number;
-}
+import { ProjectDTO, CreateProjectDTO, UpdateProjectDTO } from '@/dtos/entities/ProjectDTO';
 
 // Enhanced types for UI components
 export interface UseProjectsEnhancedResult {
@@ -40,8 +16,8 @@ export interface UseProjectsEnhancedResult {
   isLoading: boolean;
   error: unknown;
   refetch: () => void;
-  createProject: (data: CreateProjectRequestDto) => void;
-  updateProject: ({ id, data }: { id: string; data: UpdateProjectRequestDto }) => void;
+  createProject: (data: CreateProjectDTO) => void;
+  updateProject: ({ id, data }: { id: string; data: UpdateProjectDTO }) => void;
   deleteProject: (id: string) => void;
   isCreating: boolean;
   isUpdating: boolean;
@@ -60,6 +36,42 @@ export interface UseProjectsEnhancedResult {
   getProjectsByProgressRange: (min: number, max: number) => ProjectDTO[];
 }
 
+// Helper functions for project calculations
+function getProjectHealthStatus(project: ProjectDTO): 'healthy' | 'warning' | 'critical' {
+  if (project.progress >= 80 && project.status !== 'en_retard') return 'healthy';
+  if (project.progress >= 40) return 'warning';
+  return 'critical';
+}
+
+function calculateProjectRisk(project: ProjectDTO): 'low' | 'medium' | 'high' {
+  const isOverdue = project.endDate && new Date(project.endDate) < new Date() && project.status !== 'completed';
+  const lowProgress = project.progress < 30;
+  if (isOverdue && lowProgress) return 'high';
+  if (isOverdue || lowProgress) return 'medium';
+  return 'low';
+}
+
+function formatProjectDuration(startDate?: string, endDate?: string): string {
+  if (!startDate) return 'N/A';
+  const start = new Date(startDate);
+  const end = endDate ? new Date(endDate) : new Date();
+  const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  if (days < 30) return `${days} jours`;
+  if (days < 365) return `${Math.round(days / 30)} mois`;
+  return `${(days / 365).toFixed(1)} ans`;
+}
+
+function calculateProjectEfficiency(project: ProjectDTO): number {
+  if (!project.startDate || !project.endDate) return 0;
+  const start = new Date(project.startDate);
+  const end = new Date(project.endDate);
+  const now = new Date();
+  const totalDuration = end.getTime() - start.getTime();
+  const elapsed = now.getTime() - start.getTime();
+  const expectedProgress = Math.min(100, (elapsed / totalDuration) * 100);
+  return expectedProgress > 0 ? (project.progress / expectedProgress) * 100 : 0;
+}
+
 /**
  * Enhanced hook for projects management with UI-specific features
  */
@@ -68,7 +80,6 @@ export function useProjectsEnhanced(): UseProjectsEnhancedResult {
   
   const projectRepository = RepositoryFactory.getProjectRepository();
   const projectService = new ProjectService(projectRepository);
-  const projectTransformer = ProjectTransformer;
 
   // Query for projects list
   const {
@@ -79,26 +90,14 @@ export function useProjectsEnhanced(): UseProjectsEnhancedResult {
   } = useQuery({
     queryKey: ['projects'],
     queryFn: async (): Promise<ProjectDTO[]> => {
-      try {
-        const projectEntities = await projectService.getAllProjects();
-        return projectEntities.map(entity => ProjectTransformer.toDTO(entity));
-      } catch (err) {
-        console.error('Error fetching projects:', err);
-        throw err;
-      }
+      return await projectService.getAllProjects();
     }
   });
 
   // Create project mutation
   const createProjectMutation = useMutation({
-    mutationFn: async (data: CreateProjectRequestDto): Promise<ProjectDTO> => {
-      try {
-        const projectEntity = await projectService.createProject(data);
-        return ProjectTransformer.toDTO(projectEntity);
-      } catch (error) {
-        console.error('Error creating project:', error);
-        throw error;
-      }
+    mutationFn: async (data: CreateProjectDTO): Promise<ProjectDTO> => {
+      return await projectService.createProject(data);
     },
     onSuccess: () => {
       toast.success('Projet créé avec succès');
@@ -112,14 +111,8 @@ export function useProjectsEnhanced(): UseProjectsEnhancedResult {
 
   // Update project mutation
   const updateProjectMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: UpdateProjectRequestDto }): Promise<ProjectDTO> => {
-      try {
-        const projectEntity = await projectService.updateProject(id, data);
-        return ProjectTransformer.toDTO(projectEntity);
-      } catch (error) {
-        console.error('Error updating project:', error);
-        throw error;
-      }
+    mutationFn: async ({ id, data }: { id: string; data: UpdateProjectDTO }): Promise<ProjectDTO> => {
+      return await projectService.updateProject(id, data);
     },
     onSuccess: () => {
       toast.success('Projet mis à jour avec succès');
@@ -134,12 +127,7 @@ export function useProjectsEnhanced(): UseProjectsEnhancedResult {
   // Delete project mutation
   const deleteProjectMutation = useMutation({
     mutationFn: async (id: string): Promise<void> => {
-      try {
-        await projectService.deleteProject(id);
-      } catch (error) {
-        console.error('Error deleting project:', error);
-        throw error;
-      }
+      await projectService.deleteProject(id);
     },
     onSuccess: () => {
       toast.success('Projet supprimé avec succès');
@@ -153,23 +141,23 @@ export function useProjectsEnhanced(): UseProjectsEnhancedResult {
 
   // Enhanced UI methods
   const getProjectHealth = (project: ProjectDTO): 'healthy' | 'warning' | 'critical' => {
-    return ProjectTransformer.getProjectHealthStatus(project);
+    return getProjectHealthStatus(project);
   };
 
   const getProjectProgress = (project: ProjectDTO): number => {
-    return ProjectTransformer.calculateProjectProgress(project);
+    return project.progress || 0;
   };
 
   const getProjectDuration = (project: ProjectDTO): string => {
-    return ProjectTransformer.formatProjectDuration(project.startDate, project.endDate);
+    return formatProjectDuration(project.startDate, project.endDate);
   };
 
   const getProjectEfficiency = (project: ProjectDTO): number => {
-    return ProjectTransformer.calculateProjectEfficiency(project);
+    return calculateProjectEfficiency(project);
   };
 
   const getProjectRisk = (project: ProjectDTO): 'low' | 'medium' | 'high' => {
-    return ProjectTransformer.calculateProjectRisk(project);
+    return calculateProjectRisk(project);
   };
 
   const getOverdueProjects = (): ProjectDTO[] => {
@@ -181,7 +169,7 @@ export function useProjectsEnhanced(): UseProjectsEnhancedResult {
 
   const getHighRiskProjects = (): ProjectDTO[] => {
     return projects.filter(project => 
-      ProjectTransformer.calculateProjectRisk(project) === 'high'
+      calculateProjectRisk(project) === 'high'
     );
   };
 
@@ -239,17 +227,17 @@ export function useProjectCalculations() {
 
   const getProjectStats = () => {
     const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
-    const totalProgress = projects.reduce((sum, p) => sum + p.progress, 0) / projects.length;
+    const totalProgress = projects.reduce((sum, p) => sum + p.progress, 0) / (projects.length || 1);
     const overdueCount = projects.filter(p => {
       if (!p.endDate) return false;
       return new Date(p.endDate) < new Date() && p.status !== 'completed';
     }).length;
     const highRiskCount = projects.filter(p => 
-      ProjectTransformer.calculateProjectRisk(p) === 'high'
+      calculateProjectRisk(p) === 'high'
     ).length;
     
     const healthyCount = projects.filter(p => 
-      ProjectTransformer.getProjectHealthStatus(p) === 'healthy'
+      getProjectHealthStatus(p) === 'healthy'
     ).length;
     
     return {
@@ -265,12 +253,10 @@ export function useProjectCalculations() {
 
   const getStatusBreakdown = () => {
     const statusBreakdown: Record<string, number> = {};
-    
     projects.forEach(project => {
       const status = project.status;
       statusBreakdown[status] = (statusBreakdown[status] || 0) + 1;
     });
-    
     return statusBreakdown;
   };
 
@@ -282,7 +268,6 @@ export function useProjectCalculations() {
       { label: '500k-1M', min: 500000, max: 1000000 },
       { label: '> 1M', min: 1000000, max: Infinity }
     ];
-    
     return ranges.map(range => ({
       label: range.label,
       count: projects.filter(p => p.budget >= range.min && p.budget < range.max).length
@@ -296,7 +281,6 @@ export function useProjectCalculations() {
       { label: '50-75%', min: 50, max: 75 },
       { label: '75-100%', min: 75, max: 100 }
     ];
-    
     return ranges.map(range => ({
       label: range.label,
       count: projects.filter(p => p.progress >= range.min && p.progress < range.max).length

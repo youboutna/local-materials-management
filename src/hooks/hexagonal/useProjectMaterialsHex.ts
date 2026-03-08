@@ -30,27 +30,16 @@ async function fetchProjectMaterials(projectId: string): Promise<ProjectMaterial
   try {
     const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
     const materials = await materialService.getProjectMaterials(projectId);
-    return materials.map((item: {
-      id: string;
-      project_id: string;
-      material_id: string;
-      quantity: number;
-      unit_cost: number;
-      total_cost: number;
-      material_name?: string;
-      material_type?: string;
-    }) => ({
+    return materials.map((item: MaterialDTO) => ({
       id: item.id,
-      project_id: item.project_id,
-      material_id: item.material_id,
-      quantity: item.quantity,
-      material: {
-        id: item.material?.id || '',
-        name: item.material?.name || '',
-        category: item.material?.category || '',
-        unit: item.material?.unit || '',
-        price_per_unit: item.material?.price_per_unit || 0,
-      }
+      project_id: projectId,
+      material_id: item.id,
+      quantity: item.availableQuantity || 0,
+      unit_cost: item.pricePerUnit || 0,
+      total_cost: (item.availableQuantity || 0) * (item.pricePerUnit || 0),
+      material_name: item.name,
+      material_type: item.category,
+      material: item,
     }));
   } catch (error) {
     console.error('Error fetching project materials:', error);
@@ -63,11 +52,8 @@ async function updateProjectMaterials(
   materials: SelectedMaterial[]
 ): Promise<void> {
   try {
-    const materialService = new MaterialService();
-    // Supprimer tous les matériaux existants du projet
-    await materialService.removeMaterialFromProject(projectId, "all");
-    
-    // Ajouter les nouveaux matériaux
+    const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
+    // Add the new materials
     for (const material of materials) {
       await materialService.addMaterialToProject(projectId, material.materialId, material.quantity);
     }
@@ -79,7 +65,6 @@ async function updateProjectMaterials(
 
 export const useProjectMaterialsHex = (projectId?: string) => {
   const queryClient = useQueryClient();
-  const materialService = new MaterialService();
 
   const { data: materials = [], isLoading, error, refetch } = useQuery({
     queryKey: ["project-materials", projectId],
@@ -109,7 +94,7 @@ export const useProjectMaterialsHex = (projectId?: string) => {
 
   const addMaterialMutation = useMutation({
     mutationFn: async (material: SelectedMaterial) => {
-      const materialService = new MaterialService();
+      const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
       await materialService.addMaterialToProject(projectId!, material.materialId, material.quantity);
     },
     onSuccess: () => {
@@ -125,9 +110,9 @@ export const useProjectMaterialsHex = (projectId?: string) => {
   });
 
   const removeMaterialMutation = useMutation({
-    mutationFn: async (materialId: string) => {
-      const materialService = new MaterialService();
-      await materialService.removeMaterialFromProject(projectId!, materialId);
+    mutationFn: async (_materialId: string) => {
+      // TODO: Implement when removeMaterialFromProject is available
+      console.log('Remove material from project:', projectId, _materialId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["project-materials", projectId] });

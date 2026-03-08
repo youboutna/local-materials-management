@@ -7,7 +7,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { ProjectService } from '@/application/services/ProjectService';
-import { ProjectMapper, ProjectResponseDto, CreateProjectRequestDto, UpdateProjectRequestDto } from '@/infrastructure/transformers/ProjectMapper';
+import { ProjectDTO, CreateProjectDTO, UpdateProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { toast } from 'sonner';
 
 export function useProjects() {
@@ -23,55 +23,49 @@ export function useProjects() {
     error,
     refetch
   } = useQuery({
-    queryKey: ['projects'],
-    queryFn: async () => {
-      const projectsData = await projectService.getAllProjects();
-      return projectsData.map(project => ProjectMapper.toResponseDto(project));
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    queryKey: ['projects-hex'],
+    queryFn: async (): Promise<ProjectDTO[]> => {
+      return await projectService.getAllProjects();
+    }
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data: CreateProjectRequestDto) => {
-      const projectEntity = ProjectMapper.toDomainFromCreateDto(data);
-      const createdProject = await projectService.createProject(projectEntity);
-      return ProjectMapper.toResponseDto(createdProject);
+    mutationFn: async (data: CreateProjectDTO): Promise<ProjectDTO> => {
+      return await projectService.createProject(data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-      toast.success('Projet créé avec succès');
+      toast.success('Projet créé');
+      queryClient.invalidateQueries({ queryKey: ['projects-hex'] });
     },
     onError: (error: Error) => {
-      toast.error('Échec de la création du projet');
-    },
+      toast.error(`Erreur: ${error.message}`);
+    }
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: UpdateProjectRequestDto }) => {
-      const updateData = ProjectMapper.toUpdateData(data);
-      const updatedProject = await projectService.updateProject(id, updateData);
-      return ProjectMapper.toResponseDto(updatedProject);
+    mutationFn: async ({ id, data }: { id: string; data: UpdateProjectDTO }): Promise<ProjectDTO> => {
+      return await projectService.updateProject(id, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-      toast.success('Projet mis à jour avec succès');
+      toast.success('Projet mis à jour');
+      queryClient.invalidateQueries({ queryKey: ['projects-hex'] });
     },
     onError: (error: Error) => {
-      toast.error('Échec de la mise à jour du projet');
-    },
+      toast.error(`Erreur: ${error.message}`);
+    }
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (id: string): Promise<void> => {
       await projectService.deleteProject(id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-      toast.success('Projet supprimé avec succès');
+      toast.success('Projet supprimé');
+      queryClient.invalidateQueries({ queryKey: ['projects-hex'] });
     },
     onError: (error: Error) => {
-      toast.error('Échec de la suppression du projet');
-    },
+      toast.error(`Erreur: ${error.message}`);
+    }
   });
 
   return {
@@ -88,37 +82,28 @@ export function useProjects() {
   };
 }
 
-export function useProjectById(id: string) {
+export function useProject(id: string) {
   const projectService = new ProjectService(
     RepositoryFactory.getProjectRepository()
   );
 
-  return useQuery({
-    queryKey: ['projects', 'id', id],
-    queryFn: async () => {
-      const project = await projectService.getProjectById(id);
-      return project ? ProjectMapper.toResponseDto(project) : null;
+  const {
+    data: project,
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['project-hex', id],
+    queryFn: async (): Promise<ProjectDTO | null> => {
+      return await projectService.getProjectById(id);
     },
-    enabled: !!id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !!id
   });
-}
 
-export function useProjectsByStatus(status: string) {
-  const projectService = new ProjectService(
-    RepositoryFactory.getProjectRepository()
-  );
-
-  return useQuery({
-    queryKey: ['projects', 'status', status],
-    queryFn: async () => {
-      // Utiliser getAllProjects puis filtrer par statut
-      const projects = await projectService.getAllProjects();
-      return projects
-        .filter(project => project.status === status)
-        .map(project => ProjectMapper.toResponseDto(project));
-    },
-    enabled: !!status,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+  return {
+    project,
+    isLoading,
+    error,
+    refetch,
+  };
 }

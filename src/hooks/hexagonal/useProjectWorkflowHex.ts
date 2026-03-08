@@ -144,11 +144,11 @@ export function useProjectWorkflowHex(projectId?: string) {
     // Transform result back to ProjectWorkflowData
     return {
       success: true,
-      projectId: result.project?.id || data.projectId || '',
+      projectId: (result as any).projectId || data.projectId || '',
       stepNumber: data.currentStep,
       data: {
         ...data,
-        projectId: result.project?.id || data.projectId,
+        projectId: (result as any).projectId || data.projectId,
         metadata: {
           ...data.metadata,
           lastSavedAt: new Date().toISOString()

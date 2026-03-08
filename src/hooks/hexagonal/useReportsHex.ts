@@ -5,15 +5,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { ReportService, type GenerateProjectReportRequestDto, type GenerateProjectAnalyticsRequestDto, type GenerateFinancialMetricsRequestDto, type GenerateRiskAssessmentRequestDto, type GenerateComplianceReportRequestDto, type ProjectReportResultDto } from '@/application/services/ReportService';
-import { 
-  ProjectReportDTO,
-  ProjectAnalyticsDTO,
-  FinancialMetricsDTO,
-  RiskAssessmentDTO,
-  ComplianceReportDTO
-} from '@/dtos/reports/reportDTOs';
 
 // =================== HOOK INTERFACES ===================
 
@@ -69,11 +61,8 @@ export interface UseComplianceReportResult {
  */
 export function useReportsHex(projectId?: string): UseReportsHexResult {
   const queryClient = useQueryClient();
-  
-  // Initialize service with hexagonal architecture
-  const reportService = ReportService.getReportService();
+  const reportService = new ReportService();
 
-  // Query for reports list
   const {
     data: reports = [],
     isLoading,
@@ -83,14 +72,11 @@ export function useReportsHex(projectId?: string): UseReportsHexResult {
     queryKey: ['reports', projectId],
     queryFn: async (): Promise<any[]> => {
       if (!projectId) return [];
-      
       try {
-        // In a real implementation, this would fetch reports from repository
         const reportData = await reportService.generateProjectReport({
           projectId,
           reportType: 'summary'
         });
-        
         return [reportData];
       } catch (error) {
         console.error('Error fetching reports:', error);
@@ -100,15 +86,9 @@ export function useReportsHex(projectId?: string): UseReportsHexResult {
     enabled: !!projectId
   });
 
-  // Mutation for generating reports
   const generateReportMutation = useMutation({
     mutationFn: async (data: GenerateProjectReportRequestDto): Promise<ProjectReportResultDto> => {
-      try {
-        return await reportService.generateProjectReport(data);
-      } catch (error) {
-        console.error('Error generating report:', error);
-        throw error;
-      }
+      return await reportService.generateProjectReport(data);
     },
     onSuccess: (data) => {
       toast.success(`Rapport généré: ${data.metadata.reportType}`);
@@ -123,7 +103,7 @@ export function useReportsHex(projectId?: string): UseReportsHexResult {
   return {
     reports,
     isLoading,
-    error,
+    error: error ? (error as Error).message : null,
     refetch,
     generateReport: generateReportMutation.mutate,
     isGenerating: generateReportMutation.isPending
@@ -135,7 +115,7 @@ export function useReportsHex(projectId?: string): UseReportsHexResult {
  */
 export function useProjectAnalyticsHex(projectId: string): UseProjectAnalyticsResult {
   const queryClient = useQueryClient();
-  const reportService = ReportService.getReportService();
+  const reportService = new ReportService();
 
   const {
     data: analytics = null,
@@ -146,45 +126,33 @@ export function useProjectAnalyticsHex(projectId: string): UseProjectAnalyticsRe
     queryKey: ['project-analytics', projectId],
     queryFn: async (): Promise<any> => {
       if (!projectId) throw new Error('Project ID is required');
-      
-      try {
-        return await reportService.generateProjectAnalytics({
-          projectId,
-          timeRange: '90d',
-          includeTrends: true,
-          includeComparisons: true
-        });
-      } catch (error) {
-        console.error('Error fetching analytics:', error);
-        throw error;
-      }
+      return await reportService.generateProjectAnalytics({
+        projectId,
+        timeRange: '90d',
+        includeTrends: true,
+        includeComparisons: true
+      });
     },
     enabled: !!projectId
   });
 
   const generateAnalyticsMutation = useMutation({
     mutationFn: async (data: GenerateProjectAnalyticsRequestDto): Promise<any> => {
-      try {
-        return await reportService.generateProjectAnalytics(data);
-      } catch (error) {
-        console.error('Error generating analytics:', error);
-        throw error;
-      }
+      return await reportService.generateProjectAnalytics(data);
     },
     onSuccess: () => {
       toast.success('Analytiques générées avec succès');
       queryClient.invalidateQueries({ queryKey: ['project-analytics'] });
     },
-    onError: (error) => {
+    onError: () => {
       toast.error('Erreur lors de la génération des analytiques');
-      console.error('Analytics generation error:', error);
     }
   });
 
   return {
     analytics,
     isLoading,
-    error,
+    error: error ? (error as Error).message : null,
     refetch,
     generateAnalytics: generateAnalyticsMutation.mutate,
     isGenerating: generateAnalyticsMutation.isPending
@@ -196,7 +164,7 @@ export function useProjectAnalyticsHex(projectId: string): UseProjectAnalyticsRe
  */
 export function useFinancialMetricsHex(projectId: string): UseFinancialMetricsResult {
   const queryClient = useQueryClient();
-  const reportService = ReportService.getReportService();
+  const reportService = new ReportService();
 
   const {
     data: metrics = null,
@@ -207,45 +175,33 @@ export function useFinancialMetricsHex(projectId: string): UseFinancialMetricsRe
     queryKey: ['financial-metrics', projectId],
     queryFn: async (): Promise<any> => {
       if (!projectId) throw new Error('Project ID is required');
-      
-      try {
-        return await reportService.generateFinancialMetrics({
-          projectId,
-          includeVariance: true,
-          includeProjections: true,
-          includeCashFlow: true
-        });
-      } catch (error) {
-        console.error('Error fetching financial metrics:', error);
-        throw error;
-      }
+      return await reportService.generateFinancialMetrics({
+        projectId,
+        includeVariance: true,
+        includeProjections: true,
+        includeCashFlow: true
+      });
     },
     enabled: !!projectId
   });
 
   const generateMetricsMutation = useMutation({
     mutationFn: async (data: GenerateFinancialMetricsRequestDto): Promise<any> => {
-      try {
-        return await reportService.generateFinancialMetrics(data);
-      } catch (error) {
-        console.error('Error generating financial metrics:', error);
-        throw error;
-      }
+      return await reportService.generateFinancialMetrics(data);
     },
     onSuccess: () => {
       toast.success('Métriques financières générées');
       queryClient.invalidateQueries({ queryKey: ['financial-metrics'] });
     },
-    onError: (error) => {
+    onError: () => {
       toast.error('Erreur lors de la génération des métriques financières');
-      console.error('Financial metrics generation error:', error);
     }
   });
 
   return {
     metrics,
     isLoading,
-    error,
+    error: error ? (error as Error).message : null,
     refetch,
     generateMetrics: generateMetricsMutation.mutate,
     isGenerating: generateMetricsMutation.isPending
@@ -257,7 +213,7 @@ export function useFinancialMetricsHex(projectId: string): UseFinancialMetricsRe
  */
 export function useRiskAssessmentHex(projectId: string): UseRiskAssessmentResult {
   const queryClient = useQueryClient();
-  const reportService = ReportService.getReportService();
+  const reportService = new ReportService();
 
   const {
     data: assessment = null,
@@ -268,44 +224,32 @@ export function useRiskAssessmentHex(projectId: string): UseRiskAssessmentResult
     queryKey: ['risk-assessment', projectId],
     queryFn: async (): Promise<any> => {
       if (!projectId) throw new Error('Project ID is required');
-      
-      try {
-        return await reportService.generateRiskAssessment({
-          projectId,
-          includeMitigation: true,
-          severity: 'medium'
-        });
-      } catch (error) {
-        console.error('Error fetching risk assessment:', error);
-        throw error;
-      }
+      return await reportService.generateRiskAssessment({
+        projectId,
+        includeMitigation: true,
+        severity: 'medium'
+      });
     },
     enabled: !!projectId
   });
 
   const generateAssessmentMutation = useMutation({
     mutationFn: async (data: GenerateRiskAssessmentRequestDto): Promise<any> => {
-      try {
-        return await reportService.generateRiskAssessment(data);
-      } catch (error) {
-        console.error('Error generating risk assessment:', error);
-        throw error;
-      }
+      return await reportService.generateRiskAssessment(data);
     },
     onSuccess: () => {
       toast.success('Évaluation des risques générée');
       queryClient.invalidateQueries({ queryKey: ['risk-assessment'] });
     },
-    onError: (error) => {
+    onError: () => {
       toast.error('Erreur lors de l\'évaluation des risques');
-      console.error('Risk assessment generation error:', error);
     }
   });
 
   return {
     assessment,
     isLoading,
-    error,
+    error: error ? (error as Error).message : null,
     refetch,
     generateAssessment: generateAssessmentMutation.mutate,
     isGenerating: generateAssessmentMutation.isPending
@@ -317,7 +261,7 @@ export function useRiskAssessmentHex(projectId: string): UseRiskAssessmentResult
  */
 export function useComplianceReportHex(projectId: string): UseComplianceReportResult {
   const queryClient = useQueryClient();
-  const reportService = ReportService.getReportService();
+  const reportService = new ReportService();
 
   const {
     data: report = null,
@@ -328,44 +272,32 @@ export function useComplianceReportHex(projectId: string): UseComplianceReportRe
     queryKey: ['compliance-report', projectId],
     queryFn: async (): Promise<any> => {
       if (!projectId) throw new Error('Project ID is required');
-      
-      try {
-        return await reportService.generateComplianceReport({
-          projectId,
-          includeRecommendations: true,
-          includeHistory: true
-        });
-      } catch (error) {
-        console.error('Error fetching compliance report:', error);
-        throw error;
-      }
+      return await reportService.generateComplianceReport({
+        projectId,
+        includeRecommendations: true,
+        includeHistory: true
+      });
     },
     enabled: !!projectId
   });
 
   const generateReportMutation = useMutation({
     mutationFn: async (data: GenerateComplianceReportRequestDto): Promise<any> => {
-      try {
-        return await reportService.generateComplianceReport(data);
-      } catch (error) {
-        console.error('Error generating compliance report:', error);
-        throw error;
-      }
+      return await reportService.generateComplianceReport(data);
     },
     onSuccess: () => {
       toast.success('Rapport de conformité généré');
       queryClient.invalidateQueries({ queryKey: ['compliance-report'] });
     },
-    onError: (error) => {
+    onError: () => {
       toast.error('Erreur lors de la génération du rapport de conformité');
-      console.error('Compliance report generation error:', error);
     }
   });
 
   return {
     report,
     isLoading,
-    error,
+    error: error ? (error as Error).message : null,
     refetch,
     generateReport: generateReportMutation.mutate,
     isGenerating: generateReportMutation.isPending
@@ -374,9 +306,6 @@ export function useComplianceReportHex(projectId: string): UseComplianceReportRe
 
 // =================== UTILITY HOOKS ===================
 
-/**
- * Hook for quick report generation with preset configurations
- */
 export function useQuickReport(projectId: string, reportType: GenerateProjectReportRequestDto['reportType']) {
   const { generateReport, isGenerating } = useReportsHex(projectId);
   
@@ -398,32 +327,23 @@ export function useQuickReport(projectId: string, reportType: GenerateProjectRep
   };
 }
 
-/**
- * Hook for batch report generation
- */
 export function useBatchReports(projectIds: string[]) {
   const queryClient = useQueryClient();
-  const reportService = ReportService.getReportService();
+  const reportService = new ReportService();
 
   const batchGenerateMutation = useMutation({
     mutationFn: async (reportConfigs: GenerateProjectReportRequestDto[]): Promise<ProjectReportResultDto[]> => {
-      try {
-        const results = await Promise.all(
-          reportConfigs.map(config => reportService.generateProjectReport(config))
-        );
-        return results;
-      } catch (error) {
-        console.error('Error generating batch reports:', error);
-        throw error;
-      }
+      const results = await Promise.all(
+        reportConfigs.map(config => reportService.generateProjectReport(config))
+      );
+      return results;
     },
     onSuccess: (results) => {
       toast.success(`${results.length} rapports générés avec succès`);
       queryClient.invalidateQueries({ queryKey: ['reports'] });
     },
-    onError: (error) => {
+    onError: () => {
       toast.error('Erreur lors de la génération batch des rapports');
-      console.error('Batch report generation error:', error);
     }
   });
 
