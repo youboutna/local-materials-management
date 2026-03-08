@@ -62,7 +62,7 @@ export const SupplierTenderAccessGuard: React.FC<SupplierTenderAccessGuardProps>
       });
 
       setHasAccess(true);
-      setGrantedTenderId(validation.tender_id || null);
+      setGrantedTenderId(validation.tenderId || null);
       
       // Get supplier email from validated secret
       const email = validation.message || '';
