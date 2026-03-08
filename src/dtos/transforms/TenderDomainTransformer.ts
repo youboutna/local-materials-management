@@ -55,28 +55,18 @@ export class TenderDomainTransformer {
    * Transform TenderDTO to Tender entity (20 constructor args)
    */
   static fromDTO(dto: TenderDTO): Tender {
-    return new Tender(
-      dto.id,
-      dto.projectId,
-      dto.title,
-      dto.description,
-      dto.tenderNumber,
-      dto.status,
-      dto.selectionMode,
-      dto.marketType,
-      dto.financingSource,
-      dto.projectReference,
-      dto.publicationDate,
-      dto.deadlineDate,
-      dto.launchDate,
-      dto.attributionDate,
-      dto.budgetMin,
-      dto.budgetMax,
-      dto.evaluationCriteria,
-      dto.eligibilityRequirements,
-      dto.createdAt,
-      dto.updatedAt
-    );
+    return Tender.create({
+      id: dto.id,
+      projectId: dto.projectId || undefined,
+      title: dto.title,
+      description: dto.description || undefined,
+      tenderNumber: dto.tenderNumber || undefined,
+      selectionMode: dto.selectionMode || undefined,
+      marketType: dto.marketType || undefined,
+      deadlineDate: dto.deadlineDate || undefined,
+      budgetMin: dto.budgetMin || undefined,
+      budgetMax: dto.budgetMax || undefined
+    });
   }
 
   /**
