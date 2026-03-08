@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Settings, Calendar, FileText } from 'lucide-react';
-import { getWorkflowStepService, WorkflowStepService } from '@/application/services/WorkflowStepService';
+import { WorkflowStepService } from '@/application/services/WorkflowStepService';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 
