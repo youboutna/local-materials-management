@@ -17,7 +17,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { ProjectPDFDocument } from './pdf/ProjectPDFDocument';
 
 interface ProjectReportGeneratorProps {
-  project: ProjectData;
+  project: any; // ProjectData or ProjectDTO
   onClose?: () => void;
 }
 
