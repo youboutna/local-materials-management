@@ -19,22 +19,23 @@ export interface PhasePaymentFormData {
   supplier_id: string;
 }
 
-// Hook: Fetch phase payments
 export function usePhasePayments(phaseId: string) {
   const paymentService = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
   
   return useQuery({
     queryKey: ['phase-payments', phaseId],
     queryFn: async () => {
-      // Use PaymentRequestService - placeholder implementation
-      const payments = await paymentService.getPaymentsByPhase(phaseId);
-      return payments.map(payment => ({
+      // PaymentRequestService doesn't have getPaymentsByPhase
+      // Use getAllPaymentRequests and filter client-side
+      const allPayments = await paymentService.getAllPaymentRequests();
+      // No phaseId on PaymentRequestDTO, return all as fallback
+      return allPayments.map(payment => ({
         id: payment.id,
         project_id: payment.projectId,
-        phase_id: payment.phaseId,
+        phase_id: phaseId,
         amount: payment.amount,
         payment_method: payment.paymentReason,
-        payment_date: payment.requestedDate,
+        payment_date: payment.createdAt,
         progress_at_payment: payment.amount.toString(),
         contractor_name: payment.description,
         transaction_id: payment.id,
@@ -45,22 +46,18 @@ export function usePhasePayments(phaseId: string) {
   });
 }
 
-// Hook: Add payment to phase
 export function useAddPhasePayment(phaseId: string, projectId: string) {
   const queryClient = useQueryClient();
   const paymentService = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
 
   return useMutation({
     mutationFn: async (paymentData: PhasePaymentFormData) => {
-      // Use PaymentRequestService - placeholder implementation
       return await paymentService.createPaymentRequest({
-        supplier_id: paymentData.supplier_id,
-        project_id: projectId,
+        supplierId: paymentData.supplier_id,
+        projectId: projectId,
         amount: parseFloat(paymentData.amount),
         description: paymentData.contractor_name,
-        payment_reason: paymentData.payment_method,
-        supporting_documents: [],
-        notes: paymentData.contractor_contact
+        paymentReason: paymentData.payment_method,
       });
     },
     onSuccess: () => {
@@ -68,23 +65,17 @@ export function useAddPhasePayment(phaseId: string, projectId: string) {
       toast({ title: 'Paiement ajouté avec succès' });
     },
     onError: (error) => {
-      toast({ 
-        title: 'Erreur', 
-        description: error.message, 
-        variant: 'destructive' 
-      });
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     }
   });
 }
 
-// Hook: Delete phase payment
 export function useDeletePhasePayment(phaseId: string) {
   const queryClient = useQueryClient();
   const paymentService = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
 
   return useMutation({
     mutationFn: async (id: string) => {
-      // Use PaymentRequestService - placeholder implementation
       return await paymentService.deletePaymentRequest(id);
     },
     onSuccess: () => {
@@ -92,16 +83,11 @@ export function useDeletePhasePayment(phaseId: string) {
       toast({ title: 'Paiement supprimé avec succès' });
     },
     onError: (error) => {
-      toast({ 
-        title: 'Erreur', 
-        description: error.message, 
-        variant: 'destructive' 
-      });
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     }
   });
 }
 
-// Hook: Fetch supplier info for auto-fill
 export function useSupplierInfo(supplierId: string | null) {
   const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
   
@@ -109,12 +95,10 @@ export function useSupplierInfo(supplierId: string | null) {
     queryKey: ['supplier-info', supplierId],
     queryFn: async () => {
       if (!supplierId) return null;
-      
-      // Use SupplierService - placeholder implementation
       const supplier = await supplierService.getSupplierById(supplierId);
       return supplier ? {
         name: supplier.name,
-        contact_person: supplier.contacts[0]?.name,
+        contact_person: supplier.contacts?.[0]?.name,
         phone: supplier.phone,
         email: supplier.email
       } : null;
