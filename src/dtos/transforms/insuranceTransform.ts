@@ -96,7 +96,7 @@ export const insuranceTransform = {
     insurance_company: updateData.insurance_company || updateData.insuranceCompany,
     policy_number: updateData.policy_number || updateData.policyNumber,
     coverage_amount: updateData.coverage_amount ?? updateData.coverageAmount,
-    coverage_type: updateData.coverage_type || updateData.coverageType,
+    coverage_type: (updateData.coverage_type || updateData.coverageType) as any,
     valid_from: updateData.valid_from || updateData.validFrom,
     valid_until: updateData.valid_until || updateData.validUntil,
     status: updateData.status,
