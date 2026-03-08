@@ -5,6 +5,7 @@
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { AUTH_ERROR_MESSAGES } from '@/config/auth';
 import { 
   IAuthRepository, 
   AuthUser, 
@@ -34,6 +35,7 @@ export class AuthService {
       return { user: result.session.user, session: result.session };
     } catch (error) {
       console.error('AuthService.getCurrentSession failed:', error);
+      if (error instanceof AppError) throw error;
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get current session');
     }
   }
@@ -52,6 +54,7 @@ export class AuthService {
       return result.user;
     } catch (error) {
       console.error('AuthService.getCurrentUser failed:', error);
+      if (error instanceof AppError) throw error;
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get current user');
     }
   }
@@ -61,10 +64,24 @@ export class AuthService {
    */
   async login(credentials: LoginCredentials): Promise<{ user: AuthUser | null; session: AuthSession | null }> {
     try {
-      const result = await this.authRepository.signIn(credentials);
-      
+      const normalized: LoginCredentials = {
+        ...credentials,
+        email: String(credentials.email || '').trim(),
+      };
+
+      const result = await this.authRepository.signIn(normalized);
+
       if (result.error) {
-        throw new AppError(ErrorCode.UNAUTHORIZED, 'Invalid credentials');
+        const rawMessage = String((result.error as any)?.message || '');
+
+        if (rawMessage.includes('Invalid login credentials')) {
+          throw new AppError(ErrorCode.UNAUTHORIZED, AUTH_ERROR_MESSAGES.INVALID_CREDENTIALS, result.error);
+        }
+        if (rawMessage.toLowerCase().includes('email not confirmed')) {
+          throw new AppError(ErrorCode.UNAUTHORIZED, AUTH_ERROR_MESSAGES.EMAIL_NOT_CONFIRMED, result.error);
+        }
+
+        throw new AppError(ErrorCode.UNAUTHORIZED, AUTH_ERROR_MESSAGES.CONNECTION_FAILED, result.error);
       }
 
       if (!result.session) {
@@ -74,7 +91,8 @@ export class AuthService {
       return { user: result.session.user, session: result.session };
     } catch (error) {
       console.error('AuthService.login failed:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Login failed');
+      if (error instanceof AppError) throw error;
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Login failed', error);
     }
   }
 

@@ -322,7 +322,7 @@ function App() {
                         }
                       />
                       <Route
-                        path="/settings"
+                        path="/settings/*"
                         element={
                           <RoleBasedRoute allowedRoles={["admin", "director"]}>
                             <Settings />
