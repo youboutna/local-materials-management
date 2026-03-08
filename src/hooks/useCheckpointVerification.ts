@@ -10,7 +10,7 @@ import { AutomaticDecompteCalculator } from '@/application/services/AutomaticDec
 import { PaymentService } from '@/application/services/PaymentService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { toast } from '@/hooks/use-toast';
-import { AutomaticDecompteDTO } from '@/dtos/entities/AutomaticDecompteDTO';
+import { AutomaticDecompteDTO } from '@/dtos/entities/DecompteDTO';
 import type { CreatePaymentDTO } from '@/dtos/entities/PaymentDTO';
 import type { MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
 

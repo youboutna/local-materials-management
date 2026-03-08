@@ -528,13 +528,13 @@ export function usePhaseDetails(phaseId: string | undefined) {
         
         return {
           id: phase.id,
-          name: phase.name,
+          name: phase.title || (phase as any).name || '',
           order: semanticOrder,
           status: phase.status,
           progress: phase.progress,
           startDate: phase.startDate,
           endDate: phase.endDate,
-          semanticCategory: getSemanticCategory(phase.type)
+          semanticCategory: getSemanticCategory((phase as any).type)
         };
       }));
       
