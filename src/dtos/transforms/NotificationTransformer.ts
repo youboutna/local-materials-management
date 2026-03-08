@@ -22,7 +22,7 @@ export class NotificationTransformer {
       message: entity.message,
       type: entity.type as 'info' | 'success' | 'warning' | 'error' | 'system',
       read: entity.read || false,
-      created_at: entity.created_at,
+      created_at: entity.created_at || new Date().toISOString(),
       updated_at: entity.updated_at,
       priority: entity.priority as 'low' | 'medium' | 'high' || undefined,
       expires_at: entity.expires_at || undefined,
@@ -35,8 +35,6 @@ export class NotificationTransformer {
    * Transform create request DTO to domain entity
    */
   static fromCreateDtoToDomain(dto: CreateNotificationRequestDTO): Omit<NotificationData, 'id' | 'created_at' | 'updated_at'> {
-    const now = new Date().toISOString();
-    
     return {
       recipient_id: dto.recipient_id,
       title: dto.title,
@@ -47,8 +45,6 @@ export class NotificationTransformer {
       expires_at: dto.expires_at || null,
       action_url: dto.action_url || null,
       metadata: dto.metadata || null,
-      created_at: now,
-      updated_at: now,
     };
   }
 

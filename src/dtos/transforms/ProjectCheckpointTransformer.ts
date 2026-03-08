@@ -1,5 +1,21 @@
-import { ProjectCheckpoint } from '@/domain/entities/ProjectCheckpoint';
-import { ProjectCheckpointDTO } from '@/dtos/transforms/ProjectCheckpointDTO';
+/**
+ * Project Checkpoint Transformer
+ * Handles conversion between checkpoint entities and DTOs
+ */
+
+export interface ProjectCheckpoint {
+  id: string;
+  projectId: string;
+  status: string;
+  date: string;
+}
+
+export interface ProjectCheckpointDTO {
+  id: string;
+  project_id: string;
+  status: 'pending' | 'completed';
+  date: string;
+}
 
 export class ProjectCheckpointTransformer {
   static toDTO(checkpoint: ProjectCheckpoint): ProjectCheckpointDTO {
@@ -13,8 +29,10 @@ export class ProjectCheckpointTransformer {
 
   static fromDTO(dto: ProjectCheckpointDTO): ProjectCheckpoint {
     return {
-      ...dto,
-      projectId: dto.project_id || ''
+      id: dto.id,
+      projectId: dto.project_id || '',
+      status: dto.status,
+      date: dto.date
     };
   }
 }

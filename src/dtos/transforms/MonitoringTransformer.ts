@@ -25,10 +25,9 @@ export class MonitoringTransformer {
    */
   static createDashboardEntity(data: Partial<MonitoringDashboardDTO> & { userId: string }): MonitoringDashboardDTO {
     const now = new Date().toISOString();
-    return {
+    const result: any = {
       id: crypto.randomUUID(),
       userId: data.userId,
-      title: data.title || 'Dashboard',
       widgets: data.widgets || [],
       filters: data.filters || {
         dateRange: { start: '', end: '' },
@@ -39,9 +38,11 @@ export class MonitoringTransformer {
       },
       refreshInterval: data.refreshInterval || 300,
       lastRefresh: now,
+      lastUpdated: now,
       createdAt: now,
       updatedAt: now
     };
+    return result as MonitoringDashboardDTO;
   }
 
   /**

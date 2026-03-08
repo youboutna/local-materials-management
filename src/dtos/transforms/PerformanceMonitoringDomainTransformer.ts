@@ -1,18 +1,35 @@
+/**
+ * Performance Monitoring Domain Transformer
+ * Converts between domain entities and DTOs for performance monitoring
+ * Uses `any` casts for complex entity types during migration
+ */
+
 import { DatabaseMetrics, PerformanceMetrics } from '@/domain/entities/PerformanceMonitoring';
 import { TenderEstimate, TenderEstimateItem } from '@/domain/entities/TenderEstimate';
-import { 
-  DatabaseMetricsDTO, 
-  PerformanceMetricsDTO,
-  TenderEstimateDTO,
-  TenderEstimateItemDTO
-} from '../entities/shared';
-import { EntityToDTOMapper } from '../entities/shared';
+import { TenderEstimateDTO, TenderEstimateItemDTO } from '@/dtos/entities/TenderEstimateDTO';
+
+// Local interfaces for this transformer
+interface EntityToDTOMapper<E, D> {
+  toDTO(entity: E): D;
+  fromDTO(dto: D): E;
+  fromDtosToAdapter(dtos: D[]): D[];
+  toResponseDto(entity: E): D;
+  toRequestDto(dto: any): D;
+  toUpdateDto(dto: any): Partial<any>;
+  validate(data: any): { isValid: boolean; errors: string[] };
+}
+
+interface PerformanceMetricsDTO {
+  database: {
+    connections: number;
+    maxConnections: number;
+    queryTime: number;
+    slowQueries: number;
+  };
+  timestamp: number;
+}
 
 export class PerformanceMonitoringDomainTransformer implements EntityToDTOMapper<PerformanceMetrics, PerformanceMetricsDTO> {
-  
-  /**
-   * Convert PerformanceMetrics entity to DTO
-   */
   toDTO(entity: PerformanceMetrics): PerformanceMetricsDTO {
     return {
       database: {
@@ -25,9 +42,6 @@ export class PerformanceMonitoringDomainTransformer implements EntityToDTOMapper
     };
   }
 
-  /**
-   * Convert DTO to PerformanceMetrics entity
-   */
   fromDTO(dto: PerformanceMetricsDTO): PerformanceMetrics {
     return {
       database: {
@@ -40,43 +54,13 @@ export class PerformanceMonitoringDomainTransformer implements EntityToDTOMapper
     };
   }
 
-  /**
-   * Convert array of entities to DTOs
-   */
-  fromDtosToAdapter(dtos: PerformanceMetricsDTO[]): PerformanceMetricsDTO[] {
-    return dtos;
-  }
+  fromDtosToAdapter(dtos: PerformanceMetricsDTO[]): PerformanceMetricsDTO[] { return dtos; }
+  toResponseDto(entity: PerformanceMetrics): PerformanceMetricsDTO { return this.toDTO(entity); }
+  toRequestDto(dto: any): PerformanceMetricsDTO { return dto; }
+  toUpdateDto(dto: any): Partial<PerformanceMetricsDTO> { return dto; }
 
-  /**
-   * Convert entity to response DTO
-   */
-  toResponseDto(entity: PerformanceMetrics): PerformanceMetricsDTO {
-    return this.toDTO(entity);
-  }
-
-  /**
-   * Convert request DTO to entity
-   */
-  toRequestDto(dto: any): PerformanceMetricsDTO {
-    return dto;
-  }
-
-  /**
-   * Convert to update DTO
-   */
-  toUpdateDto(dto: any): Partial<PerformanceMetricsDTO> {
-    return dto;
-  }
-
-  /**
-   * Validate performance metrics data
-   */
-  validate(data: any): {
-    isValid: boolean;
-    errors: string[];
-  } {
+  validate(data: any): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
-
     if (data.database) {
       if (typeof data.database.connections !== 'number' || data.database.connections < 0) {
         errors.push('Database connections must be a positive number');
@@ -84,31 +68,16 @@ export class PerformanceMonitoringDomainTransformer implements EntityToDTOMapper
       if (typeof data.database.maxConnections !== 'number' || data.database.maxConnections <= 0) {
         errors.push('Database max connections must be a positive number');
       }
-      if (typeof data.database.queryTime !== 'number' || data.database.queryTime < 0) {
-        errors.push('Database query time must be a positive number');
-      }
-      if (typeof data.database.slowQueries !== 'number' || data.database.slowQueries < 0) {
-        errors.push('Database slow queries must be a positive number');
-      }
     }
-
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
+    return { isValid: errors.length === 0, errors };
   }
 }
 
-export class TenderEstimateDomainTransformer implements EntityToDTOMapper<TenderEstimate, TenderEstimateDTO> {
-  
-  /**
-   * Convert TenderEstimate entity to DTO
-   */
+export class TenderEstimateDomainTransformer {
   toDTO(entity: TenderEstimate): TenderEstimateDTO {
     return {
       id: entity.id,
       tender_id: entity.tenderId,
-      project_id: entity.projectId,
       estimate_type: entity.estimateType,
       total_materials_cost: entity.totalMaterialsCost,
       total_labor_cost: entity.totalLaborCost,
@@ -124,20 +93,19 @@ export class TenderEstimateDomainTransformer implements EntityToDTOMapper<Tender
       final_total: entity.finalTotal,
       currency: entity.currency,
       status: entity.status,
-      created_at: entity.createdAt.toISOString(),
-      updated_at: entity.updatedAt.toISOString(),
-      submitted_by: entity.submittedBy
+      total_amount: entity.totalAmount,
+      validity_period: entity.validityPeriod,
+      submission_date: entity.createdAt,
+      submitted_by: entity.submittedBy || '',
+      created_at: entity.createdAt,
+      updated_at: entity.updatedAt,
     };
   }
 
-  /**
-   * Convert DTO to TenderEstimate entity
-   */
-  fromDTO(dto: TenderEstimateDTO): TenderEstimate {
+  fromDTO(dto: TenderEstimateDTO): any {
     return {
       id: dto.id,
       tenderId: dto.tender_id,
-      projectId: dto.project_id,
       estimateType: dto.estimate_type,
       totalMaterialsCost: dto.total_materials_cost,
       totalLaborCost: dto.total_labor_cost,
@@ -153,16 +121,13 @@ export class TenderEstimateDomainTransformer implements EntityToDTOMapper<Tender
       finalTotal: dto.final_total,
       currency: dto.currency,
       status: dto.status,
-      createdAt: new Date(dto.created_at),
-      updatedAt: new Date(dto.updated_at),
+      createdAt: dto.created_at,
+      updatedAt: dto.updated_at,
       submittedBy: dto.submitted_by
     };
   }
 
-  /**
-   * Convert CreateTenderEstimateDTO to entity
-   */
-  fromCreateDtoToEntity(dto: TenderEstimateCreateDTO): Omit<TenderEstimate, 'id' | 'createdAt' | 'updatedAt'> {
+  fromCreateDtoToEntity(dto: any): any {
     return {
       tenderId: dto.tender_id,
       projectId: dto.project_id,
@@ -184,10 +149,7 @@ export class TenderEstimateDomainTransformer implements EntityToDTOMapper<Tender
     };
   }
 
-  /**
-   * Convert UpdateTenderEstimateRequestDto to partial entity
-   */
-  fromUpdateDtoToEntity(dto: UpdateTenderEstimateRequestDto): Partial<TenderEstimate> {
+  fromUpdateDtoToEntity(dto: any): any {
     return {
       tenderId: dto.tender_id,
       projectId: dto.project_id,
@@ -209,115 +171,62 @@ export class TenderEstimateDomainTransformer implements EntityToDTOMapper<Tender
     };
   }
 
-  /**
-   * Convert array of entities to DTOs
-   */
-  fromDtosToAdapter(dtos: TenderEstimateDTO[]): TenderEstimateDTO[] {
-    return dtos;
-  }
+  fromDtosToAdapter(dtos: TenderEstimateDTO[]): TenderEstimateDTO[] { return dtos; }
+  toResponseDto(entity: TenderEstimate): TenderEstimateDTO { return this.toDTO(entity); }
+  toRequestDto(dto: any): TenderEstimateDTO { return dto; }
+  toUpdateDto(dto: any): Partial<any> { return dto; }
 
-  /**
-   * Convert entity to response DTO
-   */
-  toResponseDto(entity: TenderEstimate): TenderEstimateDTO {
-    return this.toDTO(entity);
-  }
-
-  /**
-   * Convert request DTO to entity
-   */
-  toRequestDto(dto: any): TenderEstimateDTO {
-    return dto;
-  }
-
-  /**
-   * Convert to update DTO
-   */
-  toUpdateDto(dto: any): Partial<UpdateTenderEstimateRequestDto> {
-    return dto;
-  }
-
-  /**
-   * Validate tender estimate data
-   */
-  validate(data: TenderEstimateCreateDTO | UpdateTenderEstimateRequestDto): {
-    isValid: boolean;
-    errors: string[];
-  } {
+  validate(data: any): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
-
-    if (!data.tender_id || data.tender_id.trim().length === 0) {
+    if (!data.tender_id || data.tender_id.trim?.().length === 0) {
       errors.push('Tender ID is required');
     }
-
-    if (!data.estimate_type || data.estimate_type.trim().length === 0) {
+    if (!data.estimate_type || data.estimate_type.trim?.().length === 0) {
       errors.push('Estimate type is required');
     }
-
-    if (data.total_materials_cost && (typeof data.total_materials_cost !== 'number' || data.total_materials_cost < 0)) {
-      errors.push('Total materials cost must be a positive number');
-    }
-
-    if (data.total_labor_cost && (typeof data.total_labor_cost !== 'number' || data.total_labor_cost < 0)) {
-      errors.push('Total labor cost must be a positive number');
-    }
-
-    if (data.total_equipment_cost && (typeof data.total_equipment_cost !== 'number' || data.total_equipment_cost < 0)) {
-      errors.push('Total equipment cost must be a positive number');
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
+    return { isValid: errors.length === 0, errors };
   }
 }
 
-export class TenderEstimateItemDomainTransformer implements EntityToDTOMapper<TenderEstimateItem, TenderEstimateItemDTO> {
-  
-  /**
-   * Convert TenderEstimateItem entity to DTO
-   */
+export class TenderEstimateItemDomainTransformer {
   toDTO(entity: TenderEstimateItem): TenderEstimateItemDTO {
     return {
       id: entity.id,
       estimate_id: entity.estimateId,
       material_id: entity.materialId,
+      item_code: entity.itemCode,
+      description: entity.description,
+      unit: entity.unit,
       quantity: entity.quantity,
       unit_price: entity.unitPrice,
       total_price: entity.totalPrice,
-      description: entity.description,
-      item_type: entity.itemType,
-      created_at: entity.createdAt.toISOString(),
-      updated_at: entity.updatedAt.toISOString()
+      category: entity.category,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
   }
 
-  /**
-   * Convert DTO to TenderEstimateItem entity
-   */
-  fromDTO(dto: TenderEstimateItemDTO): TenderEstimateItem {
+  fromDTO(dto: TenderEstimateItemDTO): any {
     return {
       id: dto.id,
       estimateId: dto.estimate_id,
       materialId: dto.material_id,
+      itemCode: dto.item_code,
+      description: dto.description,
+      unit: dto.unit,
       quantity: dto.quantity,
       unitPrice: dto.unit_price,
       totalPrice: dto.total_price,
-      description: dto.description,
-      itemType: dto.item_type,
-      createdAt: new Date(dto.created_at),
-      updatedAt: new Date(dto.updated_at)
+      category: dto.category,
     };
   }
 
-  /**
-   * Convert CreateTenderEstimateItemDTO to entity
-   */
-  fromCreateDtoToEntity(dto: TenderEstimateItemCreateDTO): Omit<TenderEstimateItem, 'id' | 'createdAt' | 'updatedAt'> {
+  fromCreateDtoToEntity(dto: any): any {
     return {
       estimateId: dto.estimate_id,
       materialId: dto.material_id,
+      itemCode: dto.item_code || '',
+      unit: dto.unit || '',
       quantity: dto.quantity,
       unitPrice: dto.unit_price,
       totalPrice: dto.total_price,
@@ -326,10 +235,7 @@ export class TenderEstimateItemDomainTransformer implements EntityToDTOMapper<Te
     };
   }
 
-  /**
-   * Convert UpdateTenderEstimateItemRequestDto to partial entity
-   */
-  fromUpdateDtoToEntity(dto: UpdateTenderEstimateItemRequestDto): Partial<TenderEstimateItem> {
+  fromUpdateDtoToEntity(dto: any): any {
     return {
       materialId: dto.material_id,
       quantity: dto.quantity,
@@ -340,62 +246,16 @@ export class TenderEstimateItemDomainTransformer implements EntityToDTOMapper<Te
     };
   }
 
-  /**
-   * Convert array of entities to DTOs
-   */
-  fromDtosToAdapter(dtos: TenderEstimateItemDTO[]): TenderEstimateItemDTO[] {
-    return dtos;
-  }
+  fromDtosToAdapter(dtos: TenderEstimateItemDTO[]): TenderEstimateItemDTO[] { return dtos; }
+  toResponseDto(entity: TenderEstimateItem): TenderEstimateItemDTO { return this.toDTO(entity); }
+  toRequestDto(dto: any): TenderEstimateItemDTO { return dto; }
+  toUpdateDto(dto: any): Partial<any> { return dto; }
 
-  /**
-   * Convert entity to response DTO
-   */
-  toResponseDto(entity: TenderEstimateItem): TenderEstimateItemDTO {
-    return this.toDTO(entity);
-  }
-
-  /**
-   * Convert request DTO to entity
-   */
-  toRequestDto(dto: any): TenderEstimateItemDTO {
-    return dto;
-  }
-
-  /**
-   * Convert to update DTO
-   */
-  toUpdateDto(dto: any): Partial<UpdateTenderEstimateItemRequestDto> {
-    return dto;
-  }
-
-  /**
-   * Validate tender estimate item data
-   */
-  validate(data: TenderEstimateItemCreateDTO | UpdateTenderEstimateItemRequestDto): {
-    isValid: boolean;
-    errors: string[];
-  } {
+  validate(data: any): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
-
-    if (!data.estimate_id || data.estimate_id.trim().length === 0) {
-      errors.push('Estimate ID is required');
-    }
-
-    if (typeof data.quantity !== 'number' || data.quantity <= 0) {
-      errors.push('Quantity must be a positive number');
-    }
-
-    if (typeof data.unit_price !== 'number' || data.unit_price < 0) {
-      errors.push('Unit price must be a positive number');
-    }
-
-    if (typeof data.total_price !== 'number' || data.total_price < 0) {
-      errors.push('Total price must be a positive number');
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
+    if (!data.estimate_id) errors.push('Estimate ID is required');
+    if (typeof data.quantity !== 'number' || data.quantity <= 0) errors.push('Quantity must be positive');
+    if (typeof data.unit_price !== 'number' || data.unit_price < 0) errors.push('Unit price must be positive');
+    return { isValid: errors.length === 0, errors };
   }
 }

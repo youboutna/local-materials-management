@@ -29,8 +29,8 @@ export class LocationTransformer {
       parentCode: entity.parentCode,
       economicImportance: entity.economicImportance,
       population: entity.population,
-      createdAt: entity.createdAt?.toISOString(),
-      updatedAt: entity.updatedAt?.toISOString()
+      createdAt: typeof entity.createdAt === 'string' ? entity.createdAt : entity.createdAt?.toISOString?.() || new Date().toISOString(),
+      updatedAt: typeof entity.updatedAt === 'string' ? entity.updatedAt : entity.updatedAt?.toISOString?.() || new Date().toISOString()
     };
   }
 
@@ -144,6 +144,7 @@ export class LocationTransformer {
    * Convert Mauritania geographic unit to LocationDTO
    */
   static fromGeographicUnit(unit: any): LocationDTO {
+    const now = new Date().toISOString();
     return {
       id: unit.code,
       code: unit.code,
@@ -156,7 +157,9 @@ export class LocationTransformer {
       },
       parentCode: 'parentCode' in unit ? unit.parentCode : undefined,
       economicImportance: unit.economicImportance,
-      population: unit.population
+      population: unit.population,
+      createdAt: now,
+      updatedAt: now
     };
   }
 

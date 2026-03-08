@@ -2,4 +2,4 @@
  * Bank Guarantee Action DTO
  * Re-export from entities for consistency
  */
-export { BankGuaranteeActionDTO } from '../entities/BankGuaranteeDTO';
+export type { BankGuaranteeActionDTO } from '../entities/BankGuaranteeDTO';

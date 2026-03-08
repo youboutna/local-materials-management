@@ -118,38 +118,7 @@ export class InspectionTransformer {
       progressAtInspection: dto.progressAtInspection || 0,
       comments: dto.description || dto.comments || '',
       completedAt: dto.actualDate || dto.date,
-      completedBy: dto.inspector || 'system',
-      // Documents: For DTOs with document IDs, we create minimal Document objects
-      // In a full implementation, documents would be loaded separately via repository
-      documents: dto.documents?.map(id => {
-        // Create minimal Document object using factory method
-        return DocumentTransformer.toEntity({
-          id,
-          title: `Document ${id}`,
-          documentType: 'other',
-          status: 'draft',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          assignedTo: null,
-          deadlineDate: null,
-          description: null,
-          fileName: null,
-          fileSize: null,
-          fileUrl: null,
-          inspectionId: dto.id, // Link to this inspection
-          isInternalOnly: null,
-          isSharedWithSuppliers: null,
-          metadata: null,
-          mimeType: null,
-          paymentId: null,
-          phaseId: dto.phaseId || null,
-          projectId: dto.projectId || null,
-          sharedDate: null,
-          supplierId: null,
-          tags: null,
-          uploadedBy: null
-        });
-      }) || []
+      completedBy: dto.inspector || 'system'
     });
   }
 
@@ -227,37 +196,8 @@ export class InspectionTransformer {
     if (dto.comments !== undefined) updateData.comments = dto.comments;
 
     if (dto.documents !== undefined) {
-      // Handle document updates - create minimal Document objects from IDs
-      // In practice, this would be handled by loading full documents from repository
-      updateData.documents = dto.documents?.map(id => {
-        // Create minimal Document object using DocumentTransformer
-        return DocumentTransformer.toEntity({
-          id,
-          title: `Document ${id}`,
-          documentType: 'other',
-          status: 'draft',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          assignedTo: null,
-          deadlineDate: null,
-          description: null,
-          fileName: null,
-          fileSize: null,
-          fileUrl: null,
-          inspectionId: dto.id, // Link to this inspection
-          isInternalOnly: null,
-          isSharedWithSuppliers: null,
-          metadata: null,
-          mimeType: null,
-          paymentId: null,
-          phaseId: dto.phaseId || null,
-          projectId: dto.projectId || null,
-          sharedDate: null,
-          supplierId: null,
-          tags: null,
-          uploadedBy: null
-        });
-      }) || [];
+      // Document IDs are stored separately; not directly on the Inspection entity
+      updateData.documentIds = dto.documents || [];
     }
 
     // Always update the timestamp
@@ -520,7 +460,7 @@ export class InspectionTransformer {
 
     return documents.map((docId, index) => {
       // Classify document type based on naming convention or index
-      let type: typeof documentTypes[number] = 'other';
+      let type: typeof documentTypes[number] = 'report';
       let name = `Document ${docId}`;
 
       if (docId.includes('certificate') || docId.includes('certificat')) {
