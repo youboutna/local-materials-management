@@ -223,13 +223,10 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
 
     handleStakeholderCreate(stakeholderData);
     setNewStakeholder({});
-    onUpdate({ stakeholders: [...localStakeholders, stakeholderData] });
   };
 
   const removeStakeholder = (id: string) => {
-    const updatedStakeholders = localStakeholders.filter((s) => s.id !== id);
-    setLocalStakeholders(updatedStakeholders);
-    onUpdate({ stakeholders: updatedStakeholders });
+    handleStakeholderDelete(id);
   };
 
   const addTeamMember = () => {
