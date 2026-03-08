@@ -176,7 +176,8 @@ export class TenderEstimateTransformer {
       estimates_by_status: stats.byStatus,
       estimates_by_currency: stats.byCurrency,
       total_value: stats.totalValue,
-      recent_estimates: stats.recentEstimates
+      recent_estimates: stats.recentEstimates,
+      estimates_by_submitter: {},
     };
   }
 
