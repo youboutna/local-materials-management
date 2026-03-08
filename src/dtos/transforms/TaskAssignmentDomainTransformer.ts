@@ -6,7 +6,7 @@ import {
 } from './shared';
 import { EntityToDTOMapper } from './shared';
 
-export class TaskAssignmentDomainTransformer implements EntityToDTOMapper<TaskAssignment, TaskAssignmentDTO> {
+export class TaskAssignmentDomainTransformer {
   
   /**
    * Convert TaskAssignment entity to DTO
