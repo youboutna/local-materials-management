@@ -29,8 +29,8 @@ export class LocationTransformer {
       parentCode: entity.parentCode,
       economicImportance: entity.economicImportance,
       population: entity.population,
-      createdAt: entity.createdAt?.toISOString(),
-      updatedAt: entity.updatedAt?.toISOString()
+      createdAt: typeof entity.createdAt === 'string' ? entity.createdAt : entity.createdAt?.toISOString?.() || new Date().toISOString(),
+      updatedAt: typeof entity.updatedAt === 'string' ? entity.updatedAt : entity.updatedAt?.toISOString?.() || new Date().toISOString()
     };
   }
 
