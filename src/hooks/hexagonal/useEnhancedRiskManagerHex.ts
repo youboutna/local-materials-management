@@ -92,7 +92,7 @@ export const useEnhancedRiskManagerHex = (
   const { data: fetchedRisks = [], isLoading: risksLoading, error: risksError } = useQuery({
     queryKey: ['enhanced-project-risks', projectId],
     queryFn: async (): Promise<ProjectRisk[]> => {
-      const data = await riskRepo.findByProject(projectId);
+      const data = await riskRepo.findByProjectId(projectId);
       return (data || []) as unknown as ProjectRisk[];
     },
     enabled: !!projectId && !propRisks,
