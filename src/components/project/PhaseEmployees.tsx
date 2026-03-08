@@ -201,8 +201,6 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
       dailyRate: employee.daily_rate?.toString() || '',
       startDate: employee.start_date || '',
       endDate: employee.end_date || '',
-      isPrimarySupplier: employee.is_primary_supplier || false,
-      is_primary_supplier: employee.is_primary_supplier || false,
     });
     setEditingId(employee.id);
     setIsAdding(true);
