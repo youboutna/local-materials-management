@@ -424,7 +424,7 @@ export class ProjectWorkflowTransforms {
       budget: formData.budget as number,
       startDate: formData.startDate as string,
       endDate: formData.endDate as string,
-      status: formData.status as string,
+      status: formData.status as ProjectStatus | undefined,
       progress: formData.progress as number,
       thumbnail: formData.thumbnail as string,
       teamSize: formData.teamSize as number,
