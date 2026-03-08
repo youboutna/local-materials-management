@@ -67,7 +67,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
   const loadComplianceData = useCallback(async () => {
     try {
       // Load bank guarantees using service - Correct method name
-      const guaranteesData = await bankGuaranteeService.getByProjectId(projectData.id || '');
+      const guaranteesData = await BankGuaranteeService.getByProjectId(projectData.id || '');
       setBankGuarantees(guaranteesData);
 
       // Load insurance policies using service - Correct method name
