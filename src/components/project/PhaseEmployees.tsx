@@ -392,9 +392,9 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="is_primary_supplier"
-                    checked={formData.is_primary_supplier}
+                    checked={formData.isPrimarySupplier}
                     onCheckedChange={(checked) => 
-                      setFormData({ ...formData, is_primary_supplier: !!checked })
+                      setFormData({ ...formData, isPrimarySupplier: !!checked })
                     }
                   />
                   <Label htmlFor="is_primary_supplier" className="flex items-center gap-2">
