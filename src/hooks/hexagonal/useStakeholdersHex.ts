@@ -152,7 +152,7 @@ export function useStakeholdersHex(projectId?: string) {
     onSuccess: (result) => {
       toast({
         title: 'Partie prenante mise à jour',
-        description: `${result.displayName} a été mis à jour avec succès.`,
+        description: `${result.name} a été mis à jour avec succès.`,
         className: 'bg-blue-100 border-blue-300 text-blue-800',
       });
 
