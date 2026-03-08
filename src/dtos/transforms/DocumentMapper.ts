@@ -1,92 +1,81 @@
 /**
- * Document Transformer/Mapper
- * Maps between Supabase data, Domain entities, and DTOs
- * Following hexagonal architecture principles
+ * Document Mapper
+ * Maps between Document domain entity and DTOs
+ * Simplified for migration compatibility
  */
 
-import { Document, DocumentType, DocumentStatus } from '@/domain/entities/Document';
+import { Document } from '@/domain/entities/Document';
+import { DocumentDTO, CreateDocumentDTO, UpdateDocumentDTO, DocumentResponseDTO } from '@/dtos/entities/DocumentDTO';
 
-// 1. ENTITÉ DU DOMAINE (Pure métier) - déjà existante dans src/domain/entities/Document.ts
-
-// 3. TRANSFORMER/MAPPER (Adapter Layer)
 export class DocumentMapper {
   /**
-   * Transforme les données brutes Supabase vers l'entité du domaine
+   * Transform domain entity to DTO
    */
-  static toDomain(supabaseDocument: any): Document {
-    return new Document(
-      supabaseDocument.id,
-      supabaseDocument.project_id,
-      supabaseDocument.phase_id,
-      supabaseDocument.inspection_id,
-      supabaseDocument.payment_id,
-      supabaseDocument.supplier_id,
-      supabaseDocument.title, // Transformation des données brutes
-      supabaseDocument.description,
-      supabaseDocument.document_type as DocumentType,
-      supabaseDocument.status as DocumentStatus,
-      supabaseDocument.file_name,
-      supabaseDocument.file_url,
-      supabaseDocument.file_size,
-      supabaseDocument.mime_type,
-      supabaseDocument.tags || [],
-      supabaseDocument.is_internal_only || false,
-      supabaseDocument.is_shared_with_suppliers || false,
-      supabaseDocument.deadline_date,
-      supabaseDocument.assigned_to,
-      supabaseDocument.uploaded_by,
-      supabaseDocument.created_at,
-      supabaseDocument.updated_at
-    );
+  static toDTO(document: Document): DocumentDTO {
+    return {
+      id: document.id,
+      title: document.title,
+      description: document.description || null,
+      documentType: document.documentType,
+      status: document.status || null,
+      fileName: document.fileName || null,
+      fileUrl: document.fileUrl || null,
+      fileSize: document.fileSize || null,
+      mimeType: document.mimeType || null,
+      projectId: document.projectId || null,
+      phaseId: document.phaseId || null,
+      inspectionId: document.inspectionId || null,
+      paymentId: document.paymentId || null,
+      supplierId: document.supplierId || null,
+      assignedTo: document.assignedTo || null,
+      deadlineDate: document.deadlineDate || null,
+      tags: document.tags || null,
+      isInternalOnly: document.isInternalOnly || null,
+      isSharedWithSuppliers: document.isSharedWithSuppliers || null,
+      uploadedBy: document.uploadedBy || null,
+      metadata: (document as any).metadata || null,
+      sharedDate: (document as any).sharedDate || null,
+      createdAt: document.createdAt || '',
+      updatedAt: document.updatedAt || '',
+    };
   }
 
   /**
-   * Transforme l'entité du domaine vers le DTO de réponse API
+   * Transform domain entity to response DTO
    */
-  static toResponseDto(document: Document): DocumentResponseDto {
-    return new DocumentResponseDto(
-      document.id,
-      document.title,
-      document.description,
-      document.documentType,
-      document.status,
-      document.fileName,
-      document.fileUrl,
-      document.fileSize,
-      document.projectId,
-      document.assignedTo,
-      document.deadlineDate,
-      document.tags,
-      document.isInternalOnly,
-      document.isSharedWithSuppliers,
-      document.uploadedBy,
-      document.createdAt,
-      document.updatedAt
-    );
+  static toResponseDto(document: Document): DocumentResponseDTO {
+    return {
+      id: document.id,
+      fileName: document.fileName || '',
+      fileSize: document.fileSize || 0,
+      fileUrl: document.fileUrl || '',
+      documentType: document.documentType,
+      createdAt: document.createdAt || '',
+    };
   }
 
   /**
-   * Transforme le DTO de requête vers l'entité du domaine
+   * Transform CreateDocumentDTO to domain entity
    */
-  static toDomainFromCreateDto(requestDto: CreateDocumentRequestDto, uploadedBy: string): Document {
+  static toDomainFromCreateDto(requestDto: CreateDocumentDTO, uploadedBy: string): Document {
     return new Document(
-      crypto.randomUUID(), // ID généré
+      crypto.randomUUID(),
       requestDto.projectId || null,
-      null, // phaseId
-      null, // inspectionId
-      null, // paymentId
-      null, // supplierId
+      requestDto.phaseId || null,
+      requestDto.inspectionId || null,
+      requestDto.paymentId || null,
+      requestDto.supplierId || null,
       requestDto.title,
       requestDto.description || null,
-      requestDto.type,
-      'draft' as DocumentStatus, // Statut initial
-      requestDto.file?.originalname || null,
-      null, // fileUrl - sera généré après upload
-      requestDto.file?.size || null,
-      requestDto.file?.mimetype || null,
+      requestDto.documentType,
+      requestDto.status || 'draft',
+      requestDto.fileName || null,
+      requestDto.fileUrl || null,
+      requestDto.fileSize || null,
+      requestDto.mimeType || null,
       requestDto.tags || [],
-      false, // isInternalOnly
-      false, // isSharedWithSuppliers
+      requestDto.isInternalOnly || false,
+      requestDto.isSharedWithSuppliers || false,
       requestDto.deadlineDate || null,
       requestDto.assignedTo || null,
       uploadedBy,
@@ -96,32 +85,25 @@ export class DocumentMapper {
   }
 
   /**
-   * Transforme le DTO de mise à jour vers les données partielles de l'entité
+   * Transform UpdateDocumentDTO to partial data
    */
-  static toUpdateData(requestDto: UpdateDocumentRequestDto): Partial<Document> {
+  static toUpdateData(requestDto: UpdateDocumentDTO): Partial<any> {
     return {
       title: requestDto.title,
       description: requestDto.description,
-      documentType: requestDto.type,
+      documentType: requestDto.documentType,
       status: requestDto.status,
       assignedTo: requestDto.assignedTo,
       deadlineDate: requestDto.deadlineDate,
       tags: requestDto.tags,
       updatedAt: new Date().toISOString()
-    } as Partial<Document>;
+    };
   }
 
   /**
-   * Transforme un tableau de données Supabase vers les entités du domaine
+   * Transform array of domain entities to response DTOs
    */
-  static toDomainArray(supabaseDocuments: any[]): Document[] {
-    return supabaseDocuments.map(doc => DocumentMapper.toDomain(doc));
-  }
-
-  /**
-   * Transforme un tableau d'entités du domaine vers les DTOs de réponse
-   */
-  static toResponseDtoArray(documents: Document[]): DocumentResponseDto[] {
+  static toResponseDtoArray(documents: Document[]): DocumentResponseDTO[] {
     return documents.map(doc => DocumentMapper.toResponseDto(doc));
   }
 }
