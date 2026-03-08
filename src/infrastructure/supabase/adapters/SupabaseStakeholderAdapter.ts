@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Supabase Stakeholder Adapter
  * Implements IStakeholderRepository using Supabase

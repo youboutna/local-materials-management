@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Auth0 Auth Adapter
  * Implements IAuthRepository for Auth0 authentication

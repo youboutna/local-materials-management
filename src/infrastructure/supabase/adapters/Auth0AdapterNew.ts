@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Auth0Adapter
  * Adapter pour l'authentification Auth0

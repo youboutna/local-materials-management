@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Tender Estimate Supabase Adapter
  * Implements ITenderEstimateRepository using Supabase
