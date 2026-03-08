@@ -245,18 +245,18 @@ export function useInsurancesHex(projectId?: string) {
 
       setInsurances(insuranceData.map(i => ({
         id: i.id,
-        projectId: i.project_id,
-        contractorId: i.contractor_id,
-        contractorName: i.provider, // Using provider as contractorName
-        insuranceCompany: i.provider,
-        policyNumber: i.policy_number,
-        coverageType: i.insurance_type,
-        coverageAmount: i.coverage_amount,
-        validFrom: i.start_date,
-        validUntil: i.valid_until,
-        status: i.status,
-        createdAt: i.created_at,
-        updatedAt: i.updated_at,
+        projectId: i.projectId || i.project_id || '',
+        contractorId: i.contractorId || i.contractor_id || '',
+        contractorName: i.contractorName || i.contractor_name || '',
+        insuranceCompany: i.insuranceCompany || i.insurance_company || '',
+        policyNumber: i.policyNumber || i.policy_number || '',
+        coverageType: i.insuranceType || '',
+        coverageAmount: i.coverageAmount || i.coverage_amount || 0,
+        validFrom: i.validFrom || i.valid_from || '',
+        validUntil: i.validUntil || i.valid_until || '',
+        status: i.status || '',
+        createdAt: i.createdAt || i.created_at || '',
+        updatedAt: i.updatedAt || i.updated_at || '',
       })));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load insurances');

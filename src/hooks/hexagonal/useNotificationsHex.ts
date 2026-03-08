@@ -53,19 +53,15 @@ export function useNotificationsHex(): UseNotificationsHexResult {
 
   // Get payment notifications specifically
   const getPaymentNotifications = async (): Promise<NotificationDTO[]> => {
-    return notificationService.getNotificationsByType([
-      'payment_due',
-      'payment_completed', 
-      'payment_failed',
-      'payment_pending',
-      'payment_blocked',
-      'payment_warning'
-    ]);
+    // Use getUserNotifications with system user as fallback
+    return notificationService.getAllNotifications().then(all => 
+      all.filter(n => ['payment_due', 'payment_completed', 'payment_failed', 'payment_pending', 'payment_blocked', 'payment_warning'].includes(n.type))
+    );
   };
 
   // Get unread count
   const getUnreadCount = async (): Promise<number> => {
-    return notificationService.getUnreadCount();
+    return notificationService.getUnreadCount('system');
   };
 
   // Create notification mutation
@@ -94,8 +90,9 @@ export function useNotificationsHex(): UseNotificationsHexResult {
 
   // Mark as read mutation
   const markAsReadMutation = useMutation({
-    mutationFn: (id: string) => 
-      notificationService.markAsRead(id),
+    mutationFn: async (id: string) => {
+      await notificationService.markNotificationAsRead(id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },
@@ -106,8 +103,9 @@ export function useNotificationsHex(): UseNotificationsHexResult {
 
   // Delete notification mutation
   const deleteNotificationMutation = useMutation({
-    mutationFn: (id: string) => 
-      notificationService.deleteNotification(id),
+    mutationFn: async (id: string) => {
+      await notificationService.deleteNotification(id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },

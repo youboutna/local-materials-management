@@ -168,7 +168,7 @@ export function useManagementActionsHex() {
         assigneeId: actionData.assigneeId,
         projectId: actionData.projectId,
         entityId: actionData.entityId,
-        entityType: 'project',
+        entityType: 'project' as const,
         metadata: {},
         createdBy: 'system',
         createdAt: new Date().toISOString(),

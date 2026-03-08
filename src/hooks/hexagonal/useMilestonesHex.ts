@@ -117,7 +117,7 @@ export function useMilestonesHex(projectId?: string, phaseId?: string) {
       const milestoneRepo = RepositoryFactory.getMilestoneRepository();
       await milestoneRepo.update(id, {
         status: newStatus,
-        completed_date: completedDate,
+        completed_date: completedDate || undefined,
       });
 
       await fetchMilestones();

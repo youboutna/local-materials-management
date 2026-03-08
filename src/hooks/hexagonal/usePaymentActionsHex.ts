@@ -165,7 +165,7 @@ export function usePaymentActionsHex() {
   });
 
   // Execute action based on type
-  const executeAction = async (actionType: string, values: TaskAssignmentRequest | SmsRequest | CallRequest | EmailRequest, metadata: ActionMetadata) => {
+  const executeAction = async (actionType: string, values: any, metadata: ActionMetadata) => {
     switch (actionType) {
       case 'task_assignment':
         return taskAssignmentMutation.mutateAsync({ values, metadata });
@@ -177,15 +177,17 @@ export function usePaymentActionsHex() {
         return sendEmailMutation.mutateAsync({ values, metadata });
       default:
         // For other types, just create notifications
-        for (const recipientId of values.recipientIds) {
-          await createNotificationMutation.mutateAsync({
-            recipientId,
-            title: values.title,
-            message: values.message,
-            type: 'payment_action',
-            relatedId: metadata.paymentId,
-            metadata
-          });
+        if (values.recipientIds) {
+          for (const recipientId of values.recipientIds) {
+            await createNotificationMutation.mutateAsync({
+              recipientId,
+              title: values.title || 'Action',
+              message: values.message || '',
+              type: 'payment_action',
+              relatedId: metadata.paymentId,
+              metadata: metadata as any
+            });
+          }
         }
     }
   };

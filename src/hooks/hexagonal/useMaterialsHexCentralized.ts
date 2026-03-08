@@ -8,8 +8,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { MaterialService } from '@/application/services/MaterialService';
 import { toast } from 'sonner';
-import { CreateMaterialRequestDto } from '@/application/dtos/CreateMaterialRequestDto';
-import { UpdateMaterialRequestDto } from '@/application/dtos/UpdateMaterialRequestDto';
+import { CreateMaterialRequestDto, UpdateMaterialRequestDto } from '@/dtos/transforms';
 
 export function useMaterials() {
   const queryClient = useQueryClient();
