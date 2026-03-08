@@ -36,19 +36,17 @@ const fetchAuditEntries = async (
     const inspectionRepository = RepositoryFactory.getInspectionRepository();
     const inspectionService = new InspectionService(inspectionRepository);
     
-    let inspections: AuditEntry[] = [];
+    let inspections: any[] = [];
     
     if (projectId) {
-      // Get inspections for project
       inspections = await inspectionService.getInspectionsByProject(projectId);
     } else {
-      // Get all inspections and filter by phase
       inspections = await inspectionService.getAllInspections();
     }
     
     // Filter by phase if provided
     if (phaseId) {
-      inspections = inspections.filter((i: AuditEntry) => i.phaseId === phaseId || i.phase_id === phaseId);
+      inspections = inspections.filter((i: any) => (i.phaseId || i.phase_id) === phaseId);
     }
     
     // Transform to AuditEntry format and limit to 10
