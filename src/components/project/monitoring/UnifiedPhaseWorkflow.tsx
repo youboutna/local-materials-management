@@ -141,19 +141,22 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
     },
   });
 
+  // Helper to normalize status for comparison (domain entity uses enum, DB uses string)
+  const statusStr = (i: any) => String(i.status).toLowerCase();
+
   // Get latest approved inspection
   const latestApprovedInspection = useMemo(() => {
-    return inspections.find(i => i.status === 'approved');
+    return inspections.find((i: any) => statusStr(i) === 'approved');
   }, [inspections]);
 
   // Check if payment is available (after approved inspection with progress >= 25%)
   const isPaymentAvailable = useMemo(() => {
-    return latestApprovedInspection && latestApprovedInspection.progress_at_inspection >= 25;
+    return latestApprovedInspection && (latestApprovedInspection as any).progressAtInspection >= 25;
   }, [latestApprovedInspection]);
 
   // Check if guarantees release is triggered (progress >= 100%)
   const isGuaranteeReleaseTriggered = useMemo(() => {
-    return latestApprovedInspection && latestApprovedInspection.progress_at_inspection >= 100;
+    return latestApprovedInspection && (latestApprovedInspection as any).progressAtInspection >= 100;
   }, [latestApprovedInspection]);
 
   // Get current workflow stage for the phase
@@ -161,13 +164,13 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
     if (isPaymentAvailable) return 'payment_available';
     if (latestApprovedInspection) return 'approved';
     
-    const pendingInspection = inspections.find(i => i.status === 'in_progress' || i.status === 'pending');
+    const pendingInspection = inspections.find((i: any) => statusStr(i) === 'inprogress' || statusStr(i) === 'pending');
     if (pendingInspection) {
-      if (pendingInspection.status === 'in_progress') return 'in_progress';
+      if (statusStr(pendingInspection) === 'inprogress') return 'in_progress';
       return 'validation_pending';
     }
     
-    const scheduledInspection = inspections.find(i => i.status === 'scheduled');
+    const scheduledInspection = inspections.find((i: any) => statusStr(i) === 'scheduled');
     if (scheduledInspection) return 'scheduled';
     
     return 'scheduled';
