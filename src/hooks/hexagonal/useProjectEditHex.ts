@@ -209,7 +209,7 @@ export function useProjectEditHex(projectId?: string) {
             if (phase.id) {
               await phaseService.updatePhase(phase.id, phase);
             } else {
-              await phaseService.createPhase({ ...phase, projectId });
+              await phaseService.createPhase(phase, projectId);
             }
           }
         }

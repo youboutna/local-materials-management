@@ -88,7 +88,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
   const { 
     project: projectDetail, 
     isLoading: detailLoading 
-  } = useProjectDetail(selectedProject);
+  } = useProjectDetail(selectedProject ?? undefined);
 
   const { 
     analytics, 

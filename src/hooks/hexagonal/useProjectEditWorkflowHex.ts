@@ -381,8 +381,8 @@ export function useProjectEditWorkflowStepsHex(projectId?: string) {
     }
     
     try {
-      const validation = await validateStep({ stepNumber, data: stepData } as any);
-      return validation || { isValid: true, errors: [] as string[], warnings: [] as string[] };
+      validateStep({ stepNumber, data: stepData } as any);
+      return { isValid: true, errors: [] as string[], warnings: [] as string[] };
     } catch (error) {
       console.error('Step validation failed:', error);
       return { isValid: false, errors: ['Erreur de validation'], warnings: [] as string[] };

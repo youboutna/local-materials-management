@@ -79,7 +79,7 @@ export function useProjectWorkflowHex(projectId?: string) {
       RepositoryFactory.getProjectRepository(),
       RepositoryFactory.getPhaseRepository(),
       RepositoryFactory.getRiskRepository(),
-      RepositoryFactory.getStakeholderRepository()
+      RepositoryFactory.getProjectStakeholderRepository()
     );
   };
 
