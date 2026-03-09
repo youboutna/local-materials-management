@@ -88,6 +88,7 @@ import {
   SupabaseInsuranceAdapter,
   SupabaseParsedInvoiceAdapter,
   SupabaseInspectionPermissionAdapter,
+  SupabaseContactMessageAdapter,
 } from './adapters';
 import { SupabaseMissionExpenseAdapter } from './adapters/SupabaseMissionExpenseAdapter';
 import {
