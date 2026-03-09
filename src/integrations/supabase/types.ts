@@ -61,6 +61,92 @@ export type Database = {
           },
         ]
       }
+      blocked_senders: {
+        Row: {
+          blocked_at: string
+          blocked_by: string | null
+          created_at: string
+          email: string
+          id: string
+          is_active: boolean
+          reason: string | null
+        }
+        Insert: {
+          blocked_at?: string
+          blocked_by?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          is_active?: boolean
+          reason?: string | null
+        }
+        Update: {
+          blocked_at?: string
+          blocked_by?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          is_active?: boolean
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_senders_blocked_by_fkey"
+            columns: ["blocked_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+        ]
+      }
+      contact_messages: {
+        Row: {
+          created_at: string
+          default_reply_email: string
+          id: string
+          is_archived: boolean
+          is_read: boolean
+          is_spam: boolean
+          message: string
+          metadata: Json | null
+          sender_email: string
+          sender_name: string
+          sender_phone: string | null
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_reply_email?: string
+          id?: string
+          is_archived?: boolean
+          is_read?: boolean
+          is_spam?: boolean
+          message: string
+          metadata?: Json | null
+          sender_email: string
+          sender_name: string
+          sender_phone?: string | null
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_reply_email?: string
+          id?: string
+          is_archived?: boolean
+          is_read?: boolean
+          is_spam?: boolean
+          message?: string
+          metadata?: Json | null
+          sender_email?: string
+          sender_name?: string
+          sender_phone?: string | null
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       distance_matrix: {
         Row: {
           created_at: string
