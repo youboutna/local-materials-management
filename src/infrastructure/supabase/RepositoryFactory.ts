@@ -158,6 +158,7 @@ interface RepositoryRegistry {
   projectStakeholderRepository?: IProjectStakeholderRepository;
   locationRepository?: ILocationRepository;
   missionExpenseRepository?: IMissionExpenseRepository;
+  contactMessageRepository?: IContactMessageRepository;
 }
 
 /**
