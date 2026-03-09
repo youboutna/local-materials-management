@@ -104,7 +104,7 @@ export const RepositoryFactory = {
         byStatus: {}
       })
     };
-  }
+  },
   
   // Contact Message Repository
   getContactMessageRepository: InfraRepositoryFactory.getContactMessageRepository,
