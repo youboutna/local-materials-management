@@ -15,7 +15,7 @@ export interface OAuthProvider {
   tokenUrl?: string | null;
   userInfoUrl?: string | null;
   scopes?: string[] | null;
-  enabled: boolean | null;
+  enabled: boolean;
   configuration?: Record<string, any> | null;
 }
 
