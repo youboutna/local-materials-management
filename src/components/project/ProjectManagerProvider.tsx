@@ -7,7 +7,6 @@ import {
   ProjectManagerState as ManagerState
 } from "@/application/services/projectManagerWithActions";
 import {
-  ProjectManagerContext,
   ProjectManagerContextType,
   ProjectAlert,
   ProjectStats,
@@ -15,6 +14,7 @@ import {
   AlertType,
   AlertSeverity
 } from "@/application/services/ProjectManagerContext";
+import { ProjectManagerContext } from "@/services/ProjectManagerContext";
 import { EscalationRoles, ProjectData } from "@/types/project";
 
 // Adapter function to convert manager alert to context alert
