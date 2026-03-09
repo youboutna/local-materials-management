@@ -10,6 +10,7 @@ import EnhancedProjectEditForm from "../components/project/EnhancedProjectEditFo
 import { useState, useEffect } from "react";
 import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
 import { ProjectService } from "@/application/services/ProjectService";
+import { AppLayout } from "@/components/layout";
 
 const ProjectEdit = () => {
   const { id } = useParams<{ id: string }>();
