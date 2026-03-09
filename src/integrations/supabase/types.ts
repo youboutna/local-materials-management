@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      auth_sessions: {
+        Row: {
+          access_token: string | null
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          metadata: Json | null
+          provider: string
+          provider_session_id: string | null
+          refresh_token: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          provider?: string
+          provider_session_id?: string | null
+          refresh_token?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          provider?: string
+          provider_session_id?: string | null
+          refresh_token?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auth_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+        ]
+      }
       distance_matrix: {
         Row: {
           created_at: string
@@ -324,6 +371,51 @@ export type Database = {
           title?: string
           type?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      oauth_providers: {
+        Row: {
+          auth_url: string | null
+          client_id: string | null
+          client_secret: string | null
+          configuration: Json | null
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          provider_name: string
+          scopes: string[] | null
+          token_url: string | null
+          updated_at: string | null
+          user_info_url: string | null
+        }
+        Insert: {
+          auth_url?: string | null
+          client_id?: string | null
+          client_secret?: string | null
+          configuration?: Json | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          provider_name: string
+          scopes?: string[] | null
+          token_url?: string | null
+          updated_at?: string | null
+          user_info_url?: string | null
+        }
+        Update: {
+          auth_url?: string | null
+          client_id?: string | null
+          client_secret?: string | null
+          configuration?: Json | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          provider_name?: string
+          scopes?: string[] | null
+          token_url?: string | null
+          updated_at?: string | null
+          user_info_url?: string | null
         }
         Relationships: []
       }
@@ -766,6 +858,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          auth_provider: string | null
           avatar_url: string | null
           created_at: string | null
           full_name: string | null
@@ -773,11 +866,14 @@ export type Database = {
           is_admin: boolean | null
           national_id: string | null
           phone: string | null
+          provider_data: Json | null
+          provider_id: string | null
           role: Database["public"]["Enums"]["user_role"] | null
           status: string | null
           updated_at: string | null
         }
         Insert: {
+          auth_provider?: string | null
           avatar_url?: string | null
           created_at?: string | null
           full_name?: string | null
@@ -785,11 +881,14 @@ export type Database = {
           is_admin?: boolean | null
           national_id?: string | null
           phone?: string | null
+          provider_data?: Json | null
+          provider_id?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           status?: string | null
           updated_at?: string | null
         }
         Update: {
+          auth_provider?: string | null
           avatar_url?: string | null
           created_at?: string | null
           full_name?: string | null
@@ -797,6 +896,8 @@ export type Database = {
           is_admin?: boolean | null
           national_id?: string | null
           phone?: string | null
+          provider_data?: Json | null
+          provider_id?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           status?: string | null
           updated_at?: string | null
