@@ -6,8 +6,8 @@ import {
   ProjectAlert as ManagerAlert,
   ProjectManagerState as ManagerState
 } from "@/application/services/projectManagerWithActions";
+// Import types from service layer (pure business logic)
 import {
-  ProjectManagerContext,
   ProjectManagerContextType,
   ProjectAlert,
   ProjectStats,
@@ -15,6 +15,10 @@ import {
   AlertType,
   AlertSeverity
 } from "@/application/services/ProjectManagerContext";
+// Create a simple context for React component (UI layer)
+import { createContext } from "react";
+
+const ProjectManagerContext = createContext<ProjectManagerContextType | null>(null);
 import { EscalationRoles, ProjectData } from "@/types/project";
 
 // Adapter function to convert manager alert to context alert
@@ -50,7 +54,7 @@ export const ProjectManagerProvider: React.FC<{
   const [manager] = useState(() => new ProjectManager(project as any, roles, actionLabels));
   const [state, setState] = useState<ProjectManagerState | null>(null);
 
-  const runChecks = useCallback(() => {
+  const runChecks = useCallback(async () => {
     const result = manager.runAllChecks();
     setState(adaptState(result));
   }, [manager]);
