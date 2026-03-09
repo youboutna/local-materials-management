@@ -53,6 +53,7 @@ import {
   IInspectionSchedulingRepository,
   IProjectStakeholderRepository,
   IMissionExpenseRepository,
+  IContactMessageRepository,
 } from '@/domain/repositories';
 
 import { ILocationRepository } from '@/domain/repositories/LocationRepository';
