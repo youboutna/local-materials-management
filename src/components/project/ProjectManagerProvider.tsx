@@ -167,6 +167,12 @@ export const ProjectManagerProvider: React.FC<{
         resolveAlert,
         closeAlert,
         getAlertsByType,
+        getAlertsBySeverity,
+        needsEscalation,
+        getEscalationPath,
+        getActionLabel,
+        getSummaryStats
+      }}
     >
       {children}
     </ProjectManagerContext.Provider>
