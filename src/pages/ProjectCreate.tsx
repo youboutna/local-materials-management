@@ -275,14 +275,13 @@ const ProjectCreate = () => {
   return (
     <AppLayout
       pageTitle={t("project_create.title")}
-      pageDescription="Suivez ce processus structuré pour créer votre projet de manière optimale"
       actions={
-        <Link to="/projects">
-          <Button variant="ghost">
+        <Button variant="ghost" asChild>
+          <Link to="/projects">
             <ArrowLeft className="mr-2 h-4 w-4" />
             {t("project_create.back_to_projects")}
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       }
     >
       <motion.div
@@ -291,7 +290,7 @@ const ProjectCreate = () => {
         transition={{ duration: 0.5 }}
         className="max-w-7xl mx-auto"
       >
-        <div className="bg-white rounded-xl shadow-elegant p-6">
+        <div className="bg-card rounded-xl border border-border shadow-sm p-4 sm:p-6">
           <ProjectCreationWorkflow
             onSubmit={handleFormSubmit}
             selectedMaterials={selectedMaterials}
