@@ -50,7 +50,7 @@ export const ProjectManagerProvider: React.FC<{
   const [manager] = useState(() => new ProjectManager(project as any, roles, actionLabels));
   const [state, setState] = useState<ProjectManagerState | null>(null);
 
-  const runChecks = useCallback(() => {
+  const runChecks = useCallback(async () => {
     const result = manager.runAllChecks();
     setState(adaptState(result));
   }, [manager]);
