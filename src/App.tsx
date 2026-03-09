@@ -5,6 +5,7 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { UnifiedAuthProvider } from "./contexts/UnifiedAuthContext";
 import { KeycloakAuthProvider } from "./contexts/KeycloakAuthContext";
+import { HexagonalAuthProvider } from "./contexts/HexagonalAuthContext";
 import MainNavbar from "./components/MainNavbar";
 import Footer from "./components/Footer";
 import { Toaster } from "./components/ui/sonner";
