@@ -493,8 +493,8 @@ function App() {
                   <Toaster />
                   <UIToaster />
                 </div>
-                </BrowserRouter>
                 </HexagonalAuthProvider>
+                </BrowserRouter>
               </KeycloakAuthProvider>
             </UnifiedAuthProvider>
           </AuthProvider>
