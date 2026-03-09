@@ -5,6 +5,7 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { UnifiedAuthProvider } from "./contexts/UnifiedAuthContext";
 import { KeycloakAuthProvider } from "./contexts/KeycloakAuthContext";
+import { HexagonalAuthProvider } from "./contexts/HexagonalAuthContext";
 import MainNavbar from "./components/MainNavbar";
 import Footer from "./components/Footer";
 import { Toaster } from "./components/ui/sonner";
@@ -93,9 +94,10 @@ function App() {
           <AuthProvider>
             <UnifiedAuthProvider>
               <KeycloakAuthProvider>
-                <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                <div className="min-h-screen bg-background">
-                  <MergedNavbar />
+                <HexagonalAuthProvider>
+                  <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                  <div className="min-h-screen bg-background">
+                    <MergedNavbar />
                   <main className="pt-16">
                     <Routes>
                       {/* Public routes - always accessible */}
@@ -491,10 +493,11 @@ function App() {
                   <Toaster />
                   <UIToaster />
                 </div>
-              </BrowserRouter>
-            </KeycloakAuthProvider>
-          </UnifiedAuthProvider>
-        </AuthProvider>
+                </BrowserRouter>
+                </HexagonalAuthProvider>
+              </KeycloakAuthProvider>
+            </UnifiedAuthProvider>
+          </AuthProvider>
         </LanguageProvider>
       </ErrorBoundary>
     </QueryClientProvider>
