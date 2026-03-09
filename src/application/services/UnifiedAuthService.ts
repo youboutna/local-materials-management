@@ -293,10 +293,13 @@ export class UnifiedAuthService {
 
   private async clearAuthSessions(): Promise<void> {
     try {
-      await supabase
-        .from('auth_sessions')
-        .delete()
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.id) {
+        await supabase
+          .from('auth_sessions')
+          .delete()
+          .eq('user_id', user.id);
+      }
     } catch (error) {
       console.warn('Failed to clear auth sessions:', error);
       // Don't throw - session cleanup failure shouldn't block logout
