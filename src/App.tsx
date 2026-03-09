@@ -94,9 +94,10 @@ function App() {
           <AuthProvider>
             <UnifiedAuthProvider>
               <KeycloakAuthProvider>
-                <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                <div className="min-h-screen bg-background">
-                  <MergedNavbar />
+                <HexagonalAuthProvider>
+                  <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                  <div className="min-h-screen bg-background">
+                    <MergedNavbar />
                   <main className="pt-16">
                     <Routes>
                       {/* Public routes - always accessible */}
