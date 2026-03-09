@@ -10,13 +10,13 @@ import { supabase } from '@/integrations/supabase/client';
 export interface OAuthProvider {
   id: string;
   providerName: string;
-  clientId?: string;
-  authUrl?: string;
-  tokenUrl?: string;
-  userInfoUrl?: string;
-  scopes?: string[];
-  enabled: boolean;
-  configuration?: Record<string, any>;
+  clientId?: string | null;
+  authUrl?: string | null;
+  tokenUrl?: string | null;
+  userInfoUrl?: string | null;
+  scopes?: string[] | null;
+  enabled: boolean | null;
+  configuration?: Record<string, any> | null;
 }
 
 export interface OAuthProviderCreateData {
