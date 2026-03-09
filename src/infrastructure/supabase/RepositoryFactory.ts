@@ -53,6 +53,7 @@ import {
   IInspectionSchedulingRepository,
   IProjectStakeholderRepository,
   IMissionExpenseRepository,
+  IContactMessageRepository,
 } from '@/domain/repositories';
 
 import { ILocationRepository } from '@/domain/repositories/LocationRepository';
@@ -87,6 +88,7 @@ import {
   SupabaseInsuranceAdapter,
   SupabaseParsedInvoiceAdapter,
   SupabaseInspectionPermissionAdapter,
+  SupabaseContactMessageAdapter,
 } from './adapters';
 import { SupabaseMissionExpenseAdapter } from './adapters/SupabaseMissionExpenseAdapter';
 import {
@@ -156,6 +158,7 @@ interface RepositoryRegistry {
   projectStakeholderRepository?: IProjectStakeholderRepository;
   locationRepository?: ILocationRepository;
   missionExpenseRepository?: IMissionExpenseRepository;
+  contactMessageRepository?: IContactMessageRepository;
 }
 
 /**
@@ -724,5 +727,16 @@ export class RepositoryFactory {
       repositoryRegistry.tenderSharingRepository = new SupabaseTenderSharingAdapter();
     }
     return repositoryRegistry.tenderSharingRepository;
+  }
+
+  /**
+   * Get Contact Message Repository instance
+   * Lazy loaded for memory efficiency
+   */
+  static getContactMessageRepository(): IContactMessageRepository {
+    if (!repositoryRegistry.contactMessageRepository) {
+      repositoryRegistry.contactMessageRepository = new SupabaseContactMessageAdapter();
+    }
+    return repositoryRegistry.contactMessageRepository;
   }
 }

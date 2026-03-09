@@ -48,6 +48,7 @@ export { SupabaseMilestoneAdapter } from './SupabaseMilestoneAdapter';
 export { SupabaseProjectStakeholderAdapter } from './SupabaseProjectStakeholderAdapter';
 export { SupabaseStakeholderAdapter } from './SupabaseStakeholderAdapter';
 export { SupabaseSupplierPaymentAdapter } from './SupabaseSupplierPaymentAdapter';
+export { SupabaseContactMessageAdapter } from './SupabaseContactMessageAdapter';
 export { SupabaseMonitoringAlertAdapter } from './SupabaseMonitoringAlertAdapter';
 
 // Auth adapters (multi-provider support)

@@ -59,6 +59,7 @@ export type { INotificationRepository } from './INotificationRepository';
 export type { IComplianceRepository } from './IComplianceRepository';
 export type { IAlertRepository } from './IAlertRepository';
 export * from './IMissionExpenseRepository';
+export type { IContactMessageRepository } from './IContactMessageRepository';
 
 // Repository Implementations (migrated from services)
 export * from './MaterialRepository';
