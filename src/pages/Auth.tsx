@@ -23,6 +23,8 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PasswordResetForm from "@/components/auth/PasswordResetForm";
+import OAuthLogin from "@/components/auth/OAuthLogin";
+import OAuthErrorHandler from "@/components/auth/OAuthErrorHandler";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
