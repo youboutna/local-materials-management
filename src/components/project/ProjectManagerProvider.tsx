@@ -151,11 +151,7 @@ export const ProjectManagerProvider: React.FC<{
     stats: { totalAlerts: 0, criticalAlerts: 0, activeRisks: 0, overdueTasks: 0 },
     lastUpdated: new Date().toISOString()
   };
-        getAlertsBySeverity,
-        needsEscalation,
-        getEscalationPath,
-        getActionLabel,
-        getSummaryStats
+
   return (
     <ProjectManagerContext.Provider
       value={{
