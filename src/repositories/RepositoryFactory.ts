@@ -105,6 +105,9 @@ export const RepositoryFactory = {
       })
     };
   }
+  
+  // Contact Message Repository
+  getContactMessageRepository: InfraRepositoryFactory.getContactMessageRepository,
 };
 
 // Maintenir les exports individuels pour compatibilité

@@ -728,4 +728,15 @@ export class RepositoryFactory {
     }
     return repositoryRegistry.tenderSharingRepository;
   }
+
+  /**
+   * Get Contact Message Repository instance
+   * Lazy loaded for memory efficiency
+   */
+  static getContactMessageRepository(): IContactMessageRepository {
+    if (!repositoryRegistry.contactMessageRepository) {
+      repositoryRegistry.contactMessageRepository = new SupabaseContactMessageAdapter();
+    }
+    return repositoryRegistry.contactMessageRepository;
+  }
 }
