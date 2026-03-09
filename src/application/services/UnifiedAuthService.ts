@@ -84,7 +84,7 @@ export class UnifiedAuthService {
         authProvider: profile?.auth_provider || 'supabase',
         providerId: profile?.provider_id,
         providerData: profile?.provider_data,
-        createdAt: result.session.user.created_at,
+        createdAt: result.session.user.created_at || new Date().toISOString(),
         updatedAt: profile?.updated_at
       };
 
