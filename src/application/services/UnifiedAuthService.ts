@@ -329,7 +329,7 @@ export class UnifiedAuthService {
       authProvider: profile?.auth_provider || 'supabase',
       providerId: profile?.provider_id,
       providerData: profile?.provider_data,
-      createdAt: authUser.created_at,
+      createdAt: authUser.created_at || new Date().toISOString(),
       updatedAt: profile?.updated_at
     };
   }
