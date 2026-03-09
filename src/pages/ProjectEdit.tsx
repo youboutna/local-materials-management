@@ -10,6 +10,7 @@ import EnhancedProjectEditForm from "../components/project/EnhancedProjectEditFo
 import { useState, useEffect } from "react";
 import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
 import { ProjectService } from "@/application/services/ProjectService";
+import { AppLayout } from "@/components/layout";
 
 const ProjectEdit = () => {
   const { id } = useParams<{ id: string }>();
@@ -262,61 +263,51 @@ const ProjectEdit = () => {
 
   if (loading || !initialData) {
     return (
-      <div className="layout-main bg-gray-50">
-        <main className="layout-content">
-          <div className="container-responsive">
-            <div className="flex justify-center items-center h-64 sm:h-96">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-terracotta-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          </div>
-        </main>
-      </div>
+      <AppLayout pageTitle={t("projects.edit.title")}>
+        <div className="flex justify-center items-center h-64 sm:h-96">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="layout-main -mt-8 bg-gray-50">
-      <main className="layout-content">
-        <div className="container-responsive">
-          {/* Back button */}
+    <AppLayout
+      pageTitle={t("projects.edit.title")}
+      actions={
+        <Button variant="ghost" asChild disabled={isSubmitting}>
           <Link to={`/projects/${id}`}>
-            <Button variant="ghost" className="mb-6" disabled={isSubmitting}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {t("projects.edit.back_to_detail")}
-            </Button>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {t("projects.edit.back_to_detail")}
           </Link>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="max-w-7xl mx-auto card-stack"
-          >
-            {/* Project Edit Workflow */}
-            <div className="bg-white rounded-xl shadow-mobile card-responsive">
-              <h1 className="heading-responsive font-serif text-adrar-800 mb-4 sm:mb-6">
-                {t("projects.edit.title")}
-              </h1>
-
-              <EnhancedProjectEditForm
-                initialData={initialData}
-                onSubmit={handleFormSubmit}
-                isSubmitting={isSubmitting}
-              />
-
-              {/* Documents Section */}
-              <div className="mt-8">
-                <ProjectDocumentUpload
-                  projectId={id!}
-                  context="project"
-                  contextLabel="Modification de projet"
-                />
-              </div>
-            </div>
-          </motion.div>
+        </Button>
+      }
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-7xl mx-auto space-y-6"
+      >
+        {/* Project Edit Workflow */}
+        <div className="bg-card rounded-xl border border-border shadow-sm p-4 sm:p-6">
+          <EnhancedProjectEditForm
+            initialData={initialData}
+            onSubmit={handleFormSubmit}
+            isSubmitting={isSubmitting}
+          />
         </div>
-      </main>
-    </div>
+
+        {/* Documents Section */}
+        <div className="bg-card rounded-xl border border-border shadow-sm p-4 sm:p-6">
+          <ProjectDocumentUpload
+            projectId={id!}
+            context="project"
+            contextLabel="Modification de projet"
+          />
+        </div>
+      </motion.div>
+    </AppLayout>
   );
 };
 
