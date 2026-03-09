@@ -151,19 +151,9 @@ export const ProjectManagerProvider: React.FC<{
   return (
     <ProjectManagerContext.Provider
       value={{
-        manager: managerWrapper,
-        state: state || defaultState,
-        alerts: state?.alerts || [],
+        data: state || defaultState,
         runChecks,
-        acknowledgeAlert,
-        resolveAlert,
-        closeAlert,
-        getAlertsByType,
-        getAlertsBySeverity,
-        needsEscalation,
-        getEscalationPath,
-        getActionLabel,
-        getSummaryStats
+        acknowledgeAlert
       }}
     >
       {children}
