@@ -93,7 +93,7 @@ export class UnifiedAuthService {
         refreshToken: result.session.refresh_token,
         expiresAt: result.session.expires_at,
         user: unifiedUser,
-        provider: profile?.auth_provider as AuthProvider || 'supabase'
+        provider: (profile?.auth_provider as AuthProvider) || 'supabase'
       };
 
       return { user: unifiedUser, session: unifiedSession };
@@ -199,7 +199,9 @@ export class UnifiedAuthService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Registration failed', result.error);
       }
 
-      return result.user ? await this.transformToUnifiedUser(result.user) : null;
+      if (!result.user) return null;
+
+      return await this.transformToUnifiedUser(result.user);
     } catch (error) {
       console.error('UnifiedAuthService.register failed:', error);
       if (error instanceof AppError) throw error;

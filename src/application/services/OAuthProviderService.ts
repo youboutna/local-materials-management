@@ -1,22 +1,23 @@
 /**
  * OAuth Provider Service
- * Implements business logic for OAuth provider management
+ * Implements business logic for OAuth provider management  
  * Following hexagonal architecture principles from PROMPTS.md
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { supabase } from '@/integrations/supabase/client';
+import { Json } from '@/integrations/supabase/types';
 
 export interface OAuthProvider {
   id: string;
   providerName: string;
-  clientId?: string | null;
-  authUrl?: string | null;
-  tokenUrl?: string | null;
-  userInfoUrl?: string | null;
-  scopes?: string[] | null;
+  clientId?: string;
+  authUrl?: string;
+  tokenUrl?: string;
+  userInfoUrl?: string;
+  scopes?: string[];
   enabled: boolean;
-  configuration?: Record<string, any> | null;
+  configuration?: Record<string, any>;
 }
 
 export interface OAuthProviderCreateData {
@@ -34,6 +35,31 @@ export interface OAuthProviderCreateData {
 export class OAuthProviderService {
   
   /**
+   * Transform database row to DTO
+   */
+  private transformProvider(data: any): OAuthProvider {
+    return {
+      id: data.id,
+      providerName: data.provider_name,
+      clientId: data.client_id || undefined,
+      authUrl: data.auth_url || undefined,
+      tokenUrl: data.token_url || undefined,
+      userInfoUrl: data.user_info_url || undefined,
+      scopes: data.scopes || undefined,
+      enabled: Boolean(data.enabled),
+      configuration: this.parseConfiguration(data.configuration)
+    };
+  }
+
+  private parseConfiguration(config: Json): Record<string, any> | undefined {
+    if (!config || config === null) return undefined;
+    if (typeof config === 'object' && !Array.isArray(config)) {
+      return config as Record<string, any>;
+    }
+    return undefined;
+  }
+
+  /**
    * Get all OAuth providers
    */
   async getOAuthProviders(): Promise<OAuthProvider[]> {
@@ -47,17 +73,7 @@ export class OAuthProviderService {
         throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch OAuth providers', error);
       }
 
-      return (data || []).map(provider => ({
-        id: provider.id,
-        providerName: provider.provider_name,
-        clientId: provider.client_id,
-        authUrl: provider.auth_url,
-        tokenUrl: provider.token_url,
-        userInfoUrl: provider.user_info_url,
-        scopes: provider.scopes,
-        enabled: provider.enabled,
-        configuration: provider.configuration
-      }));
+      return (data || []).map(this.transformProvider);
     } catch (error) {
       console.error('OAuthProviderService.getOAuthProviders failed:', error);
       if (error instanceof AppError) throw error;
@@ -83,17 +99,7 @@ export class OAuthProviderService {
         throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch OAuth provider', error);
       }
 
-      return {
-        id: data.id,
-        providerName: data.provider_name,
-        clientId: data.client_id,
-        authUrl: data.auth_url,
-        tokenUrl: data.token_url,
-        userInfoUrl: data.user_info_url,
-        scopes: data.scopes,
-        enabled: data.enabled || false,
-        configuration: data.configuration || undefined
-      };
+      return this.transformProvider(data);
     } catch (error) {
       console.error('OAuthProviderService.getOAuthProviderByName failed:', error);
       if (error instanceof AppError) throw error;
@@ -116,17 +122,7 @@ export class OAuthProviderService {
         throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch enabled OAuth providers', error);
       }
 
-      return (data || []).map(provider => ({
-        id: provider.id,
-        providerName: provider.provider_name,
-        clientId: provider.client_id,
-        authUrl: provider.auth_url,
-        tokenUrl: provider.token_url,
-        userInfoUrl: provider.user_info_url,
-        scopes: provider.scopes,
-        enabled: provider.enabled || false,
-        configuration: provider.configuration || undefined
-      }));
+      return (data || []).map(this.transformProvider);
     } catch (error) {
       console.error('OAuthProviderService.getEnabledOAuthProviders failed:', error);
       if (error instanceof AppError) throw error;
@@ -160,17 +156,7 @@ export class OAuthProviderService {
         throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to create/update OAuth provider', error);
       }
 
-      return {
-        id: provider.id,
-        providerName: provider.provider_name,
-        clientId: provider.client_id,
-        authUrl: provider.auth_url,
-        tokenUrl: provider.token_url,
-        userInfoUrl: provider.user_info_url,
-        scopes: provider.scopes,
-        enabled: provider.enabled,
-        configuration: provider.configuration
-      };
+      return this.transformProvider(provider);
     } catch (error) {
       console.error('OAuthProviderService.upsertOAuthProvider failed:', error);
       if (error instanceof AppError) throw error;
