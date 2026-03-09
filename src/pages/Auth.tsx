@@ -125,13 +125,23 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-adrar-50 to-terracotta-50">
       <main className="flex-grow flex items-center justify-center pt-24 pb-16 px-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-adrar-800">
-              Accès au Portail
-            </CardTitle>
-            <p className="text-gray-600">Connectez-vous ou créez un compte</p>
-          </CardHeader>
+        <div className="w-full max-w-md space-y-6">
+          {/* OAuth Error Handler */}
+          <OAuthErrorHandler />
+          
+          {/* OAuth Login Options */}
+          <OAuthLogin 
+            title="Connexion rapide"
+            description="Connectez-vous avec votre compte existant"
+          />
+
+          <Card>
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl text-adrar-800">
+                Accès au Portail
+              </CardTitle>
+              <p className="text-gray-600">Connectez-vous ou créez un compte</p>
+            </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-3">
