@@ -142,7 +142,7 @@ const Auth = () => {
               </CardTitle>
               <p className="text-gray-600">Connectez-vous ou créez un compte</p>
             </CardHeader>
-          <CardContent>
+            <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="login" className="flex items-center gap-2">
@@ -328,7 +328,8 @@ const Auth = () => {
             </Tabs>
           </CardContent>
         </Card>
-      </main>
+      </div>
+    </main>
     </div>
   );
 };
