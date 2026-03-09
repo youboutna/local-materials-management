@@ -10,6 +10,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
+import { AUTH_ERROR_MESSAGES } from '@/config/auth';
 import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import { UnifiedAuthService, UnifiedAuthUser, UnifiedAuthSession, OAuthLoginData } from '@/application/services/UnifiedAuthService';
 import { LoginCredentials, RegisterData } from '@/domain/repositories/IAuthRepository';

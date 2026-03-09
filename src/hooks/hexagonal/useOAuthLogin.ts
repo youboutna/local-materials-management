@@ -4,7 +4,7 @@
  * Following PROMPTS.md rules: UI Component → Service → Domain ← Adapter → DB
  */
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useHexagonalAuth } from '@/contexts/HexagonalAuthContext';
 import { AppError, ErrorCode } from '@/utils/errorHandling';

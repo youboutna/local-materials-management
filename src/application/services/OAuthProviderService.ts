@@ -91,8 +91,8 @@ export class OAuthProviderService {
         tokenUrl: data.token_url,
         userInfoUrl: data.user_info_url,
         scopes: data.scopes,
-        enabled: data.enabled,
-        configuration: data.configuration
+        enabled: data.enabled || false,
+        configuration: data.configuration || undefined
       };
     } catch (error) {
       console.error('OAuthProviderService.getOAuthProviderByName failed:', error);
