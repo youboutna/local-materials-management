@@ -214,8 +214,13 @@ export class LocationRepository implements ILocationRepository {
 
       // Apply type filter
       if (filters?.type && filters.type !== 'all') {
-        supabaseQuery = supabaseQuery.eq('type', filters.type);
-      }
+        if (filters.type === 'regions') {
+          supabaseQuery = supabaseQuery.in('type', ['region', 'wilaya']);
+        } else if (filters.type === 'cities') {
+          supabaseQuery = supabaseQuery.eq('type', 'city');
+        } else {
+          supabaseQuery = supabaseQuery.eq('type', filters.type);
+        }
 
       // Apply search filter
       if (query) {
