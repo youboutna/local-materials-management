@@ -5089,6 +5089,7 @@ export type Database = {
           opening_date: string | null
           opening_hours: string | null
           owner_email: string | null
+          owner_id: string | null
           owner_name: string | null
           owner_national_id: string | null
           owner_phone: string | null
@@ -5131,6 +5132,7 @@ export type Database = {
           opening_date?: string | null
           opening_hours?: string | null
           owner_email?: string | null
+          owner_id?: string | null
           owner_name?: string | null
           owner_national_id?: string | null
           owner_phone?: string | null
@@ -5173,6 +5175,7 @@ export type Database = {
           opening_date?: string | null
           opening_hours?: string | null
           owner_email?: string | null
+          owner_id?: string | null
           owner_name?: string | null
           owner_national_id?: string | null
           owner_phone?: string | null
@@ -6264,6 +6267,14 @@ export type Database = {
         Returns: undefined
       }
       is_current_user_admin: { Args: never; Returns: boolean }
+      is_station_owner: {
+        Args: { _station_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_stock_owner: {
+        Args: { _stock_id: string; _user_id: string }
+        Returns: boolean
+      }
       search_projects_autocomplete: {
         Args: { search_term?: string }
         Returns: {

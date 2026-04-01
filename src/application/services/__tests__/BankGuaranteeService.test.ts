@@ -1,16 +1,22 @@
-import 'jest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { BankGuaranteeService } from '../BankGuaranteeService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { mockDeep } from 'jest-mock-extended';
+import { AppError } from '@/utils/errorHandling';
 import type { CreateBankGuaranteeDTO } from '@/dtos/entities/BankGuaranteeDTO';
 
 describe('BankGuaranteeService', () => {
   let service: BankGuaranteeService;
-  const mockRepo = mockDeep<ReturnType<typeof RepositoryFactory.getBankGuaranteeRepository>>();
+  const mockRepo = {
+    create: vi.fn(),
+    findAll: vi.fn(),
+    findById: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    findByProjectId: vi.fn(),
+  };
   
   beforeEach(() => {
-    jest.spyOn(RepositoryFactory, 'getBankGuaranteeRepository').mockReturnValue(mockRepo as any);
+    vi.spyOn(RepositoryFactory, 'getBankGuaranteeRepository').mockReturnValue(mockRepo as any);
     service = new BankGuaranteeService();
   });
 
@@ -59,6 +65,4 @@ describe('BankGuaranteeService', () => {
       })).rejects.toThrow(AppError);
     });
   });
-
-  // Additional test suites
 });
