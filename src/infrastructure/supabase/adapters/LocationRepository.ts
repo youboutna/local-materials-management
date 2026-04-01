@@ -221,6 +221,7 @@ export class LocationRepository implements ILocationRepository {
         } else {
           supabaseQuery = supabaseQuery.eq('type', filters.type);
         }
+      }
 
       // Apply search filter
       if (query) {
