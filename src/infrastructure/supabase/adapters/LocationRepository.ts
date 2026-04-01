@@ -411,12 +411,16 @@ export class LocationRepository implements ILocationRepository {
    * Map database row to Location entity
    */
   private mapRowToLocation(row: Record<string, unknown>): Location {
+    // Normalize 'wilaya' → 'region' for domain consistency
+    const rawType = row.type as string;
+    const normalizedType = rawType === 'wilaya' ? 'region' : rawType;
+    
     return new Location({
       id: row.id,
       code: row.code,
       name: row.name,
       nameAr: row.name_ar,
-      type: row.type,
+      type: normalizedType,
       coordinates: row.latitude && row.longitude ? {
         lat: row.latitude,
         lng: row.longitude
