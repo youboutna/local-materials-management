@@ -76,7 +76,7 @@ export class LocationRepository implements ILocationRepository {
       const { data, error } = await supabase
         .from(this.tableName)
         .select('*')
-        .eq('type', 'region')
+        .in('type', ['region', 'wilaya'])
         .order('name', { ascending: true });
 
       if (error) {
@@ -125,7 +125,7 @@ export class LocationRepository implements ILocationRepository {
         .from(this.tableName)
         .select('*')
         .eq('code', code)
-        .eq('type', 'region')
+        .in('type', ['region', 'wilaya'])
         .single();
 
       if (error) {
@@ -214,7 +214,13 @@ export class LocationRepository implements ILocationRepository {
 
       // Apply type filter
       if (filters?.type && filters.type !== 'all') {
-        supabaseQuery = supabaseQuery.eq('type', filters.type);
+        if (filters.type === 'regions') {
+          supabaseQuery = supabaseQuery.in('type', ['region', 'wilaya']);
+        } else if (filters.type === 'cities') {
+          supabaseQuery = supabaseQuery.eq('type', 'city');
+        } else {
+          supabaseQuery = supabaseQuery.eq('type', filters.type);
+        }
       }
 
       // Apply search filter
@@ -384,10 +390,11 @@ export class LocationRepository implements ILocationRepository {
    */
   async countByType(type: 'region' | 'city'): Promise<number> {
     try {
+      const dbTypes = type === 'region' ? ['region', 'wilaya'] : [type];
       const { data, error } = await supabase
         .from(this.tableName)
         .select('id', { count: 'exact', head: true })
-        .eq('type', type);
+        .in('type', dbTypes);
 
       if (error) {
         throw new DatabaseError(`Error counting locations by type: ${error.message}`, error);
@@ -406,12 +413,16 @@ export class LocationRepository implements ILocationRepository {
    * Map database row to Location entity
    */
   private mapRowToLocation(row: Record<string, unknown>): Location {
+    // Normalize 'wilaya' → 'region' for domain consistency
+    const rawType = row.type as string;
+    const normalizedType = rawType === 'wilaya' ? 'region' : rawType;
+    
     return new Location({
       id: row.id,
       code: row.code,
       name: row.name,
       nameAr: row.name_ar,
-      type: row.type,
+      type: normalizedType,
       coordinates: row.latitude && row.longitude ? {
         lat: row.latitude,
         lng: row.longitude
