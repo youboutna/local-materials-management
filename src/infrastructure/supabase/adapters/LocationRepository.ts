@@ -390,10 +390,11 @@ export class LocationRepository implements ILocationRepository {
    */
   async countByType(type: 'region' | 'city'): Promise<number> {
     try {
+      const dbTypes = type === 'region' ? ['region', 'wilaya'] : [type];
       const { data, error } = await supabase
         .from(this.tableName)
         .select('id', { count: 'exact', head: true })
-        .eq('type', type);
+        .in('type', dbTypes);
 
       if (error) {
         throw new DatabaseError(`Error counting locations by type: ${error.message}`, error);
