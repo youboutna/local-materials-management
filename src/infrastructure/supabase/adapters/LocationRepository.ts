@@ -125,7 +125,7 @@ export class LocationRepository implements ILocationRepository {
         .from(this.tableName)
         .select('*')
         .eq('code', code)
-        .eq('type', 'region')
+        .in('type', ['region', 'wilaya'])
         .single();
 
       if (error) {
