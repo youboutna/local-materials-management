@@ -76,7 +76,7 @@ export class LocationRepository implements ILocationRepository {
       const { data, error } = await supabase
         .from(this.tableName)
         .select('*')
-        .eq('type', 'region')
+        .in('type', ['region', 'wilaya'])
         .order('name', { ascending: true });
 
       if (error) {
