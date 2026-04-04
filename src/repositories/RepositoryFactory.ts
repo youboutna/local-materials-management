@@ -108,6 +108,9 @@ export const RepositoryFactory = {
   
   // Contact Message Repository
   getContactMessageRepository: InfraRepositoryFactory.getContactMessageRepository,
+  
+  // Location Repository
+  getLocationRepository: InfraRepositoryFactory.getLocationRepository,
 };
 
 // Maintenir les exports individuels pour compatibilité
