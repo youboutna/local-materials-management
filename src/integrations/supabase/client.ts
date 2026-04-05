@@ -9,6 +9,20 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+const schemaProfileFetch: typeof fetch = async (input, init) => {
+  const request = input instanceof Request ? input : new Request(input, init);
+  const headers = new Headers(request.headers);
+  const method = (request.method || init?.method || 'GET').toUpperCase();
+  const acceptProfile = headers.get('Accept-Profile');
+
+  if ((method === 'GET' || method === 'HEAD') && acceptProfile && acceptProfile !== 'public') {
+    headers.set('Content-Profile', acceptProfile);
+    headers.delete('Accept-Profile');
+  }
+
+  return fetch(new Request(request, { headers }));
+};
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
@@ -17,5 +31,8 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true
+  },
+  global: {
+    fetch: schemaProfileFetch
   }
 });
