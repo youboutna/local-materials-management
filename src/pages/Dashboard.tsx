@@ -76,29 +76,34 @@ const Dashboard: React.FC = () => {
     }))
   , [hexProjects]);
 
+  // Compute location distribution from hexProjects as fallback
+  const locationDistributionFromProjects = useMemo(() => {
+    if (!hexProjects || hexProjects.length === 0) return [];
+    const locationCounts = hexProjects.reduce((acc, p) => {
+      const loc = p.location || 'Non spécifié';
+      acc[loc] = (acc[loc] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+    return Object.entries(locationCounts)
+      .map(([name, value], i) => ({ name, value, color: colors[i % colors.length] }))
+      .sort((a, b) => b.value - a.value);
+  }, [hexProjects]);
+
   // Use stats from hexagonal dashboard hook with safe defaults
   const stats = useMemo(() => {
-    // Return safe defaults if dashboardStats is null or loading
-    if (!dashboardStats) {
-      return {
-        activeProjects: 0,
-        totalBudget: 0,
-        teamMembers: 0,
-        materials: 0,
-        statusDistribution: [],
-        locationDistribution: [],
-      };
-    }
-    
-    return {
-      activeProjects: dashboardStats.activeProjects || 0,
-      totalBudget: dashboardStats.totalBudget || 0,
-      teamMembers: dashboardStats.totalEmployees || 0,
-      materials: dashboardStats.totalMaterials || 0,
-      statusDistribution: dashboardStats.statusDistribution || [],
-      locationDistribution: dashboardStats.locationDistribution || [],
+    const baseStats = {
+      activeProjects: dashboardStats?.activeProjects || hexProjects.filter(p => p.status === 'en cours' || p.status === 'in_progress').length,
+      totalBudget: dashboardStats?.totalBudget || hexProjects.reduce((s, p) => s + (p.budget || 0), 0),
+      teamMembers: dashboardStats?.totalEmployees || 0,
+      materials: dashboardStats?.totalMaterials || 0,
+      statusDistribution: dashboardStats?.statusDistribution || [],
+      locationDistribution: (dashboardStats?.locationDistribution && dashboardStats.locationDistribution.length > 0) 
+        ? dashboardStats.locationDistribution 
+        : locationDistributionFromProjects,
     };
-  }, [dashboardStats]);
+    return baseStats;
+  }, [dashboardStats, hexProjects, locationDistributionFromProjects]);
 
   if (statsLoading) {
     return (

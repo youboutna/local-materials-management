@@ -10,17 +10,24 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 const schemaProfileFetch: typeof fetch = async (input, init) => {
-  const request = input instanceof Request ? input : new Request(input, init);
-  const headers = new Headers(request.headers);
-  const method = (request.method || init?.method || 'GET').toUpperCase();
-  const acceptProfile = headers.get('Accept-Profile');
+  // Build headers from init or input Request
+  const baseHeaders = init?.headers
+    ? new Headers(init.headers)
+    : input instanceof Request
+      ? new Headers(input.headers)
+      : new Headers();
+
+  const method = (init?.method || (input instanceof Request ? input.method : 'GET')).toUpperCase();
+  const acceptProfile = baseHeaders.get('Accept-Profile');
 
   if ((method === 'GET' || method === 'HEAD') && acceptProfile && acceptProfile !== 'public') {
-    headers.set('Content-Profile', acceptProfile);
-    headers.delete('Accept-Profile');
+    baseHeaders.set('Content-Profile', acceptProfile);
+    baseHeaders.delete('Accept-Profile');
   }
 
-  return fetch(new Request(request, { headers }));
+  // Use the simple (url, init) form to avoid Request body consumption issues
+  const url = input instanceof Request ? input.url : String(input);
+  return fetch(url, { ...init, headers: baseHeaders });
 };
 
 // Import the supabase client like this:
