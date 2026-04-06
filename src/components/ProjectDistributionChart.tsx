@@ -5,7 +5,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProjectLocation {
   name: string;
-  count: number;
+  count?: number;
+  value?: number;
 }
 
 interface ProjectDistributionChartProps {
