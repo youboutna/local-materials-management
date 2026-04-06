@@ -16,10 +16,16 @@ interface ProjectDistributionChartProps {
 const ProjectDistributionChart: React.FC<ProjectDistributionChartProps> = ({ data }) => {
   const { t } = useLanguage();
   
+  // Normalize data: support both 'count' and 'value' keys
+  const normalizedData = data.map(item => ({
+    name: item.name,
+    count: item.count ?? item.value ?? 0,
+  }));
+  
   return (
     <ResponsiveContainer width="100%" height={300}>
       <BarChart
-        data={data}
+        data={normalizedData}
         margin={{
           top: 5,
           right: 30,
@@ -28,11 +34,11 @@ const ProjectDistributionChart: React.FC<ProjectDistributionChartProps> = ({ dat
         }}
       >
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" />
-        <YAxis />
+        <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-20} textAnchor="end" height={60} />
+        <YAxis allowDecimals={false} />
         <Tooltip formatter={(value) => [`${value} projets`, 'Nombre']} />
         <Legend />
-        <Bar dataKey="count" name="Nombre de projets" fill="#8884d8" />
+        <Bar dataKey="count" name="Nombre de projets" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
