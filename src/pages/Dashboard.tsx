@@ -38,6 +38,7 @@ import {
 import React, { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { buildLocationDistribution, getProjectCoordinates } from "@/utils/projectLocationBuckets";
 
 
 const Dashboard: React.FC = () => {
@@ -69,25 +70,15 @@ const Dashboard: React.FC = () => {
       teamSize: p.teamSize || 0,
       startDate: p.startDate ? new Date(p.startDate).toISOString() : new Date().toISOString(),
       endDate: p.endDate ? new Date(p.endDate).toISOString() : new Date().toISOString(),
-      coordinates: p.coordinates ? {
-        latitude: p.coordinates.latitude || 0,
-        longitude: p.coordinates.longitude || 0
-      } : undefined,
+      latitude: getProjectCoordinates(p)?.latitude,
+      longitude: getProjectCoordinates(p)?.longitude,
+      coordinates: getProjectCoordinates(p),
     }))
   , [hexProjects]);
 
   // Compute location distribution from hexProjects as fallback
   const locationDistributionFromProjects = useMemo(() => {
-    if (!hexProjects || hexProjects.length === 0) return [];
-    const locationCounts = hexProjects.reduce((acc, p) => {
-      const loc = p.location || 'Non spécifié';
-      acc[loc] = (acc[loc] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
-    return Object.entries(locationCounts)
-      .map(([name, value], i) => ({ name, value, color: colors[i % colors.length] }))
-      .sort((a, b) => b.value - a.value);
+    return buildLocationDistribution(hexProjects);
   }, [hexProjects]);
 
   // Use stats from hexagonal dashboard hook with safe defaults

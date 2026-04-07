@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { ProjectData } from '@/dtos/entities/ProjectDTO';
 import { usePagination } from '@/hooks/usePagination';
+import { getProjectCoordinates } from '@/utils/projectLocationBuckets';
 
 interface InteractiveProjectsListProps {
   projects: ProjectData[];
@@ -116,11 +117,11 @@ const InteractiveProjectsList: React.FC<InteractiveProjectsListProps> = ({
                     </div>
 
                     {/* GPS Coordinates */}
-                    {project.coordinates && (
+                    {getProjectCoordinates(project) && (
                       <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 px-2 py-1 rounded">
                         <Navigation className="h-3 w-3 text-primary" />
                         <span className="font-mono">
-                          {project.coordinates.latitude.toFixed(4)}, {project.coordinates.longitude.toFixed(4)}
+                          {getProjectCoordinates(project)!.latitude.toFixed(4)}, {getProjectCoordinates(project)!.longitude.toFixed(4)}
                         </span>
                       </div>
                     )}
