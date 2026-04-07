@@ -13,6 +13,7 @@ import { InspectionService } from './InspectionService';
 import { SupplierService } from './SupplierService';
 import { InspectionStatus } from '@/domain/entities/Inspection';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { buildLocationDistribution } from '@/utils/projectLocationBuckets';
 import {
   MonitoringConfiguration,
   MonitoringMetrics,
@@ -129,20 +130,7 @@ export class DashboardService {
       ];
 
       // Location distribution based on project location
-      const locationCounts = projectsData.reduce((acc, project) => {
-        const location = project.location || 'Non spécifié';
-        acc[location] = (acc[location] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      const locationColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
-      const locationDistribution = Object.entries(locationCounts)
-        .map(([name, value], index) => ({
-          name,
-          value,
-          color: locationColors[index % locationColors.length]
-        }))
-        .sort((a, b) => b.value - a.value); // Sort by count descending
+      const locationDistribution = buildLocationDistribution(projectsData);
 
       // Calculate average project health
       const averageProjectHealth = projectsData.length > 0 

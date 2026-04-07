@@ -198,6 +198,12 @@ export class ProjectTransformer {
       location: project.location || '',
       latitude: project.coordinates?.latitude,
       longitude: project.coordinates?.longitude,
+      coordinates: project.coordinates
+        ? {
+            latitude: project.coordinates.latitude,
+            longitude: project.coordinates.longitude,
+          }
+        : undefined,
       startDate: project.startDate?.toISOString() || '',
       endDate: project.endDate?.toISOString(),
       budget: project.budget,
