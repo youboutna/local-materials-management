@@ -6,6 +6,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaf
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+import { getProjectCoordinates } from '@/utils/projectLocationBuckets';
 
 // Local type alias for project with coordinates
 type ProjectData = ProjectDTO;
@@ -77,9 +78,7 @@ const EnhancedInteractiveMap: React.FC<EnhancedInteractiveMapProps> = ({
   ];
 
   // Filter projects that have GPS coordinates
-  const projectsWithCoords = projects.filter(project => 
-    project.coordinates?.latitude && project.coordinates?.longitude
-  );
+  const projectsWithCoords = projects.filter((project) => Boolean(getProjectCoordinates(project)));
 
   const handleMapClick = useCallback((latlng: L.LatLng) => {
     setSelectedCoords({ lat: latlng.lat, lng: latlng.lng });
@@ -202,7 +201,10 @@ const EnhancedInteractiveMap: React.FC<EnhancedInteractiveMapProps> = ({
             {projectsWithCoords.map((project) => (
               <Marker
                 key={`project-${project.id}`}
-                position={[project.coordinates!.latitude, project.coordinates!.longitude]}
+                position={[
+                  getProjectCoordinates(project)!.latitude,
+                  getProjectCoordinates(project)!.longitude,
+                ]}
                 icon={createProjectIcon(project.status)}
               >
                 <Popup className="project-popup">
@@ -226,7 +228,7 @@ const EnhancedInteractiveMap: React.FC<EnhancedInteractiveMapProps> = ({
                           </span>
                           <div className="flex items-center gap-1 text-xs text-gray-500">
                             <Navigation className="h-3 w-3" />
-                            {project.coordinates!.latitude.toFixed(4)}, {project.coordinates!.longitude.toFixed(4)}
+                            {getProjectCoordinates(project)!.latitude.toFixed(4)}, {getProjectCoordinates(project)!.longitude.toFixed(4)}
                           </div>
                         </div>
                       </div>

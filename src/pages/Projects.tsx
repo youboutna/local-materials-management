@@ -109,8 +109,9 @@ const Projects: React.FC = () => {
     
     return projects
       .filter((project) => Boolean(getProjectCoordinates(project)))
-      .map((project) => ({
+      .map((project) => {
         const coords = getProjectCoordinates(project)!;
+        return {
         id: project.id,
         name: project.title,
         type: "project" as const,
@@ -120,7 +121,8 @@ const Projects: React.FC = () => {
         region: project.location,
         startDate: project.startDate,
         endDate: project.endDate,
-      }));
+        };
+      });
   }, [projects]);
 
   // Initialize and update map locations
@@ -130,8 +132,9 @@ const Projects: React.FC = () => {
     // Set initial locations from all projects
     const allLocations = projects
       .filter((project) => Boolean(getProjectCoordinates(project)))
-      .map(project => ({
+      .map(project => {
         const coords = getProjectCoordinates(project)!;
+        return {
         id: project.id,
         name: project.title,
         type: "project" as const,
@@ -141,7 +144,8 @@ const Projects: React.FC = () => {
         region: project.location,
         startDate: project.startDate,
         endDate: project.endDate,
-      }));
+        };
+      });
 
     setFilteredMapLocations(allLocations);
   }, [projects]);

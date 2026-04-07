@@ -9,6 +9,7 @@ import { Filter, MapPin, DollarSign, Target } from 'lucide-react';
 import { ProjectData } from '@/dtos/entities/ProjectDTO';
 import { MAURITANIA_REGIONS, GeographicUnit } from '@/utils/mauritania';
 import { isLocationInRegion, findRegionByLocation } from '@/utils/mauritaniaUtils';
+import { getProjectCoordinates } from '@/utils/projectLocationBuckets';
 
 interface InteractiveMapFiltersProps {
   projects: ProjectData[];
@@ -54,17 +55,19 @@ const InteractiveMapFilters: React.FC<InteractiveMapFiltersProps> = ({
       }
 
       // GPS coordinates filter
-      if (project.coordinates) {
-        if (project.coordinates.latitude < gpsLatRange[0] || 
-            project.coordinates.latitude > gpsLatRange[1] ||
-            project.coordinates.longitude < gpsLngRange[0] || 
-            project.coordinates.longitude > gpsLngRange[1]) {
+      const coords = getProjectCoordinates(project);
+      if (coords) {
+        if (coords.latitude < gpsLatRange[0] || 
+            coords.latitude > gpsLatRange[1] ||
+            coords.longitude < gpsLngRange[0] || 
+            coords.longitude > gpsLngRange[1]) {
           return false;
         }
       }
 
       return true;
     });
+    onFiltersChange(filtered);
   }, [selectedRegion, selectedStatus, budgetRange, gpsLatRange, gpsLngRange, projects]);
 
   const resetFilters = () => {
