@@ -483,6 +483,9 @@ export class ProjectService {
         risks: data.risks || [],
         payments: data.payments || [],
         inspections: data.inspections as InspectionDTO[] || [],
+        documents: data.documents || [],
+        bankGuarantees: data.bankGuarantees || [],
+        insuranceCertificates: data.insuranceCertificates || [],
       };
     } catch (error) {
       throw new ProjectServiceError(
