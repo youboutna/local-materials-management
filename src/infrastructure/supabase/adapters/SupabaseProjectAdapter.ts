@@ -128,16 +128,19 @@ export class SupabaseProjectAdapter implements IProjectRepository {
 
   async findWithRelatedData(id: string): Promise<ProjectWithRelatedData> {
     if (!id || id.trim() === '') {
-      return { project: null, phases: [], tasks: [], risks: [], inspections: [], payments: [] };
+      return { project: null, phases: [], tasks: [], risks: [], inspections: [], payments: [], documents: [], bankGuarantees: [], insuranceCertificates: [] };
     }
 
-    const [projectResult, phasesResult, tasksResult, risksResult, inspectionsResult, paymentsResult] = await Promise.all([
+    const [projectResult, phasesResult, tasksResult, risksResult, inspectionsResult, paymentsResult, documentsResult, bankGuaranteesResult, insuranceResult] = await Promise.all([
       supabase.from('projects').select('*').eq('id', id).single(),
       supabase.from('project_phases').select('*').eq('project_id', id).order('order_index'),
       supabase.from('task_assignments').select('*').eq('project_id', id),
       supabase.from('project_risks').select('*').eq('project_id', id),
       supabase.from('inspections').select('*').eq('project_id', id),
       supabase.from('payments').select('*').eq('project_id', id),
+      supabase.from('documents').select('*').eq('project_id', id),
+      supabase.from('bank_guarantees').select('*').eq('project_id', id),
+      supabase.from('insurance_certificates').select('*').eq('project_id', id),
     ]);
 
     return {
@@ -147,6 +150,9 @@ export class SupabaseProjectAdapter implements IProjectRepository {
       risks: risksResult.data || [],
       inspections: inspectionsResult.data || [],
       payments: paymentsResult.data || [],
+      documents: documentsResult.data || [],
+      bankGuarantees: bankGuaranteesResult.data || [],
+      insuranceCertificates: insuranceResult.data || [],
     };
   }
 

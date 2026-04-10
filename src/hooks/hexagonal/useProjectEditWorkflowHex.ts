@@ -55,7 +55,7 @@ export function useProjectEditWorkflowHex(projectId?: string) {
   // Query pour initialiser le workflow d'édition
   const initializeWorkflowQuery = useQuery({
     queryKey: ['edit-workflow', projectId],
-    queryFn: async (): Promise<WorkflowState | null> => {
+    queryFn: async (): Promise<ProjectWorkflowData | null> => {
       if (!projectId) return null;
       return await projectWorkflowService.initializeEditWorkflow(projectId);
     },

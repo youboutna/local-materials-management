@@ -24,6 +24,9 @@ export interface ProjectWithRelatedData {
   risks: any[];
   inspections: any[];
   payments: any[];
+  documents: any[];
+  bankGuarantees: any[];
+  insuranceCertificates: any[];
 }
 
 export interface IProjectRepository {

@@ -328,11 +328,10 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   }, [projectDetail]);
   
   const inspectionsSource = useMemo(() => {
-    // ProjectDetailDTO doesn't have inspections property, using empty array for now
-    const inspections: InspectionDTO[] = [];
+    const inspections: InspectionDTO[] = (projectDetail as any)?.inspections || [];
     console.log('📊 Inspections Source:', inspections);
     return inspections;
-  }, []);
+  }, [projectDetail]);
   
   const paymentsSource = useMemo(() => {
     const expenses = projectDetail?.expenses || [];
@@ -578,9 +577,43 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
   // Use data from DTO for all tabs
   const payments = paymentsSource;
-  const documentsData: Array<{id: string, title: string, type: string, document_type: string, description?: string, created_at: string, status: string}> = [];
-  const bankGuaranteesData: Array<{id: string, guarantee_type: string, bank_name: string, guarantee_amount: number, issue_date: string, expiry_date: string, status: string}> = [];
-  const insuranceCertificatesData: Array<{id: string, coverage_type: string, insurance_company: string, policy_number: string, coverage_amount: number, valid_from: string, valid_until: string, notes?: string}> = [];
+  const documentsData = useMemo(() => {
+    return ((projectDetail as any)?.documents || []).map((doc: any) => ({
+      id: doc.id,
+      title: doc.title || doc.file_name || 'Document',
+      type: doc.document_type || doc.type || 'other',
+      document_type: doc.document_type || doc.type || 'other',
+      description: doc.description,
+      created_at: doc.created_at || doc.createdAt || new Date().toISOString(),
+      status: doc.status || 'pending',
+    }));
+  }, [projectDetail]);
+
+  const bankGuaranteesData = useMemo(() => {
+    return ((projectDetail as any)?.bankGuarantees || []).map((bg: any) => ({
+      id: bg.id,
+      guarantee_type: bg.guarantee_type || 'Garantie de bonne exécution',
+      bank_name: bg.bank_name || 'Non spécifié',
+      guarantee_amount: bg.guarantee_amount || 0,
+      issue_date: bg.issue_date || bg.created_at,
+      expiry_date: bg.expiry_date || '',
+      status: bg.status || 'active',
+    }));
+  }, [projectDetail]);
+
+  const insuranceCertificatesData = useMemo(() => {
+    return ((projectDetail as any)?.insuranceCertificates || []).map((ic: any) => ({
+      id: ic.id,
+      coverage_type: ic.coverage_type || 'Responsabilité civile',
+      insurance_company: ic.insurance_company || 'Non spécifié',
+      policy_number: ic.policy_number || '',
+      coverage_amount: ic.coverage_amount || 0,
+      valid_from: ic.valid_from || ic.created_at,
+      valid_until: ic.valid_until || '',
+      notes: ic.notes,
+      status: ic.status || 'active',
+    }));
+  }, [projectDetail]);
 
   const handleGeneratePhasesFromReferential = async () => {
     if (!selectedReferential || !projectId) {
@@ -1069,7 +1102,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         <TabsContent value="financial" className="mt-6">
           <FinancialOverview
             budget={project.budget || 0}
-            spent={0}
+            spent={paymentsSource.reduce((sum, p) => sum + (p.amount || 0), 0)}
             phases={phasesSource || []}
             financialMetrics={{}}
           />

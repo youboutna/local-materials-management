@@ -221,20 +221,69 @@ export class ProjectWorkflowService {
 
   // =================== WORKFLOW STATE MANAGEMENT ===================
 
-  async initializeEditWorkflow(projectId: string): Promise<WorkflowState> {
+  async initializeEditWorkflow(projectId: string): Promise<ProjectWorkflowData> {
     try {
       const project = await this.projectRepository.findById(projectId);
       if (!project) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Project not found');
       }
-      
-      return {
-        currentStep: 'project-info',
-        completedSteps: [],
-        availableTransitions: this.getAvailableTransitions('project-info'),
-        validation: { isValid: true, errors: [] }
+
+      // Load project DTO
+      const projectDTO = ProjectTransformer.toDTO(project);
+
+      // Load related data in parallel
+      const [phases, risks] = await Promise.all([
+        this.phaseRepository?.findByProjectId(projectId).catch(() => []) || Promise.resolve([]),
+        this.riskRepository?.findByProjectId(projectId).catch(() => []) || Promise.resolve([]),
+      ]);
+
+      // Build complete workflow data
+      const workflowData: ProjectWorkflowData = {
+        projectId,
+        currentStep: 1,
+        isDraft: false,
+        isComplete: projectDTO.status === 'termine' || projectDTO.status === 'completed',
+        projectData: projectDTO,
+        relatedData: {
+          phases: (phases || []).map((p: any) => ({
+            id: p.id,
+            projectId: p.projectId || projectId,
+            name: p.name || p.phaseName || '',
+            description: p.description || '',
+            startDate: p.startDate,
+            endDate: p.endDate,
+            progress: p.progress || 0,
+            status: p.status || 'not_started',
+            type: p.type || p.phaseType || 'custom',
+            priority: p.priority || 'medium',
+            orderIndex: p.orderIndex || 0,
+            estimatedCost: p.estimatedCost || 0,
+            estimatedDuration: p.estimatedDuration || 0,
+            constructionStage: p.constructionStage || '',
+          })) as PhaseDTO[],
+          risks: (risks || []).map((r: any) => ({
+            id: r.id,
+            projectId: r.projectId || projectId,
+            title: r.title || r.riskTitle || '',
+            description: r.description || r.riskDescription || '',
+            probability: r.probability || 0,
+            impact: r.impact || 0,
+            riskScore: r.riskScore || 0,
+            status: r.status || 'identified',
+            mitigationPlan: r.mitigationPlan || r.mitigationStrategy || '',
+          })) as RiskDTO[],
+        },
+        metadata: {
+          lastSavedAt: projectDTO.updatedAt || new Date().toISOString(),
+          totalSteps: 7,
+          completedSteps: 1,
+          progressPercentage: 14,
+        },
       };
+
+      return workflowData;
     } catch (error) {
+      if (error instanceof AppError) throw error;
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to initialize workflow');
     }
   }

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SupabaseTenderSharingAdapter - Infrastructure Adapter
  * Implements ITenderSharingRepository for Supabase

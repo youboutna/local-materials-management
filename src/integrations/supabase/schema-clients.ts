@@ -15,10 +15,17 @@ import { supabase } from './client';
 
 /**
  * BTP (Construction) schema client
- * Tables: projects, project_phases, inspections, payments, documents,
- *         tenders, materials, employees, suppliers, task_assignments, etc.
+ * 
+ * IMPORTANT: Uses the default public schema client because all BTP tables
+ * are exposed through public proxy views (e.g. public.projects → btp.projects).
+ * Using .schema('btp') causes HTTP 406 (PGRST106) errors since the btp schema
+ * is not in PostgREST's db-schemas config.
+ * 
+ * Tables available via public views: projects, project_phases, inspections,
+ * payments, documents, tenders, materials, employees, suppliers,
+ * task_assignments, bank_guarantees, insurance_certificates, etc.
  */
-export const btpClient = supabase.schema('btp' as any);
+export const btpClient = supabase;
 
 /**
  * Fishing schema client
