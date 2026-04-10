@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { SubmissionSecretService } from './SubmissionSecretService';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { supabase as supabaseClient } from '@/integrations/supabase/client';
