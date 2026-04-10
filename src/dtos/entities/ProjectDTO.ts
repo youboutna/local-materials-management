@@ -537,6 +537,9 @@ export interface ProjectDetailDTO extends ProjectDTO {
   
   // Documents
   documents?: DocumentDTO[];
+  
+  // Bank guarantees
+  bankGuarantees?: any[];
 }
 
 // Project List Item for compact views
