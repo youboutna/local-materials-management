@@ -1102,7 +1102,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         <TabsContent value="financial" className="mt-6">
           <FinancialOverview
             budget={project.budget || 0}
-            spent={0}
+            spent={paymentsSource.reduce((sum, p) => sum + (p.amount || 0), 0)}
             phases={phasesSource || []}
             financialMetrics={{}}
           />
