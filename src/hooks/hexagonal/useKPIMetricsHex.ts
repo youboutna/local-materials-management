@@ -121,13 +121,13 @@ const fetchKPIMetrics = async (): Promise<KPIMetrics> => {
 
     const criticalAlerts: CriticalAlert[] = alertsList.map((alert: any) => ({
       id: alert.id,
-      type: mapAlertType(alert.alert_type || alert.alertType),
+      type: mapAlertType(alert.type || alert.alert_type || alert.alertType || ''),
       title: alert.title,
       description: alert.description || '',
-      message: alert.message || alert.description || '',
-      severity: alert.severity || 'warning',
-      priority: alert.priority || 'medium',
-      status: alert.status || 'active',
+      message: alert.description || '',
+      severity: (alert.severity === 'critical' || alert.severity === 'high') ? 'critical' : 'warning',
+      priority: alert.severity === 'critical' ? 'critical' : alert.severity === 'high' ? 'high' : 'medium',
+      status: alert.resolved ? 'resolved' : alert.acknowledged ? 'acknowledged' : 'active',
       createdAt: alert.created_at || alert.createdAt,
     }));
 
