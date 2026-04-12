@@ -150,8 +150,14 @@ export class ProjectService {
       const projects = await this.projectRepository.findAll();
       return ProjectTransformer.manyToDTO(projects);
     } catch (error) {
+      const errMsg = error instanceof Error 
+        ? error.message 
+        : (error && typeof error === 'object' && 'message' in error) 
+          ? String((error as any).message) 
+          : JSON.stringify(error);
+      console.error('ProjectService.findAll error details:', error);
       throw new ProjectServiceError(
-        `Failed to find projects: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `Failed to find projects: ${errMsg}`,
         'FIND_ALL_ERROR'
       );
     }
