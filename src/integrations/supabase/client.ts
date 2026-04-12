@@ -3,31 +3,63 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-//const SUPABASE_URL = "https://huttgbybeuzeikaqfvam.supabase.co";
-//const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1dHRnYnliZXV6ZWlrYXFmdmFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyNjM3MzgsImV4cCI6MjA1ODgzOTczOH0.1VbV47UuczSyKrA_Rzxw2lywA25392bjNe6snuHVF0k";
-
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-const schemaProfileFetch: typeof fetch = async (input, init) => {
-  // Build headers from init or input Request
-  const baseHeaders = init?.headers
-    ? new Headers(init.headers)
-    : input instanceof Request
-      ? new Headers(input.headers)
-      : new Headers();
+/**
+ * Custom fetch wrapper for schema profile header management.
+ * Swaps Accept-Profile → Content-Profile on GET/HEAD for non-public schemas
+ * to work around PostgREST PGRST106 restrictions.
+ * 
+ * Handles both call signatures:
+ *   fetch(url: string, init: RequestInit)
+ *   fetch(request: Request)
+ */
+const schemaProfileFetch: typeof fetch = async (
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> => {
+  let url: string;
+  let finalInit: RequestInit;
 
-  const method = (init?.method || (input instanceof Request ? input.method : 'GET')).toUpperCase();
-  const acceptProfile = baseHeaders.get('Accept-Profile');
-
-  if ((method === 'GET' || method === 'HEAD') && acceptProfile && acceptProfile !== 'public') {
-    baseHeaders.set('Content-Profile', acceptProfile);
-    baseHeaders.delete('Accept-Profile');
+  if (input instanceof Request) {
+    // Supabase may call fetch(Request) directly – extract all properties
+    url = input.url;
+    finalInit = {
+      method: input.method,
+      headers: new Headers(input.headers),
+      body: input.body,
+      signal: input.signal,
+      credentials: input.credentials as RequestCredentials,
+      cache: input.cache,
+      redirect: input.redirect,
+      referrer: input.referrer,
+      referrerPolicy: input.referrerPolicy,
+      mode: input.mode,
+      // Merge any explicit init overrides
+      ...init,
+    };
+    // Ensure headers from init override if provided
+    if (init?.headers) {
+      finalInit.headers = new Headers(init.headers);
+    }
+  } else {
+    url = String(input);
+    finalInit = { ...init, headers: new Headers(init?.headers) };
   }
 
-  // Use the simple (url, init) form to avoid Request body consumption issues
-  const url = input instanceof Request ? input.url : String(input);
-  return fetch(url, { ...init, headers: baseHeaders });
+  const headers = finalInit.headers as Headers;
+  const method = (finalInit.method || 'GET').toUpperCase();
+  const acceptProfile = headers.get('Accept-Profile');
+
+  // For non-public schema GET/HEAD requests, swap the profile header
+  if ((method === 'GET' || method === 'HEAD') && acceptProfile && acceptProfile !== 'public') {
+    headers.set('Content-Profile', acceptProfile);
+    headers.delete('Accept-Profile');
+  }
+
+  finalInit.headers = headers;
+  return fetch(url, finalInit);
 };
 
 // Import the supabase client like this:

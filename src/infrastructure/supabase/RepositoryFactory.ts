@@ -578,18 +578,8 @@ export class RepositoryFactory {
    */
   static getAlertRepository(): IAlertRepository {
     if (!repositoryRegistry.alertRepository) {
-      // SupabaseAlertRepository not yet implemented - return stub
-      repositoryRegistry.alertRepository = {
-        getAlerts: async () => [],
-        getAlertById: async () => null,
-        createAlert: async (data: any) => data,
-        updateAlert: async (id: string, data: any) => data,
-        deleteAlert: async () => true,
-        getAlertsByProject: async () => [],
-        getActiveAlerts: async () => [],
-        acknowledgeAlert: async () => {},
-        dismissAlert: async () => {},
-      } as any;
+      const { SupabaseAlertAdapter } = require('./adapters/SupabaseAlertAdapter');
+      repositoryRegistry.alertRepository = new SupabaseAlertAdapter();
     }
     return repositoryRegistry.alertRepository!;
   }
