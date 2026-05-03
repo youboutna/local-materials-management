@@ -150,23 +150,12 @@ export class ProjectService {
       const projects = await this.projectRepository.findAll();
       return ProjectTransformer.manyToDTO(projects);
     } catch (error) {
-<<<<<<< HEAD
-      const errMsg = error instanceof Error 
-        ? error.message 
-        : (error && typeof error === 'object' && 'message' in error) 
-          ? String((error as any).message) 
-          : JSON.stringify(error);
-      console.error('ProjectService.findAll error details:', error);
-      throw new ProjectServiceError(
-        `Failed to find projects: ${errMsg}`,
-=======
       console.error('ProjectService.findAll error details:', error);
       const errorMessage = error instanceof Error ? error.message : 
                           error && typeof error === 'object' ? JSON.stringify(error) : 
                           'Unknown error';
       throw new ProjectServiceError(
         `Failed to find projects: ${errorMessage}`,
->>>>>>> 17416942 (fix hydration project worflow)
         'FIND_ALL_ERROR'
       );
     }
