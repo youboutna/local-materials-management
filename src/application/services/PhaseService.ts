@@ -10,7 +10,13 @@ import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { ReferentialService } from './ReferentialService';
-import { ReferentialType } from '@/config/referentials';
+import { 
+  ReferentialPhase, 
+  ReferentialStep, 
+  ReferentialTask, 
+  MultiLanguageLabel,
+  ReferentialType 
+} from '@/config/referentials';
 import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
 
 /**
@@ -145,8 +151,8 @@ export class PhaseService {
       const phases: Phase[] = [];
       
       for (const phaseData of referentialData.phases) {
-        const labelStr = typeof phaseData.label === 'string' ? phaseData.label : (phaseData.label as any)?.fr || String(phaseData.label);
-        const descStr = typeof phaseData.description === 'string' ? phaseData.description : (phaseData.description as any)?.fr || '';
+        const labelStr = typeof phaseData.label === 'string' ? phaseData.label : (phaseData.label as { fr?: string })?.fr || String(phaseData.label);
+        const descStr = typeof phaseData.description === 'string' ? phaseData.description : (phaseData.description as { fr?: string })?.fr || '';
         const phase = PhaseTransformer.fromCreateDTO({
           id: crypto.randomUUID(),
           projectId,
@@ -155,7 +161,7 @@ export class PhaseService {
           status: PhaseStatus.PENDING,
           progress: 0,
           orderIndex: phaseData.order || 0,
-          steps: this.convertReferentialSteps((phaseData.steps || []) as any[]),
+          steps: this.convertReferentialSteps(phaseData.steps || []),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         });
@@ -177,40 +183,49 @@ export class PhaseService {
   /**
    * Convert referential steps to PhaseStepDTO
    */
-  private convertReferentialSteps(steps: Array<{id?: string; label?: string; name?: string; description?: string; order?: number; estimatedDuration?: number; estimated_duration_days?: number; tasks?: any[]}>): PhaseStepDTO[] {
-    return steps.map(step => ({
-      id: step.id || crypto.randomUUID(),
-      name: step.label || step.name || '',
-      description: step.description || '',
-      status: PhaseStatus.PENDING,
-      progress: 0,
-      order_index: step.order || 0,
-      estimated_duration_days: step.estimatedDuration || step.estimated_duration_days || 0,
-      actual_duration_days: 0,
-      start_date: '',
-      end_date: '',
-      tasks: this.convertReferentialTasks(step.tasks || [])
-    }));
+  private convertReferentialSteps(steps: ReferentialStep[]): PhaseStepDTO[] {
+    return steps.map(step => {
+      const labelStr = step.label.fr || step.label.en || step.label.ar || '';
+      
+      return {
+        id: step.code || crypto.randomUUID(),
+        name: labelStr,
+        description: '', // ReferentialStep n'a pas de description
+        status: PhaseStatus.PENDING,
+        progress: 0,
+        order_index: step.order || 0,
+        estimated_duration_days: 0,
+        actual_duration_days: 0,
+        start_date: '',
+        end_date: '',
+        tasks: this.convertReferentialTasks(step.tasks || [])
+      };
+    });
   }
 
   /**
    * Convert referential tasks to PhaseTaskDTO
    */
-  private convertReferentialTasks(tasks: Array<{id?: string; label?: string; name?: string; description?: string; order?: number; estimatedDuration?: number; estimated_duration_days?: number}>): PhaseTaskDTO[] {
-    return tasks.map(task => ({
-      id: task.id || crypto.randomUUID(),
-      name: task.label || task.name || '',
-      description: task.description || '',
-      status: PhaseStatus.PENDING,
-      progress: 0,
-      order_index: task.order || 0,
-      estimated_duration_days: task.estimatedDuration || task.estimated_duration_days || 0,
-      actual_duration_days: 0,
-      start_date: '',
-      end_date: '',
-      assigned_to: [],
-      dependencies: []
-    }));
+  private convertReferentialTasks(tasks: ReferentialTask[]): PhaseTaskDTO[] {
+    return tasks.map(task => {
+      const labelStr = task.label.fr || task.label.en || task.label.ar || '';
+      const descStr = task.description?.fr || task.description?.en || task.description?.ar || '';
+      
+      return {
+        id: task.code || crypto.randomUUID(),
+        name: labelStr,
+        description: descStr,
+        status: PhaseStatus.PENDING,
+        progress: 0,
+        order_index: 0, // ReferentialTask n'a pas de order
+        estimated_duration_days: task.estimatedDurationDays || 0,
+        actual_duration_days: 0,
+        start_date: '',
+        end_date: '',
+        assigned_to: [],
+        dependencies: []
+      };
+    });
   }
 
   /**

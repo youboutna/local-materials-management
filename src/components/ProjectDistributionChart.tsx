@@ -1,12 +1,13 @@
 
 import React from 'react';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell } from 'recharts';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProjectLocation {
   name: string;
-  count?: number;
-  value?: number;
+  value: number;
+  count?: number; // For backward compatibility
+  color?: string;
 }
 
 interface ProjectDistributionChartProps {
@@ -16,11 +17,14 @@ interface ProjectDistributionChartProps {
 const ProjectDistributionChart: React.FC<ProjectDistributionChartProps> = ({ data }) => {
   const { t } = useLanguage();
   
-  // Normalize data: support both 'count' and 'value' keys
+  // Normalize data to use 'value' consistently
   const normalizedData = data.map(item => ({
-    name: item.name,
-    count: item.count ?? item.value ?? 0,
+    ...item,
+    value: item.value ?? item.count ?? 0
   }));
+  
+  // Default colors if not provided
+  const defaultColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
   
   return (
     <ResponsiveContainer width="100%" height={300}>
@@ -34,11 +38,21 @@ const ProjectDistributionChart: React.FC<ProjectDistributionChartProps> = ({ dat
         }}
       >
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-20} textAnchor="end" height={60} />
-        <YAxis allowDecimals={false} />
+        <XAxis 
+          dataKey="name" 
+          tick={{ fontSize: 11 }}
+          angle={-45}
+          textAnchor="end"
+          height={80}
+        />
+        <YAxis />
         <Tooltip formatter={(value) => [`${value} projets`, 'Nombre']} />
         <Legend />
-        <Bar dataKey="count" name="Nombre de projets" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="value" name="Nombre de projets" fill="#8884d8">
+          {normalizedData.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={entry.color || defaultColors[index % defaultColors.length]} />
+          ))}
+        </Bar>
       </BarChart>
     </ResponsiveContainer>
   );

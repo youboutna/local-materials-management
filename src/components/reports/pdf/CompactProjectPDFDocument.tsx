@@ -477,10 +477,10 @@ export function CompactProjectPDFDocument({
 
   // Default company information
   const defaultCompany = {
-    name: 'Société Mauritanienne d\'Électricité (SOMELEC)',
+    name: 'Direction de lelectricite MPE',
     address: 'Avenue Gamal Abdel Nasser, BP 355, Nouakchott, Mauritanie',
     phone: '+222 45 25 25 25',
-    email: 'contact@somelec.mr',
+    email: 'contact@energy.mr',
     logo: undefined
   };
 

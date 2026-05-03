@@ -5,8 +5,8 @@
  * Rule #9: DB → Entity → Repository → Service
  */
 
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
-import { Project } from '@/domain/entities';
+import { supabase } from '@/integrations/supabase/client';
+import { Project } from '@/domain/entities/Project';
 import { IProjectRepository, ProjectSummary, ProjectWithRelatedData } from '@/domain/repositories';
 import { ProjectTransformer } from '@/dtos/transforms/ProjectTransformer';
 
@@ -31,13 +31,35 @@ export class SupabaseProjectAdapter implements IProjectRepository {
   }
 
   async findAll(): Promise<Project[]> {
-    const { data, error } = await supabase
-      .from('projects')
-      .select('*')
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    return (data || []).map(row => ProjectTransformer.fromSupabase(row as Record<string, unknown>));
+      if (error) {
+        console.error('SupabaseProjectAdapter.findAll error:', error);
+        throw new Error(`Database query failed: ${error.message}`);
+      }
+
+      if (!data || data.length === 0) {
+        console.log('No projects found in database');
+        return [];
+      }
+
+      console.log(`Found ${data.length} projects in database`);
+      return data.map(row => {
+        try {
+          return ProjectTransformer.fromSupabase(row as Record<string, unknown>);
+        } catch (transformError) {
+          console.error('Error transforming project row:', row, transformError);
+          throw new Error(`Failed to transform project data: ${transformError instanceof Error ? transformError.message : 'Unknown transformation error'}`);
+        }
+      });
+    } catch (error) {
+      console.error('SupabaseProjectAdapter.findAll error:', error);
+      throw error;
+    }
   }
 
   async create(projectData: Record<string, unknown>): Promise<Project> {

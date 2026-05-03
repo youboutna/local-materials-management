@@ -217,9 +217,11 @@ export class ProjectTransformer {
       terrainType: project.terrainType || undefined,
       category: project.sector || undefined,
       subCategory: project.projectType || undefined,
-      priorityLevel: project.priority as "faible" | "moyenne" | "elevee" | "tresElevee" | undefined, // Proper enum mapping
-      riskLevel: (project.getRiskScore() > 70 ? 'critique' : project.getRiskScore() > 40 ? 'eleve' : 'faible') as "faible" | "moyen" | "eleve" | "critique",
-      projectManagerId: project.projectResponsable?.id || undefined,
+      priorityLevel: project.priority as "faible" | "moyenne" | "elevee" | "tresElevee" | undefined,
+      riskLevel: (project.getRiskScore?.() ? project.getRiskScore() : 0) > 70 ? 'critique' : 
+                (project.getRiskScore?.() ? project.getRiskScore() : 0) > 40 ? 'eleve' : 
+                'faible' as "faible" | "moyen" | "eleve" | "critique",
+      projectManagerId: project.projectManagerId || project.projectResponsable?.id || undefined,
       technicalManagerId: project.technicalManager?.id || undefined,
       supervisorId: project.supervisorId || project.supervisor?.id,
       clientId: project.clientId || undefined,
@@ -227,8 +229,8 @@ export class ProjectTransformer {
         ? project.mainContractor
         : project.mainContractor?.name,
       currentPhase: project.currentPhase || undefined,
-      currentStage: project.currentStage as ConstructionStage | undefined, // Cast to ConstructionStage enum
-      methodology: project.methodology as "waterfall" | "agile" | "hybrid" | undefined, // Cast to Methodology enum
+      currentStage: project.currentStage as ConstructionStage | undefined,
+      methodology: project.methodology as "waterfall" | "agile" | "hybrid" | undefined,
       projectReference: project.projectReferenceNumber,
       selectionMode: project.selectionMode || undefined,
       financingSource: project.financingSource || undefined,
@@ -431,7 +433,30 @@ export class ProjectTransformer {
    * Batch: Domain Entities → DTOs
    */
   static manyToDTO(projects: Project[]): ProjectDTO[] {
-    return projects.map(project => this.toDTO(project));
+    try {
+      return projects.map(project => this.toDTO(project));
+    } catch (error) {
+      console.error('ProjectTransformer.manyToDTO error:', error);
+      console.error('Projects data:', projects);
+      
+      // Fallback: return basic DTOs with essential fields only
+      return projects.map(project => ({
+        id: project.id,
+        title: project.title,
+        description: project.description || '',
+        status: (project.status as ProjectStatus) || ProjectStatus.PLANIFIE,
+        progress: project.progress || 0,
+        location: project.location || '',
+        startDate: project.startDate?.toISOString() || '',
+        endDate: project.endDate?.toISOString(),
+        budget: project.budget || 0,
+        currency: project.currency || 'XOF',
+        teamSize: project.teamSize || 0,
+        thumbnail: project.thumbnail || '',
+        createdAt: project.createdAt?.toISOString() || new Date().toISOString(),
+        updatedAt: project.updatedAt?.toISOString() || new Date().toISOString(),
+      } as ProjectDTO));
+    }
   }
 
   // =================== UI ↔ DTO ===================

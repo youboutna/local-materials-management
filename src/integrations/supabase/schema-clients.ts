@@ -25,7 +25,11 @@ import { supabase } from './client';
  * payments, documents, tenders, materials, employees, suppliers,
  * task_assignments, bank_guarantees, insurance_certificates, etc.
  */
+<<<<<<< HEAD
 export const btpClient = supabase;
+=======
+export const btpClient = supabase.schema('public' as any);
+>>>>>>> 17416942 (fix hydration project worflow)
 
 /**
  * Fishing schema client

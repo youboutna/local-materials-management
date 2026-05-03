@@ -21,8 +21,10 @@ import type { IPaymentRepository } from '@/domain/repositories/IPaymentRepositor
 import type { IEmployeeRepository } from '@/domain/repositories/IEmployeeRepository';
 import type { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
 import type { IReceptionRepository } from '@/domain/repositories/IReceptionRepository';
-import { WorkflowStep, WorkflowState, WorkflowTransition, ProjectWorkflowData, ValidationResult, SaveResult } from '@/dtos/workflows/ProjectWorkflowDTOs';
+import { WorkflowStep, WorkflowState, WorkflowTransition, ProjectWorkflowData, ValidationResult, SaveResult, StepRelatedDataDTO } from '@/dtos/workflows/ProjectWorkflowDTOs';
 import { ProjectDTO, CreateProjectDTO, UpdateProjectDTO, ProjectStatus } from '@/dtos/entities/ProjectDTO';
+import { Phase } from '@/domain/entities/Phase';
+import { Risk } from '@/domain/entities/Risk';
 import { PhaseDTO, PhaseStatus, PhaseType, PhasePriority } from '@/dtos/entities/PhaseDTO';
 import { RiskDTO, RiskStatus } from '@/dtos/entities/RiskDTO';
 import { MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
@@ -31,6 +33,8 @@ import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
 import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
 import { PaymentDTO } from '@/dtos/entities/PaymentDTO';
+import { BankGuaranteeDTO } from '@/dtos/entities/BankGuaranteeDTO';
+import { InsuranceCertificateDTO } from '@/dtos/entities/InsuranceCertificateDTO';
 import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
 import { SupplierDTO } from '@/dtos/entities/SupplierDTO';
 import { ReferentialService } from '@/application/services/ReferentialService';
@@ -389,21 +393,30 @@ export class ProjectWorkflowService {
           budget: projectData.budget || 0,
           startDate: projectData.startDate || new Date().toISOString().split('T')[0],
           endDate: projectData.endDate,
-          status: ProjectStatus.PLANIFIE_LEGACY as any,
+          status: ProjectStatus.PLANIFIE,
           thumbnail: projectData.thumbnail || '',
           teamSize: projectData.teamSize || 1,
           financingSource: projectData.financingSource,
           marketType: projectData.marketType,
           selectionMode: projectData.selectionMode,
           projectReference: projectData.projectReference,
-          mainContractor: typeof projectData.mainContractor === 'string' 
-            ? projectData.mainContractor 
-            : (projectData.mainContractor as any)?.name || '',
+          mainContractor: typeof projectData.mainContractor === 'string'
+            ? projectData.mainContractor
+            : (typeof projectData.mainContractor === 'object' && projectData.mainContractor !== null && 'name' in projectData.mainContractor
+              ? String((projectData.mainContractor as { name: string }).name)
+              : ''),
           allowsInitialPayment: projectData.allowsInitialPayment as boolean | undefined,
           initialPaymentPercentage: projectData.initialPaymentPercentage as number | undefined,
           currentPhase: projectData.currentPhase,
           currentStage: projectData.currentStage,
-          ...(projectData.coordinates ? { latitude: (projectData.coordinates as any).latitude, longitude: (projectData.coordinates as any).longitude } : {})
+          ...(projectData.coordinates ? {
+            latitude: typeof projectData.coordinates === 'object' && projectData.coordinates !== null && 'latitude' in projectData.coordinates
+              ? (projectData.coordinates as { latitude: number; longitude: number }).latitude
+              : undefined,
+            longitude: typeof projectData.coordinates === 'object' && projectData.coordinates !== null && 'longitude' in projectData.coordinates
+              ? (projectData.coordinates as { latitude: number; longitude: number }).longitude
+              : undefined
+          } : {})
         };
 
         const projectEntity = ProjectTransformer.fromCreateDTOToEntity(createRequest);
@@ -461,7 +474,7 @@ export class ProjectWorkflowService {
     }
   }
 
-  private async saveRelatedData(projectId: string, relatedData: any): Promise<void> {
+  private async saveRelatedData(projectId: string, relatedData: StepRelatedDataDTO & { milestones?: MilestoneDTO[]; documents?: DocumentDTO[]; payments?: PaymentDTO[]; bankGuarantees?: BankGuaranteeDTO[]; insuranceCertificates?: InsuranceCertificateDTO[]; receptions?: any[] }): Promise<void> {
     // Save phases if provided
     if (relatedData.phases && relatedData.phases.length > 0) {
       for (const phase of relatedData.phases) {
@@ -470,7 +483,7 @@ export class ProjectWorkflowService {
           projectId,
           status: phase.status || PhaseStatus.PENDING
         };
-        await this.phaseRepository.create(phaseEntity as any);
+        await this.phaseRepository.create(phaseEntity as Phase);
       }
     }
 
@@ -482,7 +495,7 @@ export class ProjectWorkflowService {
           projectId,
           status: risk.status || RiskStatus.IDENTIFIED
         };
-        await this.riskRepository.save(riskEntity as any);
+        await this.riskRepository.save(riskEntity as Risk);
       }
     }
 

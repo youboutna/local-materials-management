@@ -92,6 +92,7 @@ export class DashboardService {
         payments: paymentsData.length,
         inspections: inspectionsData.length,
         suppliers: suppliersData.length
+        
       });
 
       // Calculate basic statistics - handle various status formats
@@ -129,8 +130,40 @@ export class DashboardService {
         { name: 'Faible', value: projectsData.filter(p => (p.progress || 0) < 50).length, color: '#ef4444' },
       ];
 
-      // Location distribution based on project location
-      const locationDistribution = buildLocationDistribution(projectsData);
+      // Location distribution based on project location with normalization
+      const normalizeLocation = (location: string): string => {
+        if (!location || location === 'Non spécifié') return 'Non spécifié';
+        
+        // Normalize Mauritanie variants
+        const lowerLocation = location.toLowerCase().trim();
+        if (lowerLocation.includes('mauritanie')) {
+          return 'Mauritanie';
+        }
+        
+        // Normalize Nouakchott variants
+        if (lowerLocation.includes('nouakchott')) {
+          return 'Nouakchott';
+        }
+        
+        // Return original location if no normalization needed
+        return location;
+      };
+
+      const locationCounts = projectsData.reduce((acc, project) => {
+        const rawLocation = project.location || 'Non spécifié';
+        const location = normalizeLocation(rawLocation);
+        acc[location] = (acc[location] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const locationColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+      const locationDistribution = Object.entries(locationCounts)
+        .map(([name, value], index) => ({
+          name,
+          value,
+          color: locationColors[index % locationColors.length]
+        }))
+        .sort((a, b) => b.value - a.value); // Sort by count descending
 
       // Calculate average project health
       const averageProjectHealth = projectsData.length > 0 

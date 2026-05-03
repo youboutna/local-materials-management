@@ -954,7 +954,7 @@ export type Database = {
           phone: string | null
           provider_data: Json | null
           provider_id: string | null
-          role: Database["public"]["Enums"]["user_role"] | null
+          role: ["Enums"]["user_role"] | null
           status: string | null
           updated_at: string | null
         }
@@ -969,7 +969,7 @@ export type Database = {
           phone?: string | null
           provider_data?: Json | null
           provider_id?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
+          role?: ["Enums"]["user_role"] | null
           status?: string | null
           updated_at?: string | null
         }
@@ -984,7 +984,7 @@ export type Database = {
           phone?: string | null
           provider_data?: Json | null
           provider_id?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
+          role?: ["Enums"]["user_role"] | null
           status?: string | null
           updated_at?: string | null
         }
@@ -2021,7 +2021,7 @@ export type Database = {
           receipt_url: string | null
           requested_at: string | null
           requested_by: string | null
-          status: Database["public"]["Enums"]["supply_request_status"] | null
+          status: ["Enums"]["supply_request_status"] | null
           supplier_name: string | null
           total_cost: number | null
           unit_price: number | null
@@ -2040,7 +2040,7 @@ export type Database = {
           receipt_url?: string | null
           requested_at?: string | null
           requested_by?: string | null
-          status?: Database["public"]["Enums"]["supply_request_status"] | null
+          status?: ["Enums"]["supply_request_status"] | null
           supplier_name?: string | null
           total_cost?: number | null
           unit_price?: number | null
@@ -2059,7 +2059,7 @@ export type Database = {
           receipt_url?: string | null
           requested_at?: string | null
           requested_by?: string | null
-          status?: Database["public"]["Enums"]["supply_request_status"] | null
+          status?: ["Enums"]["supply_request_status"] | null
           supplier_name?: string | null
           total_cost?: number | null
           unit_price?: number | null
@@ -2760,7 +2760,7 @@ export type Database = {
           authorization_id: string | null
           created_at: string | null
           document_category:
-            | Database["public"]["Enums"]["document_category"]
+            | ["Enums"]["document_category"]
             | null
           document_name: string | null
           file_path: string | null
@@ -2779,7 +2779,7 @@ export type Database = {
           authorization_id?: string | null
           created_at?: string | null
           document_category?:
-            | Database["public"]["Enums"]["document_category"]
+            | ["Enums"]["document_category"]
             | null
           document_name?: string | null
           file_path?: string | null
@@ -2798,7 +2798,7 @@ export type Database = {
           authorization_id?: string | null
           created_at?: string | null
           document_category?:
-            | Database["public"]["Enums"]["document_category"]
+            | ["Enums"]["document_category"]
             | null
           document_name?: string | null
           file_path?: string | null
@@ -2818,7 +2818,7 @@ export type Database = {
       authorization_requests: {
         Row: {
           address: string | null
-          applicant_type: Database["public"]["Enums"]["applicant_type"] | null
+          applicant_type: ["Enums"]["applicant_type"] | null
           approval_date: string | null
           approved_by: string | null
           business_experience_years: number | null
@@ -2859,14 +2859,14 @@ export type Database = {
           signature_data: string | null
           signature_date: string | null
           spouse_name: string | null
-          status: Database["public"]["Enums"]["authorization_status"] | null
+          status: ["Enums"]["authorization_status"] | null
           submission_date: string | null
           submitted_by: string | null
           updated_at: string | null
         }
         Insert: {
           address?: string | null
-          applicant_type?: Database["public"]["Enums"]["applicant_type"] | null
+          applicant_type?: ["Enums"]["applicant_type"] | null
           approval_date?: string | null
           approved_by?: string | null
           business_experience_years?: number | null
@@ -2907,14 +2907,14 @@ export type Database = {
           signature_data?: string | null
           signature_date?: string | null
           spouse_name?: string | null
-          status?: Database["public"]["Enums"]["authorization_status"] | null
+          status?: ["Enums"]["authorization_status"] | null
           submission_date?: string | null
           submitted_by?: string | null
           updated_at?: string | null
         }
         Update: {
           address?: string | null
-          applicant_type?: Database["public"]["Enums"]["applicant_type"] | null
+          applicant_type?: ["Enums"]["applicant_type"] | null
           approval_date?: string | null
           approved_by?: string | null
           business_experience_years?: number | null
@@ -2955,7 +2955,7 @@ export type Database = {
           signature_data?: string | null
           signature_date?: string | null
           spouse_name?: string | null
-          status?: Database["public"]["Enums"]["authorization_status"] | null
+          status?: ["Enums"]["authorization_status"] | null
           submission_date?: string | null
           submitted_by?: string | null
           updated_at?: string | null
@@ -3178,7 +3178,7 @@ export type Database = {
           created_at: string | null
           deadline_date: string | null
           description: string | null
-          document_type: Database["public"]["Enums"]["document_type"] | null
+          document_type: ["Enums"]["document_type"] | null
           file_name: string | null
           file_size: number | null
           file_url: string | null
@@ -3192,7 +3192,7 @@ export type Database = {
           phase_id: string | null
           project_id: string | null
           shared_date: string | null
-          status: Database["public"]["Enums"]["document_status"] | null
+          status: ["Enums"]["document_status"] | null
           supplier_id: string | null
           tags: string[] | null
           title: string | null
@@ -3204,7 +3204,7 @@ export type Database = {
           created_at?: string | null
           deadline_date?: string | null
           description?: string | null
-          document_type?: Database["public"]["Enums"]["document_type"] | null
+          document_type?: ["Enums"]["document_type"] | null
           file_name?: string | null
           file_size?: number | null
           file_url?: string | null
@@ -3218,7 +3218,7 @@ export type Database = {
           phase_id?: string | null
           project_id?: string | null
           shared_date?: string | null
-          status?: Database["public"]["Enums"]["document_status"] | null
+          status?: ["Enums"]["document_status"] | null
           supplier_id?: string | null
           tags?: string[] | null
           title?: string | null
@@ -3230,7 +3230,7 @@ export type Database = {
           created_at?: string | null
           deadline_date?: string | null
           description?: string | null
-          document_type?: Database["public"]["Enums"]["document_type"] | null
+          document_type?: ["Enums"]["document_type"] | null
           file_name?: string | null
           file_size?: number | null
           file_url?: string | null
@@ -3244,7 +3244,7 @@ export type Database = {
           phase_id?: string | null
           project_id?: string | null
           shared_date?: string | null
-          status?: Database["public"]["Enums"]["document_status"] | null
+          status?: ["Enums"]["document_status"] | null
           supplier_id?: string | null
           tags?: string[] | null
           title?: string | null
@@ -3462,7 +3462,7 @@ export type Database = {
           planned_duration: number | null
           progress: number | null
           start_date: string | null
-          status: Database["public"]["Enums"]["mission_status"] | null
+          status: ["Enums"]["mission_status"] | null
           title: string | null
           total_catch_value: number | null
           total_catch_weight: number | null
@@ -3483,7 +3483,7 @@ export type Database = {
           planned_duration?: number | null
           progress?: number | null
           start_date?: string | null
-          status?: Database["public"]["Enums"]["mission_status"] | null
+          status?: ["Enums"]["mission_status"] | null
           title?: string | null
           total_catch_value?: number | null
           total_catch_weight?: number | null
@@ -3504,7 +3504,7 @@ export type Database = {
           planned_duration?: number | null
           progress?: number | null
           start_date?: string | null
-          status?: Database["public"]["Enums"]["mission_status"] | null
+          status?: ["Enums"]["mission_status"] | null
           title?: string | null
           total_catch_value?: number | null
           total_catch_weight?: number | null
@@ -5584,7 +5584,7 @@ export type Database = {
       tender_documents: {
         Row: {
           category:
-            | Database["public"]["Enums"]["tender_document_category"]
+            | ["Enums"]["tender_document_category"]
             | null
           created_at: string | null
           document_id: string | null
@@ -5595,7 +5595,7 @@ export type Database = {
           reviewer_notes: string | null
           status: string | null
           subcategory:
-            | Database["public"]["Enums"]["tender_document_subcategory"]
+            | ["Enums"]["tender_document_subcategory"]
             | null
           submission_date: string | null
           tender_id: string | null
@@ -5603,7 +5603,7 @@ export type Database = {
         }
         Insert: {
           category?:
-            | Database["public"]["Enums"]["tender_document_category"]
+            | ["Enums"]["tender_document_category"]
             | null
           created_at?: string | null
           document_id?: string | null
@@ -5614,7 +5614,7 @@ export type Database = {
           reviewer_notes?: string | null
           status?: string | null
           subcategory?:
-            | Database["public"]["Enums"]["tender_document_subcategory"]
+            | ["Enums"]["tender_document_subcategory"]
             | null
           submission_date?: string | null
           tender_id?: string | null
@@ -5622,7 +5622,7 @@ export type Database = {
         }
         Update: {
           category?:
-            | Database["public"]["Enums"]["tender_document_category"]
+            | ["Enums"]["tender_document_category"]
             | null
           created_at?: string | null
           document_id?: string | null
@@ -5633,7 +5633,7 @@ export type Database = {
           reviewer_notes?: string | null
           status?: string | null
           subcategory?:
-            | Database["public"]["Enums"]["tender_document_subcategory"]
+            | ["Enums"]["tender_document_subcategory"]
             | null
           submission_date?: string | null
           tender_id?: string | null
@@ -6032,7 +6032,7 @@ export type Database = {
           insurance_expires_at: string | null
           name: string | null
           registration_number: string | null
-          status: Database["public"]["Enums"]["vessel_status"] | null
+          status: ["Enums"]["vessel_status"] | null
           updated_at: string | null
         }
         Insert: {
@@ -6047,7 +6047,7 @@ export type Database = {
           insurance_expires_at?: string | null
           name?: string | null
           registration_number?: string | null
-          status?: Database["public"]["Enums"]["vessel_status"] | null
+          status?: ["Enums"]["vessel_status"] | null
           updated_at?: string | null
         }
         Update: {
@@ -6062,7 +6062,7 @@ export type Database = {
           insurance_expires_at?: string | null
           name?: string | null
           registration_number?: string | null
-          status?: Database["public"]["Enums"]["vessel_status"] | null
+          status?: ["Enums"]["vessel_status"] | null
           updated_at?: string | null
         }
         Relationships: []
@@ -6123,7 +6123,7 @@ export type Database = {
           p_quantities_executed?: Json
           p_work_description: string
         }
-        Returns: Database["public"]["Views"]["progress_invoices"]["Row"]
+        Returns: ["Views"]["progress_invoices"]["Row"]
         SetofOptions: {
           from: "*"
           to: "progress_invoices"
@@ -6237,7 +6237,7 @@ export type Database = {
       }
       get_user_role: {
         Args: { user_id: string }
-        Returns: Database["public"]["Enums"]["user_role"]
+        Returns: ["Enums"]["user_role"]
       }
       get_user_roles: {
         Args: { target_user_id: string }

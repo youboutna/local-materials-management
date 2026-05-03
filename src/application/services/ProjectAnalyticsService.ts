@@ -70,7 +70,7 @@ export class ProjectAnalyticsService {
         // ProjectDTO required fields
         title: projectData.project.title || '',
         description: projectData.project.description || '',
-        status: (projectData.project.status as any) || 'en cours',
+        status: (projectData.project.status as 'planning' | 'in_progress' | 'completed' | 'cancelled' | 'on_hold') || 'en cours',
         progress: overallProgress,
         budget: budget,
         location: projectData.project.location || '',
@@ -152,7 +152,22 @@ export class ProjectAnalyticsService {
   /**
    * Get project cost analysis
    */
-  async getProjectCostAnalysis(projectId: string): Promise<any> {
+  async getProjectCostAnalysis(projectId: string): Promise<{
+    totalBudget: number;
+    actualCost: number;
+    committedCost: number;
+    remainingBudget: number;
+    costVariance: number;
+    costPerformanceIndex: number;
+    estimateAtCompletion: number;
+    varianceAtCompletion: number;
+    costBreakdown: Array<{
+      category: string;
+      budgetedCost: number;
+      actualCost: number;
+      variance: number;
+    }>;
+  }> {
     try {
       if (!projectId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
@@ -206,7 +221,7 @@ export class ProjectAnalyticsService {
 
       const inspections = await this.inspectionRepository.findByProjectId(projectDetail.id);
       const completedInspections = inspections.filter(i => 
-        (i.status as string) === 'completed'
+        (i.status as string) === 'Completed'
       ).length;
       const totalInspections = inspections.length;
       
