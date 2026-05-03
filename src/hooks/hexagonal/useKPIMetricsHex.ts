@@ -5,7 +5,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { EVMCalculations, BudgetAnalytics } from '@/types/calculations';
+import type { EVMCalculations, BudgetAnalytics } from '@/dtos/entities/CalculationsDTO';
 
 export interface CriticalAlert {
   id: string;
