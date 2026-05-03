@@ -62,19 +62,18 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
 
     try {
       setSubmitting(true);
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { error } = await supabase.from('quantity_takeoffs').insert({
+      const { QuantityTakeoffService } = await import('@/application/services/QuantityTakeoffService');
+      const service = new QuantityTakeoffService();
+      await service.createQuantityTakeoff({
         project_id: projectId,
         material_id: formData.materialId,
         element_type: formData.elementType,
         unit: formData.unit,
         length: formData.length,
-        width: formData.width || null,
-        height: formData.height || null,
-        note: formData.note || null,
-      });
-
-      if (error) throw error;
+        width: formData.width || undefined,
+        height: formData.height || undefined,
+        note: formData.note || undefined,
+      } as any);
 
       toast({
         title: "Métré créé",
