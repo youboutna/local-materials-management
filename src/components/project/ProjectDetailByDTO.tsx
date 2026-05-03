@@ -204,7 +204,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
        // Type the responses safely
        const typedMetrics = (metrics || {}) as { totalMilestones?: number; completedMilestones?: number; overdueTasks?: number };
        const typedAnalytics = (analytics || {}) as unknown as Record<string, number>;
-       const typedCostAnalysis = (costAnalysis || {}) as Record<string, number>;
+       const typedCostAnalysis = (costAnalysis || {}) as unknown as Record<string, number>;
        
        // Combine all data into the expected format (camelCase only)
        return {

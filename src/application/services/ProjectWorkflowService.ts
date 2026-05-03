@@ -483,7 +483,7 @@ export class ProjectWorkflowService {
           projectId,
           status: phase.status || PhaseStatus.PENDING
         };
-        await this.phaseRepository.create(phaseEntity as Phase);
+        await this.phaseRepository.create(phaseEntity as unknown as Phase);
       }
     }
 
