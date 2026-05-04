@@ -2,10 +2,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import type { ProjectWithPayments } from '@/dtos/entities/ProjectAggregateDTO';
+import type { ProjectWithPaymentsDTO } from '@/dtos/entities/ProjectWithPaymentsDTO';
 import { format } from 'date-fns';
 
-export function ProjectStatusCard({ project }: { project: ProjectWithPayments }) {
+export function ProjectStatusCard({ project }: { project: ProjectWithPaymentsDTO }) {
   const getStatusColor = () => {
     switch (project.status) {
       case 'en cours': return 'bg-blue-500';
@@ -69,7 +69,7 @@ export function ProjectStatusCard({ project }: { project: ProjectWithPayments })
             <div className="mt-4">
               <p className="text-sm text-muted-foreground">Dernier paiement</p>
               <p className="text-sm font-medium">
-                {project.payments[0].amount.toLocaleString()} MRU ({format(new Date(project.payments[0].payment_date), 'dd/MM/yyyy')})
+                {project.payments[0].amount.toLocaleString()} MRU ({format(new Date(project.payments[0].paymentDate), 'dd/MM/yyyy')})
               </p>
             </div>
           )}
