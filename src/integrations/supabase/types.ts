@@ -193,6 +193,72 @@ export type Database = {
         }
         Relationships: []
       }
+      complaints: {
+        Row: {
+          assigned_name: string | null
+          assigned_to: string | null
+          complainant_email: string | null
+          complainant_name: string | null
+          complainant_phone: string | null
+          complaint_type: string
+          created_at: string
+          description: string
+          id: string
+          incident_date: string | null
+          investigation_notes: string | null
+          is_anonymous: boolean
+          reported_by: string | null
+          resolution: string | null
+          resolution_date: string | null
+          station_id: string | null
+          station_name: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_name?: string | null
+          assigned_to?: string | null
+          complainant_email?: string | null
+          complainant_name?: string | null
+          complainant_phone?: string | null
+          complaint_type: string
+          created_at?: string
+          description: string
+          id?: string
+          incident_date?: string | null
+          investigation_notes?: string | null
+          is_anonymous?: boolean
+          reported_by?: string | null
+          resolution?: string | null
+          resolution_date?: string | null
+          station_id?: string | null
+          station_name?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_name?: string | null
+          assigned_to?: string | null
+          complainant_email?: string | null
+          complainant_name?: string | null
+          complainant_phone?: string | null
+          complaint_type?: string
+          created_at?: string
+          description?: string
+          id?: string
+          incident_date?: string | null
+          investigation_notes?: string | null
+          is_anonymous?: boolean
+          reported_by?: string | null
+          resolution?: string | null
+          resolution_date?: string | null
+          station_id?: string | null
+          station_name?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contact_messages: {
         Row: {
           created_at: string
@@ -237,6 +303,174 @@ export type Database = {
           sender_name?: string
           sender_phone?: string | null
           subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      danger_reports: {
+        Row: {
+          assigned_inspector_id: string | null
+          assigned_inspector_name: string | null
+          created_at: string
+          depot_id: string | null
+          description: string
+          id: string
+          investigation_result: string | null
+          latitude: number | null
+          location_description: string
+          longitude: number | null
+          photos: Json | null
+          report_type: string
+          reporter_contact: string | null
+          station_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_inspector_id?: string | null
+          assigned_inspector_name?: string | null
+          created_at?: string
+          depot_id?: string | null
+          description: string
+          id?: string
+          investigation_result?: string | null
+          latitude?: number | null
+          location_description?: string
+          longitude?: number | null
+          photos?: Json | null
+          report_type: string
+          reporter_contact?: string | null
+          station_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_inspector_id?: string | null
+          assigned_inspector_name?: string | null
+          created_at?: string
+          depot_id?: string | null
+          description?: string
+          id?: string
+          investigation_result?: string | null
+          latitude?: number | null
+          location_description?: string
+          longitude?: number | null
+          photos?: Json | null
+          report_type?: string
+          reporter_contact?: string | null
+          station_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      deliveries: {
+        Row: {
+          arrival_date: string | null
+          cargo_certificate_id: string | null
+          created_at: string
+          created_by: string | null
+          delivery_number: string
+          delivery_slip: string | null
+          departure_date: string | null
+          destination_depot_id: string | null
+          destination_depot_name: string | null
+          destination_station_id: string | null
+          destination_station_name: string | null
+          discrepancy_notes: string | null
+          driver_license: string | null
+          driver_name: string
+          id: string
+          import_batch_reference: string | null
+          inspection_certificate: string | null
+          loading_date: string | null
+          loading_qr_code: string | null
+          origin_depot_id: string | null
+          origin_depot_name: string | null
+          product: string
+          quantity_difference: number | null
+          quantity_received: number | null
+          quantity_shipped: number
+          status: string
+          transport_certificate: string | null
+          truck_registration: string
+          truck_technical_visit_expiry: string | null
+          unit: string
+          unloading_date: string | null
+          unloading_qr_code: string | null
+          unloading_report_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          arrival_date?: string | null
+          cargo_certificate_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivery_number: string
+          delivery_slip?: string | null
+          departure_date?: string | null
+          destination_depot_id?: string | null
+          destination_depot_name?: string | null
+          destination_station_id?: string | null
+          destination_station_name?: string | null
+          discrepancy_notes?: string | null
+          driver_license?: string | null
+          driver_name?: string
+          id?: string
+          import_batch_reference?: string | null
+          inspection_certificate?: string | null
+          loading_date?: string | null
+          loading_qr_code?: string | null
+          origin_depot_id?: string | null
+          origin_depot_name?: string | null
+          product: string
+          quantity_difference?: number | null
+          quantity_received?: number | null
+          quantity_shipped?: number
+          status?: string
+          transport_certificate?: string | null
+          truck_registration?: string
+          truck_technical_visit_expiry?: string | null
+          unit?: string
+          unloading_date?: string | null
+          unloading_qr_code?: string | null
+          unloading_report_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          arrival_date?: string | null
+          cargo_certificate_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivery_number?: string
+          delivery_slip?: string | null
+          departure_date?: string | null
+          destination_depot_id?: string | null
+          destination_depot_name?: string | null
+          destination_station_id?: string | null
+          destination_station_name?: string | null
+          discrepancy_notes?: string | null
+          driver_license?: string | null
+          driver_name?: string
+          id?: string
+          import_batch_reference?: string | null
+          inspection_certificate?: string | null
+          loading_date?: string | null
+          loading_qr_code?: string | null
+          origin_depot_id?: string | null
+          origin_depot_name?: string | null
+          product?: string
+          quantity_difference?: number | null
+          quantity_received?: number | null
+          quantity_shipped?: number
+          status?: string
+          transport_certificate?: string | null
+          truck_registration?: string
+          truck_technical_visit_expiry?: string | null
+          unit?: string
+          unloading_date?: string | null
+          unloading_qr_code?: string | null
+          unloading_report_number?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -426,6 +660,189 @@ export type Database = {
           updated_at?: string | null
           usage_count?: number
           version?: string
+        }
+        Relationships: []
+      }
+      import_forecasts: {
+        Row: {
+          actual_cost: number | null
+          actual_sales: number | null
+          actual_volume: number | null
+          created_at: string
+          forecasted_cost: number | null
+          forecasted_volume: number
+          id: string
+          importer_id: string
+          importer_name: string | null
+          period: string
+          period_month: number | null
+          period_quarter: number | null
+          period_year: number
+          product: string
+          sales_variance: number | null
+          status: string
+          updated_at: string
+          variance: number | null
+          variance_percentage: number | null
+        }
+        Insert: {
+          actual_cost?: number | null
+          actual_sales?: number | null
+          actual_volume?: number | null
+          created_at?: string
+          forecasted_cost?: number | null
+          forecasted_volume?: number
+          id?: string
+          importer_id: string
+          importer_name?: string | null
+          period: string
+          period_month?: number | null
+          period_quarter?: number | null
+          period_year: number
+          product: string
+          sales_variance?: number | null
+          status?: string
+          updated_at?: string
+          variance?: number | null
+          variance_percentage?: number | null
+        }
+        Update: {
+          actual_cost?: number | null
+          actual_sales?: number | null
+          actual_volume?: number | null
+          created_at?: string
+          forecasted_cost?: number | null
+          forecasted_volume?: number
+          id?: string
+          importer_id?: string
+          importer_name?: string | null
+          period?: string
+          period_month?: number | null
+          period_quarter?: number | null
+          period_year?: number
+          product?: string
+          sales_variance?: number | null
+          status?: string
+          updated_at?: string
+          variance?: number | null
+          variance_percentage?: number | null
+        }
+        Relationships: []
+      }
+      incidents: {
+        Row: {
+          affected_area: string | null
+          casualties: number | null
+          corrective_action_plan: string | null
+          corrective_deadline: string | null
+          corrective_status: string | null
+          created_at: string
+          depot_id: string | null
+          description: string
+          documents: Json | null
+          formal_notice_date: string | null
+          formal_notice_deadline: string | null
+          formal_notice_issued: boolean | null
+          id: string
+          immediate_actions: string
+          incident_date: string
+          incident_type: string
+          injuries: number | null
+          investigation_date: string | null
+          investigation_findings: string | null
+          investigator_id: string | null
+          investigator_name: string | null
+          latitude: number | null
+          location_details: string
+          longitude: number | null
+          photos: Json | null
+          pv_date: string | null
+          pv_number: string | null
+          pv_transmitted_to_minister: boolean | null
+          pv_transmitted_to_prosecutor: boolean | null
+          reported_by: string | null
+          reported_by_name: string | null
+          root_cause: string | null
+          severity: string
+          station_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          affected_area?: string | null
+          casualties?: number | null
+          corrective_action_plan?: string | null
+          corrective_deadline?: string | null
+          corrective_status?: string | null
+          created_at?: string
+          depot_id?: string | null
+          description: string
+          documents?: Json | null
+          formal_notice_date?: string | null
+          formal_notice_deadline?: string | null
+          formal_notice_issued?: boolean | null
+          id?: string
+          immediate_actions?: string
+          incident_date?: string
+          incident_type: string
+          injuries?: number | null
+          investigation_date?: string | null
+          investigation_findings?: string | null
+          investigator_id?: string | null
+          investigator_name?: string | null
+          latitude?: number | null
+          location_details?: string
+          longitude?: number | null
+          photos?: Json | null
+          pv_date?: string | null
+          pv_number?: string | null
+          pv_transmitted_to_minister?: boolean | null
+          pv_transmitted_to_prosecutor?: boolean | null
+          reported_by?: string | null
+          reported_by_name?: string | null
+          root_cause?: string | null
+          severity?: string
+          station_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          affected_area?: string | null
+          casualties?: number | null
+          corrective_action_plan?: string | null
+          corrective_deadline?: string | null
+          corrective_status?: string | null
+          created_at?: string
+          depot_id?: string | null
+          description?: string
+          documents?: Json | null
+          formal_notice_date?: string | null
+          formal_notice_deadline?: string | null
+          formal_notice_issued?: boolean | null
+          id?: string
+          immediate_actions?: string
+          incident_date?: string
+          incident_type?: string
+          injuries?: number | null
+          investigation_date?: string | null
+          investigation_findings?: string | null
+          investigator_id?: string | null
+          investigator_name?: string | null
+          latitude?: number | null
+          location_details?: string
+          longitude?: number | null
+          photos?: Json | null
+          pv_date?: string | null
+          pv_number?: string | null
+          pv_transmitted_to_minister?: boolean | null
+          pv_transmitted_to_prosecutor?: boolean | null
+          reported_by?: string | null
+          reported_by_name?: string | null
+          root_cause?: string | null
+          severity?: string
+          station_id?: string | null
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
