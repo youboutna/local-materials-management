@@ -6,7 +6,7 @@ import ProjectFileImporter from "@/components/projects/ProjectFileImporter";
 import AdvancedProjectImporter from "@/components/projects/AdvancedProjectImporter";
 import ProjectExporter from "@/components/projects/ProjectExporter";
 import { Database, FileSpreadsheet, Upload, Download } from "lucide-react";
-import { ImportResult } from "@/types/project";
+import { ImportResult } from "@/dtos/entities/ProjectLegacyDTO";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const ProjectImport = () => {

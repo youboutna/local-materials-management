@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { EVMMetrics, PERTAnalysis, ProjectData } from '@/types/project';
+import { EVMMetrics, PERTAnalysis, ProjectData } from '@/dtos/entities/ProjectLegacyDTO';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { TaskDTO } from '@/dtos/entities/TaskDTO';
 
