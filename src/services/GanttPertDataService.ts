@@ -9,7 +9,7 @@
 
 import { ProjectDetailDTO, GanttChartData, PERTAnalysis } from '@/dtos/entities/ProjectDTO';
 import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
-import { PERTActivity } from '@/types/project';
+import { PERTActivity } from '@/dtos/entities/ProjectLegacyDTO';
 
 export interface GanttPhaseData {
   id: string;

@@ -2,7 +2,7 @@
 // projectManagerWithActions.ts
 
 import { CHECK_SCHEDULE_INTERVALS } from "@/hooks/projects/constants";
-import { ActionLabels, Alert, EscalationRoles, EVMData, GanttChartData, InsurancePolicy, PERTAnalysis, ProjectData } from "@/types/project";
+import { ActionLabels, Alert, EscalationRoles, EVMData, GanttChartData, InsurancePolicy, PERTAnalysis, ProjectData } from "@/dtos/entities/ProjectLegacyDTO";
 import { ReportCalculations } from "@/utils/reportCalculations";
 
 /**

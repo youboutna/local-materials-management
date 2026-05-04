@@ -1,4 +1,4 @@
-import { ProjectData, EscalationRoles } from '@/types/project';
+import { ProjectData, EscalationRoles } from '@/dtos/entities/ProjectLegacyDTO';
 
 // Define ActionLabels locally to avoid circular import
 export interface ActionLabels {
