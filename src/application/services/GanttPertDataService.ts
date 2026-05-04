@@ -6,11 +6,11 @@
  */
 
 import { GanttChartData } from '@/domain/entities/index';
-import { PERTAnalysis } from '@/dtos/entities/ProjectLegacyDTO';
+import { PERTAnalysis } from '@/dtos/entities/ProjectAggregateDTO';
 import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { TaskDTO } from '@/dtos/entities/TaskDTO';
 import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
-import { PERTActivity } from '@/dtos/entities/ProjectLegacyDTO';
+import { PERTActivity } from '@/dtos/entities/ProjectAggregateDTO';
 
 export interface GanttPhaseData {
   id: string;

@@ -5,7 +5,7 @@ import {
   EVMData,
   GanttChartData,
   PERTAnalysis,
-} from "@/dtos/entities/ProjectLegacyDTO"
+} from "@/dtos/entities/ProjectAggregateDTO"
 
 export interface ProjectManagerState {
   alerts: Alert[];

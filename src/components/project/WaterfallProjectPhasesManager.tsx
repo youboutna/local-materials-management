@@ -23,7 +23,7 @@ import WaterfallGanttChart from './WaterfallGanttChart';
 import WaterfallProjectKPIs from './WaterfallProjectKPIs';
 import ConstructionPhaseManager from './ConstructionPhaseManager';
 import { useProjects } from '@/hooks/projects/useProjects';
-import type { ProjectData } from '@/dtos/entities/ProjectLegacyDTO';
+import type { ProjectData } from '@/dtos/entities/ProjectAggregateDTO';
 
 interface WaterfallProjectPhasesManagerProps {
   selectedProject: ProjectData | null;

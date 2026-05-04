@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useCreateInspectionHex, useUpdateProjectStatusHex } from '@/hooks/hexagonal';
 import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
-import type { ProjectWithPayments } from '@/dtos/entities/ProjectLegacyDTO';
+import type { ProjectWithPayments } from '@/dtos/entities/ProjectAggregateDTO';
 type InspectionStatusLocal = 'approved' | 'requires_changes' | 'rejected' | 'pending';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { InspectorSelector } from '@/components/selectors/InspectorSelector';

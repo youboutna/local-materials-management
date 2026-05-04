@@ -31,7 +31,7 @@ import { Plus, Calendar, Save, Trash2, DollarSign, Eye, RefreshCw } from "lucide
 import { useNavigate } from "react-router-dom";
 import { usePhasesHex } from "@/hooks/hexagonal";
 import { toast } from "@/hooks/use-toast";
-import { ConstructionPhase, ConstructionStage } from "@/dtos/entities/ProjectLegacyDTO";
+import { ConstructionPhase, ConstructionStage } from "@/dtos/entities/ProjectAggregateDTO";
 
 interface PhaseListProps {
   phases: any[];

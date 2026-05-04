@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, ChevronLeft, ChevronRight, BarChart3, Clock, Users, DollarSign } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSameMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import type { ProjectStatus } from '@/dtos/entities/ProjectLegacyDTO';
+import type { ProjectStatus } from '@/dtos/entities/ProjectAggregateDTO';
 
 interface GanttTask {
   id: string;
