@@ -2,7 +2,7 @@
 import { BankGuaranteeService as HexBankGuaranteeService } from '@/application/services/BankGuaranteeService';
 import { NotificationService } from '@/application/services/NotificationService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { ProjectDelay, BankGuaranteeData, NOTIFICATION_ROLES, DELAY_THRESHOLDS } from '@/dtos/entities/ProjectLegacyDTO';
+import { ProjectDelay, BankGuaranteeData, NOTIFICATION_ROLES, DELAY_THRESHOLDS } from '@/dtos/entities/ProjectAggregateDTO';
 import { AppError, ErrorLogger } from '@/utils/errorHandling';
 
 export class BankGuaranteeService {

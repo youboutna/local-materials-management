@@ -8,7 +8,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RepositoryFactory } from "@/repositories/RepositoryFactory";
 import { ProjectService } from "@/application/services/ProjectService";
-import { ProjectData } from "@/dtos/entities/ProjectLegacyDTO";
+import { ProjectData } from "@/dtos/entities/ProjectAggregateDTO";
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 

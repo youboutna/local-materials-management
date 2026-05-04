@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import type { ProjectWithPayments } from '@/dtos/entities/ProjectLegacyDTO';
+import type { ProjectWithPayments } from '@/dtos/entities/ProjectAggregateDTO';
 import { format } from 'date-fns';
 
 export function ProjectStatusCard({ project }: { project: ProjectWithPayments }) {

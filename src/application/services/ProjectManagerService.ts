@@ -1,5 +1,5 @@
 // application/services/ProjectManagerService.ts
-import { Alert, EVMData, ProjectData, EscalationRoles, GanttChartData, PERTAnalysis, ActionLabels } from "@/dtos/entities/ProjectLegacyDTO";
+import { Alert, EVMData, ProjectData, EscalationRoles, GanttChartData, PERTAnalysis, ActionLabels } from "@/dtos/entities/ProjectAggregateDTO";
 import {
   ProjectManager,
 } from "../../services/projectManagerWithActions";
@@ -12,7 +12,7 @@ export interface ProjectManagerState {
   pertData: PERTAnalysis;
 }
 
-// Use the ActionLabels type from @/types/project directly
+// Use the ActionLabels type from @/dtos/entities/ProjectAggregateDTO directly
 export const actionLabels: ActionLabels = {
   task_assignment: 'Assigner une tâche',
   hierarchy_notification: 'Notifier la hiérarchie',

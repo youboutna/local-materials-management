@@ -1,5 +1,5 @@
 // MonitoringService.ts - Centralized monitoring to reduce manual actions
-import { ProjectData, Alert, EVMData, ActionLabels, EscalationRoles } from "@/dtos/entities/ProjectLegacyDTO";
+import { ProjectData, Alert, EVMData, ActionLabels, EscalationRoles } from "@/dtos/entities/ProjectAggregateDTO";
 import { ProjectManager } from "./projectManagerWithActions";
 
 export interface MonitoringConfiguration {

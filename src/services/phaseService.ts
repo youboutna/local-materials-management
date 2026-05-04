@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { ConstructionPhase, ConstructionStage } from '@/dtos/entities/ProjectLegacyDTO';
+import { ConstructionPhase, ConstructionStage } from '@/dtos/entities/ProjectAggregateDTO';
 import { ProjectPhaseEntity, PhaseStepData, PhaseTaskData } from '@/types/entities';
 import { PhaseDTO, PhaseSummaryDTO, PhaseFormDTO, PhaseStepDTO, PhaseTaskDTO, PhaseStatus } from '@/types/phase-dto';
 import { DEV_MODE } from '@/config/constants';
