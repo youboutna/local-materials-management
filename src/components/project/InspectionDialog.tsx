@@ -59,11 +59,12 @@ export function InspectionDialog({ project, onInspectionCreated }: InspectionDia
 
     try {
       await createInspectionMutation.mutateAsync({
-        project_id: project.id,
+        projectId: project.id,
         date: format(date, 'yyyy-MM-dd'),
         status,
-        inspector: inspectorName,
-        progress_at_inspection: progress,
+        inspectorId,
+        inspectorName,
+        progressAtInspection: progress,
         comments: comments || null,
       });
 
