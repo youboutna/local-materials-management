@@ -36,7 +36,7 @@ export function useProjectWithPaymentsHex(projectId: string | undefined) {
 
       const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
       const inspectionService = new InspectionService();
-      const paymentService = new PaymentService();
+      const paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
 
       const [project, inspections, payments] = await Promise.all([
         projectService.findById(projectId),
