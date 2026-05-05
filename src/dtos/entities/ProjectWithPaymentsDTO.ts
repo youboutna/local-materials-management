@@ -40,6 +40,7 @@ export interface InspectionSummaryDTO {
   status: InspectionStatus;
   inspector?: string | null;
   progressAtInspection?: number | null;
+  comments?: string | null;
 }
 
 export interface PaymentSummaryDTO {
