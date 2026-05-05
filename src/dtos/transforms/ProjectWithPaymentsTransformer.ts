@@ -10,7 +10,24 @@ import type {
   InspectionSummaryDTO,
   PaymentSummaryDTO,
   InspectionStatus,
+  CreateInspectionDTO,
+  UpdateProjectStatusDTO,
 } from '@/dtos/entities/ProjectWithPaymentsDTO';
+
+/** Row snake_case prêt pour insert dans `inspections`. */
+export interface InspectionInsertRow {
+  project_id: string;
+  date: string;
+  status: string;
+  inspector: string;
+  progress_at_inspection: number;
+  comments: string | null;
+}
+
+/** Patch snake_case prêt pour update dans `projects`. */
+export interface ProjectStatusUpdateRow {
+  status: string;
+}
 
 interface RawInspection {
   id: string;
