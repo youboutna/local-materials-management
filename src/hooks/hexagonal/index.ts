@@ -489,7 +489,7 @@ export type {
 } from '@/dtos/entities';
 
 // Specialized type exports
-export type { CreateInspectionData } from './useInspectionDialogHex';
+export type { CreateInspectionDTO, UpdateProjectStatusDTO } from './useInspectionDialogHex';
 export type { ProjectImportData } from './useProjectImporterHex';
 export type { CreateUserData, UpdateUserData } from './useUserManagementDialogHex';
 export type { EstimateItem } from './useTenderEstimateHex';
