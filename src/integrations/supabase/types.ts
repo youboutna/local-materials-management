@@ -2074,6 +2074,42 @@ export type Database = {
         }
         Relationships: []
       }
+      station_fuel_availability: {
+        Row: {
+          created_at: string
+          id: string
+          last_updated: string
+          notes: string | null
+          product: string
+          station_id: string
+          status: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_updated?: string
+          notes?: string | null
+          product: string
+          station_id: string
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_updated?: string
+          notes?: string | null
+          product?: string
+          station_id?: string
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       stock_alerts: {
         Row: {
           acknowledged_at: string | null
