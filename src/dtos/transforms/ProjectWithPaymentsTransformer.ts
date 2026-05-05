@@ -90,6 +90,7 @@ export class ProjectWithPaymentsTransformer {
       status: (raw.status ?? 'pending') as InspectionStatus,
       inspector: raw.inspector ?? null,
       progressAtInspection: raw.progress_at_inspection ?? null,
+      comments: raw.comments ?? null,
     };
   }
 
