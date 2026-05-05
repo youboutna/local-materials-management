@@ -49,6 +49,28 @@ export interface PaymentSummaryDTO {
   contractorName?: string | null;
 }
 
+/**
+ * Payload UI → Service pour créer une inspection (camelCase strict).
+ * Le transformer se charge de la conversion vers snake_case côté DB.
+ */
+export interface CreateInspectionDTO {
+  projectId: string;
+  date: string;
+  status: InspectionStatus;
+  inspectorId: string;
+  inspectorName: string;
+  progressAtInspection: number;
+  comments?: string | null;
+}
+
+/**
+ * Payload UI → Service pour mettre à jour le statut d'un projet.
+ */
+export interface UpdateProjectStatusDTO {
+  projectId: string;
+  status: ProjectStatus | string;
+}
+
 export interface ProjectWithPaymentsDTO extends BaseEntityDTO {
   title: string;
   description?: string | null;

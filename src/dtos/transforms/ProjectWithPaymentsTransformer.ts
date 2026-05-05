@@ -10,7 +10,24 @@ import type {
   InspectionSummaryDTO,
   PaymentSummaryDTO,
   InspectionStatus,
+  CreateInspectionDTO,
+  UpdateProjectStatusDTO,
 } from '@/dtos/entities/ProjectWithPaymentsDTO';
+
+/** Row snake_case prêt pour insert dans `inspections`. */
+export interface InspectionInsertRow {
+  project_id: string;
+  date: string;
+  status: string;
+  inspector: string;
+  progress_at_inspection: number;
+  comments: string | null;
+}
+
+/** Patch snake_case prêt pour update dans `projects`. */
+export interface ProjectStatusUpdateRow {
+  status: string;
+}
 
 interface RawInspection {
   id: string;
@@ -82,5 +99,23 @@ export class ProjectWithPaymentsTransformer {
       paymentDate: raw.payment_date ?? '',
       contractorName: raw.contractor_name ?? null,
     };
+  }
+
+  /** UI camelCase → DB snake_case (insert inspection). */
+  static toSupabaseInsert(dto: CreateInspectionDTO): InspectionInsertRow {
+    return {
+      project_id: dto.projectId,
+      date: dto.date,
+      status: dto.status,
+      // L'adapter inspections stocke le nom (cf. SupabaseInspectionAdapter.mapToRow)
+      inspector: dto.inspectorName || dto.inspectorId,
+      progress_at_inspection: dto.progressAtInspection,
+      comments: dto.comments ?? null,
+    };
+  }
+
+  /** UI camelCase → DB snake_case (update project status). */
+  static toSupabaseStatusUpdate(dto: UpdateProjectStatusDTO): ProjectStatusUpdateRow {
+    return { status: String(dto.status) };
   }
 }
