@@ -36,6 +36,7 @@ interface RawInspection {
   status?: string | null;
   inspector?: string | null;
   progress_at_inspection?: number | null;
+  comments?: string | null;
 }
 
 interface RawPayment {
