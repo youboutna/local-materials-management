@@ -1,49 +1,46 @@
-import React, { useState } from 'react';
+/**
+ * WorkflowInspection
+ * ------------------
+ * Composant d'inspection workflow conforme à l'architecture hexagonale.
+ * Aucun import legacy, aucun `supabase.from(...)`. Toutes les données
+ * proviennent du DTO `ProjectWithPaymentsDTO` et des hooks hexagonaux.
+ *
+ * Round-trip: UI → DTO (camelCase) → Service → Adapter → DB (snake_case).
+ */
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { 
-  CheckCircle, 
-  Clock, 
-  AlertTriangle, 
-  XCircle, 
+import {
+  CheckCircle,
+  Clock,
+  AlertTriangle,
+  XCircle,
   Eye,
   FileText,
   Calendar,
   User,
   ArrowRight,
-  ExternalLink
+  ExternalLink,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { InspectionDialog } from '@/components/project/InspectionDialog';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
-
-// Local type for inspection status with all needed values
-type InspectionStatus = 'pending' | 'approved' | 'rejected' | 'requires_changes';
-
-// Type alias for local project with payments
-interface LocalProjectWithPayments {
-  id: string;
-  title: string;
-  status: string;
-  progress: number;
-  inspections?: Array<{
-    id: string;
-    date: string;
-    status: string;
-    inspector: string;
-    progress_at_inspection: number;
-    comments?: string;
-  }>;
-}
+import {
+  useUpdateProjectStatusHex,
+  useProjectWithPaymentsHex,
+} from '@/hooks/hexagonal';
+import type {
+  ProjectWithPaymentsDTO,
+  InspectionStatus,
+} from '@/dtos/entities/ProjectWithPaymentsDTO';
 
 interface WorkflowInspectionProps {
-  project: LocalProjectWithPayments;
+  project: ProjectWithPaymentsDTO;
   onInspectionUpdate?: () => void;
 }
 
@@ -52,114 +49,66 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
   const { toast } = useToast();
   const { t } = useLanguage();
   const navigate = useNavigate();
-  
-  // Sort inspections by date
-  const sortedInspections = project.inspections 
-    ? [...project.inspections].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    : [];
+
+  const updateProjectStatus = useUpdateProjectStatusHex();
+  // Re-hydrate via service après création (round-trip)
+  const { data: hydrated, refetch } = useProjectWithPaymentsHex(project.id);
+
+  const sortedInspections = useMemo(() => {
+    const list = (hydrated?.inspections ?? project.inspections) || [];
+    return [...list].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    );
+  }, [hydrated, project.inspections]);
 
   const handleInspectionCreated = async () => {
     try {
-      // Get the latest inspection after creation
-      const { data: latestInspections, error: latestError } = await supabase
-        .from('inspections')
-        .select('*')
-        .eq('project_id' as any, project.id as any)
-        .order('date', { ascending: false })
-        .limit(1);
+      const fresh = await refetch();
+      const dto = fresh.data;
+      if (!dto || !dto.inspections.length) {
+        if (onInspectionUpdate) onInspectionUpdate();
+        return;
+      }
 
-      if (latestError) throw latestError;
+      const latest = dto.inspections[0];
+      const reference = dto.inspections.find(
+        (i) => i.status === 'approved' || i.status === 'requires_changes',
+      );
+      const newProgress = reference?.progressAtInspection ?? dto.progress;
 
-      if (latestInspections && latestInspections.length > 0) {
-        const latestInspection = latestInspections[0] as any;
-        
-        console.log('Latest inspection:', latestInspection);
-        
-        // Get the last inspection by date with status 'approved' or 'requires_changes' for progress reference
-        const { data: relevantInspections, error: relevantError } = await supabase
-          .from('inspections')
-          .select('*')
-          .eq('project_id' as any, project.id as any)
-          .in('status' as any, ['approved', 'requires_changes'] as any)
-          .order('date', { ascending: false })
-          .limit(1);
+      let newStatus: string = dto.status;
+      if (latest.status === 'approved') {
+        newStatus = newProgress >= 100 ? 'terminé' : 'en cours';
+      } else if (latest.status === 'requires_changes' || latest.status === 'pending') {
+        newStatus = 'en inspection';
+      } else if (latest.status === 'rejected') {
+        newStatus = 'suspendu';
+      }
 
-        if (relevantError) throw relevantError;
-
-        // Use progress from the most recent approved or requires_changes inspection
-        // If no such inspection exists, keep current project progress
-        const newProgress = relevantInspections && relevantInspections.length > 0 
-          ? (relevantInspections[0] as any).progress_at_inspection
-          : project.progress;
-        
-        let newStatus = project.status;
-
-        console.log('Using progress from last approved/requires_changes inspection:', (relevantInspections as any)?.[0]?.status, 'with progress:', newProgress);
-
-        // Determine new status based on latest inspection status
-        if (latestInspection.status === 'approved') {
-          // If progress reaches 100%, mark project as completed
-          if (newProgress >= 100) {
-            newStatus = 'termine';
-          } else {
-            newStatus = 'enCours';
-          }
-        } else if (latestInspection.status === 'requires_changes') {
-          // For inspections requiring changes, set status to inspection
-          newStatus = 'enInspection';
-        } else if (latestInspection.status === 'rejected') {
-          // For rejected inspections, set status to suspended
-          newStatus = 'suspendu';
-        } else if (latestInspection.status === 'pending') {
-          // For pending inspections, set status to inspection
-          newStatus = 'enInspection';
-        }
-
-        console.log('Updating project with:', { 
-          newProgress, 
-          newStatus, 
-          currentProgress: project.progress,
-          latestInspectionStatus: latestInspection.status,
-          relevantInspectionFound: relevantInspections && relevantInspections.length > 0
-        });
-
-        // Update project with new progress and status
-        const { error: updateError } = await supabase
-          .from('projects')
-          .update({ 
-            progress: newProgress,
-            status: newStatus
-          } as any)
-          .eq('id' as any, project.id as any);
-
-        if (updateError) {
-          throw updateError;
-        }
-
-        const progressSource = relevantInspections && relevantInspections.length > 0 
-          ? `basée sur la dernière inspection ${(relevantInspections[0] as any).status === 'approved' ? 'approuvée' : 'nécessitant des modifications'}`
-          : 'maintenue (aucune inspection approuvée/modifiée trouvée)';
-
-        toast({
-          title: "Projet mis à jour",
-          description: `Progression mise à jour à ${newProgress}% ${progressSource}. Statut: ${newStatus}`,
+      if (newStatus !== dto.status) {
+        await updateProjectStatus.mutateAsync({
+          projectId: dto.id,
+          status: newStatus,
         });
       }
 
-      if (onInspectionUpdate) {
-        onInspectionUpdate();
-      }
-    } catch (error) {
-      console.error('Error updating project:', error);
       toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour la progression du projet.",
-        variant: "destructive",
+        title: t('inspection.dialog.created'),
+        description: `${t('projects.progress_done')}: ${newProgress}% — ${newStatus}`,
+      });
+
+      if (onInspectionUpdate) onInspectionUpdate();
+    } catch (error) {
+      console.error('WorkflowInspection.handleInspectionCreated failed:', error);
+      toast({
+        title: t('inspection.dialog.error'),
+        description: t('inspection.dialog.error_description'),
+        variant: 'destructive',
       });
     }
   };
 
-  const getStatusIcon = (status: InspectionStatus) => {
+  const getStatusIcon = (status: InspectionStatus | string) => {
     switch (status) {
       case 'approved':
         return <CheckCircle className="h-5 w-5 text-green-600" />;
@@ -174,30 +123,42 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
     }
   };
 
-  const getStatusColor = (status: InspectionStatus) => {
+  const getStatusColor = (status: InspectionStatus | string) => {
     switch (status) {
-      case 'approved': return 'bg-green-100 text-green-800 border-green-200';
-      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'requires_changes': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'rejected': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'approved':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'requires_changes':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'rejected':
+        return 'bg-red-100 text-red-800 border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
-  const getStatusText = (status: InspectionStatus) => {
+  const getStatusText = (status: InspectionStatus | string) => {
     switch (status) {
-      case 'approved': return t('inspection.dialog.status_approved');
-      case 'pending': return t('inspection.dialog.status_pending');
-      case 'requires_changes': return t('inspection.dialog.status_requires_changes');
-      case 'rejected': return t('inspection.dialog.status_rejected');
-      default: return status;
+      case 'approved':
+        return t('inspection.dialog.status_approved');
+      case 'pending':
+        return t('inspection.dialog.status_pending');
+      case 'requires_changes':
+        return t('inspection.dialog.status_requires_changes');
+      case 'rejected':
+        return t('inspection.dialog.status_rejected');
+      default:
+        return String(status);
     }
   };
 
-  // Calculate workflow progress based on approved inspections
-  const approvedInspections = sortedInspections.filter(i => i.status === 'approved').length;
+  const approvedInspections = sortedInspections.filter((i) => i.status === 'approved').length;
   const totalInspections = sortedInspections.length;
-  const workflowProgress = totalInspections > 0 ? (approvedInspections / totalInspections) * 100 : 0;
+  const workflowProgress =
+    totalInspections > 0 ? (approvedInspections / totalInspections) * 100 : 0;
+
+  const projectForDialog = hydrated ?? project;
 
   return (
     <Card className="w-full">
@@ -208,8 +169,8 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
             {t('inspection.dialog.title')}
           </CardTitle>
           <div className="flex gap-2">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               onClick={() => navigate('/inspection-monitoring')}
               className="flex items-center gap-2"
@@ -217,18 +178,19 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
               <ExternalLink className="h-4 w-4" />
               Suivi des Inspections
             </Button>
-            <InspectionDialog 
-              project={project as any} 
+            <InspectionDialog
+              project={projectForDialog}
               onInspectionCreated={handleInspectionCreated}
             />
           </div>
         </div>
-        
-        {/* Progress Overview */}
+
         <div className="mt-4 space-y-2">
           <div className="flex justify-between text-sm">
             <span>{t('projects.progress_done')}</span>
-            <span>{Math.round(workflowProgress)}% {t('inspection.dialog.status_approved')}</span>
+            <span>
+              {Math.round(workflowProgress)}% {t('inspection.dialog.status_approved')}
+            </span>
           </div>
           <Progress value={workflowProgress} className="h-2" />
           <div className="text-xs text-muted-foreground">
@@ -236,7 +198,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent>
         {sortedInspections.length === 0 ? (
           <div className="text-center py-8">
@@ -245,52 +207,47 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
               {t('inspection.dialog.new_inspection')}
             </h3>
             <p className="text-gray-500 mb-4">
-              {t('inspection.dialog.description').replace('{project}', project.title)}
+              {t('inspection.dialog.description').replace('{project}', projectForDialog.title)}
             </p>
-            <InspectionDialog 
-              project={project as any} 
+            <InspectionDialog
+              project={projectForDialog}
               onInspectionCreated={handleInspectionCreated}
             />
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Timeline */}
             <div className="relative">
               {sortedInspections.map((inspection, index) => (
                 <div key={inspection.id} className="relative">
-                  {/* Timeline line */}
                   {index < sortedInspections.length - 1 && (
                     <div className="absolute left-6 top-12 w-0.5 h-16 bg-gray-200" />
                   )}
-                  
-                  {/* Inspection Step */}
-                  <div 
+
+                  <div
                     className={`flex items-start gap-4 p-4 rounded-lg border transition-all cursor-pointer ${
-                      selectedStep === index 
-                        ? 'bg-adrar-50 border-adrar-200' 
+                      selectedStep === index
+                        ? 'bg-adrar-50 border-adrar-200'
                         : 'hover:bg-gray-50'
                     }`}
                     onClick={() => setSelectedStep(selectedStep === index ? null : index)}
                   >
-                    <div className="flex-shrink-0 mt-1">
-                      {getStatusIcon(inspection.status as InspectionStatus)}
-                    </div>
-                    
+                    <div className="flex-shrink-0 mt-1">{getStatusIcon(inspection.status)}</div>
+
                     <div className="flex-grow min-w-0">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <h4 className="font-medium text-gray-900">
                             {t('inspection.dialog.title')} #{totalInspections - index}
                           </h4>
-                          <Badge className={getStatusColor(inspection.status as InspectionStatus)}>
-                            {getStatusText(inspection.status as InspectionStatus)}
+                          <Badge className={getStatusColor(inspection.status)}>
+                            {getStatusText(inspection.status)}
                           </Badge>
                         </div>
                         <Button variant="ghost" size="sm">
                           <Eye className="h-4 w-4" />
                         </Button>
                       </div>
-                      
+
                       <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
@@ -298,14 +255,15 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
                         </div>
                         <div className="flex items-center gap-1">
                           <User className="h-3 w-3" />
-                          {inspection.inspector}
+                          {inspection.inspector ?? '—'}
                         </div>
                         <div className="flex items-center gap-1">
-                          <span>{inspection.progress_at_inspection}% {t('project.progress')}</span>
+                          <span>
+                            {inspection.progressAtInspection ?? 0}% {t('project.progress')}
+                          </span>
                         </div>
                       </div>
-                      
-                      {/* Expanded Details */}
+
                       {selectedStep === index && (
                         <div className="mt-4 pt-4 border-t">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -313,35 +271,49 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
                               <h5 className="font-medium mb-2">{t('inspection.dialog.title')}</h5>
                               <div className="space-y-1 text-sm">
                                 <div>
-                                  <span className="text-muted-foreground">{t('inspection.dialog.date')}:</span>
-                                  <span className="ml-2">{format(new Date(inspection.date), 'dd MMMM yyyy')}</span>
+                                  <span className="text-muted-foreground">
+                                    {t('inspection.dialog.date')}:
+                                  </span>
+                                  <span className="ml-2">
+                                    {format(new Date(inspection.date), 'dd MMMM yyyy')}
+                                  </span>
                                 </div>
                                 <div>
-                                  <span className="text-muted-foreground">{t('inspection.dialog.inspector')}:</span>
-                                  <span className="ml-2">{inspection.inspector}</span>
+                                  <span className="text-muted-foreground">
+                                    {t('inspection.dialog.inspector')}:
+                                  </span>
+                                  <span className="ml-2">{inspection.inspector ?? '—'}</span>
                                 </div>
                                 <div>
-                                  <span className="text-muted-foreground">{t('inspection.dialog.progress')}:</span>
-                                  <span className="ml-2">{inspection.progress_at_inspection}%</span>
+                                  <span className="text-muted-foreground">
+                                    {t('inspection.dialog.progress')}:
+                                  </span>
+                                  <span className="ml-2">
+                                    {inspection.progressAtInspection ?? 0}%
+                                  </span>
                                 </div>
                               </div>
                             </div>
-                            
+
                             {inspection.comments && (
                               <div>
-                                <h5 className="font-medium mb-2">{t('inspection.dialog.comments')}</h5>
+                                <h5 className="font-medium mb-2">
+                                  {t('inspection.dialog.comments')}
+                                </h5>
                                 <div className="bg-gray-50 p-3 rounded text-sm">
                                   {inspection.comments}
                                 </div>
                               </div>
                             )}
                           </div>
-                          
+
                           {inspection.status === 'requires_changes' && (
                             <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
                               <div className="flex items-center gap-2 text-orange-800">
                                 <AlertTriangle className="h-4 w-4" />
-                                <span className="font-medium">{t('inspection.dialog.status_requires_changes')}</span>
+                                <span className="font-medium">
+                                  {t('inspection.dialog.status_requires_changes')}
+                                </span>
                               </div>
                               <p className="text-sm text-orange-700 mt-1">
                                 {t('inspection.dialog.status_requires_changes')}
@@ -351,7 +323,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
                         </div>
                       )}
                     </div>
-                    
+
                     {index < sortedInspections.length - 1 && (
                       <ArrowRight className="h-4 w-4 text-gray-400 mt-2" />
                     )}
@@ -359,36 +331,43 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
                 </div>
               ))}
             </div>
-            
+
             <Separator />
-            
-            {/* Workflow Summary */}
+
             <div className="bg-gray-50 rounded-lg p-4">
               <h4 className="font-medium mb-3">{t('projects.overview.description')}</h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">
-                    {sortedInspections.filter(i => i.status === 'approved').length}
+                    {sortedInspections.filter((i) => i.status === 'approved').length}
                   </div>
-                  <div className="text-muted-foreground">{t('inspection.dialog.status_approved')}</div>
+                  <div className="text-muted-foreground">
+                    {t('inspection.dialog.status_approved')}
+                  </div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-yellow-600">
-                    {sortedInspections.filter(i => i.status === 'pending').length}
+                    {sortedInspections.filter((i) => i.status === 'pending').length}
                   </div>
-                  <div className="text-muted-foreground">{t('inspection.dialog.status_pending')}</div>
+                  <div className="text-muted-foreground">
+                    {t('inspection.dialog.status_pending')}
+                  </div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-orange-600">
-                    {sortedInspections.filter(i => i.status === 'requires_changes').length}
+                    {sortedInspections.filter((i) => i.status === 'requires_changes').length}
                   </div>
-                  <div className="text-muted-foreground">{t('inspection.dialog.status_requires_changes')}</div>
+                  <div className="text-muted-foreground">
+                    {t('inspection.dialog.status_requires_changes')}
+                  </div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-red-600">
-                    {sortedInspections.filter(i => i.status === 'rejected').length}
+                    {sortedInspections.filter((i) => i.status === 'rejected').length}
                   </div>
-                  <div className="text-muted-foreground">{t('inspection.dialog.status_rejected')}</div>
+                  <div className="text-muted-foreground">
+                    {t('inspection.dialog.status_rejected')}
+                  </div>
                 </div>
               </div>
             </div>

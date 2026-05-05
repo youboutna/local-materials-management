@@ -36,6 +36,7 @@ interface RawInspection {
   status?: string | null;
   inspector?: string | null;
   progress_at_inspection?: number | null;
+  comments?: string | null;
 }
 
 interface RawPayment {
@@ -89,6 +90,7 @@ export class ProjectWithPaymentsTransformer {
       status: (raw.status ?? 'pending') as InspectionStatus,
       inspector: raw.inspector ?? null,
       progressAtInspection: raw.progress_at_inspection ?? null,
+      comments: raw.comments ?? null,
     };
   }
 

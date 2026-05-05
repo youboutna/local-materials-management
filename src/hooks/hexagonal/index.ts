@@ -399,6 +399,7 @@ export {
   useCreateInspectionHex, 
   useUpdateProjectStatusHex 
 } from './useInspectionDialogHex';
+export { useProjectWithPaymentsHex } from './useProjectWithPaymentsHex';
 
 // Import & Export
 export { useImportProjectsHex } from './useProjectImporterHex';
