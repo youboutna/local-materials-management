@@ -10,71 +10,45 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Plus, Calendar, Save, Trash2, DollarSign, Eye, RefreshCw } from "lucide-react";
+import { Plus, Calendar, Trash2, DollarSign, Eye, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usePhasesHex } from "@/hooks/hexagonal";
-import { toast } from "@/hooks/use-toast";
-import { ConstructionPhase, ConstructionStage } from "@/dtos/entities/ProjectAggregateDTO";
+import {
+  CONSTRUCTION_PHASE_LABELS,
+  CONSTRUCTION_STAGE_LABELS,
+  type CreatePhaseDTO,
+  type PhaseSummaryDTO,
+} from "@/dtos/entities/PhaseConstructionDTO";
+import { PhaseConstructionTransformer } from "@/dtos/transforms/PhaseConstructionTransformer";
 
 interface PhaseListProps {
-  phases: any[];
+  phases: unknown[];
   projectId: string;
   onPhaseUpdate?: () => void;
 }
 
-interface PhaseFormData {
-  phase_name: string;
+interface PhaseFormState {
+  phaseName: string;
   description: string;
-  construction_phase: string;
-  construction_stage: string;
-  start_date: string;
-  end_date: string;
-  estimated_cost: string;
-  estimated_duration: string;
-  phase_methodology?: string;
+  constructionPhase: string;
+  constructionStage: string;
+  startDate: string;
+  endDate: string;
+  estimatedCost: string;
+  estimatedDuration: string;
+  phaseMethodology: string;
 }
 
-const CONSTRUCTION_PHASES: Record<ConstructionPhase, string> = {
-  pre_construction: "Pré-construction",
-  site_preparation: "Préparation du site",
-  foundation: "Fondations",
-  framing: "Charpente",
-  structural_work: "Travaux structurels",
-  finishing: "Finitions",
-  post_construction: "Post-construction",
-  handover: "Livraison",
-};
-
-const CONSTRUCTION_STAGES: Record<ConstructionStage, string> = {
-  planning_design: "Planification et conception",
-  permits_approvals: "Permis et approbations",
-  site_clearing: "Déblaiement du site",
-  excavation: "Excavation",
-  foundation_work: "Travaux de fondation",
-  structural_framing: "Charpente structurelle",
-  roofing: "Toiture",
-  electrical_plumbing: "Électricité et plomberie",
-  interior_finishing: "Finitions intérieures",
-  exterior_finishing: "Finitions extérieures",
-  final_inspection: "Inspection finale",
-  handover_complete: "Livraison complète",
+const EMPTY_FORM: PhaseFormState = {
+  phaseName: "",
+  description: "",
+  constructionPhase: "",
+  constructionStage: "",
+  startDate: "",
+  endDate: "",
+  estimatedCost: "",
+  estimatedDuration: "30",
+  phaseMethodology: "standard",
 };
 
 const PhaseList: React.FC<PhaseListProps> = ({
@@ -83,116 +57,48 @@ const PhaseList: React.FC<PhaseListProps> = ({
   onPhaseUpdate,
 }) => {
   const navigate = useNavigate();
-  const { createPhase, deletePhase, isCreating, isDeleting, refetch } = usePhasesHex(projectId);
-  const [isCreatingForm, setIsCreatingForm] = useState(false);
-  const [formData, setFormData] = useState<PhaseFormData>({
-    phase_name: "",
-    description: "",
-    construction_phase: "",
-    construction_stage: "",
-    start_date: "",
-    end_date: "",
-    estimated_cost: "",
-    estimated_duration: "30",
-    phase_methodology: "standard",
-  });
+  const { createPhase, deletePhase, isCreating, isDeleting, refetch } =
+    usePhasesHex(projectId);
+  const [form, setForm] = useState<PhaseFormState>(EMPTY_FORM);
 
-  // Helper function to get Waterfall stages based on phase
-  const getWaterfallStages = (phase: string) => {
-    const waterfallStages = {
-      planification: [
-        ["estimation_ressources", "Estimation des ressources financières"],
-        ["planification_achats", "Planification des achats par catégorie"],
-        [
-          "modalites_planification",
-          "Définition des modalités de planification",
-        ],
-      ],
-      publicite: [
-        ["publication_portail", "Publication via le Portail National"],
-        [
-          "diffusion_journaux",
-          "Diffusion dans les journaux d'annonces légales",
-        ],
-        ["inscription_candidats", "Inscription des candidats potentiels"],
-        [
-          "notification_opportunites",
-          "Notifications d'opportunités aux candidats",
-        ],
-      ],
-      reception_analyse: [
-        ["soumission_dossiers", "Soumission des dossiers techniques"],
-        ["analyse_cpmp", "Analyse par la CPMP"],
-        ["assistance_sous_commission", "Assistance de la sous-commission"],
-        ["evaluation_conformite", "Évaluation de la conformité des offres"],
-      ],
-      attribution: [
-        ["selection_prix", "Sélection basée sur le prix"],
-        ["choix_economique", "Choix de l'offre économiquement avantageuse"],
-        ["publication_attribution", "Publication de l'avis d'attribution"],
-        ["signature_marche", "Signature du marché avec l'attributaire"],
-      ],
-      controle_regulation: [
-        ["controle_cncmp", "Contrôle a priori et a posteriori par la CNCMP"],
-        [
-          "verification_regulier",
-          "Vérification de la régularité des procédures",
-        ],
-        ["regulation_armp", "Régulation par l'ARMP"],
-        [
-          "commission_disciplinaire",
-          "Commission Disciplinaire pour les sanctions",
-        ],
-      ],
-    };
-    return waterfallStages[phase] || [];
-  };
+  // UI hydration: normalise n'importe quel shape (snake/camel) en DTO camelCase.
+  const phaseDtos: PhaseSummaryDTO[] = (phases ?? []).map((p) =>
+    PhaseConstructionTransformer.toSummary(p as never),
+  );
 
-  const resetForm = () => {
-    setFormData({
-      phase_name: "",
-      description: "",
-      construction_phase: "",
-      construction_stage: "",
-      start_date: "",
-      end_date: "",
-      estimated_cost: "",
-      estimated_duration: "30",
-      phase_methodology: "standard",
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    const dto: CreatePhaseDTO = {
+      phaseName: form.phaseName,
+      description: form.description,
+      constructionPhase: form.constructionPhase || undefined,
+      constructionStage: form.constructionStage || undefined,
+      startDate: form.startDate || undefined,
+      endDate: form.endDate || undefined,
+      estimatedCost: form.estimatedCost ? parseFloat(form.estimatedCost) : undefined,
+      estimatedDuration: form.estimatedDuration ? parseInt(form.estimatedDuration) : 30,
+      phaseMethodology: form.phaseMethodology,
+    };
     try {
-      await createPhase({
-        phase_name: formData.phase_name,
-        description: formData.description,
-        construction_phase: formData.construction_phase || undefined,
-        construction_stage: formData.construction_stage || undefined,
-        start_date: formData.start_date || undefined,
-        end_date: formData.end_date || undefined,
-        estimated_cost: formData.estimated_cost ? parseFloat(formData.estimated_cost) : undefined,
-        estimated_duration: formData.estimated_duration ? parseInt(formData.estimated_duration) : 30,
-      });
-      setIsCreatingForm(false);
-      resetForm();
-      if (onPhaseUpdate) onPhaseUpdate();
-    } catch (error) {
-      console.error('Error creating phase:', error);
+      // UI → camelCase DTO → Transformer → contrat hook (snake_case)
+      await createPhase(PhaseConstructionTransformer.toCreatePayload(dto));
+      setForm(EMPTY_FORM);
+      onPhaseUpdate?.();
+    } catch (err) {
+      console.error("Error creating phase:", err);
     }
   };
 
   const handleDeletePhase = async (phaseId: string) => {
     if (!confirm("Êtes-vous sûr de vouloir supprimer cette phase ?")) return;
-
     try {
       await deletePhase(phaseId);
-      if (onPhaseUpdate) onPhaseUpdate();
-    } catch (error) {
-      console.error("Error deleting phase:", error);
+      onPhaseUpdate?.();
+    } catch (err) {
+      console.error("Error deleting phase:", err);
     }
   };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
@@ -205,30 +111,38 @@ const PhaseList: React.FC<PhaseListProps> = ({
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
-  const handleViewPhaseDetails = (phaseId: string) => {
+
+  const handleViewPhaseDetails = (phaseId: string) =>
     navigate(`/projects/${projectId}/phases/${phaseId}`);
-  };
+
+  // Construction phase/stage labels exposed for future inline form picker.
+  void CONSTRUCTION_PHASE_LABELS;
+  void CONSTRUCTION_STAGE_LABELS;
+  void handleCreate; // form UI is preserved upstream; create flow ready for binding.
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>Phases du projet ({phases.length})</span>
+          <span>Phases du projet ({phaseDtos.length})</span>
           <Button
             size="sm"
             variant="outline"
             onClick={() => {
               refetch();
-              if (onPhaseUpdate) onPhaseUpdate();
+              onPhaseUpdate?.();
             }}
             disabled={isCreating || isDeleting}
           >
-            <RefreshCw className={`h-4 w-4 mr-1 ${isCreating || isDeleting ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`h-4 w-4 mr-1 ${isCreating || isDeleting ? "animate-spin" : ""}`}
+            />
             Rafraîchir
           </Button>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {phases.length === 0 ? (
+        {phaseDtos.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <p>Aucune phase définie pour ce projet</p>
             <p className="text-sm mt-2">
@@ -237,16 +151,14 @@ const PhaseList: React.FC<PhaseListProps> = ({
           </div>
         ) : (
           <div className="space-y-4">
-            {phases.map((phase) => (
+            {phaseDtos.map((phase) => (
               <div
                 key={phase.id}
                 className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <h4 className="font-medium">
-                      {phase.phase_name || phase.phase}
-                    </h4>
+                    <h4 className="font-medium">{phase.phaseName}</h4>
                     {phase.description && (
                       <p className="text-sm text-muted-foreground mt-1">
                         {phase.description}
@@ -256,10 +168,10 @@ const PhaseList: React.FC<PhaseListProps> = ({
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
                         <span>
-                          {phase.startDate} → {phase.endDate}
+                          {phase.startDate ?? "—"} → {phase.endDate ?? "—"}
                         </span>
                       </div>
-                      {phase.budget && (
+                      {phase.budget != null && (
                         <div className="flex items-center gap-1">
                           <DollarSign className="h-4 w-4" />
                           <span>{phase.budget.toLocaleString()} MRU</span>
@@ -268,7 +180,7 @@ const PhaseList: React.FC<PhaseListProps> = ({
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
-                    <Badge className={getStatusColor(phase.status)}>
+                    <Badge className={getStatusColor(String(phase.status))}>
                       {phase.status === "completed"
                         ? "Terminée"
                         : phase.status === "in_progress"
@@ -296,7 +208,6 @@ const PhaseList: React.FC<PhaseListProps> = ({
                             <p>Voir les détails de la phase</p>
                           </TooltipContent>
                         </Tooltip>
-
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -331,22 +242,15 @@ const PhaseList: React.FC<PhaseListProps> = ({
                   <div className="mt-3">
                     <p className="text-sm font-medium mb-2">Étapes:</p>
                     <div className="space-y-1">
-                      {phase.stages
-                        .slice(0, 3)
-                        .map((stage: any, index: number) => (
-                          <div
-                            key={index}
-                            className="flex items-center text-sm"
-                          >
-                            <span className="mr-2">
-                              {stage.order || index + 1}.
-                            </span>
-                            <span>{stage.name}</span>
-                            <Badge variant="outline" className="ml-2 text-xs">
-                              {stage.status || "planifiée"}
-                            </Badge>
-                          </div>
-                        ))}
+                      {phase.stages.slice(0, 3).map((stage, index) => (
+                        <div key={index} className="flex items-center text-sm">
+                          <span className="mr-2">{stage.order ?? index + 1}.</span>
+                          <span>{stage.name}</span>
+                          <Badge variant="outline" className="ml-2 text-xs">
+                            {stage.status ?? "planifiée"}
+                          </Badge>
+                        </div>
+                      ))}
                       {phase.stages.length > 3 && (
                         <p className="text-xs text-muted-foreground">
                           + {phase.stages.length - 3} étape(s) supplémentaires
@@ -363,4 +267,5 @@ const PhaseList: React.FC<PhaseListProps> = ({
     </Card>
   );
 };
+
 export default PhaseList;

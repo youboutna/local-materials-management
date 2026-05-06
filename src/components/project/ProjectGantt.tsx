@@ -1,10 +1,10 @@
 import React from 'react';
 import GanttDiagramWithMilestones from './GanttDiagramWithMilestones';
 import { ReportCalculations } from '@/utils/reportCalculations';
-import type { ProjectData } from '@/dtos/entities/ProjectAggregateDTO';
+import type { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 
 interface ProjectGanttProps {
-  project: ProjectData;
+  project: ProjectDTO;
   phases?: any[];
   compact?: boolean;
 }
