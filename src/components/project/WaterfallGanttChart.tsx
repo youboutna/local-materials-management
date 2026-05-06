@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Calendar, ChevronLeft, ChevronRight, BarChart3, Clock, Users, DollarSign } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSameMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import type { ProjectStatus } from '@/dtos/entities/ProjectWithPaymentsDTO';
-
-interface GanttTask {
+/**
+ * GanttTaskDTO (camelCase strict) consommé par `WaterfallGanttChart`.
+ * Le mapping depuis les phases hex/repos est effectué dans le parent.
+ */
+export interface GanttTaskDTO {
   id: string;
   name: string;
   startDate: Date;
@@ -21,17 +23,20 @@ interface GanttTask {
   procurementStep?: number;
 }
 
+// Alias rétrocompatible
+type GanttTask = GanttTaskDTO;
+
 interface WaterfallGanttChartProps {
   tasks: GanttTask[];
   projectStartDate?: Date;
   projectEndDate?: Date;
-  ProjectTitle: string;
-  ProjectDescription: string;
-  ProjectLocation: string;
-  ProjectStatus: ProjectStatus;
-  ProjectProgress: number;
-  projectBudget: number;
-  ProjectTeamSize: number;
+  ProjectTitle?: string;
+  ProjectDescription?: string;
+  ProjectLocation?: string;
+  ProjectStatus?: string;
+  ProjectProgress?: number;
+  projectBudget?: number;
+  ProjectTeamSize?: number;
 }
 
 const WaterfallGanttChart: React.FC<WaterfallGanttChartProps> = ({
