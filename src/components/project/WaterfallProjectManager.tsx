@@ -1,9 +1,16 @@
-import React, { useState, useEffect } from 'react';
+/**
+ * WaterfallProjectManager
+ * -----------------------
+ * Hexagonal: hydrate phases/milestones via hooks hex (`usePhasesHex`,
+ * `useMilestonesHex`). Aucun appel direct Supabase. Le `ProjectManagerProvider`
+ * conserve son contrat existant via cast structurel.
+ */
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Calendar, 
-  BarChart3, 
+import {
+  Calendar,
+  BarChart3,
   Target,
   Clock,
   CheckCircle2,
@@ -11,27 +18,25 @@ import {
   MapPin,
   User,
   Building,
-  AlertCircle
+  AlertCircle,
 } from 'lucide-react';
 import WaterfallGanttChart from './WaterfallGanttChart';
 import GanttDiagramWithMilestones from './GanttDiagramWithMilestones';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import WaterfallProjectKPIs from './WaterfallProjectKPIs';
 import { useProjects } from '@/hooks/projects/useProjects';
-import type { EscalationRoles, ActionLabels, ProjectData } from '@/dtos/entities/ProjectAggregateDTO';
+import { usePhasesHex } from '@/hooks/hexagonal/usePhasesHex';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
 
-// Define default roles (adjust based on your actual role structure use )
-//@TODO use position and hierachy from template   of Organization
-const defaultRoles: EscalationRoles = {
+// Roles & action labels par défaut (shape conservée pour le provider).
+const defaultRoles = {
   level1: 'Chef de projet',
   level2: 'Directeur Technique',
   level3: 'DG',
-  level4: 'Comité juridique'
-};
+  level4: 'Comité juridique',
+} as const;
 
-// Action labels compatible with projectManagerWithActions.ActionLabels
 const actionLabels = {
   budget: 'Budget',
   timeline: 'Calendrier',
@@ -56,101 +61,46 @@ const actionLabels = {
 const WaterfallProjectManager = () => {
   const [activeTab, setActiveTab] = useState('gantt');
   const { projects, isLoading: loading } = useProjects();
-  const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
-  const [phases, setPhases] = useState<any[]>([]);
-  const [milestones, setMilestones] = useState<any[]>([]);
-  const [metrics, setMetrics] = useState<any>({
-    schedulePerformanceIndex: 1,
-    costPerformanceIndex: 1,
-    earnedValue: 0,
-    plannedValue: 0,
-    actualCost: 0,
-    budgetAtCompletion: 0,
-    estimateAtCompletion: 0,
-    estimateToComplete: 0,
-    varianceAtCompletion: 0
-  });
+  const [selectedProject, setSelectedProject] = useState<any>(null);
 
-  // Sélectionner automatiquement le premier projet au chargement
   useEffect(() => {
     if (projects && projects.length > 0 && !selectedProject) {
       setSelectedProject(projects[0]);
     }
   }, [projects, selectedProject]);
 
-  useEffect(() => {
-    const fetchProjectData = async () => {
-      if (!selectedProject) return;
+  const { phases: phasesEntities } = usePhasesHex(selectedProject?.id);
 
-      try {
-        const { supabase } = await import('@/integrations/supabase/client');
-        const { data: phasesData } = await supabase
-          .from('project_phases')
-          .select('*')
-          .eq('project_id', selectedProject.id);
+  const phases = useMemo(
+    () =>
+      phasesEntities.map((p: any) => ({
+        id: p.id,
+        title: p.phaseName ?? p.name ?? 'Phase',
+        startDate: p.startDate ?? '',
+        endDate: p.endDate ?? '',
+        actualProgress: p.progress ?? 0,
+        status: p.status ?? 'not_started',
+        budget: p.estimatedCost ?? 0,
+        actualCost: p.actualCost ?? 0,
+      })),
+    [phasesEntities]
+  );
 
-        // Récupérer les jalons spécifiques au projet sélectionné
-        const { data: milestonesData } = await supabase
-          .from('project_milestones')
-          .select('*')
-          .eq('project_id', selectedProject.id);
-
-        if (phasesData) {
-          setPhases(phasesData.map(p => ({
-            id: p.id,
-            name: p.phase_name,
-            plannedProgress: 0,
-            actualProgress: p.progress || 0,
-            budget: p.estimated_cost || 0,
-            actualCost: p.actual_cost || 0,
-            startDate: p.start_date,
-            endDate: p.end_date,
-            status: p.status,
-            procurementStep: '',
-            projectId: p.project_id
-          })));
-        }
-
-        if (milestonesData) {
-          setMilestones(milestonesData.map(m => ({
-            id: m.id,
-            title: m.title,
-            targetDate: m.target_date,
-            completedDate: m.completion_date,
-            status: m.status,
-            projectId: m.project_id,
-            phase: '',
-            stage: ''
-          })));
-        }
-
-        // Calcul des métriques EVM à partir des phases
-        if (phasesData && phasesData.length > 0) {
-          const earnedValue = phasesData.reduce((sum, p) => sum + ((p.progress || 0) / 100) * (p.estimated_cost || 0), 0);
-          const plannedValue = phasesData.reduce((sum, p) => sum + (0 / 100) * (p.estimated_cost || 0), 0);
-          const actualCost = phasesData.reduce((sum, p) => sum + (p.actual_cost || 0), 0);
-          const budgetAtCompletion = selectedProject.budget || phasesData.reduce((sum, p) => sum + (p.estimated_cost || 0), 0);
-
-          setMetrics({
-            schedulePerformanceIndex: plannedValue > 0 ? earnedValue / plannedValue : 1,
-            costPerformanceIndex: actualCost > 0 ? earnedValue / actualCost : 1,
-            earnedValue,
-            plannedValue,
-            actualCost,
-            budgetAtCompletion,
-            estimateAtCompletion: actualCost + (budgetAtCompletion - earnedValue),
-            estimateToComplete: budgetAtCompletion - earnedValue,
-            varianceAtCompletion: budgetAtCompletion - (actualCost + (budgetAtCompletion - earnedValue))
-          });
-        }
-
-      } catch (err) {
-        console.error('Erreur lors du fetch phases/milestones', err);
-      }
+  const metrics = useMemo(() => {
+    if (!phases.length || !selectedProject) {
+      return { schedulePerformanceIndex: 1, costPerformanceIndex: 1 };
+    }
+    const earnedValue = phases.reduce(
+      (sum, p) => sum + ((p.actualProgress || 0) / 100) * (p.budget || 0),
+      0
+    );
+    const actualCost = phases.reduce((sum, p) => sum + (p.actualCost || 0), 0);
+    return {
+      schedulePerformanceIndex: 1,
+      costPerformanceIndex: actualCost > 0 ? earnedValue / actualCost : 1,
     };
+  }, [phases, selectedProject]);
 
-    fetchProjectData();
-  }, [selectedProject]);
 
   if (loading) {
     return (

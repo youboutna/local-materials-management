@@ -127,19 +127,30 @@ export function usePhaseHex(phaseId?: string): UsePhaseHexResult {
 /**
  * Hook for phases list by project with CRUD operations
  */
+export interface UpdatePhaseData {
+  phase_name?: string;
+  description?: string;
+  start_date?: string;
+  end_date?: string;
+  estimated_cost?: number;
+  status?: string;
+  progress?: number;
+}
+
 export interface UsePhasesHexResult {
   phases: Phase[];
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
   createPhase: (data: CreatePhaseData) => Promise<Phase | null>;
+  updatePhase: (phaseId: string, data: UpdatePhaseData) => Promise<boolean>;
   deletePhase: (phaseId: string) => Promise<boolean>;
   isCreating: boolean;
   isDeleting: boolean;
+  isUpdating: boolean;
 }
 
 export function usePhasesHex(projectId: string | undefined): UsePhasesHexResult {
-  // Initialize repository inside hook
   const phaseRepository = useMemo(
     () => RepositoryFactory.getPhaseRepository(),
     []
@@ -149,6 +160,7 @@ export function usePhasesHex(projectId: string | undefined): UsePhasesHexResult 
   const [error, setError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const fetchPhases = useCallback(async () => {
     if (!projectId) {
@@ -201,6 +213,29 @@ export function usePhasesHex(projectId: string | undefined): UsePhasesHexResult 
     }
   }, [projectId, fetchPhases, phaseRepository]);
 
+  const updatePhase = useCallback(async (phaseId: string, data: UpdatePhaseData): Promise<boolean> => {
+    setIsUpdating(true);
+    try {
+      const updates: Record<string, unknown> = {};
+      if (data.phase_name !== undefined) updates.name = data.phase_name;
+      if (data.description !== undefined) updates.description = data.description;
+      if (data.start_date !== undefined) updates.startDate = data.start_date;
+      if (data.end_date !== undefined) updates.endDate = data.end_date;
+      if (data.estimated_cost !== undefined) updates.estimatedCost = data.estimated_cost;
+      if (data.status !== undefined) updates.status = data.status;
+      if (data.progress !== undefined) updates.progress = data.progress;
+      await phaseRepository.update(phaseId, updates as unknown as Partial<Phase>);
+      await fetchPhases();
+      return true;
+    } catch (err) {
+      console.error('Failed to update phase:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update phase');
+      return false;
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [fetchPhases, phaseRepository]);
+
   const deletePhase = useCallback(async (phaseId: string): Promise<boolean> => {
     setIsDeleting(true);
     try {
@@ -222,8 +257,10 @@ export function usePhasesHex(projectId: string | undefined): UsePhasesHexResult 
     error,
     refetch: fetchPhases,
     createPhase,
+    updatePhase,
     deletePhase,
     isCreating,
     isDeleting,
+    isUpdating,
   };
 }
