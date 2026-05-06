@@ -216,15 +216,15 @@ export function usePhasesHex(projectId: string | undefined): UsePhasesHexResult 
   const updatePhase = useCallback(async (phaseId: string, data: UpdatePhaseData): Promise<boolean> => {
     setIsUpdating(true);
     try {
-      const updates: Partial<Phase> = {};
-      if (data.phase_name !== undefined) (updates as any).name = data.phase_name;
-      if (data.description !== undefined) (updates as any).description = data.description;
-      if (data.start_date !== undefined) (updates as any).startDate = data.start_date ? new Date(data.start_date) : undefined;
-      if (data.end_date !== undefined) (updates as any).endDate = data.end_date ? new Date(data.end_date) : undefined;
-      if (data.estimated_cost !== undefined) (updates as any).estimatedCost = data.estimated_cost;
-      if (data.status !== undefined) (updates as any).status = data.status as PhaseStatus;
-      if (data.progress !== undefined) (updates as any).progress = data.progress;
-      await phaseRepository.update(phaseId, updates);
+      const updates: Record<string, unknown> = {};
+      if (data.phase_name !== undefined) updates.name = data.phase_name;
+      if (data.description !== undefined) updates.description = data.description;
+      if (data.start_date !== undefined) updates.startDate = data.start_date;
+      if (data.end_date !== undefined) updates.endDate = data.end_date;
+      if (data.estimated_cost !== undefined) updates.estimatedCost = data.estimated_cost;
+      if (data.status !== undefined) updates.status = data.status;
+      if (data.progress !== undefined) updates.progress = data.progress;
+      await phaseRepository.update(phaseId, updates as unknown as Partial<Phase>);
       await fetchPhases();
       return true;
     } catch (err) {
