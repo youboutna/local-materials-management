@@ -387,6 +387,7 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
     if (phase.description !== undefined) entity.description = phase.description;
     if (phase.status !== undefined) entity.status = phase.status;
     if (phase.progress !== undefined) entity.progress = phase.progress;
+    if ((phase as any).estimatedCost !== undefined) (entity as any).estimated_cost = (phase as any).estimatedCost;
     
     if (phase.startDate !== undefined) {
       entity.start_date = phase.startDate instanceof Date 
