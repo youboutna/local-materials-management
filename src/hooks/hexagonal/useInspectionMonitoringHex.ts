@@ -60,12 +60,36 @@ export function useInspectionMonitoringHex(options?: {
   const queryClient = useQueryClient();
   const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
 
-  // Fetch inspections
+  // Fetch inspections - map domain Inspection -> flat MonitoringInspection (camelCase strings)
   const inspectionsQuery = useQuery({
     queryKey: ['inspection-monitoring', options?.inspectorName],
-    queryFn: async () => {
+    queryFn: async (): Promise<MonitoringInspection[]> => {
       const data = await inspectionService.getAllInspections();
-      return (data || []) as unknown as MonitoringInspection[];
+      const list = (data || []).map((i: any): MonitoringInspection => {
+        const insp = i.inspector;
+        const inspectorName = typeof insp === 'string'
+          ? insp
+          : (insp?.name || insp?.id || '');
+        const dateRaw = i.date instanceof Date ? i.date.toISOString() : (i.date || '');
+        return {
+          id: i.id,
+          project_id: i.projectId || i.project_id || '',
+          inspector: inspectorName,
+          date: dateRaw,
+          status: typeof i.status === 'string' ? i.status : String(i.status ?? 'pending'),
+          progress_at_inspection: i.progressAtInspection ?? i.progress_at_inspection ?? 0,
+          comments: i.comments ?? null,
+          created_at: i.createdAt || i.created_at || '',
+          updated_at: i.updatedAt || i.updated_at || '',
+          phase_id: i.phaseId ?? i.phase_id ?? null,
+          documents: Array.isArray(i.documents) ? i.documents : [],
+        };
+      });
+      if (options?.filterByInspector && options?.inspectorName) {
+        const needle = options.inspectorName.toLowerCase();
+        return list.filter(x => x.inspector.toLowerCase().includes(needle));
+      }
+      return list;
     }
   });
 

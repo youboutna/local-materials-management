@@ -141,11 +141,17 @@ const RoleBasedInspectionMonitoring = () => {
     }
   }, [searchParams, inspections]);
 
+  const safeDateInput = (raw: string | undefined | null): string => {
+    if (!raw) return '';
+    const d = new Date(raw);
+    return isNaN(d.getTime()) ? '' : d.toISOString().split('T')[0];
+  };
+
   const openEditDialog = (inspection: MonitoringInspection) => {
     setEditingInspection(inspection);
     setEditFormData({
       inspector: inspection.inspector,
-      date: new Date(inspection.date).toISOString().split('T')[0],
+      date: safeDateInput(inspection.date),
       status: inspection.status,
       progress_at_inspection: inspection.progress_at_inspection || 0,
       comments: inspection.comments || ''

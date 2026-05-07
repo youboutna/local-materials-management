@@ -283,48 +283,73 @@ const WaterfallProjectManager = () => {
             </TabsList>
 
             <TabsContent value="gantt" className="space-y-4">
-              <WaterfallGanttChart 
-                tasks={phases.map(p => ({
-                  id: p.id,
-                  name: p.title,
-                  startDate: new Date(p.startDate),
-                  endDate: new Date(p.endDate),
-                  progress: p.actualProgress,
-                  phase: p.title,
-                  status: p.status,
-                  procurementStep: 1,
-                  assignedTo: '',
-                  budget: p.budget
-                }))}
-                projectStartDate={new Date(Math.min(...phases.map(p => new Date(p.startDate).getTime())))}
-                projectEndDate={new Date(Math.max(...phases.map(p => new Date(p.endDate).getTime())))}
-                ProjectTitle={selectedProject.title}
-                ProjectDescription={selectedProject.description}
-                ProjectLocation={selectedProject.location}
-                ProjectStatus={selectedProject.status}
-                ProjectProgress={selectedProject.progress}
-                projectBudget={selectedProject.budget}
-                ProjectTeamSize={selectedProject.teamSize}
-              />
+              {(() => {
+                const parse = (v: any) => {
+                  if (!v) return null;
+                  const d = new Date(v);
+                  return isNaN(d.getTime()) ? null : d;
+                };
+                const ganttTasks = phases
+                  .map(p => ({
+                    id: p.id,
+                    name: p.title,
+                    startDate: parse(p.startDate),
+                    endDate: parse(p.endDate),
+                    progress: p.actualProgress,
+                    phase: p.title,
+                    status: p.status,
+                    procurementStep: 1,
+                    assignedTo: '',
+                    budget: p.budget
+                  }))
+                  .filter(t => t.startDate && t.endDate) as any[];
+                const starts = ganttTasks.map(t => t.startDate.getTime());
+                const ends = ganttTasks.map(t => t.endDate.getTime());
+                return (
+                  <WaterfallGanttChart
+                    tasks={ganttTasks}
+                    projectStartDate={starts.length ? new Date(Math.min(...starts)) : undefined}
+                    projectEndDate={ends.length ? new Date(Math.max(...ends)) : undefined}
+                    ProjectTitle={selectedProject.title}
+                    ProjectDescription={selectedProject.description}
+                    ProjectLocation={selectedProject.location}
+                    ProjectStatus={selectedProject.status}
+                    ProjectProgress={selectedProject.progress}
+                    projectBudget={selectedProject.budget}
+                    ProjectTeamSize={selectedProject.teamSize}
+                  />
+                );
+              })()}
             </TabsContent>
 
             <TabsContent value="gantt-diagram" className="space-y-4">
-              <GanttDiagramWithMilestones
-                projectTitle={selectedProject?.title || 'Projet sans nom'}
-                projectPeriod={{
-                  start: selectedProject?.startDate ? new Date(selectedProject.startDate) : new Date(),
-                  end: selectedProject?.endDate ? new Date(selectedProject.endDate) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-                }}
-                phases={phases.map(p => ({
-                  id: p.id,
-                  name: p.title,
-                  startDate: new Date(p.startDate),
-                  endDate: new Date(p.endDate),
-                  progress: p.actualProgress || 0,
-                  status: p.status === 'completed' ? 'completed' : p.status === 'in_progress' ? 'in_progress' : 'planned'
-                }))}
-                milestones={ReportCalculations.calculateMilestoneStatus(selectedProject?.progress || 0)}
-              />
+              {(() => {
+                const parse = (v: any) => {
+                  if (!v) return null;
+                  const d = new Date(v);
+                  return isNaN(d.getTime()) ? null : d;
+                };
+                const projStart = parse(selectedProject?.startDate) || new Date();
+                const projEnd = parse(selectedProject?.endDate) || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+                const diagramPhases = phases
+                  .map(p => ({
+                    id: p.id,
+                    name: p.title,
+                    startDate: parse(p.startDate),
+                    endDate: parse(p.endDate),
+                    progress: p.actualProgress || 0,
+                    status: p.status === 'completed' ? 'completed' : p.status === 'in_progress' ? 'in_progress' : 'planned'
+                  }))
+                  .filter(p => p.startDate && p.endDate) as any[];
+                return (
+                  <GanttDiagramWithMilestones
+                    projectTitle={selectedProject?.title || 'Projet sans nom'}
+                    projectPeriod={{ start: projStart, end: projEnd }}
+                    phases={diagramPhases}
+                    milestones={ReportCalculations.calculateMilestoneStatus(selectedProject?.progress || 0)}
+                  />
+                );
+              })()}
             </TabsContent>
 
             <TabsContent value="analytics" className="space-y-4">

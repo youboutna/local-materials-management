@@ -39,12 +39,17 @@ interface WaterfallGanttChartProps {
   ProjectTeamSize?: number;
 }
 
+const isValidDate = (d: unknown): d is Date => d instanceof Date && !isNaN(d.getTime());
+
 const WaterfallGanttChart: React.FC<WaterfallGanttChartProps> = ({
   tasks,
-  projectStartDate = new Date(),
-  projectEndDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+  projectStartDate,
+  projectEndDate
 }) => {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const safeStart = isValidDate(projectStartDate) ? projectStartDate! : new Date();
+  const safeEnd = isValidDate(projectEndDate) ? projectEndDate! : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+  const safeTasks = (tasks || []).filter(t => isValidDate(t.startDate) && isValidDate(t.endDate));
+  const [currentDate, setCurrentDate] = useState<Date>(safeStart);
   const [viewMode, setViewMode] = useState<'month' | 'quarter' | 'year'>('month');
 
   // Mauritanian Procurement Workflow Steps
@@ -119,11 +124,11 @@ const WaterfallGanttChart: React.FC<WaterfallGanttChartProps> = ({
   const days = getDaysInView();
 
   // Calculate KPIs
-  const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(t => t.status === 'completed').length;
-  const delayedTasks = tasks.filter(t => t.status === 'delayed').length;
+  const totalTasks = safeTasks.length;
+  const completedTasks = safeTasks.filter(t => t.status === 'completed').length;
+  const delayedTasks = safeTasks.filter(t => t.status === 'delayed').length;
   const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-  const totalBudget = tasks.reduce((sum, task) => sum + (task.budget || 0), 0);
+  const totalBudget = safeTasks.reduce((sum, task) => sum + (task.budget || 0), 0);
 
   return (
     <div className="space-y-6">
@@ -222,7 +227,7 @@ const WaterfallGanttChart: React.FC<WaterfallGanttChartProps> = ({
 
           {/* Tasks */}
           <div className="space-y-3">
-            {tasks.map((task) => {
+            {safeTasks.map((task) => {
               const position = getTaskPosition(task, days);
               const procurementStep = procurementSteps.find(step => step.id === task.procurementStep);
               
