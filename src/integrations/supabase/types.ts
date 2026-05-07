@@ -2080,7 +2080,10 @@ export type Database = {
           id: string
           last_updated: string
           notes: string | null
+          price_reported_at: string | null
           product: string
+          queue_status: string
+          reported_price: number | null
           station_id: string
           status: string
           updated_at: string
@@ -2091,7 +2094,10 @@ export type Database = {
           id?: string
           last_updated?: string
           notes?: string | null
+          price_reported_at?: string | null
           product: string
+          queue_status?: string
+          reported_price?: number | null
           station_id: string
           status?: string
           updated_at?: string
@@ -2102,7 +2108,10 @@ export type Database = {
           id?: string
           last_updated?: string
           notes?: string | null
+          price_reported_at?: string | null
           product?: string
+          queue_status?: string
+          reported_price?: number | null
           station_id?: string
           status?: string
           updated_at?: string
@@ -2116,8 +2125,12 @@ export type Database = {
           changed_by: string | null
           id: string
           notes: string | null
+          previous_queue_status: string | null
+          previous_reported_price: number | null
           previous_status: string | null
           product: string
+          queue_status: string | null
+          reported_price: number | null
           station_id: string
           status: string
         }
@@ -2126,8 +2139,12 @@ export type Database = {
           changed_by?: string | null
           id?: string
           notes?: string | null
+          previous_queue_status?: string | null
+          previous_reported_price?: number | null
           previous_status?: string | null
           product: string
+          queue_status?: string | null
+          reported_price?: number | null
           station_id: string
           status: string
         }
@@ -2136,8 +2153,12 @@ export type Database = {
           changed_by?: string | null
           id?: string
           notes?: string | null
+          previous_queue_status?: string | null
+          previous_reported_price?: number | null
           previous_status?: string | null
           product?: string
+          queue_status?: string | null
+          reported_price?: number | null
           station_id?: string
           status?: string
         }
