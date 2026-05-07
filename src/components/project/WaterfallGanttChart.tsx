@@ -124,9 +124,9 @@ const WaterfallGanttChart: React.FC<WaterfallGanttChartProps> = ({
   const days = getDaysInView();
 
   // Calculate KPIs
-  const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(t => t.status === 'completed').length;
-  const delayedTasks = tasks.filter(t => t.status === 'delayed').length;
+  const totalTasks = safeTasks.length;
+  const completedTasks = safeTasks.filter(t => t.status === 'completed').length;
+  const delayedTasks = safeTasks.filter(t => t.status === 'delayed').length;
   const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
   const totalBudget = tasks.reduce((sum, task) => sum + (task.budget || 0), 0);
 
@@ -227,7 +227,7 @@ const WaterfallGanttChart: React.FC<WaterfallGanttChartProps> = ({
 
           {/* Tasks */}
           <div className="space-y-3">
-            {tasks.map((task) => {
+            {safeTasks.map((task) => {
               const position = getTaskPosition(task, days);
               const procurementStep = procurementSteps.find(step => step.id === task.procurementStep);
               
