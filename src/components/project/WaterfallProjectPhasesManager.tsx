@@ -425,43 +425,33 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
           </TabsContent>
 
           <TabsContent value="gantt" className="space-y-4">
-            <WaterfallGanttChart
-              tasks={phases
-                .filter((p) => p.startDate && p.endDate)
+            {(() => {
+              const parse = (v: any) => {
+                if (!v) return null;
+                const d = new Date(v);
+                return isNaN(d.getTime()) ? null : d;
+              };
+              const ganttTasks = phases
                 .map((p) => ({
                   id: p.id,
                   name: p.title,
-                  startDate: new Date(p.startDate),
-                  endDate: new Date(p.endDate),
+                  startDate: parse(p.startDate),
+                  endDate: parse(p.endDate),
                   progress: p.actualProgress,
                   phase: p.title,
                   status: p.status,
                   procurementStep: 1,
                   assignedTo: '',
                   budget: p.budget,
-                }))}
-              projectStartDate={
-                phases.length
-                  ? new Date(
-                      Math.min(
-                        ...phases
-                          .filter((p) => p.startDate)
-                          .map((p) => new Date(p.startDate).getTime())
-                      )
-                    )
-                  : undefined
-              }
-              projectEndDate={
-                phases.length
-                  ? new Date(
-                      Math.max(
-                        ...phases
-                          .filter((p) => p.endDate)
-                          .map((p) => new Date(p.endDate).getTime())
-                      )
-                    )
-                  : undefined
-              }
+                }))
+                .filter((t) => t.startDate && t.endDate) as any[];
+              const starts = ganttTasks.map((t) => t.startDate.getTime());
+              const ends = ganttTasks.map((t) => t.endDate.getTime());
+              return (
+                <WaterfallGanttChart
+                  tasks={ganttTasks}
+                  projectStartDate={starts.length ? new Date(Math.min(...starts)) : undefined}
+                  projectEndDate={ends.length ? new Date(Math.max(...ends)) : undefined}
               ProjectTitle={selectedProject.title}
               ProjectDescription={selectedProject.description}
               ProjectLocation={selectedProject.location}
