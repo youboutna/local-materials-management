@@ -452,14 +452,16 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
                   tasks={ganttTasks}
                   projectStartDate={starts.length ? new Date(Math.min(...starts)) : undefined}
                   projectEndDate={ends.length ? new Date(Math.max(...ends)) : undefined}
-              ProjectTitle={selectedProject.title}
-              ProjectDescription={selectedProject.description}
-              ProjectLocation={selectedProject.location}
-              ProjectStatus={selectedProject.status}
-              ProjectProgress={selectedProject.progress}
-              projectBudget={selectedProject.budget}
-              ProjectTeamSize={selectedProject.teamSize}
-            />
+                  ProjectTitle={selectedProject.title}
+                  ProjectDescription={selectedProject.description}
+                  ProjectLocation={selectedProject.location}
+                  ProjectStatus={selectedProject.status}
+                  ProjectProgress={selectedProject.progress}
+                  projectBudget={selectedProject.budget}
+                  ProjectTeamSize={selectedProject.teamSize}
+                />
+              );
+            })()}
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-4">
