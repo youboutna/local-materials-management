@@ -128,7 +128,7 @@ const WaterfallGanttChart: React.FC<WaterfallGanttChartProps> = ({
   const completedTasks = safeTasks.filter(t => t.status === 'completed').length;
   const delayedTasks = safeTasks.filter(t => t.status === 'delayed').length;
   const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-  const totalBudget = tasks.reduce((sum, task) => sum + (task.budget || 0), 0);
+  const totalBudget = safeTasks.reduce((sum, task) => sum + (task.budget || 0), 0);
 
   return (
     <div className="space-y-6">
