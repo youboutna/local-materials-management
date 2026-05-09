@@ -36,7 +36,20 @@ export class ProjectBudgetLink {
   readonly updatedAt: string;
 
   private constructor(p: ProjectBudgetLinkProps) {
-    Object.assign(this, p);
+    this.id = p.id;
+    this.projectId = p.projectId;
+    this.ministryCode = p.ministryCode;
+    this.programCode = p.programCode;
+    this.actionCode = p.actionCode;
+    this.chapterCode = p.chapterCode;
+    this.lineCode = p.lineCode;
+    this.allocatedCe = p.allocatedCe;
+    this.allocatedCp = p.allocatedCp;
+    this.fiscalYear = p.fiscalYear;
+    this.notes = p.notes;
+    this.createdBy = p.createdBy;
+    this.createdAt = p.createdAt;
+    this.updatedAt = p.updatedAt;
   }
 
   static create(p: ProjectBudgetLinkProps): ProjectBudgetLink {
