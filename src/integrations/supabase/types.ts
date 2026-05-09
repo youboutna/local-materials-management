@@ -5195,6 +5195,57 @@ export type Database = {
         }
         Relationships: []
       }
+      project_budget_links: {
+        Row: {
+          action_code: string | null
+          allocated_ce: number | null
+          allocated_cp: number | null
+          chapter_code: string | null
+          created_at: string | null
+          created_by: string | null
+          fiscal_year: number | null
+          id: string | null
+          line_code: string | null
+          ministry_code: string | null
+          notes: string | null
+          program_code: string | null
+          project_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          action_code?: string | null
+          allocated_ce?: number | null
+          allocated_cp?: number | null
+          chapter_code?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          fiscal_year?: number | null
+          id?: string | null
+          line_code?: string | null
+          ministry_code?: string | null
+          notes?: string | null
+          program_code?: string | null
+          project_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          action_code?: string | null
+          allocated_ce?: number | null
+          allocated_cp?: number | null
+          chapter_code?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          fiscal_year?: number | null
+          id?: string | null
+          line_code?: string | null
+          ministry_code?: string | null
+          notes?: string | null
+          program_code?: string | null
+          project_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       project_materials: {
         Row: {
           created_at: string | null
@@ -5386,6 +5437,51 @@ export type Database = {
           stakeholder_entity_type?: string | null
           stakeholder_type?: string | null
           supplier_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      project_strategy_links: {
+        Row: {
+          chantier_code: string | null
+          contribution_pct: number | null
+          created_at: string | null
+          created_by: string | null
+          id: string | null
+          intervention_code: string | null
+          justification: string | null
+          lever_code: string | null
+          objective_code: string | null
+          project_id: string | null
+          source_referential: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          chantier_code?: string | null
+          contribution_pct?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string | null
+          intervention_code?: string | null
+          justification?: string | null
+          lever_code?: string | null
+          objective_code?: string | null
+          project_id?: string | null
+          source_referential?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          chantier_code?: string | null
+          contribution_pct?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string | null
+          intervention_code?: string | null
+          justification?: string | null
+          lever_code?: string | null
+          objective_code?: string | null
+          project_id?: string | null
+          source_referential?: string | null
           updated_at?: string | null
         }
         Relationships: []
