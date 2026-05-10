@@ -51,6 +51,10 @@ export { SupabaseSupplierPaymentAdapter } from './SupabaseSupplierPaymentAdapter
 export { SupabaseContactMessageAdapter } from './SupabaseContactMessageAdapter';
 export { SupabaseMonitoringAlertAdapter } from './SupabaseMonitoringAlertAdapter';
 
+// Strategic linkage adapters
+export { SupabaseProjectStrategyLinkAdapter } from './SupabaseProjectStrategyLinkAdapter';
+export { SupabaseProjectBudgetLinkAdapter } from './SupabaseProjectBudgetLinkAdapter';
+
 // Auth adapters (multi-provider support)
 export { KeycloakAuthAdapter } from './KeycloakAuthAdapter';
 export { Auth0Adapter } from './Auth0Adapter';

@@ -15,6 +15,7 @@ import {
   Layers,
   MapPin,
   Save,
+  Target,
   Users,
 } from "lucide-react";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
@@ -56,6 +57,7 @@ import { PhaseDTO, PhaseType, PhaseStatus, PhasePriority } from "@/dtos/entities
 import { LocationDTO } from "@/dtos/shared";
 import { generatePhaseTypeFromReferentialPhase, generateDynamicPhaseType } from '@/utils/phaseTypeGenerator';
 import ProjectInfoStep from "./steps/ProjectInfoStep";
+import StrategicLinkageStep from "./steps/StrategicLinkageStep";
 
 interface ProjectCreationWorkflowProps {
   onSubmit: (data: ProjectWorkflowData) => void;
@@ -178,6 +180,14 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     },
     {
       id: 7,
+      title: "Liaisons stratégiques",
+      icon: Target,
+      description: "SCAPP et Loi de Finances 2026",
+      color: "bg-purple-500",
+      isCompleted: () => true,
+    },
+    {
+      id: 8,
       title: "Validation",
       icon: CheckCircle,
       description: "Réception définitive et clôture",
@@ -315,7 +325,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       </Card>
 
       {/* Steps Navigation */}
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-8 gap-2">
         {steps.map((step, idx) => (
           <motion.button
             key={step.id}
@@ -452,7 +462,29 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
              />
            )}
 
-          {currentStep === 6 && (
+           {currentStep === 6 && (
+             <StrategicLinkageStep
+               projectId={formData?.projectId || ''}
+               onStrategyLinksChange={(links) => {
+                 updateFormData({
+                   relatedData: {
+                     ...formData?.relatedData,
+                     strategyLinks: links
+                   }
+                 });
+               }}
+               onBudgetLinksChange={(links) => {
+                 updateFormData({
+                   relatedData: {
+                     ...formData?.relatedData,
+                     budgetLinks: links
+                   }
+                 });
+               }}
+             />
+           )}
+
+          {currentStep === 7 && (
             <div className="space-y-4">
               <h3 className="font-semibold">Résumé du Projet</h3>
               <Card>

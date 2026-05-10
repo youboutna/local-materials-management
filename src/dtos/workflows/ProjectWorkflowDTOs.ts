@@ -15,6 +15,8 @@ import { DocumentDTO } from '../entities/DocumentDTO';
 import { InsuranceCertificateDTO } from '../entities/InsuranceDTO';
 import { BankGuaranteeDTO } from '../entities/BankGuaranteeDTO';
 import { ComplianceItemDTO } from '../entities/ComplianceDTO';
+import { ProjectStrategyLinkDTO } from '../entities/ProjectStrategyLinkDTO';
+import { ProjectBudgetLinkDTO } from '../entities/ProjectBudgetLinkDTO';
 
 export interface ProjectWorkflowData {
   projectId?: string;
@@ -42,6 +44,8 @@ export interface StepRelatedDataDTO {
   compliance?: ComplianceDataDTO;
   tasks?: TaskDTO[];
   inspections?: InspectionDTO[];
+  strategyLinks?: ProjectStrategyLinkDTO[];
+  budgetLinks?: ProjectBudgetLinkDTO[];
 }
 
 export interface ComplianceDataDTO {

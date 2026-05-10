@@ -55,6 +55,8 @@ import {
   IMissionExpenseRepository,
   IContactMessageRepository,
 } from '@/domain/repositories';
+import type { IProjectStrategyLinkRepository } from '@/domain/repositories/IProjectStrategyLinkRepository';
+import type { IProjectBudgetLinkRepository } from '@/domain/repositories/IProjectBudgetLinkRepository';
 
 import { ILocationRepository } from '@/domain/repositories/LocationRepository';
 
@@ -108,6 +110,8 @@ import { IStakeholderRepository } from '@/domain/repositories/IStakeholderReposi
 import { SupabaseWorkspaceAdapter } from './adapters/SupabaseWorkspaceAdapter';
 
 import { LocationRepository } from './adapters/LocationRepository';
+import { SupabaseProjectStrategyLinkAdapter } from './adapters/SupabaseProjectStrategyLinkAdapter';
+import { SupabaseProjectBudgetLinkAdapter } from './adapters/SupabaseProjectBudgetLinkAdapter';
 
 /**
  * Repository Registry - Enhanced Singleton Management
@@ -159,6 +163,8 @@ interface RepositoryRegistry {
   locationRepository?: ILocationRepository;
   missionExpenseRepository?: IMissionExpenseRepository;
   contactMessageRepository?: IContactMessageRepository;
+  projectStrategyLinkRepository?: IProjectStrategyLinkRepository;
+  projectBudgetLinkRepository?: IProjectBudgetLinkRepository;
 }
 
 /**
@@ -728,5 +734,27 @@ export class RepositoryFactory {
       repositoryRegistry.contactMessageRepository = new SupabaseContactMessageAdapter();
     }
     return repositoryRegistry.contactMessageRepository;
+  }
+
+  /**
+   * Get Project Strategy Link Repository instance
+   * Lazy loaded for memory efficiency
+   */
+  static getProjectStrategyLinkRepository(): IProjectStrategyLinkRepository {
+    if (!repositoryRegistry.projectStrategyLinkRepository) {
+      repositoryRegistry.projectStrategyLinkRepository = new SupabaseProjectStrategyLinkAdapter();
+    }
+    return repositoryRegistry.projectStrategyLinkRepository;
+  }
+
+  /**
+   * Get Project Budget Link Repository instance
+   * Lazy loaded for memory efficiency
+   */
+  static getProjectBudgetLinkRepository(): IProjectBudgetLinkRepository {
+    if (!repositoryRegistry.projectBudgetLinkRepository) {
+      repositoryRegistry.projectBudgetLinkRepository = new SupabaseProjectBudgetLinkAdapter();
+    }
+    return repositoryRegistry.projectBudgetLinkRepository;
   }
 }
