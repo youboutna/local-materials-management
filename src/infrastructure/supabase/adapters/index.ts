@@ -56,6 +56,3 @@ export { SupabaseProjectStrategyLinkAdapter } from './SupabaseProjectStrategyLin
 export { SupabaseProjectBudgetLinkAdapter } from './SupabaseProjectBudgetLinkAdapter';
 
 // Auth adapters (multi-provider support)
-export { KeycloakAuthAdapter } from './KeycloakAuthAdapter';
-export { Auth0Adapter } from './Auth0Adapter';
-export { DatabaseAuthAdapter } from './DatabaseAuthAdapter';
