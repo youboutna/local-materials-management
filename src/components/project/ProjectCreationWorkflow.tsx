@@ -59,6 +59,23 @@ import { generatePhaseTypeFromReferentialPhase, generateDynamicPhaseType } from 
 import ProjectInfoStep from "./steps/ProjectInfoStep";
 import StrategicLinkageStep from "./steps/StrategicLinkageStep";
 
+// Référentiel central des étapes (PROMPTS.md Rule #3 + ARCHITECTURE_REFERENTIELS)
+import {
+  PROJECT_WORKFLOW_STEPS,
+  type WorkflowStepIcon,
+} from "@/config/referentials/projects/project-workflow-steps.referential";
+
+const STEP_ICON_MAP: Record<WorkflowStepIcon, React.ComponentType<{ className?: string }>> = {
+  building: Building,
+  users: Users,
+  "map-pin": MapPin,
+  layers: Layers,
+  "alert-triangle": AlertTriangle,
+  "file-check": FileCheck,
+  target: Target,
+  "check-circle": CheckCircle,
+};
+
 interface ProjectCreationWorkflowProps {
   onSubmit: (data: ProjectWorkflowData) => void;
   selectedMaterials: Array<{ materialId: string; quantity: number }>;
@@ -66,6 +83,8 @@ interface ProjectCreationWorkflowProps {
     materials: Array<{ materialId: string; quantity: number }>
   ) => void;
   initialData?: ProjectWorkflowData;
+  mode?: "create" | "edit";
+  projectId?: string;
 }
 
 const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
@@ -73,7 +92,10 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   selectedMaterials,
   onMaterialsChange,
   initialData,
+  mode = "create",
+  projectId,
 }) => {
+
   // ⚡ Application Layer - Use unified workflow hook for all state management (Rule #5)
   const {
     workflowState,
