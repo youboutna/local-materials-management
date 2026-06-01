@@ -232,7 +232,7 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
                   </TabsContent>
                   
                   <TabsContent value="advanced" className="space-y-4">
-                    <AdvancedQuantityCalculator />
+                    <AdvancedQuantityCalculator projectId={projectId} onPersisted={() => { handleTakeoffAdded(); setIsFormDialogOpen(false); }} />
                     <div className="flex justify-end gap-2">
                       <Button variant="outline" onClick={() => setIsFormDialogOpen(false)}>
                         {t('project.cancel')}

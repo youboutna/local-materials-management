@@ -11,12 +11,13 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Calculator, Upload, X, Trash2, Download, SkipForward, SkipBack } from "lucide-react";
+import { Calculator, Upload, X, Trash2, Download, SkipForward, SkipBack, Save } from "lucide-react";
 import * as pdfjsLib from "pdfjs-dist";
 import Papa from "papaparse";
 import { toast } from "@/hooks/use-toast";
 import { calculateAdvancedQuantities, parsePdf } from "@/utils/btpCalculations";
 import { CalculationParams, mapToElementType, elementTypes, Opening, CalculationResult, InvoiceLine, STANDARD_OPENINGS } from "@/utils/types";
+import { useCreateQuantityTakeoff, useMaterialsForTakeoff } from "@/hooks/hexagonal/useQuantityTakeoffHex";
 
 // PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = window.location.origin + "/pdf.worker.min.js";
@@ -253,7 +254,13 @@ const getRecommendations = (elementType: string) => {
 };
 
 
-const AdvancedQuantityCalculator: React.FC = () => {
+interface AdvancedQuantityCalculatorProps {
+  projectId?: string;
+  phaseId?: string;
+  onPersisted?: () => void;
+}
+
+const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({ projectId, phaseId, onPersisted }) => {
   const [form, setForm] = useState(DEFAULT_FORM);
   const [calculations, setCalculations] = useState<CalculationResult[]>([]);
   const [invoiceLines, setInvoiceLines] = useState<InvoiceLine[]>([]);
@@ -278,6 +285,71 @@ const AdvancedQuantityCalculator: React.FC = () => {
   });
   const [showEditOpeningForm, setShowEditOpeningForm] = useState(false);
   const [planMessage, setPlanMessage] = useState<string | null>(null);
+  const [selectedMaterialId, setSelectedMaterialId] = useState<string>("");
+  const [savingAll, setSavingAll] = useState(false);
+  const { data: materials = [] } = useMaterialsForTakeoff();
+  const createTakeoff = useCreateQuantityTakeoff(projectId ?? "");
+
+  // Extract primary numeric quantity from results (volume m³ > area m² > length m > count)
+  const extractQuantity = (calc: CalculationResult): { qty: number; unit: string } => {
+    const r = calc.results || {};
+    const num = (k: string) => (typeof r[k] === "number" ? (r[k] as number) : undefined);
+    const volume = num("Volume béton (m³)") ?? num("Volume (m³)") ?? num("volume");
+    if (volume) return { qty: volume, unit: "m³" };
+    const area = num("Surface (m²)") ?? num("Surface nette (m²)") ?? num("area");
+    if (area) return { qty: area, unit: "m²" };
+    const length = num("Longueur (m)") ?? calc.dimensions?.length;
+    if (length) return { qty: length, unit: "m" };
+    const count = num("Nombre") ?? num("count");
+    if (count) return { qty: count, unit: "unité" };
+    return { qty: 1, unit: calc.metadata?.unit ?? "unité" };
+  };
+
+  const persistCalculation = async (calc: CalculationResult) => {
+    if (!projectId || !selectedMaterialId) return;
+    const { qty, unit } = extractQuantity(calc);
+    await createTakeoff.mutateAsync({
+      material_id: selectedMaterialId,
+      element_type: calc.elementType || "basic_calculator",
+      unit,
+      length: calc.dimensions?.length ?? 0,
+      width: calc.dimensions?.width ?? 0,
+      height: calc.dimensions?.height ?? 0,
+      quantity: qty,
+      note: JSON.stringify({
+        phaseId,
+        originalLabel: calc.originalLabel,
+        results: calc.results,
+        openings: calc.openings,
+      }),
+    });
+  };
+
+  const handleSaveAll = async () => {
+    if (!projectId) {
+      toast({ title: "Contexte projet manquant", description: "Ouvrez le calculateur depuis un projet pour sauvegarder.", variant: "destructive" });
+      return;
+    }
+    if (!selectedMaterialId) {
+      toast({ title: "Matériau requis", description: "Sélectionnez un matériau de référence.", variant: "destructive" });
+      return;
+    }
+    if (calculations.length === 0) return;
+    setSavingAll(true);
+    try {
+      for (const calc of calculations) {
+        await persistCalculation(calc);
+      }
+      toast({ title: "Métrés enregistrés", description: `${calculations.length} ligne(s) ajoutée(s) au projet.` });
+      onPersisted?.();
+    } catch (e: any) {
+      toast({ title: "Erreur d'enregistrement", description: e?.message ?? "Échec", variant: "destructive" });
+    } finally {
+      setSavingAll(false);
+    }
+  };
+
+
 
 
   const currentElement = elementTypes.find(el => el.value === form.elementType);
@@ -562,8 +634,31 @@ const AdvancedQuantityCalculator: React.FC = () => {
       {/* Results Table */}
       {calculations.length > 0 && (
         <Card>
-          <CardHeader>
+          <CardHeader className="space-y-3">
             <CardTitle>Résultats des calculs ({calculations.length} éléments)</CardTitle>
+            {projectId && (
+              <div className="flex flex-wrap items-end gap-2 border-t pt-3">
+                <div className="flex-1 min-w-[220px]">
+                  <Label className="text-xs">Matériau de référence (requis)</Label>
+                  <Select value={selectedMaterialId} onValueChange={setSelectedMaterialId}>
+                    <SelectTrigger><SelectValue placeholder="Sélectionner un matériau..." /></SelectTrigger>
+                    <SelectContent>
+                      {materials.map((m: any) => (
+                        <SelectItem key={m.id} value={m.id}>{m.name} ({m.unit})</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  onClick={handleSaveAll}
+                  disabled={savingAll || !selectedMaterialId || calculations.length === 0}
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  {savingAll ? "Enregistrement..." : `Enregistrer ${calculations.length} métré(s) dans le projet`}
+                </Button>
+                {phaseId && <Badge variant="outline" className="ml-2">Phase associée</Badge>}
+              </div>
+            )}
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <div className="border rounded-lg overflow-hidden">
