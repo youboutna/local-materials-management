@@ -281,12 +281,8 @@ Fait à ${inspection.projects?.location || 'Lieu'}, le ${format(new Date(), 'dd 
       if (!inspectionId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
       }
-
-      // For now, return empty array as PV repository is not available
-      // TODO: Implement proper PV retrieval when PV repository is available
-      console.warn('PVGeneratorService.getInspectionPVs: PV repository not available');
-      
-      return [];
+      const rows = await this.pvRepository.getInspectionPVs(inspectionId);
+      return (rows || []).map(this.mapRecordToGeneratedPV);
     } catch (error) {
       console.error('PVGeneratorService.getInspectionPVs failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get inspection PVs');
@@ -301,13 +297,8 @@ Fait à ${inspection.projects?.location || 'Lieu'}, le ${format(new Date(), 'dd 
       if (!pvId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'PV ID is required');
       }
-
-      // For now, return null as PV repository is not available
-      // TODO: Implement proper PV download when PV repository is available
-      console.warn('PVGeneratorService.downloadPV: PV repository not available');
-      console.log(`Downloading PV: ${pvId}`);
-      
-      return null;
+      const record = await this.pvRepository.getPVById(pvId);
+      return (record?.pdf_url as string | undefined) ?? null;
     } catch (error) {
       console.error('PVGeneratorService.downloadPV failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to download PV');
@@ -322,15 +313,45 @@ Fait à ${inspection.projects?.location || 'Lieu'}, le ${format(new Date(), 'dd 
       if (!pvId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'PV ID is required');
       }
-
-      // For now, return null as PV repository is not available
-      // TODO: Implement proper PV retrieval when PV repository is available
-      console.warn('PVGeneratorService.getPVById: PV repository not available');
-      
-      return null;
+      const record = await this.pvRepository.getPVById(pvId);
+      return record ? this.mapRecordToGeneratedPV(record) : null;
     } catch (error) {
       console.error('PVGeneratorService.getPVById failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get PV by ID');
     }
   }
+
+  private mapRecordToGeneratedPV(record: Record<string, unknown>): GeneratedPV {
+    const metadata = (record.metadata as Record<string, unknown> | null) || {};
+    return {
+      id: String(record.id),
+      inspection_id: String(record.inspection_id),
+      pv_type: record.pv_type as PVType,
+      pv_number: String(record.pv_number),
+      title: (record.title as string) || '',
+      header: (metadata.header as GeneratedPV['header']) || {
+        project_title: '',
+        inspection_date: '',
+        inspection_type: record.pv_type as PVType,
+        location: '',
+      },
+      participants: [],
+      object: '',
+      observations_summary: (record.content as string) || '',
+      observations_table: [],
+      conclusions: (metadata.conclusions as GeneratedPV['conclusions']) || {
+        overall_status: 'conform' as ConformityStatus,
+        summary: '',
+      },
+      recommendations: [],
+      signatures: [],
+      annexes: [],
+      status: (record.status as GeneratedPV['status']) || 'draft',
+      generated_at: String(record.generated_at),
+      generated_by: (record.generated_by as string) || '',
+      version: Number(record.version) || 1,
+      pdf_url: (record.pdf_url as string) || undefined,
+    };
+  }
 }
+
