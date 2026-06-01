@@ -136,7 +136,16 @@ export class TenderSharingService {
       console.warn('TenderSharingService.getSharedDocuments failed', error);
       return [];
     }
-    return data ?? [];
+    return (data ?? [])
+      .filter((d: any) => d && d.id && d.title)
+      .map((d: any) => ({
+        id: String(d.id),
+        title: String(d.title),
+        description: d.description ?? null,
+        file_url: d.file_url ?? null,
+        document_type: d.document_type ?? null,
+      }));
   }
 }
+
 
