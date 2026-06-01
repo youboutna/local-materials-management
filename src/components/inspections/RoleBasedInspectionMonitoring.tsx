@@ -197,22 +197,23 @@ const RoleBasedInspectionMonitoring = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, { variant: string; icon: React.ReactNode }> = {
-      pending: { variant: 'secondary', icon: <Clock className="h-3 w-3" /> },
-      in_progress: { variant: 'default', icon: <Calendar className="h-3 w-3" /> },
-      completed: { variant: 'outline', icon: <CheckCircle className="h-3 w-3" /> },
-      approved: { variant: 'default', icon: <UserCheck className="h-3 w-3" /> },
-      rejected: { variant: 'destructive', icon: <AlertTriangle className="h-3 w-3" /> }
+    const def = getInspectionStatus(status);
+    const iconMap: Record<string, React.ReactNode> = {
+      pending: <Clock className="h-3 w-3" />,
+      scheduled: <Calendar className="h-3 w-3" />,
+      in_progress: <Calendar className="h-3 w-3" />,
+      completed: <CheckCircle className="h-3 w-3" />,
+      failed: <AlertTriangle className="h-3 w-3" />,
+      cancelled: <AlertTriangle className="h-3 w-3" />,
     };
-    
-    const config = variants[status] || variants.pending;
     return (
-      <Badge variant={config.variant as any} className="flex items-center gap-1">
-        {config.icon}
-        {status}
+      <Badge variant={def.tone as any} className="flex items-center gap-1">
+        {iconMap[def.code] ?? <Clock className="h-3 w-3" />}
+        {getInspectionStatusLabel(def.code)}
       </Badge>
     );
   };
+
 
   return (
     <div className="space-y-6">
