@@ -82,17 +82,34 @@ export class ReportingService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
       }
 
-      // Fetch all required data in parallel using repository
+      // Résolution profil + sections via le référentiel (jamais codé en dur).
+      const profile: ReportProfile = request.profile ?? 'detailed';
+      const sections: Record<ReportSectionKey, boolean> = {
+        ...defaultSectionsFor(profile),
+        ...(request.sections ?? {}),
+      };
+      const profileCfg = getReportProfile(profile);
+      const depth = profileCfg.depth;
+      const wantLight = depth === 'light';
+
+      // Fetch sélectif : on évite les appels coûteux quand la section n'est pas demandée.
+      const wantPhases = sections.phases || sections.evmAnalysis || sections.pertAnalysis || sections.kpi;
+      const wantInspections = sections.inspections;
+
       const [
         reportDTO,
         realCosts,
         phases,
-        inspections
+        inspections,
       ] = await Promise.all([
         this.reportingRepository.transformProjectForReport(request.project),
         this.reportingRepository.calculateRealProjectCosts(request.project.id),
-        this.reportingRepository.getProjectPhases(request.project.id),
-        this.reportingRepository.getProjectInspections(request.project.id)
+        wantPhases
+          ? this.reportingRepository.getProjectPhases(request.project.id)
+          : Promise.resolve([] as any[]),
+        wantInspections
+          ? this.reportingRepository.getProjectInspections(request.project.id)
+          : Promise.resolve([] as any[]),
       ]);
 
       const phasesData = phases || [];
