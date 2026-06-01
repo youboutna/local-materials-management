@@ -39,10 +39,10 @@ const PhaseDetail: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useLanguage();
 
-  const { phase, loading } = usePhaseDetails(phaseId);
+  const { phase, isLoading: loading, error } = usePhaseDetails(phaseId);
 
   const stage = useMemo(
-    () => (phase ? getPhaseLifecycleStage({ type: phase.type, status: phase.status }) : 'PLANIFICATION'),
+    () => (phase ? getPhaseLifecycleStage({ type: (phase as any).phaseType || (phase as any).type, status: phase.status }) : 'PLANIFICATION'),
     [phase]
   );
   const stageMeta = getLifecycleStageMeta(stage);
