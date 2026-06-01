@@ -318,9 +318,9 @@ export function ProjectPDFDocument({
               };
               
               return [
-                p.name || 'Sans nom',
-                `${p.actualProgress || 0}%`,
-                statusMap[p.status] || p.status || 'Non défini',
+                p.title || p.name || '—',
+                `${p.actualProgress ?? p.progress ?? 0}%`,
+                statusMap[p.status] || p.status || '—',
                 p.budget ? `${p.budget.toLocaleString('fr-FR')} MRU` : '0 MRU',
                 p.actualCost ? `${p.actualCost.toLocaleString('fr-FR')} MRU` : '0 MRU',
                 ((p.actualCost || 0) - (p.budget || 0)).toLocaleString('fr-FR') + ' MRU'
