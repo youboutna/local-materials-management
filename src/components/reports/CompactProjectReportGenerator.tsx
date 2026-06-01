@@ -310,8 +310,8 @@ export function CompactProjectReportGenerator({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center gap-4">
-          <div className="flex-1">
+        <div className="grid gap-4 md:grid-cols-[1fr_auto_auto] md:items-end">
+          <div>
             <Label htmlFor="report-title">Titre du Rapport</Label>
             <Input
               id="report-title"
@@ -319,6 +319,21 @@ export function CompactProjectReportGenerator({
               onChange={(e) => setReportTitle(e.target.value)}
               placeholder="Entrez le titre du rapport"
             />
+          </div>
+          <div className="min-w-[200px]">
+            <Label htmlFor="report-profile">Profil</Label>
+            <Select value={profile} onValueChange={(v) => setProfile(v as ReportProfile)}>
+              <SelectTrigger id="report-profile">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.values(REPORT_PROFILES).map((p) => (
+                  <SelectItem key={p.code} value={p.code}>
+                    {p.label.fr}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <Button
             onClick={generatePDF}
