@@ -664,8 +664,8 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
               <SelectItem value="all">Tous statuts</SelectItem>
               <SelectItem value="pending">En attente</SelectItem>
               <SelectItem value="in_progress">En cours</SelectItem>
-              <SelectItem value="completed">TerminÃ</SelectItem>
-              <SelectItem value="blocked">BloquÃ</SelectItem>
+              <SelectItem value="completed">Terminé</SelectItem>
+              <SelectItem value="blocked">Bloqué</SelectItem>
             </SelectContent>
           </Select>
           
@@ -679,7 +679,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
-                  {editingId ? 'Modifier la tâche' : 'CrÃer une nouvelle tâche'}
+                  {editingId ? 'Modifier la tâche' : 'Créer une nouvelle tâche'}
                 </DialogTitle>
               </DialogHeader>
               
@@ -697,7 +697,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                   </div>
                   
                   <div>
-                    <Label htmlFor="priority">PrioritÃ</Label>
+                    <Label htmlFor="priority">Priorité</Label>
                     <Select value={formData.priority} onValueChange={(value) => setFormData({ ...formData, priority: value })}>
                       <SelectTrigger>
                         <SelectValue />
@@ -705,7 +705,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                       <SelectContent>
                         <SelectItem value="low">Faible</SelectItem>
                         <SelectItem value="medium">Moyenne</SelectItem>
-                        <SelectItem value="high">ÉlevÃe</SelectItem>
+                        <SelectItem value="high">Élevée</SelectItem>
                         <SelectItem value="urgent">Urgente</SelectItem>
                       </SelectContent>
                     </Select>
@@ -735,7 +735,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
 
                   {!formData.applyToAllPhases && (
                     <div>
-                      <Label htmlFor="phaseSelect">SÃlectionner une ou plusieurs phases</Label>
+                      <Label htmlFor="phaseSelect">Sélectionner une ou plusieurs phases</Label>
                       <div className="border rounded-md p-3 max-h-48 overflow-y-auto bg-background">
                         {currentPhases.length === 0 ? (
                           <p className="text-sm text-muted-foreground">Aucune phase disponible</p>
@@ -787,7 +787,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                       </div>
                       {currentPhases.length === 0 && (
                         <p className="text-xs text-muted-foreground mt-1">
-                          Aucune phase trouvÃe. CrÃeze d'abord des phases dans l'onglet Phases.
+                          Aucune phase trouvée. Créez d'abord des phases dans l'onglet Phases.
                         </p>
                       )}
                     </div>
@@ -798,7 +798,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                   <Label htmlFor="assignedTo">AssignÃ </Label>
                   <Select value={formData.assigned_to} onValueChange={(value) => setFormData({ ...formData, assigned_to: value })}>
                     <SelectTrigger>
-                      <SelectValue placeholder="SÃlectionner un profil" />
+                      <SelectValue placeholder="Sélectionner un profil" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="employees">Employees (Internal Staff)</SelectItem>
@@ -825,7 +825,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="due_date">Date d'ÃchÃance</Label>
+                    <Label htmlFor="due_date">Date d'échéance</Label>
                     <Input
                       id="due_date"
                       type="date"
@@ -843,8 +843,8 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                       <SelectContent>
                         <SelectItem value="pending">En attente</SelectItem>
                         <SelectItem value="in_progress">En cours</SelectItem>
-                        <SelectItem value="completed">TerminÃ</SelectItem>
-                        <SelectItem value="blocked">BloquÃ</SelectItem>
+                        <SelectItem value="completed">Terminé</SelectItem>
+                        <SelectItem value="blocked">Bloqué</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -855,7 +855,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                     Annuler
                   </Button>
                   <Button type="submit">
-                    {editingId ? 'Mettre Ã  jour' : 'CrÃer'}
+                    {editingId ? 'Mettre Ã  jour' : 'Créer'}
                   </Button>
                 </div>
               </form>
@@ -937,9 +937,9 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
             <CardContent className="p-6">
               <div className="text-center">
                 <Target className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-2 text-sm font-semibold text-gray-900">Aucune tâche trouvÃe</h3>
+                <h3 className="mt-2 text-sm font-semibold text-gray-900">Aucune tâche trouvée</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Commencez par crÃer une nouvelle tâche pour ce projet.
+                  Commencez par créer une nouvelle tâche pour ce projet.
                 </p>
               </div>
             </CardContent>
