@@ -71,18 +71,29 @@ const PhaseDetail: React.FC = () => {
       <AppLayout pageTitle="Phase">
         <div className="container mx-auto px-4 py-8 text-center">
           <h1 className="text-2xl font-bold text-destructive mb-2">Phase non trouvée</h1>
+          {error && <p className="text-sm text-muted-foreground mb-4">{(error as Error).message}</p>}
           <Button onClick={() => navigate(`/projects/${projectId}`)}>Retour au projet</Button>
         </div>
       </AppLayout>
     );
   }
 
+  // Normalize entity → view model (Phase entity uses phaseName/phaseType/estimatedCost)
+  const title = (phase as any).title || (phase as any).phaseName || 'Phase';
+  const description = (phase as any).description || '';
+  const progress = (phase as any).progress ?? 0;
+  const budget = (phase as any).budget ?? (phase as any).estimatedCost ?? 0;
+  const estimatedDuration = (phase as any).estimatedDuration ?? 0;
+  const startDate = (phase as any).startDate || '';
+  const endDate = (phase as any).endDate || '';
+  const location = (phase as any).location || '';
+
   return (
-    <AppLayout pageTitle={phase.title} pageDescription={stageMeta.description}>
-      <div className="container mx-auto px-4 py-6 space-y-6">
+    <AppLayout pageTitle={title} pageDescription={stageMeta.description}>
+      <div className="container mx-auto px-4 py-4 space-y-4">
         {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
             <Button
               variant="outline"
               size="sm"
@@ -90,11 +101,11 @@ const PhaseDetail: React.FC = () => {
               className="flex items-center gap-2"
               aria-label="Retour au projet"
             >
-              <ArrowLeft className="h-4 w-4" /> Retour au projet
+              <ArrowLeft className="h-4 w-4" /> Retour
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">{phase.title}</h1>
-              <p className="text-muted-foreground mt-1">{phase.description}</p>
+              <h1 className="text-xl md:text-2xl font-bold text-foreground leading-tight">{title}</h1>
+              {description && <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{description}</p>}
             </div>
           </div>
           <div className="flex items-center gap-2">
