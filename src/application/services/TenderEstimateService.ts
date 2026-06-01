@@ -583,5 +583,35 @@ export class TenderEstimateService {
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to calculate estimate totals');
     }
   }
+
+  /**
+   * Map repository TenderEstimateItem entity (from TenderEstimate.ts) to DTO
+   */
+  private mapItemEntityToDTO(entity: unknown): TenderEstimateItemDTO {
+    const e = entity as {
+      id: string; estimateId: string; itemCode?: string; description?: string;
+      unit?: string; quantity: number; unitPrice: number; totalPrice: number;
+      category?: string; specifications?: string; materialId?: string; itemType?: string;
+      createdAt?: string; updatedAt?: string;
+    };
+    const now = new Date().toISOString();
+    return {
+      id: e.id,
+      estimate_id: e.estimateId,
+      material_id: e.materialId,
+      item_code: e.itemCode ?? '',
+      description: e.description ?? '',
+      unit: e.unit ?? 'unit',
+      quantity: Number(e.quantity) || 0,
+      unit_price: Number(e.unitPrice) || 0,
+      total_price: Number(e.totalPrice) || 0,
+      category: e.category,
+      specifications: e.specifications,
+      item_type: e.itemType,
+      line_total: Number(e.totalPrice) || 0,
+      created_at: e.createdAt ?? now,
+      updated_at: e.updatedAt ?? now,
+    };
+  }
 }
 
