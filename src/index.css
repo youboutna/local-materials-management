@@ -148,8 +148,11 @@
 }
 
 /* Enhanced responsive utilities */
+/* Pleine largeur à côté de la sidebar : pas de `container mx-auto` qui ajoute
+   des marges latérales superflues. Padding compact pour rapprocher le menu
+   du contenu. */
 .container-responsive {
-  @apply container mx-auto px-4 sm:px-6 lg:px-8;
+  @apply w-full px-3 sm:px-4 lg:px-6;
 }
 
 .grid-responsive {
