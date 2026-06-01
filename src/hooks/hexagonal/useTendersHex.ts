@@ -236,7 +236,7 @@ export function useProjectPhasesForTender(projectId?: string, tenderId?: string)
     queryKey: ['tender-project-phases', projectId, tenderId],
     queryFn: async (): Promise<{ projectInfo: { id: string; title: string } | null; phases: ProjectPhaseForTender[] }> => {
       if (!projectId) return { projectInfo: null, phases: [] };
-      const phaseRepo = RepositoryFactory.getProjectPhaseRepository();
+      const phaseRepo = RepositoryFactory.getPhaseRepository();
       const projectRepo = RepositoryFactory.getProjectRepository();
       const [project, phases] = await Promise.all([
         projectRepo.findById(projectId),
@@ -267,7 +267,7 @@ export function useProjectPhasesForLots(projectId?: string) {
     queryKey: ['project-phases-for-lots', projectId],
     queryFn: async () => {
       if (!projectId) return [];
-      const phaseRepo = RepositoryFactory.getProjectPhaseRepository();
+      const phaseRepo = RepositoryFactory.getPhaseRepository();
       const phases = await phaseRepo.findByProjectId(projectId);
       return (phases || []).map((p: Record<string, unknown>, idx: number) => ({
         id: String(p.id),
