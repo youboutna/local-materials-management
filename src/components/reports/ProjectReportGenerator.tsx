@@ -109,8 +109,15 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
         setReportData(completeReport.reportData);
         setCostCalculation(completeReport.costCalculation);
         setEnrichedData(completeReport.reportDTO);
-        
-        // Calculate EVM metrics with enhanced data
+        setDeviations(completeReport.deviations || []);
+        setHealthScore(completeReport.healthScore || null);
+
+        // Calculate EVM metrics with enhanced data — utiliser realCosts en priorité
+        const actualCostForEvm = Number(
+          (completeReport.realCosts as any)?.totalSpent
+            ?? completeReport.costCalculation.actualCost
+            ?? 0,
+        );
         const evmMetricsResult = ReportCalculations.calculateEVMMetrics(
           project, 
           completeReport.costCalculation.actualCost,
