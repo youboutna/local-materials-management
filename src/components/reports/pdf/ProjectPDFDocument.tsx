@@ -589,7 +589,94 @@ export function ProjectPDFDocument({
         </PDFSection>
       )}
 
-      {/* Notes additionnelles */}
+      {/* Diagramme de Gantt — vue tabulaire phases sur timeline */}
+      {reportConfig.includeSections.ganttChart && enrichedData?.phases && enrichedData.phases.length > 0 && (
+        <PDFSection title="Diagramme de Gantt" borderColor="#0891b2">
+          <PDFTable
+            headers={['Phase', 'Début', 'Fin', 'Durée (j)', 'Avancement', 'Statut']}
+            data={enrichedData.phases.map((p: any) => {
+              const start = p.startDate ? new Date(p.startDate) : null;
+              const end = p.endDate ? new Date(p.endDate) : null;
+              const duration = start && end ? Math.max(0, Math.round((end.getTime() - start.getTime()) / 86400000)) : 0;
+              return [
+                p.name || p.title || 'Phase',
+                start ? format(start, 'dd/MM/yyyy') : '—',
+                end ? format(end, 'dd/MM/yyyy') : '—',
+                duration.toString(),
+                `${Math.round(p.progress ?? 0)}%`,
+                p.status || '—',
+              ];
+            })}
+            columnWidths={['30%', '15%', '15%', '12%', '13%', '15%']}
+          />
+        </PDFSection>
+      )}
+
+      {/* Blocages de paiements */}
+      {reportConfig.includeSections.paymentBlocks && safeReportData.paymentBlocks.length > 0 && (
+        <PDFSection title="Blocages de Paiements" borderColor="#dc2626">
+          <PDFTable
+            headers={['Référence', 'Motif', 'Montant', 'Statut', 'Date']}
+            data={safeReportData.paymentBlocks.map((b: any) => [
+              b.reference || b.id || '—',
+              b.reason || b.cause || '—',
+              b.amount != null ? `${Number(b.amount).toLocaleString('fr-FR')} ${project.currency || 'MRU'}` : '—',
+              b.status || 'bloqué',
+              b.createdAt ? format(new Date(b.createdAt), 'dd/MM/yyyy') : '—',
+            ])}
+            columnWidths={['20%', '30%', '20%', '15%', '15%']}
+          />
+        </PDFSection>
+      )}
+
+      {/* Fournisseurs */}
+      {reportConfig.includeSections.suppliers && safeReportData.suppliers.length > 0 && (
+        <PDFSection title="Fournisseurs" borderColor="#7c3aed">
+          <PDFTable
+            headers={['Nom', 'Contact', 'Catégorie', 'Statut']}
+            data={safeReportData.suppliers.map((s: any) => [
+              s.name || s.companyName || '—',
+              s.contactName || s.email || s.phone || '—',
+              s.category || s.type || '—',
+              s.status || 'actif',
+            ])}
+            columnWidths={['35%', '30%', '20%', '15%']}
+          />
+        </PDFSection>
+      )}
+
+      {/* Documents */}
+      {reportConfig.includeSections.documents && safeReportData.documents.length > 0 && (
+        <PDFSection title="Documents" borderColor="#0d9488">
+          <PDFTable
+            headers={['Titre', 'Type', 'Auteur', 'Date']}
+            data={safeReportData.documents.map((d: any) => [
+              d.title || d.name || d.fileName || '—',
+              d.type || d.documentType || '—',
+              d.author || d.uploadedBy || '—',
+              d.createdAt ? format(new Date(d.createdAt), 'dd/MM/yyyy') : (d.uploadedAt ? format(new Date(d.uploadedAt), 'dd/MM/yyyy') : '—'),
+            ])}
+            columnWidths={['40%', '20%', '20%', '20%']}
+          />
+        </PDFSection>
+      )}
+
+      {/* Alertes d'escalade */}
+      {reportConfig.includeSections.escalationAlerts && safeReportData.escalationAlerts.length > 0 && (
+        <PDFSection title="Alertes d'Escalade" borderColor="#ea580c">
+          <PDFTable
+            headers={['Sévérité', 'Catégorie', 'Message', 'Date']}
+            data={safeReportData.escalationAlerts.map((a: any) => [
+              (a.severity || a.level || 'info').toUpperCase(),
+              a.category || a.type || '—',
+              a.message || a.description || '—',
+              a.createdAt ? format(new Date(a.createdAt), 'dd/MM/yyyy HH:mm') : '—',
+            ])}
+            columnWidths={['15%', '20%', '50%', '15%']}
+          />
+        </PDFSection>
+      )}
+
       {reportConfig.notes && (
         <PDFSection title="Notes Additionnelles" borderColor="#6366f1">
           <PDFCard>
