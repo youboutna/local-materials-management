@@ -11,12 +11,13 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Calculator, Upload, X, Trash2, Download, SkipForward, SkipBack } from "lucide-react";
+import { Calculator, Upload, X, Trash2, Download, SkipForward, SkipBack, Save } from "lucide-react";
 import * as pdfjsLib from "pdfjs-dist";
 import Papa from "papaparse";
 import { toast } from "@/hooks/use-toast";
 import { calculateAdvancedQuantities, parsePdf } from "@/utils/btpCalculations";
 import { CalculationParams, mapToElementType, elementTypes, Opening, CalculationResult, InvoiceLine, STANDARD_OPENINGS } from "@/utils/types";
+import { useCreateQuantityTakeoff, useMaterialsForTakeoff } from "@/hooks/hexagonal/useQuantityTakeoffHex";
 
 // PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = window.location.origin + "/pdf.worker.min.js";
