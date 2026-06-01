@@ -19,7 +19,6 @@ import {
   ReportSectionKey,
   REPORT_PROFILES,
   REPORT_SECTION_LABELS,
-  ALL_REPORT_SECTIONS,
   defaultSectionsFor,
   getReportProfile,
 } from '@/config/referentials/reports/report-profiles.referential';
