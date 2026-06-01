@@ -779,11 +779,18 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   };
 
   // Calculate phases stats for header - MUST be before any early returns
-  const phasesStats = useMemo(() => ({
-    total: computedPhases.length || project?.phasesCount || 0,
-    completed: computedPhases.filter((p) => p.status === "completed").length || 0,
-    inProgress: computedPhases.filter((p) => p.status === "in_progress").length || 0,
-  }), [computedPhases, project?.phasesCount]);
+  // Any non-terminal/non-pending phase status is considered "in progress" to
+  // reflect dynamic workflow (inspection, validation, payment_request, etc.).
+  const TERMINAL_PHASE_STATUSES = new Set(["completed", "closed", "cancelled", "archived"]);
+  const PENDING_PHASE_STATUSES = new Set(["not_started", "pending", "draft", "planned"]);
+  const phasesStats = useMemo(() => {
+    const total = computedPhases.length || project?.phasesCount || 0;
+    const completed = computedPhases.filter((p) => p.status === "completed").length || 0;
+    const inProgress = computedPhases.filter(
+      (p) => !TERMINAL_PHASE_STATUSES.has(p.status) && !PENDING_PHASE_STATUSES.has(p.status),
+    ).length || 0;
+    return { total, completed, inProgress };
+  }, [computedPhases, project?.phasesCount]);
 
   const handleDelete = async (projectIdToDelete: string) => {
     if (
