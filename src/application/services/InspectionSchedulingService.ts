@@ -90,17 +90,24 @@ export const INSPECTION_TYPES = {
 
 export class InspectionSchedulingService {
   constructor(
-    private inspectionRepository: IInspectionRepository = RepositoryFactory.getInspectionRepository()
+    private inspectionRepository: IInspectionRepository = RepositoryFactory.getInspectionRepository(),
+    private employeeRepository = RepositoryFactory.getEmployeeRepository()
   ) {}
 
   /**
-   * Check inspector availability
+   * Check inspector availability for a given date.
+   * An inspector is unavailable if they already have an inspection assigned
+   * on the same calendar day.
    */
   async checkInspectorAvailability(request: CheckInspectorAvailabilityRequestDto): Promise<boolean> {
     try {
-      // Simple availability check - always return true for now
-      console.log(`[InspectionSchedulingService] Checking availability for inspector ${request.inspectorId} on ${request.date}`);
-      return true;
+      const existing = await this.inspectionRepository.findByInspector(request.inspectorId);
+      const day = request.date.slice(0, 10);
+      const conflict = (existing || []).some(insp => {
+        const d = (insp as unknown as { date?: string }).date;
+        return typeof d === 'string' && d.slice(0, 10) === day;
+      });
+      return !conflict;
     } catch (error) {
       console.error('Error checking inspector availability:', error);
       return false;
@@ -108,21 +115,22 @@ export class InspectionSchedulingService {
   }
 
   /**
-   * Schedule an inspection
+   * Schedule an inspection by updating it through the repository.
    */
   async scheduleInspection(request: ScheduleInspectionRequestDto): Promise<boolean> {
-    try {
-      // Validate request data
-      const validation = this.validateScheduleData(request);
-      if (!validation.isValid) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, `Validation failed: ${validation.errors.join(', ')}`);
-      }
+    const validation = this.validateScheduleData(request);
+    if (!validation.isValid) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, `Validation failed: ${validation.errors.join(', ')}`);
+    }
 
-      // For now, simulate scheduling as inspection repository is not available
-      // TODO: Implement proper inspection scheduling when inspection repository is available
-      console.warn('InspectionSchedulingService.scheduleInspection: Inspection repository not available');
-      console.log(`Scheduling inspection: ${request.inspectionId}`);
-      
+    try {
+      const scheduledAt = `${request.scheduledDate}T${request.scheduledTime || '09:00'}:00`;
+      await this.inspectionRepository.update(request.inspectionId, {
+        date: scheduledAt,
+        inspector: request.inspectorId,
+        status: 'scheduled',
+        comments: request.notes,
+      } as unknown as Parameters<IInspectionRepository['update']>[1]);
       return true;
     } catch (error) {
       console.error('InspectionSchedulingService.scheduleInspection failed:', error);
@@ -131,20 +139,30 @@ export class InspectionSchedulingService {
   }
 
   /**
-   * Get available inspectors for date range
+   * Get inspectors available within the requested window.
+   * Backed by EmployeeRepository.findInspectors().
    */
   async getAvailableInspectors(request: GetAvailableInspectorsRequestDto): Promise<AssignableInspector[]> {
-    try {
-      if (!request.startDate || !request.endDate) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Start date and end date are required');
-      }
+    if (!request.startDate || !request.endDate) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Start date and end date are required');
+    }
 
-      // For now, return mock data as inspector repository is not available
-      // TODO: Implement proper inspector retrieval when inspector repository is available
-      console.warn('InspectionSchedulingService.getAvailableInspectors: Inspector repository not available');
-      console.log(`Getting available inspectors for: ${request.startDate} to ${request.endDate}`);
-      
-      return [];
+    try {
+      const inspectors = await this.employeeRepository.findInspectors();
+      return (inspectors || []).map((emp) => {
+        const e = emp as unknown as Record<string, unknown>;
+        return {
+          id: String(e.id ?? ''),
+          name: String(e.fullName ?? e.full_name ?? e.name ?? 'Inspecteur'),
+          email: String(e.email ?? ''),
+          role: String(e.role ?? 'inspector'),
+          specializations: Array.isArray(e.specializations) ? (e.specializations as string[]) : [],
+          availability: {
+            startDate: request.startDate,
+            endDate: request.endDate,
+          },
+        };
+      });
     } catch (error) {
       console.error('InspectionSchedulingService.getAvailableInspectors failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get available inspectors');
