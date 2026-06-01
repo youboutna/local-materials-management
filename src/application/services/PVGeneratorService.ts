@@ -57,6 +57,7 @@ export class PVGeneratorService {
   private projectRepository: IProjectRepository;
   private phaseRepository: IPhaseRepository;
   private documentRepository: IDocumentRepository;
+  private pvRepository = RepositoryFactory.getPVGeneratorRepository();
 
   constructor() {
     this.inspectionRepository = RepositoryFactory.getInspectionRepository();
@@ -64,6 +65,7 @@ export class PVGeneratorService {
     this.phaseRepository = RepositoryFactory.getPhaseRepository();
     this.documentRepository = RepositoryFactory.getDocumentRepository();
   }
+
   /**
    * Generate PV from inspection data
    */
