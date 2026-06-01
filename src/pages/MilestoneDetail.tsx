@@ -97,10 +97,14 @@ const MilestoneDetail: React.FC = () => {
                 )}
                 <Button
                   variant="secondary"
-                  onClick={() => toggleMilestoneStatus(milestone.id, milestone.status)}
+                  onClick={async () => {
+                    const ok = await toggleMilestoneStatus(milestone.id, milestone.status);
+                    ok ? milestoneToasts.updateSuccess(milestone.title) : milestoneToasts.updateError();
+                  }}
                 >
                   {milestone.status === 'completed' ? 'Rouvrir' : 'Marquer terminé'}
                 </Button>
+
               </div>
             </CardContent>
           </Card>
