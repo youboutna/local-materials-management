@@ -17,6 +17,17 @@ import {
   ArrowRight,
   Shield,
   Zap,
+  ClipboardList,
+  HardHat,
+  Truck,
+  ScrollText,
+  Banknote,
+  ShieldCheck,
+  Bell,
+  Activity,
+  CheckSquare,
+  LayoutDashboard,
+  UserCog,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
