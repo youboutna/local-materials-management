@@ -111,19 +111,15 @@ function CascadingAutocomplete({
 }: CascadingAutocompleteProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<AutocompleteSuggestion[]>([]);
+  const [activeIndex, setActiveIndex] = useState<number>(-1);
+  const listboxId = useMemo(() => `lb-${label.replace(/\s+/g, '-')}`, [label]);
   const debouncedQuery = useDebounce(value, 300);
 
   // Helper to call searchFn with appropriate arguments based on whether parentCode is needed
   const callSearchFn = useCallback((query: string, parent?: string): AutocompleteSuggestion[] => {
-    // Check if the function expects parentCode (3 args) or just limit (2 args)
-    // Functions with parentCode parameter: searchChantiers, searchInterventions, searchObjectivesSuggestions, 
-    // searchBudgetPrograms, searchBudgetActions, searchBudgetLines
-    // Functions without parentCode: searchLevers, searchBudgetMinistries
     if (parent) {
-      // Call with parentCode parameter
       return (searchFn as (q: string, p?: string, l?: number) => AutocompleteSuggestion[])(query, parent, 20);
     } else {
-      // Call with just query (and optional limit)
       return (searchFn as (q: string, l?: number) => AutocompleteSuggestion[])(query, 20);
     }
   }, [searchFn]);
@@ -134,16 +130,18 @@ function CascadingAutocomplete({
       const results = callSearchFn(debouncedQuery, parentCode);
       setSuggestions(results);
       setIsOpen(results.length > 0);
+      setActiveIndex(results.length > 0 ? 0 : -1);
     } else if (parentCode && !value) {
-      // Auto-load all children when parent is selected
       const results = callSearchFn('', parentCode);
       setSuggestions(results);
       if (results.length > 0 && results.length <= 10) {
-        setIsOpen(true); // Auto-open if few results
+        setIsOpen(true);
+        setActiveIndex(0);
       }
     } else {
       setSuggestions([]);
       setIsOpen(false);
+      setActiveIndex(-1);
     }
   }, [debouncedQuery, callSearchFn, parentCode, value]);
 
@@ -151,15 +149,57 @@ function CascadingAutocomplete({
     onChange(suggestion.label.fr);
     onSelect(suggestion);
     setIsOpen(false);
+    setActiveIndex(-1);
   }, [onChange, onSelect]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!isOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp') && suggestions.length > 0) {
+      setIsOpen(true);
+      setActiveIndex(0);
+      e.preventDefault();
+      return;
+    }
+    if (!isOpen) return;
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setActiveIndex((i) => (i + 1) % suggestions.length);
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setActiveIndex((i) => (i <= 0 ? suggestions.length - 1 : i - 1));
+        break;
+      case 'Home':
+        e.preventDefault();
+        setActiveIndex(0);
+        break;
+      case 'End':
+        e.preventDefault();
+        setActiveIndex(suggestions.length - 1);
+        break;
+      case 'Enter':
+        if (activeIndex >= 0 && activeIndex < suggestions.length) {
+          e.preventDefault();
+          handleSelect(suggestions[activeIndex]);
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        setIsOpen(false);
+        setActiveIndex(-1);
+        break;
+    }
+  }, [isOpen, suggestions, activeIndex, handleSelect]);
 
   // Level colors for visual hierarchy
   const levelColors = [
-    'border-l-blue-500',   // Level 0 - Blue
-    'border-l-green-500',  // Level 1 - Green
-    'border-l-amber-500',  // Level 2 - Amber
-    'border-l-purple-500', // Level 3 - Purple
+    'border-l-blue-500',
+    'border-l-green-500',
+    'border-l-amber-500',
+    'border-l-purple-500',
   ];
+
+  const activeOptionId = activeIndex >= 0 ? `${listboxId}-opt-${activeIndex}` : undefined;
 
   return (
     <div className={`relative border-l-2 pl-3 ${levelColors[level % 4]}`}>
@@ -178,13 +218,14 @@ function CascadingAutocomplete({
             size="sm"
             onClick={onClear}
             className="h-6 px-2 text-xs text-muted-foreground"
+            aria-label={`Effacer ${label}`}
           >
             Effacer
           </Button>
         )}
       </div>
       <div className="relative mt-1">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
         <Input
           id={label}
           placeholder={parentCode && !value ? `${childrenCount || 0} options disponibles` : placeholder}
@@ -192,19 +233,22 @@ function CascadingAutocomplete({
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => suggestions.length > 0 && setIsOpen(true)}
           onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+          onKeyDown={handleKeyDown}
           disabled={disabled}
           className="pl-9"
           aria-autocomplete="list"
           aria-expanded={isOpen}
+          aria-controls={listboxId}
+          aria-activedescendant={activeOptionId}
           role="combobox"
         />
       </div>
-      
+
       {/* Selected item details */}
       {selectedSuggestion && !isOpen && (
         <div className="mt-2 rounded-md bg-muted/50 p-2 text-xs">
           <div className="flex items-start gap-2">
-            <Info className="h-3 w-3 mt-0.5 text-muted-foreground" />
+            <Info className="h-3 w-3 mt-0.5 text-muted-foreground" aria-hidden="true" />
             <div className="flex-1">
               <div className="font-medium">{selectedSuggestion.label.fr}</div>
               {selectedSuggestion.secondaryLabel && (
@@ -222,17 +266,19 @@ function CascadingAutocomplete({
           </div>
         </div>
       )}
-      
+
       {isOpen && suggestions.length > 0 && (
         <ScrollArea className="absolute z-50 mt-1 max-h-60 w-full rounded-md border bg-popover shadow-lg">
-          <ul role="listbox" className="py-1">
-            {suggestions.map((suggestion) => (
+          <ul id={listboxId} role="listbox" aria-label={label} className="py-1">
+            {suggestions.map((suggestion, idx) => (
               <li
                 key={suggestion.id}
+                id={`${listboxId}-opt-${idx}`}
                 role="option"
-                aria-selected={false}
-                className="flex cursor-pointer items-center justify-between px-3 py-2 text-sm hover:bg-accent"
-                onClick={() => handleSelect(suggestion)}
+                aria-selected={idx === activeIndex}
+                className={`flex cursor-pointer items-center justify-between px-3 py-2 text-sm hover:bg-accent ${idx === activeIndex ? 'bg-accent' : ''}`}
+                onMouseEnter={() => setActiveIndex(idx)}
+                onMouseDown={(e) => { e.preventDefault(); handleSelect(suggestion); }}
               >
                 <div className="flex-1">
                   <span className="font-medium">{suggestion.label.fr}</span>
