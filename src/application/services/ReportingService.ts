@@ -230,6 +230,8 @@ export class ReportingService {
         healthScore,
         realCosts,
         deviations,
+        profile,
+        sections,
       };
     } catch (error) {
       console.error('ReportingService.generateCompleteProjectReport failed:', error);
