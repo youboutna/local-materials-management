@@ -25,6 +25,12 @@ import {
   Eye,
   Bell,
   FolderOpen,
+  Compass,
+  HardHat,
+  ShieldCheck,
+  Flag,
+  Target,
+  BarChart3,
 } from "lucide-react";
 
 interface NavItem {
