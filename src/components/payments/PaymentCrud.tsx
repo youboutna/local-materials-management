@@ -668,28 +668,36 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                   </TableCell>
                 </TableRow>
               ) : (
-                payments.map((payment) => (
+                payments.map((payment) => {
+                  const proj = payment.projectId ? projectLabelMap.get(payment.projectId) : undefined;
+                  const projectLabel = proj?.ref || proj?.label || 'Projet non lié';
+                  return (
                   <TableRow key={payment.id}>
                     <TableCell>
-                      {payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString('fr-FR') : '-'}
+                      {payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString('fr-FR') : '—'}
                     </TableCell>
                     <TableCell>
-                      <Link 
-                        to={`/projects/${payment.projectId}`}
-                        className="text-primary hover:underline flex items-center gap-1"
-                      >
-                        {payment.projectId?.substring(0, 8)}...
-                        <ExternalLink className="h-3 w-3" />
-                      </Link>
+                      {payment.projectId ? (
+                        <Link
+                          to={`/projects/${payment.projectId}`}
+                          className="text-primary hover:underline inline-flex items-center gap-1 max-w-[180px] truncate"
+                          title={proj?.label || projectLabel}
+                        >
+                          <span className="truncate">{projectLabel}</span>
+                          <ExternalLink className="h-3 w-3 shrink-0" />
+                        </Link>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <div className="font-medium">{payment.contractorName}</div>
+                      <div className="font-medium">{payment.contractorName || '—'}</div>
+                      {payment.contractorContact && (
                         <div className="text-sm text-muted-foreground">{payment.contractorContact}</div>
-                      </div>
+                      )}
                     </TableCell>
-                    <TableCell className="font-medium">
-                      {payment.amount?.toLocaleString('fr-FR')} MRU
+                    <TableCell className="font-medium whitespace-nowrap">
+                      {formatAmount(payment.amount)} MRU
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -698,7 +706,9 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{payment.progressAtPayment}%</Badge>
+                      <Badge variant="outline">
+                        {typeof payment.progressAtPayment === 'number' ? `${payment.progressAtPayment}%` : '—'}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -720,7 +730,8 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))
+                  );
+                })
               )}
             </TableBody>
           </Table>
