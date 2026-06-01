@@ -19,7 +19,6 @@ import {
   ReportSectionKey,
   REPORT_PROFILES,
   REPORT_SECTION_LABELS,
-  ALL_REPORT_SECTIONS,
   defaultSectionsFor,
   getReportProfile,
 } from '@/config/referentials/reports/report-profiles.referential';
@@ -304,30 +303,16 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="summary">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">Rapide</Badge>
-                      <span>Résumé exécutif</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="detailed">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">Complet</Badge>
-                      <span>Rapport détaillé</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="financial">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">Finance</Badge>
-                      <span>Analyse financière</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="project_manager">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">Gestion</Badge>
-                      <span>Chef de projet</span>
-                    </div>
-                  </SelectItem>
+                  {Object.values(REPORT_PROFILES).map((profile) => (
+                    <SelectItem key={profile.code} value={profile.code}>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs capitalize">
+                          {profile.depth}
+                        </Badge>
+                        <span>{profile.label.fr}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <div className="text-xs text-muted-foreground mt-1">
@@ -338,53 +323,78 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
 
           {/* Sections à inclure */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
               <Label className="text-base font-medium">Sections à inclure</Label>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSelectAll}
-                className="h-8 px-3 text-xs"
-              >
-                {Object.values(reportConfig.includeSections).every(Boolean) ? (
-                  <>
-                    <Square className="h-3 w-3 mr-1" />
-                    Désélectionner tout
-                  </>
-                ) : (
-                  <>
-                    <CheckSquare className="h-3 w-3 mr-1" />
-                    Sélectionner tout
-                  </>
-                )}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    setReportConfig(prev => ({
+                      ...prev,
+                      includeSections: defaultSectionsFor(prev.reportType),
+                    }))
+                  }
+                  className="h-8 px-3 text-xs"
+                  title="Restaurer les sections par défaut du profil sélectionné"
+                >
+                  Réinitialiser au profil
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSelectAll}
+                  className="h-8 px-3 text-xs"
+                >
+                  {Object.values(reportConfig.includeSections).every(Boolean) ? (
+                    <>
+                      <Square className="h-3 w-3 mr-1" />
+                      Désélectionner tout
+                    </>
+                  ) : (
+                    <>
+                      <CheckSquare className="h-3 w-3 mr-1" />
+                      Sélectionner tout
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
-            
+
             <div className="bg-muted/30 p-4 rounded-lg border">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {Object.entries(reportConfig.includeSections).map(([key, value]) => (
-                  <div 
-                    key={key} 
-                    className={`flex items-center space-x-3 p-2 rounded-md transition-colors hover:bg-background/50 ${
-                      value ? 'bg-primary/5 border border-primary/20' : 'bg-background/30'
-                    }`}
-                  >
-                    <Checkbox
-                      id={key}
-                      checked={value}
-                      onCheckedChange={(checked) => updateSectionConfig(key as any, checked as boolean)}
-                      className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                    />
-                    <Label htmlFor={key} className="text-sm font-normal cursor-pointer flex-1">
-                      {REPORT_SECTION_LABELS[key as ReportSectionKey] ?? key}
-                    </Label>
-                  </div>
-                ))}
+                {Object.entries(reportConfig.includeSections).map(([key, value]) => {
+                  const inProfile = getReportProfile(reportConfig.reportType).includes.includes(
+                    key as ReportSectionKey,
+                  );
+                  return (
+                    <div
+                      key={key}
+                      className={`flex items-center space-x-3 p-2 rounded-md transition-colors hover:bg-background/50 ${
+                        value ? 'bg-primary/5 border border-primary/20' : 'bg-background/30'
+                      }`}
+                    >
+                      <Checkbox
+                        id={key}
+                        checked={value}
+                        onCheckedChange={(checked) => updateSectionConfig(key as any, checked as boolean)}
+                        className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                      />
+                      <Label htmlFor={key} className="text-sm font-normal cursor-pointer flex-1 flex items-center gap-2">
+                        <span className="flex-1">{REPORT_SECTION_LABELS[key as ReportSectionKey] ?? key}</span>
+                        {inProfile && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Profil</Badge>
+                        )}
+                      </Label>
+                    </div>
+                  );
+                })}
               </div>
-              
+
               <div className="mt-3 pt-3 border-t border-border/50">
                 <div className="text-xs text-muted-foreground">
                   {Object.values(reportConfig.includeSections).filter(Boolean).length} sections sélectionnées sur {Object.keys(reportConfig.includeSections).length}
+                  {' · '}Profil « {getReportProfile(reportConfig.reportType).label.fr} » recommande {getReportProfile(reportConfig.reportType).includes.length} sections
                 </div>
               </div>
             </div>
@@ -445,39 +455,4 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
       </Card>
     </div>
   );
-}
-
-function getSectionLabel(key: string): string {
-  const labels: { [key: string]: string } = {
-    overview: 'Aperçu général',
-    financial: 'Résumé financier',
-    timeline: 'Calendrier',
-    materials: 'Matériaux',
-    phases: 'Phases',
-    inspections: 'Inspections',
-    risks: 'Analyse des risques',
-    kpi: 'Indicateurs de performance',
-    milestones: 'Jalons',
-    bankGuarantees: 'Garanties bancaires',
-    insurance: 'Assurances',
-    paymentBlocks: 'Blocages de paiements',
-    suppliers: 'Fournisseurs',
-    documents: 'Documents',
-    employees: 'Employés',
-    escalationAlerts: 'Alertes d\'escalade',
-    evmAnalysis: 'Analyse EVM',
-    pertAnalysis: 'Analyse PERT',
-    ganttChart: 'Diagramme de Gantt'
-  };
-  return labels[key] || key;
-}
-
-function getReportTypeDescription(type: string): string {
-  const descriptions: Record<string, string> = {
-    summary: 'Rapport concis avec les informations essentielles du projet',
-    detailed: 'Rapport complet incluant toutes les sections et analyses disponibles',
-    financial: 'Focus sur les aspects financiers, garanties et contrôles de paiement',
-    project_manager: 'Rapport orienté gestion avec timeline, ressources et analyses avancées'
-  };
-  return descriptions[type] || type;
 }
