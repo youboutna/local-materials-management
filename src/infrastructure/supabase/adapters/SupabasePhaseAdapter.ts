@@ -79,7 +79,7 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
       .eq('project_id', projectId);
 
     if (error) throw new Error(error.message);
-    return data.map(d => PhaseTransformer.toDTO(d));
+    return data.map(d => PhaseTransformer.fromDB(d));
   }
 
   async findByProjectId(projectId: string): Promise<Phase[]> {
