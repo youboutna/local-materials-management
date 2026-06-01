@@ -282,7 +282,7 @@ Fait à ${inspection.projects?.location || 'Lieu'}, le ${format(new Date(), 'dd 
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
       }
       const rows = await this.pvRepository.getInspectionPVs(inspectionId);
-      return (rows || []).map(this.mapRecordToGeneratedPV);
+      return (rows || []).map(r => this.mapRecordToGeneratedPV(r as unknown as Record<string, unknown>));
     } catch (error) {
       console.error('PVGeneratorService.getInspectionPVs failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get inspection PVs');
