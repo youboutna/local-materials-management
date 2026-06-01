@@ -221,7 +221,7 @@ const RoleBasedInspectionMonitoring = () => {
           </p>
         </div>
         {isAdmin && (
-          <Button onClick={() => navigate('/inspections/new')}>
+          <Button onClick={() => navigate('/inspections/create')}>
             <Plus className="h-4 w-4 mr-2" />
             Nouvelle Inspection
           </Button>
