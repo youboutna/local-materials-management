@@ -906,13 +906,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         onValueChange={setActiveTab}
         className="space-y-4"
       >
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-          <TabsTrigger value="phases">Planification</TabsTrigger>
-          <TabsTrigger value="tasks">Exécution</TabsTrigger>
-          <TabsTrigger value="financial">Financier</TabsTrigger>
-          <TabsTrigger value="compliance">Conformité</TabsTrigger>
-          <TabsTrigger value="map">Localisation</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 h-auto">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm">Vue d'ensemble</TabsTrigger>
+          <TabsTrigger value="phases" className="text-xs sm:text-sm">Planification</TabsTrigger>
+          <TabsTrigger value="tasks" className="text-xs sm:text-sm">Exécution</TabsTrigger>
+          <TabsTrigger value="financial" className="text-xs sm:text-sm">Financier</TabsTrigger>
+          <TabsTrigger value="compliance" className="text-xs sm:text-sm">Conformité</TabsTrigger>
+          <TabsTrigger value="map" className="text-xs sm:text-sm">Localisation</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
