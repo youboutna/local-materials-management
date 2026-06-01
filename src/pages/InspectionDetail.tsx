@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Calendar, User, FileText, TrendingUp, Edit, Play, ClipboardList } from 'lucide-react';
+import { ArrowLeft, Calendar, User, FileText, TrendingUp, Edit, Play, ClipboardList, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
