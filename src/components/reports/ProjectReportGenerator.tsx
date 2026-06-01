@@ -331,7 +331,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
                 </SelectContent>
               </Select>
               <div className="text-xs text-muted-foreground mt-1">
-                {getReportTypeDescription(reportConfig.reportType)}
+                {getReportProfile(reportConfig.reportType).description.fr}
               </div>
             </div>
           </div>
@@ -376,7 +376,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
                       className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                     />
                     <Label htmlFor={key} className="text-sm font-normal cursor-pointer flex-1">
-                      {getSectionLabel(key)}
+                      {REPORT_SECTION_LABELS[key as ReportSectionKey] ?? key}
                     </Label>
                   </div>
                 ))}
