@@ -240,6 +240,29 @@ export function ProjectPDFDocument({
         </PDFSection>
       )}
 
+      {/* Écarts (DeviationEngine — référentiel deviation-rules) */}
+      {reportConfig.includeSections.kpi && deviations.length > 0 && (
+        <PDFSection title="Écarts & Indicateurs Clés" borderColor="#ef4444">
+          <PDFTable
+            headers={['Indicateur', 'Valeur', 'Unité', 'Sévérité']}
+            data={deviations.map((d) => [
+              d.label,
+              `${d.value > 0 ? '+' : ''}${d.value}`,
+              d.unit,
+              d.severity,
+            ])}
+          />
+          {healthScore && typeof healthScore === 'object' && (
+            <PDFText>
+              Score de santé global :{' '}
+              {(healthScore.overallScore ?? healthScore.score ?? '—')}
+              {healthScore.category ? ` (${healthScore.category})` : ''}
+            </PDFText>
+          )}
+        </PDFSection>
+      )}
+
+
       {/* Matériaux */}
    
     {reportConfig.includeSections.materials && materials.length > 0 && (
