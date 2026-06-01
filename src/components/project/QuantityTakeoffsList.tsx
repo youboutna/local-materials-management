@@ -66,7 +66,7 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
                 <div>
                   <h4 className="font-semibold text-lg">{takeoff.material?.name}</h4>
                   <p className="text-sm text-gray-600">
-                    {takeoff.quantity} {takeoff.material?.unit} Ã  {takeoff.material?.price_per_unit} MRU/unité
+                    {takeoff.quantity} {takeoff.material?.unit} à {takeoff.material?.price_per_unit} MRU/unité
                   </p>
                 </div>
                 <div className="flex gap-2">

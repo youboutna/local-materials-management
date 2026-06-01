@@ -54,7 +54,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
     if (availableMaterials.length === 0) {
       toast({
         title: "Aucun matériau disponible",
-        description: "Tous les matériaux sont déjÃ  sélectionnés.",
+        description: "Tous les matériaux sont déjà sélectionnés.",
       });
       return;
     }

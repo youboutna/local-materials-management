@@ -143,7 +143,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
       setUploadedDocuments(prev => [...prev, uploadedDocument.url || '']);
       toast({
         title: 'Document téléchargé',
-        description: 'Le document a été ajouté Ã  votre demande',
+        description: 'Le document a été ajouté à votre demande',
       });
     } catch (error) {
       console.error('Error uploading file:', error);

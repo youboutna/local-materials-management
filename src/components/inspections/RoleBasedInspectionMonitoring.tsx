@@ -167,7 +167,7 @@ const RoleBasedInspectionMonitoring = () => {
       console.log('Edit inspection:', { id: editingInspection.id, data: editFormData });
       toast({
         title: "Succès",
-        description: "Inspection mise Ã  jour",
+        description: "Inspection mise à jour",
       });
       
       setIsEditDialogOpen(false);

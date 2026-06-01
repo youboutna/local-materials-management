@@ -103,7 +103,7 @@ const Users = () => {
       navigate("/auth?mode=login");
       toast({
         title: t('common.error'),
-        description: "Veuillez vous connecter pour accéder Ã  cette page.",
+        description: "Veuillez vous connecter pour accéder à cette page.",
         variant: "destructive",
       });
     }
@@ -283,7 +283,7 @@ const Users = () => {
                     >
                       {searchQuery
                         ? t("users.no_results") ||
-                          "Aucun utilisateur ne correspond Ã  la recherche"
+                          "Aucun utilisateur ne correspond à la recherche"
                         : t("users.none_found") || "Aucun utilisateur trouvé"}
                     </TableCell>
                   </TableRow>
