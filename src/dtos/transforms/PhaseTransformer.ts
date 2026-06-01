@@ -134,8 +134,8 @@ export class PhaseTransformer {
     set('progress', phase.progress);
     set('order_index', phase.orderIndex);
     set('phase_type', phase.phaseType);
-    set('start_date', (phase.startDate as any) instanceof Date ? (phase.startDate as Date).toISOString() : phase.startDate);
-    set('end_date', (phase.endDate as any) instanceof Date ? (phase.endDate as Date).toISOString() : phase.endDate);
+    set('start_date', (phase.startDate as any) instanceof Date ? (phase.startDate as unknown as Date).toISOString() : phase.startDate);
+    set('end_date', (phase.endDate as any) instanceof Date ? (phase.endDate as unknown as Date).toISOString() : phase.endDate);
     set('estimated_duration', phase.estimatedDuration);
     set('actual_duration', phase.actualDuration);
     set('estimated_cost', phase.estimatedCost);
