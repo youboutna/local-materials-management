@@ -104,7 +104,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   const [showPhaseManager, setShowPhaseManager] = useState(false);
   const [phases, setPhases] = useState<PhaseDTO[]>([]);
   const [referentialOptions, setReferentialOptions] = useState<{ value: string; label: string; description?: string }[]>([]);
-  console.log("🔍 ProjectDetailByDTO render - projectId:", projectId);
+  
 
   // Load referential options
   useEffect(() => {
@@ -136,25 +136,14 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   } = useQuery<ProjectSummaryDTO | undefined>({
     queryKey: ["project-summary", projectId],
     queryFn: async (): Promise<ProjectSummaryDTO | undefined> => {
-      console.log("🔍 Query function starting for projectId:", projectId);
       if (!projectId) {
-        console.error("🚫 Project ID is missing");
         throw new Error(t("project.errors.missing_id"));
       }
-
-      console.log("🔍 Calling ProjectService.getProjectSummary...");
-      try {
-        const result = await projectService.getProjectSummary(projectId);
-        console.log("🔍 ProjectService result:", result ? "SUCCESS" : "NULL");
-        if (!result) {
-          console.error("🚫 Project not found for ID:", projectId);
-          throw new Error(t("project.errors.not_found"));
-        }
-        return result;
-      } catch (error) {
-        console.error("🚫 Error in ProjectService.getProjectSummary:", error);
-        throw error;
+      const result = await projectService.getProjectSummary(projectId);
+      if (!result) {
+        throw new Error(t("project.errors.not_found"));
       }
+      return result;
     },
     enabled: !!projectId,
     retry: 1,
@@ -307,37 +296,15 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     staleTime: 30_000,
   });
 
-  // Use data from ProjectDetailDTO
-  const phasesSource = useMemo(() => {
-    const phases = projectDetail?.plannedPhases || [];
-    console.log('📊 Phases Source:', phases);
-    console.log('📊 ProjectDetail:', projectDetail);
-    return phases;
-  }, [projectDetail]);
-  
-  const tasksSource = useMemo(() => {
-    const tasks = projectDetail?.tasks || [];
-    console.log('📊 Tasks Source:', tasks);
-    return tasks;
-  }, [projectDetail]);
-  
-  const risksSource = useMemo(() => {
-    const risks = projectDetail?.risks || [];
-    console.log('📊 Risks Source:', risks);
-    return risks;
-  }, [projectDetail]);
-  
-  const inspectionsSource = useMemo(() => {
-    const inspections: InspectionDTO[] = (projectDetail as any)?.inspections || [];
-    console.log('📊 Inspections Source:', inspections);
-    return inspections;
-  }, [projectDetail]);
-  
-  const paymentsSource = useMemo(() => {
-    const expenses = projectDetail?.expenses || [];
-    console.log('📊 Payments Source:', expenses);
-    return expenses;
-  }, [projectDetail]);
+  // Use data from ProjectDetailDTO (hydrated camelCase from service)
+  const phasesSource = useMemo(() => projectDetail?.plannedPhases || [], [projectDetail]);
+  const tasksSource = useMemo(() => projectDetail?.tasks || [], [projectDetail]);
+  const risksSource = useMemo(() => projectDetail?.risks || [], [projectDetail]);
+  const inspectionsSource = useMemo<InspectionDTO[]>(
+    () => ((projectDetail as any)?.inspections || []),
+    [projectDetail]
+  );
+  const paymentsSource = useMemo(() => projectDetail?.expenses || [], [projectDetail]);
 
   // Calculate current phase and stage dynamically from phases
   const currentPhaseInfo = useMemo(() => {
@@ -404,7 +371,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       
       // Transform real resources to the expected format
       const allResources = realResources.map((resource: any) => ({
-        id: resource.id || `resource-${Math.random()}`,
+        id: resource.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `resource-${Date.now()}`),
         name: resource.name || resource.title || "Ressource sans nom",
         type: resource.type || "human",
         position: resource.position || resource.role || "Non spécifié",
@@ -939,13 +906,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         onValueChange={setActiveTab}
         className="space-y-4"
       >
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-          <TabsTrigger value="phases">Planification</TabsTrigger>
-          <TabsTrigger value="tasks">Exécution</TabsTrigger>
-          <TabsTrigger value="financial">Financier</TabsTrigger>
-          <TabsTrigger value="compliance">Conformité</TabsTrigger>
-          <TabsTrigger value="map">Localisation</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 h-auto">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm">Vue d'ensemble</TabsTrigger>
+          <TabsTrigger value="phases" className="text-xs sm:text-sm">Planification</TabsTrigger>
+          <TabsTrigger value="tasks" className="text-xs sm:text-sm">Exécution</TabsTrigger>
+          <TabsTrigger value="financial" className="text-xs sm:text-sm">Financier</TabsTrigger>
+          <TabsTrigger value="compliance" className="text-xs sm:text-sm">Conformité</TabsTrigger>
+          <TabsTrigger value="map" className="text-xs sm:text-sm">Localisation</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -1204,12 +1171,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         {/* New Planning Tab with Gantt, PERT, Kanban, Critical Path */}
         <TabsContent value="planning" className="mt-6">
           <Tabs defaultValue="gantt" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="gantt">Gantt</TabsTrigger>
-              <TabsTrigger value="pert">PERT</TabsTrigger>
-              <TabsTrigger value="kanban">Kanban</TabsTrigger>
-              <TabsTrigger value="critical">Chemin Critique</TabsTrigger>
-              <TabsTrigger value="timeline">Timeline</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-auto">
+              <TabsTrigger value="gantt" className="text-xs sm:text-sm">Gantt</TabsTrigger>
+              <TabsTrigger value="pert" className="text-xs sm:text-sm">PERT</TabsTrigger>
+              <TabsTrigger value="kanban" className="text-xs sm:text-sm">Kanban</TabsTrigger>
+              <TabsTrigger value="critical" className="text-xs sm:text-sm">Chemin Critique</TabsTrigger>
+              <TabsTrigger value="timeline" className="text-xs sm:text-sm">Timeline</TabsTrigger>
             </TabsList>
 
             <TabsContent value="gantt">
@@ -1955,10 +1922,9 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   : (project as any).adresse?.address || project.location || "",
               shapeType: (project as any).forme,
             }}
-            onChange={(data) => {
-              console.log("Map data changed:", data);
-              // Handle map data updates
-              // TODO: Update project with new map data
+            onChange={(_data) => {
+              // Map data changes are persisted via the dedicated project edit workflow (step Localisation).
+              // No-op here to keep the detail view read-only for GIS overlays.
             }}
           />
         </TabsContent>
