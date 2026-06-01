@@ -124,13 +124,27 @@ export class ReportingService {
         }
       };
 
+      // Compute project-scope deviations via the DeviationEngine (referentials-driven)
+      const deviations = DeviationEngine.compute(
+        {
+          plannedEndDate: (request.project as any).endDate ?? (request.project as any).end_date ?? null,
+          actualEndDate: (request.project as any).actualEndDate ?? null,
+          plannedBudget: request.project.budget ?? null,
+          actualCost: (realCosts as any)?.totalSpent ?? null,
+          plannedProgress: 100,
+          actualProgress: request.project.progress ?? 0,
+        },
+        'project',
+      );
+
       return {
         reportDTO,
         reportData,
         costCalculation,
         resourceUtilization,
         healthScore: null, // To be implemented
-        realCosts
+        realCosts,
+        deviations,
       };
     } catch (error) {
       console.error('ReportingService.generateCompleteProjectReport failed:', error);
