@@ -353,7 +353,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
           )}
           
           <p className="text-xs text-muted-foreground">
-            Un projet peut être associé Ã  plusieurs appels d'offres. Indiquez la référence de l'appel d'offres concerné par cette demande.
+            Un projet peut être associé à plusieurs appels d'offres. Indiquez la référence de l'appel d'offres concerné par cette demande.
           </p>
         </div>
       )}

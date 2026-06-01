@@ -83,7 +83,7 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
     } else {
       toast({
         title: "Document non disponible",
-        description: "Aucun fichier n'est associé Ã  ce document d'appel d'offres.",
+        description: "Aucun fichier n'est associé à ce document d'appel d'offres.",
         variant: "destructive"
       });
     }

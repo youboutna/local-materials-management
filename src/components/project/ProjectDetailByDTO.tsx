@@ -3,6 +3,7 @@ import EnhancedRiskManager from "@/components/project/EnhancedRiskManager";
 import EnhancedTaskManager from "@/components/project/EnhancedTaskManager";
 import FinancialOverview from "@/components/project/FinaancialOverview";
 import PhaseList from "@/components/project/PhaseList";
+import { InspectionsList } from "@/components/project/InspectionsList";
 import ProjectGantt from "@/components/project/ProjectGantt";
 import TeamOverview from "@/components/project/TeamOverview";
 import { UnifiedMilestoneManager } from "@/components/project/milestones";
@@ -779,11 +780,18 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   };
 
   // Calculate phases stats for header - MUST be before any early returns
-  const phasesStats = useMemo(() => ({
-    total: computedPhases.length || project?.phasesCount || 0,
-    completed: computedPhases.filter((p) => p.status === "completed").length || 0,
-    inProgress: computedPhases.filter((p) => p.status === "in_progress").length || 0,
-  }), [computedPhases, project?.phasesCount]);
+  // Any non-terminal/non-pending phase status is considered "in progress" to
+  // reflect dynamic workflow (inspection, validation, payment_request, etc.).
+  const TERMINAL_PHASE_STATUSES = new Set(["completed", "closed", "cancelled", "archived"]);
+  const PENDING_PHASE_STATUSES = new Set(["not_started", "pending", "draft", "planned"]);
+  const phasesStats = useMemo(() => {
+    const total = computedPhases.length || project?.phasesCount || 0;
+    const completed = computedPhases.filter((p) => p.status === "completed").length || 0;
+    const inProgress = computedPhases.filter(
+      (p) => !TERMINAL_PHASE_STATUSES.has(p.status) && !PENDING_PHASE_STATUSES.has(p.status),
+    ).length || 0;
+    return { total, completed, inProgress };
+  }, [computedPhases, project?.phasesCount]);
 
   const handleDelete = async (projectIdToDelete: string) => {
     if (
@@ -1311,13 +1319,87 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         </TabsContent>
 
         <TabsContent value="tasks" className="mt-6">
-          <EnhancedTaskManager
-            projectId={projectId!}
-            tasks={tasks}
-            setTasks={setTasks}
-            phases={computedPhases}
-          />
+          {(() => {
+            // Default execution sub-tab driven by project status
+            const status = String((project as any)?.status || '').toLowerCase();
+            const defaultExecTab =
+              status.includes('inspection') ? 'inspections'
+              : status.includes('payment') ? 'payments-exec'
+              : 'tasks-exec';
+            return (
+              <Tabs defaultValue={defaultExecTab} className="space-y-4">
+                <TabsList>
+                  <TabsTrigger value="tasks-exec">Tâches</TabsTrigger>
+                  <TabsTrigger value="inspections">Inspections</TabsTrigger>
+                  <TabsTrigger value="payments-exec">Paiements</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="tasks-exec">
+                  <EnhancedTaskManager
+                    projectId={projectId!}
+                    tasks={tasks}
+                    setTasks={setTasks}
+                    phases={computedPhases}
+                  />
+                </TabsContent>
+
+                <TabsContent value="inspections">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Shield className="h-5 w-5" />
+                        Inspections du projet
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <InspectionsList projectId={projectId!} />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="payments-exec">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <DollarSign className="h-5 w-5" />
+                        Paiements en cours
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {payments.filter(p => p.status !== 'paid' && p.status !== 'cancelled').length === 0 ? (
+                        <p className="text-muted-foreground">Aucun paiement en cours pour ce projet.</p>
+                      ) : (
+                        <div className="grid gap-3">
+                          {payments
+                            .filter(p => p.status !== 'paid' && p.status !== 'cancelled')
+                            .map((p) => (
+                              <a
+                                key={p.id}
+                                href={`/payments/${p.id}`}
+                                className="p-3 border rounded-lg hover:bg-accent flex justify-between"
+                              >
+                                <div>
+                                  <p className="font-medium">{(p as any).description || 'Paiement'}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {new Date(p.paymentDate).toLocaleDateString('fr-FR')}
+                                  </p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="font-semibold">{(p.amount || 0).toLocaleString()} MRU</p>
+                                  <Badge variant="secondary">{p.status}</Badge>
+                                </div>
+                              </a>
+                            ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            );
+          })()}
         </TabsContent>
+
 
         <TabsContent value="risks" className="mt-6">
           <EnhancedRiskManager

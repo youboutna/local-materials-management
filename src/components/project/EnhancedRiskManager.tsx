@@ -421,7 +421,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
                 Annuler
               </Button>
               <Button type="submit" disabled={createRiskMutation.isPending || updateRiskMutation.isPending}>
-                {editingId ? 'Mettre Ã  jour' : 'Créer'}
+                {editingId ? 'Mettre à jour' : 'Créer'}
               </Button>
             </div>
           </form>

@@ -159,7 +159,7 @@ const SupplierPortal = () => {
     // TODO: Implement document sharing logic
     toast({
       title: "Partage de document",
-      description: "Fonctionnalité de partage Ã  implémenter",
+      description: "Fonctionnalité de partage à implémenter",
     });
   };
 
