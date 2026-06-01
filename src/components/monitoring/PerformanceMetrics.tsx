@@ -188,11 +188,9 @@ const PerformanceMetrics: React.FC = () => {
     };
   };
 
-  const getPerformanceColor = (value: number, thresholds: { good: number; warning: number }) => {
-    if (value <= thresholds.good) return 'text-green-600';
-    if (value <= thresholds.warning) return 'text-yellow-600';
-    return 'text-red-600';
-  };
+  const getPerformanceColor = (value: number, code: string) =>
+    PERFORMANCE_STATUS_TEXT_CLASS[classifyPerformance(code, value)];
+
 
   if (loading) {
     return (
