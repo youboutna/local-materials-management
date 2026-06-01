@@ -255,105 +255,15 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
   };
 
   const handleReportTypeChange = (newType: string) => {
-    const reportType = newType as ReportConfig['reportType'];
-    
-    // Define default sections for each report type
-    const defaultSections: Record<ReportConfig['reportType'], Partial<ReportConfig['includeSections']>> = {
-      summary: {
-        overview: true,
-        financial: true,
-        timeline: true,
-        phases: true,
-        kpi: true,
-        milestones: true,
-        risks: false,
-        materials: false,
-        inspections: false,
-        bankGuarantees: false,
-        insurance: false,
-        paymentBlocks: false,
-        suppliers: false,
-        documents: false,
-        employees: false,
-        escalationAlerts: false,
-        evmAnalysis: false,
-        pertAnalysis: false,
-        ganttChart: false,
-      },
-      detailed: {
-        overview: true,
-        financial: true,
-        timeline: true,
-        materials: true,
-        phases: true,
-        inspections: true,
-        risks: true,
-        kpi: true,
-        milestones: true,
-        bankGuarantees: true,
-        insurance: true,
-        paymentBlocks: true,
-        suppliers: true,
-        documents: true,
-        employees: true,
-        escalationAlerts: true,
-        evmAnalysis: true,
-        pertAnalysis: true,
-        ganttChart: true,
-      },
-      financial: {
-        overview: true,
-        financial: true,
-        timeline: false,
-        materials: false,
-        phases: true,
-        inspections: false,
-        risks: true,
-        kpi: true,
-        milestones: false,
-        bankGuarantees: true,
-        insurance: true,
-        paymentBlocks: true,
-        suppliers: true,
-        documents: false,
-        employees: false,
-        escalationAlerts: true,
-        evmAnalysis: true,
-        pertAnalysis: false,
-        ganttChart: false,
-      },
-      project_manager: {
-        overview: true,
-        financial: true,
-        timeline: true,
-        materials: true,
-        phases: true,
-        inspections: true,
-        risks: true,
-        kpi: true,
-        milestones: true,
-        bankGuarantees: false,
-        insurance: false,
-        paymentBlocks: false,
-        suppliers: false,
-        documents: true,
-        employees: true,
-        escalationAlerts: true,
-        evmAnalysis: true,
-        pertAnalysis: true,
-        ganttChart: true,
-      },
-    };
-
+    const reportType = newType as ReportProfile;
+    // Défauts pilotés par le référentiel `report-profiles.referential.ts` (zéro code dur).
     setReportConfig(prev => ({
       ...prev,
       reportType,
-      includeSections: {
-        ...prev.includeSections,
-        ...defaultSections[reportType]
-      }
+      includeSections: defaultSectionsFor(reportType),
     }));
   };
+
 
   if (loading && !reportData) {
     return (
