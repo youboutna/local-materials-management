@@ -1,17 +1,20 @@
-// @ts-nocheck
+/**
+ * ProjectCreate
+ * Page d'entrée pour la création projet.
+ * Toute la persistance (project, phases, stakeholders, …) est déléguée à
+ * `ProjectWorkflowService` via `ProjectCreationWorkflow` (saveCurrentStep par étape).
+ * — Pas de double persistance, pas de mapping snake_case ici.
+ */
 import ProjectCreationWorkflow from "@/components/project/ProjectCreationWorkflow";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useProjectsHex, useAddMaterialToProjectHex } from "@/hooks/hexagonal";
 import { toast } from "@/hooks/use-toast";
-import { PhaseService } from '@/application/services/PhaseService';
-import { ProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout";
+import type { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
 
 interface SelectedMaterial {
   materialId: string;
@@ -21,255 +24,15 @@ interface SelectedMaterial {
 const ProjectCreate = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedMaterials, setSelectedMaterials] = useState<
-    SelectedMaterial[]
-  >([]);
-  const { createProject } = useProjectsHex();
-  const addMaterialToProjectMutation = useAddMaterialToProjectHex();
+  const [selectedMaterials, setSelectedMaterials] = useState<SelectedMaterial[]>([]);
 
-  // Status mapping from form values to database values
-  const statusMapping = {
-    Planning: "en attente",
-    InProgress: "en cours",
-    Pending: "en attente",
-    OnHold: "suspendu",
-    Completed: "terminé",
-    Cancelled: "annulé",
-  } as const;
-  // Handle form submission from ProjectFormWithMap
-  const handleFormSubmit = async (data: any) => {
-    setIsSubmitting(true);
-
-    try {
-      // Prepare coordinates and localization data for the API
-      const projectCoordinates = data.facilitiesLocation?.center
-        ? {
-            latitude: data.facilitiesLocation.center.lat,
-            longitude: data.facilitiesLocation.center.lng,
-          }
-        : undefined;
-
-      // Prepare localization data
-      const localizationData =
-        data.facilitiesLocation?.polygon ||
-        data.facilitiesLocation?.warehouseShape ||
-        [];
-      const shapeType =
-        data.facilitiesLocation?.shapeType ||
-        (data.facilitiesLocation?.polygon?.length > 0 ? "polygon" : undefined);
-      const addressData = data.facilitiesLocation?.address;
-
-      // Map the status from form to database value
-      const mappedStatus =
-        statusMapping[data.status as keyof typeof statusMapping] ||
-        "en attente";
-
-      // Create the new project with all the form data
-      const projectData = {
-        title: data.title,
-        description: data.description,
-        location: data.shapeData?.address || data.location || "Non spécifié",
-        status: data.status,
-        progress: data.progress,
-        budget: parseFloat(data.budget) || 0,
-        estimated_days: parseInt(data.estimatedDays) || null,
-        currency: data.currency || "MRU",
-        payment_mode: data.paymentMode || "progressive",
-        payment_frequency: data.paymentFrequency || "monthly",
-        initial_advance_percentage: data.initialAdvance || 20,
-        retention_percentage: data.retentionPercentage || 5,
-        priority: data.priority || "medium",
-        project_type: data.projectType || "construction",
-        sector: data.sector,
-        permit_number: data.permitNumber,
-        startDate:
-          data.startDate ||
-          data.start_date ||
-          new Date().toISOString().split("T")[0],
-        endDate: data.endDate || data.end_date,
-        thumbnail: "/img/project-placeholder.jpg",
-        teamSize: data.team_size || 1,
-        coordinates: projectCoordinates,
-        financingSource: data.financing_source,
-        marketType: data.market_type,
-        selectionMode: data.selection_mode,
-        projectResponsableId: data.delegation?.projectManager || null,
-        mainContractor: data.main_contractor || null,
-        engineeringConsultant: data.engineering_consultant || null,
-        projectReference: data.reference,
-        allowsInitialPayment: data.allows_initial_payment,
-        initialPaymentPercentage: data.initial_payment_percentage,
-        // Construction workflow fields - ensuring proper type casting
-        currentPhase: data.current_phase,
-        currentStage: data.current_stage,
-        // Localization fields
-        localisation: localizationData,
-        forme: shapeType,
-        adresse: data.shapeData?.address,
-      };
-
-      const projectResult = await createProject(projectData);
-
-      if (projectResult?.id) {
-        // Save project stakeholders
-        if (
-          data.stakeholders ||
-          data.delegation ||
-          data.principals ||
-          data.internalStakeholders ||
-          data.externalStakeholders ||
-          data.teamMembers
-        ) {
-          try {
-            // Combine all stakeholder data
-            const allStakeholders = [
-              ...(data.stakeholders || []),
-              ...(data.internalStakeholders || []),
-              ...(data.externalStakeholders || []),
-            ];
-
-            // Combine all delegation data (principals + other roles)
-            const allDelegation = {
-              ...(data.delegation || {}),
-              ...(data.principals || {}),
-            };
-
-            // Create service instances
-            const stakeholderService = new ProjectStakeholderService(
-              RepositoryFactory.getStakeholderRepository()
-            );
-            
-            await stakeholderService.createProjectStakeholders(
-              projectResult.id,
-              allStakeholders,
-              allDelegation
-            );
-            toast({
-              title: "Parties prenantes sauvegardées",
-              description:
-                "Les parties prenantes du projet ont été configurées.",
-            });
-          } catch (stakeholderError) {
-            console.error("Error saving stakeholders:", stakeholderError);
-            toast({
-              title: "Avertissement",
-              description:
-                "Projet créé mais erreur lors de la sauvegarde des parties prenantes.",
-              variant: "destructive",
-            });
-          }
-        }
-
-        // Save construction phases if any are defined
-        if (data.phases && data.phases.length > 0) {
-          try {
-            // Create service instance
-            const phaseService = new PhaseService(
-              RepositoryFactory.getPhaseRepository()
-            );
-            
-            // Create phases one by one
-            for (const phase of data.phases) {
-              await phaseService.createPhase({
-                project_id: projectResult.id,
-                phase_name: phase.name || phase.phase_name,
-                description: phase.description || '',
-                start_date: phase.start_date || new Date().toISOString(),
-                end_date: phase.end_date || new Date().toISOString(),
-                estimated_duration_days: phase.estimated_duration || 30,
-                estimated_cost: phase.estimated_cost || 0,
-                status: phase.status || 'pending',
-                progress: phase.progress || 0,
-                construction_phase: phase.construction_phase || phase.name,
-                notes: phase.custom_phase_data ? JSON.stringify(phase.custom_phase_data) : null
-              });
-            }
-            
-            toast({
-              title: "Phases sauvegardées",
-              description: `${data.phases.length} phase(s) de construction sauvegardée(s).`,
-            });
-          } catch (phaseError) {
-            console.error("Error saving phases:", phaseError);
-            toast({
-              title: "Avertissement",
-              description:
-                "Les phases n'ont pas pu être sauvegardées, mais le projet a été créé.",
-            });
-          }
-        }
-
-        // Add materials to the project if any are selected
-        if (selectedMaterials.length > 0) {
-          await addMaterialsToProject(projectResult.id, selectedMaterials);
-        }
-      }
-
-      // Show appropriate success message based on completion
-      if (data.missingOptionalFields && data.missingOptionalFields.length > 0) {
-        toast({
-          title: "Projet créé avec succès",
-          description: `${
-            data.title
-          } a été créé. N'oubliez pas de compléter : ${data.missingOptionalFields
-            .slice(0, 2)
-            .join(", ")}${
-            data.missingOptionalFields.length > 2 ? "..." : ""
-          } en éditant le projet.`,
-          variant: "default",
-        });
-      } else {
-        toast({
-          title: t("project_create.toast.created"),
-          description: t("project_create.toast.created_desc") + data.title,
-        });
-      }
-
-      if (data.saveType === "global_and_close" || !data.saveType) {
-        if (data.saveType === "global_and_close" || !data.saveType) {
-          navigate("/projects");
-        }
-      }
-    } catch (error) {
-      console.error("Error creating project:", error);
-      toast({
-        title: t("project_create.toast.error"),
-        description: t("project_create.toast.error_desc"),
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Add materials to project using hexagonal architecture
-  const addMaterialsToProject = async (
-    projectId: string,
-    materials: SelectedMaterial[]
-  ) => {
-    try {
-      // Use hexagonal hook for each material addition
-      for (const material of materials) {
-        await addMaterialToProjectMutation.mutateAsync({
-          projectId,
-          materialId: material.materialId,
-          quantity: material.quantity
-        });
-      }
-
-      toast({
-        title: "Matériaux ajoutés",
-        description: `${materials.length} matériau(x) ajouté(s) au projet avec succès.`,
-      });
-    } catch (error) {
-      console.error("Error adding materials to project:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible d'ajouter les matériaux au projet",
-        variant: "destructive",
-      });
-    }
+  const handleFormSubmit = (data: ProjectWorkflowData) => {
+    toast({
+      title: t("project_create.toast.created") || "Projet créé",
+      description: data.projectData?.title || "",
+    });
+    const id = data.projectId || data.projectData?.id;
+    navigate(id ? `/projects/${id}` : "/projects");
   };
 
   return (
@@ -292,6 +55,7 @@ const ProjectCreate = () => {
       >
         <div className="bg-card rounded-xl border border-border shadow-sm p-4 sm:p-6">
           <ProjectCreationWorkflow
+            mode="create"
             onSubmit={handleFormSubmit}
             selectedMaterials={selectedMaterials}
             onMaterialsChange={setSelectedMaterials}

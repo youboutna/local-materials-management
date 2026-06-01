@@ -59,6 +59,23 @@ import { generatePhaseTypeFromReferentialPhase, generateDynamicPhaseType } from 
 import ProjectInfoStep from "./steps/ProjectInfoStep";
 import StrategicLinkageStep from "./steps/StrategicLinkageStep";
 
+// Référentiel central des étapes (PROMPTS.md Rule #3 + ARCHITECTURE_REFERENTIELS)
+import {
+  PROJECT_WORKFLOW_STEPS,
+  type WorkflowStepIcon,
+} from "@/config/referentials/projects/project-workflow-steps.referential";
+
+const STEP_ICON_MAP: Record<WorkflowStepIcon, React.ComponentType<{ className?: string }>> = {
+  building: Building,
+  users: Users,
+  "map-pin": MapPin,
+  layers: Layers,
+  "alert-triangle": AlertTriangle,
+  "file-check": FileCheck,
+  target: Target,
+  "check-circle": CheckCircle,
+};
+
 interface ProjectCreationWorkflowProps {
   onSubmit: (data: ProjectWorkflowData) => void;
   selectedMaterials: Array<{ materialId: string; quantity: number }>;
@@ -66,6 +83,8 @@ interface ProjectCreationWorkflowProps {
     materials: Array<{ materialId: string; quantity: number }>
   ) => void;
   initialData?: ProjectWorkflowData;
+  mode?: "create" | "edit";
+  projectId?: string;
 }
 
 const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
@@ -73,7 +92,10 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   selectedMaterials,
   onMaterialsChange,
   initialData,
+  mode = "create",
+  projectId,
 }) => {
+
   // ⚡ Application Layer - Use unified workflow hook for all state management (Rule #5)
   const {
     workflowState,
@@ -89,7 +111,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     saveCurrentStep,
     validateCurrentStep,
     workflowSteps
-  } = useUnifiedProjectWorkflow('creation');
+  } = useUnifiedProjectWorkflow(mode === "edit" ? "edit" : "creation", projectId);
 
   // 🎨 UI Layer - Only UI-specific state (Rule #5)
   const [currentStep, setCurrentStep] = useState(0);
@@ -101,100 +123,25 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   // 🎨 UI Layer - Use unified workflow validation (Rule #5 compliant)
   const validateStepData = useCallback(async (): Promise<{ isValid: boolean; errors: string[] }> => {
     if (!formData) return { isValid: false, errors: ['No form data available'] };
-    
-    // Use unified workflow validation
     const validation = await validateCurrentStep();
-    return {
-      isValid: validation.isValid,
-      errors: validation.errors
-    };
+    return { isValid: validation.isValid, errors: validation.errors };
   }, [formData, validateCurrentStep]);
 
-  // Steps aligned with workflow specification (7 étapes critiques)
-  // ✅ Using centralized DTOs and proper validation (Rule #4)
-  const steps = [
-    {
-      id: 1,
-      title: "Informations du projet",
-      icon: Building,
-      description: "Type, budget, dates, référence",
-      color: "bg-blue-500",
-      isCompleted: () => {
-        if (!projectData) return false;
-        return Boolean(
-          projectData.title &&
-          projectData.description &&
-          (projectData.budget || 0) > 0 &&
-          projectData.startDate &&
-          projectData.endDate
-        );
-      },
-    },
-    {
-      id: 2,
-      title: "Parties prenantes",
-      icon: Users,
-      description:
-        "Bailleurs, Ministères, Entreprises, Banques, Bureau conseil",
-      color: "bg-green-500",
-      isCompleted: () => {
-        if (!projectData) return false;
-        return Boolean(projectData.projectManagerId);
-      },
-    },
-    {
-      id: 3,
-      title: "Localisation",
-      icon: MapPin,
-      description: "Géolocalisation interactive (Maps/Leaflet)",
-      color: "bg-cyan-500",
-      isCompleted: () => {
-        if (!projectData) return false;
-        return Boolean(projectData.address && (projectData.latitude || projectData.longitude));
-      },
-    },
-    {
-      id: 4,
-      title: "Planification WBS",
-      icon: Layers,
-      description:
-        "Phase → Step → Task avec documents, ressources, inspections",
-      color: "bg-indigo-500",
-      isCompleted: () => Boolean(relatedData?.phases && relatedData.phases.length > 0),
-    },
-    {
-      id: 5,
-      title: "Risques",
-      icon: AlertTriangle,
-      description: "Analyse et gestion des risques",
-      color: "bg-red-500",
-      isCompleted: () => Boolean(relatedData?.risks && relatedData.risks.length >= 0),
-    },
-    {
-      id: 6,
-      title: "Conformité",
-      icon: FileCheck,
-      description: "Standards Entreprise et bailleurs (BM, BAD, BID, AFD)",
-      color: "bg-amber-500",
-      isCompleted: () => true,
-    },
-    {
-      id: 7,
-      title: "Liaisons stratégiques",
-      icon: Target,
-      description: "SCAPP et Loi de Finances 2026",
-      color: "bg-purple-500",
-      isCompleted: () => true,
-    },
-    {
-      id: 8,
-      title: "Validation",
-      icon: CheckCircle,
-      description: "Réception définitive et clôture",
-      color: "bg-teal-500",
-      isCompleted: () => true,
-    },
-  ];
+  // ✅ Steps from centralized referential (ARCHITECTURE_REFERENTIELS)
+  // — labels/validation/icones centralisés ; pas de hardcoding UI.
+  const steps = useMemo(
+    () =>
+      PROJECT_WORKFLOW_STEPS.map((cfg) => ({
+        id: cfg.id,
+        title: cfg.title,
+        description: cfg.description,
+        color: cfg.color,
+        icon: STEP_ICON_MAP[cfg.icon],
+        isCompleted: () => cfg.validate(formData ?? null),
+      })),
+    [formData]
+  );
+
 
   // 🎨 UI Layer - Save and proceed to next step using unified workflow (Rule #5)
   const saveAndNextStep = async () => {
@@ -372,16 +319,28 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
         {currentStep === 1 && (
           <StakeholdersTeamStep
             workflowData={formData}
+            mode={mode}
             onStepComplete={(stepData) => {
-              updateFormData({ 
+              const stakeholders = stepData.stakeholders || [];
+              // Promotion auto du Chef de projet → projectManagerId (validation step 2)
+              const pm = stakeholders.find((s: any) =>
+                String(s?.position || s?.role || "").toLowerCase().includes("chef de projet")
+              );
+              updateFormData({
                 relatedData: {
                   ...formData?.relatedData,
-                  stakeholders: stepData.stakeholders
-                }
+                  stakeholders,
+                },
+                projectData: {
+                  ...(formData?.projectData || {} as any),
+                  ...(pm?.employeeId ? { projectManagerId: pm.employeeId } : {}),
+                } as any,
               });
             }}
           />
         )}
+
+
 
         {currentStep === 2 && (
           <InteractiveMapGIS

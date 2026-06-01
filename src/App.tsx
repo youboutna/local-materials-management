@@ -49,7 +49,7 @@ import SupplierPasswordReset from "./pages/SupplierPasswordReset";
 import TenderManagement from "./pages/TenderManagement";
 import TenderImport from "./pages/TenderImport";
 import PhaseDetail from "./pages/PhaseDetail";
-import ProjectPhasesDetail from "./pages/ProjectPhasesDetail";
+// ProjectPhasesDetail/PhaseDetailsPage retirés du routing : PhaseDetail unifié sur /projects/:projectId/phases/:phaseId
 import Suppliers from "./pages/Suppliers";
 import EnhancedDashboard from "./pages/EnhancedDashboard";
 import BankGuaranteeMonitorPage from "./pages/BankGuaranteeMonitor";
@@ -67,7 +67,7 @@ import { EvaluationAccessPortal } from "./components/tenders/EvaluationAccessPor
 import SupplierSubmissionDashboard from "./components/suppliers/SupplierSubmissionDashboard";
 import WorkflowTest from "./pages/WorkflowTest";
 import MergedNavbar from "./components/MergedNavbar";
-import PhaseDetailsPage from "./components/project/PhaseDetailsPage";
+
 import { DEV_MODE } from "./config/constants";
 import EnhancedMaterialForm from "./components/materials/EnhancedMaterialForm";
 
@@ -235,24 +235,13 @@ function App() {
                       />
                       <Route
                         path="/projects/:projectId/phases/:phaseId"
-                        element={<PhaseDetailsPage />}
-                      />
-                      <Route
-                        path="/projects/:id/edit/phases/detail"
-                        element={
-                          <RoleBasedRoute disallowedRoles={["supplier"]}>
-                            <ProjectPhasesDetail />
-                          </RoleBasedRoute>
-                        }
-                      />
-                      {/* <Route
-                        path="/projects/:projectId/phases/:phaseId"
                         element={
                           <RoleBasedRoute disallowedRoles={["supplier"]}>
                             <PhaseDetail />
                           </RoleBasedRoute>
                         }
-                      /> */}
+                      />
+
                       <Route
                         path="/projects/import"
                         element={
