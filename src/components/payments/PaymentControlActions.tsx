@@ -221,7 +221,10 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
           Actions de Contrôle de Paiement
         </CardTitle>
         <CardDescription>
-          Actions disponibles pour le paiement de {amount.toLocaleString()} MRU
+          Actions disponibles pour le paiement de {amount.toLocaleString()} MRU —{' '}
+          <a href={`/payments/${paymentId}`} className="text-primary hover:underline font-mono">
+            voir détail ({paymentId.slice(0, 8)}…)
+          </a>
         </CardDescription>
       </CardHeader>
       <CardContent>
