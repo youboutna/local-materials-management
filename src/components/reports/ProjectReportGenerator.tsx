@@ -128,13 +128,13 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
         const evmMetricsResult = ReportCalculations.calculateEVMMetrics(
           project,
           actualCostForEvm,
-          completeReport.reportDTO.phases
+          completeReport.reportDTO.phases as any
         );
         setEvmMetrics(evmMetricsResult);
-        
+
         // Calculate PERT analysis with project phases and tasks
         const pertAnalysisResult = ReportCalculations.calculatePERTAnalysis(
-          completeReport.reportDTO.phases,
+          completeReport.reportDTO.phases as any,
           project.tasks || []
         );
         setPertAnalysis(pertAnalysisResult);
