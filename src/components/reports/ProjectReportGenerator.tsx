@@ -121,7 +121,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
     };
 
     loadReportData();
-  }, [project, toast]);
+  }, [project, toast, reportConfig.reportType]);
 
   const generatePDF = async () => {
     if (!reportData || !costCalculation) {
