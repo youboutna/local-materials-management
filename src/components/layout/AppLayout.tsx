@@ -144,7 +144,7 @@ export function AppLayout({
         )}
 
         {/* Page Content */}
-        <div className="container-responsive py-6">{children}</div>
+        <div className="container-responsive py-4">{children}</div>
       </main>
     </div>
   );
