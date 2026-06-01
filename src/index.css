@@ -371,5 +371,15 @@
   .card-dense [data-slot="card-content"] {
     @apply py-3;
   }
+
+  /* Filet de sécurité : ramène les <input> natifs legacy (p-3) à h-9
+     pour éviter des champs gigantesques (ex: « Référence du projet »). */
+  input.p-3:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  select.p-3 {
+    @apply h-9 py-1.5 px-2.5 text-sm;
+  }
+  textarea.p-3 {
+    @apply py-2 px-3 text-sm;
+  }
 }
 
