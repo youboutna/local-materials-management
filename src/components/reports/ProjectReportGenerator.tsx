@@ -456,38 +456,3 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
     </div>
   );
 }
-
-function getSectionLabel(key: string): string {
-  const labels: { [key: string]: string } = {
-    overview: 'Aperçu général',
-    financial: 'Résumé financier',
-    timeline: 'Calendrier',
-    materials: 'Matériaux',
-    phases: 'Phases',
-    inspections: 'Inspections',
-    risks: 'Analyse des risques',
-    kpi: 'Indicateurs de performance',
-    milestones: 'Jalons',
-    bankGuarantees: 'Garanties bancaires',
-    insurance: 'Assurances',
-    paymentBlocks: 'Blocages de paiements',
-    suppliers: 'Fournisseurs',
-    documents: 'Documents',
-    employees: 'Employés',
-    escalationAlerts: 'Alertes d\'escalade',
-    evmAnalysis: 'Analyse EVM',
-    pertAnalysis: 'Analyse PERT',
-    ganttChart: 'Diagramme de Gantt'
-  };
-  return labels[key] || key;
-}
-
-function getReportTypeDescription(type: string): string {
-  const descriptions: Record<string, string> = {
-    summary: 'Rapport concis avec les informations essentielles du projet',
-    detailed: 'Rapport complet incluant toutes les sections et analyses disponibles',
-    financial: 'Focus sur les aspects financiers, garanties et contrôles de paiement',
-    project_manager: 'Rapport orienté gestion avec timeline, ressources et analyses avancées'
-  };
-  return descriptions[type] || type;
-}
