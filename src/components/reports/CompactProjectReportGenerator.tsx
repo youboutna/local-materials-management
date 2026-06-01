@@ -163,17 +163,19 @@ export function CompactProjectReportGenerator({
             try {
               const completeReport = await reportingService.generateCompleteProjectReport({ project: proj as any });
               const reportProject = completeReport.reportDTO.project || {};
-              
-              // Convert ProjectData to ProjectDetailDTO with all required arrays
+              const realCosts: any = completeReport.realCosts || {};
+              const actualCost = Number(
+                realCosts.totalSpent ?? completeReport.costCalculation.actualCost ?? 0
+              );
+
               const projectDetailFromService = {
                 ...reportProject,
                 id: proj.id || '',
                 title: proj.title || '',
                 currency: proj.currency || 'MRU',
                 teamSize: proj.teamSize || 0,
-                createdAt: proj.createdAt || new Date().toISOString(),
-                updatedAt: proj.updatedAt || new Date().toISOString(),
-                // Required arrays
+                createdAt: proj.createdAt || (reportProject as any).createdAt || null,
+                updatedAt: proj.updatedAt || (reportProject as any).updatedAt || null,
                 phases: (reportProject as any).phases || [],
                 tasks: (reportProject as any).tasks || [],
                 risks: (reportProject as any).risks || [],
@@ -193,21 +195,23 @@ export function CompactProjectReportGenerator({
                 methodology: (reportProject as any).methodology || 'hybrid',
                 ganttChart: (reportProject as any).ganttChart,
                 pertAnalysis: (reportProject as any).pertAnalysis,
-                earnedValueManagement: (reportProject as any).earnedValueManagement
+                earnedValueManagement: (reportProject as any).earnedValueManagement,
+                deviations: completeReport.deviations,
+                healthScore: completeReport.healthScore,
               } as ProjectDetailDTO;
               enrichedMap.set(proj.id, projectDetailFromService);
-              
+
               const evmMetricsResult = ReportCalculations.calculateEVMMetrics(
                 proj as any,
-                completeReport.costCalculation.actualCost
+                actualCost,
               );
               evmMap.set(proj.id, evmMetricsResult as EVMMetrics);
-              
+
               const pertResult = ReportCalculations.calculatePERTAnalysis(proj as any);
               pertMap.set(proj.id, {
                 expectedDuration: (pertResult as any).totalExpectedDuration || (pertResult as any).expectedDuration || 0,
                 variance: (pertResult as any).totalVariance || (pertResult as any).variance || 0,
-                ...pertResult
+                ...pertResult,
               });
             } catch (error) {
               console.error(`Failed to load data for project ${proj.id}:`, error);
