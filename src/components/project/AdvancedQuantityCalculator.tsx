@@ -254,7 +254,13 @@ const getRecommendations = (elementType: string) => {
 };
 
 
-const AdvancedQuantityCalculator: React.FC = () => {
+interface AdvancedQuantityCalculatorProps {
+  projectId?: string;
+  phaseId?: string;
+  onPersisted?: () => void;
+}
+
+const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({ projectId, phaseId, onPersisted }) => {
   const [form, setForm] = useState(DEFAULT_FORM);
   const [calculations, setCalculations] = useState<CalculationResult[]>([]);
   const [invoiceLines, setInvoiceLines] = useState<InvoiceLine[]>([]);
