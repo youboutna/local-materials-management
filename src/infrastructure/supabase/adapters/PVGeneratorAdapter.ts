@@ -15,7 +15,7 @@ export class PVGeneratorAdapter implements IPVGeneratorRepository {
 
   
   async getInspectionWithProject(inspectionId: string): Promise<any> {
-    const { data, error } = await supabase
+    const { data, error } = await btpClient
       .from('inspections')
       .select(`
         *,
@@ -28,6 +28,7 @@ export class PVGeneratorAdapter implements IPVGeneratorRepository {
     if (error) throw error;
     return data;
   }
+
 
   async savePV(pvData: {
     inspection_id: string;
