@@ -304,30 +304,16 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="summary">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">Rapide</Badge>
-                      <span>Résumé exécutif</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="detailed">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">Complet</Badge>
-                      <span>Rapport détaillé</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="financial">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">Finance</Badge>
-                      <span>Analyse financière</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="project_manager">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">Gestion</Badge>
-                      <span>Chef de projet</span>
-                    </div>
-                  </SelectItem>
+                  {Object.values(REPORT_PROFILES).map((profile) => (
+                    <SelectItem key={profile.code} value={profile.code}>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs capitalize">
+                          {profile.depth}
+                        </Badge>
+                        <span>{profile.label.fr}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <div className="text-xs text-muted-foreground mt-1">
