@@ -316,3 +316,60 @@
   content: attr(data-label) ": ";
   @apply font-semibold text-foreground sm:hidden;
 }
+
+/* =====================================================================
+   GLOBAL COMPACT DENSITY
+   Règle globale appliquée à tous les formulaires & filtres pour réduire
+   la hauteur des champs, le padding et la taille de police. Améliore la
+   densité d'information sans casser l'accessibilité (>=32px tactile).
+   ===================================================================== */
+@layer components {
+  /* Champs de saisie shadcn (Input, Textarea-like) */
+  .app-dense input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  input.h-10,
+  input.h-11 {
+    @apply h-9 text-sm;
+  }
+
+  /* SelectTrigger & boutons compacts */
+  [data-radix-select-trigger],
+  button[role="combobox"] {
+    @apply h-9 text-sm;
+  }
+
+  /* Boutons shadcn par défaut */
+  .btn-compact,
+  button[data-slot="button"]:not(.btn-lg):not(.btn-xl) {
+    @apply h-9 px-3 text-sm;
+  }
+
+  /* Labels plus discrets */
+  label {
+    @apply text-sm;
+  }
+
+  /* Réduit l'espace vertical des form-group / form-grid */
+  .form-grid {
+    @apply gap-3 sm:gap-4;
+  }
+  .form-group {
+    @apply space-y-1.5;
+  }
+  .form-responsive {
+    @apply space-y-3 sm:space-y-4;
+  }
+
+  /* Cartes filtres : padding compact */
+  [data-filters-card] {
+    @apply p-3;
+  }
+
+  /* Cards header denses */
+  .card-dense [data-slot="card-header"] {
+    @apply py-3;
+  }
+  .card-dense [data-slot="card-content"] {
+    @apply py-3;
+  }
+}
+

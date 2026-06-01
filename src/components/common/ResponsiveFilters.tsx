@@ -98,28 +98,29 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
 
   // Desktop View
   const DesktopFilters = () => (
-    <Card className={`hidden md:block ${className}`}>
-      <CardHeader>
+    <Card data-filters-card className={`hidden md:block ${className}`}>
+      <CardHeader className="py-2 px-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <Filter className="h-4 w-4" />
             Filtres
             {activeFiltersCount > 0 && (
-              <Badge variant="secondary" className="ml-2">
+              <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
                 {activeFiltersCount}
               </Badge>
             )}
           </CardTitle>
           {resultCount !== undefined && (
-            <span className="text-sm text-muted-foreground">
-              {resultCount} résultat{resultCount !== 1 ? "s" : ""}
+            <span className="text-xs text-muted-foreground">
+              {resultCount} résultat{resultCount > 1 ? "s" : ""}
             </span>
           )}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-3 pb-3 pt-0">
         <div
-          className={`grid gap-4 ${
+          className={`grid gap-2 ${
+
             filters.length <= 2
               ? "grid-cols-1 lg:grid-cols-3"
               : filters.length === 3
