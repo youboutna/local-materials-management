@@ -273,12 +273,15 @@ export function useProjectPhasesForLots(projectId?: string) {
       if (!projectId) return [];
       const phaseRepo = RepositoryFactory.getPhaseRepository();
       const phases = await phaseRepo.findByProjectId(projectId);
-      return (phases || []).map((p: Record<string, unknown>, idx: number) => ({
-        id: String(p.id),
-        name: String(p.phaseName ?? p.name ?? `Phase ${idx + 1}`),
-        order: Number(p.orderIndex ?? idx),
-        status: String(p.status ?? 'pending'),
-      }));
+      return (phases || []).map((ph, idx) => {
+        const p = ph as unknown as Record<string, unknown>;
+        return {
+          id: String(p.id),
+          name: String(p.phaseName ?? p.name ?? `Phase ${idx + 1}`),
+          order: Number(p.orderIndex ?? idx),
+          status: String(p.status ?? 'pending'),
+        };
+      });
     },
     enabled: !!projectId
   });
