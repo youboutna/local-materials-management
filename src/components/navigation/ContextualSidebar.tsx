@@ -116,9 +116,14 @@ const navigationItems: NavItem[] = [
     ],
   },
   {
-    label: "Notifications",
-    href: "/notifications-center",
-    icon: Bell,
+    label: "Reporting & suivi",
+    icon: BarChart3,
+    children: [
+      { label: "Suivi global", href: "/comprehensive-monitoring" },
+      { label: "Documents", href: "/documents" },
+      { label: "Tâches", href: "/tasks" },
+      { label: "Notifications", href: "/notifications-center" },
+    ],
   },
   {
     label: "Paramètres",
