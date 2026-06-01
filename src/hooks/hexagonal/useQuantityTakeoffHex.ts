@@ -26,6 +26,7 @@ export function useMaterialsForTakeoff() {
 }
 
 // Hook: Create quantity takeoff
+// IMPORTANT: matches CreateQuantityTakeoffRequestDto (snake_case) expected by QuantityTakeoffService
 export function useCreateQuantityTakeoff(projectId: string) {
   const queryClient = useQueryClient();
 
@@ -38,26 +39,31 @@ export function useCreateQuantityTakeoff(projectId: string) {
       width?: number;
       height?: number;
       note?: string;
-      quantity: number;
+      quantity?: number;
+      phase_id?: string;
+      milestone_id?: string;
+      unit_price?: number;
     }) => {
       const service = new QuantityTakeoffService();
-      // Use the service's available methods
-      const takeoffData = {
-        materialId: data.material_id,
-        elementType: data.element_type,
-        unit: data.unit,
-        length: data.length,
-        width: data.width ?? 0,
-        height: data.height ?? 0,
-        note: data.note ?? '',
-        quantity: data.quantity,
-        projectId,
-      };
-      // QuantityTakeoffService uses default repos from constructor
-      await (service as any).createQuantityTakeoff(takeoffData);
+      const allowed = new Set(['m³', 'm²', 'm', 'unité']);
+      const unit = (allowed.has(data.unit) ? data.unit : 'unité') as 'm³' | 'm²' | 'm' | 'unité';
+      await service.createQuantityTakeoff({
+        project_id: projectId,
+        material_id: data.material_id,
+        element_type: data.element_type,
+        unit,
+        length: data.length || 0,
+        width: data.width,
+        height: data.height,
+        unit_price: data.unit_price,
+        phase_id: data.phase_id,
+        milestone_id: data.milestone_id,
+        note: data.note,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quantity-takeoffs', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['phase-quantity-takeoffs'] });
     }
   });
 }
