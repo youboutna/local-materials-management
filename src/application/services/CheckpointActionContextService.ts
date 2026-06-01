@@ -573,23 +573,24 @@ export class CheckpointActionContextService {
 
   private async fetchProject(projectId: string): Promise<unknown> {
     try {
-      // For now, return mock data as project repository is not available
-      // TODO: Implement proper project retrieval when project repository is available
-      console.warn('CheckpointActionContextService.fetchProject: Project repository not available');
-      
+      const project = await RepositoryFactory.getProjectRepository().findById(projectId);
+      if (!project) {
+        throw new AppError(ErrorCode.NOT_FOUND, `Project ${projectId} not found`);
+      }
+      const p = project as unknown as Record<string, unknown>;
       return {
-        id: projectId,
-        title: 'Projet Test',
-        description: 'Description du projet',
-        status: 'in_progress',
-        progress: 75,
-        budget: 1000000,
-        start_date: '2024-01-01',
-        end_date: '2024-12-31',
-        main_contractor: 'Entreprise Test',
-        project_reference: 'REF-001',
-        allows_initial_payment: true,
-        initial_payment_percentage: 10
+        id: p.id,
+        title: p.title ?? p.name,
+        description: p.description,
+        status: p.status,
+        progress: p.progress ?? 0,
+        budget: p.budget,
+        start_date: p.startDate ?? p.start_date,
+        end_date: p.endDate ?? p.end_date,
+        main_contractor: typeof p.mainContractor === 'string' ? p.mainContractor : (p.mainContractor as Record<string, unknown> | undefined)?.name,
+        project_reference: p.projectReference ?? p.reference,
+        allows_initial_payment: p.allowsInitialPayment ?? false,
+        initial_payment_percentage: p.initialPaymentPercentage ?? 0,
       };
     } catch (error) {
       console.error('CheckpointActionContextService.fetchProject failed:', error);
@@ -599,32 +600,20 @@ export class CheckpointActionContextService {
 
   private async fetchPhases(projectId: string): Promise<unknown[]> {
     try {
-      // For now, return mock data as phase repository is not available
-      // TODO: Implement proper phase retrieval when phase repository is available
-      console.warn('CheckpointActionContextService.fetchPhases: Phase repository not available');
-      
-      return [
-        {
-          id: 'phase-1',
-          title: 'Phase 1',
-          status: 'completed',
-          progress: 100,
-          start_date: '2024-01-01',
-          end_date: '2024-03-31',
-          budget: 300000,
-          actual_cost: 280000
-        },
-        {
-          id: 'phase-2',
-          title: 'Phase 2',
-          status: 'in_progress',
-          progress: 60,
-          start_date: '2024-04-01',
-          end_date: '2024-06-30',
-          budget: 400000,
-          actual_cost: 240000
-        }
-      ];
+      const phases = await RepositoryFactory.getPhaseRepository().findByProjectId(projectId);
+      return (phases || []).map(ph => {
+        const p = ph as unknown as Record<string, unknown>;
+        return {
+          id: p.id,
+          title: p.phaseName ?? p.name,
+          status: p.status,
+          progress: p.progress ?? 0,
+          start_date: p.startDate ?? p.start_date,
+          end_date: p.endDate ?? p.end_date,
+          budget: p.estimatedCost ?? p.budget,
+          actual_cost: p.actualCost ?? 0,
+        };
+      });
     } catch (error) {
       console.error('CheckpointActionContextService.fetchPhases failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch phases');
@@ -633,56 +622,11 @@ export class CheckpointActionContextService {
 
   private async fetchMilestones(projectId: string): Promise<MilestoneDTO[]> {
     try {
-      // Use milestone repository with proper typing - returns MilestoneDTO[]
-      const milestoneRepository = RepositoryFactory.getMilestoneRepository();
-      const milestones = await milestoneRepository.findByProjectId(projectId);
-      
+      const milestones = await RepositoryFactory.getMilestoneRepository().findByProjectId(projectId);
       return milestones;
     } catch (error) {
       console.error('CheckpointActionContextService.fetchMilestones failed:', error);
-      // Fallback to mock data with MilestoneDTO structure
-      return [
-        {
-          id: 'milestone-1',
-          projectId: projectId,
-          title: 'Milestone 1',
-          description: 'First project milestone',
-          targetDate: '2024-03-31T00:00:00.000Z',
-          completedDate: '2024-03-30T00:00:00.000Z',
-          completedate: '2024-03-30T00:00:00.000Z',
-          status: 'completed' as MilestoneStatus,
-          type: 'gate' as MilestoneType,
-          priority: 'high' as MilestonePriority,
-          weight: 0.3,
-          notes: '',
-          isFromTemplate: false,
-          dependencies: [],
-          assignedTo: {} as any,
-          createdBy: {} as any,
-          createdAt: '2024-01-01T00:00:00.000Z',
-          updatedAt: '2024-03-30T00:00:00.000Z'
-        },
-        {
-          id: 'milestone-2',
-          projectId: projectId,
-          title: 'Milestone 2',
-          description: 'Second project milestone',
-          targetDate: '2024-06-30T00:00:00.000Z',
-          completedDate: undefined,
-          completedate: '',
-          status: 'pending' as MilestoneStatus,
-          type: 'checkpoint' as MilestoneType,
-          priority: 'critical' as MilestonePriority,
-          weight: 0.4,
-          notes: '',
-          isFromTemplate: false,
-          dependencies: ['milestone-1'],
-          assignedTo: {} as any,
-          createdBy: {} as any,
-          createdAt: '2024-01-01T00:00:00.000Z',
-          updatedAt: '2024-01-01T00:00:00.000Z'
-        }
-      ];
+      return [];
     }
   }
 
@@ -691,13 +635,8 @@ export class CheckpointActionContextService {
       if (!milestoneId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Milestone ID is required');
       }
-
-      // Use milestone repository with proper typing - returns MilestoneDTO
-      const milestoneRepository = RepositoryFactory.getMilestoneRepository();
-      const milestoneDTO = await milestoneRepository.findById(milestoneId);
-      
+      const milestoneDTO = await RepositoryFactory.getMilestoneRepository().findById(milestoneId);
       if (milestoneDTO) {
-        // Convert MilestoneDTO to internal MilestoneData
         return {
           id: milestoneDTO.id,
           title: milestoneDTO.title,
@@ -705,25 +644,13 @@ export class CheckpointActionContextService {
           completionDate: milestoneDTO.completedDate || undefined,
           status: milestoneDTO.status,
           priority: milestoneDTO.priority || 'normal',
-          progressPercentage: 0, // MilestoneDTO doesn't have direct progress
+          progressPercentage: 0,
           weight: milestoneDTO.weight || 0.5,
           type: milestoneDTO.type || 'checkpoint',
-          tags: []
+          tags: [],
         };
       }
-
-      // Fallback to default data
-      return {
-        id: milestoneId,
-        title: 'Milestone',
-        targetDate: new Date().toISOString(),
-        status: 'pending',
-        priority: 'normal',
-        progressPercentage: 0,
-        weight: 0.5,
-        type: 'checkpoint',
-        tags: []
-      };
+      throw new AppError(ErrorCode.NOT_FOUND, `Milestone ${milestoneId} not found`);
     } catch (error) {
       console.error('CheckpointActionContextService.fetchMilestoneById failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch milestone by ID');
@@ -732,65 +659,76 @@ export class CheckpointActionContextService {
 
   private async fetchPayments(projectId: string): Promise<unknown[]> {
     try {
-      // For now, return mock data as payment repository is not available
-      // TODO: Implement proper payment retrieval when payment repository is available
-      console.warn('CheckpointActionContextService.fetchPayments: Payment repository not available');
-      
-      return [
-        {
-          id: 'payment-1',
-          amount: 100000,
-          payment_date: '2024-03-15',
-          contractor_id: 'contractor-1',
-          contractor_name: 'Entreprise Test',
-          contractor_contact: 'contact@test.com'
-        }
-      ];
+      const payments = await RepositoryFactory.getPaymentRepository().findByProjectId(projectId);
+      return (payments || []).map(p => {
+        const pp = p as unknown as Record<string, unknown>;
+        return {
+          id: pp.id,
+          amount: pp.amount,
+          payment_date: pp.paymentDate ?? pp.payment_date,
+          contractor_id: pp.contractorId ?? pp.supplierId ?? pp.contractor_id,
+          contractor_name: pp.contractorName ?? pp.supplierName,
+          contractor_contact: pp.contractorContact ?? pp.supplierContact,
+        };
+      });
     } catch (error) {
       console.error('CheckpointActionContextService.fetchPayments failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch payments');
+      return [];
     }
   }
 
   private async fetchInspections(projectId: string): Promise<unknown[]> {
     try {
-      // For now, return mock data as inspection repository is not available
-      // TODO: Implement proper inspection retrieval when inspection repository is available
-      console.warn('CheckpointActionContextService.fetchInspections: Inspection repository not available');
-      
-      return [
-        {
-          id: 'inspection-1',
-          date: '2024-03-10',
-          status: 'approved',
-          inspector: 'Inspecteur Principal',
-          progress_at_inspection: 85,
-          phase_id: 'phase-1'
-        }
-      ];
+      const inspections = await RepositoryFactory.getInspectionRepository().findByProjectId(projectId);
+      return (inspections || []).map(i => {
+        const ii = i as unknown as Record<string, unknown>;
+        return {
+          id: ii.id,
+          date: ii.scheduledDate ?? ii.executionDate ?? ii.date,
+          status: ii.status,
+          inspector: ii.inspectorName ?? ii.inspectorId,
+          progress_at_inspection: ii.progressAtInspection ?? 0,
+          phase_id: ii.phaseId,
+        };
+      });
     } catch (error) {
       console.error('CheckpointActionContextService.fetchInspections failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch inspections');
+      return [];
     }
   }
 
   private async fetchMainContractor(projectId: string): Promise<ContractorInfo | undefined> {
     try {
-      // For now, return mock data as supplier repository is not available
-      // TODO: Implement proper contractor retrieval when supplier repository is available
-      console.warn('CheckpointActionContextService.fetchMainContractor: Supplier repository not available');
-      
+      const project = await RepositoryFactory.getProjectRepository().findById(projectId);
+      if (!project) return undefined;
+      const mc = (project as unknown as Record<string, unknown>).mainContractor;
+      if (!mc) return undefined;
+      if (typeof mc === 'string') {
+        const supplier = await RepositoryFactory.getSupplierRepository().findById(mc).catch(() => null);
+        if (supplier) {
+          const s = supplier as unknown as Record<string, unknown>;
+          return {
+            id: String(s.id),
+            name: String(s.name ?? s.companyName ?? ''),
+            contact: String(s.email ?? s.contact ?? ''),
+            company: String(s.companyName ?? s.name ?? ''),
+          };
+        }
+        return { id: mc, name: mc, contact: '', company: mc };
+      }
+      const s = mc as Record<string, unknown>;
       return {
-        id: 'contractor-1',
-        name: 'Entreprise Test',
-        contact: 'contact@test.com',
-        company: 'Entreprise Test SARL'
+        id: String(s.id ?? ''),
+        name: String(s.name ?? ''),
+        contact: String(s.contact ?? s.email ?? ''),
+        company: String(s.company ?? s.name ?? ''),
       };
     } catch (error) {
       console.error('CheckpointActionContextService.fetchMainContractor failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch main contractor');
+      return undefined;
     }
   }
+
 
   private mapPhaseToSummary(phase: unknown): PhaseSummary {
     const phaseData = phase as Record<string, unknown>;
