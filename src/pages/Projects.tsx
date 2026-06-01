@@ -237,31 +237,31 @@ const Projects: React.FC = () => {
         </Button>
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-3">
         <Tabs defaultValue="grid" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="grid" className="flex items-center gap-2">
-              <Grid className="h-4 w-4" />
+          <TabsList className="grid w-full grid-cols-4 h-9">
+            <TabsTrigger value="grid" className="flex items-center gap-2 text-xs">
+              <Grid className="h-3.5 w-3.5" />
               Vue Grille
             </TabsTrigger>
-            <TabsTrigger value="waterfall" className="flex items-center gap-2">
-              <Filter className="h-4 w-4" />
+            <TabsTrigger value="waterfall" className="flex items-center gap-2 text-xs">
+              <Filter className="h-3.5 w-3.5" />
               Gestion Waterfall
             </TabsTrigger>
-            <TabsTrigger value="map" className="flex items-center gap-2">
-              <Map className="h-4 w-4" />
+            <TabsTrigger value="map" className="flex items-center gap-2 text-xs">
+              <Map className="h-3.5 w-3.5" />
               Carte des Projets
             </TabsTrigger>
             <TabsTrigger
               value="interactive"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-xs"
             >
-              <Map className="h-4 w-4" />
+              <Map className="h-3.5 w-3.5" />
               Carte Interactive
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="grid" className="space-y-6">
+          <TabsContent value="grid" className="space-y-3">
             {/* Add Bulk Actions Component */}
             <BulkActions
               selectedProjects={selectedProjects}
@@ -270,39 +270,38 @@ const Projects: React.FC = () => {
               onClearSelection={clearSelection}
             />
 
-            {/* Selection Options - Separate from ProjectFilters */}
+            {/* Selection Options - compact */}
             {selectedProjects.size > 0 && (
-              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                <div className="text-sm text-gray-600">
-                  {selectedProjects.size} élément(s) sélectionné(s) sur{" "}
-                  {filteredProjects.length}
-                </div>
-
-                <div className="flex gap-2">
+              <div className="flex flex-wrap items-center gap-2 px-3 py-2 bg-muted/40 rounded-md text-xs">
+                <span className="text-muted-foreground">
+                  {selectedProjects.size} sélectionné(s) / {filteredProjects.length}
+                </span>
+                <div className="flex gap-1.5 ml-auto">
                   <Button
                     variant="outline"
                     size="sm"
+                    className="h-7 text-xs"
                     onClick={() =>
                       selectAllOnPage(paginatedProjects.map((p) => p.id))
                     }
                   >
-                    Sélectionner la page
+                    Page
                   </Button>
-
                   <Button
                     variant="outline"
                     size="sm"
+                    className="h-7 text-xs"
                     onClick={() => selectAll(projects?.map((p) => p.id) || [])}
                   >
-                    Tout sélectionner
+                    Tout
                   </Button>
-
-                  <Button variant="outline" size="sm" onClick={clearSelection}>
-                    Tout désélectionner
+                  <Button variant="outline" size="sm" className="h-7 text-xs" onClick={clearSelection}>
+                    Effacer
                   </Button>
                 </div>
               </div>
             )}
+
 
             <ProjectFilters
               searchQuery={searchQuery}
