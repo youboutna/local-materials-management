@@ -323,53 +323,78 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
 
           {/* Sections à inclure */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
               <Label className="text-base font-medium">Sections à inclure</Label>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSelectAll}
-                className="h-8 px-3 text-xs"
-              >
-                {Object.values(reportConfig.includeSections).every(Boolean) ? (
-                  <>
-                    <Square className="h-3 w-3 mr-1" />
-                    Désélectionner tout
-                  </>
-                ) : (
-                  <>
-                    <CheckSquare className="h-3 w-3 mr-1" />
-                    Sélectionner tout
-                  </>
-                )}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    setReportConfig(prev => ({
+                      ...prev,
+                      includeSections: defaultSectionsFor(prev.reportType),
+                    }))
+                  }
+                  className="h-8 px-3 text-xs"
+                  title="Restaurer les sections par défaut du profil sélectionné"
+                >
+                  Réinitialiser au profil
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSelectAll}
+                  className="h-8 px-3 text-xs"
+                >
+                  {Object.values(reportConfig.includeSections).every(Boolean) ? (
+                    <>
+                      <Square className="h-3 w-3 mr-1" />
+                      Désélectionner tout
+                    </>
+                  ) : (
+                    <>
+                      <CheckSquare className="h-3 w-3 mr-1" />
+                      Sélectionner tout
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
-            
+
             <div className="bg-muted/30 p-4 rounded-lg border">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {Object.entries(reportConfig.includeSections).map(([key, value]) => (
-                  <div 
-                    key={key} 
-                    className={`flex items-center space-x-3 p-2 rounded-md transition-colors hover:bg-background/50 ${
-                      value ? 'bg-primary/5 border border-primary/20' : 'bg-background/30'
-                    }`}
-                  >
-                    <Checkbox
-                      id={key}
-                      checked={value}
-                      onCheckedChange={(checked) => updateSectionConfig(key as any, checked as boolean)}
-                      className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                    />
-                    <Label htmlFor={key} className="text-sm font-normal cursor-pointer flex-1">
-                      {REPORT_SECTION_LABELS[key as ReportSectionKey] ?? key}
-                    </Label>
-                  </div>
-                ))}
+                {Object.entries(reportConfig.includeSections).map(([key, value]) => {
+                  const inProfile = getReportProfile(reportConfig.reportType).includes.includes(
+                    key as ReportSectionKey,
+                  );
+                  return (
+                    <div
+                      key={key}
+                      className={`flex items-center space-x-3 p-2 rounded-md transition-colors hover:bg-background/50 ${
+                        value ? 'bg-primary/5 border border-primary/20' : 'bg-background/30'
+                      }`}
+                    >
+                      <Checkbox
+                        id={key}
+                        checked={value}
+                        onCheckedChange={(checked) => updateSectionConfig(key as any, checked as boolean)}
+                        className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                      />
+                      <Label htmlFor={key} className="text-sm font-normal cursor-pointer flex-1 flex items-center gap-2">
+                        <span className="flex-1">{REPORT_SECTION_LABELS[key as ReportSectionKey] ?? key}</span>
+                        {inProfile && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Profil</Badge>
+                        )}
+                      </Label>
+                    </div>
+                  );
+                })}
               </div>
-              
+
               <div className="mt-3 pt-3 border-t border-border/50">
                 <div className="text-xs text-muted-foreground">
                   {Object.values(reportConfig.includeSections).filter(Boolean).length} sections sélectionnées sur {Object.keys(reportConfig.includeSections).length}
+                  {' · '}Profil « {getReportProfile(reportConfig.reportType).label.fr} » recommande {getReportProfile(reportConfig.reportType).includes.length} sections
                 </div>
               </div>
             </div>
