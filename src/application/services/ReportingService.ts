@@ -81,12 +81,40 @@ export class ReportingService {
       const phasesData = phases || [];
       const inspectionsData = inspections || [];
 
-      // Use ProjectCalculationService for project analytics
-      const analytics = ProjectCalculationService.calculateProjectHealthScore(
-        request.project.progress || 0,
-        85, // Default budget utilization
-        90, // Default schedule performance
-        88  // Default quality score
+      // ---- Métriques dérivées des données réelles (plus de constantes hardcodées) ----
+      const budget = request.project.budget || 0;
+      const totalSpent = Number((realCosts as any)?.totalSpent ?? 0);
+      const actualProgress = request.project.progress || 0;
+
+      // Utilisation budgétaire = % du budget consommé
+      const budgetUtilization = budget > 0 ? Math.min(100, (totalSpent / budget) * 100) : 0;
+
+      // Performance schedule = ratio progression réelle / progression temporelle attendue
+      const startDate = (request.project as any).startDate ?? (request.project as any).start_date ?? null;
+      const endDate = (request.project as any).endDate ?? (request.project as any).end_date ?? null;
+      let schedulePerformance = 100;
+      if (startDate && endDate) {
+        const start = new Date(startDate).getTime();
+        const end = new Date(endDate).getTime();
+        const now = Date.now();
+        const totalMs = end - start;
+        if (totalMs > 0) {
+          const expectedProgress = Math.max(0, Math.min(100, ((now - start) / totalMs) * 100));
+          schedulePerformance = expectedProgress > 0
+            ? Math.min(150, (actualProgress / expectedProgress) * 100)
+            : 100;
+        }
+      }
+
+      // Qualité = inverse du nombre d'alertes critiques (proxy faute de mieux), borné [0,100]
+      const alertCount = (request.project as any).alerts?.length ?? 0;
+      const qualityScore = Math.max(0, 100 - alertCount * 5);
+
+      const healthScore = ProjectCalculationService.calculateProjectHealthScore(
+        actualProgress,
+        budgetUtilization,
+        schedulePerformance,
+        qualityScore,
       );
 
       // Calculate resource utilization for the first phase if available
@@ -94,17 +122,29 @@ export class ReportingService {
         ? await this.reportingRepository.calculatePhaseResourceUtilization(request.project.id, phasesData[0].id)
         : null;
 
+      // Projection de fin basée sur le burn rate réel (au lieu de today + 30j en dur)
+      let projectedCompletionIso: string;
+      if (endDate) {
+        projectedCompletionIso = new Date(endDate).toISOString();
+      } else if (totalSpent > 0 && actualProgress > 0 && actualProgress < 100 && startDate) {
+        const elapsedMs = Date.now() - new Date(startDate).getTime();
+        const projectedTotalMs = (elapsedMs / actualProgress) * 100;
+        projectedCompletionIso = new Date(new Date(startDate).getTime() + projectedTotalMs).toISOString();
+      } else {
+        projectedCompletionIso = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      }
+
       // Calculate comprehensive cost data
       const costCalculation: CostCalculation = {
-        totalBudget: request.project.budget || 0,
-        spentAmount: realCosts.totalSpent || 0,
-        remainingBudget: (request.project.budget || 0) - (realCosts.totalSpent || 0),
-        costVariance: (realCosts.totalSpent || 0) - (request.project.budget || 0),
-        estimatedCost: realCosts.estimatedCost || 0,
-        actualCost: realCosts.actualPhaseCost || 0,
-        efficiency: realCosts.totalSpent > 0 ? ((request.project.budget || 0) / realCosts.totalSpent) * 100 : 100,
-        projectedCompletion: new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toISOString(), // Default 30 days from now
-        projectedOverrun: Math.max(0, (realCosts.totalSpent || 0) - (request.project.budget || 0))
+        totalBudget: budget,
+        spentAmount: totalSpent,
+        remainingBudget: budget - totalSpent,
+        costVariance: totalSpent - budget,
+        estimatedCost: (realCosts as any)?.estimatedCost || 0,
+        actualCost: (realCosts as any)?.actualPhaseCost || totalSpent,
+        efficiency: totalSpent > 0 ? (budget / totalSpent) * 100 : 100,
+        projectedCompletion: projectedCompletionIso,
+        projectedOverrun: Math.max(0, totalSpent - budget),
       };
 
       // Create proper ReportData object
