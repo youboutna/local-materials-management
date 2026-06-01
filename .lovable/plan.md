@@ -1,10 +1,17 @@
 
-# Plan global — HadraTech‑GPI : référentiels au cœur, DQE, rapports filtrés, finalisation dette
+# Plan global — HadraTech‑GPI : alignement architecture + écart Planifié vs Réalisé
 
 > Conformité stricte `docs/PROMPTS.md` + `docs/ARCHITECTURE_REFERENTIELS.md` :
 > tout seuil/poids/règle/statut/indicateur/profil passe par `src/config/referentials/*` et un moteur générique. Aucune valeur métier en dur dans l'UI.
 
-Inspiration captures (ETER) : KPI projet (Progression / Budget / Délai / Rentabilité avec cible référentielle), onglets `Planification / Exécution / Financier / Conformité / Localisation`, **DQE Détaillé**, **Phases & Jalons** en cartes, **Gantt**.
+**Cadre métier générique** (toute entreprise, pas un cas client) :
+`Planification (DQE / AO / Conformité / RH / Matériel) → Exécution → Clôture`.
+Les utilisateurs (DG, CP, CFO, Contrôleur, Inspecteur, Fournisseur) doivent visualiser **l'écart Planifié vs Réalisé** sur 5 axes : *Performance · Suivi‑Évaluation · Reporting · Inspection · Paiement/Comptabilité*.
+
+Vues projet (`/projects/{id}`) organisées par axe métier, pas par client :
+`Planification` · `Exécution` · `Financier` · `Conformité` · `Localisation` (référentiel `project-views`).
+
+
 
 ---
 
@@ -80,16 +87,17 @@ Actions :
 
 ## 6. Items HIGH/MEDIUM/LOW restants
 
-| ID | Action | Fichier |
+| ID | Action | Statut |
 |---|---|---|
-| H5 | `ProjectCard.getProjectHealth` → `DeviationEngine.compute(..., 'project')` + `health-thresholds.referential` | `ProjectCard.tsx` |
-| H8 | `PerformanceMetrics` seuils via `indicator-templates.referential` | `PerformanceMetrics.tsx` |
-| M3 | Typer `(phase as any)` → `PhaseDTO` | composants phase |
-| M5 | Statuts inspection via `inspection-statuses.referential` | `RoleBasedInspectionMonitoring.tsx` |
-| M7 | Cross-link Tender ↔ Project complet (inspections liées) | `TenderDetail.tsx` |
-| M9 | Persist statut milestone via `MilestoneService.updateStatus` | `MilestoneDetail.tsx` |
-| M10 | Toasts standardisés via `projectToasts` | divers |
-| L3 | Retirer `@ts-nocheck` (reports + 3-4 composants) | reports |
+| H5 | `ProjectCard.getProjectHealth` → `classifyProjectHealth` (`health-thresholds.referential`) | ✅ fait |
+| H8 | `PerformanceMetrics` seuils via `PERFORMANCE_THRESHOLDS` + `classifyPerformance` | ✅ fait |
+| M3 | `toPhaseViewModel` typé → élimine `(phase as any)` dans `PhaseDetail` | ✅ fait (PhaseDetail) — à propager : `UnifiedCascadeWorkflow`, `ConstructionPhaseWithSteps`, `PhaseDetailsPage` |
+| M5 | Statuts inspection via `INSPECTION_STATUSES` (`getInspectionStatus*`) | ✅ fait (`RoleBasedInspectionMonitoring`) |
+| M7 | Cross-link Tender ↔ Project complet (inspections liées) | ⏳ à faire |
+| M9 | Persist statut milestone + toast retour utilisateur | ✅ fait (hook hex + `entityToasts`) |
+| M10 | Toasts standardisés via `entityToasts(entityLabel)` factory | ✅ socle fait — à propager sur paiements/tenders/tasks |
+| L3 | Retirer `@ts-nocheck` (reports + composants) | 🟡 partiel : `PhaseDetail` OK ; restants : `enhancedReportingService`, `TenderSubmissionService`, `EnhancedSupplierTenderPortal`, utils calculs |
+
 
 ---
 
