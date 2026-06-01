@@ -36,6 +36,17 @@ interface ProjectPDFDocumentProps {
     notes?: string;
   };
   enrichedData?: ProjectReportDTO;
+  /** Écarts calculés via DeviationEngine (référentiel deviation-rules). */
+  deviations?: Array<{
+    ruleCode: string;
+    label: string;
+    value: number;
+    unit: string;
+    severity: 'info' | 'low' | 'medium' | 'high';
+    sign: 1 | -1 | 0;
+  }>;
+  /** Score de santé projet calculé par ProjectCalculationService. */
+  healthScore?: any;
 }
 
 export function ProjectPDFDocument({
@@ -45,7 +56,9 @@ export function ProjectPDFDocument({
   evmMetrics,
   pertAnalysis,
   reportConfig,
-  enrichedData
+  enrichedData,
+  deviations = [],
+  healthScore = null,
 }: ProjectPDFDocumentProps) {
   
   const getStatusText = (status: string) => {
