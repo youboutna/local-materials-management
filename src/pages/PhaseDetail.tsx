@@ -165,10 +165,10 @@ const PhaseDetail: React.FC = () => {
               scope="phase"
               input={{
                 plannedEndDate: endDate,
-                actualEndDate: (phase as any).actualEndDate,
+                actualEndDate: vm.actualEndDate,
                 plannedBudget: budget,
-                actualCost: (phase as any).actualCost,
-                plannedProgress: (phase as any).plannedProgress ?? 100,
+                actualCost: vm.actualCost,
+                plannedProgress: vm.plannedProgress,
                 actualProgress: progress,
               }}
             />
