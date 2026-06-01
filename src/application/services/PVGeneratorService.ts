@@ -123,12 +123,33 @@ export class PVGeneratorService {
         pdf_url: pdfUrl
       };
 
-      // For now, just return the generated PV as PV repository is not available
-      // TODO: Implement proper PV storage when PV repository is available
-      console.warn('PVGeneratorService.generatePV: PV repository not available');
-      console.log(`Generated PV: ${generatedPV.pv_number}`);
+      // Persist PV via repository
+      try {
+        const saved = await this.pvRepository.savePV({
+          inspection_id: request.inspectionId,
+          pv_number: pvNumber,
+          pv_type: request.pvType,
+          title: generatedPV.title,
+          content: pvContent,
+          pdf_url: pdfUrl,
+          status: generatedPV.status,
+          generated_by: generatedPV.generated_by,
+          version: generatedPV.version,
+          metadata: { header: generatedPV.header, conclusions: generatedPV.conclusions },
+          generated_at: generatedPV.generated_at,
+        });
+        if (saved && saved.id) {
+          generatedPV.id = saved.id;
+        }
+      } catch (persistError) {
+        console.error('PVGeneratorService.generatePV: failed to persist PV', persistError);
+        throw persistError instanceof AppError
+          ? persistError
+          : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to persist generated PV');
+      }
 
       return { success: true, pv: generatedPV };
+
 
     } catch (error) {
       console.error('PVGeneratorService.generatePV failed:', error);
