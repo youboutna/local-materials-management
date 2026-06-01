@@ -15,6 +15,58 @@ import {
 } from '@/dtos/entities/PhaseDTO';
 
 export class PhaseTransformer {
+  // =================== DB Row (snake_case) → Domain Entity ===================
+
+  /**
+   * Map a raw Supabase row (snake_case columns of `project_phases`) to a Phase entity.
+   * Safely parses JSON-as-string columns (milestones, dependencies, materials, ...).
+   */
+  static fromDB(row: any): Phase {
+    if (!row) return null as any;
+
+    const safeJson = (val: unknown, fallback: any = null) => {
+      if (val == null) return fallback;
+      if (typeof val !== 'string') return val;
+      try { return JSON.parse(val); } catch { return fallback; }
+    };
+
+    return Phase.create({
+      id: row.id,
+      projectId: row.project_id,
+      phaseName: row.phase_name || row.name || '',
+      description: row.description ?? null,
+      status: row.status || 'pending',
+      progress: row.progress ?? 0,
+      orderIndex: row.order_index ?? 0,
+      phaseType: row.phase_type || row.construction_phase || '',
+      startDate: row.start_date ?? null,
+      endDate: row.end_date ?? null,
+      estimatedDuration: row.estimated_duration ?? null,
+      actualDuration: row.actual_duration ?? null,
+      estimatedCost: row.estimated_cost ?? null,
+      actualCost: row.actual_cost ?? null,
+      constructionPhase: row.construction_phase ?? null,
+      constructionStage: row.construction_stage ?? null,
+      dependencies: safeJson(row.dependencies, []),
+      milestones: safeJson(row.milestones, []),
+      humanResources: safeJson(row.human_resources, null),
+      materials: safeJson(row.materials, []),
+      suppliers: safeJson(row.suppliers, []),
+      location: row.location ?? null,
+      customPhaseData: row.custom_phase_data ?? null,
+      notes: row.notes ?? null,
+      weight: row.weight ?? null,
+      createdBy: row.created_by ?? null,
+      createdAt: row.created_at || new Date().toISOString(),
+      updatedAt: row.updated_at || new Date().toISOString(),
+    });
+  }
+
+  /** Backwards-compat alias used by adapters that historically called fromDTO on a DB row. */
+  static fromDTO(row: any): Phase {
+    return this.fromDB(row);
+  }
+
   // =================== Domain to DTO ===================
 
   /**
