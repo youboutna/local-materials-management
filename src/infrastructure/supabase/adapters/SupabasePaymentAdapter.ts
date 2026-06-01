@@ -6,17 +6,21 @@ import { Payment, PaymentStatus, PaymentMethod } from '@/domain/entities/Payment
 
 export class SupabasePaymentAdapter implements IPaymentRepository {
   private mapToEntity(data: any): Payment {
+    // ⚠️ Positional ctor — keep aligned with Payment(id, project, phase, inspection, amount, paymentDate, paymentMethod, status, progressAtPayment, transactionId, contractorName, contractorContact, bankName, accountNumber, checkNumber, mobileNumber, mobileOperator, receiverName, documents, createdAt, updatedAt)
+    // Wrap relational ids as lightweight objects so DTO mappers can read `.id`.
+    const project = data.project_id ? ({ id: data.project_id } as any) : null;
+    const phase = data.phase_id ? ({ id: data.phase_id } as any) : null;
+    const inspection = data.inspection_id ? ({ id: data.inspection_id } as any) : null;
     return new Payment(
       data.id,
-      data.project_id,
-      data.phase_id || null,
-      data.step_id || null,
-      data.inspection_id || null,
-      data.amount || 0,
+      project,
+      phase,
+      inspection,
+      Number(data.amount) || 0,
       data.payment_date,
       (data.payment_method || 'bank_transfer') as PaymentMethod,
       (data.status || 'pending_validation') as PaymentStatus,
-      data.progress_at_payment || 0,
+      Number(data.progress_at_payment) || 0,
       data.transaction_id || null,
       data.contractor_name || '',
       data.contractor_contact || '',
