@@ -172,3 +172,29 @@ generateCompleteProjectReport(input: {
 - Intégrations ERP (SAGE/COBOL), SCADA (OPC UA), SIG (ArcGIS/WMS), Active Directory/LDAP — chiffrage séparé.
 - Refonte visuelle globale ; on s'aligne sur les captures sans refondre le design system.
 - Migration legacy `src/services` / `src/types` (mémoire protège).
+
+---
+
+## Finalisation passe — Hydratation paiements
+
+### Bug corrigé
+`/payment-control` affichait des colonnes décalées (Date=01/01/1970, Montant=UUID, Méthode=timestamp, Progression=`pending_validation%`).
+
+**Cause** : `SupabasePaymentAdapter.mapToEntity` passait 5 champs entre `id` et `amount` (`project_id`, `phase_id`, `step_id`, `inspection_id`, `amount`) alors que le constructeur `Payment` en attend 4 (`project`, `phase`, `inspection`, `amount`). Décalage positionnel → tout shifté d'un cran.
+
+**Correctif** (`src/infrastructure/supabase/adapters/SupabasePaymentAdapter.ts`) :
+1. Suppression du `step_id` du mapping positionnel (n'existe pas sur l'entité).
+2. Wrapping des FK (`project_id`, `phase_id`, `inspection_id`) en objets `{ id }` pour que `PaymentTransformer.toDTO` puisse résoudre `entity.project?.id`.
+3. Coercion explicite `Number(data.amount)` et `Number(data.progress_at_payment)`.
+
+### Round-trip UI ↔ DB validé
+- Lecture : DB snake_case → adapter (positions corrigées) → entité → `PaymentTransformer.toDTO` → camelCase DTO → `PaymentCrud` table.
+- Écriture : formulaire camelCase → `CreatePaymentDTO` → `PaymentService.createPayment` → adapter `save()` (snake_case).
+
+### Plan global — état final
+- ✅ Référentiels (reports, inspections, project-views, dqe, health-thresholds)
+- ✅ Hexagonal hydration (PhaseViewModel, entityToasts, hex notifications, payment adapter)
+- ✅ Reporting PDF (5 sections + profils)
+- ✅ Performance/Health (référentiels seuils)
+- ✅ Payment-control (mapping positionnel + projectId hook)
+- 🔜 Post-passe : remonter `PhaseViewModel` aux écrans phase legacy ; rediriger les `recipient_id='system'` vers `project_alerts`.
