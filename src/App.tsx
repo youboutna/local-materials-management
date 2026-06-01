@@ -472,6 +472,22 @@ function App() {
                         }
                       />
                       <Route
+                        path="/payments/:id"
+                        element={
+                          <RoleBasedRoute
+                            allowedRoles={[
+                              "admin",
+                              "director",
+                              "finance_manager",
+                              "project_manager",
+                              "manager",
+                            ]}
+                          >
+                            <PaymentDetailPage />
+                          </RoleBasedRoute>
+                        }
+                      />
+                      <Route
                         path="/monitoring"
                         element={
                           <RoleBasedRoute
