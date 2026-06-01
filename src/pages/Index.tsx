@@ -17,6 +17,17 @@ import {
   ArrowRight,
   Shield,
   Zap,
+  ClipboardList,
+  HardHat,
+  Truck,
+  ScrollText,
+  Banknote,
+  ShieldCheck,
+  Bell,
+  Activity,
+  CheckSquare,
+  LayoutDashboard,
+  UserCog,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
@@ -55,54 +66,123 @@ const Index = () => {
 
   const features = [
     {
+      icon: LayoutDashboard,
+      title: safeT("index.feature.dashboard.title", "Tableau de bord"),
+      description: safeT("index.feature.dashboard.description", "Vue d'ensemble et indicateurs TBI"),
+      link: "/dashboard",
+      gradient: "from-indigo-500 to-blue-500",
+    },
+    {
       icon: Briefcase,
       title: safeT("index.feature.projects.title", "Projets"),
-      description: safeT(
-        "index.feature.projects.description",
-        "Gérez vos projets de construction"
-      ),
+      description: safeT("index.feature.projects.description", "Gestion des projets de construction"),
       link: "/projects",
       gradient: "from-blue-500 to-cyan-500",
     },
     {
+      icon: HardHat,
+      title: safeT("index.feature.monitoring.title", "Suivi & Contrôle"),
+      description: safeT("index.feature.monitoring.description", "PTBA, PPM, PED et écarts"),
+      link: "/monitoring",
+      gradient: "from-cyan-500 to-teal-500",
+    },
+    {
+      icon: CheckSquare,
+      title: safeT("index.feature.tasks.title", "Tâches"),
+      description: safeT("index.feature.tasks.description", "Affectation et suivi des tâches"),
+      link: "/tasks",
+      gradient: "from-teal-500 to-emerald-500",
+    },
+    {
+      icon: Activity,
+      title: safeT("index.feature.inspections.title", "Inspections"),
+      description: safeT("index.feature.inspections.description", "Contrôles qualité & PV"),
+      link: "/inspection-monitoring",
+      gradient: "from-emerald-500 to-green-500",
+    },
+    {
       icon: Package,
       title: safeT("index.feature.materials.title", "Matériaux"),
-      description: safeT(
-        "index.feature.materials.description",
-        "Gestion des matériaux"
-      ),
+      description: safeT("index.feature.materials.description", "Référentiel et stocks"),
       link: "/materials",
-      gradient: "from-emerald-500 to-green-500",
+      gradient: "from-green-500 to-lime-500",
+    },
+    {
+      icon: Truck,
+      title: safeT("index.feature.suppliers.title", "Fournisseurs"),
+      description: safeT("index.feature.suppliers.description", "Annuaire et performance"),
+      link: "/suppliers",
+      gradient: "from-lime-500 to-yellow-500",
+    },
+    {
+      icon: ClipboardList,
+      title: safeT("index.feature.tenders.title", "Appels d'offres"),
+      description: safeT("index.feature.tenders.description", "DAO, soumissions, évaluation"),
+      link: "/tender-management",
+      gradient: "from-yellow-500 to-orange-500",
+    },
+    {
+      icon: Banknote,
+      title: safeT("index.feature.payments.title", "Paiements"),
+      description: safeT("index.feature.payments.description", "Contrôle et déblocage"),
+      link: "/payment-control",
+      gradient: "from-orange-500 to-red-500",
+    },
+    {
+      icon: ShieldCheck,
+      title: safeT("index.feature.guarantees.title", "Cautions bancaires"),
+      description: safeT("index.feature.guarantees.description", "Suivi des garanties"),
+      link: "/bank-guarantee-monitor",
+      gradient: "from-red-500 to-rose-500",
+    },
+    {
+      icon: Shield,
+      title: safeT("index.feature.insurance.title", "Assurances"),
+      description: safeT("index.feature.insurance.description", "Certificats et échéances"),
+      link: "/insurance-management",
+      gradient: "from-rose-500 to-pink-500",
     },
     {
       icon: FileText,
       title: safeT("index.feature.documents.title", "Documents"),
-      description: safeT(
-        "index.feature.documents.description",
-        "Gestion documentaire"
-      ),
+      description: safeT("index.feature.documents.description", "GED projet et contractuelle"),
       link: "/documents",
-      gradient: "from-purple-500 to-pink-500",
+      gradient: "from-pink-500 to-fuchsia-500",
+    },
+    {
+      icon: UserCog,
+      title: safeT("index.feature.employees.title", "Employés"),
+      description: safeT("index.feature.employees.description", "Ressources humaines"),
+      link: "/employees",
+      gradient: "from-fuchsia-500 to-purple-500",
     },
     {
       icon: Users,
-      title: safeT("index.feature.teams.title", "Équipes"),
-      description: safeT(
-        "index.feature.teams.description",
-        "Gestion des équipes"
-      ),
+      title: safeT("index.feature.users.title", "Utilisateurs"),
+      description: safeT("index.feature.users.description", "Comptes et rôles"),
       link: "/users",
-      gradient: "from-orange-500 to-red-500",
+      gradient: "from-purple-500 to-violet-500",
+    },
+    {
+      icon: Bell,
+      title: safeT("index.feature.notifications.title", "Notifications"),
+      description: safeT("index.feature.notifications.description", "Centre d'alertes"),
+      link: "/notifications-center",
+      gradient: "from-violet-500 to-indigo-500",
     },
     {
       icon: BarChart3,
-      title: safeT("index.feature.dashboard.title", "Tableau de bord"),
-      description: safeT(
-        "index.feature.dashboard.description",
-        "Vue d'ensemble"
-      ),
-      link: "/dashboard",
-      gradient: "from-indigo-500 to-blue-500",
+      title: safeT("index.feature.enhanced.title", "Dashboard avancé"),
+      description: safeT("index.feature.enhanced.description", "Analytique étendue"),
+      link: "/enhanced-dashboard",
+      gradient: "from-indigo-500 to-sky-500",
+    },
+    {
+      icon: ScrollText,
+      title: safeT("index.feature.profile.title", "Profil"),
+      description: safeT("index.feature.profile.description", "Préférences personnelles"),
+      link: "/profile",
+      gradient: "from-sky-500 to-blue-500",
     },
   ];
 
