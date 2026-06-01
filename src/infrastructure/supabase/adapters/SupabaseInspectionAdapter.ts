@@ -257,17 +257,44 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
   }
 
   async addDocument(document: { inspectionId: string; document: Document; uploadedAt: string; uploadedBy: string }): Promise<void> {
-    // TODO: Add inspection_documents table to Supabase schema
-    // For now, log warning and do nothing
-    console.warn('addDocument: inspection_documents table not available in Supabase schema');
-    // Document would be stored in the documents field of the inspections table
+    const { supabase: publicClient } = await import('@/integrations/supabase/client');
+    const doc = document.document as unknown as Record<string, unknown>;
+    const { error } = await publicClient
+      .from('inspection_documents' as any)
+      .insert({
+        inspection_id: document.inspectionId,
+        document_id: (doc.id as string) ?? null,
+        document_name: (doc.name as string) ?? 'document',
+        document_url: (doc.url as string) ?? '',
+        document_type: (doc.type as string) ?? null,
+        file_size: (doc.size as number) ?? null,
+        uploaded_by: document.uploadedBy,
+        uploaded_at: document.uploadedAt,
+        metadata: doc,
+      } as any);
+    if (error) throw new Error(`Failed to add inspection document: ${error.message}`);
   }
 
   async findDocumentsByInspectionId(inspectionId: string): Promise<Document[]> {
-    // TODO: Add inspection_documents table to Supabase schema
-    // For now, return empty array
-    console.warn('findDocumentsByInspectionId: inspection_documents table not available in Supabase schema');
-    return [];
+    const { supabase: publicClient } = await import('@/integrations/supabase/client');
+    const { data, error } = await publicClient
+      .from('inspection_documents' as any)
+      .select('*')
+      .eq('inspection_id', inspectionId)
+      .order('uploaded_at', { ascending: false });
+    if (error) {
+      console.error('findDocumentsByInspectionId failed:', error);
+      return [];
+    }
+    return ((data ?? []) as any[]).map((row) => ({
+      id: row.document_id ?? row.id,
+      name: row.document_name,
+      url: row.document_url,
+      type: row.document_type ?? 'application/octet-stream',
+      size: row.file_size ?? 0,
+      uploadedAt: row.uploaded_at,
+      uploadedBy: row.uploaded_by,
+    })) as unknown as Document[];
   }
 
   async getChecklistTemplate(inspectionType: string): Promise<ChecklistItem[]> {
