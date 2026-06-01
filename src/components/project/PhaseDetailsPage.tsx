@@ -12,12 +12,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertTriangle,
-  Eye,
+  Banknote,
+  Calculator,
   FileText,
+  Package,
   Target,
+  Users,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Banknote } from "lucide-react";
 import InitiatePaymentModal from "@/components/payment/InitiatePaymentModal";
 
 // Hooks
@@ -39,9 +41,11 @@ import { PhaseEditDialog, formatCurrency } from "./phase";
 import UnifiedCascadeWorkflow from "./workflow/UnifiedCascadeWorkflow";
 import CheckpointVerificationPanel from "./workflow/CheckpointVerificationPanel";
 import PhaseDocuments from "./PhaseDocuments";
-import PhaseMaterials from "./PhaseMaterials";
 import PhaseInspections from "./PhaseInspections";
 import PhasePayments from "./PhasePayments";
+import PhaseResourcesTab from "./phase/PhaseResourcesTab";
+import PhaseQuantityTakeoffTab from "./phase/PhaseQuantityTakeoffTab";
+import PhaseStakeholdersTab from "./phase/PhaseStakeholdersTab";
 import ScheduleInspectionModal from "@/components/inspections/ScheduleInspectionModal";
 
 // Phase UI interface for component layer with proper DTO support
