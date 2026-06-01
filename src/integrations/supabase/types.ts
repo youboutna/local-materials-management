@@ -846,6 +846,57 @@ export type Database = {
         }
         Relationships: []
       }
+      inspection_pvs: {
+        Row: {
+          content: string
+          created_at: string
+          generated_at: string
+          generated_by: string | null
+          id: string
+          inspection_id: string
+          metadata: Json | null
+          pdf_url: string | null
+          pv_number: string
+          pv_type: string
+          status: string
+          title: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          inspection_id: string
+          metadata?: Json | null
+          pdf_url?: string | null
+          pv_number: string
+          pv_type: string
+          status?: string
+          title?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          inspection_id?: string
+          metadata?: Json | null
+          pdf_url?: string | null
+          pv_number?: string
+          pv_type?: string
+          status?: string
+          title?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
       insurance_companies: {
         Row: {
           address: string | null
