@@ -2,7 +2,7 @@
  * PhaseQuantityTakeoffTab
  * Onglet Métré / DQE d'une phase : monte le module existant QuantityTakeoffs
  * (calcul des quantités + référentiel dqe-categories) au niveau projet,
- * tout en affichant le contexte de phase courant.
+ * et propose l'import direct d'un DQE Excel rattaché à la phase.
  */
 
 import React from 'react';
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calculator } from 'lucide-react';
 import QuantityTakeoffs from '@/components/project/QuantityTakeoffs';
+import DQEImportDialog from './DQEImportDialog';
 
 interface PhaseQuantityTakeoffTabProps {
   phaseId: string;
@@ -18,13 +19,14 @@ interface PhaseQuantityTakeoffTabProps {
 }
 
 const PhaseQuantityTakeoffTab: React.FC<PhaseQuantityTakeoffTabProps> = ({
+  phaseId,
   projectId,
   phaseName,
 }) => {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader className="py-3">
+        <CardHeader className="py-3 flex flex-row items-center justify-between gap-2 space-y-0">
           <CardTitle className="text-base flex items-center gap-2">
             <Calculator className="h-4 w-4 text-primary" />
             Métré & DQE
@@ -34,12 +36,14 @@ const PhaseQuantityTakeoffTab: React.FC<PhaseQuantityTakeoffTabProps> = ({
               </Badge>
             )}
           </CardTitle>
+          <DQEImportDialog projectId={projectId} phaseId={phaseId} />
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
             Quantités calculées au niveau projet — les postes DQE (Terrassement, Revêtement,
             Génie Civil, etc.) suivent le référentiel{' '}
             <code className="text-xs bg-muted px-1 py-0.5 rounded">dqe-categories.referential.ts</code>.
+            Utilisez « Importer DQE » pour charger un devis Excel et créer les métrés en masse.
           </p>
           <QuantityTakeoffs projectId={projectId} />
         </CardContent>
