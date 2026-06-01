@@ -13,6 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import {
+  getInspectionStatus,
+  getInspectionStatusLabel,
+} from '@/config/referentials/inspections/inspection-statuses.referential';
 import { 
   Calendar, 
   Bell, 
