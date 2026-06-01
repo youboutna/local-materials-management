@@ -61,6 +61,23 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
     uploadInvoice
   } = usePaymentCrud();
 
+  // Lookup map for human-readable project labels (hide raw UUIDs in the UI)
+  const { projects: allProjects } = useProjects();
+  const projectLabelMap = React.useMemo(() => {
+    const map = new Map<string, { label: string; ref?: string }>();
+    (allProjects || []).forEach((p: any) => {
+      const ref = p.projectReference || p.projectReferenceNumber || p.reference;
+      const label = p.title || p.name || ref || 'Projet';
+      map.set(p.id, { label, ref });
+    });
+    return map;
+  }, [allProjects]);
+
+  const formatAmount = (n?: number) =>
+    typeof n === 'number' && !Number.isNaN(n)
+      ? new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(n)
+      : '—';
+
   const [formData, setFormData] = useState({
     // ✅ CAMELCASE: Primary fields
     projectId: projectId || '',
