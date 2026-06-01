@@ -444,7 +444,16 @@ const InsuranceCrud: React.FC = () => {
               {certificates.map((certificate) => (
                 <TableRow key={certificate.id}>
                   <TableCell className="font-medium">
-                    {certificate.projectId}
+                    {certificate.projectId ? (
+                      <a
+                        href={`/projects/${certificate.projectId}`}
+                        className="text-primary hover:underline inline-flex items-center gap-1"
+                        title={certificate.projectId}
+                      >
+                        <Eye className="h-3 w-3" />
+                        {certificate.projectId.slice(0, 8)}...
+                      </a>
+                    ) : '—'}
                   </TableCell>
                   <TableCell>{certificate.contractorName || certificate.contractorId}</TableCell>
                   <TableCell>
