@@ -380,28 +380,8 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
   }
 
   private async mapToEntity(phase: Partial<Phase>): Promise<Partial<PhaseDB>> {
-    const entity: Partial<PhaseDB> = {};
-    
-    if (phase.projectId !== undefined) entity.project_id = phase.projectId;
-    if (phase.name !== undefined) entity.phase_name = phase.name;
-    if (phase.description !== undefined) entity.description = phase.description;
-    if (phase.status !== undefined) entity.status = phase.status;
-    if (phase.progress !== undefined) entity.progress = phase.progress;
-    if ((phase as any).estimatedCost !== undefined) (entity as any).estimated_cost = (phase as any).estimatedCost;
-    
-    if (phase.startDate !== undefined) {
-      entity.start_date = phase.startDate instanceof Date 
-        ? phase.startDate.toISOString()
-        : phase.startDate;
-    }
-    
-    if (phase.endDate !== undefined) {
-      entity.end_date = phase.endDate instanceof Date
-        ? phase.endDate.toISOString()
-        : phase.endDate;
-    }
-    
-    return entity;
+    // Delegate to centralized transformer for guaranteed round-trip parity
+    return PhaseTransformer.toDB(phase as any) as Partial<PhaseDB>;
   }
 
   async updatePhase(params: PhaseOperationParams): Promise<Phase> {

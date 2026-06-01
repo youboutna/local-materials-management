@@ -84,6 +84,9 @@ export class PhaseTransformer {
   }
 
   static toDTO(phase: Phase): PhaseDTO {
+    // Map phaseType (snake_case DB value) to DTO type enum value; fallback to 'execution'
+    const rawType = (phase.phaseType || phase.constructionPhase || '').toString();
+    const mappedType = (PhaseTransformer.validatePhaseType(rawType) as unknown) as DTOType;
     return {
       id: phase.id,
       projectId: phase.projectId,
@@ -98,14 +101,14 @@ export class PhaseTransformer {
       actualDuration: phase.actualDuration || 0,
       estimatedCost: phase.estimatedCost || 0,
       actualCost: phase.actualCost || 0,
-      type: 'execution' as DTOType, // Default type
-      priority: 'medium' as DTOPriority, // Default priority
+      type: mappedType || ('execution' as DTOType),
+      priority: 'medium' as DTOPriority, // Priority not persisted yet in project_phases
       dependencies: phase.dependencies || [],
       milestones: phase.milestones || [],
       createdAt: phase.createdAt,
       updatedAt: phase.updatedAt,
 
-      // NEW: Additional database fields in DTO
+      // Additional database fields surfaced in DTO
       constructionPhase: phase.constructionPhase || undefined,
       constructionStage: phase.constructionStage || undefined,
       createdBy: phase.createdBy || undefined,
@@ -113,6 +116,42 @@ export class PhaseTransformer {
       humanResources: phase.humanResources ? (phase.humanResources as unknown as Record<string, unknown>) : undefined,
       weight: phase.weight || undefined,
     };
+  }
+
+  // =================== Domain Entity → DB Row (snake_case) ===================
+  /**
+   * Centralized mapping Phase → project_phases row (snake_case).
+   * Use from adapters' insert/update calls to guarantee round-trip parity.
+   */
+  static toDB(phase: Partial<Phase> & Record<string, any>): Record<string, unknown> {
+    const out: Record<string, unknown> = {};
+    const set = (key: string, val: unknown) => { if (val !== undefined) out[key] = val; };
+
+    set('project_id', phase.projectId);
+    set('phase_name', phase.phaseName ?? phase.name);
+    set('description', phase.description);
+    set('status', phase.status);
+    set('progress', phase.progress);
+    set('order_index', phase.orderIndex);
+    set('phase_type', phase.phaseType);
+    set('start_date', (phase.startDate as any) instanceof Date ? (phase.startDate as unknown as Date).toISOString() : phase.startDate);
+    set('end_date', (phase.endDate as any) instanceof Date ? (phase.endDate as unknown as Date).toISOString() : phase.endDate);
+    set('estimated_duration', phase.estimatedDuration);
+    set('actual_duration', phase.actualDuration);
+    set('estimated_cost', phase.estimatedCost);
+    set('actual_cost', phase.actualCost);
+    set('construction_phase', phase.constructionPhase);
+    set('construction_stage', phase.constructionStage);
+    set('weight', phase.weight);
+    set('notes', phase.notes);
+    set('location', phase.location);
+    set('custom_phase_data', phase.customPhaseData);
+    if (phase.dependencies !== undefined) set('dependencies', JSON.stringify(phase.dependencies));
+    if (phase.milestones !== undefined) set('milestones', JSON.stringify(phase.milestones));
+    if (phase.humanResources !== undefined) set('human_resources', JSON.stringify(phase.humanResources));
+    if (phase.materials !== undefined) set('materials', JSON.stringify(phase.materials));
+    if (phase.suppliers !== undefined) set('suppliers', JSON.stringify(phase.suppliers));
+    return out;
   }
 
   static stepToDTO(step: PhaseStep): PhaseStepDTO {
