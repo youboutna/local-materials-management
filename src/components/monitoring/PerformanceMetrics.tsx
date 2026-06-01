@@ -264,7 +264,7 @@ const PerformanceMetrics: React.FC = () => {
             <Clock className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${getPerformanceColor(data.requests.averageResponseTime, { good: 200, warning: 500 })}`}>
+            <div className={`text-2xl font-bold ${getPerformanceColor(data.requests.averageResponseTime, 'HTTP_RESPONSE_MS')}`}>
               {formatMetric(data.requests.averageResponseTime, 'time')}
             </div>
             <div className="text-xs text-muted-foreground">Moyenne mobile</div>
@@ -294,7 +294,7 @@ const PerformanceMetrics: React.FC = () => {
             <TrendingUp className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${getPerformanceColor(data.errors.rate, { good: 1, warning: 5 })}`}>
+            <div className={`text-2xl font-bold ${getPerformanceColor(data.errors.rate, 'ERROR_RATE_PCT')}`}>
               {data.errors.rate.toFixed(2)}%
             </div>
             <div className="text-xs text-muted-foreground">
@@ -331,7 +331,7 @@ const PerformanceMetrics: React.FC = () => {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Temps requête moyen</span>
-                <span className={getPerformanceColor(data.database.queryTime, { good: 50, warning: 100 })}>
+                <span className={getPerformanceColor(data.database.queryTime, 'DB_QUERY_MS')}>
                   {formatMetric(data.database.queryTime, 'time')}
                 </span>
               </div>
