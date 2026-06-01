@@ -162,7 +162,7 @@ export function CompactProjectReportGenerator({
           
           for (const proj of projectList) {
             try {
-              const completeReport = await reportingService.generateCompleteProjectReport({ project: proj as any });
+              const completeReport = await reportingService.generateCompleteProjectReport({ project: proj as any, profile, sections: defaultSectionsFor(profile) });
               const reportProject = completeReport.reportDTO.project || {};
               const realCosts: any = completeReport.realCosts || {};
               const actualCost = Number(
