@@ -20,10 +20,23 @@ import {
 } from '@/dtos/entities/ReportDTO';
 import { ProjectData } from '@/dtos/entities/ProjectDTO';
 import { IReportingRepository } from '@/domain/repositories/IReportingRepository';
+import {
+  ReportProfile,
+  ReportSectionKey,
+  getReportProfile,
+  defaultSectionsFor,
+} from '@/config/referentials/reports/report-profiles.referential';
 
 // Service DTOs for data exchange
 export interface GenerateCompleteProjectReportRequestDto {
   project: ProjectData;
+  /** Profil de rapport (résumé / détaillé / financier / chef de projet). */
+  profile?: ReportProfile;
+  /**
+   * Sections demandées. Si fourni, prend le pas sur le défaut du profil.
+   * Permet à l'UI de cocher/décocher individuellement.
+   */
+  sections?: Partial<Record<ReportSectionKey, boolean>>;
 }
 
 export interface GenerateProjectAnalyticsRequestDto {
@@ -46,6 +59,10 @@ export interface CompleteProjectReportResultDto {
   healthScore: unknown;
   realCosts: unknown; // Repository-provided real-time project cost data
   deviations: DeviationResult[]; // DeviationEngine output for project scope
+  /** Profil utilisé (echo pour debug et alignement UI). */
+  profile: ReportProfile;
+  /** Sections résolues effectivement actives (référentiel + overrides UI). */
+  sections: Record<ReportSectionKey, boolean>;
 }
 
 export class ReportingService {
