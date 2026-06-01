@@ -25,7 +25,7 @@ export class SupabaseProjectBudgetLinkAdapter implements IProjectBudgetLinkRepos
       console.error('[BudgetLinkAdapter] findByProjectId', error);
       return [];
     }
-    return (data || []).map((row) => ProjectBudgetLinkTransformer.rowToDTO(row));
+    return (data || []).map((row: any) => ProjectBudgetLinkTransformer.rowToDTO(row));
   }
 
   async create(dto: CreateProjectBudgetLinkDTO): Promise<ProjectBudgetLinkDTO> {
