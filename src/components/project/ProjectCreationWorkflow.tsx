@@ -310,49 +310,47 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Progress Bar */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Progression du Workflow</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <Progress value={getStepProgress()} className="h-2" />
-          <p className="text-sm text-muted-foreground">
-            Étape {currentStep + 1} sur {steps.length}
-          </p>
-        </CardContent>
-      </Card>
+    <div className="space-y-3">
+      {/* Compact progress header */}
+      <div className="flex items-center gap-3 px-1">
+        <Progress value={getStepProgress()} className="h-1.5 flex-1" />
+        <span className="text-xs text-muted-foreground whitespace-nowrap">
+          Étape {currentStep + 1} / {steps.length}
+        </span>
+      </div>
 
       {/* Steps Navigation */}
-      <div className="grid grid-cols-8 gap-2">
+      <div className="grid grid-cols-8 gap-1.5">
         {steps.map((step, idx) => (
           <motion.button
             key={step.id}
             onClick={() => setCurrentStep(idx)}
+            title={step.title}
+            aria-label={step.title}
             className={cn(
-              "p-3 rounded-lg transition-all",
+              "p-2 rounded-md transition-all flex items-center justify-center",
               currentStep === idx
-                ? "bg-primary text-primary-foreground"
+                ? "bg-primary text-primary-foreground shadow-sm"
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
             )}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
           >
-            <step.icon className="h-5 w-5 mx-auto" />
+            <step.icon className="h-4 w-4" />
           </motion.button>
         ))}
       </div>
 
       {/* Step Content */}
       <Card>
-        <CardHeader>
-          <CardTitle>{steps[currentStep]?.title}</CardTitle>
-          <p className="text-sm text-muted-foreground">
+        <CardHeader className="py-3">
+          <CardTitle className="text-base">{steps[currentStep]?.title}</CardTitle>
+          <p className="text-xs text-muted-foreground">
             {steps[currentStep]?.description}
           </p>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4">
+
           {currentStep === 0 && (
             <ProjectInfoStep
               mode="create"
