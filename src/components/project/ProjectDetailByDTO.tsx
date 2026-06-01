@@ -1171,12 +1171,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         {/* New Planning Tab with Gantt, PERT, Kanban, Critical Path */}
         <TabsContent value="planning" className="mt-6">
           <Tabs defaultValue="gantt" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="gantt">Gantt</TabsTrigger>
-              <TabsTrigger value="pert">PERT</TabsTrigger>
-              <TabsTrigger value="kanban">Kanban</TabsTrigger>
-              <TabsTrigger value="critical">Chemin Critique</TabsTrigger>
-              <TabsTrigger value="timeline">Timeline</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-auto">
+              <TabsTrigger value="gantt" className="text-xs sm:text-sm">Gantt</TabsTrigger>
+              <TabsTrigger value="pert" className="text-xs sm:text-sm">PERT</TabsTrigger>
+              <TabsTrigger value="kanban" className="text-xs sm:text-sm">Kanban</TabsTrigger>
+              <TabsTrigger value="critical" className="text-xs sm:text-sm">Chemin Critique</TabsTrigger>
+              <TabsTrigger value="timeline" className="text-xs sm:text-sm">Timeline</TabsTrigger>
             </TabsList>
 
             <TabsContent value="gantt">
