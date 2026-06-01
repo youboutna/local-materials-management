@@ -188,7 +188,7 @@ export function CompactProjectReportGenerator({
                 insuranceCertificates: (reportProject as any).insuranceCertificates || [],
                 alerts: (reportProject as any).alerts || [],
                 tenders: (reportProject as any).tenders || [],
-                plannedPhases: (reportProject as any).plannedPhases || [],
+                plannedPhases: (reportProject as any).plannedPhases || (reportProject as any).phases || [],
                 constructionMilestones: (reportProject as any).constructionMilestones || [],
                 expenses: (reportProject as any).expenses || [],
                 resources: (reportProject as any).resources || [],
