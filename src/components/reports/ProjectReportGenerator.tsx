@@ -31,28 +31,10 @@ interface ProjectReportGeneratorProps {
 
 interface ReportConfig {
   title: string;
-  includeSections: {
-    overview: boolean;
-    financial: boolean;
-    timeline: boolean;
-    materials: boolean;
-    phases: boolean;
-    inspections: boolean;
-    risks: boolean;
-    kpi: boolean;
-    milestones: boolean;
-    bankGuarantees: boolean;
-    insurance: boolean;
-    paymentBlocks: boolean;
-    suppliers: boolean;
-    documents: boolean;
-    employees: boolean;
-    escalationAlerts: boolean;
-    evmAnalysis: boolean;
-    pertAnalysis: boolean;
-    ganttChart: boolean;
-  };
-  reportType: 'summary' | 'detailed' | 'financial' | 'project_manager';
+  /** Sections cochées par l'utilisateur — défauts dérivés du référentiel via `defaultSectionsFor`. */
+  includeSections: Record<ReportSectionKey, boolean>;
+  /** Profil = code du référentiel `report-profiles`. */
+  reportType: ReportProfile;
   recipientEmail?: string;
   notes?: string;
 }
@@ -67,31 +49,14 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
   const [enrichedData, setEnrichedData] = useState<any>(null);
   const [deviations, setDeviations] = useState<any[]>([]);
   const [healthScore, setHealthScore] = useState<any>(null);
-  
+
+  const initialProfile: ReportProfile = 'summary';
+
   const [reportConfig, setReportConfig] = useState<ReportConfig>({
     title: `Rapport de projet - ${project.title}`,
-    includeSections: {
-      overview: true,
-      financial: true,
-      timeline: true,
-      materials: true,
-      phases: true,
-      inspections: true,
-      risks: true,
-      kpi: true,
-      milestones: true,
-      bankGuarantees: true,
-      insurance: true,
-      paymentBlocks: true,
-      suppliers: true,
-      documents: true,
-      employees: true,
-      escalationAlerts: true,
-      evmAnalysis: true,
-      pertAnalysis: true,
-      ganttChart: false,
-    },
-    reportType: 'summary',
+    // Défauts pilotés par le référentiel — plus aucune liste de sections en dur.
+    includeSections: defaultSectionsFor(initialProfile),
+    reportType: initialProfile,
     recipientEmail: '',
     notes: '',
   });
@@ -99,19 +64,23 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
   // Create ReportingService instance
   const reportingServiceInstance = useMemo(() => new ReportingService(), []);
 
-  // Generate complete project report using ReportingService
-  const generateCompleteReport = async (proj: any) => {
-    return await reportingServiceInstance.generateCompleteProjectReport({ project: proj });
+  // Generate report with profile + sections from referential.
+  const generateCompleteReport = async (proj: any, profile: ReportProfile) => {
+    return await reportingServiceInstance.generateCompleteProjectReport({
+      project: proj,
+      profile,
+      sections: reportConfig.includeSections,
+    });
   };
 
-  // Load all report data on component mount
+  // Re-fetch report data when project or profile change. Section toggles only affect PDF render.
   useEffect(() => {
     const loadReportData = async () => {
       try {
         setLoading(true);
-        
-        // Generate complete report with all enhanced calculations
-        const completeReport = await generateCompleteReport(project);
+
+        const completeReport = await generateCompleteReport(project, reportConfig.reportType);
+
         
         setReportData(completeReport.reportData);
         setCostCalculation(completeReport.costCalculation);
