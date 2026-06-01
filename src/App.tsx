@@ -235,24 +235,13 @@ function App() {
                       />
                       <Route
                         path="/projects/:projectId/phases/:phaseId"
-                        element={<PhaseDetailsPage />}
-                      />
-                      <Route
-                        path="/projects/:id/edit/phases/detail"
-                        element={
-                          <RoleBasedRoute disallowedRoles={["supplier"]}>
-                            <ProjectPhasesDetail />
-                          </RoleBasedRoute>
-                        }
-                      />
-                      {/* <Route
-                        path="/projects/:projectId/phases/:phaseId"
                         element={
                           <RoleBasedRoute disallowedRoles={["supplier"]}>
                             <PhaseDetail />
                           </RoleBasedRoute>
                         }
-                      /> */}
+                      />
+
                       <Route
                         path="/projects/import"
                         element={
