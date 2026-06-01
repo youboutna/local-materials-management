@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,14 +7,22 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ReportingService, CompleteProjectReportResultDto } from '@/application/services/ReportingService';
-import { ProjectData, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
+import { ReportingService } from '@/application/services/ReportingService';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import { pdf } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver';
 import { CheckSquare, Download, FileText, Loader2, Mail, Square } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { ProjectPDFDocument } from './pdf/ProjectPDFDocument';
+import {
+  ReportProfile,
+  ReportSectionKey,
+  REPORT_PROFILES,
+  REPORT_SECTION_LABELS,
+  ALL_REPORT_SECTIONS,
+  defaultSectionsFor,
+  getReportProfile,
+} from '@/config/referentials/reports/report-profiles.referential';
 
 interface ProjectReportGeneratorProps {
   project: any; // ProjectData or ProjectDTO
@@ -24,28 +31,10 @@ interface ProjectReportGeneratorProps {
 
 interface ReportConfig {
   title: string;
-  includeSections: {
-    overview: boolean;
-    financial: boolean;
-    timeline: boolean;
-    materials: boolean;
-    phases: boolean;
-    inspections: boolean;
-    risks: boolean;
-    kpi: boolean;
-    milestones: boolean;
-    bankGuarantees: boolean;
-    insurance: boolean;
-    paymentBlocks: boolean;
-    suppliers: boolean;
-    documents: boolean;
-    employees: boolean;
-    escalationAlerts: boolean;
-    evmAnalysis: boolean;
-    pertAnalysis: boolean;
-    ganttChart: boolean;
-  };
-  reportType: 'summary' | 'detailed' | 'financial' | 'project_manager';
+  /** Sections cochées par l'utilisateur — défauts dérivés du référentiel via `defaultSectionsFor`. */
+  includeSections: Record<ReportSectionKey, boolean>;
+  /** Profil = code du référentiel `report-profiles`. */
+  reportType: ReportProfile;
   recipientEmail?: string;
   notes?: string;
 }
@@ -60,31 +49,14 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
   const [enrichedData, setEnrichedData] = useState<any>(null);
   const [deviations, setDeviations] = useState<any[]>([]);
   const [healthScore, setHealthScore] = useState<any>(null);
-  
+
+  const initialProfile: ReportProfile = 'summary';
+
   const [reportConfig, setReportConfig] = useState<ReportConfig>({
     title: `Rapport de projet - ${project.title}`,
-    includeSections: {
-      overview: true,
-      financial: true,
-      timeline: true,
-      materials: true,
-      phases: true,
-      inspections: true,
-      risks: true,
-      kpi: true,
-      milestones: true,
-      bankGuarantees: true,
-      insurance: true,
-      paymentBlocks: true,
-      suppliers: true,
-      documents: true,
-      employees: true,
-      escalationAlerts: true,
-      evmAnalysis: true,
-      pertAnalysis: true,
-      ganttChart: false,
-    },
-    reportType: 'summary',
+    // Défauts pilotés par le référentiel — plus aucune liste de sections en dur.
+    includeSections: defaultSectionsFor(initialProfile),
+    reportType: initialProfile,
     recipientEmail: '',
     notes: '',
   });
@@ -92,19 +64,23 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
   // Create ReportingService instance
   const reportingServiceInstance = useMemo(() => new ReportingService(), []);
 
-  // Generate complete project report using ReportingService
-  const generateCompleteReport = async (proj: any) => {
-    return await reportingServiceInstance.generateCompleteProjectReport({ project: proj });
+  // Generate report with profile + sections from referential.
+  const generateCompleteReport = async (proj: any, profile: ReportProfile) => {
+    return await reportingServiceInstance.generateCompleteProjectReport({
+      project: proj,
+      profile,
+      sections: reportConfig.includeSections,
+    });
   };
 
-  // Load all report data on component mount
+  // Re-fetch report data when project or profile change. Section toggles only affect PDF render.
   useEffect(() => {
     const loadReportData = async () => {
       try {
         setLoading(true);
-        
-        // Generate complete report with all enhanced calculations
-        const completeReport = await generateCompleteReport(project);
+
+        const completeReport = await generateCompleteReport(project, reportConfig.reportType);
+
         
         setReportData(completeReport.reportData);
         setCostCalculation(completeReport.costCalculation);
@@ -121,13 +97,13 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
         const evmMetricsResult = ReportCalculations.calculateEVMMetrics(
           project,
           actualCostForEvm,
-          completeReport.reportDTO.phases
+          completeReport.reportDTO.phases as any
         );
         setEvmMetrics(evmMetricsResult);
-        
+
         // Calculate PERT analysis with project phases and tasks
         const pertAnalysisResult = ReportCalculations.calculatePERTAnalysis(
-          completeReport.reportDTO.phases,
+          completeReport.reportDTO.phases as any,
           project.tasks || []
         );
         setPertAnalysis(pertAnalysisResult);
@@ -145,7 +121,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
     };
 
     loadReportData();
-  }, [project, toast]);
+  }, [project, toast, reportConfig.reportType]);
 
   const generatePDF = async () => {
     if (!reportData || !costCalculation) {
@@ -279,105 +255,15 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
   };
 
   const handleReportTypeChange = (newType: string) => {
-    const reportType = newType as ReportConfig['reportType'];
-    
-    // Define default sections for each report type
-    const defaultSections: Record<ReportConfig['reportType'], Partial<ReportConfig['includeSections']>> = {
-      summary: {
-        overview: true,
-        financial: true,
-        timeline: true,
-        phases: true,
-        kpi: true,
-        milestones: true,
-        risks: false,
-        materials: false,
-        inspections: false,
-        bankGuarantees: false,
-        insurance: false,
-        paymentBlocks: false,
-        suppliers: false,
-        documents: false,
-        employees: false,
-        escalationAlerts: false,
-        evmAnalysis: false,
-        pertAnalysis: false,
-        ganttChart: false,
-      },
-      detailed: {
-        overview: true,
-        financial: true,
-        timeline: true,
-        materials: true,
-        phases: true,
-        inspections: true,
-        risks: true,
-        kpi: true,
-        milestones: true,
-        bankGuarantees: true,
-        insurance: true,
-        paymentBlocks: true,
-        suppliers: true,
-        documents: true,
-        employees: true,
-        escalationAlerts: true,
-        evmAnalysis: true,
-        pertAnalysis: true,
-        ganttChart: true,
-      },
-      financial: {
-        overview: true,
-        financial: true,
-        timeline: false,
-        materials: false,
-        phases: true,
-        inspections: false,
-        risks: true,
-        kpi: true,
-        milestones: false,
-        bankGuarantees: true,
-        insurance: true,
-        paymentBlocks: true,
-        suppliers: true,
-        documents: false,
-        employees: false,
-        escalationAlerts: true,
-        evmAnalysis: true,
-        pertAnalysis: false,
-        ganttChart: false,
-      },
-      project_manager: {
-        overview: true,
-        financial: true,
-        timeline: true,
-        materials: true,
-        phases: true,
-        inspections: true,
-        risks: true,
-        kpi: true,
-        milestones: true,
-        bankGuarantees: false,
-        insurance: false,
-        paymentBlocks: false,
-        suppliers: false,
-        documents: true,
-        employees: true,
-        escalationAlerts: true,
-        evmAnalysis: true,
-        pertAnalysis: true,
-        ganttChart: true,
-      },
-    };
-
+    const reportType = newType as ReportProfile;
+    // Défauts pilotés par le référentiel `report-profiles.referential.ts` (zéro code dur).
     setReportConfig(prev => ({
       ...prev,
       reportType,
-      includeSections: {
-        ...prev.includeSections,
-        ...defaultSections[reportType]
-      }
+      includeSections: defaultSectionsFor(reportType),
     }));
   };
+
 
   if (loading && !reportData) {
     return (
@@ -445,7 +331,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
                 </SelectContent>
               </Select>
               <div className="text-xs text-muted-foreground mt-1">
-                {getReportTypeDescription(reportConfig.reportType)}
+                {getReportProfile(reportConfig.reportType).description.fr}
               </div>
             </div>
           </div>
@@ -490,7 +376,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
                       className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                     />
                     <Label htmlFor={key} className="text-sm font-normal cursor-pointer flex-1">
-                      {getSectionLabel(key)}
+                      {REPORT_SECTION_LABELS[key as ReportSectionKey] ?? key}
                     </Label>
                   </div>
                 ))}

@@ -152,3 +152,10 @@ export {
 export * from './indicator-templates.referential';
 export * from './deviation-rules.referential';
 export * from './weighting-models.referential';
+
+// HadraTech-GPI — référentiels métiers transverses (rapports, vues, DQE, santé).
+export * from './reports/report-profiles.referential';
+export * from './inspections/inspection-statuses.referential';
+export * from './projects/project-views.referential';
+export * from './dqe/dqe-categories.referential';
+export * from './kpi/health-thresholds.referential';
