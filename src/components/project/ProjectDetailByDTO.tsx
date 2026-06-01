@@ -104,7 +104,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   const [showPhaseManager, setShowPhaseManager] = useState(false);
   const [phases, setPhases] = useState<PhaseDTO[]>([]);
   const [referentialOptions, setReferentialOptions] = useState<{ value: string; label: string; description?: string }[]>([]);
-  console.log("🔍 ProjectDetailByDTO render - projectId:", projectId);
+  
 
   // Load referential options
   useEffect(() => {
@@ -136,25 +136,14 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   } = useQuery<ProjectSummaryDTO | undefined>({
     queryKey: ["project-summary", projectId],
     queryFn: async (): Promise<ProjectSummaryDTO | undefined> => {
-      console.log("🔍 Query function starting for projectId:", projectId);
       if (!projectId) {
-        console.error("🚫 Project ID is missing");
         throw new Error(t("project.errors.missing_id"));
       }
-
-      console.log("🔍 Calling ProjectService.getProjectSummary...");
-      try {
-        const result = await projectService.getProjectSummary(projectId);
-        console.log("🔍 ProjectService result:", result ? "SUCCESS" : "NULL");
-        if (!result) {
-          console.error("🚫 Project not found for ID:", projectId);
-          throw new Error(t("project.errors.not_found"));
-        }
-        return result;
-      } catch (error) {
-        console.error("🚫 Error in ProjectService.getProjectSummary:", error);
-        throw error;
+      const result = await projectService.getProjectSummary(projectId);
+      if (!result) {
+        throw new Error(t("project.errors.not_found"));
       }
+      return result;
     },
     enabled: !!projectId,
     retry: 1,
@@ -307,37 +296,15 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     staleTime: 30_000,
   });
 
-  // Use data from ProjectDetailDTO
-  const phasesSource = useMemo(() => {
-    const phases = projectDetail?.plannedPhases || [];
-    console.log('📊 Phases Source:', phases);
-    console.log('📊 ProjectDetail:', projectDetail);
-    return phases;
-  }, [projectDetail]);
-  
-  const tasksSource = useMemo(() => {
-    const tasks = projectDetail?.tasks || [];
-    console.log('📊 Tasks Source:', tasks);
-    return tasks;
-  }, [projectDetail]);
-  
-  const risksSource = useMemo(() => {
-    const risks = projectDetail?.risks || [];
-    console.log('📊 Risks Source:', risks);
-    return risks;
-  }, [projectDetail]);
-  
-  const inspectionsSource = useMemo(() => {
-    const inspections: InspectionDTO[] = (projectDetail as any)?.inspections || [];
-    console.log('📊 Inspections Source:', inspections);
-    return inspections;
-  }, [projectDetail]);
-  
-  const paymentsSource = useMemo(() => {
-    const expenses = projectDetail?.expenses || [];
-    console.log('📊 Payments Source:', expenses);
-    return expenses;
-  }, [projectDetail]);
+  // Use data from ProjectDetailDTO (hydrated camelCase from service)
+  const phasesSource = useMemo(() => projectDetail?.plannedPhases || [], [projectDetail]);
+  const tasksSource = useMemo(() => projectDetail?.tasks || [], [projectDetail]);
+  const risksSource = useMemo(() => projectDetail?.risks || [], [projectDetail]);
+  const inspectionsSource = useMemo<InspectionDTO[]>(
+    () => ((projectDetail as any)?.inspections || []),
+    [projectDetail]
+  );
+  const paymentsSource = useMemo(() => projectDetail?.expenses || [], [projectDetail]);
 
   // Calculate current phase and stage dynamically from phases
   const currentPhaseInfo = useMemo(() => {
