@@ -420,7 +420,7 @@ export class ReceptionService {
     
     for (const member of committee) {
       participants.push({
-        id: `participant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: crypto.randomUUID(),
         name: member,
         role: 'committee_member',
         organization: 'organization',
