@@ -7,6 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, ExternalLink, Calendar, Flag } from 'lucide-react';
 import { useMilestonesHex } from '@/hooks/hexagonal/useMilestonesHex';
+import { entityToasts } from '@/hooks/projects/projectToasts';
+
+const milestoneToasts = entityToasts('jalon');
 
 const Field: React.FC<{ label: string; value?: React.ReactNode }> = ({ label, value }) => (
   <div>
