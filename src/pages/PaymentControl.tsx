@@ -280,7 +280,9 @@ const PaymentControlPage = () => {
   
   // Use hexagonal hooks
   const { projects, isLoading: projectsLoading } = useProjectsHex();
-  const { stats: paymentStats } = usePaymentBlocksHex();
+  // Conformité : passe l'id du projet sélectionné (sinon le hook log
+  // "No projectId provided" et `stats` reste vide).
+  const { stats: paymentStats } = usePaymentBlocksHex(selectedProject?.id);
 
   // Helper function to safely convert date to ISO string
   const toISOStringSafe = (date: string | Date | undefined | null): string => {
