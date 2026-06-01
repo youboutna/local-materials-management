@@ -634,8 +634,31 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
       {/* Results Table */}
       {calculations.length > 0 && (
         <Card>
-          <CardHeader>
+          <CardHeader className="space-y-3">
             <CardTitle>Résultats des calculs ({calculations.length} éléments)</CardTitle>
+            {projectId && (
+              <div className="flex flex-wrap items-end gap-2 border-t pt-3">
+                <div className="flex-1 min-w-[220px]">
+                  <Label className="text-xs">Matériau de référence (requis)</Label>
+                  <Select value={selectedMaterialId} onValueChange={setSelectedMaterialId}>
+                    <SelectTrigger><SelectValue placeholder="Sélectionner un matériau..." /></SelectTrigger>
+                    <SelectContent>
+                      {materials.map((m: any) => (
+                        <SelectItem key={m.id} value={m.id}>{m.name} ({m.unit})</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  onClick={handleSaveAll}
+                  disabled={savingAll || !selectedMaterialId || calculations.length === 0}
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  {savingAll ? "Enregistrement..." : `Enregistrer ${calculations.length} métré(s) dans le projet`}
+                </Button>
+                {phaseId && <Badge variant="outline" className="ml-2">Phase associée</Badge>}
+              </div>
+            )}
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <div className="border rounded-lg overflow-hidden">
