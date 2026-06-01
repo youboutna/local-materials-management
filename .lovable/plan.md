@@ -1,61 +1,166 @@
-## Objectif
-Aligner toutes les vues détail (« vues cadres ») sur les règles de `docs/PROMPTS.md` (flux UI → DTO → Service → Adapter → DB, pas de Supabase direct dans React, hooks hexagonaux), corriger un bug bloquant sur `/payment-control`, et fiabiliser l'hydratation des données dans les rapports / PDF.
 
-## 1. Bug fix bloquant — `/payment-control`
-`src/pages/PaymentControl.tsx` ligne 192 référence `loading` qui n'est jamais déclaré (seul `useNotificationsHex()` est destructuré ligne 94 sans renommage).
-- Récupérer `isLoading` depuis `useNotificationsHex()` et l'aliaser en `loading`, ou remplacer directement l'usage par `isLoading`.
-- Vérifier les autres flags (`unreadCount`, etc.) et harmoniser avec le contrat du hook.
+# Plan global — HadraTech‑GPI : référentiels au cœur, DQE, rapports filtrés, finalisation dette
 
-## 2. Vues détail manquantes / incohérentes
-Auditer puis standardiser ces pages. Toutes doivent : utiliser `AppLayout`, un hook `useXxxHex(id)` (jamais Supabase direct), afficher un skeleton, un état d'erreur, un état vide, des liens croisés (projet, phase, inspection liée, paiement lié), et des badges de déviation via `DeviationEngine` quand pertinent.
+> Conformité stricte `docs/PROMPTS.md` + `docs/ARCHITECTURE_REFERENTIELS.md` :
+> tout seuil/poids/règle/statut/indicateur/profil passe par `src/config/referentials/*` et un moteur générique. Aucune valeur métier en dur dans l'UI.
 
-| Page | État actuel | Action |
-|---|---|---|
-| `/inspections/:id` (`InspectionDetail.tsx`) | OK mais layout non `AppLayout`, pas de liens croisés payment/phase | Migrer vers `AppLayout`, ajouter Field links (projet/phase/paiement déclenché) |
-| `/payments/:id` (`PaymentDetail.tsx`) | OK récent | Vérifier `paymentMethod` mapping + ajouter bloc blocages/approbations via `usePaymentControlHex` |
-| `/tasks/:taskId` (`TaskDetail.tsx`) | Layout custom, pas de liens projet/phase | Ajouter liens croisés + statut via `DeviationEngine` (retard tâche) |
-| `/projects/:projectId/phases/:phaseId` (`PhaseDetail.tsx`) | OK structurée mais doublon avec `PhaseDetailsPage` | Garder `PhaseDetail`, supprimer route doublon, vérifier tous les sous-composants reçoivent le DTO enrichi |
-| **Tender** détail | **Aucune page** `/tenders/:id` n'existe (App.tsx) | **Créer** `src/pages/TenderDetail.tsx` + route, basée sur `useTenderHex(id)` ; afficher submissions, documents, statut évaluation |
-| **Milestone** détail | Aucune page dédiée | **Créer** `src/pages/MilestoneDetail.tsx` + route `/projects/:projectId/milestones/:milestoneId`, utilise `MilestoneService.getEnriched` |
-| **TaskAssignment** détail | Confondu avec `TaskDetail` | Confirmer qu'`useTaskAssignmentHex` retourne bien l'assignation enrichie (assignee, phase, due date) et compléter le DTO si nécessaire |
+Inspiration captures (ETER) : KPI projet (Progression / Budget / Délai / Rentabilité avec cible référentielle), onglets `Planification / Exécution / Financier / Conformité / Localisation`, **DQE Détaillé**, **Phases & Jalons** en cartes, **Gantt**.
 
-Côté listes (`InspectionMonitoring`, `PaymentCrud`, listes de tâches, jalons, tenders) : vérifier que chaque ligne pointe bien vers ces routes détail via `<Link>` (déjà fait pour inspections/paiements, à compléter pour tender + milestone).
+---
 
-## 3. Rapports & PDF
-Les générateurs (`CompactProjectReportGenerator`, `ProjectReportGenerator`, `ReportManager`) consomment déjà `ReportingService.generateCompleteProjectReport`, mais certaines sections sont vides parce que :
-- Les KPIs déviation ne passent pas par `DeviationEngine` (calcul inline « today - endDate »).
-- Les coûts réels viennent de `project.budget_actual` (souvent null) au lieu de la somme `payment_requests.amount` via `PaymentService`.
-- Les jalons listés sont les jalons « plats » sans état d'inspection/paiement associé.
+## 1. Socle référentiel à compléter
+
+Nouveaux référentiels (mêmes patterns que `weighting-models.referential.ts`) :
+
+| Fichier | Rôle |
+|---|---|
+| `reports/report-profiles.referential.ts` | `summary / detailed / financial / project_manager` → sections + profondeur de hydratation |
+| `inspections/inspection-statuses.referential.ts` | Statuts + transitions inspection (remplace M5 en dur) |
+| `projects/project-views.referential.ts` | Onglets projet (`planification`, `exécution`, `financier`, `conformité`, `localisation`) par type (ETER, SOMELEC…) |
+| `dqe/dqe-categories.referential.ts` | Postes DQE (Terrassement, Revêtement, Signalisation…) + unités + cibles rentabilité par entité |
+| `kpi/health-thresholds.referential.ts` | Seuils santé projet (H5/H8) — feeds `DeviationEngine` |
+
+Index `src/config/referentials/index.ts` mis à jour.
+
+---
+
+## 2. Vue Projet « cadre ETER/SOMELEC » (inspirée captures)
+
+`ProjectDetail.tsx` (ou nouveau `ProjectDashboardView` orchestré) :
+
+- **Bandeau KPI** : `Progression`, `Budget`, `Délai restant`, `Rentabilité` (cible récupérée depuis `dqe-categories.referential.ts` selon `project.referentialType`).
+  - Badges via `DeviationEngine.compute(..., 'project')` (remplace H5 dur).
+- **Onglets dynamiques** lus depuis `project-views.referential.ts` :
+  - `Planification` : Phases & Jalons (cartes), Gantt (`GanttChart` existant), PERT.
+  - `Exécution` : tâches en cours, retards, inspections planifiées (statuts via nouveau référentiel).
+  - `Financier` : DQE détaillé (table groupée par poste, rentabilité par ligne), répartition budgétaire (donut), engagements vs réels (PED).
+  - `Conformité` : tâches obligatoires injectées par `ComplianceInjector`, audits, garanties bancaires.
+  - `Localisation` : carte + coordonnées (réutilise `GIS coordinate fallback`).
+- Données via `ProjectService.getEnriched(id)` (un seul fetch, agrégat).
+
+---
+
+## 3. DQE — connecter DQE → dépenses réelles
+
+- Entité `DQELine` (déjà partiellement présente via `QuantityTakeoff`) : `category`, `label`, `unit`, `quantity`, `unitPrice`, `total`, `targetMargin`.
+- `DQEService.getProjectDQE(projectId)` → renvoie lignes groupées par poste + total + rentabilité **calculée** = `(total_planifié − coût_réel) / total_planifié`.
+- `coût_réel` agrégé via `PaymentService.getApprovedByDQELine(lineId)`.
+- Composant `DQEDetailedTable` (capture 2) : groupes pliables, badge rentabilité vs cible référentielle.
+- Composant `BudgetBreakdownDonut` (capture 1) : poids par poste DQE.
+
+---
+
+## 4. Phases & Jalons — cartes + Gantt unifiés
+
+- `PhasesAndMilestonesCards` (capture 3) : carte par phase avec dates, sous-étapes (label issu du référentiel `somelec/eter`), badge statut (référentiel `inspection-statuses` réutilisé pour cohérence).
+- Lien card → `PhaseDetail` existant. Pas de doublon.
+- Gantt alimenté par `ProjectService.getEnriched` (pas de Supabase direct).
+
+---
+
+## 5. Rapports & PDF — hydratation pilotée par profil/sections
+
+Problème actuel : `ReportingService.generateCompleteProjectReport` ignore `reportType` + `includeSections` → tout hydraté. 5 sections (`paymentBlocks`, `suppliers`, `documents`, `escalationAlerts`, `ganttChart`) jamais rendues dans `ProjectPDFDocument`.
 
 Actions :
-- Étendre `ReportingService` avec : `getDeviationSummary(projectId)` (utilise `DeviationEngine` + référentiels `indicator-templates`, `deviation-rules`), `getActualCosts(projectId)` (somme paiements approuvés), `getMilestoneStatusMatrix(projectId)` (joint jalons / inspections / paiements).
-- Ajouter ces champs au DTO `ProjectReportDTO`.
-- Mettre à jour `CompactProjectReportGenerator.tsx` et le template PDF pour rendre ces nouvelles sections (deviation badges, coûts réels vs planifiés, matrice jalons).
-- Edge function `send-project-report` : vérifier qu'elle reçoit bien le DTO complet (pas un `project` brut).
 
-## 4. Vérifications transverses (règles PROMPTS.md)
-Pour chaque fichier touché :
-- Aucun `import { supabase }` direct dans `src/components/**` ou `src/pages/**` (exceptions documentées : `useAuth`, URL publiques storage).
-- Aucun appel React/hook dans `src/application/services/**`.
-- Tous les DTOs en `camelCase`, mapping snake_case isolé dans les adapters.
-- TanStack Query v5 : pas de `onError`/`onSuccess` sur `useQuery`/`useMutation`.
+1. **`ReportingService`** : signature étendue `generate({ project, profile?, sections? })`. Court-circuit fetch par section + profondeur (`light` skip PERT/EVM série, `full` tout).
+2. **`ProjectReportGenerator.tsx`** : passe `profile` + `sections`. Maps `defaultSections` déplacées dans `report-profiles.referential.ts`. Retire `@ts-nocheck` (L3) après typage propre.
+3. **`CompactProjectReportGenerator.tsx`** : ajoute Select profil (défaut `summary`), supprime `useDirectData` mort.
+4. **`ProjectPDFDocument.tsx`** : brancher les 5 sections manquantes (chacune gardée par `reportConfig.includeSections.X`) :
+   - `paymentBlocks` via `PaymentBlockingValidation`
+   - `suppliers` via `enrichedData.suppliers`
+   - `documents` (table)
+   - `escalationAlerts` (filtrés `deviation-rules` critical/high)
+   - `ganttChart` (rendu PDF statique simple, phases sur barre temporelle)
+5. **DQE & rentabilité** ajoutés au PDF (nouvelle section gated par `dqe`).
+6. **Edge function `send-project-report`** : ne recalcule rien, reçoit le DTO filtré + blob PDF, envoie l'email.
+
+---
+
+## 6. Items HIGH/MEDIUM/LOW restants
+
+| ID | Action | Fichier |
+|---|---|---|
+| H5 | `ProjectCard.getProjectHealth` → `DeviationEngine.compute(..., 'project')` + `health-thresholds.referential` | `ProjectCard.tsx` |
+| H8 | `PerformanceMetrics` seuils via `indicator-templates.referential` | `PerformanceMetrics.tsx` |
+| M3 | Typer `(phase as any)` → `PhaseDTO` | composants phase |
+| M5 | Statuts inspection via `inspection-statuses.referential` | `RoleBasedInspectionMonitoring.tsx` |
+| M7 | Cross-link Tender ↔ Project complet (inspections liées) | `TenderDetail.tsx` |
+| M9 | Persist statut milestone via `MilestoneService.updateStatus` | `MilestoneDetail.tsx` |
+| M10 | Toasts standardisés via `projectToasts` | divers |
+| L3 | Retirer `@ts-nocheck` (reports + 3-4 composants) | reports |
+
+---
+
+## 7. Conformité PROMPTS.md (gardes-fous)
+
+À chaque fichier touché : ✅ pas de `import { supabase }` dans composants/pages, ✅ pas de hook React dans `application/services`, ✅ DTO camelCase, ✅ TanStack v5 sans `onError/onSuccess`, ✅ aucune valeur métier en dur (seuils, statuts, profils).
+
+---
 
 ## Détails techniques
-```text
-Fix /payment-control:
-  const { ..., isLoading: loading } = useNotificationsHex();
 
-Nouvelles routes (App.tsx):
-  <Route path="/tenders/:id" element={<TenderDetail />} />
-  <Route path="/projects/:projectId/milestones/:milestoneId" element={<MilestoneDetail />} />
+```ts
+// reports/report-profiles.referential.ts
+export type ReportProfile = 'summary' | 'detailed' | 'financial' | 'project_manager';
+export interface ReportProfileConfig {
+  code: ReportProfile;
+  label: MultiLanguageLabel;
+  depth: 'light' | 'full' | 'financial' | 'managerial';
+  includes: ReportSectionKey[];
+}
+export const REPORT_PROFILES: Record<ReportProfile, ReportProfileConfig> = { /* ... */ };
+export const defaultSectionsFor = (p: ReportProfile) => /* map → Record<key, boolean> */;
 
-Nouveaux fichiers:
-  src/pages/TenderDetail.tsx
-  src/pages/MilestoneDetail.tsx
-  (+ extensions ReportingService, ProjectReportDTO)
+// dqe/dqe-categories.referential.ts
+export interface DQECategory {
+  code: string;            // TERRASSEMENT, REVETEMENT, SIGNALISATION
+  label: MultiLanguageLabel;
+  unit?: string;
+  targetMargin: { min: number; max: number }; // [10, 30] pour ETER
+  applicableEntities?: string[]; // ['ETER']
+}
+
+// ReportingService.ts (signature)
+generateCompleteProjectReport(input: {
+  project: ProjectData;
+  profile?: ReportProfile;          // défaut 'detailed'
+  sections?: Partial<Record<ReportSectionKey, boolean>>;
+}): Promise<CompleteProjectReportResultDto>;
 ```
 
+---
+
+## Fichiers
+
+**Créés**
+- `src/config/referentials/reports/report-profiles.referential.ts`
+- `src/config/referentials/inspections/inspection-statuses.referential.ts`
+- `src/config/referentials/projects/project-views.referential.ts`
+- `src/config/referentials/dqe/dqe-categories.referential.ts`
+- `src/config/referentials/kpi/health-thresholds.referential.ts`
+- `src/components/project/dashboard/ProjectKpiBand.tsx`
+- `src/components/project/dashboard/DQEDetailedTable.tsx`
+- `src/components/project/dashboard/BudgetBreakdownDonut.tsx`
+- `src/components/project/dashboard/PhasesAndMilestonesCards.tsx`
+- `src/application/services/DQEService.ts`
+
+**Modifiés**
+- `src/config/referentials/index.ts`
+- `src/application/services/ReportingService.ts`
+- `src/components/reports/ProjectReportGenerator.tsx`
+- `src/components/reports/CompactProjectReportGenerator.tsx`
+- `src/components/reports/pdf/ProjectPDFDocument.tsx`
+- `src/components/project/ProjectCard.tsx`
+- `src/components/project/PerformanceMetrics.tsx`
+- `src/components/inspections/RoleBasedInspectionMonitoring.tsx`
+- `src/pages/ProjectDetail.tsx`
+- `supabase/functions/send-project-report/index.ts`
+- `.lovable/plan.md`
+
 ## Hors scope
-- Refonte visuelle des pages existantes.
-- Migration des modules legacy (`src/services`, `src/types`) — protégés par mémoire projet.
-- Changements de schéma DB (sauf si `milestone_id` requis sur inspections, à confirmer avant).
+
+- Intégrations ERP (SAGE/COBOL), SCADA (OPC UA), SIG (ArcGIS/WMS), Active Directory/LDAP — chiffrage séparé.
+- Refonte visuelle globale ; on s'aligne sur les captures sans refondre le design system.
+- Migration legacy `src/services` / `src/types` (mémoire protège).
