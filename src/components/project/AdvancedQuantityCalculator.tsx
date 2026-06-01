@@ -285,6 +285,71 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
   });
   const [showEditOpeningForm, setShowEditOpeningForm] = useState(false);
   const [planMessage, setPlanMessage] = useState<string | null>(null);
+  const [selectedMaterialId, setSelectedMaterialId] = useState<string>("");
+  const [savingAll, setSavingAll] = useState(false);
+  const { data: materials = [] } = useMaterialsForTakeoff();
+  const createTakeoff = useCreateQuantityTakeoff(projectId ?? "");
+
+  // Extract primary numeric quantity from results (volume m³ > area m² > length m > count)
+  const extractQuantity = (calc: CalculationResult): { qty: number; unit: string } => {
+    const r = calc.results || {};
+    const num = (k: string) => (typeof r[k] === "number" ? (r[k] as number) : undefined);
+    const volume = num("Volume béton (m³)") ?? num("Volume (m³)") ?? num("volume");
+    if (volume) return { qty: volume, unit: "m³" };
+    const area = num("Surface (m²)") ?? num("Surface nette (m²)") ?? num("area");
+    if (area) return { qty: area, unit: "m²" };
+    const length = num("Longueur (m)") ?? calc.dimensions?.length;
+    if (length) return { qty: length, unit: "m" };
+    const count = num("Nombre") ?? num("count");
+    if (count) return { qty: count, unit: "unité" };
+    return { qty: 1, unit: calc.metadata?.unit ?? "unité" };
+  };
+
+  const persistCalculation = async (calc: CalculationResult) => {
+    if (!projectId || !selectedMaterialId) return;
+    const { qty, unit } = extractQuantity(calc);
+    await createTakeoff.mutateAsync({
+      material_id: selectedMaterialId,
+      element_type: calc.elementType || "basic_calculator",
+      unit,
+      length: calc.dimensions?.length ?? 0,
+      width: calc.dimensions?.width ?? 0,
+      height: calc.dimensions?.height ?? 0,
+      quantity: qty,
+      note: JSON.stringify({
+        phaseId,
+        originalLabel: calc.originalLabel,
+        results: calc.results,
+        openings: calc.openings,
+      }),
+    });
+  };
+
+  const handleSaveAll = async () => {
+    if (!projectId) {
+      toast({ title: "Contexte projet manquant", description: "Ouvrez le calculateur depuis un projet pour sauvegarder.", variant: "destructive" });
+      return;
+    }
+    if (!selectedMaterialId) {
+      toast({ title: "Matériau requis", description: "Sélectionnez un matériau de référence.", variant: "destructive" });
+      return;
+    }
+    if (calculations.length === 0) return;
+    setSavingAll(true);
+    try {
+      for (const calc of calculations) {
+        await persistCalculation(calc);
+      }
+      toast({ title: "Métrés enregistrés", description: `${calculations.length} ligne(s) ajoutée(s) au projet.` });
+      onPersisted?.();
+    } catch (e: any) {
+      toast({ title: "Erreur d'enregistrement", description: e?.message ?? "Échec", variant: "destructive" });
+    } finally {
+      setSavingAll(false);
+    }
+  };
+
+
 
 
   const currentElement = elementTypes.find(el => el.value === form.elementType);
