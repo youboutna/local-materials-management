@@ -178,3 +178,43 @@ export const getProgressColor = (progress: number): string => {
   if (progress >= 25) return 'bg-orange-500';
   return 'bg-red-500';
 };
+
+// ============================================================
+// Project lifecycle stages — Planification → Exécution → Contrôle → Clôture
+// Pure derivation from phase type/status. No hardcode in UI components.
+// ============================================================
+export type LifecycleStage = 'PLANIFICATION' | 'EXECUTION' | 'CONTROLE' | 'CLOTURE';
+
+export interface LifecycleStageMeta {
+  stage: LifecycleStage;
+  label: string;
+  tokenClass: string;
+  description: string;
+}
+
+const STAGE_META: Record<LifecycleStage, LifecycleStageMeta> = {
+  PLANIFICATION: { stage: 'PLANIFICATION', label: 'Planification', tokenClass: 'bg-stage-plan/10 text-stage-plan border-stage-plan/30', description: 'Conception, études, WBS' },
+  EXECUTION:     { stage: 'EXECUTION',     label: 'Exécution',     tokenClass: 'bg-stage-exec/10 text-stage-exec border-stage-exec/30', description: 'Travaux et livraisons en cours' },
+  CONTROLE:      { stage: 'CONTROLE',      label: 'Contrôle',      tokenClass: 'bg-stage-control/10 text-stage-control border-stage-control/30', description: 'Inspections, conformité, qualité' },
+  CLOTURE:       { stage: 'CLOTURE',       label: 'Clôture',       tokenClass: 'bg-stage-close/10 text-stage-close border-stage-close/30', description: 'Réception définitive, archivage' },
+};
+
+const PLAN_TYPES = new Set(['planning','design','preparation','study','conception','planification']);
+const EXEC_TYPES = new Set(['construction','execution','implementation','travaux']);
+const CONTROL_TYPES = new Set(['inspection','quality','compliance','audit','controle','control']);
+const CLOSE_TYPES = new Set(['closure','handover','reception','cloture','archive']);
+
+export const getPhaseLifecycleStage = (phase: { type?: string | null; status?: string | null }): LifecycleStage => {
+  const t = (phase.type || '').toString().toLowerCase();
+  const s = (phase.status || '').toString().toLowerCase();
+  if (CLOSE_TYPES.has(t) || s === 'closed' || s === 'completed') return 'CLOTURE';
+  if (CONTROL_TYPES.has(t)) return 'CONTROLE';
+  if (EXEC_TYPES.has(t) || s === 'in_progress') return 'EXECUTION';
+  if (PLAN_TYPES.has(t) || s === 'pending' || s === 'not_started') return 'PLANIFICATION';
+  return 'EXECUTION';
+};
+
+export const getLifecycleStageMeta = (stage: LifecycleStage): LifecycleStageMeta => STAGE_META[stage];
+
+export const ALL_LIFECYCLE_STAGES: LifecycleStage[] = ['PLANIFICATION','EXECUTION','CONTROLE','CLOTURE'];
+
