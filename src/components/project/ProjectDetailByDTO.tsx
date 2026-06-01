@@ -1318,13 +1318,90 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         </TabsContent>
 
         <TabsContent value="tasks" className="mt-6">
-          <EnhancedTaskManager
-            projectId={projectId!}
-            tasks={tasks}
-            setTasks={setTasks}
-            phases={computedPhases}
-          />
+          {(() => {
+            // Default execution sub-tab driven by project status
+            const status = String((project as any)?.status || '').toLowerCase();
+            const defaultExecTab =
+              status.includes('inspection') ? 'inspections'
+              : status.includes('payment') ? 'payments-exec'
+              : 'tasks-exec';
+            return (
+              <Tabs defaultValue={defaultExecTab} className="space-y-4">
+                <TabsList>
+                  <TabsTrigger value="tasks-exec">Tâches</TabsTrigger>
+                  <TabsTrigger value="inspections">Inspections</TabsTrigger>
+                  <TabsTrigger value="payments-exec">Paiements</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="tasks-exec">
+                  <EnhancedTaskManager
+                    projectId={projectId!}
+                    tasks={tasks}
+                    setTasks={setTasks}
+                    phases={computedPhases}
+                  />
+                </TabsContent>
+
+                <TabsContent value="inspections">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Shield className="h-5 w-5" />
+                        Inspections du projet
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {React.createElement(
+                        require('@/components/project/InspectionsList').InspectionsList,
+                        { projectId: projectId! }
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="payments-exec">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <DollarSign className="h-5 w-5" />
+                        Paiements en cours
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {payments.filter(p => p.status !== 'paid' && p.status !== 'cancelled').length === 0 ? (
+                        <p className="text-muted-foreground">Aucun paiement en cours pour ce projet.</p>
+                      ) : (
+                        <div className="grid gap-3">
+                          {payments
+                            .filter(p => p.status !== 'paid' && p.status !== 'cancelled')
+                            .map((p) => (
+                              <a
+                                key={p.id}
+                                href={`/payments/${p.id}`}
+                                className="p-3 border rounded-lg hover:bg-accent flex justify-between"
+                              >
+                                <div>
+                                  <p className="font-medium">{(p as any).description || 'Paiement'}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {new Date(p.paymentDate).toLocaleDateString('fr-FR')}
+                                  </p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="font-semibold">{(p.amount || 0).toLocaleString()} MRU</p>
+                                  <Badge variant="secondary">{p.status}</Badge>
+                                </div>
+                              </a>
+                            ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            );
+          })()}
         </TabsContent>
+
 
         <TabsContent value="risks" className="mt-6">
           <EnhancedRiskManager
