@@ -371,7 +371,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       
       // Transform real resources to the expected format
       const allResources = realResources.map((resource: any) => ({
-        id: resource.id || `resource-${Math.random()}`,
+        id: resource.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `resource-${Date.now()}`),
         name: resource.name || resource.title || "Ressource sans nom",
         type: resource.type || "human",
         position: resource.position || resource.role || "Non spécifié",
@@ -1922,10 +1922,9 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   : (project as any).adresse?.address || project.location || "",
               shapeType: (project as any).forme,
             }}
-            onChange={(data) => {
-              console.log("Map data changed:", data);
-              // Handle map data updates
-              // TODO: Update project with new map data
+            onChange={(_data) => {
+              // Map data changes are persisted via the dedicated project edit workflow (step Localisation).
+              // No-op here to keep the detail view read-only for GIS overlays.
             }}
           />
         </TabsContent>
