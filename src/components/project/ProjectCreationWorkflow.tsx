@@ -319,16 +319,28 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
         {currentStep === 1 && (
           <StakeholdersTeamStep
             workflowData={formData}
+            mode={mode}
             onStepComplete={(stepData) => {
-              updateFormData({ 
+              const stakeholders = stepData.stakeholders || [];
+              // Promotion auto du Chef de projet → projectManagerId (validation step 2)
+              const pm = stakeholders.find((s: any) =>
+                String(s?.position || s?.role || "").toLowerCase().includes("chef de projet")
+              );
+              updateFormData({
                 relatedData: {
                   ...formData?.relatedData,
-                  stakeholders: stepData.stakeholders
-                }
+                  stakeholders,
+                },
+                projectData: {
+                  ...(formData?.projectData || {} as any),
+                  ...(pm?.employeeId ? { projectManagerId: pm.employeeId } : {}),
+                } as any,
               });
             }}
           />
         )}
+
+
 
         {currentStep === 2 && (
           <InteractiveMapGIS
