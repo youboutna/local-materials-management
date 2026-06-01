@@ -15,7 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarDays, Target, Plus, CheckCircle, Clock } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { ElectricSpinner } from "../loading-page";
-import { useMilestonesHex, Milestone } from "@/hooks/hexagonal";
+import { useMilestonesHex, Milestone, usePhaseInspectionsHex } from "@/hooks/hexagonal";
+import { usePhasePayments } from "@/hooks/hexagonal/usePhasePaymentsHex";
 
 interface PhaseMilestonesProps {
   phaseId: string;
@@ -34,6 +35,11 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
     updateMilestone,
     toggleMilestoneStatus,
   } = useMilestonesHex(projectId, phaseId);
+
+  // Phase-context enrichment: link sibling inspections + payments for visibility
+  const { inspections: phaseInspections = [] } = usePhaseInspectionsHex(phaseId, projectId);
+  const phasePaymentsQuery = usePhasePayments(phaseId);
+  const phasePayments = phasePaymentsQuery.data || [];
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null);
@@ -265,6 +271,25 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
         </Dialog>
       </CardHeader>
       <CardContent>
+        {/* Contexte de phase : éléments liés au même phaseId */}
+        {(phaseInspections.length > 0 || phasePayments.length > 0) && (
+          <div className="mb-4 grid grid-cols-2 gap-3">
+            <div className="rounded-lg border p-3 bg-muted/30">
+              <p className="text-xs text-muted-foreground">Inspections de la phase</p>
+              <p className="text-lg font-semibold">
+                {phaseInspections.filter((i: any) => i.status === 'completed' || i.status === 'approved').length}
+                <span className="text-sm text-muted-foreground"> / {phaseInspections.length}</span>
+              </p>
+            </div>
+            <div className="rounded-lg border p-3 bg-muted/30">
+              <p className="text-xs text-muted-foreground">Paiements liés</p>
+              <p className="text-lg font-semibold">
+                {phasePayments.filter((p: any) => p.status === 'paid' || p.status === 'approved').length}
+                <span className="text-sm text-muted-foreground"> / {phasePayments.length}</span>
+              </p>
+            </div>
+          </div>
+        )}
         {milestones.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             Aucun jalon pour cette phase
