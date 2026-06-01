@@ -49,7 +49,7 @@ type UserProfile = {
 const DEV_PROFILES: UserProfile[] = [
   {
     id: "dev-user-id",
-    full_name: "DÃ©veloppeur Test",
+    full_name: "Développeur Test",
     phone: "123456789",
     national_id: "DEV12345",
     avatar_url: null,
@@ -103,7 +103,7 @@ const Users = () => {
       navigate("/auth?mode=login");
       toast({
         title: t('common.error'),
-        description: "Veuillez vous connecter pour accÃ©der Ã  cette page.",
+        description: "Veuillez vous connecter pour accéder Ã  cette page.",
         variant: "destructive",
       });
     }
@@ -133,7 +133,7 @@ const Users = () => {
       console.error("Error fetching profiles:", error);
       toast({
         title: t('common.error'),
-        description: `Impossible de rÃ©cupÃ©rer les utilisateurs: ${error.message}`,
+        description: `Impossible de récupérer les utilisateurs: ${error.message}`,
         variant: "destructive",
       });
     }
@@ -204,7 +204,7 @@ const Users = () => {
     >
       {isDevelopmentMode && (
         <div className="fixed top-20 right-4 z-50 bg-amber-100 text-amber-800 px-4 py-2 rounded-md shadow-md text-sm">
-          ðŸ› ï¸ {t("dev_mode.active") || "Mode dÃ©veloppement actif"}
+          ðŸ› ï¸ {t("dev_mode.active") || "Mode développement actif"}
         </div>
       )}
 
@@ -250,13 +250,13 @@ const Users = () => {
                     {t("auth.email") || "Email"}
                   </TableHead>
                   <TableHead className="hidden md:table-cell">
-                    {t("users.table.phone") || "TÃ©lÃ©phone"}
+                    {t("users.table.phone") || "Téléphone"}
                   </TableHead>
                   <TableHead className="hidden md:table-cell">
                     {t("users.table.national_id") || "ID National"}
                   </TableHead>
                   <TableHead className="hidden md:table-cell">
-                    {t("users.table.role") || "RÃ´le principal"}
+                    {t("users.table.role") || "Rôle principal"}
                   </TableHead>
                   <TableHead className="hidden md:table-cell">
                     {t("users.table.status") || "Statut"}
@@ -284,7 +284,7 @@ const Users = () => {
                       {searchQuery
                         ? t("users.no_results") ||
                           "Aucun utilisateur ne correspond Ã  la recherche"
-                        : t("users.none_found") || "Aucun utilisateur trouvÃ©"}
+                        : t("users.none_found") || "Aucun utilisateur trouvé"}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -343,7 +343,7 @@ const Users = () => {
                         >
                           {profile.is_active !== false
                             ? t("users.active") || "Actif"
-                            : t("users.inactive") || "DÃ©sactivÃ©"}
+                            : t("users.inactive") || "Désactivé"}
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
@@ -417,7 +417,7 @@ const Users = () => {
         <SheetContent className="w-[90%] sm:max-w-lg">
           <SheetHeader>
             <SheetTitle className="text-lg font-serif">
-              {t("users.details_title") || "DÃ©tails de l'utilisateur"}
+              {t("users.details_title") || "Détails de l'utilisateur"}
             </SheetTitle>
           </SheetHeader>
 
@@ -462,7 +462,7 @@ const Users = () => {
 
                 <div>
                   <label className="text-muted-foreground text-sm">
-                    {t("users.phone") || "TÃ©lÃ©phone"}
+                    {t("users.phone") || "Téléphone"}
                   </label>
                   <p className="font-medium">{selectedUser.phone || "-"}</p>
                 </div>

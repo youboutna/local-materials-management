@@ -224,7 +224,7 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
 
   // Handle delete
   const handleDelete = async (tenderId: string) => {
-    if (confirm('ÃŠtes-vous sÃ»r de vouloir supprimer cet appel d\'offres ?')) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cet appel d\'offres ?')) {
       try {
         await deleteTenderMutation.mutateAsync(tenderId);
       } catch (error) {
@@ -300,7 +300,7 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
                 
                 {tender.estimated_value && (
                   <div className="text-sm font-medium">
-                    Valeur estimÃ©e: {tender.estimated_value.toLocaleString()} â‚¬
+                    Valeur estimée: {tender.estimated_value.toLocaleString()} â‚¬
                   </div>
                 )}
               </div>
@@ -330,13 +330,13 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
               </div>
               
               <div>
-                <Label htmlFor="project_id">Projet associÃ©</Label>
+                <Label htmlFor="project_id">Projet associé</Label>
                 <Select 
                   value={formData.project_id} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, project_id: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="SÃ©lectionner un projet" />
+                    <SelectValue placeholder="Sélectionner un projet" />
                   </SelectTrigger>
                   <SelectContent>
                     {projects.map((project) => (
@@ -384,41 +384,41 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
 
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="selection_mode">Mode de sÃ©lection</Label>
+                <Label htmlFor="selection_mode">Mode de sélection</Label>
                 <Select 
                   value={formData.selection_mode} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, selection_mode: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Mode de sÃ©lection" />
+                    <SelectValue placeholder="Mode de sélection" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="open">Ouvert</SelectItem>
                     <SelectItem value="restricted">Restreint</SelectItem>
-                    <SelectItem value="negotiated">NÃ©gociÃ©</SelectItem>
+                    <SelectItem value="negotiated">Négocié</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               
               <div>
-                <Label htmlFor="market_type">Type de marchÃ©</Label>
+                <Label htmlFor="market_type">Type de marché</Label>
                 <Select 
                   value={formData.market_type} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, market_type: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Type de marchÃ©" />
+                    <SelectValue placeholder="Type de marché" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="public">Public</SelectItem>
-                    <SelectItem value="private">PrivÃ©</SelectItem>
+                    <SelectItem value="private">Privé</SelectItem>
                     <SelectItem value="mixed">Mixte</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               
               <div>
-                <Label htmlFor="estimated_value">Valeur estimÃ©e (â‚¬)</Label>
+                <Label htmlFor="estimated_value">Valeur estimée (â‚¬)</Label>
                 <Input
                   id="estimated_value"
                   type="number"
@@ -437,8 +437,8 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
                 className="w-full"
               >
                 {selectedProcurementSteps.length > 0 
-                  ? `${selectedProcurementSteps.length} Ã©tape(s) sÃ©lectionnÃ©e(s)`
-                  : 'SÃ©lectionner les Ã©tapes du workflow'
+                  ? `${selectedProcurementSteps.length} étape(s) sélectionnée(s)`
+                  : 'Sélectionner les étapes du workflow'
                 }
               </Button>
             </div>

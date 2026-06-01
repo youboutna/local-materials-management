@@ -95,8 +95,8 @@ const RoleBasedInspectionMonitoring = () => {
     // This would send notification to project managers/admins
     console.log('Alert sent:', { inspectionId, message });
     toast({
-      title: "Alerte envoyÃ©e",
-      description: "La hiÃ©rarchie a Ã©tÃ© notifiÃ©e",
+      title: "Alerte envoyée",
+      description: "La hiérarchie a été notifiée",
     });
   };
 
@@ -166,7 +166,7 @@ const RoleBasedInspectionMonitoring = () => {
       // For now, just log the edit since we don't have the mutation
       console.log('Edit inspection:', { id: editingInspection.id, data: editFormData });
       toast({
-        title: "SuccÃ¨s",
+        title: "Succès",
         description: "Inspection mise Ã  jour",
       });
       
@@ -178,14 +178,14 @@ const RoleBasedInspectionMonitoring = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('ÃŠtes-vous sÃ»r de vouloir supprimer cette inspection ?')) return;
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette inspection ?')) return;
     
     try {
       // For now, just log the delete since we don't have the mutation
       console.log('Delete inspection:', id);
       toast({
-        title: "SuccÃ¨s",
-        description: "Inspection supprimÃ©e",
+        title: "Succès",
+        description: "Inspection supprimée",
       });
     } catch (error) {
       console.error('Error deleting inspection:', error);
@@ -217,7 +217,7 @@ const RoleBasedInspectionMonitoring = () => {
         <div>
           <h1 className="text-3xl font-bold">Suivi des Inspections</h1>
           <p className="text-muted-foreground">
-            Gestion des inspections selon les rÃ´les et permissions
+            Gestion des inspections selon les rôles et permissions
           </p>
         </div>
         {isAdmin && (
@@ -249,8 +249,8 @@ const RoleBasedInspectionMonitoring = () => {
                   <div>
                     <p className="font-medium">{getProjectTitle(inspection.project_id)}</p>
                     <p className="text-sm text-muted-foreground">
-                      Inspecteur: {inspection.inspector} â€¢ 
-                      Date prÃ©vue: {new Date(inspection.date).toLocaleDateString('fr-FR')} â€¢ 
+                      Inspecteur: {inspection.inspector} • 
+                      Date prévue: {new Date(inspection.date).toLocaleDateString('fr-FR')} • 
                       Retard: {Math.ceil((new Date().getTime() - new Date(inspection.date).getTime()) / (1000 * 60 * 60 * 24))} jour(s)
                     </p>
                   </div>
@@ -266,7 +266,7 @@ const RoleBasedInspectionMonitoring = () => {
                         )}
                       >
                         <Send className="h-4 w-4 mr-2" />
-                        Alerte hiÃ©rarchie
+                        Alerte hiérarchie
                       </Button>
                     )}
                   </div>
@@ -309,9 +309,9 @@ const RoleBasedInspectionMonitoring = () => {
                   <SelectItem value="all">Tous les statuts</SelectItem>
                   <SelectItem value="pending">En attente</SelectItem>
                   <SelectItem value="in_progress">En cours</SelectItem>
-                  <SelectItem value="completed">ComplÃ©tÃ©</SelectItem>
-                  <SelectItem value="approved">ApprouvÃ©</SelectItem>
-                  <SelectItem value="rejected">RejetÃ©</SelectItem>
+                  <SelectItem value="completed">Complété</SelectItem>
+                  <SelectItem value="approved">Approuvé</SelectItem>
+                  <SelectItem value="rejected">Rejeté</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -390,7 +390,7 @@ const RoleBasedInspectionMonitoring = () => {
                             <DropdownMenuItem asChild>
                               <Link to={`/inspections/${inspection.id}`}>
                                 <Eye className="h-4 w-4 mr-2" />
-                                Voir les dÃ©tails
+                                Voir les détails
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
@@ -467,9 +467,9 @@ const RoleBasedInspectionMonitoring = () => {
                   <SelectContent>
                     <SelectItem value="pending">En attente</SelectItem>
                     <SelectItem value="in_progress">En cours</SelectItem>
-                    <SelectItem value="completed">ComplÃ©tÃ©</SelectItem>
-                    <SelectItem value="approved">ApprouvÃ©</SelectItem>
-                    <SelectItem value="rejected">RejetÃ©</SelectItem>
+                    <SelectItem value="completed">Complété</SelectItem>
+                    <SelectItem value="approved">Approuvé</SelectItem>
+                    <SelectItem value="rejected">Rejeté</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

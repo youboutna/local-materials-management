@@ -61,11 +61,11 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'approved':
-        return 'ApprouvÃ©';
+        return 'Approuvé';
       case 'rejected':
-        return 'RejetÃ©';
+        return 'Rejeté';
       case 'requires_revision':
-        return 'RÃ©vision requise';
+        return 'Révision requise';
       case 'submitted':
         return 'Soumis';
       default:
@@ -83,7 +83,7 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
     } else {
       toast({
         title: "Document non disponible",
-        description: "Aucun fichier n'est associÃ© Ã  ce document d'appel d'offres.",
+        description: "Aucun fichier n'est associé Ã  ce document d'appel d'offres.",
         variant: "destructive"
       });
     }
@@ -111,7 +111,7 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
             <TabsList className="tabs-list-responsive tabs-list-3">
               <TabsTrigger value="administrative">Administratifs</TabsTrigger>
               <TabsTrigger value="technical">Techniques</TabsTrigger>
-              <TabsTrigger value="financial">FinanciÃ¨res</TabsTrigger>
+              <TabsTrigger value="financial">Financières</TabsTrigger>
             </TabsList>
 
             {(['administrative', 'technical', 'financial'] as TenderDocumentCategory[]).map((category) => (
@@ -185,7 +185,7 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
                 {filterDocumentsByCategory(category).length === 0 && (
                   <div className="text-center py-8 text-gray-500">
                     <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p>Aucun document {TENDER_CATEGORY_LABELS[category].toLowerCase()} trouvÃ© pour ce projet.</p>
+                    <p>Aucun document {TENDER_CATEGORY_LABELS[category].toLowerCase()} trouvé pour ce projet.</p>
                   </div>
                 )}
               </TabsContent>

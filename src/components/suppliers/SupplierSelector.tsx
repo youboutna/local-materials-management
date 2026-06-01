@@ -109,7 +109,7 @@ const SupplierSelector: React.FC<SupplierSelectorProps> = ({
           onValueChange={handleSupplierSelect}
         >
           <SelectTrigger>
-            <SelectValue placeholder="SÃ©lectionner un fournisseur" />
+            <SelectValue placeholder="Sélectionner un fournisseur" />
           </SelectTrigger>
           <SelectContent>
             {suppliers?.map((supplier) => (
@@ -162,11 +162,11 @@ const SupplierSelector: React.FC<SupplierSelectorProps> = ({
               id="supplierContact"
               value={customSupplier.contact}
               onChange={(e) => handleCustomSupplierChange('contact', e.target.value)}
-              placeholder="TÃ©lÃ©phone ou email"
+              placeholder="Téléphone ou email"
             />
           </div>
           <div>
-            <Label htmlFor="leadTime">DÃ©lai de livraison (jours)</Label>
+            <Label htmlFor="leadTime">Délai de livraison (jours)</Label>
             <Input
               id="leadTime"
               type="number"

@@ -53,8 +53,8 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
   const addMaterial = () => {
     if (availableMaterials.length === 0) {
       toast({
-        title: "Aucun matÃ©riau disponible",
-        description: "Tous les matÃ©riaux sont dÃ©jÃ  sÃ©lectionnÃ©s.",
+        title: "Aucun matériau disponible",
+        description: "Tous les matériaux sont déjÃ  sélectionnés.",
       });
       return;
     }
@@ -62,7 +62,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
     const materialToAdd = availableMaterials[0];
     onChange([...selectedMaterials, { materialId: materialToAdd.id, quantity: 1 }]);
     
-    toast({ title: "MatÃ©riau ajoutÃ©", description: `${materialToAdd.name} ajoutÃ©.` });
+    toast({ title: "Matériau ajouté", description: `${materialToAdd.name} ajouté.` });
   };
 
   const removeMaterial = (index: number) => {
@@ -103,7 +103,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            {t('materials.required') || "MatÃ©riaux requis"}
+            {t('materials.required') || "Matériaux requis"}
             <Badge variant="outline" className="ml-auto">{materials.length} disponibles</Badge>
           </CardTitle>
         </CardHeader>
@@ -123,11 +123,11 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
             </div>
             
             <div className="space-y-2">
-              <Label>{t('materials.category') || "CatÃ©gorie"}</Label>
+              <Label>{t('materials.category') || "Catégorie"}</Label>
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                 <SelectTrigger><SelectValue placeholder="Toutes" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes les catÃ©gories</SelectItem>
+                  <SelectItem value="all">Toutes les catégories</SelectItem>
                   {categories.map(cat => (
                     <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                   ))}
@@ -145,20 +145,20 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
           </div>
 
           <div className="text-sm text-muted-foreground">
-            {materials.length} matÃ©riau(x) trouvÃ©(s) ({availableMaterials.length} disponibles)
+            {materials.length} matériau(x) trouvé(s) ({availableMaterials.length} disponibles)
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>MatÃ©riaux sÃ©lectionnÃ©s ({selectedMaterials.length})</CardTitle>
+          <CardTitle>Matériaux sélectionnés ({selectedMaterials.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {selectedMaterials.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>{t('materials.none_selected') || "Aucun matÃ©riau sÃ©lectionnÃ©"}</p>
+              <p>{t('materials.none_selected') || "Aucun matériau sélectionné"}</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -171,16 +171,16 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
                     <CardContent className="p-4">
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
                         <div className="md:col-span-2 space-y-2">
-                          <Label>MatÃ©riau</Label>
+                          <Label>Matériau</Label>
                           <Select value={selected.materialId} onValueChange={(v) => updateMaterialId(index, v)}>
-                            <SelectTrigger><SelectValue placeholder="SÃ©lectionner" /></SelectTrigger>
+                            <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
                             <SelectContent className="max-h-60">
                               {materials.filter(m => m.id && m.name).map(m => (
                                 <SelectItem key={m.id} value={m.id}>
                                   <div className="flex flex-col">
                                     <span className="font-medium">{m.name}</span>
                                     <span className="text-xs text-muted-foreground">
-                                      {m.category} â€¢ {Number(m.price_per_unit || 0).toLocaleString()} MRU/{m.unit}
+                                      {m.category} • {Number(m.price_per_unit || 0).toLocaleString()} MRU/{m.unit}
                                     </span>
                                   </div>
                                 </SelectItem>
@@ -200,7 +200,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
                         </div>
 
                         <div className="space-y-2">
-                          <Label>QuantitÃ©</Label>
+                          <Label>Quantité</Label>
                           <div className="flex items-center space-x-2">
                             <Input
                               type="number"
@@ -238,8 +238,8 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
                 <CardContent className="p-4">
                   <div className="flex justify-between items-center">
                     <div>
-                      <h3 className="font-medium">CoÃ»t total</h3>
-                      <p className="text-sm text-muted-foreground">{selectedMaterials.length} matÃ©riau(x)</p>
+                      <h3 className="font-medium">Coût total</h3>
+                      <p className="text-sm text-muted-foreground">{selectedMaterials.length} matériau(x)</p>
                     </div>
                     <div className="text-right">
                       <div className="text-2xl font-bold text-primary">{totalCost.toLocaleString()} MRU</div>

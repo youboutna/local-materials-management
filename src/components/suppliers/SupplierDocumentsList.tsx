@@ -57,7 +57,7 @@ const SupplierDocumentsList = ({ supplier }: SupplierDocumentsListProps) => {
     } catch (error) {
       toast({
         title: "Erreur",
-        description: "Impossible de tÃ©lÃ©charger le fichier.",
+        description: "Impossible de télécharger le fichier.",
         variant: "destructive"
       });
     }
@@ -76,7 +76,7 @@ const SupplierDocumentsList = ({ supplier }: SupplierDocumentsListProps) => {
       <Card>
         <CardContent className="text-center py-6">
           <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Aucun document tÃ©lÃ©versÃ©</p>
+          <p className="text-sm text-muted-foreground">Aucun document téléversé</p>
         </CardContent>
       </Card>
     );

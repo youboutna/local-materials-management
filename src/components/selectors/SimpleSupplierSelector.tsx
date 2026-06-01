@@ -17,7 +17,7 @@ interface SimpleSupplierSelectorProps {
 const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
   value,
   onChange,
-  placeholder = "SÃ©lectionner un fournisseur",
+  placeholder = "Sélectionner un fournisseur",
   disabled = false,
   label
 }) => {
@@ -91,7 +91,7 @@ const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
               ) : value ? (
                 <div className="flex items-center gap-2 text-orange-600">
                   <Building2 className="h-4 w-4" />
-                  <span>Fournisseur sÃ©lectionnÃ© (ID: {value})</span>
+                  <span>Fournisseur sélectionné (ID: {value})</span>
                 </div>
               ) : null}
             </SelectValue>
@@ -126,7 +126,7 @@ const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
             ))}
             {(!suppliers || suppliers.filter(s => s.id && s.id.trim() !== '').length === 0) && (
               <div className="p-2 text-sm text-muted-foreground text-center">
-                Aucun fournisseur trouvÃ©
+                Aucun fournisseur trouvé
               </div>
             )}
           </SelectContent>
@@ -135,7 +135,7 @@ const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
 
       {selectedSupplier && (
         <div className="text-xs text-muted-foreground">
-          SÃ©lectionnÃ©: {selectedSupplier.name}
+          Sélectionné: {selectedSupplier.name}
           {selectedSupplier.contact_person && ` - Contact: ${selectedSupplier.contact_person}`}
         </div>
       )}

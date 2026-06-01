@@ -20,10 +20,10 @@ interface EmployeeSelectorProps {
 const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
   value,
   onChange,
-  label = "EmployÃ©",
+  label = "Employé",
   disabled = false,
   required = false,
-  placeholder = "SÃ©lectionner un employÃ©",
+  placeholder = "Sélectionner un employé",
   departmentFilter,
   positionFilter
 }) => {
@@ -72,7 +72,7 @@ const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Rechercher un employÃ©..."
+            placeholder="Rechercher un employé..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -111,7 +111,7 @@ const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
                         {employee.full_name}
                       </div>
                       <div className="text-xs text-muted-foreground truncate">
-                        {employee.position && `${employee.position} â€¢ `}
+                        {employee.position && `${employee.position} • `}
                         ID: {employee.employee_id}
                       </div>
                       {employee.email && (
@@ -130,7 +130,7 @@ const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
                 <SelectItem value="no-employees" disabled>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Users className="h-4 w-4" />
-                    <span>Aucun employÃ© trouvÃ©</span>
+                    <span>Aucun employé trouvé</span>
                   </div>
                 </SelectItem>
               )}
@@ -140,8 +140,8 @@ const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
         
         {selectedEmployee && (
           <div className="text-xs text-muted-foreground">
-            {selectedEmployee.position && `${selectedEmployee.position} â€¢ `}
-            {selectedEmployee.department && `${selectedEmployee.department} â€¢ `}
+            {selectedEmployee.position && `${selectedEmployee.position} • `}
+            {selectedEmployee.department && `${selectedEmployee.department} • `}
             ID: {selectedEmployee.employee_id}
           </div>
         )}

@@ -142,14 +142,14 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
       
       setUploadedDocuments(prev => [...prev, uploadedDocument.url || '']);
       toast({
-        title: 'Document tÃ©lÃ©chargÃ©',
-        description: 'Le document a Ã©tÃ© ajoutÃ© Ã  votre demande',
+        title: 'Document téléchargé',
+        description: 'Le document a été ajouté Ã  votre demande',
       });
     } catch (error) {
       console.error('Error uploading file:', error);
       toast({
         title: 'Erreur',
-        description: 'Impossible de tÃ©lÃ©charger le document',
+        description: 'Impossible de télécharger le document',
         variant: 'destructive',
       });
     }
@@ -270,9 +270,9 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       pending: { color: 'bg-yellow-100 text-yellow-800', label: 'En attente' },
-      approved: { color: 'bg-green-100 text-green-800', label: 'ApprouvÃ©' },
-      rejected: { color: 'bg-red-100 text-red-800', label: 'RejetÃ©' },
-      processed: { color: 'bg-blue-100 text-blue-800', label: 'TraitÃ©' },
+      approved: { color: 'bg-green-100 text-green-800', label: 'Approuvé' },
+      rejected: { color: 'bg-red-100 text-red-800', label: 'Rejeté' },
+      processed: { color: 'bg-blue-100 text-blue-800', label: 'Traité' },
     };
     
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
@@ -310,7 +310,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
                     value={projectId}
                     onChange={(id) => setProjectId(id || '')}
                     label="Projet (optionnel)"
-                    placeholder="SÃ©lectionner un projet"
+                    placeholder="Sélectionner un projet"
                     secureMode={true}
                     showTenderReference={true}
                     tenderReference={tenderReference}
@@ -333,12 +333,12 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
                 <Label htmlFor="paymentReason">Motif du paiement *</Label>
                 <Select value={paymentReason} onValueChange={setPaymentReason}>
                   <SelectTrigger>
-                    <SelectValue placeholder="SÃ©lectionner le motif" />
+                    <SelectValue placeholder="Sélectionner le motif" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="materials">Fourniture de matÃ©riaux</SelectItem>
+                    <SelectItem value="materials">Fourniture de matériaux</SelectItem>
                     <SelectItem value="services">Prestation de services</SelectItem>
-                    <SelectItem value="equipment">Location d'Ã©quipement</SelectItem>
+                    <SelectItem value="equipment">Location d'équipement</SelectItem>
                     <SelectItem value="transport">Transport</SelectItem>
                     <SelectItem value="maintenance">Maintenance</SelectItem>
                     <SelectItem value="other">Autre</SelectItem>
@@ -352,7 +352,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
                   id="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="DÃ©crivez en dÃ©tail la prestation ou fourniture"
+                  placeholder="Décrivez en détail la prestation ou fourniture"
                   rows={3}
                 />
               </div>
@@ -363,7 +363,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
                   id="notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Informations complÃ©mentaires"
+                  placeholder="Informations complémentaires"
                   rows={2}
                 />
               </div>
@@ -383,7 +383,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
                     className="cursor-pointer inline-flex items-center px-4 py-2 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
                   >
                     <Upload className="mr-2 h-4 w-4" />
-                    TÃ©lÃ©charger un document
+                    Télécharger un document
                   </label>
                 </div>
                 {uploadedDocuments.length > 0 && (
@@ -391,7 +391,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
                     {uploadedDocuments.map((doc, index) => (
                       <div key={index} className="flex items-center text-sm text-green-600">
                         <FileText className="mr-1 h-3 w-3" />
-                        Document {index + 1} tÃ©lÃ©chargÃ©
+                        Document {index + 1} téléchargé
                       </div>
                     ))}
                   </div>

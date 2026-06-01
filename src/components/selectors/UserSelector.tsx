@@ -22,7 +22,7 @@ const UserSelector: React.FC<UserSelectorProps> = ({
   label = "Utilisateur",
   disabled = false,
   required = false,
-  placeholder = "SÃ©lectionner un utilisateur",
+  placeholder = "Sélectionner un utilisateur",
   roleFilter
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -111,7 +111,7 @@ const UserSelector: React.FC<UserSelectorProps> = ({
                 <SelectItem value="no-users" disabled>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Users className="h-4 w-4" />
-                    <span>Aucun utilisateur trouvÃ©</span>
+                    <span>Aucun utilisateur trouvé</span>
                   </div>
                 </SelectItem>
               )}
