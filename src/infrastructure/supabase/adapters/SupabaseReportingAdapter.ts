@@ -1,16 +1,24 @@
-// @ts-nocheck
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
-import { IReportingRepository } from '@/domain/repositories/IReportingRepository';
-import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
+import { IReportingRepository, ProjectData } from '@/domain/repositories/IReportingRepository';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import { ProjectCalculationService } from '@/application/services/ProjectCalculationService';
-import { ProjectReportDTO, EnhancedPhaseDTO } from '@/dtos/entities/ProjectReportDTO';
+import { ProjectReportDTO, EnhancedPhaseDTO, FinancialMetricsDTO } from '@/dtos/entities/ProjectReportDTO';
 import { Database } from '@/integrations/supabase/types';
+import { toPhaseViewModel, type PhaseViewModel } from '@/utils/phaseViewModel';
 
 // Types officiels Supabase pour les tables utilisées
 type ProjectPhaseRow = Database['public']['Tables']['project_phases']['Row'];
 type InspectionRow = Database['public']['Tables']['inspections']['Row'];
 type ProjectMilestoneRow = Database['public']['Tables']['project_milestones']['Row'];
+
+// Phase hydratée pour les rapports — camelCase + alias `name` pour rester
+// compatible avec EnhancedPhaseDTO/ProjectDetailDTO côté UI/PDF.
+type ReportPhase = PhaseViewModel & { name: string; actualProgress: number };
+
+const hydratePhase = (row: unknown): ReportPhase => {
+  const vm = toPhaseViewModel(row as Record<string, unknown>);
+  return { ...vm, name: vm.title, actualProgress: vm.progress };
+};
 
 export class SupabaseReportingAdapter implements IReportingRepository {
   
