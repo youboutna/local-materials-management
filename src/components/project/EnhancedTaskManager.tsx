@@ -297,15 +297,15 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
       setEditingId(null);
       resetForm();
       toast({
-        title: "Tâche mise Ã  jour",
-        description: "La tâche a été mise Ã  jour avec succès.",
+        title: "Tâche mise à jour",
+        description: "La tâche a été mise à jour avec succès.",
       });
     },
     onError: (error) => {
       console.error('Error updating task:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de mettre Ã  jour la tâche.",
+        description: "Impossible de mettre à jour la tâche.",
         variant: "destructive",
       });
     },
@@ -448,7 +448,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
     if (!formData.applyToAllPhases && !formData.phase_id) {
       toast({
         title: "Erreur", 
-        description: "Vous devez sélectionner une phase ou appliquer Ã  toutes les phases.",
+        description: "Vous devez sélectionner une phase ou appliquer à toutes les phases.",
         variant: "destructive",
       });
       return;
@@ -730,7 +730,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                       checked={formData.applyToAllPhases}
                       onCheckedChange={(checked) => setFormData({ ...formData, applyToAllPhases: checked as boolean })}
                     />
-                    <Label htmlFor="applyToAllPhases">Appliquer Ã  toutes les phases</Label>
+                    <Label htmlFor="applyToAllPhases">Appliquer à toutes les phases</Label>
                   </div>
 
                   {!formData.applyToAllPhases && (
@@ -855,7 +855,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                     Annuler
                   </Button>
                   <Button type="submit">
-                    {editingId ? 'Mettre Ã  jour' : 'Créer'}
+                    {editingId ? 'Mettre à jour' : 'Créer'}
                   </Button>
                 </div>
               </form>
