@@ -121,23 +121,6 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
         <div
           className={`grid gap-2 ${
 
-            Filtres
-            {activeFiltersCount > 0 && (
-              <Badge variant="secondary" className="ml-2">
-                {activeFiltersCount}
-              </Badge>
-            )}
-          </CardTitle>
-          {resultCount !== undefined && (
-            <span className="text-sm text-muted-foreground">
-              {resultCount} résultat{resultCount !== 1 ? "s" : ""}
-            </span>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div
-          className={`grid gap-4 ${
             filters.length <= 2
               ? "grid-cols-1 lg:grid-cols-3"
               : filters.length === 3
