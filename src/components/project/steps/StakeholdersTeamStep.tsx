@@ -34,6 +34,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
 import { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
 import { StakeholderDTO, CreateStakeholderDTO, UpdateStakeholderDTO, StakeholderType, StakeholderEntityType, StakeholderRole } from "@/dtos/entities/StakeholderDTO";
+import { StakeholderUITransformer, type StakeholderFormData } from "@/dtos/transforms/StakeholderUITransformer";
 import { EmployeeDTO, CreateEmployeeDTO, UpdateEmployeeDTO, EmployeeDepartment, EmployeeType, EmployeeStatus } from "@/dtos/entities/EmployeeDTO";
 import { EmployeeRole } from "@/dtos/entities/EmployeeDTO";
 import { SupplierDTO } from "@/dtos/entities/SupplierDTO";
@@ -171,48 +172,25 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
     return employee?.full_name || "Employé inconnu";
   };
 
-  // Enhanced stakeholder creation with proper validation and type safety
+  // UI → Transformer → DTO (PROMPTS.md Rule #4 + Core memory: UI Data Mapping)
   const addStakeholder = () => {
-    // ✅ Enhanced validation with clear error messages
-    const validationErrors: string[] = [];
-    
-    if (!newStakeholder.stakeholderType) {
-      validationErrors.push("Le type de partie prenante est requis");
-    }
-    
-    if (!newStakeholder.employeeId && !newStakeholder.organizationId) {
-      validationErrors.push("L'ID de l'entité est requis");
-    }
-    
-    if (!newStakeholder.role) {
-      validationErrors.push("Le rôle est requis");
-    }
-
-    if (validationErrors.length > 0) {
-      console.error("Validation errors:", validationErrors);
-      return;
-    }
-
-    const stakeholderData: CreateStakeholderDTO = {
-      name: newStakeholder.name || "",
+    const formData: StakeholderFormData = {
+      name:
+        newStakeholder.name ||
+        newStakeholder.organization ||
+        (newStakeholder.employeeId
+          ? getEmployeeName(newStakeholder.employeeId)
+          : ""),
       stakeholderType: newStakeholder.stakeholderType as StakeholderType,
-      entityType: newStakeholder.stakeholderType === StakeholderType.EMPLOYEE 
-        ? StakeholderEntityType.PERSON 
-        : StakeholderEntityType.ORGANIZATION, // ✅ Proper enum usage
-      role: newStakeholder.role as StakeholderRole, // ✅ Proper enum casting
-      projectId: projectData.id,
-      organizationId: newStakeholder.organizationId,
+      role: (newStakeholder.role as string) || "",
+      email: newStakeholder.email,
+      phone: newStakeholder.phone,
       employeeId: newStakeholder.employeeId,
-      isPrimary: newStakeholder.isPrimary || false,
-      contact: {
-        name: newStakeholder.name || "",
-        email: newStakeholder.email || "",
-        phone: newStakeholder.phone,
-        position: newStakeholder.position,
-      },
+      organizationId: newStakeholder.organizationId,
       organization: newStakeholder.organization,
-      responsibilities: newStakeholder.responsibilities || [],
-      accessLevel: newStakeholder.accessLevel as 'read' | 'write' | 'admin' || "read",
+      position: newStakeholder.position,
+      responsibilities: newStakeholder.responsibilities,
+      accessLevel: newStakeholder.accessLevel as 'read' | 'write' | 'admin' | undefined,
       startDate: newStakeholder.startDate,
       endDate: newStakeholder.endDate,
       hourlyRate: newStakeholder.hourlyRate,
@@ -221,7 +199,19 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
       isActive: newStakeholder.isActive !== false,
     };
 
-    handleStakeholderCreate(stakeholderData);
+    const validation = StakeholderUITransformer.validateStakeholderForm(formData);
+    if (!validation.isValid) {
+      console.error("Validation errors:", validation.errors);
+      return;
+    }
+
+    const dto: CreateStakeholderDTO = {
+      ...StakeholderUITransformer.formToCreateRequest(formData),
+      projectId: projectData.id,
+      isPrimary: newStakeholder.isPrimary || false,
+    };
+
+    handleStakeholderCreate(dto);
     setNewStakeholder({});
   };
 
