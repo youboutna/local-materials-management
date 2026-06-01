@@ -142,7 +142,7 @@ export function useStorageHex(bucketName: string = 'documents') {
         const results = await Promise.all(
           files.map(async (file, index) => {
             try {
-              const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${file.name}`;
+              const fileName = `${Date.now()}-${crypto.randomUUID().slice(0, 9)}-${file.name}`;
               const filePath = `${folder}/${fileName}`;
 
               console.info('USE_STORAGE_HEX_009: Uploading individual file', {

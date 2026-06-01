@@ -11,7 +11,7 @@ import { ReportCalculations } from "@/utils/reportCalculations";
  * ---------------------------
  */
 const uid = (prefix = 'id') =>
-  `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  `${prefix}-${Date.now()}-${crypto.randomUUID().slice(0, 9)}`;
 
 const daysBetween = (d1: Date, d2: Date) =>
   Math.floor((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));

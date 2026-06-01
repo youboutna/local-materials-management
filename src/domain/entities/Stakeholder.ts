@@ -245,7 +245,7 @@ export class Stakeholder {
     contact: StakeholderContact,
     responsibilities: string[] = []
   ): Stakeholder {
-    const id = `stakeholder_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = `stakeholder_${Date.now()}_${crypto.randomUUID().slice(0, 9)}`;
     const now = new Date().toISOString();
     
     return new Stakeholder(
@@ -280,7 +280,7 @@ export class Stakeholder {
     contact: StakeholderContact,
     responsibilities: string[] = []
   ): Stakeholder {
-    const id = `stakeholder_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = `stakeholder_${Date.now()}_${crypto.randomUUID().slice(0, 9)}`;
     const now = new Date().toISOString();
     
     return new Stakeholder(

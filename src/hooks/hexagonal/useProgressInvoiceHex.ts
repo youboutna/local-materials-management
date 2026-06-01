@@ -109,7 +109,7 @@ export function useProgressInvoiceHex() {
   const uploadDocument = async (file: File): Promise<string> => {
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
       const filePath = `progress_invoices/${fileName}`;
 
       const result = await storageService.uploadFile({ bucket: 'documents', path: filePath, file });

@@ -188,7 +188,7 @@ export class InspectionService {
       if (!files || files.length === 0) throw new AppError(ErrorCode.VALIDATION_ERROR, 'Files are required');
 
       return files.map(file => ({
-        id: `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: `doc_${Date.now()}_${crypto.randomUUID().slice(0, 9)}`,
         type: 'report' as const,
         name: file.name,
         url: '',

@@ -160,7 +160,7 @@ export function useManagementActionsHex() {
       priority: 'low' | 'medium' | 'high' | 'urgent';
     }) => {
       const actionEvent = {
-        id: `action-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `action-${Date.now()}-${crypto.randomUUID().slice(0, 9)}`,
         type: actionData.type,
         title: actionData.title,
         description: actionData.description,

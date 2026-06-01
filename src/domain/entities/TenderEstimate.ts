@@ -599,7 +599,7 @@ export class TenderEstimate {
     projectId?: string;
     submittedBy?: string;
   }): TenderEstimate {
-    const id = `estimate_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = `estimate_${Date.now()}_${crypto.randomUUID().slice(0, 9)}`;
     const now = new Date().toISOString();
 
     return new TenderEstimate(
@@ -729,7 +729,7 @@ export class TenderEstimate {
   }
 
   private generateItemId(): string {
-    return `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `item_${Date.now()}_${crypto.randomUUID().slice(0, 9)}`;
   }
 
   // ============= Serialization =============

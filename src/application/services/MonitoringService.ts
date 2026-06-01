@@ -107,7 +107,7 @@ export class MonitoringService {
       }
 
       const alertEntity: MonitoringAlert = {
-        id: `alert-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `alert-${Date.now()}-${crypto.randomUUID().slice(0, 9)}`,
         ...alert,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()

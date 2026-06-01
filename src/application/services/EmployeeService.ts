@@ -242,7 +242,7 @@ export class EmployeeService {
    * Helper method to generate ID
    */
   private generateId(): string {
-    return `emp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `emp_${Date.now()}_${crypto.randomUUID().slice(0, 9)}`;
   }
 
   /**

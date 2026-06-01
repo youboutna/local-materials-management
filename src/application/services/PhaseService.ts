@@ -291,7 +291,7 @@ export class PhaseService {
       
       for (const phaseData of referentialPhases) {
         const phaseEntity = Phase.create({
-          id: `phase-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          id: `phase-${Date.now()}-${crypto.randomUUID().slice(0, 9)}`,
           projectId,
           phaseName: phaseData.name || 'Unknown Phase',
           description: phaseData.description || '',

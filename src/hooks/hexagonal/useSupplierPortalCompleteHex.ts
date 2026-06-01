@@ -254,7 +254,7 @@ export function useUploadSupplierDocumentHex() {
     mutationFn: async ({ file, title, description, documentType, userId, supplierId }: {
       file: File; title: string; description?: string; documentType: string; userId: string; supplierId?: string;
     }) => {
-      const fileName = `${Math.random()}.${file.name.split('.').pop()}`;
+      const fileName = `${crypto.randomUUID()}.${file.name.split('.').pop()}`;
       const filePath = `supplier-documents/${userId}/${fileName}`;
 
       const storageService = new StorageService();

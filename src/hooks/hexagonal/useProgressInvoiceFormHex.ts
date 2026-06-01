@@ -93,7 +93,7 @@ export const useProgressInvoiceFormHex = (projectId?: string) => {
   const uploadFileMutation = useMutation({
     mutationFn: async (file: File) => {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
       const filePath = `progress_invoices/${fileName}`;
       const storageService = new StorageService();
       const result = await storageService.uploadFile({ bucket: 'documents', path: filePath, file });

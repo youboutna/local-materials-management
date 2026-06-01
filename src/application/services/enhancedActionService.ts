@@ -416,7 +416,7 @@ export class EnhancedActionService {
 
       // Create action
       const action: EnhancedActionDTO = {
-        id: `action-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `action-${Date.now()}-${crypto.randomUUID().slice(0, 9)}`,
         entityType: 'insurance',
         entityId: request.insuranceId,
         projectId: request.projectId,
@@ -478,7 +478,7 @@ export class EnhancedActionService {
 
       // Create action
       const action: EnhancedActionDTO = {
-        id: `action-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `action-${Date.now()}-${crypto.randomUUID().slice(0, 9)}`,
         entityType: 'bankGuarantee',
         entityId: request.insuranceId,
         projectId: request.projectId,
@@ -540,7 +540,7 @@ export class EnhancedActionService {
 
       // Create action
       const action: EnhancedActionDTO = {
-        id: `action-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `action-${Date.now()}-${crypto.randomUUID().slice(0, 9)}`,
         entityType: 'payment',
         entityId: request.insuranceId,
         projectId: request.projectId,

@@ -99,7 +99,7 @@ export function getDevApiUrl(): string {
  * Mock data generators for development
  */
 export const mockDataGenerators = {
-  generateId: () => `mock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+  generateId: () => `mock_${Date.now()}_${crypto.randomUUID().slice(0, 9)}`,
   
   generateTimestamp: () => new Date().toISOString(),
   
@@ -109,5 +109,5 @@ export const mockDataGenerators = {
   
   generateEmail: () => `user_${Math.random().toString(36).substr(2, 8)}@example.com`,
   
-  generatePhone: () => `+33${Math.random().toString(36).substr(2, 9)}`,
+  generatePhone: () => `+33${crypto.randomUUID().slice(0, 9)}`,
 } as const;
