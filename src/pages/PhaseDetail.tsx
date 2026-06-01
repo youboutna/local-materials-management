@@ -119,46 +119,47 @@ const PhaseDetail: React.FC = () => {
         </div>
 
         {/* Overview KPIs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Progression</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 py-2 px-3">
+              <CardTitle className="text-xs font-medium">Progression</CardTitle>
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{phase.progress ?? 0}%</div>
-              <Progress value={phase.progress ?? 0} className="mt-2" />
+            <CardContent className="px-3 pb-3 pt-0">
+              <div className="text-xl font-bold">{progress}%</div>
+              <Progress value={progress} className="mt-1.5 h-1.5" />
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Budget</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 py-2 px-3">
+              <CardTitle className="text-xs font-medium">Budget</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{(phase.budget ?? 0).toLocaleString()} MRU</div>
+            <CardContent className="px-3 pb-3 pt-0">
+              <div className="text-xl font-bold">{(budget).toLocaleString()} MRU</div>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Durée</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 py-2 px-3">
+              <CardTitle className="text-xs font-medium">Durée</CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{phase.estimatedDuration ?? 0} jours</div>
-              <p className="text-xs text-muted-foreground">{phase.startDate} → {phase.endDate}</p>
+            <CardContent className="px-3 pb-3 pt-0">
+              <div className="text-xl font-bold">{estimatedDuration} j</div>
+              <p className="text-[11px] text-muted-foreground truncate">{startDate} → {endDate}</p>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Localisation</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 py-2 px-3">
+              <CardTitle className="text-xs font-medium">Localisation</CardTitle>
               <MapPin className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-sm font-medium">{phase.location || 'Non spécifiée'}</div>
+            <CardContent className="px-3 pb-3 pt-0">
+              <div className="text-sm font-medium truncate">{location || 'Non spécifiée'}</div>
             </CardContent>
           </Card>
         </div>
+
 
         {/* Cross-module quick navigation */}
         <Card>
