@@ -2,12 +2,17 @@
 /**
  * PV Generator Adapter - Supabase Implementation
  * Implements IPVGeneratorRepository using Supabase
+ *
+ * inspection_pvs lives in the public schema, so we use the default supabase client.
+ * Inspection metadata still lives under btp.* and is accessed via btpClient.
  */
 
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 import { IPVGeneratorRepository } from '@/domain/repositories/IPVGeneratorRepository';
 
 export class PVGeneratorAdapter implements IPVGeneratorRepository {
+
   
   async getInspectionWithProject(inspectionId: string): Promise<any> {
     const { data, error } = await supabase
