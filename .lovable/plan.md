@@ -1,77 +1,61 @@
+## Objectif
+Aligner toutes les vues détail (« vues cadres ») sur les règles de `docs/PROMPTS.md` (flux UI → DTO → Service → Adapter → DB, pas de Supabase direct dans React, hooks hexagonaux), corriger un bug bloquant sur `/payment-control`, et fiabiliser l'hydratation des données dans les rapports / PDF.
 
-# Plan : Cohérence mapping & hydratation des vues Projet / Phase / Jalon / Rapports
+## 1. Bug fix bloquant — `/payment-control`
+`src/pages/PaymentControl.tsx` ligne 192 référence `loading` qui n'est jamais déclaré (seul `useNotificationsHex()` est destructuré ligne 94 sans renommage).
+- Récupérer `isLoading` depuis `useNotificationsHex()` et l'aliaser en `loading`, ou remplacer directement l'usage par `isLoading`.
+- Vérifier les autres flags (`unreadCount`, etc.) et harmoniser avec le contrat du hook.
 
-## Diagnostic (basé sur capture + code)
+## 2. Vues détail manquantes / incohérentes
+Auditer puis standardiser ces pages. Toutes doivent : utiliser `AppLayout`, un hook `useXxxHex(id)` (jamais Supabase direct), afficher un skeleton, un état d'erreur, un état vide, des liens croisés (projet, phase, inspection liée, paiement lié), et des badges de déviation via `DeviationEngine` quand pertinent.
 
-Sur `/projects/:id` (statut INSPECTION, 96% progression, 1 phase, 2191j de retard) :
+| Page | État actuel | Action |
+|---|---|---|
+| `/inspections/:id` (`InspectionDetail.tsx`) | OK mais layout non `AppLayout`, pas de liens croisés payment/phase | Migrer vers `AppLayout`, ajouter Field links (projet/phase/paiement déclenché) |
+| `/payments/:id` (`PaymentDetail.tsx`) | OK récent | Vérifier `paymentMethod` mapping + ajouter bloc blocages/approbations via `usePaymentControlHex` |
+| `/tasks/:taskId` (`TaskDetail.tsx`) | Layout custom, pas de liens projet/phase | Ajouter liens croisés + statut via `DeviationEngine` (retard tâche) |
+| `/projects/:projectId/phases/:phaseId` (`PhaseDetail.tsx`) | OK structurée mais doublon avec `PhaseDetailsPage` | Garder `PhaseDetail`, supprimer route doublon, vérifier tous les sous-composants reçoivent le DTO enrichi |
+| **Tender** détail | **Aucune page** `/tenders/:id` n'existe (App.tsx) | **Créer** `src/pages/TenderDetail.tsx` + route, basée sur `useTenderHex(id)` ; afficher submissions, documents, statut évaluation |
+| **Milestone** détail | Aucune page dédiée | **Créer** `src/pages/MilestoneDetail.tsx` + route `/projects/:projectId/milestones/:milestoneId`, utilise `MilestoneService.getEnriched` |
+| **TaskAssignment** détail | Confondu avec `TaskDetail` | Confirmer qu'`useTaskAssignmentHex` retourne bien l'assignation enrichie (assignee, phase, due date) et compléter le DTO si nécessaire |
 
-1. **Onglet "Exécution" quasi vide** — `ProjectDetailByDTO.tsx` ligne 1313 : le panneau `value="tasks"` ne contient QUE `EnhancedTaskManager`. Il ignore complètement les **inspections**, **paiements en cours**, **étapes workflow** et **PV** — alors qu'au statut INSPECTION, l'exécution = inspections + livrables, pas les tâches Gantt.
-2. **PHASES 0/1** — `1 phase` existe mais "0 en cours" car la phase est en statut `inspection`/`completed`, non `in_progress`. Le compteur ne suit pas le statut dynamique (cf. mémoire `project-phase-dynamic-calculation`).
-3. **Encodage cassé** — `EnhancedTaskManager.tsx:790,940` : "trouvÃe", "CrÃeze" → fichier mal encodé (Latin1/UTF8 mix), visible aussi dans la capture ("Aucune tâche trouvÃe").
-4. **DÉLAI "2191j de retard"** sur un projet 96% complet → calcul d'écart basé sur `end_date` initiale sans tenir compte du statut/avancement réel. Devrait passer par `DeviationEngine` (mémoire `tbi-deviation-engine`).
-5. **Vue Phase (`PhaseDetailPage` / `PhaseDetailsPage`)** — deux composants quasi dupliqués (346 vs 485 lignes) : sources de désynchronisation hydratation.
-6. **Vue Jalons (`PhaseMilestones`, `UnifiedMilestoneManager`)** : ne reflète pas l'état réel des inspections/checkpoints liés (pas de jointure côté DTO).
-7. **Rapports (`CompactProjectReportGenerator`, `ReportManager`)** : consomment `project` brut depuis le composant parent, sans passer par `ReportingService` complet → KPIs financiers/écarts manquants.
+Côté listes (`InspectionMonitoring`, `PaymentCrud`, listes de tâches, jalons, tenders) : vérifier que chaque ligne pointe bien vers ces routes détail via `<Link>` (déjà fait pour inspections/paiements, à compléter pour tender + milestone).
 
-## Corrections proposées
+## 3. Rapports & PDF
+Les générateurs (`CompactProjectReportGenerator`, `ProjectReportGenerator`, `ReportManager`) consomment déjà `ReportingService.generateCompleteProjectReport`, mais certaines sections sont vides parce que :
+- Les KPIs déviation ne passent pas par `DeviationEngine` (calcul inline « today - endDate »).
+- Les coûts réels viennent de `project.budget_actual` (souvent null) au lieu de la somme `payment_requests.amount` via `PaymentService`.
+- Les jalons listés sont les jalons « plats » sans état d'inspection/paiement associé.
 
-### 1. Onglet "Exécution" du projet — rendre contextuel au statut
-Dans `ProjectDetailByDTO.tsx`, remplacer le contenu du `TabsContent value="tasks"` par un sous-routage interne :
-```
-Exécution
- ├─ Tâches            (EnhancedTaskManager)
- ├─ Inspections       (InspectionsList filtré projectId)
- ├─ Paiements en cours (PaymentHistory pending/in_review)
- └─ Workflow / Étapes (PhaseWorkflowContainer de la phase active)
-```
-- Onglet actif par défaut = celui qui correspond au statut projet (`inspection` → Inspections).
-- Récupération via hooks hexagonaux existants : `useInspectionsHex`, `useProjectPaymentsHex`, `useWorkflowOrchestrator`.
+Actions :
+- Étendre `ReportingService` avec : `getDeviationSummary(projectId)` (utilise `DeviationEngine` + référentiels `indicator-templates`, `deviation-rules`), `getActualCosts(projectId)` (somme paiements approuvés), `getMilestoneStatusMatrix(projectId)` (joint jalons / inspections / paiements).
+- Ajouter ces champs au DTO `ProjectReportDTO`.
+- Mettre à jour `CompactProjectReportGenerator.tsx` et le template PDF pour rendre ces nouvelles sections (deviation badges, coûts réels vs planifiés, matrice jalons).
+- Edge function `send-project-report` : vérifier qu'elle reçoit bien le DTO complet (pas un `project` brut).
 
-### 2. Carte "PHASES x/y" — statut dynamique
-- Brancher sur `ProjectAnalyticsService.getPhaseProgressSummary(projectId)` qui retourne `{ total, inProgress, completed, blocked }`.
-- Affiche `inProgress/total` et tooltip détaillé (mémoire `project-phase-dynamic-calculation` respectée).
-
-### 3. Carte "DÉLAI" — DeviationEngine
-- Remplacer le calcul inline `(today - endDate)` par `DeviationEngine.compute({ planned, actual, indicatorTemplate: 'project-delay' })`.
-- Si projet >= 95% completé → afficher "Clôture en cours" + écart final, pas "retard".
-
-### 4. Encodage UTF-8
-- Réécrire `EnhancedTaskManager.tsx` (lignes 623, 790, 940) et grep global `Ãe|Ã©|Ã¨` pour réparer tous les caractères corrompus.
-
-### 5. Fusion PhaseDetailPage / PhaseDetailsPage
-- Garder `PhaseDetailsPage` (le plus complet, 485 l.) comme source unique.
-- Supprimer `PhaseDetailPage.tsx` et rediriger ses imports.
-- Aligner sur DTO `PhaseDetailDTO` (camelCase), hydratation via `PhaseService.getPhaseDetail(phaseId)` qui agrège : steps, tasks, inspections, payments, jalons.
-
-### 6. Vue Jalons cohérente
-- `MilestoneService.getEnriched(milestoneId)` : joindre checkpoints + inspections + statut de paiement associé.
-- `PhaseMilestones` et `UnifiedMilestoneManager` consomment ce DTO enrichi (au lieu de fetcher séparément).
-
-### 7. Rapports — passer par ReportingService
-- `CompactProjectReportGenerator` et `ReportManager` : recevoir `ProjectReportDTO` complet depuis `ReportingService.buildProjectReport(projectId)` (déjà défini dans `IReportingRepository`).
-- Inclure : KPIs référentiels (TBI), écarts (DeviationEngine), résumé financier réel (`calculateRealProjectCosts`), inspections, jalons.
+## 4. Vérifications transverses (règles PROMPTS.md)
+Pour chaque fichier touché :
+- Aucun `import { supabase }` direct dans `src/components/**` ou `src/pages/**` (exceptions documentées : `useAuth`, URL publiques storage).
+- Aucun appel React/hook dans `src/application/services/**`.
+- Tous les DTOs en `camelCase`, mapping snake_case isolé dans les adapters.
+- TanStack Query v5 : pas de `onError`/`onSuccess` sur `useQuery`/`useMutation`.
 
 ## Détails techniques
+```text
+Fix /payment-control:
+  const { ..., isLoading: loading } = useNotificationsHex();
 
-| Fichier | Action |
-|---|---|
-| `src/components/project/ProjectDetailByDTO.tsx` | Restructure onglet Exécution en sous-tabs ; remplace calcul délai/phases par services |
-| `src/application/services/ProjectAnalyticsService.ts` | Ajouter `getPhaseProgressSummary` si absent |
-| `src/application/services/DeviationEngine.ts` | Exposer `computeProjectDelay(project)` utilisant indicator-template |
-| `src/components/project/EnhancedTaskManager.tsx` | Fix encodage UTF-8 |
-| `src/components/project/PhaseDetailsPage.tsx` | Devient source unique, consomme `PhaseDetailDTO` |
-| `src/components/project/PhaseDetailPage.tsx` | **Supprimé**, imports redirigés |
-| `src/application/services/PhaseService.ts` | Ajouter `getPhaseDetail(phaseId)` agrégateur |
-| `src/application/services/MilestoneService.ts` | Ajouter `getEnriched(milestoneId)` |
-| `src/components/project/PhaseMilestones.tsx`, `UnifiedMilestoneManager.tsx` | Consommer DTO enrichi |
-| `src/components/reports/CompactProjectReportGenerator.tsx`, `ReportManager.tsx` | Consommer `ProjectReportDTO` via `ReportingService` |
+Nouvelles routes (App.tsx):
+  <Route path="/tenders/:id" element={<TenderDetail />} />
+  <Route path="/projects/:projectId/milestones/:milestoneId" element={<MilestoneDetail />} />
 
-## Conformité aux règles PROMPTS.md
-- Flow respecté : DB → Adapter → Transformer → Entity → Service → DTO → UI.
-- Aucun `supabase` direct ajouté dans React.
-- Référentiels (indicator-templates, deviation-rules, weighting-models) utilisés pour tout calcul d'écart / statut dynamique.
-- TanStack Query v5 : pas de `onError`/`onSuccess`.
+Nouveaux fichiers:
+  src/pages/TenderDetail.tsx
+  src/pages/MilestoneDetail.tsx
+  (+ extensions ReportingService, ProjectReportDTO)
+```
 
-## Hors scope (à confirmer)
-- Refonte visuelle des cartes KPI (icônes, couleurs) — non demandé.
-- Migration de nouvelles tables — pas nécessaire, tout existe déjà.
+## Hors scope
+- Refonte visuelle des pages existantes.
+- Migration des modules legacy (`src/services`, `src/types`) — protégés par mémoire projet.
+- Changements de schéma DB (sauf si `milestone_id` requis sur inspections, à confirmer avant).
