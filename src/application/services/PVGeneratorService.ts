@@ -314,7 +314,7 @@ Fait à ${inspection.projects?.location || 'Lieu'}, le ${format(new Date(), 'dd 
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'PV ID is required');
       }
       const record = await this.pvRepository.getPVById(pvId);
-      return record ? this.mapRecordToGeneratedPV(record) : null;
+      return record ? this.mapRecordToGeneratedPV(record as unknown as Record<string, unknown>) : null;
     } catch (error) {
       console.error('PVGeneratorService.getPVById failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get PV by ID');
