@@ -487,7 +487,7 @@ export function ProjectPDFDocument({
                 };
                 
                 return [
-                  milestone.title || 'Sans titre',
+                  milestone.title || milestone.name || '—',
                   milestone.targetDate ? format(new Date(milestone.targetDate), 'dd/MM/yyyy') : 'Non défini',
                   statusMap[milestone.status] || milestone.status || 'Non défini',
                   priorityMap[milestone.priority] || milestone.priority || 'Moyenne',
