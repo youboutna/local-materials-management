@@ -231,13 +231,7 @@ export {
   useAddTaskCommentHex, 
   useMarkTaskCompletedHex 
 } from './useSupplierPortalCompleteHex';
-export { 
-  useSupplierAuthHex as useSupplierDashboardAuthHex,
-  useSupplierProfileHex as useSupplierDashboardProfileHex,
-  useSupplierNotificationsHex as useSupplierDashboardNotificationsHex,
-  useSupplierPaymentsHex,
-  useSupplierDocumentsHex as useSupplierDashboardDocumentsHex
-} from './useSupplierDashboardHex';
+// Legacy SupplierDashboard hooks removed — page deleted (use UnifiedSupplierPortal).
 export { 
   useSupplierSubmissionsHex, 
   useSubmissionDocumentsHex,
