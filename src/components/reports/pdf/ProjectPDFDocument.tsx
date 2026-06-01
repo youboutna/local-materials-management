@@ -253,11 +253,10 @@ export function ProjectPDFDocument({
             ])}
           />
           {healthScore && typeof healthScore === 'object' && (
-            <PDFText>
-              Score de santé global :{' '}
-              {(healthScore.overallScore ?? healthScore.score ?? '—')}
-              {healthScore.category ? ` (${healthScore.category})` : ''}
-            </PDFText>
+            <PDFText
+              label="Score de santé global"
+              value={`${healthScore.overallScore ?? healthScore.score ?? '—'}${healthScore.category ? ` (${healthScore.category})` : ''}`}
+            />
           )}
         </PDFSection>
       )}
