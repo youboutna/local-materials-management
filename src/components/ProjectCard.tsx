@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import StatusBadge from './StatusBadge';
+import { classifyProjectHealth } from '@/config/referentials/kpi/health-thresholds.referential';
 
 interface ProjectCardProps {
   project: ProjectData;
