@@ -236,7 +236,7 @@ export function CompactProjectReportGenerator({
     };
 
     loadData();
-  }, [project, projects, isSingleProject, projectList.length, toast, useDirectData, projectList, reportingService]);
+  }, [project, projects, isSingleProject, projectList.length, toast, projectList, reportingService, profile]);
 
   const generatePDF = async () => {
     if (projectList.length === 0) {
