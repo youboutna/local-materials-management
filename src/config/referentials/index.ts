@@ -147,3 +147,8 @@ export {
   getReferentialType
 } from './milestones-elec.referential';
 
+
+// PTBA/PPM/PED/TBI — référentiels transverses (alignement docs/ARCHITECTURE_REFERENTIELS.md)
+export * from './indicator-templates.referential';
+export * from './deviation-rules.referential';
+export * from './weighting-models.referential';

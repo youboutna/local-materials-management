@@ -21,6 +21,7 @@ import PhaseInspections from '@/components/project/PhaseInspections';
 import PhaseMilestones from '@/components/project/PhaseMilestones';
 import { GanttChart, PERTDiagram, CriticalPathView } from '@/components/planning';
 import { AppLayout } from '@/components/layout/AppLayout';
+import DeviationBadges from '@/components/common/DeviationBadges';
 import {
   getPhaseLifecycleStage,
   getLifecycleStageMeta,
@@ -160,6 +161,23 @@ const PhaseDetail: React.FC = () => {
           </Card>
         </div>
 
+        {/* Écarts planifié vs réalisé (DeviationEngine + deviation-rules) */}
+        <Card>
+          <CardContent className="py-3 px-4 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground mr-1">Écarts :</span>
+            <DeviationBadges
+              scope="phase"
+              input={{
+                plannedEndDate: endDate,
+                actualEndDate: (phase as any).actualEndDate,
+                plannedBudget: budget,
+                actualCost: (phase as any).actualCost,
+                plannedProgress: (phase as any).plannedProgress ?? 100,
+                actualProgress: progress,
+              }}
+            />
+          </CardContent>
+        </Card>
 
         {/* Cross-module quick navigation */}
         <Card>
