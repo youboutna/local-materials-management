@@ -358,7 +358,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                             ...newStakeholder,
                             employeeId,
                             name: emp?.full_name || newStakeholder.name,
-                            email: emp?.email || newStakeholder.email,
+                            email: (emp as any)?.email || newStakeholder.email,
                           });
                         }}
                       />
