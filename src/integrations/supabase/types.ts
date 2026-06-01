@@ -1457,7 +1457,10 @@ export type Database = {
         Row: {
           auth_provider: string | null
           avatar_url: string | null
+          brand_id: string | null
           created_at: string | null
+          department: string | null
+          depot_id: string | null
           full_name: string | null
           id: string
           is_admin: boolean | null
@@ -1465,14 +1468,19 @@ export type Database = {
           phone: string | null
           provider_data: Json | null
           provider_id: string | null
+          region: string | null
           role: Database["public"]["Enums"]["user_role"] | null
+          station_id: string | null
           status: string | null
           updated_at: string | null
         }
         Insert: {
           auth_provider?: string | null
           avatar_url?: string | null
+          brand_id?: string | null
           created_at?: string | null
+          department?: string | null
+          depot_id?: string | null
           full_name?: string | null
           id: string
           is_admin?: boolean | null
@@ -1480,14 +1488,19 @@ export type Database = {
           phone?: string | null
           provider_data?: Json | null
           provider_id?: string | null
+          region?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
+          station_id?: string | null
           status?: string | null
           updated_at?: string | null
         }
         Update: {
           auth_provider?: string | null
           avatar_url?: string | null
+          brand_id?: string | null
           created_at?: string | null
+          department?: string | null
+          depot_id?: string | null
           full_name?: string | null
           id?: string
           is_admin?: boolean | null
@@ -1495,7 +1508,9 @@ export type Database = {
           phone?: string | null
           provider_data?: Json | null
           provider_id?: string | null
+          region?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
+          station_id?: string | null
           status?: string | null
           updated_at?: string | null
         }
@@ -6810,6 +6825,12 @@ export type Database = {
         Args: { role_name: string; target_user_id: string }
         Returns: undefined
       }
+      can_approve_authorizations: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
+      can_inspect: { Args: { _user_id: string }; Returns: boolean }
+      can_view_national_data: { Args: { _user_id: string }; Returns: boolean }
       create_progress_invoice: {
         Args: {
           p_inspection_id: string
@@ -6903,6 +6924,7 @@ export type Database = {
           position_title: string
         }[]
       }
+      get_highest_role: { Args: { _user_id: string }; Returns: string }
       get_project_hierarchy: {
         Args: { project_id_param: string }
         Returns: {
@@ -6954,6 +6976,10 @@ export type Database = {
           validated_at: string
           warnings: Json
         }[]
+      }
+      has_any_role: {
+        Args: { _roles: string[]; _user_id: string }
+        Returns: boolean
       }
       has_role: {
         Args: { role_name: string; user_id: string }
