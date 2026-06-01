@@ -208,11 +208,11 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
           </Button>
         </div>
 
-        {/* Active Filters Display */}
+        {/* Active Filters Display - inline & compact */}
         {hasActiveFilters && (
-          <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">
+          <div className="flex flex-wrap items-center gap-1.5 mt-2 pt-2 border-t">
             {searchValue && searchValue.trim().length > 0 && (
-              <Badge variant="secondary" className="flex items-center gap-1">
+              <Badge variant="secondary" className="flex items-center gap-1 h-6 px-2 text-xs">
                 <Search className="h-3 w-3" />"{searchValue}"
                 <Button
                   variant="ghost"
@@ -234,7 +234,7 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
                   <Badge
                     key={filter.key}
                     variant="secondary"
-                    className="flex items-center gap-1"
+                    className="flex items-center gap-1 h-6 px-2 text-xs"
                   >
                     {filter.label}: {option?.label || filter.value}
                     <Button

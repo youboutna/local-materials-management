@@ -39,10 +39,10 @@ const PhaseDetail: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useLanguage();
 
-  const { phase, loading } = usePhaseDetails(phaseId);
+  const { phase, isLoading: loading, error } = usePhaseDetails(phaseId);
 
   const stage = useMemo(
-    () => (phase ? getPhaseLifecycleStage({ type: phase.type, status: phase.status }) : 'PLANIFICATION'),
+    () => (phase ? getPhaseLifecycleStage({ type: (phase as any).phaseType || (phase as any).type, status: phase.status }) : 'PLANIFICATION'),
     [phase]
   );
   const stageMeta = getLifecycleStageMeta(stage);
@@ -71,18 +71,29 @@ const PhaseDetail: React.FC = () => {
       <AppLayout pageTitle="Phase">
         <div className="container mx-auto px-4 py-8 text-center">
           <h1 className="text-2xl font-bold text-destructive mb-2">Phase non trouvée</h1>
+          {error && <p className="text-sm text-muted-foreground mb-4">{(error as Error).message}</p>}
           <Button onClick={() => navigate(`/projects/${projectId}`)}>Retour au projet</Button>
         </div>
       </AppLayout>
     );
   }
 
+  // Normalize entity → view model (Phase entity uses phaseName/phaseType/estimatedCost)
+  const title = (phase as any).title || (phase as any).phaseName || 'Phase';
+  const description = (phase as any).description || '';
+  const progress = (phase as any).progress ?? 0;
+  const budget = (phase as any).budget ?? (phase as any).estimatedCost ?? 0;
+  const estimatedDuration = (phase as any).estimatedDuration ?? 0;
+  const startDate = (phase as any).startDate || '';
+  const endDate = (phase as any).endDate || '';
+  const location = (phase as any).location || '';
+
   return (
-    <AppLayout pageTitle={phase.title} pageDescription={stageMeta.description}>
-      <div className="container mx-auto px-4 py-6 space-y-6">
+    <AppLayout pageTitle={title} pageDescription={stageMeta.description}>
+      <div className="container mx-auto px-4 py-4 space-y-4">
         {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
             <Button
               variant="outline"
               size="sm"
@@ -90,11 +101,11 @@ const PhaseDetail: React.FC = () => {
               className="flex items-center gap-2"
               aria-label="Retour au projet"
             >
-              <ArrowLeft className="h-4 w-4" /> Retour au projet
+              <ArrowLeft className="h-4 w-4" /> Retour
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">{phase.title}</h1>
-              <p className="text-muted-foreground mt-1">{phase.description}</p>
+              <h1 className="text-xl md:text-2xl font-bold text-foreground leading-tight">{title}</h1>
+              {description && <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{description}</p>}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -108,46 +119,47 @@ const PhaseDetail: React.FC = () => {
         </div>
 
         {/* Overview KPIs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Progression</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 py-2 px-3">
+              <CardTitle className="text-xs font-medium">Progression</CardTitle>
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{phase.progress ?? 0}%</div>
-              <Progress value={phase.progress ?? 0} className="mt-2" />
+            <CardContent className="px-3 pb-3 pt-0">
+              <div className="text-xl font-bold">{progress}%</div>
+              <Progress value={progress} className="mt-1.5 h-1.5" />
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Budget</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 py-2 px-3">
+              <CardTitle className="text-xs font-medium">Budget</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{(phase.budget ?? 0).toLocaleString()} MRU</div>
+            <CardContent className="px-3 pb-3 pt-0">
+              <div className="text-xl font-bold">{(budget).toLocaleString()} MRU</div>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Durée</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 py-2 px-3">
+              <CardTitle className="text-xs font-medium">Durée</CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{phase.estimatedDuration ?? 0} jours</div>
-              <p className="text-xs text-muted-foreground">{phase.startDate} → {phase.endDate}</p>
+            <CardContent className="px-3 pb-3 pt-0">
+              <div className="text-xl font-bold">{estimatedDuration} j</div>
+              <p className="text-[11px] text-muted-foreground truncate">{startDate} → {endDate}</p>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Localisation</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 py-2 px-3">
+              <CardTitle className="text-xs font-medium">Localisation</CardTitle>
               <MapPin className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-sm font-medium">{phase.location || 'Non spécifiée'}</div>
+            <CardContent className="px-3 pb-3 pt-0">
+              <div className="text-sm font-medium truncate">{location || 'Non spécifiée'}</div>
             </CardContent>
           </Card>
         </div>
+
 
         {/* Cross-module quick navigation */}
         <Card>
@@ -233,10 +245,10 @@ const PhaseDetail: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {(phase.progress ?? 0) < 100 && (
+                {progress < 100 && (
                   <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-md text-sm">
                     <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                    <span>La phase n'est pas encore achevée ({phase.progress ?? 0}%). La clôture nécessite la réception définitive et la levée des réserves.</span>
+                    <span>La phase n'est pas encore achevée ({progress}%). La clôture nécessite la réception définitive et la levée des réserves.</span>
                   </div>
                 )}
                 <PhaseDocuments phaseId={phaseId!} projectId={projectId!} />
