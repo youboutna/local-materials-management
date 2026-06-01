@@ -1352,10 +1352,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {React.createElement(
-                        require('@/components/project/InspectionsList').InspectionsList,
-                        { projectId: projectId! }
-                      )}
+                      <InspectionsList projectId={projectId!} />
                     </CardContent>
                   </Card>
                 </TabsContent>
