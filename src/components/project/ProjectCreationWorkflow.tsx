@@ -477,7 +477,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                  updateFormData({
                    relatedData: {
                      ...formData?.relatedData,
-                     budgetLinks: links
+                     budgetLinks: links as any
                    }
                  });
                }}
