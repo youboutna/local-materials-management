@@ -45,6 +45,7 @@ export interface CompleteProjectReportResultDto {
   resourceUtilization: unknown;
   healthScore: unknown;
   realCosts: unknown; // Repository-provided real-time project cost data
+  deviations: DeviationResult[]; // DeviationEngine output for project scope
 }
 
 export class ReportingService {
