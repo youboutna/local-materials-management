@@ -80,17 +80,27 @@ export function ReportManager({ data, reportType }: ReportManagerProps) {
         ) : null;
       
       case 'payment':
-        return data.supplier && data.payments ? (
-          <SupplierPaymentReportGenerator 
+        if (!data.supplier || !data.payments) return null;
+        // Plage temporelle = bornes réelles des paiements (et non l'année courante en dur).
+        const paymentDates = data.payments
+          .map((p: any) => p.paymentDate || p.createdAt)
+          .filter(Boolean)
+          .map((d: string) => new Date(d).getTime());
+        const startDate = paymentDates.length
+          ? new Date(Math.min(...paymentDates))
+          : new Date(new Date().getFullYear(), 0, 1);
+        const endDate = paymentDates.length
+          ? new Date(Math.max(...paymentDates))
+          : new Date();
+        return (
+          <SupplierPaymentReportGenerator
             supplier={data.supplier}
             payments={data.payments}
-            dateRange={{
-              startDate: new Date(new Date().getFullYear(), 0, 1), // Start of year
-              endDate: new Date()
-            }}
-            onClose={() => setIsOpen(false)} 
+            dateRange={{ startDate, endDate }}
+            onClose={() => setIsOpen(false)}
           />
-        ) : null;
+        );
+      
       
       default:
         return null;
