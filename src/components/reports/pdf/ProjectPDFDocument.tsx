@@ -620,7 +620,7 @@ export function ProjectPDFDocument({
             data={safeReportData.paymentBlocks.map((b: any) => [
               b.reference || b.id || '—',
               b.reason || b.cause || '—',
-              b.amount != null ? `${Number(b.amount).toLocaleString('fr-FR')} ${project.currency || 'MRU'}` : '—',
+              b.amount != null ? `${Number(b.amount).toLocaleString('fr-FR')} ${(project as any).currency || 'MRU'}` : '—',
               b.status || 'bloqué',
               b.createdAt ? format(new Date(b.createdAt), 'dd/MM/yyyy') : '—',
             ])}
