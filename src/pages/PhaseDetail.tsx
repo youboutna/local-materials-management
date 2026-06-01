@@ -109,8 +109,8 @@ const PhaseDetail: React.FC = () => {
             <Badge className={stageMeta.tokenClass} variant="outline">
               {stageMeta.label}
             </Badge>
-            <Badge className={getStatusColor(phase.status)} variant="outline">
-              {getStatusLabel(phase.status)}
+            <Badge className={getStatusColor(vm.status)} variant="outline">
+              {getStatusLabel(vm.status)}
             </Badge>
           </div>
         </div>
