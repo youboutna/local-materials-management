@@ -58,6 +58,8 @@ import NotificationsCenterPage from "./pages/NotificationsCenter";
 import InsuranceManagementPage from "./pages/InsuranceManagement";
 import PaymentControlPage from "./pages/PaymentControl";
 import PaymentDetailPage from "./pages/PaymentDetail";
+import TenderDetail from "./pages/TenderDetail";
+import MilestoneDetail from "./pages/MilestoneDetail";
 import ComprehensiveMonitoringPage from "./pages/ComprehensiveMonitoring";
 import EnhancedSupplierTenderPortal from "./components/suppliers/EnhancedSupplierTenderPortal";
 import { SupplierSecureAccessPortal } from "./components/tenders/SupplierSecureAccessPortal";
