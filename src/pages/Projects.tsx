@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Map, Grid, Filter, Plus } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import ProjectsGridPaginated from "@/components/projects/ProjectsGridPaginated";
 import ProjectsHeader from "@/components/projects/ProjectsHeader";
 import ProjectFilters from "@/components/projects/ProjectFilters";
@@ -55,6 +55,27 @@ const Projects: React.FC = () => {
     availableRegions,
     performSearch,
   } = useProjectsFilter(projects || []);
+
+  // Sync ?stage= or ?status= from URL into the status filter (e.g. sidebar deep links)
+  const [searchParams] = useSearchParams();
+  useEffect(() => {
+    const stage = searchParams.get('stage');
+    const status = searchParams.get('status');
+    if (status) {
+      setStatusFilter(status);
+      return;
+    }
+    if (!stage) return;
+    // Map lifecycle stage → coarse project status filter (best-effort, no hardcoded enums)
+    const stageToStatus: Record<string, string> = {
+      PLANIFICATION: 'en attente',
+      EXECUTION: 'en cours',
+      CONTROLE: 'en cours',
+      CLOTURE: 'terminé',
+    };
+    const target = stageToStatus[stage];
+    if (target) setStatusFilter(target);
+  }, [searchParams, setStatusFilter]);
 
   // Pagination for projects
   const {

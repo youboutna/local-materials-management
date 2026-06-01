@@ -25,7 +25,7 @@ export class SupabaseProjectBudgetLinkAdapter implements IProjectBudgetLinkRepos
       console.error('[BudgetLinkAdapter] findByProjectId', error);
       return [];
     }
-    return (data || []).map((row) => ProjectBudgetLinkTransformer.rowToDTO(row));
+    return (data || []).map((row: any) => ProjectBudgetLinkTransformer.rowToDTO(row));
   }
 
   async create(dto: CreateProjectBudgetLinkDTO): Promise<ProjectBudgetLinkDTO> {
@@ -40,7 +40,7 @@ export class SupabaseProjectBudgetLinkAdapter implements IProjectBudgetLinkRepos
     if (error) {
       throw new Error(`BudgetLink create failed: ${error.message}`);
     }
-    return ProjectBudgetLinkTransformer.rowToDTO(data);
+    return ProjectBudgetLinkTransformer.rowToDTO(data as any);
   }
 
   async update(id: string, dto: UpdateProjectBudgetLinkDTO): Promise<ProjectBudgetLinkDTO> {
@@ -55,7 +55,7 @@ export class SupabaseProjectBudgetLinkAdapter implements IProjectBudgetLinkRepos
     if (error) {
       throw new Error(`BudgetLink update failed: ${error.message}`);
     }
-    return ProjectBudgetLinkTransformer.rowToDTO(data);
+    return ProjectBudgetLinkTransformer.rowToDTO(data as any);
   }
 
   async delete(id: string): Promise<void> {

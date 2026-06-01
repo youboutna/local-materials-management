@@ -63,6 +63,13 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
+				// Project lifecycle stage tokens (see index.css)
+				stage: {
+					plan: 'hsl(var(--stage-plan))',
+					exec: 'hsl(var(--stage-exec))',
+					control: 'hsl(var(--stage-control))',
+					close: 'hsl(var(--stage-close))',
+				},
 				// Adrar region inspired color palette
 				sandstone: {
 					50: '#F9F6F0',

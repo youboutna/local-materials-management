@@ -25,6 +25,12 @@ import {
   Eye,
   Bell,
   FolderOpen,
+  Compass,
+  HardHat,
+  ShieldCheck,
+  Flag,
+  Target,
+  BarChart3,
 } from "lucide-react";
 
 interface NavItem {
@@ -55,6 +61,17 @@ const navigationItems: NavItem[] = [
       { label: "Tous les projets", href: "/projects" },
       { label: "Créer un projet", href: "/projects/create" },
       { label: "Importer", href: "/projects/import" },
+    ],
+  },
+  {
+    label: "Cycle de vie projet",
+    icon: Compass,
+    children: [
+      { label: "Planification", href: "/projects?stage=PLANIFICATION", icon: Target },
+      { label: "Exécution", href: "/projects?stage=EXECUTION", icon: HardHat },
+      { label: "Contrôle & Inspections", href: "/inspection-monitoring", icon: ShieldCheck },
+      { label: "Paiements & échéances", href: "/payment-control", icon: CreditCard },
+      { label: "Clôture", href: "/projects?stage=CLOTURE", icon: Flag },
     ],
   },
   {
@@ -99,9 +116,14 @@ const navigationItems: NavItem[] = [
     ],
   },
   {
-    label: "Notifications",
-    href: "/notifications-center",
-    icon: Bell,
+    label: "Reporting & suivi",
+    icon: BarChart3,
+    children: [
+      { label: "Suivi global", href: "/comprehensive-monitoring" },
+      { label: "Documents", href: "/documents" },
+      { label: "Tâches", href: "/tasks" },
+      { label: "Notifications", href: "/notifications-center" },
+    ],
   },
   {
     label: "Paramètres",

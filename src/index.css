@@ -42,6 +42,12 @@
     --info: 199 89% 48%;
     --info-foreground: 210 40% 98%;
 
+    /* Project lifecycle stages */
+    --stage-plan: 218 90% 45%;     /* blue — planification */
+    --stage-exec: 142 70% 40%;     /* green — exécution */
+    --stage-control: 38 92% 50%;   /* amber — contrôle */
+    --stage-close: 262 60% 50%;    /* purple — clôture */
+
     --adrar-50: 25 50% 95%;
     --adrar-100: 25 45% 88%;
     --adrar-200: 25 40% 78%;
