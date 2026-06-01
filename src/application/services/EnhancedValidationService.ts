@@ -804,7 +804,7 @@ export class EnhancedValidationService {
     resolution: string = ''
   ): ValidationIssue {
     return {
-      id: `issue-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `issue-${Date.now()}-${crypto.randomUUID().slice(0, 9)}`,
       category,
       severity,
       title,

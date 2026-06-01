@@ -72,7 +72,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
       if (inspectionData.documents && inspectionData.documents.length > 0) {
         const uploadPromises = inspectionData.documents.map(async (file) => {
           const fileExt = file.name.split('.').pop();
-          const fileName = `${Math.random()}.${fileExt}`;
+          const fileName = `${crypto.randomUUID()}.${fileExt}`;
           const folder = `inspections/${projectId}`;
 
           const uploadResult = await uploadFile({ file, folder });

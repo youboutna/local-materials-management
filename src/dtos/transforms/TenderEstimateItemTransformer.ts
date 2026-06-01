@@ -39,7 +39,7 @@ export class TenderEstimateItemTransformer {
     request: CreateTenderEstimateItemRequestDto,
     estimateId: string
   ): TenderEstimateItem {
-    const id = `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = `item_${Date.now()}_${crypto.randomUUID().slice(0, 9)}`;
     const totalPrice = request.quantity * request.unit_price;
 
     return new TenderEstimateItem(

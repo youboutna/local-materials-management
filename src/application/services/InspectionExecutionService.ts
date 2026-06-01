@@ -53,7 +53,7 @@ export class InspectionExecutionService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID and inspector are required');
       }
 
-      const inspectionId = `insp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const inspectionId = `insp-${Date.now()}-${crypto.randomUUID().slice(0, 9)}`;
       
       const inspection = Inspection.create({
         id: inspectionId,
@@ -99,7 +99,7 @@ export class InspectionExecutionService {
       }
       const currentUserId = userData.user.id;
 
-      const observationId = `obs-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const observationId = `obs-${Date.now()}-${crypto.randomUUID().slice(0, 9)}`;
       const newObservation: InspectionObservation = {
         id: observationId,
         inspectionId: request.inspectionId,
@@ -205,7 +205,7 @@ export class InspectionExecutionService {
         throw new AppError(ErrorCode.UNAUTHORIZED, 'User not authenticated');
       }
 
-      const participantId = `part-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const participantId = `part-${Date.now()}-${crypto.randomUUID().slice(0, 9)}`;
       const newParticipant: InspectionParticipant = {
         id: participantId,
         name: request.participant.name,

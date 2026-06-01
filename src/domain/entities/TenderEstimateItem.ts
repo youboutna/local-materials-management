@@ -147,7 +147,7 @@ export class TenderEstimateItem {
     category?: string,
     specifications?: string
   ): TenderEstimateItem {
-    const id = `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = `item_${Date.now()}_${crypto.randomUUID().slice(0, 9)}`;
     const totalPrice = quantity * unitPrice;
     
     return new TenderEstimateItem(

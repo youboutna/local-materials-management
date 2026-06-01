@@ -57,6 +57,7 @@ export class PVGeneratorService {
   private projectRepository: IProjectRepository;
   private phaseRepository: IPhaseRepository;
   private documentRepository: IDocumentRepository;
+  private pvRepository = RepositoryFactory.getPVGeneratorRepository();
 
   constructor() {
     this.inspectionRepository = RepositoryFactory.getInspectionRepository();
@@ -64,6 +65,7 @@ export class PVGeneratorService {
     this.phaseRepository = RepositoryFactory.getPhaseRepository();
     this.documentRepository = RepositoryFactory.getDocumentRepository();
   }
+
   /**
    * Generate PV from inspection data
    */
@@ -121,12 +123,33 @@ export class PVGeneratorService {
         pdf_url: pdfUrl
       };
 
-      // For now, just return the generated PV as PV repository is not available
-      // TODO: Implement proper PV storage when PV repository is available
-      console.warn('PVGeneratorService.generatePV: PV repository not available');
-      console.log(`Generated PV: ${generatedPV.pv_number}`);
+      // Persist PV via repository
+      try {
+        const saved = await this.pvRepository.savePV({
+          inspection_id: request.inspectionId,
+          pv_number: pvNumber,
+          pv_type: request.pvType,
+          title: generatedPV.title,
+          content: pvContent,
+          pdf_url: pdfUrl,
+          status: generatedPV.status,
+          generated_by: generatedPV.generated_by,
+          version: generatedPV.version,
+          metadata: { header: generatedPV.header, conclusions: generatedPV.conclusions },
+          generated_at: generatedPV.generated_at,
+        });
+        if (saved && saved.id) {
+          generatedPV.id = saved.id;
+        }
+      } catch (persistError) {
+        console.error('PVGeneratorService.generatePV: failed to persist PV', persistError);
+        throw persistError instanceof AppError
+          ? persistError
+          : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to persist generated PV');
+      }
 
       return { success: true, pv: generatedPV };
+
 
     } catch (error) {
       console.error('PVGeneratorService.generatePV failed:', error);
@@ -258,12 +281,8 @@ Fait à ${inspection.projects?.location || 'Lieu'}, le ${format(new Date(), 'dd 
       if (!inspectionId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection ID is required');
       }
-
-      // For now, return empty array as PV repository is not available
-      // TODO: Implement proper PV retrieval when PV repository is available
-      console.warn('PVGeneratorService.getInspectionPVs: PV repository not available');
-      
-      return [];
+      const rows = await this.pvRepository.getInspectionPVs(inspectionId);
+      return (rows || []).map(r => this.mapRecordToGeneratedPV(r as unknown as Record<string, unknown>));
     } catch (error) {
       console.error('PVGeneratorService.getInspectionPVs failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get inspection PVs');
@@ -278,13 +297,8 @@ Fait à ${inspection.projects?.location || 'Lieu'}, le ${format(new Date(), 'dd 
       if (!pvId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'PV ID is required');
       }
-
-      // For now, return null as PV repository is not available
-      // TODO: Implement proper PV download when PV repository is available
-      console.warn('PVGeneratorService.downloadPV: PV repository not available');
-      console.log(`Downloading PV: ${pvId}`);
-      
-      return null;
+      const record = await this.pvRepository.getPVById(pvId);
+      return (record?.pdf_url as string | undefined) ?? null;
     } catch (error) {
       console.error('PVGeneratorService.downloadPV failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to download PV');
@@ -299,15 +313,45 @@ Fait à ${inspection.projects?.location || 'Lieu'}, le ${format(new Date(), 'dd 
       if (!pvId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'PV ID is required');
       }
-
-      // For now, return null as PV repository is not available
-      // TODO: Implement proper PV retrieval when PV repository is available
-      console.warn('PVGeneratorService.getPVById: PV repository not available');
-      
-      return null;
+      const record = await this.pvRepository.getPVById(pvId);
+      return record ? this.mapRecordToGeneratedPV(record as unknown as Record<string, unknown>) : null;
     } catch (error) {
       console.error('PVGeneratorService.getPVById failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get PV by ID');
     }
   }
+
+  private mapRecordToGeneratedPV(record: Record<string, unknown>): GeneratedPV {
+    const metadata = (record.metadata as Record<string, unknown> | null) || {};
+    return {
+      id: String(record.id),
+      inspection_id: String(record.inspection_id),
+      pv_type: record.pv_type as PVType,
+      pv_number: String(record.pv_number),
+      title: (record.title as string) || '',
+      header: (metadata.header as GeneratedPV['header']) || {
+        project_title: '',
+        inspection_date: '',
+        inspection_type: record.pv_type as PVType,
+        location: '',
+      },
+      participants: [],
+      object: '',
+      observations_summary: (record.content as string) || '',
+      observations_table: [],
+      conclusions: (metadata.conclusions as GeneratedPV['conclusions']) || {
+        overall_status: 'conform' as ConformityStatus,
+        summary: '',
+      },
+      recommendations: [],
+      signatures: [],
+      annexes: [],
+      status: (record.status as GeneratedPV['status']) || 'draft',
+      generated_at: String(record.generated_at),
+      generated_by: (record.generated_by as string) || '',
+      version: Number(record.version) || 1,
+      pdf_url: (record.pdf_url as string) || undefined,
+    };
+  }
 }
+
