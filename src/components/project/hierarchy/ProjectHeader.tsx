@@ -100,6 +100,8 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
 
   const getDaysRemaining = () => {
     if (!project.endDate) return "N/A";
+    // When project is nearly done, show closure state instead of raw delay
+    if (project.progress >= 95) return "Clôture en cours";
     const end = new Date(project.endDate);
     const now = new Date();
     const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -110,6 +112,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
 
   const getDelayColor = (): "success" | "warning" | "destructive" | "info" => {
     if (!project.endDate) return "muted" as any;
+    if (project.progress >= 95) return "success";
     const end = new Date(project.endDate);
     const now = new Date();
     const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
