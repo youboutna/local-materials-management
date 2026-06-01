@@ -899,8 +899,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               {projectDataForReport && (
                 <CompactProjectReportGenerator
                   project={projectDataForReport as any}
-                  useDirectData={true}
                 />
+
               )}
             </div>
           </DialogContent>
