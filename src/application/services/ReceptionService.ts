@@ -369,27 +369,37 @@ export class ReceptionService {
   }
 
   private async uploadDocuments(projectId: string, files: File[]): Promise<ReceptionDocumentDTO[]> {
+    const { supabase } = await import('@/integrations/supabase/client');
     const documents: ReceptionDocumentDTO[] = [];
-    
+
     for (const file of files) {
-      // In a real implementation, this would upload to storage service
+      const docId = crypto.randomUUID();
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const path = `receptions/${projectId}/${docId}-${safeName}`;
+      const { error: upErr } = await supabase.storage
+        .from('project-documents')
+        .upload(path, file, { upsert: false, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from('project-documents').getPublicUrl(path);
+
+      const nowIso = new Date().toISOString();
       const document = {
-        id: `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: docId,
         projectId,
         title: file.name,
         description: `Uploaded document: ${file.name}`,
         type: this.getDocumentType(file.type),
-        fileUrl: `mock-url/${file.name}`,
+        fileUrl: pub.publicUrl,
         fileName: file.name,
         fileSize: file.size,
         mimeType: file.type,
-        uploadedAt: new Date().toISOString(),
+        uploadedAt: nowIso,
         uploadedBy: 'system',
         isRequired: true,
         isSubmitted: true,
         validationStatus: 'pending',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        createdAt: nowIso,
+        updatedAt: nowIso,
       } as ReceptionDocumentDTO;
       documents.push(document);
     }
