@@ -431,7 +431,7 @@ export class TenderEstimateService {
         materialId: request.material_id,
         itemType: request.item_type,
       } as unknown as Parameters<typeof this.tenderEstimateRepository.createItem>[0]);
-      return TenderEstimateItemTransformer.toTenderEstimateItemDTO(created as TenderEstimateItemEntity);
+      return this.mapItemEntityToDTO(created);
     } catch (error) {
       console.error('TenderEstimateService.createTenderEstimateItem failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create estimate item');
@@ -447,7 +447,7 @@ export class TenderEstimateService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Estimate ID is required');
       }
       const items = await this.tenderEstimateRepository.findItemsByEstimateId(request.estimate_id);
-      return items.map(i => TenderEstimateItemTransformer.toTenderEstimateItemDTO(i as TenderEstimateItemEntity));
+      return items.map(i => this.mapItemEntityToDTO(i));
     } catch (error) {
       console.error('TenderEstimateService.getEstimateItems failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get estimate items');
@@ -466,7 +466,7 @@ export class TenderEstimateService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Update data is required');
       }
       const updated = await this.tenderEstimateRepository.updateItem(request.id, request.updates as Partial<TenderEstimateItemEntity>);
-      return TenderEstimateItemTransformer.toTenderEstimateItemDTO(updated as TenderEstimateItemEntity);
+      return this.mapItemEntityToDTO(updated);
     } catch (error) {
       console.error('TenderEstimateService.updateEstimateItem failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update estimate item');
