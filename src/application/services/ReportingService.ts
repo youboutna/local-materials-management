@@ -7,6 +7,7 @@ import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import { ProjectCalculationService } from '@/application/services/ProjectCalculationService';
+import { DeviationEngine, DeviationResult } from '@/application/services/DeviationEngine';
 import {
   ProjectReportDTO,
   EnhancedPhaseDTO,
