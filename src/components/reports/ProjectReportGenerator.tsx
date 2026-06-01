@@ -119,8 +119,8 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
             ?? 0,
         );
         const evmMetricsResult = ReportCalculations.calculateEVMMetrics(
-          project, 
-          completeReport.costCalculation.actualCost,
+          project,
+          actualCostForEvm,
           completeReport.reportDTO.phases
         );
         setEvmMetrics(evmMetricsResult);
