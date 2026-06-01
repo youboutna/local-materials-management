@@ -599,7 +599,7 @@ export function ProjectPDFDocument({
               const end = p.endDate ? new Date(p.endDate) : null;
               const duration = start && end ? Math.max(0, Math.round((end.getTime() - start.getTime()) / 86400000)) : 0;
               return [
-                p.name || p.title || 'Phase',
+                p.title || p.name || 'Phase',
                 start ? format(start, 'dd/MM/yyyy') : '—',
                 end ? format(end, 'dd/MM/yyyy') : '—',
                 duration.toString(),
