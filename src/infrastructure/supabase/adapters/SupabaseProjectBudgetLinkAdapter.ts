@@ -40,7 +40,7 @@ export class SupabaseProjectBudgetLinkAdapter implements IProjectBudgetLinkRepos
     if (error) {
       throw new Error(`BudgetLink create failed: ${error.message}`);
     }
-    return ProjectBudgetLinkTransformer.rowToDTO(data);
+    return ProjectBudgetLinkTransformer.rowToDTO(data as any);
   }
 
   async update(id: string, dto: UpdateProjectBudgetLinkDTO): Promise<ProjectBudgetLinkDTO> {
