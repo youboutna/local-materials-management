@@ -1,7 +1,7 @@
-// @ts-nocheck
 /**
  * PhaseDetail — Lifecycle-grouped tabs (Planification / Exécution / Contrôle / Clôture).
  * Cross-module navigation buttons link to inspections, payments, documents and reports.
+ * Vue typée via `toPhaseViewModel` — plus de (phase as any) ni de @ts-nocheck (M3 / L3).
  */
 import React, { useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
@@ -22,6 +22,7 @@ import PhaseMilestones from '@/components/project/PhaseMilestones';
 import { GanttChart, PERTDiagram, CriticalPathView } from '@/components/planning';
 import { AppLayout } from '@/components/layout/AppLayout';
 import DeviationBadges from '@/components/common/DeviationBadges';
+import { toPhaseViewModel } from '@/utils/phaseViewModel';
 import {
   getPhaseLifecycleStage,
   getLifecycleStageMeta,
@@ -38,17 +39,19 @@ const PhaseDetail: React.FC = () => {
   const { projectId, phaseId } = useParams<{ projectId: string; phaseId: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { t } = useLanguage();
+  useLanguage();
 
   const { phase, isLoading: loading, error } = usePhaseDetails(phaseId);
 
+  const vm = useMemo(() => (phase ? toPhaseViewModel(phase as unknown as Record<string, unknown>) : null), [phase]);
+
   const stage = useMemo(
-    () => (phase ? getPhaseLifecycleStage({ type: (phase as any).phaseType || (phase as any).type, status: phase.status }) : 'PLANIFICATION'),
-    [phase]
+    () => (vm ? getPhaseLifecycleStage({ type: vm.type, status: vm.status }) : 'PLANIFICATION'),
+    [vm]
   );
   const stageMeta = getLifecycleStageMeta(stage);
 
-  const defaultStageTab = (searchParams.get('stage') as any) || stage.toLowerCase();
+  const defaultStageTab = (searchParams.get('stage') as string) || stage.toLowerCase();
 
   const onStageChange = (v: string) => {
     setSearchParams((sp) => {
@@ -67,7 +70,7 @@ const PhaseDetail: React.FC = () => {
     );
   }
 
-  if (!phase) {
+  if (!vm) {
     return (
       <AppLayout pageTitle="Phase">
         <div className="container mx-auto px-4 py-8 text-center">
@@ -79,15 +82,8 @@ const PhaseDetail: React.FC = () => {
     );
   }
 
-  // Normalize entity → view model (Phase entity uses phaseName/phaseType/estimatedCost)
-  const title = (phase as any).title || (phase as any).phaseName || 'Phase';
-  const description = (phase as any).description || '';
-  const progress = (phase as any).progress ?? 0;
-  const budget = (phase as any).budget ?? (phase as any).estimatedCost ?? 0;
-  const estimatedDuration = (phase as any).estimatedDuration ?? 0;
-  const startDate = (phase as any).startDate || '';
-  const endDate = (phase as any).endDate || '';
-  const location = (phase as any).location || '';
+  const { title, description, progress, budget, estimatedDuration, startDate, endDate, location } = vm;
+
 
   return (
     <AppLayout pageTitle={title} pageDescription={stageMeta.description}>
