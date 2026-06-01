@@ -3,6 +3,7 @@ import EnhancedRiskManager from "@/components/project/EnhancedRiskManager";
 import EnhancedTaskManager from "@/components/project/EnhancedTaskManager";
 import FinancialOverview from "@/components/project/FinaancialOverview";
 import PhaseList from "@/components/project/PhaseList";
+import { InspectionsList } from "@/components/project/InspectionsList";
 import ProjectGantt from "@/components/project/ProjectGantt";
 import TeamOverview from "@/components/project/TeamOverview";
 import { UnifiedMilestoneManager } from "@/components/project/milestones";
