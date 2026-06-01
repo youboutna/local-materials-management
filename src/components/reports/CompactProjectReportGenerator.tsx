@@ -12,6 +12,8 @@ import { pdf } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver';
 import { Download, FileText, Loader2, MapPin } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { REPORT_PROFILES, type ReportProfile, defaultSectionsFor } from '@/config/referentials/reports/report-profiles.referential';
 import { CompactProjectPDFDocument, SingleCompactProjectPDF } from './pdf/CompactProjectPDFDocument';
 
 // Local type aliases for report generation
@@ -48,18 +50,17 @@ interface CompactProjectReportGeneratorProps {
   project?: ProjectDTO;
   projects?: ProjectDTO[];
   onClose?: () => void;
-  useDirectData?: boolean;
 }
 
-export function CompactProjectReportGenerator({ 
-  project, 
-  projects, 
+export function CompactProjectReportGenerator({
+  project,
+  projects,
   onClose,
-  useDirectData = false 
 }: CompactProjectReportGeneratorProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [reportTitle, setReportTitle] = useState('Rapport des Projets SOMELEC');
+  const [profile, setProfile] = useState<ReportProfile>('summary');
   
   // Data maps for multiple projects
   const [enrichedDataMap, setEnrichedDataMap] = useState<Map<string, ProjectDetailDTO>>(new Map());
@@ -86,7 +87,7 @@ export function CompactProjectReportGenerator({
         if (isSingleProject && project) {
           // Toujours passer par ReportingService pour garantir des KPIs cohérents
           // (EVM via ReportCalculations, écarts via DeviationEngine, coûts réels via repository).
-          const completeReport = await reportingService.generateCompleteProjectReport({ project: project as any });
+          const completeReport = await reportingService.generateCompleteProjectReport({ project: project as any, profile, sections: defaultSectionsFor(profile) });
           const reportProject = completeReport.reportDTO.project || {};
           const realCosts: any = completeReport.realCosts || {};
           const actualCost = Number(
@@ -161,7 +162,7 @@ export function CompactProjectReportGenerator({
           
           for (const proj of projectList) {
             try {
-              const completeReport = await reportingService.generateCompleteProjectReport({ project: proj as any });
+              const completeReport = await reportingService.generateCompleteProjectReport({ project: proj as any, profile, sections: defaultSectionsFor(profile) });
               const reportProject = completeReport.reportDTO.project || {};
               const realCosts: any = completeReport.realCosts || {};
               const actualCost = Number(
@@ -235,7 +236,7 @@ export function CompactProjectReportGenerator({
     };
 
     loadData();
-  }, [project, projects, isSingleProject, projectList.length, toast, useDirectData, projectList, reportingService]);
+  }, [project, projects, isSingleProject, projectList.length, toast, projectList, reportingService, profile]);
 
   const generatePDF = async () => {
     if (projectList.length === 0) {
@@ -309,8 +310,8 @@ export function CompactProjectReportGenerator({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center gap-4">
-          <div className="flex-1">
+        <div className="grid gap-4 md:grid-cols-[1fr_auto_auto] md:items-end">
+          <div>
             <Label htmlFor="report-title">Titre du Rapport</Label>
             <Input
               id="report-title"
@@ -318,6 +319,21 @@ export function CompactProjectReportGenerator({
               onChange={(e) => setReportTitle(e.target.value)}
               placeholder="Entrez le titre du rapport"
             />
+          </div>
+          <div className="min-w-[200px]">
+            <Label htmlFor="report-profile">Profil</Label>
+            <Select value={profile} onValueChange={(v) => setProfile(v as ReportProfile)}>
+              <SelectTrigger id="report-profile">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.values(REPORT_PROFILES).map((p) => (
+                  <SelectItem key={p.code} value={p.code}>
+                    {p.label.fr}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <Button
             onClick={generatePDF}
