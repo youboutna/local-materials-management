@@ -795,7 +795,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                 </div>
 
                 <div>
-                  <Label htmlFor="assignedTo">AssignÃ </Label>
+                  <Label htmlFor="assignedTo">Assigné </Label>
                   <Select value={formData.assigned_to} onValueChange={(value) => setFormData({ ...formData, assigned_to: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner un profil" />
