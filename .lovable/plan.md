@@ -1,10 +1,17 @@
 
-# Plan global — HadraTech‑GPI : référentiels au cœur, DQE, rapports filtrés, finalisation dette
+# Plan global — HadraTech‑GPI : alignement architecture + écart Planifié vs Réalisé
 
 > Conformité stricte `docs/PROMPTS.md` + `docs/ARCHITECTURE_REFERENTIELS.md` :
 > tout seuil/poids/règle/statut/indicateur/profil passe par `src/config/referentials/*` et un moteur générique. Aucune valeur métier en dur dans l'UI.
 
-Inspiration captures (ETER) : KPI projet (Progression / Budget / Délai / Rentabilité avec cible référentielle), onglets `Planification / Exécution / Financier / Conformité / Localisation`, **DQE Détaillé**, **Phases & Jalons** en cartes, **Gantt**.
+**Cadre métier générique** (toute entreprise, pas un cas client) :
+`Planification (DQE / AO / Conformité / RH / Matériel) → Exécution → Clôture`.
+Les utilisateurs (DG, CP, CFO, Contrôleur, Inspecteur, Fournisseur) doivent visualiser **l'écart Planifié vs Réalisé** sur 5 axes : *Performance · Suivi‑Évaluation · Reporting · Inspection · Paiement/Comptabilité*.
+
+Vues projet (`/projects/{id}`) organisées par axe métier, pas par client :
+`Planification` · `Exécution` · `Financier` · `Conformité` · `Localisation` (référentiel `project-views`).
+
+
 
 ---
 
