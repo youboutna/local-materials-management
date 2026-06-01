@@ -15,7 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarDays, Target, Plus, CheckCircle, Clock } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { ElectricSpinner } from "../loading-page";
-import { useMilestonesHex, Milestone } from "@/hooks/hexagonal";
+import { useMilestonesHex, Milestone, usePhaseInspectionsHex } from "@/hooks/hexagonal";
+import { usePhasePayments } from "@/hooks/hexagonal/usePhasePaymentsHex";
 
 interface PhaseMilestonesProps {
   phaseId: string;
