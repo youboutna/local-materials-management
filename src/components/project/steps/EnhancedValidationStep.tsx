@@ -140,33 +140,50 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
     }
 
     try {
-      // In real implementation, this would call ReceptionService
-      // For now, we'll create a mock reception following hexagonal patterns
-      const newReception: Partial<ReceptionDTO> = {
+      // Real implementation: upload files to Supabase storage and persist documents
+      const { supabase } = await import('@/integrations/supabase/client');
+      const projectId = formData.id || '';
+
+      const uploadedDocs = await Promise.all(
+        uploadedFiles.map(async (file) => {
+          const docId = crypto.randomUUID();
+          const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+          const path = `receptions/${projectId || 'unassigned'}/${docId}-${safeName}`;
+          const { error: upErr } = await supabase.storage
+            .from('project-documents')
+            .upload(path, file, { upsert: false, contentType: file.type });
+          if (upErr) throw upErr;
+          const { data: pub } = supabase.storage.from('project-documents').getPublicUrl(path);
+          return {
+            id: docId,
+            name: file.name,
+            type: file.type as any,
+            url: pub.publicUrl,
+            size: file.size,
+            uploadedAt: new Date().toISOString(),
+          };
+        })
+      );
+
+      const receptionId = crypto.randomUUID();
+      const nowIso = new Date().toISOString();
+      const savedReception: ReceptionDTO = {
+        id: receptionId,
         type: selectedReceptionType,
         scheduledDate: receptionDate,
         receptionCommittee: committeeMembers,
         chairmanId: chairman,
         notes: receptionNotes,
         status: ReceptionStatus.PENDING,
-        projectId: formData.id || '',
-        documents: uploadedFiles.map(file => ({
-          id: `doc-${crypto.randomUUID()}`,
-          name: file.name,
-          type: file.type as any,
-          url: `mock-url/${file.name}`,
-          size: file.size,
-          uploadedAt: new Date().toISOString()
-        })) as any
-      };
+        projectId,
+        documents: uploadedDocs as any,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      } as ReceptionDTO;
 
-      // Mock service call - in real implementation, use ReceptionService
-      const savedReception = {
-        id: 'mock-id',
-        ...newReception,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
+      // Persist into ProjectDTO (round-trip via parent onUpdate)
+      const nextReceptions = [...(formData.receptions || []), savedReception];
+      onUpdate({ receptions: nextReceptions } as any);
 
       // Update validation results
       setValidationResults(prev => ({
@@ -181,9 +198,6 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
         title: "Succès",
         description: "Réception créée avec succès",
       });
-
-      // In real implementation, this would call ReceptionService.createReception(newReception)
-      console.log('Mock reception created:', savedReception);
     } catch (error: unknown) {
       console.error('Failed to create reception:', error);
       
