@@ -221,7 +221,7 @@ const RoleBasedInspectionMonitoring = () => {
           </p>
         </div>
         {isAdmin && (
-          <Button onClick={() => navigate('/inspections/new')}>
+          <Button onClick={() => navigate('/inspections/create')}>
             <Plus className="h-4 w-4 mr-2" />
             Nouvelle Inspection
           </Button>
@@ -346,7 +346,16 @@ const RoleBasedInspectionMonitoring = () => {
                 <TableBody>
                   {paginatedInspections.map((inspection) => (
                     <TableRow key={inspection.id}>
-                      <TableCell className="font-mono text-sm">{inspection.id}</TableCell>
+                      <TableCell className="font-mono text-sm">
+                        <Link
+                          to={`/inspections/${inspection.id}`}
+                          className="text-primary hover:underline inline-flex items-center gap-1"
+                          title="Voir l'inspection"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          {inspection.id.slice(0, 8)}…
+                        </Link>
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Users className="h-4 w-4" />
