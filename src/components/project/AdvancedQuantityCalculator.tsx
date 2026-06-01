@@ -312,15 +312,16 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
       material_id: selectedMaterialId,
       element_type: calc.elementType || "basic_calculator",
       unit,
-      length: calc.dimensions?.length ?? 0,
+      length: calc.dimensions?.length ?? qty,
       width: calc.dimensions?.width ?? 0,
       height: calc.dimensions?.height ?? 0,
-      quantity: qty,
+      phase_id: phaseId,
       note: JSON.stringify({
-        phaseId,
         originalLabel: calc.originalLabel,
         results: calc.results,
         openings: calc.openings,
+        computedQuantity: qty,
+        computedUnit: unit,
       }),
     });
   };

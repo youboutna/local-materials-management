@@ -305,7 +305,13 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                     <Select
                       value={newStakeholder?.stakeholderType || ""}
                       onValueChange={(value) =>
-                        setNewStakeholder({ ...newStakeholder, stakeholderType: value as StakeholderType })
+                        setNewStakeholder({
+                          ...newStakeholder,
+                          stakeholderType: value as StakeholderType,
+                          // reset entity selection when type changes
+                          employeeId: undefined,
+                          organizationId: undefined,
+                        })
                       }
                     >
                       <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
@@ -320,11 +326,79 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                       </SelectContent>
                     </Select>
                   </div>
-                  
-                  <div className="flex justify-end mt-4">
+
+                  <div>
+                    <Label className="block text-sm font-medium mb-2">Rôle</Label>
+                    <Select
+                      value={(newStakeholder?.role as string) || ""}
+                      onValueChange={(value) =>
+                        setNewStakeholder({ ...newStakeholder, role: value as StakeholderRole })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner le rôle" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.values(StakeholderRole).map((role) => (
+                          <SelectItem key={role} value={role}>{role}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Conditional autocomplete by stakeholder type */}
+                  {newStakeholder?.stakeholderType === StakeholderType.EMPLOYEE && (
+                    <div className="md:col-span-2">
+                      <EmployeeSelector
+                        label="Employé"
+                        value={newStakeholder.employeeId}
+                        onChange={(employeeId) => {
+                          const emp = employees.find((e) => e.id === employeeId);
+                          setNewStakeholder({
+                            ...newStakeholder,
+                            employeeId,
+                            name: emp?.full_name || newStakeholder.name,
+                            email: (emp as any)?.email || newStakeholder.email,
+                          });
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {newStakeholder?.stakeholderType &&
+                    newStakeholder.stakeholderType !== StakeholderType.EMPLOYEE && (
+                      <div className="md:col-span-2">
+                        <SimpleSupplierSelector
+                          label={
+                            newStakeholder.role === StakeholderRole.CONSULTANT
+                              ? "Indépendant / Consultant"
+                              : "Fournisseur / Organisation"
+                          }
+                          value={newStakeholder.organizationId}
+                          onChange={(organizationId) => {
+                            const sup = suppliers?.find((s) => s.id === organizationId);
+                            setNewStakeholder({
+                              ...newStakeholder,
+                              organizationId,
+                              organization: sup?.name || newStakeholder.organization,
+                              name: sup?.name || newStakeholder.name,
+                            });
+                          }}
+                        />
+                      </div>
+                    )}
+
+                  <div className="flex justify-end mt-4 md:col-span-2">
                     <Button
                       onClick={addStakeholder}
-                      disabled={stakeholdersLoading}
+                      disabled={
+                        stakeholdersLoading ||
+                        !newStakeholder?.stakeholderType ||
+                        !newStakeholder?.role ||
+                        (newStakeholder.stakeholderType === StakeholderType.EMPLOYEE
+                          ? !newStakeholder.employeeId
+                          : !newStakeholder.organizationId)
+                      }
                     >
                       <Plus className="h-4 w-4 mr-2" />
                       Ajouter
