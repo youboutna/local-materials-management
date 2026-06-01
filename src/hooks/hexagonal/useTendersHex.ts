@@ -164,23 +164,24 @@ export function useTenderSubmission(submissionId: string) {
   return useQuery({
     queryKey: ['tender-submission', submissionId],
     queryFn: async () => {
-      // TODO: Create TenderSubmissionService when available
-      // For now, return domain entity with mock data
+      const data = await TenderSubmissionService.getSubmissionById(submissionId);
+      if (!data) return null;
+      const row = data as Record<string, unknown>;
       return TenderSubmission.create({
-        id: submissionId,
-        projectId: 'mock-project-id',
-        tenderId: 'mock-tender-id',
-        status: 'draft',
-        createdAt: new Date(),
-        submissionDate: new Date(),
-        supplierEmail: 'mock-supplier@example.com',
-        supplierName: 'Mock Supplier',
-        administrativeScore: 85,
-        technicalScore: 90,
-        financialScore: 95,
-        totalScore: 90,
-        updatedAt: new Date(),
-        userId: 'mock-user-id'
+        id: String(row.id),
+        projectId: (row.project_id as string) ?? '',
+        tenderId: String(row.tender_id),
+        status: (row.status as 'draft' | 'submitted' | 'under_review' | 'approved' | 'rejected') ?? 'draft',
+        createdAt: row.created_at ? new Date(row.created_at as string) : new Date(),
+        submissionDate: row.submission_date ? new Date(row.submission_date as string) : new Date(),
+        supplierEmail: (row.supplier_email as string) ?? '',
+        supplierName: (row.supplier_name as string) ?? '',
+        administrativeScore: Number(row.administrative_score) || 0,
+        technicalScore: Number(row.technical_score) || 0,
+        financialScore: Number(row.financial_score) || 0,
+        totalScore: Number(row.total_score) || 0,
+        updatedAt: row.updated_at ? new Date(row.updated_at as string) : new Date(),
+        userId: (row.user_id as string) ?? '',
       });
     },
     enabled: !!submissionId
@@ -192,9 +193,7 @@ export function useSubmissionDocuments(submissionId: string) {
   return useQuery({
     queryKey: ['submission-documents', submissionId],
     queryFn: async () => {
-      // TODO: Create TenderSubmissionDocumentService when available
-      // For now, return empty array
-      return [];
+      return await TenderSubmissionService.getSubmissionDocuments(submissionId);
     },
     enabled: !!submissionId
   });
@@ -208,7 +207,6 @@ export function useSaveSubmissionEvaluation(submissionId: string) {
     mutationFn: async ({
       scores,
       finalSubmit = false,
-      currentStatus
     }: {
       scores: {
         administrative_score: number;
@@ -218,15 +216,12 @@ export function useSaveSubmissionEvaluation(submissionId: string) {
       finalSubmit?: boolean;
       currentStatus?: string;
     }) => {
-      // TODO: Create TenderSubmissionService when available
-      // Calculate total score
       const totalScore =
         scores.administrative_score * 0.3 +
         scores.technical_score * 0.4 +
         scores.financial_score * 0.3;
-
-      // TODO: Update submission in database when service is available
-      // For now, return mock result
+      const nextStatus: 'under_review' | 'approved' = finalSubmit ? 'approved' : 'under_review';
+      await TenderSubmissionService.updateSubmissionStatus(submissionId, nextStatus);
       return { totalScore, finalSubmit };
     },
     onSuccess: () => {
@@ -235,14 +230,32 @@ export function useSaveSubmissionEvaluation(submissionId: string) {
   });
 }
 
-// Hook: Fetch project phases for tender
+// Hook: Fetch project phases for tender (delegated to PhaseService via repository)
 export function useProjectPhasesForTender(projectId?: string, tenderId?: string) {
   return useQuery({
     queryKey: ['tender-project-phases', projectId, tenderId],
     queryFn: async (): Promise<{ projectInfo: { id: string; title: string } | null; phases: ProjectPhaseForTender[] }> => {
-      // TODO: Create TenderSubmissionService when available
-      // For now, return mock data
-      return { projectInfo: { id: projectId || 'mock', title: 'Mock Project' }, phases: [] };
+      if (!projectId) return { projectInfo: null, phases: [] };
+      const phaseRepo = RepositoryFactory.getPhaseRepository();
+      const projectRepo = RepositoryFactory.getProjectRepository();
+      const [project, phases] = await Promise.all([
+        projectRepo.findById(projectId),
+        phaseRepo.findByProjectId(projectId),
+      ]);
+      const mapped: ProjectPhaseForTender[] = (phases || []).map((p: Record<string, unknown>, idx: number) => ({
+        id: String(p.id),
+        name: String(p.phaseName ?? p.name ?? `Phase ${idx + 1}`),
+        order: Number(p.orderIndex ?? idx),
+        status: String(p.status ?? 'pending'),
+        startDate: p.startDate as string | undefined,
+        endDate: p.endDate as string | undefined,
+        budget: p.estimatedCost as number | undefined,
+        steps: [],
+      }));
+      return {
+        projectInfo: project ? { id: String((project as Record<string, unknown>).id), title: String((project as Record<string, unknown>).title ?? '') } : null,
+        phases: mapped,
+      };
     },
     enabled: !!(projectId || tenderId)
   });
@@ -254,10 +267,14 @@ export function useProjectPhasesForLots(projectId?: string) {
     queryKey: ['project-phases-for-lots', projectId],
     queryFn: async () => {
       if (!projectId) return [];
-
-      // TODO: Create PhaseService integration when available
-      // For now, return mock data
-      return [];
+      const phaseRepo = RepositoryFactory.getPhaseRepository();
+      const phases = await phaseRepo.findByProjectId(projectId);
+      return (phases || []).map((p: Record<string, unknown>, idx: number) => ({
+        id: String(p.id),
+        name: String(p.phaseName ?? p.name ?? `Phase ${idx + 1}`),
+        order: Number(p.orderIndex ?? idx),
+        status: String(p.status ?? 'pending'),
+      }));
     },
     enabled: !!projectId
   });
