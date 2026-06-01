@@ -58,6 +58,8 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
   const [evmMetrics, setEvmMetrics] = useState<any>(null);
   const [pertAnalysis, setPertAnalysis] = useState<any>(null);
   const [enrichedData, setEnrichedData] = useState<any>(null);
+  const [deviations, setDeviations] = useState<any[]>([]);
+  const [healthScore, setHealthScore] = useState<any>(null);
   
   const [reportConfig, setReportConfig] = useState<ReportConfig>({
     title: `Rapport de projet - ${project.title}`,
