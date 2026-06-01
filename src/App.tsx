@@ -311,6 +311,22 @@ function App() {
                       />
                       <Route path="/tasks/:taskId" element={<TaskDetail />} />
                       <Route
+                        path="/tenders/:id"
+                        element={
+                          <RoleBasedRoute disallowedRoles={["supplier"]}>
+                            <TenderDetail />
+                          </RoleBasedRoute>
+                        }
+                      />
+                      <Route
+                        path="/projects/:projectId/milestones/:milestoneId"
+                        element={
+                          <RoleBasedRoute disallowedRoles={["supplier"]}>
+                            <MilestoneDetail />
+                          </RoleBasedRoute>
+                        }
+                      />
+                      <Route
                         path="/employees"
                         element={
                           <RoleBasedRoute disallowedRoles={["supplier"]}>
