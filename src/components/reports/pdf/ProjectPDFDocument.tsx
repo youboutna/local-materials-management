@@ -318,9 +318,9 @@ export function ProjectPDFDocument({
               };
               
               return [
-                p.name || 'Sans nom',
-                `${p.actualProgress || 0}%`,
-                statusMap[p.status] || p.status || 'Non défini',
+                p.title || p.name || '—',
+                `${p.actualProgress ?? p.progress ?? 0}%`,
+                statusMap[p.status] || p.status || '—',
                 p.budget ? `${p.budget.toLocaleString('fr-FR')} MRU` : '0 MRU',
                 p.actualCost ? `${p.actualCost.toLocaleString('fr-FR')} MRU` : '0 MRU',
                 ((p.actualCost || 0) - (p.budget || 0)).toLocaleString('fr-FR') + ' MRU'
@@ -487,7 +487,7 @@ export function ProjectPDFDocument({
                 };
                 
                 return [
-                  milestone.title || 'Sans titre',
+                  milestone.title || milestone.name || '—',
                   milestone.targetDate ? format(new Date(milestone.targetDate), 'dd/MM/yyyy') : 'Non défini',
                   statusMap[milestone.status] || milestone.status || 'Non défini',
                   priorityMap[milestone.priority] || milestone.priority || 'Moyenne',
@@ -599,7 +599,7 @@ export function ProjectPDFDocument({
               const end = p.endDate ? new Date(p.endDate) : null;
               const duration = start && end ? Math.max(0, Math.round((end.getTime() - start.getTime()) / 86400000)) : 0;
               return [
-                p.name || p.title || 'Phase',
+                p.title || p.name || 'Phase',
                 start ? format(start, 'dd/MM/yyyy') : '—',
                 end ? format(end, 'dd/MM/yyyy') : '—',
                 duration.toString(),

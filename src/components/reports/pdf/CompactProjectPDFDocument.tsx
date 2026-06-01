@@ -569,11 +569,12 @@ export function CompactProjectPDFDocument({
   };
 
   const getCurrentPhase = (phases: any[]) => {
-    if (!phases || phases.length === 0) return 'Non définie';
+    if (!phases || phases.length === 0) return '—';
+    const phaseLabel = (p: any) => p?.title || p?.name || 'En cours';
     const inProgress = phases.find((p: any) => p.status === 'in_progress');
     if (inProgress) {
       const idx = phases.findIndex((p: any) => p.id === inProgress.id);
-      return `Phase ${idx + 1}/${phases.length} - ${inProgress.name || 'En cours'}`;
+      return `Phase ${idx + 1}/${phases.length} - ${phaseLabel(inProgress)}`;
     }
     const completed = phases.filter((p: any) => p.status === 'completed').length;
     return `Phase ${completed}/${phases.length}`;
@@ -783,7 +784,7 @@ export function CompactProjectPDFDocument({
                     {phases.slice(0, 3).map((phase: any, idx: number) => (
                       <View key={idx} style={styles.tableRow}>
                         <Text style={[styles.tableCell, { width: '35%' }]}>
-                          {phase.name?.substring(0, 20) || `Phase ${idx + 1}`}
+                          {(phase.title || phase.name || `Phase ${idx + 1}`).toString().substring(0, 20)}
                         </Text>
                         <Text style={[styles.tableCell, { width: '25%' }]}>
                           {formatBudget(phase.actualCost || 0)}
