@@ -36,6 +36,11 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
     toggleMilestoneStatus,
   } = useMilestonesHex(projectId, phaseId);
 
+  // Phase-context enrichment: link sibling inspections + payments for visibility
+  const { inspections: phaseInspections = [] } = usePhaseInspectionsHex(phaseId, projectId);
+  const phasePaymentsQuery = usePhasePayments(phaseId);
+  const phasePayments = phasePaymentsQuery.data || [];
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null);
 
