@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,14 +7,22 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ReportingService, CompleteProjectReportResultDto } from '@/application/services/ReportingService';
-import { ProjectData, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
+import { ReportingService } from '@/application/services/ReportingService';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import { pdf } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver';
 import { CheckSquare, Download, FileText, Loader2, Mail, Square } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { ProjectPDFDocument } from './pdf/ProjectPDFDocument';
+import {
+  ReportProfile,
+  ReportSectionKey,
+  REPORT_PROFILES,
+  REPORT_SECTION_LABELS,
+  ALL_REPORT_SECTIONS,
+  defaultSectionsFor,
+  getReportProfile,
+} from '@/config/referentials/reports/report-profiles.referential';
 
 interface ProjectReportGeneratorProps {
   project: any; // ProjectData or ProjectDTO
