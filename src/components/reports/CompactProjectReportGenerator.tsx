@@ -50,18 +50,17 @@ interface CompactProjectReportGeneratorProps {
   project?: ProjectDTO;
   projects?: ProjectDTO[];
   onClose?: () => void;
-  useDirectData?: boolean;
 }
 
-export function CompactProjectReportGenerator({ 
-  project, 
-  projects, 
+export function CompactProjectReportGenerator({
+  project,
+  projects,
   onClose,
-  useDirectData = false 
 }: CompactProjectReportGeneratorProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [reportTitle, setReportTitle] = useState('Rapport des Projets SOMELEC');
+  const [profile, setProfile] = useState<ReportProfile>('summary');
   
   // Data maps for multiple projects
   const [enrichedDataMap, setEnrichedDataMap] = useState<Map<string, ProjectDetailDTO>>(new Map());
