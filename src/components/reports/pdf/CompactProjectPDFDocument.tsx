@@ -569,15 +569,24 @@ export function CompactProjectPDFDocument({
   };
 
   const getCurrentPhase = (phases: any[]) => {
-    if (!phases || phases.length === 0) return '—';
-    const phaseLabel = (p: any) => p?.title || p?.name || 'En cours';
-    const inProgress = phases.find((p: any) => p.status === 'in_progress');
-    if (inProgress) {
-      const idx = phases.findIndex((p: any) => p.id === inProgress.id);
-      return `Phase ${idx + 1}/${phases.length} - ${phaseLabel(inProgress)}`;
+    if (!phases || phases.length === 0) return 'Aucune phase';
+    const phaseLabel = (p: any, idx: number) =>
+      p?.title || p?.name || p?.phase_name || `Phase ${idx + 1}`;
+    // 1) En cours
+    const inProgressIdx = phases.findIndex((p: any) => p?.status === 'in_progress');
+    if (inProgressIdx >= 0) {
+      return `Phase ${inProgressIdx + 1}/${phases.length} - ${phaseLabel(phases[inProgressIdx], inProgressIdx)}`;
     }
-    const completed = phases.filter((p: any) => p.status === 'completed').length;
-    return `Phase ${completed}/${phases.length}`;
+    // 2) Toutes terminées
+    const completed = phases.filter((p: any) => p?.status === 'completed').length;
+    if (completed === phases.length) {
+      const last = phases[phases.length - 1];
+      return `Terminé (${completed}/${phases.length}) - ${phaseLabel(last, phases.length - 1)}`;
+    }
+    // 3) Sinon : prochaine phase planifiée (1ère non terminée)
+    const nextIdx = phases.findIndex((p: any) => p?.status !== 'completed');
+    const idx = nextIdx >= 0 ? nextIdx : 0;
+    return `Phase ${idx + 1}/${phases.length} - ${phaseLabel(phases[idx], idx)} (Planifiée)`;
   };
 
   // Helper function to get PERT expected duration safely

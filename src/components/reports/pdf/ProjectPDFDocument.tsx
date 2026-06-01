@@ -318,7 +318,7 @@ export function ProjectPDFDocument({
               };
               
               return [
-                p.title || p.name || '—',
+                p.title || p.name || p.phase_name || '—',
                 `${p.actualProgress ?? p.progress ?? 0}%`,
                 statusMap[p.status] || p.status || '—',
                 p.budget ? `${p.budget.toLocaleString('fr-FR')} MRU` : '0 MRU',
