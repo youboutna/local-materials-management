@@ -164,11 +164,22 @@ export class ReportingService {
         }
       };
 
-      // Compute project-scope deviations via the DeviationEngine (referentials-driven)
+      // Compute project-scope deviations via the DeviationEngine (referentials-driven).
+      // Pour les projets in_progress en retard sans actualEndDate, on injecte "today" pour
+      // déclencher quand même le calcul de duration_deviation.
+      const isInProgress = ['in_progress', 'inspection', 'validation', 'payment_request'].includes(
+        String(request.project.status || ''),
+      );
+      const plannedEndDate = (request.project as any).endDate ?? (request.project as any).end_date ?? null;
+      const explicitActualEnd = (request.project as any).actualEndDate ?? null;
+      const isOverdue = plannedEndDate && Date.now() > new Date(plannedEndDate).getTime();
+      const effectiveActualEnd = explicitActualEnd
+        || (isInProgress && isOverdue ? new Date().toISOString() : null);
+
       const deviations = DeviationEngine.compute(
         {
-          plannedEndDate: (request.project as any).endDate ?? (request.project as any).end_date ?? null,
-          actualEndDate: (request.project as any).actualEndDate ?? null,
+          plannedEndDate,
+          actualEndDate: effectiveActualEnd,
           plannedBudget: request.project.budget ?? null,
           actualCost: (realCosts as any)?.totalSpent ?? null,
           plannedProgress: 100,
@@ -182,7 +193,7 @@ export class ReportingService {
         reportData,
         costCalculation,
         resourceUtilization,
-        healthScore: null, // To be implemented
+        healthScore,
         realCosts,
         deviations,
       };
