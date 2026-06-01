@@ -551,7 +551,7 @@ export class PerformanceMonitoringService {
       
       // Create performance monitoring record in memory
       const monitoringRecord: PerformanceMonitoringRecord = {
-        id: `monitoring-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `monitoring-${crypto.randomUUID()}`,
         projectId,
         employeeId: employeeId || 'system',
         dateRange: dateRange || 'current',
