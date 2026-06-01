@@ -12,7 +12,7 @@ import { MaterialCategory, MaterialFormDataDTO, MaterialDTO, MaterialUnit, Updat
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useWorkspaces } from '@/hooks/useWorkspaces';
-import { GeocodingService } from '@/application/services/GeocodingService';
+import { getGeocodingService } from '@/application/services/GeocodingServiceFactory';
 
 // Types for advanced UI features
 interface WorkspaceData {
@@ -91,12 +91,8 @@ export function useMaterialsHex(): UseMaterialsHexResult {
   const { t } = useLanguage();
   const { workspaces } = useWorkspaces();
 
-  // Initialize geocoding service for workspace enhancement (should be injected via service)
-  // TODO: Inject geocoding service via dependency injection
-  const geocodingService = new GeocodingService({
-    userAgent: 'MauritaniaMapper/1.0 (workspace-enhancement)',
-    prioritizeLocal: true
-  });
+  // Singleton geocoding service injected via factory (hexagonal DI).
+  const geocodingService = getGeocodingService();
 
   const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
 

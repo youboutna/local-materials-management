@@ -7,7 +7,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { RepositoryFactory } from "@/repositories/RepositoryFactory";
+import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
 import { EmployeeService } from "@/application/services/EmployeeService";
 import { EmployeeTransformer } from '@/dtos/transforms';
 import { useNavigate } from 'react-router-dom';
@@ -49,9 +49,8 @@ export function useEmployeesHex(): UseEmployeesHexResult {
   const navigate = useNavigate();
   const { t } = useLanguage();
   
-  // TODO: Implement EmployeeRepository in RepositoryFactory
-  // For now, using a mock implementation
-  const employeeRepository = {} as any; // RepositoryFactory.getEmployeeRepository();
+  // Real EmployeeRepository via RepositoryFactory (no more mock).
+  const employeeRepository = RepositoryFactory.getEmployeeRepository();
   const employeeService = new EmployeeService(employeeRepository);
 
   // Query for employees list
@@ -64,8 +63,8 @@ export function useEmployeesHex(): UseEmployeesHexResult {
     queryKey: ['employees'],
     queryFn: async (): Promise<any[]> => {
       try {
-        // Mock data for now
-        return [];
+        const result = await employeeService.searchEmployees({});
+        return Array.isArray(result) ? result : (result as any)?.employees ?? [];
       } catch (err) {
         console.error('Error fetching employees:', err);
         throw err;

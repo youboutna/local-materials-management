@@ -1,10 +1,10 @@
 /**
  * Hexagonal hook for contact form / authorization request submission
- * Uses RepositoryFactory instead of direct Supabase access
+ * Delegates persistence to AuthorizationRequestAdapter (no direct Supabase calls).
  */
 import { useMutation } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { getAuthorizationRequestRepository } from '@/infrastructure/supabase/adapters/AuthorizationRequestAdapter';
 
 export interface ContactFormData {
   applicant_type: string;
@@ -21,47 +21,33 @@ export interface ContactFormData {
   description?: string;
 }
 
-// NOTE: authorization_requests is a standalone table not covered by core adapters.
-// We keep a thin adapter function here until a dedicated AuthorizationRequestAdapter is created.
-async function submitAuthorizationRequest(formData: ContactFormData) {
-  const insertData: Record<string, unknown> = {
-    applicant_type: formData.applicant_type,
-    email: formData.email,
-    national_id: formData.national_id,
-    phone_number: formData.phone_number,
-    request_type: formData.request_type,
-    parcel_address: formData.company_address || 'Non spécifié',
-    status: 'draft',
-  };
-
-  if (formData.individual_first_name) insertData.individual_first_name = formData.individual_first_name;
-  if (formData.individual_last_name) insertData.individual_last_name = formData.individual_last_name;
-  if (formData.address) insertData.address = formData.address;
-  if (formData.description) insertData.description = formData.description;
-  if (formData.applicant_type === 'company') {
-    if (formData.company_name) insertData.company_name = formData.company_name;
-    if (formData.company_nif) insertData.company_nif = formData.company_nif;
-  }
-
-  // TODO: Migrate to AuthorizationRequestAdapter when created
-  const { data, error } = await supabase
-    .from('authorization_requests')
-    .insert([insertData as any]);
-
-  if (error) throw error;
-  return data;
-}
+const repo = getAuthorizationRequestRepository();
 
 export const useSubmitContactFormHex = () => {
   return useMutation({
-    mutationFn: submitAuthorizationRequest,
+    mutationFn: async (formData: ContactFormData) => {
+      return repo.submit({
+        applicantType: formData.applicant_type,
+        individualFirstName: formData.individual_first_name,
+        individualLastName: formData.individual_last_name,
+        email: formData.email,
+        phoneNumber: formData.phone_number,
+        address: formData.address,
+        nationalId: formData.national_id,
+        companyName: formData.company_name,
+        companyNif: formData.company_nif,
+        requestType: formData.request_type,
+        parcelAddress: formData.company_address,
+        description: formData.description,
+      });
+    },
     onSuccess: () => {
       toast({
         title: 'Demande envoyée',
         description: "Votre demande d'autorisation a été envoyée avec succès.",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Error submitting authorization request:', error);
       toast({
         title: 'Erreur',
