@@ -272,23 +272,31 @@ const PhaseDetailsPage: React.FC = () => {
         canRequestPayment={canRequestPayment}
       />
 
-      {/* Tabs de navigation */}
+      {/* Tabs de navigation — alignées sur le cycle de vie d'une phase */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3 mb-4">
+        <TabsList className="grid w-full grid-cols-6 mb-4">
           <TabsTrigger value="hierarchy" className="flex items-center gap-2">
             <Target className="h-4 w-4" /> Hiérarchie
           </TabsTrigger>
           <TabsTrigger value="workflow" className="flex items-center gap-2">
             <Banknote className="h-4 w-4" /> Workflow
           </TabsTrigger>
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <Eye className="h-4 w-4" /> Vue d'ensemble
+          <TabsTrigger value="resources" className="flex items-center gap-2">
+            <Package className="h-4 w-4" /> Ressources
+          </TabsTrigger>
+          <TabsTrigger value="metre" className="flex items-center gap-2">
+            <Calculator className="h-4 w-4" /> Métré / DQE
+          </TabsTrigger>
+          <TabsTrigger value="stakeholders" className="flex items-center gap-2">
+            <Users className="h-4 w-4" /> Parties prenantes
+          </TabsTrigger>
+          <TabsTrigger value="documents" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" /> Documents
           </TabsTrigger>
         </TabsList>
 
-        {/* Tab Hiérarchie - Phase 4 : Vue structurée */}
+        {/* Tab Hiérarchie */}
         <TabsContent value="hierarchy" className="space-y-6">
-          {/* Affichage conditionnel : Avec étapes OU avec jalons directs */}
           {hasSteps ? (
             <PhaseWithStepsView
               phase={phaseForComponents as any}
@@ -316,18 +324,13 @@ const PhaseDetailsPage: React.FC = () => {
                   Cette phase n'a ni étapes ni jalons configurés.
                 </p>
                 <div className="flex justify-center gap-3">
-                  <Button variant="outline">
-                    Ajouter une étape
-                  </Button>
-                  <Button variant="outline">
-                    Ajouter un jalon
-                  </Button>
+                  <Button variant="outline">Ajouter une étape</Button>
+                  <Button variant="outline">Ajouter un jalon</Button>
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {/* Grille Inspections / Paiements */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader className="py-3">
@@ -348,16 +351,14 @@ const PhaseDetailsPage: React.FC = () => {
           </div>
         </TabsContent>
 
-        {/* Tab Workflow - Cascade existant */}
+        {/* Tab Workflow */}
         <TabsContent value="workflow" className="space-y-6">
-          {/* Panneau de vérification des checkpoints */}
           <CheckpointVerificationPanel
             projectId={projectId!}
             phaseId={phaseId!}
             compact
           />
 
-          {/* Workflow unifié avec timeline intégrée */}
           <UnifiedCascadeWorkflow
             phase={phaseForComponents as any}
             projectProgress={projectProgress}
@@ -377,29 +378,29 @@ const PhaseDetailsPage: React.FC = () => {
             onMilestoneAction={(action, item) => handleMilestoneAction(action, item)}
             formatCurrency={formatCurrency}
           />
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader className="py-3">
-                <CardTitle className="text-base">Inspections</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <PhaseInspections phaseId={phaseId!} projectId={projectId!} />
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="py-3">
-                <CardTitle className="text-base">Paiements</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <PhasePayments phaseId={phaseId!} projectId={projectId!} />
-              </CardContent>
-            </Card>
-          </div>
         </TabsContent>
 
-        {/* Tab Vue d'ensemble */}
-        <TabsContent value="overview" className="space-y-6">
+        {/* Tab Ressources : matériaux + main d'œuvre */}
+        <TabsContent value="resources" className="space-y-6">
+          <PhaseResourcesTab phaseId={phaseId!} projectId={projectId!} />
+        </TabsContent>
+
+        {/* Tab Métré / DQE */}
+        <TabsContent value="metre" className="space-y-6">
+          <PhaseQuantityTakeoffTab
+            phaseId={phaseId!}
+            projectId={projectId!}
+            phaseName={phaseName}
+          />
+        </TabsContent>
+
+        {/* Tab Parties prenantes filtrées par concern métier */}
+        <TabsContent value="stakeholders" className="space-y-6">
+          <PhaseStakeholdersTab projectId={projectId!} phaseId={phaseId!} />
+        </TabsContent>
+
+        {/* Tab Documents */}
+        <TabsContent value="documents" className="space-y-6">
           <Card>
             <CardHeader className="py-3">
               <CardTitle className="text-base flex items-center gap-2">
@@ -414,24 +415,14 @@ const PhaseDetailsPage: React.FC = () => {
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader className="py-3">
-                <CardTitle className="text-base">Matériaux</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <PhaseMaterials phaseId={phaseId!} projectId={projectId!} />
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="py-3">
-                <CardTitle className="text-base">Documents</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <PhaseDocuments phaseId={phaseId!} projectId={projectId!} />
-              </CardContent>
-            </Card>
-          </div>
+          <Card>
+            <CardHeader className="py-3">
+              <CardTitle className="text-base">Documents de la phase</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PhaseDocuments phaseId={phaseId!} projectId={projectId!} />
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 
