@@ -242,18 +242,22 @@ export function useProjectPhasesForTender(projectId?: string, tenderId?: string)
         projectRepo.findById(projectId),
         phaseRepo.findByProjectId(projectId),
       ]);
-      const mapped: ProjectPhaseForTender[] = (phases || []).map((p: Record<string, unknown>, idx: number) => ({
-        id: String(p.id),
-        name: String(p.phaseName ?? p.name ?? `Phase ${idx + 1}`),
-        order: Number(p.orderIndex ?? idx),
-        status: String(p.status ?? 'pending'),
-        startDate: p.startDate as string | undefined,
-        endDate: p.endDate as string | undefined,
-        budget: p.estimatedCost as number | undefined,
-        steps: [],
-      }));
+      const mapped: ProjectPhaseForTender[] = (phases || []).map((ph, idx) => {
+        const p = ph as unknown as Record<string, unknown>;
+        return {
+          id: String(p.id),
+          name: String(p.phaseName ?? p.name ?? `Phase ${idx + 1}`),
+          order: Number(p.orderIndex ?? idx),
+          status: String(p.status ?? 'pending'),
+          startDate: p.startDate as string | undefined,
+          endDate: p.endDate as string | undefined,
+          budget: p.estimatedCost as number | undefined,
+          steps: [],
+        };
+      });
+      const projRec = project ? (project as unknown as Record<string, unknown>) : null;
       return {
-        projectInfo: project ? { id: String((project as Record<string, unknown>).id), title: String((project as Record<string, unknown>).title ?? '') } : null,
+        projectInfo: projRec ? { id: String(projRec.id), title: String(projRec.title ?? '') } : null,
         phases: mapped,
       };
     },
@@ -269,12 +273,15 @@ export function useProjectPhasesForLots(projectId?: string) {
       if (!projectId) return [];
       const phaseRepo = RepositoryFactory.getPhaseRepository();
       const phases = await phaseRepo.findByProjectId(projectId);
-      return (phases || []).map((p: Record<string, unknown>, idx: number) => ({
-        id: String(p.id),
-        name: String(p.phaseName ?? p.name ?? `Phase ${idx + 1}`),
-        order: Number(p.orderIndex ?? idx),
-        status: String(p.status ?? 'pending'),
-      }));
+      return (phases || []).map((ph, idx) => {
+        const p = ph as unknown as Record<string, unknown>;
+        return {
+          id: String(p.id),
+          name: String(p.phaseName ?? p.name ?? `Phase ${idx + 1}`),
+          order: Number(p.orderIndex ?? idx),
+          status: String(p.status ?? 'pending'),
+        };
+      });
     },
     enabled: !!projectId
   });

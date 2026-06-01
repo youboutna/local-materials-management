@@ -84,39 +84,44 @@ export class PerformanceMonitoringService {
     try {
       const startTime = Date.now();
 
-      // TODO: Replace with RepositoryFactory pattern when available
-      // const [projectsResult, inspectionsResult, paymentsResult] = await Promise.all([
-      //   this.projectRepository.getMetrics(),
-      //   this.inspectionRepository.getMetrics(),
-      //   this.paymentRepository.getMetrics()
-      // ]);
-      
-      // Temporary mock data until repositories are implemented
-      const projectsResult = { count: 10, error: null };
-      const inspectionsResult = { count: 5, error: null };
-      const paymentsResult = { count: 3, error: null };
+      // Use RepositoryFactory pattern (no direct Supabase)
+      const { RepositoryFactory } = await import('@/infrastructure/supabase/RepositoryFactory');
+      const projectRepo = RepositoryFactory.getProjectRepository();
+      const inspectionRepo = RepositoryFactory.getInspectionRepository();
+      const paymentRepo = RepositoryFactory.getPaymentRepository();
+
+      const [projects, inspections, payments] = await Promise.all([
+        projectRepo.findAll().catch(() => []),
+        inspectionRepo.findAll ? inspectionRepo.findAll().catch(() => []) : Promise.resolve([]),
+        (paymentRepo as unknown as { findAll?: () => Promise<unknown[]> }).findAll
+          ? (paymentRepo as unknown as { findAll: () => Promise<unknown[]> }).findAll().catch(() => [])
+          : Promise.resolve([]),
+      ]);
 
       const queryTime = Date.now() - startTime;
+      const isActiveStatus = (s: unknown) => s === 'in_progress' || s === 'active' || s === 'planning';
+      const isPendingInsp = (s: unknown) => s === 'pending' || s === 'scheduled';
+      const isPendingPay = (s: unknown) => s === 'pending' || s === 'awaiting_approval';
 
-      // Count active projects (mock data)
-      const activeProjects = 5; // Mock value
-      const pendingInspections = 2; // Mock value
-      const pendingPayments = 1; // Mock value
+      const activeProjects = (projects as unknown[]).filter(p => isActiveStatus((p as Record<string, unknown>).status)).length;
+      const pendingInspections = (inspections as unknown[]).filter(i => isPendingInsp((i as Record<string, unknown>).status)).length;
+      const pendingPayments = (payments as unknown[]).filter(p => isPendingPay((p as Record<string, unknown>).status)).length;
 
       return {
-        connections: 1, // Single connection per client
-        maxConnections: 100, // Supabase default
+        connections: 1,
+        maxConnections: 100,
         queryTime,
         slowQueries: queryTime > 500 ? 1 : 0,
         activeProjects,
-        pendingInspections: inspectionsResult.count || 0,
-        pendingPayments: paymentsResult.count || 0
+        pendingInspections,
+        pendingPayments,
       };
     } catch (error) {
       console.error('PerformanceMonitoringService.getDatabaseMetrics failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get database metrics');
     }
   }
+
 
   /**
    * Get comprehensive performance metrics
@@ -546,7 +551,7 @@ export class PerformanceMonitoringService {
       
       // Create performance monitoring record in memory
       const monitoringRecord: PerformanceMonitoringRecord = {
-        id: `monitoring-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `monitoring-${crypto.randomUUID()}`,
         projectId,
         employeeId: employeeId || 'system',
         dateRange: dateRange || 'current',
