@@ -58,6 +58,8 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
   const [evmMetrics, setEvmMetrics] = useState<any>(null);
   const [pertAnalysis, setPertAnalysis] = useState<any>(null);
   const [enrichedData, setEnrichedData] = useState<any>(null);
+  const [deviations, setDeviations] = useState<any[]>([]);
+  const [healthScore, setHealthScore] = useState<any>(null);
   
   const [reportConfig, setReportConfig] = useState<ReportConfig>({
     title: `Rapport de projet - ${project.title}`,
@@ -107,11 +109,18 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
         setReportData(completeReport.reportData);
         setCostCalculation(completeReport.costCalculation);
         setEnrichedData(completeReport.reportDTO);
-        
-        // Calculate EVM metrics with enhanced data
+        setDeviations(completeReport.deviations || []);
+        setHealthScore(completeReport.healthScore || null);
+
+        // Calculate EVM metrics with enhanced data — utiliser realCosts en priorité
+        const actualCostForEvm = Number(
+          (completeReport.realCosts as any)?.totalSpent
+            ?? completeReport.costCalculation.actualCost
+            ?? 0,
+        );
         const evmMetricsResult = ReportCalculations.calculateEVMMetrics(
-          project, 
-          completeReport.costCalculation.actualCost,
+          project,
+          actualCostForEvm,
           completeReport.reportDTO.phases
         );
         setEvmMetrics(evmMetricsResult);
@@ -160,6 +169,8 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
           pertAnalysis={pertAnalysis || undefined}
           reportConfig={reportConfig}
           enrichedData={enrichedData || undefined}
+          deviations={deviations}
+          healthScore={healthScore}
         />
       );
 
@@ -213,6 +224,8 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
           pertAnalysis={pertAnalysis || undefined}
           reportConfig={reportConfig}
           enrichedData={enrichedData || undefined}
+          deviations={deviations}
+          healthScore={healthScore}
         />
       );
 

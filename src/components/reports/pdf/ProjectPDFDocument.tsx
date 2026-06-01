@@ -36,6 +36,17 @@ interface ProjectPDFDocumentProps {
     notes?: string;
   };
   enrichedData?: ProjectReportDTO;
+  /** Écarts calculés via DeviationEngine (référentiel deviation-rules). */
+  deviations?: Array<{
+    ruleCode: string;
+    label: string;
+    value: number;
+    unit: string;
+    severity: 'info' | 'low' | 'medium' | 'high';
+    sign: 1 | -1 | 0;
+  }>;
+  /** Score de santé projet calculé par ProjectCalculationService. */
+  healthScore?: any;
 }
 
 export function ProjectPDFDocument({
@@ -45,7 +56,9 @@ export function ProjectPDFDocument({
   evmMetrics,
   pertAnalysis,
   reportConfig,
-  enrichedData
+  enrichedData,
+  deviations = [],
+  healthScore = null,
 }: ProjectPDFDocumentProps) {
   
   const getStatusText = (status: string) => {
@@ -226,6 +239,28 @@ export function ProjectPDFDocument({
           </PDFCard>
         </PDFSection>
       )}
+
+      {/* Écarts (DeviationEngine — référentiel deviation-rules) */}
+      {reportConfig.includeSections.kpi && deviations.length > 0 && (
+        <PDFSection title="Écarts & Indicateurs Clés" borderColor="#ef4444">
+          <PDFTable
+            headers={['Indicateur', 'Valeur', 'Unité', 'Sévérité']}
+            data={deviations.map((d) => [
+              d.label,
+              `${d.value > 0 ? '+' : ''}${d.value}`,
+              d.unit,
+              d.severity,
+            ])}
+          />
+          {healthScore && typeof healthScore === 'object' && (
+            <PDFText
+              label="Score de santé global"
+              value={`${healthScore.overallScore ?? healthScore.score ?? '—'}${healthScore.category ? ` (${healthScore.category})` : ''}`}
+            />
+          )}
+        </PDFSection>
+      )}
+
 
       {/* Matériaux */}
    
