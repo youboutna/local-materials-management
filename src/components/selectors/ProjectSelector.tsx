@@ -28,7 +28,7 @@ interface ProjectSelectorProps {
 const ProjectSelector: React.FC<ProjectSelectorProps> = ({
   value,
   onChange,
-  placeholder = "SÃ©lectionner un projet",
+  placeholder = "Sélectionner un projet",
   label = "Projet",
   required = false,
   disabled = false,
@@ -94,7 +94,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
                     <div className="min-w-0 flex-1">
                       <div className="font-medium truncate">{project.title}</div>
                       {project.project_reference && (
-                        <div className="text-xs text-gray-500 truncate">RÃ©f: {project.project_reference}</div>
+                        <div className="text-xs text-gray-500 truncate">Réf: {project.project_reference}</div>
                       )}
                       {!secureMode && project.location && (
                         <div className="text-xs text-gray-500 truncate">{project.location}</div>
@@ -125,7 +125,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
       {selectedProject && (
         <div className="p-3 bg-gray-50 rounded-lg text-sm space-y-1">
           <div className="flex justify-between items-center">
-            <span className="font-medium">Projet sÃ©lectionnÃ©:</span>
+            <span className="font-medium">Projet sélectionné:</span>
             {!secureMode && selectedProject.status && (
               <Badge variant="outline" className={getStatusColor(selectedProject.status)}>
                 {selectedProject.status}
@@ -134,7 +134,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
           </div>
           <div>{selectedProject.title}</div>
           {selectedProject.project_reference && (
-            <div className="text-gray-600">ðŸ“‹ RÃ©f: {selectedProject.project_reference}</div>
+            <div className="text-gray-600">ðŸ“‹ Réf: {selectedProject.project_reference}</div>
           )}
           {!secureMode && selectedProject.location && (
             <div className="text-gray-600">ðŸ“ {selectedProject.location}</div>

@@ -159,7 +159,7 @@ const SupplierPortal = () => {
     // TODO: Implement document sharing logic
     toast({
       title: "Partage de document",
-      description: "FonctionnalitÃ© de partage Ã  implÃ©menter",
+      description: "Fonctionnalité de partage Ã  implémenter",
     });
   };
 
@@ -188,7 +188,7 @@ const SupplierPortal = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                placeholder="•••••••••"
               />
             </div>
             <div className="flex space-x-2">
@@ -213,7 +213,7 @@ const SupplierPortal = () => {
                 disabled={isSigningUp}
                 className="w-full mt-2"
               >
-                {isSigningUp ? 'Inscription...' : "CrÃ©er un compte"}
+                {isSigningUp ? 'Inscription...' : "Créer un compte"}
               </Button>
             )}
           </CardContent>
@@ -237,7 +237,7 @@ const SupplierPortal = () => {
             <div className="flex items-center space-x-4">
               <Button variant="outline" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
-                DÃ©connexion
+                Déconnexion
               </Button>
             </div>
           </div>
@@ -250,7 +250,7 @@ const SupplierPortal = () => {
           <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="dashboard">Tableau de bord</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
-            <TabsTrigger value="tasks">TÃ¢ches</TabsTrigger>
+            <TabsTrigger value="tasks">Tâches</TabsTrigger>
             <TabsTrigger value="inspections">Inspections</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="payments">Paiements</TabsTrigger>
@@ -261,21 +261,21 @@ const SupplierPortal = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Documents UploadÃ©s</CardTitle>
+                  <CardTitle>Documents Uploadés</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{uploadedDocuments.length}</div>
-                  <p className="text-gray-600">Documents uploadÃ©s</p>
+                  <p className="text-gray-600">Documents uploadés</p>
                 </CardContent>
               </Card>
               
               <Card>
                 <CardHeader>
-                  <CardTitle>TÃ¢ches AssignÃ©es</CardTitle>
+                  <CardTitle>Tâches Assignées</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{assignedTasks.length}</div>
-                  <p className="text-gray-600">TÃ¢ches assignÃ©es</p>
+                  <p className="text-gray-600">Tâches assignées</p>
                 </CardContent>
               </Card>
               
@@ -339,7 +339,7 @@ const SupplierPortal = () => {
               
               <Card>
                 <CardHeader>
-                  <CardTitle>Documents UploadÃ©s</CardTitle>
+                  <CardTitle>Documents Uploadés</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <BusinessDocuments documents={uploadedDocuments} />
@@ -352,12 +352,12 @@ const SupplierPortal = () => {
           <TabsContent value="tasks" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>TÃ¢ches AssignÃ©es</CardTitle>
+                <CardTitle>Tâches Assignées</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {assignedTasks.length === 0 ? (
-                    <p className="text-gray-500">Aucune tÃ¢che assignÃ©e</p>
+                    <p className="text-gray-500">Aucune tâche assignée</p>
                   ) : (
                     assignedTasks.map((task) => (
                       <div key={task.id} className="border rounded-lg p-4 space-y-2">
@@ -384,7 +384,7 @@ const SupplierPortal = () => {
                             disabled={task.status === 'completed'}
                           >
                             <CheckCircle className="h-4 w-4 mr-2" />
-                            {task.status === 'completed' ? 'ComplÃ©tÃ©' : 'Marquer complÃ©tÃ©'}
+                            {task.status === 'completed' ? 'Complété' : 'Marquer complété'}
                           </Button>
                         </div>
                         {selectedTaskId === task.id && (

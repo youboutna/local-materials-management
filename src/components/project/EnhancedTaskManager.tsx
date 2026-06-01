@@ -264,15 +264,15 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
       setIsCreating(false);
       resetForm();
       toast({
-        title: "TÃ¢che crÃ©Ã©e",
-        description: "La tÃ¢che a Ã©tÃ© crÃ©Ã©e avec succÃ¨s.",
+        title: "Tâche créée",
+        description: "La tâche a été créée avec succès.",
       });
     },
     onError: (error) => {
       console.error('Error creating task:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de crÃ©er la tÃ¢che.",
+        description: "Impossible de créer la tâche.",
         variant: "destructive",
       });
     },
@@ -297,15 +297,15 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
       setEditingId(null);
       resetForm();
       toast({
-        title: "TÃ¢che mise Ã  jour",
-        description: "La tÃ¢che a Ã©tÃ© mise Ã  jour avec succÃ¨s.",
+        title: "Tâche mise Ã  jour",
+        description: "La tâche a été mise Ã  jour avec succès.",
       });
     },
     onError: (error) => {
       console.error('Error updating task:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de mettre Ã  jour la tÃ¢che.",
+        description: "Impossible de mettre Ã  jour la tâche.",
         variant: "destructive",
       });
     },
@@ -325,15 +325,15 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['enhanced-task-assignments'] });
       toast({
-        title: "TÃ¢che supprimÃ©e",
-        description: "La tÃ¢che a Ã©tÃ© supprimÃ©e avec succÃ¨s.",
+        title: "Tâche supprimée",
+        description: "La tâche a été supprimée avec succès.",
       });
     },
     onError: (error) => {
       console.error('Error deleting task:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de supprimer la tÃ¢che.",
+        description: "Impossible de supprimer la tâche.",
         variant: "destructive",
       });
     },
@@ -371,13 +371,13 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
       ['foundation', 'structure', 'finishing', 'utilities'].includes(constructionPhase);
     
     const options = [
-      { category: 'EmployÃ©s internes', items: employees.map(emp => ({ 
+      { category: 'Employés internes', items: employees.map(emp => ({ 
         id: emp.id, 
         name: emp.full_name, 
         subtitle: emp.position,
         type: 'employee'
       })) },
-      { category: 'Bureaux d\'Ã©tudes / Consultants', items: suppliers
+      { category: 'Bureaux d\'études / Consultants', items: suppliers
         .filter(s => s.type === 'consultant' || !s.type)
         .map(supplier => ({ 
           id: supplier.id, 
@@ -439,7 +439,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
     if (!formData.title.trim()) {
       toast({
         title: "Erreur",
-        description: "Le titre de la tÃ¢che est requis.",
+        description: "Le titre de la tâche est requis.",
         variant: "destructive",
       });
       return;
@@ -448,7 +448,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
     if (!formData.applyToAllPhases && !formData.phase_id) {
       toast({
         title: "Erreur", 
-        description: "Vous devez sÃ©lectionner une phase ou appliquer Ã  toutes les phases.",
+        description: "Vous devez sélectionner une phase ou appliquer Ã  toutes les phases.",
         variant: "destructive",
       });
       return;
@@ -526,15 +526,15 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
         resetForm();
 
         toast({
-          title: "TÃ¢che crÃ©Ã©e",
-          description: `${tasksToCreate.length} tÃ¢che(s) crÃ©Ã©e(s) avec succÃ¨s.`,
+          title: "Tâche créée",
+          description: `${tasksToCreate.length} tâche(s) créée(s) avec succès.`,
         });
       }
     } catch (error) {
       console.error('Error creating task:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de crÃ©er la tÃ¢che.",
+        description: "Impossible de créer la tâche.",
         variant: "destructive",
       });
     }
@@ -598,7 +598,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
     const supplier = suppliers.find(sup => sup.id === assignedTo);
     if (supplier) return supplier.name;
     
-    return 'Non assignÃ©';
+    return 'Non assigné';
   };
 
   const getPhaseName = (phaseId: string) => {
@@ -620,9 +620,9 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
         <CardContent className="p-6">
           <div className="text-center">
             <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-2 text-sm font-semibold text-gray-900">Aucune phase trouvÃ©e</h3>
+            <h3 className="mt-2 text-sm font-semibold text-gray-900">Aucune phase trouvée</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Vous devez d'abord crÃ©er des phases pour ce projet avant de pouvoir ajouter des tÃ¢ches.
+              Vous devez d'abord créer des phases pour ce projet avant de pouvoir ajouter des tâches.
             </p>
           </div>
         </CardContent>
@@ -635,9 +635,9 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
       {/* Header with controls */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h3 className="text-lg font-semibold">Gestion des tÃ¢ches</h3>
+          <h3 className="text-lg font-semibold">Gestion des tâches</h3>
           <p className="text-sm text-muted-foreground">
-            {filteredTasks.length} tÃ¢che(s) â€¢ {currentPhases.length} phase(s)
+            {filteredTasks.length} tâche(s) • {currentPhases.length} phase(s)
           </p>
         </div>
         
@@ -673,25 +673,25 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
             <DialogTrigger asChild>
               <Button size="sm" onClick={() => resetForm()}>
                 <Plus className="h-4 w-4 mr-2" />
-                Nouvelle tÃ¢che
+                Nouvelle tâche
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
-                  {editingId ? 'Modifier la tÃ¢che' : 'CrÃer une nouvelle tÃ¢che'}
+                  {editingId ? 'Modifier la tâche' : 'CrÃer une nouvelle tâche'}
                 </DialogTitle>
               </DialogHeader>
               
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="title">Titre de la tÃ¢che</Label>
+                    <Label htmlFor="title">Titre de la tâche</Label>
                     <Input
                       id="title"
                       value={formData.title}
                       onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      placeholder="Nom de la tÃ¢che"
+                      placeholder="Nom de la tâche"
                       required
                     />
                   </div>
@@ -705,7 +705,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                       <SelectContent>
                         <SelectItem value="low">Faible</SelectItem>
                         <SelectItem value="medium">Moyenne</SelectItem>
-                        <SelectItem value="high">Ã‰levÃe</SelectItem>
+                        <SelectItem value="high">ÉlevÃe</SelectItem>
                         <SelectItem value="urgent">Urgente</SelectItem>
                       </SelectContent>
                     </Select>
@@ -718,7 +718,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Description de la tÃ¢che"
+                    placeholder="Description de la tâche"
                     rows={3}
                   />
                 </div>
@@ -937,9 +937,9 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
             <CardContent className="p-6">
               <div className="text-center">
                 <Target className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-2 text-sm font-semibold text-gray-900">Aucune tÃ¢che trouvÃe</h3>
+                <h3 className="mt-2 text-sm font-semibold text-gray-900">Aucune tâche trouvÃe</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Commencez par crÃer une nouvelle tÃ¢che pour ce projet.
+                  Commencez par crÃer une nouvelle tâche pour ce projet.
                 </p>
               </div>
             </CardContent>

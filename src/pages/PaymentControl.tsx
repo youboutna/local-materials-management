@@ -24,7 +24,7 @@ import { actionLabels } from '@/application/services/ProjectManagerService';
 import { EscalationRoles } from '@/domain/entities/Hierarchy';
 import { ProjectData } from '@/dtos/entities/ProjectAggregateDTO';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
-import { useProjectsHex, usePaymentControlHex, useNotificationsHex } from '@/hooks/hexagonal';
+import { useProjectsHex, usePaymentControlHex, useNotificationsHex, usePaymentBlocksHex } from '@/hooks/hexagonal';
 import { useAuthUserHex } from '@/hooks/hexagonal/useAuthUserHex';
 
 interface NotificationData {

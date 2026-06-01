@@ -22,7 +22,7 @@ export function InspectorSelector({
   value,
   onValueChange,
   label = "Inspecteur",
-  placeholder = "SÃ©lectionner un inspecteur",
+  placeholder = "Sélectionner un inspecteur",
   className
 }: InspectorSelectorProps) {
   const [open, setOpen] = useState(false);
@@ -47,7 +47,7 @@ export function InspectorSelector({
                 <User className="h-4 w-4" />
                 <span>{selectedInspector.name}</span>
                 {selectedInspector.type === 'supplier' && (
-                  <Badge variant="secondary" className="text-xs">Bureau d'Ã©tudes</Badge>
+                  <Badge variant="secondary" className="text-xs">Bureau d'études</Badge>
                 )}
               </div>
             ) : (
@@ -61,9 +61,9 @@ export function InspectorSelector({
             <CommandInput placeholder="Rechercher un inspecteur..." />
             <CommandList>
               <CommandEmpty>
-                {isLoading ? "Chargement..." : "Aucun inspecteur trouvÃ©"}
+                {isLoading ? "Chargement..." : "Aucun inspecteur trouvé"}
               </CommandEmpty>
-              <CommandGroup heading="EmployÃ©s">
+              <CommandGroup heading="Employés">
                 {inspectors
                   .filter(i => i.type === 'employee')
                   .map((inspector) => (
@@ -87,13 +87,13 @@ export function InspectorSelector({
                           <span className="text-xs text-muted-foreground">{inspector.position}</span>
                         )}
                         {inspector.role && (
-                          <span className="text-xs text-muted-foreground">RÃ´le: {inspector.role}</span>
+                          <span className="text-xs text-muted-foreground">Rôle: {inspector.role}</span>
                         )}
                       </div>
                     </CommandItem>
                   ))}
               </CommandGroup>
-              <CommandGroup heading="Bureaux d'Ã©tudes">
+              <CommandGroup heading="Bureaux d'études">
                 {inspectors
                   .filter(i => i.type === 'supplier')
                   .map((inspector) => (
@@ -117,7 +117,7 @@ export function InspectorSelector({
                           <span className="text-xs text-muted-foreground">{inspector.position}</span>
                         )}
                         {inspector.role && (
-                          <span className="text-xs text-muted-foreground">RÃ´le: {inspector.role}</span>
+                          <span className="text-xs text-muted-foreground">Rôle: {inspector.role}</span>
                         )}
                       </div>
                     </CommandItem>

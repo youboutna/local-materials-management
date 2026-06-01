@@ -22,9 +22,9 @@ import {
 const invoiceSchema = z.object({
   project_id: z.string().min(1, 'Le projet est requis'),
   inspection_id: z.string().optional(),
-  progress_percentage: z.number().min(0).max(100, 'Le taux d\'avancement doit Ãªtre entre 0 et 100'),
-  invoice_amount: z.number().positive('Le montant doit Ãªtre positif'),
-  work_description: z.string().min(10, 'Description requise (min 10 caractÃ¨res)'),
+  progress_percentage: z.number().min(0).max(100, 'Le taux d\'avancement doit être entre 0 et 100'),
+  invoice_amount: z.number().positive('Le montant doit être positif'),
+  work_description: z.string().min(10, 'Description requise (min 10 caractères)'),
   quantities_executed: z.any().optional(),
   lot_details: z.any().optional(),
 });
@@ -96,7 +96,7 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
   if (isLoading && selectedProjectId) {
     return (
       <div className="text-center py-8">
-        Chargement des donnÃ©es du projet...
+        Chargement des données du projet...
       </div>
     );
   }
@@ -116,10 +116,10 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
                   <div>Type de projet: <strong>{projectData.project_type || 'infrastructure'}</strong></div>
                   <div>Source de financement: <strong>{projectData.funding_source || 'N/A'}</strong></div>
                   {workflowRequirements.requiresConsultant && (
-                    <div className="text-orange-600">âœ“ Validation ingÃ©nieur conseil requise</div>
+                    <div className="text-orange-600">âœ“ Validation ingénieur conseil requise</div>
                   )}
                   {workflowRequirements.requiresMinistry && (
-                    <div className="text-orange-600">âœ“ Approbation ministÃ¨re requise</div>
+                    <div className="text-orange-600">âœ“ Approbation ministère requise</div>
                   )}
                   {workflowRequirements.requiresDonor && (
                     <div className="text-orange-600">âœ“ Approbation bailleur de fonds requise</div>
@@ -134,7 +134,7 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
             <EnhancedProjectSelector
               value={selectedProjectId}
               onChange={(value) => setValue('project_id', value || '')}
-              placeholder="SÃ©lectionner un projet"
+              placeholder="Sélectionner un projet"
             />
             {errors.project_id && (
               <p className="text-sm text-red-600 mt-1">{errors.project_id.message}</p>
@@ -150,7 +150,7 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
                   onValueChange={(value) => setValue('inspection_id', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="SÃ©lectionner une inspection" />
+                    <SelectValue placeholder="Sélectionner une inspection" />
                   </SelectTrigger>
                   <SelectContent>
                     {inspections.map((inspection) => (
@@ -178,7 +178,7 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
                 )}
                 {previousProgress > 0 && (
                   <p className="text-sm text-gray-600 mt-1">
-                    Progression prÃ©cÃ©dente: {previousProgress}%
+                    Progression précédente: {previousProgress}%
                   </p>
                 )}
               </div>
@@ -252,7 +252,7 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
                   Annuler
                 </Button>
                 <Button type="submit" disabled={loading}>
-                  {loading ? 'CrÃ©ation...' : 'CrÃ©er la facture'}
+                  {loading ? 'Création...' : 'Créer la facture'}
                 </Button>
               </div>
             </>

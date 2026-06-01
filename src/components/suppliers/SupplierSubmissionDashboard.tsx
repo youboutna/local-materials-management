@@ -98,11 +98,11 @@ const SupplierSubmissionDashboard = () => {
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'approved':
-        return 'ApprouvÃ©e';
+        return 'Approuvée';
       case 'rejected':
-        return 'RejetÃ©e';
+        return 'Rejetée';
       case 'under_review':
-        return 'En cours d\'Ã©valuation';
+        return 'En cours d\'évaluation';
       case 'submitted':
         return 'Soumise';
       default:
@@ -144,7 +144,7 @@ const SupplierSubmissionDashboard = () => {
     } catch (error) {
       toast({
         title: "Erreur",
-        description: "Impossible de tÃ©lÃ©charger le document",
+        description: "Impossible de télécharger le document",
         variant: "destructive"
       });
     }
@@ -169,7 +169,7 @@ const SupplierSubmissionDashboard = () => {
               Tableau de Bord des Soumissions
             </h1>
             <p className="text-muted-foreground mt-1">
-              Suivez l'Ã©tat de vos soumissions en temps rÃ©el
+              Suivez l'état de vos soumissions en temps réel
             </p>
           </div>
           <Badge variant="outline" className="px-3 py-1 gap-1">
@@ -208,7 +208,7 @@ const SupplierSubmissionDashboard = () => {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">En Ã©valuation</p>
+                  <p className="text-sm text-muted-foreground">En évaluation</p>
                   <p className="text-2xl font-bold">{stats.under_review}</p>
                 </div>
                 <Clock className="h-8 w-8 text-blue-500" />
@@ -220,7 +220,7 @@ const SupplierSubmissionDashboard = () => {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">ApprouvÃ©es</p>
+                  <p className="text-sm text-muted-foreground">Approuvées</p>
                   <p className="text-2xl font-bold">{stats.approved}</p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-green-500" />
@@ -232,7 +232,7 @@ const SupplierSubmissionDashboard = () => {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">RejetÃ©es</p>
+                  <p className="text-sm text-muted-foreground">Rejetées</p>
                   <p className="text-2xl font-bold">{stats.rejected}</p>
                 </div>
                 <XCircle className="h-8 w-8 text-red-500" />
@@ -257,8 +257,8 @@ const SupplierSubmissionDashboard = () => {
                   <TabsTrigger value="all">Toutes</TabsTrigger>
                   <TabsTrigger value="submitted">Soumises</TabsTrigger>
                   <TabsTrigger value="under_review">En cours</TabsTrigger>
-                  <TabsTrigger value="approved">ApprouvÃ©es</TabsTrigger>
-                  <TabsTrigger value="rejected">RejetÃ©es</TabsTrigger>
+                  <TabsTrigger value="approved">Approuvées</TabsTrigger>
+                  <TabsTrigger value="rejected">Rejetées</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value={activeTab} className="mt-4">
@@ -300,7 +300,7 @@ const SupplierSubmissionDashboard = () => {
                       {filterSubmissions(activeTab).length === 0 && (
                         <div className="text-center py-12 text-muted-foreground">
                           <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                          <p>Aucune soumission trouvÃ©e</p>
+                          <p>Aucune soumission trouvée</p>
                         </div>
                       )}
                     </div>
@@ -315,7 +315,7 @@ const SupplierSubmissionDashboard = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Eye className="h-5 w-5" />
-                DÃ©tails
+                Détails
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -392,7 +392,7 @@ const SupplierSubmissionDashboard = () => {
                     {/* Activity Log - TODO: Implement when useSubmissionActivityLogsHex is available */}
                     {/* {activityLogs && activityLogs.length > 0 && (
                       <div>
-                        <h4 className="font-medium mb-3">Historique d'activitÃ©</h4>
+                        <h4 className="font-medium mb-3">Historique d'activité</h4>
                         <div className="space-y-2">
                           {activityLogs.map((log) => (
                             <div key={log.id} className="border-l-2 border-primary/20 pl-3 py-2">
@@ -411,7 +411,7 @@ const SupplierSubmissionDashboard = () => {
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
                   <Eye className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>SÃ©lectionnez une soumission pour voir les dÃ©tails</p>
+                  <p>Sélectionnez une soumission pour voir les détails</p>
                 </div>
               )}
             </CardContent>

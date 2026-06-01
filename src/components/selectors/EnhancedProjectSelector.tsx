@@ -39,7 +39,7 @@ interface EnhancedProjectSelectorProps {
 const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
   value,
   onChange,
-  placeholder = "SÃ©lectionner un projet",
+  placeholder = "Sélectionner un projet",
   label = "Projet",
   required = false,
   disabled = false,
@@ -70,7 +70,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
     [projects, value]
   );
 
-  // RÃ©initialiser la recherche quand le select est fermÃ©
+  // Réinitialiser la recherche quand le select est fermé
   useEffect(() => {
     if (!isOpen && searchTerm) {
       setSearchTerm('');
@@ -80,8 +80,8 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
   const getStatusConfig = (status: string | null | undefined) => {
     switch (status?.toLowerCase()) {
       case 'completed':
-      case 'terminÃ©':
-        return { color: 'bg-green-100 text-green-800 border-green-200', label: 'TerminÃ©' };
+      case 'terminé':
+        return { color: 'bg-green-100 text-green-800 border-green-200', label: 'Terminé' };
       case 'inprogress':
       case 'en cours':
         return { color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'En cours' };
@@ -92,15 +92,15 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
       case 'en attente':
         return { color: 'bg-gray-100 text-gray-800 border-gray-200', label: 'En attente' };
       case 'cancelled':
-      case 'annulÃ©':
-        return { color: 'bg-red-100 text-red-800 border-red-200', label: 'AnnulÃ©' };
+      case 'annulé':
+        return { color: 'bg-red-100 text-red-800 border-red-200', label: 'Annulé' };
       default:
-        return { color: 'bg-gray-100 text-gray-800 border-gray-200', label: status || 'Non spÃ©cifiÃ©' };
+        return { color: 'bg-gray-100 text-gray-800 border-gray-200', label: status || 'Non spécifié' };
     }
   };
 
   const formatDate = (dateString: string | null | undefined) => {
-    if (!dateString) return 'Non spÃ©cifiÃ©';
+    if (!dateString) return 'Non spécifié';
     try {
       return new Date(dateString).toLocaleDateString('fr-FR', {
         day: '2-digit',
@@ -113,7 +113,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
   };
 
   const formatCurrency = (amount: number | null | undefined) => {
-    if (!amount) return 'Non spÃ©cifiÃ©';
+    if (!amount) return 'Non spécifié';
     return new Intl.NumberFormat('fr-MR', {
       style: 'currency',
       currency: 'MRU',
@@ -151,7 +151,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Rechercher par titre, rÃ©fÃ©rence..."
+            placeholder="Rechercher par titre, référence..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -166,7 +166,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
           </div>
         )}
 
-        {/* SÃ©lecteur de projet */}
+        {/* Sélecteur de projet */}
         <Select
           value={value || ''}
           onValueChange={(projectId) => {
@@ -197,7 +197,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
               </div>
             ) : projects.length === 0 ? (
               <div className="py-4 text-center text-sm text-muted-foreground">
-                Aucun projet trouvÃ©
+                Aucun projet trouvé
               </div>
             ) : (
               projects.map((project) => {
@@ -212,7 +212,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
                         <div className="font-medium truncate">{project.title}</div>
                         {project.project_reference && (
                           <div className="text-xs text-muted-foreground truncate">
-                            RÃ©f: {project.project_reference}
+                            Réf: {project.project_reference}
                           </div>
                         )}
                         {!secureMode && (
@@ -248,12 +248,12 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
           <p className="text-sm text-muted-foreground">{helpText}</p>
         )}
 
-        {/* DÃ©tails du projet sÃ©lectionnÃ© */}
+        {/* Détails du projet sélectionné */}
         {showProjectDetails && selectedProject && (
           <div className="p-3 bg-muted/50 rounded-lg border space-y-3">
             <div className="flex justify-between items-start">
               <div>
-                <h4 className="font-medium text-sm">Projet sÃ©lectionnÃ©</h4>
+                <h4 className="font-medium text-sm">Projet sélectionné</h4>
                 <p className="font-semibold">{selectedProject.title}</p>
               </div>
               {!secureMode && selectedProject.status && (
@@ -267,7 +267,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
               {selectedProject.project_reference && (
                 <div className="flex items-center gap-2">
                   <FileText className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-muted-foreground">RÃ©fÃ©rence:</span>
+                  <span className="text-muted-foreground">Référence:</span>
                   <span className="font-medium">{selectedProject.project_reference}</span>
                 </div>
               )}
@@ -283,7 +283,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
               {!secureMode && (selectedProject.start_date || selectedProject.end_date) && (
                 <div className="flex items-center gap-2">
                   <Calendar className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-muted-foreground">PÃ©riode:</span>
+                  <span className="text-muted-foreground">Période:</span>
                   <span className="font-medium">
                     {formatDate(selectedProject.start_date)} - {formatDate(selectedProject.end_date)}
                   </span>
@@ -302,18 +302,18 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
         )}
       </div>
 
-      {/* Section rÃ©fÃ©rence d'appel d'offres */}
+      {/* Section référence d'appel d'offres */}
       {showTenderReference && (
         <div className="space-y-2 pt-2 border-t">
           <Label className="text-sm font-medium">
-            RÃ©fÃ©rence d'appel d'offres
+            Référence d'appel d'offres
             <span className="text-muted-foreground font-normal ml-1">(optionnel)</span>
           </Label>
           
           <div className="relative">
             <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Saisir la rÃ©fÃ©rence d'appel d'offres"
+              placeholder="Saisir la référence d'appel d'offres"
               value={tenderReference}
               onChange={(e) => onTenderReferenceChange?.(e.target.value)}
               className="pl-10"
@@ -328,7 +328,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
             </div>
           ) : tenders && tenders.length > 0 && (
             <div className="mt-2">
-              <p className="text-xs text-muted-foreground mb-2">Appels d'offres associÃ©s:</p>
+              <p className="text-xs text-muted-foreground mb-2">Appels d'offres associés:</p>
               <div className="space-y-1">
                 {tenders.map((tender) => (
                   <button
@@ -353,7 +353,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
           )}
           
           <p className="text-xs text-muted-foreground">
-            Un projet peut Ãªtre associÃ© Ã  plusieurs appels d'offres. Indiquez la rÃ©fÃ©rence de l'appel d'offres concernÃ© par cette demande.
+            Un projet peut être associé Ã  plusieurs appels d'offres. Indiquez la référence de l'appel d'offres concerné par cette demande.
           </p>
         </div>
       )}
