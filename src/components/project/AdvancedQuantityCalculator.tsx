@@ -335,7 +335,7 @@ const AdvancedQuantityCalculator: React.FC = () => {
         ...prev.openings,
         {
           ...currentOpening,
-          id: Math.random().toString(36).substring(7),
+          id: crypto.randomUUID(),
           height: form.elementType === "concrete_slab" ? currentOpening.height || form.height : undefined,
         },
       ],
@@ -747,7 +747,7 @@ const AdvancedQuantityCalculator: React.FC = () => {
                                         ...f.openings,
                                         {
                                           ...editOpening,
-                                          id: Math.random().toString(36).substring(7),
+                                          id: crypto.randomUUID(),
                                         },
                                       ],
                                     }));

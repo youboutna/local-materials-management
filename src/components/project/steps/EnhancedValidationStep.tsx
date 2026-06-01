@@ -151,7 +151,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
         status: ReceptionStatus.PENDING,
         projectId: formData.id || '',
         documents: uploadedFiles.map(file => ({
-          id: `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          id: `doc-${crypto.randomUUID()}`,
           name: file.name,
           type: file.type as any,
           url: `mock-url/${file.name}`,
