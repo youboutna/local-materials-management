@@ -87,7 +87,7 @@ export function CompactProjectReportGenerator({
         if (isSingleProject && project) {
           // Toujours passer par ReportingService pour garantir des KPIs cohérents
           // (EVM via ReportCalculations, écarts via DeviationEngine, coûts réels via repository).
-          const completeReport = await reportingService.generateCompleteProjectReport({ project: project as any });
+          const completeReport = await reportingService.generateCompleteProjectReport({ project: project as any, profile, sections: defaultSectionsFor(profile) });
           const reportProject = completeReport.reportDTO.project || {};
           const realCosts: any = completeReport.realCosts || {};
           const actualCost = Number(
