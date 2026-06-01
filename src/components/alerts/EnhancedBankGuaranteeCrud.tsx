@@ -419,7 +419,18 @@ const EnhancedBankGuaranteeCrud = () => {
           <TableBody>
             {guarantees.map((guarantee) => (
               <TableRow key={guarantee.id}>
-                <TableCell className="font-medium">{(guarantee.projectId || '').slice(0, 8)}...</TableCell>
+                <TableCell className="font-medium">
+                  {guarantee.projectId ? (
+                    <a
+                      href={`/projects/${guarantee.projectId}`}
+                      className="text-primary hover:underline inline-flex items-center gap-1"
+                      title={guarantee.projectId}
+                    >
+                      <Eye className="h-3 w-3" />
+                      {guarantee.projectId.slice(0, 8)}...
+                    </a>
+                  ) : '—'}
+                </TableCell>
                 <TableCell>{guarantee.bankName}</TableCell>
                 <TableCell>
                   {guaranteeTypes.find(t => t.value === guarantee.guaranteeType)?.label || guarantee.guaranteeType}
