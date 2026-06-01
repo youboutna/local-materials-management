@@ -532,5 +532,54 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
   };
 };
 
-// Export alias for useInspectionHex
-export const useInspectionHex = useInspectionsHex;
+// =====================================================================
+// useInspectionHex — single inspection fetch by id (UI-friendly DTO).
+// Sépare clairement les deux cas d'usage (liste vs détail) — l'ancien
+// alias pointait sur le hook liste et retournait `inspections[]` au lieu
+// d'`inspection`, ce qui faisait planter /inspections/:id.
+// =====================================================================
+export const useInspectionHex = (id?: string) => {
+  const queryClient = useQueryClient();
+  const service = new InspectionService(RepositoryFactory.getInspectionRepository());
+
+  const { data: inspection, isLoading, error, refetch } = useQuery({
+    queryKey: ['inspection-hex', id],
+    queryFn: async () => {
+      if (!id) return null;
+      const entity = await service.getInspectionById(id);
+      if (!entity) return null;
+
+      // Hydratation Entity → UI DTO camelCase (round-trip propre).
+      const inspector = (entity as any).inspector;
+      return {
+        id: entity.id,
+        projectId: entity.projectId ?? null,
+        projectTitle: (entity as any).projectTitle ?? undefined,
+        phaseId: entity.phaseId ?? null,
+        date: typeof entity.date === 'string' ? entity.date : new Date(entity.date as any).toISOString(),
+        inspector:
+          typeof inspector === 'string'
+            ? inspector
+            : inspector?.name ?? inspector?.agency ?? '—',
+        status: String(entity.status ?? 'scheduled'),
+        progressAtInspection: entity.progressAtInspection ?? null,
+        comments: entity.comments ?? '',
+        createdAt: entity.createdAt instanceof Date ? entity.createdAt.toISOString() : (entity.createdAt as any),
+        updatedAt: entity.updatedAt instanceof Date ? entity.updatedAt.toISOString() : (entity.updatedAt as any),
+      };
+    },
+    enabled: !!id,
+    retry: 1,
+  });
+
+  return {
+    inspection,
+    isLoading,
+    error,
+    refetch: () => {
+      queryClient.invalidateQueries({ queryKey: ['inspection-hex', id] });
+      return refetch();
+    },
+  };
+};
+
