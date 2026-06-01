@@ -7,6 +7,7 @@ import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import { ProjectCalculationService } from '@/application/services/ProjectCalculationService';
+import { DeviationEngine, DeviationResult } from '@/application/services/DeviationEngine';
 import {
   ProjectReportDTO,
   EnhancedPhaseDTO,
@@ -44,6 +45,7 @@ export interface CompleteProjectReportResultDto {
   resourceUtilization: unknown;
   healthScore: unknown;
   realCosts: unknown; // Repository-provided real-time project cost data
+  deviations: DeviationResult[]; // DeviationEngine output for project scope
 }
 
 export class ReportingService {
@@ -122,13 +124,27 @@ export class ReportingService {
         }
       };
 
+      // Compute project-scope deviations via the DeviationEngine (referentials-driven)
+      const deviations = DeviationEngine.compute(
+        {
+          plannedEndDate: (request.project as any).endDate ?? (request.project as any).end_date ?? null,
+          actualEndDate: (request.project as any).actualEndDate ?? null,
+          plannedBudget: request.project.budget ?? null,
+          actualCost: (realCosts as any)?.totalSpent ?? null,
+          plannedProgress: 100,
+          actualProgress: request.project.progress ?? 0,
+        },
+        'project',
+      );
+
       return {
         reportDTO,
         reportData,
         costCalculation,
         resourceUtilization,
         healthScore: null, // To be implemented
-        realCosts
+        realCosts,
+        deviations,
       };
     } catch (error) {
       console.error('ReportingService.generateCompleteProjectReport failed:', error);

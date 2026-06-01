@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Calendar, User, FileText, TrendingUp, Edit, Play, ClipboardList } from 'lucide-react';
+import { ArrowLeft, Calendar, User, FileText, TrendingUp, Edit, Play, ClipboardList, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
@@ -199,6 +200,25 @@ const InspectionDetail = () => {
                       <span className="font-medium">Modifié le:</span>{' '}
                       {format(new Date(inspection.updatedAt), 'PPP à HH:mm', { locale: fr })}
                     </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="flex flex-wrap gap-2">
+                    {inspection.projectId && (
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to={`/projects/${inspection.projectId}`}>
+                          Projet <ExternalLink className="h-3 w-3 ml-1" />
+                        </Link>
+                      </Button>
+                    )}
+                    {inspection.phaseId && inspection.projectId && (
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to={`/projects/${inspection.projectId}/phases/${inspection.phaseId}`}>
+                          Phase <ExternalLink className="h-3 w-3 ml-1" />
+                        </Link>
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>

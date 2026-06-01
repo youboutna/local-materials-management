@@ -1,11 +1,11 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, AlertCircle, ExternalLink } from 'lucide-react';
 import { getPriorityColor } from '@/utils/notificationUtils';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { useTaskAssignmentHex, useTaskAssignmentsHex } from '@/hooks/hexagonal';
@@ -212,6 +212,23 @@ const TaskDetail = () => {
               </Button>
             </div>
           )}
+
+          <div className="flex flex-wrap gap-2 pt-4 border-t">
+            {(task as any).projectId && (
+              <Button variant="outline" size="sm" asChild>
+                <Link to={`/projects/${(task as any).projectId}`}>
+                  Projet <ExternalLink className="h-3 w-3 ml-1" />
+                </Link>
+              </Button>
+            )}
+            {(task as any).phaseId && (task as any).projectId && (
+              <Button variant="outline" size="sm" asChild>
+                <Link to={`/projects/${(task as any).projectId}/phases/${(task as any).phaseId}`}>
+                  Phase <ExternalLink className="h-3 w-3 ml-1" />
+                </Link>
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
     </AppLayout>
