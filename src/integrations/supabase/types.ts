@@ -846,6 +846,51 @@ export type Database = {
         }
         Relationships: []
       }
+      inspection_documents: {
+        Row: {
+          created_at: string
+          document_id: string | null
+          document_name: string
+          document_type: string | null
+          document_url: string
+          file_size: number | null
+          id: string
+          inspection_id: string
+          metadata: Json | null
+          updated_at: string
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          document_id?: string | null
+          document_name: string
+          document_type?: string | null
+          document_url: string
+          file_size?: number | null
+          id?: string
+          inspection_id: string
+          metadata?: Json | null
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          document_id?: string | null
+          document_name?: string
+          document_type?: string | null
+          document_url?: string
+          file_size?: number | null
+          id?: string
+          inspection_id?: string
+          metadata?: Json | null
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       inspection_pvs: {
         Row: {
           content: string
