@@ -56,6 +56,27 @@ const Projects: React.FC = () => {
     performSearch,
   } = useProjectsFilter(projects || []);
 
+  // Sync ?stage= or ?status= from URL into the status filter (e.g. sidebar deep links)
+  const [searchParams] = useSearchParams();
+  useEffect(() => {
+    const stage = searchParams.get('stage');
+    const status = searchParams.get('status');
+    if (status) {
+      setStatusFilter(status);
+      return;
+    }
+    if (!stage) return;
+    // Map lifecycle stage → coarse project status filter (best-effort, no hardcoded enums)
+    const stageToStatus: Record<string, string> = {
+      PLANIFICATION: 'en attente',
+      EXECUTION: 'en cours',
+      CONTROLE: 'en cours',
+      CLOTURE: 'terminé',
+    };
+    const target = stageToStatus[stage];
+    if (target) setStatusFilter(target);
+  }, [searchParams, setStatusFilter]);
+
   // Pagination for projects
   const {
     currentData: paginatedProjects,
