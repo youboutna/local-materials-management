@@ -21,6 +21,7 @@ import PhaseInspections from '@/components/project/PhaseInspections';
 import PhaseMilestones from '@/components/project/PhaseMilestones';
 import { GanttChart, PERTDiagram, CriticalPathView } from '@/components/planning';
 import { AppLayout } from '@/components/layout/AppLayout';
+import DeviationBadges from '@/components/common/DeviationBadges';
 import {
   getPhaseLifecycleStage,
   getLifecycleStageMeta,

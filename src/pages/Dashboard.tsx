@@ -2,6 +2,7 @@
 import AlertsDashboard from "@/components/dashboard/AlertsDashboard";
 import KPIDashboardWidget from "@/components/dashboard/KPIDashboardWidget";
 import ManagementActions from "@/components/dashboard/ManagementActions";
+import TBIWidget from "@/components/dashboard/TBIWidget";
 import ProjectDistributionChart from "@/components/ProjectDistributionChart";
 import ProjectMap from "@/components/ProjectMap";
 import ProjectProgressChart from "@/components/ProjectProgressChart";
@@ -231,6 +232,9 @@ const Dashboard: React.FC = () => {
                 className="space-y-6"
               >
                
+                {/* TBI — Tableau de bord des indicateurs (référentiel indicator-templates) */}
+                <TBIWidget projects={hexProjects as any} />
+
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <Card className="border-l-4 border-l-primary">
