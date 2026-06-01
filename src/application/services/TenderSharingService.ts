@@ -89,4 +89,63 @@ export class TenderSharingService {
   }> {
     return await this.getRepository().getAccessStatistics(tenderId);
   }
+
+  /**
+   * Fetch documents shared with suppliers for a given tender, optionally
+   * restricted to a whitelist of document IDs (the gate's allowedDocuments).
+   * Kept in the service layer so UI components never touch supabase directly.
+   */
+  static async getSharedDocuments(
+    tenderId: string,
+    allowedDocumentIds?: string[]
+  ): Promise<Array<{
+    id: string;
+    title: string;
+    description?: string | null;
+    file_url?: string | null;
+    document_type?: string | null;
+  }>> {
+    const { supabase } = await import('@/integrations/supabase/client');
+
+    // First, look up the tender's project so we can include project-level docs.
+    const { data: tenderRow } = await supabase
+      .from('tenders')
+      .select('project_id')
+      .eq('id', tenderId)
+      .single();
+
+    let query = supabase
+      .from('documents')
+      .select('id, title, description, file_url, document_type')
+      .eq('is_shared_with_suppliers', true);
+
+    if (tenderRow?.project_id) {
+      query = query.or(
+        `metadata->>tender_id.eq.${tenderId},project_id.eq.${tenderRow.project_id}`
+      );
+    } else {
+      query = query.eq('metadata->>tender_id', tenderId);
+    }
+
+    if (allowedDocumentIds && allowedDocumentIds.length > 0) {
+      query = query.in('id', allowedDocumentIds);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      console.warn('TenderSharingService.getSharedDocuments failed', error);
+      return [];
+    }
+    return (data ?? [])
+      .filter((d: any) => d && d.id && d.title)
+      .map((d: any) => ({
+        id: String(d.id),
+        title: String(d.title),
+        description: d.description ?? null,
+        file_url: d.file_url ?? null,
+        document_type: d.document_type ?? null,
+      }));
+  }
 }
+
+

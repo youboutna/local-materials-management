@@ -228,24 +228,12 @@ const TenderManagement = () => {
 
                 <Tabs defaultValue="workflow" className="flex-1">
                   <div className="border-b px-6 bg-muted/30">
-                    <TabsList className="grid w-full grid-cols-8 max-w-4xl">
+                    <TabsList className="grid w-full grid-cols-4 max-w-2xl">
                       <TabsTrigger value="workflow" className="text-xs">
-                        Workflow
-                      </TabsTrigger>
-                      <TabsTrigger value="phases" className="text-xs">
-                        Phases Projet
-                      </TabsTrigger>
-                      <TabsTrigger value="stepper" className="text-xs">
-                        Processus
+                        Workflow & Étapes
                       </TabsTrigger>
                       <TabsTrigger value="lots" className="text-xs">
-                        Lots
-                      </TabsTrigger>
-                      <TabsTrigger value="timeline" className="text-xs">
-                        Chronologie
-                      </TabsTrigger>
-                      <TabsTrigger value="steps" className="text-xs">
-                        Étapes
+                        Lots & Phases
                       </TabsTrigger>
                       <TabsTrigger value="documents" className="text-xs">
                         Documents
@@ -257,46 +245,49 @@ const TenderManagement = () => {
                   </div>
 
                   <CardContent className="p-6">
-                    <TabsContent value="workflow" className="mt-0">
+                    {/* Workflow & Étapes — fusion workflow + stepper + steps + timeline */}
+                    <TabsContent value="workflow" className="mt-0 space-y-6">
+                      <TenderTimelineCard
+                        launchDate={selectedTender.launchDate}
+                        deadlineDate={selectedTender.deadlineDate ?? selectedTender.attributionDate}
+                      />
+                      <TenderWorkflowStepper
+                        tenderId={selectedTender.id}
+                        currentStep={
+                          selectedTender.status === 'draft'
+                            ? 'creation'
+                            : selectedTender.status === 'published'
+                              ? 'publication'
+                              : 'evaluation'
+                        }
+                      />
                       <PublicProcurementWorkflow
                         selectedTender={selectedTender}
                         onShareWithSuppliers={handleShareWithSuppliers}
                       />
-                    </TabsContent>
-                    <TabsContent value="phases" className="mt-0">
-                      <TenderProjectPhases 
-                        tenderId={selectedTender.id}
-                        projectId={selectedTender.projectId}
-                      />
-                    </TabsContent>
-                    <TabsContent value="stepper" className="mt-0">
-                      <TenderWorkflowStepper 
-                        tenderId={selectedTender.id}
-                        currentStep={selectedTender.status === 'draft' ? 'creation' : selectedTender.status === 'published' ? 'publication' : 'evaluation'}
-                      />
-                    </TabsContent>
-                    <TabsContent value="lots" className="mt-0">
-                      <TenderLotBuilder 
-                        tenderId={selectedTender.id} 
-                        projectId={selectedTender.projectId}
-                      />
-                    </TabsContent>
-                    <TabsContent value="timeline" className="mt-0">
-                      <TenderTimelineCard
-                        launchDate={selectedTender.launchDate}
-                        deadlineDate={selectedTender.attributionDate}
-                      />
-                    </TabsContent>
-                    <TabsContent value="steps" className="mt-0">
                       <TenderWorkflowSteps
                         tenderId={selectedTender.id}
                         projectId={selectedTender.projectId}
                         readonly={false}
                       />
                     </TabsContent>
+
+                    {/* Lots & Phases — fusion lots + phases */}
+                    <TabsContent value="lots" className="mt-0 space-y-6">
+                      <TenderProjectPhases
+                        tenderId={selectedTender.id}
+                        projectId={selectedTender.projectId}
+                      />
+                      <TenderLotBuilder
+                        tenderId={selectedTender.id}
+                        projectId={selectedTender.projectId}
+                      />
+                    </TabsContent>
+
                     <TabsContent value="documents" className="mt-0">
                       <TenderDocumentManager tenderId={selectedTender.id} />
                     </TabsContent>
+
                     <TabsContent value="evaluation" className="mt-0">
                       <div className="space-y-4">
                         {/* Submissions List with Secret Code Management */}
@@ -384,6 +375,7 @@ const TenderManagement = () => {
                     </TabsContent>
                   </CardContent>
                 </Tabs>
+
               </Card>
             ) : (
               <Card className="h-full">
