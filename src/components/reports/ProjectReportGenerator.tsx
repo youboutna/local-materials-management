@@ -224,6 +224,8 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
           pertAnalysis={pertAnalysis || undefined}
           reportConfig={reportConfig}
           enrichedData={enrichedData || undefined}
+          deviations={deviations}
+          healthScore={healthScore}
         />
       );
 
