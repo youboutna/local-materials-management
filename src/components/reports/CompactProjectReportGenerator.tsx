@@ -12,6 +12,8 @@ import { pdf } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver';
 import { Download, FileText, Loader2, MapPin } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { REPORT_PROFILES, type ReportProfile, defaultSectionsFor } from '@/config/referentials/reports/report-profiles.referential';
 import { CompactProjectPDFDocument, SingleCompactProjectPDF } from './pdf/CompactProjectPDFDocument';
 
 // Local type aliases for report generation
