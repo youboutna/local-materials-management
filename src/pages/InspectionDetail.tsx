@@ -201,6 +201,25 @@ const InspectionDetail = () => {
                       {format(new Date(inspection.updatedAt), 'PPP à HH:mm', { locale: fr })}
                     </div>
                   </div>
+
+                  <Separator />
+
+                  <div className="flex flex-wrap gap-2">
+                    {inspection.projectId && (
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to={`/projects/${inspection.projectId}`}>
+                          Projet <ExternalLink className="h-3 w-3 ml-1" />
+                        </Link>
+                      </Button>
+                    )}
+                    {inspection.phaseId && inspection.projectId && (
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to={`/projects/${inspection.projectId}/phases/${inspection.phaseId}`}>
+                          Phase <ExternalLink className="h-3 w-3 ml-1" />
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
