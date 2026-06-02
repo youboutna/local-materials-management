@@ -461,7 +461,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       <div className="flex justify-between">
         <Button
           variant="outline"
-          onClick={previousStep}
+          onClick={() => setCurrentStepUi((prev) => Math.max(0, prev - 1))}
           disabled={currentStep === 0}
         >
           <ChevronLeft className="h-4 w-4 mr-2" />
@@ -469,7 +469,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
         </Button>
 
         <div className="flex gap-2">
-          <Button variant="secondary" onClick={() => saveCurrentStep()}>
+          <Button variant="secondary" onClick={() => saveCurrentStep(currentStep + 1)}>
             <Save className="h-4 w-4 mr-2" />
             Sauvegarder
           </Button>
