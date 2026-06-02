@@ -329,7 +329,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
               updateFormData({
                 relatedData: {
                   ...formData?.relatedData,
-                  stakeholders,
+                  stakeholders: stakeholders as any,
                 },
                 projectData: {
                   ...(formData?.projectData || {} as any),

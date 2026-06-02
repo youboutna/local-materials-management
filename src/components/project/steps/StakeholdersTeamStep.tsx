@@ -68,7 +68,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
 
   // Initialize from workflow data if present (edit mode)
   const initial: StakeholderDTO[] =
-    (workflowData?.relatedData?.stakeholders as StakeholderDTO[]) || [];
+    ((workflowData?.relatedData?.stakeholders as unknown) as StakeholderDTO[]) || [];
 
   const [localStakeholders, setLocalStakeholders] =
     useState<StakeholderDTO[]>(initial);
