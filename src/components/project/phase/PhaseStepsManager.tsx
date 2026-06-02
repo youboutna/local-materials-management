@@ -59,6 +59,8 @@ import {
 import { cn } from "@/lib/utils";
 import { PhaseStepDTO, PhaseTaskDTO, PhaseStatus } from "@/types/phase-dto";
 import { StepItem } from '@/types/unified-workflow';
+import DQEImportDialog from "./DQEImportDialog";
+import PhaseStepResourceDialog from "./PhaseStepResourceDialog";
 
 interface PhaseStepsManagerProps {
   // Accept legacy PhaseStepDTO[] or unified StepItem[]
@@ -70,6 +72,9 @@ interface PhaseStepsManagerProps {
   onUpdateTask: (stepId: string, taskId: string, updates: Partial<PhaseTaskDTO>) => Promise<unknown>;
   onDeleteTask: (stepId: string, taskId: string) => Promise<unknown>;
   isUpdating?: boolean;
+  /** Required to enable per-step DQE import & manual resource entry. */
+  projectId?: string;
+  phaseId?: string;
 }
 
 const statusOptions: { value: PhaseStatus; label: string; color: string; icon: React.ReactNode }[] = [
