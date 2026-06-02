@@ -171,7 +171,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     }
 
     // Use the unified workflow hook's save functionality (Rule #5: UI Layer Separation)
-    const result = await saveCurrentStep();
+    const result = await saveCurrentStep(currentStep + 1);
     if (!result || !result.success) {
       // Type-safe error handling for SaveResult interface
       let errorMessage = 'Failed to save workflow data';
