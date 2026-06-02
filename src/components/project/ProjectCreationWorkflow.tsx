@@ -229,7 +229,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       
       // Submit through the unified workflow system
       await updateFormData(finalWorkflowData);
-      const result = await saveCurrentStep();
+      const result = await saveCurrentStep(steps.length);
       
       if (!result || !result.success) {
         throw new Error((result as any)?.errors?.join(', ') || 'Failed to complete project creation');
