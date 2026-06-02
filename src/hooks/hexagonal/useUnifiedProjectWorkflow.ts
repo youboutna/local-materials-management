@@ -43,7 +43,7 @@ export function useUnifiedProjectWorkflow(mode: 'creation' | 'edit', projectId?:
     mode,
     projectId,
     currentStep: 1,
-    totalSteps: 9,
+    totalSteps: 8,
     isDirty: false,
     isValid: false,
     isLoading: false
