@@ -868,6 +868,8 @@ const PhaseStepsManager: React.FC<PhaseStepsManagerProps> = ({
                 status,
                 progress: status === 'completed' ? 100 : status === 'pending' ? 0 : undefined
               })}
+              projectId={projectId}
+              phaseId={phaseId}
             />
           ))}
         </div>
