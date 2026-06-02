@@ -204,14 +204,16 @@ export class ProjectWorkflowService {
   }
 
   getWorkflowSteps(): WorkflowStep[] {
+    // ⚠️ requiredFields use dotted paths consumed by getNestedValue → must match ProjectWorkflowData shape.
     return [
-      { id: 'project-info', name: 'project_info', title: 'Informations du projet', description: 'Type, budget, dates, référence', order: 1, isCompleted: false, isRequired: true, validation: { rules: ['title_required', 'budget_positive'], requiredFields: ['title', 'description', 'budget'] } },
-      { id: 'stakeholders', name: 'stakeholders', title: 'Parties prenantes', description: 'Bailleurs, Ministères, Entreprises', order: 2, isCompleted: false, isRequired: true, validation: { rules: [], requiredFields: ['projectManagerId'] } },
-      { id: 'location', name: 'location', title: 'Localisation', description: 'Géolocalisation interactive', order: 3, isCompleted: false, isRequired: true, validation: { rules: [], requiredFields: ['location'] } },
+      { id: 'project-info', name: 'project_info', title: 'Informations du projet', description: 'Type, budget, dates, référence', order: 1, isCompleted: false, isRequired: true, validation: { rules: ['title_required', 'budget_positive'], requiredFields: ['projectData.title'] } },
+      { id: 'stakeholders', name: 'stakeholders', title: 'Parties prenantes', description: 'Bailleurs, Ministères, Entreprises', order: 2, isCompleted: false, isRequired: false, validation: { rules: [], requiredFields: [] } },
+      { id: 'location', name: 'location', title: 'Localisation', description: 'Géolocalisation interactive', order: 3, isCompleted: false, isRequired: true, validation: { rules: [], requiredFields: ['projectData.location'] } },
       { id: 'phases', name: 'phases', title: 'Planification WBS', description: 'Phase → Step → Task', order: 4, isCompleted: false, isRequired: true, validation: { rules: [], requiredFields: [] } },
       { id: 'risks', name: 'risks', title: 'Risques', description: 'Analyse et gestion des risques', order: 5, isCompleted: false, isRequired: false, validation: { rules: [], requiredFields: [] } },
       { id: 'compliance', name: 'compliance', title: 'Conformité', description: 'Standards SOMELEC et bailleurs', order: 6, isCompleted: false, isRequired: false, validation: { rules: [], requiredFields: [] } },
-      { id: 'review', name: 'review', title: 'Validation', description: 'Réception définitive et clôture', order: 7, isCompleted: false, isRequired: true, validation: { rules: [], requiredFields: [] } }
+      { id: 'strategy', name: 'strategy', title: 'Liens stratégiques', description: 'Stratégies & budget', order: 7, isCompleted: false, isRequired: false, validation: { rules: [], requiredFields: [] } },
+      { id: 'review', name: 'review', title: 'Validation', description: 'Réception définitive et clôture', order: 8, isCompleted: false, isRequired: true, validation: { rules: [], requiredFields: [] } }
     ];
   }
 
@@ -352,28 +354,197 @@ export class ProjectWorkflowService {
 
   // =================== STEP SAVE ===================
 
+  /**
+   * Per-step dispatcher. Each UI step only persists the slice it owns.
+   * - 1 Project Info → projects (create or update)
+   * - 2 Stakeholders → project_stakeholders (upsert)
+   * - 3 Location    → projects.update (location + coords)
+   * - 4 Phases      → project_phases (upsert)
+   * - 5 Risks       → project_risks (upsert)
+   * - 6 Compliance  → (no DB target yet — referential-only)
+   * - 7 Strategy    → handled by StrategicLinkageStep hooks (no-op here)
+   * - 8 Review      → completeWorkflow
+   */
   async saveStep(stepNumber: number, data: ProjectWorkflowData, context: any): Promise<SaveResult & { projectId?: string }> {
     try {
-      // Validate step first
       const validation = await this.validateStep(stepNumber, data);
       if (!validation.isValid) {
         return { success: false, errors: validation.errors, warnings: validation.warnings };
       }
 
-      const result = await this.saveWorkflowData(data);
-      
-      return {
-        success: true,
-        projectId: result.projectId,
-        data: result,
-        warnings: validation.warnings
-      };
+      // Resolve / ensure projectId (step 1 may create the project)
+      let projectId = data.projectId || data.projectData?.id;
+
+      switch (stepNumber) {
+        case 1: {
+          projectId = await this.upsertProjectFromWorkflow(data);
+          break;
+        }
+        case 2: {
+          if (!projectId) return { success: false, errors: ['Projet non créé — complétez l\'étape 1 d\'abord.'] };
+          await this.upsertStakeholders(projectId, data.relatedData?.stakeholders || []);
+          // promote project manager if provided
+          if (data.projectData?.projectManagerId) {
+            await this.projectRepository.update(projectId, { projectManagerId: data.projectData.projectManagerId } as any);
+          }
+          break;
+        }
+        case 3: {
+          if (!projectId) return { success: false, errors: ['Projet non créé — complétez l\'étape 1 d\'abord.'] };
+          await this.projectRepository.update(projectId, {
+            location: data.projectData?.location,
+            latitude: data.projectData?.latitude,
+            longitude: data.projectData?.longitude,
+          } as any);
+          break;
+        }
+        case 4: {
+          if (!projectId) return { success: false, errors: ['Projet non créé — complétez l\'étape 1 d\'abord.'] };
+          await this.upsertPhases(projectId, data.relatedData?.phases || []);
+          break;
+        }
+        case 5: {
+          if (!projectId) return { success: false, errors: ['Projet non créé — complétez l\'étape 1 d\'abord.'] };
+          await this.upsertRisks(projectId, data.relatedData?.risks || []);
+          break;
+        }
+        case 6:
+        case 7: {
+          // Compliance & strategy links are persisted by their dedicated hooks/services.
+          break;
+        }
+        case 8: {
+          if (projectId) await this.completeWorkflow({ projectId });
+          break;
+        }
+        default:
+          return { success: false, errors: [`Étape inconnue: ${stepNumber}`] };
+      }
+
+      return { success: true, projectId, warnings: validation.warnings };
     } catch (error) {
       console.error('Step save error:', error);
       return {
         success: false,
         errors: [error instanceof Error ? error.message : 'Unknown error']
       };
+    }
+  }
+
+  // =================== STEP-SCOPED PERSISTENCE HELPERS ===================
+
+  private async upsertProjectFromWorkflow(data: ProjectWorkflowData): Promise<string> {
+    const projectData = data.projectData;
+    if (!projectData) throw new AppError(ErrorCode.VALIDATION_ERROR, 'projectData manquant');
+    const existingId = data.projectId || projectData.id;
+
+    const mainContractor = typeof projectData.mainContractor === 'string'
+      ? projectData.mainContractor
+      : (projectData.mainContractor && typeof projectData.mainContractor === 'object' && 'name' in projectData.mainContractor
+          ? String((projectData.mainContractor as { name: string }).name)
+          : undefined);
+
+    const coords = projectData.coordinates && typeof projectData.coordinates === 'object'
+      ? { latitude: (projectData.coordinates as any).latitude, longitude: (projectData.coordinates as any).longitude }
+      : { latitude: projectData.latitude, longitude: projectData.longitude };
+
+    if (existingId) {
+      const updateRequest: UpdateProjectDTO = {
+        id: existingId,
+        title: projectData.title,
+        description: projectData.description,
+        location: projectData.location,
+        budget: projectData.budget,
+        startDate: projectData.startDate,
+        endDate: projectData.endDate,
+        teamSize: projectData.teamSize,
+        thumbnail: projectData.thumbnail,
+      };
+      const entity = ProjectTransformer.fromUpdateDTOToEntity(updateRequest);
+      await this.projectRepository.update(existingId, entity);
+      return existingId;
+    }
+
+    const createRequest: CreateProjectDTO = {
+      title: projectData.title || 'Nouveau projet',
+      description: projectData.description || '',
+      location: projectData.location || '',
+      budget: projectData.budget || 0,
+      startDate: projectData.startDate || new Date().toISOString().split('T')[0],
+      endDate: projectData.endDate,
+      status: ProjectStatus.PLANIFIE,
+      thumbnail: projectData.thumbnail || '',
+      teamSize: projectData.teamSize || 1,
+      financingSource: projectData.financingSource,
+      marketType: projectData.marketType,
+      selectionMode: projectData.selectionMode,
+      projectReference: projectData.projectReference,
+      mainContractor,
+      allowsInitialPayment: projectData.allowsInitialPayment as boolean | undefined,
+      initialPaymentPercentage: projectData.initialPaymentPercentage as number | undefined,
+      currentPhase: projectData.currentPhase,
+      currentStage: projectData.currentStage,
+      ...(coords.latitude != null && coords.longitude != null ? { latitude: coords.latitude, longitude: coords.longitude } : {}),
+    };
+    const entity = ProjectTransformer.fromCreateDTOToEntity(createRequest);
+    const created = await this.projectRepository.create(entity);
+
+    // Generate referential phases only at first creation
+    if (projectData.projectReference) {
+      const config: ProjectGenerationConfig = {
+        referentialType: projectData.projectReference as ReferentialType,
+        projectStartDate: projectData.startDate || new Date().toISOString().split('T')[0],
+        projectBudget: projectData.budget || 0,
+        projectId: created.id,
+        generateMilestones: true,
+      };
+      const generated = await this.generateCompleteProjectStructure(config);
+      await this.saveGeneratedPhases(created.id, generated);
+    }
+    return created.id;
+  }
+
+  private async upsertPhases(projectId: string, phases: PhaseDTO[]): Promise<void> {
+    if (!phases.length) return;
+    const existing = await this.phaseRepository.findByProjectId(projectId).catch(() => [] as any[]);
+    const existingIds = new Set(existing.map((p: any) => p.id));
+    for (const phase of phases) {
+      const payload = { ...phase, projectId, status: phase.status || PhaseStatus.PENDING };
+      if (phase.id && existingIds.has(phase.id)) {
+        await this.phaseRepository.update(phase.id, payload as unknown as Partial<Phase>);
+      } else {
+        const { id: _omit, ...toCreate } = payload as any;
+        await this.phaseRepository.create(toCreate as unknown as Phase);
+      }
+    }
+  }
+
+  private async upsertRisks(projectId: string, risks: RiskDTO[]): Promise<void> {
+    if (!risks.length) return;
+    const existing = await this.riskRepository.findByProjectId(projectId).catch(() => [] as any[]);
+    const existingIds = new Set(existing.map((r: any) => r.id));
+    for (const risk of risks) {
+      const payload = { ...risk, projectId, status: risk.status || RiskStatus.IDENTIFIED } as Risk;
+      if (risk.id && existingIds.has(risk.id)) {
+        await this.riskRepository.update(risk.id, payload);
+      } else {
+        await this.riskRepository.save(payload);
+      }
+    }
+  }
+
+  private async upsertStakeholders(projectId: string, stakeholders: any[]): Promise<void> {
+    if (!stakeholders.length) return;
+    const existing = await this.stakeholderRepository.findByProjectId(projectId).catch(() => [] as any[]);
+    const existingIds = new Set(existing.map((s: any) => s.id));
+    for (const s of stakeholders) {
+      const payload = { ...s, projectId };
+      if (s.id && existingIds.has(s.id)) {
+        await this.stakeholderRepository.update(s.id, payload);
+      } else {
+        const { id: _omit, createdAt: _ca, updatedAt: _ua, ...toCreate } = payload;
+        await this.stakeholderRepository.create(toCreate as any);
+      }
     }
   }
 

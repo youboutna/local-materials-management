@@ -108,13 +108,19 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     updateFormData,
     nextStep,
     previousStep,
+    setCurrentStep,
     saveCurrentStep,
     validateCurrentStep,
     workflowSteps
   } = useUnifiedProjectWorkflow(mode === "edit" ? "edit" : "creation", projectId);
 
   // 🎨 UI Layer - Only UI-specific state (Rule #5)
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStepUi] = useState(0);
+
+  // Keep the application layer in sync with UI tab selection (1-indexed in hook).
+  useEffect(() => {
+    setCurrentStep(currentStep + 1);
+  }, [currentStep, setCurrentStep]);
 
   // 🎨 UI Layer - Use unified workflow data (Rule #5: UI Layer Separation)
   const projectData = formData?.projectData;
@@ -123,9 +129,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   // 🎨 UI Layer - Use unified workflow validation (Rule #5 compliant)
   const validateStepData = useCallback(async (): Promise<{ isValid: boolean; errors: string[] }> => {
     if (!formData) return { isValid: false, errors: ['No form data available'] };
-    const validation = await validateCurrentStep();
+    const validation = await validateCurrentStep(currentStep + 1);
     return { isValid: validation.isValid, errors: validation.errors };
-  }, [formData, validateCurrentStep]);
+  }, [formData, validateCurrentStep, currentStep]);
 
   // ✅ Steps from centralized referential (ARCHITECTURE_REFERENTIELS)
   // — labels/validation/icones centralisés ; pas de hardcoding UI.
@@ -145,21 +151,16 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
   // 🎨 UI Layer - Save and proceed to next step using unified workflow (Rule #5)
   const saveAndNextStep = async () => {
-    // Validate current step before proceeding
     if (!canProceedNext()) {
-      console.warn('Veuillez compléter l\'étape actuelle avant de continuer');
-      return; // 🚫 Do not proceed if validation fails
+      console.warn("Veuillez compléter l'étape actuelle avant de continuer");
+      return;
     }
-
-    // Attempt to save current step using unified workflow
-    const result = await saveCurrentStep();
+    const result = await saveCurrentStep(currentStep + 1);
     if (!result || !result.success) {
       console.error('Échec de la sauvegarde, passage à l\'étape suivante annulé');
-      return; // 🚫 Do not proceed if save fails
+      return;
     }
-
-    // Only proceed if save was successful
-    nextStep();
+    setCurrentStepUi((prev) => Math.min(prev + 1, steps.length - 1));
   };
 
   // 🎨 UI Layer - Save all workflow data using unified workflow (Rule #5)
@@ -170,7 +171,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     }
 
     // Use the unified workflow hook's save functionality (Rule #5: UI Layer Separation)
-    const result = await saveCurrentStep();
+    const result = await saveCurrentStep(currentStep + 1);
     if (!result || !result.success) {
       // Type-safe error handling for SaveResult interface
       let errorMessage = 'Failed to save workflow data';
@@ -228,7 +229,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       
       // Submit through the unified workflow system
       await updateFormData(finalWorkflowData);
-      const result = await saveCurrentStep();
+      const result = await saveCurrentStep(steps.length);
       
       if (!result || !result.success) {
         throw new Error((result as any)?.errors?.join(', ') || 'Failed to complete project creation');
@@ -271,7 +272,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
         {steps.map((step, idx) => (
           <motion.button
             key={step.id}
-            onClick={() => setCurrentStep(idx)}
+            onClick={() => setCurrentStepUi(idx)}
             title={step.title}
             aria-label={step.title}
             className={cn(
@@ -460,7 +461,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       <div className="flex justify-between">
         <Button
           variant="outline"
-          onClick={previousStep}
+          onClick={() => setCurrentStepUi((prev) => Math.max(0, prev - 1))}
           disabled={currentStep === 0}
         >
           <ChevronLeft className="h-4 w-4 mr-2" />
@@ -468,7 +469,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
         </Button>
 
         <div className="flex gap-2">
-          <Button variant="secondary" onClick={() => saveCurrentStep()}>
+          <Button variant="secondary" onClick={() => saveCurrentStep(currentStep + 1)}>
             <Save className="h-4 w-4 mr-2" />
             Sauvegarder
           </Button>

@@ -43,7 +43,7 @@ export function useUnifiedProjectWorkflow(mode: 'creation' | 'edit', projectId?:
     mode,
     projectId,
     currentStep: 1,
-    totalSteps: 9,
+    totalSteps: 8,
     isDirty: false,
     isValid: false,
     isLoading: false
@@ -79,27 +79,24 @@ export function useUnifiedProjectWorkflow(mode: 'creation' | 'edit', projectId?:
   }, [loadedData, formData]);
 
   const saveStepMutation = useMutation({
-    mutationFn: async (stepData: ProjectWorkflowData): Promise<SaveResult> => {
-      if (!workflowState.projectId && mode === 'creation') {
-        return await workflowService.saveStep(workflowState.currentStep, stepData, { mode: 'creation' });
-      } else if (workflowState.projectId) {
-        return await workflowService.saveStep(workflowState.currentStep, stepData, { 
-          mode: 'edit', 
-          projectId: workflowState.projectId 
-        });
-      }
-      throw new Error('Invalid workflow state');
+    mutationFn: async (args: { data: ProjectWorkflowData; stepNumber: number }): Promise<SaveResult> => {
+      const { data, stepNumber } = args;
+      const ctx = workflowState.projectId
+        ? { mode: 'edit' as const, projectId: workflowState.projectId }
+        : { mode: 'creation' as const };
+      return await workflowService.saveStep(stepNumber, data, ctx);
     },
-    onSuccess: (result) => {
+    onSuccess: (result, variables) => {
       if (result.success) {
-        toast({ title: "Étape sauvegardée", description: `L'étape ${workflowState.currentStep} a été sauvegardée avec succès.` });
+        toast({ title: "Étape sauvegardée", description: `L'étape ${variables.stepNumber} a été sauvegardée avec succès.` });
         if (result.projectId && !workflowState.projectId) {
           setWorkflowState(prev => ({ ...prev, projectId: result.projectId }));
         }
         setWorkflowState(prev => ({ ...prev, isDirty: false }));
         queryClient.invalidateQueries({ queryKey: ['project-workflow-data'] });
       } else {
-        toast({ title: "Erreur de sauvegarde", description: result.message || "Une erreur est survenue.", variant: "destructive" });
+        const msg = result.errors?.join(', ') || result.message || "Une erreur est survenue.";
+        toast({ title: "Erreur de sauvegarde", description: msg, variant: "destructive" });
       }
     },
     onError: (error: Error) => {
@@ -108,8 +105,8 @@ export function useUnifiedProjectWorkflow(mode: 'creation' | 'edit', projectId?:
   });
 
   const validateStepMutation = useMutation({
-    mutationFn: async (stepData: ProjectWorkflowData) => {
-      return await workflowService.validateStep(workflowState.currentStep, stepData);
+    mutationFn: async (args: { data: ProjectWorkflowData; stepNumber: number }) => {
+      return await workflowService.validateStep(args.stepNumber, args.data);
     },
     onError: (error: Error) => {
       console.error('Step validation failed:', error);
@@ -125,6 +122,10 @@ export function useUnifiedProjectWorkflow(mode: 'creation' | 'edit', projectId?:
     });
   }, []);
 
+  const setCurrentStep = useCallback((step: number) => {
+    setWorkflowState(prev => ({ ...prev, currentStep: step }));
+  }, []);
+
   const nextStep = useCallback(() => {
     if (workflowState.currentStep < workflowState.totalSteps) {
       setWorkflowState(prev => ({ ...prev, currentStep: prev.currentStep + 1 }));
@@ -137,30 +138,36 @@ export function useUnifiedProjectWorkflow(mode: 'creation' | 'edit', projectId?:
     }
   }, [workflowState.currentStep]);
 
-  const saveCurrentStep = useCallback(async () => {
+  const saveCurrentStep = useCallback(async (stepNumber?: number) => {
     if (!formData) {
       toast({ title: "Erreur", description: "Aucune donnée à sauvegarder", variant: "destructive" });
-      return;
+      return { success: false, message: 'No data' } as SaveResult;
     }
     try {
-      return await saveStepMutation.mutateAsync(formData);
+      return await saveStepMutation.mutateAsync({
+        data: formData,
+        stepNumber: stepNumber ?? workflowState.currentStep,
+      });
     } catch (error: unknown) {
       const errMsg = error instanceof Error ? error.message : 'Unknown error';
       return { success: false, message: errMsg };
     }
-  }, [formData, saveStepMutation]);
+  }, [formData, saveStepMutation, workflowState.currentStep]);
 
-  const validateCurrentStep = useCallback(async () => {
+  const validateCurrentStep = useCallback(async (stepNumber?: number) => {
     if (!formData) return { isValid: false, errors: ['No data to validate'] };
     try {
-      const validation = await validateStepMutation.mutateAsync(formData);
+      const validation = await validateStepMutation.mutateAsync({
+        data: formData,
+        stepNumber: stepNumber ?? workflowState.currentStep,
+      });
       setWorkflowState(prev => ({ ...prev, isValid: validation.isValid }));
       return validation;
     } catch (error: unknown) {
       const errMsg = error instanceof Error ? error.message : 'Unknown error';
       return { isValid: false, errors: [errMsg] };
     }
-  }, [formData, validateStepMutation]);
+  }, [formData, validateStepMutation, workflowState.currentStep]);
 
   const currentStepInfo = workflowSteps?.find(step => step.order === workflowState.currentStep);
   const isStepCompleted = currentStepInfo?.isCompleted || false;
@@ -177,6 +184,7 @@ export function useUnifiedProjectWorkflow(mode: 'creation' | 'edit', projectId?:
     updateFormData,
     nextStep,
     previousStep,
+    setCurrentStep,
     saveCurrentStep,
     validateCurrentStep,
     workflowSteps,
