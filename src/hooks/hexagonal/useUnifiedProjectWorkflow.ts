@@ -184,6 +184,7 @@ export function useUnifiedProjectWorkflow(mode: 'creation' | 'edit', projectId?:
     updateFormData,
     nextStep,
     previousStep,
+    setCurrentStep,
     saveCurrentStep,
     validateCurrentStep,
     workflowSteps,
