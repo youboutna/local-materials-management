@@ -204,14 +204,16 @@ export class ProjectWorkflowService {
   }
 
   getWorkflowSteps(): WorkflowStep[] {
+    // ⚠️ requiredFields use dotted paths consumed by getNestedValue → must match ProjectWorkflowData shape.
     return [
-      { id: 'project-info', name: 'project_info', title: 'Informations du projet', description: 'Type, budget, dates, référence', order: 1, isCompleted: false, isRequired: true, validation: { rules: ['title_required', 'budget_positive'], requiredFields: ['title', 'description', 'budget'] } },
-      { id: 'stakeholders', name: 'stakeholders', title: 'Parties prenantes', description: 'Bailleurs, Ministères, Entreprises', order: 2, isCompleted: false, isRequired: true, validation: { rules: [], requiredFields: ['projectManagerId'] } },
-      { id: 'location', name: 'location', title: 'Localisation', description: 'Géolocalisation interactive', order: 3, isCompleted: false, isRequired: true, validation: { rules: [], requiredFields: ['location'] } },
+      { id: 'project-info', name: 'project_info', title: 'Informations du projet', description: 'Type, budget, dates, référence', order: 1, isCompleted: false, isRequired: true, validation: { rules: ['title_required', 'budget_positive'], requiredFields: ['projectData.title'] } },
+      { id: 'stakeholders', name: 'stakeholders', title: 'Parties prenantes', description: 'Bailleurs, Ministères, Entreprises', order: 2, isCompleted: false, isRequired: false, validation: { rules: [], requiredFields: [] } },
+      { id: 'location', name: 'location', title: 'Localisation', description: 'Géolocalisation interactive', order: 3, isCompleted: false, isRequired: true, validation: { rules: [], requiredFields: ['projectData.location'] } },
       { id: 'phases', name: 'phases', title: 'Planification WBS', description: 'Phase → Step → Task', order: 4, isCompleted: false, isRequired: true, validation: { rules: [], requiredFields: [] } },
       { id: 'risks', name: 'risks', title: 'Risques', description: 'Analyse et gestion des risques', order: 5, isCompleted: false, isRequired: false, validation: { rules: [], requiredFields: [] } },
       { id: 'compliance', name: 'compliance', title: 'Conformité', description: 'Standards SOMELEC et bailleurs', order: 6, isCompleted: false, isRequired: false, validation: { rules: [], requiredFields: [] } },
-      { id: 'review', name: 'review', title: 'Validation', description: 'Réception définitive et clôture', order: 7, isCompleted: false, isRequired: true, validation: { rules: [], requiredFields: [] } }
+      { id: 'strategy', name: 'strategy', title: 'Liens stratégiques', description: 'Stratégies & budget', order: 7, isCompleted: false, isRequired: false, validation: { rules: [], requiredFields: [] } },
+      { id: 'review', name: 'review', title: 'Validation', description: 'Réception définitive et clôture', order: 8, isCompleted: false, isRequired: true, validation: { rules: [], requiredFields: [] } }
     ];
   }
 
