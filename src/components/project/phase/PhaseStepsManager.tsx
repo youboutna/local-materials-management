@@ -687,6 +687,8 @@ const PhaseStepsManager: React.FC<PhaseStepsManagerProps> = ({
   onUpdateTask,
   onDeleteTask,
   isUpdating,
+  projectId,
+  phaseId,
 }) => {
   // Normalize incoming steps to PhaseStepDTO[] so component logic remains unchanged
   const normalizedSteps: PhaseStepDTO[] = React.useMemo(() => {
