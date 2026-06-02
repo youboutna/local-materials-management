@@ -272,7 +272,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
         {steps.map((step, idx) => (
           <motion.button
             key={step.id}
-            onClick={() => setCurrentStep(idx)}
+            onClick={() => setCurrentStepUi(idx)}
             title={step.title}
             aria-label={step.title}
             className={cn(
