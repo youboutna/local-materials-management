@@ -415,6 +415,8 @@ const StepCard: React.FC<{
   onTaskStatusChange: (taskId: string, status: PhaseStatus) => void;
   expanded: boolean;
   onToggleExpand: () => void;
+  projectId?: string;
+  phaseId?: string;
 }> = ({ 
   step, 
   index, 
@@ -427,7 +429,9 @@ const StepCard: React.FC<{
   onDeleteTask,
   onTaskStatusChange,
   expanded,
-  onToggleExpand
+  onToggleExpand,
+  projectId,
+  phaseId,
 }) => {
   const isCompleted = step.status === 'completed';
   const isInProgress = step.status === 'in_progress';
