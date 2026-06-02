@@ -640,6 +640,37 @@ const StepCard: React.FC<{
               </div>
             </div>
           )}
+
+          {/* Ressources (expanded) — DQE import + ajout manuel */}
+          {expanded && projectId && phaseId && (
+            <div
+              className="mt-4 pt-4 border-t ml-7"
+              data-testid={`step-resources-${step.id}`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Ressources de l'étape
+                </p>
+                <div className="flex items-center gap-2">
+                  <DQEImportDialog
+                    projectId={projectId}
+                    phaseId={phaseId}
+                    stepId={step.id}
+                  />
+                  <PhaseStepResourceDialog
+                    projectId={projectId}
+                    phaseId={phaseId}
+                    stepId={step.id}
+                    stepName={step.name}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground/70">
+                Importez un DQE (.xlsx) ou ajoutez à la main matériaux,
+                main-d'œuvre et prestations rattachés à cette étape.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
