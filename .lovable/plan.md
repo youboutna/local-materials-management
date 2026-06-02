@@ -1,83 +1,94 @@
-## Objectif
 
-Aligner `/projects/:id/phases/:phaseId` (et les écrans de planification) avec l'architecture hexagonale et les goals HadraTech-GPI : **brancher les modules déjà existants** (DQE, QuantityTakeoff, PhaseMaterials, PhaseEmployees, Stakeholders) au lieu d'en réécrire. Round-trip UI → Transformer → DTO → Service → Adapter → DB validé sur chaque tab.
+# Plan v2 — Nettoyage workflow `projects/create` + Ressources DQE/manuelles dans les phases
 
-## Audit (constaté, pas inventé)
+## Partie A — Déduplication step Parties Prenantes (inchangée)
 
-Modules **déjà construits mais non câblés dans la page Phase** :
-- `QuantityTakeoffService` + `useQuantityTakeoffsHex` + `QuantityTakeoffForm` / `QuantityTakeoffsList` / `MetreCalculator`
-- `MaterialService` + `usePhaseMaterialsHex` + `PhaseMaterials.tsx` (présent en tab "overview" uniquement, perdu)
-- `EmployeeService` + `usePhaseEmployeesHex` (composant `PhaseEmployees.tsx` existe, **jamais monté** dans `PhaseDetailsPage`)
-- `StakeholderService` + `ProjectStakeholderService` + `useStakeholdersHex` + `stakeholderRoles.ts` référentiel
-- `dqe-categories.referential.ts` + `AdvancedProjectImporter.tsx` (parser DQE) — pas relié à une phase
-- `SupplierService`, `SupplierPaymentService`, `InspectorService` — déjà branchés ailleurs
+Voir constat précédent : dans `StakeholdersTeamStep.tsx`, les onglets `Équipe`, `Contractants`, `Documents` sont des doublons ou du code mort. Le seul flux légitime est :
+```
+UI form → StakeholderUITransformer.formToCreateRequest → CreateStakeholderDTO (camelCase)
+        → ProjectStakeholderService → IProjectStakeholderRepository → Supabase
+```
 
-Tabs actuelles `PhaseDetailsPage.tsx` : `hierarchy | workflow | overview`. Pas de Ressources, pas de Métré/DQE, pas de Parties Prenantes. `PhaseMaterials` est enfoui dans "overview".
+### Changements
+1. `StakeholdersTeamStep.tsx` : supprimer les 3 onglets redondants, garder une **liste unique** + **segmented filter** (Tous / Équipe / Externes / Contractants) en vue filtrée sur la même `stakeholders[]`.
+2. Supprimer `state teamMembers` (dead local) et `src/components/project/steps/TeamContractorsStep.tsx` (107 l, non importé).
 
-## Plan d'exécution
+## Partie B — Documents réels par partie prenante (remplace l'onglet info)
 
-### Étape 1 — Refonte des tabs `PhaseDetailsPage`
-Passer de 3 → 6 tabs alignées sur le cycle de vie d'une phase :
-1. **Hiérarchie** (existant)
-2. **Workflow** (existant)
-3. **Ressources** (NOUVEAU) — splits internes :
-   - Matériaux (`PhaseMaterials` existant)
-   - Main d'œuvre (`PhaseEmployees` existant, à monter)
-   - Bouton "Importer depuis DQE" (réutilise le parser DQE → pré-remplit lignes Métré + matériaux)
-4. **Métré / DQE** (NOUVEAU) — monte `QuantityTakeoffsList` filtré par `phaseId`, avec `QuantityTakeoffForm` + `MetreCalculator` ; lecture seule du référentiel `dqe-categories.referential.ts`
-5. **Parties Prenantes** (NOUVEAU) — `StakeholderAssignmentPanel` (à créer, ~150 LOC) qui :
-   - Liste les stakeholders du projet via `useStakeholdersHex({ projectId })`
-   - Filtre par rôle (`stakeholderRoles.ts` : supplier, bureau de conseil, inspecteur, contractor)
-   - Permet d'associer/dissocier un stakeholder à la phase courante via `ProjectStakeholderService.assignToPhase()` (méthode à exposer si manquante — sinon table de liaison `phase_stakeholders` à créer)
-6. **Documents** (déplacé depuis overview) — `PhaseDocuments`
+Le composant `StakeholderDocumentUpload` (wrapper de `ProjectDocumentUpload` avec `context="stakeholder"`) existe déjà. Il faut juste l'exposer dans la liste.
 
-Suppression de l'onglet "Vue d'ensemble" redondant (contenu absorbé par Header + Hiérarchie).
+### Changements
+1. Dans la liste unique de Partie A, ajouter sur chaque carte stakeholder un bouton **"Documents"** qui ouvre un `Dialog` contenant `<StakeholderDocumentUpload projectId stakeholderId stakeholderName />`.
+2. Indicateur visuel (badge "n doc.") si `useStakeholderDocuments(projectId, stakeholderId).length > 0` — utiliser le hook existant si présent, sinon défaut sans badge (pas de nouveau service).
+3. Le bloc d'aide statique "Documents requis" (contrat, conventions, …) est conservé une seule fois en `<Alert>` discrète au-dessus de la liste, à titre informatif.
 
-### Étape 2 — Brancher le parser DQE sur la phase
-- Extraire le parser de `AdvancedProjectImporter.tsx` dans `src/application/services/DQEImportService.ts` (pure TS, pas de React).
-- Ajouter `DQEImportDialog` réutilisable dans le tab Ressources : upload Excel/CSV → preview → write via `QuantityTakeoffService.createBatch()` + `MaterialService.linkToPhase()`.
-- Pas de nouvelle dépendance ; `xlsx` est déjà installé.
+Aucune nouvelle table : les documents existent déjà dans `project_documents` avec `stakeholder_id` (vérifier via grep `ProjectDocumentUpload` — schéma déjà supporté). Si la colonne `stakeholder_id` manque côté DB, migration sera ajoutée à ce moment-là.
 
-### Étape 3 — Round-trip UI → DB (validation systématique)
-Pour chaque tab nouvellement câblée :
-- Vérifier que le hook retourne via `Service → Adapter → Transformer` (pas de `supabase.from` direct)
-- Vérifier que l'UI utilise le DTO (`@/dtos/entities/*`) — corriger tout import legacy `@/types/*`
-- Tester save/load aller-retour (création matériau, employé, ligne métré, assignation stakeholder)
+## Partie C — Ressources DQE / manuelles dans les étapes de phase (planification & exécution)
 
-### Étape 4 — Goal "stakeholder à ses propres concerns"
-- `StakeholderAssignmentPanel` filtre les actions selon `role` du référentiel :
-  - **supplier** → voit Bons de commande + livraisons (lien `/supplier-portal/:id`)
-  - **bureau de conseil** → voit Inspections + rapports (lien `/inspections?phaseId=`)
-  - **inspecteur** → voit checkpoints à vérifier (lien `/inspector-dashboard`)
-  - **contractor** → voit décomptes + paiements
-- Réutilise `StakeholderRoleService.getConcernsForRole()` (à ajouter si manquant — sinon mapping statique dans le référentiel).
+### Constat
+- `DQEImportService` + `DQEImportDialog` existent et persistent via `QuantityTakeoffService`.
+- `PhaseQuantityTakeoffTab.tsx` expose déjà `<DQEImportDialog projectId phaseId />` au niveau **phase**.
+- `PhaseStepsManager.tsx` (890 l) gère les étapes (`PhaseStepDTO`) et tâches (`PhaseTaskDTO`) mais n'offre **aucune entrée ressources** (DQE ou manuel) au niveau étape/tâche.
+- `PhaseMaterials`, `PhaseEmployees` existent au niveau phase via `usePhaseMaterialsHex`, `usePhaseEmployeesHex`.
 
-### Étape 5 — Vérifications
-- TypeScript clean sur les fichiers touchés
-- Console preview : aucun warning de hook conditionnel
-- Test manuel : créer une phase, importer un DQE, voir matériaux/métré peuplés, assigner un fournisseur, vérifier qu'il apparaît dans `/supplier-portal`
+### Objectif
+Au niveau **étape de phase** (et réutilisable en exécution via `StepDetailPanel`), permettre 3 actions équivalentes pour constituer les ressources :
+1. **Importer DQE** (xlsx) — réutilise `DQEImportDialog`, propage `phaseId` + `stepId`.
+2. **Ajouter manuellement un matériau** — nouveau `PhaseStepResourceDialog` qui réutilise `MaterialSelector` + `calculateQuantity()` puis appelle `useCreateQuantityTakeoff`.
+3. **Ajouter manuellement une ressource humaine / prestation** — même dialog, onglet RH : `EmployeeSelector` → `usePhaseEmployees.add` ; ou `SimpleSupplierSelector` → `usePhaseStakeholders.add` (rôle = prestataire).
 
-## Fichiers
+### Changements UI uniquement (aucun nouveau service)
 
-**Édités**
-- `src/components/project/PhaseDetailsPage.tsx` (refonte tabs)
+1. **`src/components/project/phase/PhaseStepResourceDialog.tsx`** (nouveau)
+   - Tabs internes : `Matériau` | `Main d'œuvre` | `Prestation`.
+   - Matériau : `MaterialSelector` + `length/width/height/unit` → `calculateQuantity` → `useCreateQuantityTakeoff({ projectId, phaseId, materialId, … note:"step:<stepId>" })`.
+   - Main d'œuvre : `EmployeeSelector` + dates + heures → `usePhaseEmployees.assign`.
+   - Prestation : `SimpleSupplierSelector` + montant → `usePhaseStakeholders.create` avec `role=PRESTATAIRE`.
+   - Pas de Supabase direct (mem://constraints/no-direct-supabase-in-react).
 
-**Créés**
-- `src/components/project/phase/PhaseResourcesTab.tsx` (~120 LOC, orchestrateur)
-- `src/components/project/phase/PhaseQuantityTakeoffTab.tsx` (~60 LOC, wrapper sur composants existants)
-- `src/components/project/phase/PhaseStakeholdersTab.tsx` (~150 LOC)
-- `src/components/project/phase/DQEImportDialog.tsx` (~180 LOC)
-- `src/application/services/DQEImportService.ts` (~120 LOC, extraction du parser existant)
+2. **`src/components/project/phase/DQEImportDialog.tsx`**
+   - Ajout prop optionnelle `stepId?: string` propagée dans `note` des takeoffs créés (compat, pas de migration DB).
 
-**Hors scope** (à confirmer si souhaité dans un second tour)
-- Migration DB `phase_stakeholders` si l'association n'existe pas déjà
-- Refonte des autres pages (Project, Tender, Supplier) — la précédente itération les a déjà alignées
-- Refactor des services existants (on les consomme tel quels)
+3. **`src/components/project/phase/PhaseStepsManager.tsx`**
+   - Dans le panneau ouvert d'une étape (sous "Tâches"), ajouter une section **"Ressources"** avec 2 boutons :
+     - `Importer DQE` → ouvre `DQEImportDialog` (`projectId`, `phaseId`, `stepId`).
+     - `Ajouter ressource` → ouvre `PhaseStepResourceDialog`.
+   - Récupération des ressources existantes via filtre `note.includes("step:<stepId>")` sur `usePhaseQuantityTakeoffs(phaseId)` + filtre similaire sur `usePhaseEmployees` / `usePhaseStakeholders` (clé note ou champ libre).
+   - `PhaseStepsManager` reçoit déjà via props (à étendre légèrement) : `projectId`, `phaseId` — ajoutés en `props` puis passés depuis `PhaseDetailsPage` / `ConstructionPhaseManager`.
 
-## Détails techniques
+4. **`src/components/project/PhaseDetailsPage.tsx` & `src/components/project/workflow/StepDetailPanel.tsx`**
+   - Passer `projectId` + `phaseId` à `PhaseStepsManager`.
+   - Aucune autre modification métier.
 
-- Aucun nouveau package
-- Tous les nouveaux composants utilisent `@/dtos/entities/*` et hooks `@/hooks/hexagonal/*`
-- Tabs construites avec shadcn `Tabs` déjà utilisé
-- Le parser DQE extrait suit `mem://architecture/no-react-in-services` : pure TS, retourne `QuantityTakeoffDTO[]` + `MaterialDTO[]`
-- `DQEImportDialog` fait la transformation form → DTO selon `mem://architecture/ui-to-dto-transformation`
+### Hors scope
+- Colonne `step_id` dédiée dans `quantity_takeoffs` / `phase_employees` (encodée provisoirement dans `note`) — migration possible dans un tour ultérieur.
+
+## Partie D — Tests Vitest
+
+`src/components/project/steps/__tests__/StakeholdersTeamStep.test.tsx`
+- type=EMPLOYEE → `EmployeeSelector` affiché ; SUPPLIER+CONTRACTOR → `SimpleSupplierSelector` ("Fournisseur/Organisation").
+- Bouton Ajouter désactivé sans (type+role+entity).
+- Filtre segmenté "Contractants" liste l'entrée ajoutée ; "Équipe" non.
+- Spy `onStepComplete` → payload camelCase (`stakeholderType`, `organizationId`, `isPrimary`).
+- Bouton "Documents" ouvre le dialog `StakeholderDocumentUpload`.
+
+`src/components/project/phase/__tests__/PhaseStepsManager.test.tsx`
+- Présence boutons `Importer DQE` + `Ajouter ressource` quand `projectId`+`phaseId`+`step` fournis.
+- Click `Ajouter ressource` ouvre `PhaseStepResourceDialog` ; onglets `Matériau`/`Main d'œuvre`/`Prestation` visibles.
+- Soumission matériau : `useCreateQuantityTakeoff` appelé avec `note` contenant `step:<id>` (mock).
+
+## Étapes d'exécution (build mode)
+
+1. Refonte `StakeholdersTeamStep.tsx` (tabs → liste unique + filter + bouton Documents).
+2. `rm src/components/project/steps/TeamContractorsStep.tsx`.
+3. `DQEImportDialog` : prop `stepId`.
+4. Nouveau `PhaseStepResourceDialog.tsx`.
+5. `PhaseStepsManager.tsx` : props `projectId`/`phaseId`, section Ressources avec boutons.
+6. Propager `projectId`/`phaseId` depuis `PhaseDetailsPage` et `StepDetailPanel`.
+7. Tests Vitest (2 fichiers) → `bunx vitest run`.
+
+## Risques
+- `usePhaseQuantityTakeoffs` / hooks RH peuvent ne pas exposer de filtre `step:` ; on filtre côté UI.
+- Si `step_id` doit devenir une vraie colonne, prévoir migration dans un tour dédié.
+- Aucune migration DB dans ce plan.

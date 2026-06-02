@@ -59,6 +59,8 @@ import {
 import { cn } from "@/lib/utils";
 import { PhaseStepDTO, PhaseTaskDTO, PhaseStatus } from "@/types/phase-dto";
 import { StepItem } from '@/types/unified-workflow';
+import DQEImportDialog from "./DQEImportDialog";
+import PhaseStepResourceDialog from "./PhaseStepResourceDialog";
 
 interface PhaseStepsManagerProps {
   // Accept legacy PhaseStepDTO[] or unified StepItem[]
@@ -70,6 +72,9 @@ interface PhaseStepsManagerProps {
   onUpdateTask: (stepId: string, taskId: string, updates: Partial<PhaseTaskDTO>) => Promise<unknown>;
   onDeleteTask: (stepId: string, taskId: string) => Promise<unknown>;
   isUpdating?: boolean;
+  /** Required to enable per-step DQE import & manual resource entry. */
+  projectId?: string;
+  phaseId?: string;
 }
 
 const statusOptions: { value: PhaseStatus; label: string; color: string; icon: React.ReactNode }[] = [
@@ -410,6 +415,8 @@ const StepCard: React.FC<{
   onTaskStatusChange: (taskId: string, status: PhaseStatus) => void;
   expanded: boolean;
   onToggleExpand: () => void;
+  projectId?: string;
+  phaseId?: string;
 }> = ({ 
   step, 
   index, 
@@ -422,7 +429,9 @@ const StepCard: React.FC<{
   onDeleteTask,
   onTaskStatusChange,
   expanded,
-  onToggleExpand
+  onToggleExpand,
+  projectId,
+  phaseId,
 }) => {
   const isCompleted = step.status === 'completed';
   const isInProgress = step.status === 'in_progress';
@@ -631,6 +640,37 @@ const StepCard: React.FC<{
               </div>
             </div>
           )}
+
+          {/* Ressources (expanded) — DQE import + ajout manuel */}
+          {expanded && projectId && phaseId && (
+            <div
+              className="mt-4 pt-4 border-t ml-7"
+              data-testid={`step-resources-${step.id}`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Ressources de l'étape
+                </p>
+                <div className="flex items-center gap-2">
+                  <DQEImportDialog
+                    projectId={projectId}
+                    phaseId={phaseId}
+                    stepId={step.id}
+                  />
+                  <PhaseStepResourceDialog
+                    projectId={projectId}
+                    phaseId={phaseId}
+                    stepId={step.id}
+                    stepName={step.name}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground/70">
+                Importez un DQE (.xlsx) ou ajoutez à la main matériaux,
+                main-d'œuvre et prestations rattachés à cette étape.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
@@ -647,6 +687,8 @@ const PhaseStepsManager: React.FC<PhaseStepsManagerProps> = ({
   onUpdateTask,
   onDeleteTask,
   isUpdating,
+  projectId,
+  phaseId,
 }) => {
   // Normalize incoming steps to PhaseStepDTO[] so component logic remains unchanged
   const normalizedSteps: PhaseStepDTO[] = React.useMemo(() => {
@@ -826,6 +868,8 @@ const PhaseStepsManager: React.FC<PhaseStepsManagerProps> = ({
                 status,
                 progress: status === 'completed' ? 100 : status === 'pending' ? 0 : undefined
               })}
+              projectId={projectId}
+              phaseId={phaseId}
             />
           ))}
         </div>

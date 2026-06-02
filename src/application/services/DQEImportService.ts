@@ -54,6 +54,8 @@ export interface DQEParseResult {
 export interface DQEImportContext {
   projectId: string;
   phaseId: string;
+  /** Optional phase step id; encoded in the note for downstream filtering. */
+  stepId?: string;
   /** Material UUID applied to every imported takeoff row. */
   defaultMaterialId: string;
 }
@@ -219,6 +221,7 @@ export class DQEImportService {
   static buildRequest(row: DQEParsedRow, ctx: DQEImportContext): CreateQuantityTakeoffRequestDto {
     const note = JSON.stringify({
       source: 'dqe-import',
+      stepId: ctx.stepId,
       categoryCode: row.categoryCode,
       categoryLabel: row.category?.label.fr,
       designation: row.designation,
