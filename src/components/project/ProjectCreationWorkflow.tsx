@@ -108,13 +108,19 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     updateFormData,
     nextStep,
     previousStep,
+    setCurrentStep,
     saveCurrentStep,
     validateCurrentStep,
     workflowSteps
   } = useUnifiedProjectWorkflow(mode === "edit" ? "edit" : "creation", projectId);
 
   // 🎨 UI Layer - Only UI-specific state (Rule #5)
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStepUi] = useState(0);
+
+  // Keep the application layer in sync with UI tab selection (1-indexed in hook).
+  useEffect(() => {
+    setCurrentStep(currentStep + 1);
+  }, [currentStep, setCurrentStep]);
 
   // 🎨 UI Layer - Use unified workflow data (Rule #5: UI Layer Separation)
   const projectData = formData?.projectData;
@@ -123,9 +129,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   // 🎨 UI Layer - Use unified workflow validation (Rule #5 compliant)
   const validateStepData = useCallback(async (): Promise<{ isValid: boolean; errors: string[] }> => {
     if (!formData) return { isValid: false, errors: ['No form data available'] };
-    const validation = await validateCurrentStep();
+    const validation = await validateCurrentStep(currentStep + 1);
     return { isValid: validation.isValid, errors: validation.errors };
-  }, [formData, validateCurrentStep]);
+  }, [formData, validateCurrentStep, currentStep]);
 
   // ✅ Steps from centralized referential (ARCHITECTURE_REFERENTIELS)
   // — labels/validation/icones centralisés ; pas de hardcoding UI.
@@ -145,21 +151,16 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
   // 🎨 UI Layer - Save and proceed to next step using unified workflow (Rule #5)
   const saveAndNextStep = async () => {
-    // Validate current step before proceeding
     if (!canProceedNext()) {
-      console.warn('Veuillez compléter l\'étape actuelle avant de continuer');
-      return; // 🚫 Do not proceed if validation fails
+      console.warn("Veuillez compléter l'étape actuelle avant de continuer");
+      return;
     }
-
-    // Attempt to save current step using unified workflow
-    const result = await saveCurrentStep();
+    const result = await saveCurrentStep(currentStep + 1);
     if (!result || !result.success) {
       console.error('Échec de la sauvegarde, passage à l\'étape suivante annulé');
-      return; // 🚫 Do not proceed if save fails
+      return;
     }
-
-    // Only proceed if save was successful
-    nextStep();
+    setCurrentStepUi((prev) => Math.min(prev + 1, steps.length - 1));
   };
 
   // 🎨 UI Layer - Save all workflow data using unified workflow (Rule #5)
