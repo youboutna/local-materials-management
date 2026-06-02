@@ -304,14 +304,17 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
               mode="create"
               workflowData={formData}
               onStepComplete={(stepData) => {
-                // Step 1 manages CRUD service adapters and initiates status/progress
-                updateFormData({ 
+                // Step 1 manages CRUD adapters; preserve user-entered status/progress
+                const merged = {
+                  ...formData?.projectData,
+                  ...stepData.projectData,
+                };
+                updateFormData({
                   projectData: {
-                    ...formData?.projectData,
-                    ...stepData.projectData,
-                    status: ProjectStatus.EN_ATTENTE,
-                    progress: 0
-                  }
+                    ...merged,
+                    status: merged.status ?? ProjectStatus.EN_ATTENTE,
+                    progress: merged.progress ?? 0,
+                  },
                 });
               }}
             />
