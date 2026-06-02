@@ -39,10 +39,11 @@ import DQEImportService, {
 interface DQEImportDialogProps {
   projectId: string;
   phaseId: string;
+  stepId?: string;
   trigger?: React.ReactNode;
 }
 
-const DQEImportDialog: React.FC<DQEImportDialogProps> = ({ projectId, phaseId, trigger }) => {
+const DQEImportDialog: React.FC<DQEImportDialogProps> = ({ projectId, phaseId, stepId, trigger }) => {
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [parsing, setParsing] = useState(false);
@@ -90,6 +91,7 @@ const DQEImportDialog: React.FC<DQEImportDialogProps> = ({ projectId, phaseId, t
       const { created, failed } = await DQEImportService.importRows(parseResult.rows, {
         projectId,
         phaseId,
+        stepId,
         defaultMaterialId,
       });
 
