@@ -773,9 +773,13 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
 
 
-        // Add new phases to existing phases
+        // Add new phases to existing phases (map PhaseData → PhaseDTO shape: title → name)
         for (const newPhase of newPhases) {
-          await constructionPhaseHook.createConstructionPhase(newPhase as unknown as PhaseDTO);
+          const phaseDTO = {
+            ...(newPhase as any),
+            name: (newPhase as any).title || (newPhase as any).name || '',
+          } as unknown as PhaseDTO;
+          await constructionPhaseHook.createConstructionPhase(phaseDTO);
         }
 
         
