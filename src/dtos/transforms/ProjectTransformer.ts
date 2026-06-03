@@ -560,8 +560,8 @@ export class ProjectTransformer {
     const entityData: Record<string, unknown> = {
       title: dto.title,
       description: dto.description || '',
-      status: (dto.status as string) || 'planifié',
-      progress: 0,
+      status: (dto.status as string) || 'planifie_v2',
+      progress: Number((dto as any).progress) || 0,
       budget: dto.budget || 0,
       startDate: dto.startDate ? new Date(dto.startDate) : null,
       endDate: dto.endDate ? new Date(dto.endDate) : null,
