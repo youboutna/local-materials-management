@@ -238,9 +238,10 @@ export class ProjectWorkflowService {
       const projectDTO = ProjectTransformer.toDTO(project);
 
       // Load related data in parallel
-      const [phases, risks] = await Promise.all([
+      const [phases, risks, stakeholders] = await Promise.all([
         this.phaseRepository?.findByProjectId(projectId).catch(() => []) || Promise.resolve([]),
         this.riskRepository?.findByProjectId(projectId).catch(() => []) || Promise.resolve([]),
+        this.stakeholderRepository?.findByProjectId(projectId).catch(() => []) || Promise.resolve([]),
       ]);
 
       // Build complete workflow data
@@ -248,7 +249,7 @@ export class ProjectWorkflowService {
         projectId,
         currentStep: 1,
         isDraft: false,
-        isComplete: projectDTO.status === 'termine' || projectDTO.status === 'completed',
+        isComplete: projectDTO.status === ProjectStatus.TERMINE || projectDTO.status === ProjectStatus.COMPLETED,
         projectData: projectDTO,
         relatedData: {
           phases: (phases || []).map((p: any) => ({
@@ -278,12 +279,13 @@ export class ProjectWorkflowService {
             status: r.status || 'identified',
             mitigationPlan: r.mitigationPlan || r.mitigationStrategy || '',
           })) as RiskDTO[],
+          stakeholders: (stakeholders || []) as any,
         },
         metadata: {
           lastSavedAt: projectDTO.updatedAt || new Date().toISOString(),
-          totalSteps: 7,
+          totalSteps: 8,
           completedSteps: 1,
-          progressPercentage: 14,
+          progressPercentage: 12,
         },
       };
 
@@ -391,11 +393,14 @@ export class ProjectWorkflowService {
         }
         case 3: {
           if (!projectId) return { success: false, errors: ['Projet non créé — complétez l\'étape 1 d\'abord.'] };
-          await this.projectRepository.update(projectId, {
+          const locUpdate: UpdateProjectDTO = {
+            id: projectId,
             location: data.projectData?.location,
             latitude: data.projectData?.latitude,
             longitude: data.projectData?.longitude,
-          } as any);
+          };
+          const locEntity = ProjectTransformer.fromUpdateDTOToEntity(locUpdate);
+          await this.projectRepository.update(projectId, locEntity as any);
           break;
         }
         case 4: {
@@ -453,12 +458,27 @@ export class ProjectWorkflowService {
         id: existingId,
         title: projectData.title,
         description: projectData.description,
+        status: projectData.status,
+        progress: projectData.progress,
         location: projectData.location,
         budget: projectData.budget,
         startDate: projectData.startDate,
         endDate: projectData.endDate,
         teamSize: projectData.teamSize,
         thumbnail: projectData.thumbnail,
+        financingSource: projectData.financingSource,
+        marketType: projectData.marketType,
+        selectionMode: projectData.selectionMode,
+        projectReference: projectData.projectReference,
+        currentPhase: projectData.currentPhase,
+        currentStage: projectData.currentStage,
+        mainContractor,
+        allowsInitialPayment: projectData.allowsInitialPayment as boolean | undefined,
+        initialPaymentPercentage: projectData.initialPaymentPercentage as number | undefined,
+        projectManagerId: projectData.projectManagerId,
+        ...(coords.latitude != null && coords.longitude != null
+          ? { latitude: coords.latitude, longitude: coords.longitude }
+          : {}),
       };
       const entity = ProjectTransformer.fromUpdateDTOToEntity(updateRequest);
       await this.projectRepository.update(existingId, entity);
@@ -472,7 +492,8 @@ export class ProjectWorkflowService {
       budget: projectData.budget || 0,
       startDate: projectData.startDate || new Date().toISOString().split('T')[0],
       endDate: projectData.endDate,
-      status: ProjectStatus.PLANIFIE,
+      status: projectData.status || ProjectStatus.PLANIFIE,
+      progress: projectData.progress ?? 0,
       thumbnail: projectData.thumbnail || '',
       teamSize: projectData.teamSize || 1,
       financingSource: projectData.financingSource,
@@ -485,7 +506,7 @@ export class ProjectWorkflowService {
       currentPhase: projectData.currentPhase,
       currentStage: projectData.currentStage,
       ...(coords.latitude != null && coords.longitude != null ? { latitude: coords.latitude, longitude: coords.longitude } : {}),
-    };
+    } as CreateProjectDTO;
     const entity = ProjectTransformer.fromCreateDTOToEntity(createRequest);
     const created = await this.projectRepository.create(entity);
 
