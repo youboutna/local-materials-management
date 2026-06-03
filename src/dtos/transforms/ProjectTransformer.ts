@@ -643,6 +643,23 @@ export class ProjectTransformer {
     if (dto.location !== undefined) updates.location = dto.location;
     if (dto.teamSize !== undefined) updates.teamSize = dto.teamSize;
     if (dto.thumbnail !== undefined) updates.thumbnail = dto.thumbnail;
+    if (dto.currency !== undefined) updates.currency = dto.currency;
+    if (dto.financingSource !== undefined) updates.financingSource = dto.financingSource;
+    if (dto.mainContractor !== undefined) updates.mainContractor = dto.mainContractor;
+    if (dto.marketType !== undefined) updates.marketType = dto.marketType;
+    if (dto.selectionMode !== undefined) updates.selectionMode = dto.selectionMode;
+    if (dto.projectReference !== undefined) updates.projectReferenceNumber = dto.projectReference;
+    if (dto.currentPhase !== undefined) updates.currentPhase = dto.currentPhase;
+    if (dto.currentStage !== undefined) updates.currentStage = dto.currentStage;
+    if (dto.allowsInitialPayment !== undefined) updates.allowsInitialPayment = dto.allowsInitialPayment;
+    if (dto.initialPaymentPercentage !== undefined) updates.initialPaymentPercentage = dto.initialPaymentPercentage;
+    if (dto.projectManagerId !== undefined) updates.projectManagerId = dto.projectManagerId;
+    // Coordinates: accept either flat lat/lng or nested {latitude, longitude}
+    const lat = dto.latitude ?? (dto.coordinates as any)?.latitude;
+    const lng = dto.longitude ?? (dto.coordinates as any)?.longitude;
+    if (lat != null && lng != null) {
+      updates.coordinates = new ProjectCoordinates(Number(lat), Number(lng));
+    }
 
     return updates;
   }
