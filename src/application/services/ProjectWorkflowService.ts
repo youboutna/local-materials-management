@@ -393,11 +393,14 @@ export class ProjectWorkflowService {
         }
         case 3: {
           if (!projectId) return { success: false, errors: ['Projet non créé — complétez l\'étape 1 d\'abord.'] };
-          await this.projectRepository.update(projectId, {
+          const locUpdate: UpdateProjectDTO = {
+            id: projectId,
             location: data.projectData?.location,
             latitude: data.projectData?.latitude,
             longitude: data.projectData?.longitude,
-          } as any);
+          };
+          const locEntity = ProjectTransformer.fromUpdateDTOToEntity(locUpdate);
+          await this.projectRepository.update(projectId, locEntity as any);
           break;
         }
         case 4: {
