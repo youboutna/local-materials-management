@@ -238,9 +238,10 @@ export class ProjectWorkflowService {
       const projectDTO = ProjectTransformer.toDTO(project);
 
       // Load related data in parallel
-      const [phases, risks] = await Promise.all([
+      const [phases, risks, stakeholders] = await Promise.all([
         this.phaseRepository?.findByProjectId(projectId).catch(() => []) || Promise.resolve([]),
         this.riskRepository?.findByProjectId(projectId).catch(() => []) || Promise.resolve([]),
+        this.stakeholderRepository?.findByProjectId(projectId).catch(() => []) || Promise.resolve([]),
       ]);
 
       // Build complete workflow data
@@ -248,7 +249,7 @@ export class ProjectWorkflowService {
         projectId,
         currentStep: 1,
         isDraft: false,
-        isComplete: projectDTO.status === 'termine' || projectDTO.status === 'completed',
+        isComplete: projectDTO.status === ProjectStatus.TERMINE || projectDTO.status === ProjectStatus.COMPLETED,
         projectData: projectDTO,
         relatedData: {
           phases: (phases || []).map((p: any) => ({
@@ -278,12 +279,13 @@ export class ProjectWorkflowService {
             status: r.status || 'identified',
             mitigationPlan: r.mitigationPlan || r.mitigationStrategy || '',
           })) as RiskDTO[],
+          stakeholders: (stakeholders || []) as any,
         },
         metadata: {
           lastSavedAt: projectDTO.updatedAt || new Date().toISOString(),
-          totalSteps: 7,
+          totalSteps: 8,
           completedSteps: 1,
-          progressPercentage: 14,
+          progressPercentage: 12,
         },
       };
 
