@@ -458,12 +458,27 @@ export class ProjectWorkflowService {
         id: existingId,
         title: projectData.title,
         description: projectData.description,
+        status: projectData.status,
+        progress: projectData.progress,
         location: projectData.location,
         budget: projectData.budget,
         startDate: projectData.startDate,
         endDate: projectData.endDate,
         teamSize: projectData.teamSize,
         thumbnail: projectData.thumbnail,
+        financingSource: projectData.financingSource,
+        marketType: projectData.marketType,
+        selectionMode: projectData.selectionMode,
+        projectReference: projectData.projectReference,
+        currentPhase: projectData.currentPhase,
+        currentStage: projectData.currentStage,
+        mainContractor,
+        allowsInitialPayment: projectData.allowsInitialPayment as boolean | undefined,
+        initialPaymentPercentage: projectData.initialPaymentPercentage as number | undefined,
+        projectManagerId: projectData.projectManagerId,
+        ...(coords.latitude != null && coords.longitude != null
+          ? { latitude: coords.latitude, longitude: coords.longitude }
+          : {}),
       };
       const entity = ProjectTransformer.fromUpdateDTOToEntity(updateRequest);
       await this.projectRepository.update(existingId, entity);
@@ -477,7 +492,8 @@ export class ProjectWorkflowService {
       budget: projectData.budget || 0,
       startDate: projectData.startDate || new Date().toISOString().split('T')[0],
       endDate: projectData.endDate,
-      status: ProjectStatus.PLANIFIE,
+      status: projectData.status || ProjectStatus.PLANIFIE,
+      progress: projectData.progress ?? 0,
       thumbnail: projectData.thumbnail || '',
       teamSize: projectData.teamSize || 1,
       financingSource: projectData.financingSource,
@@ -490,7 +506,7 @@ export class ProjectWorkflowService {
       currentPhase: projectData.currentPhase,
       currentStage: projectData.currentStage,
       ...(coords.latitude != null && coords.longitude != null ? { latitude: coords.latitude, longitude: coords.longitude } : {}),
-    };
+    } as CreateProjectDTO;
     const entity = ProjectTransformer.fromCreateDTOToEntity(createRequest);
     const created = await this.projectRepository.create(entity);
 
