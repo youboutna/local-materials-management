@@ -93,7 +93,7 @@ export class ReportingService {
       const wantLight = depth === 'light';
 
       // Fetch sélectif : on évite les appels coûteux quand la section n'est pas demandée.
-      const wantPhases = sections.phases || sections.evmAnalysis || sections.pertAnalysis || sections.kpi;
+      const wantPhases = sections.phases || sections.evmAnalysis || sections.pertAnalysis || sections.kpi || sections.ganttChart;
       const wantInspections = sections.inspections;
 
       const [
@@ -101,6 +101,7 @@ export class ReportingService {
         realCosts,
         phases,
         inspections,
+        sectionData,
       ] = await Promise.all([
         this.reportingRepository.transformProjectForReport(request.project),
         this.reportingRepository.calculateRealProjectCosts(request.project.id),
@@ -110,10 +111,12 @@ export class ReportingService {
         wantInspections
           ? this.reportingRepository.getProjectInspections(request.project.id)
           : Promise.resolve([] as any[]),
+        this.reportingRepository.getProjectReportSections(request.project.id, sections),
       ]);
 
       const phasesData = phases || [];
-      const inspectionsData = inspections || [];
+      const inspectionsData = inspections.length > 0 ? inspections : sectionData.inspections;
+
 
       // ---- Métriques dérivées des données réelles (plus de constantes hardcodées) ----
       const budget = request.project.budget || 0;
