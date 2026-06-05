@@ -62,6 +62,132 @@ export class SupabaseReportingAdapter implements IReportingRepository {
     return data || [];
   }
 
+  /**
+   * Hydrate sectional report data driven by the user-selected sections.
+   * Each query is gated by its corresponding section flag — disabled sections
+   * return empty arrays to keep the PDF render shape stable and avoid waste.
+   */
+  async getProjectReportSections(
+    projectId: string,
+    sections: Partial<Record<ReportSectionKey, boolean>>,
+  ): Promise<ReportSectionsData> {
+    const empty: ReportSectionsData = {
+      materials: [],
+      inspections: [],
+      bankGuarantees: [],
+      insurance: [],
+      paymentBlocks: [],
+      suppliers: [],
+      documents: [],
+      employees: [],
+      escalationAlerts: [],
+      constructionMilestones: [],
+    };
+
+    const safeFetch = async <T>(label: string, p: Promise<{ data: T[] | null; error: any }>): Promise<T[]> => {
+      try {
+        const { data, error } = await p;
+        if (error) {
+          console.warn(`[ReportSections] ${label} fetch error:`, error.message);
+          return [];
+        }
+        return data || [];
+      } catch (e) {
+        console.warn(`[ReportSections] ${label} threw:`, e);
+        return [];
+      }
+    };
+
+    const tasks: Array<Promise<void>> = [];
+
+    if (sections.materials) {
+      tasks.push(
+        safeFetch('materials', supabase.from('project_materials').select('*').eq('project_id', projectId) as any)
+          .then(rows => { empty.materials = rows; }),
+      );
+    }
+    if (sections.inspections) {
+      tasks.push(
+        safeFetch('inspections', supabase.from('inspections').select('*').eq('project_id', projectId) as any)
+          .then(rows => { empty.inspections = rows; }),
+      );
+    }
+    if (sections.bankGuarantees) {
+      tasks.push(
+        safeFetch('bankGuarantees', publicSupabase.from('bank_guarantees').select('*').eq('project_id', projectId) as any)
+          .then(rows => { empty.bankGuarantees = rows; }),
+      );
+    }
+    if (sections.insurance) {
+      tasks.push(
+        safeFetch('insurance', publicSupabase.from('insurance_certificates').select('*').eq('project_id', projectId) as any)
+          .then(rows => { empty.insurance = rows; }),
+      );
+    }
+    if (sections.paymentBlocks) {
+      tasks.push(
+        safeFetch('paymentBlocks', publicSupabase.from('payment_blocks').select('*').eq('project_id', projectId) as any)
+          .then(rows => { empty.paymentBlocks = rows; }),
+      );
+    }
+    if (sections.documents) {
+      tasks.push(
+        safeFetch('documents', publicSupabase.from('documents').select('*').eq('project_id', projectId) as any)
+          .then(rows => { empty.documents = rows; }),
+      );
+    }
+    if (sections.milestones) {
+      tasks.push(
+        safeFetch('milestones', publicSupabase.from('project_milestones').select('*').eq('project_id', projectId) as any)
+          .then(rows => { empty.constructionMilestones = rows; }),
+      );
+    }
+    if (sections.employees) {
+      tasks.push(
+        safeFetch(
+          'employees',
+          publicSupabase
+            .from('project_resources')
+            .select('*')
+            .eq('project_id', projectId)
+            .eq('type', 'human') as any,
+        ).then(rows => { empty.employees = rows; }),
+      );
+    }
+    if (sections.suppliers) {
+      // Suppliers are linked to a project via project_stakeholders.supplier_id.
+      tasks.push(
+        (async () => {
+          const stakeholders = await safeFetch(
+            'project_stakeholders',
+            publicSupabase
+              .from('project_stakeholders')
+              .select('supplier_id')
+              .eq('project_id', projectId)
+              .not('supplier_id', 'is', null) as any,
+          );
+          const ids = Array.from(
+            new Set(stakeholders.map((s: any) => s.supplier_id).filter(Boolean)),
+          );
+          if (ids.length === 0) {
+            empty.suppliers = [];
+            return;
+          }
+          const rows = await safeFetch(
+            'suppliers',
+            publicSupabase.from('suppliers').select('*').in('id', ids as string[]) as any,
+          );
+          empty.suppliers = rows;
+        })(),
+      );
+    }
+    // escalationAlerts: table not standardized — leave empty until referential exposes a feed.
+
+    await Promise.all(tasks);
+    return empty;
+  }
+
+
   async calculateRealProjectCosts(projectId: string): Promise<any> {
     return await ProjectCalculationService.calculateRealProjectCosts(projectId);
   }
