@@ -184,7 +184,8 @@ export class ReportingService {
         projectedOverrun: Math.max(0, totalSpent - budget),
       };
 
-      // Create proper ReportData object
+      // Surface the section-scoped slices directly on reportData so the PDF
+      // and any other consumer can read a single, predictable shape.
       const reportData: ReportData = {
         id: crypto.randomUUID?.() || Date.now().toString(),
         title: `Project Report for ${request.project.title}`,
@@ -197,9 +198,28 @@ export class ReportingService {
         metadata: {
           totalBudget: request.project.budget,
           progress: request.project.progress,
-          costData: realCosts
-        }
-      };
+          costData: realCosts,
+        },
+        // Hydrated slices (empty arrays when section is disabled)
+        materials: sectionData.materials,
+        inspections: inspectionsData,
+        bankGuarantees: sectionData.bankGuarantees,
+        insurance: sectionData.insurance,
+        paymentBlocks: sectionData.paymentBlocks,
+        suppliers: sectionData.suppliers,
+        documents: sectionData.documents,
+        employees: sectionData.employees,
+        escalationAlerts: sectionData.escalationAlerts,
+        constructionMilestones: sectionData.constructionMilestones,
+        phases: phasesData,
+      } as ReportData;
+
+      // Surface phases at the top of the reportDTO so the PDF can rely on a
+      // stable accessor (`enrichedData.phases`) instead of digging into project.
+      if (phasesData.length > 0) {
+        (reportDTO as any).phases = phasesData;
+      }
+
 
       // Compute project-scope deviations via the DeviationEngine (referentials-driven).
       // Pour les projets in_progress en retard sans actualEndDate, on injecte "today" pour
