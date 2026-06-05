@@ -72,7 +72,18 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
     });
   };
 
-  // Re-fetch report data when project or profile change. Section toggles only affect PDF render.
+  // Signature stable des sections actives → déclenche un re-fetch ciblé quand
+  // l'utilisateur coche/décoche une section qui requiert de nouvelles données.
+  const sectionsSignature = useMemo(
+    () =>
+      (Object.keys(reportConfig.includeSections) as ReportSectionKey[])
+        .filter((k) => reportConfig.includeSections[k])
+        .sort()
+        .join('|'),
+    [reportConfig.includeSections],
+  );
+
+  // Re-fetch report data when project, profile, or active sections change.
   useEffect(() => {
     const loadReportData = async () => {
       try {
@@ -80,7 +91,6 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
 
         const completeReport = await generateCompleteReport(project, reportConfig.reportType);
 
-        
         setReportData(completeReport.reportData);
         setCostCalculation(completeReport.costCalculation);
         setEnrichedData(completeReport.reportDTO);
@@ -120,7 +130,9 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
     };
 
     loadReportData();
-  }, [project, toast, reportConfig.reportType]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project, toast, reportConfig.reportType, sectionsSignature]);
+
 
   const generatePDF = async () => {
     if (!reportData || !costCalculation) {
