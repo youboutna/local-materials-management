@@ -3,7 +3,9 @@
 // via une vue proxy publique (Multi-Schema Architecture) et n'est pas typée dans
 // Database['public']['Tables']. À retirer après typage des proxies.
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
-import { IReportingRepository } from '@/domain/repositories/IReportingRepository';
+import { supabase as publicSupabase } from '@/integrations/supabase/client';
+import { IReportingRepository, ReportSectionsData } from '@/domain/repositories/IReportingRepository';
+import type { ReportSectionKey } from '@/config/referentials/reports/report-profiles.referential';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import { ProjectCalculationService } from '@/application/services/ProjectCalculationService';
 import { ProjectReportDTO, EnhancedPhaseDTO } from '@/dtos/entities/ProjectReportDTO';
