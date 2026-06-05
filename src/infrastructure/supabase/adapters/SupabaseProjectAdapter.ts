@@ -10,6 +10,46 @@ import { Project } from '@/domain/entities/Project';
 import { IProjectRepository, ProjectSummary, ProjectWithRelatedData } from '@/domain/repositories';
 import { ProjectTransformer } from '@/dtos/transforms/ProjectTransformer';
 
+/**
+ * Normalize project status values to the strict set accepted by the
+ * `projects_status_check` constraint in the DB:
+ *   'en cours' | 'terminé' | 'en attente' | 'en inspection' | 'suspendu' | 'annulé'
+ *
+ * Internal code uses richer enums (en_cours_v2, planifie_v2, draft, …) and
+ * legacy values (enCours, planifié, planned, …). We collapse them here so
+ * the DB write never violates the constraint.
+ */
+function normalizeStatusForDb(status: unknown): string | undefined {
+  if (status === undefined || status === null || status === '') return undefined;
+  const raw = String(status).toLowerCase().replace(/[\s_-]/g, '').replace(/v2$/, '');
+  const map: Record<string, string> = {
+    encours: 'en cours',
+    enconstruction: 'en cours',
+    attribue: 'en cours',
+    attribué: 'en cours',
+    planifie: 'en cours',
+    planifié: 'en cours',
+    planned: 'en cours',
+    enconception: 'en cours',
+    enretard: 'en cours',
+    enreview: 'en inspection',
+    eninspection: 'en inspection',
+    enattente: 'en attente',
+    draft: 'en attente',
+    brouillon: 'en attente',
+    prequalification: 'en attente',
+    termine: 'terminé',
+    terminé: 'terminé',
+    completed: 'terminé',
+    encloture: 'terminé',
+    suspendu: 'suspendu',
+    annule: 'annulé',
+    annulé: 'annulé',
+    cancelled: 'annulé',
+  };
+  return map[raw] ?? 'en attente';
+}
+
 export class SupabaseProjectAdapter implements IProjectRepository {
   // ============= CRUD Operations =============
 
@@ -63,11 +103,16 @@ export class SupabaseProjectAdapter implements IProjectRepository {
   }
 
   async create(projectData: Record<string, unknown>): Promise<Project> {
-    const supabaseData = ProjectTransformer.toSupabase(projectData as Partial<Project>);
+    const supabaseData = ProjectTransformer.toSupabase(projectData as Partial<Project>) as Record<string, unknown>;
+    if ('status' in supabaseData) {
+      const normalized = normalizeStatusForDb(supabaseData.status);
+      if (normalized) supabaseData.status = normalized;
+      else delete supabaseData.status;
+    }
 
     const { data, error } = await supabase
       .from('projects')
-      .insert(supabaseData as Record<string, unknown>)
+      .insert(supabaseData)
       .select()
       .single();
 
@@ -80,11 +125,16 @@ export class SupabaseProjectAdapter implements IProjectRepository {
       throw new Error('Invalid project ID provided');
     }
 
-    const entityData = ProjectTransformer.toSupabase(updates as Project);
+    const entityData = ProjectTransformer.toSupabase(updates as Project) as Record<string, unknown>;
+    if ('status' in entityData) {
+      const normalized = normalizeStatusForDb(entityData.status);
+      if (normalized) entityData.status = normalized;
+      else delete entityData.status;
+    }
 
     const { data, error } = await supabase
       .from('projects')
-      .update(entityData as Record<string, unknown>)
+      .update(entityData)
       .eq('id', id)
       .select()
       .single();
