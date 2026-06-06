@@ -301,35 +301,48 @@ export class ProjectAnalyticsService {
       }
 
       const inspections = await this.inspectionRepository.findByProjectId(projectDetail.id);
-      const completedInspections = inspections.filter(i => 
-        (i.status as string) === 'Completed'
-      ).length;
+      const passed = inspections.filter((i) => {
+        const s = String((i as any).status || '').toLowerCase();
+        return s === 'completed' || s === 'passed' || s === 'approved';
+      }).length;
       const totalInspections = inspections.length;
-      
-      const complianceScore = totalInspections > 0 ? Math.round((completedInspections / totalInspections) * 100) : 85;
-      
+
+      // Score de conformité réel : passés / total. 0 si aucune inspection (pas de valeur fictive).
+      const complianceScore = totalInspections > 0
+        ? Math.round((passed / totalInspections) * 100)
+        : 0;
+
+      // Catégories réelles : alertes non résolues classées par sévérité
+      const alerts = ((projectDetail as any).alerts || []) as Array<any>;
+      const complianceIssues = alerts
+        .filter((a) => !a.resolved && !a.acknowledged)
+        .map((a) => ({
+          category: String(a.category || a.type || 'Autre'),
+          severity: String(a.severity || 'low').toLowerCase(),
+          description: String(a.message || a.description || ''),
+          dueDate: a.dueDate || a.due_date || new Date().toISOString(),
+        }));
+
+      // Dates d'audit : tirées des inspections réelles (dernière complétée / prochaine planifiée)
+      const completed = inspections
+        .filter((i) => String((i as any).status || '').toLowerCase() === 'completed')
+        .map((i) => new Date((i as any).completedAt || (i as any).updatedAt || (i as any).inspectionDate || 0).getTime())
+        .filter((t) => t > 0)
+        .sort((a, b) => b - a);
+      const upcoming = inspections
+        .map((i) => new Date((i as any).scheduledDate || (i as any).inspectionDate || 0).getTime())
+        .filter((t) => t > Date.now())
+        .sort((a, b) => a - b);
+
       return {
         complianceScore,
-        regulatoryCompliance: Math.min(100, complianceScore + 5),
-        safetyCompliance: Math.max(70, complianceScore - 2),
-        qualityCompliance: Math.min(100, complianceScore + 3),
-        documentationCompliance: Math.max(75, complianceScore - 3),
-        lastAuditDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-        nextAuditDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
-        complianceIssues: [
-          {
-            category: 'Documentation',
-            severity: 'medium',
-            description: 'Missing safety inspection reports for phase 2',
-            dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
-          },
-          {
-            category: 'Quality',
-            severity: 'low',
-            description: 'Minor deviations in material specifications',
-            dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-          }
-        ]
+        regulatoryCompliance: complianceScore,
+        safetyCompliance: complianceScore,
+        qualityCompliance: complianceScore,
+        documentationCompliance: complianceScore,
+        lastAuditDate: completed[0] ? new Date(completed[0]).toISOString() : '',
+        nextAuditDate: upcoming[0] ? new Date(upcoming[0]).toISOString() : '',
+        complianceIssues,
       };
     } catch (error) {
       console.error('ProjectAnalyticsService.getComplianceData failed:', error);
