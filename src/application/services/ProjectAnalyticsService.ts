@@ -149,7 +149,8 @@ export class ProjectAnalyticsService {
         timelineVariance,
         resourceUtilization,
         costEfficiency: budget > 0 ? (actualCost / budget) * 100 : 0,
-        schedulePerformance: spi * 100,
+        // SPI brut (0-1+) pour rester compatible avec les consommateurs existants (`>= 1`, `* 3`).
+        schedulePerformance: spi,
         // Aucune source de feedback parties prenantes branchée : 0 plutôt qu'une valeur fictive.
         stakeholderSatisfaction: 0,
         lastUpdated: new Date().toISOString(),
