@@ -51,7 +51,7 @@ export class ProjectAnalyticsService {
       }
 
       const projectData = await this.projectRepository.findWithRelatedData(projectId);
-      
+
       if (!projectData.project) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Project not found');
       }
@@ -59,42 +59,106 @@ export class ProjectAnalyticsService {
       const tasks = projectData.tasks || [];
       const completedTasks = tasks.filter((task) => task.status === 'completed').length;
       const totalTasks = tasks.length;
-      const overallProgress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+      // Avancement réel : priorité au progress projet (calculé via phases), fallback ratio tâches.
+      const projectProgress = Number((projectData.project as any).progress ?? 0);
+      const overallProgress = projectProgress > 0
+        ? projectProgress
+        : (totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0);
 
       const budget = projectData.project.budget || 0;
       const payments = projectData.payments || [];
       const actualCost = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
 
-      // Build a minimal ProjectAnalyticsDTO - extends ProjectDTO minus id/createdAt/updatedAt
+      // --- EVM dérivé des vraies dates et progression ---
+      const startDate = projectData.project.startDate ? new Date(projectData.project.startDate as any) : null;
+      const endDate = (projectData.project as any).endDate ? new Date((projectData.project as any).endDate) : null;
+      let plannedValue = 0;
+      let timeProgressPct = 0;
+      if (startDate && endDate) {
+        const total = endDate.getTime() - startDate.getTime();
+        const elapsed = Math.max(0, Date.now() - startDate.getTime());
+        const ratio = total > 0 ? Math.min(1, elapsed / total) : 0;
+        timeProgressPct = ratio * 100;
+        plannedValue = budget * ratio;
+      }
+      const earnedValue = budget * (overallProgress / 100);
+      const spi = plannedValue > 0 ? earnedValue / plannedValue : 1;
+      const cpi = actualCost > 0 ? earnedValue / actualCost : 1;
+      const timelineVariance = overallProgress - timeProgressPct;
+
+      // --- Milestones réels ---
+      let milestoneCompletion = 0;
+      try {
+        const milestones = await this.milestoneRepository.findByProjectId(projectId);
+        if (milestones.length > 0) {
+          const done = milestones.filter((m) => m.status === 'completed').length;
+          milestoneCompletion = (done / milestones.length) * 100;
+        }
+      } catch { /* no-op */ }
+
+      // --- Qualité réelle : taux de conformité des inspections ---
+      let qualityScore = 0;
+      try {
+        const inspections = await this.inspectionRepository.findByProjectId(projectId);
+        if (inspections.length > 0) {
+          const passed = inspections.filter((i) => {
+            const s = String((i as any).status || '').toLowerCase();
+            return s === 'completed' || s === 'passed' || s === 'approved';
+          }).length;
+          qualityScore = (passed / inspections.length) * 100;
+        }
+      } catch { /* no-op */ }
+
+      // --- Risque réel : moyenne pondérée probabilité × impact ---
+      const risks = (projectData as any).risks || [];
+      let riskScore = 0;
+      if (risks.length > 0) {
+        const sum = risks.reduce((acc: number, r: any) => {
+          const p = String(r.probability || 'low').toLowerCase() as 'low' | 'medium' | 'high';
+          const i = String(r.impact || 'low').toLowerCase() as 'low' | 'medium' | 'high';
+          return acc + this.calculateRiskScore(p, i);
+        }, 0);
+        riskScore = Math.min(100, sum / risks.length);
+      }
+
+      // --- Utilisation ressources : tâches actives / capacité équipe ---
+      const teamSize = projectData.project.teamSize || 0;
+      const activeTasks = tasks.filter((t) => t.status === 'in_progress').length;
+      const resourceUtilization = teamSize > 0 ? Math.min(100, (activeTasks / teamSize) * 100) : 0;
+
       return {
-        // ProjectDTO required fields
         title: projectData.project.title || '',
         description: projectData.project.description || '',
         status: (projectData.project.status as 'planning' | 'in_progress' | 'completed' | 'cancelled' | 'on_hold') || 'en cours',
         progress: overallProgress,
-        budget: budget,
+        budget,
         location: projectData.project.location || '',
         startDate: projectData.project.startDate?.toISOString() || new Date().toISOString(),
-        teamSize: projectData.project.teamSize || 0,
-        currency: 'XOF',
+        teamSize,
+        currency: (projectData.project as any).currency || 'MRU',
         thumbnail: '',
 
-        // Analytics-specific fields
         totalBudget: budget,
-        actualCost: actualCost,
+        actualCost,
         budgetVariance: budget - actualCost,
         remainingBudget: budget - actualCost,
         progressPercentage: overallProgress,
-        milestoneCompletion: 75,
-        riskScore: 30,
-        qualityScore: 85,
-        timelineVariance: 0,
-        resourceUtilization: 75,
+        milestoneCompletion,
+        riskScore,
+        qualityScore,
+        timelineVariance,
+        resourceUtilization,
         costEfficiency: budget > 0 ? (actualCost / budget) * 100 : 0,
-        schedulePerformance: overallProgress / 100,
-        stakeholderSatisfaction: 80,
+        schedulePerformance: spi * 100,
+        // Aucune source de feedback parties prenantes branchée : 0 plutôt qu'une valeur fictive.
+        stakeholderSatisfaction: 0,
         lastUpdated: new Date().toISOString(),
-        cpi: budget > 0 ? budget / Math.max(actualCost, 1) : 1.0
+        cpi,
+        // Exposer EVM brut pour les widgets qui le consomment
+        plannedValue,
+        earnedValue,
+        scheduleVariance: earnedValue - plannedValue,
+        costVariance: earnedValue - actualCost,
       } as ProjectAnalyticsDTO;
     } catch (error) {
       console.error('ProjectAnalyticsService.getProjectAnalytics failed:', error);
