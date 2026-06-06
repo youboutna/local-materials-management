@@ -243,14 +243,35 @@ export class ProjectAnalyticsService {
         throw new AppError(ErrorCode.NOT_FOUND, 'Project not found');
       }
 
-      const totalBudget = projectData.project.budget || 1000000;
+      const totalBudget = projectData.project.budget || 0;
       const payments = projectData.payments || [];
       const actualCost = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
       const remainingBudget = totalBudget - actualCost;
-      const costVariance = totalBudget - actualCost;
-      const costPerformanceIndex = actualCost > 0 ? totalBudget / actualCost : 1;
-      const estimateAtCompletion = actualCost + (totalBudget - actualCost) / costPerformanceIndex;
+
+      // EVM-aligned : CPI = EV / AC ; EAC = BAC / CPI (PMI standard)
+      const progress = Number((projectData.project as any).progress ?? 0);
+      const earnedValue = totalBudget * (progress / 100);
+      const costPerformanceIndex = actualCost > 0 ? earnedValue / actualCost : 1;
+      const costVariance = earnedValue - actualCost;
+      const estimateAtCompletion = costPerformanceIndex > 0
+        ? totalBudget / costPerformanceIndex
+        : totalBudget;
       const varianceAtCompletion = totalBudget - estimateAtCompletion;
+
+      // Répartition réelle par catégorie (depuis payments.category), pas de split arbitraire
+      const breakdownMap = new Map<string, { budgeted: number; actual: number }>();
+      for (const p of payments) {
+        const cat = String((p as any).category || 'Autre');
+        const entry = breakdownMap.get(cat) || { budgeted: 0, actual: 0 };
+        entry.actual += Number(p.amount || 0);
+        breakdownMap.set(cat, entry);
+      }
+      const costBreakdown = Array.from(breakdownMap.entries()).map(([category, v]) => ({
+        category,
+        budgetedCost: v.budgeted,
+        actualCost: v.actual,
+        variance: v.budgeted - v.actual,
+      }));
 
       return {
         totalBudget,
@@ -261,13 +282,9 @@ export class ProjectAnalyticsService {
         costPerformanceIndex,
         estimateAtCompletion,
         varianceAtCompletion,
-        costBreakdown: [
-          { category: 'Labor', budgetedCost: totalBudget * 0.4, actualCost: actualCost * 0.4, variance: costVariance * 0.4 },
-          { category: 'Materials', budgetedCost: totalBudget * 0.3, actualCost: actualCost * 0.3, variance: costVariance * 0.3 },
-          { category: 'Equipment', budgetedCost: totalBudget * 0.2, actualCost: actualCost * 0.2, variance: costVariance * 0.2 },
-          { category: 'Other', budgetedCost: totalBudget * 0.1, actualCost: actualCost * 0.1, variance: costVariance * 0.1 }
-        ]
+        costBreakdown,
       };
+
     } catch (error) {
       console.error('ProjectAnalyticsService.getProjectCostAnalysis failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get project cost analysis');
