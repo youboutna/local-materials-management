@@ -51,7 +51,7 @@ export class ProjectAnalyticsService {
       }
 
       const projectData = await this.projectRepository.findWithRelatedData(projectId);
-      
+
       if (!projectData.project) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Project not found');
       }
@@ -59,42 +59,107 @@ export class ProjectAnalyticsService {
       const tasks = projectData.tasks || [];
       const completedTasks = tasks.filter((task) => task.status === 'completed').length;
       const totalTasks = tasks.length;
-      const overallProgress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+      // Avancement réel : priorité au progress projet (calculé via phases), fallback ratio tâches.
+      const projectProgress = Number((projectData.project as any).progress ?? 0);
+      const overallProgress = projectProgress > 0
+        ? projectProgress
+        : (totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0);
 
       const budget = projectData.project.budget || 0;
       const payments = projectData.payments || [];
       const actualCost = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
 
-      // Build a minimal ProjectAnalyticsDTO - extends ProjectDTO minus id/createdAt/updatedAt
+      // --- EVM dérivé des vraies dates et progression ---
+      const startDate = projectData.project.startDate ? new Date(projectData.project.startDate as any) : null;
+      const endDate = (projectData.project as any).endDate ? new Date((projectData.project as any).endDate) : null;
+      let plannedValue = 0;
+      let timeProgressPct = 0;
+      if (startDate && endDate) {
+        const total = endDate.getTime() - startDate.getTime();
+        const elapsed = Math.max(0, Date.now() - startDate.getTime());
+        const ratio = total > 0 ? Math.min(1, elapsed / total) : 0;
+        timeProgressPct = ratio * 100;
+        plannedValue = budget * ratio;
+      }
+      const earnedValue = budget * (overallProgress / 100);
+      const spi = plannedValue > 0 ? earnedValue / plannedValue : 1;
+      const cpi = actualCost > 0 ? earnedValue / actualCost : 1;
+      const timelineVariance = overallProgress - timeProgressPct;
+
+      // --- Milestones réels ---
+      let milestoneCompletion = 0;
+      try {
+        const milestones = await this.milestoneRepository.findByProjectId(projectId);
+        if (milestones.length > 0) {
+          const done = milestones.filter((m) => m.status === 'completed').length;
+          milestoneCompletion = (done / milestones.length) * 100;
+        }
+      } catch { /* no-op */ }
+
+      // --- Qualité réelle : taux de conformité des inspections ---
+      let qualityScore = 0;
+      try {
+        const inspections = await this.inspectionRepository.findByProjectId(projectId);
+        if (inspections.length > 0) {
+          const passed = inspections.filter((i) => {
+            const s = String((i as any).status || '').toLowerCase();
+            return s === 'completed' || s === 'passed' || s === 'approved';
+          }).length;
+          qualityScore = (passed / inspections.length) * 100;
+        }
+      } catch { /* no-op */ }
+
+      // --- Risque réel : moyenne pondérée probabilité × impact ---
+      const risks = (projectData as any).risks || [];
+      let riskScore = 0;
+      if (risks.length > 0) {
+        const sum = risks.reduce((acc: number, r: any) => {
+          const p = String(r.probability || 'low').toLowerCase() as 'low' | 'medium' | 'high';
+          const i = String(r.impact || 'low').toLowerCase() as 'low' | 'medium' | 'high';
+          return acc + this.calculateRiskScore(p, i);
+        }, 0);
+        riskScore = Math.min(100, sum / risks.length);
+      }
+
+      // --- Utilisation ressources : tâches actives / capacité équipe ---
+      const teamSize = projectData.project.teamSize || 0;
+      const activeTasks = tasks.filter((t) => t.status === 'in_progress').length;
+      const resourceUtilization = teamSize > 0 ? Math.min(100, (activeTasks / teamSize) * 100) : 0;
+
       return {
-        // ProjectDTO required fields
         title: projectData.project.title || '',
         description: projectData.project.description || '',
         status: (projectData.project.status as 'planning' | 'in_progress' | 'completed' | 'cancelled' | 'on_hold') || 'en cours',
         progress: overallProgress,
-        budget: budget,
+        budget,
         location: projectData.project.location || '',
         startDate: projectData.project.startDate?.toISOString() || new Date().toISOString(),
-        teamSize: projectData.project.teamSize || 0,
-        currency: 'XOF',
+        teamSize,
+        currency: (projectData.project as any).currency || 'MRU',
         thumbnail: '',
 
-        // Analytics-specific fields
         totalBudget: budget,
-        actualCost: actualCost,
+        actualCost,
         budgetVariance: budget - actualCost,
         remainingBudget: budget - actualCost,
         progressPercentage: overallProgress,
-        milestoneCompletion: 75,
-        riskScore: 30,
-        qualityScore: 85,
-        timelineVariance: 0,
-        resourceUtilization: 75,
+        milestoneCompletion,
+        riskScore,
+        qualityScore,
+        timelineVariance,
+        resourceUtilization,
         costEfficiency: budget > 0 ? (actualCost / budget) * 100 : 0,
-        schedulePerformance: overallProgress / 100,
-        stakeholderSatisfaction: 80,
+        // SPI brut (0-1+) pour rester compatible avec les consommateurs existants (`>= 1`, `* 3`).
+        schedulePerformance: spi,
+        // Aucune source de feedback parties prenantes branchée : 0 plutôt qu'une valeur fictive.
+        stakeholderSatisfaction: 0,
         lastUpdated: new Date().toISOString(),
-        cpi: budget > 0 ? budget / Math.max(actualCost, 1) : 1.0
+        cpi,
+        // Exposer EVM brut pour les widgets qui le consomment
+        plannedValue,
+        earnedValue,
+        scheduleVariance: earnedValue - plannedValue,
+        costVariance: earnedValue - actualCost,
       } as ProjectAnalyticsDTO;
     } catch (error) {
       console.error('ProjectAnalyticsService.getProjectAnalytics failed:', error);
@@ -179,14 +244,35 @@ export class ProjectAnalyticsService {
         throw new AppError(ErrorCode.NOT_FOUND, 'Project not found');
       }
 
-      const totalBudget = projectData.project.budget || 1000000;
+      const totalBudget = projectData.project.budget || 0;
       const payments = projectData.payments || [];
       const actualCost = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
       const remainingBudget = totalBudget - actualCost;
-      const costVariance = totalBudget - actualCost;
-      const costPerformanceIndex = actualCost > 0 ? totalBudget / actualCost : 1;
-      const estimateAtCompletion = actualCost + (totalBudget - actualCost) / costPerformanceIndex;
+
+      // EVM-aligned : CPI = EV / AC ; EAC = BAC / CPI (PMI standard)
+      const progress = Number((projectData.project as any).progress ?? 0);
+      const earnedValue = totalBudget * (progress / 100);
+      const costPerformanceIndex = actualCost > 0 ? earnedValue / actualCost : 1;
+      const costVariance = earnedValue - actualCost;
+      const estimateAtCompletion = costPerformanceIndex > 0
+        ? totalBudget / costPerformanceIndex
+        : totalBudget;
       const varianceAtCompletion = totalBudget - estimateAtCompletion;
+
+      // Répartition réelle par catégorie (depuis payments.category), pas de split arbitraire
+      const breakdownMap = new Map<string, { budgeted: number; actual: number }>();
+      for (const p of payments) {
+        const cat = String((p as any).category || 'Autre');
+        const entry = breakdownMap.get(cat) || { budgeted: 0, actual: 0 };
+        entry.actual += Number(p.amount || 0);
+        breakdownMap.set(cat, entry);
+      }
+      const costBreakdown = Array.from(breakdownMap.entries()).map(([category, v]) => ({
+        category,
+        budgetedCost: v.budgeted,
+        actualCost: v.actual,
+        variance: v.budgeted - v.actual,
+      }));
 
       return {
         totalBudget,
@@ -197,13 +283,9 @@ export class ProjectAnalyticsService {
         costPerformanceIndex,
         estimateAtCompletion,
         varianceAtCompletion,
-        costBreakdown: [
-          { category: 'Labor', budgetedCost: totalBudget * 0.4, actualCost: actualCost * 0.4, variance: costVariance * 0.4 },
-          { category: 'Materials', budgetedCost: totalBudget * 0.3, actualCost: actualCost * 0.3, variance: costVariance * 0.3 },
-          { category: 'Equipment', budgetedCost: totalBudget * 0.2, actualCost: actualCost * 0.2, variance: costVariance * 0.2 },
-          { category: 'Other', budgetedCost: totalBudget * 0.1, actualCost: actualCost * 0.1, variance: costVariance * 0.1 }
-        ]
+        costBreakdown,
       };
+
     } catch (error) {
       console.error('ProjectAnalyticsService.getProjectCostAnalysis failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get project cost analysis');
@@ -220,35 +302,48 @@ export class ProjectAnalyticsService {
       }
 
       const inspections = await this.inspectionRepository.findByProjectId(projectDetail.id);
-      const completedInspections = inspections.filter(i => 
-        (i.status as string) === 'Completed'
-      ).length;
+      const passed = inspections.filter((i) => {
+        const s = String((i as any).status || '').toLowerCase();
+        return s === 'completed' || s === 'passed' || s === 'approved';
+      }).length;
       const totalInspections = inspections.length;
-      
-      const complianceScore = totalInspections > 0 ? Math.round((completedInspections / totalInspections) * 100) : 85;
-      
+
+      // Score de conformité réel : passés / total. 0 si aucune inspection (pas de valeur fictive).
+      const complianceScore = totalInspections > 0
+        ? Math.round((passed / totalInspections) * 100)
+        : 0;
+
+      // Catégories réelles : alertes non résolues classées par sévérité
+      const alerts = ((projectDetail as any).alerts || []) as Array<any>;
+      const complianceIssues = alerts
+        .filter((a) => !a.resolved && !a.acknowledged)
+        .map((a) => ({
+          category: String(a.category || a.type || 'Autre'),
+          severity: String(a.severity || 'low').toLowerCase(),
+          description: String(a.message || a.description || ''),
+          dueDate: a.dueDate || a.due_date || new Date().toISOString(),
+        }));
+
+      // Dates d'audit : tirées des inspections réelles (dernière complétée / prochaine planifiée)
+      const completed = inspections
+        .filter((i) => String((i as any).status || '').toLowerCase() === 'completed')
+        .map((i) => new Date((i as any).completedAt || (i as any).updatedAt || (i as any).inspectionDate || 0).getTime())
+        .filter((t) => t > 0)
+        .sort((a, b) => b - a);
+      const upcoming = inspections
+        .map((i) => new Date((i as any).scheduledDate || (i as any).inspectionDate || 0).getTime())
+        .filter((t) => t > Date.now())
+        .sort((a, b) => a - b);
+
       return {
         complianceScore,
-        regulatoryCompliance: Math.min(100, complianceScore + 5),
-        safetyCompliance: Math.max(70, complianceScore - 2),
-        qualityCompliance: Math.min(100, complianceScore + 3),
-        documentationCompliance: Math.max(75, complianceScore - 3),
-        lastAuditDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-        nextAuditDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
-        complianceIssues: [
-          {
-            category: 'Documentation',
-            severity: 'medium',
-            description: 'Missing safety inspection reports for phase 2',
-            dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
-          },
-          {
-            category: 'Quality',
-            severity: 'low',
-            description: 'Minor deviations in material specifications',
-            dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-          }
-        ]
+        regulatoryCompliance: complianceScore,
+        safetyCompliance: complianceScore,
+        qualityCompliance: complianceScore,
+        documentationCompliance: complianceScore,
+        lastAuditDate: completed[0] ? new Date(completed[0]).toISOString() : '',
+        nextAuditDate: upcoming[0] ? new Date(upcoming[0]).toISOString() : '',
+        complianceIssues,
       };
     } catch (error) {
       console.error('ProjectAnalyticsService.getComplianceData failed:', error);
