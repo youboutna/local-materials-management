@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { ReportingService } from '@/application/services/ReportingService';
+import { DeviationEngine } from '@/application/services/DeviationEngine';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import { pdf } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver';
