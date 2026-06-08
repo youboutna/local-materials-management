@@ -331,20 +331,22 @@ const RoleBasedInspectionMonitoring = () => {
             <div className="flex-1">
               <Label htmlFor="search">Recherche</Label>
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <Input
                   id="search"
+                  type="search"
                   placeholder="Rechercher par inspecteur, commentaires ou ID..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
+                  aria-label="Rechercher des inspections"
                 />
               </div>
             </div>
             <div className="w-48">
               <Label htmlFor="status">Statut</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
+                <SelectTrigger id="status" aria-label="Filtrer par statut">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -429,8 +431,8 @@ const RoleBasedInspectionMonitoring = () => {
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <Settings className="h-4 w-4" />
+                            <Button variant="ghost" size="sm" aria-label="Actions sur l'inspection">
+                              <Settings className="h-4 w-4" aria-hidden="true" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">

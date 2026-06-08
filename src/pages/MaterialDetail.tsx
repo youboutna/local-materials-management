@@ -103,16 +103,16 @@ const MaterialDetail = () => {
       pageDescription={material.category}
       actions={
         <Button asChild>
-          <Link to={`/materials/${material.id}/edit`}>
-            <Edit className="mr-2 h-4 w-4" />
+          <Link to={`/materials/${material.id}/edit`} aria-label={`Modifier ${material.name}`}>
+            <Edit className="mr-2 h-4 w-4" aria-hidden="true" />
             Modifier
           </Link>
         </Button>
       }
     >
       <Button variant="outline" size="sm" asChild className="mb-6">
-        <Link to="/materials">
-          <ArrowLeft className="mr-2 h-4 w-4" />
+        <Link to="/materials" aria-label="Retour à la liste des matériaux">
+          <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
           Retour
         </Link>
       </Button>

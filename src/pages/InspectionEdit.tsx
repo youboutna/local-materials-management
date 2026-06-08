@@ -121,16 +121,17 @@ const InspectionEdit = () => {
         variant="ghost"
         onClick={() => navigate(-1)}
         className="mb-4"
+        aria-label="Revenir à la page précédente"
       >
-        <ArrowLeft className="h-4 w-4 mr-2" />
+        <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
         {t('inspection.common.back')}
       </Button>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>{t('inspection.edit.title')}</CardTitle>
-          <Button variant="outline" size="sm" onClick={() => navigate(`/inspections/${id}`)}>
-            <ExternalLink className="h-4 w-4 mr-2" />
+          <Button variant="outline" size="sm" onClick={() => navigate(`/inspections/${id}`)} aria-label="Consulter le détail de l'inspection">
+            <ExternalLink className="h-4 w-4 mr-2" aria-hidden="true" />
             Consulter
           </Button>
         </CardHeader>
@@ -153,6 +154,7 @@ const InspectionEdit = () => {
                   value={formData.inspector}
                   onChange={(e) => setFormData(prev => ({ ...prev, inspector: e.target.value }))}
                   required
+                  aria-required="true"
                   placeholder={t('inspection.common.inspector_placeholder')}
                 />
               </div>
@@ -167,6 +169,7 @@ const InspectionEdit = () => {
                   value={formData.date}
                   onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
                   required
+                  aria-required="true"
                 />
               </div>
               
@@ -176,14 +179,14 @@ const InspectionEdit = () => {
                   value={formData.status} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="status" aria-label={t('inspection.common.status_label')}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {statusOptions.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         <div className="flex items-center gap-2">
-                          <option.icon className="h-4 w-4" />
+                          <option.icon className="h-4 w-4" aria-hidden="true" />
                           {option.label}
                         </div>
                       </SelectItem>
@@ -225,7 +228,7 @@ const InspectionEdit = () => {
               >
                 {t('inspection.common.cancel')}
               </Button>
-              <Button type="submit" disabled={saving}>
+              <Button type="submit" disabled={saving} aria-busy={saving}>
                 {saving ? t('inspection.common.saving') : t('inspection.common.save')}
               </Button>
             </div>
