@@ -157,7 +157,7 @@ const ProjectPhasesDetail: React.FC = () => {
                 <ResourcesMaterialsStep
                   selectedMaterials={selectedMaterials}
                   onMaterialsChange={setSelectedMaterials}
-                  formData={{ id }}
+                  projectData={{ id }}
                   currentPhaseId={selectedPhaseId}
                   isEditing={true}
                 />
