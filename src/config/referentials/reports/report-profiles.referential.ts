@@ -26,13 +26,14 @@ export type ReportSectionKey =
   | 'escalationAlerts'
   | 'evmAnalysis'
   | 'pertAnalysis'
-  | 'ganttChart';
+  | 'ganttChart'
+  | 'monitoringEvaluation';
 
 export const ALL_REPORT_SECTIONS: ReportSectionKey[] = [
   'overview', 'financial', 'timeline', 'materials', 'phases', 'inspections',
   'risks', 'kpi', 'milestones', 'bankGuarantees', 'insurance', 'paymentBlocks',
   'suppliers', 'documents', 'employees', 'escalationAlerts', 'evmAnalysis',
-  'pertAnalysis', 'ganttChart',
+  'pertAnalysis', 'ganttChart', 'monitoringEvaluation',
 ];
 
 export type ReportDepth = 'light' | 'full' | 'financial' | 'managerial';
@@ -51,7 +52,7 @@ export const REPORT_PROFILES: Record<ReportProfile, ReportProfileConfig> = {
     label: { fr: 'Résumé exécutif', en: 'Executive summary' },
     description: { fr: 'Rapport concis avec les informations essentielles du projet' },
     depth: 'light',
-    includes: ['overview', 'financial', 'timeline', 'phases', 'kpi', 'milestones'],
+    includes: ['overview', 'financial', 'timeline', 'phases', 'kpi', 'milestones', 'monitoringEvaluation'],
   },
   detailed: {
     code: 'detailed',
@@ -68,6 +69,7 @@ export const REPORT_PROFILES: Record<ReportProfile, ReportProfileConfig> = {
     includes: [
       'overview', 'financial', 'phases', 'risks', 'kpi', 'bankGuarantees',
       'insurance', 'paymentBlocks', 'suppliers', 'escalationAlerts', 'evmAnalysis',
+      'monitoringEvaluation',
     ],
   },
   project_manager: {
@@ -78,7 +80,7 @@ export const REPORT_PROFILES: Record<ReportProfile, ReportProfileConfig> = {
     includes: [
       'overview', 'financial', 'timeline', 'materials', 'phases', 'inspections',
       'risks', 'kpi', 'milestones', 'documents', 'employees', 'escalationAlerts',
-      'evmAnalysis', 'pertAnalysis', 'ganttChart',
+      'evmAnalysis', 'pertAnalysis', 'ganttChart', 'monitoringEvaluation',
     ],
   },
 };
@@ -126,4 +128,5 @@ export const REPORT_SECTION_LABELS: Record<ReportSectionKey, string> = {
   evmAnalysis: 'Analyse EVM',
   pertAnalysis: 'Analyse PERT',
   ganttChart: 'Diagramme de Gantt',
+  monitoringEvaluation: 'Suivi & Évaluation',
 };

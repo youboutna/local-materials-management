@@ -1028,6 +1028,68 @@ export type Database = {
           },
         ]
       }
+      national_depots: {
+        Row: {
+          address: string | null
+          city: string | null
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          latitude: number | null
+          longitude: number | null
+          manager_id: string | null
+          name: string
+          notes: string | null
+          operator: string | null
+          total_capacity: number | null
+          updated_at: string
+          wilaya: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          manager_id?: string | null
+          name: string
+          notes?: string | null
+          operator?: string | null
+          total_capacity?: number | null
+          updated_at?: string
+          wilaya?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          manager_id?: string | null
+          name?: string
+          notes?: string | null
+          operator?: string | null
+          total_capacity?: number | null
+          updated_at?: string
+          wilaya?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "national_depots_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -2426,6 +2488,7 @@ export type Database = {
       }
       stocks: {
         Row: {
+          brand_id: string | null
           capacity: number
           city_code: string | null
           city_name_ar: string | null
@@ -2434,18 +2497,23 @@ export type Database = {
           current_stock: number
           current_tarif_unit: number | null
           depot: string
+          depot_id: string | null
           fuel_type_code: string | null
           id: string
           last_revaluation_date: string | null
           last_update: string | null
           notes: string | null
+          parent_stock_id: string | null
           product: string
           rotation_rate: number | null
+          station_id: string | null
           status: string
+          stock_level: Database["public"]["Enums"]["stock_level"]
           trend: string | null
           updated_at: string
         }
         Insert: {
+          brand_id?: string | null
           capacity: number
           city_code?: string | null
           city_name_ar?: string | null
@@ -2454,18 +2522,23 @@ export type Database = {
           current_stock?: number
           current_tarif_unit?: number | null
           depot: string
+          depot_id?: string | null
           fuel_type_code?: string | null
           id?: string
           last_revaluation_date?: string | null
           last_update?: string | null
           notes?: string | null
+          parent_stock_id?: string | null
           product: string
           rotation_rate?: number | null
+          station_id?: string | null
           status?: string
+          stock_level?: Database["public"]["Enums"]["stock_level"]
           trend?: string | null
           updated_at?: string
         }
         Update: {
+          brand_id?: string | null
           capacity?: number
           city_code?: string | null
           city_name_ar?: string | null
@@ -2474,18 +2547,44 @@ export type Database = {
           current_stock?: number
           current_tarif_unit?: number | null
           depot?: string
+          depot_id?: string | null
           fuel_type_code?: string | null
           id?: string
           last_revaluation_date?: string | null
           last_update?: string | null
           notes?: string | null
+          parent_stock_id?: string | null
           product?: string
           rotation_rate?: number | null
+          station_id?: string | null
           status?: string
+          stock_level?: Database["public"]["Enums"]["stock_level"]
           trend?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "stocks_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stocks_depot_id_fkey"
+            columns: ["depot_id"]
+            isOneToOne: false
+            referencedRelation: "national_depots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stocks_parent_stock_id_fkey"
+            columns: ["parent_stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       submission_access_logs: {
         Row: {
@@ -6004,6 +6103,7 @@ export type Database = {
           created_at: string | null
           destination: string | null
           destination_code: string | null
+          destination_stock_id: string | null
           id: string | null
           index_km: number | null
           label_prod_ar: string | null
@@ -6019,16 +6119,24 @@ export type Database = {
           rec_id: string | null
           recorded_by: string | null
           reference: string | null
+          rejection_reason: string | null
+          source_stock_id: string | null
           stock_id: string | null
           supplier: string | null
           tarif_unit: number | null
           total_value: number | null
           unit_price: number | null
+          validated_at: string | null
+          validated_by: string | null
+          validation_status:
+            | Database["public"]["Enums"]["movement_validation_status"]
+            | null
         }
         Insert: {
           created_at?: string | null
           destination?: string | null
           destination_code?: string | null
+          destination_stock_id?: string | null
           id?: string | null
           index_km?: number | null
           label_prod_ar?: string | null
@@ -6044,16 +6152,24 @@ export type Database = {
           rec_id?: string | null
           recorded_by?: string | null
           reference?: string | null
+          rejection_reason?: string | null
+          source_stock_id?: string | null
           stock_id?: string | null
           supplier?: string | null
           tarif_unit?: number | null
           total_value?: number | null
           unit_price?: number | null
+          validated_at?: string | null
+          validated_by?: string | null
+          validation_status?:
+            | Database["public"]["Enums"]["movement_validation_status"]
+            | null
         }
         Update: {
           created_at?: string | null
           destination?: string | null
           destination_code?: string | null
+          destination_stock_id?: string | null
           id?: string | null
           index_km?: number | null
           label_prod_ar?: string | null
@@ -6069,11 +6185,18 @@ export type Database = {
           rec_id?: string | null
           recorded_by?: string | null
           reference?: string | null
+          rejection_reason?: string | null
+          source_stock_id?: string | null
           stock_id?: string | null
           supplier?: string | null
           tarif_unit?: number | null
           total_value?: number | null
           unit_price?: number | null
+          validated_at?: string | null
+          validated_by?: string | null
+          validation_status?:
+            | Database["public"]["Enums"]["movement_validation_status"]
+            | null
         }
         Relationships: []
       }
@@ -6927,6 +7050,10 @@ export type Database = {
       }
       can_inspect: { Args: { _user_id: string }; Returns: boolean }
       can_view_national_data: { Args: { _user_id: string }; Returns: boolean }
+      can_view_stock: {
+        Args: { _stock_id: string; _user_id: string }
+        Returns: boolean
+      }
       create_progress_invoice: {
         Args: {
           p_inspection_id: string
@@ -7094,6 +7221,10 @@ export type Database = {
         Returns: boolean
       }
       is_current_user_admin: { Args: never; Returns: boolean }
+      is_depot_manager_of: {
+        Args: { _depot_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_station_owner: {
         Args: { _station_id: string; _user_id: string }
         Returns: boolean
@@ -7163,6 +7294,12 @@ export type Database = {
         | "tender"
         | "supplier_catalog"
       mission_status: "planned" | "in_progress" | "completed" | "cancelled"
+      movement_validation_status:
+        | "pending"
+        | "validated"
+        | "rejected"
+        | "in_transit"
+      stock_level: "national" | "brand" | "station"
       supply_request_status: "pending" | "approved" | "rejected" | "completed"
       tender_document_category: "administrative" | "technical" | "financial"
       tender_document_subcategory:
@@ -7396,6 +7533,13 @@ export const Constants = {
         "supplier_catalog",
       ],
       mission_status: ["planned", "in_progress", "completed", "cancelled"],
+      movement_validation_status: [
+        "pending",
+        "validated",
+        "rejected",
+        "in_transit",
+      ],
+      stock_level: ["national", "brand", "station"],
       supply_request_status: ["pending", "approved", "rejected", "completed"],
       tender_document_category: ["administrative", "technical", "financial"],
       tender_document_subcategory: [
