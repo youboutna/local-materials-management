@@ -110,8 +110,13 @@ const MaterialEdit = () => {
     <AppLayout
       pageTitle={`${t("materials.edit")} - ${material.name}`}
       actions={
-        <Button variant="outline" onClick={() => navigate("/materials")} className="flex items-center gap-2">
-          <ArrowLeft className="h-4 w-4" />
+        <Button
+          variant="outline"
+          onClick={() => navigate("/materials")}
+          className="flex items-center gap-2"
+          aria-label={t("materials.back_to_list") || "Retour à la liste des matériaux"}
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           {t("materials.back_to_list")}
         </Button>
       }
@@ -119,7 +124,7 @@ const MaterialEdit = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Save className="h-5 w-5" />
+            <Save className="h-5 w-5" aria-hidden="true" />
             {t("materials.edit_details")}
           </CardTitle>
         </CardHeader>
@@ -146,12 +151,14 @@ const MaterialEdit = () => {
                 }
               }}
               disabled={isUpdating}
+              aria-busy={isUpdating}
+              aria-label={isUpdating ? t("materials.updating") : t("materials.save_changes")}
               className="bg-gradient-to-r from-terracotta-500 to-adrar-600 hover:from-terracotta-600 hover:to-adrar-700"
             >
               {isUpdating ? (
-                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t("materials.updating")}</>
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />{t("materials.updating")}</>
               ) : (
-                <><Save className="h-4 w-4 mr-2" />{t("materials.save_changes")}</>
+                <><Save className="h-4 w-4 mr-2" aria-hidden="true" />{t("materials.save_changes")}</>
               )}
             </Button>
           </div>

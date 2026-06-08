@@ -340,8 +340,8 @@ const TaskAssignmentsComponent = () => {
             {tasks?.length || 0} tâche(s) au total
           </p>
         </div>
-        <Button onClick={() => setIsCreating(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+        <Button onClick={() => setIsCreating(true)} aria-label={t("task.new") || "Créer une nouvelle tâche"}>
+          <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
           {t("task.new") || "Nouvelle Tâche"}
         </Button>
       </div>
@@ -358,14 +358,16 @@ const TaskAssignmentsComponent = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <Label htmlFor="search">
-                <Search className="h-4 w-4 inline mr-2" />
+                <Search className="h-4 w-4 inline mr-2" aria-hidden="true" />
                 Rechercher
               </Label>
               <Input
                 id="search"
+                type="search"
                 placeholder="Titre, description, assigné..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                aria-label="Rechercher une tâche"
               />
             </div>
             <div>
@@ -435,7 +437,7 @@ const TaskAssignmentsComponent = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" aria-label={editingId ? "Formulaire de modification de tâche" : "Formulaire de création de tâche"}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="title">Titre *</Label>
@@ -444,6 +446,7 @@ const TaskAssignmentsComponent = () => {
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     required
+                    aria-required="true"
                   />
                 </div>
                 <div className="space-y-2">
@@ -546,7 +549,11 @@ const TaskAssignmentsComponent = () => {
                 <Button type="button" variant="outline" onClick={resetForm}>
                   Annuler
                 </Button>
-                <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                <Button
+                  type="submit"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                  aria-busy={createMutation.isPending || updateMutation.isPending}
+                >
                   {editingId ? "Mettre à jour" : "Créer"}
                 </Button>
               </div>
@@ -567,15 +574,17 @@ const TaskAssignmentsComponent = () => {
                     size="sm"
                     variant="ghost"
                     onClick={() => handleEdit(task)}
+                    aria-label={`Modifier la tâche ${task.title}`}
                   >
-                    <Edit className="h-4 w-4" />
+                    <Edit className="h-4 w-4" aria-hidden="true" />
                   </Button>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => deleteMutation.mutate(task.id)}
+                    aria-label={`Supprimer la tâche ${task.title}`}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 </div>
               </div>
@@ -594,12 +603,12 @@ const TaskAssignmentsComponent = () => {
               </div>
               <div className="text-sm text-muted-foreground space-y-1">
                 <div className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
+                  <User className="h-4 w-4" aria-hidden="true" />
                   <span className="truncate">{getAssigneeName(task)}</span>
                 </div>
                 {(task.due_date || task.dueDate) && (
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
+                    <Calendar className="h-4 w-4" aria-hidden="true" />
                     <span>{new Date(task.due_date || task.dueDate).toLocaleDateString('fr-FR')}</span>
                   </div>
                 )}
