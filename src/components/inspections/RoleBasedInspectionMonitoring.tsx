@@ -109,6 +109,14 @@ const RoleBasedInspectionMonitoring = () => {
   const filteredInspections = useMemo(() => {
     let filtered = inspections;
 
+    // Scope by phase / project from URL (PhaseDetail cross-nav)
+    if (phaseId) {
+      filtered = filtered.filter(i => i.phase_id === phaseId);
+    }
+    if (projectId) {
+      filtered = filtered.filter(i => i.project_id === projectId);
+    }
+
     // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter(inspection =>
@@ -124,7 +132,7 @@ const RoleBasedInspectionMonitoring = () => {
     }
 
     return filtered;
-  }, [inspections, searchTerm, statusFilter]);
+  }, [inspections, searchTerm, statusFilter, phaseId, projectId]);
 
   const paginatedInspections = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
