@@ -1,10 +1,10 @@
-// @ts-nocheck
 import React, { useState, useEffect, useMemo } from 'react';
 import UnifiedInsuranceManager from '@/components/insurance/UnifiedInsuranceManager';
 import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
 import { useProjectManager } from '@/hooks/useProjectManager';
 import { actionLabels } from '@/application/services/ProjectManagerService';
-import { EscalationRoles, ProjectData, ProjectStatus } from '@/dtos/entities/ProjectDTO';
+
+import type { ProjectData, EscalationRoles } from '@/dtos/entities/ProjectAggregateDTO';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle } from 'lucide-react';
@@ -97,7 +97,7 @@ const InsuranceManagementPage = () => {
     const loadDefaultProject = async () => {
       try {
         // Use ProjectService instead of direct Supabase call
-        const projects = await projectService.getProjectsByStatus(ProjectStatus.EN_COURS);
+        const projects = await projectService.getProjectsForInsurance();
         
         if (projects && projects.length > 0) {
           const project = projects[0];
@@ -187,7 +187,7 @@ const InsuranceManagementPage = () => {
     <ProjectManagerProvider 
       project={selectedProject} 
       roles={buildEscalationRoles()} 
-      actionLabels={actionLabels}
+      actionLabels={actionLabels as any}
     >
       <InsuranceContent />
     </ProjectManagerProvider>

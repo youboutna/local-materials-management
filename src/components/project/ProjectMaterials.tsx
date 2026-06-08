@@ -150,8 +150,7 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
 
   const handleRemoveMaterial = async (materialId: string) => {
     try {
-      // TODO: Implement removeMaterialFromProject when project-material relationship is available
-      console.log(`Removing material ${materialId} from project ${projectId}`);
+      await new MaterialService(null as any).removeMaterialFromProject(projectId, materialId);
 
       toast({
         title: "Matériau supprimé",

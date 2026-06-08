@@ -2,7 +2,16 @@
 
 Finaliser le round-trip **UI ⇄ DTO ⇄ Service ⇄ Adapter ⇄ DB** sur toutes les pages listées dans `src/App.tsx`, en supprimant les `@ts-nocheck`, les mappings `snake_case` résiduels côté UI, les `TODO` mock, et en hydratant les vues qui affichent encore des valeurs "Indéfinie / 0 / —" alors que les données existent. Pas de nouvelle table, pas de migration.
 
+## Avancement (lots)
+- Lot 1 — `ProjectImport.tsx` : `@ts-nocheck` retiré, typé via `ProjectReportDTO.ImportResult`.
+- Lot 2 — `ProjectPhasesDetail.tsx` : `@ts-nocheck` retiré, `PhaseRow` typé via `Phase` (camelCase). `PhaseDetailsPage.tsx` : actions validate/view branchées.
+- Lot 4 — `InsuranceManagement.tsx` : `@ts-nocheck` retiré ; imports `EscalationRoles`/`ProjectData` corrigés (`@/dtos/entities/ProjectAggregateDTO`) ; câblage `ProjectService.getProjectsForInsurance()` (nouvelle méthode applicative, pas de nouveau repo).
+- Lot 6 — `ProjectMaterials.tsx` : TODO `removeMaterialFromProject` résolu via `MaterialService.removeMaterialFromProject()` (nettoie `quantity_takeoffs`). `ProjectFormWithMap.tsx`, `ProjectCreateByDTO.tsx`, `ProjectDetailByDTO.tsx` : TODO/mock supprimés.
+- Lot 3 (Dashboard) & Lot 5 (catalogues) : `@ts-nocheck` restent — retrait nécessitera un nettoyage des hooks `hexagonal/*` (signatures DTO incomplètes) en amont, hors périmètre tant que les DTOs source ne sont pas alignés.
+
 ---
+
+
 
 ## Périmètre exact (issu de `src/App.tsx`)
 
