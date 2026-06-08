@@ -4,7 +4,7 @@ import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvi
 import { useProjectManager } from '@/hooks/useProjectManager';
 import { actionLabels } from '@/application/services/ProjectManagerService';
 import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
-import type { ProjectData } from '@/dtos/entities/ProjectAggregateDTO';
+import type { ProjectData, EscalationRoles } from '@/dtos/entities/ProjectAggregateDTO';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle } from 'lucide-react';
