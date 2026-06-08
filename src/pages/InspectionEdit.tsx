@@ -80,7 +80,7 @@ const InspectionEdit = () => {
           inspector: formData.inspector,
           date: formData.date,
           status: formData.status as 'scheduled' | 'in_progress' | 'completed' | 'approved' | 'rejected' | 'requires_changes' | 'pending' | 'cancelled',
-          progressAtInspection: formData.progressAtInspection,
+          ...({ progressAtInspection: formData.progressAtInspection } as Record<string, unknown>),
           comments: formData.comments,
         },
       });
