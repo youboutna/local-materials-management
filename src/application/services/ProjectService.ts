@@ -296,6 +296,9 @@ export class ProjectService {
         'GET_FOR_INSURANCE_ERROR'
       );
     }
+  }
+
+
 
   async updateProjectStatus(id: string, newStatus: string, reason?: string): Promise<ProjectDTO | null> {
     try {
