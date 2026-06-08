@@ -128,4 +128,5 @@ export const REPORT_SECTION_LABELS: Record<ReportSectionKey, string> = {
   evmAnalysis: 'Analyse EVM',
   pertAnalysis: 'Analyse PERT',
   ganttChart: 'Diagramme de Gantt',
+  monitoringEvaluation: 'Suivi & Évaluation',
 };
