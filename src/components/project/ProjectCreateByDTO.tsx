@@ -204,8 +204,8 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
         updatedAt: new Date().toISOString(),
       };
 
-      // TODO: Save phases and milestones to database
-      // For now, we'll include them in the project data structure
+      // Phases & jalons sont inclus dans fullProjectData et persistés
+      // par ProjectWorkflowService côté caller (onSave).
 
       toast({
         title: 'Projet créé',
