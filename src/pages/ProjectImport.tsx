@@ -9,13 +9,13 @@ import ProjectFileImporter from "@/components/projects/ProjectFileImporter";
 import AdvancedProjectImporter from "@/components/projects/AdvancedProjectImporter";
 import ProjectExporter from "@/components/projects/ProjectExporter";
 import { Database, FileSpreadsheet, Upload, Download } from "lucide-react";
-import type { ImportResult } from "@/dtos/entities/ProjectImportDTO";
+import type { ImportResult as ReportImportResult } from "@/dtos/entities/ProjectReportDTO";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const ProjectImport = () => {
   const { t } = useLanguage();
 
-  const handleImportComplete = (result: ImportResult) => {
+  const handleImportComplete = (result: ReportImportResult) => {
     console.log("Import completed:", result);
     // You can add additional logic here like refreshing project lists
   };
