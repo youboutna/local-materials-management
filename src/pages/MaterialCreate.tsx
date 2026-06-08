@@ -119,7 +119,7 @@ const MaterialCreate = () => {
         estimatedDuration: formData.timeline.estimatedDuration
       } : undefined,
       supplier: formData.supplier
-    };
+    } as CreateMaterialRequestDto);
 
     // Add supplier ID if supplier info is provided (map from form supplier object)
     if (completeFormData.supplier?.name) {
