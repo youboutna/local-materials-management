@@ -419,3 +419,30 @@ src/pages/
 - **Composants critiques migrés** : 39 composants principaux
 - **Services legacy migrés** : 2 services (ProgressCalculationService, ProjectStakeholderService)
 - **Production ready** : Prêt pour déploiement
+
+---
+
+## 🛠️ Stack technique HadraTech-GPI
+
+| Couche | Technologies |
+|---|---|
+| Frontend | React 18 + TypeScript 5 + Vite 5 |
+| UI | Tailwind CSS v3 + shadcn-ui (Radix) + Framer Motion |
+| État & données | TanStack Query v5, Context API, React Hook Form + Zod |
+| Cartographie | Leaflet / React-Leaflet + Google Maps API |
+| Backend & DB | PostgreSQL (Supabase) — schémas multi (`public`, `btp`) via vues proxy |
+| Auth | Supabase Auth (par défaut) ; Keycloak (SAML 2.0 / SSO) en option |
+| Stockage | Supabase Storage (buckets publics + privés) |
+| Edge | Supabase Edge Functions (Deno) |
+
+## 🔌 Intégrations externes
+
+| Système | Protocole / API | Usage |
+|---|---|---|
+| ERP financier (SAGE, COBOL legacy) | REST / GraphQL | Export PED, rapprochement engagements |
+| SIG (ArcGIS, GeoServer) | WMS / WMTS / WFS | Couches cartographiques, fonds géoréférencés |
+| SCADA industriel | OPC UA | Capteurs terrain, télémétrie chantier |
+| Annuaire (AD / LDAP) | LDAP / SAML | SSO entreprise, synchronisation utilisateurs |
+| QField | GeoJSON / `.qgs` | Relevés terrain mobiles |
+
+> Toutes les intégrations passent par un **adapter** (`src/infrastructure/`) — jamais d'appel direct depuis l'UI.

@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, ExternalLink, Calendar, Flag } from 'lucide-react';
 import { useMilestonesHex } from '@/hooks/hexagonal/useMilestonesHex';
 import { entityToasts } from '@/hooks/projects/projectToasts';
+import { useState } from 'react';
 
 const milestoneToasts = entityToasts('jalon');
 
@@ -29,6 +30,7 @@ const MilestoneDetail: React.FC = () => {
   const { projectId, milestoneId } = useParams<{ projectId: string; milestoneId: string }>();
   const navigate = useNavigate();
   const { milestones, loading, error, toggleMilestoneStatus } = useMilestonesHex(projectId);
+  const [isTogglingStatus, setIsTogglingStatus] = useState(false);
 
   const milestone = milestones.find((m) => m.id === milestoneId);
 
@@ -97,12 +99,21 @@ const MilestoneDetail: React.FC = () => {
                 )}
                 <Button
                   variant="secondary"
+                  disabled={isTogglingStatus}
+                  aria-busy={isTogglingStatus}
                   onClick={async () => {
-                    const ok = await toggleMilestoneStatus(milestone.id, milestone.status);
-                    ok ? milestoneToasts.updateSuccess(milestone.title) : milestoneToasts.updateError();
+                    setIsTogglingStatus(true);
+                    try {
+                      const ok = await toggleMilestoneStatus(milestone.id, milestone.status);
+                      ok ? milestoneToasts.updateSuccess(milestone.title) : milestoneToasts.updateError();
+                    } finally {
+                      setIsTogglingStatus(false);
+                    }
                   }}
                 >
-                  {milestone.status === 'completed' ? 'Rouvrir' : 'Marquer terminé'}
+                  {isTogglingStatus
+                    ? 'Mise à jour…'
+                    : milestone.status === 'completed' ? 'Rouvrir' : 'Marquer terminé'}
                 </Button>
 
               </div>

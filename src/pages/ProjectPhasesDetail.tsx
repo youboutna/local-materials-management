@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useId, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,7 @@ interface PhaseRow {
 
 const ProjectPhasesDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const phaseSelectId = useId();
   const [phases, setPhases] = useState<PhaseRow[]>([]);
   const [project, setProject] = useState<any>(null);
   const [selectedPhaseId, setSelectedPhaseId] = useState<string | undefined>(undefined);
@@ -105,9 +106,9 @@ const ProjectPhasesDetail: React.FC = () => {
           </Button>
         </Link>
         <div className="w-full max-w-md">
-          <label className="block text-sm font-medium mb-2">Sélectionner une phase</label>
+          <label htmlFor={phaseSelectId} className="block text-sm font-medium mb-2">Sélectionner une phase</label>
           <Select value={selectedPhaseId} onValueChange={setSelectedPhaseId}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger id={phaseSelectId} className="w-full" aria-label="Sélectionner une phase">
               <SelectValue placeholder={loading ? 'Chargement...' : 'Choisir une phase'} />
             </SelectTrigger>
             <SelectContent side="bottom" align="start">

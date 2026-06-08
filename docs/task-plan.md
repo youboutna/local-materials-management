@@ -533,3 +533,29 @@ $allFilesWithCalls | Sort-Object Appels -Descending | Select-Object -First 10 | 
 ```
 todo 
 ---
+---
+
+## ✅ Finalisation CRUD & Vues — Projets / Phases / Jalons (HadraTech-GPI)
+
+### Pages cibles
+- [x] `src/pages/Projects.tsx` — toolbar filtres + suppression bulk OK
+- [x] `src/pages/ProjectDetail.tsx` (+ `ProjectDetailByDTO`) — onglets Vue/Phases/Suivi & Évaluation
+- [x] `src/pages/PhaseDetail.tsx` — onglets lifecycle (Planif/Exec/Contrôle/Clôture) + navigation cross-module
+- [x] `src/pages/ProjectPhasesDetail.tsx` — onglet « Suivi & Éval. » branché ; Select labellisé
+- [x] `src/pages/MilestoneDetail.tsx` — toggle terminé/rouvrir avec `aria-busy`
+
+### Sous-objets (composants `Phase*`)
+- `PhaseTasks` — CRUD via `useTasksHex`
+- `PhaseMilestones` — CRUD via `useMilestonesHex`
+- `PhaseMaterials` / `PhaseDocuments` / `PhasePayments` / `PhaseInspections` / `PhaseEmployees`
+
+### Garde-fous design / accessibilité
+- Tokens sémantiques uniquement (pas de `text-gray-*` ad-hoc).
+- Un seul `<main>` par route (via `AppLayout`).
+- Boutons-icônes : `aria-label` obligatoire.
+- Skeletons + `role="status"` pour les chargements.
+- Tap target ≥ 44×44 sur mobile (`min-h-11 min-w-11`).
+
+### Hors scope explicite
+- Aucune migration DB.
+- Aucune modification des services `src/application/services/*` ni des adapters.

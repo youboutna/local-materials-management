@@ -1,46 +1,109 @@
 ## Objectif
 
-1. Corriger les incohérences de mapping dans `ProjectDetail` (phase actuelle « Aucune phase définie » / compteur Phases `0/4`).
-2. Intégrer une section **Suivi & Évaluation** (monitoringEvaluation) dans les vues `ProjectDetail` et `ProjectPhasesDetail`, alimentée par le même `DeviationEngine` que le rapport PDF, conformément à `docs/ARCHITECTURE_REFERENTIELS.md` (référentiels = légos métier, calcul dans le moteur générique).
+1. Mettre à jour `docs/*.md` pour intégrer la consigne HadraTech-GPI (vision, modules, personnalisation par référentiels, stack, personas).
+2. Finaliser les CRUD et vues sur les pages **Projects**, **PhaseDetail**, **ProjectPhasesDetail**, **MilestoneDetail** et leurs sous-objets, en respectant le design system, l'accessibilité et la navigabilité.
 
-## Diagnostic des incohérences
+Aucune nouvelle table DB. Aucune migration. Le travail reste UI + hooks existants + DTO existants.
 
-| Symptôme | Cause | Fichier |
-|---|---|---|
-| `Phase actuelle : Aucune phase définie` | `currentPhaseInfo` lit `p.name` sur `projectDetail.plannedPhases` alors que le `PhaseDTO` expose `phase_name` (snake_case côté DTO de transformation). Résultat : tous les fallbacks → `null`. | `src/components/project/ProjectDetailByDTO.tsx` (l. 311-345) |
-| Compteur `Phases 0/4` malgré le projet terminé | `phasesStats` est correct sur le total (utilise le hook hex `useProjectPhasesHex`) mais le `completed` reste à 0 car les phases héritées n'ont jamais leur `status` synchronisé avec le statut projet (`terminé`). | `src/components/project/ProjectDetailByDTO.tsx` (l. 787-794) |
-| « Étape actuelle : N/A » | Même cause que (1) : la source de phases n'est pas la même que `computedPhases`, et `stages` ne sont jamais inspectés. | idem |
+---
 
-## Modifications
+## Partie A — Documentation (`docs/*.md`)
 
-### 1. Fix mapping phase actuelle / stats (frontend uniquement)
-- `src/components/project/ProjectDetailByDTO.tsx`
-  - Faire dériver `currentPhaseInfo` de `computedPhases` (déjà normalisé : `phase_name`, `status`, `stages`) plutôt que de `phasesSource` brut.
-  - Étape actuelle : prendre le premier `stage` non terminé du phase courante.
-  - `phasesStats.completed` : si toutes les phases sont en `planned/pending` mais que `project.status === 'completed' | 'terminé'` et `project.progress >= 100`, considérer total = completed (alignement avec règle « Dynamic Phase Calculation »).
+### A.1 `docs/CONTEXT.md` (réécriture ciblée)
+- Ajouter en tête : positionnement HadraTech-GPI = plateforme GPI visuelle, collaborative et modulaire (type Monday.com), personnalisable par référentiels.
+- Section **Modules métier** : Projet & ressources, Gestion de projet (Gantt/PERT/Waterfall/Kanban/Géo), Matériaux, Géolocalisation, Utilisateurs (Admin/Directeur/Manager/Lecteur/Fournisseur), Documentaire, Financier (paiements, garanties, assurances), Portail Fournisseur, i18n AR/FR/EN.
+- Conserver les **Personas** existants (Directeur / Chef de projet / Contrôleur) et leurs KPI.
 
-### 2. Section Suivi & Évaluation (UI)
-Créer un composant réutilisable `MonitoringEvaluationPanel` qui :
-- Reçoit `projectDetail`, `phases`, et un `scope: 'project' | 'phase'`.
-- Calcule via `DeviationEngine.compute(...)` (déjà utilisé par le PDF) les écarts coût/délai/avancement par phase.
-- Affiche : cartes KPI (SPI, CPI, score santé, jugement global), tableau des écarts (Phase, Indicateur, Planifié, Réalisé, Écart, Sévérité, Jugement), synthèse + recommandation.
-- Réutilise `ProjectAnalyticsService.calculateEVMMetrics` + `health-thresholds.referential` (aucune valeur codée en dur).
+### A.2 `docs/ARCHITECTURE_REFERENTIELS.md` (extension)
+- Ajouter le catalogue d'exemples concrets de référentiels et formats supportés :
+  - Politique publique / Stratégie nationale (JSON, Excel, API)
+  - Budget programme / LFI (CSV, Excel, API) → blocage si dépassement
+  - ODD / normes internationales (JSON, CSV)
+  - Référentiel projets (XML MS Project, Excel)
+  - SIG QField (.qgs, .qml, GeoJSON)
+  - Normes techniques (JSON, XML)
+  - Structure organisationnelle (CSV, Excel)
+- Mécanismes à exposer : import / édition / **versioning** / publication ; moteur de validation temps réel ; rapports de conformité.
 
-Intégrations :
-- `ProjectDetailByDTO.tsx` : nouvel onglet **Suivi & Évaluation** dans le bloc `Tabs` (avant « Localisation ») rendant `<MonitoringEvaluationPanel scope="project" />`.
-- `ProjectPhasesDetail.tsx` : nouvel onglet **Suivi & Éval.** rendant `<MonitoringEvaluationPanel scope="phase" phaseId={selectedPhaseId} />` (filtre auto sur la phase sélectionnée).
+### A.3 `docs/ARCHITECTURE.md` (mise à jour stack & intégrations)
+- Confirmer la **stack** : React + TS + Vite, Tailwind + shadcn-ui + Framer Motion, React Query + RHF + Zod, Leaflet + Google Maps, Supabase (PostgreSQL + Auth + Storage), Keycloak/SAML optionnel.
+- Ajouter section **Intégrations externes** : ERP (SAGE), SIG (WMS/WMTS, ArcGIS, GeoServer), SCADA (OPC UA), LDAP/AD.
 
-### 3. Pas de changement de schéma
-Aucune migration ; tout le calcul s'appuie sur les données déjà hydratées + les référentiels existants (`deviation-rules`, `indicator-templates`, `weighting-models`, `health-thresholds`).
+### A.4 `docs/task-plan.md` (ajout d'une section finale)
+- Nouvelle section « **Finalisation CRUD & Vues — Projets / Phases / Jalons** » listant les items de la Partie B comme checklist trackable.
 
-## Fichiers touchés
+### A.5 `docs/PROMPTS.md`
+- Ajouter en annexe le prompt « 🚀 Développer HadraTech-GPI » fourni par l'utilisateur, comme prompt de référence projet.
 
-- `src/components/project/ProjectDetailByDTO.tsx` (fix mapping + nouvel onglet)
-- `src/pages/ProjectPhasesDetail.tsx` (nouvel onglet)
-- `src/components/project/monitoring/MonitoringEvaluationPanel.tsx` (nouveau)
+---
 
-## Hors périmètre
+## Partie B — CRUD & Vues
 
-- Pas de retouche aux services hexagonaux ni aux adapters Supabase.
-- Pas de modification du PDF (déjà fait précédemment).
-- Pas de refonte visuelle des autres KPI cards.
+### B.1 `src/pages/Projects.tsx`
+- Vérifier présence d'actions CRUD complètes : créer (déjà via `/projects/create`), éditer, supprimer (avec `AlertDialog` shadcn), dupliquer.
+- Ajouter **toolbar accessible** : recherche, filtres statut/phase, bouton "Nouveau projet" avec `aria-label`.
+- Garantir un seul `<main>` (via `AppLayout`) et hiérarchie H1 unique.
+
+### B.2 `src/pages/ProjectDetail.tsx` / `ProjectDetailByDTO.tsx`
+- Conserver les onglets existants (déjà incluant « Suivi & Évaluation »).
+- Ajouter actions rapides accessibles : Éditer, Supprimer (confirmation), Exporter rapport.
+- Corriger mapping résiduel (DTO camelCase uniquement côté UI ; voir mémoire projet).
+
+### B.3 `src/pages/PhaseDetail.tsx`
+- Déjà solide. Ajouter :
+  - Boutons CRUD phase : Éditer (modal/route), Supprimer (confirmation), Marquer terminée.
+  - Boutons CRUD sous-objets exposés dans chaque onglet (tâches, jalons, matériaux, documents, paiements, inspections) — vérifier que chaque composant `Phase*` expose bien Create/Update/Delete.
+  - `aria-label` sur tous les boutons-icônes, focus visible, navigation clavier dans les `Tabs` (déjà OK via Radix).
+
+### B.4 `src/pages/ProjectPhasesDetail.tsx`
+- Retirer `@ts-nocheck` ; typer `phases`, `project` correctement via DTO.
+- Le `<Select>` de phase doit être labellisé (`<label htmlFor>` + `id` cohérents).
+- Ajouter actions CRUD phase au-dessus des onglets (Ajouter phase, Renommer, Supprimer).
+- Vérifier l'onglet « Suivi & Éval. » (déjà en place).
+
+### B.5 `src/pages/MilestoneDetail.tsx`
+- Compléter CRUD : Éditer jalon (modal RHF + Zod), Supprimer (confirmation), Re-planifier (date cible).
+- Bouton « Marquer terminé / Rouvrir » déjà présent — ajouter état désactivé pendant mutation et `aria-busy`.
+- Lier vers la phase et le projet (déjà fait) + breadcrumb.
+
+### B.6 Composants partagés (vérifications légères)
+- `PhaseTasks`, `PhaseMilestones`, `PhaseMaterials`, `PhaseDocuments`, `PhasePayments`, `PhaseInspections`, `PhaseEmployees` :
+  - confirmer Create / Update / Delete branchés sur les hooks hexagonaux existants (`useTasksHex`, `useMilestonesHex`, etc.) ; sinon brancher.
+  - boutons-icônes : `aria-label`, tap target ≥ 44×44 (`min-h-11 min-w-11`) sur mobile.
+
+### B.7 Design & accessibilité (transverse)
+- Aucun couleur ad-hoc : utiliser tokens (`bg-background`, `text-foreground`, `text-muted-foreground`, `border-border`, etc.).
+- Un seul `<main>` par route (déjà géré par `AppLayout`).
+- `lang="fr"` sur `<html>` à confirmer dans `index.html`.
+- Vérifier focus-visible sur tous les triggers d'onglets et boutons.
+- Skeletons existants pour les états de chargement ; ajouter `role="status"` + texte SR-only « Chargement ».
+
+---
+
+## Détails techniques
+
+- **Aucune** modification de schéma Supabase, des services `src/application/services/*`, ni des adapters.
+- Les nouveaux modals d'édition (phase, jalon) utilisent **RHF + Zod** et `Dialog` shadcn.
+- Les suppressions utilisent `AlertDialog` shadcn avec un bouton de confirmation destructif.
+- Les hooks utilisés restent les hooks hexagonaux existants (`useMilestonesHex`, `usePhaseDetails`, `useProjects`, etc.). Si un hook n'expose pas `delete`/`update`, on l'étend localement en passant par le service existant (pas de nouveau repo).
+- Respect strict des mémoires projet : pas de Supabase direct dans la UI, pas de React dans les services.
+
+---
+
+## Livrables
+
+```text
+docs/CONTEXT.md                   (mise à jour)
+docs/ARCHITECTURE.md              (mise à jour stack + intégrations)
+docs/ARCHITECTURE_REFERENTIELS.md (extension catalogue référentiels)
+docs/PROMPTS.md                   (annexe prompt HadraTech-GPI)
+docs/task-plan.md                 (checklist finalisation)
+src/pages/Projects.tsx            (toolbar + CRUD complet)
+src/pages/ProjectDetail*          (actions rapides + a11y)
+src/pages/PhaseDetail.tsx         (CRUD phase + a11y)
+src/pages/ProjectPhasesDetail.tsx (typage + CRUD + label select)
+src/pages/MilestoneDetail.tsx     (modal édition + suppression)
+src/components/project/Phase*.tsx (vérif CRUD sous-objets + a11y)
+```
+
+Ordre d'exécution : **docs d'abord** (A.1 → A.5), **puis** code (B.1 → B.7).

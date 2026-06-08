@@ -151,3 +151,30 @@ les services calculent à partir des référentiels.
 > réglementation et entité (SOMELEC, ETER, SNAT…) sans réécriture.
 > Le comportement des outils PTBA / PPM / PED / TBI est dicté par les référentiels,
 > et le calcul des écarts planification vs exécution est entièrement automatisé.
+
+---
+
+## 7. Catalogue de référentiels importables (HadraTech-GPI)
+
+L'administrateur peut **créer ou importer** des référentiels via plusieurs formats, puis les **associer à un ou plusieurs projets**. Le moteur de validation applique automatiquement les contraintes (champs, workflows, indicateurs, blocages).
+
+| Type de référentiel | Formats supportés | Exemples | Usage métier |
+|---|---|---|---|
+| Politique publique / Stratégie nationale | JSON, Excel, API | Plan Émergence Mauritanie, Vision 2030 | Alignement projets sur priorités nationales |
+| Budget programme / LFI | CSV, Excel, API | LFI 2025/2026 — lignes par ministère | Contrainte budgétaire ; **blocage si dépassement** |
+| ODD & normes internationales | JSON, CSV | ODD 6, 9, 11 | Traçabilité contribution objectifs mondiaux |
+| Référentiel projets | XML MS Project, Excel | Chantiers types (routes, bâtiments, réseaux) | Standardisation phases/jalons |
+| SIG QField | `.qgs`, `.qml`, GeoJSON | Relevés topo, points d'intérêt | Géolocalisation, cartographie |
+| Normes techniques | JSON, XML | CCTP, DTU, spécifications matériaux | Validation technique tâches & matériaux |
+| Structure organisationnelle | CSV, Excel | Organigramme, rôles, responsabilités | Gestion utilisateurs & permissions |
+
+### 7.1 Mécanismes d'administration
+- **Import** (drag & drop) + **édition** dans l'UI dédiée.
+- **Versioning** : chaque référentiel est versionné (semver) ; basculement entre versions.
+- **Publication** : workflow brouillon → revue → publication.
+- **Validation temps réel** : moteur générique applique les contraintes au save d'une entité.
+- **Rapports de conformité** : tableau de bord (ex. contribution ODD, exécution LFI).
+
+### 7.2 Synchronisation externe
+Référentiels synchronisables via **API** avec : SAGE (ERP financier), LFI (portail Trésor),
+catalogues ODD, AD/LDAP (structure orga).
