@@ -208,6 +208,8 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
           enrichedData={enrichedData || undefined}
           deviations={deviations}
           healthScore={healthScore}
+          phaseDeviations={filteredPhaseDeviations}
+          selectedPhaseIds={reportConfig.selectedPhaseIds}
         />
       );
 
