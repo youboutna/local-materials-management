@@ -3,7 +3,7 @@ import UnifiedInsuranceManager from '@/components/insurance/UnifiedInsuranceMana
 import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
 import { useProjectManager } from '@/hooks/useProjectManager';
 import { actionLabels } from '@/application/services/ProjectManagerService';
-import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
+
 import type { ProjectData, EscalationRoles } from '@/dtos/entities/ProjectAggregateDTO';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
