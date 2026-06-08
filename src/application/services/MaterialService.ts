@@ -238,6 +238,26 @@ export class MaterialService {
     }
   }
 
+  /**
+   * Remove a material from a project
+   * Placeholder until a dedicated project_materials junction table exists.
+   * Currently removes the related quantity_takeoffs row(s) so the UI stays in sync.
+   */
+  async removeMaterialFromProject(projectId: string, materialId: string): Promise<void> {
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { error } = await supabase
+        .from('quantity_takeoffs')
+        .delete()
+        .eq('project_id', projectId)
+        .eq('material_id', materialId);
+      if (error) throw error;
+    } catch (error) {
+      console.error('MaterialService.removeMaterialFromProject failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to remove material from project');
+    }
+  }
+
   // =================== Geocoding Integration ===================
 
   /**

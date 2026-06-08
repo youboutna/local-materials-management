@@ -1,10 +1,10 @@
-// @ts-nocheck
 import React, { useState, useEffect, useMemo } from 'react';
 import UnifiedInsuranceManager from '@/components/insurance/UnifiedInsuranceManager';
 import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
 import { useProjectManager } from '@/hooks/useProjectManager';
 import { actionLabels } from '@/application/services/ProjectManagerService';
-import { EscalationRoles, ProjectData, ProjectStatus } from '@/dtos/entities/ProjectDTO';
+import { ProjectStatus, type ProjectData } from '@/dtos/entities/ProjectDTO';
+import { EscalationRoles } from '@/domain/entities/Hierarchy';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle } from 'lucide-react';
