@@ -32,6 +32,7 @@ interface ProjectPDFDocumentProps {
       evmAnalysis: boolean;
       pertAnalysis: boolean;
       ganttChart: boolean;
+      monitoringEvaluation: boolean;
     };
     notes?: string;
   };
