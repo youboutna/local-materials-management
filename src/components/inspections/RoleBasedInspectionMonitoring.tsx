@@ -73,6 +73,7 @@ const RoleBasedInspectionMonitoring = () => {
   });
 
   const projectId = searchParams.get('project');
+  const phaseId = searchParams.get('phase');
 
   // Role-based permissions - using dynamic roles matching original
   const isInspector = hasAnyRole(['inspector', 'engineer', 'consultant']);
