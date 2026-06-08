@@ -75,6 +75,8 @@ export function ProjectPDFDocument({
   enrichedData,
   deviations = [],
   healthScore = null,
+  phaseDeviations = [],
+  selectedPhaseIds,
 }: ProjectPDFDocumentProps) {
   
   const getStatusText = (status: string) => {
