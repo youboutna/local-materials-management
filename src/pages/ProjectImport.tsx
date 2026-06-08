@@ -1,4 +1,7 @@
-// @ts-nocheck
+/**
+ * ProjectImport — page d'import/export projets.
+ * Typage strict via ImportResult DTO, plus de @ts-nocheck (Lot 1).
+ */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProjectImporter2025 from "@/components/projects/ProjectImporter2025";
