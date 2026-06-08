@@ -1984,7 +1984,25 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           </div>
         </TabsContent>
 
+        <TabsContent value="monitoring" className="mt-6">
+          <MonitoringEvaluationPanel
+            scope="project"
+            project={projectDetail as any}
+            phases={computedPhases.map((p) => ({
+              id: p.id,
+              name: p.phase_name || p.phase,
+              status: p.status,
+              progress: p.progress,
+              startDate: p.startDate,
+              endDate: p.endDate,
+              budget: p.budget,
+              actualProgress: p.progress,
+            }))}
+          />
+        </TabsContent>
+
         <TabsContent value="map" className="mt-6">
+
           <InteractiveMapGIS
             title="Localisation du projet"
             description="Carte interactive avec outils GIS"
