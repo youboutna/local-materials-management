@@ -71,6 +71,7 @@ import {
   SelectContent,
 } from "../ui/select";
 import { useProjectPhasesHex } from "@/hooks/hexagonal";
+import MonitoringEvaluationPanel from "@/components/project/monitoring/MonitoringEvaluationPanel";
 
 interface ProjectDetailByDTOProps {
   projectId?: string;
