@@ -552,6 +552,33 @@ export function ProjectPDFDocument({
               </PDFCard>
             )}
 
+            {/* Écarts par phase — filtré selon `selectedPhaseIds` côté générateur */}
+            {(() => {
+              const filtered = selectedPhaseIds
+                ? phaseDeviations.filter((pd) => selectedPhaseIds.includes(pd.phaseId))
+                : phaseDeviations;
+              const rows = filtered.flatMap((pd) =>
+                pd.deviations.length > 0
+                  ? pd.deviations.map((d) => [
+                      pd.phaseName,
+                      d.label,
+                      `${d.value > 0 ? '+' : ''}${d.value} ${d.unit}`,
+                      (severityLabel[d.severity] || d.severity).toUpperCase(),
+                      judgeDeviation(d.sign, d.severity),
+                    ])
+                  : [[pd.phaseName, '—', '—', 'CONFORME', 'Aucun écart calculable']],
+              );
+              if (rows.length === 0) return null;
+              return (
+                <PDFTable
+                  headers={['Phase', 'Indicateur', 'Écart', 'Sévérité', 'Jugement']}
+                  data={rows}
+                  columnWidths={['25%', '25%', '15%', '13%', '22%']}
+                />
+              );
+            })()}
+
+
             <PDFCard>
               <PDFRow>
                 <PDFCol>
