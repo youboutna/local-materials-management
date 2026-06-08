@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, CheckCircle, Clock, AlertCircle, ExternalLink } from 'lucide-react';
@@ -102,8 +103,8 @@ const TaskDetail = () => {
                 ? 'Cette tâche n\'existe pas ou a été supprimée.'
                 : 'Vous n\'avez pas les permissions nécessaires pour accéder à cette tâche.'}
             </p>
-            <Button variant="outline" onClick={() => navigate(-1)}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
+            <Button variant="outline" onClick={() => navigate(-1)} aria-label="Revenir à la page précédente">
+              <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
               Retour
             </Button>
           </CardContent>
@@ -117,8 +118,8 @@ const TaskDetail = () => {
       pageTitle={task.title}
       pageDescription="Détail de la tâche"
     >
-      <Button variant="outline" onClick={() => navigate(-1)} className="mb-6">
-        <ArrowLeft className="h-4 w-4 mr-2" />
+      <Button variant="outline" onClick={() => navigate(-1)} className="mb-6" aria-label="Revenir à la page précédente">
+        <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
         Retour
       </Button>
 
@@ -149,7 +150,7 @@ const TaskDetail = () => {
           <div className="grid grid-cols-2 gap-4">
             {task.dueDate && (
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
+                <Clock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <div>
                   <p className="text-sm font-medium">Date limite</p>
                   <p className="text-sm text-muted-foreground">
@@ -160,7 +161,7 @@ const TaskDetail = () => {
             )}
             {task.completionDate && (
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-600" />
+                <CheckCircle className="h-4 w-4 text-green-600" aria-hidden="true" />
                 <div>
                   <p className="text-sm font-medium">Date de completion</p>
                   <p className="text-sm text-muted-foreground">
@@ -179,13 +180,16 @@ const TaskDetail = () => {
               </div>
             )}
             <div className="space-y-2">
+              <Label htmlFor="new-task-note" className="sr-only">Ajouter une note</Label>
               <Textarea
+                id="new-task-note"
                 placeholder="Ajouter une note..."
                 value={newNote}
                 onChange={(e) => setNewNote(e.target.value)}
                 rows={3}
+                aria-label="Nouvelle note pour la tâche"
               />
-              <Button onClick={handleAddNote} disabled={!newNote.trim() || updating}>
+              <Button onClick={handleAddNote} disabled={!newNote.trim() || updating} aria-busy={updating}>
                 Ajouter une note
               </Button>
             </div>
@@ -197,17 +201,19 @@ const TaskDetail = () => {
                 <Button 
                   onClick={() => handleUpdateStatus('in_progress')}
                   disabled={updating}
+                  aria-busy={updating}
                   variant="outline"
                 >
-                  <AlertCircle className="h-4 w-4 mr-2" />
+                  <AlertCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                   Commencer la tâche
                 </Button>
               )}
               <Button 
                 onClick={() => handleUpdateStatus('completed')}
                 disabled={updating}
+                aria-busy={updating}
               >
-                <CheckCircle className="h-4 w-4 mr-2" />
+                <CheckCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                 Marquer comme terminée
               </Button>
             </div>
@@ -216,15 +222,15 @@ const TaskDetail = () => {
           <div className="flex flex-wrap gap-2 pt-4 border-t">
             {(task as any).projectId && (
               <Button variant="outline" size="sm" asChild>
-                <Link to={`/projects/${(task as any).projectId}`}>
-                  Projet <ExternalLink className="h-3 w-3 ml-1" />
+                <Link to={`/projects/${(task as any).projectId}`} aria-label="Ouvrir le projet associé">
+                  Projet <ExternalLink className="h-3 w-3 ml-1" aria-hidden="true" />
                 </Link>
               </Button>
             )}
             {(task as any).phaseId && (task as any).projectId && (
               <Button variant="outline" size="sm" asChild>
-                <Link to={`/projects/${(task as any).projectId}/phases/${(task as any).phaseId}`}>
-                  Phase <ExternalLink className="h-3 w-3 ml-1" />
+                <Link to={`/projects/${(task as any).projectId}/phases/${(task as any).phaseId}`} aria-label="Ouvrir la phase associée">
+                  Phase <ExternalLink className="h-3 w-3 ml-1" aria-hidden="true" />
                 </Link>
               </Button>
             )}

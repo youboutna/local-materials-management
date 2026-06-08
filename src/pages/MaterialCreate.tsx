@@ -176,14 +176,15 @@ const MaterialCreate = () => {
               size="sm"
               onClick={() => navigate("/materials")}
               className="text-gray-600 hover:text-gray-900"
+              aria-label="Retour à la liste des matériaux"
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
               Retour aux matériaux
             </Button>
           </div>
           <div className="mt-4">
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-              <Package className="h-8 w-8 text-terracotta-500" />
+              <Package className="h-8 w-8 text-terracotta-500" aria-hidden="true" />
               Nouveau matériau
             </h1>
             <p className="text-gray-600 mt-2">
@@ -216,6 +217,8 @@ const MaterialCreate = () => {
                     if (formElement) formElement.requestSubmit();
                   }}
                   disabled={isSubmitting}
+                  aria-busy={isSubmitting}
+                  aria-label={isSubmitting ? "Création en cours" : "Créer le matériau"}
                   className="bg-gradient-to-r from-terracotta-500 to-adrar-600 hover:from-terracotta-600 hover:to-adrar-700 text-white"
                 >
                   {isSubmitting ? "Création..." : "Créer le matériau"}
