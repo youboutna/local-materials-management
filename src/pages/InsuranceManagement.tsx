@@ -97,7 +97,7 @@ const InsuranceManagementPage = () => {
     const loadDefaultProject = async () => {
       try {
         // Use ProjectService instead of direct Supabase call
-        const projects = await projectService.getProjectsByStatus(ProjectStatus.EN_COURS);
+        const projects = await projectService.getProjectsForInsurance();
         
         if (projects && projects.length > 0) {
           const project = projects[0];
