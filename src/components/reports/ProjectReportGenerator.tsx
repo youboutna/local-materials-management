@@ -37,6 +37,8 @@ interface ReportConfig {
   reportType: ReportProfile;
   recipientEmail?: string;
   notes?: string;
+  /** Phases incluses dans le tableau d'écarts. `undefined` = toutes. */
+  selectedPhaseIds?: string[];
 }
 
 export function ProjectReportGenerator({ project, onClose }: ProjectReportGeneratorProps) {
