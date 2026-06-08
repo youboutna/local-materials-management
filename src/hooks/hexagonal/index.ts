@@ -355,6 +355,12 @@ export { useUploadTenderDocumentHex } from './useTenderDocumentUploadHex';
 
 // Contact Form
 export { useSubmitContactFormHex } from './useContactFormHex';
+export {
+  useContactMessagesHex,
+  useContactMessageStatsHex,
+  useSubmitContactMessageHex,
+  useContactMessageActionsHex,
+} from './useContactMessagesHex';
 
 // Users Admin
 export { 

@@ -123,6 +123,7 @@ const navigationItems: NavItem[] = [
       { label: "Documents", href: "/documents" },
       { label: "Tâches", href: "/tasks" },
       { label: "Notifications", href: "/notifications-center" },
+      { label: "Messagerie", href: "/inbox", roles: ["admin", "director", "manager"] },
     ],
   },
   {
