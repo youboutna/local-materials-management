@@ -86,6 +86,53 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
     [reportConfig.includeSections],
   );
 
+  // Phases disponibles + per-phase deviations (DeviationEngine, scope 'phase').
+  const availablePhases = useMemo<Array<{ id: string; name: string }>>(() => {
+    const phases = (enrichedData?.phases as any[]) || [];
+    return phases.map((p) => ({
+      id: String(p.id),
+      name: p.title || p.name || p.phase_name || `Phase ${p.id}`,
+    }));
+  }, [enrichedData]);
+
+  const phaseDeviations = useMemo(() => {
+    const phases = (enrichedData?.phases as any[]) || [];
+    return phases.map((p) => {
+      const completed = (p.status || '').toString().toLowerCase() === 'completed';
+      const results = DeviationEngine.compute(
+        {
+          plannedEndDate: p.endDate ?? p.end_date ?? null,
+          actualEndDate: completed ? (p.actualEndDate ?? p.updatedAt ?? p.updated_at ?? null) : null,
+          plannedBudget: Number(p.budget ?? 0) || null,
+          actualCost: p.actualCost != null ? Number(p.actualCost) : null,
+          plannedProgress: p.plannedProgress != null ? Number(p.plannedProgress) : null,
+          actualProgress: p.actualProgress != null ? Number(p.actualProgress) : (p.progress != null ? Number(p.progress) : null),
+        },
+        'phase',
+      );
+      return {
+        phaseId: String(p.id),
+        phaseName: p.title || p.name || p.phase_name || `Phase ${p.id}`,
+        deviations: results,
+      };
+    });
+  }, [enrichedData]);
+
+  // Initialise la sélection sur l'ensemble des phases dès qu'elles sont chargées.
+  useEffect(() => {
+    if (reportConfig.selectedPhaseIds === undefined && availablePhases.length > 0) {
+      setReportConfig((prev) => ({ ...prev, selectedPhaseIds: availablePhases.map((p) => p.id) }));
+    }
+  }, [availablePhases, reportConfig.selectedPhaseIds]);
+
+  const filteredPhaseDeviations = useMemo(() => {
+    if (!reportConfig.selectedPhaseIds) return phaseDeviations;
+    const set = new Set(reportConfig.selectedPhaseIds);
+    return phaseDeviations.filter((pd) => set.has(pd.phaseId));
+  }, [phaseDeviations, reportConfig.selectedPhaseIds]);
+
+
+
   // Re-fetch report data when project, profile, or active sections change.
   useEffect(() => {
     const loadReportData = async () => {
