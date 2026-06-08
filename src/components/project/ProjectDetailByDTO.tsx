@@ -781,12 +781,18 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   const PENDING_PHASE_STATUSES = new Set(["not_started", "pending", "draft", "planned"]);
   const phasesStats = useMemo(() => {
     const total = computedPhases.length || project?.phasesCount || 0;
-    const completed = computedPhases.filter((p) => p.status === "completed").length || 0;
+    const projectDone =
+      (project?.status || "").toLowerCase() === "completed" ||
+      (project?.status || "").toLowerCase() === "terminé" ||
+      (project?.progress || 0) >= 100;
+    let completed = computedPhases.filter((p) => p.status === "completed").length || 0;
+    if (projectDone && total > 0) completed = total;
     const inProgress = computedPhases.filter(
       (p) => !TERMINAL_PHASE_STATUSES.has(p.status) && !PENDING_PHASE_STATUSES.has(p.status),
     ).length || 0;
     return { total, completed, inProgress };
-  }, [computedPhases, project?.phasesCount]);
+  }, [computedPhases, project?.phasesCount, project?.status, project?.progress]);
+
 
   const handleDelete = async (projectIdToDelete: string) => {
     if (
