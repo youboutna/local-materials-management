@@ -5,7 +5,7 @@ project_id = "huttgbybeuzeikaqfvam"
 # CORS settings to allow requests from all origins in development
 [api]
 port = 54321
-schemas = ["public", "storage", "graphql_public"]
+schemas = ["public", "storage", "graphql_public", "btp", "fishing", "health", "fuel_stations"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
