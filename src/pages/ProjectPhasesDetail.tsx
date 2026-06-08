@@ -7,8 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/hooks/use-toast';
 import { PhaseService } from '@/application/services/PhaseService';
 import { ProjectService } from '@/application/services/ProjectService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import type { Phase } from '@/domain/entities/Phase';
-import type { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+import type { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import PhaseMaterials from '@/components/project/PhaseMaterials';
 import PhaseEmployees from '@/components/project/PhaseEmployees';
 import PhaseDocuments from '@/components/project/PhaseDocuments';
@@ -35,7 +36,7 @@ const ProjectPhasesDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const phaseSelectId = useId();
   const [phases, setPhases] = useState<PhaseRow[]>([]);
-  const [project, setProject] = useState<ProjectDTO | null>(null);
+  const [project, setProject] = useState<ProjectDetailDTO | null>(null);
   const [selectedPhaseId, setSelectedPhaseId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [selectedMaterials, setSelectedMaterials] = useState<Array<{ materialId: string; quantity: number }>>([]);
@@ -46,7 +47,7 @@ const ProjectPhasesDetail: React.FC = () => {
       try {
         setLoading(true);
         const phaseService = new PhaseService();
-        const projectService = new ProjectService();
+        const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
         const [phasesData, projectData] = await Promise.all([
           phaseService.getPhasesByProject(id),
           projectService.getProjectWithDetails(id).catch(() => null),
@@ -64,7 +65,7 @@ const ProjectPhasesDetail: React.FC = () => {
         }));
 
         setPhases(rows);
-        setProject(projectData as ProjectDTO | null);
+        setProject(projectData as ProjectDetailDTO | null);
 
         const urlParams = new URLSearchParams(window.location.search);
         const phaseParam = urlParams.get('phase');
