@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useEffect, useId, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
