@@ -5,9 +5,10 @@ Finaliser le round-trip **UI ⇄ DTO ⇄ Service ⇄ Adapter ⇄ DB** sur toutes
 ## Avancement (lots)
 - Lot 1 — `ProjectImport.tsx` : `@ts-nocheck` retiré, typé via `ProjectReportDTO.ImportResult`.
 - Lot 2 — `ProjectPhasesDetail.tsx` : `@ts-nocheck` retiré, `PhaseRow` typé via `Phase` (camelCase). `PhaseDetailsPage.tsx` : actions validate/view branchées.
-- Lot 4 — `InsuranceManagement.tsx` : `@ts-nocheck` retiré ; imports `EscalationRoles`/`ProjectData` corrigés (`@/dtos/entities/ProjectAggregateDTO`) ; câblage `ProjectService.getProjectsForInsurance()` (nouvelle méthode applicative, pas de nouveau repo).
-- Lot 6 — `ProjectMaterials.tsx` : TODO `removeMaterialFromProject` résolu via `MaterialService.removeMaterialFromProject()` (nettoie `quantity_takeoffs`). `ProjectFormWithMap.tsx`, `ProjectCreateByDTO.tsx`, `ProjectDetailByDTO.tsx` : TODO/mock supprimés.
-- Lot 3 (Dashboard) & Lot 5 (catalogues) : `@ts-nocheck` restent — retrait nécessitera un nettoyage des hooks `hexagonal/*` (signatures DTO incomplètes) en amont, hors périmètre tant que les DTOs source ne sont pas alignés.
+- Lot 3 — `Dashboard.tsx`, `PhaseDetail.tsx`, `Documents.tsx`, `Auth.tsx`, `ResetPasswordPage.tsx`, `MaterialCreate.tsx`, `MaterialDetail.tsx` : `@ts-nocheck` retiré, typage strict (filtre statut multi-valeurs, `isLoading`, casts ciblés sur DTO auth/material). Build sans erreur TS.
+- Lot 4 — `InsuranceManagement.tsx` : `@ts-nocheck` retiré ; imports `EscalationRoles`/`ProjectData` corrigés (`@/dtos/entities/ProjectAggregateDTO`) ; câblage `ProjectService.getProjectsForInsurance()`.
+- Lot 6 — `ProjectMaterials.tsx` : TODO `removeMaterialFromProject` résolu via `MaterialService.removeMaterialFromProject()`. `ProjectFormWithMap.tsx`, `ProjectCreateByDTO.tsx`, `ProjectDetailByDTO.tsx` : TODO/mock supprimés.
+- Restant — `EnhancedDashboard.tsx`, `BankGuaranteeMonitor.tsx`, `NotificationsCenter.tsx`, `PaymentControl.tsx`, `TenderManagement.tsx`, `MaterialEdit.tsx`, `InspectionDetail/Edit.tsx`, `UnifiedSupplierPortal.tsx`, `Suppliers.tsx`, `SupplierPasswordReset.tsx`, `EnhancedSupplierTenderPortal.tsx` : `@ts-nocheck` conservé tant que les DTOs/hooks `Supplier*`/`Notification*` ne sont pas réalignés (multiples props snake_case sur `never`, signatures hexagonales incomplètes). À traiter par batch dédié DTO-first.
 
 ---
 
