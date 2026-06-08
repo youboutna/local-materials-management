@@ -30,12 +30,8 @@ const InspectionEdit = () => {
     progressAtInspection: 0,
     comments: ''
   });
-  
-  // Legacy snake_case aliases for backward compatibility (PROMPTS.md Pattern 2)
-  const formDataLegacy = {
-    project_id: formData.projectId,
-    progress_at_inspection: formData.progressAtInspection,
-  };
+
+
 
   const statusOptions = [
     { value: 'scheduled', label: t('inspection.status.scheduled'), icon: Clock },
