@@ -187,7 +187,7 @@ const InsuranceManagementPage = () => {
     <ProjectManagerProvider 
       project={selectedProject} 
       roles={buildEscalationRoles()} 
-      actionLabels={actionLabels}
+      actionLabels={actionLabels as any}
     >
       <InsuranceContent />
     </ProjectManagerProvider>
