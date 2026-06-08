@@ -308,41 +308,36 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   const paymentsSource = useMemo(() => projectDetail?.expenses || [], [projectDetail]);
 
   // Calculate current phase and stage dynamically from phases
+  // Uses normalized PhaseDTO fields (phase_name) and falls back across aliases.
   const currentPhaseInfo = useMemo(() => {
-    if (!phasesSource || phasesSource.length === 0) {
+    const source = (phasesSource || []) as any[];
+    if (source.length === 0) {
       return { currentPhase: null, currentStage: null };
     }
 
-    // Find the first phase that is "in_progress" - use name property from PhaseDTO
-    const inProgressPhase = phasesSource.find(
-      (p) => p.status === "in_progress"
-    );
-    if (inProgressPhase) {
-      return {
-        currentPhase: inProgressPhase.name || inProgressPhase.type,
-        currentStage: null,
-      };
-    }
+    const getName = (p: any) =>
+      p?.phase_name || p?.name || p?.phase || p?.type || p?.constructionStage || null;
 
-    // If no in_progress phase, find the first "pending" phase
-    const pendingPhase = phasesSource.find(
-      (p) =>
-        p.status === "pending"
-    );
-    if (pendingPhase) {
-      return {
-        currentPhase: pendingPhase.name || pendingPhase.type,
-        currentStage: null,
-      };
-    }
-
-    // All phases completed - show last one
-    const lastPhase = phasesSource[phasesSource.length - 1];
-    return {
-      currentPhase: lastPhase?.name || lastPhase?.type || null,
-      currentStage: null,
+    const getStage = (p: any): string | null => {
+      const stages = Array.isArray(p?.stages) ? p.stages : [];
+      const active = stages.find((s: any) => s?.status && s.status !== "completed");
+      return active?.name || stages[0]?.name || p?.constructionStage || null;
     };
+
+    const inProgress = source.find((p) => p?.status === "in_progress");
+    if (inProgress) {
+      return { currentPhase: getName(inProgress), currentStage: getStage(inProgress) };
+    }
+
+    const pending = source.find((p) => p?.status === "pending" || p?.status === "planned" || p?.status === "not_started");
+    if (pending) {
+      return { currentPhase: getName(pending), currentStage: getStage(pending) };
+    }
+
+    const last = source[source.length - 1];
+    return { currentPhase: getName(last), currentStage: getStage(last) };
   }, [phasesSource]);
+
 
   // Calculate project methodology
   const projectMethodology = useMemo(() => {
