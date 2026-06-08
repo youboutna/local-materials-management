@@ -203,8 +203,8 @@ const InspectionEdit = () => {
                   type="number"
                   min="0"
                   max="100"
-                  value={formData.progress_at_inspection}
-                  onChange={(e) => setFormData(prev => ({ ...prev, progress_at_inspection: parseInt(e.target.value) || 0 }))}
+                  value={formData.progressAtInspection}
+                  onChange={(e) => setFormData(prev => ({ ...prev, progressAtInspection: parseInt(e.target.value) || 0 }))}
                 />
               </div>
             </div>
