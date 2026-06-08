@@ -70,7 +70,7 @@ const Auth = () => {
       return result;
     },
     onSuccess: (data) => {
-      toast.success(`Bienvenue ${data.user?.name || data.user?.email || ''}!`);
+      toast.success(`Bienvenue ${(data.user as { name?: string; email?: string } | undefined)?.name || data.user?.email || ''}!`);
       refetch();
       navigate('/dashboard');
     },

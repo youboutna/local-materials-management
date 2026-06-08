@@ -96,7 +96,7 @@ const MaterialCreate = () => {
       description: completeFormData.description || '', // Ensure description is never undefined
       category: formData.category,
       subcategory: formData.subcategory,
-      unit: formData.unit,
+      unit: (formData.unit ?? '') as string,
       pricePerUnit: formData.pricePerUnit,
       quantity: formData.quantity,
       availableQuantity: formData.availableQuantity,
