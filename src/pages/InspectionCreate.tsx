@@ -74,9 +74,9 @@ const InspectionCreate: React.FC = () => {
           variant="ghost"
           onClick={() => navigate(-1)}
           className="mb-4"
-          aria-label="Retour"
+          aria-label="Revenir à la page précédente"
         >
-          <ArrowLeft className="h-4 w-4 mr-2" />
+          <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
           Retour
         </Button>
 
@@ -119,6 +119,7 @@ const InspectionCreate: React.FC = () => {
                       setForm((p) => ({ ...p, inspector: e.target.value }))
                     }
                     required
+                    aria-required="true"
                     placeholder="Nom de l'inspecteur"
                   />
                 </div>
@@ -132,6 +133,7 @@ const InspectionCreate: React.FC = () => {
                       setForm((p) => ({ ...p, date: e.target.value }))
                     }
                     required
+                    aria-required="true"
                   />
                 </div>
               </div>
@@ -195,8 +197,8 @@ const InspectionCreate: React.FC = () => {
                 >
                   Annuler
                 </Button>
-                <Button type="submit" disabled={isCreating}>
-                  <Save className="h-4 w-4 mr-2" />
+                <Button type="submit" disabled={isCreating} aria-busy={isCreating}>
+                  <Save className="h-4 w-4 mr-2" aria-hidden="true" />
                   {isCreating ? 'Création…' : 'Créer'}
                 </Button>
               </div>
