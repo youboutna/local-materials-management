@@ -179,16 +179,16 @@ const PhaseDetail: React.FC = () => {
         <Card>
           <CardContent className="py-3 flex flex-wrap items-center gap-2">
             <span className="text-xs font-medium text-muted-foreground mr-2">Navigation rapide :</span>
-            <Button size="sm" variant="ghost" onClick={() => navigate(`/inspections?phase=${phaseId}`)}>
+            <Button size="sm" variant="ghost" aria-label="Voir les inspections de la phase" onClick={() => navigate(`/inspections?phase=${phaseId}`)}>
               <ClipboardCheck className="h-4 w-4 mr-1" /> Inspections <ExternalLink className="h-3 w-3 ml-1" />
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => navigate(`/payment-control?phase=${phaseId}`)}>
+            <Button size="sm" variant="ghost" aria-label="Voir les paiements de la phase" onClick={() => navigate(`/payment-control?phase=${phaseId}`)}>
               <CreditCard className="h-4 w-4 mr-1" /> Paiements <ExternalLink className="h-3 w-3 ml-1" />
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => navigate(`/documents?phase=${phaseId}`)}>
+            <Button size="sm" variant="ghost" aria-label="Voir les documents de la phase" onClick={() => navigate(`/documents?phase=${phaseId}`)}>
               <FileText className="h-4 w-4 mr-1" /> Documents <ExternalLink className="h-3 w-3 ml-1" />
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => navigate(`/comprehensive-monitoring?phase=${phaseId}`)}>
+            <Button size="sm" variant="ghost" aria-label="Voir les rapports liés à la phase" onClick={() => navigate(`/comprehensive-monitoring?phase=${phaseId}`)}>
               <BarChart3 className="h-4 w-4 mr-1" /> Rapports <ExternalLink className="h-3 w-3 ml-1" />
             </Button>
           </CardContent>
