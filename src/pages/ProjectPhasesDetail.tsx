@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { PhaseService } from '@/application/services/PhaseService';
-import { PhaseDTO } from '@/dtos/transforms/shared';
+import { ProjectService } from '@/application/services/ProjectService';
 import PhaseMaterials from '@/components/project/PhaseMaterials';
 import PhaseEmployees from '@/components/project/PhaseEmployees';
 import PhaseDocuments from '@/components/project/PhaseDocuments';
@@ -18,52 +18,83 @@ import PhaseCompliance from '@/components/project/PhaseCompliance';
 import PhaseMilestones from '@/components/project/PhaseMilestones';
 import ResourcesMaterialsStep from '@/components/project/steps/ResourcesMaterialsStep';
 import StepDocumentUpload from '@/components/project/steps/StepDocumentUpload';
-import { ArrowLeft, Layers, ClipboardList, FileText, ShieldCheck, TriangleAlert, CalendarClock, Package } from 'lucide-react';
+import MonitoringEvaluationPanel from '@/components/project/monitoring/MonitoringEvaluationPanel';
+import { ArrowLeft, Layers, ClipboardList, FileText, ShieldCheck, TriangleAlert, CalendarClock, Package, Activity } from 'lucide-react';
 
-interface PhaseOption { id: string; name: string; }
+interface PhaseRow {
+  id: string;
+  name: string;
+  status?: string;
+  progress?: number;
+  startDate?: string | null;
+  endDate?: string | null;
+  budget?: number | null;
+}
 
 const ProjectPhasesDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [phases, setPhases] = useState<PhaseOption[]>([]);
+  const [phases, setPhases] = useState<PhaseRow[]>([]);
+  const [project, setProject] = useState<any>(null);
   const [selectedPhaseId, setSelectedPhaseId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [selectedMaterials, setSelectedMaterials] = useState<Array<{ materialId: string; quantity: number }>>([]);
 
   useEffect(() => {
-    const loadPhases = async () => {
+    const load = async () => {
       if (!id) return;
       try {
         setLoading(true);
-        
-        // ✅ Utilisation de PhaseService hexagonal
         const phaseService = new PhaseService();
-        const phasesData = await phaseService.getPhasesByProject(id);
-        
-        // Transformation en options pour le select
-        const options = phasesData.map(p => ({ 
-          id: p.id, 
-          name: p.phase_name || 'Phase sans nom' 
+        const projectService = new ProjectService();
+        const [phasesData, projectData] = await Promise.all([
+          phaseService.getPhasesByProject(id),
+          projectService.getProjectWithDetails(id).catch(() => null),
+        ]);
+
+        const rows: PhaseRow[] = phasesData.map((p: any) => ({
+          id: p.id,
+          name: p.phase_name || p.name || 'Phase sans nom',
+          status: p.status,
+          progress: p.progress ?? 0,
+          startDate: p.start_date ?? p.startDate ?? null,
+          endDate: p.end_date ?? p.endDate ?? null,
+          budget: p.estimated_cost ?? p.estimatedCost ?? p.budget ?? null,
         }));
-        
-        setPhases(options);
-        
-        // Check for phase query parameter
+
+        setPhases(rows);
+        setProject(projectData);
+
         const urlParams = new URLSearchParams(window.location.search);
         const phaseParam = urlParams.get('phase');
-        setSelectedPhaseId(phaseParam || options[0]?.id);
+        setSelectedPhaseId(phaseParam || rows[0]?.id);
       } catch (err) {
         console.error(err);
-        toast({ 
-          title: 'Erreur', 
-          description: "Impossible de charger les phases via PhaseService", 
-          variant: 'destructive' 
+        toast({
+          title: 'Erreur',
+          description: "Impossible de charger les phases via PhaseService",
+          variant: 'destructive',
         });
       } finally {
         setLoading(false);
       }
     };
-    loadPhases();
+    load();
   }, [id]);
+
+  const monitoringPhases = useMemo(
+    () =>
+      phases.map((p) => ({
+        id: p.id,
+        name: p.name,
+        status: p.status,
+        progress: p.progress,
+        startDate: p.startDate,
+        endDate: p.endDate,
+        budget: p.budget,
+        actualProgress: p.progress,
+      })),
+    [phases],
+  );
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6">
@@ -96,7 +127,7 @@ const ProjectPhasesDetail: React.FC = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="resources" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-8">
+            <TabsList className="grid w-full grid-cols-9">
               <TabsTrigger value="resources" className="flex items-center gap-2"><ClipboardList className="h-4 w-4"/>Ressources</TabsTrigger>
               <TabsTrigger value="materials" className="flex items-center gap-2"><Package className="h-4 w-4"/>Matériaux</TabsTrigger>
               <TabsTrigger value="documents" className="flex items-center gap-2"><FileText className="h-4 w-4"/>Documents</TabsTrigger>
@@ -105,6 +136,7 @@ const ProjectPhasesDetail: React.FC = () => {
               <TabsTrigger value="compliance" className="flex items-center gap-2"><ShieldCheck className="h-4 w-4"/>Conformité</TabsTrigger>
               <TabsTrigger value="gantt" className="flex items-center gap-2"><CalendarClock className="h-4 w-4"/>Gantt</TabsTrigger>
               <TabsTrigger value="planning" className="flex items-center gap-2"><CalendarClock className="h-4 w-4"/>Planning</TabsTrigger>
+              <TabsTrigger value="monitoring" className="flex items-center gap-2"><Activity className="h-4 w-4"/>Suivi & Éval.</TabsTrigger>
             </TabsList>
 
             <TabsContent value="resources">
@@ -187,6 +219,21 @@ const ProjectPhasesDetail: React.FC = () => {
                 </div>
               ) : (
                 <div className="text-sm text-muted-foreground">Veuillez sélectionner une phase.</div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="monitoring">
+              {project && selectedPhaseId ? (
+                <MonitoringEvaluationPanel
+                  scope="phase"
+                  project={project}
+                  phases={monitoringPhases}
+                  phaseId={selectedPhaseId}
+                />
+              ) : (
+                <div className="text-sm text-muted-foreground">
+                  Sélectionnez une phase pour afficher les indicateurs de suivi & évaluation.
+                </div>
               )}
             </TabsContent>
           </Tabs>
