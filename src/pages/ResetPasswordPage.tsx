@@ -36,7 +36,7 @@ const ResetPasswordPage = () => {
             refresh_token: refreshToken,
             user: null,
             expires_at: 0,
-          } as unknown as Parameters<typeof authService.setSession>[0]);
+          } as never);
 
           if (error) {
             console.error('Session error:', error);
