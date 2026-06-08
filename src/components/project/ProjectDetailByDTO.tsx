@@ -71,6 +71,7 @@ import {
   SelectContent,
 } from "../ui/select";
 import { useProjectPhasesHex } from "@/hooks/hexagonal";
+import MonitoringEvaluationPanel from "@/components/project/monitoring/MonitoringEvaluationPanel";
 
 interface ProjectDetailByDTOProps {
   projectId?: string;
@@ -308,41 +309,36 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   const paymentsSource = useMemo(() => projectDetail?.expenses || [], [projectDetail]);
 
   // Calculate current phase and stage dynamically from phases
+  // Uses normalized PhaseDTO fields (phase_name) and falls back across aliases.
   const currentPhaseInfo = useMemo(() => {
-    if (!phasesSource || phasesSource.length === 0) {
+    const source = (phasesSource || []) as any[];
+    if (source.length === 0) {
       return { currentPhase: null, currentStage: null };
     }
 
-    // Find the first phase that is "in_progress" - use name property from PhaseDTO
-    const inProgressPhase = phasesSource.find(
-      (p) => p.status === "in_progress"
-    );
-    if (inProgressPhase) {
-      return {
-        currentPhase: inProgressPhase.name || inProgressPhase.type,
-        currentStage: null,
-      };
-    }
+    const getName = (p: any) =>
+      p?.phase_name || p?.name || p?.phase || p?.type || p?.constructionStage || null;
 
-    // If no in_progress phase, find the first "pending" phase
-    const pendingPhase = phasesSource.find(
-      (p) =>
-        p.status === "pending"
-    );
-    if (pendingPhase) {
-      return {
-        currentPhase: pendingPhase.name || pendingPhase.type,
-        currentStage: null,
-      };
-    }
-
-    // All phases completed - show last one
-    const lastPhase = phasesSource[phasesSource.length - 1];
-    return {
-      currentPhase: lastPhase?.name || lastPhase?.type || null,
-      currentStage: null,
+    const getStage = (p: any): string | null => {
+      const stages = Array.isArray(p?.stages) ? p.stages : [];
+      const active = stages.find((s: any) => s?.status && s.status !== "completed");
+      return active?.name || stages[0]?.name || p?.constructionStage || null;
     };
+
+    const inProgress = source.find((p) => p?.status === "in_progress");
+    if (inProgress) {
+      return { currentPhase: getName(inProgress), currentStage: getStage(inProgress) };
+    }
+
+    const pending = source.find((p) => p?.status === "pending" || p?.status === "planned" || p?.status === "not_started");
+    if (pending) {
+      return { currentPhase: getName(pending), currentStage: getStage(pending) };
+    }
+
+    const last = source[source.length - 1];
+    return { currentPhase: getName(last), currentStage: getStage(last) };
   }, [phasesSource]);
+
 
   // Calculate project methodology
   const projectMethodology = useMemo(() => {
@@ -786,12 +782,18 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   const PENDING_PHASE_STATUSES = new Set(["not_started", "pending", "draft", "planned"]);
   const phasesStats = useMemo(() => {
     const total = computedPhases.length || project?.phasesCount || 0;
-    const completed = computedPhases.filter((p) => p.status === "completed").length || 0;
+    const projectDone =
+      (project?.status || "").toLowerCase() === "completed" ||
+      (project?.status || "").toLowerCase() === "terminé" ||
+      (project?.progress || 0) >= 100;
+    let completed = computedPhases.filter((p) => p.status === "completed").length || 0;
+    if (projectDone && total > 0) completed = total;
     const inProgress = computedPhases.filter(
       (p) => !TERMINAL_PHASE_STATUSES.has(p.status) && !PENDING_PHASE_STATUSES.has(p.status),
     ).length || 0;
     return { total, completed, inProgress };
-  }, [computedPhases, project?.phasesCount]);
+  }, [computedPhases, project?.phasesCount, project?.status, project?.progress]);
+
 
   const handleDelete = async (projectIdToDelete: string) => {
     if (
@@ -914,14 +916,16 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         onValueChange={setActiveTab}
         className="space-y-4"
       >
-        <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 h-auto">
+        <TabsList className="grid w-full grid-cols-3 md:grid-cols-7 h-auto">
           <TabsTrigger value="overview" className="text-xs sm:text-sm">Vue d'ensemble</TabsTrigger>
           <TabsTrigger value="phases" className="text-xs sm:text-sm">Planification</TabsTrigger>
           <TabsTrigger value="tasks" className="text-xs sm:text-sm">Exécution</TabsTrigger>
           <TabsTrigger value="financial" className="text-xs sm:text-sm">Financier</TabsTrigger>
           <TabsTrigger value="compliance" className="text-xs sm:text-sm">Conformité</TabsTrigger>
+          <TabsTrigger value="monitoring" className="text-xs sm:text-sm">Suivi & Évaluation</TabsTrigger>
           <TabsTrigger value="map" className="text-xs sm:text-sm">Localisation</TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1980,7 +1984,25 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           </div>
         </TabsContent>
 
+        <TabsContent value="monitoring" className="mt-6">
+          <MonitoringEvaluationPanel
+            scope="project"
+            project={projectDetail as any}
+            phases={computedPhases.map((p) => ({
+              id: p.id,
+              name: p.phase_name || p.phase,
+              status: p.status,
+              progress: p.progress,
+              startDate: p.startDate,
+              endDate: p.endDate,
+              budget: p.budget,
+              actualProgress: p.progress,
+            }))}
+          />
+        </TabsContent>
+
         <TabsContent value="map" className="mt-6">
+
           <InteractiveMapGIS
             title="Localisation du projet"
             description="Carte interactive avec outils GIS"
