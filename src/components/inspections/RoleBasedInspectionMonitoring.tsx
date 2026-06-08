@@ -224,6 +224,21 @@ const RoleBasedInspectionMonitoring = () => {
   };
 
 
+  const createUrl = (() => {
+    const sp = new URLSearchParams();
+    if (projectId) sp.set('project', projectId);
+    if (phaseId) sp.set('phase', phaseId);
+    const qs = sp.toString();
+    return `/inspections/create${qs ? `?${qs}` : ''}`;
+  })();
+
+  const clearScope = () => {
+    const sp = new URLSearchParams(searchParams);
+    sp.delete('phase');
+    sp.delete('project');
+    setSearchParams(sp);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -235,12 +250,25 @@ const RoleBasedInspectionMonitoring = () => {
           </p>
         </div>
         {isAdmin && (
-          <Button onClick={() => navigate('/inspections/create')}>
+          <Button onClick={() => navigate(createUrl)}>
             <Plus className="h-4 w-4 mr-2" />
             Nouvelle Inspection
           </Button>
         )}
       </div>
+
+      {(phaseId || projectId) && (
+        <div className="flex items-center justify-between rounded-md border bg-muted/40 px-3 py-2 text-sm">
+          <span>
+            Filtré par {phaseId && <strong>phase {phaseId.slice(0, 8)}…</strong>}
+            {phaseId && projectId && ' / '}
+            {projectId && <strong>projet {projectId.slice(0, 8)}…</strong>}
+          </span>
+          <Button variant="ghost" size="sm" onClick={clearScope} aria-label="Effacer le filtre">
+            Effacer
+          </Button>
+        </div>
+      )}
 
       {/* Statistics Cards */}
       {/* Stats section removed for now since we don't have the stats hook */}
