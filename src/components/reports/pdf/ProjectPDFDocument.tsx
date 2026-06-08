@@ -460,6 +460,111 @@ export function ProjectPDFDocument({
         </PDFSection>
       )}
 
+      {/* Suivi & Évaluation — synthèse écarts + jugement global de performance */}
+      {reportConfig.includeSections.monitoringEvaluation && (() => {
+        const spi = evmMetrics?.schedulePerformanceIndex;
+        const cpi = evmMetrics?.costPerformanceIndex;
+        const severityLabel: Record<string, string> = {
+          info: 'Conforme',
+          low: 'Faible',
+          medium: 'Modéré',
+          high: 'Critique',
+        };
+        const judgeDeviation = (sign: number, severity: string) => {
+          if (severity === 'info') return 'Conforme';
+          const direction = sign > 0 ? 'Dépassement' : sign < 0 ? 'Avance/Économie' : 'Stable';
+          return `${direction} — ${severityLabel[severity] || severity}`;
+        };
+        const globalJudgment = (() => {
+          if (spi == null || cpi == null) return { label: 'Données insuffisantes', color: '#6b7280' };
+          if (spi >= 1 && cpi >= 1) return { label: 'Excellent — projet sous contrôle', color: '#10b981' };
+          if (spi >= 0.95 && cpi >= 0.95) return { label: 'Satisfaisant — surveillance régulière', color: '#3b82f6' };
+          if (spi >= 0.85 && cpi >= 0.85) return { label: 'Vigilance — actions préventives requises', color: '#f59e0b' };
+          return { label: 'Critique — actions correctives urgentes', color: '#ef4444' };
+        })();
+        const score = healthScore && typeof healthScore === 'object'
+          ? (healthScore.overallScore ?? healthScore.score ?? null)
+          : null;
+
+        return (
+          <PDFSection title="Suivi & Évaluation" borderColor="#0ea5e9">
+            <PDFRow>
+              <PDFMetricCard
+                title="Performance globale"
+                value={globalJudgment.label}
+                color={globalJudgment.color}
+              />
+              {score != null && (
+                <PDFMetricCard
+                  title="Score de santé"
+                  value={`${Number(score).toFixed(0)}/100`}
+                  color="#8b5cf6"
+                />
+              )}
+              {spi != null && (
+                <PDFMetricCard
+                  title="SPI (délai)"
+                  value={spi.toFixed(2)}
+                  color={spi >= 1 ? '#10b981' : spi >= 0.9 ? '#f59e0b' : '#ef4444'}
+                />
+              )}
+              {cpi != null && (
+                <PDFMetricCard
+                  title="CPI (coût)"
+                  value={cpi.toFixed(2)}
+                  color={cpi >= 1 ? '#10b981' : cpi >= 0.9 ? '#f59e0b' : '#ef4444'}
+                />
+              )}
+            </PDFRow>
+
+            {deviations.length > 0 ? (
+              <PDFTable
+                headers={['Indicateur', 'Écart', 'Unité', 'Sévérité', 'Jugement']}
+                data={deviations.map((d) => [
+                  d.label,
+                  `${d.value > 0 ? '+' : ''}${d.value}`,
+                  d.unit,
+                  (severityLabel[d.severity] || d.severity).toUpperCase(),
+                  judgeDeviation(d.sign, d.severity),
+                ])}
+                columnWidths={['30%', '15%', '10%', '15%', '30%']}
+              />
+            ) : (
+              <PDFCard>
+                <PDFText label="Écarts" value="Aucun écart significatif détecté sur la période." />
+              </PDFCard>
+            )}
+
+            <PDFCard>
+              <PDFRow>
+                <PDFCol>
+                  <PDFText
+                    label="Synthèse délai"
+                    value={spi == null ? 'N/A' : spi >= 1 ? 'Avance ou conforme au planning' : spi >= 0.9 ? 'Léger retard à surveiller' : 'Retard significatif — replanifier'}
+                  />
+                  <PDFText
+                    label="Synthèse coût"
+                    value={cpi == null ? 'N/A' : cpi >= 1 ? 'Sous le budget' : cpi >= 0.9 ? 'Léger dépassement à surveiller' : 'Dépassement budgétaire — arbitrer'}
+                  />
+                </PDFCol>
+                <PDFCol>
+                  <PDFText
+                    label="Recommandation"
+                    value={
+                      (spi != null && spi < 0.9) || (cpi != null && cpi < 0.9)
+                        ? 'Mettre en place un plan de redressement (planning + coût) et un comité de pilotage hebdomadaire.'
+                        : (spi != null && spi < 1) || (cpi != null && cpi < 1)
+                        ? 'Renforcer le suivi des phases critiques et anticiper les arbitrages ressources.'
+                        : 'Maintenir le rythme et capitaliser les bonnes pratiques.'
+                    }
+                  />
+                </PDFCol>
+              </PDFRow>
+            </PDFCard>
+          </PDFSection>
+        );
+      })()}
+
       {/* Jalons */}
       {reportConfig.includeSections.milestones && (
         <PDFSection title="Jalons du Projet" borderColor="#10b981">
