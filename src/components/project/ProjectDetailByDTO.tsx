@@ -363,7 +363,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     const computeResources = () => {
       if (!projectDetail) return;
       
-      // Use real resources from projectDetail instead of mock data
+      // Hydrate les ressources réelles depuis le DTO projet (plus de mock).
       const realResources = Array.isArray(projectDetail.resources) ? projectDetail.resources : [];
       
       // Transform real resources to the expected format

@@ -1,14 +1,15 @@
-// @ts-nocheck
 import React, { useEffect, useId, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { PhaseService } from '@/application/services/PhaseService';
 import { ProjectService } from '@/application/services/ProjectService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import type { Phase } from '@/domain/entities/Phase';
+import type { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import PhaseMaterials from '@/components/project/PhaseMaterials';
 import PhaseEmployees from '@/components/project/PhaseEmployees';
 import PhaseDocuments from '@/components/project/PhaseDocuments';
@@ -35,7 +36,7 @@ const ProjectPhasesDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const phaseSelectId = useId();
   const [phases, setPhases] = useState<PhaseRow[]>([]);
-  const [project, setProject] = useState<any>(null);
+  const [project, setProject] = useState<ProjectDetailDTO | null>(null);
   const [selectedPhaseId, setSelectedPhaseId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [selectedMaterials, setSelectedMaterials] = useState<Array<{ materialId: string; quantity: number }>>([]);
@@ -46,24 +47,25 @@ const ProjectPhasesDetail: React.FC = () => {
       try {
         setLoading(true);
         const phaseService = new PhaseService();
-        const projectService = new ProjectService();
+        const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
         const [phasesData, projectData] = await Promise.all([
           phaseService.getPhasesByProject(id),
           projectService.getProjectWithDetails(id).catch(() => null),
         ]);
 
-        const rows: PhaseRow[] = phasesData.map((p: any) => ({
+        // Mapping strict DTO (camelCase) — plus de snake_case côté UI
+        const rows: PhaseRow[] = (phasesData as Phase[]).map((p) => ({
           id: p.id,
-          name: p.phase_name || p.name || 'Phase sans nom',
+          name: p.phaseName?.trim() || 'Phase sans nom',
           status: p.status,
           progress: p.progress ?? 0,
-          startDate: p.start_date ?? p.startDate ?? null,
-          endDate: p.end_date ?? p.endDate ?? null,
-          budget: p.estimated_cost ?? p.estimatedCost ?? p.budget ?? null,
+          startDate: p.startDate ?? null,
+          endDate: p.endDate ?? null,
+          budget: p.estimatedCost ?? null,
         }));
 
         setPhases(rows);
-        setProject(projectData);
+        setProject(projectData as ProjectDetailDTO | null);
 
         const urlParams = new URLSearchParams(window.location.search);
         const phaseParam = urlParams.get('phase');
@@ -155,7 +157,7 @@ const ProjectPhasesDetail: React.FC = () => {
                 <ResourcesMaterialsStep
                   selectedMaterials={selectedMaterials}
                   onMaterialsChange={setSelectedMaterials}
-                  formData={{ id }}
+                  projectData={{ id }}
                   currentPhaseId={selectedPhaseId}
                   isEditing={true}
                 />

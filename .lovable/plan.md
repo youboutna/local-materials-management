@@ -1,109 +1,101 @@
 ## Objectif
 
-1. Mettre à jour `docs/*.md` pour intégrer la consigne HadraTech-GPI (vision, modules, personnalisation par référentiels, stack, personas).
-2. Finaliser les CRUD et vues sur les pages **Projects**, **PhaseDetail**, **ProjectPhasesDetail**, **MilestoneDetail** et leurs sous-objets, en respectant le design system, l'accessibilité et la navigabilité.
-
-Aucune nouvelle table DB. Aucune migration. Le travail reste UI + hooks existants + DTO existants.
+Finaliser le round-trip **UI ⇄ DTO ⇄ Service ⇄ Adapter ⇄ DB** sur toutes les pages listées dans `src/App.tsx`, en supprimant les `@ts-nocheck`, les mappings `snake_case` résiduels côté UI, les `TODO` mock, et en hydratant les vues qui affichent encore des valeurs "Indéfinie / 0 / —" alors que les données existent. Pas de nouvelle table, pas de migration.
 
 ---
 
-## Partie A — Documentation (`docs/*.md`)
+## Périmètre exact (issu de `src/App.tsx`)
 
-### A.1 `docs/CONTEXT.md` (réécriture ciblée)
-- Ajouter en tête : positionnement HadraTech-GPI = plateforme GPI visuelle, collaborative et modulaire (type Monday.com), personnalisable par référentiels.
-- Section **Modules métier** : Projet & ressources, Gestion de projet (Gantt/PERT/Waterfall/Kanban/Géo), Matériaux, Géolocalisation, Utilisateurs (Admin/Directeur/Manager/Lecteur/Fournisseur), Documentaire, Financier (paiements, garanties, assurances), Portail Fournisseur, i18n AR/FR/EN.
-- Conserver les **Personas** existants (Directeur / Chef de projet / Contrôleur) et leurs KPI.
-
-### A.2 `docs/ARCHITECTURE_REFERENTIELS.md` (extension)
-- Ajouter le catalogue d'exemples concrets de référentiels et formats supportés :
-  - Politique publique / Stratégie nationale (JSON, Excel, API)
-  - Budget programme / LFI (CSV, Excel, API) → blocage si dépassement
-  - ODD / normes internationales (JSON, CSV)
-  - Référentiel projets (XML MS Project, Excel)
-  - SIG QField (.qgs, .qml, GeoJSON)
-  - Normes techniques (JSON, XML)
-  - Structure organisationnelle (CSV, Excel)
-- Mécanismes à exposer : import / édition / **versioning** / publication ; moteur de validation temps réel ; rapports de conformité.
-
-### A.3 `docs/ARCHITECTURE.md` (mise à jour stack & intégrations)
-- Confirmer la **stack** : React + TS + Vite, Tailwind + shadcn-ui + Framer Motion, React Query + RHF + Zod, Leaflet + Google Maps, Supabase (PostgreSQL + Auth + Storage), Keycloak/SAML optionnel.
-- Ajouter section **Intégrations externes** : ERP (SAGE), SIG (WMS/WMTS, ArcGIS, GeoServer), SCADA (OPC UA), LDAP/AD.
-
-### A.4 `docs/task-plan.md` (ajout d'une section finale)
-- Nouvelle section « **Finalisation CRUD & Vues — Projets / Phases / Jalons** » listant les items de la Partie B comme checklist trackable.
-
-### A.5 `docs/PROMPTS.md`
-- Ajouter en annexe le prompt « 🚀 Développer HadraTech-GPI » fourni par l'utilisateur, comme prompt de référence projet.
+```text
+/projects                              Projects.tsx
+/projects/create                       ProjectCreate.tsx
+/projects/import                       ProjectImport.tsx          ← @ts-nocheck
+/projects/:id                          ProjectDetail.tsx → ProjectDetailByDTO
+/projects/:id/edit                     ProjectEdit.tsx
+/projects/:projectId/phases/:phaseId   PhaseDetail.tsx
+/projects/:projectId/milestones/:mId   MilestoneDetail.tsx
+(legacy)                               ProjectPhasesDetail.tsx    ← @ts-nocheck
+/dashboard                             Dashboard.tsx              ← @ts-nocheck
+/enhanced-dashboard                    EnhancedDashboard.tsx      ← @ts-nocheck
+/monitoring                            ComprehensiveMonitoring.tsx
+/inspection-monitoring                 InspectionMonitoring.tsx
+/bank-guarantee-monitor                BankGuaranteeMonitor.tsx   ← @ts-nocheck
+/payment-control                       PaymentControl.tsx         ← @ts-nocheck
+/payments/:id                          PaymentDetail.tsx
+/insurance-management                  InsuranceManagement.tsx    ← @ts-nocheck
+/notifications-center                  NotificationsCenter.tsx    ← @ts-nocheck
+/materials, /materials/*               Materials*.tsx             ← @ts-nocheck (3 fichiers)
+/documents                             Documents.tsx              ← @ts-nocheck
+/suppliers, /tender-*                  Suppliers / TenderMgmt     ← @ts-nocheck
+/inspections/*                         Inspection*.tsx            ← @ts-nocheck (2 fichiers)
+```
 
 ---
 
-## Partie B — CRUD & Vues
+## Plan d'exécution (par lots parallélisables)
 
-### B.1 `src/pages/Projects.tsx`
-- Vérifier présence d'actions CRUD complètes : créer (déjà via `/projects/create`), éditer, supprimer (avec `AlertDialog` shadcn), dupliquer.
-- Ajouter **toolbar accessible** : recherche, filtres statut/phase, bouton "Nouveau projet" avec `aria-label`.
-- Garantir un seul `<main>` (via `AppLayout`) et hiérarchie H1 unique.
+### Lot 1 — Projets (round-trip complet)
+- `src/pages/Projects.tsx` : remplacer le commentaire « no hardcoded enums » par usage du référentiel `project-status` (`src/config/referentials`). Toolbar accessible déjà présente, vérifier `aria-label` sur recherche/filtres.
+- `src/pages/ProjectDetail.tsx` + `ProjectDetailByDTO.tsx` : retirer le bloc "Use real resources… mock" (ligne 366), brancher sur `useProjectDetail` (déjà hexagonal). Vérifier `currentPhaseInfo.phaseName` (mémoire : fix "Indéfinie").
+- `src/pages/ProjectEdit.tsx` / `ProjectCreate.tsx` : confirmer transformation form → `ProjectFormDTO` (camelCase) via transformer dédié, retirer tout accès `snake_case`.
+- `src/pages/ProjectImport.tsx` : retirer `@ts-nocheck`, typer payload via `ImportProjectDTO`.
 
-### B.2 `src/pages/ProjectDetail.tsx` / `ProjectDetailByDTO.tsx`
-- Conserver les onglets existants (déjà incluant « Suivi & Évaluation »).
-- Ajouter actions rapides accessibles : Éditer, Supprimer (confirmation), Exporter rapport.
-- Corriger mapping résiduel (DTO camelCase uniquement côté UI ; voir mémoire projet).
+### Lot 2 — Phases & Jalons
+- `src/pages/PhaseDetail.tsx` : déjà sans `@ts-nocheck`. Vérifier hooks `usePhaseDetails` / `useTasksHex` / `useMilestonesHex` exposent bien `create/update/delete`. Brancher les `TODO` restants de `PhaseDetailsPage.tsx` (lignes 184/187).
+- `src/pages/ProjectPhasesDetail.tsx` : retirer `@ts-nocheck`, typer `PhaseRow` à partir du DTO `PhaseDTO` (camelCase). Remplacer les `p.phase_name || p.name` par lecture DTO (`phaseName`). Le service doit retourner du DTO, pas du raw row.
+- `src/pages/MilestoneDetail.tsx` : compléter modal édition (RHF + Zod) + suppression `AlertDialog` si manquants.
 
-### B.3 `src/pages/PhaseDetail.tsx`
-- Déjà solide. Ajouter :
-  - Boutons CRUD phase : Éditer (modal/route), Supprimer (confirmation), Marquer terminée.
-  - Boutons CRUD sous-objets exposés dans chaque onglet (tâches, jalons, matériaux, documents, paiements, inspections) — vérifier que chaque composant `Phase*` expose bien Create/Update/Delete.
-  - `aria-label` sur tous les boutons-icônes, focus visible, navigation clavier dans les `Tabs` (déjà OK via Radix).
+### Lot 3 — Dashboard & Monitoring
+- `src/pages/Dashboard.tsx` : retirer `@ts-nocheck`. Typer `projects` via `ProjectDTO`, supprimer le cast `as 'en cours' | ...'` au profit de l'enum issu du référentiel statuts. Vérifier `useDashboardHex` renvoie des stats hydratées (sinon corriger l'adapter qui agrège).
+- `src/pages/EnhancedDashboard.tsx` : idem, retirer `@ts-nocheck`.
+- `src/pages/ComprehensiveMonitoring.tsx` : déjà propre, vérifier que chaque sous-composant (`SystemHealthOverview`, `PerformanceMetrics`, `BankGuaranteeMonitor`, `RoleBasedInspectionMonitoring`, `UnifiedInsuranceManager`, `EnhancedPaymentBlockingInterface`) consomme des services hexagonaux et non `supabase` direct.
+- `src/pages/InspectionMonitoring.tsx`, `BankGuaranteeMonitor.tsx` : retirer `@ts-nocheck`, typer via DTO.
 
-### B.4 `src/pages/ProjectPhasesDetail.tsx`
-- Retirer `@ts-nocheck` ; typer `phases`, `project` correctement via DTO.
-- Le `<Select>` de phase doit être labellisé (`<label htmlFor>` + `id` cohérents).
-- Ajouter actions CRUD phase au-dessus des onglets (Ajouter phase, Renommer, Supprimer).
-- Vérifier l'onglet « Suivi & Éval. » (déjà en place).
+### Lot 4 — Paiements, Assurances, Notifications
+- `PaymentControl.tsx`, `PaymentDetail.tsx`, `InsuranceManagement.tsx`, `NotificationsCenter.tsx` : retirer `@ts-nocheck`, brancher sur services existants. Le `TODO: Move this to ProjectService` (InsuranceManagement L115) → exposer une méthode `getProjectsForInsurance()` dans `ProjectService`.
 
-### B.5 `src/pages/MilestoneDetail.tsx`
-- Compléter CRUD : Éditer jalon (modal RHF + Zod), Supprimer (confirmation), Re-planifier (date cible).
-- Bouton « Marquer terminé / Rouvrir » déjà présent — ajouter état désactivé pendant mutation et `aria-busy`.
-- Lier vers la phase et le projet (déjà fait) + breadcrumb.
+### Lot 5 — Catalogues annexes (round-trip light)
+- `Materials*.tsx`, `Documents.tsx`, `Suppliers.tsx`, `TenderManagement.tsx`, `Inspection*.tsx`, `ResetPasswordPage.tsx`, `SupplierPasswordReset.tsx`, `UnifiedSupplierPortal.tsx`, `Auth.tsx` : retirer `@ts-nocheck`, typer les états locaux via les DTOs existants (`MaterialDTO`, `DocumentDTO`, `SupplierDTO`, `TenderDTO`, `InspectionDTO`, `AuthDTO`).
 
-### B.6 Composants partagés (vérifications légères)
-- `PhaseTasks`, `PhaseMilestones`, `PhaseMaterials`, `PhaseDocuments`, `PhasePayments`, `PhaseInspections`, `PhaseEmployees` :
-  - confirmer Create / Update / Delete branchés sur les hooks hexagonaux existants (`useTasksHex`, `useMilestonesHex`, etc.) ; sinon brancher.
-  - boutons-icônes : `aria-label`, tap target ≥ 44×44 (`min-h-11 min-w-11`) sur mobile.
-
-### B.7 Design & accessibilité (transverse)
-- Aucun couleur ad-hoc : utiliser tokens (`bg-background`, `text-foreground`, `text-muted-foreground`, `border-border`, etc.).
-- Un seul `<main>` par route (déjà géré par `AppLayout`).
-- `lang="fr"` sur `<html>` à confirmer dans `index.html`.
-- Vérifier focus-visible sur tous les triggers d'onglets et boutons.
-- Skeletons existants pour les états de chargement ; ajouter `role="status"` + texte SR-only « Chargement ».
+### Lot 6 — Composants partagés cités par les pages ci-dessus
+- `ProjectFormWithMap.tsx` L131 : remplacer le `TODO contact` par lecture `supplier.contactName` du DTO.
+- `ProjectMaterials.tsx` L153 : implémenter `removeMaterialFromProject` via `ProjectMaterialsService` (méthode existante ou à ajouter dans le service applicatif uniquement, sans nouveau repo).
+- `ProjectCreateByDTO.tsx` L207 : déclencher `phaseService.savePhases()` + `milestoneService.saveMilestones()` après création projet.
+- `PhaseDetailsPage.tsx` L184/187 : brancher modal validation jalon + page détail jalon (`/projects/:projectId/milestones/:milestoneId`).
 
 ---
 
-## Détails techniques
+## Garde-fous techniques (mémoires projet)
 
-- **Aucune** modification de schéma Supabase, des services `src/application/services/*`, ni des adapters.
-- Les nouveaux modals d'édition (phase, jalon) utilisent **RHF + Zod** et `Dialog` shadcn.
-- Les suppressions utilisent `AlertDialog` shadcn avec un bouton de confirmation destructif.
-- Les hooks utilisés restent les hooks hexagonaux existants (`useMilestonesHex`, `usePhaseDetails`, `useProjects`, etc.). Si un hook n'expose pas `delete`/`update`, on l'étend localement en passant par le service existant (pas de nouveau repo).
-- Respect strict des mémoires projet : pas de Supabase direct dans la UI, pas de React dans les services.
+- **Pas de Supabase direct dans React** : seules exceptions tolérées (`useAuth`, URL Storage publique).
+- **Pas de React dans `application/services/*`** : si une page importe un service, le service doit rester pur TS.
+- **TanStack Query v5** : aucun `onError/onSuccess` ajouté sur `useQuery/useMutation` ; utiliser `isError/isSuccess`.
+- **DTO camelCase obligatoire en UI** : tout accès `p.phase_name`, `p.start_date`, `p.snake_case` côté composant est interdit ; corrigé via transformer dans l'adapter.
+- **Entités immutables** : update via méthode dédiée, jamais mutation de champ readonly.
+- **Référentiels** : aucun enum métier codé en dur (statuts, phases, types) ; toujours lire depuis `src/config/referentials/`.
 
----
+## Stratégie d'exécution
+
+L'agent traite les **6 lots en parallèle** quand les fichiers ne se chevauchent pas, en lançant des sous-agents `acp_subagent--explore` au besoin pour identifier la chaîne snake→camel restante par fichier. Après chaque lot, lecture du build output pour valider qu'aucune régression de type n'apparaît avant de passer au lot suivant.
 
 ## Livrables
 
 ```text
-docs/CONTEXT.md                   (mise à jour)
-docs/ARCHITECTURE.md              (mise à jour stack + intégrations)
-docs/ARCHITECTURE_REFERENTIELS.md (extension catalogue référentiels)
-docs/PROMPTS.md                   (annexe prompt HadraTech-GPI)
-docs/task-plan.md                 (checklist finalisation)
-src/pages/Projects.tsx            (toolbar + CRUD complet)
-src/pages/ProjectDetail*          (actions rapides + a11y)
-src/pages/PhaseDetail.tsx         (CRUD phase + a11y)
-src/pages/ProjectPhasesDetail.tsx (typage + CRUD + label select)
-src/pages/MilestoneDetail.tsx     (modal édition + suppression)
-src/components/project/Phase*.tsx (vérif CRUD sous-objets + a11y)
+src/App.tsx                                 (inchangé sauf si un import devient invalide)
+src/pages/Projects.tsx, ProjectCreate.tsx, ProjectDetail.tsx, ProjectEdit.tsx,
+                ProjectImport.tsx, ProjectPhasesDetail.tsx, PhaseDetail.tsx,
+                MilestoneDetail.tsx, Dashboard.tsx, EnhancedDashboard.tsx,
+                ComprehensiveMonitoring.tsx, InspectionMonitoring.tsx,
+                BankGuaranteeMonitor.tsx, PaymentControl.tsx, PaymentDetail.tsx,
+                InsuranceManagement.tsx, NotificationsCenter.tsx,
+                Materials*.tsx, Documents.tsx, Suppliers.tsx,
+                TenderManagement.tsx, Inspection*.tsx, Auth.tsx,
+                ResetPasswordPage.tsx, SupplierPasswordReset.tsx,
+                UnifiedSupplierPortal.tsx                   (retrait @ts-nocheck + typage DTO)
+src/components/project/ProjectDetailByDTO.tsx, ProjectCreateByDTO.tsx,
+                ProjectFormWithMap.tsx, ProjectMaterials.tsx,
+                PhaseDetailsPage.tsx                         (résolution TODO + hydratation)
+src/application/services/ProjectService.ts                  (ajout getProjectsForInsurance + savePhases/Milestones helpers si manquants)
 ```
 
-Ordre d'exécution : **docs d'abord** (A.1 → A.5), **puis** code (B.1 → B.7).
+Aucune migration DB, aucun nouveau repo. Toute logique manquante est ajoutée dans les services applicatifs existants.

@@ -128,7 +128,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
     const mainContractor = initialData?.main_contractor || '';
     return {
       name: mainContractor,
-      contact: '', // TODO: Load contact from database if supplier exists
+      contact: (initialData as { main_contractor_contact?: string })?.main_contractor_contact || '',
       leadTime: 7
     };
   });

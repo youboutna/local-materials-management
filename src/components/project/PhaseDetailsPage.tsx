@@ -181,10 +181,13 @@ const PhaseDetailsPage: React.FC = () => {
         handleRequestPayment(stepId, milestone.id);
         break;
       case 'validate':
-        // TODO: Validation modal
+        // Validation = planifier une inspection sur le jalon
+        handleScheduleInspection(stepId, milestone.id);
         break;
       case 'view':
-        // TODO: View milestone details
+        if (milestone?.id) {
+          navigate(`/projects/${projectId}/milestones/${milestone.id}`);
+        }
         break;
     }
   };
