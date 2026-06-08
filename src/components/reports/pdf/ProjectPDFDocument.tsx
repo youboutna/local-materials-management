@@ -48,6 +48,21 @@ interface ProjectPDFDocumentProps {
   }>;
   /** Score de santé projet calculé par ProjectCalculationService. */
   healthScore?: any;
+  /** Écarts par phase (filtrés selon `selectedPhaseIds`) — alimente le tableau « Suivi & Évaluation ». */
+  phaseDeviations?: Array<{
+    phaseId: string;
+    phaseName: string;
+    deviations: Array<{
+      ruleCode: string;
+      label: string;
+      value: number;
+      unit: string;
+      severity: 'info' | 'low' | 'medium' | 'high';
+      sign: 1 | -1 | 0;
+    }>;
+  }>;
+  /** IDs des phases sélectionnées par l'utilisateur (undefined = toutes). */
+  selectedPhaseIds?: string[];
 }
 
 export function ProjectPDFDocument({
