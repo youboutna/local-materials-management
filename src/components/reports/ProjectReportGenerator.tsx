@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { ReportingService } from '@/application/services/ReportingService';
+import { DeviationEngine } from '@/application/services/DeviationEngine';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import { pdf } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver';
@@ -36,6 +37,8 @@ interface ReportConfig {
   reportType: ReportProfile;
   recipientEmail?: string;
   notes?: string;
+  /** Phases incluses dans le tableau d'écarts. `undefined` = toutes. */
+  selectedPhaseIds?: string[];
 }
 
 export function ProjectReportGenerator({ project, onClose }: ProjectReportGeneratorProps) {
@@ -82,6 +85,53 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
         .join('|'),
     [reportConfig.includeSections],
   );
+
+  // Phases disponibles + per-phase deviations (DeviationEngine, scope 'phase').
+  const availablePhases = useMemo<Array<{ id: string; name: string }>>(() => {
+    const phases = (enrichedData?.phases as any[]) || [];
+    return phases.map((p) => ({
+      id: String(p.id),
+      name: p.title || p.name || p.phase_name || `Phase ${p.id}`,
+    }));
+  }, [enrichedData]);
+
+  const phaseDeviations = useMemo(() => {
+    const phases = (enrichedData?.phases as any[]) || [];
+    return phases.map((p) => {
+      const completed = (p.status || '').toString().toLowerCase() === 'completed';
+      const results = DeviationEngine.compute(
+        {
+          plannedEndDate: p.endDate ?? p.end_date ?? null,
+          actualEndDate: completed ? (p.actualEndDate ?? p.updatedAt ?? p.updated_at ?? null) : null,
+          plannedBudget: Number(p.budget ?? 0) || null,
+          actualCost: p.actualCost != null ? Number(p.actualCost) : null,
+          plannedProgress: p.plannedProgress != null ? Number(p.plannedProgress) : null,
+          actualProgress: p.actualProgress != null ? Number(p.actualProgress) : (p.progress != null ? Number(p.progress) : null),
+        },
+        'phase',
+      );
+      return {
+        phaseId: String(p.id),
+        phaseName: p.title || p.name || p.phase_name || `Phase ${p.id}`,
+        deviations: results,
+      };
+    });
+  }, [enrichedData]);
+
+  // Initialise la sélection sur l'ensemble des phases dès qu'elles sont chargées.
+  useEffect(() => {
+    if (reportConfig.selectedPhaseIds === undefined && availablePhases.length > 0) {
+      setReportConfig((prev) => ({ ...prev, selectedPhaseIds: availablePhases.map((p) => p.id) }));
+    }
+  }, [availablePhases, reportConfig.selectedPhaseIds]);
+
+  const filteredPhaseDeviations = useMemo(() => {
+    if (!reportConfig.selectedPhaseIds) return phaseDeviations;
+    const set = new Set(reportConfig.selectedPhaseIds);
+    return phaseDeviations.filter((pd) => set.has(pd.phaseId));
+  }, [phaseDeviations, reportConfig.selectedPhaseIds]);
+
+
 
   // Re-fetch report data when project, profile, or active sections change.
   useEffect(() => {
@@ -158,6 +208,8 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
           enrichedData={enrichedData || undefined}
           deviations={deviations}
           healthScore={healthScore}
+          phaseDeviations={filteredPhaseDeviations}
+          selectedPhaseIds={reportConfig.selectedPhaseIds}
         />
       );
 
@@ -213,6 +265,8 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
           enrichedData={enrichedData || undefined}
           deviations={deviations}
           healthScore={healthScore}
+          phaseDeviations={filteredPhaseDeviations}
+          selectedPhaseIds={reportConfig.selectedPhaseIds}
         />
       );
 
@@ -411,6 +465,68 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
               </div>
             </div>
           </div>
+
+          {/* Filtre Phases pour le tableau d'écarts (visible si section Suivi & Évaluation active) */}
+          {reportConfig.includeSections.monitoringEvaluation && availablePhases.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <Label className="text-base font-medium">Phases incluses dans le tableau d'écarts</Label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      setReportConfig((prev) => ({
+                        ...prev,
+                        selectedPhaseIds: availablePhases.map((p) => p.id),
+                      }))
+                    }
+                    className="h-8 px-3 text-xs"
+                  >
+                    <CheckSquare className="h-3 w-3 mr-1" /> Tout sélectionner
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setReportConfig((prev) => ({ ...prev, selectedPhaseIds: [] }))}
+                    className="h-8 px-3 text-xs"
+                  >
+                    <Square className="h-3 w-3 mr-1" /> Aucune
+                  </Button>
+                </div>
+              </div>
+              <div className="bg-muted/30 p-4 rounded-lg border grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                {availablePhases.map((phase) => {
+                  const checked = (reportConfig.selectedPhaseIds ?? availablePhases.map((p) => p.id)).includes(phase.id);
+                  return (
+                    <div key={phase.id} className="flex items-center space-x-2 p-2 rounded-md hover:bg-background/50">
+                      <Checkbox
+                        id={`phase-${phase.id}`}
+                        checked={checked}
+                        onCheckedChange={(c) => {
+                          setReportConfig((prev) => {
+                            const current = prev.selectedPhaseIds ?? availablePhases.map((p) => p.id);
+                            const next = c
+                              ? Array.from(new Set([...current, phase.id]))
+                              : current.filter((id) => id !== phase.id);
+                            return { ...prev, selectedPhaseIds: next };
+                          });
+                        }}
+                      />
+                      <Label htmlFor={`phase-${phase.id}`} className="text-sm font-normal cursor-pointer flex-1">
+                        {phase.name}
+                      </Label>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {(reportConfig.selectedPhaseIds ?? availablePhases.map((p) => p.id)).length} phase(s) sélectionnée(s) sur {availablePhases.length}
+              </div>
+            </div>
+          )}
+
+
 
           {/* Email */}
           <div className="space-y-2">

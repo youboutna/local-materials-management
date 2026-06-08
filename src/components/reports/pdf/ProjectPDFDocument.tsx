@@ -48,6 +48,21 @@ interface ProjectPDFDocumentProps {
   }>;
   /** Score de santé projet calculé par ProjectCalculationService. */
   healthScore?: any;
+  /** Écarts par phase (filtrés selon `selectedPhaseIds`) — alimente le tableau « Suivi & Évaluation ». */
+  phaseDeviations?: Array<{
+    phaseId: string;
+    phaseName: string;
+    deviations: Array<{
+      ruleCode: string;
+      label: string;
+      value: number;
+      unit: string;
+      severity: 'info' | 'low' | 'medium' | 'high';
+      sign: 1 | -1 | 0;
+    }>;
+  }>;
+  /** IDs des phases sélectionnées par l'utilisateur (undefined = toutes). */
+  selectedPhaseIds?: string[];
 }
 
 export function ProjectPDFDocument({
@@ -60,6 +75,8 @@ export function ProjectPDFDocument({
   enrichedData,
   deviations = [],
   healthScore = null,
+  phaseDeviations = [],
+  selectedPhaseIds,
 }: ProjectPDFDocumentProps) {
   
   const getStatusText = (status: string) => {
@@ -534,6 +551,33 @@ export function ProjectPDFDocument({
                 <PDFText label="Écarts" value="Aucun écart significatif détecté sur la période." />
               </PDFCard>
             )}
+
+            {/* Écarts par phase — filtré selon `selectedPhaseIds` côté générateur */}
+            {(() => {
+              const filtered = selectedPhaseIds
+                ? phaseDeviations.filter((pd) => selectedPhaseIds.includes(pd.phaseId))
+                : phaseDeviations;
+              const rows = filtered.flatMap((pd) =>
+                pd.deviations.length > 0
+                  ? pd.deviations.map((d) => [
+                      pd.phaseName,
+                      d.label,
+                      `${d.value > 0 ? '+' : ''}${d.value} ${d.unit}`,
+                      (severityLabel[d.severity] || d.severity).toUpperCase(),
+                      judgeDeviation(d.sign, d.severity),
+                    ])
+                  : [[pd.phaseName, '—', '—', 'CONFORME', 'Aucun écart calculable']],
+              );
+              if (rows.length === 0) return null;
+              return (
+                <PDFTable
+                  headers={['Phase', 'Indicateur', 'Écart', 'Sévérité', 'Jugement']}
+                  data={rows}
+                  columnWidths={['25%', '25%', '15%', '13%', '22%']}
+                />
+              );
+            })()}
+
 
             <PDFCard>
               <PDFRow>
