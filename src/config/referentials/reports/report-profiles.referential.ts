@@ -26,13 +26,14 @@ export type ReportSectionKey =
   | 'escalationAlerts'
   | 'evmAnalysis'
   | 'pertAnalysis'
-  | 'ganttChart';
+  | 'ganttChart'
+  | 'monitoringEvaluation';
 
 export const ALL_REPORT_SECTIONS: ReportSectionKey[] = [
   'overview', 'financial', 'timeline', 'materials', 'phases', 'inspections',
   'risks', 'kpi', 'milestones', 'bankGuarantees', 'insurance', 'paymentBlocks',
   'suppliers', 'documents', 'employees', 'escalationAlerts', 'evmAnalysis',
-  'pertAnalysis', 'ganttChart',
+  'pertAnalysis', 'ganttChart', 'monitoringEvaluation',
 ];
 
 export type ReportDepth = 'light' | 'full' | 'financial' | 'managerial';
