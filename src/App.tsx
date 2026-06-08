@@ -36,6 +36,7 @@ import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import UserProfile from "./pages/UserProfile";
 import Contact from "./pages/Contact";
+import Inbox from "./pages/Inbox";
 import Terms from "./pages/Terms";
 import Policy from "./pages/Policy";
 import NotFound from "./pages/NotFound";
@@ -107,6 +108,7 @@ function App() {
                       <Route path="/" element={<Index />} />
                       <Route path="/auth" element={<Auth />} />
                       <Route path="/contact" element={<Contact />} />
+                      <Route path="/inbox" element={<Inbox />} />
                       <Route path="/terms" element={<Terms />} />
                       <Route path="/policy" element={<Policy />} />
                       <Route
