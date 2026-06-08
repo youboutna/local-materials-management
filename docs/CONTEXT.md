@@ -121,3 +121,27 @@ Manages construction projects that use local Mauritanian materials, with feature
     - Analyse prévisionnelle: Révision prévisions coûts
     - Audit processus: Vérification conformité
 ---
+
+---
+
+## 🚀 HadraTech-GPI — Positionnement plateforme
+
+**HadraTech-GPI** est une plateforme de **gestion intégrée de projet (GPI)** visuelle, collaborative et modulaire (type Monday.com), conçue pour tout secteur (construction, travaux publics, administration, ONG, etc.).
+
+**Force différenciante** : la **personnalisation par référentiels** (politique publique, budget programme, ODD, normes techniques) — l'entreprise importe ou crée ses propres référentiels pour aligner automatiquement les modules (projet, matériaux, financier, prestataires) sur les cadres stratégiques ou réglementaires.
+
+### Vues offertes
+Tableau · Gantt · Kanban · PERT · Waterfall · Géolocalisation.
+
+### Modules métier
+| Module | Fonctionnalités clés |
+|---|---|
+| 🧰 Projet & ressources | Création projets, affectation tâches/ressources, suivi retards, inspections programmées, rapports, géolocalisation chantiers |
+| 📊 Gestion de projet | Phases, jalons, dépendances, Gantt/Waterfall/PERT, avancement temps réel, alignement marché public |
+| 📦 Matériaux | Optimisation stocks, traçabilité, workflow « expression de besoin → accord → livraison » |
+| 🗺️ Géolocalisation | Cartographie interactive, intégration SIG (ArcGIS, GeoServer) via WMS/WMTS |
+| 👥 Utilisateurs | Rôles sécurisés Admin / Directeur / Manager / Lecteur / Fournisseur ; organigramme paramétrable |
+| 📂 Documentaire | Centralisation, workflows validation, versioning, liaison tâches/projets |
+| 💰 Financier & technique | Budgets, coûts, paiements (validation + déblocage), inspections, garanties bancaires, assurances |
+| 🌐 Portail Fournisseur | Notifications, documents/factures, historique paiements, appel d'offres dématérialisé avec confidentialité des plis |
+| 🌍 i18n | AR / FR / EN extensible |

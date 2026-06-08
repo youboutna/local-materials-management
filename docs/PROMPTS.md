@@ -363,3 +363,26 @@ const data: ProjectDTO = await repository.find(id);
 -`docs/TASKS_PLAN.md` - Plan de tâches
 `docs/ARCHITECTURE.md` - Architecture hexagonale détaillée
 - `
+---
+
+## 📎 Annexe — Prompt de référence HadraTech-GPI
+
+> Prompt source utilisé pour cadrer le développement continu de la plateforme.
+
+**Rôle** : développer HadraTech-GPI, plateforme de gestion intégrée de projet (GPI) visuelle, collaborative et modulaire, conçue pour tout secteur.
+
+**Vision** :
+- Interface moderne type Monday.com avec vues Tableau / Gantt / Kanban / PERT / Waterfall / Géolocalisation.
+- Couche **Référentiels** permettant de personnaliser champs, workflows, alertes et indicateurs sans développement.
+- Modules pré-opérationnels : projet, ressources, matériaux, géolocalisation, financier, documentaire, portail fournisseur.
+- Intégrations ERP (SAGE), SIG (WMS/WMTS), SCADA (OPC UA), LDAP/AD.
+- Multilingue AR / FR / EN (extensible).
+
+**Personnalisation par référentiels** :
+- Imports : JSON, XML MS Project, SIG QField, CSV/Excel, API.
+- Association référentiel ↔ projet → contraintes automatiques sur champs / workflows / indicateurs.
+- Versioning, publication, validation temps réel, rapports de conformité.
+
+**Tech stack** : React + TS + Vite, Tailwind + shadcn-ui + Framer Motion, TanStack Query + RHF + Zod, Leaflet + Google Maps, Supabase (PG + Auth + Storage), Keycloak optionnel.
+
+Voir `docs/CONTEXT.md` (positionnement & modules), `docs/ARCHITECTURE.md` (stack & intégrations), `docs/ARCHITECTURE_REFERENTIELS.md` (catalogue référentiels).
