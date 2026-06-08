@@ -34,9 +34,9 @@ const ResetPasswordPage = () => {
           const { error } = await authService.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
-            user: null as unknown as import('@/domain/entities/AuthUser').AuthUser,
+            user: null,
             expires_at: 0,
-          } as import('@/dtos/entities/AuthDTO').AuthSession);
+          } as unknown as Parameters<typeof authService.setSession>[0]);
 
           if (error) {
             console.error('Session error:', error);
