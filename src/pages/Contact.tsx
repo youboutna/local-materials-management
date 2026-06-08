@@ -1,374 +1,308 @@
 import React, { useState } from "react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Mail, Phone, MapPin, Clock } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Mail, Phone, MapPin, Clock, Send } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useSubmitContactFormHex } from "@/hooks/hexagonal";
+import { useSubmitContactMessageHex } from "@/hooks/hexagonal/useContactMessagesHex";
 import { useToast } from "@/hooks/use-toast";
 
-const Contact = () => {
+const contactSchema = z.object({
+  senderName: z
+    .string()
+    .trim()
+    .min(2, "Le nom doit contenir au moins 2 caractères.")
+    .max(100, "Le nom doit faire moins de 100 caractères."),
+  senderEmail: z
+    .string()
+    .trim()
+    .email("Adresse e-mail invalide.")
+    .max(255, "L'e-mail doit faire moins de 255 caractères."),
+  senderPhone: z
+    .string()
+    .trim()
+    .max(30, "Le téléphone doit faire moins de 30 caractères.")
+    .optional()
+    .or(z.literal("")),
+  subject: z
+    .string()
+    .trim()
+    .min(3, "L'objet doit contenir au moins 3 caractères.")
+    .max(200, "L'objet doit faire moins de 200 caractères."),
+  message: z
+    .string()
+    .trim()
+    .min(10, "Le message doit contenir au moins 10 caractères.")
+    .max(2000, "Le message doit faire moins de 2000 caractères."),
+});
+
+type ContactForm = z.infer<typeof contactSchema>;
+type FieldErrors = Partial<Record<keyof ContactForm, string>>;
+
+const initialForm: ContactForm = {
+  senderName: "",
+  senderEmail: "",
+  senderPhone: "",
+  subject: "",
+  message: "",
+};
+
+const Contact: React.FC = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
-  const submitMutation = useSubmitContactFormHex();
+  const submitMutation = useSubmitContactMessageHex();
 
-  const [formData, setFormData] = useState({
-    applicant_type: "",
-    individual_first_name: "",
-    individual_last_name: "",
-    email: "",
-    phone_number: "",
-    address: "",
-    national_id: "",
-    company_name: "",
-    company_nif: "",
-    request_type: "service",
-    company_address: "",
-    description: "",
-  });
+  const [formData, setFormData] = useState<ContactForm>(initialForm);
+  const [errors, setErrors] = useState<FieldErrors>({});
 
-  const handleInputChange = (field: string, value: string) => {
+  const setField = <K extends keyof ContactForm>(field: K, value: ContactForm[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (
-      !formData.applicant_type ||
-      !formData.email ||
-      !formData.phone_number ||
-      !formData.request_type
-    ) {
+    const parsed = contactSchema.safeParse(formData);
+    if (!parsed.success) {
+      const fieldErrors: FieldErrors = {};
+      parsed.error.issues.forEach((issue) => {
+        const key = issue.path[0] as keyof ContactForm;
+        if (!fieldErrors[key]) fieldErrors[key] = issue.message;
+      });
+      setErrors(fieldErrors);
       toast({
-        title: "Erreur",
-        description: "Veuillez remplir les champs obligatoires.",
+        title: "Formulaire invalide",
+        description: "Veuillez corriger les champs en erreur.",
         variant: "destructive",
       });
       return;
     }
 
-    submitMutation.mutate(formData, {
-      onSuccess: () => {
-        // Reset form
-        setFormData({
-          applicant_type: "",
-          individual_first_name: "",
-          individual_last_name: "",
-          email: "",
-          phone_number: "",
-          address: "",
-          national_id: "",
-          company_name: "",
-          company_nif: "",
-          request_type: "service",
-          company_address: "",
-          description: "",
-        });
+    submitMutation.mutate(
+      {
+        senderName: parsed.data.senderName,
+        senderEmail: parsed.data.senderEmail,
+        senderPhone: parsed.data.senderPhone || undefined,
+        subject: parsed.data.subject,
+        message: parsed.data.message,
       },
-    });
+      {
+        onSuccess: () => {
+          setFormData(initialForm);
+          setErrors({});
+        },
+      }
+    );
   };
 
   const isSubmitting = submitMutation.isPending;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <main className="flex-grow py-16">
-        <div className="container mx-auto px-4">
-          <div className="bg-white rounded-xl shadow-elegant p-8">
-            <h1 className="text-3xl font-serif font-bold text-adrar-900 mb-6">
-              {t("contact.title")}
+    <div className="min-h-screen flex flex-col bg-background">
+      <main className="flex-grow py-12" id="main-content">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <header className="mb-8">
+            <h1 className="text-3xl font-bold text-foreground">
+              {t("contact.title") || "Contactez-nous"}
             </h1>
+            <p className="text-muted-foreground mt-2">
+              Envoyez-nous un message, notre équipe vous répondra rapidement.
+            </p>
+          </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              {/* Contact form */}
-              <div>
-                <h2 className="text-xl font-semibold mb-6">
-                  {t("contact.form.title")}
-                </h2>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  {/* Applicant Type */}
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Type de demandeur *
-                    </label>
-                    <Select
-                      onValueChange={(value) =>
-                        handleInputChange("applicant_type", value)
-                      }
-                      value={formData.applicant_type}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionnez le type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="individual">Particulier</SelectItem>
-                        <SelectItem value="company">Entreprise</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Basic Info */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>{t("contact.form.title") || "Nouveau message"}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form
+                  onSubmit={handleSubmit}
+                  className="space-y-4"
+                  aria-label="Formulaire de contact"
+                  noValidate
+                >
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Prénom *
-                      </label>
+                    <div className="space-y-2">
+                      <Label htmlFor="contact-name">
+                        Nom complet <span aria-hidden="true">*</span>
+                      </Label>
                       <Input
-                        value={formData.individual_first_name}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "individual_first_name",
-                            e.target.value
-                          )
-                        }
-                        placeholder="Votre prénom"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Nom *
-                      </label>
-                      <Input
-                        value={formData.individual_last_name}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "individual_last_name",
-                            e.target.value
-                          )
-                        }
+                        id="contact-name"
+                        value={formData.senderName}
+                        onChange={(e) => setField("senderName", e.target.value)}
                         placeholder="Votre nom"
+                        aria-required="true"
+                        aria-invalid={!!errors.senderName}
+                        aria-describedby={errors.senderName ? "contact-name-error" : undefined}
+                        autoComplete="name"
                         required
                       />
+                      {errors.senderName && (
+                        <p id="contact-name-error" role="alert" className="text-sm text-destructive">
+                          {errors.senderName}
+                        </p>
+                      )}
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Email *
-                      </label>
+                    <div className="space-y-2">
+                      <Label htmlFor="contact-email">
+                        E-mail <span aria-hidden="true">*</span>
+                      </Label>
                       <Input
+                        id="contact-email"
                         type="email"
-                        value={formData.email}
-                        onChange={(e) =>
-                          handleInputChange("email", e.target.value)
-                        }
+                        value={formData.senderEmail}
+                        onChange={(e) => setField("senderEmail", e.target.value)}
                         placeholder="votre@email.com"
+                        aria-required="true"
+                        aria-invalid={!!errors.senderEmail}
+                        aria-describedby={errors.senderEmail ? "contact-email-error" : undefined}
+                        autoComplete="email"
                         required
                       />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Téléphone *
-                      </label>
-                      <Input
-                        value={formData.phone_number}
-                        onChange={(e) =>
-                          handleInputChange("phone_number", e.target.value)
-                        }
-                        placeholder="Votre numéro de téléphone"
-                        required
-                      />
+                      {errors.senderEmail && (
+                        <p id="contact-email-error" role="alert" className="text-sm text-destructive">
+                          {errors.senderEmail}
+                        </p>
+                      )}
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Numéro d'identité nationale *
-                      </label>
+                    <div className="space-y-2">
+                      <Label htmlFor="contact-phone">Téléphone</Label>
                       <Input
-                        value={formData.national_id}
-                        onChange={(e) =>
-                          handleInputChange("national_id", e.target.value)
-                        }
-                        placeholder="Numéro d'identité"
+                        id="contact-phone"
+                        type="tel"
+                        value={formData.senderPhone}
+                        onChange={(e) => setField("senderPhone", e.target.value)}
+                        placeholder="+222 ..."
+                        aria-invalid={!!errors.senderPhone}
+                        aria-describedby={errors.senderPhone ? "contact-phone-error" : undefined}
+                        autoComplete="tel"
+                      />
+                      {errors.senderPhone && (
+                        <p id="contact-phone-error" role="alert" className="text-sm text-destructive">
+                          {errors.senderPhone}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="contact-subject">
+                        Objet <span aria-hidden="true">*</span>
+                      </Label>
+                      <Input
+                        id="contact-subject"
+                        value={formData.subject}
+                        onChange={(e) => setField("subject", e.target.value)}
+                        placeholder="Objet du message"
+                        aria-required="true"
+                        aria-invalid={!!errors.subject}
+                        aria-describedby={errors.subject ? "contact-subject-error" : undefined}
                         required
                       />
+                      {errors.subject && (
+                        <p id="contact-subject-error" role="alert" className="text-sm text-destructive">
+                          {errors.subject}
+                        </p>
+                      )}
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Adresse personnelle
-                    </label>
-                    <Input
-                      value={formData.address}
-                      onChange={(e) =>
-                        handleInputChange("address", e.target.value)
-                      }
-                      placeholder="Votre adresse personnelle"
-                    />
-                  </div>
-
-                  {/* Company-specific fields */}
-                  {formData.applicant_type === "company" && (
-                    <>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-1">
-                            Nom de l'entreprise *
-                          </label>
-                          <Input
-                            value={formData.company_name}
-                            onChange={(e) =>
-                              handleInputChange("company_name", e.target.value)
-                            }
-                            placeholder="Nom de votre entreprise"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1">
-                            NIF de l'entreprise
-                          </label>
-                          <Input
-                            value={formData.company_nif}
-                            onChange={(e) =>
-                              handleInputChange("company_nif", e.target.value)
-                            }
-                            placeholder="Numéro d'identification fiscale"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1">
-                            Adresse de entreprise *
-                          </label>
-                          <Input
-                            value={formData.company_address}
-                            onChange={(e) =>
-                              handleInputChange(
-                                "parcel_address",
-                                e.target.value
-                              )
-                            }
-                            placeholder="Adresse entreprise demandé"
-                            required
-                          />
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  {/* Individual-specific fields */}
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Description du projet
-                    </label>
+                  <div className="space-y-2">
+                    <Label htmlFor="contact-message">
+                      Message <span aria-hidden="true">*</span>
+                    </Label>
                     <Textarea
-                      value={formData.description}
-                      onChange={(e) =>
-                        handleInputChange("description", e.target.value)
-                      }
-                      placeholder="Décrivez votre projet de station-service"
-                      rows={4}
-                      className="resize-none"
+                      id="contact-message"
+                      value={formData.message}
+                      onChange={(e) => setField("message", e.target.value)}
+                      placeholder="Décrivez votre demande..."
+                      rows={6}
+                      aria-required="true"
+                      aria-invalid={!!errors.message}
+                      aria-describedby={errors.message ? "contact-message-error" : "contact-message-hint"}
+                      required
+                      maxLength={2000}
                     />
+                    {errors.message ? (
+                      <p id="contact-message-error" role="alert" className="text-sm text-destructive">
+                        {errors.message}
+                      </p>
+                    ) : (
+                      <p id="contact-message-hint" className="text-xs text-muted-foreground">
+                        {formData.message.length}/2000 caractères
+                      </p>
+                    )}
                   </div>
 
                   <Button
                     type="submit"
-                    className="w-full"
+                    className="w-full sm:w-auto"
                     disabled={isSubmitting}
+                    aria-busy={isSubmitting}
                   >
-                    {isSubmitting ? "Envoi en cours..." : "Envoyer la demande"}
+                    <Send className="h-4 w-4 mr-2" aria-hidden="true" />
+                    {isSubmitting ? "Envoi en cours…" : "Envoyer le message"}
                   </Button>
                 </form>
-              </div>
+              </CardContent>
+            </Card>
 
-              {/* Contact information */}
-              <div className="space-y-6">
-                <h2 className="text-xl font-semibold mb-6">
-                  {t("contact.info.title")}
-                </h2>
-
-                <div className="space-y-4">
-                  <div className="flex items-start space-x-4">
-                    <MapPin className="h-6 w-6 text-terracotta-500 flex-shrink-0 mt-0.5" />
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("contact.info.title") || "Coordonnées"}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <address className="not-italic space-y-4 text-sm">
+                  <div className="flex items-start gap-3">
+                    <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" aria-hidden="true" />
                     <div>
-                      <h3 className="font-medium">
-                        {t("contact.info.address")}
-                      </h3>
-                      <p className="text-gray-600">
-                        {t("contact.info.address_value")}
+                      <p className="font-medium">{t("contact.info.address") || "Adresse"}</p>
+                      <p className="text-muted-foreground">
+                        {t("contact.info.address_value") || "Nouakchott, Mauritanie"}
                       </p>
                     </div>
                   </div>
-
-                  <div className="flex items-start space-x-4">
-                    <Phone className="h-6 w-6 text-terracotta-500 flex-shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-3">
+                    <Phone className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" aria-hidden="true" />
                     <div>
-                      <h3 className="font-medium">{t("contact.info.phone")}</h3>
-                      <p className="text-gray-600">
-                        {t("contact.info.phone_value")}
+                      <p className="font-medium">{t("contact.info.phone") || "Téléphone"}</p>
+                      <a
+                        href="tel:+22245000000"
+                        className="text-muted-foreground hover:text-primary"
+                      >
+                        {t("contact.info.phone_value") || "+222 45 00 00 00"}
+                      </a>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Mail className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" aria-hidden="true" />
+                    <div>
+                      <p className="font-medium">{t("contact.info.email") || "E-mail"}</p>
+                      <a
+                        href="mailto:contact@hadratech.com"
+                        className="text-muted-foreground hover:text-primary break-all"
+                      >
+                        {t("contact.info.email_value") || "contact@hadratech.com"}
+                      </a>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Clock className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" aria-hidden="true" />
+                    <div>
+                      <p className="font-medium">{t("contact.info.hours") || "Horaires"}</p>
+                      <p className="text-muted-foreground">
+                        {t("contact.info.hours_value") || "Lun – Ven · 08h00 – 17h00"}
                       </p>
                     </div>
                   </div>
-
-                  <div className="flex items-start space-x-4">
-                    <Mail className="h-6 w-6 text-terracotta-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-medium">{t("contact.info.email")}</h3>
-                      <p className="text-gray-600">
-                        {t("contact.info.email_value")}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-4">
-                    <Clock className="h-6 w-6 text-terracotta-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-medium">{t("contact.info.hours")}</h3>
-                      <p className="text-gray-600">
-                        {t("contact.info.hours_value")}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-6 mt-6 border-t">
-                  <h3 className="font-medium mb-2">
-                    {t("contact.info.social")}
-                  </h3>
-                  <div className="flex space-x-4">
-                    <a
-                      href="#"
-                      className="h-10 w-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
-                    >
-                      <span className="sr-only">Facebook</span>
-                      {/* ...icon... */}
-                    </a>
-                    <a
-                      href="#"
-                      className="h-10 w-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
-                    >
-                      <span className="sr-only">Twitter</span>
-                      {/* ...icon... */}
-                    </a>
-                    <a
-                      href="#"
-                      className="h-10 w-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
-                    >
-                      <span className="sr-only">LinkedIn</span>
-                      {/* ...icon... */}
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
+                </address>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>
