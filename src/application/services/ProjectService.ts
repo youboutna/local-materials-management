@@ -277,6 +277,26 @@ export class ProjectService {
     }
   }
 
+  /**
+   * Returns the list of projects relevant for insurance monitoring.
+   * Currently aliases "active" projects (status = en cours / EN_COURS).
+   * Provided as a dedicated method so UI layers don't hardcode status filters.
+   */
+  async getProjectsForInsurance(): Promise<ProjectDTO[]> {
+    try {
+      const active = await this.projectRepository.findAll();
+      const eligible = active.filter(p => {
+        const s = String(p.status || '').toLowerCase();
+        return s === 'en cours' || s === 'en_cours' || s === 'en_cours_v2' || s === 'in_progress';
+      });
+      return ProjectTransformer.manyToDTO(eligible);
+    } catch (error) {
+      throw new ProjectServiceError(
+        `Failed to get insurance projects: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'GET_FOR_INSURANCE_ERROR'
+      );
+    }
+
   async updateProjectStatus(id: string, newStatus: string, reason?: string): Promise<ProjectDTO | null> {
     try {
       const project = await this.projectRepository.findById(id);
