@@ -466,6 +466,68 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
             </div>
           </div>
 
+          {/* Filtre Phases pour le tableau d'écarts (visible si section Suivi & Évaluation active) */}
+          {reportConfig.includeSections.monitoringEvaluation && availablePhases.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <Label className="text-base font-medium">Phases incluses dans le tableau d'écarts</Label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      setReportConfig((prev) => ({
+                        ...prev,
+                        selectedPhaseIds: availablePhases.map((p) => p.id),
+                      }))
+                    }
+                    className="h-8 px-3 text-xs"
+                  >
+                    <CheckSquare className="h-3 w-3 mr-1" /> Tout sélectionner
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setReportConfig((prev) => ({ ...prev, selectedPhaseIds: [] }))}
+                    className="h-8 px-3 text-xs"
+                  >
+                    <Square className="h-3 w-3 mr-1" /> Aucune
+                  </Button>
+                </div>
+              </div>
+              <div className="bg-muted/30 p-4 rounded-lg border grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                {availablePhases.map((phase) => {
+                  const checked = (reportConfig.selectedPhaseIds ?? availablePhases.map((p) => p.id)).includes(phase.id);
+                  return (
+                    <div key={phase.id} className="flex items-center space-x-2 p-2 rounded-md hover:bg-background/50">
+                      <Checkbox
+                        id={`phase-${phase.id}`}
+                        checked={checked}
+                        onCheckedChange={(c) => {
+                          setReportConfig((prev) => {
+                            const current = prev.selectedPhaseIds ?? availablePhases.map((p) => p.id);
+                            const next = c
+                              ? Array.from(new Set([...current, phase.id]))
+                              : current.filter((id) => id !== phase.id);
+                            return { ...prev, selectedPhaseIds: next };
+                          });
+                        }}
+                      />
+                      <Label htmlFor={`phase-${phase.id}`} className="text-sm font-normal cursor-pointer flex-1">
+                        {phase.name}
+                      </Label>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {(reportConfig.selectedPhaseIds ?? availablePhases.map((p) => p.id)).length} phase(s) sélectionnée(s) sur {availablePhases.length}
+              </div>
+            </div>
+          )}
+
+
+
           {/* Email */}
           <div className="space-y-2">
             <Label htmlFor="email">Email de destinataire (optionnel)</Label>
