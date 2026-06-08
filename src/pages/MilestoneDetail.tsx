@@ -37,8 +37,8 @@ const MilestoneDetail: React.FC = () => {
   return (
     <AppLayout pageTitle="🚩 Détail du jalon">
       <div className="space-y-4">
-        <Button variant="ghost" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-4 w-4 mr-2" /> Retour
+        <Button variant="ghost" onClick={() => navigate(-1)} aria-label="Revenir à la page précédente">
+          <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" /> Retour
         </Button>
 
         {loading && <Skeleton className="h-64 w-full" />}

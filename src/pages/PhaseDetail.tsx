@@ -98,7 +98,7 @@ const PhaseDetail: React.FC = () => {
               className="flex items-center gap-2"
               aria-label="Retour au projet"
             >
-              <ArrowLeft className="h-4 w-4" /> Retour
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Retour
             </Button>
             <div>
               <h1 className="text-xl md:text-2xl font-bold text-foreground leading-tight">{title}</h1>
@@ -180,16 +180,16 @@ const PhaseDetail: React.FC = () => {
           <CardContent className="py-3 flex flex-wrap items-center gap-2">
             <span className="text-xs font-medium text-muted-foreground mr-2">Navigation rapide :</span>
             <Button size="sm" variant="ghost" aria-label="Voir les inspections de la phase" onClick={() => navigate(`/inspection-monitoring?phase=${phaseId}&project=${projectId}`)}>
-              <ClipboardCheck className="h-4 w-4 mr-1" /> Inspections <ExternalLink className="h-3 w-3 ml-1" />
+              <ClipboardCheck className="h-4 w-4 mr-1" aria-hidden="true" /> Inspections <ExternalLink className="h-3 w-3 ml-1" aria-hidden="true" />
             </Button>
             <Button size="sm" variant="ghost" aria-label="Voir les paiements de la phase" onClick={() => navigate(`/payment-control?phase=${phaseId}&project=${projectId}`)}>
-              <CreditCard className="h-4 w-4 mr-1" /> Paiements <ExternalLink className="h-3 w-3 ml-1" />
+              <CreditCard className="h-4 w-4 mr-1" aria-hidden="true" /> Paiements <ExternalLink className="h-3 w-3 ml-1" aria-hidden="true" />
             </Button>
             <Button size="sm" variant="ghost" aria-label="Voir les documents de la phase" onClick={() => navigate(`/documents?phase=${phaseId}&project=${projectId}`)}>
-              <FileText className="h-4 w-4 mr-1" /> Documents <ExternalLink className="h-3 w-3 ml-1" />
+              <FileText className="h-4 w-4 mr-1" aria-hidden="true" /> Documents <ExternalLink className="h-3 w-3 ml-1" aria-hidden="true" />
             </Button>
             <Button size="sm" variant="ghost" aria-label="Voir les rapports liés à la phase" onClick={() => navigate(`/monitoring?phase=${phaseId}&project=${projectId}`)}>
-              <BarChart3 className="h-4 w-4 mr-1" /> Rapports <ExternalLink className="h-3 w-3 ml-1" />
+              <BarChart3 className="h-4 w-4 mr-1" aria-hidden="true" /> Rapports <ExternalLink className="h-3 w-3 ml-1" aria-hidden="true" />
             </Button>
           </CardContent>
         </Card>
