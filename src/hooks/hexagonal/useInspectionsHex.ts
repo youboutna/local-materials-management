@@ -139,8 +139,8 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['inspections'] });
+      queryClient.invalidateQueries({ queryKey: ['inspection-monitoring'] });
       toast.success(`L'inspection "${data.inspector}" a été créée avec succès.`);
-      navigate('/inspections');
     },
     onError: (error: unknown) => {
       console.error('Error creating inspection:', error);

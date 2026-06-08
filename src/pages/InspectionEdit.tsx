@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,12 +30,8 @@ const InspectionEdit = () => {
     progressAtInspection: 0,
     comments: ''
   });
-  
-  // Legacy snake_case aliases for backward compatibility (PROMPTS.md Pattern 2)
-  const formDataLegacy = {
-    project_id: formData.projectId,
-    progress_at_inspection: formData.progressAtInspection,
-  };
+
+
 
   const statusOptions = [
     { value: 'scheduled', label: t('inspection.status.scheduled'), icon: Clock },
@@ -50,12 +45,12 @@ const InspectionEdit = () => {
   useEffect(() => {
     if (inspection) {
       setFormData({
-        projectId: inspection.projectId,
-        inspector: inspection.inspector,
-        date: new Date(inspection.date).toISOString().split('T')[0],
-        status: inspection.status,
-        progressAtInspection: inspection.progressAtInspection || 0,
-        comments: inspection.comments || ''
+        projectId: inspection.projectId ?? '',
+        inspector: inspection.inspector ?? '',
+        date: inspection.date ? new Date(inspection.date).toISOString().split('T')[0] : '',
+        status: inspection.status ?? 'scheduled',
+        progressAtInspection: inspection.progressAtInspection ?? 0,
+        comments: inspection.comments ?? ''
       });
     }
   }, [inspection]);
@@ -77,11 +72,13 @@ const InspectionEdit = () => {
       
       await updateInspection({
         id,
-        inspector: formData.inspector,
-        date: formData.date,
-        status: formData.status,
-        progressAtInspection: formData.progress_at_inspection,
-        comments: formData.comments
+        data: {
+          inspector: formData.inspector,
+          date: formData.date,
+          status: formData.status as 'scheduled' | 'in_progress' | 'completed' | 'approved' | 'rejected' | 'requires_changes' | 'pending' | 'cancelled',
+          ...({ progressAtInspection: formData.progressAtInspection } as Record<string, unknown>),
+          comments: formData.comments,
+        },
       });
       
       toast({
@@ -202,8 +199,8 @@ const InspectionEdit = () => {
                   type="number"
                   min="0"
                   max="100"
-                  value={formData.progress_at_inspection}
-                  onChange={(e) => setFormData(prev => ({ ...prev, progress_at_inspection: parseInt(e.target.value) || 0 }))}
+                  value={formData.progressAtInspection}
+                  onChange={(e) => setFormData(prev => ({ ...prev, progressAtInspection: parseInt(e.target.value) || 0 }))}
                 />
               </div>
             </div>
