@@ -77,7 +77,7 @@ const judge = (spi: number, cpi: number): { label: string; tone: string } => {
 
 const fmtValue = (r: DeviationResult) => {
   const sign = r.value > 0 ? "+" : "";
-  const unit = r.unit === "days" ? "j" : r.unit === "percent" ? "%" : r.unit === "points" ? "pts" : "";
+  const unit = r.unit === "days" ? "j" : r.unit;
   return `${sign}${r.value}${unit}`;
 };
 
