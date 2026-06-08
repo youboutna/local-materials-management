@@ -3,8 +3,8 @@ import UnifiedInsuranceManager from '@/components/insurance/UnifiedInsuranceMana
 import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
 import { useProjectManager } from '@/hooks/useProjectManager';
 import { actionLabels } from '@/application/services/ProjectManagerService';
-import { ProjectStatus, type ProjectData } from '@/dtos/entities/ProjectDTO';
-import { EscalationRoles } from '@/domain/entities/Hierarchy';
+import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
+import type { ProjectData } from '@/dtos/entities/ProjectAggregateDTO';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle } from 'lucide-react';
