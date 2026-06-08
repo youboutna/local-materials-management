@@ -1,4 +1,3 @@
-// @ts-nocheck
 import MaterialAvailabilityCard from "@/components/materials/MaterialAvailabilityCard";
 import MaterialLocationMap from "@/components/materials/MaterialLocationMap";
 import WarehouseShapeTracer from "@/components/materials/WarehouseShapeTracer";
@@ -23,7 +22,7 @@ import { AppLayout } from "@/components/layout";
 const MaterialDetail = () => {
   const { t } = useLanguage();
   const { id } = useParams();
-  const { material, isLoading: loading } = useMaterialHex(id);
+  const { material, isLoading: loading } = useMaterialHex(id ?? '');
   const [warehouseShape, setWarehouseShape] = useState<
     { x: number; y: number }[]
   >([]);

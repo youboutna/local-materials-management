@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,7 +70,7 @@ const Auth = () => {
       return result;
     },
     onSuccess: (data) => {
-      toast.success(`Bienvenue ${data.user?.name || data.user?.email || ''}!`);
+      toast.success(`Bienvenue ${(data.user as { name?: string; email?: string } | undefined)?.name || data.user?.email || ''}!`);
       refetch();
       navigate('/dashboard');
     },

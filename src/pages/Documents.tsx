@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -45,7 +44,7 @@ const Documents = () => {
   const navigate = useNavigate();
 
   // Get projects for tender documents using hexagonal hook
-  const { projects, loading: projectsLoading } = useProjectsHex();
+  const { projects, isLoading: projectsLoading } = useProjectsHex();
 
   const documentTypes = [
     {

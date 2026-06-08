@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -35,8 +34,9 @@ const ResetPasswordPage = () => {
           const { error } = await authService.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
-            user: null // Will be populated by the adapter
-          });
+            user: null,
+            expires_at: 0,
+          } as never);
 
           if (error) {
             console.error('Session error:', error);

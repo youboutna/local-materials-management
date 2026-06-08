@@ -1,4 +1,3 @@
-// @ts-nocheck
 import AlertsDashboard from "@/components/dashboard/AlertsDashboard";
 import KPIDashboardWidget from "@/components/dashboard/KPIDashboardWidget";
 import ManagementActions from "@/components/dashboard/ManagementActions";
@@ -85,7 +84,10 @@ const Dashboard: React.FC = () => {
   // Use stats from hexagonal dashboard hook with safe defaults
   const stats = useMemo(() => {
     const baseStats = {
-      activeProjects: dashboardStats?.activeProjects || hexProjects.filter(p => p.status === 'en cours' || p.status === 'in_progress').length,
+      activeProjects: dashboardStats?.activeProjects || hexProjects.filter(p => {
+        const s = String(p.status);
+        return s === 'en cours' || s === 'in_progress' || s === 'en_cours_v2' || s === 'enCours';
+      }).length,
       totalBudget: dashboardStats?.totalBudget || hexProjects.reduce((s, p) => s + (p.budget || 0), 0),
       teamMembers: dashboardStats?.totalEmployees || 0,
       materials: dashboardStats?.totalMaterials || 0,
@@ -418,7 +420,7 @@ const Dashboard: React.FC = () => {
                     <CardContent className="h-80">
                       {projects && projects.length > 0 ? (
                         <ProjectMap
-                          projects={projects}
+                          projects={projects as unknown as import('@/dtos/entities/ProjectDTO').ProjectDTO[]}
                           defaultCenter={[20.5279, -10.0309]}
                           defaultZoom={6}
                           height="100%"

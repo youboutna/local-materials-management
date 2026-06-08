@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -92,12 +91,12 @@ const MaterialCreate = () => {
     };
 
     // Hexagonal Architecture: Use MaterialTransformer to convert UI form data to service DTO
-    const createDto: CreateMaterialRequestDto = {
+    const createDto: CreateMaterialRequestDto = ({
       name: formData.name,
       description: completeFormData.description || '', // Ensure description is never undefined
       category: formData.category,
       subcategory: formData.subcategory,
-      unit: formData.unit,
+      unit: (formData.unit ?? '') as string,
       pricePerUnit: formData.pricePerUnit,
       quantity: formData.quantity,
       availableQuantity: formData.availableQuantity,
@@ -120,7 +119,7 @@ const MaterialCreate = () => {
         estimatedDuration: formData.timeline.estimatedDuration
       } : undefined,
       supplier: formData.supplier
-    };
+    } as CreateMaterialRequestDto);
 
     // Add supplier ID if supplier info is provided (map from form supplier object)
     if (completeFormData.supplier?.name) {
