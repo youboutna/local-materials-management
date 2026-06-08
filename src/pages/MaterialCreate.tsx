@@ -91,7 +91,7 @@ const MaterialCreate = () => {
     };
 
     // Hexagonal Architecture: Use MaterialTransformer to convert UI form data to service DTO
-    const createDto: CreateMaterialRequestDto = {
+    const createDto: CreateMaterialRequestDto = ({
       name: formData.name,
       description: completeFormData.description || '', // Ensure description is never undefined
       category: formData.category,
