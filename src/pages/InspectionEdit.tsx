@@ -49,12 +49,12 @@ const InspectionEdit = () => {
   useEffect(() => {
     if (inspection) {
       setFormData({
-        projectId: inspection.projectId,
-        inspector: inspection.inspector,
-        date: new Date(inspection.date).toISOString().split('T')[0],
-        status: inspection.status,
-        progressAtInspection: inspection.progressAtInspection || 0,
-        comments: inspection.comments || ''
+        projectId: inspection.projectId ?? '',
+        inspector: inspection.inspector ?? '',
+        date: inspection.date ? new Date(inspection.date).toISOString().split('T')[0] : '',
+        status: inspection.status ?? 'scheduled',
+        progressAtInspection: inspection.progressAtInspection ?? 0,
+        comments: inspection.comments ?? ''
       });
     }
   }, [inspection]);
@@ -76,11 +76,13 @@ const InspectionEdit = () => {
       
       await updateInspection({
         id,
-        inspector: formData.inspector,
-        date: formData.date,
-        status: formData.status,
-        progressAtInspection: formData.progress_at_inspection,
-        comments: formData.comments
+        data: {
+          inspector: formData.inspector,
+          date: formData.date,
+          status: formData.status,
+          progressAtInspection: formData.progressAtInspection,
+          comments: formData.comments,
+        },
       });
       
       toast({
