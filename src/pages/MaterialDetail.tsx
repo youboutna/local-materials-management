@@ -1,4 +1,3 @@
-// @ts-nocheck
 import MaterialAvailabilityCard from "@/components/materials/MaterialAvailabilityCard";
 import MaterialLocationMap from "@/components/materials/MaterialLocationMap";
 import WarehouseShapeTracer from "@/components/materials/WarehouseShapeTracer";

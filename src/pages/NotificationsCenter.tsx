@@ -1,4 +1,3 @@
-// @ts-nocheck
 import RoleBasedNotificationCenter from '@/components/alerts/RoleBasedNotificationCenter';
 import NotificationCrud from '@/components/notifications/NotificationCrud';
 import { Alert, AlertDescription } from '@/components/ui/alert';

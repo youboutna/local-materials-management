@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { SubmissionProgressTracker, SubmissionStep } from '@/components/suppliers/SubmissionProgressTracker';
 import { SubmissionSecretDisplay } from '@/components/suppliers/SubmissionSecretDisplay';
 import { SupplierTenderAccessGuard } from '@/components/suppliers/SupplierTenderAccessGuard';
