@@ -4,7 +4,7 @@
  * Implements IMissionExpenseRepository for Supabase database operations
  */
 
-import { fishingClient as supabase } from '@/integrations/supabase/schema-clients';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { IMissionExpenseRepository } from '@/domain/repositories/IMissionExpenseRepository';
 import { MissionExpense, MissionExpenseStatus, MissionExpenseCategory } from '@/domain/entities/MissionExpense';
 

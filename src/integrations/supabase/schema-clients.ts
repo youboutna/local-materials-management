@@ -1,14 +1,17 @@
 /**
- * Schema-Specific Supabase Clients
- * Multi-schema architecture: btp, fishing, health, fuel_stations
+ * Schema-Specific Supabase Clients — Hadratech-GPI (BTP only)
  *
- * Each client targets a specific PostgreSQL schema via `.schema()`.
- * The default `supabase` client (public schema) is used for shared tables:
- * profiles, user_roles, notifications, locations, contact_messages, etc.
+ * Scope applicatif : isolation stricte sur le schéma `btp`.
+ * Les schémas `fishing`, `health`, `fuel_stations` sont HORS scope de
+ * cette application et ne doivent jamais être exposés ici.
  *
- * IMPORTANT: For `.schema('<name>')` to work without HTTP 406 (PGRST106),
- * the schema MUST be declared in `supabase/config.toml` under
- * `[api].schemas`. All schemas below are exposed there.
+ * Le client `supabase` par défaut (schéma public) reste utilisé pour les
+ * tables transverses : profiles, user_roles, notifications, locations,
+ * contact_messages, etc.
+ *
+ * IMPORTANT : pour que `.schema('btp')` fonctionne sans HTTP 406 (PGRST106),
+ * le schéma `btp` DOIT être déclaré dans `supabase/config.toml` sous
+ * `[api].schemas`.
  *
  * Usage:
  *   import { btpClient } from '@/integrations/supabase/schema-clients';
@@ -19,38 +22,17 @@ import { supabase } from './client';
 
 /**
  * BTP (Construction) schema client.
- * Tables: projects, project_phases, inspections, payments, documents,
+ * Tables : projects, project_phases, inspections, payments, documents,
  * tenders, materials, employees, suppliers, task_assignments,
- * bank_guarantees, insurance_certificates, etc.
+ * bank_guarantees, insurance_certificates, mission_expenses, etc.
  */
 export const btpClient = supabase.schema('btp' as any);
 
 /**
- * Fishing schema client.
- * Tables: fishing_missions, vessels, catch_records, fishing_licenses, etc.
- */
-export const fishingClient = supabase.schema('fishing' as any);
-
-/**
- * Health schema client.
- * Tables: patients, prescriptions, health_claims, medical_acts, etc.
- */
-export const healthClient = supabase.schema('health' as any);
-
-/**
- * Fuel Stations schema client.
- * Tables: service_stations, hse_evaluations, authorization_requests, etc.
- */
-export const fuelStationsClient = supabase.schema('fuel_stations' as any);
-
-/**
- * Schema name constants for reference.
+ * Constantes de noms de schéma autorisés dans Hadratech-GPI.
  */
 export const SCHEMAS = {
   BTP: 'btp',
-  FISHING: 'fishing',
-  HEALTH: 'health',
-  FUEL_STATIONS: 'fuel_stations',
   PUBLIC: 'public',
 } as const;
 
