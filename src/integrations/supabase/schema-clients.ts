@@ -1,38 +1,62 @@
 /**
  * Schema-Specific Supabase Clients — Hadratech-GPI
  *
- * IMPORTANT — État du projet hébergé :
- * Le projet Supabase distant n'expose actuellement QUE les schémas
- * `public` et `graphql_public` via PostgREST. Toutes les tables métier
- * (projects, tender_estimates, project_alerts, inspections, payments,
- * documents, materials, employees, suppliers, etc.) résident dans
- * `public`. Tenter `supabase.schema('btp')` provoque l'erreur
- * « The schema must be one of the following: public, graphql_public »
- * et casse toutes les opérations CRUD.
+ * Pourquoi un adapter ?
+ * ---------------------
+ * Sur Supabase, plusieurs projets/applicatifs peuvent cohabiter dans la même
+ * instance. L'isolation logique se fait par **schéma nommé** (ex: `btp`,
+ * `fishing`, `health`, ...). PostgREST n'expose toutefois QUE les schémas
+ * listés dans Dashboard > API > Exposed schemas (par défaut `public`,
+ * `graphql_public`).
  *
- * Conséquence : `btpClient` est volontairement aliasé sur le client
- * `supabase` par défaut (schéma public). Si un jour le schéma `btp`
- * est exposé côté Dashboard Supabase (API > Exposed schemas), il
- * suffira de basculer cette ligne sur `supabase.schema('btp')`.
+ * Cet adapter centralise la résolution du schéma cible :
+ *  1. Lecture de la variable d'env `VITE_BTP_SCHEMA` (override runtime/build).
+ *  2. Fallback sur `DEFAULT_BTP_SCHEMA` (code TypeScript) si non défini.
+ *  3. Si le schéma résolu est `public`, on renvoie le client par défaut
+ *     (pas d'appel à `.schema()`, ce qui évite l'erreur PGRST106
+ *     « The schema must be one of the following: public, graphql_public »
+ *     tant qu'aucun schéma custom n'est exposé côté Dashboard).
+ *  4. Sinon, on renvoie `supabase.schema(name)` typé sur ce schéma.
  *
- * Les schémas `fishing`, `health`, `fuel_stations` sont hors scope
- * de cette application.
+ * Pour activer le schéma `btp` en production :
+ *   - Dashboard Supabase > Settings > API > Exposed schemas : ajouter `btp`.
+ *   - Définir `VITE_BTP_SCHEMA=btp` dans `.env` (ou via le build host).
+ *   - Aucun changement de code applicatif requis.
  */
 
 import { supabase } from './client';
 
-/**
- * BTP client — alias du client public tant que le schéma `btp`
- * n'est pas exposé côté Supabase Dashboard.
- */
-export const btpClient = supabase;
+/** Schéma BTP par défaut codé en dur (utilisé si l'env n'est pas défini). */
+const DEFAULT_BTP_SCHEMA = 'public';
 
-/**
- * Constantes de noms de schéma autorisés dans Hadratech-GPI.
- */
+/** Schémas connus de l'écosystème Supabase multi-projets. Pour documentation. */
 export const SCHEMAS = {
-  BTP: 'btp',
   PUBLIC: 'public',
+  BTP: 'btp',
 } as const;
 
-export type SchemaName = typeof SCHEMAS[keyof typeof SCHEMAS];
+export type SchemaName = string;
+
+/** Résout le nom du schéma BTP courant (env-first, fallback code). */
+export function resolveBtpSchemaName(): SchemaName {
+  const fromEnv = import.meta.env?.VITE_BTP_SCHEMA as string | undefined;
+  return (fromEnv && fromEnv.trim()) || DEFAULT_BTP_SCHEMA;
+}
+
+/**
+ * Factory générique : renvoie un client Supabase ciblant un schéma nommé.
+ * Si le schéma est `public`, renvoie le client racine sans appeler `.schema()`
+ * pour éviter PGRST106 lorsque le schéma n'est pas exposé.
+ */
+export function getSchemaClient(schemaName: SchemaName) {
+  if (!schemaName || schemaName === 'public') {
+    return supabase;
+  }
+  // Cast nécessaire : `.schema()` n'accepte que des schémas connus dans les
+  // types générés. On garde l'API ouverte pour des schémas custom exposés.
+  return (supabase as any).schema(schemaName);
+}
+
+/** Client BTP — résolu une fois au chargement du module. */
+export const BTP_SCHEMA: SchemaName = resolveBtpSchemaName();
+export const btpClient = getSchemaClient(BTP_SCHEMA);
