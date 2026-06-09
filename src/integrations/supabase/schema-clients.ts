@@ -1,32 +1,31 @@
 /**
- * Schema-Specific Supabase Clients — Hadratech-GPI (BTP only)
+ * Schema-Specific Supabase Clients — Hadratech-GPI
  *
- * Scope applicatif : isolation stricte sur le schéma `btp`.
- * Les schémas `fishing`, `health`, `fuel_stations` sont HORS scope de
- * cette application et ne doivent jamais être exposés ici.
+ * IMPORTANT — État du projet hébergé :
+ * Le projet Supabase distant n'expose actuellement QUE les schémas
+ * `public` et `graphql_public` via PostgREST. Toutes les tables métier
+ * (projects, tender_estimates, project_alerts, inspections, payments,
+ * documents, materials, employees, suppliers, etc.) résident dans
+ * `public`. Tenter `supabase.schema('btp')` provoque l'erreur
+ * « The schema must be one of the following: public, graphql_public »
+ * et casse toutes les opérations CRUD.
  *
- * Le client `supabase` par défaut (schéma public) reste utilisé pour les
- * tables transverses : profiles, user_roles, notifications, locations,
- * contact_messages, etc.
+ * Conséquence : `btpClient` est volontairement aliasé sur le client
+ * `supabase` par défaut (schéma public). Si un jour le schéma `btp`
+ * est exposé côté Dashboard Supabase (API > Exposed schemas), il
+ * suffira de basculer cette ligne sur `supabase.schema('btp')`.
  *
- * IMPORTANT : pour que `.schema('btp')` fonctionne sans HTTP 406 (PGRST106),
- * le schéma `btp` DOIT être déclaré dans `supabase/config.toml` sous
- * `[api].schemas`.
- *
- * Usage:
- *   import { btpClient } from '@/integrations/supabase/schema-clients';
- *   const { data } = await btpClient.from('projects').select('*');
+ * Les schémas `fishing`, `health`, `fuel_stations` sont hors scope
+ * de cette application.
  */
 
 import { supabase } from './client';
 
 /**
- * BTP (Construction) schema client.
- * Tables : projects, project_phases, inspections, payments, documents,
- * tenders, materials, employees, suppliers, task_assignments,
- * bank_guarantees, insurance_certificates, mission_expenses, etc.
+ * BTP client — alias du client public tant que le schéma `btp`
+ * n'est pas exposé côté Supabase Dashboard.
  */
-export const btpClient = supabase.schema('btp' as any);
+export const btpClient = supabase;
 
 /**
  * Constantes de noms de schéma autorisés dans Hadratech-GPI.
