@@ -1,111 +1,72 @@
-## Objectif
+## Objectif global
 
-Finaliser le round-trip **UI ⇄ DTO ⇄ Service ⇄ Adapter ⇄ DB** sur toutes les pages listées dans `src/App.tsx`, en supprimant les `@ts-nocheck`, les mappings `snake_case` résiduels côté UI, les `TODO` mock, et en hydratant les vues qui affichent encore des valeurs "Indéfinie / 0 / —" alors que les données existent. Pas de nouvelle table, pas de migration.
+Pour chaque page route de `src/App.tsx`, garantir le round-trip **UI ↔ DTO ↔ Service ↔ Adapter ↔ DB** conforme aux règles de `docs/PROMPTS.md` et `docs/ARCHITECTURE.md`, corriger les bugs `save` (en commençant par les mocks de `RepositoryFactory`), et densifier l'UI sans refonte (tokens sémantiques, headers compacts, `AppLayout` sans description).
 
-## Avancement (lots)
-- Lot 1 — `ProjectImport.tsx` : `@ts-nocheck` retiré, typé via `ProjectReportDTO.ImportResult`.
-- Lot 2 — `ProjectPhasesDetail.tsx` : `@ts-nocheck` retiré, `PhaseRow` typé via `Phase` (camelCase). `PhaseDetailsPage.tsx` : actions validate/view branchées.
-- Lot 3 — `Dashboard.tsx`, `PhaseDetail.tsx`, `Documents.tsx`, `Auth.tsx`, `ResetPasswordPage.tsx`, `MaterialCreate.tsx`, `MaterialDetail.tsx` : `@ts-nocheck` retiré, typage strict (filtre statut multi-valeurs, `isLoading`, casts ciblés sur DTO auth/material). Build sans erreur TS.
-- Lot 4 — `InsuranceManagement.tsx` : `@ts-nocheck` retiré ; imports `EscalationRoles`/`ProjectData` corrigés (`@/dtos/entities/ProjectAggregateDTO`) ; câblage `ProjectService.getProjectsForInsurance()`.
-- Lot 6 — `ProjectMaterials.tsx` : TODO `removeMaterialFromProject` résolu via `MaterialService.removeMaterialFromProject()`. `ProjectFormWithMap.tsx`, `ProjectCreateByDTO.tsx`, `ProjectDetailByDTO.tsx` : TODO/mock supprimés.
-- Restant — `EnhancedDashboard.tsx`, `BankGuaranteeMonitor.tsx`, `NotificationsCenter.tsx`, `PaymentControl.tsx`, `TenderManagement.tsx`, `MaterialEdit.tsx`, `InspectionDetail/Edit.tsx`, `UnifiedSupplierPortal.tsx`, `Suppliers.tsx`, `SupplierPasswordReset.tsx`, `EnhancedSupplierTenderPortal.tsx` : `@ts-nocheck` conservé tant que les DTOs/hooks `Supplier*`/`Notification*` ne sont pas réalignés (multiples props snake_case sur `never`, signatures hexagonales incomplètes). À traiter par batch dédié DTO-first.
+Le travail est **trop volumineux pour une seule itération** : je propose un plan en vagues. À chaque vague, mêmes étapes : audit → fix CRUD → polish UI → vérif build/logs → mémoire mise à jour.
 
----
+## Règles d'or appliquées partout
 
+- Aucun `supabase.from(...)` ni `.schema(...)` dans `src/components/**` ou `src/pages/**`. Seuls les Services + hooks `hexagonal/*` y ont droit.
+- Chaque Service consomme un Repository concret (jamais le mock fallback en prod).
+- DTO camelCase, DB snake_case, transformer explicite dans les deux sens.
+- `useQuery`/`useMutation` v5 : pas d'`onError`/`onSuccess` callbacks ; toasts dans les hooks après `await mutateAsync`.
+- Tokens sémantiques uniquement (`bg-card`, `text-foreground`, `border-border`…), pas de `text-white` / `bg-[#...]`.
+- `AppLayout` sans `pageDescription` (densité headers, mem `style/layout-header-density-standard`).
 
+## Vague 1 — Projects & Phases (priorité user)
 
-## Périmètre exact (issu de `src/App.tsx`)
+Routes : `/projects`, `/projects/create`, `/projects/:id`, `/projects/:id/edit`, `/projects/import`, `/projects/:id/phases/*` (et `MilestoneDetail`, `TaskDetail` dérivés).
 
-```text
-/projects                              Projects.tsx
-/projects/create                       ProjectCreate.tsx
-/projects/import                       ProjectImport.tsx          ← @ts-nocheck
-/projects/:id                          ProjectDetail.tsx → ProjectDetailByDTO
-/projects/:id/edit                     ProjectEdit.tsx
-/projects/:projectId/phases/:phaseId   PhaseDetail.tsx
-/projects/:projectId/milestones/:mId   MilestoneDetail.tsx
-(legacy)                               ProjectPhasesDetail.tsx    ← @ts-nocheck
-/dashboard                             Dashboard.tsx              ← @ts-nocheck
-/enhanced-dashboard                    EnhancedDashboard.tsx      ← @ts-nocheck
-/monitoring                            ComprehensiveMonitoring.tsx
-/inspection-monitoring                 InspectionMonitoring.tsx
-/bank-guarantee-monitor                BankGuaranteeMonitor.tsx   ← @ts-nocheck
-/payment-control                       PaymentControl.tsx         ← @ts-nocheck
-/payments/:id                          PaymentDetail.tsx
-/insurance-management                  InsuranceManagement.tsx    ← @ts-nocheck
-/notifications-center                  NotificationsCenter.tsx    ← @ts-nocheck
-/materials, /materials/*               Materials*.tsx             ← @ts-nocheck (3 fichiers)
-/documents                             Documents.tsx              ← @ts-nocheck
-/suppliers, /tender-*                  Suppliers / TenderMgmt     ← @ts-nocheck
-/inspections/*                         Inspection*.tsx            ← @ts-nocheck (2 fichiers)
-```
+1. Audit `ProjectCreate.tsx`, `ProjectEdit.tsx`, `ProjectDetail.tsx`, composants `ProjectWorkflow*`, `Phase*Tab`, `Step*Tab`.
+2. Vérifier que chaque onglet (Identification, Localisation, Budget, Phases, Steps, Stakeholders, Documents) :
+   - lit ses valeurs via `useProject*` hook hexagonal,
+   - persiste via `ProjectWorkflowService` (pas d'appel Supabase direct),
+   - transforme `formState → CreateProjectDTO / UpdateProjectDTO` via un Transformer dédié.
+3. Brancher la génération phases/steps sur référentiel (`config/referentials/`) via `PhaseGeneratorService`.
+4. Fixer toute regression `save` (toasts succès/erreur, invalidation queries, redirection).
+5. UI : compacter headers de tabs, retirer descriptions verbales, normaliser cards (`Card` + `CardHeader` slim).
 
----
+## Vague 2 — Comprehensive Monitoring (6 onglets)
 
-## Plan d'exécution (par lots parallélisables)
+Routes : `/comprehensive-monitoring`, `/inspection-monitoring`, `/bank-guarantee-monitor`, `/insurance-management`.
 
-### Lot 1 — Projets (round-trip complet)
-- `src/pages/Projects.tsx` : remplacer le commentaire « no hardcoded enums » par usage du référentiel `project-status` (`src/config/referentials`). Toolbar accessible déjà présente, vérifier `aria-label` sur recherche/filtres.
-- `src/pages/ProjectDetail.tsx` + `ProjectDetailByDTO.tsx` : retirer le bloc "Use real resources… mock" (ligne 366), brancher sur `useProjectDetail` (déjà hexagonal). Vérifier `currentPhaseInfo.phaseName` (mémoire : fix "Indéfinie").
-- `src/pages/ProjectEdit.tsx` / `ProjectCreate.tsx` : confirmer transformation form → `ProjectFormDTO` (camelCase) via transformer dédié, retirer tout accès `snake_case`.
-- `src/pages/ProjectImport.tsx` : retirer `@ts-nocheck`, typer payload via `ImportProjectDTO`.
+1. `SystemHealthOverview` : alertes via `MonitoringAlertService` → `project_alerts` (acknowledge/resolve). Métriques via `PerformanceMonitoringService` réel (remplacer mock dans `RepositoryFactory.getPerformanceMonitoringRepository`).
+2. `PerformanceMetrics` : brancher historique réel.
+3. `RoleBasedInspectionMonitoring`, `UnifiedInsuranceManager`, `EnhancedPaymentBlockingInterface`, `BankGuaranteeMonitor` : audit zéro-Supabase, CRUD complet (create/edit/delete), confirmations dialog.
+4. UI : grid KPI cohérente, badges sémantiques (`destructive`, `secondary`, `default`), tabs sticky.
 
-### Lot 2 — Phases & Jalons
-- `src/pages/PhaseDetail.tsx` : déjà sans `@ts-nocheck`. Vérifier hooks `usePhaseDetails` / `useTasksHex` / `useMilestonesHex` exposent bien `create/update/delete`. Brancher les `TODO` restants de `PhaseDetailsPage.tsx` (lignes 184/187).
-- `src/pages/ProjectPhasesDetail.tsx` : retirer `@ts-nocheck`, typer `PhaseRow` à partir du DTO `PhaseDTO` (camelCase). Remplacer les `p.phase_name || p.name` par lecture DTO (`phaseName`). Le service doit retourner du DTO, pas du raw row.
-- `src/pages/MilestoneDetail.tsx` : compléter modal édition (RHF + Zod) + suppression `AlertDialog` si manquants.
+## Vague 3 — Tenders & Estimates (bug save prioritaire)
 
-### Lot 3 — Dashboard & Monitoring
-- `src/pages/Dashboard.tsx` : retirer `@ts-nocheck`. Typer `projects` via `ProjectDTO`, supprimer le cast `as 'en cours' | ...'` au profit de l'enum issu du référentiel statuts. Vérifier `useDashboardHex` renvoie des stats hydratées (sinon corriger l'adapter qui agrège).
-- `src/pages/EnhancedDashboard.tsx` : idem, retirer `@ts-nocheck`.
-- `src/pages/ComprehensiveMonitoring.tsx` : déjà propre, vérifier que chaque sous-composant (`SystemHealthOverview`, `PerformanceMetrics`, `BankGuaranteeMonitor`, `RoleBasedInspectionMonitoring`, `UnifiedInsuranceManager`, `EnhancedPaymentBlockingInterface`) consomme des services hexagonaux et non `supabase` direct.
-- `src/pages/InspectionMonitoring.tsx`, `BankGuaranteeMonitor.tsx` : retirer `@ts-nocheck`, typer via DTO.
+Routes : `/tenders`, `/tenders/:id`, `/tenders/import`.
 
-### Lot 4 — Paiements, Assurances, Notifications
-- `PaymentControl.tsx`, `PaymentDetail.tsx`, `InsuranceManagement.tsx`, `NotificationsCenter.tsx` : retirer `@ts-nocheck`, brancher sur services existants. Le `TODO: Move this to ProjectService` (InsuranceManagement L115) → exposer une méthode `getProjectsForInsurance()` dans `ProjectService`.
+1. **Fix bloquant** : remplacer le mock `getTenderEstimateRepository` dans `src/repositories/RepositoryFactory.ts` par le vrai `TenderEstimateAdapter` (déjà exporté dans `infrastructure/supabase/adapters/index.ts`). C'est la cause directe du « Failed to save tender ».
+2. Vérifier `TenderEstimateService` + DTOs (`tender_estimates`, `tender_estimate_items`) round-trip.
+3. RLS : conserver politique `submitted_by = auth.uid()` (mem `tender-security-rls`).
+4. UI : densifier toolbar, normaliser dialog d'estimate (DialogDescription a11y).
 
-### Lot 5 — Catalogues annexes (round-trip light)
-- `Materials*.tsx`, `Documents.tsx`, `Suppliers.tsx`, `TenderManagement.tsx`, `Inspection*.tsx`, `ResetPasswordPage.tsx`, `SupplierPasswordReset.tsx`, `UnifiedSupplierPortal.tsx`, `Auth.tsx` : retirer `@ts-nocheck`, typer les états locaux via les DTOs existants (`MaterialDTO`, `DocumentDTO`, `SupplierDTO`, `TenderDTO`, `InspectionDTO`, `AuthDTO`).
+## Vague 4 — Inspections, Payments, Documents, Suppliers, Employees, Materials, Tasks
 
-### Lot 6 — Composants partagés cités par les pages ci-dessus
-- `ProjectFormWithMap.tsx` L131 : remplacer le `TODO contact` par lecture `supplier.contactName` du DTO.
-- `ProjectMaterials.tsx` L153 : implémenter `removeMaterialFromProject` via `ProjectMaterialsService` (méthode existante ou à ajouter dans le service applicatif uniquement, sans nouveau repo).
-- `ProjectCreateByDTO.tsx` L207 : déclencher `phaseService.savePhases()` + `milestoneService.saveMilestones()` après création projet.
-- `PhaseDetailsPage.tsx` L184/187 : brancher modal validation jalon + page détail jalon (`/projects/:projectId/milestones/:milestoneId`).
+Routes : `/inspections/*`, `/payments/*`, `/documents`, `/suppliers/*`, `/employees`, `/materials/*`, `/tasks/*`, `/milestones/:id`.
 
----
+Pour chacune : même grille audit/fix/UI que vagues précédentes. Une PR par domaine pour rester revuable.
 
-## Garde-fous techniques (mémoires projet)
+## Vague 5 — Profil, Settings, Auth, Workflow Test, NotFound
 
-- **Pas de Supabase direct dans React** : seules exceptions tolérées (`useAuth`, URL Storage publique).
-- **Pas de React dans `application/services/*`** : si une page importe un service, le service doit rester pur TS.
-- **TanStack Query v5** : aucun `onError/onSuccess` ajouté sur `useQuery/useMutation` ; utiliser `isError/isSuccess`.
-- **DTO camelCase obligatoire en UI** : tout accès `p.phase_name`, `p.start_date`, `p.snake_case` côté composant est interdit ; corrigé via transformer dans l'adapter.
-- **Entités immutables** : update via méthode dédiée, jamais mutation de champ readonly.
-- **Référentiels** : aucun enum métier codé en dur (statuts, phases, types) ; toujours lire depuis `src/config/referentials/`.
+Polish UI + vérif que `useAuth` est la seule porte Supabase autorisée.
 
-## Stratégie d'exécution
+## Détails techniques transverses
 
-L'agent traite les **6 lots en parallèle** quand les fichiers ne se chevauchent pas, en lançant des sous-agents `acp_subagent--explore` au besoin pour identifier la chaîne snake→camel restante par fichier. Après chaque lot, lecture du build output pour valider qu'aucune régression de type n'apparaît avant de passer au lot suivant.
+- **Fix prioritaire #1** : `src/repositories/RepositoryFactory.ts` → `getTenderEstimateRepository` doit retourner `new TenderEstimateAdapter()` (vrai adapter).
+- **Fix prioritaire #2** : `getPerformanceMonitoringRepository` → `new SupabaseMonitoringAdapter()`.
+- **Dialog a11y** : déjà patché globalement dans `dialog.tsx`, juste vérifier qu'aucune Dialog custom ne re-crée le warning.
+- **Mémoire** : après chaque vague, écrire `mem://features/<page>-crud-roundtrip` + mettre à jour `mem://index.md`.
 
-## Livrables
+## Livraison
 
-```text
-src/App.tsx                                 (inchangé sauf si un import devient invalide)
-src/pages/Projects.tsx, ProjectCreate.tsx, ProjectDetail.tsx, ProjectEdit.tsx,
-                ProjectImport.tsx, ProjectPhasesDetail.tsx, PhaseDetail.tsx,
-                MilestoneDetail.tsx, Dashboard.tsx, EnhancedDashboard.tsx,
-                ComprehensiveMonitoring.tsx, InspectionMonitoring.tsx,
-                BankGuaranteeMonitor.tsx, PaymentControl.tsx, PaymentDetail.tsx,
-                InsuranceManagement.tsx, NotificationsCenter.tsx,
-                Materials*.tsx, Documents.tsx, Suppliers.tsx,
-                TenderManagement.tsx, Inspection*.tsx, Auth.tsx,
-                ResetPasswordPage.tsx, SupplierPasswordReset.tsx,
-                UnifiedSupplierPortal.tsx                   (retrait @ts-nocheck + typage DTO)
-src/components/project/ProjectDetailByDTO.tsx, ProjectCreateByDTO.tsx,
-                ProjectFormWithMap.tsx, ProjectMaterials.tsx,
-                PhaseDetailsPage.tsx                         (résolution TODO + hydratation)
-src/application/services/ProjectService.ts                  (ajout getProjectsForInsurance + savePhases/Milestones helpers si manquants)
-```
+- 1 vague par message (sinon diff ingérable).
+- Chaque vague se termine par : liste fichiers changés, vérif logs console, note mémoire ajoutée.
+- Démarrage proposé : **Vague 1 (Projects & Phases)** dans le prochain message dès validation du plan.
 
-Aucune migration DB, aucun nouveau repo. Toute logique manquante est ajoutée dans les services applicatifs existants.
+## Question ouverte
+
+Souhaites-tu que je démarre immédiatement la **Vague 3 (fix save tender — 5 min, débloque ta démo)** avant la Vague 1 (Projects, plus long) ? Sinon je suis l'ordre proposé.
