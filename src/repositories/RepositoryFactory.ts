@@ -41,70 +41,29 @@ export const RepositoryFactory = {
   getTenderDocumentRepository: InfraRepositoryFactory.getTenderDocumentRepository,
   getMilestoneRepository: InfraRepositoryFactory.getMilestoneRepository,
   
-  // Ajout des méthodes manquantes avec des implémentations temporaires
-  getPerformanceMonitoringRepository: () => {
-    // Implémentation temporaire - à remplacer par le vrai adapter
-    return {
-      getDatabaseMetrics: async () => ({
-        connections: 10,
-        maxConnections: 100,
-        queryTime: 50,
-        slowQueries: 0
-      }),
-      getPerformanceMetrics: async () => {
-        const database = await {
-          connections: 10,
-          maxConnections: 100,
-          queryTime: 50,
-          slowQueries: 0
-        };
-        return {
-          database,
-          timestamp: new Date()
-        };
-      },
-      checkDatabaseHealth: async (metrics: any) => {
-        return metrics.queryTime < 1000 && metrics.slowQueries === 0;
-      },
-      getDatabaseHealthStatus: async (metrics: any) => {
-        if (metrics.queryTime > 2000 || metrics.slowQueries > 5) {
-          return 'critical';
-        }
-        if (metrics.queryTime > 1000 || metrics.connections > 80) {
-          return 'warning';
-        }
-        return 'healthy';
-      },
-      getHistoricalMetrics: async (hours: number) => [],
-      storeMetrics: async (metrics: any) => {
-        console.log('Storing metrics:', metrics);
-      }
-    };
-  },
-  
-  getTenderEstimateRepository: () => {
-    // Implémentation temporaire - à remplacer par le vrai adapter
-    return {
-      create: async (estimate: any) => ({ ...estimate, id: 'temp-' + Date.now(), createdAt: new Date(), updatedAt: new Date() }),
-      findById: async (id: string) => null,
-      findByTenderId: async (tenderId: string) => [],
-      findByProjectId: async (projectId: string) => [],
-      findBySubmittedBy: async (userId: string) => [],
-      findAll: async () => [],
-      update: async (id: string, updates: any) => ({ ...updates, id, updatedAt: new Date() }),
-      delete: async (id: string) => console.log('Deleting estimate:', id),
-      createItem: async (item: any) => ({ ...item, id: 'temp-' + Date.now(), createdAt: new Date(), updatedAt: new Date() }),
-      findItemsByEstimateId: async (estimateId: string) => [],
-      updateItem: async (id: string, updates: any) => ({ ...updates, id, updatedAt: new Date() }),
-      deleteItem: async (id: string) => console.log('Deleting estimate item:', id),
-      getEstimateStats: async (tenderId: string) => ({
-        totalEstimates: 0,
-        totalAmount: 0,
-        averageAmount: 0,
-        byStatus: {}
-      })
-    };
-  },
+  // Délégation au vrai adapter Supabase (l'ancienne implémentation mock
+  // ne persistait rien — cause directe du bug "Failed to save tender").
+  getTenderEstimateRepository: InfraRepositoryFactory.getTenderEstimateRepository,
+
+  // Performance monitoring : pas encore d'adapter dédié côté infra,
+  // on garde un fallback inerte qui retourne des métriques nulles plutôt
+  // que des valeurs inventées. À remplacer par un vrai
+  // SupabasePerformanceAdapter dès qu'on persiste les métriques.
+  getPerformanceMonitoringRepository: () => ({
+    getDatabaseMetrics: async () => ({ connections: 0, maxConnections: 100, queryTime: 0, slowQueries: 0 }),
+    getPerformanceMetrics: async () => ({
+      database: { connections: 0, maxConnections: 100, queryTime: 0, slowQueries: 0 },
+      timestamp: new Date(),
+    }),
+    checkDatabaseHealth: async (metrics: any) => metrics.queryTime < 1000 && metrics.slowQueries === 0,
+    getDatabaseHealthStatus: async (metrics: any) => {
+      if (metrics.queryTime > 2000 || metrics.slowQueries > 5) return 'critical';
+      if (metrics.queryTime > 1000 || metrics.connections > 80) return 'warning';
+      return 'healthy';
+    },
+    getHistoricalMetrics: async () => [],
+    storeMetrics: async () => {},
+  }),
   
   // Contact Message Repository
   getContactMessageRepository: InfraRepositoryFactory.getContactMessageRepository,
