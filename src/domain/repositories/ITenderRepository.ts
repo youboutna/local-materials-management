@@ -5,7 +5,7 @@ export interface ITenderRepository {
   // CRUD operations
   findById(id: string): Promise<Tender | null>;
   findAll(): Promise<Tender[]>;
-  save(tender: Tender): Promise<void>;
+  save(tender: Tender | Record<string, any>): Promise<Tender | null>;
   update(id: string, data: Partial<Tender>): Promise<void>;
   delete(id: string): Promise<void>;
   
