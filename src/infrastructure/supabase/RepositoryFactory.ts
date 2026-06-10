@@ -454,7 +454,7 @@ export class RepositoryFactory {
     if (!repositoryRegistry.tenderRepository) {
       repositoryRegistry.tenderRepository = new SupabaseTenderAdapter();
     }
-    return repositoryRegistry.tenderRepository;
+    return repositoryRegistry.tenderRepository!;
   }
 
   /**
