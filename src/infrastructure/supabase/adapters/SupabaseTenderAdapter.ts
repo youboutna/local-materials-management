@@ -22,10 +22,22 @@ export class SupabaseTenderAdapter implements ITenderRepository {
     return data.map((d: any) => this.mapToEntity(d));
   }
 
-  async save(tender: Tender): Promise<void> {
-    const payload = TenderTransformer.toSupabase(tender);
-    const { error } = await supabase.from('tenders').insert([payload]);
+  async save(tender: Tender | Record<string, any>): Promise<Tender | null> {
+    // Accept either a domain entity or a raw partial row from the UI layer.
+    const raw: Record<string, any> = (tender as any)?.id !== undefined && (tender as any)?.title !== undefined && typeof (tender as any).isOpen === 'function'
+      ? TenderTransformer.toSupabase(tender as Tender)
+      : { ...(tender as Record<string, any>) };
+
+    // Strip id when null/undefined so Postgres uses the DEFAULT gen_random_uuid().
+    if (raw.id === null || raw.id === undefined || raw.id === '') delete raw.id;
+    // Strip empty timestamps to let DB defaults populate them.
+    if (!raw.created_at) delete raw.created_at;
+    if (!raw.updated_at) delete raw.updated_at;
+    if (!raw.status) raw.status = 'draft';
+
+    const { data, error } = await supabase.from('tenders').insert([raw]).select().single();
     if (error) throw new Error(`Failed to save tender: ${error.message}`);
+    return data ? this.mapToEntity(data) : null;
   }
 
   async update(id: string, data: Partial<Tender>): Promise<void> {
