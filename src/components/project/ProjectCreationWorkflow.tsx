@@ -19,7 +19,7 @@ import {
   Users,
 } from "lucide-react";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { v4 as uuidv4 } from 'uuid';
+// (uuid removed — IDs are generated DB-side via `gen_random_uuid()`)
 
 // Import step components
 import InteractiveMapGIS from "../materials/InteractiveMapGIS";
