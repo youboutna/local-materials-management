@@ -19,7 +19,7 @@ import {
   Users,
 } from "lucide-react";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { v4 as uuidv4 } from 'uuid';
+// (uuid removed — IDs are generated DB-side via `gen_random_uuid()`)
 
 // Import step components
 import InteractiveMapGIS from "../materials/InteractiveMapGIS";
@@ -152,12 +152,20 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   // 🎨 UI Layer - Save and proceed to next step using unified workflow (Rule #5)
   const saveAndNextStep = async () => {
     if (!canProceedNext()) {
-      console.warn("Veuillez compléter l'étape actuelle avant de continuer");
+      toast({
+        title: "Étape incomplète",
+        description: "Veuillez compléter les champs requis avant de continuer.",
+        variant: "destructive",
+      });
       return;
     }
     const result = await saveCurrentStep(currentStep + 1);
     if (!result || !result.success) {
-      console.error('Échec de la sauvegarde, passage à l\'étape suivante annulé');
+      toast({
+        title: "Sauvegarde échouée",
+        description: (result as any)?.errors?.join(', ') || result?.message || "Erreur inconnue",
+        variant: "destructive",
+      });
       return;
     }
     setCurrentStepUi((prev) => Math.min(prev + 1, steps.length - 1));
@@ -240,13 +248,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
         description: "Le projet a été créé et toutes les étapes sont complétées",
       });
       
-      // Call the onSubmit prop with the complete workflow data
+      // Call the onSubmit prop with the complete workflow data — parent (ProjectCreate/Edit)
+      // handles SPA navigation via react-router (no full page reload).
       onSubmit(finalWorkflowData as ProjectWorkflowData);
-      
-      // Redirect to project detail if projectId exists
-      if (formData.projectId) {
-        window.location.href = `/projects/${formData.projectId}`;
-      }
     } catch (error) {
       console.error('Submission error:', error);
       toast({
@@ -349,30 +353,20 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
         {currentStep === 2 && (
           <InteractiveMapGIS
             value={{
-              coordinates: formData?.projectData?.latitude && formData?.projectData?.longitude 
+              coordinates: formData?.projectData?.latitude && formData?.projectData?.longitude
                 ? { lat: formData?.projectData.latitude, lng: formData?.projectData.longitude }
                 : undefined
             }}
             onChange={(data) => {
               if (data.coordinates) {
+                // ⚠️ Never set `id` UI-side — Postgres `gen_random_uuid()` provides it on insert.
+                // Only merge coordinate deltas; other defaults belong to ProjectInfoStep (step 1).
                 updateFormData({
                   projectData: {
                     ...(formData?.projectData || {}),
-                    id: formData?.projectData?.id || uuidv4(), // Ensure we always have an ID
-                    createdAt: formData?.projectData?.createdAt || new Date().toISOString(), // Default now
-                    updatedAt: formData?.projectData?.updatedAt || new Date().toISOString(), // Default now
-                    title: formData?.projectData?.title || '', // Default empty string
-                    description: formData?.projectData?.description || '', // Default empty string
-                    status: formData?.projectData?.status || ProjectStatus.DRAFT, // Default status
-                    progress: formData?.projectData?.progress || 0, // Default progress
-                    location: formData?.projectData?.location || '', // Default empty string
-                    startDate: formData?.projectData?.startDate || new Date().toISOString().split('T')[0], // Default today
-                    budget: formData?.projectData?.budget || 0, // Default budget
-                    currency: formData?.projectData?.currency || 'MRO', // Default currency
-                    teamSize: formData?.projectData?.teamSize || 0, // Default team size
                     latitude: data.coordinates.lat,
-                    longitude: data.coordinates.lng
-                  }
+                    longitude: data.coordinates.lng,
+                  } as any,
                 });
               }
             }}

@@ -1,72 +1,90 @@
-## Objectif global
+## Périmètre
+- `/projects/create` → `ProjectCreate.tsx` → `ProjectCreationWorkflow.tsx` (8 étapes, ~496 L) → `steps/*` (12 fichiers, ~5300 L)
+- `/projects/:id` → `ProjectDetail.tsx` → `ProjectDetailByDTO.tsx` (**2041 L**) + sous-composants (`ProjectPhases`, `PhaseList`, `ProjectMaterials`, `ProjectDocuments`, `ProjectGantt`, `EnhancedRiskManager`, `EnhancedTaskManager`, `PhaseDetailsPage`, `PaymentHistory`, `InspectionsList`, etc.)
+- `/projects/:id/edit` → `ProjectEdit.tsx` (réutilise le workflow en mode edit)
 
-Pour chaque page route de `src/App.tsx`, garantir le round-trip **UI ↔ DTO ↔ Service ↔ Adapter ↔ DB** conforme aux règles de `docs/PROMPTS.md` et `docs/ARCHITECTURE.md`, corriger les bugs `save` (en commençant par les mocks de `RepositoryFactory`), et densifier l'UI sans refonte (tokens sémantiques, headers compacts, `AppLayout` sans description).
+## Règles transversales (rappelées avant chaque PR)
+Conformes à `docs/PROMPTS.md` + `docs/ARCHITECTURE_REFERENTIELS.md` :
+- Zéro `supabase.from()` / `supabase.schema()` dans pages & composants
+- Flow obligatoire : UI → Transformer → DTO (camelCase) → Service → Adapter → DB (snake_case)
+- Hooks via `useUnifiedProjectWorkflow` / `useProjectsHex` ; mutations TanStack v5 (pas de `onError/onSuccess` sur `useQuery`)
+- `AppLayout` sans `pageDescription` ; tokens sémantiques uniquement (pas de `text-white`, `bg-[#xxx]`)
+- Référentiels = source de vérité (phases, indicateurs, écarts) — pas de hardcoding métier
 
-Le travail est **trop volumineux pour une seule itération** : je propose un plan en vagues. À chaque vague, mêmes étapes : audit → fix CRUD → polish UI → vérif build/logs → mémoire mise à jour.
+---
 
-## Règles d'or appliquées partout
+## Vague A — Bugs save & round-trip (priorité 1, ~1-2h)
 
-- Aucun `supabase.from(...)` ni `.schema(...)` dans `src/components/**` ou `src/pages/**`. Seuls les Services + hooks `hexagonal/*` y ont droit.
-- Chaque Service consomme un Repository concret (jamais le mock fallback en prod).
-- DTO camelCase, DB snake_case, transformer explicite dans les deux sens.
-- `useQuery`/`useMutation` v5 : pas d'`onError`/`onSuccess` callbacks ; toasts dans les hooks après `await mutateAsync`.
-- Tokens sémantiques uniquement (`bg-card`, `text-foreground`, `border-border`…), pas de `text-white` / `bg-[#...]`.
-- `AppLayout` sans `pageDescription` (densité headers, mem `style/layout-header-density-standard`).
+### A1. `/projects/create` — workflow 8 étapes
+Audit étape par étape du round-trip UI ↔ DTO ↔ Service ↔ DB :
 
-## Vague 1 — Projects & Phases (priorité user)
+| # | Étape | Composant | Vérification |
+|---|---|---|---|
+| 1 | Infos projet | `ProjectInfoStep` | Title/desc/budget/dates/status → `CreateProjectDTO` ; pas d'`id` côté UI (gen DB) |
+| 2 | Parties prenantes | `StakeholdersTeamStep` | Promotion auto Chef projet → `projectManagerId` |
+| 3 | Localisation | `InteractiveMapGIS` inline | **Bug actuel** : injecte un `uuidv4()` côté UI → conflit avec `gen_random_uuid()` DB. **Fix** : ne jamais setter `id` côté UI. |
+| 4 | Phases | `ConstructionPhaseManager` | Génération depuis référentiels `projectTypes` ; persistance via `PhaseService` (pas en formMode) |
+| 5 | Risques | `RiskAnalysisStep` | DTO `RiskDTO[]` → `RiskRepository.saveBatch` |
+| 6 | Conformité | `EnhancedComplianceStep` | DTO `ComplianceItemDTO[]` |
+| 7 | Stratégie/Budget | `StrategicLinkageStep` | Links → `project_strategy_links` / `project_budget_links` |
+| 8 | Résumé | inline | Affichage récap + bouton final |
 
-Routes : `/projects`, `/projects/create`, `/projects/:id`, `/projects/:id/edit`, `/projects/import`, `/projects/:id/phases/*` (et `MilestoneDetail`, `TaskDetail` dérivés).
+**Fixes attendus** :
+- Supprimer `uuidv4()` à l'étape 3 — laisser l'adapter Project gérer l'ID (cohérent avec fix tender)
+- `handleSubmit` : éviter `window.location.href` (utiliser `navigate()` via prop `onSubmit` déjà fournie)
+- Toasts d'erreur si étape échoue (pas seulement `console.error`)
+- Bouton "Sauvegarder" → invalider queries `['project-workflow-data']` après succès (déjà fait dans le hook, vérifier)
 
-1. Audit `ProjectCreate.tsx`, `ProjectEdit.tsx`, `ProjectDetail.tsx`, composants `ProjectWorkflow*`, `Phase*Tab`, `Step*Tab`.
-2. Vérifier que chaque onglet (Identification, Localisation, Budget, Phases, Steps, Stakeholders, Documents) :
-   - lit ses valeurs via `useProject*` hook hexagonal,
-   - persiste via `ProjectWorkflowService` (pas d'appel Supabase direct),
-   - transforme `formState → CreateProjectDTO / UpdateProjectDTO` via un Transformer dédié.
-3. Brancher la génération phases/steps sur référentiel (`config/referentials/`) via `PhaseGeneratorService`.
-4. Fixer toute regression `save` (toasts succès/erreur, invalidation queries, redirection).
-5. UI : compacter headers de tabs, retirer descriptions verbales, normaliser cards (`Card` + `CardHeader` slim).
+### A2. `/projects/:id/edit`
+- Vérifier que `useUnifiedProjectWorkflow('edit', id)` hydrate bien les 8 étapes via `initializeEditWorkflow`
+- Tester save par étape (ne doit pas créer un doublon)
 
-## Vague 2 — Comprehensive Monitoring (6 onglets)
+### A3. `ProjectPhases.tsx` (legacy)
+- `new PhaseService(null as any)` → casser : injecter `RepositoryFactory.getPhaseRepository()`
+- Boucle `for...of` update phases : transformer en batch `phaseService.saveBatch(projectId, phases)`
 
-Routes : `/comprehensive-monitoring`, `/inspection-monitoring`, `/bank-guarantee-monitor`, `/insurance-management`.
+---
 
-1. `SystemHealthOverview` : alertes via `MonitoringAlertService` → `project_alerts` (acknowledge/resolve). Métriques via `PerformanceMonitoringService` réel (remplacer mock dans `RepositoryFactory.getPerformanceMonitoringRepository`).
-2. `PerformanceMetrics` : brancher historique réel.
-3. `RoleBasedInspectionMonitoring`, `UnifiedInsuranceManager`, `EnhancedPaymentBlockingInterface`, `BankGuaranteeMonitor` : audit zéro-Supabase, CRUD complet (create/edit/delete), confirmations dialog.
-4. UI : grid KPI cohérente, badges sémantiques (`destructive`, `secondary`, `default`), tabs sticky.
+## Vague B — `/projects/:id` : design + CRUD finalisé (~2-3h)
 
-## Vague 3 — Tenders & Estimates (bug save prioritaire)
+### B1. Découpe `ProjectDetailByDTO.tsx` (2041 L → max 400 L/fichier)
+Le fichier est ingérable. Extraction en sous-composants colocalisés :
+- `ProjectDetailHeader.tsx` (titre, statut, actions edit/delete)
+- `ProjectDetailTabs.tsx` (orchestrateur d'onglets)
+- `tabs/OverviewTab.tsx`, `tabs/PhasesTab.tsx`, `tabs/MaterialsTab.tsx`, `tabs/DocumentsTab.tsx`, `tabs/TasksTab.tsx`, `tabs/RisksTab.tsx`, `tabs/PaymentsTab.tsx`, `tabs/InspectionsTab.tsx`, `tabs/GanttTab.tsx`
 
-Routes : `/tenders`, `/tenders/:id`, `/tenders/import`.
+### B2. Suppression `pageDescription` (mémoire UI density standard)
+`ProjectDetail.tsx` ligne 38 → retirer `pageDescription="Détail du projet"`.
 
-1. **Fix bloquant** : remplacer le mock `getTenderEstimateRepository` dans `src/repositories/RepositoryFactory.ts` par le vrai `TenderEstimateAdapter` (déjà exporté dans `infrastructure/supabase/adapters/index.ts`). C'est la cause directe du « Failed to save tender ».
-2. Vérifier `TenderEstimateService` + DTOs (`tender_estimates`, `tender_estimate_items`) round-trip.
-3. RLS : conserver politique `submitted_by = auth.uid()` (mem `tender-security-rls`).
-4. UI : densifier toolbar, normaliser dialog d'estimate (DialogDescription a11y).
+### B3. UI densification
+- Tabs sticky en haut
+- Cards KPI compactes (grille 4 colonnes desktop, 2 mobile)
+- Badges sémantiques (`bg-success/10 text-success`, etc.) — pas de couleurs hardcodées
+- Espaces réduits (p-3/p-4 au lieu de p-6) cohérents avec workflow
 
-## Vague 4 — Inspections, Payments, Documents, Suppliers, Employees, Materials, Tasks
+### B4. CRUD finalisé par onglet
+Vérifier qu'à chaque onglet :
+- Bouton "Ajouter/Modifier/Supprimer" branché à un Service (pas Supabase direct)
+- Confirmation avant suppression (`AlertDialog`)
+- Toast succès/erreur
+- Invalidation TanStack Query ciblée
 
-Routes : `/inspections/*`, `/payments/*`, `/documents`, `/suppliers/*`, `/employees`, `/materials/*`, `/tasks/*`, `/milestones/:id`.
+---
 
-Pour chacune : même grille audit/fix/UI que vagues précédentes. Une PR par domaine pour rester revuable.
+## Vague C — Sous-composants partagés (~1-2h)
 
-## Vague 5 — Profil, Settings, Auth, Workflow Test, NotFound
+Audit rapide + fixes ciblés (pas de réécriture) :
+- `ConstructionPhaseManager.tsx` — vérifier la génération depuis référentiel + sauvegarde
+- `PhaseList.tsx`, `PhaseDetailsPage.tsx` — round-trip Phase
+- `ProjectMaterials.tsx`, `ProjectDocuments.tsx` — service-only
+- `EnhancedRiskManager.tsx`, `EnhancedTaskManager.tsx` — TanStack v5 conformity
 
-Polish UI + vérif que `useAuth` est la seule porte Supabase autorisée.
+---
 
-## Détails techniques transverses
+## Livrables
+- ~15-25 fichiers édités, 0 fichier nouveau côté domaine
+- 8-12 nouveaux fichiers `tabs/*` pour découper `ProjectDetailByDTO`
+- Mémoires à créer : `mem://features/project-workflow-id-policy` (jamais d'ID UI-side), `mem://style/project-detail-tabs-decomposition`
 
-- **Fix prioritaire #1** : `src/repositories/RepositoryFactory.ts` → `getTenderEstimateRepository` doit retourner `new TenderEstimateAdapter()` (vrai adapter).
-- **Fix prioritaire #2** : `getPerformanceMonitoringRepository` → `new SupabaseMonitoringAdapter()`.
-- **Dialog a11y** : déjà patché globalement dans `dialog.tsx`, juste vérifier qu'aucune Dialog custom ne re-crée le warning.
-- **Mémoire** : après chaque vague, écrire `mem://features/<page>-crud-roundtrip` + mettre à jour `mem://index.md`.
-
-## Livraison
-
-- 1 vague par message (sinon diff ingérable).
-- Chaque vague se termine par : liste fichiers changés, vérif logs console, note mémoire ajoutée.
-- Démarrage proposé : **Vague 1 (Projects & Phases)** dans le prochain message dès validation du plan.
-
-## Question ouverte
-
-Souhaites-tu que je démarre immédiatement la **Vague 3 (fix save tender — 5 min, débloque ta démo)** avant la Vague 1 (Projects, plus long) ? Sinon je suis l'ordre proposé.
+## Question
+Ordre proposé : **A → B → C**. Je commence par la **Vague A (bugs save round-trip)** immédiatement, ou tu préfères que j'attaque **B1 (découpe ProjectDetailByDTO)** en premier parce que le fichier 2041L te bloque visuellement ?

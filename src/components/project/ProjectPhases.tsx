@@ -8,6 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/use-auth';
 import { DEV_MODE } from '@/config/constants';
 import { PhaseService } from '@/application/services/PhaseService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import ConstructionPhaseManager, { PhaseData } from './ConstructionPhaseManager';
 
 interface ProjectPhasesProps {
@@ -47,7 +48,7 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
     try {
       console.log('Starting to fetch phases...');
       setLoading(true);
-      const loadedPhases = await new PhaseService(null as any).getPhasesByProject(projectId);
+      const loadedPhases = await new PhaseService(RepositoryFactory.getPhaseRepository()).getPhasesByProject(projectId);
       console.log('Loaded phases from database:', loadedPhases);
       // Map PhaseDTO to PhaseData with required fields
       const mappedPhases: PhaseData[] = loadedPhases.map((phase: any) => ({
@@ -135,7 +136,7 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
        console.log('Phases to save:', newPhases.length);
        
        // PhaseService.saveProjectPhases does not exist, so we update phases individually
-       const phaseService = new PhaseService(null as any);
+       const phaseService = new PhaseService(RepositoryFactory.getPhaseRepository());
        for (const phase of newPhases) {
          if (phase.id) {
            // Update existing phase
