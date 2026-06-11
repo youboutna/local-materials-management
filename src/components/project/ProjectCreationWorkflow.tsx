@@ -152,12 +152,20 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   // 🎨 UI Layer - Save and proceed to next step using unified workflow (Rule #5)
   const saveAndNextStep = async () => {
     if (!canProceedNext()) {
-      console.warn("Veuillez compléter l'étape actuelle avant de continuer");
+      toast({
+        title: "Étape incomplète",
+        description: "Veuillez compléter les champs requis avant de continuer.",
+        variant: "destructive",
+      });
       return;
     }
     const result = await saveCurrentStep(currentStep + 1);
     if (!result || !result.success) {
-      console.error('Échec de la sauvegarde, passage à l\'étape suivante annulé');
+      toast({
+        title: "Sauvegarde échouée",
+        description: (result as any)?.errors?.join(', ') || result?.message || "Erreur inconnue",
+        variant: "destructive",
+      });
       return;
     }
     setCurrentStepUi((prev) => Math.min(prev + 1, steps.length - 1));
