@@ -33,10 +33,7 @@ const ProjectDetail = () => {
   }
 
   return (
-    <AppLayout
-      pageTitle={t("nav.projects")}
-      pageDescription="Détail du projet"
-    >
+    <AppLayout pageTitle={t("nav.projects")}>
       <ProjectDetailByDTO projectId={id} onEdit={handleEdit} />
     </AppLayout>
   );
