@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/use-auth';
 import { DEV_MODE } from '@/config/constants';
 import { PhaseService } from '@/application/services/PhaseService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import ConstructionPhaseManager, { PhaseData } from './ConstructionPhaseManager';
 
 interface ProjectPhasesProps {
   projectId?: string;
