@@ -8,7 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/use-auth';
 import { DEV_MODE } from '@/config/constants';
 import { PhaseService } from '@/application/services/PhaseService';
-import ConstructionPhaseManager, { PhaseData } from './ConstructionPhaseManager';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 interface ProjectPhasesProps {
   projectId?: string;
