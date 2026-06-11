@@ -248,13 +248,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
         description: "Le projet a été créé et toutes les étapes sont complétées",
       });
       
-      // Call the onSubmit prop with the complete workflow data
+      // Call the onSubmit prop with the complete workflow data — parent (ProjectCreate/Edit)
+      // handles SPA navigation via react-router (no full page reload).
       onSubmit(finalWorkflowData as ProjectWorkflowData);
-      
-      // Redirect to project detail if projectId exists
-      if (formData.projectId) {
-        window.location.href = `/projects/${formData.projectId}`;
-      }
     } catch (error) {
       console.error('Submission error:', error);
       toast({
