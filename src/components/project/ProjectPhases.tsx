@@ -48,7 +48,7 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
     try {
       console.log('Starting to fetch phases...');
       setLoading(true);
-      const loadedPhases = await new PhaseService(null as any).getPhasesByProject(projectId);
+      const loadedPhases = await new PhaseService(RepositoryFactory.getPhaseRepository()).getPhasesByProject(projectId);
       console.log('Loaded phases from database:', loadedPhases);
       // Map PhaseDTO to PhaseData with required fields
       const mappedPhases: PhaseData[] = loadedPhases.map((phase: any) => ({
