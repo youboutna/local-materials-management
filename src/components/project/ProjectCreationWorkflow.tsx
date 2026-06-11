@@ -349,30 +349,20 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
         {currentStep === 2 && (
           <InteractiveMapGIS
             value={{
-              coordinates: formData?.projectData?.latitude && formData?.projectData?.longitude 
+              coordinates: formData?.projectData?.latitude && formData?.projectData?.longitude
                 ? { lat: formData?.projectData.latitude, lng: formData?.projectData.longitude }
                 : undefined
             }}
             onChange={(data) => {
               if (data.coordinates) {
+                // ⚠️ Never set `id` UI-side — Postgres `gen_random_uuid()` provides it on insert.
+                // Only merge coordinate deltas; other defaults belong to ProjectInfoStep (step 1).
                 updateFormData({
                   projectData: {
                     ...(formData?.projectData || {}),
-                    id: formData?.projectData?.id || uuidv4(), // Ensure we always have an ID
-                    createdAt: formData?.projectData?.createdAt || new Date().toISOString(), // Default now
-                    updatedAt: formData?.projectData?.updatedAt || new Date().toISOString(), // Default now
-                    title: formData?.projectData?.title || '', // Default empty string
-                    description: formData?.projectData?.description || '', // Default empty string
-                    status: formData?.projectData?.status || ProjectStatus.DRAFT, // Default status
-                    progress: formData?.projectData?.progress || 0, // Default progress
-                    location: formData?.projectData?.location || '', // Default empty string
-                    startDate: formData?.projectData?.startDate || new Date().toISOString().split('T')[0], // Default today
-                    budget: formData?.projectData?.budget || 0, // Default budget
-                    currency: formData?.projectData?.currency || 'MRO', // Default currency
-                    teamSize: formData?.projectData?.teamSize || 0, // Default team size
                     latitude: data.coordinates.lat,
-                    longitude: data.coordinates.lng
-                  }
+                    longitude: data.coordinates.lng,
+                  } as any,
                 });
               }
             }}
