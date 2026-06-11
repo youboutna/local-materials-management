@@ -136,7 +136,7 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
        console.log('Phases to save:', newPhases.length);
        
        // PhaseService.saveProjectPhases does not exist, so we update phases individually
-       const phaseService = new PhaseService(null as any);
+       const phaseService = new PhaseService(RepositoryFactory.getPhaseRepository());
        for (const phase of newPhases) {
          if (phase.id) {
            // Update existing phase
