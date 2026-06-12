@@ -929,7 +929,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
 
 
-        <TabsContent value="overview" className="space-y-6">
+        <TabsContent value="overview" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
@@ -1275,13 +1275,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   </CardHeader>
                   <CardContent>
                     {pertAnalysis ? (
-                      <div className="space-y-6">
+                      <div className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                           <div>
                             <p className="text-sm text-muted-foreground">
                               Durée attendue totale
                             </p>
-                            <p className="text-2xl font-bold">
+                            <p className="text-xl font-semibold">
                               {pertAnalysis.totalExpectedDuration.toFixed(1)} jours
                             </p>
                           </div>
@@ -1289,7 +1289,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                             <p className="text-sm text-muted-foreground">
                               Écart-type total
                             </p>
-                            <p className="text-2xl font-bold">
+                            <p className="text-xl font-semibold">
                               {pertAnalysis.variances
                                 ? Math.sqrt(
                                     (Object.values(pertAnalysis.variances) as number[]).reduce(
@@ -1306,7 +1306,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                             <p className="text-sm text-muted-foreground">
                               Tâches sur chemin critique
                             </p>
-                            <p className="text-2xl font-bold">
+                            <p className="text-xl font-semibold">
                               {pertAnalysis.criticalPath?.length || 0}
                             </p>
                           </div>
@@ -1503,17 +1503,17 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
         <TabsContent value="kpis" className="mt-6">
           {kpiMetrics ? (
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* Progress KPIs */}
                 <Card>
-                  <CardContent className="p-6">
+                  <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">
                           Progression
                         </p>
-                        <p className="text-2xl font-bold">
+                        <p className="text-xl font-semibold">
                           {kpiMetrics.progressPercentage}% ({kpiMetrics.milestoneCompletion}% jalons)
                         </p>
                       </div>
@@ -1528,13 +1528,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
                 {/* Budget KPIs */}
                 <Card>
-                  <CardContent className="p-6">
+                  <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">
                           Utilisation Budget
                         </p>
-                        <p className="text-2xl font-bold">
+                        <p className="text-xl font-semibold">
                           {((kpiMetrics.actualCost / (kpiMetrics.totalBudget || 1)) * 100).toFixed(1)}%
                         </p>
                       </div>
@@ -1548,13 +1548,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
                 {/* EVM - CPI */}
                 <Card>
-                  <CardContent className="p-6">
+                  <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">
                           CPI (Coût)
                         </p>
-                        <p className="text-2xl font-bold">
+                        <p className="text-xl font-semibold">
                           {kpiMetrics.costEfficiency.toFixed(2)}
                         </p>
                       </div>
@@ -1576,13 +1576,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
                 {/* EVM - SPI */}
                 <Card>
-                  <CardContent className="p-6">
+                  <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">
                           SPI (Planning)
                         </p>
-                        <p className="text-2xl font-bold">
+                        <p className="text-xl font-semibold">
                           {kpiMetrics.schedulePerformance.toFixed(2)}
                         </p>
                       </div>
@@ -1602,13 +1602,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
                 {/* Quality */}
                 <Card>
-                  <CardContent className="p-6">
+                  <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">
                           Qualité
                         </p>
-                        <p className="text-2xl font-bold">
+                        <p className="text-xl font-semibold">
                           {kpiMetrics.qualityScore.toFixed(0)}%
                         </p>
                       </div>
@@ -1622,13 +1622,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
                 {/* Risks */}
                 <Card>
-                  <CardContent className="p-6">
+                  <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">
                           Risques
                         </p>
-                        <p className="text-2xl font-bold">
+                        <p className="text-xl font-semibold">
                           {kpiMetrics.riskScore}
                         </p>
                       </div>
@@ -1642,13 +1642,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
                 {/* Health Score */}
                 <Card>
-                  <CardContent className="p-6">
+                  <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">
                           Santé Globale
                         </p>
-                        <p className="text-2xl font-bold">
+                        <p className="text-xl font-semibold">
                           {Math.round((kpiMetrics.qualityScore + kpiMetrics.schedulePerformance + kpiMetrics.costEfficiency) / 3)}
                         </p>
                       </div>
@@ -1670,13 +1670,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
                 {/* Timeline */}
                 <Card>
-                  <CardContent className="p-6">
+                  <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">
                           Délai
                         </p>
-                        <p className="text-2xl font-bold">
+                        <p className="text-xl font-semibold">
                           {Math.round(kpiMetrics.schedulePerformance * 3)}j
                         </p>
                       </div>
@@ -1762,7 +1762,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         </TabsContent>
 
         <TabsContent value="compliance" className="mt-6">
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Bank Guarantees */}
             <Card>
               <CardHeader>
@@ -1955,7 +1955,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-4 border rounded-lg text-center">
-                    <p className="text-2xl font-bold">
+                    <p className="text-xl font-semibold">
                       {bankGuaranteesData.length}
                     </p>
                     <p className="text-sm text-muted-foreground">
@@ -1963,13 +1963,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                     </p>
                   </div>
                   <div className="p-4 border rounded-lg text-center">
-                    <p className="text-2xl font-bold">
+                    <p className="text-xl font-semibold">
                       {insuranceCertificatesData.length}
                     </p>
                     <p className="text-sm text-muted-foreground">Assurances</p>
                   </div>
                   <div className="p-4 border rounded-lg text-center">
-                    <p className="text-2xl font-bold">
+                    <p className="text-xl font-semibold">
                       {
                         documentsData.filter((d: {id: string, title: string, type: string, document_type: string, description?: string, created_at: string, status: string}) =>
                           ["contract", "project_report", "tender"].includes(
