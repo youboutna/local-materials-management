@@ -847,7 +847,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             permissions nécessaires.
           </p>
           <div className="flex gap-2 justify-center">
-            <Button onClick={() => window.location.reload()} variant="outline">
+            <Button
+              onClick={() => {
+                queryClient.invalidateQueries({ queryKey: ["project-summary", projectId] });
+                queryClient.invalidateQueries({ queryKey: ["project-detail", projectId] });
+              }}
+              variant="outline"
+            >
               Réessayer
             </Button>
             <Button onClick={() => navigate("/projects")}>
