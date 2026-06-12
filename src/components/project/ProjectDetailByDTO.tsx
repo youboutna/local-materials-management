@@ -860,7 +860,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="container mx-auto py-4 space-y-4">
+
       {/* New Hierarchical Header with KPIs */}
       <ProjectHeader
         project={{
