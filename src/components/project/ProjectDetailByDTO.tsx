@@ -72,6 +72,7 @@ import {
 } from "../ui/select";
 import { useProjectPhasesHex } from "@/hooks/hexagonal";
 import MonitoringEvaluationPanel from "@/components/project/monitoring/MonitoringEvaluationPanel";
+import { PaymentDialog } from "@/components/project/PaymentDialog";
 
 interface ProjectDetailByDTOProps {
   projectId?: string;
@@ -1432,9 +1433,28 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         <TabsContent value="payments" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5" />
-                Échéancier de paiements
+              <CardTitle className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5" />
+                  Échéancier de paiements
+                </span>
+                <PaymentDialog
+                  project={{
+                    ...(project as any),
+                    payments: (payments || []).map((p: any) => ({
+                      id: p.id,
+                      amount: Number(p.amount ?? 0),
+                      paymentDate: p.paymentDate ?? p.payment_date ?? '',
+                      progressAtPayment: p.progressAtPayment ?? p.progress_at_payment ?? 0,
+                      status: p.status ?? 'pending',
+                      description: p.description ?? '',
+                    })),
+                  } as any}
+                  onPaymentComplete={() => {
+                    queryClient.invalidateQueries({ queryKey: ["project-detail", projectId] });
+                    queryClient.invalidateQueries({ queryKey: ["project-summary", projectId] });
+                  }}
+                />
               </CardTitle>
             </CardHeader>
             <CardContent>
