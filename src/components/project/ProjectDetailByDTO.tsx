@@ -917,7 +917,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         onValueChange={setActiveTab}
         className="space-y-4"
       >
-        <TabsList className="grid w-full grid-cols-3 md:grid-cols-7 h-auto">
+        <TabsList className="sticky top-0 z-20 grid w-full grid-cols-3 md:grid-cols-7 h-auto bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
           <TabsTrigger value="overview" className="text-xs sm:text-sm">Vue d'ensemble</TabsTrigger>
           <TabsTrigger value="phases" className="text-xs sm:text-sm">Planification</TabsTrigger>
           <TabsTrigger value="tasks" className="text-xs sm:text-sm">Exécution</TabsTrigger>
@@ -926,6 +926,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           <TabsTrigger value="monitoring" className="text-xs sm:text-sm">Suivi & Évaluation</TabsTrigger>
           <TabsTrigger value="map" className="text-xs sm:text-sm">Localisation</TabsTrigger>
         </TabsList>
+
 
 
         <TabsContent value="overview" className="space-y-6">
