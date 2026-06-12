@@ -72,6 +72,7 @@ import {
 } from "../ui/select";
 import { useProjectPhasesHex } from "@/hooks/hexagonal";
 import MonitoringEvaluationPanel from "@/components/project/monitoring/MonitoringEvaluationPanel";
+import { PaymentDialog } from "@/components/project/PaymentDialog";
 
 interface ProjectDetailByDTOProps {
   projectId?: string;
