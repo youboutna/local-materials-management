@@ -3817,6 +3817,7 @@ export type Database = {
           id: string | null
           issue_date: string | null
           project_id: string | null
+          released_at: string | null
           status: string | null
           updated_at: string | null
         }
@@ -3830,6 +3831,7 @@ export type Database = {
           id?: string | null
           issue_date?: string | null
           project_id?: string | null
+          released_at?: string | null
           status?: string | null
           updated_at?: string | null
         }
@@ -3843,6 +3845,7 @@ export type Database = {
           id?: string | null
           issue_date?: string | null
           project_id?: string | null
+          released_at?: string | null
           status?: string | null
           updated_at?: string | null
         }
