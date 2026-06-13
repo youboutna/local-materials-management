@@ -28,7 +28,7 @@ export class TaskAssignmentAdapter implements ITaskAssignmentRepository {
           status: taskAssignment.status,
           priority: taskAssignment.priority,
           due_date: taskAssignment.dueDate?.toISOString(),
-          completed_at: taskAssignment.completedAt?.toISOString(),
+          completion_date: taskAssignment.completedAt?.toISOString(),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
