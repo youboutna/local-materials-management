@@ -5614,38 +5614,68 @@ export type Database = {
       }
       project_stakeholders: {
         Row: {
+          contract_type: string | null
           created_at: string | null
           employee_id: string | null
+          end_date: string | null
+          external_email: string | null
+          external_name: string | null
+          external_phone: string | null
+          hourly_rate: number | null
           id: string | null
+          is_active: boolean | null
           is_primary: boolean | null
+          notes: string | null
           project_id: string | null
+          responsibilities: string[] | null
           role_description: string | null
           stakeholder_entity_type: string | null
           stakeholder_type: string | null
+          start_date: string | null
           supplier_id: string | null
           updated_at: string | null
         }
         Insert: {
+          contract_type?: string | null
           created_at?: string | null
           employee_id?: string | null
+          end_date?: string | null
+          external_email?: string | null
+          external_name?: string | null
+          external_phone?: string | null
+          hourly_rate?: number | null
           id?: string | null
+          is_active?: boolean | null
           is_primary?: boolean | null
+          notes?: string | null
           project_id?: string | null
+          responsibilities?: string[] | null
           role_description?: string | null
           stakeholder_entity_type?: string | null
           stakeholder_type?: string | null
+          start_date?: string | null
           supplier_id?: string | null
           updated_at?: string | null
         }
         Update: {
+          contract_type?: string | null
           created_at?: string | null
           employee_id?: string | null
+          end_date?: string | null
+          external_email?: string | null
+          external_name?: string | null
+          external_phone?: string | null
+          hourly_rate?: number | null
           id?: string | null
+          is_active?: boolean | null
           is_primary?: boolean | null
+          notes?: string | null
           project_id?: string | null
+          responsibilities?: string[] | null
           role_description?: string | null
           stakeholder_entity_type?: string | null
           stakeholder_type?: string | null
+          start_date?: string | null
           supplier_id?: string | null
           updated_at?: string | null
         }
