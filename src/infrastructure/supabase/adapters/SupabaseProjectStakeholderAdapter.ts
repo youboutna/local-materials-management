@@ -304,15 +304,24 @@ export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRep
   }
 
   private mapToSupabase(entity: Partial<ProjectStakeholderEntity>): ProjectStakeholderInsertData {
-    return {
-      project_id: entity.projectId,
-      stakeholder_type: entity.stakeholderType,
-      stakeholder_entity_type: entity.stakeholderEntityType,
-      employee_id: entity.employeeId,
-      supplier_id: entity.supplierId,
-      role_description: entity.roleDescription,
-      is_active: entity.isActive,
-      updated_at: new Date().toISOString()
-    };
+    const row: ProjectStakeholderInsertData = { updated_at: new Date().toISOString() };
+    if (entity.projectId !== undefined) row.project_id = entity.projectId;
+    if (entity.stakeholderType !== undefined) row.stakeholder_type = entity.stakeholderType;
+    if (entity.stakeholderEntityType !== undefined) row.stakeholder_entity_type = entity.stakeholderEntityType;
+    if (entity.employeeId !== undefined) row.employee_id = entity.employeeId;
+    if (entity.supplierId !== undefined) row.supplier_id = entity.supplierId;
+    if (entity.externalName !== undefined) row.external_name = entity.externalName;
+    if (entity.externalEmail !== undefined) row.external_email = entity.externalEmail;
+    if (entity.externalPhone !== undefined) row.external_phone = entity.externalPhone;
+    if (entity.roleDescription !== undefined) row.role_description = entity.roleDescription;
+    if (entity.responsibilities !== undefined) row.responsibilities = entity.responsibilities;
+    if (entity.isActive !== undefined) row.is_active = entity.isActive;
+    if (entity.startDate !== undefined) row.start_date = entity.startDate;
+    if (entity.endDate !== undefined) row.end_date = entity.endDate;
+    if (entity.hourlyRate !== undefined) row.hourly_rate = entity.hourlyRate;
+    if (entity.contractType !== undefined) row.contract_type = entity.contractType;
+    if (entity.notes !== undefined) row.notes = entity.notes;
+    return row;
   }
+
 }
