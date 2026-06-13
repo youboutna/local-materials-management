@@ -79,25 +79,20 @@ export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRep
       return [];
     }
 
-    try {
-      const { data, error } = await supabase
-        .from('project_stakeholders')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: true });
+    const { data, error } = await supabase
+      .from('project_stakeholders')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: true });
 
-      if (error) {
-        console.error('SupabaseProjectStakeholderAdapter.findByProjectId error:', error);
-        throw error;
-      }
-
-      console.log('SupabaseProjectStakeholderAdapter.findByProjectId data:', data);
-      return (data || []).map(this.mapToEntity);
-    } catch (error) {
-      console.error('SupabaseProjectStakeholderAdapter.findByProjectId caught error:', error);
+    if (error) {
+      console.error('SupabaseProjectStakeholderAdapter.findByProjectId error:', error);
       throw error;
     }
+
+    return (data || []).map(this.mapToEntity);
   }
+
 
   async findByType(stakeholderType: string): Promise<ProjectStakeholderEntity[]> {
     const { data, error } = await supabase
