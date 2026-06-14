@@ -166,6 +166,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       staleTime: 30_000,
     });
 
+  const projectTabsDef = useMemo(
+    () => getProjectTabs((projectDetail as any)?.entityCode),
+    [projectDetail]
+  );
+
   // Analytics from ProjectService
   const projectAnalyticsQuery = useQuery({
     queryKey: ["project-analytics", projectId],
