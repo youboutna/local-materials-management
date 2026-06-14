@@ -52,6 +52,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ElectricSpinner } from "../loading-page";
 import { CompactProjectReportGenerator } from "../reports/CompactProjectReportGenerator";
 import { ReferentialType } from "@/config/referentials";
+import { getProjectTabs } from "@/config/referentials/projects/project-views.referential";
 import { referentialService } from '@/application/services/ReferentialService';
 import {
   Dialog as DialogUI,
