@@ -2,14 +2,17 @@
  * Project Views Referential
  *
  * Onglets dynamiques affichés sur la vue projet, par type d'entité.
- * Inspiration captures ETER : Planification, Exécution, Financier, Conformité, Localisation.
+ * Reflète les 7 onglets standards du détail projet HadraTech-GPI :
+ *   Vue d'ensemble · Planification · Exécution · Financier · Conformité · Suivi & Évaluation · Localisation
  */
 
 export type ProjectTabKey =
+  | 'overview'
   | 'planification'
   | 'execution'
   | 'financier'
   | 'conformite'
+  | 'suivi_evaluation'
   | 'localisation'
   | 'dqe'
   | 'inspections'
@@ -18,6 +21,8 @@ export type ProjectTabKey =
 
 export interface ProjectTabDef {
   key: ProjectTabKey;
+  /** Valeur `TabsTrigger.value` côté UI (alignée sur ProjectDetailByDTO). */
+  uiValue: string;
   label: { fr: string; en?: string };
   /** Icône lucide-react à utiliser dans l'UI. */
   icon?: string;
@@ -25,15 +30,17 @@ export interface ProjectTabDef {
 }
 
 export const PROJECT_TABS: Record<ProjectTabKey, ProjectTabDef> = {
-  planification: { key: 'planification', label: { fr: 'Planification' },  icon: 'CalendarRange', order: 10 },
-  execution:     { key: 'execution',     label: { fr: 'Exécution' },      icon: 'PlayCircle',    order: 20 },
-  financier:     { key: 'financier',     label: { fr: 'Financier' },      icon: 'Wallet',        order: 30 },
-  conformite:    { key: 'conformite',    label: { fr: 'Conformité' },     icon: 'ShieldCheck',   order: 40 },
-  localisation:  { key: 'localisation',  label: { fr: 'Localisation' },   icon: 'MapPin',        order: 50 },
-  dqe:           { key: 'dqe',           label: { fr: 'DQE' },            icon: 'ListTree',      order: 25 },
-  inspections:   { key: 'inspections',   label: { fr: 'Inspections' },    icon: 'ClipboardCheck', order: 35 },
-  documents:     { key: 'documents',     label: { fr: 'Documents' },      icon: 'FileText',      order: 60 },
-  rapports:      { key: 'rapports',      label: { fr: 'Rapports' },       icon: 'FileBarChart',  order: 70 },
+  overview:         { key: 'overview',         uiValue: 'overview',   label: { fr: "Vue d'ensemble" },   icon: 'LayoutDashboard', order: 5 },
+  planification:    { key: 'planification',    uiValue: 'phases',     label: { fr: 'Planification' },     icon: 'CalendarRange',   order: 10 },
+  execution:        { key: 'execution',        uiValue: 'tasks',      label: { fr: 'Exécution' },         icon: 'PlayCircle',      order: 20 },
+  financier:        { key: 'financier',        uiValue: 'financial',  label: { fr: 'Financier' },         icon: 'Wallet',          order: 30 },
+  conformite:       { key: 'conformite',       uiValue: 'compliance', label: { fr: 'Conformité' },        icon: 'ShieldCheck',     order: 40 },
+  suivi_evaluation: { key: 'suivi_evaluation', uiValue: 'monitoring', label: { fr: 'Suivi & Évaluation' }, icon: 'Activity',       order: 45 },
+  localisation:     { key: 'localisation',     uiValue: 'map',        label: { fr: 'Localisation' },      icon: 'MapPin',          order: 50 },
+  dqe:              { key: 'dqe',              uiValue: 'dqe',        label: { fr: 'DQE' },               icon: 'ListTree',        order: 25 },
+  inspections:      { key: 'inspections',      uiValue: 'inspections', label: { fr: 'Inspections' },      icon: 'ClipboardCheck',  order: 35 },
+  documents:        { key: 'documents',        uiValue: 'documents',  label: { fr: 'Documents' },         icon: 'FileText',        order: 60 },
+  rapports:         { key: 'rapports',         uiValue: 'rapports',   label: { fr: 'Rapports' },          icon: 'FileBarChart',    order: 70 },
 };
 
 export interface ProjectViewProfile {
@@ -46,15 +53,15 @@ export interface ProjectViewProfile {
 export const PROJECT_VIEW_PROFILES: ProjectViewProfile[] = [
   {
     entityCode: 'ETER',
-    tabs: ['planification', 'dqe', 'execution', 'financier', 'conformite', 'localisation', 'inspections', 'rapports'],
+    tabs: ['overview', 'planification', 'dqe', 'execution', 'financier', 'conformite', 'suivi_evaluation', 'localisation', 'inspections', 'rapports'],
   },
   {
     entityCode: 'SOMELEC_INFRA',
-    tabs: ['planification', 'execution', 'financier', 'conformite', 'inspections', 'localisation', 'documents', 'rapports'],
+    tabs: ['overview', 'planification', 'execution', 'financier', 'conformite', 'suivi_evaluation', 'inspections', 'localisation', 'documents', 'rapports'],
   },
   {
     entityCode: 'DEFAULT',
-    tabs: ['planification', 'execution', 'financier', 'inspections', 'documents', 'rapports'],
+    tabs: ['overview', 'planification', 'execution', 'financier', 'conformite', 'suivi_evaluation', 'localisation'],
   },
 ];
 

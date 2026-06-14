@@ -462,6 +462,25 @@ export class Project {
     siteDetails?: string;
     supervisorId?: string;
     terrainType?: string;
+    // === Additional hydration fields ===
+    marketType?: string;
+    selectionMode?: string;
+    methodology?: string;
+    currentPhase?: string;
+    currentStage?: string;
+    projectType?: string;
+    priority?: string;
+    geographicZone?: string;
+    environmentalConstraints?: string;
+    areaSqm?: number;
+    clientId?: string;
+    requiresPermits?: boolean;
+    permitNumber?: string;
+    hasUtilities?: boolean;
+    insuranceRequired?: boolean;
+    launchDate?: Date;
+    projectReference?: string;
+    allowsInitialPayment?: boolean;
   }): Project {
     const project = new Project(
       data.id,
@@ -527,6 +546,26 @@ export class Project {
     if (data.siteDetails !== undefined) project._siteDetails = data.siteDetails;
     if (data.supervisorId !== undefined) project._supervisorId = data.supervisorId;
     if (data.terrainType !== undefined) project._terrainType = data.terrainType;
+
+    // === Additional hydration fields ===
+    if (data.marketType !== undefined) project._marketType = data.marketType;
+    if (data.selectionMode !== undefined) project._selectionMode = data.selectionMode;
+    if (data.methodology !== undefined) project._methodology = data.methodology;
+    if (data.currentPhase !== undefined) project._currentPhase = data.currentPhase;
+    if (data.currentStage !== undefined) project._currentStage = data.currentStage;
+    if (data.projectType !== undefined) project._projectType = data.projectType;
+    if (data.priority !== undefined) project._priority = data.priority;
+    if (data.geographicZone !== undefined) project._geographicZone = data.geographicZone;
+    if (data.environmentalConstraints !== undefined) project._environmentalConstraints = data.environmentalConstraints;
+    if (data.areaSqm !== undefined) project._areaSqm = data.areaSqm;
+    if (data.clientId !== undefined) project._clientId = data.clientId;
+    if (data.requiresPermits !== undefined) project._requiresPermits = data.requiresPermits;
+    if (data.permitNumber !== undefined) project._permitNumber = data.permitNumber;
+    if (data.hasUtilities !== undefined) project._hasUtilities = data.hasUtilities;
+    if (data.insuranceRequired !== undefined) project._insuranceRequired = data.insuranceRequired;
+    if (data.launchDate !== undefined) project._launchDate = data.launchDate;
+    if (data.projectReference !== undefined) project._projectReference = data.projectReference;
+    if (data.allowsInitialPayment !== undefined) project._allowsInitialPayment = data.allowsInitialPayment;
 
     return project;
   }
