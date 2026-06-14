@@ -925,13 +925,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         className="space-y-4"
       >
         <TabsList className="sticky top-0 z-20 grid w-full grid-cols-3 md:grid-cols-7 h-auto bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
-          <TabsTrigger value="overview" className="text-xs sm:text-sm">Vue d'ensemble</TabsTrigger>
-          <TabsTrigger value="phases" className="text-xs sm:text-sm">Planification</TabsTrigger>
-          <TabsTrigger value="tasks" className="text-xs sm:text-sm">Exécution</TabsTrigger>
-          <TabsTrigger value="financial" className="text-xs sm:text-sm">Financier</TabsTrigger>
-          <TabsTrigger value="compliance" className="text-xs sm:text-sm">Conformité</TabsTrigger>
-          <TabsTrigger value="monitoring" className="text-xs sm:text-sm">Suivi & Évaluation</TabsTrigger>
-          <TabsTrigger value="map" className="text-xs sm:text-sm">Localisation</TabsTrigger>
+          {projectTabsDef.map((tab) => (
+            <TabsTrigger key={tab.uiValue} value={tab.uiValue} className="text-xs sm:text-sm">
+              {tab.label.fr}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
 
