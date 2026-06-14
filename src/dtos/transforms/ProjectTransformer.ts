@@ -110,6 +110,25 @@ export class ProjectTransformer {
       siteDetails: row.site_details as string,
       supervisorId: row.supervisor_id as string,
       terrainType: row.terrain_type as string,
+      // === Missing hydration fields (Règle #1 - Flèche Sacrée DB → DTO) ===
+      marketType: (row.market_type as string) || undefined,
+      selectionMode: (row.selection_mode as string) || undefined,
+      methodology: (row.methodology as string) || undefined,
+      currentPhase: (row.current_phase as string) || undefined,
+      currentStage: (row.current_stage as string) || undefined,
+      projectType: (row.project_type as string) || undefined,
+      priority: (row.priority as string) || undefined,
+      geographicZone: (row.geographic_zone as string) || undefined,
+      environmentalConstraints: (row.environmental_constraints as string) || undefined,
+      areaSqm: row.area_sqm != null ? Number(row.area_sqm) : undefined,
+      clientId: (row.client_id as string) || undefined,
+      requiresPermits: row.requires_permits as boolean | undefined,
+      permitNumber: (row.permit_number as string) || undefined,
+      hasUtilities: row.has_utilities as boolean | undefined,
+      insuranceRequired: row.insurance_required as boolean | undefined,
+      launchDate: row.launch_date ? new Date(row.launch_date as string) : undefined,
+      projectReference: (row.project_reference as string) || undefined,
+      allowsInitialPayment: row.allows_initial_payment as boolean | undefined,
     });
   }
 
