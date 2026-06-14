@@ -462,6 +462,25 @@ export class Project {
     siteDetails?: string;
     supervisorId?: string;
     terrainType?: string;
+    // === Additional hydration fields ===
+    marketType?: string;
+    selectionMode?: string;
+    methodology?: string;
+    currentPhase?: string;
+    currentStage?: string;
+    projectType?: string;
+    priority?: string;
+    geographicZone?: string;
+    environmentalConstraints?: string;
+    areaSqm?: number;
+    clientId?: string;
+    requiresPermits?: boolean;
+    permitNumber?: string;
+    hasUtilities?: boolean;
+    insuranceRequired?: boolean;
+    launchDate?: Date;
+    projectReference?: string;
+    allowsInitialPayment?: boolean;
   }): Project {
     const project = new Project(
       data.id,
