@@ -956,7 +956,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             </div>
           </DialogContent>
         </Dialog>
-        <ReportManager data={{ project }} reportType="project" />
+        {/* Rapport complet — alimenté avec les collections déjà hydratées (phases / tasks / inspections / payments) pour rester aligné avec le rapport compact. */}
+        <ReportManager
+          data={{ project: (projectDataForReport ?? project) as any }}
+          reportType="project"
+        />
       </div>
 
       {/* Main Content Tabs */}
