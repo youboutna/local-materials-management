@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  getProjectListViews,
+  getDefaultProjectListView,
+} from "@/config/referentials/projects/project-list-views.referential";
 import { Map, Grid, Filter, Plus } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import ProjectsGridPaginated from "@/components/projects/ProjectsGridPaginated";
