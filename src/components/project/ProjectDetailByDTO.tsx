@@ -22,6 +22,7 @@ import { toast } from "@/hooks/use-toast";
 import { ProjectAnalyticsService } from '@/application/services/ProjectAnalyticsService';
 import { ProjectService } from '@/application/services/ProjectService';
 import { MilestoneService } from '@/application/services/MilestoneService';
+import { ProgressCalculationHexService } from '@/application/services/ProgressCalculationHexService';
 import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import { ProjectDetailDTO, ProjectSummaryDTO } from "@/dtos/entities/ProjectDTO";
 import { InspectionDTO } from "@/dtos/entities/InspectionDTO";
