@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  getProjectListViews,
+  getDefaultProjectListView,
+} from "@/config/referentials/projects/project-list-views.referential";
 import { Map, Grid, Filter, Plus } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import ProjectsGridPaginated from "@/components/projects/ProjectsGridPaginated";
@@ -238,27 +242,25 @@ const Projects: React.FC = () => {
       }
     >
       <div className="space-y-3">
-        <Tabs defaultValue="grid" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 h-9">
-            <TabsTrigger value="grid" className="flex items-center gap-2 text-xs">
-              <Grid className="h-3.5 w-3.5" />
-              Vue Grille
-            </TabsTrigger>
-            <TabsTrigger value="waterfall" className="flex items-center gap-2 text-xs">
-              <Filter className="h-3.5 w-3.5" />
-              Gestion Waterfall
-            </TabsTrigger>
-            <TabsTrigger value="map" className="flex items-center gap-2 text-xs">
-              <Map className="h-3.5 w-3.5" />
-              Carte des Projets
-            </TabsTrigger>
-            <TabsTrigger
-              value="interactive"
-              className="flex items-center gap-2 text-xs"
-            >
-              <Map className="h-3.5 w-3.5" />
-              Carte Interactive
-            </TabsTrigger>
+        <Tabs defaultValue={getDefaultProjectListView()} className="w-full">
+          <TabsList
+            className="grid w-full h-9"
+            style={{ gridTemplateColumns: `repeat(${getProjectListViews().length}, minmax(0, 1fr))` }}
+          >
+            {getProjectListViews().map((view) => {
+              const Icon = view.icon === "Grid" ? Grid : view.icon === "Filter" ? Filter : Map;
+              return (
+                <TabsTrigger
+                  key={view.uiValue}
+                  value={view.uiValue}
+                  className="flex items-center gap-2 text-xs"
+                  title={view.description?.fr}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {view.label.fr}
+                </TabsTrigger>
+              );
+            })}
           </TabsList>
 
           <TabsContent value="grid" className="space-y-3">
