@@ -295,7 +295,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   });
 
   // Milestone count for dashboard - use instance method
-  const milestoneServiceInstance = new MilestoneService();
+  const milestoneServiceInstance = useMemo(() => new MilestoneService(), []);
+  const progressServiceInstance = useMemo(() => new ProgressCalculationHexService(), []);
   const { data: milestoneProgress } = useQuery({
     queryKey: ["milestone-progress", projectId],
     queryFn: async () => {
