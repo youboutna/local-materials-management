@@ -449,23 +449,56 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     }
   }, [projectDetail, risksSource, tasksSource, t]);
 
-  // Calculate realistic progress
-  const [calculatedProgress, setCalculatedProgress] = useState<number>(0);
+  // Calculate realistic progress from hydrated collections (phases + tasks + inspections)
+  // via ProgressCalculationHexService — pure-TS service piloté par référentiel de poids.
+  const calculatedProgress = useMemo<number>(() => {
+    const phases = (phasesSource || []) as any[];
+    const tasks = (tasksSource || []) as any[];
+    const inspections = (inspectionsSource || []) as any[];
 
-  useEffect(() => {
-    const calculateProgress = async () => {
-      if (projectDetail) {
-        // const progress = ProgressCalculationService.calculateProjectProgress(
-        //   projectDetail.plannedPhases || [],
-        //   projectDetail.tasks || [],
-        //   projectDetail.inspections || []
-        // );
-        // setCalculatedProgress(progress);
-        setCalculatedProgress(projectDetail.progress || 0);
-      }
-    };
-    calculateProgress();
-  }, [projectDetail]);
+    // Aucune collection hydratée → on retombe sur la valeur persistée.
+    if (phases.length === 0 && tasks.length === 0 && inspections.length === 0) {
+      return projectDetail?.progress ?? 0;
+    }
+
+    const normalizeStatus = (s: any) => String(s ?? '').toLowerCase().replace(/[\s-]/g, '_');
+    const mapPhase = (p: any) => ({
+      id: p.id,
+      name: p.phase_name || p.name || '',
+      phase_name: p.phase_name || p.name || '',
+      status: ['completed', 'in_progress', 'cancelled'].includes(normalizeStatus(p.status))
+        ? (normalizeStatus(p.status) as any)
+        : 'pending',
+      progress: Number(p.progress ?? 0),
+    });
+    const mapTask = (t: any) => ({
+      id: t.id,
+      title: t.title || t.task_name || '',
+      status: ['completed', 'in_progress', 'cancelled'].includes(normalizeStatus(t.status))
+        ? (normalizeStatus(t.status) as any)
+        : 'pending',
+      progress: Number(t.progress ?? 0),
+      phase_id: t.phase_id || '',
+      priority: (t.priority || 'medium') as any,
+    });
+    const mapInspection = (i: any) => ({
+      id: i.id,
+      title: i.title || i.inspection_type || '',
+      status: ['completed', 'in_progress', 'cancelled'].includes(normalizeStatus(i.status))
+        ? (normalizeStatus(i.status) as any)
+        : 'scheduled',
+      progress: Number(i.progress ?? (normalizeStatus(i.status) === 'completed' ? 100 : 0)),
+      phase_id: i.phase_id || '',
+      type: (i.type || 'regular') as any,
+      priority: (i.priority || 'medium') as any,
+    });
+
+    return progressServiceInstance.calculateProjectProgress(
+      phases.map(mapPhase) as any,
+      tasks.map(mapTask) as any,
+      inspections.map(mapInspection) as any,
+    );
+  }, [phasesSource, tasksSource, inspectionsSource, projectDetail?.progress]);
 
   // Convert project data for compact report generator
   const projectDataForReport = useMemo(() => {
