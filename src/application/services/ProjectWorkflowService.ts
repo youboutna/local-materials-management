@@ -558,13 +558,72 @@ export class ProjectWorkflowService {
     if (!stakeholders.length) return;
     const existing = await this.stakeholderRepository.findByProjectId(projectId).catch(() => [] as any[]);
     const existingIds = new Set(existing.map((s: any) => s.id));
+
+    /**
+     * Normalize incoming stakeholder (UI/DTO/Entity shape) to the
+     * project_stakeholders DB constraints:
+     * - stakeholder_entity_type ∈ {'employee','supplier'} (NOT NULL)
+     * - employee_id required when 'employee' (and supplier_id NULL)
+     * - supplier_id required when 'supplier' (and employee_id NULL)
+     * - stakeholder_type NOT NULL
+     */
+    const normalize = (s: any): any => {
+      const employeeId = s.employeeId ?? s.employee_id ?? null;
+      const supplierId = s.supplierId ?? s.supplier_id ?? s.organizationId ?? s.organization_id ?? null;
+      let entityType: 'employee' | 'supplier' | null =
+        s.stakeholderEntityType ?? s.stakeholder_entity_type ?? s.entityType ?? null;
+      // Map DTO enum casing → DB lower-case
+      if (typeof entityType === 'string') {
+        const v = entityType.toLowerCase();
+        entityType = v === 'employee' || v === 'person' ? 'employee'
+                   : v === 'supplier' || v === 'organization' || v === 'external' ? 'supplier'
+                   : null;
+      }
+      if (!entityType) entityType = employeeId ? 'employee' : supplierId ? 'supplier' : null;
+
+      const stakeholderType: string = (
+        s.stakeholderType ?? s.stakeholder_type ?? s.type ?? s.role ?? 'external'
+      ).toString();
+
+      return {
+        projectId,
+        stakeholderType,
+        stakeholderEntityType: entityType,
+        employeeId: entityType === 'employee' ? employeeId : null,
+        supplierId: entityType === 'supplier' ? supplierId : null,
+        roleDescription: s.roleDescription ?? s.role_description ?? s.role ?? null,
+        externalName: s.externalName ?? s.external_name ?? s.name ?? s.contact?.name ?? null,
+        externalEmail: s.externalEmail ?? s.external_email ?? s.email ?? s.contact?.email ?? null,
+        externalPhone: s.externalPhone ?? s.external_phone ?? s.phone ?? s.contact?.phone ?? null,
+        responsibilities: s.responsibilities ?? null,
+        isActive: s.isActive ?? true,
+        startDate: s.startDate ?? s.start_date ?? null,
+        endDate: s.endDate ?? s.end_date ?? null,
+        hourlyRate: s.hourlyRate ?? s.hourly_rate ?? null,
+        contractType: s.contractType ?? s.contract_type ?? null,
+        notes: s.notes ?? null,
+      };
+    };
+
     for (const s of stakeholders) {
-      const payload = { ...s, projectId };
+      const payload = normalize(s);
+      // Skip rows that cannot satisfy the DB constraints
+      if (!payload.stakeholderEntityType) {
+        console.warn('[upsertStakeholders] skipped: missing entity type', s);
+        continue;
+      }
+      if (payload.stakeholderEntityType === 'employee' && !payload.employeeId) {
+        console.warn('[upsertStakeholders] skipped: employee without employeeId', s);
+        continue;
+      }
+      if (payload.stakeholderEntityType === 'supplier' && !payload.supplierId) {
+        console.warn('[upsertStakeholders] skipped: supplier without supplierId', s);
+        continue;
+      }
       if (s.id && existingIds.has(s.id)) {
         await this.stakeholderRepository.update(s.id, payload);
       } else {
-        const { id: _omit, createdAt: _ca, updatedAt: _ua, ...toCreate } = payload;
-        await this.stakeholderRepository.create(toCreate as any);
+        await this.stakeholderRepository.create(payload as any);
       }
     }
   }
