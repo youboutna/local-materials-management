@@ -92,6 +92,15 @@ export function useUnifiedProjectWorkflow(mode: 'creation' | 'edit', projectId?:
         if (result.projectId && !workflowState.projectId) {
           setWorkflowState(prev => ({ ...prev, projectId: result.projectId }));
         }
+        // Also mirror the freshly-created projectId into formData so downstream
+        // steps (e.g. StrategicLinkageStep) receive a real project reference.
+        if (result.projectId) {
+          setFormData(prev => prev ? ({
+            ...prev,
+            projectId: result.projectId,
+            projectData: prev.projectData ? { ...prev.projectData, id: result.projectId } : prev.projectData,
+          }) : prev);
+        }
         setWorkflowState(prev => ({ ...prev, isDirty: false }));
         queryClient.invalidateQueries({ queryKey: ['project-workflow-data'] });
       } else {
