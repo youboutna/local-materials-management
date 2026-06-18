@@ -413,9 +413,18 @@ export class ProjectWorkflowService {
           await this.upsertRisks(projectId, data.relatedData?.risks || []);
           break;
         }
-        case 6:
+        case 6: {
+          // Compliance step is a read-only aggregation view (bank guarantees,
+          // insurance, documents). Nothing to persist here.
+          break;
+        }
         case 7: {
-          // Compliance & strategy links are persisted by their dedicated hooks/services.
+          if (!projectId) return { success: false, errors: ['Projet non créé — complétez l\'étape 1 d\'abord.'] };
+          await this.upsertStrategyAndBudgetLinks(
+            projectId,
+            (data.relatedData as any)?.strategyLinks || [],
+            (data.relatedData as any)?.budgetLinks || []
+          );
           break;
         }
         case 8: {
