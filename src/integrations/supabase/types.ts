@@ -3917,6 +3917,213 @@ export type Database = {
         }
         Relationships: []
       }
+      compliance_audit_log: {
+        Row: {
+          changed_at: string | null
+          changed_by: string | null
+          compliance_item_id: string | null
+          field_name: string | null
+          id: string | null
+          new_value: string | null
+          old_value: string | null
+        }
+        Insert: {
+          changed_at?: string | null
+          changed_by?: string | null
+          compliance_item_id?: string | null
+          field_name?: string | null
+          id?: string | null
+          new_value?: string | null
+          old_value?: string | null
+        }
+        Update: {
+          changed_at?: string | null
+          changed_by?: string | null
+          compliance_item_id?: string | null
+          field_name?: string | null
+          id?: string | null
+          new_value?: string | null
+          old_value?: string | null
+        }
+        Relationships: []
+      }
+      compliance_documents: {
+        Row: {
+          category: string | null
+          compliance_item_id: string | null
+          created_at: string | null
+          document_id: string | null
+          file_url: string | null
+          id: string | null
+          is_required: boolean | null
+          subcategory: string | null
+          updated_at: string | null
+          uploaded_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          category?: string | null
+          compliance_item_id?: string | null
+          created_at?: string | null
+          document_id?: string | null
+          file_url?: string | null
+          id?: string | null
+          is_required?: boolean | null
+          subcategory?: string | null
+          updated_at?: string | null
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          category?: string | null
+          compliance_item_id?: string | null
+          created_at?: string | null
+          document_id?: string | null
+          file_url?: string | null
+          id?: string | null
+          is_required?: boolean | null
+          subcategory?: string | null
+          updated_at?: string | null
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
+      compliance_items: {
+        Row: {
+          bank_guarantee_id: string | null
+          category: string | null
+          compliance_level: string | null
+          created_at: string | null
+          created_by: string | null
+          deadline: string | null
+          description: string | null
+          external_references: string[] | null
+          id: string | null
+          last_reviewed: string | null
+          mitigation_plan: string | null
+          mitigation_required: boolean | null
+          next_review: string | null
+          priority: string | null
+          project_id: string | null
+          responsible: string | null
+          risk_level: string | null
+          status: string | null
+          subcategory: string | null
+          title: string | null
+          type: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          bank_guarantee_id?: string | null
+          category?: string | null
+          compliance_level?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deadline?: string | null
+          description?: string | null
+          external_references?: string[] | null
+          id?: string | null
+          last_reviewed?: string | null
+          mitigation_plan?: string | null
+          mitigation_required?: boolean | null
+          next_review?: string | null
+          priority?: string | null
+          project_id?: string | null
+          responsible?: string | null
+          risk_level?: string | null
+          status?: string | null
+          subcategory?: string | null
+          title?: string | null
+          type?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          bank_guarantee_id?: string | null
+          category?: string | null
+          compliance_level?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deadline?: string | null
+          description?: string | null
+          external_references?: string[] | null
+          id?: string | null
+          last_reviewed?: string | null
+          mitigation_plan?: string | null
+          mitigation_required?: boolean | null
+          next_review?: string | null
+          priority?: string | null
+          project_id?: string | null
+          responsible?: string | null
+          risk_level?: string | null
+          status?: string | null
+          subcategory?: string | null
+          title?: string | null
+          type?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      compliance_items_with_details: {
+        Row: {
+          bank_guarantee_id: string | null
+          category: string | null
+          compliance_level: string | null
+          created_at: string | null
+          created_by: string | null
+          deadline: string | null
+          description: string | null
+          documents: Json | null
+          external_references: string[] | null
+          id: string | null
+          last_reviewed: string | null
+          mitigation_plan: string | null
+          mitigation_required: boolean | null
+          next_review: string | null
+          notes: Json | null
+          priority: string | null
+          project_id: string | null
+          responsible: string | null
+          risk_level: string | null
+          status: string | null
+          subcategory: string | null
+          title: string | null
+          type: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Relationships: []
+      }
+      compliance_notes: {
+        Row: {
+          compliance_item_id: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string | null
+          note: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          compliance_item_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string | null
+          note?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          compliance_item_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string | null
+          note?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       consumables_usage: {
         Row: {
           category_id: string | null
