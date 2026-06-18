@@ -419,7 +419,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
            {currentStep === 6 && (
              <StrategicLinkageStep
-               projectId={formData?.projectId || ''}
+               projectId={formData?.projectId || workflowState?.projectId || ''}
+               initialStrategyLinks={(formData?.relatedData as any)?.strategyLinks || []}
+               initialBudgetLinks={(formData?.relatedData as any)?.budgetLinks || []}
                onStrategyLinksChange={(links) => {
                  updateFormData({
                    relatedData: {
