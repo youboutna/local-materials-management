@@ -647,7 +647,86 @@ export class ProjectWorkflowService {
       ) {
         console.warn('[upsertStakeholders] skipped: external without contact', s);
         continue;
+  }
+
+  /**
+   * Replace strategy & budget links for a project (idempotent).
+   * Strategy: SCAPP linkages.  Budget: Loi de Finances 2026 lines.
+   * We instantiate the dedicated services via RepositoryFactory to keep
+   * the constructor signature stable (hexagonal: services orchestrate repos).
+   */
+  private async upsertStrategyAndBudgetLinks(
+    projectId: string,
+    strategyLinks: any[],
+    budgetLinks: any[]
+  ): Promise<void> {
+    // Lazy imports avoid circular deps at module load time.
+    const [
+      { ProjectStrategyLinkService },
+      { ProjectBudgetLinkService },
+    ] = await Promise.all([
+      import('@/application/services/ProjectStrategyLinkService'),
+      import('@/application/services/ProjectBudgetLinkService'),
+    ]);
+
+    const strategyService = new ProjectStrategyLinkService(
+      RepositoryFactory.getProjectStrategyLinkRepository()
+    );
+    const budgetService = new ProjectBudgetLinkService(
+      RepositoryFactory.getProjectBudgetLinkRepository()
+    );
+
+    // --- Strategy links ---
+    try {
+      const existing = await strategyService.getLinksByProjectId(projectId).catch(() => []);
+      // delete-then-recreate keeps the implementation simple & idempotent
+      await Promise.all(
+        (existing || []).map((l: any) => l.id ? strategyService.deleteLink(l.id).catch(() => undefined) : undefined)
+      );
+      if (strategyLinks.length > 0) {
+        const normalized = strategyLinks.map((l) => ({
+          ...l,
+          projectId,
+          sourceReferential: l.sourceReferential || 'SCAPP',
+          leverCode: l.leverCode ?? null,
+          chantierCode: l.chantierCode ?? null,
+          interventionCode: l.interventionCode ?? null,
+          objectiveCode: l.objectiveCode ?? null,
+          contributionPct: Number(l.contributionPct) || 0,
+        }));
+        await strategyService.batchCreateLinks(projectId, normalized);
       }
+    } catch (e) {
+      console.error('[upsertStrategyAndBudgetLinks] strategy error:', e);
+      throw e;
+    }
+
+    // --- Budget links ---
+    try {
+      const existing = await budgetService.getLinksByProjectId(projectId).catch(() => []);
+      await Promise.all(
+        (existing || []).map((l: any) => l.id ? budgetService.deleteLink(l.id).catch(() => undefined) : undefined)
+      );
+      if (budgetLinks.length > 0) {
+        const normalized = budgetLinks.map((l) => ({
+          ...l,
+          projectId,
+          ministryCode: l.ministryCode ?? null,
+          programCode: l.programCode ?? null,
+          actionCode: l.actionCode ?? null,
+          lineCode: l.lineCode ?? null,
+          allocatedCe: Number(l.allocatedCe) || 0,
+          allocatedCp: Number(l.allocatedCp) || 0,
+          fiscalYear: l.fiscalYear || 2026,
+        }));
+        await budgetService.batchCreateLinks(projectId, normalized);
+      }
+    } catch (e) {
+      console.error('[upsertStrategyAndBudgetLinks] budget error:', e);
+      throw e;
+    }
+  }
+
       if (s.id && existingIds.has(s.id)) {
         await this.stakeholderRepository.update(s.id, payload);
       } else {
