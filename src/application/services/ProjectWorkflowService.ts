@@ -647,20 +647,26 @@ export class ProjectWorkflowService {
       ) {
         console.warn('[upsertStakeholders] skipped: external without contact', s);
         continue;
+      }
+      if (s.id && existingIds.has(s.id)) {
+        await this.stakeholderRepository.update(s.id, payload);
+      } else {
+        await this.stakeholderRepository.create(payload as any);
+      }
+    }
   }
 
   /**
    * Replace strategy & budget links for a project (idempotent).
    * Strategy: SCAPP linkages.  Budget: Loi de Finances 2026 lines.
-   * We instantiate the dedicated services via RepositoryFactory to keep
-   * the constructor signature stable (hexagonal: services orchestrate repos).
+   * Services are instantiated via RepositoryFactory to keep the workflow
+   * service constructor signature stable (hexagonal: services orchestrate repos).
    */
   private async upsertStrategyAndBudgetLinks(
     projectId: string,
     strategyLinks: any[],
     budgetLinks: any[]
   ): Promise<void> {
-    // Lazy imports avoid circular deps at module load time.
     const [
       { ProjectStrategyLinkService },
       { ProjectBudgetLinkService },
@@ -676,12 +682,13 @@ export class ProjectWorkflowService {
       RepositoryFactory.getProjectBudgetLinkRepository()
     );
 
-    // --- Strategy links ---
+    // --- Strategy links: delete-then-recreate (idempotent) ---
     try {
       const existing = await strategyService.getLinksByProjectId(projectId).catch(() => []);
-      // delete-then-recreate keeps the implementation simple & idempotent
       await Promise.all(
-        (existing || []).map((l: any) => l.id ? strategyService.deleteLink(l.id).catch(() => undefined) : undefined)
+        (existing || []).map((l: any) =>
+          l?.id ? strategyService.deleteLink(l.id).catch(() => undefined) : undefined
+        )
       );
       if (strategyLinks.length > 0) {
         const normalized = strategyLinks.map((l) => ({
@@ -705,7 +712,9 @@ export class ProjectWorkflowService {
     try {
       const existing = await budgetService.getLinksByProjectId(projectId).catch(() => []);
       await Promise.all(
-        (existing || []).map((l: any) => l.id ? budgetService.deleteLink(l.id).catch(() => undefined) : undefined)
+        (existing || []).map((l: any) =>
+          l?.id ? budgetService.deleteLink(l.id).catch(() => undefined) : undefined
+        )
       );
       if (budgetLinks.length > 0) {
         const normalized = budgetLinks.map((l) => ({
@@ -727,13 +736,6 @@ export class ProjectWorkflowService {
     }
   }
 
-      if (s.id && existingIds.has(s.id)) {
-        await this.stakeholderRepository.update(s.id, payload);
-      } else {
-        await this.stakeholderRepository.create(payload as any);
-      }
-    }
-  }
 
 
   // =================== WORKFLOW DATA PERSISTENCE ===================
