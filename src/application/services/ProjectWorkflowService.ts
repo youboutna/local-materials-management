@@ -413,9 +413,18 @@ export class ProjectWorkflowService {
           await this.upsertRisks(projectId, data.relatedData?.risks || []);
           break;
         }
-        case 6:
+        case 6: {
+          // Compliance step is a read-only aggregation view (bank guarantees,
+          // insurance, documents). Nothing to persist here.
+          break;
+        }
         case 7: {
-          // Compliance & strategy links are persisted by their dedicated hooks/services.
+          if (!projectId) return { success: false, errors: ['Projet non créé — complétez l\'étape 1 d\'abord.'] };
+          await this.upsertStrategyAndBudgetLinks(
+            projectId,
+            (data.relatedData as any)?.strategyLinks || [],
+            (data.relatedData as any)?.budgetLinks || []
+          );
           break;
         }
         case 8: {
@@ -646,6 +655,87 @@ export class ProjectWorkflowService {
       }
     }
   }
+
+  /**
+   * Replace strategy & budget links for a project (idempotent).
+   * Strategy: SCAPP linkages.  Budget: Loi de Finances 2026 lines.
+   * Services are instantiated via RepositoryFactory to keep the workflow
+   * service constructor signature stable (hexagonal: services orchestrate repos).
+   */
+  private async upsertStrategyAndBudgetLinks(
+    projectId: string,
+    strategyLinks: any[],
+    budgetLinks: any[]
+  ): Promise<void> {
+    const [
+      { ProjectStrategyLinkService },
+      { ProjectBudgetLinkService },
+    ] = await Promise.all([
+      import('@/application/services/ProjectStrategyLinkService'),
+      import('@/application/services/ProjectBudgetLinkService'),
+    ]);
+
+    const strategyService = new ProjectStrategyLinkService(
+      RepositoryFactory.getProjectStrategyLinkRepository()
+    );
+    const budgetService = new ProjectBudgetLinkService(
+      RepositoryFactory.getProjectBudgetLinkRepository()
+    );
+
+    // --- Strategy links: delete-then-recreate (idempotent) ---
+    try {
+      const existing = await strategyService.getLinksByProjectId(projectId).catch(() => []);
+      await Promise.all(
+        (existing || []).map((l: any) =>
+          l?.id ? strategyService.deleteLink(l.id).catch(() => undefined) : undefined
+        )
+      );
+      if (strategyLinks.length > 0) {
+        const normalized = strategyLinks.map((l) => ({
+          ...l,
+          projectId,
+          sourceReferential: l.sourceReferential || 'SCAPP',
+          leverCode: l.leverCode ?? null,
+          chantierCode: l.chantierCode ?? null,
+          interventionCode: l.interventionCode ?? null,
+          objectiveCode: l.objectiveCode ?? null,
+          contributionPct: Number(l.contributionPct) || 0,
+        }));
+        await strategyService.batchCreateLinks(projectId, normalized);
+      }
+    } catch (e) {
+      console.error('[upsertStrategyAndBudgetLinks] strategy error:', e);
+      throw e;
+    }
+
+    // --- Budget links ---
+    try {
+      const existing = await budgetService.getLinksByProjectId(projectId).catch(() => []);
+      await Promise.all(
+        (existing || []).map((l: any) =>
+          l?.id ? budgetService.deleteLink(l.id).catch(() => undefined) : undefined
+        )
+      );
+      if (budgetLinks.length > 0) {
+        const normalized = budgetLinks.map((l) => ({
+          ...l,
+          projectId,
+          ministryCode: l.ministryCode ?? null,
+          programCode: l.programCode ?? null,
+          actionCode: l.actionCode ?? null,
+          lineCode: l.lineCode ?? null,
+          allocatedCe: Number(l.allocatedCe) || 0,
+          allocatedCp: Number(l.allocatedCp) || 0,
+          fiscalYear: l.fiscalYear || 2026,
+        }));
+        await budgetService.batchCreateLinks(projectId, normalized);
+      }
+    } catch (e) {
+      console.error('[upsertStrategyAndBudgetLinks] budget error:', e);
+      throw e;
+    }
+  }
+
 
 
   // =================== WORKFLOW DATA PERSISTENCE ===================
