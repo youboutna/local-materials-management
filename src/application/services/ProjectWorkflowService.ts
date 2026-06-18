@@ -569,17 +569,30 @@ export class ProjectWorkflowService {
      */
     const normalize = (s: any): any => {
       const employeeId = s.employeeId ?? s.employee_id ?? null;
-      const supplierId = s.supplierId ?? s.supplier_id ?? s.organizationId ?? s.organization_id ?? null;
-      let entityType: 'employee' | 'supplier' | null =
-        s.stakeholderEntityType ?? s.stakeholder_entity_type ?? s.entityType ?? null;
-      // Map DTO enum casing → DB lower-case
+      const supplierId =
+        s.supplierId ?? s.supplier_id ?? s.organizationId ?? s.organization_id ?? null;
+
+      // Resolve entity type from any incoming convention
+      let entityType: 'employee' | 'supplier' | 'external' | null =
+        (s.stakeholderEntityType ?? s.stakeholder_entity_type ?? s.entityType ?? null) as any;
       if (typeof entityType === 'string') {
         const v = entityType.toLowerCase();
-        entityType = v === 'employee' || v === 'person' ? 'employee'
-                   : v === 'supplier' || v === 'organization' || v === 'external' ? 'supplier'
+        entityType =
+          v === 'employee' || v === 'person' || v === 'team' || v === 'department' ? 'employee'
+          : v === 'supplier' || v === 'organization' || v === 'organisation' || v === 'vendor' || v === 'contractor' ? 'supplier'
+          : v === 'external' ? 'external'
+          : null;
+      }
+      // Infer from available IDs / external info
+      const externalName = s.externalName ?? s.external_name ?? s.name ?? s.contact?.name ?? null;
+      const externalEmail = s.externalEmail ?? s.external_email ?? s.email ?? s.contact?.email ?? null;
+      const externalPhone = s.externalPhone ?? s.external_phone ?? s.phone ?? s.contact?.phone ?? null;
+      if (!entityType) {
+        entityType = employeeId ? 'employee'
+                   : supplierId ? 'supplier'
+                   : (externalName || externalEmail || externalPhone) ? 'external'
                    : null;
       }
-      if (!entityType) entityType = employeeId ? 'employee' : supplierId ? 'supplier' : null;
 
       const stakeholderType: string = (
         s.stakeholderType ?? s.stakeholder_type ?? s.type ?? s.role ?? 'external'
@@ -591,10 +604,10 @@ export class ProjectWorkflowService {
         stakeholderEntityType: entityType,
         employeeId: entityType === 'employee' ? employeeId : null,
         supplierId: entityType === 'supplier' ? supplierId : null,
+        externalName,
+        externalEmail,
+        externalPhone,
         roleDescription: s.roleDescription ?? s.role_description ?? s.role ?? null,
-        externalName: s.externalName ?? s.external_name ?? s.name ?? s.contact?.name ?? null,
-        externalEmail: s.externalEmail ?? s.external_email ?? s.email ?? s.contact?.email ?? null,
-        externalPhone: s.externalPhone ?? s.external_phone ?? s.phone ?? s.contact?.phone ?? null,
         responsibilities: s.responsibilities ?? null,
         isActive: s.isActive ?? true,
         startDate: s.startDate ?? s.start_date ?? null,
@@ -607,7 +620,6 @@ export class ProjectWorkflowService {
 
     for (const s of stakeholders) {
       const payload = normalize(s);
-      // Skip rows that cannot satisfy the DB constraints
       if (!payload.stakeholderEntityType) {
         console.warn('[upsertStakeholders] skipped: missing entity type', s);
         continue;
@@ -620,6 +632,13 @@ export class ProjectWorkflowService {
         console.warn('[upsertStakeholders] skipped: supplier without supplierId', s);
         continue;
       }
+      if (
+        payload.stakeholderEntityType === 'external' &&
+        !payload.externalName && !payload.externalEmail && !payload.externalPhone
+      ) {
+        console.warn('[upsertStakeholders] skipped: external without contact', s);
+        continue;
+      }
       if (s.id && existingIds.has(s.id)) {
         await this.stakeholderRepository.update(s.id, payload);
       } else {
@@ -627,6 +646,7 @@ export class ProjectWorkflowService {
       }
     }
   }
+
 
   // =================== WORKFLOW DATA PERSISTENCE ===================
 
