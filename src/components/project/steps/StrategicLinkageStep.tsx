@@ -692,6 +692,14 @@ export default function StrategicLinkageStep({
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {!projectId && (
+              <div className="mb-4 flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+                <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <div>
+                  <strong>Étape 1 requise :</strong> complétez « Informations du projet » et cliquez sur <em>Suivant</em>. Vos liens sont conservés en mémoire et seront sauvegardés automatiquement dès qu'un identifiant projet sera disponible.
+                </div>
+              </div>
+            )}
             <Tabs defaultValue="strategy" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="strategy" className="flex items-center gap-2">
