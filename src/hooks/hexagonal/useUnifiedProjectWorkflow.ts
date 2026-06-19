@@ -19,6 +19,8 @@ export interface UnifiedWorkflowState {
   isValid: boolean;
   isLoading: boolean;
   error?: string;
+  lastSavedAt?: string;
+  lastValidationErrors?: string[];
 }
 
 export interface SaveResult {
@@ -46,7 +48,9 @@ export function useUnifiedProjectWorkflow(mode: 'creation' | 'edit', projectId?:
     totalSteps: 8,
     isDirty: false,
     isValid: false,
-    isLoading: false
+    isLoading: false,
+    lastSavedAt: undefined,
+    lastValidationErrors: []
   });
 
   const [formData, setFormData] = useState<ProjectWorkflowData | null>(null);
