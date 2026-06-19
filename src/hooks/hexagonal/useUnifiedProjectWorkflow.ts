@@ -19,6 +19,8 @@ export interface UnifiedWorkflowState {
   isValid: boolean;
   isLoading: boolean;
   error?: string;
+  lastSavedAt?: string;
+  lastValidationErrors?: string[];
 }
 
 export interface SaveResult {
@@ -46,7 +48,9 @@ export function useUnifiedProjectWorkflow(mode: 'creation' | 'edit', projectId?:
     totalSteps: 8,
     isDirty: false,
     isValid: false,
-    isLoading: false
+    isLoading: false,
+    lastSavedAt: undefined,
+    lastValidationErrors: []
   });
 
   const [formData, setFormData] = useState<ProjectWorkflowData | null>(null);
@@ -88,9 +92,12 @@ export function useUnifiedProjectWorkflow(mode: 'creation' | 'edit', projectId?:
     },
     onSuccess: (result, variables) => {
       if (result.success) {
-        toast({ title: "Étape sauvegardée", description: `L'étape ${variables.stepNumber} a été sauvegardée avec succès.` });
+        toast({ title: "Étape sauvegardée", description: `Étape ${variables.stepNumber} enregistrée.` });
+        const now = new Date().toISOString();
         if (result.projectId && !workflowState.projectId) {
-          setWorkflowState(prev => ({ ...prev, projectId: result.projectId }));
+          setWorkflowState(prev => ({ ...prev, projectId: result.projectId, isDirty: false, lastSavedAt: now, lastValidationErrors: [] }));
+        } else {
+          setWorkflowState(prev => ({ ...prev, isDirty: false, lastSavedAt: now, lastValidationErrors: [] }));
         }
         // Also mirror the freshly-created projectId into formData so downstream
         // steps (e.g. StrategicLinkageStep) receive a real project reference.
@@ -107,15 +114,17 @@ export function useUnifiedProjectWorkflow(mode: 'creation' | 'edit', projectId?:
             } as typeof prev;
           });
         }
-        setWorkflowState(prev => ({ ...prev, isDirty: false }));
         queryClient.invalidateQueries({ queryKey: ['project-workflow-data'] });
       } else {
-        const msg = result.errors?.join(', ') || result.message || "Une erreur est survenue.";
-        toast({ title: "Erreur de sauvegarde", description: msg, variant: "destructive" });
+        const errs = result.errors && result.errors.length > 0 ? result.errors : [result.message || "Une erreur est survenue."];
+        setWorkflowState(prev => ({ ...prev, lastValidationErrors: errs }));
+        toast({ title: "Erreur de sauvegarde", description: errs.join(', '), variant: "destructive" });
       }
     },
     onError: (error: Error) => {
-      toast({ title: "Erreur de sauvegarde", description: error.message || "Une erreur est survenue.", variant: "destructive" });
+      const msg = error.message || "Une erreur est survenue.";
+      setWorkflowState(prev => ({ ...prev, lastValidationErrors: [msg] }));
+      toast({ title: "Erreur de sauvegarde", description: msg, variant: "destructive" });
     }
   });
 

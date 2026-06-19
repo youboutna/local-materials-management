@@ -11,6 +11,8 @@ import {
   CheckCircle,
   ChevronLeft,
   ChevronRight,
+  CircleDashed,
+  Clock,
   FileCheck,
   Layers,
   MapPin,
@@ -150,6 +152,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
 
   // 🎨 UI Layer - Save and proceed to next step using unified workflow (Rule #5)
+  // Toasts are owned by the mutation (useUnifiedProjectWorkflow). We only surface
+  // a single "validation" toast here to avoid duplicate notifications.
   const saveAndNextStep = async () => {
     if (!canProceedNext()) {
       toast({
@@ -161,11 +165,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     }
     const result = await saveCurrentStep(currentStep + 1);
     if (!result || !result.success) {
-      toast({
-        title: "Sauvegarde échouée",
-        description: (result as any)?.errors?.join(', ') || result?.message || "Erreur inconnue",
-        variant: "destructive",
-      });
+      // Mutation already emitted a destructive toast — just stop here.
       return;
     }
     setCurrentStepUi((prev) => Math.min(prev + 1, steps.length - 1));
@@ -177,26 +177,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       console.error('No form data available');
       return false;
     }
-
-    // Use the unified workflow hook's save functionality (Rule #5: UI Layer Separation)
     const result = await saveCurrentStep(currentStep + 1);
-    if (!result || !result.success) {
-      // Type-safe error handling for SaveResult interface
-      let errorMessage = 'Failed to save workflow data';
-      
-      if (result && 'errors' in result && Array.isArray((result as any).errors) && (result as any).errors.length > 0) {
-        errorMessage = (result as any).errors.join(', ');
-      }
-      else if (result && 'message' in result && typeof (result as any).message === 'string') {
-        errorMessage = (result as any).message;
-      }
-      
-      console.error('Erreur lors de la sauvegarde complète:', errorMessage);
-      return false; // ❌ Failed
-    }
-
-    console.log('Toutes les données du workflow sauvegardées');
-    return true; // ✅ Success
+    return !!result?.success;
   };
 
   const getStepProgress = (): number => {
@@ -209,9 +191,20 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
   const canProceedNext = (): boolean => {
     const step = steps[currentStep];
-    // ✅ Use project data for validation (consistent with step validation)
     return step ? step.isCompleted() : false;
   };
+
+  // 🎨 UX — Auto-save indicator
+  const lastSavedLabel = useMemo(() => {
+    const ts = (workflowState as any)?.lastSavedAt as string | undefined;
+    if (!ts) return null;
+    try {
+      const d = new Date(ts);
+      return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    } catch { return null; }
+  }, [workflowState]);
+
+  const validationErrors: string[] = (workflowState as any)?.lastValidationErrors || [];
 
   const handleSubmit = async () => {
     try {
@@ -263,45 +256,94 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
   return (
     <div className="space-y-3">
-      {/* Compact progress header */}
+      {/* Compact progress header + auto-save indicator */}
       <div className="flex items-center gap-3 px-1">
         <Progress value={getStepProgress()} className="h-1.5 flex-1" />
         <span className="text-xs text-muted-foreground whitespace-nowrap">
           Étape {currentStep + 1} / {steps.length}
         </span>
+        <span className="flex items-center gap-1 text-[11px] text-muted-foreground whitespace-nowrap" aria-live="polite">
+          {isLoading ? (
+            <>
+              <Clock className="h-3 w-3 animate-pulse" />
+              Sauvegarde…
+            </>
+          ) : workflowState?.isDirty ? (
+            <>
+              <CircleDashed className="h-3 w-3 text-amber-500" />
+              Modifications non sauvegardées
+            </>
+          ) : lastSavedLabel ? (
+            <>
+              <CheckCircle className="h-3 w-3 text-emerald-600" />
+              Sauvegardé · {lastSavedLabel}
+            </>
+          ) : null}
+        </span>
       </div>
 
-      {/* Steps Navigation */}
+      {/* Steps Navigation — badges with completion check */}
       <div className="grid grid-cols-8 gap-1.5">
-        {steps.map((step, idx) => (
-          <motion.button
-            key={step.id}
-            onClick={() => setCurrentStepUi(idx)}
-            title={step.title}
-            aria-label={step.title}
-            className={cn(
-              "p-2 rounded-md transition-all flex items-center justify-center",
-              currentStep === idx
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            )}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            <step.icon className="h-4 w-4" />
-          </motion.button>
-        ))}
+        {steps.map((step, idx) => {
+          const done = step.isCompleted();
+          const active = currentStep === idx;
+          return (
+            <motion.button
+              key={step.id}
+              onClick={() => setCurrentStepUi(idx)}
+              title={`${idx + 1}. ${step.title}${done ? ' ✓' : ''}`}
+              aria-label={step.title}
+              aria-current={active ? 'step' : undefined}
+              className={cn(
+                "relative p-2 rounded-md transition-all flex items-center justify-center",
+                active
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : done
+                    ? "bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-400"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+              )}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <step.icon className="h-4 w-4" />
+              {done && !active && (
+                <CheckCircle className="absolute -top-1 -right-1 h-3 w-3 text-emerald-600 bg-background rounded-full" />
+              )}
+            </motion.button>
+          );
+        })}
       </div>
+
+      {/* Inline validation errors (mirrored from mutation result) */}
+      {validationErrors.length > 0 && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+          <div className="flex items-center gap-1.5 font-medium">
+            <AlertTriangle className="h-3.5 w-3.5" />
+            Corrections requises
+          </div>
+          <ul className="mt-1 list-disc pl-5 space-y-0.5">
+            {validationErrors.slice(0, 4).map((e, i) => (<li key={i}>{e}</li>))}
+          </ul>
+        </div>
+      )}
 
       {/* Step Content */}
       <Card>
         <CardHeader className="py-3">
-          <CardTitle className="text-base">{steps[currentStep]?.title}</CardTitle>
-          <p className="text-xs text-muted-foreground">
-            {steps[currentStep]?.description}
-          </p>
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <CardTitle className="text-base truncate">{steps[currentStep]?.title}</CardTitle>
+              <p className="text-xs text-muted-foreground truncate">
+                {steps[currentStep]?.description}
+              </p>
+            </div>
+            <Badge variant={canProceedNext() ? 'default' : 'secondary'} className="shrink-0">
+              {canProceedNext() ? 'Complète' : 'À compléter'}
+            </Badge>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
+
 
           {currentStep === 0 && (
             <ProjectInfoStep
@@ -468,9 +510,14 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
         </Button>
 
         <div className="flex gap-2">
-          <Button variant="secondary" onClick={() => saveCurrentStep(currentStep + 1)}>
+          <Button
+            variant="secondary"
+            onClick={() => saveCurrentStep(currentStep + 1)}
+            disabled={isLoading || !workflowState?.isDirty}
+            title={!workflowState?.isDirty ? 'Aucune modification à sauvegarder' : 'Sauvegarder l\'étape'}
+          >
             <Save className="h-4 w-4 mr-2" />
-            Sauvegarder
+            {isLoading ? 'Sauvegarde…' : 'Sauvegarder'}
           </Button>
           {currentStep === steps.length - 1 ? (
             <Button onClick={handleSubmit} disabled={isLoading}>
@@ -478,12 +525,17 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
               {isLoading ? 'Création en cours...' : 'Créer le Projet'}
             </Button>
           ) : (
-            <Button onClick={saveAndNextStep}>
-              Suivant
+            <Button
+              onClick={saveAndNextStep}
+              disabled={isLoading || !canProceedNext()}
+              title={!canProceedNext() ? 'Complétez les champs requis pour continuer' : 'Sauvegarder et passer à l\'étape suivante'}
+            >
+              {isLoading ? 'Sauvegarde…' : 'Suivant'}
               <ChevronRight className="h-4 w-4 ml-2" />
             </Button>
           )}
         </div>
+
       </div>
     </div>
   );
