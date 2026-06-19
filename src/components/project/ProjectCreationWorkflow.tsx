@@ -152,6 +152,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
 
   // 🎨 UI Layer - Save and proceed to next step using unified workflow (Rule #5)
+  // Toasts are owned by the mutation (useUnifiedProjectWorkflow). We only surface
+  // a single "validation" toast here to avoid duplicate notifications.
   const saveAndNextStep = async () => {
     if (!canProceedNext()) {
       toast({
@@ -163,11 +165,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     }
     const result = await saveCurrentStep(currentStep + 1);
     if (!result || !result.success) {
-      toast({
-        title: "Sauvegarde échouée",
-        description: (result as any)?.errors?.join(', ') || result?.message || "Erreur inconnue",
-        variant: "destructive",
-      });
+      // Mutation already emitted a destructive toast — just stop here.
       return;
     }
     setCurrentStepUi((prev) => Math.min(prev + 1, steps.length - 1));
@@ -179,26 +177,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       console.error('No form data available');
       return false;
     }
-
-    // Use the unified workflow hook's save functionality (Rule #5: UI Layer Separation)
     const result = await saveCurrentStep(currentStep + 1);
-    if (!result || !result.success) {
-      // Type-safe error handling for SaveResult interface
-      let errorMessage = 'Failed to save workflow data';
-      
-      if (result && 'errors' in result && Array.isArray((result as any).errors) && (result as any).errors.length > 0) {
-        errorMessage = (result as any).errors.join(', ');
-      }
-      else if (result && 'message' in result && typeof (result as any).message === 'string') {
-        errorMessage = (result as any).message;
-      }
-      
-      console.error('Erreur lors de la sauvegarde complète:', errorMessage);
-      return false; // ❌ Failed
-    }
-
-    console.log('Toutes les données du workflow sauvegardées');
-    return true; // ✅ Success
+    return !!result?.success;
   };
 
   const getStepProgress = (): number => {
@@ -211,9 +191,20 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
   const canProceedNext = (): boolean => {
     const step = steps[currentStep];
-    // ✅ Use project data for validation (consistent with step validation)
     return step ? step.isCompleted() : false;
   };
+
+  // 🎨 UX — Auto-save indicator
+  const lastSavedLabel = useMemo(() => {
+    const ts = (workflowState as any)?.lastSavedAt as string | undefined;
+    if (!ts) return null;
+    try {
+      const d = new Date(ts);
+      return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    } catch { return null; }
+  }, [workflowState]);
+
+  const validationErrors: string[] = (workflowState as any)?.lastValidationErrors || [];
 
   const handleSubmit = async () => {
     try {
