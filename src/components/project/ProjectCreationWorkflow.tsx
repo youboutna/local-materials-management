@@ -256,45 +256,94 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
   return (
     <div className="space-y-3">
-      {/* Compact progress header */}
+      {/* Compact progress header + auto-save indicator */}
       <div className="flex items-center gap-3 px-1">
         <Progress value={getStepProgress()} className="h-1.5 flex-1" />
         <span className="text-xs text-muted-foreground whitespace-nowrap">
           Étape {currentStep + 1} / {steps.length}
         </span>
+        <span className="flex items-center gap-1 text-[11px] text-muted-foreground whitespace-nowrap" aria-live="polite">
+          {isLoading ? (
+            <>
+              <Clock className="h-3 w-3 animate-pulse" />
+              Sauvegarde…
+            </>
+          ) : workflowState?.isDirty ? (
+            <>
+              <CircleDashed className="h-3 w-3 text-amber-500" />
+              Modifications non sauvegardées
+            </>
+          ) : lastSavedLabel ? (
+            <>
+              <CheckCircle className="h-3 w-3 text-emerald-600" />
+              Sauvegardé · {lastSavedLabel}
+            </>
+          ) : null}
+        </span>
       </div>
 
-      {/* Steps Navigation */}
+      {/* Steps Navigation — badges with completion check */}
       <div className="grid grid-cols-8 gap-1.5">
-        {steps.map((step, idx) => (
-          <motion.button
-            key={step.id}
-            onClick={() => setCurrentStepUi(idx)}
-            title={step.title}
-            aria-label={step.title}
-            className={cn(
-              "p-2 rounded-md transition-all flex items-center justify-center",
-              currentStep === idx
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            )}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            <step.icon className="h-4 w-4" />
-          </motion.button>
-        ))}
+        {steps.map((step, idx) => {
+          const done = step.isCompleted();
+          const active = currentStep === idx;
+          return (
+            <motion.button
+              key={step.id}
+              onClick={() => setCurrentStepUi(idx)}
+              title={`${idx + 1}. ${step.title}${done ? ' ✓' : ''}`}
+              aria-label={step.title}
+              aria-current={active ? 'step' : undefined}
+              className={cn(
+                "relative p-2 rounded-md transition-all flex items-center justify-center",
+                active
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : done
+                    ? "bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-400"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+              )}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <step.icon className="h-4 w-4" />
+              {done && !active && (
+                <CheckCircle className="absolute -top-1 -right-1 h-3 w-3 text-emerald-600 bg-background rounded-full" />
+              )}
+            </motion.button>
+          );
+        })}
       </div>
+
+      {/* Inline validation errors (mirrored from mutation result) */}
+      {validationErrors.length > 0 && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+          <div className="flex items-center gap-1.5 font-medium">
+            <AlertTriangle className="h-3.5 w-3.5" />
+            Corrections requises
+          </div>
+          <ul className="mt-1 list-disc pl-5 space-y-0.5">
+            {validationErrors.slice(0, 4).map((e, i) => (<li key={i}>{e}</li>))}
+          </ul>
+        </div>
+      )}
 
       {/* Step Content */}
       <Card>
         <CardHeader className="py-3">
-          <CardTitle className="text-base">{steps[currentStep]?.title}</CardTitle>
-          <p className="text-xs text-muted-foreground">
-            {steps[currentStep]?.description}
-          </p>
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <CardTitle className="text-base truncate">{steps[currentStep]?.title}</CardTitle>
+              <p className="text-xs text-muted-foreground truncate">
+                {steps[currentStep]?.description}
+              </p>
+            </div>
+            <Badge variant={canProceedNext() ? 'default' : 'secondary'} className="shrink-0">
+              {canProceedNext() ? 'Complète' : 'À compléter'}
+            </Badge>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
+
 
           {currentStep === 0 && (
             <ProjectInfoStep
