@@ -510,9 +510,14 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
         </Button>
 
         <div className="flex gap-2">
-          <Button variant="secondary" onClick={() => saveCurrentStep(currentStep + 1)}>
+          <Button
+            variant="secondary"
+            onClick={() => saveCurrentStep(currentStep + 1)}
+            disabled={isLoading || !workflowState?.isDirty}
+            title={!workflowState?.isDirty ? 'Aucune modification à sauvegarder' : 'Sauvegarder l\'étape'}
+          >
             <Save className="h-4 w-4 mr-2" />
-            Sauvegarder
+            {isLoading ? 'Sauvegarde…' : 'Sauvegarder'}
           </Button>
           {currentStep === steps.length - 1 ? (
             <Button onClick={handleSubmit} disabled={isLoading}>
@@ -520,12 +525,17 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
               {isLoading ? 'Création en cours...' : 'Créer le Projet'}
             </Button>
           ) : (
-            <Button onClick={saveAndNextStep}>
-              Suivant
+            <Button
+              onClick={saveAndNextStep}
+              disabled={isLoading || !canProceedNext()}
+              title={!canProceedNext() ? 'Complétez les champs requis pour continuer' : 'Sauvegarder et passer à l\'étape suivante'}
+            >
+              {isLoading ? 'Sauvegarde…' : 'Suivant'}
               <ChevronRight className="h-4 w-4 ml-2" />
             </Button>
           )}
         </div>
+
       </div>
     </div>
   );
