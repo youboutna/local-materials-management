@@ -1492,6 +1492,12 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
             onClose={() => setEditingPhase(null)}
 
+            isSaving={constructionPhaseHook.loading}
+
+            saveError={constructionPhaseHook.error}
+
+            onViewDetails={effectiveProjectId ? () => handleViewPhaseDetail(editingPhase.id) : undefined}
+
           />
 
         )}
