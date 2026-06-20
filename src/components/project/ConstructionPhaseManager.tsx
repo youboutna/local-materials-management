@@ -2262,21 +2262,34 @@ const PhaseEditDialog: React.FC<{
 
           
 
+          {(saveError || localError) && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {localError || saveError}
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="flex justify-end gap-2">
 
-            <Button variant="outline" onClick={onClose}>
-
+            <Button variant="outline" onClick={onClose} disabled={isSaving}>
               Annuler
-
             </Button>
 
-            <Button onClick={() => onSave(editedPhase)}>
-
-              Sauvegarder
-
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <Clock className="h-4 w-4 mr-2 animate-spin" />
+                  Sauvegarde…
+                </>
+              ) : (
+                'Sauvegarder'
+              )}
             </Button>
 
           </div>
+
 
         </div>
 
