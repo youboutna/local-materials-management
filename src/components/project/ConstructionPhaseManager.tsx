@@ -385,7 +385,28 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
     checkAuthenticationAndProceed(async () => {
 
-      await constructionPhaseHook.updateConstructionPhase(updatedPhase.id, updatedPhase as unknown as PhaseDTO);
+      // Map legacy UI PhaseData shape to hexagonal PhaseDTO fields
+      // (DB columns: phase_name, description, start_date, end_date, estimated_cost, status, progress)
+      const statusMap: Record<string, string> = {
+        not_started: 'pending',
+        in_progress: 'in_progress',
+        completed: 'completed',
+        delayed: 'delayed',
+      };
+
+      const phaseDTO: Partial<PhaseDTO> = {
+        id: updatedPhase.id,
+        name: updatedPhase.title,
+        description: updatedPhase.description,
+        startDate: updatedPhase.startDate || undefined,
+        endDate: updatedPhase.endDate || undefined,
+        estimatedCost: Number(updatedPhase.budget) || 0,
+        actualCost: Number(updatedPhase.actualCost) || 0,
+        progress: Number(updatedPhase.progress) || 0,
+        status: (statusMap[updatedPhase.status] || updatedPhase.status) as PhaseDTO['status'],
+      };
+
+      await constructionPhaseHook.updateConstructionPhase(updatedPhase.id, phaseDTO as PhaseDTO);
 
       setEditingPhase(null);
 
