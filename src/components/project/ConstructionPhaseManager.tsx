@@ -381,37 +381,72 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
 
 
-  const updatePhase = async (updatedPhase: PhaseData) => {
+  const updatePhase = async (updatedPhase: PhaseData): Promise<boolean> => {
+    if (!user && !DEV_MODE) {
+      toast({
+        title: "Authentification requise",
+        description: "Vous devez être connecté pour modifier une phase.",
+        variant: "destructive",
+      });
+      return false;
+    }
 
-    checkAuthenticationAndProceed(async () => {
+    // Map legacy UI PhaseData shape to hexagonal PhaseDTO fields
+    const statusMap: Record<string, string> = {
+      not_started: 'pending',
+      in_progress: 'in_progress',
+      completed: 'completed',
+      delayed: 'delayed',
+    };
 
-      // Map legacy UI PhaseData shape to hexagonal PhaseDTO fields
-      // (DB columns: phase_name, description, start_date, end_date, estimated_cost, status, progress)
-      const statusMap: Record<string, string> = {
-        not_started: 'pending',
-        in_progress: 'in_progress',
-        completed: 'completed',
-        delayed: 'delayed',
-      };
+    const previous = allPhases.find((p) => p.id === updatedPhase.id) as PhaseData | undefined;
+    const phaseDTO: Partial<PhaseDTO> = {
+      id: updatedPhase.id,
+      name: updatedPhase.title,
+      description: updatedPhase.description,
+      startDate: updatedPhase.startDate || undefined,
+      endDate: updatedPhase.endDate || undefined,
+      estimatedCost: Number(updatedPhase.budget) || 0,
+      actualCost: Number(updatedPhase.actualCost) || 0,
+      progress: Number(updatedPhase.progress) || 0,
+      status: (statusMap[updatedPhase.status] || updatedPhase.status) as PhaseDTO['status'],
+    };
 
-      const phaseDTO: Partial<PhaseDTO> = {
-        id: updatedPhase.id,
-        name: updatedPhase.title,
-        description: updatedPhase.description,
-        startDate: updatedPhase.startDate || undefined,
-        endDate: updatedPhase.endDate || undefined,
-        estimatedCost: Number(updatedPhase.budget) || 0,
-        actualCost: Number(updatedPhase.actualCost) || 0,
-        progress: Number(updatedPhase.progress) || 0,
-        status: (statusMap[updatedPhase.status] || updatedPhase.status) as PhaseDTO['status'],
-      };
+    // Detect "no change" to avoid silent ignored update
+    if (previous) {
+      const sameTitle = (previous.title ?? '') === (updatedPhase.title ?? '');
+      const sameDesc = (previous.description ?? '') === (updatedPhase.description ?? '');
+      const sameStart = (previous.startDate ?? '') === (updatedPhase.startDate ?? '');
+      const sameEnd = (previous.endDate ?? '') === (updatedPhase.endDate ?? '');
+      const sameBudget = Number(previous.budget || 0) === Number(updatedPhase.budget || 0);
+      const sameStatus = previous.status === updatedPhase.status;
+      const sameProgress = Number(previous.progress || 0) === Number(updatedPhase.progress || 0);
+      if (sameTitle && sameDesc && sameStart && sameEnd && sameBudget && sameStatus && sameProgress) {
+        toast({
+          title: "Aucune modification",
+          description: "Aucun changement détecté — la sauvegarde a été ignorée.",
+        });
+        return false;
+      }
+    }
 
+    try {
       await constructionPhaseHook.updateConstructionPhase(updatedPhase.id, phaseDTO as PhaseDTO);
-
-      setEditingPhase(null);
-
-    }, 'modifier une phase');
-
+      // Hook surfaces success toast itself; only close dialog on success
+      if (!constructionPhaseHook.error) {
+        setEditingPhase(null);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Phase update failed:', err);
+      toast({
+        title: "Échec de la mise à jour",
+        description: err instanceof Error ? err.message : "Impossible de sauvegarder la phase. Vérifiez votre connexion et réessayez.",
+        variant: "destructive",
+      });
+      return false;
+    }
   };
 
 
