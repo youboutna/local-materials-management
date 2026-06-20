@@ -2055,13 +2055,32 @@ const PhaseEditDialog: React.FC<{
 
   phase: PhaseData;
 
-  onSave: (phase: PhaseData) => void;
+  onSave: (phase: PhaseData) => Promise<boolean> | void;
 
   onClose: () => void;
 
-}> = ({ phase, onSave, onClose }) => {
+  isSaving?: boolean;
+
+  saveError?: string | null;
+
+  onViewDetails?: () => void;
+
+}> = ({ phase, onSave, onClose, isSaving = false, saveError, onViewDetails }) => {
 
   const [editedPhase, setEditedPhase] = useState<PhaseData>(phase);
+
+  const [localError, setLocalError] = useState<string | null>(null);
+
+  const handleSave = async () => {
+    setLocalError(null);
+    try {
+      await onSave(editedPhase);
+    } catch (err) {
+      setLocalError(err instanceof Error ? err.message : 'Erreur inattendue');
+    }
+  };
+
+
 
 
 
