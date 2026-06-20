@@ -2092,9 +2092,25 @@ const PhaseEditDialog: React.FC<{
 
         <DialogHeader>
 
-          <DialogTitle>Modifier la phase: {phase.title}</DialogTitle>
+          <DialogTitle className="flex items-center justify-between gap-3">
+            <span>Modifier la phase: {phase.title}</span>
+            {onViewDetails && (
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                onClick={onViewDetails}
+                className="text-sm flex items-center gap-1"
+              >
+                <Eye className="h-4 w-4" />
+                Voir le détail de la phase
+              </Button>
+            )}
+          </DialogTitle>
 
         </DialogHeader>
+
+
 
         
 
