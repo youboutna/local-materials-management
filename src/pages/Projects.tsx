@@ -33,6 +33,7 @@ import { getProjectCoordinates } from "@/utils/projectLocationBuckets";
 
 const Projects: React.FC = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   // Use hexagonal architecture hook
   const { projects: hexProjects, isLoading, error, deleteProject } = useProjectsHex();
   const projects = React.useMemo(() => hexProjects ?? [], [hexProjects]);
