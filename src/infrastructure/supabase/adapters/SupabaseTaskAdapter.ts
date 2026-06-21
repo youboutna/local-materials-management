@@ -52,28 +52,41 @@ export class SupabaseTaskAdapter implements ITaskRepository {
       .from('task_assignments')
       .insert({
         id: task.id,
-        project_id: task.projectId,
+        project_id: task.projectId || null,
+        phase_id: task.phaseId || null,
+        step_id: task.stepId || null,
         title: task.title,
         description: task.description,
         status: task.status,
         priority: task.priority,
         assigned_to: task.assignedTo[0] || null,
-        assigned_by: task.assignedBy,
-        due_date: task.dueDate,
-        notes: task.notes
+        assigned_by: task.assignedBy || null,
+        due_date: task.dueDate || null,
+        start_date: task.startDate || null,
+        end_date: task.endDate || null,
+        progress: task.progress ?? 0,
+        notes: task.notes || null
       });
 
     if (error) throw new Error(`Failed to save task: ${error.message}`);
   }
 
-  async update(id: string, data: Partial<Task>): Promise<void> {
+  async update(id: string, data: Partial<Task> & Record<string, any>): Promise<void> {
     const updateData: Record<string, any> = {};
     if (data.title !== undefined) updateData.title = data.title;
     if (data.description !== undefined) updateData.description = data.description;
     if (data.status !== undefined) updateData.status = data.status;
     if (data.priority !== undefined) updateData.priority = data.priority;
     if (data.dueDate !== undefined) updateData.due_date = data.dueDate;
+    if (data.startDate !== undefined) updateData.start_date = data.startDate;
+    if (data.endDate !== undefined) updateData.end_date = data.endDate;
+    if (data.progress !== undefined) updateData.progress = data.progress;
+    if (data.phaseId !== undefined) updateData.phase_id = data.phaseId;
     if (data.notes !== undefined) updateData.notes = data.notes;
+    if ((data as any).assignedTo !== undefined) {
+      const list = (data as any).assignedTo as string[] | undefined;
+      updateData.assigned_to = list && list.length ? list[0] : null;
+    }
 
     const { error } = await supabase
       .from('task_assignments')
@@ -104,8 +117,14 @@ export class SupabaseTaskAdapter implements ITaskRepository {
   }
 
   async findByPhaseId(phaseId: string): Promise<Task[]> {
-    const tasks = await this.findAll();
-    return tasks.filter(t => t.phaseId === phaseId);
+    const { data, error } = await supabase
+      .from('task_assignments')
+      .select('*')
+      .eq('phase_id', phaseId)
+      .order('created_at', { ascending: false });
+
+    if (error || !data) return [];
+    return data.map(d => this.mapToEntity(d));
   }
 
   async findByStepId(stepId: string): Promise<Task[]> {
