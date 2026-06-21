@@ -390,8 +390,8 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
 
   return (
     <>
-      <DesktopFilters />
-      <MobileFilters />
+      {DesktopFilters()}
+      {MobileFilters()}
     </>
   );
 };

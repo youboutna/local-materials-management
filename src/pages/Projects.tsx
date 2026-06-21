@@ -6,7 +6,7 @@ import {
   getDefaultProjectListView,
 } from "@/config/referentials/projects/project-list-views.referential";
 import { Map, Grid, Filter, Plus } from "lucide-react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import ProjectsGridPaginated from "@/components/projects/ProjectsGridPaginated";
 import ProjectsHeader from "@/components/projects/ProjectsHeader";
 import ProjectFilters from "@/components/projects/ProjectFilters";
@@ -33,6 +33,7 @@ import { getProjectCoordinates } from "@/utils/projectLocationBuckets";
 
 const Projects: React.FC = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   // Use hexagonal architecture hook
   const { projects: hexProjects, isLoading, error, deleteProject } = useProjectsHex();
   const projects = React.useMemo(() => hexProjects ?? [], [hexProjects]);
@@ -470,8 +471,7 @@ const Projects: React.FC = () => {
                   : projects || []
               }
               onProjectSelect={(project) => {
-                console.log("Selected project:", project);
-                // Navigate to project detail or show modal
+                navigate(`/projects/${project.id}`);
               }}
             />
 
@@ -483,8 +483,7 @@ const Projects: React.FC = () => {
                   : projects || []
               }
               onProjectSelect={(project) => {
-                console.log("Selected project from list:", project);
-                // Navigate to project detail or show modal
+                navigate(`/projects/${project.id}`);
               }}
             />
           </TabsContent>
