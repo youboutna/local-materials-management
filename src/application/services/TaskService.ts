@@ -149,6 +149,7 @@ export class TaskService {
       const task = Task.create({
         id: crypto.randomUUID(),
         projectId: createDTO.projectId || '',
+        phaseId: createDTO.phaseId,
         title: createDTO.title,
         description: createDTO.description,
         status: createDTO.status ? String(createDTO.status) as any : 'pending' as any,
@@ -158,7 +159,8 @@ export class TaskService {
       });
 
       await this.taskRepository.save(task);
-      return this.toDTO(task);
+      const saved = await this.taskRepository.findById(task.id);
+      return this.toDTO(saved ?? task);
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       throw new TaskServiceError(
@@ -176,20 +178,19 @@ export class TaskService {
         throw new TaskServiceError('Task not found', 'TASK_NOT_FOUND');
       }
 
-      // Validate status transition if status is being updated
-      if (updateDTO.status && !this.isValidTaskStatusTransition(String(existingTask.status) as any, String(updateDTO.status) as any)) {
-        throw new ValidationError(
-          `Invalid status transition from ${existingTask.status} to ${updateDTO.status}`,
-          { status: ['Invalid status transition'] }
-        );
-      }
+      const patch: Record<string, unknown> = {};
+      if (updateDTO.title !== undefined) patch.title = updateDTO.title;
+      if (updateDTO.description !== undefined) patch.description = updateDTO.description;
+      if (updateDTO.status !== undefined) patch.status = String(updateDTO.status);
+      if (updateDTO.priority !== undefined) patch.priority = String(updateDTO.priority);
+      if (updateDTO.dueDate !== undefined) patch.dueDate = updateDTO.dueDate;
+      if (updateDTO.phaseId !== undefined) patch.phaseId = updateDTO.phaseId;
+      if ((updateDTO as any).assignedTo !== undefined) patch.assignedTo = (updateDTO as any).assignedTo;
+      if ((updateDTO as any).notes !== undefined) patch.notes = (updateDTO as any).notes;
 
-      // Create updated task using immutable pattern
-      const updatedTask = existingTask.withStatus(String(updateDTO.status ?? existingTask.status) as any)
-        .withProgress(existingTask.progress);
-      
-      // Return DTO after update
-      return this.toDTO(updatedTask);
+      await this.taskRepository.update(id, patch as any);
+      const refreshed = await this.taskRepository.findById(id);
+      return this.toDTO(refreshed ?? existingTask);
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       throw new TaskServiceError(
