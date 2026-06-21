@@ -471,8 +471,7 @@ const Projects: React.FC = () => {
                   : projects || []
               }
               onProjectSelect={(project) => {
-                console.log("Selected project:", project);
-                // Navigate to project detail or show modal
+                navigate(`/projects/${project.id}`);
               }}
             />
 
@@ -484,8 +483,7 @@ const Projects: React.FC = () => {
                   : projects || []
               }
               onProjectSelect={(project) => {
-                console.log("Selected project from list:", project);
-                // Navigate to project detail or show modal
+                navigate(`/projects/${project.id}`);
               }}
             />
           </TabsContent>
