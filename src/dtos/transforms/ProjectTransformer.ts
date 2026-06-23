@@ -19,6 +19,8 @@ import {
   CreateProjectRequestDTO
 } from '@/dtos/entities/ProjectDTO';
 import type { ConstructionStage } from '@/dtos/entities/ProjectDTO';
+import { InterventionZone } from '@/domain/entities/InterventionZone';
+import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 import { PhaseTransformer } from './PhaseTransformer';
 import { TaskTransformer } from './TaskTransformer';
 import { RiskTransformer } from './RiskTransformer';
@@ -29,6 +31,7 @@ import { MaterialTransformer } from './MaterialTransformer';
 import { InspectionTransformer } from './InspectionTransformer';
 import { StakeholderTransformer } from './StakeholderTransformer';
 import { InspectionStatus } from '@/domain/entities/Inspection';
+
 
 // TYPE-SAFE INTERFACES FOR DTOs WITH RELATED COLLECTIONS
 interface ProjectDTOWithCollections extends ProjectDTO {
