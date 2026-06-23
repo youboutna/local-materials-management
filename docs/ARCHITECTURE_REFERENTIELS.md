@@ -178,3 +178,32 @@ L'administrateur peut **créer ou importer** des référentiels via plusieurs fo
 ### 7.2 Synchronisation externe
 Référentiels synchronisables via **API** avec : SAGE (ERP financier), LFI (portail Trésor),
 catalogues ODD, AD/LDAP (structure orga).
+
+---
+
+## 8. Zone d'intervention (localisation projet)
+
+Un projet n'est pas réduit à une adresse : sa **localisation est une zone d'intervention** géographique.
+
+- Modèle domaine : `src/domain/entities/InterventionZone.ts`
+- DTO : `src/dtos/entities/InterventionZoneDTO.ts`
+- Stockage : colonne existante `public.projects.localisation` (jsonb), avec `forme` en miroir court du type.
+- Aucune migration destructive : seul un `COMMENT ON COLUMN` documente le format.
+
+Schéma JSON persisté :
+
+```json
+{
+  "type": "polygon" | "rectangle" | "circle" | "point",
+  "coordinates": [{ "lat": 18.07, "lng": -15.96 }],
+  "radiusMeters": 250,
+  "label": "Lot 3 — wilaya de Trarza",
+  "address": "Rosso, RN2 km 12",
+  "areaSqm": 184230.5
+}
+```
+
+Le `ProjectTransformer` (`fromSupabase` / `fromDTO`) hydrate la zone depuis `localisation`,
+calcule le centroïde et l'aire (Shoelace + projection equirectangulaire), et l'expose dans
+`ProjectDTO.interventionZone`. Les imports/exports passent par `ProjectImportExportService`
+et propagent automatiquement la zone.
