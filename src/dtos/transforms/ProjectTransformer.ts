@@ -19,6 +19,8 @@ import {
   CreateProjectRequestDTO
 } from '@/dtos/entities/ProjectDTO';
 import type { ConstructionStage } from '@/dtos/entities/ProjectDTO';
+import { InterventionZone } from '@/domain/entities/InterventionZone';
+import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 import { PhaseTransformer } from './PhaseTransformer';
 import { TaskTransformer } from './TaskTransformer';
 import { RiskTransformer } from './RiskTransformer';
@@ -29,6 +31,7 @@ import { MaterialTransformer } from './MaterialTransformer';
 import { InspectionTransformer } from './InspectionTransformer';
 import { StakeholderTransformer } from './StakeholderTransformer';
 import { InspectionStatus } from '@/domain/entities/Inspection';
+
 
 // TYPE-SAFE INTERFACES FOR DTOs WITH RELATED COLLECTIONS
 interface ProjectDTOWithCollections extends ProjectDTO {
@@ -51,12 +54,21 @@ export class ProjectTransformer {
    * Converts snake_case database fields to camelCase domain properties
    */
   static fromSupabase(row: Record<string, unknown>): Project {
-    const coordinates = row.coordinates_latitude && row.coordinates_longitude
-      ? new ProjectCoordinates(
-          Number(row.coordinates_latitude),
-          Number(row.coordinates_longitude)
-        )
+    // Hydrate the intervention zone from `localisation` jsonb when available,
+    // and derive coordinates from its centroid when explicit lat/lng are missing.
+    const zone = InterventionZone.fromJSON(row.localisation);
+    const center = zone?.getCenter();
+    const lat = row.coordinates_latitude != null
+      ? Number(row.coordinates_latitude)
+      : center?.lat;
+    const lng = row.coordinates_longitude != null
+      ? Number(row.coordinates_longitude)
+      : center?.lng;
+    const coordinates = lat != null && lng != null
+      ? new ProjectCoordinates(lat, lng)
       : undefined;
+
+
 
     return Project.create({
       id: row.id as string,
@@ -223,6 +235,10 @@ export class ProjectTransformer {
             longitude: project.coordinates.longitude,
           }
         : undefined,
+      interventionZone: (() => {
+        const zone = InterventionZone.fromJSON(project.localisation);
+        return zone ? (zone.toJSON() as InterventionZoneDTO) : undefined;
+      })(),
       startDate: project.startDate?.toISOString() || '',
       endDate: project.endDate?.toISOString(),
       budget: project.budget,
@@ -231,6 +247,7 @@ export class ProjectTransformer {
       thumbnail: project.thumbnail,
       createdAt: project.createdAt?.toISOString() || new Date().toISOString(),
       updatedAt: project.updatedAt?.toISOString() || new Date().toISOString(),
+
       address: project.location || undefined,
       geographicZone: project.geographicZone || undefined,
       terrainType: project.terrainType || undefined,
@@ -325,11 +342,27 @@ export class ProjectTransformer {
    * For processing incoming API requests
    */
   static fromDTO(dto: ProjectDTO | ProjectDTOWithCollections): Project {
-    const coordinates = dto.latitude && dto.longitude
-      ? new ProjectCoordinates(dto.latitude, dto.longitude)
-      : dto.coordinates
-      ? new ProjectCoordinates(dto.coordinates.latitude, dto.coordinates.longitude)
+    // Resolve intervention zone -> derive centroid coords + `localisation` JSON
+    const zone = dto.interventionZone
+      ? InterventionZone.create({
+          type: dto.interventionZone.type,
+          coordinates: dto.interventionZone.coordinates,
+          radiusMeters: dto.interventionZone.radiusMeters,
+          label: dto.interventionZone.label,
+          address: dto.interventionZone.address,
+          areaSqm: dto.interventionZone.areaSqm,
+        })
       : undefined;
+    const zoneCenter = zone?.getCenter();
+    const explicitLat = dto.latitude ?? dto.coordinates?.latitude;
+    const explicitLng = dto.longitude ?? dto.coordinates?.longitude;
+    const coordinates = explicitLat != null && explicitLng != null
+      ? new ProjectCoordinates(explicitLat, explicitLng)
+      : zoneCenter
+      ? new ProjectCoordinates(zoneCenter.lat, zoneCenter.lng)
+      : undefined;
+
+
 
     return Project.create({
       id: dto.id,
@@ -359,11 +392,14 @@ export class ProjectTransformer {
       completionDate: dto.completionDate ? new Date(dto.completionDate) : undefined,
       donorOrganization: dto.donorOrganization,
       estimatedDays: dto.estimatedDays,
-      forme: dto.forme,
+      forme: zone?.type ?? dto.forme,
       fundingSource: dto.fundingSource,
       initialAdvancePercentage: dto.initialAdvancePercentage,
       initialPaymentPercentage: dto.initialPaymentPercentage,
-      localisation: dto.localisation,
+      localisation: zone
+        ? (zone.toJSON() as unknown as Record<string, unknown>)
+        : dto.localisation,
+
       materialsBudget: dto.materialsBudget,
       paymentFrequency: dto.paymentFrequency,
       paymentMode: dto.paymentMode,
