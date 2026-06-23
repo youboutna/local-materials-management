@@ -342,11 +342,27 @@ export class ProjectTransformer {
    * For processing incoming API requests
    */
   static fromDTO(dto: ProjectDTO | ProjectDTOWithCollections): Project {
-    const coordinates = dto.latitude && dto.longitude
-      ? new ProjectCoordinates(dto.latitude, dto.longitude)
-      : dto.coordinates
-      ? new ProjectCoordinates(dto.coordinates.latitude, dto.coordinates.longitude)
+    // Resolve intervention zone -> derive centroid coords + `localisation` JSON
+    const zone = dto.interventionZone
+      ? InterventionZone.create({
+          type: dto.interventionZone.type,
+          coordinates: dto.interventionZone.coordinates,
+          radiusMeters: dto.interventionZone.radiusMeters,
+          label: dto.interventionZone.label,
+          address: dto.interventionZone.address,
+          areaSqm: dto.interventionZone.areaSqm,
+        })
       : undefined;
+    const zoneCenter = zone?.getCenter();
+    const explicitLat = dto.latitude ?? dto.coordinates?.latitude;
+    const explicitLng = dto.longitude ?? dto.coordinates?.longitude;
+    const coordinates = explicitLat != null && explicitLng != null
+      ? new ProjectCoordinates(explicitLat, explicitLng)
+      : zoneCenter
+      ? new ProjectCoordinates(zoneCenter.lat, zoneCenter.lng)
+      : undefined;
+
+
 
     return Project.create({
       id: dto.id,
