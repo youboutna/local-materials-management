@@ -1,18 +1,17 @@
 
 import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
 import { Upload, Calendar, MapPin, DollarSign, Clock } from 'lucide-react';
+import { useProjectImportExportHex } from '@/hooks/hexagonal/useProjectImportExportHex';
+import type { ProjectImportRow } from '@/application/services/ProjectImportExportService';
 
 const ProjectImporter2025 = () => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { importProjects, isImporting, lastImportResult } = useProjectImportExportHex();
   const [importProgress, setImportProgress] = useState(0);
+
 
   const projects2025 = [
     {
