@@ -392,11 +392,14 @@ export class ProjectTransformer {
       completionDate: dto.completionDate ? new Date(dto.completionDate) : undefined,
       donorOrganization: dto.donorOrganization,
       estimatedDays: dto.estimatedDays,
-      forme: dto.forme,
+      forme: zone?.type ?? dto.forme,
       fundingSource: dto.fundingSource,
       initialAdvancePercentage: dto.initialAdvancePercentage,
       initialPaymentPercentage: dto.initialPaymentPercentage,
-      localisation: dto.localisation,
+      localisation: zone
+        ? (zone.toJSON() as unknown as Record<string, unknown>)
+        : dto.localisation,
+
       materialsBudget: dto.materialsBudget,
       paymentFrequency: dto.paymentFrequency,
       paymentMode: dto.paymentMode,
