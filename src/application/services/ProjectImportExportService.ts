@@ -22,11 +22,12 @@ import type {
 import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 
-export interface ProjectImportRow extends Partial<CreateProjectDTO> {
+export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status'>> {
   title: string;
   description?: string;
   location?: string;
   status?: string;
+  progress?: number;
   budget?: number;
   startDate?: string;
   endDate?: string;
@@ -37,6 +38,7 @@ export interface ProjectImportRow extends Partial<CreateProjectDTO> {
   /** Référentiel projet (ex: 'somelec', 'eter') pour génération de phases. */
   referentialCode?: string;
 }
+
 
 export interface ProjectImportResult {
   total: number;
