@@ -235,6 +235,10 @@ export class ProjectTransformer {
             longitude: project.coordinates.longitude,
           }
         : undefined,
+      interventionZone: (() => {
+        const zone = InterventionZone.fromJSON(project.localisation);
+        return zone ? (zone.toJSON() as InterventionZoneDTO) : undefined;
+      })(),
       startDate: project.startDate?.toISOString() || '',
       endDate: project.endDate?.toISOString(),
       budget: project.budget,
@@ -243,6 +247,7 @@ export class ProjectTransformer {
       thumbnail: project.thumbnail,
       createdAt: project.createdAt?.toISOString() || new Date().toISOString(),
       updatedAt: project.updatedAt?.toISOString() || new Date().toISOString(),
+
       address: project.location || undefined,
       geographicZone: project.geographicZone || undefined,
       terrainType: project.terrainType || undefined,
