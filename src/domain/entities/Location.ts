@@ -30,7 +30,13 @@ export interface MapLocation {
   warehouseShape?: { lat: number; lng: number }[];
   warehouseShapeType?: "polygon" | "rectangle" | "circle";
   adresse?: string | undefined;
+  /**
+   * Zone d'intervention géographique d'un projet (polygone/rectangle/cercle).
+   * Permet à la carte d'afficher la zone et non un simple marqueur.
+   */
+  interventionZone?: import('@/dtos/entities/InterventionZoneDTO').InterventionZoneDTO;
 }
+
 
 /**
  * Location Domain Entity

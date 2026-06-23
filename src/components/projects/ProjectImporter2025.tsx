@@ -1,18 +1,17 @@
 
 import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
 import { Upload, Calendar, MapPin, DollarSign, Clock } from 'lucide-react';
+import { useProjectImportExportHex } from '@/hooks/hexagonal/useProjectImportExportHex';
+import type { ProjectImportRow } from '@/application/services/ProjectImportExportService';
 
 const ProjectImporter2025 = () => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { importProjects, isImporting, lastImportResult } = useProjectImportExportHex();
   const [importProgress, setImportProgress] = useState(0);
+
 
   const projects2025 = [
     {
@@ -161,64 +160,36 @@ const ProjectImporter2025 = () => {
     }
   ];
 
-  const importMutation = useMutation({
-    mutationFn: async () => {
-      const results: any[] = [];
-      
-      for (let i = 0; i < projects2025.length; i++) {
-        const project = projects2025[i];
-        
-        // Check if project already exists
-        const { data: existing } = await supabase
-          .from('projects')
-          .select('id')
-          .eq('title', project.title as any)
-          .maybeSingle();
-
-        if (!existing) {
-          const { data, error } = await supabase
-            .from('projects')
-            .insert(project as any)
-            .select()
-            .single();
-
-          if (error) {
-            console.error(`Error importing project ${project.title}:`, error);
-            throw error;
-          }
-          
-          if (data) {
-            results.push(data);
-          }
-        }
-        
-        // Update progress
-        setImportProgress(((i + 1) / projects2025.length) * 100);
-        
-        // Small delay to show progress
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-      
-      return results;
-    },
-    onSuccess: (results) => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-      toast({
-        title: "Import réussi",
-        description: `${results.length} nouveaux projets ont été importés avec succès.`,
-      });
-      setImportProgress(0);
-    },
-    onError: (error) => {
-      console.error('Import error:', error);
-      toast({
-        title: "Erreur d'import",
-        description: "Une erreur s'est produite lors de l'import des projets.",
-        variant: "destructive"
-      });
-      setImportProgress(0);
-    }
+  // Map the snake_case demo dataset to ProjectImportRow (camelCase DTO).
+  const toImportRow = (p: typeof projects2025[number]): ProjectImportRow => ({
+    title: p.title,
+    description: p.description,
+    location: p.location,
+    status: p.status,
+    progress: p.progress,
+    budget: p.budget,
+    startDate: p.start_date,
+    endDate: p.end_date,
+    teamSize: p.team_size,
+    financingSource: p.financing_source,
+    marketType: p.market_type,
+    selectionMode: p.selection_mode,
+    launchDate: p.launch_date,
+    attributionDate: p.attribution_date,
+    completionDate: p.completion_date,
   });
+
+  const handleImport = async () => {
+    setImportProgress(10);
+    try {
+      await importProjects(projects2025.map(toImportRow));
+      setImportProgress(100);
+    } finally {
+      setTimeout(() => setImportProgress(0), 1200);
+    }
+  };
+
+
 
   const formatBudget = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -243,15 +214,15 @@ const ProjectImporter2025 = () => {
               <p className="text-sm text-gray-600">
                 Cette action importera {projects2025.length} projets planifiés pour l'année 2025.
               </p>
-              <Button 
-                onClick={() => importMutation.mutate()}
-                disabled={importMutation.isPending}
+              <Button
+                onClick={handleImport}
+                disabled={isImporting}
               >
-                {importMutation.isPending ? 'Import en cours...' : 'Importer les projets'}
+                {isImporting ? 'Import en cours...' : 'Importer les projets'}
               </Button>
             </div>
-            
-            {importMutation.isPending && (
+
+            {(isImporting || importProgress > 0) && (
               <div className="space-y-2">
                 <Progress value={importProgress} className="w-full" />
                 <p className="text-sm text-center text-gray-500">
@@ -259,6 +230,22 @@ const ProjectImporter2025 = () => {
                 </p>
               </div>
             )}
+
+            {lastImportResult && (
+              <div className="text-sm text-muted-foreground border-t pt-3">
+                <strong>Dernier import :</strong> {lastImportResult.imported} créé(s),
+                {' '}{lastImportResult.skipped} ignoré(s),
+                {' '}{lastImportResult.failed} en erreur
+                {lastImportResult.errors.length > 0 && (
+                  <ul className="mt-2 list-disc pl-5 text-destructive">
+                    {lastImportResult.errors.slice(0, 5).map((e) => (
+                      <li key={`${e.row}-${e.title}`}>Ligne {e.row} — {e.title}: {e.message}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
           </div>
         </CardContent>
       </Card>

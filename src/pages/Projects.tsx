@@ -147,8 +147,10 @@ const Projects: React.FC = () => {
         region: project.location,
         startDate: project.startDate,
         endDate: project.endDate,
+        interventionZone: (project as { interventionZone?: import('@/dtos/entities/InterventionZoneDTO').InterventionZoneDTO }).interventionZone,
         };
       });
+
   }, [projects]);
 
   // Initialize and update map locations
@@ -170,8 +172,10 @@ const Projects: React.FC = () => {
         region: project.location,
         startDate: project.startDate,
         endDate: project.endDate,
+        interventionZone: (project as { interventionZone?: import('@/dtos/entities/InterventionZoneDTO').InterventionZoneDTO }).interventionZone,
         };
       });
+
 
     setFilteredMapLocations(allLocations);
   }, [projects]);

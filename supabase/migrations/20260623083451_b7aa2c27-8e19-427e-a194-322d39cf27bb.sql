@@ -1,0 +1,2 @@
+COMMENT ON COLUMN public.projects.localisation IS 'InterventionZone JSON: { type: polygon|rectangle|circle|point, coordinates: [{lat,lng}], radiusMeters?, label?, address?, areaSqm? }';
+COMMENT ON COLUMN public.projects.forme IS 'Short label for the intervention zone shape (polygon | rectangle | circle | point), mirrors localisation.type';
