@@ -214,15 +214,15 @@ const ProjectImporter2025 = () => {
               <p className="text-sm text-gray-600">
                 Cette action importera {projects2025.length} projets planifiés pour l'année 2025.
               </p>
-              <Button 
-                onClick={() => importMutation.mutate()}
-                disabled={importMutation.isPending}
+              <Button
+                onClick={handleImport}
+                disabled={isImporting}
               >
-                {importMutation.isPending ? 'Import en cours...' : 'Importer les projets'}
+                {isImporting ? 'Import en cours...' : 'Importer les projets'}
               </Button>
             </div>
-            
-            {importMutation.isPending && (
+
+            {(isImporting || importProgress > 0) && (
               <div className="space-y-2">
                 <Progress value={importProgress} className="w-full" />
                 <p className="text-sm text-center text-gray-500">
@@ -230,6 +230,22 @@ const ProjectImporter2025 = () => {
                 </p>
               </div>
             )}
+
+            {lastImportResult && (
+              <div className="text-sm text-muted-foreground border-t pt-3">
+                <strong>Dernier import :</strong> {lastImportResult.imported} créé(s),
+                {' '}{lastImportResult.skipped} ignoré(s),
+                {' '}{lastImportResult.failed} en erreur
+                {lastImportResult.errors.length > 0 && (
+                  <ul className="mt-2 list-disc pl-5 text-destructive">
+                    {lastImportResult.errors.slice(0, 5).map((e) => (
+                      <li key={`${e.row}-${e.title}`}>Ligne {e.row} — {e.title}: {e.message}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
           </div>
         </CardContent>
       </Card>
