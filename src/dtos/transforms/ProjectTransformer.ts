@@ -54,12 +54,21 @@ export class ProjectTransformer {
    * Converts snake_case database fields to camelCase domain properties
    */
   static fromSupabase(row: Record<string, unknown>): Project {
-    const coordinates = row.coordinates_latitude && row.coordinates_longitude
-      ? new ProjectCoordinates(
-          Number(row.coordinates_latitude),
-          Number(row.coordinates_longitude)
-        )
+    // Hydrate the intervention zone from `localisation` jsonb when available,
+    // and derive coordinates from its centroid when explicit lat/lng are missing.
+    const zone = InterventionZone.fromJSON(row.localisation);
+    const center = zone?.getCenter();
+    const lat = row.coordinates_latitude != null
+      ? Number(row.coordinates_latitude)
+      : center?.lat;
+    const lng = row.coordinates_longitude != null
+      ? Number(row.coordinates_longitude)
+      : center?.lng;
+    const coordinates = lat != null && lng != null
+      ? new ProjectCoordinates(lat, lng)
       : undefined;
+
+
 
     return Project.create({
       id: row.id as string,
