@@ -339,6 +339,12 @@ export interface ProjectDTO extends BaseEntityDTO {
     latitude: number;
     longitude: number;
   };
+  /**
+   * Zone d'intervention géographique (polygone/rectangle/cercle).
+   * Stockée dans projects.localisation (jsonb). Voir InterventionZoneDTO.
+   */
+  interventionZone?: import('./InterventionZoneDTO').InterventionZoneDTO;
+  
   
   // Timeline
   startDate: string;
