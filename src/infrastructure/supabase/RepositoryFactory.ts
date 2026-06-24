@@ -584,7 +584,7 @@ export class RepositoryFactory {
    */
   static getAlertRepository(): IAlertRepository {
     if (!repositoryRegistry.alertRepository) {
-      const { SupabaseAlertAdapter } = require('./adapters/SupabaseAlertAdapter');
+      // Static import — `require` is not available in the browser bundle
       repositoryRegistry.alertRepository = new SupabaseAlertAdapter();
     }
     return repositoryRegistry.alertRepository!;
