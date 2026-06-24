@@ -108,6 +108,7 @@ import { SupabaseTenderSharingAdapter } from '../adapters/SupabaseTenderSharingA
 import { IMonitoringRepository } from '@/domain/repositories/IMonitoringRepository';
 import { IStakeholderRepository } from '@/domain/repositories/IStakeholderRepository';
 import { SupabaseWorkspaceAdapter } from './adapters/SupabaseWorkspaceAdapter';
+import { SupabaseAlertAdapter } from './adapters/SupabaseAlertAdapter';
 
 import { LocationRepository } from './adapters/LocationRepository';
 import { SupabaseProjectStrategyLinkAdapter } from './adapters/SupabaseProjectStrategyLinkAdapter';
