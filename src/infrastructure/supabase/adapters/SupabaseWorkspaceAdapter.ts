@@ -1,6 +1,9 @@
 // @ts-nocheck
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { Json } from '@/integrations/supabase/types';
+import { OperationalStatus } from '@/utils/mauritania';
+import type { Workspace } from '@/domain/entities/Workspace';
+import type { IWorkspaceRepository } from '@/domain/repositories/IWorkspaceRepository';
 
 // Database row interface for workspaces table
 interface WorkspaceRow {
