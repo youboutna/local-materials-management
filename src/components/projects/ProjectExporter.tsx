@@ -30,7 +30,10 @@ const ProjectExporter = () => {
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const { toast } = useToast();
   const { t } = useLanguage();
-  const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+  const projectService = useMemo(
+    () => new ProjectService(RepositoryFactory.getProjectRepository()),
+    [],
+  );
 
   useEffect(() => {
     const loadProjects = async () => {
