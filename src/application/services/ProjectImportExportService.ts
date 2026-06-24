@@ -123,7 +123,12 @@ export class ProjectImportExportService {
   }
 
   private toCreateDTO(row: ProjectImportRow): CreateProjectDTO {
-    // Defensive defaults so the Domain entity validation passes.
+    const zones = row.interventionZones && row.interventionZones.length > 0
+      ? row.interventionZones
+      : row.interventionZone
+      ? [row.interventionZone]
+      : undefined;
+    const firstZone = zones?.[0];
     const dto: CreateProjectDTO = {
       title: row.title,
       description: row.description ?? '',
@@ -133,9 +138,9 @@ export class ProjectImportExportService {
       currency: row.currency ?? 'MRU',
       startDate: row.startDate ?? new Date().toISOString(),
       endDate: row.endDate,
-      location: row.location ?? row.interventionZone?.address ?? '',
-      latitude: row.latitude ?? row.interventionZone?.coordinates?.[0]?.lat,
-      longitude: row.longitude ?? row.interventionZone?.coordinates?.[0]?.lng,
+      location: row.location ?? firstZone?.address ?? '',
+      latitude: row.latitude ?? firstZone?.coordinates?.[0]?.lat,
+      longitude: row.longitude ?? firstZone?.coordinates?.[0]?.lng,
       teamSize: row.teamSize ?? 0,
       financingSource: row.financingSource,
       marketType: row.marketType,
@@ -144,7 +149,8 @@ export class ProjectImportExportService {
       attributionDate: row.attributionDate,
       launchDate: row.launchDate,
       completionDate: row.completionDate,
-      interventionZone: row.interventionZone,
+      interventionZones: zones,
+      interventionZone: firstZone,
     } as CreateProjectDTO;
     return dto;
   }
