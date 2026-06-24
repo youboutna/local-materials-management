@@ -20,7 +20,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useMemo } from "react";
 import * as XLSX from "xlsx";
 
 type ImportMode = "create" | "update" | "patch";
