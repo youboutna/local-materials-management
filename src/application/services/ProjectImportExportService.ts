@@ -34,7 +34,10 @@ export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status
   teamSize?: number;
   latitude?: number;
   longitude?: number;
+  /** @deprecated — préférer `interventionZones` (multi). */
   interventionZone?: InterventionZoneDTO;
+  /** Zones bénéficiaires (multi-polygones). */
+  interventionZones?: InterventionZoneDTO[];
   /** Référentiel projet (ex: 'somelec', 'eter') pour génération de phases. */
   referentialCode?: string;
 }
