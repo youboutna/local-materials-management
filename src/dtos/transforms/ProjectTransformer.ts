@@ -19,7 +19,7 @@ import {
   CreateProjectRequestDTO
 } from '@/dtos/entities/ProjectDTO';
 import type { ConstructionStage } from '@/dtos/entities/ProjectDTO';
-import { InterventionZone } from '@/domain/entities/InterventionZone';
+import { InterventionZone, InterventionZoneCollection } from '@/domain/entities/InterventionZone';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 import { PhaseTransformer } from './PhaseTransformer';
 import { TaskTransformer } from './TaskTransformer';
