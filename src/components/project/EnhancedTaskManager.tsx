@@ -801,23 +801,29 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                       <SelectValue placeholder="Sélectionner un profil" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="employees">Employees (Internal Staff)</SelectItem>
-                      {employees.map((emp) => (
-                        <SelectItem key={emp.id} value={emp.id}>
-                          {emp.full_name} {emp.position ? `(${emp.position})` : ''}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="consulting_firms">Consulting Firms</SelectItem>
-                      {suppliers.filter(s => s.type === 'consulting').map((supplier) => (
-                        <SelectItem key={supplier.id} value={supplier.id}>
-                          {supplier.name} {supplier.contact_person ? `- ${supplier.contact_person}` : ''}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="main_contractor">Main Contractor</SelectItem>
+                      <SelectGroup>
+                        <SelectLabel>Employés (Internes)</SelectLabel>
+                        {employees.map((emp) => (
+                          <SelectItem key={emp.id} value={emp.id}>
+                            {emp.full_name} {emp.position ? `(${emp.position})` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                      <SelectGroup>
+                        <SelectLabel>Bureaux d'études / Consultants</SelectLabel>
+                        {suppliers.filter(s => s.type === 'consulting').map((supplier) => (
+                          <SelectItem key={supplier.id} value={supplier.id}>
+                            {supplier.name} {supplier.contact_person ? `- ${supplier.contact_person}` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
                       {projectData?.main_contractor && (
-                        <SelectItem value={projectData.main_contractor}>
-                          {projectData.main_contractor}
-                        </SelectItem>
+                        <SelectGroup>
+                          <SelectLabel>Contractant principal</SelectLabel>
+                          <SelectItem value={projectData.main_contractor}>
+                            {projectData.main_contractor}
+                          </SelectItem>
+                        </SelectGroup>
                       )}
                     </SelectContent>
                   </Select>
