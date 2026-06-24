@@ -235,9 +235,15 @@ export class ProjectTransformer {
             longitude: project.coordinates.longitude,
           }
         : undefined,
+      interventionZones: (() => {
+        const collection = InterventionZoneCollection.fromJSON(project.localisation);
+        return collection.isEmpty()
+          ? undefined
+          : collection.zones.map((z) => z.toJSON() as InterventionZoneDTO);
+      })(),
       interventionZone: (() => {
-        const zone = InterventionZone.fromJSON(project.localisation);
-        return zone ? (zone.toJSON() as InterventionZoneDTO) : undefined;
+        const collection = InterventionZoneCollection.fromJSON(project.localisation);
+        return collection.isEmpty() ? undefined : (collection.zones[0].toJSON() as InterventionZoneDTO);
       })(),
       startDate: project.startDate?.toISOString() || '',
       endDate: project.endDate?.toISOString(),
