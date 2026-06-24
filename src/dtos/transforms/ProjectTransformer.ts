@@ -348,18 +348,30 @@ export class ProjectTransformer {
    * For processing incoming API requests
    */
   static fromDTO(dto: ProjectDTO | ProjectDTOWithCollections): Project {
-    // Resolve intervention zone -> derive centroid coords + `localisation` JSON
-    const zone = dto.interventionZone
-      ? InterventionZone.create({
-          type: dto.interventionZone.type,
-          coordinates: dto.interventionZone.coordinates,
-          radiusMeters: dto.interventionZone.radiusMeters,
-          label: dto.interventionZone.label,
-          address: dto.interventionZone.address,
-          areaSqm: dto.interventionZone.areaSqm,
-        })
-      : undefined;
-    const zoneCenter = zone?.getCenter();
+    // Resolve intervention zones (multi) -> derive centroid + `localisation` JSON v2
+    const zonesInput = dto.interventionZones && dto.interventionZones.length > 0
+      ? dto.interventionZones
+      : dto.interventionZone
+      ? [dto.interventionZone]
+      : [];
+    const zoneEntities = zonesInput
+      .map((z) => {
+        try {
+          return InterventionZone.create({
+            type: z.type,
+            coordinates: z.coordinates,
+            radiusMeters: z.radiusMeters,
+            label: z.label,
+            address: z.address,
+            areaSqm: z.areaSqm,
+          });
+        } catch {
+          return undefined;
+        }
+      })
+      .filter((z): z is InterventionZone => !!z);
+    const collection = InterventionZoneCollection.create(zoneEntities);
+    const zoneCenter = collection.getBoundingCenter();
     const explicitLat = dto.latitude ?? dto.coordinates?.latitude;
     const explicitLng = dto.longitude ?? dto.coordinates?.longitude;
     const coordinates = explicitLat != null && explicitLng != null
