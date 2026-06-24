@@ -220,11 +220,47 @@ export class ProjectImportExportService {
       createdAt: p.createdAt,
       updatedAt: p.updatedAt,
     };
-    if (includeZone && p.interventionZone) {
-      base.interventionZone = p.interventionZone;
-      base.interventionZoneType = p.interventionZone.type;
-      base.interventionZoneAreaSqm = p.interventionZone.areaSqm;
-      base.interventionZoneAddress = p.interventionZone.address;
+    const zones = p.interventionZones && p.interventionZones.length > 0
+      ? p.interventionZones
+      : p.interventionZone
+      ? [p.interventionZone]
+      : [];
+    if (includeZone && zones.length > 0) {
+      base.interventionZones = zones;
+      base.interventionZoneCount = zones.length;
+      base.interventionZoneTotalAreaSqm = zones.reduce(
+        (sum, z) => sum + (z.areaSqm ?? 0),
+        0,
+      );
+      // GeoJSON FeatureCollection for tooling
+      base.interventionZonesGeoJSON = {
+        type: 'FeatureCollection',
+        features: zones.map((z, idx) => ({
+          type: 'Feature',
+          properties: {
+            label: z.label ?? `Zone ${idx + 1}`,
+            shape: z.type,
+            areaSqm: z.areaSqm,
+            radiusMeters: z.radiusMeters,
+            address: z.address,
+          },
+          geometry:
+            z.type === 'circle' || z.type === 'point'
+              ? {
+                  type: 'Point',
+                  coordinates: [z.coordinates[0]?.lng, z.coordinates[0]?.lat],
+                }
+              : {
+                  type: 'Polygon',
+                  coordinates: [
+                    [
+                      ...z.coordinates.map((c) => [c.lng, c.lat]),
+                      [z.coordinates[0]?.lng, z.coordinates[0]?.lat],
+                    ],
+                  ],
+                },
+        })),
+      };
     }
     return base;
   }
