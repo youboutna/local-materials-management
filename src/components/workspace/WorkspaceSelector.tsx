@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MAURITANIA_REGIONS } from '@/utils/mauritania';
 import { getAllGeographicUnits, getRegionsWithCapitals, getRegionsWithPorts, getRegionsWithUniversities } from '@/utils/mauritaniaUtils';
 import { GeographicUnit } from '@/utils/mauritania';
+import { toast } from '@/hooks/use-toast';
 import LocationAutocomplete from '../location/LocationAutocomplete';
 import { WorkspaceDTO } from '@/dtos/entities/WorkspaceDTO';
 import { OperationalStatus } from '@/domain/entities/Workspace';
