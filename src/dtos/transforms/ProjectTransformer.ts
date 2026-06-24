@@ -54,10 +54,10 @@ export class ProjectTransformer {
    * Converts snake_case database fields to camelCase domain properties
    */
   static fromSupabase(row: Record<string, unknown>): Project {
-    // Hydrate the intervention zone from `localisation` jsonb when available,
-    // and derive coordinates from its centroid when explicit lat/lng are missing.
-    const zone = InterventionZone.fromJSON(row.localisation);
-    const center = zone?.getCenter();
+    // Hydrate the intervention zones from `localisation` jsonb when available,
+    // and derive coordinates from the bounding centroid when explicit lat/lng are missing.
+    const zoneCollection = InterventionZoneCollection.fromJSON(row.localisation);
+    const center = zoneCollection.getBoundingCenter();
     const lat = row.coordinates_latitude != null
       ? Number(row.coordinates_latitude)
       : center?.lat;
