@@ -340,9 +340,12 @@ export interface ProjectDTO extends BaseEntityDTO {
     longitude: number;
   };
   /**
-   * Zone d'intervention géographique (polygone/rectangle/cercle).
-   * Stockée dans projects.localisation (jsonb). Voir InterventionZoneDTO.
+   * Zones d'intervention géographiques (polygones/rectangles/cercles, multi-zones).
+   * Stockées dans projects.localisation (jsonb v2 — { version: 2, zones: [...] }).
+   * Voir InterventionZoneDTO.
    */
+  interventionZones?: import('./InterventionZoneDTO').InterventionZoneDTO[];
+  /** @deprecated alias mono-zone — pointe vers `interventionZones[0]`. */
   interventionZone?: import('./InterventionZoneDTO').InterventionZoneDTO;
   
   
