@@ -36,8 +36,10 @@ import { LocationService } from './LocationService';
 import type { ProjectLocationData } from '@/dtos/entities/ProjectDTO';
 
 // Import geocoding for project location validation
-import { AutoFillLocationData, useLocationAutoFill } from '@/hooks/hexagonal/useLocationAutoFill';
-import { MAURITANIA_REGIONS } from '@/utils/mauritania';
+// NOTE: services must be pure TS — we use the singleton factory, never the React hook.
+import { getGeocodingService } from './GeocodingServiceFactory';
+import type { AutoFillLocationData } from '@/hooks/hexagonal/useLocationAutoFill';
+import { MAURITANIA_REGIONS, MAURITANIA_CITIES } from '@/utils/mauritania';
 
 // Location metadata interface
 interface LocationMetadata extends Record<string, unknown> {
@@ -763,19 +765,22 @@ export class ProjectService {
   // =================== PROJECT LOCATION METHODS ===================
 
   /**
-   * Validate and enrich project location data with geocoding
+   * Validate and enrich project location data with geocoding.
+   *
+   * Pure-TS implementation: uses the singleton {@link getGeocodingService}
+   * factory and ignores any React hook accidentally passed by legacy callers.
    */
   async validateAndEnrichProjectLocation(
     locationData: ProjectLocationData,
-    locationHook?: ReturnType<typeof useLocationAutoFill>
+    _legacyLocationHook?: unknown,
   ): Promise<ProjectLocationData & { validatedAt: string; validationSource: string; confidence: number }> {
     try {
       // Validate coordinates first
       this.validateProjectCoordinates(locationData.latitude, locationData.longitude);
 
       // Attempt geocoding if address provided but no coordinates
-      if (locationData.address && (!locationData.latitude || !locationData.longitude) && locationHook) {
-        const geocoded = await this.geocodeProjectAddress(locationData.address, locationHook);
+      if (locationData.address && (!locationData.latitude || !locationData.longitude)) {
+        const geocoded = await this.geocodeProjectAddress(locationData.address);
         if (geocoded?.coordinates && geocoded.confidence > 0.7) {
           locationData.latitude = geocoded.coordinates.lat;
           locationData.longitude = geocoded.coordinates.lng;
@@ -784,8 +789,11 @@ export class ProjectService {
       }
 
       // Attempt reverse geocoding if coordinates provided but no address
-      if ((locationData.latitude && locationData.longitude) && !locationData.address && locationHook) {
-        const reverseGeocoded = await this.reverseGeocodeProjectCoordinates(locationData.latitude, locationData.longitude, locationHook);
+      if ((locationData.latitude && locationData.longitude) && !locationData.address) {
+        const reverseGeocoded = await this.reverseGeocodeProjectCoordinates(
+          locationData.latitude,
+          locationData.longitude,
+        );
         if (reverseGeocoded?.address) {
           locationData.address = reverseGeocoded.address;
           locationData.locationData = reverseGeocoded;
@@ -835,14 +843,20 @@ export class ProjectService {
   }
 
   /**
-   * Geocode project address
+   * Geocode project address — pure TS, uses singleton factory.
    */
-  private async geocodeProjectAddress(
-    address: string,
-    locationHook: ReturnType<typeof useLocationAutoFill>
-  ): Promise<AutoFillLocationData | null> {
+  private async geocodeProjectAddress(address: string): Promise<AutoFillLocationData | null> {
     try {
-      return await locationHook.geocodeAddress(address);
+      const results = await getGeocodingService().geocode(address);
+      if (!results || results.length === 0) return null;
+      const r = results[0];
+      return {
+        address: r.address,
+        coordinates: r.coordinates,
+        confidence: r.confidence,
+        type: r.type,
+        metadata: r.metadata,
+      };
     } catch (error) {
       console.warn('Project geocoding failed:', error);
       return null;
@@ -850,15 +864,23 @@ export class ProjectService {
   }
 
   /**
-   * Reverse geocode project coordinates
+   * Reverse geocode project coordinates — pure TS, uses singleton factory.
    */
   private async reverseGeocodeProjectCoordinates(
     lat: number,
     lng: number,
-    locationHook: ReturnType<typeof useLocationAutoFill>
   ): Promise<AutoFillLocationData | null> {
     try {
-      return await locationHook.reverseGeocode(lat, lng);
+      const results = await getGeocodingService().reverseGeocode(lat, lng);
+      if (!results || results.length === 0) return null;
+      const r = results[0];
+      return {
+        address: r.address,
+        coordinates: r.coordinates,
+        confidence: r.confidence,
+        type: r.type,
+        metadata: r.metadata,
+      };
     } catch (error) {
       console.warn('Project reverse geocoding failed:', error);
       return null;
