@@ -38,6 +38,8 @@ import type {
   InterventionZoneLatLng,
   InterventionZoneShape,
 } from '@/dtos/entities/InterventionZoneDTO';
+import { getGeocodingService } from '@/application/services/GeocodingServiceFactory';
+import { toast } from 'sonner';
 
 // Marqueur Leaflet par défaut.
 const markerIcon = L.icon({
@@ -118,6 +120,53 @@ const InterventionZonesPicker: React.FC<InterventionZonesPickerProps> = ({
     ? [zones[0].coordinates[0].lat, zones[0].coordinates[0].lng]
     : defaultCenter;
 
+  /**
+   * Reverse-geocode the zone center via the singleton GeocodingService
+   * and merge address + Mauritania region/city codes + provider metadata.
+   * Best-effort — silently ignored on failure (the zone stays usable).
+   */
+  const enrichWithReverseGeocode = async (
+    zone: InterventionZoneDTO,
+  ): Promise<InterventionZoneDTO> => {
+    const center = zone.coordinates[0];
+    if (!center) return zone;
+    try {
+      const results = await getGeocodingService().reverseGeocode(center.lat, center.lng);
+      const r = results?.[0];
+      if (!r) return zone;
+      return {
+        ...zone,
+        address: zone.address ?? r.address,
+        regionCode:
+          zone.regionCode ?? (r.type === 'region' ? r.metadata?.code : undefined),
+        cityCode:
+          zone.cityCode ?? (r.type === 'city' ? r.metadata?.code : undefined),
+        geocodingMeta: {
+          provider: 'openstreetmap',
+          confidence: r.confidence,
+          displayName: r.address,
+          placeId: (r as unknown as { placeId?: string | number }).placeId,
+          geocodedAt: new Date().toISOString(),
+        },
+      };
+    } catch {
+      return zone;
+    }
+  };
+
+  const commitZone = async (zone: InterventionZoneDTO) => {
+    // Append immediately for snappy UX, then patch with geocoding result.
+    const provisional = [...zones, zone];
+    onChange(provisional);
+    const enriched = await enrichWithReverseGeocode(zone);
+    if (enriched !== zone) {
+      onChange([...zones, enriched]);
+      if (enriched.address) {
+        toast.success(`📍 Zone géolocalisée : ${enriched.address}`);
+      }
+    }
+  };
+
   const handleMapClick = (latlng: InterventionZoneLatLng) => {
     if (mode === 'polygon') {
       setDraftCoords((prev) => [...prev, latlng]);
@@ -129,7 +178,7 @@ const InterventionZonesPicker: React.FC<InterventionZonesPickerProps> = ({
         coordinates: [latlng],
         label: draftLabel || `Point ${zones.length + 1}`,
       };
-      onChange([...zones, z]);
+      void commitZone(z);
       setDraftLabel('');
       setMode('idle');
     }
@@ -144,7 +193,7 @@ const InterventionZonesPicker: React.FC<InterventionZonesPickerProps> = ({
       areaSqm,
       label: draftLabel || `Zone ${zones.length + 1}`,
     };
-    onChange([...zones, z]);
+    void commitZone(z);
     setDraftCoords([]);
     setDraftLabel('');
     setMode('idle');
@@ -159,7 +208,7 @@ const InterventionZonesPicker: React.FC<InterventionZonesPickerProps> = ({
       areaSqm: circleAreaSqm(draftCircle.radius),
       label: draftLabel || `Zone ${zones.length + 1}`,
     };
-    onChange([...zones, z]);
+    void commitZone(z);
     setDraftCircle(null);
     setDraftLabel('');
     setMode('idle');
