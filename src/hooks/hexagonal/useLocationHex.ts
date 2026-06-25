@@ -97,13 +97,7 @@ export function useLocationHex(): UseLocationHexResult {
     []
   );
 
-  const geocodingService = useMemo(() => 
-    new GeocodingService({
-      userAgent: 'MauritaniaMapper/1.0 (location-hex-hook)',
-      prioritizeLocal: true
-    }), 
-    []
-  );
+  const geocodingService = useMemo(() => getGeocodingService(), []);
 
   // Query all regions and cities
   const { data: allRegions, isLoading: regionsLoading } = useQuery({
