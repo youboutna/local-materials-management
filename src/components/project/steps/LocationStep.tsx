@@ -32,6 +32,12 @@ const LocationStep: React.FC<LocationStepProps> = ({
       <CardContent>
         <div className="space-y-6">
           <div>
+            <label className="block text-sm font-medium mb-2">
+              Adresse du projet (siège équipe / siège social)
+            </label>
+            <p className="text-xs text-muted-foreground mb-2">
+              Adresse administrative et point de contact — distincte des zones bénéficiaires ci-dessous.
+            </p>
             <UnifiedLocationSelector
               value={{
                 address: formData.location || formData.address,
