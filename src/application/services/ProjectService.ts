@@ -655,10 +655,9 @@ export class ProjectService {
       
       // Validate and enrich location data if provided
       let enrichedLocation: ProjectLocationData & { validatedAt: string; validationSource: string; confidence: number } | undefined;
-      if (locationData && this.locationService) {
-        // We need to pass the location hook from React context
-        // This method should be called from a React component that can provide the hook
-        enrichedLocation = await (this.locationService as any).validateAndEnrichProjectLocation(locationData);
+      if (locationData) {
+        // Pure-TS enrichment via singleton geocoding factory (no React hook needed).
+        enrichedLocation = await this.validateAndEnrichProjectLocation(locationData);
       }
 
       // Create project data for repository - let repository handle mapping
@@ -720,8 +719,8 @@ export class ProjectService {
         throw new ProjectServiceError('Location service not available', 'LOCATION_SERVICE_UNAVAILABLE');
       }
 
-      // Validate and enrich location data
-      const enrichedLocation = await (this.locationService as any).validateAndEnrichProjectLocation(locationData);
+      // Validate and enrich location data (pure TS).
+      const enrichedLocation = await this.validateAndEnrichProjectLocation(locationData);
 
       // Update project with location data
       const updateData: UpdateProjectDTO = {
