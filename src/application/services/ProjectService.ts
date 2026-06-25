@@ -715,11 +715,7 @@ export class ProjectService {
 
   async updateLocation(projectId: string, locationData: ProjectLocationData): Promise<ProjectDTO> {
     try {
-      if (!this.locationService) {
-        throw new ProjectServiceError('Location service not available', 'LOCATION_SERVICE_UNAVAILABLE');
-      }
-
-      // Validate and enrich location data (pure TS).
+      // Validate and enrich location data (pure TS — singleton factory).
       const enrichedLocation = await this.validateAndEnrichProjectLocation(locationData);
 
       // Update project with location data
