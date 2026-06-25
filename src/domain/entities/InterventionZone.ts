@@ -16,6 +16,14 @@ export interface LatLng {
   lng: number;
 }
 
+export interface InterventionZoneGeocodingMeta {
+  provider?: string;
+  confidence?: number;
+  displayName?: string;
+  placeId?: string | number;
+  geocodedAt?: string;
+}
+
 export interface InterventionZoneProps {
   type: InterventionZoneShape;
   /**
@@ -30,6 +38,12 @@ export interface InterventionZoneProps {
   address?: string;
   /** Superficie en m² (calculée si absente). */
   areaSqm?: number;
+  /** Code wilaya Mauritanie (auto-rempli par reverse-geocoding). */
+  regionCode?: string;
+  /** Code moughataa/ville Mauritanie (auto-rempli par reverse-geocoding). */
+  cityCode?: string;
+  /** Métadonnées du dernier géocodage appliqué (provider, confidence, place_id). */
+  geocodingMeta?: InterventionZoneGeocodingMeta;
 }
 
 const EARTH_RADIUS_M = 6_371_000;
@@ -42,6 +56,9 @@ export class InterventionZone {
   readonly label?: string;
   readonly address?: string;
   readonly areaSqm?: number;
+  readonly regionCode?: string;
+  readonly cityCode?: string;
+  readonly geocodingMeta?: InterventionZoneGeocodingMeta;
 
   private constructor(props: InterventionZoneProps) {
     this.type = props.type;
@@ -50,6 +67,9 @@ export class InterventionZone {
     this.label = props.label;
     this.address = props.address;
     this.areaSqm = props.areaSqm ?? InterventionZone.computeAreaSqm(props);
+    this.regionCode = props.regionCode;
+    this.cityCode = props.cityCode;
+    this.geocodingMeta = props.geocodingMeta;
   }
 
   static create(props: InterventionZoneProps): InterventionZone {
@@ -81,6 +101,9 @@ export class InterventionZone {
       label: this.label,
       address: this.address,
       areaSqm: this.areaSqm,
+      regionCode: this.regionCode,
+      cityCode: this.cityCode,
+      geocodingMeta: this.geocodingMeta,
     };
   }
 
@@ -99,6 +122,9 @@ export class InterventionZone {
         label: v.label,
         address: v.address,
         areaSqm: v.areaSqm,
+        regionCode: v.regionCode,
+        cityCode: v.cityCode,
+        geocodingMeta: v.geocodingMeta,
       });
     } catch {
       return undefined;
