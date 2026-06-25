@@ -1,109 +1,87 @@
-# Plan — Deux tâches parallélisables
+## Périmètre
 
-Les deux tâches sont **indépendantes** (fichiers et tables disjoints) et peuvent être implémentées en parallèle.
-
----
-
-## Tâche 1 — Aligner Import / Export projets sur l'architecture hexagonale + référentiels
-
-### Constats
-
-- `ProjectImporter2025.tsx` viole la règle hexagonale : import direct `supabase.from(...)` (interdit dans `components/`). Doit passer par `ProjectService` via `useImportProjectsHex`.
-- `ProjectFileImporter.tsx`, `AdvancedProjectImporter.tsx`, `ProjectExporter.tsx` instancient `new ProjectService(RepositoryFactory.getProjectRepository())` dans le composant : à remplacer par les hooks hexagonaux (`useImportProjectsHex`, `useProjectsHex`).
-- `ProjectExporter` utilise `projects: any[]` → typer en `ProjectDTO[]`.
-- `useProjectImporterHex` ne propage pas les champs d'import enrichis (référentiel, type de projet, méthodologie, zone d'intervention, coordonnées, phases référentielles). Doit accepter `CreateProjectDTO` étendu et déléguer à `ProjectService.createProject` (qui passe par les transformers et déclenche la génération de phases via `ProjectWorkflowService` quand un référentiel `projectType` est résolu).
-- Aucune validation référentielle à l'import : il faut faire passer chaque ligne par `ReferentialService.validateProjectAgainstReferential(...)` (ou un nouvel utilitaire `ProjectImportValidator`) qui :
-  - mappe `project_type` → `projectTypes.referential.ts` (SOMELEC, ETER, SNAT…),
-  - vérifie les champs obligatoires du référentiel,
-  - injecte les tâches obligatoires de `compliance-obligations.referential.ts`,
-  - applique les modèles de pondération (`weighting-models`) si phases présentes.
-- Export : enrichir le payload avec les indicateurs TBI (CPI/SPI/TEP) calculés via `ScheduleVsActualService` et la zone d'intervention (cf. Tâche 2). Format JSON exhaustif, Excel/CSV : colonnes plates documentées.
-
-### Livrables
-
-1. **Service unifié** `src/application/services/ProjectImportExportService.ts`
-  - `importProjects(rows: ProjectImportRow[], opts): Promise<ImportResult>` : validation référentielle → `ProjectService.createProject` → génération phases via `ProjectWorkflowService` → `ImportResult` agrégé.
-  - `exportProjects(ids: string[], format): Promise<Blob>` : récupère via `ProjectService.getProjectsByIds`, enrichit (zone d'intervention, indicateurs TBI), sérialise.
-  - Pure TS, zéro React (mémoire `no-react-in-services`).
-2. **Hook** `src/hooks/hexagonal/useProjectImportExportHex.ts` exposant `importProjects` (mutation) + `exportProjects` (mutation) avec toasts, `isImporting`, `isExporting`, erreurs.
-3. **DTOs** : étendre `src/dtos/entities/ProjectImportDTO.ts` avec `referentialCode`, `interventionZone` (cf. Tâche 2), `phasesTemplate`. Ajouter `ProjectExportDTO`.
-4. **Refonte UI** (présentation uniquement, logique métier dans le service) :
-  - `ProjectImporter2025.tsx` : remplacer `supabase.from('projects').insert` par `useProjectImportExportHex().importProjects`.
-  - `ProjectFileImporter.tsx`, `AdvancedProjectImporter.tsx` : supprimer instanciation directe de `ProjectService`, brancher sur le hook, mapper les colonnes parsées vers `ProjectImportRow` via un transformer dédié `src/dtos/transforms/ProjectImportTransformer.ts` (`fileRowToImportDTO`, `geoFeatureToImportDTO`).
-  - `ProjectExporter.tsx` : typer `projects: ProjectDTO[]`, brancher `useProjectsHex` + `exportProjects`, ajouter case à cocher « Inclure zone d'intervention » et « Inclure indicateurs TBI ».
-5. **Tests/validation** : build TS, lint, mini script `bunx vitest run` sur le transformer.
-
-### Critères d'acceptation
-
-- `rg "supabase\.from" src/components/projects` → 0 hit.
-- `rg "new ProjectService" src/components` → 0 hit.
-- Un import Excel basique crée des projets, génère les phases via référentiel si `project_type` mappé, et affiche un `ImportResult` avec erreurs ligne par ligne.
-- Export JSON contient la `interventionZone` (si présente) et un bloc `indicators` (CPI/SPI/TEP) ; Excel/CSV applatissent ces données.
+Trois lots indépendants à exécuter dans la foulée. Lot A (bugs bloquants) en premier, puis Lot B (domaine zones), puis Lot C (UI/import-export).
 
 ---
 
-## Tâche 2 — Localisation projet = zone d'intervention (forme géométrique), pas seulement adresse
+## Lot A — Bugs runtime (priorité haute)
 
-### Constats
+### A1. `OperationalStatus is not defined` (SupabaseWorkspaceAdapter)
+- Lire `src/infrastructure/supabase/adapters/SupabaseWorkspaceAdapter.ts` + `src/domain/entities/Workspace.ts`.
+- Ajouter l'import manquant de `OperationalStatus` (ou retirer la référence si l'enum a été supprimé) dans `mapToEntity`.
 
-- Table `projects` possède déjà : `forme text`, `localisation jsonb`, `geographic_zone text`, `adresse jsonb`, `coordinates_latitude/longitude`, `area_sqm`. Aucune géométrie polygone structurée n'est exploitée côté domaine.
-- `Project` entity / `ProjectDTO` n'exposent qu'un point (`latitude/longitude`) + `location: string`. La carte (`MapLocation`) supporte déjà `warehouseShape: {lat,lng}[]` mais uniquement pour les entrepôts.
-- L'utilisateur veut : la **localisation d'un projet = une zone d'intervention** (polygone / rectangle / cercle), pas qu'une adresse.
+### A2. `require is not defined` (KPI / `getAlertRepository`)
+- Rechercher `require(` côté navigateur (`rg "require\\(" src/`).
+- Remplacer par `import` statique ou `await import(...)` dynamique (selon mémoire « Dynamic Supabase Import »).
 
-### Modèle cible
+### A3. `Contractor contact is required` (PaymentRequestService)
+- Lire `PaymentTransformer` et `Payment` entité : la validation `validateContractorContact` bloque le `mapToEntity` lors d'un simple findAll dashboard.
+- Rendre la validation **tolérante en lecture** : si le contact manque, journaliser un warning et retourner l'entité avec `contractorContact: undefined` au lieu de throw. La validation stricte reste à la création/mise à jour.
 
-- Nouveau type domaine `InterventionZone` :
-  ```ts
-  type InterventionZoneShape = 'polygon' | 'rectangle' | 'circle';
-  interface InterventionZone {
-    type: InterventionZoneShape;
-    coordinates: { lat: number; lng: number }[]; // polygone/rect : sommets ; cercle : [center]
-    radiusMeters?: number;                       // cercle uniquement
-    label?: string;                              // ex. "Lot 3 — wilaya de Trarza"
-    areaSqm?: number;                            // calculé
-    address?: string;                            // libellé textuel (ex-`location`)
-  }
+### A4. `invalid input syntax for type uuid: "consulting_firms"` (création de tâche)
+- Reproduire : page Tasks → Créer. Inspecter le payload : un champ catégorie/type (`consulting_firms`) est envoyé dans une colonne `uuid` (probablement `assignee_id` ou `project_id` mal mappé).
+- Lire `TaskService.createTask` + `SupabaseTaskAdapter` + le formulaire `TaskCreateForm`.
+- Corriger le mapping : la chaîne `consulting_firms` doit aller dans une colonne `text` (type/catégorie), pas dans une FK uuid.
+
+---
+
+## Lot B — Domaine multi-zones d'intervention
+
+### B1. Séparation conceptuelle
+- **`projects.address`** (déjà existant via DTO `address` + `coordinates`) = adresse administrative du projet (siège équipe). Pas touché.
+- **`projects.localisation` (jsonb)** = liste de zones bénéficiaires (multi-polygones non disjoints).
+
+### B2. Domaine
+- Mettre à jour `src/domain/entities/InterventionZone.ts` pour exposer aussi un **wrapper `InterventionZoneCollection`** : tableau de `InterventionZone` + `getBoundingCenter()` + `getTotalAreaSqm()`.
+- Format JSON stocké en DB :
+  ```json
+  { "version": 2, "zones": [ {InterventionZoneProps}, ... ] }
   ```
-  &nbsp;
-- Stockage : utiliser la colonne existante `**localisation jsonb**` pour persister la zone (rétrocompatible). La colonne `forme text` est conservée comme libellé court (`'polygon'`, `'circle'`...). `location: string` reste pour l'adresse libre. **Pas de migration destructive** ; juste un `COMMENT ON COLUMN` SQL pour documenter le format JSON.
+  Rétro-compat : si `{ type: 'polygon'|... }` à la racine → wrap automatiquement en `{ zones: [old] }`.
 
-### Livrables
+### B3. DTO + Transformer
+- `ProjectDTO.interventionZone` → `interventionZones: InterventionZoneDTO[]` (au pluriel). Garder un getter `interventionZone` (alias = `zones[0]`) pour compat ascendante temporaire.
+- `ProjectTransformer.fromSupabase` : parse `localisation` jsonb → `zones[]`. Centroïde projet = barycentre des centroïdes (fallback `coordinates_latitude/longitude`).
+- `ProjectTransformer.toSupabase` : `localisation = { version: 2, zones: zones.map(z => z.toJSON()) }`.
 
-1. **Domaine**
-  - `src/domain/entities/InterventionZone.ts` : entité + factory + helpers (`computeCentroid`, `computeAreaSqm`, `contains(lat,lng)`).
-  - `src/domain/entities/Project.ts` : ajouter `interventionZone?: InterventionZone`, `getCenter()`, conserver `latitude/longitude` (auto-calculés depuis le centroïde si absents).
-2. **DTO + Transformer**
-  - `src/dtos/entities/ProjectDTO.ts` : champ `interventionZone?: InterventionZoneDTO`.
-  - `src/dtos/transforms/ProjectTransformer.ts` (et `SupabaseProjectAdapter`) : sérialiser/désérialiser `localisation` jsonb ↔ `InterventionZoneDTO`. `coordinates_latitude/longitude` renseignés depuis le centroïde quand zone fournie.
-3. **Service**
-  - `ProjectService.setInterventionZone(projectId, zone)` + recalcul `area_sqm`.
-  - `getProjectCoordinates` (déjà mémoïsé en mémoire) : prend en compte le centroïde de la zone.
-4. **UI**
-  - Édition projet (`ProjectEdit` / step Localisation) : remplacer le simple input par un `InterventionZonePicker` (réutilise les composants Leaflet déjà présents, draw polygon/rectangle/circle, basé sur `react-leaflet-draw` déjà inclus pour les entrepôts).
-  - Carte interactive (`EnhancedInteractiveMap`, `InteractiveProjectsList`) : afficher la zone du projet (polygone) en plus du marqueur, popup « Voir détails » → `/projects/:id`.
-  - `MapLocation` (`Location.ts`) : ajouter `interventionZone?: InterventionZoneDTO` (sans casser `warehouseShape`).
-  - `Projects.tsx` : transformer projets → `MapLocation` en propageant la zone.
-5. **Hook** `useProjectInterventionZoneHex` (lecture+save via service).
-6. **Documentation** : section dans `docs/ARCHITECTURE_REFERENTIELS.md` § « Zone d'intervention » (1 paragraphe + schéma JSON).
-7. **Migration légère SQL** : `COMMENT ON COLUMN public.projects.localisation IS '{type, coordinates[], radiusMeters?, label?, areaSqm?, address?}'`. Pas de modification de structure.
-
-### Critères d'acceptation
-
-- Création/édition d'un projet permet de dessiner une zone (polygone/rectangle/cercle) sur la carte. Sauvegarde persiste dans `projects.localisation`.
-- Au chargement, la zone réapparaît, le marqueur est positionné sur le centroïde, `area_sqm` est mis à jour.
-- L'export projet (Tâche 1) inclut la zone ; l'import GeoJSON (`AdvancedProjectImporter`) hydrate la zone depuis `feature.geometry` quand `type ∈ {Polygon, MultiPolygon, Point}`.
-- `rg "supabase\.from" src/components` reste à 0.
+### B4. Service
+- `ProjectService.setInterventionZones(projectId, zones[])`.
+- `ProjectService.addInterventionZone` / `removeInterventionZone(zoneIndex)`.
 
 ---
 
-## Exécution
+## Lot C — UI : picker Leaflet + import/export
 
-Les deux tâches peuvent être codées en parallèle (aucun fichier partagé sauf `ProjectDTO.ts` / `ProjectTransformer.ts`, qu'on traite en premier dans la Tâche 2 puis consommé par la Tâche 1). Build/typecheck final commun.
+### C1. `InterventionZonesPicker` (nouveau composant)
+- `src/components/projects/InterventionZonesPicker.tsx`.
+- Leaflet + `leaflet-draw` (déjà utilisé dans le projet, sinon `bun add leaflet-draw @types/leaflet-draw`).
+- Permet de **dessiner plusieurs polygones / rectangles / cercles** sur la même carte, les modifier, les supprimer. Affiche label + surface calculée par zone. Bouton "Ajouter une zone".
+- Props : `value: InterventionZoneDTO[]`, `onChange(zones)`, `addressMarker?: LatLng` (affiche l'adresse projet comme repère distinct).
 
-```text
-T2 (domain + DTO zone) ──┐
-                         ├─► merge → build TS
-T1 (service + UI I/E)  ──┘
-```
+### C2. Intégration formulaires
+- `ProjectCreate.tsx` / `ProjectEdit.tsx` : section "Adresse du projet" (existante) + nouvelle section "Zones bénéficiaires" utilisant `InterventionZonesPicker`. Sauvegarde via `useProjectInterventionZoneHex` (renommé `useProjectInterventionZonesHex`).
 
-&nbsp;
+### C3. Affichage carte projets
+- `EnhancedInteractiveMap` / `Projects.tsx` : afficher chaque zone d'intervention en `Polygon`/`Circle` Leaflet (couleur selon statut). Marqueur adresse = pin classique distinct.
+
+### C4. Refonte importers/exporters
+- **`AdvancedProjectImporter.tsx`** + **`ProjectFileImporter.tsx`** : supprimer toute instanciation directe de `ProjectService`/`supabase.from`. Passer par `useProjectImportExportHex().importProjects`.
+- **`ProjectExporter.tsx`** : utiliser `useProjectImportExportHex().exportProjects`. Ajouter case à cocher "Inclure zones d'intervention (GeoJSON)".
+- **Nouveau `ProjectImportTransformer`** (`src/dtos/transforms/ProjectImportTransformer.ts`) : ligne CSV/Excel/JSON brute → `CreateProjectDTO` validé (référentiel, parsing GeoJSON pour `interventionZones`, normalisation wilaya via `mauritaniaUtils`).
+- `ProjectImportExportService.importProjects` utilise `ProjectImportTransformer.fromRow` au lieu de mapping inline.
+
+### C5. Critères de validation
+- `rg "supabase.from" src/components/projects/` → 0 hit pour Importer/Exporter.
+- `rg "new ProjectService" src/components/` → 0 hit.
+- Build TS vert (`tsgo`).
+- Création projet : on dessine 2 polygones se chevauchant → sauvegarde → reload → les 2 zones réapparaissent sur la carte et dans l'export GeoJSON.
+
+---
+
+## Ordre d'exécution
+
+1. **Lot A** en parallèle (4 fixes indépendants, fichiers distincts).
+2. **Lot B** (domaine pur, pas de dépendance UI).
+3. **Lot C** (dépend de B). C1 (picker) + C4 (refonte importers) en parallèle, puis C2/C3 qui consomment C1.
+
+Migration DB : aucune nouvelle table. Juste un `COMMENT ON COLUMN public.projects.localisation` mis à jour pour documenter `{version:2, zones:[]}`.

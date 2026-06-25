@@ -354,14 +354,16 @@ export class Payment {
 
   private validateContractorName(name: string): string {
     if (!name || name.trim().length === 0) {
-      throw new Error('Contractor name is required');
+      console.warn('[Payment] contractorName missing — defaulting to "—"');
+      return '—';
     }
     return name.trim();
   }
 
   private validateContractorContact(contact: string): string {
     if (!contact || contact.trim().length === 0) {
-      throw new Error('Contractor contact is required');
+      console.warn('[Payment] contractorContact missing — defaulting to "—"');
+      return '—';
     }
     return contact.trim();
   }

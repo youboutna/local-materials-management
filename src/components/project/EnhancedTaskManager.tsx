@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
@@ -801,23 +801,29 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                       <SelectValue placeholder="Sélectionner un profil" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="employees">Employees (Internal Staff)</SelectItem>
-                      {employees.map((emp) => (
-                        <SelectItem key={emp.id} value={emp.id}>
-                          {emp.full_name} {emp.position ? `(${emp.position})` : ''}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="consulting_firms">Consulting Firms</SelectItem>
-                      {suppliers.filter(s => s.type === 'consulting').map((supplier) => (
-                        <SelectItem key={supplier.id} value={supplier.id}>
-                          {supplier.name} {supplier.contact_person ? `- ${supplier.contact_person}` : ''}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="main_contractor">Main Contractor</SelectItem>
+                      <SelectGroup>
+                        <SelectLabel>Employés (Internes)</SelectLabel>
+                        {employees.map((emp) => (
+                          <SelectItem key={emp.id} value={emp.id}>
+                            {emp.full_name} {emp.position ? `(${emp.position})` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                      <SelectGroup>
+                        <SelectLabel>Bureaux d'études / Consultants</SelectLabel>
+                        {suppliers.filter(s => s.type === 'consulting').map((supplier) => (
+                          <SelectItem key={supplier.id} value={supplier.id}>
+                            {supplier.name} {supplier.contact_person ? `- ${supplier.contact_person}` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
                       {projectData?.main_contractor && (
-                        <SelectItem value={projectData.main_contractor}>
-                          {projectData.main_contractor}
-                        </SelectItem>
+                        <SelectGroup>
+                          <SelectLabel>Contractant principal</SelectLabel>
+                          <SelectItem value={projectData.main_contractor}>
+                            {projectData.main_contractor}
+                          </SelectItem>
+                        </SelectGroup>
                       )}
                     </SelectContent>
                   </Select>

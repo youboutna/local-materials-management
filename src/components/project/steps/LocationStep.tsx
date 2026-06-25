@@ -3,6 +3,8 @@ import { MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import InteractiveMapGIS from '../../materials/InteractiveMapGIS';
 import UnifiedLocationSelector from '../../location/UnifiedLocationSelector';
+import InterventionZonesPicker from '../../projects/InterventionZonesPicker';
+import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 
 // Import entity DTOs (following PROMPTS.md Rule #4: No type redefinition)
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
@@ -30,6 +32,12 @@ const LocationStep: React.FC<LocationStepProps> = ({
       <CardContent>
         <div className="space-y-6">
           <div>
+            <label className="block text-sm font-medium mb-2">
+              Adresse du projet (siège équipe / siège social)
+            </label>
+            <p className="text-xs text-muted-foreground mb-2">
+              Adresse administrative et point de contact — distincte des zones bénéficiaires ci-dessous.
+            </p>
             <UnifiedLocationSelector
               value={{
                 address: formData.location || formData.address,
@@ -54,32 +62,27 @@ const LocationStep: React.FC<LocationStepProps> = ({
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-4">Localisation précise et délimitation</label>
-            <div className="border rounded-lg overflow-hidden">
-              <InteractiveMapGIS
-                title="Géolocalisation du Projet"
-                description="Sélectionnez l'emplacement et tracez la zone de travail"
-                allowPolygon={true}
-                value={formData.coordinates ? {
-                  coordinates: {
-                    lat: formData.coordinates.latitude,
-                    lng: formData.coordinates.longitude
-                  }
-                } : undefined}
-                onChange={(locationData) => {
-                  if (locationData?.coordinates) {
-                    onUpdate({ 
-                      coordinates: {
-                        latitude: locationData.coordinates.lat,
-                        longitude: locationData.coordinates.lng
-                      }
-                    });
-                  }
-                }}
-              />
-            </div>
-          </div>
+          {/* Zones d'intervention — multi-polygones bénéficiaires */}
+          <InterventionZonesPicker
+            value={
+              (formData as unknown as { interventionZones?: InterventionZoneDTO[] })
+                .interventionZones ??
+              ((formData as unknown as { interventionZone?: InterventionZoneDTO })
+                .interventionZone
+                ? [
+                    (formData as unknown as { interventionZone: InterventionZoneDTO })
+                      .interventionZone,
+                  ]
+                : [])
+            }
+            onChange={(zones) =>
+              onUpdate({
+                interventionZones: zones,
+                // Legacy : on garde la première zone dans `interventionZone` pour compat.
+                interventionZone: zones[0],
+              } as unknown as Partial<ProjectDTO>)
+            }
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>

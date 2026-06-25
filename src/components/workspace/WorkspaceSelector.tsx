@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MAURITANIA_REGIONS } from '@/utils/mauritania';
 import { getAllGeographicUnits, getRegionsWithCapitals, getRegionsWithPorts, getRegionsWithUniversities } from '@/utils/mauritaniaUtils';
 import { GeographicUnit } from '@/utils/mauritania';
+import { toast } from '@/hooks/use-toast';
 import LocationAutocomplete from '../location/LocationAutocomplete';
 import { WorkspaceDTO } from '@/dtos/entities/WorkspaceDTO';
 import { OperationalStatus } from '@/domain/entities/Workspace';
@@ -50,7 +51,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const selectedWorkspace = workspaces.find(w => w.id === selectedWorkspaceId);
-  const { toast } = require('@/hooks/use-toast').useToast ? require('@/hooks/use-toast') : { toast: (...args: any[]) => console.log(...args) };
+  
 
   const regions = getRegionsWithCapitals();
   

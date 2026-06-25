@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,7 +47,10 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
-  const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+  const projectService = useMemo(
+    () => new ProjectService(RepositoryFactory.getProjectRepository()),
+    [],
+  );
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';

@@ -19,7 +19,7 @@ import {
   CreateProjectRequestDTO
 } from '@/dtos/entities/ProjectDTO';
 import type { ConstructionStage } from '@/dtos/entities/ProjectDTO';
-import { InterventionZone } from '@/domain/entities/InterventionZone';
+import { InterventionZone, InterventionZoneCollection } from '@/domain/entities/InterventionZone';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 import { PhaseTransformer } from './PhaseTransformer';
 import { TaskTransformer } from './TaskTransformer';
@@ -54,10 +54,10 @@ export class ProjectTransformer {
    * Converts snake_case database fields to camelCase domain properties
    */
   static fromSupabase(row: Record<string, unknown>): Project {
-    // Hydrate the intervention zone from `localisation` jsonb when available,
-    // and derive coordinates from its centroid when explicit lat/lng are missing.
-    const zone = InterventionZone.fromJSON(row.localisation);
-    const center = zone?.getCenter();
+    // Hydrate the intervention zones from `localisation` jsonb when available,
+    // and derive coordinates from the bounding centroid when explicit lat/lng are missing.
+    const zoneCollection = InterventionZoneCollection.fromJSON(row.localisation);
+    const center = zoneCollection.getBoundingCenter();
     const lat = row.coordinates_latitude != null
       ? Number(row.coordinates_latitude)
       : center?.lat;
@@ -235,9 +235,15 @@ export class ProjectTransformer {
             longitude: project.coordinates.longitude,
           }
         : undefined,
+      interventionZones: (() => {
+        const collection = InterventionZoneCollection.fromJSON(project.localisation);
+        return collection.isEmpty()
+          ? undefined
+          : collection.zones.map((z) => z.toJSON() as InterventionZoneDTO);
+      })(),
       interventionZone: (() => {
-        const zone = InterventionZone.fromJSON(project.localisation);
-        return zone ? (zone.toJSON() as InterventionZoneDTO) : undefined;
+        const collection = InterventionZoneCollection.fromJSON(project.localisation);
+        return collection.isEmpty() ? undefined : (collection.zones[0].toJSON() as InterventionZoneDTO);
       })(),
       startDate: project.startDate?.toISOString() || '',
       endDate: project.endDate?.toISOString(),
@@ -342,18 +348,30 @@ export class ProjectTransformer {
    * For processing incoming API requests
    */
   static fromDTO(dto: ProjectDTO | ProjectDTOWithCollections): Project {
-    // Resolve intervention zone -> derive centroid coords + `localisation` JSON
-    const zone = dto.interventionZone
-      ? InterventionZone.create({
-          type: dto.interventionZone.type,
-          coordinates: dto.interventionZone.coordinates,
-          radiusMeters: dto.interventionZone.radiusMeters,
-          label: dto.interventionZone.label,
-          address: dto.interventionZone.address,
-          areaSqm: dto.interventionZone.areaSqm,
-        })
-      : undefined;
-    const zoneCenter = zone?.getCenter();
+    // Resolve intervention zones (multi) -> derive centroid + `localisation` JSON v2
+    const zonesInput = dto.interventionZones && dto.interventionZones.length > 0
+      ? dto.interventionZones
+      : dto.interventionZone
+      ? [dto.interventionZone]
+      : [];
+    const zoneEntities = zonesInput
+      .map((z) => {
+        try {
+          return InterventionZone.create({
+            type: z.type,
+            coordinates: z.coordinates,
+            radiusMeters: z.radiusMeters,
+            label: z.label,
+            address: z.address,
+            areaSqm: z.areaSqm,
+          });
+        } catch {
+          return undefined;
+        }
+      })
+      .filter((z): z is InterventionZone => !!z);
+    const collection = InterventionZoneCollection.create(zoneEntities);
+    const zoneCenter = collection.getBoundingCenter();
     const explicitLat = dto.latitude ?? dto.coordinates?.latitude;
     const explicitLng = dto.longitude ?? dto.coordinates?.longitude;
     const coordinates = explicitLat != null && explicitLng != null
@@ -392,12 +410,12 @@ export class ProjectTransformer {
       completionDate: dto.completionDate ? new Date(dto.completionDate) : undefined,
       donorOrganization: dto.donorOrganization,
       estimatedDays: dto.estimatedDays,
-      forme: zone?.type ?? dto.forme,
+      forme: collection.zones[0]?.type ?? dto.forme,
       fundingSource: dto.fundingSource,
       initialAdvancePercentage: dto.initialAdvancePercentage,
       initialPaymentPercentage: dto.initialPaymentPercentage,
-      localisation: zone
-        ? (zone.toJSON() as unknown as Record<string, unknown>)
+      localisation: !collection.isEmpty()
+        ? (collection.toJSON() as unknown as Record<string, unknown>)
         : dto.localisation,
 
       materialsBudget: dto.materialsBudget,

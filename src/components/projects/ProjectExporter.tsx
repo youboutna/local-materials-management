@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,7 +30,10 @@ const ProjectExporter = () => {
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const { toast } = useToast();
   const { t } = useLanguage();
-  const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+  const projectService = useMemo(
+    () => new ProjectService(RepositoryFactory.getProjectRepository()),
+    [],
+  );
 
   useEffect(() => {
     const loadProjects = async () => {

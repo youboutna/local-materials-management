@@ -20,7 +20,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useMemo } from "react";
 import * as XLSX from "xlsx";
 
 type ImportMode = "create" | "update" | "patch";
@@ -63,7 +63,10 @@ export default function ProjectFileImporter({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
-  const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+  const projectService = useMemo(
+    () => new ProjectService(RepositoryFactory.getProjectRepository()),
+    [],
+  );
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return "0 Bytes";

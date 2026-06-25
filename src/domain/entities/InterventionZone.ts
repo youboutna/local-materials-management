@@ -128,3 +128,60 @@ export class InterventionZone {
     return Math.abs(s) / 2;
   }
 }
+
+/**
+ * Collection de zones d'intervention (un projet peut couvrir plusieurs zones
+ * bénéficiaires, potentiellement non disjointes).
+ *
+ * Format JSON stocké en DB (`projects.localisation`) :
+ *   { version: 2, zones: InterventionZoneProps[] }
+ *
+ * Rétro-compatibilité : si la racine ressemble à un `InterventionZoneProps`
+ * (legacy mono-zone), elle est automatiquement wrappée dans `{ zones: [...] }`.
+ */
+export class InterventionZoneCollection {
+  readonly zones: InterventionZone[];
+
+  private constructor(zones: InterventionZone[]) {
+    this.zones = zones;
+  }
+
+  static create(zones: InterventionZone[]): InterventionZoneCollection {
+    return new InterventionZoneCollection(zones);
+  }
+
+  static fromJSON(value: unknown): InterventionZoneCollection {
+    if (!value || typeof value !== 'object') return new InterventionZoneCollection([]);
+    const v = value as Record<string, unknown>;
+    // Format v2
+    if (Array.isArray(v.zones)) {
+      const zones = v.zones
+        .map((z) => InterventionZone.fromJSON(z))
+        .filter((z): z is InterventionZone => !!z);
+      return new InterventionZoneCollection(zones);
+    }
+    // Legacy mono-zone wrap
+    const single = InterventionZone.fromJSON(value);
+    return new InterventionZoneCollection(single ? [single] : []);
+  }
+
+  isEmpty(): boolean {
+    return this.zones.length === 0;
+  }
+
+  getBoundingCenter(): LatLng | undefined {
+    if (this.zones.length === 0) return undefined;
+    const centers = this.zones.map((z) => z.getCenter());
+    const lat = centers.reduce((a, p) => a + p.lat, 0) / centers.length;
+    const lng = centers.reduce((a, p) => a + p.lng, 0) / centers.length;
+    return { lat, lng };
+  }
+
+  getTotalAreaSqm(): number {
+    return this.zones.reduce((sum, z) => sum + (z.areaSqm ?? 0), 0);
+  }
+
+  toJSON(): { version: 2; zones: InterventionZoneProps[] } {
+    return { version: 2, zones: this.zones.map((z) => z.toJSON()) };
+  }
+}

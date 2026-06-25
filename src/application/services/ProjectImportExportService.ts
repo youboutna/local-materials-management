@@ -34,7 +34,10 @@ export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status
   teamSize?: number;
   latitude?: number;
   longitude?: number;
+  /** @deprecated — préférer `interventionZones` (multi). */
   interventionZone?: InterventionZoneDTO;
+  /** Zones bénéficiaires (multi-polygones). */
+  interventionZones?: InterventionZoneDTO[];
   /** Référentiel projet (ex: 'somelec', 'eter') pour génération de phases. */
   referentialCode?: string;
 }
@@ -120,7 +123,12 @@ export class ProjectImportExportService {
   }
 
   private toCreateDTO(row: ProjectImportRow): CreateProjectDTO {
-    // Defensive defaults so the Domain entity validation passes.
+    const zones = row.interventionZones && row.interventionZones.length > 0
+      ? row.interventionZones
+      : row.interventionZone
+      ? [row.interventionZone]
+      : undefined;
+    const firstZone = zones?.[0];
     const dto: CreateProjectDTO = {
       title: row.title,
       description: row.description ?? '',
@@ -130,9 +138,9 @@ export class ProjectImportExportService {
       currency: row.currency ?? 'MRU',
       startDate: row.startDate ?? new Date().toISOString(),
       endDate: row.endDate,
-      location: row.location ?? row.interventionZone?.address ?? '',
-      latitude: row.latitude ?? row.interventionZone?.coordinates?.[0]?.lat,
-      longitude: row.longitude ?? row.interventionZone?.coordinates?.[0]?.lng,
+      location: row.location ?? firstZone?.address ?? '',
+      latitude: row.latitude ?? firstZone?.coordinates?.[0]?.lat,
+      longitude: row.longitude ?? firstZone?.coordinates?.[0]?.lng,
       teamSize: row.teamSize ?? 0,
       financingSource: row.financingSource,
       marketType: row.marketType,
@@ -141,7 +149,8 @@ export class ProjectImportExportService {
       attributionDate: row.attributionDate,
       launchDate: row.launchDate,
       completionDate: row.completionDate,
-      interventionZone: row.interventionZone,
+      interventionZones: zones,
+      interventionZone: firstZone,
     } as CreateProjectDTO;
     return dto;
   }
@@ -211,11 +220,47 @@ export class ProjectImportExportService {
       createdAt: p.createdAt,
       updatedAt: p.updatedAt,
     };
-    if (includeZone && p.interventionZone) {
-      base.interventionZone = p.interventionZone;
-      base.interventionZoneType = p.interventionZone.type;
-      base.interventionZoneAreaSqm = p.interventionZone.areaSqm;
-      base.interventionZoneAddress = p.interventionZone.address;
+    const zones = p.interventionZones && p.interventionZones.length > 0
+      ? p.interventionZones
+      : p.interventionZone
+      ? [p.interventionZone]
+      : [];
+    if (includeZone && zones.length > 0) {
+      base.interventionZones = zones;
+      base.interventionZoneCount = zones.length;
+      base.interventionZoneTotalAreaSqm = zones.reduce(
+        (sum, z) => sum + (z.areaSqm ?? 0),
+        0,
+      );
+      // GeoJSON FeatureCollection for tooling
+      base.interventionZonesGeoJSON = {
+        type: 'FeatureCollection',
+        features: zones.map((z, idx) => ({
+          type: 'Feature',
+          properties: {
+            label: z.label ?? `Zone ${idx + 1}`,
+            shape: z.type,
+            areaSqm: z.areaSqm,
+            radiusMeters: z.radiusMeters,
+            address: z.address,
+          },
+          geometry:
+            z.type === 'circle' || z.type === 'point'
+              ? {
+                  type: 'Point',
+                  coordinates: [z.coordinates[0]?.lng, z.coordinates[0]?.lat],
+                }
+              : {
+                  type: 'Polygon',
+                  coordinates: [
+                    [
+                      ...z.coordinates.map((c) => [c.lng, c.lat]),
+                      [z.coordinates[0]?.lng, z.coordinates[0]?.lat],
+                    ],
+                  ],
+                },
+        })),
+      };
     }
     return base;
   }
