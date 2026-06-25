@@ -312,7 +312,7 @@ const InterventionZonesPicker: React.FC<InterventionZonesPickerProps> = ({
                 return (
                   <Polygon
                     key={`z-${idx}`}
-                    positions={z.coordinates.map((c) => [c.lat, c.lng])}
+                    positions={z.coordinates.map((c) => [c.lat, c.lng] as [number, number])}
                     pathOptions={{ color: '#10b981', fillOpacity: 0.2 }}
                   />
                 );
@@ -323,7 +323,7 @@ const InterventionZonesPicker: React.FC<InterventionZonesPickerProps> = ({
             {/* Brouillon polygone */}
             {mode === 'polygon' && draftCoords.length > 0 && (
               <Polyline
-                positions={draftCoords.map((c) => [c.lat, c.lng])}
+                positions={draftCoords.map((c) => [c.lat, c.lng] as [number, number])}
                 pathOptions={{ color: '#f59e0b', dashArray: '4 6' }}
               />
             )}
