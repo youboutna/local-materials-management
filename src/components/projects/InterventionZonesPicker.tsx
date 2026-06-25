@@ -128,7 +128,17 @@ const InterventionZonesPicker: React.FC<InterventionZonesPickerProps> = ({
   const enrichWithReverseGeocode = async (
     zone: InterventionZoneDTO,
   ): Promise<InterventionZoneDTO> => {
-    const center = zone.coordinates[0];
+    // Reverse-geocode the *center* (centroid for polygons, center for circles/points).
+    const center =
+      zone.type === 'polygon' && zone.coordinates.length >= 3
+        ? zone.coordinates.reduce(
+            (acc, p, _i, arr) => ({
+              lat: acc.lat + p.lat / arr.length,
+              lng: acc.lng + p.lng / arr.length,
+            }),
+            { lat: 0, lng: 0 },
+          )
+        : zone.coordinates[0];
     if (!center) return zone;
     try {
       const results = await getGeocodingService().reverseGeocode(center.lat, center.lng);
