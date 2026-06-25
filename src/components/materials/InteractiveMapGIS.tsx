@@ -13,6 +13,7 @@ import 'leaflet/dist/leaflet.css';
 
 // Import GeoService and Mauritania utilities
 import { GeocodingService } from '@/application/services/GeocodingService';
+import { getGeocodingService } from '@/application/services/GeocodingServiceFactory';
 import { 
   Region, 
   City, 
@@ -106,11 +107,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
   const allCityCoordinates = getAllCityCoordinates();
 
   // GeoService instance
-  const geoService = new GeocodingService({
-    provider: 'openstreetmap',
-    userAgent: 'MauritaniaMapper/1.0 (contact@mauritania-mapper.mr)',
-    prioritizeLocal: true
-  });
+  const geoService = getGeocodingService();
 
   useEffect(() => {
     if (value) {

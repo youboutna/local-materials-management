@@ -27,6 +27,7 @@ import {
 // Import services (application layer)
 import { LocationService } from '@/application/services/LocationService';
 import { GeocodingService } from '@/application/services/GeocodingService';
+import { getGeocodingService } from '@/application/services/GeocodingServiceFactory';
 
 // Import repository factory for dependency injection
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
