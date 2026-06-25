@@ -17,6 +17,7 @@ import {
 } from '@/dtos/entities/MaterialDTO';
 import { MaterialTransformer } from '@/dtos/transforms/MaterialTransformer';
 import { GeocodingService } from './GeocodingService';
+import { getGeocodingService } from './GeocodingServiceFactory';
 import { SupplierService } from '@/application/services/SupplierService';
 import { WorkspaceService } from './WorkspaceService';
 import { DocumentService } from './DocumentService';
@@ -36,10 +37,8 @@ export class MaterialService {
     workspaceRepository?: IWorkspaceRepository,
     documentRepository?: IDocumentRepository
   ) {
-    // Initialize geocoding service for MAP geolocalizations
-    this.geocodingService = new GeocodingService({
-      userAgent: 'MauritaniaMapper/1.0 (contact@company.mr)'
-    });
+    // Singleton geocoding service (factory) — no per-instance Nominatim config.
+    this.geocodingService = getGeocodingService();
 
     // Initialize related services following hexagonal architecture
     if (supplierRepository) {

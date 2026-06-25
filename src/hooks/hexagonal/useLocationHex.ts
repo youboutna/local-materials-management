@@ -27,6 +27,7 @@ import {
 // Import services (application layer)
 import { LocationService } from '@/application/services/LocationService';
 import { GeocodingService } from '@/application/services/GeocodingService';
+import { getGeocodingService } from '@/application/services/GeocodingServiceFactory';
 
 // Import repository factory for dependency injection
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
@@ -97,13 +98,7 @@ export function useLocationHex(): UseLocationHexResult {
     []
   );
 
-  const geocodingService = useMemo(() => 
-    new GeocodingService({
-      userAgent: 'MauritaniaMapper/1.0 (location-hex-hook)',
-      prioritizeLocal: true
-    }), 
-    []
-  );
+  const geocodingService = useMemo(() => getGeocodingService(), []);
 
   // Query all regions and cities
   const { data: allRegions, isLoading: regionsLoading } = useQuery({

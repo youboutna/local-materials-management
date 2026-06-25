@@ -9,7 +9,8 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 // Import GeocodingService and Mauritania data
-import { GeocodingService, GeocodingResult, ReverseGeocodingResult } from '@/application/services/GeocodingService';
+import { GeocodingResult, ReverseGeocodingResult } from '@/application/services/GeocodingService';
+import { getGeocodingService } from '@/application/services/GeocodingServiceFactory';
 import { Region, City, MAURITANIA_CITIES, MAURITANIA_REGIONS } from '@/utils/mauritania';
 import { searchRegions, searchCities } from '@/utils/mauritaniaUtils';
 
@@ -56,15 +57,9 @@ export interface LocationAutoFillResult {
 export function useLocationAutoFill(): LocationAutoFillResult {
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Initialize GeocodingService with OpenStreetMap configuration
-  const geocodingService = useMemo(() =>
-    new GeocodingService({
-      provider: 'openstreetmap',
-      userAgent: 'MauritaniaMapper/1.0 (location-autofill-hook)',
-      prioritizeLocal: true // Use Mauritania data first
-    }),
-    []
-  );
+  // Singleton geocoding service (factory) — keeps a single Nominatim
+  // user-agent / rate-limit budget across the entire app.
+  const geocodingService = useMemo(() => getGeocodingService(), []);
 
   // Query all regions and cities
   const { data: allRegions = [], isLoading: regionsLoading } = useQuery({
