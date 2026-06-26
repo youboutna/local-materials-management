@@ -15,7 +15,7 @@
  * Implémentation volontairement légère (pas de `leaflet-draw`) : on utilise
  * react-leaflet et un mode d'édition par clics successifs.
  */
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   MapContainer,
   TileLayer,
