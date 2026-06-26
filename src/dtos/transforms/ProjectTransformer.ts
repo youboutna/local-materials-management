@@ -364,6 +364,9 @@ export class ProjectTransformer {
             label: z.label,
             address: z.address,
             areaSqm: z.areaSqm,
+            regionCode: z.regionCode,
+            cityCode: z.cityCode,
+            geocodingMeta: z.geocodingMeta,
           });
         } catch {
           return undefined;
