@@ -108,6 +108,13 @@ const InterventionZonesPicker: React.FC<InterventionZonesPickerProps> = ({
   height = 460,
 }) => {
   const zones = useMemo(() => value ?? [], [value]);
+  // Keep a ref of the latest zones so async geocoding can safely merge by index
+  // without losing concurrent additions (fixes stale-closure bug).
+  const zonesRef = useRef<InterventionZoneDTO[]>(zones);
+  useEffect(() => {
+    zonesRef.current = zones;
+  }, [zones]);
+
   const [mode, setMode] = useState<DraftMode>('idle');
   const [draftCoords, setDraftCoords] = useState<InterventionZoneLatLng[]>([]);
   const [draftCircle, setDraftCircle] = useState<{
@@ -128,7 +135,6 @@ const InterventionZonesPicker: React.FC<InterventionZonesPickerProps> = ({
   const enrichWithReverseGeocode = async (
     zone: InterventionZoneDTO,
   ): Promise<InterventionZoneDTO> => {
-    // Reverse-geocode the *center* (centroid for polygons, center for circles/points).
     const center =
       zone.type === 'polygon' && zone.coordinates.length >= 3
         ? zone.coordinates.reduce(
@@ -165,15 +171,25 @@ const InterventionZonesPicker: React.FC<InterventionZonesPickerProps> = ({
   };
 
   const commitZone = async (zone: InterventionZoneDTO) => {
-    // Append immediately for snappy UX, then patch with geocoding result.
-    const provisional = [...zones, zone];
+    // 1) Optimistic append using the latest snapshot.
+    const provisional = [...zonesRef.current, zone];
+    zonesRef.current = provisional;
+    const insertedIndex = provisional.length - 1;
     onChange(provisional);
+
+    // 2) Reverse-geocode and patch by index against the *current* ref.
     const enriched = await enrichWithReverseGeocode(zone);
-    if (enriched !== zone) {
-      onChange([...zones, enriched]);
-      if (enriched.address) {
-        toast.success(`📍 Zone géolocalisée : ${enriched.address}`);
-      }
+    if (enriched === zone) return;
+    const next = zonesRef.current.slice();
+    if (next[insertedIndex]) {
+      next[insertedIndex] = enriched;
+    } else {
+      next.push(enriched);
+    }
+    zonesRef.current = next;
+    onChange(next);
+    if (enriched.address) {
+      toast.success(`📍 Zone géolocalisée : ${enriched.address}`);
     }
   };
 
