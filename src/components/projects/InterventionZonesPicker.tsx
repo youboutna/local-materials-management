@@ -79,11 +79,13 @@ function formatArea(sqm: number): string {
 }
 
 // --- Capture des clics sur la carte -----------------------------------------
-const ClickCapture: React.FC<{ onClick: (latlng: InterventionZoneLatLng) => void }> = ({
-  onClick,
-}) => {
+const ClickCapture: React.FC<{
+  onClick: (latlng: InterventionZoneLatLng) => void;
+  onDoubleClick?: () => void;
+}> = ({ onClick, onDoubleClick }) => {
   useMapEvents({
     click: (e) => onClick({ lat: e.latlng.lat, lng: e.latlng.lng }),
+    dblclick: () => onDoubleClick?.(),
   });
   return null;
 };
