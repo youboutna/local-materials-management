@@ -357,12 +357,16 @@ const InterventionZonesPicker: React.FC<InterventionZonesPickerProps> = ({
             center={initialCenter}
             zoom={defaultZoom}
             style={{ height: '100%', width: '100%' }}
+            doubleClickZoom={mode !== 'polygon'}
           >
             <TileLayer
               attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <ClickCapture onClick={handleMapClick} />
+            <ClickCapture
+              onClick={handleMapClick}
+              onDoubleClick={mode === 'polygon' ? finishPolygon : undefined}
+            />
 
             {/* Zones existantes */}
             {zones.map((z, idx) => {
@@ -386,21 +390,31 @@ const InterventionZonesPicker: React.FC<InterventionZonesPickerProps> = ({
                 );
               }
               if (z.coordinates.length >= 3) {
+                // polygon or rectangle render the same way
                 return (
                   <Polygon
                     key={`z-${idx}`}
                     positions={z.coordinates.map((c) => [c.lat, c.lng] as [number, number])}
-                    pathOptions={{ color: '#10b981', fillOpacity: 0.2 }}
+                    pathOptions={{
+                      color: z.type === 'rectangle' ? '#7c3aed' : '#10b981',
+                      fillOpacity: 0.2,
+                    }}
                   />
                 );
               }
               return null;
             })}
 
-            {/* Brouillon polygone */}
-            {mode === 'polygon' && draftCoords.length > 0 && (
+            {/* Brouillon polygone : trait fermé pour visualiser la zone en cours */}
+            {mode === 'polygon' && draftCoords.length >= 2 && (
               <Polyline
-                positions={draftCoords.map((c) => [c.lat, c.lng] as [number, number])}
+                positions={[
+                  ...draftCoords.map((c) => [c.lat, c.lng] as [number, number]),
+                  // close back to the first vertex once we have ≥3 points
+                  ...(draftCoords.length >= 3
+                    ? [[draftCoords[0].lat, draftCoords[0].lng] as [number, number]]
+                    : []),
+                ]}
                 pathOptions={{ color: '#f59e0b', dashArray: '4 6' }}
               />
             )}
