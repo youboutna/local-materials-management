@@ -7506,6 +7506,7 @@ export type Database = {
         Args: { _stock_id: string; _user_id: string }
         Returns: boolean
       }
+      normalize_intervention_zones: { Args: { input: Json }; Returns: Json }
       search_projects_autocomplete: {
         Args: { search_term?: string }
         Returns: {

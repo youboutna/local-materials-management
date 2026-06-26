@@ -15,7 +15,7 @@
  * Implémentation volontairement légère (pas de `leaflet-draw`) : on utilise
  * react-leaflet et un mode d'édition par clics successifs.
  */
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   MapContainer,
   TileLayer,
@@ -79,11 +79,13 @@ function formatArea(sqm: number): string {
 }
 
 // --- Capture des clics sur la carte -----------------------------------------
-const ClickCapture: React.FC<{ onClick: (latlng: InterventionZoneLatLng) => void }> = ({
-  onClick,
-}) => {
+const ClickCapture: React.FC<{
+  onClick: (latlng: InterventionZoneLatLng) => void;
+  onDoubleClick?: () => void;
+}> = ({ onClick, onDoubleClick }) => {
   useMapEvents({
     click: (e) => onClick({ lat: e.latlng.lat, lng: e.latlng.lng }),
+    dblclick: () => onDoubleClick?.(),
   });
   return null;
 };
@@ -108,6 +110,13 @@ const InterventionZonesPicker: React.FC<InterventionZonesPickerProps> = ({
   height = 460,
 }) => {
   const zones = useMemo(() => value ?? [], [value]);
+  // Keep a ref of the latest zones so async geocoding can safely merge by index
+  // without losing concurrent additions (fixes stale-closure bug).
+  const zonesRef = useRef<InterventionZoneDTO[]>(zones);
+  useEffect(() => {
+    zonesRef.current = zones;
+  }, [zones]);
+
   const [mode, setMode] = useState<DraftMode>('idle');
   const [draftCoords, setDraftCoords] = useState<InterventionZoneLatLng[]>([]);
   const [draftCircle, setDraftCircle] = useState<{
@@ -128,7 +137,6 @@ const InterventionZonesPicker: React.FC<InterventionZonesPickerProps> = ({
   const enrichWithReverseGeocode = async (
     zone: InterventionZoneDTO,
   ): Promise<InterventionZoneDTO> => {
-    // Reverse-geocode the *center* (centroid for polygons, center for circles/points).
     const center =
       zone.type === 'polygon' && zone.coordinates.length >= 3
         ? zone.coordinates.reduce(
@@ -165,15 +173,25 @@ const InterventionZonesPicker: React.FC<InterventionZonesPickerProps> = ({
   };
 
   const commitZone = async (zone: InterventionZoneDTO) => {
-    // Append immediately for snappy UX, then patch with geocoding result.
-    const provisional = [...zones, zone];
+    // 1) Optimistic append using the latest snapshot.
+    const provisional = [...zonesRef.current, zone];
+    zonesRef.current = provisional;
+    const insertedIndex = provisional.length - 1;
     onChange(provisional);
+
+    // 2) Reverse-geocode and patch by index against the *current* ref.
     const enriched = await enrichWithReverseGeocode(zone);
-    if (enriched !== zone) {
-      onChange([...zones, enriched]);
-      if (enriched.address) {
-        toast.success(`📍 Zone géolocalisée : ${enriched.address}`);
-      }
+    if (enriched === zone) return;
+    const next = zonesRef.current.slice();
+    if (next[insertedIndex]) {
+      next[insertedIndex] = enriched;
+    } else {
+      next.push(enriched);
+    }
+    zonesRef.current = next;
+    onChange(next);
+    if (enriched.address) {
+      toast.success(`📍 Zone géolocalisée : ${enriched.address}`);
     }
   };
 
@@ -339,12 +357,16 @@ const InterventionZonesPicker: React.FC<InterventionZonesPickerProps> = ({
             center={initialCenter}
             zoom={defaultZoom}
             style={{ height: '100%', width: '100%' }}
+            doubleClickZoom={mode !== 'polygon'}
           >
             <TileLayer
               attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <ClickCapture onClick={handleMapClick} />
+            <ClickCapture
+              onClick={handleMapClick}
+              onDoubleClick={mode === 'polygon' ? finishPolygon : undefined}
+            />
 
             {/* Zones existantes */}
             {zones.map((z, idx) => {
@@ -368,21 +390,31 @@ const InterventionZonesPicker: React.FC<InterventionZonesPickerProps> = ({
                 );
               }
               if (z.coordinates.length >= 3) {
+                // polygon or rectangle render the same way
                 return (
                   <Polygon
                     key={`z-${idx}`}
                     positions={z.coordinates.map((c) => [c.lat, c.lng] as [number, number])}
-                    pathOptions={{ color: '#10b981', fillOpacity: 0.2 }}
+                    pathOptions={{
+                      color: z.type === 'rectangle' ? '#7c3aed' : '#10b981',
+                      fillOpacity: 0.2,
+                    }}
                   />
                 );
               }
               return null;
             })}
 
-            {/* Brouillon polygone */}
-            {mode === 'polygon' && draftCoords.length > 0 && (
+            {/* Brouillon polygone : trait fermé pour visualiser la zone en cours */}
+            {mode === 'polygon' && draftCoords.length >= 2 && (
               <Polyline
-                positions={draftCoords.map((c) => [c.lat, c.lng] as [number, number])}
+                positions={[
+                  ...draftCoords.map((c) => [c.lat, c.lng] as [number, number]),
+                  // close back to the first vertex once we have ≥3 points
+                  ...(draftCoords.length >= 3
+                    ? [[draftCoords[0].lat, draftCoords[0].lng] as [number, number]]
+                    : []),
+                ]}
                 pathOptions={{ color: '#f59e0b', dashArray: '4 6' }}
               />
             )}

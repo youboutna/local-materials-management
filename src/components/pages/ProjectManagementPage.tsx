@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import LocationAutocomplete from '@/components/location/LocationAutocomplete';
+import UnifiedLocationSelector from '@/components/location/UnifiedLocationSelector';
 import { 
   Dialog, 
   DialogContent, 
@@ -716,17 +716,15 @@ const ProjectManagementPage: React.FC = () => {
                 <Label htmlFor="title">Project Title</Label>
                 <Input id="title" placeholder="Enter project title" />
               </div>
-              <div>
+              <div className="col-span-2">
                 <Label htmlFor="location">Location</Label>
-                <LocationAutocomplete
-                  value=""
-                  onChange={(address, locationData) => {
-                    // Handle location change
-                    console.log('Location selected:', address, locationData);
+                <UnifiedLocationSelector
+                  value={{}}
+                  onChange={(loc) => {
+                    console.log('Location selected:', loc);
                   }}
                   placeholder="Rechercher une localisation pour le projet..."
                   filter="all"
-                  className="w-full"
                 />
               </div>
               <div>

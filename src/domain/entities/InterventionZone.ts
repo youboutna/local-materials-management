@@ -207,7 +207,7 @@ export class InterventionZoneCollection {
     return this.zones.reduce((sum, z) => sum + (z.areaSqm ?? 0), 0);
   }
 
-  toJSON(): { version: 2; zones: InterventionZoneProps[] } {
-    return { version: 2, zones: this.zones.map((z) => z.toJSON()) };
+  toJSON(): { version: 3; zones: InterventionZoneProps[] } {
+    return { version: 3, zones: this.zones.map((z) => z.toJSON()) };
   }
 }
