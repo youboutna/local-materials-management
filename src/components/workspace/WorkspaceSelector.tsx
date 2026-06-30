@@ -19,7 +19,7 @@ import { MAURITANIA_REGIONS } from '@/utils/mauritania';
 import { getAllGeographicUnits, getRegionsWithCapitals, getRegionsWithPorts, getRegionsWithUniversities } from '@/utils/mauritaniaUtils';
 import { GeographicUnit } from '@/utils/mauritania';
 import { toast } from '@/hooks/use-toast';
-import LocationAutocomplete from '../location/LocationAutocomplete';
+import UnifiedLocationSelector from '../location/UnifiedLocationSelector';
 import { WorkspaceDTO } from '@/dtos/entities/WorkspaceDTO';
 import { OperationalStatus } from '@/domain/entities/Workspace';
 
