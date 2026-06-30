@@ -276,7 +276,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
         })}
       </MapContainer>
 
-      {uniqueStatuses.length > 0 && (
+      {(uniqueStatuses.length > 0 || zoneOverlays.length > 0) && (
         <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm p-3 rounded-lg shadow-lg border max-w-xs z-[1000]">
           <h4 className="font-semibold text-sm mb-2">{t('dashboard.legend_title')}</h4>
           <div className="grid grid-cols-1 gap-1 text-xs">
@@ -296,6 +296,29 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
                 <span className="truncate">{status}</span>
               </div>
             ))}
+            {zoneOverlays.length > 0 && (
+              <>
+                <div className="border-t my-1" />
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  Zones d'intervention ({zoneOverlays.length})
+                </div>
+                {(['polygon', 'rectangle', 'circle', 'point'] as const)
+                  .filter((s) => zoneOverlays.some((o) => o.zone.type === s))
+                  .map((s) => (
+                    <div key={`zlg-${s}`} className="flex items-center gap-2">
+                      <div
+                        className="w-3 h-3 border border-white shadow-sm flex-shrink-0"
+                        style={{
+                          backgroundColor: shapeColor(s),
+                          borderRadius: s === 'circle' || s === 'point' ? '9999px' : '2px',
+                          opacity: 0.7,
+                        }}
+                      />
+                      <span className="truncate capitalize">{s}</span>
+                    </div>
+                  ))}
+              </>
+            )}
           </div>
         </div>
       )}
