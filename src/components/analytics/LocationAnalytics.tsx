@@ -33,7 +33,7 @@ import {
   Download,
   RefreshCw
 } from 'lucide-react';
-import LocationAutocomplete from '../location/LocationAutocomplete';
+import UnifiedLocationSelector from '../location/UnifiedLocationSelector';
 import { useLocationHex } from '@/hooks/hexagonal/useLocationHex';
 import { LocationDTO } from '@/dtos/shared';
 
