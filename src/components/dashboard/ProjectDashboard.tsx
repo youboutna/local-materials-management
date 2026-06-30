@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import LocationAutocomplete from '@/components/location/LocationAutocomplete';
+import UnifiedLocationSelector from '@/components/location/UnifiedLocationSelector';
 import { 
   BarChart, 
   Bar, 
