@@ -106,7 +106,54 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
     new Set(mapLocations.map((loc) => loc.status).filter(Boolean))
   );
 
-  if (!mapLocations.length) {
+  // -------- Multi-polygon intervention zones (visual + traceable) ------------
+  // Aggregate `interventionZones` from every project so search/filter screens
+  // can visualise multiple shapes (polygon/rectangle/circle/point) at once.
+  const zoneOverlays = useMemo(() => {
+    if (!projects?.length) return [] as Array<{
+      projectId: string;
+      projectTitle: string;
+      zone: InterventionZoneDTO;
+    }>;
+    return projects.flatMap((p) =>
+      (p.interventionZones ?? []).map((zone) => ({
+        projectId: p.id,
+        projectTitle: p.title,
+        zone,
+      }))
+    );
+  }, [projects]);
+
+  useEffect(() => {
+    if (zoneOverlays.length > 0) {
+      console.info(
+        `[ProjectMap] rendering ${zoneOverlays.length} intervention zone(s)`,
+        zoneOverlays.map((o) => ({
+          project: o.projectTitle,
+          type: o.zone.type,
+          label: o.zone.label,
+          vertices: o.zone.coordinates.length,
+          radiusMeters: o.zone.radiusMeters,
+        }))
+      );
+    }
+  }, [zoneOverlays]);
+
+  const shapeColor = (t: InterventionZoneDTO['type']): string => {
+    switch (t) {
+      case 'rectangle':
+        return '#7c3aed';
+      case 'circle':
+        return '#2563eb';
+      case 'point':
+        return '#0ea5e9';
+      case 'polygon':
+      default:
+        return '#10b981';
+    }
+  };
+
+  if (!mapLocations.length && !zoneOverlays.length) {
     return (
       <div className={`relative ${className}`} style={{ height }}>
         <div className="h-full flex items-center justify-center text-gray-500 bg-gray-100 rounded-lg">
