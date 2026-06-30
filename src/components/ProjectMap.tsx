@@ -1,11 +1,12 @@
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useLanguage } from '@/contexts/LanguageContext';
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polygon, Circle } from "react-leaflet";
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
 import { MapLocation } from "@/domain/entities/Location";
 import { Badge } from "@/components/ui/badge";
+import type { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 
 export type ProjectStatus =
   | "en cours"
