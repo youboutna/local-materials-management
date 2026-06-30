@@ -224,22 +224,27 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
 
       {showLocationSearch && (
         <div className="mt-4">
-          <LocationAutocomplete
-            value=""
-            onChange={(address, locationData) => {
-              if (onLocationSearch && locationData) {
+          <UnifiedLocationSelector
+            value={{}}
+            onChange={(loc) => {
+              console.info('[WorkspaceSelector] location search', loc);
+              if (onLocationSearch) {
                 onLocationSearch({
-                  address,
-                  latitude: locationData.coordinates?.lat,
-                  longitude: locationData.coordinates?.lng,
-                  regionCode: locationData.type === 'region' ? locationData.code : locationData.parentCode,
-                  cityCode: locationData.type === 'city' ? locationData.code : undefined
+                  address: loc.address,
+                  latitude: loc.latitude,
+                  longitude: loc.longitude,
+                  regionCode: loc.regionCode,
+                  cityCode: loc.cityCode,
                 });
               }
             }}
             placeholder="Rechercher une localisation pour les espaces de travail..."
             filter="all"
             className="w-full"
+            showCoordinates={false}
+            showGPS={false}
+            showMap={false}
+            allowManualEntry={false}
           />
         </div>
       )}
