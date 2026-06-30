@@ -223,6 +223,57 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
             </Popup>
           </Marker>
         ))}
+
+        {/* === Intervention-zone overlays (multi-polygons / circles / points) === */}
+        {zoneOverlays.map(({ projectId, projectTitle, zone }, idx) => {
+          const color = shapeColor(zone.type);
+          const key = `zone-${projectId}-${idx}`;
+          if (zone.type === 'circle' && zone.coordinates[0]) {
+            return (
+              <Circle
+                key={key}
+                center={[zone.coordinates[0].lat, zone.coordinates[0].lng]}
+                radius={zone.radiusMeters ?? 500}
+                pathOptions={{ color, fillOpacity: 0.2 }}
+              >
+                <Popup>
+                  <strong>{projectTitle}</strong>
+                  <div className="text-xs">{zone.label ?? 'Zone'} · cercle · r={zone.radiusMeters ?? 0}m</div>
+                </Popup>
+              </Circle>
+            );
+          }
+          if (zone.type === 'point' && zone.coordinates[0]) {
+            return (
+              <Marker
+                key={key}
+                position={[zone.coordinates[0].lat, zone.coordinates[0].lng]}
+              >
+                <Popup>
+                  <strong>{projectTitle}</strong>
+                  <div className="text-xs">{zone.label ?? 'Point'}</div>
+                </Popup>
+              </Marker>
+            );
+          }
+          if (zone.coordinates.length >= 3) {
+            return (
+              <Polygon
+                key={key}
+                positions={zone.coordinates.map((c) => [c.lat, c.lng] as [number, number])}
+                pathOptions={{ color, fillOpacity: 0.2 }}
+              >
+                <Popup>
+                  <strong>{projectTitle}</strong>
+                  <div className="text-xs">
+                    {zone.label ?? 'Zone'} · {zone.type} · {zone.coordinates.length} sommets
+                  </div>
+                </Popup>
+              </Polygon>
+            );
+          }
+          return null;
+        })}
       </MapContainer>
 
       {uniqueStatuses.length > 0 && (
