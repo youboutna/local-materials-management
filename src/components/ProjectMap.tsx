@@ -1,11 +1,12 @@
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useLanguage } from '@/contexts/LanguageContext';
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polygon, Circle } from "react-leaflet";
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
 import { MapLocation } from "@/domain/entities/Location";
 import { Badge } from "@/components/ui/badge";
+import type { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 
 export type ProjectStatus =
   | "en cours"
@@ -105,7 +106,54 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
     new Set(mapLocations.map((loc) => loc.status).filter(Boolean))
   );
 
-  if (!mapLocations.length) {
+  // -------- Multi-polygon intervention zones (visual + traceable) ------------
+  // Aggregate `interventionZones` from every project so search/filter screens
+  // can visualise multiple shapes (polygon/rectangle/circle/point) at once.
+  const zoneOverlays = useMemo(() => {
+    if (!projects?.length) return [] as Array<{
+      projectId: string;
+      projectTitle: string;
+      zone: InterventionZoneDTO;
+    }>;
+    return projects.flatMap((p) =>
+      (p.interventionZones ?? []).map((zone) => ({
+        projectId: p.id,
+        projectTitle: p.title,
+        zone,
+      }))
+    );
+  }, [projects]);
+
+  useEffect(() => {
+    if (zoneOverlays.length > 0) {
+      console.info(
+        `[ProjectMap] rendering ${zoneOverlays.length} intervention zone(s)`,
+        zoneOverlays.map((o) => ({
+          project: o.projectTitle,
+          type: o.zone.type,
+          label: o.zone.label,
+          vertices: o.zone.coordinates.length,
+          radiusMeters: o.zone.radiusMeters,
+        }))
+      );
+    }
+  }, [zoneOverlays]);
+
+  const shapeColor = (t: InterventionZoneDTO['type']): string => {
+    switch (t) {
+      case 'rectangle':
+        return '#7c3aed';
+      case 'circle':
+        return '#2563eb';
+      case 'point':
+        return '#0ea5e9';
+      case 'polygon':
+      default:
+        return '#10b981';
+    }
+  };
+
+  if (!mapLocations.length && !zoneOverlays.length) {
     return (
       <div className={`relative ${className}`} style={{ height }}>
         <div className="h-full flex items-center justify-center text-gray-500 bg-gray-100 rounded-lg">
@@ -175,9 +223,60 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
             </Popup>
           </Marker>
         ))}
+
+        {/* === Intervention-zone overlays (multi-polygons / circles / points) === */}
+        {zoneOverlays.map(({ projectId, projectTitle, zone }, idx) => {
+          const color = shapeColor(zone.type);
+          const key = `zone-${projectId}-${idx}`;
+          if (zone.type === 'circle' && zone.coordinates[0]) {
+            return (
+              <Circle
+                key={key}
+                center={[zone.coordinates[0].lat, zone.coordinates[0].lng]}
+                radius={zone.radiusMeters ?? 500}
+                pathOptions={{ color, fillOpacity: 0.2 }}
+              >
+                <Popup>
+                  <strong>{projectTitle}</strong>
+                  <div className="text-xs">{zone.label ?? 'Zone'} · cercle · r={zone.radiusMeters ?? 0}m</div>
+                </Popup>
+              </Circle>
+            );
+          }
+          if (zone.type === 'point' && zone.coordinates[0]) {
+            return (
+              <Marker
+                key={key}
+                position={[zone.coordinates[0].lat, zone.coordinates[0].lng]}
+              >
+                <Popup>
+                  <strong>{projectTitle}</strong>
+                  <div className="text-xs">{zone.label ?? 'Point'}</div>
+                </Popup>
+              </Marker>
+            );
+          }
+          if (zone.coordinates.length >= 3) {
+            return (
+              <Polygon
+                key={key}
+                positions={zone.coordinates.map((c) => [c.lat, c.lng] as [number, number])}
+                pathOptions={{ color, fillOpacity: 0.2 }}
+              >
+                <Popup>
+                  <strong>{projectTitle}</strong>
+                  <div className="text-xs">
+                    {zone.label ?? 'Zone'} · {zone.type} · {zone.coordinates.length} sommets
+                  </div>
+                </Popup>
+              </Polygon>
+            );
+          }
+          return null;
+        })}
       </MapContainer>
 
-      {uniqueStatuses.length > 0 && (
+      {(uniqueStatuses.length > 0 || zoneOverlays.length > 0) && (
         <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm p-3 rounded-lg shadow-lg border max-w-xs z-[1000]">
           <h4 className="font-semibold text-sm mb-2">{t('dashboard.legend_title')}</h4>
           <div className="grid grid-cols-1 gap-1 text-xs">
@@ -197,6 +296,29 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
                 <span className="truncate">{status}</span>
               </div>
             ))}
+            {zoneOverlays.length > 0 && (
+              <>
+                <div className="border-t my-1" />
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  Zones d'intervention ({zoneOverlays.length})
+                </div>
+                {(['polygon', 'rectangle', 'circle', 'point'] as const)
+                  .filter((s) => zoneOverlays.some((o) => o.zone.type === s))
+                  .map((s) => (
+                    <div key={`zlg-${s}`} className="flex items-center gap-2">
+                      <div
+                        className="w-3 h-3 border border-white shadow-sm flex-shrink-0"
+                        style={{
+                          backgroundColor: shapeColor(s),
+                          borderRadius: s === 'circle' || s === 'point' ? '9999px' : '2px',
+                          opacity: 0.7,
+                        }}
+                      />
+                      <span className="truncate capitalize">{s}</span>
+                    </div>
+                  ))}
+              </>
+            )}
           </div>
         </div>
       )}

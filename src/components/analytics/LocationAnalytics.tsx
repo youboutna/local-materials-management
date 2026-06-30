@@ -33,7 +33,7 @@ import {
   Download,
   RefreshCw
 } from 'lucide-react';
-import LocationAutocomplete from '../location/LocationAutocomplete';
+import UnifiedLocationSelector from '../location/UnifiedLocationSelector';
 import { useLocationHex } from '@/hooks/hexagonal/useLocationHex';
 import { LocationDTO } from '@/dtos/shared';
 
@@ -248,12 +248,28 @@ const LocationAnalytics: React.FC<LocationAnalyticsProps> = ({
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <LocationAutocomplete
-              value={selectedRegion || selectedCity}
-              onChange={handleLocationSearch}
+            <UnifiedLocationSelector
+              value={{ regionCode: selectedRegion, cityCode: selectedCity }}
+              onChange={(loc) => {
+                console.info('[LocationAnalytics] filter changed', loc);
+                if (loc.cityCode) {
+                  setSelectedCity(loc.cityCode);
+                  setSelectedRegion(loc.regionCode || '');
+                } else if (loc.regionCode) {
+                  setSelectedRegion(loc.regionCode);
+                  setSelectedCity('');
+                } else {
+                  setSelectedRegion('');
+                  setSelectedCity('');
+                }
+              }}
               placeholder="Filter by region or city..."
               filter="all"
               className="w-full"
+              showCoordinates={false}
+              showGPS={false}
+              showMap={false}
+              allowManualEntry={false}
             />
             {(selectedRegion || selectedCity) && (
               <div className="flex items-center gap-2">

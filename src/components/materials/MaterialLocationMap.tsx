@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin, Map } from 'lucide-react';
 import ProjectMap from '@/components/ProjectMap';
 import { MapLocation } from '@/domain/entities/Location';
-import LocationAutocomplete from '../location/LocationAutocomplete';
+import UnifiedLocationSelector from '../location/UnifiedLocationSelector';
 
 interface MaterialLocationMapProps {
   material: {
@@ -33,7 +33,7 @@ const MaterialLocationMap: React.FC<MaterialLocationMapProps> = ({
 }) => {
   // Create map location from material data
   const mapLocations: MapLocation[] = [];
-  
+
   if (material.coordinates_latitude && material.coordinates_longitude) {
     mapLocations.push({
       id: material.id,
@@ -55,26 +55,27 @@ const MaterialLocationMap: React.FC<MaterialLocationMapProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Enhanced Location Input */}
-        <div>
-          <LocationAutocomplete
-            value={material.adresse || material.origin_location || ''}
-            onChange={(address, locationData) => {
-              if (onLocationUpdate) {
-                onLocationUpdate({
-                  address,
-                  latitude: locationData?.coordinates?.lat,
-                  longitude: locationData?.coordinates?.lng,
-                  regionCode: locationData?.type === 'region' ? locationData.code : locationData?.parentCode,
-                  cityCode: locationData?.type === 'city' ? locationData.code : undefined
-                });
-              }
-            }}
-            placeholder="Rechercher une localisation pour ce matériau..."
-            filter="all"
-            className="w-full"
-          />
-        </div>
+        {/* Unified geospatial selector (search + coordinates + GPS + map) */}
+        <UnifiedLocationSelector
+          value={{
+            address: material.adresse || material.origin_location || '',
+            latitude: material.coordinates_latitude,
+            longitude: material.coordinates_longitude,
+          }}
+          onChange={(loc) => {
+            console.info('[MaterialLocationMap] location updated', loc);
+            onLocationUpdate?.({
+              address: loc.address,
+              latitude: loc.latitude,
+              longitude: loc.longitude,
+              regionCode: loc.regionCode,
+              cityCode: loc.cityCode,
+            });
+          }}
+          placeholder="Rechercher une localisation pour ce matériau..."
+          filter="all"
+          className="w-full"
+        />
 
         {/* Map Display */}
         {mapLocations.length > 0 ? (

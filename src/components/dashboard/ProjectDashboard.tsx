@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import LocationAutocomplete from '@/components/location/LocationAutocomplete';
+import UnifiedLocationSelector from '@/components/location/UnifiedLocationSelector';
 import { 
   BarChart, 
   Bar, 
@@ -382,16 +382,18 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <LocationAutocomplete
-                    value=""
-                    onChange={(address, locationData) => {
-                      // Handle location search
-                      console.log('Dashboard location search:', address, locationData);
-                      // Could filter projects by location here
+                  <UnifiedLocationSelector
+                    value={{}}
+                    onChange={(loc) => {
+                      console.info('[ProjectDashboard] location search', loc);
                     }}
                     placeholder="Rechercher des projets par localisation..."
                     filter="all"
                     className="w-full"
+                    showCoordinates={false}
+                    showGPS={false}
+                    showMap={false}
+                    allowManualEntry={false}
                   />
                   <div className="text-sm text-muted-foreground">
                     <p>Recherchez des projets par région, ville ou adresse spécifique.</p>

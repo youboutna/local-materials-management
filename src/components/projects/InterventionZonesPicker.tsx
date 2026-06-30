@@ -177,6 +177,14 @@ const InterventionZonesPicker: React.FC<InterventionZonesPickerProps> = ({
     const provisional = [...zonesRef.current, zone];
     zonesRef.current = provisional;
     const insertedIndex = provisional.length - 1;
+    console.info('[InterventionZonesPicker] commitZone (optimistic)', {
+      index: insertedIndex,
+      type: zone.type,
+      label: zone.label,
+      vertices: zone.coordinates.length,
+      radiusMeters: zone.radiusMeters,
+      areaSqm: zone.areaSqm,
+    });
     onChange(provisional);
 
     // 2) Reverse-geocode and patch by index against the *current* ref.
@@ -189,6 +197,14 @@ const InterventionZonesPicker: React.FC<InterventionZonesPickerProps> = ({
       next.push(enriched);
     }
     zonesRef.current = next;
+    console.info('[InterventionZonesPicker] zone enriched (reverse-geocode)', {
+      index: insertedIndex,
+      address: enriched.address,
+      regionCode: enriched.regionCode,
+      cityCode: enriched.cityCode,
+      provider: enriched.geocodingMeta?.provider,
+      confidence: enriched.geocodingMeta?.confidence,
+    });
     onChange(next);
     if (enriched.address) {
       toast.success(`📍 Zone géolocalisée : ${enriched.address}`);
