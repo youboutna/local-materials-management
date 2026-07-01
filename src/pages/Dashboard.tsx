@@ -418,15 +418,22 @@ const Dashboard: React.FC = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="h-80">
-                      {projects && projects.length > 0 ? (
-                        <ProjectMap
-                          projects={projects as unknown as import('@/dtos/entities/ProjectDTO').ProjectDTO[]}
-                          defaultCenter={[20.5279, -10.0309]}
-                          defaultZoom={6}
-                          height="100%"
-                          className="h-full rounded-lg"
-                        />
-                      ) : (
+                      {projects && projects.length > 0 ? (() => {
+                        const zoneCount = (projects as any[]).reduce(
+                          (acc, p) => acc + (Array.isArray(p?.interventionZones) ? p.interventionZones.length : 0),
+                          0,
+                        );
+                        console.info('[Dashboard] map rendered', zoneCount, 'zones for', projects.length, 'projects');
+                        return (
+                          <ProjectMap
+                            projects={projects as unknown as import('@/dtos/entities/ProjectDTO').ProjectDTO[]}
+                            defaultCenter={[20.5279, -10.0309]}
+                            defaultZoom={6}
+                            height="100%"
+                            className="h-full rounded-lg"
+                          />
+                        );
+                      })() : (
                         <div className="h-full w-full bg-muted/20 flex items-center justify-center rounded-lg border border-dashed">
                           <span className="text-muted-foreground text-sm font-medium">{t('dashboard.no_geolocated_projects')}</span>
                         </div>

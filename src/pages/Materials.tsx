@@ -16,7 +16,7 @@ import { useMaterialsHex } from "@/hooks/hexagonal";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { MaterialUIDTO } from "@/dtos/transforms";
-import InteractiveMapGIS from "@/components/materials/InteractiveMapGIS";
+
 
 const Materials: React.FC = () => {
   const navigate = useNavigate();
