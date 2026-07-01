@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { TenderService } from '@/application/services/TenderService';
+import { TenderSubmissionService } from '@/application/services/TenderSubmissionService';
 
 export interface SubmissionsInboxProps {
   tenderId: string;
@@ -29,7 +29,7 @@ export function SubmissionsInbox({ tenderId, tenderDeadline, onOpenSubmission, o
 
   const { data: submissions = [], isLoading, isError } = useQuery({
     queryKey: ['tender-submissions', tenderId],
-    queryFn: () => TenderService.getTenderSubmissions(tenderId),
+    queryFn: () => TenderSubmissionService.getTenderSubmissions(tenderId),
     enabled: !!tenderId,
   });
 
