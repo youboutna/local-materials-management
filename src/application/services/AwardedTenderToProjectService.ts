@@ -81,13 +81,18 @@ export class AwardedTenderToProjectService {
       return { payload, applied: false, warnings };
     }
 
-    // 2. Application via ProjectWorkflowService (respecte Project Aggregate).
-    const workflow = getProjectWorkflowService();
+    // 2. Application directe via les repositories (respecte l'ordre : phase → tasks → milestones).
+    const phaseRepo = RepositoryFactory.getPhaseRepository();
+    const taskRepo = RepositoryFactory.getTaskRepository();
+    const milestoneRepo = RepositoryFactory.getMilestoneRepository();
+    const tenderRepo = RepositoryFactory.getTenderRepository();
+
     const createdPhaseIds: string[] = [];
     const createdTaskIds: string[] = [];
     const createdMilestoneIds: string[] = [];
 
     for (const phase of payload.phases) {
+      let phaseId: string | undefined;
       try {
         const phaseData: any = {
           projectId: req.projectId,
@@ -101,54 +106,56 @@ export class AwardedTenderToProjectService {
           budgetAmount: phase.amount,
           durationDays: phase.durationDays,
         };
-        // Réutilise saveRelatedData via une saveStep-like injection minimaliste.
-        const saved: any = await (workflow as any).phaseRepository?.create(phaseData);
-        const phaseId = saved?.id;
+        const saved: any = await phaseRepo.create(phaseData);
+        phaseId = saved?.id;
         if (phaseId) createdPhaseIds.push(phaseId);
-
-        // Tâches
-        for (const task of phase.tasks) {
-          try {
-            const taskId = await this.createTaskSafe(workflow, {
-              projectId: req.projectId,
-              phaseId,
-              name: task.name,
-              orderIndex: task.order,
-              estimatedDurationDays: task.durationDays,
-              budgetAmount: task.amount,
-              quantity: task.quantity,
-              unit: task.unit,
-              referenceCode: task.itemCode,
-            });
-            if (taskId) createdTaskIds.push(taskId);
-          } catch (err) {
-            warnings.push(`Tâche "${task.name}" : ${(err as Error).message}`);
-          }
-        }
-
-        // Jalons
-        for (const ms of phase.milestones) {
-          try {
-            const msId = await this.createMilestoneSafe(workflow, {
-              projectId: req.projectId,
-              phaseId,
-              name: ms.name,
-              progressPercent: ms.progressPercent,
-              targetAmount: ms.targetAmount,
-            });
-            if (msId) createdMilestoneIds.push(msId);
-          } catch (err) {
-            warnings.push(`Jalon "${ms.name}" : ${(err as Error).message}`);
-          }
-        }
       } catch (err) {
         warnings.push(`Phase "${phase.name}" : ${(err as Error).message}`);
+        continue;
+      }
+
+      // Tâches
+      for (const task of phase.tasks) {
+        try {
+          const t: any = await (taskRepo as any).create({
+            projectId: req.projectId,
+            phaseId,
+            name: task.name,
+            orderIndex: task.order,
+            estimatedDurationDays: task.durationDays,
+            budgetAmount: task.amount,
+            quantity: task.quantity,
+            unit: task.unit,
+            referenceCode: task.itemCode,
+            status: 'PENDING',
+          });
+          if (t?.id) createdTaskIds.push(t.id);
+        } catch (err) {
+          warnings.push(`Tâche "${task.name}" : ${(err as Error).message}`);
+        }
+      }
+
+      // Jalons
+      for (const ms of phase.milestones) {
+        try {
+          const m: any = await (milestoneRepo as any).create({
+            projectId: req.projectId,
+            phaseId,
+            name: ms.name,
+            progressPercent: ms.progressPercent,
+            targetAmount: ms.targetAmount,
+            status: 'PENDING',
+          });
+          if (m?.id) createdMilestoneIds.push(m.id);
+        } catch (err) {
+          warnings.push(`Jalon "${ms.name}" : ${(err as Error).message}`);
+        }
       }
     }
 
     // 3. Marquer le tender comme "contracted".
     try {
-      await TenderService.updateTenderStatus?.(req.tenderId, 'contracted');
+      await (tenderRepo as any).update?.(req.tenderId, { status: 'contracted' });
     } catch (err) {
       warnings.push(`Statut tender non mis à jour : ${(err as Error).message}`);
     }
@@ -163,22 +170,6 @@ export class AwardedTenderToProjectService {
 
     return { payload, applied: true, createdPhaseIds, createdTaskIds, createdMilestoneIds, warnings };
   }
-
-  private async createTaskSafe(workflow: any, data: any): Promise<string | undefined> {
-    if (workflow.taskService?.createTask) {
-      const t = await workflow.taskService.createTask(data);
-      return t?.id;
-    }
-    return undefined;
-  }
-
-  private async createMilestoneSafe(workflow: any, data: any): Promise<string | undefined> {
-    if (workflow.milestoneService?.createMilestone) {
-      const m = await workflow.milestoneService.createMilestone(data);
-      return m?.id;
-    }
-    return undefined;
-  }
 }
 
 let _instance: AwardedTenderToProjectService | undefined;
@@ -186,3 +177,4 @@ export function getAwardedTenderToProjectService(): AwardedTenderToProjectServic
   if (!_instance) _instance = new AwardedTenderToProjectService();
   return _instance;
 }
+
