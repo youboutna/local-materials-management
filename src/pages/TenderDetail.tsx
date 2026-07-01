@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, ExternalLink, Calendar, DollarSign, FileSignature } from 'lucide-react';
 import { useTenderHex } from '@/hooks/hexagonal';
-import { AwardedTenderPreviewDialog } from '@/components/tenders/AwardedTenderPreviewDialog';
+// AwardedTenderPreviewDialog déclenché depuis TenderManagement (nécessite estimateId gagnant).
 
 const Field: React.FC<{ label: string; value?: React.ReactNode }> = ({ label, value }) => (
   <div>
@@ -91,9 +91,11 @@ const TenderDetail: React.FC = () => {
                     Soumissions & évaluation <ExternalLink className="h-3 w-3 ml-1" />
                   </Link>
                 </Button>
-                {(tender.status === 'awarded' || tender.status === 'under_evaluation') && (
-                  <Button onClick={() => setAwardOpen(true)}>
-                    <FileSignature className="h-4 w-4 mr-1" /> Signer contrat & hydrater projet
+                {(tender.status === 'awarded' || tender.status === 'under_evaluation') && tender.projectId && (
+                  <Button asChild>
+                    <Link to={`/tender-management?tenderId=${tender.id}&action=award`}>
+                      <FileSignature className="h-4 w-4 mr-1" /> Signer contrat & hydrater projet
+                    </Link>
                   </Button>
                 )}
               </div>
@@ -101,15 +103,8 @@ const TenderDetail: React.FC = () => {
           </Card>
         )}
 
-        {tender && (
-          <AwardedTenderPreviewDialog
-            open={awardOpen}
-            onOpenChange={setAwardOpen}
-            tenderId={tender.id}
-            estimateId={undefined}
-            projectId={tender.projectId ?? null}
-          />
-        )}
+        {/* AwardedTenderPreviewDialog est déclenché depuis TenderManagement (soumissions) car il nécessite l'estimateId gagnant. */}
+        {false && awardOpen && <span />}
       </div>
     </AppLayout>
   );
