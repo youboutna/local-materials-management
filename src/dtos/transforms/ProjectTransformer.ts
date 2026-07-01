@@ -748,6 +748,22 @@ export class ProjectTransformer {
     if (dto.checkScheduleLastRun !== undefined) entityData.checkScheduleLastRun = dto.checkScheduleLastRun;
     if (dto.paymentWorkflowConfig !== undefined) entityData.paymentWorkflowConfig = dto.paymentWorkflowConfig;
 
+    // === Zones d'intervention (multi-polygones) → localisation v3 ===
+    // Override any pre-supplied `localisation` so the domain zones remain the
+    // single source of truth, and mirror the primary shape into `forme`.
+    const zonesBuild = ProjectTransformer.buildLocalisationFromZones(
+      dto.interventionZones,
+      dto.interventionZone,
+    );
+    if (zonesBuild.payload) {
+      entityData.localisation = zonesBuild.payload;
+      if (!dto.forme && zonesBuild.forme) entityData.forme = zonesBuild.forme;
+      console.debug('[ProjectTransformer] Create: hydrated localisation from zones', {
+        count: (dto.interventionZones?.length ?? (dto.interventionZone ? 1 : 0)),
+        forme: entityData.forme,
+      });
+    }
+
     return entityData;
   }
 
