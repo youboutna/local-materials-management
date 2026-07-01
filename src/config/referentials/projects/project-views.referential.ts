@@ -61,7 +61,7 @@ export const PROJECT_VIEW_PROFILES: ProjectViewProfile[] = [
   },
   {
     entityCode: 'DEFAULT',
-    tabs: ['overview', 'planification', 'execution', 'financier', 'conformite', 'suivi_evaluation', 'localisation'],
+    tabs: ['overview', 'planification', 'dqe', 'execution', 'financier', 'conformite', 'suivi_evaluation', 'localisation', 'rapports'],
   },
 ];
 
