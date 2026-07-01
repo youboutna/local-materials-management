@@ -79,6 +79,17 @@ export interface TenderEstimateItemDTO {
   // Business logic calculated fields
   margin_percentage?: number;
   line_total?: number;
+  // --- Ancrage RH / Prestataires (Plan v10 §3) ---
+  /** Type de ressource pointée par la ligne DQE. */
+  resource_kind?: 'internal_qualification' | 'external_provider' | 'material';
+  /** Id qualification interne (organigramme) — coût horaire chargé hérité. */
+  employee_qualification_id?: string;
+  /** Id fournisseur externe rattaché à la ligne. */
+  supplier_id?: string;
+  /** Référence contractuelle appliquée (convention-cadre / marché). */
+  supplier_contract_ref?: string;
+  /** Nb d'heures/jours estimé pour cette ressource (informatif). */
+  estimated_hours?: number;
   created_at: string;
   updated_at: string;
 }
@@ -122,8 +133,14 @@ export interface CreateTenderEstimateItemRequestDto {
   category?: string;
   specifications?: string;
   item_type?: string;
-  materialId?: string;  // ✅ Added for UI form support
-  itemType?: string;   // ✅ Added for UI form support
+  materialId?: string;
+  itemType?: string;
+  // Ancrage RH/Prestataires (v10)
+  resource_kind?: 'internal_qualification' | 'external_provider' | 'material';
+  employee_qualification_id?: string;
+  supplier_id?: string;
+  supplier_contract_ref?: string;
+  estimated_hours?: number;
 }
 
 export interface UpdateTenderEstimateRequestDto {
