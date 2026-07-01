@@ -27,6 +27,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import GeoZoneEditor from "@/components/gis/GeoZoneEditor";
 import type { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 import ConstructionPhaseManager from "./ConstructionPhaseManager";
+import QuantityTakeoffs from "./QuantityTakeoffs";
 import EnhancedComplianceStep from "./steps/EnhancedComplianceStep";
 import ResourcesMaterialsStep from "./steps/ResourcesMaterialsStep";
 import RiskAnalysisStep from "./steps/RiskAnalysisStep";
