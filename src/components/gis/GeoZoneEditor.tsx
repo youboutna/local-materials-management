@@ -524,28 +524,42 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
                 <Search className="h-3 w-3" />
                 Rechercher une adresse (base + Nominatim)
               </Label>
-              <LocationAutocomplete
-                onLocationSelect={(loc) => {
-                  if (loc.coordinates) {
-                    setFlyTarget([loc.coordinates.lat, loc.coordinates.lng]);
-                    console.info('[GeoZoneEditor] address selected', loc);
-                  }
-                }}
-                placeholder="Ville, wilaya, adresse…"
-                onAddAsPoint={(loc) => {
-                  if (loc.coordinates) {
-                    void commitZone({
-                      type: 'point',
-                      coordinates: [
-                        { lat: loc.coordinates.lat, lng: loc.coordinates.lng },
-                      ],
-                      label: loc.address,
-                      address: loc.address,
-                    });
-                    setFlyTarget([loc.coordinates.lat, loc.coordinates.lng]);
-                  }
-                }}
-              />
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <LocationAutocomplete
+                    onChange={(text, locationData) => {
+                      const coords = locationData?.coordinates;
+                      if (coords) {
+                        console.info('[GeoZoneEditor] address selected', {
+                          text,
+                          type: locationData?.type,
+                          code: locationData?.code,
+                          coords,
+                        });
+                        setFlyTarget([coords.lat, coords.lng]);
+                      }
+                    }}
+                    placeholder="Ville, wilaya, région…"
+                  />
+                </div>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    if (flyTarget) {
+                      void commitZone({
+                        type: 'point',
+                        coordinates: [{ lat: flyTarget[0], lng: flyTarget[1] }],
+                        label: `Point ${zones.length + 1}`,
+                      });
+                    } else {
+                      toast.info('Sélectionnez d\'abord une adresse.');
+                    }
+                  }}
+                >
+                  <MapPin className="h-3.5 w-3.5 mr-1" /> Ajouter comme point
+                </Button>
+              </div>
             </div>
           </div>
         )}
