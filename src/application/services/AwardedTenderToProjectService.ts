@@ -159,10 +159,6 @@ export class AwardedTenderToProjectService {
           warnings.push(`Jalon "${ms.name}" : ${(err as Error).message}`);
         }
       }
-    }
-
-        }
-      }
 
       // Plan de charge RH / Prestataires (v10 §2 Lot 4) — insertion phase_employees.
       const lotKey = (phase.name || '').trim();
@@ -191,6 +187,7 @@ export class AwardedTenderToProjectService {
         }
       }
     }
+
 
     // 3. Marquer le tender comme "contracted".
     try {
