@@ -149,6 +149,10 @@ export const DqeResourcePicker: React.FC<Props> = ({ value, onChange, compact })
         </div>
       )}
     </div>
+      {validationError && (
+        <p className="text-xs text-destructive" role="alert">{validationError}</p>
+      )}
+    </div>
   );
 };
 
