@@ -384,6 +384,18 @@ const TenderManagement = () => {
                             )}
                           />
                         )}
+
+                        {/* Panneau critères pondérés (Admin / Technique / Financier) */}
+                        {Array.from(verifiedSubmissions).map((subId) => {
+                          const sub = submissions?.find((s: any) => s.id === subId);
+                          return (
+                            <EvaluationPanelTabs
+                              key={subId}
+                              submissionId={subId}
+                              supplierName={sub?.supplier_name}
+                            />
+                          );
+                        })}
                       </div>
                     </TabsContent>
                   </CardContent>
