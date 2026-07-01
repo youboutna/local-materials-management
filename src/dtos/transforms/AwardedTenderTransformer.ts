@@ -27,11 +27,10 @@ export interface AwardedProjectHydrationPayload {
 }
 
 export class AwardedTenderTransformer {
-  /** Convertit les lignes d'un TenderEstimate en DqeLine normalisées. */
+  /** Convertit les lignes d'un TenderEstimate en DqeLine normalisées + métadonnées ressources. */
   static estimateItemsToDqeLines(items: TenderEstimateItemDTO[] | undefined | null): DqeLine[] {
     if (!items || items.length === 0) return [];
     return items.map((it) => {
-      // Convention : le champ `category` porte le lot, `specifications` peut porter le sous-lot.
       const cat = (it.category || '').trim();
       const spec = (it.specifications || '').trim();
       return {
@@ -45,7 +44,13 @@ export class AwardedTenderTransformer {
         quantity: Number(it.quantity) || 0,
         unitPrice: Number(it.unit_price) || 0,
         totalPrice: Number(it.total_price) || 0,
-      } satisfies DqeLine;
+        // Métadonnées RH/Prestataires (v10) — propagées vers le payload d'hydratation.
+        resourceKind: it.resource_kind,
+        employeeQualificationId: it.employee_qualification_id,
+        supplierId: it.supplier_id,
+        supplierContractRef: it.supplier_contract_ref,
+        estimatedHours: it.estimated_hours,
+      } as DqeLine & Record<string, unknown>;
     });
   }
 
