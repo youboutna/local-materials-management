@@ -223,6 +223,7 @@ export class TenderEstimateAdapter implements ITenderEstimateRepository {
    */
   async createItem(item: Omit<TenderEstimateItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<TenderEstimateItem> {
     try {
+      const anyItem = item as any;
       const { data, error } = await supabase
         .from('tender_estimate_items')
         .insert({
@@ -233,6 +234,17 @@ export class TenderEstimateAdapter implements ITenderEstimateRepository {
           total_price: item.totalPrice,
           description: item.description,
           item_type: item.itemType,
+          // Structural (v10)
+          item_code: anyItem.itemCode ?? null,
+          unit: anyItem.unit ?? null,
+          category: anyItem.category ?? null,
+          specifications: anyItem.specifications ?? null,
+          // Resource anchoring (v10)
+          resource_kind: anyItem.resourceKind ?? anyItem.resource_kind ?? null,
+          employee_qualification_id: anyItem.employeeQualificationId ?? anyItem.employee_qualification_id ?? null,
+          supplier_id: anyItem.supplierId ?? anyItem.supplier_id ?? null,
+          supplier_contract_ref: anyItem.supplierContractRef ?? anyItem.supplier_contract_ref ?? null,
+          estimated_hours: anyItem.estimatedHours ?? anyItem.estimated_hours ?? null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
