@@ -8,24 +8,27 @@
 
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search, ClipboardCheck, Eye, Clock, AlertTriangle } from 'lucide-react';
+import { Search, ClipboardCheck, Eye, Clock, AlertTriangle, FileSignature } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TenderSubmissionService } from '@/application/services/TenderSubmissionService';
+import { AwardedTenderPreviewDialog } from './AwardedTenderPreviewDialog';
 
 export interface SubmissionsInboxProps {
   tenderId: string;
   tenderDeadline?: string | null;
+  projectId?: string | null;
   onOpenSubmission?: (submissionId: string) => void;
   onEvaluate?: (submissionId: string) => void;
 }
 
-export function SubmissionsInbox({ tenderId, tenderDeadline, onOpenSubmission, onEvaluate }: SubmissionsInboxProps) {
+export function SubmissionsInbox({ tenderId, tenderDeadline, projectId, onOpenSubmission, onEvaluate }: SubmissionsInboxProps) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [awardTarget, setAwardTarget] = useState<{ estimateId: string; supplierName?: string; supplierId?: string } | null>(null);
 
   const { data: submissions = [], isLoading, isError } = useQuery({
     queryKey: ['tender-submissions', tenderId],
@@ -130,14 +133,38 @@ export function SubmissionsInbox({ tenderId, tenderDeadline, onOpenSubmission, o
                 <Button size="sm" variant="outline" onClick={() => onOpenSubmission?.(s.id)}>
                   <Eye className="h-3.5 w-3.5 mr-1" /> Voir
                 </Button>
-                <Button size="sm" onClick={() => onEvaluate?.(s.id)}>
+                <Button size="sm" variant="secondary" onClick={() => onEvaluate?.(s.id)}>
                   Évaluer
                 </Button>
+                {s.status === 'approved' && projectId && (s.tender_estimate_id || s.estimate_id) && (
+                  <Button
+                    size="sm"
+                    onClick={() => setAwardTarget({
+                      estimateId: s.tender_estimate_id ?? s.estimate_id,
+                      supplierName: s.supplier_name,
+                      supplierId: s.supplier_id,
+                    })}
+                  >
+                    <FileSignature className="h-3.5 w-3.5 mr-1" /> Attribuer
+                  </Button>
+                )}
               </div>
             </li>
           ))}
         </ul>
       </CardContent>
+
+      {awardTarget && projectId && (
+        <AwardedTenderPreviewDialog
+          open={!!awardTarget}
+          onOpenChange={(o) => !o && setAwardTarget(null)}
+          projectId={projectId}
+          tenderId={tenderId}
+          winningEstimateId={awardTarget.estimateId}
+          supplierId={awardTarget.supplierId}
+          supplierName={awardTarget.supplierName}
+        />
+      )}
     </Card>
   );
 }
