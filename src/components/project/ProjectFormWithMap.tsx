@@ -624,18 +624,21 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
         {/* Location Tab - Fixed to prevent render2 error */}
         <TabsContent value="location" className="space-y-6">
           <div className="w-full">
-            <InteractiveMapGIS
-              title="Localisation et zone d'entrepôt du projet"
-              description="Définissez la position GPS du projet et tracez la zone des installations/entrepôts"
+            <UnifiedLocationSelector
               value={{
-                coordinates: facilitiesMapData.center,
-                shape: facilitiesMapData.warehouseShape || facilitiesMapData.polygon || [],
                 address: facilitiesMapData.address,
-                shapeType: facilitiesMapData.shapeType
+                latitude: facilitiesMapData.center?.lat,
+                longitude: facilitiesMapData.center?.lng,
               }}
-              onChange={handleMapDataChange}
-              allowPolygon={true}
-              className="min-h-[600px]"
+              onChange={(loc) => {
+                handleMapDataChange({
+                  coordinates: loc.latitude != null && loc.longitude != null ? { lat: loc.latitude, lng: loc.longitude } : undefined,
+                  address: loc.address,
+                });
+              }}
+              showMap
+              showCoordinates
+              showGPS
             />
           </div>
 
