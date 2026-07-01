@@ -393,13 +393,22 @@ export class ProjectWorkflowService {
         }
         case 3: {
           if (!projectId) return { success: false, errors: ['Projet non créé — complétez l\'étape 1 d\'abord.'] };
+          const pd = data.projectData as any;
           const locUpdate: UpdateProjectDTO = {
             id: projectId,
-            location: data.projectData?.location,
-            latitude: data.projectData?.latitude,
-            longitude: data.projectData?.longitude,
+            location: pd?.location,
+            latitude: pd?.latitude,
+            longitude: pd?.longitude,
+            geographicZone: pd?.geographicZone,
+            terrainType: pd?.terrainType,
+            interventionZones: pd?.interventionZones,
+            interventionZone: pd?.interventionZone,
           };
           const locEntity = ProjectTransformer.fromUpdateDTOToEntity(locUpdate);
+          console.debug('[ProjectWorkflowService] saveStep(3) location payload', {
+            hasZones: Array.isArray(pd?.interventionZones) && pd.interventionZones.length > 0,
+            zonesCount: pd?.interventionZones?.length ?? 0,
+          });
           await this.projectRepository.update(projectId, locEntity as any);
           break;
         }
