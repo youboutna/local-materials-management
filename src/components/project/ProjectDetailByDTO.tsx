@@ -63,6 +63,7 @@ import {
   DialogTitle as DialogTitleUI,
 } from "@/components/ui/dialog";
 import ConstructionPhaseManager from "./ConstructionPhaseManager";
+import QuantityTakeoffs from "./QuantityTakeoffs";
 import ProjectCheckpointsDashboard from "./ProjectCheckpointsDashboard";
 import { Label } from "../ui/label";
 import { ProjectHeader, ProjectHierarchyView, ProjectMatrixView } from "./hierarchy";
@@ -970,7 +971,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         onValueChange={setActiveTab}
         className="space-y-4"
       >
-        <TabsList className="sticky top-0 z-20 grid w-full grid-cols-3 md:grid-cols-7 h-auto bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
+        <TabsList className="sticky top-0 z-20 grid w-full grid-cols-3 md:grid-cols-5 lg:grid-cols-9 h-auto bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
           {projectTabsDef.map((tab) => (
             <TabsTrigger key={tab.uiValue} value={tab.uiValue} className="text-xs sm:text-sm">
               {tab.label.fr}
@@ -2116,6 +2117,17 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               />
             );
           })()}
+        </TabsContent>
+
+        {/* DQE / Métré — module de quantification (simple + avancé) */}
+        <TabsContent value="dqe" className="mt-6">
+          <QuantityTakeoffs projectId={projectId!} />
+        </TabsContent>
+
+        {/* Rapports — génère un rapport complet incluant le métré planifié */}
+        <TabsContent value="rapports" className="mt-6 space-y-6">
+          <CompactProjectReportGenerator project={projectDetail as any} />
+          <QuantityTakeoffs projectId={projectId!} />
         </TabsContent>
 
       </Tabs>

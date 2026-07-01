@@ -27,6 +27,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import GeoZoneEditor from "@/components/gis/GeoZoneEditor";
 import type { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 import ConstructionPhaseManager from "./ConstructionPhaseManager";
+import QuantityTakeoffs from "./QuantityTakeoffs";
 import EnhancedComplianceStep from "./steps/EnhancedComplianceStep";
 import ResourcesMaterialsStep from "./steps/ResourcesMaterialsStep";
 import RiskAnalysisStep from "./steps/RiskAnalysisStep";
@@ -422,19 +423,32 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
         )}
 
         {currentStep === 3 && (
-          <ConstructionPhaseManager
-            projectId={formData?.projectId || ''}
-            workflowData={formData ?? null}
-            phases={formData?.relatedData?.phases || []}
-            onStepComplete={(stepData) => {
-              updateFormData({
-                relatedData: {
-                  ...formData?.relatedData,
-                  phases: stepData.phases
-                }
-              });
-            }}
-          />
+          <div className="space-y-6">
+            <ConstructionPhaseManager
+              projectId={formData?.projectId || ''}
+              workflowData={formData ?? null}
+              phases={formData?.relatedData?.phases || []}
+              onStepComplete={(stepData) => {
+                updateFormData({
+                  relatedData: {
+                    ...formData?.relatedData,
+                    phases: stepData.phases
+                  }
+                });
+              }}
+            />
+            {(formData?.projectId || workflowState?.projectId) ? (
+              <QuantityTakeoffs
+                projectId={(formData?.projectId || workflowState?.projectId) as string}
+              />
+            ) : (
+              <Card>
+                <CardContent className="p-4 text-sm text-muted-foreground">
+                  Le calcul métré (simple & avancé) sera disponible après la sauvegarde de l'étape 1.
+                </CardContent>
+              </Card>
+            )}
+          </div>
         )}
 
            {currentStep === 4 && (
