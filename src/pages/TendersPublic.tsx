@@ -75,16 +75,16 @@ export default function TendersPublic() {
               </CardHeader>
             </Card>
             <SupplierBidWizard
-              tenderId={tender.id}
-              tenderTitle={tender.title}
-              deadlineDate={tender.deadline_date}
+              tenderId={tender.id as string}
+              tenderTitle={tender.title ?? undefined}
+              deadlineDate={tender.deadline_date ?? null}
               onSubmit={async () => {
                 toast({
                   title: 'Candidature soumise',
                   description: 'Votre candidature a été enregistrée. Vous recevrez un code secret par email pour le suivi.',
                 });
               }}
-              renderStep={(step) => <BidStepContent step={step} tenderId={tender.id} />}
+              renderStep={(step) => <BidStepContent step={step} tenderId={tender.id as string} />}
             />
           </div>
         )}
