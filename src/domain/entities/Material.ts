@@ -569,7 +569,18 @@ export class Material {
         availableQuantity: row.available_quantity as number ?? 0,
         originLocation: row.origin_location as string,
         subcategory: row.subcategory as string,
-        localisation: row.localisation as CoordinatePoint[] ?? [],
+        localisation: (() => {
+          // Rétro-compat: la DB peut stocker un tableau (legacy) OU un objet v3
+          // {version:3, zones:[…]} (entrepôt matérialisé par multi-polygones).
+          const raw = row.localisation as unknown;
+          if (!raw) return [];
+          if (Array.isArray(raw)) return raw as CoordinatePoint[];
+          if (typeof raw === 'object') {
+            const zones = (raw as { zones?: unknown[] }).zones;
+            if (Array.isArray(zones)) return zones as CoordinatePoint[];
+          }
+          return [];
+        })(),
         forme: row.forme as "polygon" | "rectangle" | "circle" | "point",
         adresse: row.adresse as string,
         createdAt: row.created_at ? new Date(row.created_at as string) : new Date(),
