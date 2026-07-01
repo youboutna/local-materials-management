@@ -21,6 +21,7 @@ import type {
 } from '@/dtos/entities/ProjectDTO';
 import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
+import { GeoJsonZoneCodec } from '@/dtos/transforms/GeoJsonZoneCodec';
 
 export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status'>> {
   title: string;
