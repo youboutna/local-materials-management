@@ -46,6 +46,55 @@ interface ProjectDTOWithCollections extends ProjectDTO {
 }
 
 export class ProjectTransformer {
+
+  // =================== DOMAIN HELPERS (Localisation v3) ===================
+
+  /**
+   * Build the canonical `localisation` jsonb v3 payload from a list of
+   * `InterventionZoneDTO`. Single source of truth for UI→DB persistence of
+   * multi-polygones (used by Create/Update transforms + workflow saveStep).
+   *
+   * Returns `undefined` when no valid zone is provided so callers can fall
+   * back to any pre-existing `localisation` value.
+   */
+  static buildLocalisationFromZones(
+    zones?: InterventionZoneDTO[] | null,
+    fallbackSingle?: InterventionZoneDTO | null,
+  ): { payload?: Record<string, unknown>; forme?: string } {
+    const src = zones && zones.length > 0
+      ? zones
+      : fallbackSingle
+        ? [fallbackSingle]
+        : [];
+    if (src.length === 0) return {};
+    const entities = src
+      .map((z) => {
+        try {
+          return InterventionZone.create({
+            type: z.type,
+            coordinates: z.coordinates,
+            radiusMeters: z.radiusMeters,
+            label: z.label,
+            address: z.address,
+            areaSqm: z.areaSqm,
+            regionCode: z.regionCode,
+            cityCode: z.cityCode,
+            geocodingMeta: z.geocodingMeta,
+          });
+        } catch {
+          return undefined;
+        }
+      })
+      .filter((z): z is InterventionZone => !!z);
+    if (entities.length === 0) return {};
+    const collection = InterventionZoneCollection.create(entities);
+    return {
+      payload: collection.toJSON() as unknown as Record<string, unknown>,
+      forme: entities[0].type,
+    };
+  }
+
+
   
   // =================== DATABASE ↔ DOMAIN ===================
   
@@ -699,6 +748,22 @@ export class ProjectTransformer {
     if (dto.checkScheduleLastRun !== undefined) entityData.checkScheduleLastRun = dto.checkScheduleLastRun;
     if (dto.paymentWorkflowConfig !== undefined) entityData.paymentWorkflowConfig = dto.paymentWorkflowConfig;
 
+    // === Zones d'intervention (multi-polygones) → localisation v3 ===
+    // Override any pre-supplied `localisation` so the domain zones remain the
+    // single source of truth, and mirror the primary shape into `forme`.
+    const zonesBuild = ProjectTransformer.buildLocalisationFromZones(
+      dto.interventionZones,
+      dto.interventionZone,
+    );
+    if (zonesBuild.payload) {
+      entityData.localisation = zonesBuild.payload;
+      if (!dto.forme && zonesBuild.forme) entityData.forme = zonesBuild.forme;
+      console.debug('[ProjectTransformer] Create: hydrated localisation from zones', {
+        count: (dto.interventionZones?.length ?? (dto.interventionZone ? 1 : 0)),
+        forme: entityData.forme,
+      });
+    }
+
     return entityData;
   }
 
@@ -735,6 +800,34 @@ export class ProjectTransformer {
     const lng = dto.longitude ?? (dto.coordinates as any)?.longitude;
     if (lat != null && lng != null) {
       updates.coordinates = new ProjectCoordinates(Number(lat), Number(lng));
+    }
+
+    // Pass-through for pre-built localisation payload (rare — advanced flows).
+    if (dto.localisation !== undefined) updates.localisation = dto.localisation;
+    if (dto.forme !== undefined) updates.forme = dto.forme;
+    if (dto.geographicZone !== undefined) updates.geographicZone = dto.geographicZone;
+    if (dto.terrainType !== undefined) updates.terrainType = dto.terrainType;
+
+    // === Zones d'intervention (multi-polygones) → localisation v3 ===
+    // Same rule as create: domain zones take precedence over the raw payload.
+    const zonesBuild = ProjectTransformer.buildLocalisationFromZones(
+      dto.interventionZones,
+      dto.interventionZone,
+    );
+    if (zonesBuild.payload) {
+      updates.localisation = zonesBuild.payload;
+      if (!dto.forme && zonesBuild.forme) updates.forme = zonesBuild.forme;
+      // Derive centroid coordinates when the UI didn't supply an explicit point
+      if (lat == null || lng == null) {
+        const center = InterventionZoneCollection.fromJSON(zonesBuild.payload).getBoundingCenter();
+        if (center) {
+          updates.coordinates = new ProjectCoordinates(center.lat, center.lng);
+        }
+      }
+      console.debug('[ProjectTransformer] Update: hydrated localisation from zones', {
+        count: (dto.interventionZones?.length ?? (dto.interventionZone ? 1 : 0)),
+        forme: updates.forme,
+      });
     }
 
     return updates;

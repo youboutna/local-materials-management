@@ -393,13 +393,22 @@ export class ProjectWorkflowService {
         }
         case 3: {
           if (!projectId) return { success: false, errors: ['Projet non créé — complétez l\'étape 1 d\'abord.'] };
+          const pd = data.projectData as any;
           const locUpdate: UpdateProjectDTO = {
             id: projectId,
-            location: data.projectData?.location,
-            latitude: data.projectData?.latitude,
-            longitude: data.projectData?.longitude,
+            location: pd?.location,
+            latitude: pd?.latitude,
+            longitude: pd?.longitude,
+            geographicZone: pd?.geographicZone,
+            terrainType: pd?.terrainType,
+            interventionZones: pd?.interventionZones,
+            interventionZone: pd?.interventionZone,
           };
           const locEntity = ProjectTransformer.fromUpdateDTOToEntity(locUpdate);
+          console.debug('[ProjectWorkflowService] saveStep(3) location payload', {
+            hasZones: Array.isArray(pd?.interventionZones) && pd.interventionZones.length > 0,
+            zonesCount: pd?.interventionZones?.length ?? 0,
+          });
           await this.projectRepository.update(projectId, locEntity as any);
           break;
         }
@@ -462,6 +471,14 @@ export class ProjectWorkflowService {
       ? { latitude: (projectData.coordinates as any).latitude, longitude: (projectData.coordinates as any).longitude }
       : { latitude: projectData.latitude, longitude: projectData.longitude };
 
+    // Zones d'intervention (multi-polygones) — propagées jusqu'aux transforms
+    // qui les traduisent en `projects.localisation` v3.
+    const pdAny = projectData as any;
+    const interventionZones = Array.isArray(pdAny?.interventionZones)
+      ? pdAny.interventionZones
+      : undefined;
+    const interventionZone = pdAny?.interventionZone;
+
     if (existingId) {
       const updateRequest: UpdateProjectDTO = {
         id: existingId,
@@ -485,6 +502,8 @@ export class ProjectWorkflowService {
         allowsInitialPayment: projectData.allowsInitialPayment as boolean | undefined,
         initialPaymentPercentage: projectData.initialPaymentPercentage as number | undefined,
         projectManagerId: projectData.projectManagerId,
+        interventionZones,
+        interventionZone,
         ...(coords.latitude != null && coords.longitude != null
           ? { latitude: coords.latitude, longitude: coords.longitude }
           : {}),
@@ -514,6 +533,8 @@ export class ProjectWorkflowService {
       initialPaymentPercentage: projectData.initialPaymentPercentage as number | undefined,
       currentPhase: projectData.currentPhase,
       currentStage: projectData.currentStage,
+      interventionZones,
+      interventionZone,
       ...(coords.latitude != null && coords.longitude != null ? { latitude: coords.latitude, longitude: coords.longitude } : {}),
     } as CreateProjectDTO;
     const entity = ProjectTransformer.fromCreateDTOToEntity(createRequest);
