@@ -28,13 +28,49 @@ interface Props {
   compact?: boolean;
 }
 
+export function validateDqeResource(v: DqeResourceValue): string | null {
+  if (!v.resource_kind) return null;
+  if (v.resource_kind === 'internal_qualification') {
+    if (!v.employee_qualification_id) return 'Sélectionnez une qualification / employé interne.';
+    if (v.supplier_id || v.supplier_contract_ref) return 'Champs prestataire non autorisés pour une ressource interne.';
+  }
+  if (v.resource_kind === 'external_provider') {
+    if (!v.supplier_id) return 'Sélectionnez un prestataire externe.';
+    if (v.employee_qualification_id) return 'Champ qualification interne non autorisé pour un prestataire externe.';
+  }
+  if (v.resource_kind === 'material' && (v.employee_qualification_id || v.supplier_id || v.supplier_contract_ref)) {
+    return 'Aucune ressource humaine ne doit être renseignée pour un matériel.';
+  }
+  if ((v.resource_kind === 'internal_qualification' || v.resource_kind === 'external_provider')
+    && v.estimated_hours !== undefined && v.estimated_hours < 0) {
+    return 'Les heures estimées doivent être positives.';
+  }
+  return null;
+}
+
 export const DqeResourcePicker: React.FC<Props> = ({ value, onChange, compact }) => {
   const { data: employees = [] } = useActiveEmployeesHex();
   const { data: suppliers = [] } = useActiveSuppliersHex();
 
-  const update = (patch: Partial<DqeResourceValue>) => onChange({ ...value, ...patch });
+  const update = (patch: Partial<DqeResourceValue>) => {
+    // Reset des champs incompatibles à chaque changement de kind (garantie de cohérence)
+    if (patch.resource_kind && patch.resource_kind !== value.resource_kind) {
+      onChange({
+        resource_kind: patch.resource_kind,
+        employee_qualification_id: undefined,
+        supplier_id: undefined,
+        supplier_contract_ref: undefined,
+        estimated_hours: patch.resource_kind === 'material' ? undefined : value.estimated_hours,
+      });
+      return;
+    }
+    onChange({ ...value, ...patch });
+  };
+
+  const validationError = validateDqeResource(value);
 
   return (
+    <div className="space-y-2">
     <div className={compact ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-2 gap-4'}>
       <div>
         <Label>Type de ressource</Label>
