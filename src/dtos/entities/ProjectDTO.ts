@@ -695,8 +695,6 @@ export interface CreateProjectDTO {
   interventionZones?: import('./InterventionZoneDTO').InterventionZoneDTO[];
   /** @deprecated alias mono-zone → pointe vers `interventionZones[0]`. */
   interventionZone?: import('./InterventionZoneDTO').InterventionZoneDTO;
-  /** Payload jsonb v3 déjà pré-construit (rare — préférer `interventionZones`). */
-  localisation?: Record<string, unknown>;
   status: ProjectStatus;
   budget: number;
   startDate: string;
