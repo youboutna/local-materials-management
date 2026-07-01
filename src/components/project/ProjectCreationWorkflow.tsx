@@ -24,7 +24,8 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 // (uuid removed — IDs are generated DB-side via `gen_random_uuid()`)
 
 // Import step components
-import InteractiveMapGIS from "../materials/InteractiveMapGIS";
+import GeoZoneEditor from "@/components/gis/GeoZoneEditor";
+import type { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 import ConstructionPhaseManager from "./ConstructionPhaseManager";
 import EnhancedComplianceStep from "./steps/EnhancedComplianceStep";
 import ResourcesMaterialsStep from "./steps/ResourcesMaterialsStep";
@@ -393,25 +394,30 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
 
         {currentStep === 2 && (
-          <InteractiveMapGIS
-            value={{
-              coordinates: formData?.projectData?.latitude && formData?.projectData?.longitude
-                ? { lat: formData?.projectData.latitude, lng: formData?.projectData.longitude }
+          <GeoZoneEditor
+            value={
+              ((formData?.projectData as unknown as { interventionZones?: InterventionZoneDTO[] })
+                ?.interventionZones) ?? []
+            }
+            onChange={(zones) => {
+              const first = zones[0]?.coordinates?.[0];
+              updateFormData({
+                projectData: {
+                  ...(formData?.projectData || {}),
+                  interventionZones: zones,
+                  ...(first ? { latitude: first.lat, longitude: first.lng } : {}),
+                } as any,
+              });
+              console.info('[ProjectCreationWorkflow] zones updated', zones.length);
+            }}
+            title="Localisation & zones d'intervention"
+            hint="Tracez une ou plusieurs zones (polygone, rectangle, cercle, point). Import GeoJSON supporté."
+            defaultCenter={
+              formData?.projectData?.latitude && formData?.projectData?.longitude
+                ? [formData.projectData.latitude, formData.projectData.longitude]
                 : undefined
-            }}
-            onChange={(data) => {
-              if (data.coordinates) {
-                // ⚠️ Never set `id` UI-side — Postgres `gen_random_uuid()` provides it on insert.
-                // Only merge coordinate deltas; other defaults belong to ProjectInfoStep (step 1).
-                updateFormData({
-                  projectData: {
-                    ...(formData?.projectData || {}),
-                    latitude: data.coordinates.lat,
-                    longitude: data.coordinates.lng,
-                  } as any,
-                });
-              }
-            }}
+            }
+            height={520}
           />
         )}
 
