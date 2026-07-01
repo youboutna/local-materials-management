@@ -44,56 +44,12 @@ const toStr = (v: unknown): string | undefined => {
 };
 
 /**
- * Convertit une `geometry` GeoJSON (Polygon / MultiPolygon / Point) en
- * tableau de `InterventionZoneDTO`.
+ * Convertit une `geometry` GeoJSON (Polygon / MultiPolygon / Point / FeatureCollection)
+ * en tableau de `InterventionZoneDTO`, via le codec bidirectionnel.
  */
 const geoJsonToZones = (geo: unknown): InterventionZoneDTO[] => {
   if (!geo || typeof geo !== 'object') return [];
-  const g = geo as Raw;
-
-  // FeatureCollection
-  if (g.type === 'FeatureCollection' && Array.isArray(g.features)) {
-    return (g.features as Raw[]).flatMap((f) => {
-      const zones = geoJsonToZones((f as Raw).geometry);
-      const props = ((f as Raw).properties as Raw) || {};
-      const label = toStr(props.label) ?? toStr(props.name);
-      return zones.map((z) => ({ ...z, label: label ?? z.label }));
-    });
-  }
-
-  // Polygon
-  if (g.type === 'Polygon' && Array.isArray(g.coordinates)) {
-    const ring = (g.coordinates as number[][][])[0] ?? [];
-    const coords: InterventionZoneLatLng[] = ring
-      .filter((c) => Array.isArray(c) && c.length >= 2)
-      .map((c) => ({ lat: c[1], lng: c[0] }));
-    if (coords.length > 0) {
-      return [{ type: 'polygon', coordinates: coords }];
-    }
-  }
-
-  // MultiPolygon
-  if (g.type === 'MultiPolygon' && Array.isArray(g.coordinates)) {
-    return (g.coordinates as number[][][][]).flatMap((poly) => {
-      const ring = poly[0] ?? [];
-      const coords: InterventionZoneLatLng[] = ring
-        .filter((c) => Array.isArray(c) && c.length >= 2)
-        .map((c) => ({ lat: c[1], lng: c[0] }));
-      return coords.length > 0
-        ? [{ type: 'polygon' as const, coordinates: coords }]
-        : [];
-    });
-  }
-
-  // Point
-  if (g.type === 'Point' && Array.isArray(g.coordinates)) {
-    const c = g.coordinates as number[];
-    if (c.length >= 2) {
-      return [{ type: 'point', coordinates: [{ lat: c[1], lng: c[0] }] }];
-    }
-  }
-
-  return [];
+  return GeoJsonZoneCodec.fromFeatureCollection(geo);
 };
 
 export class ProjectImportTransformer {
