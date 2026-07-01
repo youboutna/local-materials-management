@@ -1,7 +1,7 @@
 import React from 'react';
 import { MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import InteractiveMapGIS from '../../materials/InteractiveMapGIS';
+
 import UnifiedLocationSelector from '../../location/UnifiedLocationSelector';
 import InterventionZonesPicker from '../../projects/InterventionZonesPicker';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';

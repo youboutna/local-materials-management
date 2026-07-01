@@ -40,7 +40,7 @@ import PhaseEmployees from '@/components/project/PhaseEmployees';
 import PhasePayments from '@/components/project/PhasePayments';
 import PhaseInspections from '@/components/project/PhaseInspections';
 import EmployeeSelector from '@/components/selectors/EmployeeSelector';
-import InteractiveMapGIS from '@/components/materials/InteractiveMapGIS';
+
 import { ProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
 import { useProjectHierarchy } from '@/hooks/useProjectHierarchy';
 import { useQuery } from '@tanstack/react-query';
