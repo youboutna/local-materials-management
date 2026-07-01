@@ -417,21 +417,37 @@ export class TenderEstimateAdapter implements ITenderEstimateRepository {
   }
 
   /**
-   * Map database row to TenderEstimateItem entity
+   * Map database row to TenderEstimateItem entity (with resource anchoring)
    */
   private mapItemRowToEntity(row: any): TenderEstimateItem {
-    return new TenderEstimateItem(
+    const itemCode = row.item_code || row.material_id || row.id;
+    const description = row.description || itemCode || 'Item';
+    const unit = row.unit || 'u';
+    const quantity = Number(row.quantity) || 1;
+    const unitPrice = Number(row.unit_price) || 0;
+    // Constructor validates totalPrice === quantity * unitPrice — normalize.
+    const totalPrice = Number((quantity * unitPrice).toFixed(2));
+
+    const entity = new TenderEstimateItem(
       row.id,
       row.estimate_id,
+      itemCode,
+      description,
+      unit,
+      quantity || 1,
+      unitPrice || 0.01,
+      (quantity || 1) * (unitPrice || 0.01),
+      row.category ?? undefined,
+      row.specifications ?? undefined,
       row.material_id,
-      row.quantity,
-      row.unit_price,
-      row.total_price,
-      row.description,
       row.item_type,
-      row.specifications,
-      row.material_id, // Use material_id as materialId
-      row.item_type   // Use item_type as itemType
     );
+    // Stash resource anchoring fields (schema-less passthrough).
+    (entity as any).resource_kind = row.resource_kind ?? undefined;
+    (entity as any).employee_qualification_id = row.employee_qualification_id ?? undefined;
+    (entity as any).supplier_id = row.supplier_id ?? undefined;
+    (entity as any).supplier_contract_ref = row.supplier_contract_ref ?? undefined;
+    (entity as any).estimated_hours = row.estimated_hours ?? undefined;
+    return entity;
   }
 }
