@@ -471,6 +471,14 @@ export class ProjectWorkflowService {
       ? { latitude: (projectData.coordinates as any).latitude, longitude: (projectData.coordinates as any).longitude }
       : { latitude: projectData.latitude, longitude: projectData.longitude };
 
+    // Zones d'intervention (multi-polygones) — propagées jusqu'aux transforms
+    // qui les traduisent en `projects.localisation` v3.
+    const pdAny = projectData as any;
+    const interventionZones = Array.isArray(pdAny?.interventionZones)
+      ? pdAny.interventionZones
+      : undefined;
+    const interventionZone = pdAny?.interventionZone;
+
     if (existingId) {
       const updateRequest: UpdateProjectDTO = {
         id: existingId,
@@ -494,6 +502,8 @@ export class ProjectWorkflowService {
         allowsInitialPayment: projectData.allowsInitialPayment as boolean | undefined,
         initialPaymentPercentage: projectData.initialPaymentPercentage as number | undefined,
         projectManagerId: projectData.projectManagerId,
+        interventionZones,
+        interventionZone,
         ...(coords.latitude != null && coords.longitude != null
           ? { latitude: coords.latitude, longitude: coords.longitude }
           : {}),
@@ -523,6 +533,8 @@ export class ProjectWorkflowService {
       initialPaymentPercentage: projectData.initialPaymentPercentage as number | undefined,
       currentPhase: projectData.currentPhase,
       currentStage: projectData.currentStage,
+      interventionZones,
+      interventionZone,
       ...(coords.latitude != null && coords.longitude != null ? { latitude: coords.latitude, longitude: coords.longitude } : {}),
     } as CreateProjectDTO;
     const entity = ProjectTransformer.fromCreateDTOToEntity(createRequest);
