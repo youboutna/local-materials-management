@@ -379,7 +379,16 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
               <Button variant="outline" onClick={() => setIsAddItemOpen(false)}>
                 Annuler
               </Button>
-              <Button onClick={handleAddItem} disabled={addItemMutation.isPending}>
+              <Button
+                onClick={handleAddItem}
+                disabled={addItemMutation.isPending || !!validateDqeResource({
+                  resource_kind: newItem.resource_kind,
+                  employee_qualification_id: newItem.employee_qualification_id,
+                  supplier_id: newItem.supplier_id,
+                  supplier_contract_ref: newItem.supplier_contract_ref,
+                  estimated_hours: newItem.estimated_hours,
+                } as DqeResourceValue)}
+              >
                 {addItemMutation.isPending ? 'Ajout...' : 'Ajouter'}
               </Button>
             </div>
