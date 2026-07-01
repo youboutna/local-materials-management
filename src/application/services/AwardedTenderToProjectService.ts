@@ -52,19 +52,27 @@ export class AwardedTenderToProjectService {
 
     // 1. Payload : soit fourni depuis le dialog preview, soit reconstruit depuis DQE.
     let payload: AwardedProjectHydrationPayload;
+    // Charger les items bruts systématiquement lorsque nécessaire pour le plan de charge.
+    let rawItems: TenderEstimateItemDTO[] = [];
     if (req.overridePayload) {
       payload = req.overridePayload;
+      // Reload items pour l'étape plan de charge, sans bloquer si indisponibles.
+      if (req.winningEstimateId) {
+        try {
+          rawItems = await this.estimateService.getEstimateItems({ estimate_id: req.winningEstimateId });
+        } catch (err) {
+          warnings.push(`Items DQE non rechargés pour plan de charge : ${(err as Error).message}`);
+        }
+      }
       console.debug('[AwardedTenderToProjectService] Using override payload from preview', {
-        projectId: req.projectId, phases: payload.phases.length,
+        projectId: req.projectId, phases: payload.phases.length, rawItems: rawItems.length,
       });
     } else {
-      const items: TenderEstimateItemDTO[] = await this.estimateService.getEstimateItems({
-        estimate_id: req.winningEstimateId,
-      });
-      if (!items || items.length === 0) {
+      rawItems = await this.estimateService.getEstimateItems({ estimate_id: req.winningEstimateId });
+      if (!rawItems || rawItems.length === 0) {
         warnings.push('Le DQE du lauréat est vide — aucune phase ne sera générée.');
       }
-      payload = AwardedTenderTransformer.buildHydrationPayload(req.projectId, items, {
+      payload = AwardedTenderTransformer.buildHydrationPayload(req.projectId, rawItems, {
         supplierId: req.supplierId,
         supplierName: req.supplierName,
         sourceEstimateId: req.winningEstimateId,
@@ -72,7 +80,7 @@ export class AwardedTenderToProjectService {
         mappingConfig: req.mappingConfig,
       });
       console.debug('[AwardedTenderToProjectService] Payload built from DQE', {
-        projectId: req.projectId, itemsCount: items.length, phases: payload.phases.length,
+        projectId: req.projectId, itemsCount: rawItems.length, phases: payload.phases.length,
         contractAmount: payload.contractAmount,
       });
     }
@@ -149,6 +157,37 @@ export class AwardedTenderToProjectService {
           if (m?.id) createdMilestoneIds.push(m.id);
         } catch (err) {
           warnings.push(`Jalon "${ms.name}" : ${(err as Error).message}`);
+        }
+      }
+    }
+
+        }
+      }
+
+      // Plan de charge RH / Prestataires (v10 §2 Lot 4) — insertion phase_employees.
+      const lotKey = (phase.name || '').trim();
+      const lotItems = rawItems.filter((it) => (it.category || '').trim() === lotKey && it.resource_kind);
+      for (const it of lotItems) {
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const row = {
+            phase_id: phaseId!,
+            employee_name: it.resource_kind === 'internal_qualification'
+              ? (it.description || it.item_code || 'Qualification')
+              : (it.supplier_id ? `Prestataire ${it.supplier_id.slice(0, 8)}` : (it.description || 'Prestataire')),
+            employee_role: it.resource_kind === 'internal_qualification'
+              ? 'internal_qualification'
+              : (it.resource_kind === 'external_provider' ? 'external_provider' : 'material'),
+            employee_contact: it.supplier_contract_ref ?? null,
+            daily_rate: it.estimated_hours && it.unit_price
+              ? Number((it.unit_price * (it.estimated_hours / 8)).toFixed(2))
+              : it.unit_price ?? null,
+            is_primary_supplier: it.resource_kind === 'external_provider',
+          };
+          const { error } = await supabase.from('phase_employees').insert(row);
+          if (error) throw error;
+        } catch (err) {
+          warnings.push(`Plan de charge (${it.item_code}) : ${(err as Error).message}`);
         }
       }
     }
