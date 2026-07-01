@@ -12,6 +12,7 @@ import { Calculator, Upload, Plus, Trash2, FileText, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { QuantitativeEstimateExporter } from '@/components/reports/QuantitativeEstimateExporter';
+import DqeResourcePicker, { type DqeResourceValue } from '@/components/tenders/DqeResourcePicker';
 import { 
   useTenderQuantitativeEstimateHex,
   type EstimateItem,
@@ -360,6 +361,19 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
                   rows={3}
                 />
               </div>
+            </div>
+            <div className="border-t pt-4">
+              <DqeResourcePicker
+                value={{
+                  resource_kind: newItem.resource_kind,
+                  employee_qualification_id: newItem.employee_qualification_id,
+                  supplier_id: newItem.supplier_id,
+                  supplier_contract_ref: newItem.supplier_contract_ref,
+                  estimated_hours: newItem.estimated_hours,
+                } as DqeResourceValue}
+                onChange={(v) => setNewItem(prev => ({ ...prev, ...v }))}
+                compact
+              />
             </div>
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setIsAddItemOpen(false)}>
