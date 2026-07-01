@@ -37,6 +37,8 @@ import { WorkspaceDTO, SupplierDTO, LocationDTO } from '@/dtos';
 import { CreateMaterialRequestDto } from '@/dtos/transforms';
 import MaterialDocuments from './MaterialDocuments';
 import UnifiedLocationSelector from '@/components/location/UnifiedLocationSelector';
+import GeoZoneEditor from '@/components/gis/GeoZoneEditor';
+import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 import { useLocationAutoFill } from '@/hooks/hexagonal/useLocationAutoFill';
 
 // Create type alias
@@ -873,6 +875,27 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
             showGPS={true}
             allowManualEntry={true}
           />
+
+          {/* Zones de couverture / workspace — multi-polygones (optionnel) */}
+          {(() => {
+            const zones = ((formData as unknown as { coverageZones?: InterventionZoneDTO[] }).coverageZones) ?? [];
+            return (
+              <GeoZoneEditor
+                value={zones}
+                onChange={(next) => {
+                  setFormData((prev) => ({
+                    ...(prev as any),
+                    coverageZones: next,
+                  }));
+                  console.info('[MaterialGIS] persisted', next.length, 'coverage zones (in-form)');
+                }}
+                showAddressBar={false}
+                title="Zones de couverture / workspace"
+                hint="Optionnel — tracez la surface couverte par ce matériau (entrepôt, aire logistique). Import GeoJSON supporté."
+                height={420}
+              />
+            );
+          })()}
         </TabsContent>
 
         <TabsContent value="quantities" className="space-y-6">
