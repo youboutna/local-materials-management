@@ -113,10 +113,10 @@ function BidStepContent({ step, tenderId }: { step: BidWizardStepCode; tenderId:
       <div className="space-y-2">
         <h3 className="font-semibold">2. Devis Quantitatif Estimatif (DQE)</h3>
         <p className="text-sm text-muted-foreground">
-          Importez votre BPU Excel, PDF ou saisissez manuellement les prix.
+          Importez votre BPU Excel, PDF ou saisissez manuellement les prix. Les totaux se calculent en temps réel.
         </p>
-        <div className="rounded border bg-muted/30 p-4 text-sm text-center text-muted-foreground">
-          [Éditeur DQE (EnhancedTenderEstimator) à monter ici selon session bidder]
+        <div className="rounded border bg-card">
+          <EnhancedTenderEstimator tenderId={tenderId} />
         </div>
       </div>
     );
