@@ -21,6 +21,7 @@ import type {
 } from '@/dtos/entities/ProjectDTO';
 import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
+import { GeoJsonZoneCodec } from '@/dtos/transforms/GeoJsonZoneCodec';
 
 export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status'>> {
   title: string;
@@ -232,35 +233,8 @@ export class ProjectImportExportService {
         (sum, z) => sum + (z.areaSqm ?? 0),
         0,
       );
-      // GeoJSON FeatureCollection for tooling
-      base.interventionZonesGeoJSON = {
-        type: 'FeatureCollection',
-        features: zones.map((z, idx) => ({
-          type: 'Feature',
-          properties: {
-            label: z.label ?? `Zone ${idx + 1}`,
-            shape: z.type,
-            areaSqm: z.areaSqm,
-            radiusMeters: z.radiusMeters,
-            address: z.address,
-          },
-          geometry:
-            z.type === 'circle' || z.type === 'point'
-              ? {
-                  type: 'Point',
-                  coordinates: [z.coordinates[0]?.lng, z.coordinates[0]?.lat],
-                }
-              : {
-                  type: 'Polygon',
-                  coordinates: [
-                    [
-                      ...z.coordinates.map((c) => [c.lng, c.lat]),
-                      [z.coordinates[0]?.lng, z.coordinates[0]?.lat],
-                    ],
-                  ],
-                },
-        })),
-      };
+      // Encodage GeoJSON via codec bidirectionnel (round-trip fidèle).
+      base.interventionZonesGeoJSON = GeoJsonZoneCodec.toFeatureCollection(zones);
     }
     return base;
   }
