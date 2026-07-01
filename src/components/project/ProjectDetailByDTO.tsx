@@ -63,6 +63,7 @@ import {
   DialogTitle as DialogTitleUI,
 } from "@/components/ui/dialog";
 import ConstructionPhaseManager from "./ConstructionPhaseManager";
+import QuantityTakeoffs from "./QuantityTakeoffs";
 import ProjectCheckpointsDashboard from "./ProjectCheckpointsDashboard";
 import { Label } from "../ui/label";
 import { ProjectHeader, ProjectHierarchyView, ProjectMatrixView } from "./hierarchy";
