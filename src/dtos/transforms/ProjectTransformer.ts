@@ -46,6 +46,55 @@ interface ProjectDTOWithCollections extends ProjectDTO {
 }
 
 export class ProjectTransformer {
+
+  // =================== DOMAIN HELPERS (Localisation v3) ===================
+
+  /**
+   * Build the canonical `localisation` jsonb v3 payload from a list of
+   * `InterventionZoneDTO`. Single source of truth for UI→DB persistence of
+   * multi-polygones (used by Create/Update transforms + workflow saveStep).
+   *
+   * Returns `undefined` when no valid zone is provided so callers can fall
+   * back to any pre-existing `localisation` value.
+   */
+  static buildLocalisationFromZones(
+    zones?: InterventionZoneDTO[] | null,
+    fallbackSingle?: InterventionZoneDTO | null,
+  ): { payload?: Record<string, unknown>; forme?: string } {
+    const src = zones && zones.length > 0
+      ? zones
+      : fallbackSingle
+        ? [fallbackSingle]
+        : [];
+    if (src.length === 0) return {};
+    const entities = src
+      .map((z) => {
+        try {
+          return InterventionZone.create({
+            type: z.type,
+            coordinates: z.coordinates,
+            radiusMeters: z.radiusMeters,
+            label: z.label,
+            address: z.address,
+            areaSqm: z.areaSqm,
+            regionCode: z.regionCode,
+            cityCode: z.cityCode,
+            geocodingMeta: z.geocodingMeta,
+          });
+        } catch {
+          return undefined;
+        }
+      })
+      .filter((z): z is InterventionZone => !!z);
+    if (entities.length === 0) return {};
+    const collection = InterventionZoneCollection.create(entities);
+    return {
+      payload: collection.toJSON() as unknown as Record<string, unknown>,
+      forme: entities[0].type,
+    };
+  }
+
+
   
   // =================== DATABASE ↔ DOMAIN ===================
   
