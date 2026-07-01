@@ -20,6 +20,9 @@ import { TenderTimelineCard } from "@/components/tenders/TenderTimelineCard";
 import { EnhancedDocumentSharing } from "@/components/suppliers/EnhancedDocumentSharing";
 import { SecureSharingDialog } from "@/components/tenders/SecureSharingDialog";
 import { SubmissionSecretDialog } from "@/components/tenders/SubmissionSecretDialog";
+import { SubmissionsInbox } from "@/components/tenders/SubmissionsInbox";
+import { EvaluationPanelTabs } from "@/components/tenders/EvaluationPanelTabs";
+import { AwardedTenderPreviewDialog } from "@/components/tenders/AwardedTenderPreviewDialog";
 import {
   Dialog,
   DialogContent,
@@ -228,7 +231,7 @@ const TenderManagement = () => {
 
                 <Tabs defaultValue="workflow" className="flex-1">
                   <div className="border-b px-6 bg-muted/30">
-                    <TabsList className="grid w-full grid-cols-4 max-w-2xl">
+                    <TabsList className="grid w-full grid-cols-5 max-w-3xl">
                       <TabsTrigger value="workflow" className="text-xs">
                         Workflow & Étapes
                       </TabsTrigger>
@@ -238,6 +241,9 @@ const TenderManagement = () => {
                       <TabsTrigger value="documents" className="text-xs">
                         Documents
                       </TabsTrigger>
+                      <TabsTrigger value="inbox" className="text-xs">
+                        Réception
+                      </TabsTrigger>
                       <TabsTrigger value="evaluation" className="text-xs">
                         Évaluation
                       </TabsTrigger>
@@ -245,6 +251,12 @@ const TenderManagement = () => {
                   </div>
 
                   <CardContent className="p-6">
+                    <TabsContent value="inbox" className="mt-0">
+                      <SubmissionsInbox
+                        tenderId={selectedTender.id}
+                        tenderDeadline={selectedTender.deadlineDate}
+                      />
+                    </TabsContent>
                     {/* Workflow & Étapes — fusion workflow + stepper + steps + timeline */}
                     <TabsContent value="workflow" className="mt-0 space-y-6">
                       <TenderTimelineCard
