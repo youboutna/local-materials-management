@@ -223,6 +223,7 @@ export class TenderEstimateAdapter implements ITenderEstimateRepository {
    */
   async createItem(item: Omit<TenderEstimateItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<TenderEstimateItem> {
     try {
+      const anyItem = item as any;
       const { data, error } = await supabase
         .from('tender_estimate_items')
         .insert({
@@ -233,6 +234,17 @@ export class TenderEstimateAdapter implements ITenderEstimateRepository {
           total_price: item.totalPrice,
           description: item.description,
           item_type: item.itemType,
+          // Structural (v10)
+          item_code: anyItem.itemCode ?? null,
+          unit: anyItem.unit ?? null,
+          category: anyItem.category ?? null,
+          specifications: anyItem.specifications ?? null,
+          // Resource anchoring (v10)
+          resource_kind: anyItem.resourceKind ?? anyItem.resource_kind ?? null,
+          employee_qualification_id: anyItem.employeeQualificationId ?? anyItem.employee_qualification_id ?? null,
+          supplier_id: anyItem.supplierId ?? anyItem.supplier_id ?? null,
+          supplier_contract_ref: anyItem.supplierContractRef ?? anyItem.supplier_contract_ref ?? null,
+          estimated_hours: anyItem.estimatedHours ?? anyItem.estimated_hours ?? null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -286,6 +298,22 @@ export class TenderEstimateAdapter implements ITenderEstimateRepository {
       if (updates.totalPrice !== undefined) updateData.total_price = updates.totalPrice;
       if (updates.description !== undefined) updateData.description = updates.description;
       if (updates.itemType) updateData.item_type = updates.itemType;
+      const u = updates as any;
+      if (u.itemCode !== undefined) updateData.item_code = u.itemCode;
+      if (u.unit !== undefined) updateData.unit = u.unit;
+      if (u.category !== undefined) updateData.category = u.category;
+      if (u.specifications !== undefined) updateData.specifications = u.specifications;
+      if (u.resourceKind !== undefined || u.resource_kind !== undefined) updateData.resource_kind = u.resourceKind ?? u.resource_kind;
+      if (u.employeeQualificationId !== undefined || u.employee_qualification_id !== undefined) updateData.employee_qualification_id = u.employeeQualificationId ?? u.employee_qualification_id;
+      if (u.supplierId !== undefined || u.supplier_id !== undefined) updateData.supplier_id = u.supplierId ?? u.supplier_id;
+      if (u.supplierContractRef !== undefined || u.supplier_contract_ref !== undefined) updateData.supplier_contract_ref = u.supplierContractRef ?? u.supplier_contract_ref;
+      if (u.estimatedHours !== undefined || u.estimated_hours !== undefined) updateData.estimated_hours = u.estimatedHours ?? u.estimated_hours;
+
+      // Strip camelCase fields not persisted directly to avoid unknown-column errors
+      delete updateData.estimateId; delete updateData.materialId; delete updateData.unitPrice;
+      delete updateData.totalPrice; delete updateData.itemType; delete updateData.itemCode;
+      delete updateData.resourceKind; delete updateData.employeeQualificationId;
+      delete updateData.supplierId; delete updateData.supplierContractRef; delete updateData.estimatedHours;
 
       const { data, error } = await supabase
         .from('tender_estimate_items')
@@ -389,21 +417,37 @@ export class TenderEstimateAdapter implements ITenderEstimateRepository {
   }
 
   /**
-   * Map database row to TenderEstimateItem entity
+   * Map database row to TenderEstimateItem entity (with resource anchoring)
    */
   private mapItemRowToEntity(row: any): TenderEstimateItem {
-    return new TenderEstimateItem(
+    const itemCode = row.item_code || row.material_id || row.id;
+    const description = row.description || itemCode || 'Item';
+    const unit = row.unit || 'u';
+    const quantity = Number(row.quantity) || 1;
+    const unitPrice = Number(row.unit_price) || 0;
+    // Constructor validates totalPrice === quantity * unitPrice — normalize.
+    const totalPrice = Number((quantity * unitPrice).toFixed(2));
+
+    const entity = new TenderEstimateItem(
       row.id,
       row.estimate_id,
+      itemCode,
+      description,
+      unit,
+      quantity || 1,
+      unitPrice || 0.01,
+      (quantity || 1) * (unitPrice || 0.01),
+      row.category ?? undefined,
+      row.specifications ?? undefined,
       row.material_id,
-      row.quantity,
-      row.unit_price,
-      row.total_price,
-      row.description,
       row.item_type,
-      row.specifications,
-      row.material_id, // Use material_id as materialId
-      row.item_type   // Use item_type as itemType
     );
+    // Stash resource anchoring fields (schema-less passthrough).
+    (entity as any).resource_kind = row.resource_kind ?? undefined;
+    (entity as any).employee_qualification_id = row.employee_qualification_id ?? undefined;
+    (entity as any).supplier_id = row.supplier_id ?? undefined;
+    (entity as any).supplier_contract_ref = row.supplier_contract_ref ?? undefined;
+    (entity as any).estimated_hours = row.estimated_hours ?? undefined;
+    return entity;
   }
 }
