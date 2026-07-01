@@ -6,7 +6,7 @@
  * @see .lovable/plan.md — Lot 4
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -44,8 +44,8 @@ export function AwardedTenderPreviewDialog(props: AwardedTenderPreviewDialogProp
     },
   });
 
-  // Charger le preview à l'ouverture
-  useMemo(() => {
+  // Charger le preview à l'ouverture (effet, pas useMemo).
+  useEffect(() => {
     if (open && !payload && !previewMutation.isPending) {
       previewMutation.mutate(undefined, {
         onSuccess: (p) => setPayload(p),
@@ -53,6 +53,7 @@ export function AwardedTenderPreviewDialog(props: AwardedTenderPreviewDialogProp
       });
     }
     if (!open) setPayload(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const applyMutation = useMutation({
