@@ -298,6 +298,22 @@ export class TenderEstimateAdapter implements ITenderEstimateRepository {
       if (updates.totalPrice !== undefined) updateData.total_price = updates.totalPrice;
       if (updates.description !== undefined) updateData.description = updates.description;
       if (updates.itemType) updateData.item_type = updates.itemType;
+      const u = updates as any;
+      if (u.itemCode !== undefined) updateData.item_code = u.itemCode;
+      if (u.unit !== undefined) updateData.unit = u.unit;
+      if (u.category !== undefined) updateData.category = u.category;
+      if (u.specifications !== undefined) updateData.specifications = u.specifications;
+      if (u.resourceKind !== undefined || u.resource_kind !== undefined) updateData.resource_kind = u.resourceKind ?? u.resource_kind;
+      if (u.employeeQualificationId !== undefined || u.employee_qualification_id !== undefined) updateData.employee_qualification_id = u.employeeQualificationId ?? u.employee_qualification_id;
+      if (u.supplierId !== undefined || u.supplier_id !== undefined) updateData.supplier_id = u.supplierId ?? u.supplier_id;
+      if (u.supplierContractRef !== undefined || u.supplier_contract_ref !== undefined) updateData.supplier_contract_ref = u.supplierContractRef ?? u.supplier_contract_ref;
+      if (u.estimatedHours !== undefined || u.estimated_hours !== undefined) updateData.estimated_hours = u.estimatedHours ?? u.estimated_hours;
+
+      // Strip camelCase fields not persisted directly to avoid unknown-column errors
+      delete updateData.estimateId; delete updateData.materialId; delete updateData.unitPrice;
+      delete updateData.totalPrice; delete updateData.itemType; delete updateData.itemCode;
+      delete updateData.resourceKind; delete updateData.employeeQualificationId;
+      delete updateData.supplierId; delete updateData.supplierContractRef; delete updateData.estimatedHours;
 
       const { data, error } = await supabase
         .from('tender_estimate_items')
