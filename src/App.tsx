@@ -46,6 +46,7 @@ import InspectionEdit from "./pages/InspectionEdit";
 import InspectionDetail from "./pages/InspectionDetail";
 import ResetPassword from "./pages/ResetPassword";
 import UnifiedSupplierPortal from "./pages/UnifiedSupplierPortal";
+import TendersPublic from "./pages/TendersPublic";
 import SupplierPasswordReset from "./pages/SupplierPasswordReset";
 import TenderManagement from "./pages/TenderManagement";
 import TenderImport from "./pages/TenderImport";
@@ -118,6 +119,10 @@ function App() {
                       <Route
                         path="/supplier-portal"
                         element={<UnifiedSupplierPortal />}
+                      />
+                      <Route
+                        path="/tenders-public"
+                        element={<TendersPublic />}
                       />
                       <Route
                         path="/supplier-tender"
