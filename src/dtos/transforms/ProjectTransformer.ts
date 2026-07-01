@@ -802,6 +802,34 @@ export class ProjectTransformer {
       updates.coordinates = new ProjectCoordinates(Number(lat), Number(lng));
     }
 
+    // Pass-through for pre-built localisation payload (rare — advanced flows).
+    if (dto.localisation !== undefined) updates.localisation = dto.localisation;
+    if (dto.forme !== undefined) updates.forme = dto.forme;
+    if (dto.geographicZone !== undefined) updates.geographicZone = dto.geographicZone;
+    if (dto.terrainType !== undefined) updates.terrainType = dto.terrainType;
+
+    // === Zones d'intervention (multi-polygones) → localisation v3 ===
+    // Same rule as create: domain zones take precedence over the raw payload.
+    const zonesBuild = ProjectTransformer.buildLocalisationFromZones(
+      dto.interventionZones,
+      dto.interventionZone,
+    );
+    if (zonesBuild.payload) {
+      updates.localisation = zonesBuild.payload;
+      if (!dto.forme && zonesBuild.forme) updates.forme = zonesBuild.forme;
+      // Derive centroid coordinates when the UI didn't supply an explicit point
+      if (lat == null || lng == null) {
+        const center = InterventionZoneCollection.fromJSON(zonesBuild.payload).getBoundingCenter();
+        if (center) {
+          updates.coordinates = new ProjectCoordinates(center.lat, center.lng);
+        }
+      }
+      console.debug('[ProjectTransformer] Update: hydrated localisation from zones', {
+        count: (dto.interventionZones?.length ?? (dto.interventionZone ? 1 : 0)),
+        forme: updates.forme,
+      });
+    }
+
     return updates;
   }
 
