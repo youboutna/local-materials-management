@@ -13,8 +13,8 @@
 import type { ProjectImportRow } from '@/application/services/ProjectImportExportService';
 import type {
   InterventionZoneDTO,
-  InterventionZoneLatLng,
 } from '@/dtos/entities/InterventionZoneDTO';
+import { GeoJsonZoneCodec } from '@/dtos/transforms/GeoJsonZoneCodec';
 
 type Raw = Record<string, unknown>;
 
