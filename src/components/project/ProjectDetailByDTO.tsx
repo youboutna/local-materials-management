@@ -1,4 +1,5 @@
 import InteractiveMapGIS from "@/components/materials/InteractiveMapGIS";
+import GeoZoneEditor from "@/components/gis/GeoZoneEditor";
 import EnhancedRiskManager from "@/components/project/EnhancedRiskManager";
 import EnhancedTaskManager from "@/components/project/EnhancedTaskManager";
 import FinancialOverview from "@/components/project/FinaancialOverview";
@@ -2072,11 +2073,37 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           />
         </TabsContent>
 
-        <TabsContent value="map" className="mt-6">
+        <TabsContent value="map" className="mt-6 space-y-4">
+          {(() => {
+            const zones =
+              (project as unknown as { interventionZones?: unknown[] }).interventionZones ??
+              [];
+            const zoneList = Array.isArray(zones)
+              ? (zones as import('@/dtos/entities/InterventionZoneDTO').InterventionZoneDTO[])
+              : [];
+            console.info('[ProjectDetail] rendering intervention zones', {
+              count: zoneList.length,
+            });
+            return (
+              <GeoZoneEditor
+                readOnly
+                showAddressBar={false}
+                value={zoneList}
+                title="Zones d'intervention"
+                hint="Vue lecture seule — éditez via le workflow projet."
+                defaultCenter={
+                  project?.coordinates?.latitude && project?.coordinates?.longitude
+                    ? [project.coordinates.latitude, project.coordinates.longitude]
+                    : undefined
+                }
+                height={520}
+              />
+            );
+          })()}
 
           <InteractiveMapGIS
-            title="Localisation du projet"
-            description="Carte interactive avec outils GIS"
+            title="Localisation du projet (siège)"
+            description="Point GPS administratif et forme legacy"
             allowPolygon={true}
             value={{
               coordinates: project && project.coordinates && project.coordinates.latitude !== undefined && project.coordinates.longitude !== undefined
@@ -2098,8 +2125,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               shapeType: (project as any).forme,
             }}
             onChange={(_data) => {
-              // Map data changes are persisted via the dedicated project edit workflow (step Localisation).
-              // No-op here to keep the detail view read-only for GIS overlays.
+              // Read-only overlay — edits go through the project workflow (Localisation step).
             }}
           />
         </TabsContent>

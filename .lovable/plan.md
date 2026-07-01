@@ -1,87 +1,89 @@
-## Périmètre
 
-Trois lots indépendants à exécuter dans la foulée. Lot A (bugs bloquants) en premier, puis Lot B (domaine zones), puis Lot C (UI/import-export).
+# Alignement GIS — un seul composant, partout
 
----
+## Problème constaté
 
-## Lot A — Bugs runtime (priorité haute)
+- `InterventionZonesPicker` n'est branché **que** dans `LocationStep` (étape création). Il ne sait pas importer un GeoJSON ni chercher une adresse pour créer une zone.
+- La page **détail projet** (`ProjectDetailByDTO`) et la page **édition** utilisent `InteractiveMapGIS`, un composant matériel générique qui n'affiche **pas** les zones d'intervention du projet.
+- `ProjectFormWithMap` (formulaire legacy) utilise aussi `InteractiveMapGIS` sans lien avec `interventionZones`.
+- Sur les pages **matériaux** (`Materials`, `MaterialDetail`, `EnhancedMaterialForm`), pas de tracé possible : uniquement un point.
+- Résultat : l'utilisateur ne "voit" pas les améliorations parce que le picker ne sort pas de l'étape 2 de création.
 
-### A1. `OperationalStatus is not defined` (SupabaseWorkspaceAdapter)
-- Lire `src/infrastructure/supabase/adapters/SupabaseWorkspaceAdapter.ts` + `src/domain/entities/Workspace.ts`.
-- Ajouter l'import manquant de `OperationalStatus` (ou retirer la référence si l'enum a été supprimé) dans `mapToEntity`.
+## Cible
 
-### A2. `require is not defined` (KPI / `getAlertRepository`)
-- Rechercher `require(` côté navigateur (`rg "require\\(" src/`).
-- Remplacer par `import` statique ou `await import(...)` dynamique (selon mémoire « Dynamic Supabase Import »).
+Un seul composant réutilisé partout : **`GeoZoneEditor`** (renommage/refactor d'`InterventionZonesPicker`) qui combine :
 
-### A3. `Contractor contact is required` (PaymentRequestService)
-- Lire `PaymentTransformer` et `Payment` entité : la validation `validateContractorContact` bloque le `mapToEntity` lors d'un simple findAll dashboard.
-- Rendre la validation **tolérante en lecture** : si le contact manque, journaliser un warning et retourner l'entité avec `contractorContact: undefined` au lieu de throw. La validation stricte reste à la création/mise à jour.
+1. **Recherche adresse** (via `UnifiedLocationSelector`) → ajoute un point ou centre une zone.
+2. **Tracé multi-polygones / rectangle / cercle / point** sur Leaflet, avec preview de la ligne de fermeture et libellé par zone.
+3. **Import GeoJSON** (`FeatureCollection` ou `Feature`) → conversion en zones typées.
+4. **Export GeoJSON** (bouton "Télécharger").
+5. **Reverse-geocoding auto** via `GeocodingServiceFactory` (déjà en place) pour remplir `regionCode`/`cityCode`.
+6. **Mode `readOnly`** : rend les zones sans barre d'outils, pour l'affichage détail.
 
-### A4. `invalid input syntax for type uuid: "consulting_firms"` (création de tâche)
-- Reproduire : page Tasks → Créer. Inspecter le payload : un champ catégorie/type (`consulting_firms`) est envoyé dans une colonne `uuid` (probablement `assignee_id` ou `project_id` mal mappé).
-- Lire `TaskService.createTask` + `SupabaseTaskAdapter` + le formulaire `TaskCreateForm`.
-- Corriger le mapping : la chaîne `consulting_firms` doit aller dans une colonne `text` (type/catégorie), pas dans une FK uuid.
+## Livrables
 
----
+### 1. Composant unifié
 
-## Lot B — Domaine multi-zones d'intervention
+- `src/components/gis/GeoZoneEditor.tsx` (nouveau) — reprend la logique de `InterventionZonesPicker`, ajoute :
+  - barre d'outils : Recherche adresse / Dessiner polygone / rectangle / cercle / point / Importer GeoJSON / Exporter / Reset.
+  - bandeau adresse en tête (autocomplete `UnifiedLocationSelector`) qui crée un `point` zone ou centre la carte.
+  - drop-zone GeoJSON (fichier `.geojson` / `.json`).
+  - prop `readOnly?: boolean` pour l'affichage seul.
+  - prop `showAddressBar?: boolean` (par défaut `true` en édition).
+- `InterventionZonesPicker.tsx` devient un alias rétro-compatible qui délègue à `GeoZoneEditor`.
 
-### B1. Séparation conceptuelle
-- **`projects.address`** (déjà existant via DTO `address` + `coordinates`) = adresse administrative du projet (siège équipe). Pas touché.
-- **`projects.localisation` (jsonb)** = liste de zones bénéficiaires (multi-polygones non disjoints).
+### 2. Wiring projet (create / edit / detail)
 
-### B2. Domaine
-- Mettre à jour `src/domain/entities/InterventionZone.ts` pour exposer aussi un **wrapper `InterventionZoneCollection`** : tableau de `InterventionZone` + `getBoundingCenter()` + `getTotalAreaSqm()`.
-- Format JSON stocké en DB :
-  ```json
-  { "version": 2, "zones": [ {InterventionZoneProps}, ... ] }
-  ```
-  Rétro-compat : si `{ type: 'polygon'|... }` à la racine → wrap automatiquement en `{ zones: [old] }`.
+- `LocationStep.tsx` : garder le nouveau `GeoZoneEditor` avec `showAddressBar={true}`. L'adresse projet actuelle (siège) reste séparée au-dessus.
+- `ProjectDetailByDTO.tsx` : remplacer le bloc `InteractiveMapGIS` par `GeoZoneEditor readOnly` alimenté par `project.interventionZones`. Fallback sur `InteractiveMapGIS` si aucune zone (ancien projet).
+- `ProjectFormWithMap.tsx` : ajouter un `GeoZoneEditor` sous la carte pour édition legacy (garde compat).
+- `EnhancedWorkflowPhaseManager.tsx` : simple substitution de la carte par `GeoZoneEditor readOnly` (déjà en contexte projet).
 
-### B3. DTO + Transformer
-- `ProjectDTO.interventionZone` → `interventionZones: InterventionZoneDTO[]` (au pluriel). Garder un getter `interventionZone` (alias = `zones[0]`) pour compat ascendante temporaire.
-- `ProjectTransformer.fromSupabase` : parse `localisation` jsonb → `zones[]`. Centroïde projet = barycentre des centroïdes (fallback `coordinates_latitude/longitude`).
-- `ProjectTransformer.toSupabase` : `localisation = { version: 2, zones: zones.map(z => z.toJSON()) }`.
+### 3. Wiring matériaux
 
-### B4. Service
-- `ProjectService.setInterventionZones(projectId, zones[])`.
-- `ProjectService.addInterventionZone` / `removeInterventionZone(zoneIndex)`.
+- `EnhancedMaterialForm.tsx` : après le `UnifiedLocationSelector`, ajouter un `GeoZoneEditor` optionnel (`showAddressBar={false}`) pour tracer la zone de couverture du matériau (persistée dans `material.coverageZones` — colonne JSONB existante sinon on stocke dans `material.metadata.coverageZones`).
+- `MaterialDetail.tsx` : remplacer `MaterialLocationMap` par `GeoZoneEditor readOnly` si `coverageZones` présent, sinon garder le point.
+- `Materials.tsx` (page liste, mode carte) : passer la couche multi-polygones des matériaux via `GeoZoneEditor readOnly` global.
 
----
+### 4. Persistance
 
-## Lot C — UI : picker Leaflet + import/export
+- Rien à migrer côté DB : `projects.localisation` déjà en v3 (`normalize_intervention_zones`).
+- Ajout mineur : accepter les `Feature`s GeoJSON de type `MultiPolygon` (éclatés en plusieurs zones `polygon`) dans le normaliseur TS `ProjectImportTransformer` (déjà présent, on étend le mapping).
+- Pour les matériaux, si la colonne dédiée n'existe pas, ajouter `coverage_zones jsonb default '[]'::jsonb` à `public.materials` via migration (avec GRANTs).
 
-### C1. `InterventionZonesPicker` (nouveau composant)
-- `src/components/projects/InterventionZonesPicker.tsx`.
-- Leaflet + `leaflet-draw` (déjà utilisé dans le projet, sinon `bun add leaflet-draw @types/leaflet-draw`).
-- Permet de **dessiner plusieurs polygones / rectangles / cercles** sur la même carte, les modifier, les supprimer. Affiche label + surface calculée par zone. Bouton "Ajouter une zone".
-- Props : `value: InterventionZoneDTO[]`, `onChange(zones)`, `addressMarker?: LatLng` (affiche l'adresse projet comme repère distinct).
+### 5. Traçabilité
 
-### C2. Intégration formulaires
-- `ProjectCreate.tsx` / `ProjectEdit.tsx` : section "Adresse du projet" (existante) + nouvelle section "Zones bénéficiaires" utilisant `InterventionZonesPicker`. Sauvegarde via `useProjectInterventionZoneHex` (renommé `useProjectInterventionZonesHex`).
+- `console.info('[GeoZoneEditor] …')` sur : import GeoJSON (nb features), export, création/suppression de zone, résultat reverse-geocode.
+- `console.info('[ProjectDetail] rendered N intervention zones')`.
 
-### C3. Affichage carte projets
-- `EnhancedInteractiveMap` / `Projects.tsx` : afficher chaque zone d'intervention en `Polygon`/`Circle` Leaflet (couleur selon statut). Marqueur adresse = pin classique distinct.
+## Détails techniques
 
-### C4. Refonte importers/exporters
-- **`AdvancedProjectImporter.tsx`** + **`ProjectFileImporter.tsx`** : supprimer toute instanciation directe de `ProjectService`/`supabase.from`. Passer par `useProjectImportExportHex().importProjects`.
-- **`ProjectExporter.tsx`** : utiliser `useProjectImportExportHex().exportProjects`. Ajouter case à cocher "Inclure zones d'intervention (GeoJSON)".
-- **Nouveau `ProjectImportTransformer`** (`src/dtos/transforms/ProjectImportTransformer.ts`) : ligne CSV/Excel/JSON brute → `CreateProjectDTO` validé (référentiel, parsing GeoJSON pour `interventionZones`, normalisation wilaya via `mauritaniaUtils`).
-- `ProjectImportExportService.importProjects` utilise `ProjectImportTransformer.fromRow` au lieu de mapping inline.
+- Leaflet + `leaflet-draw` non-requis : dessin fait à la main (déjà OK dans `InterventionZonesPicker`).
+- Parsing GeoJSON : simple lecture `JSON.parse`, conversion `[lng,lat]` → `{lat,lng}`, mapping :
+  - `Point` → `type: 'point'`
+  - `Polygon` → `type: 'polygon'` (première ring)
+  - `MultiPolygon` → plusieurs `polygon`
+  - `Feature.properties.label` → `label` de zone
+- Reverse-geocoding batch : appelé uniquement pour les nouvelles zones (dédup par `label+centroid`).
+- Aucune régression sur la couche adapter/transformer : les DTO/entities `InterventionZone*` sont déjà en v3.
 
-### C5. Critères de validation
-- `rg "supabase.from" src/components/projects/` → 0 hit pour Importer/Exporter.
-- `rg "new ProjectService" src/components/` → 0 hit.
-- Build TS vert (`tsgo`).
-- Création projet : on dessine 2 polygones se chevauchant → sauvegarde → reload → les 2 zones réapparaissent sur la carte et dans l'export GeoJSON.
+## Fichiers touchés
 
----
+```text
+src/components/gis/GeoZoneEditor.tsx                          (new)
+src/components/projects/InterventionZonesPicker.tsx           (alias → GeoZoneEditor)
+src/components/project/steps/LocationStep.tsx                 (import via alias, showAddressBar=true)
+src/components/project/ProjectDetailByDTO.tsx                 (remplace InteractiveMapGIS)
+src/components/project/ProjectFormWithMap.tsx                 (ajout picker)
+src/components/project/EnhancedWorkflowPhaseManager.tsx       (remplace map par picker readonly)
+src/components/materials/EnhancedMaterialForm.tsx             (ajout picker optionnel)
+src/pages/MaterialDetail.tsx                                  (picker readonly si zones)
+src/pages/Materials.tsx                                       (couche multi-polygones)
+src/dtos/transforms/ProjectImportTransformer.ts               (MultiPolygon support)
+supabase/migrations/xxx_add_material_coverage_zones.sql       (si colonne absente)
+```
 
-## Ordre d'exécution
+## Hors périmètre
 
-1. **Lot A** en parallèle (4 fixes indépendants, fichiers distincts).
-2. **Lot B** (domaine pur, pas de dépendance UI).
-3. **Lot C** (dépend de B). C1 (picker) + C4 (refonte importers) en parallèle, puis C2/C3 qui consomment C1.
-
-Migration DB : aucune nouvelle table. Juste un `COMMENT ON COLUMN public.projects.localisation` mis à jour pour documenter `{version:2, zones:[]}`.
+- Pas de refonte du fond de carte (Leaflet OSM reste par défaut).
+- Pas de nouveau provider de géocodage (on garde `GeocodingServiceFactory`/Nominatim).
