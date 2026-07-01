@@ -1,5 +1,5 @@
 import MaterialAvailabilityCard from "@/components/materials/MaterialAvailabilityCard";
-import MaterialLocationMap from "@/components/materials/MaterialLocationMap";
+
 import GeoZoneEditorLazy from "@/components/gis/GeoZoneEditor";
 import WarehouseShapeTracer from "@/components/materials/WarehouseShapeTracer";
 import { Badge } from "@/components/ui/badge";
