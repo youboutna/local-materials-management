@@ -12,7 +12,7 @@ import { Calculator, Upload, Plus, Trash2, FileText, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { QuantitativeEstimateExporter } from '@/components/reports/QuantitativeEstimateExporter';
-import DqeResourcePicker, { type DqeResourceValue } from '@/components/tenders/DqeResourcePicker';
+import DqeResourcePicker, { type DqeResourceValue, validateDqeResource } from '@/components/tenders/DqeResourcePicker';
 import { 
   useTenderQuantitativeEstimateHex,
   type EstimateItem,
