@@ -255,6 +255,7 @@ const TenderManagement = () => {
                       <SubmissionsInbox
                         tenderId={selectedTender.id}
                         tenderDeadline={selectedTender.deadlineDate}
+                        projectId={selectedTender.projectId}
                       />
                     </TabsContent>
                     {/* Workflow & Étapes — fusion workflow + stepper + steps + timeline */}
