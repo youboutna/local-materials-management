@@ -971,7 +971,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         onValueChange={setActiveTab}
         className="space-y-4"
       >
-        <TabsList className="sticky top-0 z-20 grid w-full grid-cols-3 md:grid-cols-7 h-auto bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
+        <TabsList className="sticky top-0 z-20 grid w-full grid-cols-3 md:grid-cols-5 lg:grid-cols-9 h-auto bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
           {projectTabsDef.map((tab) => (
             <TabsTrigger key={tab.uiValue} value={tab.uiValue} className="text-xs sm:text-sm">
               {tab.label.fr}
