@@ -2081,53 +2081,55 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             const zoneList = Array.isArray(zones)
               ? (zones as import('@/dtos/entities/InterventionZoneDTO').InterventionZoneDTO[])
               : [];
-            console.info('[ProjectDetail] rendering intervention zones', {
-              count: zoneList.length,
-            });
+            console.info('[ProjectDetail] rendered', zoneList.length, 'intervention zones');
+            if (zoneList.length > 0) {
+              return (
+                <GeoZoneEditor
+                  readOnly
+                  showAddressBar={false}
+                  value={zoneList}
+                  title="Zones d'intervention"
+                  hint="Vue lecture seule — éditez via le workflow projet."
+                  defaultCenter={
+                    project?.coordinates?.latitude && project?.coordinates?.longitude
+                      ? [project.coordinates.latitude, project.coordinates.longitude]
+                      : undefined
+                  }
+                  height={520}
+                />
+              );
+            }
+            // Legacy fallback: no versioned zones — show single-point legacy map.
             return (
-              <GeoZoneEditor
-                readOnly
-                showAddressBar={false}
-                value={zoneList}
-                title="Zones d'intervention"
-                hint="Vue lecture seule — éditez via le workflow projet."
-                defaultCenter={
-                  project?.coordinates?.latitude && project?.coordinates?.longitude
-                    ? [project.coordinates.latitude, project.coordinates.longitude]
-                    : undefined
-                }
-                height={520}
+              <InteractiveMapGIS
+                title="Localisation du projet (siège)"
+                description="Aucune zone d'intervention tracée — vue legacy du point GPS"
+                allowPolygon={true}
+                value={{
+                  coordinates: project && project.coordinates && project.coordinates.latitude !== undefined && project.coordinates.longitude !== undefined
+                    ? {
+                        lat: project.coordinates.latitude,
+                        lng: project.coordinates.longitude,
+                      }
+                    : undefined,
+                  polygon: Array.isArray((project as any).localisation)
+                    ? (project as any).localisation
+                    : [],
+                  warehouseShape: Array.isArray((project as any).localisation)
+                    ? (project as any).localisation
+                    : [],
+                  address:
+                    typeof (project as any).adresse === "string"
+                      ? (project as any).adresse
+                      : (project as any).adresse?.address || project.location || "",
+                  shapeType: (project as any).forme,
+                }}
+                onChange={() => {
+                  /* readonly */
+                }}
               />
             );
           })()}
-
-          <InteractiveMapGIS
-            title="Localisation du projet (siège)"
-            description="Point GPS administratif et forme legacy"
-            allowPolygon={true}
-            value={{
-              coordinates: project && project.coordinates && project.coordinates.latitude !== undefined && project.coordinates.longitude !== undefined
-                ? {
-                    lat: project.coordinates.latitude,
-                    lng: project.coordinates.longitude,
-                  }
-                : undefined,
-              polygon: Array.isArray((project as any).localisation)
-                ? (project as any).localisation
-                : [],
-              warehouseShape: Array.isArray((project as any).localisation)
-                ? (project as any).localisation
-                : [],
-              address:
-                typeof (project as any).adresse === "string"
-                  ? (project as any).adresse
-                  : (project as any).adresse?.address || project.location || "",
-              shapeType: (project as any).forme,
-            }}
-            onChange={(_data) => {
-              // Read-only overlay — edits go through the project workflow (Localisation step).
-            }}
-          />
         </TabsContent>
 
       </Tabs>
