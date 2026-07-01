@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Calendar, MapPin, Building, User, HardHat, Clock, FileText, CreditCard, Settings, Save, CheckCircle } from 'lucide-react';
 import InteractiveMapGIS from '../materials/InteractiveMapGIS';
+import GeoZoneEditor from '@/components/gis/GeoZoneEditor';
+import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 import ProjectPhases from '@/components/project/ProjectPhases';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import TenderProjectFields from '@/components/projects/TenderProjectFields';
@@ -636,6 +638,27 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
               className="min-h-[600px]"
             />
           </div>
+
+          {/* Multi-polygones — zones d'intervention bénéficiaires */}
+          {(() => {
+            console.info('[ProjectForm] intervention zones editor mounted');
+            const zones = ((formData as unknown as { interventionZones?: InterventionZoneDTO[] }).interventionZones) ?? [];
+            return (
+              <GeoZoneEditor
+                value={zones}
+                onChange={(next) => {
+                  setFormData((prev) => ({
+                    ...(prev as any),
+                    interventionZones: next,
+                  }));
+                  console.info('[ProjectForm] zones updated', next.length);
+                }}
+                title="Zones d'intervention (bénéficiaires)"
+                hint="Tracez une ou plusieurs zones — polygones, rectangles, cercles ou points. Import GeoJSON supporté."
+                height={520}
+              />
+            );
+          })()}
           
           {/* Display current map data for debugging */}
           {(facilitiesMapData.center || facilitiesMapData.warehouseShape?.length) && (
