@@ -430,6 +430,12 @@ export class TenderEstimateService {
         specifications: request.specifications,
         materialId: request.material_id,
         itemType: request.item_type,
+        // Resource anchoring (v10)
+        resourceKind: request.resource_kind,
+        employeeQualificationId: request.employee_qualification_id,
+        supplierId: request.supplier_id,
+        supplierContractRef: request.supplier_contract_ref,
+        estimatedHours: request.estimated_hours,
       } as unknown as Parameters<typeof this.tenderEstimateRepository.createItem>[0]);
       return this.mapItemEntityToDTO(created);
     } catch (error) {
