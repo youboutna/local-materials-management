@@ -10,8 +10,7 @@
  */
 
 import { TenderEstimateService } from './TenderEstimateService';
-import { TenderService } from './TenderService';
-import { getProjectWorkflowService } from './ProjectWorkflowService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { AwardedTenderTransformer, type AwardedProjectHydrationPayload } from '@/dtos/transforms/AwardedTenderTransformer';
 import type { DqeMappingConfig } from '@/config/referentials/tender/dqe-mapping.referential';
 import type { TenderEstimateItemDTO } from '@/dtos/entities/TenderEstimateDTO';
