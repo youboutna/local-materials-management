@@ -1,82 +1,134 @@
-# Vérification .lovable/plan.md + normalisation bidirectionnelle GIS
 
-## 1. Vérification de l'exécution du plan (8 écarts)
+# Refonte du module Tender Management — Cohérence et fluidité
 
-Audit rapide de chaque écart via lecture ciblée des fichiers :
+## 1. Contexte
 
-| # | Fichier | Statut attendu | Action si écart |
-|---|---------|----------------|-----------------|
-| 1 | `ProjectFormWithMap.tsx` | `GeoZoneEditor` monté | Compléter si manquant |
-| 2 | `EnhancedWorkflowPhaseManager.tsx` | `GeoZoneEditor readOnly` | Remplacer `InteractiveMapGIS` |
-| 3 | `EnhancedMaterialForm.tsx` | `GeoZoneEditor` coverage | Idem |
-| 4 | `Materials.tsx` | `ProjectMap` + overlay | Idem |
-| 5 | `LocationStep.tsx` | import mort supprimé | Nettoyer |
-| 6 | `MaterialDetail.tsx` | doublon supprimé | Nettoyer |
-| 7 | `ProjectDetailByDTO.tsx` | fallback strict | Corriger condition |
-| 8 | `Dashboard.tsx` + `ProjectDashboard.tsx` | `showInterventionZones` + légende | Compléter |
+Socle existant (à réutiliser, pas réécrire) : tables `tenders`, `tender_submissions`, `tender_estimates`, `tender_estimate_items`, `quantity_takeoffs`, `project_phases/tasks/milestones` ; parseurs Excel/PDF/métré en silos ; portail fournisseur basique avec code secret ; module projet (Gantt/PERT) actif.
 
-Rapport écrit dans le message final (fichier par fichier, avec numéros de ligne). Correction uniquement des écarts réels détectés.
+Défi : **orchestrer** les briques, **uniformiser** les parcours (Wizards/Steppers), **centraliser** les règles dans des référentiels, **fluidifier** les transitions d'état et inter-modules, **tracer** chaque décision.
 
-## 2. Normalisation bidirectionnelle multi-polygones
+## 2. Périmètre — 4 lots
 
-Objectif : garantir qu'un projet **exporté** puis **réimporté** conserve à l'identique ses zones (Polygon, MultiPolygon, Circle, Point) — round-trip fidèle.
+### Lot 1 — Backend Tender (manager)
 
-### 2.1 Format canonique d'export (GeoJSON standard)
+Pages : `TenderManagement.tsx` (liste + indicateurs), `TenderDetail.tsx`.
 
-`ProjectImportExportService.toExportRow` produit déjà `interventionZonesGeoJSON` (FeatureCollection). Extensions nécessaires :
+- **Stepper horizontal 5 étapes** remplace les onglets denses : Identification → Cadre & Lots → DPAO & Pièces → Planning → Publication.
+- **Statuts référentiels** : `draft → published → open → under_evaluation → awarded → contracted → closed` avec gardes (ex: publication interdite sans lots).
+- **SubmissionsInbox** : centralise réception, filtres statut/fournisseur/lot, badges deadline, `submission_access_logs`.
+- **EvaluationPanel** refondu : 3 sous-onglets (Admin / Technique / Financier), critères pondérés, score total auto, verrou post-attribution.
+- **Attribution** : dialog confirmation → contrat draft → notification lauréat/rejetés (edge existant).
 
-- **Cercle** → `Feature` `Point` + `properties.shape="circle"` + `properties.radiusMeters` (respect GeoJSON RFC 7946 : cercle non natif, encodé via propriété).
-- **Rectangle** → `Feature` `Polygon` fermé + `properties.shape="rectangle"` (les 4 sommets + fermeture).
-- **Polygon** → déjà OK, mais garantir la fermeture du ring (dernier point = premier).
-- **MultiPolygon** (nouveau) : si une zone porte plusieurs rings, émettre `geometry.type="MultiPolygon"`.
-- Propager `regionCode`, `cityCode`, `geocodingMeta`, `areaSqm`, `label`, `address` dans `properties`.
+### Lot 2 — Portail fournisseur `/supplier-portal`
 
-### 2.2 Import symétrique dans `ProjectImportTransformer.geoJsonToZones`
+Page : `UnifiedSupplierPortal.tsx`.
 
-Compléter la reconstruction pour restituer le type d'origine à partir de `properties.shape` :
+- **Mode hybride** conservé : consultation publique (`status IN ('published','open')` ET `deadline_date > now()`), suivi via code secret existant.
+- **PublicTendersList** : cartes compactes, filtres (catégorie, région, montant, deadline).
+- **SupplierBidWizard vertical 4 étapes** : DPAO → DQE → Pièces (admin/tech/fin) → Récap & soumission.
+- Progress tracker persistant, garde deadline bloquante.
 
-- `Point` + `properties.shape="circle"` + `radiusMeters` → `InterventionZoneDTO { type:'circle', coordinates:[centre], radiusMeters }`.
-- `Polygon` + `properties.shape="rectangle"` → `type:'rectangle'`.
-- `Polygon` sans hint → `type:'polygon'` (comportement actuel préservé).
-- `MultiPolygon` → une `InterventionZoneDTO` par polygone (plutôt qu'une par ring), en réhydratant `label` depuis `properties`.
-- Restaurer `regionCode`, `cityCode`, `geocodingMeta`, `areaSqm`, `label`, `address` depuis `properties`.
-- Toujours fermer le ring en entrée (tolérance : accepter ring fermé ou ouvert).
+### Lot 3 — DQE Wizard (Quote & Takeoff)
 
-### 2.3 Utilitaire partagé `GeoJsonZoneCodec`
+Composants : `EnhancedTenderEstimator`, `TenderQuantitativeEstimate`, `QuantityTakeoffForm`.
 
-Nouveau fichier `src/dtos/transforms/GeoJsonZoneCodec.ts` :
+- **3 modes fusionnés dans un onglet unique** :
+  - Import Excel (BPU multi-structure, parser étendu)
+  - Import PDF (OCR consolidé, extraction lignes/lots)
+  - Saisie manuelle (table lots/sous-lots, drag & drop, duplication)
+- Calculs temps réel (PT = qté × PU), totaux/lot, TVA, sous-totaux.
+- Validation `TenderEstimateValidation` (unités, quantités > 0, PU numérique).
+- Aperçu PDF (`DevisPDFDocument`), export XLSX, autosave debouncé.
 
-```ts
-export class GeoJsonZoneCodec {
-  static toFeature(zone: InterventionZoneDTO, index: number): GeoJSON.Feature
-  static fromFeature(feature: GeoJSON.Feature): InterventionZoneDTO[]
-  static toFeatureCollection(zones: InterventionZoneDTO[]): GeoJSON.FeatureCollection
-  static fromFeatureCollection(fc: unknown): InterventionZoneDTO[]
-}
+### Lot 4 — Post-attribution → hydratation projet
+
+Nouveau service : `AwardedTenderToProjectService`.
+
+Déclencheur : « Signer contrat » sur soumission gagnante (rôles habilités).
+
+Pipeline :
+1. Charger `TenderEstimate` lauréat (existant ou reparser).
+2. Mapper via référentiel : 1 lot = 1 phase, 1 sous-lot = 1 tâche, jalons à 25/50/75/100 % du montant.
+3. **Preview interactive** (`AwardedTenderPreviewDialog`) : renommer, fusionner, ajuster durées.
+4. Application via `ProjectWorkflowService` (respecte règle « Project Aggregate ») → `project_phases`, `project_tasks`, `project_milestones`, `project_budget_links`, ajout fournisseur dans `project_stakeholders`.
+5. Traçabilité : `project_alerts` + `workflow_history`.
+
+Scénario complémentaire : bouton « Importer depuis DQE » dans `ProjectCreationWorkflow` (upload direct, sans AO).
+
+## 3. Référentiels paramétrables
+
+| Référentiel | Rôle |
+|-------------|------|
+| `tender-workflow.referential` | Statuts, transitions, gardes métier |
+| `evaluation-criteria.referential` | Critères pondérés modifiables |
+| `dqe-mapping.referential` | Règles DQE → phases/tâches/jalons |
+
+Stockés dans `src/config/referentials/`, administrables sans redéploiement.
+
+## 4. Contraintes techniques
+
+- **Hexagonal strict** : UI → Hook → Service → Repository → Adapter → DB. Aucun `supabase` direct dans React.
+- **Transformers dédiés** : `AwardedTenderTransformer`, extension `TenderEstimateItemTransformer`.
+- **TanStack Query v5** : pas de `onSuccess`/`onError` sur `useQuery`/`useMutation`.
+- **RLS** : ajout policy publique `anon SELECT` sur `tenders WHERE status IN ('published','open') AND deadline_date > now()`. Autres policies conservées.
+
+## 5. Structure indicative
+
+```text
+src/config/referentials/
+├── tender-workflow.referential.ts
+├── evaluation-criteria.referential.ts
+└── dqe-mapping.referential.ts
+
+src/application/services/
+├── AwardedTenderToProjectService.ts        (nouveau)
+└── TenderEstimateService.ts                (étendu : autosave, parser)
+
+src/dtos/transforms/
+└── AwardedTenderTransformer.ts             (nouveau)
+
+src/components/tenders/
+├── TenderWizardStepper.tsx                 (nouveau)
+├── SubmissionsInbox.tsx                    (nouveau)
+├── EvaluationPanelTabs.tsx                 (refonte)
+└── AwardedTenderPreviewDialog.tsx          (nouveau)
+
+src/components/supplier/
+├── SupplierBidWizard.tsx                   (nouveau, 4 steps)
+└── PublicTendersList.tsx                   (nouveau)
+
+src/pages/
+├── TenderManagement.tsx                    (wire stepper + inbox)
+├── TenderDetail.tsx                        (wire evaluation + award)
+└── UnifiedSupplierPortal.tsx               (wire wizard)
 ```
 
-- Source de vérité unique utilisée par :
-  - `ProjectImportExportService.toExportRow` (remplace le mapping inline)
-  - `ProjectImportTransformer.geoJsonToZones` (remplace le mapping inline)
-  - futur consommateur `GeoZoneEditor` (import GeoJSON drag & drop)
-- Écrit avec des types `GeoJSON.*` (déjà installés via `@types/geojson`, sinon inline minimal).
+Migration SQL unique : policy publique lecture `tenders` (statuts publics + deadline valide).
 
-### 2.4 Test round-trip
+## 6. Ordre d'exécution
 
-Ajouter `src/dtos/transforms/__tests__/GeoJsonZoneCodec.roundtrip.test.ts` :
+| Phase | Périmètre | Justification |
+|-------|-----------|---------------|
+| 1 | Référentiels + `AwardedTenderToProjectService` | Fondations métier |
+| 2 | Lot 1 (Backend Tender) | Cœur gestionnaire |
+| 3 | Lot 3 (DQE Wizard) | Indépendant, parallèle possible |
+| 4 | Lot 2 (Portail) | Consomme Lot 3 |
+| 5 | Lot 4 (Post-attribution) | Boucle le cycle |
 
-- Fixture couvrant les 4 formes (`polygon`, `rectangle`, `circle`, `point`) + un `MultiPolygon` reconstitué depuis 2 zones.
-- Assert : `fromFeatureCollection(toFeatureCollection(zones))` égal à `zones` (comparaison structurelle sur type, coordonnées, radiusMeters, label, regionCode).
+## 7. Décisions par défaut
 
-## Livrables
+- Portail : hybride (public + code secret).
+- Sources DQE : Excel + PDF + manuel dans un même espace.
+- Mapping : lot=phase / sous-lot=tâche / jalons 25-50-75-100 %, ajustables en preview.
 
-- Corrections ciblées des écarts plan.md restants.
-- `src/dtos/transforms/GeoJsonZoneCodec.ts` (nouveau).
-- `ProjectImportExportService.ts` + `ProjectImportTransformer.ts` : délégation au codec.
-- Test round-trip.
-- Aucun changement de schéma DB, aucune migration.
+## 8. Hors périmètre (itérations futures)
 
-## Hors périmètre
+Notifications multicanal unifiées ; enrichissement GIS (analyses spatiales) ; schéma DB étendu ; comptes fournisseurs obligatoires ; connecteurs ERP/SCADA fins ; workflow garanties/cautions dédié ; approbations multi-comités granulaires.
 
-- Pas de refonte des composants carte.
-- Pas de nouveau format de fichier (on reste GeoJSON FeatureCollection standard).
+## 9. Bénéfices attendus
+
+Parcours guidés sans rupture ; zéro double saisie DQE → contrat → projet ; visibilité temps réel ; règles configurables sans code ; garde-fous métier ; traçabilité complète pour audit.
+
+## 10. Prochaines étapes
+
+Validation plan → paramétrage initial référentiels avec administrateurs → développement itératif lots 1→4 → recette parcours → déploiement progressif.
