@@ -1,4 +1,4 @@
-import InteractiveMapGIS from "@/components/materials/InteractiveMapGIS";
+
 import GeoZoneEditor from "@/components/gis/GeoZoneEditor";
 import EnhancedRiskManager from "@/components/project/EnhancedRiskManager";
 import EnhancedTaskManager from "@/components/project/EnhancedTaskManager";
