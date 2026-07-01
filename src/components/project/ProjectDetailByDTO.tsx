@@ -1,4 +1,4 @@
-import InteractiveMapGIS from "@/components/materials/InteractiveMapGIS";
+
 import GeoZoneEditor from "@/components/gis/GeoZoneEditor";
 import EnhancedRiskManager from "@/components/project/EnhancedRiskManager";
 import EnhancedTaskManager from "@/components/project/EnhancedTaskManager";
@@ -2099,34 +2099,20 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                 />
               );
             }
-            // Legacy fallback: no versioned zones — show single-point legacy map.
+            // Fallback strict : aucune zone tracée — carte vide en lecture seule via GeoZoneEditor
             return (
-              <InteractiveMapGIS
-                title="Localisation du projet (siège)"
-                description="Aucune zone d'intervention tracée — vue legacy du point GPS"
-                allowPolygon={true}
-                value={{
-                  coordinates: project && project.coordinates && project.coordinates.latitude !== undefined && project.coordinates.longitude !== undefined
-                    ? {
-                        lat: project.coordinates.latitude,
-                        lng: project.coordinates.longitude,
-                      }
-                    : undefined,
-                  polygon: Array.isArray((project as any).localisation)
-                    ? (project as any).localisation
-                    : [],
-                  warehouseShape: Array.isArray((project as any).localisation)
-                    ? (project as any).localisation
-                    : [],
-                  address:
-                    typeof (project as any).adresse === "string"
-                      ? (project as any).adresse
-                      : (project as any).adresse?.address || project.location || "",
-                  shapeType: (project as any).forme,
-                }}
-                onChange={() => {
-                  /* readonly */
-                }}
+              <GeoZoneEditor
+                readOnly
+                showAddressBar={false}
+                value={[]}
+                title="Localisation du projet"
+                hint="Aucune zone d'intervention tracée — définissez-en via l'édition du projet."
+                defaultCenter={
+                  project?.coordinates?.latitude && project?.coordinates?.longitude
+                    ? [project.coordinates.latitude, project.coordinates.longitude]
+                    : undefined
+                }
+                height={420}
               />
             );
           })()}

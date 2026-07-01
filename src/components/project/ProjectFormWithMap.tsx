@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Calendar, MapPin, Building, User, HardHat, Clock, FileText, CreditCard, Settings, Save, CheckCircle } from 'lucide-react';
-import InteractiveMapGIS from '../materials/InteractiveMapGIS';
+import UnifiedLocationSelector from '@/components/location/UnifiedLocationSelector';
 import GeoZoneEditor from '@/components/gis/GeoZoneEditor';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 import ProjectPhases from '@/components/project/ProjectPhases';
@@ -624,18 +624,21 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
         {/* Location Tab - Fixed to prevent render2 error */}
         <TabsContent value="location" className="space-y-6">
           <div className="w-full">
-            <InteractiveMapGIS
-              title="Localisation et zone d'entrepôt du projet"
-              description="Définissez la position GPS du projet et tracez la zone des installations/entrepôts"
+            <UnifiedLocationSelector
               value={{
-                coordinates: facilitiesMapData.center,
-                shape: facilitiesMapData.warehouseShape || facilitiesMapData.polygon || [],
                 address: facilitiesMapData.address,
-                shapeType: facilitiesMapData.shapeType
+                latitude: facilitiesMapData.center?.lat,
+                longitude: facilitiesMapData.center?.lng,
               }}
-              onChange={handleMapDataChange}
-              allowPolygon={true}
-              className="min-h-[600px]"
+              onChange={(loc) => {
+                handleMapDataChange({
+                  coordinates: loc.latitude != null && loc.longitude != null ? { lat: loc.latitude, lng: loc.longitude } : undefined,
+                  address: loc.address,
+                });
+              }}
+              showMap
+              showCoordinates
+              showGPS
             />
           </div>
 
