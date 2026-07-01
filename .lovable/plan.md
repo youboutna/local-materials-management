@@ -1,5 +1,5 @@
 
-# Alignement GIS — un seul composant, partout
+# Alignement GIS — Localisation unifiée en 3 couches, partout
 
 ## Problème constaté
 
@@ -11,25 +11,35 @@
 
 ## Cible
 
-Un seul composant réutilisé partout : **`GeoZoneEditor`** (renommage/refactor d'`InterventionZonesPicker`) qui combine :
+Un modèle unique de localisation, applicable à tous les concepts géo-référencés :
+
+1. **Adresse classique / attributaire** : adresse d'unité de gestion, siège, entrepôt, fournisseur, localité administrative.
+2. **Géolocalisation GNSS** : point GPS exact `latitude/longitude`, issu de la base interne, saisie manuelle, GPS navigateur, reverse-geocoding ou provider carte.
+3. **Tracé de formes géo-référencées** : `Polygon`, `MultiPolygon`, `GeometryCollection` / MultiGeometry, cercle, rectangle, point, avec libellés métier selon le contexte.
+
+Un seul composant réutilisé partout : **`GeoZoneEditor` / Système GIS Interactif** qui combine :
 
 1. **Recherche adresse** (via `UnifiedLocationSelector`) → ajoute un point ou centre une zone.
 2. **Tracé multi-polygones / rectangle / cercle / point** sur Leaflet, avec preview de la ligne de fermeture et libellé par zone.
-3. **Import GeoJSON** (`FeatureCollection` ou `Feature`) → conversion en zones typées.
-4. **Export GeoJSON** (bouton "Télécharger").
+3. **Import GeoJSON fidèle** (`FeatureCollection`, `Feature`, `Geometry`) → conservation des géométries originales quand elles sont complexes.
+4. **Export GeoJSON normalisé** (bouton "Télécharger") → ré-export fidèle des `MultiPolygon` / `GeometryCollection`.
 5. **Reverse-geocoding auto** via `GeocodingServiceFactory` (déjà en place) pour remplir `regionCode`/`cityCode`.
 6. **Mode `readOnly`** : rend les zones sans barre d'outils, pour l'affichage détail.
+7. **Contexte métier paramétrable** : projet = zones d'intervention, matériau = workspace/warehouse/couverture logistique, indicateurs = zones d'analyse spatiale et infobulles détaillées.
 
 ## Livrables
 
 ### 1. Composant unifié
 
 - `src/components/gis/GeoZoneEditor.tsx` (nouveau) — reprend la logique de `InterventionZonesPicker`, ajoute :
-  - barre d'outils : Recherche adresse / Dessiner polygone / rectangle / cercle / point / Importer GeoJSON / Exporter / Reset.
-  - bandeau adresse en tête (autocomplete `UnifiedLocationSelector`) qui crée un `point` zone ou centre la carte.
+  - barre d'outils : Recherche adresse / source interne / source provider carte / Dessiner polygone / rectangle / cercle / point / Importer GeoJSON / Exporter / Reset.
+  - bandeau adresse en tête (autocomplete `UnifiedLocationSelector`) qui permet de choisir la source : **base interne** ou **API provider carte**.
+  - alimentation automatique du centre et du premier point de dessin depuis la source sélectionnée.
   - drop-zone GeoJSON (fichier `.geojson` / `.json`).
   - prop `readOnly?: boolean` pour l'affichage seul.
   - prop `showAddressBar?: boolean` (par défaut `true` en édition).
+  - prop `contextLabel?: string` (`Zone d'intervention`, `Workspace/warehouse`, `Zone d'analyse`, etc.).
+  - prop `tooltipRenderer?: (zone) => ReactNode` pour les infobulles d'analyse spatiale.
 - `InterventionZonesPicker.tsx` devient un alias rétro-compatible qui délègue à `GeoZoneEditor`.
 
 ### 2. Wiring projet (create / edit / detail)
@@ -48,13 +58,23 @@ Un seul composant réutilisé partout : **`GeoZoneEditor`** (renommage/refactor 
 ### 4. Persistance
 
 - Rien à migrer côté DB : `projects.localisation` déjà en v3 (`normalize_intervention_zones`).
-- Ajout mineur : accepter les `Feature`s GeoJSON de type `MultiPolygon` (éclatés en plusieurs zones `polygon`) dans le normaliseur TS `ProjectImportTransformer` (déjà présent, on étend le mapping).
+- Corriger `ProjectWorkflowService.saveStep(3)` et les transformers projet pour ne plus perdre `localisation` / `interventionZones` pendant création et modification.
+- Étendre `InterventionZoneDTO` et le domaine pour accepter : `polygon`, `multipolygon`, `multigeometry`, `rectangle`, `circle`, `point`.
+- Normaliser l'import/export GeoJSON dans un utilitaire unique :
+  - `Point` → zone `point`.
+  - `Polygon` → zone `polygon` avec géométrie originale préservée.
+  - `MultiPolygon` → zone `multipolygon` avec géométrie originale préservée, pas d'écrasement en simples polygones sauf affichage Leaflet.
+  - `GeometryCollection` → zone `multigeometry` avec géométries originales préservées.
+  - `Feature.properties` → `properties` + `label` métier.
 - Pour les matériaux, si la colonne dédiée n'existe pas, ajouter `coverage_zones jsonb default '[]'::jsonb` à `public.materials` via migration (avec GRANTs).
+- Corriger `MaterialTransformer`, `MaterialDTO`, `useMaterialsHex` et `MaterialService` pour persister `adresse`, coordonnées GNSS, `forme`, `localisation` / `coverageZones` au create et update.
 
 ### 5. Traçabilité
 
 - `console.info('[GeoZoneEditor] …')` sur : import GeoJSON (nb features), export, création/suppression de zone, résultat reverse-geocode.
 - `console.info('[ProjectDetail] rendered N intervention zones')`.
+- `console.info('[MaterialGIS] persisted N coverage/workspace zones')`.
+- `console.info('[ProjectWorkflow] persisted N intervention zones')`.
 
 ## Détails techniques
 
@@ -62,7 +82,8 @@ Un seul composant réutilisé partout : **`GeoZoneEditor`** (renommage/refactor 
 - Parsing GeoJSON : simple lecture `JSON.parse`, conversion `[lng,lat]` → `{lat,lng}`, mapping :
   - `Point` → `type: 'point'`
   - `Polygon` → `type: 'polygon'` (première ring)
-  - `MultiPolygon` → plusieurs `polygon`
+  - `MultiPolygon` → `type: 'multipolygon'`, rendu comme plusieurs rings mais stockage fidèle
+  - `GeometryCollection` → `type: 'multigeometry'`, rendu des sous-géométries supportées
   - `Feature.properties.label` → `label` de zone
 - Reverse-geocoding batch : appelé uniquement pour les nouvelles zones (dédup par `label+centroid`).
 - Aucune régression sur la couche adapter/transformer : les DTO/entities `InterventionZone*` sont déjà en v3.
