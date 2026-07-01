@@ -234,9 +234,6 @@ export class ProjectImportExportService {
       );
       // Encodage GeoJSON via codec bidirectionnel (round-trip fidèle).
       base.interventionZonesGeoJSON = GeoJsonZoneCodec.toFeatureCollection(zones);
-                },
-        })),
-      };
     }
     return base;
   }
