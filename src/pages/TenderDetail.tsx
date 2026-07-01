@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { AppLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, ExternalLink, Calendar, DollarSign } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Calendar, DollarSign, FileSignature } from 'lucide-react';
 import { useTenderHex } from '@/hooks/hexagonal';
+import { AwardedTenderPreviewDialog } from '@/components/tenders/AwardedTenderPreviewDialog';
 
 const Field: React.FC<{ label: string; value?: React.ReactNode }> = ({ label, value }) => (
   <div>
@@ -19,6 +20,7 @@ const TenderDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { tender, loading, error } = useTenderHex(id);
+  const [awardOpen, setAwardOpen] = useState(false);
 
   return (
     <AppLayout pageTitle="📄 Détail de l'appel d'offres">
@@ -89,9 +91,24 @@ const TenderDetail: React.FC = () => {
                     Soumissions & évaluation <ExternalLink className="h-3 w-3 ml-1" />
                   </Link>
                 </Button>
+                {(tender.status === 'awarded' || tender.status === 'under_evaluation') && (
+                  <Button onClick={() => setAwardOpen(true)}>
+                    <FileSignature className="h-4 w-4 mr-1" /> Signer contrat & hydrater projet
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {tender && (
+          <AwardedTenderPreviewDialog
+            open={awardOpen}
+            onOpenChange={setAwardOpen}
+            tenderId={tender.id}
+            estimateId={undefined}
+            projectId={tender.projectId ?? null}
+          />
         )}
       </div>
     </AppLayout>
