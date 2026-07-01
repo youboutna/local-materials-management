@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Calendar, MapPin, Building, User, HardHat, Clock, FileText, CreditCard, Settings, Save, CheckCircle } from 'lucide-react';
-import InteractiveMapGIS from '../materials/InteractiveMapGIS';
+import UnifiedLocationSelector from '@/components/location/UnifiedLocationSelector';
 import GeoZoneEditor from '@/components/gis/GeoZoneEditor';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 import ProjectPhases from '@/components/project/ProjectPhases';
