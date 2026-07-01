@@ -599,6 +599,11 @@ export class TenderEstimateService {
       unit?: string; quantity: number; unitPrice: number; totalPrice: number;
       category?: string; specifications?: string; materialId?: string; itemType?: string;
       createdAt?: string; updatedAt?: string;
+      resource_kind?: 'internal_qualification' | 'external_provider' | 'material';
+      employee_qualification_id?: string;
+      supplier_id?: string;
+      supplier_contract_ref?: string;
+      estimated_hours?: number;
     };
     const now = new Date().toISOString();
     return {
@@ -615,6 +620,11 @@ export class TenderEstimateService {
       specifications: e.specifications,
       item_type: e.itemType,
       line_total: Number(e.totalPrice) || 0,
+      resource_kind: e.resource_kind,
+      employee_qualification_id: e.employee_qualification_id,
+      supplier_id: e.supplier_id,
+      supplier_contract_ref: e.supplier_contract_ref,
+      estimated_hours: e.estimated_hours,
       created_at: e.createdAt ?? now,
       updated_at: e.updatedAt ?? now,
     };
