@@ -688,6 +688,15 @@ export interface CreateProjectDTO {
   title: string;
   description: string;
   location: string;
+  /**
+   * Zones d'intervention (multi-polygones/rectangles/cercles bénéficiaires).
+   * Persistées dans `projects.localisation` (jsonb v3) — voir `InterventionZoneDTO`.
+   */
+  interventionZones?: import('./InterventionZoneDTO').InterventionZoneDTO[];
+  /** @deprecated alias mono-zone → pointe vers `interventionZones[0]`. */
+  interventionZone?: import('./InterventionZoneDTO').InterventionZoneDTO;
+  /** Payload jsonb v3 déjà pré-construit (rare — préférer `interventionZones`). */
+  localisation?: Record<string, unknown>;
   status: ProjectStatus;
   budget: number;
   startDate: string;
