@@ -1,40 +1,82 @@
-# Finaliser l'alignement GIS — clôturer .lovable/plan.md
+# Vérification .lovable/plan.md + normalisation bidirectionnelle GIS
 
-Le plan initial est appliqué à 60 %. Ce plan ferme les 8 écarts restants pour que **tous** les composants "localisation" — création, édition, détail, liste, dashboard, matériaux, phases — passent par `GeoZoneEditor` / `UnifiedLocationSelector` avec support multi-polygones.
+## 1. Vérification de l'exécution du plan (8 écarts)
 
-## Écarts à corriger
+Audit rapide de chaque écart via lecture ciblée des fichiers :
 
-| # | Fichier | Problème | Action |
-|---|---------|----------|--------|
-| 1 | `src/components/project/ProjectFormWithMap.tsx` | Édition legacy sans zones d'intervention | Ajouter `GeoZoneEditor` sous la carte, alimenté par `formData.interventionZones` |
-| 2 | `src/components/project/EnhancedWorkflowPhaseManager.tsx` | Import `InteractiveMapGIS` non aligné | Remplacer par `GeoZoneEditor readOnly` alimenté par les zones du projet courant |
-| 3 | `src/components/materials/EnhancedMaterialForm.tsx` | Pas de tracé multi-polygones | Ajouter `GeoZoneEditor` (`showAddressBar={false}`, `contextLabel="Zone de couverture"`), persister dans `material.coverageZones` (JSONB) |
-| 4 | `src/pages/Materials.tsx` (mode carte) | `InteractiveMapGIS` isolé | Remplacer par `ProjectMap` (déjà multi-zones) + overlay `coverageZones` des matériaux |
-| 5 | `src/components/project/steps/LocationStep.tsx` | Import mort `InteractiveMapGIS` | Supprimer l'import résiduel |
-| 6 | `src/pages/MaterialDetail.tsx` | Doublon `MaterialLocationMap` + `GeoZoneEditor` | Garder uniquement `GeoZoneEditor readOnly`; supprimer `MaterialLocationMap` du rendu (composant conservé pour usages tiers) |
-| 7 | `src/components/project/ProjectDetailByDTO.tsx` | `InteractiveMapGIS` rendu en plus des zones | Le rendre en fallback strict (`zones.length === 0`) au lieu de rendu additionnel |
-| 8 | `src/pages/Dashboard.tsx` + `src/components/dashboard/ProjectDashboard.tsx` | `ProjectMap` brut, pas de légende / pas de zones d'intervention agrégées | Passer `showInterventionZones` à `ProjectMap` et ajouter la légende multi-zones ; côté `ProjectDashboard`, brancher `UnifiedLocationSelector` en lecture unifiée avec surface zones du projet actif |
+| # | Fichier | Statut attendu | Action si écart |
+|---|---------|----------------|-----------------|
+| 1 | `ProjectFormWithMap.tsx` | `GeoZoneEditor` monté | Compléter si manquant |
+| 2 | `EnhancedWorkflowPhaseManager.tsx` | `GeoZoneEditor readOnly` | Remplacer `InteractiveMapGIS` |
+| 3 | `EnhancedMaterialForm.tsx` | `GeoZoneEditor` coverage | Idem |
+| 4 | `Materials.tsx` | `ProjectMap` + overlay | Idem |
+| 5 | `LocationStep.tsx` | import mort supprimé | Nettoyer |
+| 6 | `MaterialDetail.tsx` | doublon supprimé | Nettoyer |
+| 7 | `ProjectDetailByDTO.tsx` | fallback strict | Corriger condition |
+| 8 | `Dashboard.tsx` + `ProjectDashboard.tsx` | `showInterventionZones` + légende | Compléter |
 
-## Persistance matériau (si absente)
+Rapport écrit dans le message final (fichier par fichier, avec numéros de ligne). Correction uniquement des écarts réels détectés.
 
-- Vérifier `public.materials.coverage_zones jsonb default '[]'::jsonb` ; sinon migration avec `GRANT SELECT, INSERT, UPDATE, DELETE ... TO authenticated;` et `GRANT ALL ... TO service_role;`.
-- Étendre `MaterialTransformer.fromSupabase` / `toSupabase` et `MaterialDTO` pour porter `coverageZones: InterventionZoneDTO[]`.
-- `useMaterialsHex` (create + update) doit propager `coverageZones` au lieu de le nullifier.
+## 2. Normalisation bidirectionnelle multi-polygones
 
-## Traçabilité (logs vérifiables)
+Objectif : garantir qu'un projet **exporté** puis **réimporté** conserve à l'identique ses zones (Polygon, MultiPolygon, Circle, Point) — round-trip fidèle.
 
-- `console.info('[Dashboard] map rendered {N} zones')`
-- `console.info('[MaterialsMap] rendered {N} coverage zones')`
-- `console.info('[MaterialGIS] persisted {N} coverage zones', materialId)`
-- `console.info('[ProjectForm] intervention zones editor mounted')`
+### 2.1 Format canonique d'export (GeoJSON standard)
+
+`ProjectImportExportService.toExportRow` produit déjà `interventionZonesGeoJSON` (FeatureCollection). Extensions nécessaires :
+
+- **Cercle** → `Feature` `Point` + `properties.shape="circle"` + `properties.radiusMeters` (respect GeoJSON RFC 7946 : cercle non natif, encodé via propriété).
+- **Rectangle** → `Feature` `Polygon` fermé + `properties.shape="rectangle"` (les 4 sommets + fermeture).
+- **Polygon** → déjà OK, mais garantir la fermeture du ring (dernier point = premier).
+- **MultiPolygon** (nouveau) : si une zone porte plusieurs rings, émettre `geometry.type="MultiPolygon"`.
+- Propager `regionCode`, `cityCode`, `geocodingMeta`, `areaSqm`, `label`, `address` dans `properties`.
+
+### 2.2 Import symétrique dans `ProjectImportTransformer.geoJsonToZones`
+
+Compléter la reconstruction pour restituer le type d'origine à partir de `properties.shape` :
+
+- `Point` + `properties.shape="circle"` + `radiusMeters` → `InterventionZoneDTO { type:'circle', coordinates:[centre], radiusMeters }`.
+- `Polygon` + `properties.shape="rectangle"` → `type:'rectangle'`.
+- `Polygon` sans hint → `type:'polygon'` (comportement actuel préservé).
+- `MultiPolygon` → une `InterventionZoneDTO` par polygone (plutôt qu'une par ring), en réhydratant `label` depuis `properties`.
+- Restaurer `regionCode`, `cityCode`, `geocodingMeta`, `areaSqm`, `label`, `address` depuis `properties`.
+- Toujours fermer le ring en entrée (tolérance : accepter ring fermé ou ouvert).
+
+### 2.3 Utilitaire partagé `GeoJsonZoneCodec`
+
+Nouveau fichier `src/dtos/transforms/GeoJsonZoneCodec.ts` :
+
+```ts
+export class GeoJsonZoneCodec {
+  static toFeature(zone: InterventionZoneDTO, index: number): GeoJSON.Feature
+  static fromFeature(feature: GeoJSON.Feature): InterventionZoneDTO[]
+  static toFeatureCollection(zones: InterventionZoneDTO[]): GeoJSON.FeatureCollection
+  static fromFeatureCollection(fc: unknown): InterventionZoneDTO[]
+}
+```
+
+- Source de vérité unique utilisée par :
+  - `ProjectImportExportService.toExportRow` (remplace le mapping inline)
+  - `ProjectImportTransformer.geoJsonToZones` (remplace le mapping inline)
+  - futur consommateur `GeoZoneEditor` (import GeoJSON drag & drop)
+- Écrit avec des types `GeoJSON.*` (déjà installés via `@types/geojson`, sinon inline minimal).
+
+### 2.4 Test round-trip
+
+Ajouter `src/dtos/transforms/__tests__/GeoJsonZoneCodec.roundtrip.test.ts` :
+
+- Fixture couvrant les 4 formes (`polygon`, `rectangle`, `circle`, `point`) + un `MultiPolygon` reconstitué depuis 2 zones.
+- Assert : `fromFeatureCollection(toFeatureCollection(zones))` égal à `zones` (comparaison structurelle sur type, coordonnées, radiusMeters, label, regionCode).
+
+## Livrables
+
+- Corrections ciblées des écarts plan.md restants.
+- `src/dtos/transforms/GeoJsonZoneCodec.ts` (nouveau).
+- `ProjectImportExportService.ts` + `ProjectImportTransformer.ts` : délégation au codec.
+- Test round-trip.
+- Aucun changement de schéma DB, aucune migration.
 
 ## Hors périmètre
 
-- Aucune évolution du fond de carte (Leaflet OSM).
-- Pas de nouveau provider géocodage (`GeocodingServiceFactory` conservé).
-- `MaterialLocationMap` non supprimé du repo — seulement retiré du rendu de `MaterialDetail` pour éviter le doublon.
-
-## Vérification
-
-- Build + lint automatiques.
-- Playwright rapide : create projet → tracer 2 polygones → edit → détail → dashboard, vérifier via console les 4 lignes de log ci-dessus.
+- Pas de refonte des composants carte.
+- Pas de nouveau format de fichier (on reste GeoJSON FeatureCollection standard).
