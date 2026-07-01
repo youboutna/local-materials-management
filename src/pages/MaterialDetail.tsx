@@ -1,5 +1,6 @@
 import MaterialAvailabilityCard from "@/components/materials/MaterialAvailabilityCard";
 import MaterialLocationMap from "@/components/materials/MaterialLocationMap";
+import GeoZoneEditorLazy from "@/components/gis/GeoZoneEditor";
 import WarehouseShapeTracer from "@/components/materials/WarehouseShapeTracer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -236,6 +237,22 @@ const MaterialDetail = () => {
         <div className="space-y-6">
           {/* Map */}
           <MaterialLocationMap material={materialData} height="400px" />
+          {(() => {
+            const zones = (materialData as unknown as { interventionZones?: unknown[] })
+              .interventionZones;
+            if (!Array.isArray(zones) || zones.length === 0) return null;
+            return (
+              <div className="mt-4">
+                <GeoZoneEditorLazy
+                  readOnly
+                  showAddressBar={false}
+                  value={zones as import('@/dtos/entities/InterventionZoneDTO').InterventionZoneDTO[]}
+                  title="Zones de couverture"
+                  height={360}
+                />
+              </div>
+            );
+          })()}
 
           {/* Material Image */}
           <Card>
