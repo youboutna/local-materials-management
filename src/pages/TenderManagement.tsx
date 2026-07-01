@@ -22,7 +22,7 @@ import { SecureSharingDialog } from "@/components/tenders/SecureSharingDialog";
 import { SubmissionSecretDialog } from "@/components/tenders/SubmissionSecretDialog";
 import { SubmissionsInbox } from "@/components/tenders/SubmissionsInbox";
 import { EvaluationPanelTabs } from "@/components/tenders/EvaluationPanelTabs";
-import { AwardedTenderPreviewDialog } from "@/components/tenders/AwardedTenderPreviewDialog";
+// AwardedTenderPreviewDialog est déclenché depuis SubmissionsInbox (bouton "Attribuer").
 import {
   Dialog,
   DialogContent,
