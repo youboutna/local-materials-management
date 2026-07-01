@@ -1,5 +1,5 @@
 import MaterialAvailabilityCard from "@/components/materials/MaterialAvailabilityCard";
-import MaterialLocationMap from "@/components/materials/MaterialLocationMap";
+
 import GeoZoneEditorLazy from "@/components/gis/GeoZoneEditor";
 import WarehouseShapeTracer from "@/components/materials/WarehouseShapeTracer";
 import { Badge } from "@/components/ui/badge";
@@ -254,7 +254,17 @@ const MaterialDetail = () => {
                 />
               );
             }
-            return <MaterialLocationMap material={materialData} height="400px" />;
+            // Fallback strict : pas de zones → GeoZoneEditor readonly vide centré sur adresse workspace.
+            return (
+              <GeoZoneEditorLazy
+                readOnly
+                showAddressBar={false}
+                value={[]}
+                title="Localisation"
+                hint="Aucune zone de couverture tracée pour ce matériau."
+                height={400}
+              />
+            );
           })()}
 
           {/* Material Image */}
