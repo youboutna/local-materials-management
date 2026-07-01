@@ -12,7 +12,7 @@ import { Calculator, Upload, Plus, Trash2, FileText, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { QuantitativeEstimateExporter } from '@/components/reports/QuantitativeEstimateExporter';
-import DqeResourcePicker, { type DqeResourceValue } from '@/components/tenders/DqeResourcePicker';
+import DqeResourcePicker, { type DqeResourceValue, validateDqeResource } from '@/components/tenders/DqeResourcePicker';
 import { 
   useTenderQuantitativeEstimateHex,
   type EstimateItem,
@@ -379,7 +379,16 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
               <Button variant="outline" onClick={() => setIsAddItemOpen(false)}>
                 Annuler
               </Button>
-              <Button onClick={handleAddItem} disabled={addItemMutation.isPending}>
+              <Button
+                onClick={handleAddItem}
+                disabled={addItemMutation.isPending || !!validateDqeResource({
+                  resource_kind: newItem.resource_kind,
+                  employee_qualification_id: newItem.employee_qualification_id,
+                  supplier_id: newItem.supplier_id,
+                  supplier_contract_ref: newItem.supplier_contract_ref,
+                  estimated_hours: newItem.estimated_hours,
+                } as DqeResourceValue)}
+              >
                 {addItemMutation.isPending ? 'Ajout...' : 'Ajouter'}
               </Button>
             </div>

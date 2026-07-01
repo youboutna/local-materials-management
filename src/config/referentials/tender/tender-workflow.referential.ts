@@ -1,7 +1,7 @@
 /**
  * Tender Workflow Referential
  * Source de vérité pour les statuts, transitions et gardes métier du cycle DDE.
- * Consommé par : TenderService, TenderWizardStepper, EvaluationPanelTabs, AwardedTenderToProjectService.
+ * Consommé par : TenderService, EvaluationPanelTabs, AwardedTenderToProjectService.
  *
  * @see docs/ARCHITECTURE_REFERENTIELS.md — Référentiels comme légos métier.
  */
