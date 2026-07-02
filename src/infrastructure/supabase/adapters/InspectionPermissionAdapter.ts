@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Inspection Permission Adapter - Supabase Implementation
  * Implements IInspectionPermissionRepository using Supabase

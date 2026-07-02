@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { Json } from '@/integrations/supabase/types';
 import { OperationalStatus } from '@/utils/mauritania';

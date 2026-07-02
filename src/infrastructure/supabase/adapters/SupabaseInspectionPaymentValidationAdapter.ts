@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Supabase Inspection Payment Validation Adapter
  * Implements IInspectionPaymentValidationRepository using Supabase

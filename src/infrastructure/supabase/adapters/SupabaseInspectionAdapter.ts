@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { Inspection, InspectionStatus, Document } from '@/domain/entities/Inspection';

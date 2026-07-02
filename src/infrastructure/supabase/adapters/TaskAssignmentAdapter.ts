@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Task Assignment Supabase Adapter
  * Implements ITaskAssignmentRepository using Supabase

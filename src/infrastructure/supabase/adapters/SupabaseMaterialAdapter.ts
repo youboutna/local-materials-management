@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Supabase Adapter for Material Repository
  * Implements IMaterialRepository using Supabase

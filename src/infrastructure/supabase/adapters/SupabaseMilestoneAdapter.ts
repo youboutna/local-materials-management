@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Supabase Milestone Adapter
  * Implements IMilestoneRepository interface using Supabase

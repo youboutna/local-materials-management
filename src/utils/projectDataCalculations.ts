@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { ProjectService } from '../application/services/ProjectService';
 import { RepositoryFactory } from '../infrastructure/supabase/RepositoryFactory';

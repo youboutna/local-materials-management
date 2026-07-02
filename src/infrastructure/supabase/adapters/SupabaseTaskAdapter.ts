@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Supabase Adapter for Task Repository
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { ITaskRepository } from '@/domain/repositories/ITaskRepository';

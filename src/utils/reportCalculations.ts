@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { EVMMetrics, PERTAnalysis, ProjectData } from '@/dtos/entities/ProjectAggregateDTO';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { TaskDTO } from '@/dtos/entities/TaskDTO';

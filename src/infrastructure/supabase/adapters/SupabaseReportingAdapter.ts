@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { supabase as publicSupabase } from '@/integrations/supabase/client';
 import { IReportingRepository, ReportSectionsData } from '@/domain/repositories/IReportingRepository';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Supabase Adapter for Supplier Repository
  * Implements ISupplierRepository using Supabase

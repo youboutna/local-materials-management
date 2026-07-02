@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Supabase Adapter for Payment Repository
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';

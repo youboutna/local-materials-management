@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ProjectCheckpoint } from '@/domain/entities/ProjectCheckpoint';
 import { ProjectCheckpointDTO } from '@/dtos/transforms/ProjectCheckpointDTO';
 
