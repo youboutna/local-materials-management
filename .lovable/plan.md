@@ -1,62 +1,60 @@
-# Plan — Suppression du code legacy
+## Objectif
 
-Cible : retirer les wrappers, alias et champs snake_case laissés « pour compatibilité » quand la logique cible est déjà implémentée ailleurs (règle PROMPTS.md §Zéro imports `@/services/*` legacy + Core memory : `src/services` & `src/types` = legacy readonly, ne doivent plus être importés).
+Éliminer la dette résiduelle après la suppression de `src/services/*` et `src/types/*` : plus aucun fichier legacy (`@ts-nocheck`, casing camelCase, stubs vides, code mort), tout aligné sur PROMPTS.md (hexagonal, DTOs, adapters, Entities, pas de Supabase direct dans les hooks/UI).
 
-## Périmètre — à supprimer
+## Inventaire de la dette
 
-### 1. Wrappers / alias devenus inutiles
-- `src/infrastructure/transformers/SupplierMapper.ts` (délègue 1-pour-1 à `SupplierTransformer`) → supprimer, migrer les 2 imports vers `@/dtos/transforms/SupplierTransformer`.
-- `src/components/location/LocationSelector.tsx` (ré-export nu de `UnifiedLocationSelector`) → supprimer, remplacer imports par `UnifiedLocationSelector`.
-- `src/components/location/EnhancedLocationSelector.tsx` (même alias) → supprimer, migrer imports.
-- `src/application/services/TenderServiceSimple.ts` (duplique `TenderService.getProjectTenders`) → supprimer si aucun consommateur ; sinon fusionner dans `TenderService`.
+**7 fichiers avec `@ts-nocheck` :**
+- `bankGuaranteeActionFunctions.ts`, `inspectionActionService.ts`, `insuranceActionService.ts` — style fonctionnel legacy, casing camelCase
+- `communicationService.ts`, `organizationalHierarchyService.ts` — stubs vides que je viens de créer
+- `enhancedReportingService.ts` — casing camelCase, doublon partiel
+- `TenderSubmissionService.ts` — utilise Supabase directement au lieu du repository
+- `tenderSubmissionNotificationService.ts` — casing camelCase
 
-### 2. Champs snake_case « backward compatibility » dans les DTO/entités camelCase
-- `src/types/tender.entity.ts` : blocs `Legacy snake_case for backward compatibility` (Tender + TenderSubmission) → supprimer, adapter les rares lecteurs restants à camelCase.
-- `src/components/documents/DocumentDetails.tsx` : interface locale avec doublons snake_case → garder uniquement camelCase (le transformer fournit déjà les deux).
+**Code mort :**
+- `ArchitectureUpdateService.ts` (416 l.) — outil interne one-shot, aucun consommateur
+- `WorkflowStepService.ts.backup` — fichier `.backup` traînant
+- Stubs `getStepDocuments` / `createWorkflowStep` dans `WorkflowStepService` — jamais implémentés
+- Commentaires « TODO / Placeholder / not yet implemented » dans `useTenderEvaluationHex`, `WorkflowStepsManager`, `StepDocumentsSection`
 
-### 3. Méthodes « Legacy Compatibility » dans services applicatifs
-- `SupplierService` (`getAllSuppliersAsDTO`, `getSupplierByIdAsDTO`, `searchSuppliersAsDTO`, `getActiveSuppliersAsDTO`, `createSupplierFromDTO`, `updateSupplierFromDTO`) : ces méthodes dupliquent les méthodes standard + `SupplierTransformer.toDTO`. Supprimer et pointer les appelants vers l'API canonique.
-- `DashboardService` méthodes marquées « Legacy compatibility method from MonitoringService » → supprimer si non appelées, sinon renommer proprement.
-- `TenderService` : 7 méthodes marquées « Legacy compatibility method from TenderSharingService » → audit d'usage, supprimer les orphelines.
-- `DocumentService.getProjectDocuments` static wrapper → supprimer, appelants utilisent l'instance.
-- `BankGuaranteeActionService.create` static → supprimer si non consommé.
+## Plan d'action
 
-### 4. Imports résiduels vers `@/services/*` (hors fichier legacy lui-même)
-Fichiers à nettoyer :
-- `src/utils/httpMetricsCollector.ts`
-- `src/hooks/useProjectManager.ts`
-- `src/hooks/useHttpHandler.ts`
-- `src/hooks/useDocumentStorage.ts`
-- `src/application/services/TenderSubmissionService.ts`
-- `src/config/referentials/index.ts` (aliases DTO backward compat)
+### Lot 1 — Suppression du code mort
+1. Supprimer `ArchitectureUpdateService.ts` et `WorkflowStepService.ts.backup`.
+2. Retirer les stubs `getStepDocuments` / `createWorkflowStep` du `WorkflowStepService` canonique.
+3. Nettoyer les consommateurs (`TenderWorkflowSteps.tsx`, `WorkflowStepsManager.tsx`, `StepDocumentsSection.tsx`, `useWorkflowSteps.ts`) : soit désactiver proprement le bouton/section, soit implémenter via un adapter réel `WorkflowStepAdapter` (préférence : désactivation propre + issue en commentaire unique).
 
-Remplacement : équivalent hexagonal dans `src/application/services` + `src/dtos`. Si l'équivalent n'existe pas encore, on ne supprime pas dans ce lot (hors périmètre « logique déjà implémentée »).
+### Lot 2 — Unification Communication / Hierarchy
+4. Supprimer les stubs `communicationService.ts` et `organizationalHierarchyService.ts`.
+5. Router les 3 action services vers `NotificationService` déjà en place (assignTask → task creation via TaskService, sendEmail/SMS/Call → NotificationService avec canaux dédiés).
+6. Pour la hiérarchie : utiliser le `ProjectStakeholderAdapter` + `EmployeeAdapter` existants pour résoudre les destinataires (supervisor/manager/director) au lieu du service factice.
 
-### 5. Divers
-- `src/domain/repositories/IBankGuaranteeRepository.ts` : méthode `@deprecated` `getByProject(id)` → supprimer si toutes les implémentations utilisent la variante `getByProject(id, options)`.
-- `src/domain/repositories/IHierarchyRepository.ts` : bloc « Legacy Operations » → supprimer les méthodes non utilisées.
-- `src/hooks/useUserRoles.ts`, `src/hooks/useEnhancedTaskAssignment.ts`, `src/hooks/useAuditEntries.ts` : commentaires « legacy interface » — vérifier consommateurs, aligner types sur DTO canonique.
-- `src/types/entities.ts` : structures « Legacy custom stage/task from ConstructionPhaseManager » → supprimer si `ConstructionPhaseManager` a bien migré vers le workflow unifié.
-- `src/types/supplier.ts` : interface `SupplierLegacy` → supprimer.
+### Lot 3 — Refonte des Action Services (casing + typage)
+7. Renommer et convertir en classes hexagonales :
+   - `bankGuaranteeActionFunctions.ts` → fusionner dans `BankGuaranteeActionService.ts` (classe déjà existante).
+   - `inspectionActionService.ts` → `InspectionActionService.ts` (nouvelle classe).
+   - `insuranceActionService.ts` → `InsuranceActionService.ts` (nouvelle classe).
+8. Typer proprement (retirer `@ts-nocheck`), extraire les interfaces publiques dans `src/dtos/actions/`.
+9. Mettre à jour `ActionsDropdown.tsx` (imports dynamiques → classes canoniques).
 
-## Hors périmètre (on ne touche pas)
-- Fichiers protégés `src/services/*` et `src/types/*` : lecture seule (Core memory). On ne modifie pas, on retire seulement les **imports** depuis le code hexagonal.
-- Références snake_case reflétant la DB dans adapters/transformers : légitimes, à conserver.
-- `enhancedActionService` : namespace static utilisé activement — conserver après vérification d'usage.
+### Lot 4 — Reporting & Tender
+10. Renommer `enhancedReportingService.ts` → `EnhancedReportingService.ts`, retirer `@ts-nocheck`, typer les retours via les DTOs `reportTypes`.
+11. `TenderSubmissionService.ts` : retirer `@ts-nocheck`, remplacer les appels directs `supabase.from('tender_submissions')` par `RepositoryFactory.getTenderSubmissionRepository()` (créer l'adapter si manquant), suivre la règle « pas de Supabase direct dans les services applicatifs sauf via adapters ».
+12. Renommer `tenderSubmissionNotificationService.ts` → `TenderSubmissionNotificationService.ts` + typage strict.
 
-## Méthode d'exécution (par lot, typecheck entre chaque)
+### Lot 5 — Vérification finale
+13. Grep global : plus aucun `@ts-nocheck` dans `src/application/services/`, plus aucun fichier `*.backup`, plus aucun `TODO: not yet implemented`.
+14. Typecheck + build : verts.
+15. Mettre à jour `mem://index.md` (retirer la mention « stubs à remplacer », ajouter la règle « pas de `@ts-nocheck` dans `src/application/services/` »).
 
-1. **Lot A — Alias inertes** : supprimer `SupplierMapper`, `LocationSelector`, `EnhancedLocationSelector`, `TenderServiceSimple` ; migrer imports.
-2. **Lot B — Champs snake_case DTO** : nettoyer `tender.entity.ts`, `DocumentDetails.tsx`, aligner consommateurs.
-3. **Lot C — Méthodes Legacy Compatibility** : audit d'usage (`rg`), suppression des orphelines dans `SupplierService`, `DashboardService`, `TenderService`, `DocumentService`, `BankGuaranteeActionService`.
-4. **Lot D — Imports `@/services/*`** : remplacement par équivalents hexagonaux là où ils existent ; consigner les manquants dans `.lovable/plan.md`.
-5. **Lot E — Interfaces & repositories** : suppression des blocs `@deprecated` / `Legacy Operations` sans consommateur.
+## Détails techniques
 
-## Validation
-- `tsgo` vert après chaque lot.
-- `rg "backward compat|Legacy|@deprecated"` doit décroître significativement.
-- Aucun import `from '@/services/'` restant hors des fichiers legacy eux-mêmes.
-- Smoke test manuel : liste projets, détail projet, tenders, matériaux.
+- Toutes les nouvelles classes suivent le pattern `getXxxService()` singleton conforme à `service-instance-transition-status`.
+- Les adapters manquants (`TenderSubmissionAdapter`, éventuellement `WorkflowStepAdapter`) suivent `hexagonal-implementation-standard` : DB snake_case → Adapter → Transformer → DTO camelCase.
+- Les hooks TanStack Query restent en v5 (pas de `onError/onSuccess`).
+- Aucune modification de schéma DB attendue.
 
-## Livrable
-Rapport final listant : fichiers supprimés, imports migrés, méthodes retirées, résidus assumés (avec justification).
+## Hors périmètre
+
+- Pas de refonte fonctionnelle des workflows tender/inspection/insurance ; strictement du nettoyage et du recâblage sur les canaux existants.
+- Pas de suppression de `WorkflowStepsManager` / `TenderWorkflowSteps` : ces UI restent, seuls les appels aux stubs sont nettoyés.
