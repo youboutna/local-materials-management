@@ -144,13 +144,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
   const handleShareDocuments = async (step: WorkflowStepDTO) => {
     if (!onShareWithSuppliers) return;
 
-    let docs = queryClient.getQueryData<StepDocumentDTO[]>(['step-documents', step.id]);
-    if (!docs) {
-      const { WorkflowStepService } = await import('@/application/services/WorkflowStepService');
-      docs = await WorkflowStepService.getStepDocuments(step.id);
-      // Prime cache for future UI usage
-      queryClient.setQueryData(['step-documents', step.id], docs);
-    }
+    const docs = queryClient.getQueryData<StepDocumentDTO[]>(['step-documents', step.id]) ?? [];
 
     const shareableDocuments = (docs || []).filter(doc => doc.can_share);
     if (shareableDocuments.length === 0) return;
@@ -517,34 +511,6 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
             <p className="text-muted-foreground">
               {searchTerm ? 'Aucune étape trouvée pour cette recherche.' : 'Aucune étape définie pour ce marché public.'}
             </p>
-            {!readonly && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={async () => {
-                  const { WorkflowStepService } = await import('@/application/services/WorkflowStepService');
-                  try {
-                    await WorkflowStepService.createWorkflowStep({
-                      tender_id: tenderId,
-                      title: 'Soumission des offres',
-                      description: 'Étape de test - téléversement des documents de soumission',
-                      step_number: 1,
-                      procurement_phase: 'soumission',
-                      procurement_stage: 'reception_offres',
-                      required_documents: ['Lettre de soumission', 'Offre technique', 'Offre financière'],
-                      status: 'in_progress'
-                    });
-                    // Use the queryClient instance from component level
-                    queryClient.invalidateQueries({ queryKey: ['workflow-steps', tenderId] });
-                    queryClient.invalidateQueries({ queryKey: ['workflow-progress', tenderId] });
-                  } catch (e) {
-                    console.error(e);
-                  }
-                }}
-              >
-                Générer une étape de test
-              </Button>
-            )}
           </div>
         )}
         </CardContent>

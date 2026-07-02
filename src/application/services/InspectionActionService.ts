@@ -1,14 +1,14 @@
 // @ts-nocheck
 import { supabase } from '@/integrations/supabase/client';
 import { NotificationService } from './NotificationService';
-import { communicationService } from './communicationService';
-import OrganizationalHierarchyService from './organizationalHierarchyService';
+import { communicationService } from './CommunicationService';
+import OrganizationalHierarchyService from './OrganizationalHierarchyService';
 
-export interface InsuranceControlAction {
+export interface InspectionControlAction {
   id: string;
-  insuranceId: string;
+  inspectionId: string;
   projectId: string;
-  contractorId: string;
+  inspectorId?: string;
   actionType: 'task_assignment' | 'hierarchy_notification' | 'sms' | 'call' | 'email' | 'mail' | 'export_receipt' | 'blockchain_verification';
   title: string;
   message: string;
@@ -23,10 +23,10 @@ export interface InsuranceControlAction {
   metadata?: any;
 }
 
-export const createInsuranceAction = async (actionData: Omit<InsuranceControlAction, 'id' | 'createdAt' | 'updatedAt' | 'status'>): Promise<InsuranceControlAction> => {
+export const createInspectionAction = async (actionData: Omit<InspectionControlAction, 'id' | 'createdAt' | 'updatedAt' | 'status'>): Promise<InspectionControlAction> => {
   try {
-    // Fetch real project and insurance data
-    const [projectData, insuranceData, projectEmployees, insuranceCompanies] = await Promise.all([
+    // Fetch real project and inspection data
+    const [projectData, inspectionData, projectEmployees, inspectionDocuments] = await Promise.all([
       // Get project details
       supabase
         .from('projects')
@@ -34,11 +34,11 @@ export const createInsuranceAction = async (actionData: Omit<InsuranceControlAct
         .eq('id', actionData.projectId)
         .single(),
       
-      // Get insurance certificate details
+      // Get inspection details
       supabase
-        .from('insurance_certificates')
+        .from('inspections')
         .select('*')
-        .eq('id', actionData.insuranceId)
+        .eq('id', actionData.inspectionId)
         .single(),
       
       // Get project team members
@@ -47,77 +47,78 @@ export const createInsuranceAction = async (actionData: Omit<InsuranceControlAct
         .select('id, full_name, email, phone, position, department')
         .eq('is_active', true),
       
-      // Get insurance companies
+      // Get inspection documents
       supabase
-        .from('insurance_companies')
+        .from('documents')
         .select('*')
+        .eq('inspection_id', actionData.inspectionId)
     ]);
 
-    const action: InsuranceControlAction = {
+    const action: InspectionControlAction = {
       ...actionData,
-      id: `ins-action-${Date.now()}`,
+      id: `insp-action-${Date.now()}`,
       status: 'pending',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       metadata: {
         ...actionData.metadata,
         project: projectData.data,
-        insurance: insuranceData.data,
+        inspection: inspectionData.data,
         availableEmployees: projectEmployees.data || [],
-        insuranceCompanies: insuranceCompanies.data || []
+        relatedDocuments: inspectionDocuments.data || []
       }
     };
 
-    // Execute action directly without localStorage storage
-    await executeInsuranceAction(action);
+    // Execute action immediately - no need for localStorage
+    await executeInspectionAction(action);
 
-    // Track action execution in notifications table
+    // Track action in notifications table
     await supabase.from('notifications').insert({
       type: 'system',
       title: `Action exécutée: ${action.title}`,
-      message: `Action ${action.actionType} exécutée pour assurance ${action.insuranceId}`,
+      message: `Action ${action.actionType} exécutée pour inspection ${action.inspectionId}`,
       recipient_id: '00000000-0000-0000-0000-000000000000', // System notification
       metadata: {
         actionType: action.actionType,
-        entityType: 'insurance',
-        entityId: action.insuranceId,
+        entityType: 'inspection',
+        entityId: action.inspectionId,
         projectId: action.projectId,
         priority: action.priority,
         executedAt: action.createdAt
       },
-      related_id: action.insuranceId
+      related_id: action.inspectionId
     });
 
     return action;
   } catch (error) {
-    console.error('Error creating insurance action:', error);
+    console.error('Error creating inspection action:', error);
     throw error;
   }
 };
 
-export const executeInsuranceAction = async (action: InsuranceControlAction): Promise<void> => {
+export const executeInspectionAction = async (action: InspectionControlAction): Promise<void> => {
   try {
     switch (action.actionType) {
       case 'task_assignment':
-        await executeInsuranceTaskAssignment(action);
+        await executeInspectionTaskAssignment(action);
         break;
       case 'hierarchy_notification':
-        await executeInsuranceHierarchyNotification(action);
+        await executeInspectionHierarchyNotification(action);
         break;
       case 'sms':
       case 'call':
       case 'email':
       case 'mail':
-        await executeInsuranceCommunication(action);
+        await executeInspectionCommunication(action);
         break;
     }
   } catch (error) {
-    console.error('Error executing insurance action:', error);
+    console.error('Error executing inspection action:', error);
     throw error;
   }
 };
 
-const executeInsuranceTaskAssignment = async (action: InsuranceControlAction): Promise<void> => {
+const executeInspectionTaskAssignment = async (action: InspectionControlAction): Promise<void> => {
   if (action.assigneeId) {
     try {
       // Get assignee details
@@ -138,32 +139,32 @@ const executeInsuranceTaskAssignment = async (action: InsuranceControlAction): P
           priority: action.priority,
           dueDate: action.dueDate,
           projectId: action.projectId,
-          relatedId: action.insuranceId,
+          relatedId: action.inspectionId,
           actionType: action.actionType,
           metadata: {
             actionId: action.id,
-            insuranceId: action.insuranceId,
+            inspectionId: action.inspectionId,
             projectId: action.projectId,
-            task_type: 'insurance_renewal'
+            task_type: 'inspection_follow_up'
           }
         });
       }
     } catch (error) {
-      console.error('Error assigning insurance task:', error);
+      console.error('Error assigning inspection task:', error);
       // Fallback to notification only
       await NotificationService.createNotification({
         recipient_id: action.assigneeId,
-        title: `Tâche assurance: ${action.title}`,
+        title: `Tâche inspection: ${action.title}`,
         message: action.message,
         type: 'task_assigned',
-        related_id: action.insuranceId,
+        related_id: action.inspectionId,
         metadata: {
           actionId: action.id,
-          insuranceId: action.insuranceId,
+          inspectionId: action.inspectionId,
           projectId: action.projectId,
           dueDate: action.dueDate,
           priority: action.priority,
-          task_type: 'insurance_renewal'
+          task_type: 'inspection_follow_up'
         }
       });
     }
@@ -173,10 +174,10 @@ const executeInsuranceTaskAssignment = async (action: InsuranceControlAction): P
     if (recipientId !== action.assigneeId) {
       await NotificationService.createNotification({
         recipient_id: recipientId,
-        title: `Nouvelle tâche d'assurance assignée`,
-        message: `Une tâche d'assurance a été assignée: ${action.title}`,
-        type: 'insurance_expiry',
-        related_id: action.insuranceId,
+        title: `Nouvelle tâche d'inspection assignée`,
+        message: `Une tâche d'inspection a été assignée: ${action.title}`,
+        type: 'inspection_required',
+        related_id: action.inspectionId,
         metadata: {
           actionId: action.id,
           assigneeId: action.assigneeId,
@@ -187,39 +188,39 @@ const executeInsuranceTaskAssignment = async (action: InsuranceControlAction): P
   }
 };
 
-const executeInsuranceHierarchyNotification = async (action: InsuranceControlAction): Promise<void> => {
+const executeInspectionHierarchyNotification = async (action: InspectionControlAction): Promise<void> => {
   try {
-    // Get organizational hierarchy for insurance-related notifications
+    // Get organizational hierarchy for inspection-related notifications
     const escalationTargets = await OrganizationalHierarchyService.findNotificationRecipients(
       action.projectId,
       {
-        type: 'insurance',
+        type: 'inspection',
         priority: action.priority,
         escalationLevel: action.escalationLevel,
-        department: 'legal'
+        department: 'construction'
       }
     );
 
     const escalationTitles = {
-      team: 'Notification équipe - Assurance',
-      supervisor: 'Escalade superviseur - Assurance',
-      manager: 'Escalade manager - Assurance',
-      director: 'Escalade direction - Assurance'
+      team: 'Notification équipe - Inspection',
+      supervisor: 'Escalade superviseur - Inspection',  
+      manager: 'Escalade manager - Inspection',
+      director: 'Escalade direction - Inspection'
     };
 
     for (const target of escalationTargets) {
       await NotificationService.createNotification({
         recipient_id: target.employee_id,
         title: escalationTitles[action.escalationLevel || 'team'],
-        message: `${action.message}\n\nAssurance: ${action.insuranceId}\nProjet: ${action.projectId}\nNiveau: ${target.hierarchy_level}`,
-        type: 'insurance_expiry',
-        related_id: action.insuranceId,
+        message: `${action.message}\n\nInspection: ${action.inspectionId}\nProjet: ${action.projectId}\nNiveau: ${target.hierarchy_level}`,
+        type: 'inspection_overdue',
+        related_id: action.inspectionId,
         metadata: {
           actionId: action.id,
           escalationLevel: action.escalationLevel,
-          insuranceId: action.insuranceId,
+          inspectionId: action.inspectionId,
           projectId: action.projectId,
-          contractorId: action.contractorId,
+          inspectorId: action.inspectorId,
           priority: action.priority,
           hierarchyLevel: target.hierarchy_level,
           targetPosition: target.position_title
@@ -227,11 +228,11 @@ const executeInsuranceHierarchyNotification = async (action: InsuranceControlAct
       });
     }
   } catch (error) {
-    console.error('Error in insurance hierarchy notification:', error);
+    console.error('Error in inspection hierarchy notification:', error);
   }
 };
 
-const executeInsuranceCommunication = async (action: InsuranceControlAction): Promise<void> => {
+const executeInspectionCommunication = async (action: InspectionControlAction): Promise<void> => {
   try {
     // Get employee details for communication
     const { data: employees } = await supabase
@@ -252,7 +253,7 @@ const executeInsuranceCommunication = async (action: InsuranceControlAction): Pr
               metadata: {
                 ...action.metadata,
                 actionId: action.id,
-                insuranceId: action.insuranceId,
+                inspectionId: action.inspectionId,
                 projectId: action.projectId
               }
             });
@@ -292,8 +293,8 @@ const executeInsuranceCommunication = async (action: InsuranceControlAction): Pr
         recipient_id: employee.id,
         title: `📢 ${action.title}`,
         message: `Communication ${action.actionType}: ${action.message}`,
-        type: 'insurance_update',
-        related_id: action.insuranceId,
+        type: 'inspection_required',
+        related_id: action.inspectionId,
         metadata: {
           actionId: action.id,
           communicationType: action.actionType,
@@ -303,27 +304,27 @@ const executeInsuranceCommunication = async (action: InsuranceControlAction): Pr
       });
     }
   } catch (error) {
-    console.error('Error in insurance communication:', error);
+    console.error('Error in inspection communication:', error);
     throw error;
   }
 };
 
-export const getInsuranceActions = async (insuranceId?: string): Promise<any[]> => {
+export const getInspectionActions = async (inspectionId?: string): Promise<any[]> => {
   // Get action history from notifications table
   const query = supabase
     .from('notifications')
     .select('*')
     .eq('type', 'system')
-    .like('metadata->entityType', 'insurance');
+    .like('metadata->entityType', 'inspection');
 
-  if (insuranceId) {
-    query.eq('metadata->entityId', insuranceId);
+  if (inspectionId) {
+    query.eq('metadata->entityId', inspectionId);
   }
 
   const { data, error } = await query.order('created_at', { ascending: false });
   
   if (error) {
-    console.error('Error fetching insurance actions:', error);
+    console.error('Error fetching inspection actions:', error);
     return [];
   }
 
