@@ -114,7 +114,7 @@ export const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
 
       switch (entityType) {
         case 'bank_guarantee':
-          const { createBankGuaranteeAction } = await import('@/application/services/BankGuaranteeActionService');
+          const { createBankGuaranteeAction } = await import('@/application/services/bankGuaranteeActionFunctions');
           actionService = createBankGuaranteeAction;
           actionData = {
             bankGuaranteeId: entityId,
