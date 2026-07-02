@@ -18,17 +18,8 @@ import {
 export class WorkflowStepService {
   constructor() {}
 
-  /** Static helper used by TenderWorkflowSteps dev tools. */
-  static async getStepDocuments(stepId: string): Promise<StepDocumentDTO[]> {
-    console.warn('WorkflowStepService.getStepDocuments not yet backed by a repository', { stepId });
-    return [];
-  }
 
-  /** Static helper used by TenderWorkflowSteps dev tools. */
-  static async createWorkflowStep(payload: Partial<WorkflowStepDTO>): Promise<WorkflowStepDTO | null> {
-    console.warn('WorkflowStepService.createWorkflowStep not yet backed by a repository', payload);
-    return null;
-  }
+
 
 
   async getTenderWorkflowSteps(tenderId: string): Promise<WorkflowStepDTO[]> {
