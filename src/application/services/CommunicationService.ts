@@ -66,7 +66,7 @@ export class CommunicationService {
       recipient_id: payload.assigneeId,
       title: `Tâche assignée: ${payload.title}`,
       message: payload.description,
-      type: 'task_assigned',
+      type: 'info',
       related_id: payload.relatedId,
       metadata: {
         channel: 'task',
