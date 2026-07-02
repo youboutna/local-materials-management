@@ -4,7 +4,7 @@
  * Max 150 lines following SRP
  */
 
-import { PhaseStatus } from "@/types/phase-dto";
+import { PhaseStatus } from "@/dtos/types/phase-dto";
 
 // Status display helpers
 export const getStatusColor = (status: PhaseStatus | string): string => {

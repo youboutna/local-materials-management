@@ -18,7 +18,7 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
-import { PhaseDTO } from "@/types/phase-dto";
+import { PhaseDTO } from "@/dtos/types/phase-dto";
 import { formatCurrency } from "@/utils/phaseDisplayHelpers";
 // PaymentCalculator component requires different props - using simpler display
 

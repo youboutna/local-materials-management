@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { WorkflowStepService } from '@/application/services/WorkflowStepService';
-import { WorkflowStepDTO, StepDocumentDTO } from '@/types/workflow-dto';
+import { WorkflowStepDTO, StepDocumentDTO } from '@/dtos/types/workflow-dto';
 import { FileText, Plus, Eye, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface StepDocumentsSectionProps {

@@ -1,6 +1,6 @@
 // utils/httpMetricsCollector.ts - Collects real HTTP metrics from httpHandler
 
-import { httpHandler } from '@/services/httpStatusHandler';
+import { httpHandler } from '@/lib/httpStatusHandler';
 
 interface HttpMetrics {
   averageResponseTime: number;

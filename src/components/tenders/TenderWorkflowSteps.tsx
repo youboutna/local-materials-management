@@ -11,11 +11,11 @@ import { Progress } from '@/components/ui/progress';
 import { FileText, Plus, Upload, Eye, CheckCircle, Clock, AlertTriangle, Workflow, ChevronDown, ChevronUp, Search, X, Share2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useWorkflowSteps } from '@/hooks/useWorkflowSteps';
-import { WorkflowStepDTO, DocumentUploadDTO, DocumentShareDTO } from '@/types/workflow-dto';
+import { WorkflowStepDTO, DocumentUploadDTO, DocumentShareDTO } from '@/dtos/types/workflow-dto';
 import { TenderDocumentCategory } from './PublicProcurementWorkflow';
 import { DEV_MODE } from '@/config/constants';
 import WorkflowStepSelector from './WorkflowStepSelector';
-import { standardWorkflow, WorkflowPhase, WorkflowStage } from '@/types/workflow';
+import { standardWorkflow, WorkflowPhase, WorkflowStage } from '@/dtos/types/workflow';
 import StandardWorkflowDocumentSuggestions from './StandardWorkflowDocumentSuggestions';
 import {
   PROCUREMENT_PHASES,
@@ -25,10 +25,10 @@ import {
   ProcurementStage,
   getSuggestedDocuments
 } from './PublicProcurementWorkflow';
-import { TenderDocumentSubcategory, TENDER_DOCUMENT_LABELS, TENDER_CATEGORY_LABELS, ADMINISTRATIVE_SUBCATEGORY_GROUPS } from '@/types/tender';
+import { TenderDocumentSubcategory, TENDER_DOCUMENT_LABELS, TENDER_CATEGORY_LABELS, ADMINISTRATIVE_SUBCATEGORY_GROUPS } from '@/dtos/types/tender';
 import ProcurementStepSelector from './ProcurementStepSelector';
 import { useQueryClient } from '@tanstack/react-query';
-import { StepDocumentDTO } from '@/types/workflow-dto';
+import { StepDocumentDTO } from '@/dtos/types/workflow-dto';
 import StepDocumentsSection from './StepDocumentsSection';
 
 interface TenderWorkflowStepsProps {
@@ -146,7 +146,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
 
     let docs = queryClient.getQueryData<StepDocumentDTO[]>(['step-documents', step.id]);
     if (!docs) {
-      const { WorkflowStepService } = await import('@/services/workflowStepService');
+      const { WorkflowStepService } = await import('@/application/services/WorkflowStepService');
       docs = await WorkflowStepService.getStepDocuments(step.id);
       // Prime cache for future UI usage
       queryClient.setQueryData(['step-documents', step.id], docs);
@@ -522,7 +522,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                 variant="outline"
                 size="sm"
                 onClick={async () => {
-                  const { WorkflowStepService } = await import('@/services/workflowStepService');
+                  const { WorkflowStepService } = await import('@/application/services/WorkflowStepService');
                   try {
                     await WorkflowStepService.createWorkflowStep({
                       tender_id: tenderId,

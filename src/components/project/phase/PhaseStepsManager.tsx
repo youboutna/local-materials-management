@@ -57,8 +57,8 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PhaseStepDTO, PhaseTaskDTO, PhaseStatus } from "@/types/phase-dto";
-import { StepItem } from '@/types/unified-workflow';
+import { PhaseStepDTO, PhaseTaskDTO, PhaseStatus } from "@/dtos/types/phase-dto";
+import { StepItem } from '@/dtos/types/unified-workflow';
 import DQEImportDialog from "./DQEImportDialog";
 import PhaseStepResourceDialog from "./PhaseStepResourceDialog";
 

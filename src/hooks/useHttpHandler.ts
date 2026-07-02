@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { httpHandler, HttpErrorResponse, fetchWithErrorHandling } from '@/services/httpStatusHandler';
+import { httpHandler, HttpErrorResponse, fetchWithErrorHandling } from '@/lib/httpStatusHandler';
 
 interface HttpHandlerSuccessCallback<T = unknown> {
   (data: T): void;

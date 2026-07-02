@@ -114,7 +114,7 @@ export const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
 
       switch (entityType) {
         case 'bank_guarantee':
-          const { createBankGuaranteeAction } = await import('@/services/bankGuaranteeActionService');
+          const { createBankGuaranteeAction } = await import('@/application/services/bankGuaranteeActionFunctions');
           actionService = createBankGuaranteeAction;
           actionData = {
             bankGuaranteeId: entityId,
@@ -126,7 +126,7 @@ export const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
           break;
 
         case 'inspection':
-          const { createInspectionAction } = await import('@/services/inspectionActionService');
+          const { createInspectionAction } = await import('@/application/services/inspectionActionService');
           actionService = createInspectionAction;
           actionData = {
             inspectionId: entityId,
@@ -137,7 +137,7 @@ export const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
           break;
 
         case 'insurance':
-          const { createInsuranceAction } = await import('@/services/insuranceActionService');
+          const { createInsuranceAction } = await import('@/application/services/insuranceActionService');
           actionService = createInsuranceAction;
           actionData = {
             insuranceId: entityId,

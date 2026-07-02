@@ -15,7 +15,7 @@ import { IInspectionRepository } from '@/domain/repositories/IInspectionReposito
 import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { MilestoneDTO, MilestoneSummaryDTO, MilestoneType, MilestonePriority, MilestoneStatus } from '@/dtos/entities/MilestoneDTO';
-import { PhaseDTO, PhaseSummaryDTO, PhaseStepDTO, PhaseTaskDTO } from '@/types/phase-dto';
+import { PhaseDTO, PhaseSummaryDTO, PhaseStepDTO, PhaseTaskDTO } from '@/dtos/types/phase-dto';
 import { Milestone } from '@/domain/entities/Milestone';
 
 // Type definitions for better type safety

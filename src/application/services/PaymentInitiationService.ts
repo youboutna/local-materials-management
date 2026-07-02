@@ -12,7 +12,7 @@ import {
   ROLE_APPROVAL_CHAIN,
   ROLE_LABELS,
   ApprovalChainStep
-} from '@/types/paymentInitiation';
+} from '@/dtos/types/paymentInitiation';
 
 export class PaymentInitiationService {
   

@@ -14,7 +14,7 @@ import {
   GeneratedPV,
   PVType,
   ConformityStatus,
-} from '@/types/inspection-execution';
+} from '@/dtos/types/inspection-execution';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 

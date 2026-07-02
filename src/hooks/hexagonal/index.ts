@@ -454,7 +454,7 @@ export type {
   QueryResult,
   MutationResult,
   ApiError
-} from '@/types/hooks';
+} from '@/dtos/types/hooks';
 
 // Export commonly used DTOs
 export type {

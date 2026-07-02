@@ -10,7 +10,7 @@ import {
   PROCUREMENT_STAGES,
   PROCUREMENT_PHASE_LABELS
 } from './PublicProcurementWorkflow';
-import type { TenderDocumentCategory } from '@/types/tender';
+import type { TenderDocumentCategory } from '@/dtos/types/tender';
 
 interface StandardWorkflowDocumentSuggestionsProps {
   selectedPhase: ProcurementPhase;

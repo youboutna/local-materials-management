@@ -1,7 +1,7 @@
 /**
  * Inspection Execution DTOs
  * Re-exported from legacy types during migration
- * TODO: Move definitions here and remove @/types/inspection-execution.ts
+ * TODO: Move definitions here and remove @/dtos/types/inspection-execution.ts
  */
 export type {
   InspectionStatus as InspectionExecutionStatus,
@@ -14,4 +14,4 @@ export type {
   PVSection,
   GeneratedPV,
   InspectionExecutionData,
-} from '@/types/inspection-execution';
+} from '@/dtos/types/inspection-execution';

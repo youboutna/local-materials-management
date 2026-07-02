@@ -1,6 +1,6 @@
 //types/reportTypes.ts
 // Data Transfer Objects for enhanced project reporting
-import { ProjectData } from '@/types/project';
+import { ProjectData } from '@/dtos/types/project';
 
 export interface ProjectReportDTO {
   // Core project data

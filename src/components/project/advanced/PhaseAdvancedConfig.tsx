@@ -22,7 +22,7 @@ import {
   ArrowRight,
   RefreshCw
 } from 'lucide-react';
-import { MilestoneProgressDTO, MilestoneSummaryDTO } from '@/types/milestone-dto';
+import { MilestoneProgressDTO, MilestoneSummaryDTO } from '@/dtos/types/milestone-dto';
 import { cn } from '@/lib/utils';
 import { format, parseISO, differenceInDays, isBefore } from 'date-fns';
 import { fr } from 'date-fns/locale';

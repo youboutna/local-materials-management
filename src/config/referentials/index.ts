@@ -123,7 +123,7 @@ export type ReferentialTaskDTO = {
 // NOTE: Do not re-export `ReferentialService` here to avoid circular
 // dependencies with `src/services/ReferentialService.ts` which imports
 // items from this module. Consumers should import the service directly
-// from '@/services/ReferentialService' when needed.
+// from '@/application/services/ReferentialService' when needed.
 
 /**
  * Re-export milestone referential utilities

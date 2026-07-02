@@ -4,7 +4,7 @@
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { standardWorkflow, WorkflowPhase, WorkflowStage, WorkflowTask } from '@/types/workflow';
+import { standardWorkflow, WorkflowPhase, WorkflowStage, WorkflowTask } from '@/dtos/types/workflow';
 
 export interface WorkflowStatus {
   id: string;

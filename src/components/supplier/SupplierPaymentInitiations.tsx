@@ -17,7 +17,7 @@ import {
   STATUS_LABELS,
   ROLE_LABELS,
   InitiatorRole
-} from '@/types/paymentInitiation';
+} from '@/dtos/types/paymentInitiation';
 import { format, formatDistanceToNow, isPast } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { 

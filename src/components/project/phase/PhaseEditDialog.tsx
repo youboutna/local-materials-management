@@ -42,7 +42,7 @@ import {
   Info,
   Target,
 } from "lucide-react";
-import { PhaseDTO, PhaseStatus } from "@/types/phase-dto";
+import { PhaseDTO, PhaseStatus } from "@/dtos/types/phase-dto";
 import { CompletionValidationResult, getCompletionBlockReasons } from "@/utils/completionValidation";
 
 interface PhaseEditDialogProps {

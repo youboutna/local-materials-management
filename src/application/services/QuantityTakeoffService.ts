@@ -10,7 +10,7 @@ import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
 import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
-import { calculateQuantity } from '@/types/quantityTakeoff';
+import { calculateQuantity } from '@/dtos/types/quantityTakeoff';
 
 // Enhanced types for comprehensive quantity takeoff operations
 export interface QuantityTakeoffWithDetails {
