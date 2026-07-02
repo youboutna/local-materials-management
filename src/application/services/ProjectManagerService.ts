@@ -2,7 +2,7 @@
 import { Alert, EVMData, ProjectData, EscalationRoles, GanttChartData, PERTAnalysis, ActionLabels } from "@/dtos/entities/ProjectAggregateDTO";
 import {
   ProjectManager,
-} from "../../services/projectManagerWithActions";
+} from "./projectManagerWithActions";
 
 export interface ProjectManagerState {
   alerts: Alert[];
