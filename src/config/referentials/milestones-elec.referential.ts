@@ -1,4 +1,4 @@
-import { MilestoneTemplateDTO } from "../../types/milestone-dto";
+import { MilestoneTemplateDTO } from "@/dtos/types/milestone-dto";
 import { REFERENTIAL_MILESTONES } from "./milestones.referential";
 import { somelecReferential } from "./somelec.referential";
 

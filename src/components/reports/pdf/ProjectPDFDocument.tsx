@@ -1,7 +1,7 @@
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { EVMMetrics, PERTAnalysis, ProjectData } from '../../../types/project';
-import { ProjectReportDTO } from '../../../types/reportTypes';
+import { EVMMetrics, PERTAnalysis, ProjectData } from '@/dtos/types/project';
+import { ProjectReportDTO } from '@/dtos/types/reportTypes';
 import { PDFCard, PDFCol, PDFDocument, PDFMetricCard, PDFRow, PDFSection, PDFTable, PDFText } from './PDFDocument';
 
 interface ProjectPDFDocumentProps {

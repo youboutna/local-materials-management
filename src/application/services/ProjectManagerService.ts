@@ -1,49 +1,31 @@
 // application/services/ProjectManagerService.ts
-import { Alert, EVMData, ProjectData, EscalationRoles, GanttChartData, PERTAnalysis, ActionLabels } from "@/dtos/entities/ProjectAggregateDTO";
+import type { EscalationRoles } from "@/dtos/entities/ProjectAggregateDTO";
 import {
   ProjectManager,
-} from "../../services/projectManagerWithActions";
+  type ActionLabels,
+  type ProjectManagerState,
+} from "./projectManagerWithActions";
 
-export interface ProjectManagerState {
-  alerts: Alert[];
-  progress: number;
-  evmData: EVMData;
-  ganttData: GanttChartData;
-  pertData: PERTAnalysis;
-}
+export type { ProjectManagerState };
 
-// Use the ActionLabels type from @/dtos/entities/ProjectAggregateDTO directly
 export const actionLabels: ActionLabels = {
-  task_assignment: 'Assigner une tâche',
-  hierarchy_notification: 'Notifier la hiérarchie',
-  sms: 'Envoyer SMS',
-  call: 'Programmer appel',
-  email: 'Envoyer email',
-  mail: 'Courrier postal',
-  export_receipt: 'Exporter reçu',
-  blockchain_verification: 'Vérification blockchain',
-  document_upload: 'Uploader document',
-  meeting_schedule: 'Planifier réunion',
-  financial_review: 'Revue financière',
-  legal_consultation: 'Consultation juridique',
+  budget: 'Revue budgétaire',
+  timeline: 'Revue planning',
+  quality: 'Contrôle qualité',
+  resource: 'Allocation ressources',
+  risk: 'Analyse du risque',
+  compliance: 'Contrôle de conformité',
 };
 
 export class ProjectManagerService {
   private manager: ProjectManager;
 
-  constructor(project: ProjectData, roles: EscalationRoles) {
+  constructor(project: any, roles: EscalationRoles) {
     this.manager = new ProjectManager(project, roles, actionLabels);
   }
 
   async runChecks(): Promise<ProjectManagerState> {
-    const result = this.manager.runAllChecks();
-    return {
-      alerts: result.alerts,
-      progress: result.progress,
-      evmData: result.evmData,
-      ganttData: result.ganttData,
-      pertData: result.pertData
-    };
+    return this.manager.runAllChecks();
   }
 
   async acknowledgeAlert(
@@ -54,3 +36,4 @@ export class ProjectManagerService {
     this.manager.acknowledgeAlert(alertId, userId, actionTaken);
   }
 }
+
