@@ -13,9 +13,9 @@ export const actionLabels: ActionLabels = {
   timeline: 'Revue planning',
   quality: 'Contrôle qualité',
   resource: 'Allocation ressources',
-  task_assignment: 'Assigner une tâche',
-  hierarchy_notification: 'Notifier la hiérarchie',
-} as ActionLabels;
+  risk: 'Analyse du risque',
+  compliance: 'Contrôle de conformité',
+};
 
 export class ProjectManagerService {
   private manager: ProjectManager;
