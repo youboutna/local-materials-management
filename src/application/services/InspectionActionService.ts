@@ -1,8 +1,8 @@
 // @ts-nocheck
 import { supabase } from '@/integrations/supabase/client';
 import { NotificationService } from './NotificationService';
-import { communicationService } from './communicationService';
-import OrganizationalHierarchyService from './organizationalHierarchyService';
+import { communicationService } from './CommunicationService';
+import OrganizationalHierarchyService from './OrganizationalHierarchyService';
 
 export interface InspectionControlAction {
   id: string;
