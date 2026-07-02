@@ -14,7 +14,7 @@ import {
   RiskAssessmentDTO,
   ReportData,
   CostCalculation
-} from '@/types/reportTypes';
+} from '@/dtos/types/reportTypes';
 
 export class EnhancedReportingService {
   private reportingRepository = RepositoryFactory.getReportingRepository();

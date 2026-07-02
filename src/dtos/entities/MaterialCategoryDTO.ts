@@ -1,6 +1,6 @@
 /**
  * Material Category DTOs
- * Migrated from @/types/materialCategories
+ * Migrated from @/dtos/types/materialCategories
  */
 
 export interface MaterialCategoryConfig {

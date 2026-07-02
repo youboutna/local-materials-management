@@ -11,7 +11,7 @@ import {
   StepDocumentDTO, 
   WorkflowProgressDTO, 
   DocumentUploadDTO 
-} from '@/types/workflow-dto';
+} from '@/dtos/types/workflow-dto';
 
 /**
  * Service for managing workflow steps with hexagonal architecture

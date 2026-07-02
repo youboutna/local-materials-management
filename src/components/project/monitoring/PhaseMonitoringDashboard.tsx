@@ -25,7 +25,7 @@ import {
   Clock
 } from 'lucide-react';
 import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
-import { MilestoneSummaryDTO } from '@/types/milestone-dto';
+import { MilestoneSummaryDTO } from '@/dtos/types/milestone-dto';
 import { MilestoneCheckpointActions, MilestoneActionContext } from '@/components/project/milestones';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';

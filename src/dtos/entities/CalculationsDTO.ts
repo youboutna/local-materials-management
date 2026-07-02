@@ -1,6 +1,6 @@
 /**
  * Calculations DTOs
- * Migrated from @/types/calculations
+ * Migrated from @/dtos/types/calculations
  * Pure data shapes for analytics and EVM computations.
  */
 

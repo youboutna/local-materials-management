@@ -1,6 +1,6 @@
 /**
  * Notification Type DTO
- * Migrated from @/types/notification
+ * Migrated from @/dtos/types/notification
  */
 
 export type NotificationType = 

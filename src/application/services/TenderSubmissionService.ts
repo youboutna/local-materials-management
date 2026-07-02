@@ -2,7 +2,7 @@
 import { SubmissionSecretService } from './SubmissionSecretService';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { supabase as supabaseClient } from '@/integrations/supabase/client';
-import { sendTenderSubmissionNotification } from '@/services/tenderSubmissionNotificationService';
+import { sendTenderSubmissionNotification } from '@/application/services/tenderSubmissionNotificationService';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 

@@ -1,7 +1,7 @@
 // React hook for workflow steps management
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { WorkflowStepService } from '@/application/services/WorkflowStepService';
-import { WorkflowStepDTO, StepDocumentDTO, DocumentUploadDTO } from '@/types/workflow-dto';
+import { WorkflowStepDTO, StepDocumentDTO, DocumentUploadDTO } from '@/dtos/types/workflow-dto';
 import { useToast } from '@/hooks/use-toast';
 
 interface WorkflowError {

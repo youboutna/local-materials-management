@@ -15,7 +15,7 @@ import {
   RefreshCw,
   Target 
 } from 'lucide-react';
-import { PhaseDTO } from '@/types/phase-dto';
+import { PhaseDTO } from '@/dtos/types/phase-dto';
 import { cn } from '@/lib/utils';
 import {
   getStatusColor,

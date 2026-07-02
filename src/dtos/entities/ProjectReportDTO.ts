@@ -159,7 +159,7 @@ export interface RiskItemDTO extends BaseEntityDTO {
   updatedAt: string;
 }
 
-// Notification types - moved from @/types/notification.ts for Rule 4 compliance
+// Notification types - moved from @/dtos/types/notification.ts for Rule 4 compliance
 export type NotificationType = 
   | 'task_assignment' 
   | 'task_completed'

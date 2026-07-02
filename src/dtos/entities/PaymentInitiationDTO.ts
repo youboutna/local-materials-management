@@ -1,6 +1,6 @@
 /**
  * Payment Initiation DTOs
- * Migrated from @/types/paymentInitiation
+ * Migrated from @/dtos/types/paymentInitiation
  */
 
 export type InitiatorRole = 'project_manager' | 'technical_manager' | 'engineering_consultant' | 'inspector';

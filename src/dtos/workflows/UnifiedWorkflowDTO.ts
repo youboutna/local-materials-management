@@ -1,7 +1,7 @@
 /**
  * Unified Workflow DTOs
  * Re-exported from legacy types during migration
- * TODO: Move definitions here and remove @/types/unified-workflow.ts
+ * TODO: Move definitions here and remove @/dtos/types/unified-workflow.ts
  */
 export type { 
   DecisionNode, 
@@ -10,4 +10,4 @@ export type {
   WorkflowStatus, 
   MilestoneType as WorkflowMilestoneType,
   mapMilestoneToDecisionNode 
-} from '@/types/unified-workflow';
+} from '@/dtos/types/unified-workflow';

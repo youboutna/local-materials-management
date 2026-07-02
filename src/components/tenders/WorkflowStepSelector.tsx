@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Plus } from 'lucide-react';
-import { standardWorkflow, WorkflowPhase, WorkflowStage } from '@/types/workflow';
+import { standardWorkflow, WorkflowPhase, WorkflowStage } from '@/dtos/types/workflow';
 import { FileText, Settings, CheckCircle2 } from 'lucide-react';
 
 interface WorkflowStepSelectorProps {

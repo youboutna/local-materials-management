@@ -15,7 +15,7 @@ import {
   PaymentType,
   DEFAULT_MAURITANIA_RULES,
   MauritaniaBusinessRulesDTO,
-} from '@/types/checkpoint-dto';
+} from '@/dtos/types/checkpoint-dto';
 import { MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
 
 // Import des repositories existants (via RepositoryFactory)

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Calculator } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { QuantityTakeoffWithDetails } from '@/types/quantityTakeoff';
+import { QuantityTakeoffWithDetails } from '@/dtos/types/quantityTakeoff';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { usePagination } from '@/hooks/usePagination';
 import { useQuantityTakeoffsHex } from '@/hooks/hexagonal'

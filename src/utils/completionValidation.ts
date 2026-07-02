@@ -4,7 +4,7 @@
  * before marking phase/project as completed
  */
 
-import { MilestoneSummaryDTO } from '@/types/milestone-dto';
+import { MilestoneSummaryDTO } from '@/dtos/types/milestone-dto';
 
 // Default minimum progress percentage required to mark as completed
 export const DEFAULT_COMPLETION_PROGRESS_THRESHOLD = 100;

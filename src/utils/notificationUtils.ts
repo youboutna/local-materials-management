@@ -1,5 +1,5 @@
 
-import { NotificationMetadata, TaskType, NotificationType } from '@/types/notification';
+import { NotificationMetadata, TaskType, NotificationType } from '@/dtos/types/notification';
 
 /**
  * Get the navigation link for a notification based on its type and metadata

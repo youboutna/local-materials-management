@@ -39,7 +39,7 @@ import {
   useCreateQuantityTakeoff,
 } from "@/hooks/hexagonal";
 import { usePhaseEmployeesHex } from "@/hooks/hexagonal/usePhaseEmployeesHex";
-import { calculateQuantity } from "@/types/quantityTakeoff";
+import { calculateQuantity } from "@/dtos/types/quantityTakeoff";
 import EmployeeSelector from "@/components/selectors/EmployeeSelector";
 import SimpleSupplierSelector from "@/components/selectors/SimpleSupplierSelector";
 

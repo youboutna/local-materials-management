@@ -1,6 +1,6 @@
 /**
  * Unified Workflow DTOs
- * Migrated from @/types/unified-workflow
+ * Migrated from @/dtos/types/unified-workflow
  */
 
 export type WorkflowMilestoneType =

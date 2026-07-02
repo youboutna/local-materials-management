@@ -3,7 +3,7 @@
  * Defines contract for quantity takeoff data access
  */
 
-import { QuantityTakeoffWithDetails } from '@/types/quantityTakeoff';
+import { QuantityTakeoffWithDetails } from '@/dtos/types/quantityTakeoff';
 
 export interface IQuantityTakeoffRepository {
   // ============= CRUD Operations =============

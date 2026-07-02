@@ -36,7 +36,7 @@ import {
   MilestoneProgressDTO,
   MilestoneType,
   MILESTONE_TYPES
-} from '@/types/milestone-dto';
+} from '@/dtos/types/milestone-dto';
 import { getDefaultProjectMilestones, getDefaultPhaseMilestones } from '@/config/referentials/milestones.referential';
 import { format, parseISO, isBefore, differenceInDays, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';

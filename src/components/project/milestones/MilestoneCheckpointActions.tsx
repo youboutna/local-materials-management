@@ -41,7 +41,7 @@ import {
   Info,
   Zap
 } from 'lucide-react';
-import { MilestoneSummaryDTO, MilestoneType, MILESTONE_TYPES } from '@/types/milestone-dto';
+import { MilestoneSummaryDTO, MilestoneType, MILESTONE_TYPES } from '@/dtos/types/milestone-dto';
 import { format, parseISO, isBefore, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';

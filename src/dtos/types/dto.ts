@@ -1,5 +1,5 @@
 // Data Transfer Objects for UI components
-import { Alert, CheckScheduleLastRun, ConstructionPhase, ConstructionStage, EVMData, GanttChartData, Inspection, InsurancePolicy, PERTAnalysis, ProjectContact, ProjectResource, ProjectRisk, ProjectStatus, Task } from '@/types/project';
+import { Alert, CheckScheduleLastRun, ConstructionPhase, ConstructionStage, EVMData, GanttChartData, Inspection, InsurancePolicy, PERTAnalysis, ProjectContact, ProjectResource, ProjectRisk, ProjectStatus, Task } from '@/dtos/types/project';
 
 // Re-export phase DTOs for convenience
 export * from './phase-dto';
