@@ -71,7 +71,7 @@ export class DocumentService {
   }
 
   /**
-   * Static method for getting project documents (for backward compatibility)
+   * Static helper for getting project documents.
    */
   static async getProjectDocuments(projectId: string): Promise<DocumentDTO[]> {
     const service = new DocumentService();
