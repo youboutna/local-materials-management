@@ -7,7 +7,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { InspectorService } from '@/application/services/InspectorServiceSimple';
-import { TenderService } from '@/application/services/TenderServiceSimple';
+import { TenderService } from '@/application/services/TenderService';
 import { SupplierService } from '@/application/services/SupplierService';
 import { UserService } from '@/application/services/UserService';
 import { ProjectService } from '@/application/services/ProjectService';
