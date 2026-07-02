@@ -284,7 +284,7 @@ export function useProjectTenders(projectId?: string) {
         RepositoryFactory.getTenderRepository()
       );
       
-      return await tenderService.getProjectTenders(projectId);
+      return await tenderService.getProjectTenders({ projectId });
     },
     enabled: !!projectId,
     ...COMMON_QUERY_OPTIONS,
