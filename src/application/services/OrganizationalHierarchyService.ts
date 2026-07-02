@@ -60,21 +60,16 @@ export class OrganizationalHierarchyService {
       return [];
     }
 
-    const rows = (data ?? []).map((row: {
-      id: string;
-      full_name: string;
-      email: string | null;
-      phone: string | null;
-      position: string | null;
-      department: string | null;
-    }) => ({
-      employee_id: row.id,
-      full_name: row.full_name,
-      email: row.email,
-      phone: row.phone,
-      position_title: row.position,
-      hierarchy_level: inferLevel(row.position),
-    }));
+    const rows: HierarchyRecipient[] = (data ?? [])
+      .filter((row) => !!row.id)
+      .map((row) => ({
+        employee_id: row.id as string,
+        full_name: row.full_name ?? '',
+        email: row.email,
+        phone: row.phone,
+        position_title: row.position,
+        hierarchy_level: inferLevel(row.position),
+      }));
 
     if (criteria.escalationLevel) {
       const filtered = rows.filter((r) => r.hierarchy_level === criteria.escalationLevel);
@@ -94,20 +89,16 @@ export class OrganizationalHierarchyService {
       console.error('OrganizationalHierarchyService.resolveByIds', error);
       return [];
     }
-    return (data ?? []).map((row: {
-      id: string;
-      full_name: string;
-      email: string | null;
-      phone: string | null;
-      position: string | null;
-    }) => ({
-      employee_id: row.id,
-      full_name: row.full_name,
-      email: row.email,
-      phone: row.phone,
-      position_title: row.position,
-      hierarchy_level: inferLevel(row.position),
-    }));
+    return (data ?? [])
+      .filter((row) => !!row.id)
+      .map((row) => ({
+        employee_id: row.id as string,
+        full_name: row.full_name ?? '',
+        email: row.email,
+        phone: row.phone,
+        position_title: row.position,
+        hierarchy_level: inferLevel(row.position),
+      }));
   }
 }
 
