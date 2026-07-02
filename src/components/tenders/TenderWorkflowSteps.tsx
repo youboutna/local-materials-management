@@ -144,13 +144,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
   const handleShareDocuments = async (step: WorkflowStepDTO) => {
     if (!onShareWithSuppliers) return;
 
-    let docs = queryClient.getQueryData<StepDocumentDTO[]>(['step-documents', step.id]);
-    if (!docs) {
-      const { WorkflowStepService } = await import('@/application/services/WorkflowStepService');
-      docs = await WorkflowStepService.getStepDocuments(step.id);
-      // Prime cache for future UI usage
-      queryClient.setQueryData(['step-documents', step.id], docs);
-    }
+    const docs = queryClient.getQueryData<StepDocumentDTO[]>(['step-documents', step.id]) ?? [];
 
     const shareableDocuments = (docs || []).filter(doc => doc.can_share);
     if (shareableDocuments.length === 0) return;
