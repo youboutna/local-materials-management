@@ -148,7 +148,6 @@ export class TenderService {
 
   /**
    * Generate a unique secret code for tender sharing
-   * Legacy compatibility method from TenderSharingService
    */
   async generateSecretCode(): Promise<string> {
     try {
@@ -168,7 +167,6 @@ export class TenderService {
 
   /**
    * Create a new sharing secret for tender documents
-   * Legacy compatibility method from TenderSharingService
    */
   async createSharingSecret(dto: CreateSharingSecretDTO): Promise<TenderSharingSecretDTO> {
     try {
@@ -204,7 +202,6 @@ export class TenderService {
 
   /**
    * Validate a sharing secret
-   * Legacy compatibility method from TenderSharingService
    */
   async validateSecret(secretCode: string, supplierEmail: string): Promise<ValidateSecretResponseDTO> {
     try {
@@ -226,7 +223,6 @@ export class TenderService {
 
   /**
    * Log access to shared documents
-   * Legacy compatibility method from TenderSharingService
    */
   async logAccess(dto: CreateAccessLogDTO): Promise<void> {
     try {
@@ -241,7 +237,6 @@ export class TenderService {
 
   /**
    * Get sharing secrets for a tender
-   * Legacy compatibility method from TenderSharingService
    */
   async getTenderSharingSecrets(tenderId: string): Promise<TenderSharingSecretDTO[]> {
     try {

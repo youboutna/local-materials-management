@@ -267,7 +267,6 @@ export class DashboardService {
 
   /**
    * Automated monitoring cycle - reduces manual intervention
-   * Legacy compatibility method from MonitoringService
    */
   async runAutomatedMonitoring(config?: MonitoringConfiguration): Promise<{
     metrics: MonitoringMetrics;
@@ -381,7 +380,6 @@ export class DashboardService {
 
   /**
    * Get monitoring configuration
-   * Legacy compatibility method from MonitoringService
    */
   getMonitoringConfiguration(): MonitoringConfiguration {
     return {
