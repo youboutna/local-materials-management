@@ -1,134 +1,62 @@
+# Plan — Suppression du code legacy
 
-# Refonte du module Tender Management — Cohérence et fluidité
+Cible : retirer les wrappers, alias et champs snake_case laissés « pour compatibilité » quand la logique cible est déjà implémentée ailleurs (règle PROMPTS.md §Zéro imports `@/services/*` legacy + Core memory : `src/services` & `src/types` = legacy readonly, ne doivent plus être importés).
 
-## 1. Contexte
+## Périmètre — à supprimer
 
-Socle existant (à réutiliser, pas réécrire) : tables `tenders`, `tender_submissions`, `tender_estimates`, `tender_estimate_items`, `quantity_takeoffs`, `project_phases/tasks/milestones` ; parseurs Excel/PDF/métré en silos ; portail fournisseur basique avec code secret ; module projet (Gantt/PERT) actif.
+### 1. Wrappers / alias devenus inutiles
+- `src/infrastructure/transformers/SupplierMapper.ts` (délègue 1-pour-1 à `SupplierTransformer`) → supprimer, migrer les 2 imports vers `@/dtos/transforms/SupplierTransformer`.
+- `src/components/location/LocationSelector.tsx` (ré-export nu de `UnifiedLocationSelector`) → supprimer, remplacer imports par `UnifiedLocationSelector`.
+- `src/components/location/EnhancedLocationSelector.tsx` (même alias) → supprimer, migrer imports.
+- `src/application/services/TenderServiceSimple.ts` (duplique `TenderService.getProjectTenders`) → supprimer si aucun consommateur ; sinon fusionner dans `TenderService`.
 
-Défi : **orchestrer** les briques, **uniformiser** les parcours (Wizards/Steppers), **centraliser** les règles dans des référentiels, **fluidifier** les transitions d'état et inter-modules, **tracer** chaque décision.
+### 2. Champs snake_case « backward compatibility » dans les DTO/entités camelCase
+- `src/types/tender.entity.ts` : blocs `Legacy snake_case for backward compatibility` (Tender + TenderSubmission) → supprimer, adapter les rares lecteurs restants à camelCase.
+- `src/components/documents/DocumentDetails.tsx` : interface locale avec doublons snake_case → garder uniquement camelCase (le transformer fournit déjà les deux).
 
-## 2. Périmètre — 4 lots
+### 3. Méthodes « Legacy Compatibility » dans services applicatifs
+- `SupplierService` (`getAllSuppliersAsDTO`, `getSupplierByIdAsDTO`, `searchSuppliersAsDTO`, `getActiveSuppliersAsDTO`, `createSupplierFromDTO`, `updateSupplierFromDTO`) : ces méthodes dupliquent les méthodes standard + `SupplierTransformer.toDTO`. Supprimer et pointer les appelants vers l'API canonique.
+- `DashboardService` méthodes marquées « Legacy compatibility method from MonitoringService » → supprimer si non appelées, sinon renommer proprement.
+- `TenderService` : 7 méthodes marquées « Legacy compatibility method from TenderSharingService » → audit d'usage, supprimer les orphelines.
+- `DocumentService.getProjectDocuments` static wrapper → supprimer, appelants utilisent l'instance.
+- `BankGuaranteeActionService.create` static → supprimer si non consommé.
 
-### Lot 1 — Backend Tender (manager)
+### 4. Imports résiduels vers `@/services/*` (hors fichier legacy lui-même)
+Fichiers à nettoyer :
+- `src/utils/httpMetricsCollector.ts`
+- `src/hooks/useProjectManager.ts`
+- `src/hooks/useHttpHandler.ts`
+- `src/hooks/useDocumentStorage.ts`
+- `src/application/services/TenderSubmissionService.ts`
+- `src/config/referentials/index.ts` (aliases DTO backward compat)
 
-Pages : `TenderManagement.tsx` (liste + indicateurs), `TenderDetail.tsx`.
+Remplacement : équivalent hexagonal dans `src/application/services` + `src/dtos`. Si l'équivalent n'existe pas encore, on ne supprime pas dans ce lot (hors périmètre « logique déjà implémentée »).
 
-- **Stepper horizontal 5 étapes** remplace les onglets denses : Identification → Cadre & Lots → DPAO & Pièces → Planning → Publication.
-- **Statuts référentiels** : `draft → published → open → under_evaluation → awarded → contracted → closed` avec gardes (ex: publication interdite sans lots).
-- **SubmissionsInbox** : centralise réception, filtres statut/fournisseur/lot, badges deadline, `submission_access_logs`.
-- **EvaluationPanel** refondu : 3 sous-onglets (Admin / Technique / Financier), critères pondérés, score total auto, verrou post-attribution.
-- **Attribution** : dialog confirmation → contrat draft → notification lauréat/rejetés (edge existant).
+### 5. Divers
+- `src/domain/repositories/IBankGuaranteeRepository.ts` : méthode `@deprecated` `getByProject(id)` → supprimer si toutes les implémentations utilisent la variante `getByProject(id, options)`.
+- `src/domain/repositories/IHierarchyRepository.ts` : bloc « Legacy Operations » → supprimer les méthodes non utilisées.
+- `src/hooks/useUserRoles.ts`, `src/hooks/useEnhancedTaskAssignment.ts`, `src/hooks/useAuditEntries.ts` : commentaires « legacy interface » — vérifier consommateurs, aligner types sur DTO canonique.
+- `src/types/entities.ts` : structures « Legacy custom stage/task from ConstructionPhaseManager » → supprimer si `ConstructionPhaseManager` a bien migré vers le workflow unifié.
+- `src/types/supplier.ts` : interface `SupplierLegacy` → supprimer.
 
-### Lot 2 — Portail fournisseur `/supplier-portal`
+## Hors périmètre (on ne touche pas)
+- Fichiers protégés `src/services/*` et `src/types/*` : lecture seule (Core memory). On ne modifie pas, on retire seulement les **imports** depuis le code hexagonal.
+- Références snake_case reflétant la DB dans adapters/transformers : légitimes, à conserver.
+- `enhancedActionService` : namespace static utilisé activement — conserver après vérification d'usage.
 
-Page : `UnifiedSupplierPortal.tsx`.
+## Méthode d'exécution (par lot, typecheck entre chaque)
 
-- **Mode hybride** conservé : consultation publique (`status IN ('published','open')` ET `deadline_date > now()`), suivi via code secret existant.
-- **PublicTendersList** : cartes compactes, filtres (catégorie, région, montant, deadline).
-- **SupplierBidWizard vertical 4 étapes** : DPAO → DQE → Pièces (admin/tech/fin) → Récap & soumission.
-- Progress tracker persistant, garde deadline bloquante.
+1. **Lot A — Alias inertes** : supprimer `SupplierMapper`, `LocationSelector`, `EnhancedLocationSelector`, `TenderServiceSimple` ; migrer imports.
+2. **Lot B — Champs snake_case DTO** : nettoyer `tender.entity.ts`, `DocumentDetails.tsx`, aligner consommateurs.
+3. **Lot C — Méthodes Legacy Compatibility** : audit d'usage (`rg`), suppression des orphelines dans `SupplierService`, `DashboardService`, `TenderService`, `DocumentService`, `BankGuaranteeActionService`.
+4. **Lot D — Imports `@/services/*`** : remplacement par équivalents hexagonaux là où ils existent ; consigner les manquants dans `.lovable/plan.md`.
+5. **Lot E — Interfaces & repositories** : suppression des blocs `@deprecated` / `Legacy Operations` sans consommateur.
 
-### Lot 3 — DQE Wizard (Quote & Takeoff)
+## Validation
+- `tsgo` vert après chaque lot.
+- `rg "backward compat|Legacy|@deprecated"` doit décroître significativement.
+- Aucun import `from '@/services/'` restant hors des fichiers legacy eux-mêmes.
+- Smoke test manuel : liste projets, détail projet, tenders, matériaux.
 
-Composants : `EnhancedTenderEstimator`, `TenderQuantitativeEstimate`, `QuantityTakeoffForm`.
-
-- **3 modes fusionnés dans un onglet unique** :
-  - Import Excel (BPU multi-structure, parser étendu)
-  - Import PDF (OCR consolidé, extraction lignes/lots)
-  - Saisie manuelle (table lots/sous-lots, drag & drop, duplication)
-- Calculs temps réel (PT = qté × PU), totaux/lot, TVA, sous-totaux.
-- Validation `TenderEstimateValidation` (unités, quantités > 0, PU numérique).
-- Aperçu PDF (`DevisPDFDocument`), export XLSX, autosave debouncé.
-
-### Lot 4 — Post-attribution → hydratation projet
-
-Nouveau service : `AwardedTenderToProjectService`.
-
-Déclencheur : « Signer contrat » sur soumission gagnante (rôles habilités).
-
-Pipeline :
-1. Charger `TenderEstimate` lauréat (existant ou reparser).
-2. Mapper via référentiel : 1 lot = 1 phase, 1 sous-lot = 1 tâche, jalons à 25/50/75/100 % du montant.
-3. **Preview interactive** (`AwardedTenderPreviewDialog`) : renommer, fusionner, ajuster durées.
-4. Application via `ProjectWorkflowService` (respecte règle « Project Aggregate ») → `project_phases`, `project_tasks`, `project_milestones`, `project_budget_links`, ajout fournisseur dans `project_stakeholders`.
-5. Traçabilité : `project_alerts` + `workflow_history`.
-
-Scénario complémentaire : bouton « Importer depuis DQE » dans `ProjectCreationWorkflow` (upload direct, sans AO).
-
-## 3. Référentiels paramétrables
-
-| Référentiel | Rôle |
-|-------------|------|
-| `tender-workflow.referential` | Statuts, transitions, gardes métier |
-| `evaluation-criteria.referential` | Critères pondérés modifiables |
-| `dqe-mapping.referential` | Règles DQE → phases/tâches/jalons |
-
-Stockés dans `src/config/referentials/`, administrables sans redéploiement.
-
-## 4. Contraintes techniques
-
-- **Hexagonal strict** : UI → Hook → Service → Repository → Adapter → DB. Aucun `supabase` direct dans React.
-- **Transformers dédiés** : `AwardedTenderTransformer`, extension `TenderEstimateItemTransformer`.
-- **TanStack Query v5** : pas de `onSuccess`/`onError` sur `useQuery`/`useMutation`.
-- **RLS** : ajout policy publique `anon SELECT` sur `tenders WHERE status IN ('published','open') AND deadline_date > now()`. Autres policies conservées.
-
-## 5. Structure indicative
-
-```text
-src/config/referentials/
-├── tender-workflow.referential.ts
-├── evaluation-criteria.referential.ts
-└── dqe-mapping.referential.ts
-
-src/application/services/
-├── AwardedTenderToProjectService.ts        (nouveau)
-└── TenderEstimateService.ts                (étendu : autosave, parser)
-
-src/dtos/transforms/
-└── AwardedTenderTransformer.ts             (nouveau)
-
-src/components/tenders/
-├── TenderWizardStepper.tsx                 (nouveau)
-├── SubmissionsInbox.tsx                    (nouveau)
-├── EvaluationPanelTabs.tsx                 (refonte)
-└── AwardedTenderPreviewDialog.tsx          (nouveau)
-
-src/components/supplier/
-├── SupplierBidWizard.tsx                   (nouveau, 4 steps)
-└── PublicTendersList.tsx                   (nouveau)
-
-src/pages/
-├── TenderManagement.tsx                    (wire stepper + inbox)
-├── TenderDetail.tsx                        (wire evaluation + award)
-└── UnifiedSupplierPortal.tsx               (wire wizard)
-```
-
-Migration SQL unique : policy publique lecture `tenders` (statuts publics + deadline valide).
-
-## 6. Ordre d'exécution
-
-| Phase | Périmètre | Justification |
-|-------|-----------|---------------|
-| 1 | Référentiels + `AwardedTenderToProjectService` | Fondations métier |
-| 2 | Lot 1 (Backend Tender) | Cœur gestionnaire |
-| 3 | Lot 3 (DQE Wizard) | Indépendant, parallèle possible |
-| 4 | Lot 2 (Portail) | Consomme Lot 3 |
-| 5 | Lot 4 (Post-attribution) | Boucle le cycle |
-
-## 7. Décisions par défaut
-
-- Portail : hybride (public + code secret).
-- Sources DQE : Excel + PDF + manuel dans un même espace.
-- Mapping : lot=phase / sous-lot=tâche / jalons 25-50-75-100 %, ajustables en preview.
-
-## 8. Hors périmètre (itérations futures)
-
-Notifications multicanal unifiées ; enrichissement GIS (analyses spatiales) ; schéma DB étendu ; comptes fournisseurs obligatoires ; connecteurs ERP/SCADA fins ; workflow garanties/cautions dédié ; approbations multi-comités granulaires.
-
-## 9. Bénéfices attendus
-
-Parcours guidés sans rupture ; zéro double saisie DQE → contrat → projet ; visibilité temps réel ; règles configurables sans code ; garde-fous métier ; traçabilité complète pour audit.
-
-## 10. Prochaines étapes
-
-Validation plan → paramétrage initial référentiels avec administrateurs → développement itératif lots 1→4 → recette parcours → déploiement progressif.
+## Livrable
+Rapport final listant : fichiers supprimés, imports migrés, méthodes retirées, résidus assumés (avec justification).
