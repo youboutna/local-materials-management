@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Supabase Adapter for Insurance Certificate Repository
  * Implements IInsuranceRepository interface using Supabase client

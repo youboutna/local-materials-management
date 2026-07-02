@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * PV Generator Adapter - Supabase Implementation
  * Implements IPVGeneratorRepository using Supabase

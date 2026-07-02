@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Supabase Adapter for Report Data Transformer Repository
  * Implements the IReportDataTransformerRepository using Supabase

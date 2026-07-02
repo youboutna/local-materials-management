@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * LocalStorage Document Adapter
  * Implements IDocumentRepository using LocalStorage for DEV_MODE

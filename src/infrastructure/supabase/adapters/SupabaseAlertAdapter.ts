@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Supabase Alert Repository
  * Implements IAlertRepository using project_alerts table (public schema)

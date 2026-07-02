@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * LocalStorage Risk Adapter
  * Implements IRiskRepository using LocalStorage for DEV_MODE

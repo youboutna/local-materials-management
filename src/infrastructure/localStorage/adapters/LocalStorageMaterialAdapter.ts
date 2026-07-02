@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * LocalStorage Material Adapter
  * Implements IMaterialRepository using LocalStorage for DEV_MODE

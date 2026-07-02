@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Supabase Implementation of Alert Repository
  * Handles data access for project alerts using Supabase

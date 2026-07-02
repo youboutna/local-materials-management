@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Supabase User Adapter
  * Implements IUserRepository using Supabase

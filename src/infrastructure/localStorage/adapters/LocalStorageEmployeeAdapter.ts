@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * LocalStorage Employee Adapter
  * Implements IEmployeeRepository using LocalStorage for DEV_MODE

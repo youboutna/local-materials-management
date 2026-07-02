@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * LocalStorage Hierarchy Adapter
  * Implements IHierarchyRepository using LocalStorage for DEV_MODE

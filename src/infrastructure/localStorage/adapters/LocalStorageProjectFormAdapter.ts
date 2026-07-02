@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * LocalStorage Project Form Adapter
  * Implements IProjectFormRepository using LocalStorage for DEV_MODE

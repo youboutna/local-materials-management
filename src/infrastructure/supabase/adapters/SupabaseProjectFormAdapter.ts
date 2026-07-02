@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Supabase Adapter for Project Form Repository
  * Implements the IProjectFormRepository using Supabase

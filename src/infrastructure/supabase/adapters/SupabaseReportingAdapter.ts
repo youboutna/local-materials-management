@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Note: @ts-nocheck conservé temporairement — la table `project_phases` est exposée
 // via une vue proxy publique (Multi-Schema Architecture) et n'est pas typée dans
 // Database['public']['Tables']. À retirer après typage des proxies.

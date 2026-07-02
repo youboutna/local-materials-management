@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Supabase Stakeholder Adapter
  * Implements IStakeholderRepository using the canonical `project_stakeholders`

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * LocalStorage Payment Adapter
  * Implements IPaymentRepository using LocalStorage for DEV_MODE

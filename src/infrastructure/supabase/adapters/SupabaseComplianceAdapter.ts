@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Supabase Compliance Adapter
  * Implements the compliance repository interface using Supabase

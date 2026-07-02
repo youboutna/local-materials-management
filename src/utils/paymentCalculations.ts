@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { InsuranceService } from '@/application/services/InsuranceService';
 import { BankGuaranteeService } from '@/application/services/BankGuaranteeService';
 import { ProjectService } from '@/application/services/ProjectService';

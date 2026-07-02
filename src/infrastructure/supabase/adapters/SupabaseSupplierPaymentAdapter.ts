@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Supabase Adapter for Supplier Payment Repository
  * Implements ISupplierPaymentRepository interface using Supabase client

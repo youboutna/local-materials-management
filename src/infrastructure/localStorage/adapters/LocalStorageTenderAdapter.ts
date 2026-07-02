@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * LocalStorage Tender Adapter
  * Implements ITenderRepository using LocalStorage for DEV_MODE

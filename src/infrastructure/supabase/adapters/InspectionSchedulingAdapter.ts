@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Inspection Scheduling Adapter - Supabase Implementation
  * Implements IInspectionSchedulingRepository using Supabase
