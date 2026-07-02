@@ -254,33 +254,4 @@ export class TenderService {
     }
   }
 
-  /**
-   * Revoke a sharing secret
-   * Legacy compatibility method from TenderSharingService
-   */
-  async revokeSharingSecret(secretId: string): Promise<void> {
-    try {
-      // This would need to be implemented with proper revocation logic
-      console.warn('revokeSharingSecret not implemented in TenderService');
-      console.log('Secret revoked:', secretId);
-    } catch (error) {
-      console.error('Error revoking sharing secret:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to revoke sharing secret');
-    }
-  }
-
-  /**
-   * Get access logs for a secret
-   * Legacy compatibility method from TenderSharingService
-   */
-  async getAccessLogs(secretCode: string): Promise<CreateAccessLogDTO[]> {
-    try {
-      // This would need to be implemented with proper retrieval logic
-      console.warn('getAccessLogs not implemented in TenderService');
-      return [];
-    } catch (error) {
-      console.error('Error getting access logs:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get access logs');
-    }
-  }
 }
