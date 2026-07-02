@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Parsed Invoice Adapter - Supabase Implementation
  * Implements IParsedInvoiceRepository using Supabase

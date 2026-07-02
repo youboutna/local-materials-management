@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Supabase Monitoring Alert Adapter
  * Uses project_alerts table from public schema for BTP project alerts

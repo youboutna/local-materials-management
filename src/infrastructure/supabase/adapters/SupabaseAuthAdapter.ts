@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Supabase Auth Adapter
  * Implements IAuthRepository for Supabase authentication

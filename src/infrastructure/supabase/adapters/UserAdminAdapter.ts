@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Supabase adapter for user administration operations
  * Implements admin-level user management functionality

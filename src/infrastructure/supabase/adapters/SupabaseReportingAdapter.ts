@@ -1,7 +1,4 @@
 // @ts-nocheck
-// Note: @ts-nocheck conservé temporairement — la table `project_phases` est exposée
-// via une vue proxy publique (Multi-Schema Architecture) et n'est pas typée dans
-// Database['public']['Tables']. À retirer après typage des proxies.
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { supabase as publicSupabase } from '@/integrations/supabase/client';
 import { IReportingRepository, ReportSectionsData } from '@/domain/repositories/IReportingRepository';

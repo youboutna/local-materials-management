@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Supabase Hierarchy Adapter
  * Implements IHierarchyRepository using Supabase
