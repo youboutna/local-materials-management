@@ -28,7 +28,7 @@ export class BankGuaranteeActionService {
   }
 
   /**
-   * Create action (simplified interface) - static method for backward compatibility
+   * Static helper for creating a bank guarantee action.
    */
   static async create(data: {
     guarantee_id: string;
