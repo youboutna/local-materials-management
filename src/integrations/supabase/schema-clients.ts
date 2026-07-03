@@ -27,7 +27,13 @@
 import { supabase } from './client';
 
 /** Schéma BTP par défaut codé en dur (utilisé si l'env n'est pas défini). */
-const DEFAULT_BTP_SCHEMA = 'btp';
+/**
+ * Défaut sûr = `public` tant que le schéma `btp` n'est pas ajouté dans
+ * Dashboard Supabase > Settings > API > Exposed schemas. Passez à `btp`
+ * (via `VITE_BTP_SCHEMA=btp` ou en éditant cette constante) UNE FOIS le
+ * schéma exposé — sinon PostgREST renvoie PGRST106.
+ */
+const DEFAULT_BTP_SCHEMA = 'public';
 
 /** Schémas connus de l'écosystème Supabase multi-projets. Pour documentation. */
 export const SCHEMAS = {
