@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileText, Upload, Eye, CheckCircle, XCircle, Clock, AlertCircle, Plus, Calculator } from 'lucide-react';
+import { FileText, Upload, Eye, CheckCircle, XCircle, Clock, AlertCircle, Plus, Calculator, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
