@@ -144,11 +144,60 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
     setExpandedLot(newLot.id);
   };
 
+  // Debounced persistence per lot to avoid one mutation per keystroke.
+  const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const [pendingUpdates, setPendingUpdates] = useState<Record<string, Partial<TenderLot>>>({});
+
+  useEffect(() => () => {
+    Object.values(saveTimers.current).forEach(clearTimeout);
+  }, []);
+
+  const schedulePersist = useCallback(
+    (lotId: string, merged: TenderLot) => {
+      if (saveTimers.current[lotId]) clearTimeout(saveTimers.current[lotId]);
+      saveTimers.current[lotId] = setTimeout(() => {
+        updateLotMut.mutate({
+          id: lotId,
+          lot: {
+            tenderId,
+            projectId: projectId ?? null,
+            number: merged.number,
+            title: merged.title,
+            description: merged.description ?? null,
+            estimatedAmount: merged.estimatedAmount ?? null,
+            linkedPhaseIds: merged.linkedPhaseIds,
+            linkedStepIds: merged.linkedStepIds,
+            requirements: merged.requirements ?? [],
+            deliverables: merged.deliverables ?? [],
+          },
+        });
+        setPendingUpdates((p) => {
+          const n = { ...p };
+          delete n[lotId];
+          return n;
+        });
+      }, 600);
+    },
+    [tenderId, projectId, updateLotMut]
+  );
+
   const updateLot = (lotId: string, updates: Partial<TenderLot>) => {
+    if (isPersistMode) {
+      const base = lots.find((l) => l.id === lotId);
+      if (!base) return;
+      const merged = { ...base, ...pendingUpdates[lotId], ...updates };
+      setPendingUpdates((p) => ({ ...p, [lotId]: { ...p[lotId], ...updates } }));
+      schedulePersist(lotId, merged);
+      return;
+    }
     handleLotsChange(lots.map(lot => lot.id === lotId ? { ...lot, ...updates } : lot));
   };
 
   const removeLot = (lotId: string) => {
+    if (isPersistMode) {
+      deleteLotMut.mutate(lotId);
+      return;
+    }
     handleLotsChange(lots.filter(lot => lot.id !== lotId));
   };
 
