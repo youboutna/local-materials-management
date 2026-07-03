@@ -131,7 +131,7 @@ const executeBankGuaranteeTaskAssignment = async (action: BankGuaranteeControlAc
         // Use the communication service to assign task
         await communicationService.assignTask({
           assigneeId: action.assigneeId,
-          assigneeName: assignee.full_name,
+          assigneeName: assignee.full_name ?? undefined,
           assigneeEmail: assignee.email || undefined,
           title: action.title,
           description: action.message,
