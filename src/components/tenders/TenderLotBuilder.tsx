@@ -152,7 +152,7 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
 
   // Debounced persistence per lot to avoid one mutation per keystroke.
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
-  const [pendingUpdates, setPendingUpdates] = useState<Record<string, Partial<TenderLot>>>({});
+  // pendingUpdates state declared above (before lots computation).
 
   useEffect(() => () => {
     Object.values(saveTimers.current).forEach(clearTimeout);
