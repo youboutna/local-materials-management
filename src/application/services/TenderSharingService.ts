@@ -105,7 +105,7 @@ export class TenderSharingService {
     file_url?: string | null;
     document_type?: string | null;
   }>> {
-    const { supabase } = await import('@/integrations/supabase/client');
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
 
     // First, look up the tender's project so we can include project-level docs.
     const { data: tenderRow } = await supabase
