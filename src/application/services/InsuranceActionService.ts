@@ -130,7 +130,7 @@ const executeInsuranceTaskAssignment = async (action: InsuranceControlAction): P
         // Use the communication service to assign task
         await communicationService.assignTask({
           assigneeId: action.assigneeId,
-          assigneeName: assignee.full_name,
+          assigneeName: assignee.full_name ?? undefined,
           assigneeEmail: assignee.email || undefined,
           title: action.title,
           description: action.message,
@@ -273,7 +273,7 @@ const executeInsuranceCommunication = async (action: InsuranceControlAction): Pr
         case 'call':
           if (employee.phone) {
             await communicationService.scheduleCall({
-              recipientId: employee.id,
+              recipientId: employee.id ?? "",
               recipientPhone: employee.phone,
               subject: action.title,
               message: action.message,
@@ -288,7 +288,7 @@ const executeInsuranceCommunication = async (action: InsuranceControlAction): Pr
 
       // Still send notification for tracking
       await NotificationService.createNotification({
-        recipient_id: employee.id,
+        recipient_id: employee.id ?? "",
         title: `📢 ${action.title}`,
         message: `Communication ${action.actionType}: ${action.message}`,
         type: 'insurance_update' as any,
