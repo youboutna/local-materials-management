@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from "@/components/ui/textarea";
 import { useStorageHex } from '@/hooks/hexagonal';
 import { useLanguage } from "@/contexts/LanguageContext";
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 
 export type TenderCategory = "administrative" | "technical" | "financial";
 export type TenderSubcategory =
