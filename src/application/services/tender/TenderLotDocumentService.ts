@@ -64,9 +64,12 @@ export class TenderLotDocumentService {
       .select('*')
       .eq('tender_id', tenderId)
       .order('created_at', { ascending: false });
+    // eslint-disable-next-line no-console
+    console.log('[TenderLotDocumentService.listByTender]', { tenderId, count: data?.length ?? 0, error, sample: data?.[0] });
     if (error) throw error;
     return (data ?? []).map(fromRow);
   }
+
 
   async create(input: CreateTenderLotDocumentInput): Promise<TenderLotDocumentRecord> {
     const { data: userData } = await rootSupabase.auth.getUser();
