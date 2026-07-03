@@ -117,12 +117,12 @@ export class TenderLotDocumentService {
   async uploadFile(tenderId: string, file: File): Promise<{ path: string; publicUrl: string }> {
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const path = `tender-lots/${tenderId}/${Date.now()}-${safeName}`;
-    const { error } = await supabase.storage.from('documents').upload(path, file, {
+    const { error } = await rootSupabase.storage.from('documents').upload(path, file, {
       cacheControl: '3600',
       upsert: false,
     });
     if (error) throw error;
-    const { data } = supabase.storage.from('documents').getPublicUrl(path);
+    const { data } = rootSupabase.storage.from('documents').getPublicUrl(path);
     return { path, publicUrl: data.publicUrl };
   }
 }
