@@ -251,18 +251,25 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
             <Button variant="outline" onClick={onClose}>
               Annuler
             </Button>
-            <Button 
+            <Button
               onClick={handleConfirmSelection}
               disabled={
-                !selectedPhase || 
-                (selectionMode !== 'phase' && !selectedStage) ||
-                (selectionMode === 'phase' && PROCUREMENT_STAGES[selectedPhase].every(stage => 
-                  isStepAlreadyAdded(selectedPhase, stage.value)
-                ))
+                selectionMode === 'single'
+                  ? !selectedPhase || !selectedStage
+                  : selectionMode === 'phase'
+                  ? !selectedPhase ||
+                    PROCUREMENT_STAGES[selectedPhase].every((stage) =>
+                      isStepAlreadyAdded(selectedPhase, stage.value)
+                    )
+                  : false
               }
             >
               <Plus className="h-4 w-4 mr-2" />
-              {selectionMode === 'phase' ? 'Ajouter la phase entière' : 'Ajouter cette Étape'}
+              {selectionMode === 'suggested'
+                ? 'Ajouter le workflow standard'
+                : selectionMode === 'phase'
+                ? 'Ajouter la phase entière'
+                : 'Ajouter cette Étape'}
             </Button>
           </div>
         </div>
