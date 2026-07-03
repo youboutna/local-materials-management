@@ -45,6 +45,12 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
   const queryClient = useQueryClient();
   const { hasRole } = useCurrentUserRoles();
   const { uploadFile, uploading } = useDocumentStorage();
+  const { data: tenderLots = [] } = useTenderLots(tenderId);
+  const lotOptions: LotOption[] = (tenderLots as any[]).map((l) => ({
+    id: l.id,
+    number: l.number ?? 1,
+    title: l.title ?? '',
+  }));
 
   // Check if user is bidder/supplier
   const isBidder = hasRole('supplier') || hasRole('agent');
