@@ -385,7 +385,7 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
               </div>
               
               <div>
-                <Label htmlFor="estimated_value">Valeur estimée (â‚¬)</Label>
+                <Label htmlFor="estimated_value">Valeur estimée (MRU)</Label>
                 <Input
                   id="estimated_value"
                   type="number"

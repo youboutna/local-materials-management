@@ -26,7 +26,7 @@ import {
   Upload,
   XCircle
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface PublicTender {
@@ -141,6 +141,40 @@ const EnhancedSupplierTenderPortal = () => {
     setAccessGrantedTenderId(tenderId);
     setSupplierEmailFromSecret(supplierEmail);
   };
+
+  // Fetch the specific tender granted by the secret code so it can be selected
+  // even if it is not listed in the public "browse" query.
+  const { data: grantedTender } = useQuery({
+    queryKey: ['granted-tender', accessGrantedTenderId],
+    queryFn: async () => {
+      if (!accessGrantedTenderId) return null;
+      const service = new TenderService();
+      const t = await service.getTenderById({ id: accessGrantedTenderId });
+      if (!t) return null;
+      return {
+        ...(t as any),
+        project_id: (t as any).projectId,
+        launch_date: (t as any).launchDate,
+        attribution_date: (t as any).attributionDate,
+        deadline_date: (t as any).deadlineDate,
+        selection_mode: (t as any).selectionMode,
+        market_type: (t as any).marketType,
+        financing_source: (t as any).financingSource,
+        project_reference: (t as any).projectReference,
+        current_phase: (t as any).currentPhase,
+        created_at: (t as any).createdAt,
+        updated_at: (t as any).updatedAt,
+      } as unknown as PublicTender;
+    },
+    enabled: !!accessGrantedTenderId,
+  });
+
+  useEffect(() => {
+    if (grantedTender && (!selectedTender || selectedTender.id !== grantedTender.id)) {
+      setSelectedTender(grantedTender);
+      setActiveTab('submit');
+    }
+  }, [grantedTender]);
 
   // Fetch public tenders for submission (published, phase 2, valid deadline)
   const { data: publicTenders, isLoading } = useQuery({
