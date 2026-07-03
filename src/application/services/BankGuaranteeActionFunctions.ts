@@ -219,7 +219,7 @@ DÉTAILS HIÉRARCHIQUES:
 - Organisation: ${primaryOrg?.organizations?.name || 'N/A'}
 - Niveau d'escalade: ${action.escalationLevel?.toUpperCase() || 'ÉQUIPE'}
 - Position destinataire: ${target.position_title}
-- Département: ${target.department}
+- Département: ${(target as any).department}
 - Niveau hiérarchique: ${target.hierarchy_level}
 
 CONTEXTE PROJET:
@@ -244,7 +244,7 @@ CONTEXTE PROJET:
           hierarchyLevel: target.hierarchy_level,
           organizationName: primaryOrg?.organizations?.name,
           targetPosition: target.position_title,
-          targetDepartment: target.department
+          targetDepartment: (target as any).department
         }
       });
     }
@@ -300,7 +300,7 @@ const executeBankGuaranteeCommunication = async (action: BankGuaranteeControlAct
     
     if (action.recipientIds && action.recipientIds.length > 0) {
       // Use specified recipients
-      const employees = projectEmployees.data?.filter(emp => action.recipientIds.includes(emp.id)) || [];
+      const employees = projectEmployees.data?.filter(emp => action.recipientIds.includes(emp.id as any)) || [];
       communicationTargets = employees.map(emp => ({
         id: emp.id,
         name: emp.full_name,
