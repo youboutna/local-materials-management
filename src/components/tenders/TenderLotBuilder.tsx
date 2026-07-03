@@ -37,6 +37,7 @@ import {
   useUpdateTenderLot,
   useDeleteTenderLot,
 } from '@/hooks/hexagonal/useTenderLotsHex';
+import TenderLotDocumentsManager from './TenderLotDocumentsManager';
 
 interface Phase {
   id: string;
