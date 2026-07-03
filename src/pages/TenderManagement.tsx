@@ -266,7 +266,7 @@ const TenderManagement = () => {
                     </TabsContent>
 
                     <TabsContent value="documents" className="mt-0">
-                      <TenderDocumentManager tenderId={selectedTender.id} />
+                      <TenderDocumentsPanel tenderId={selectedTender.id} projectId={selectedTender.projectId ?? selectedTender.project_id ?? undefined} />
                     </TabsContent>
 
                     <TabsContent value="inbox" className="mt-0">
