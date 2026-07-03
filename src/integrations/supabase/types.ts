@@ -3228,6 +3228,7 @@ export type Database = {
           file_url: string
           id: string
           lot_id: string | null
+          lot_ids: string[]
           mime_type: string | null
           tender_id: string
           title: string
@@ -3243,6 +3244,7 @@ export type Database = {
           file_url: string
           id?: string
           lot_id?: string | null
+          lot_ids?: string[]
           mime_type?: string | null
           tender_id: string
           title: string
@@ -3258,6 +3260,7 @@ export type Database = {
           file_url?: string
           id?: string
           lot_id?: string | null
+          lot_ids?: string[]
           mime_type?: string | null
           tender_id?: string
           title?: string

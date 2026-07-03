@@ -290,8 +290,10 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
               tenderId={tenderId}
               lotId={null}
               scopeLabel="Communs à tous les lots"
+              availableLots={lots.map((l) => ({ id: l.id, number: l.number, title: l.title }))}
               readOnly={readOnly}
             />
+
           </div>
         )}
 
@@ -450,8 +452,10 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
                           tenderId={tenderId}
                           lotId={lot.id}
                           scopeLabel={`Lot ${lot.number}`}
+                          availableLots={lots.map((l) => ({ id: l.id, number: l.number, title: l.title }))}
                           readOnly={readOnly}
                         />
+
                       </div>
                     )}
 
