@@ -47,9 +47,19 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
   };
 
   const handleConfirmSelection = () => {
-    if (!selectedPhase) return;
-    
-    if (selectionMode === 'phase') {
+    if (selectionMode === 'suggested') {
+      // Add all stages of every phase (full standard public-procurement workflow)
+      (Object.keys(PROCUREMENT_STAGES) as ProcurementPhase[]).forEach((phase) => {
+        PROCUREMENT_STAGES[phase].forEach((stage) => {
+          const alreadyExists = (existingSteps || []).some(
+            (s) => s.phase === phase && s.stage.value === stage.value
+          );
+          if (!alreadyExists) onSelectStep(phase, stage, []);
+        });
+      });
+    } else if (!selectedPhase) {
+      return;
+    } else if (selectionMode === 'phase') {
       // Add all stages of selected phase
       const phaseStages = PROCUREMENT_STAGES[selectedPhase];
       phaseStages.forEach((stage) => {
@@ -67,7 +77,7 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
         }
       }
     }
-    
+
     // Reset and close
     setSelectedPhase(null);
     setSelectedStage(null);
