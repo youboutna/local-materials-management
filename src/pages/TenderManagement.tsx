@@ -30,6 +30,7 @@ import { useQuery } from "@tanstack/react-query";
 import { TenderSubmissionService } from "@/application/services/TenderSubmissionService";
 import { AppLayout } from "@/components/layout";
 import { useTenders } from "@/hooks/hexagonal";
+import { useTenderLots } from "@/hooks/hexagonal/useTenderLotsHex";
 import { TenderStatusCode } from "@/config/referentials/tender/tender-workflow.referential";
 import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
 import { useToast } from "@/hooks/use-toast";
