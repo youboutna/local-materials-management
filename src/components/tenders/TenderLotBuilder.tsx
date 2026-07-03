@@ -431,6 +431,18 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
                       </div>
                     )}
 
+                    {/* Documents attachés à ce lot */}
+                    {isPersistMode && (
+                      <div className="pt-3 border-t">
+                        <TenderLotDocumentsManager
+                          tenderId={tenderId}
+                          lotId={lot.id}
+                          scopeLabel={`Lot ${lot.number}`}
+                          readOnly={readOnly}
+                        />
+                      </div>
+                    )}
+
                     {/* Actions */}
                     {!readOnly && (
                       <div className="flex justify-end pt-2 border-t">
