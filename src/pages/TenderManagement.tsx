@@ -118,10 +118,12 @@ const TenderManagement = () => {
     enabled: !!selectedTender?.id,
   });
 
+  const { data: lots = [] } = useTenderLots(selectedTender?.id ?? '');
+
   const workflowContext = useMemo(() => {
     const list = submissions as any[];
     return {
-      hasLots: false, // will be computed by service when disponible
+      hasLots: (lots as any[]).length > 0,
       hasDocuments: docsCount > 0,
       hasDeadline: !!(selectedTender?.submissionDeadline || selectedTender?.deadlineDate),
       submissionsCount: list.length,
@@ -129,7 +131,7 @@ const TenderManagement = () => {
       hasWinner: list.some((s) => s.status === 'awarded' || s.is_winner),
       contractSigned: selectedTender?.status === 'contracted' || selectedTender?.status === 'closed',
     };
-  }, [submissions, docsCount, selectedTender]);
+  }, [submissions, docsCount, selectedTender, lots]);
 
   const handleTransition = async (to: TenderStatusCode) => {
     if (!selectedTender) return;
