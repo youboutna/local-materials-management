@@ -79,15 +79,33 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
   onChange,
   readOnly = false
 }) => {
+  const isPersistMode = !externalLots && !onChange && !!tenderId;
+
+  const { data: persistedLots, isLoading: isLoadingLots } = useTenderLots(
+    isPersistMode ? tenderId : ''
+  );
+  const createLot = useCreateTenderLot(tenderId);
+  const updateLotMut = useUpdateTenderLot(tenderId);
+  const deleteLotMut = useDeleteTenderLot(tenderId);
+
   const [internalLots, setInternalLots] = useState<TenderLot[]>([]);
-  const lots = externalLots || internalLots;
-  
+  const lots: TenderLot[] = isPersistMode
+    ? (persistedLots ?? []).map((l) => ({
+        id: l.id,
+        number: l.number,
+        title: l.title,
+        description: l.description ?? undefined,
+        estimatedAmount: l.estimatedAmount ?? undefined,
+        linkedPhaseIds: l.linkedPhaseIds,
+        linkedStepIds: l.linkedStepIds,
+        requirements: l.requirements,
+        deliverables: l.deliverables,
+      }))
+    : (externalLots ?? internalLots);
+
   const handleLotsChange = (newLots: TenderLot[]) => {
-    if (onChange) {
-      onChange(newLots);
-    } else {
-      setInternalLots(newLots);
-    }
+    if (onChange) onChange(newLots);
+    else if (!isPersistMode) setInternalLots(newLots);
   };
 
   const [expandedLot, setExpandedLot] = useState<string | null>(null);
@@ -97,14 +115,30 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
   const phases: Phase[] = phasesData || [];
 
   const addLot = () => {
+    const nextNumber = lots.length + 1;
+    if (isPersistMode) {
+      createLot.mutate({
+        tenderId,
+        projectId: projectId ?? null,
+        number: nextNumber,
+        title: `Lot ${nextNumber}`,
+        description: null,
+        estimatedAmount: null,
+        linkedPhaseIds: [],
+        linkedStepIds: [],
+        requirements: [],
+        deliverables: [],
+      });
+      return;
+    }
     const newLot: TenderLot = {
       id: `lot-${Date.now()}`,
-      number: lots.length + 1,
-      title: `Lot ${lots.length + 1}`,
+      number: nextNumber,
+      title: `Lot ${nextNumber}`,
       linkedPhaseIds: [],
       linkedStepIds: [],
       requirements: [],
-      deliverables: []
+      deliverables: [],
     };
     handleLotsChange([...lots, newLot]);
     setExpandedLot(newLot.id);
