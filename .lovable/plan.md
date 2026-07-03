@@ -1,77 +1,70 @@
-# Migration schéma `btp` — plan par lots
+## Objectif
+Terminer la migration `public → btp` pour les Lots 2 à 5 (dette technique restante), en suivant la stratégie « Copie + bascule » validée pour le Lot 1.
 
-## Périmètre retenu
-- **Migrer vers `btp`** : toutes les tables métier de `public` (tender_*, project_*, inspection_*, phase_*, price_*, form_*, workflow_*, subscription_*, complaints, contact_messages, notifications, email_*, danger_reports, prospect_*, etc.).
-- **Reste en `public`** (transverse indispensable) : `profiles`, `user_roles`, `oauth_providers`, `auth_sessions`, `blocked_senders`, `system_settings`, `pharmaceutical_specialties`, `prescription_medications`, `insurance_companies`, `territories`, storage.objects, toutes les tables `fuel_stations.*` et `public.stocks`/`deliveries`/`stations_*`/`brand_*`/`national_depots` (hors périmètre BTP, module fuel).
-- **Fonctions SECURITY DEFINER** avec `SET search_path = 'public'` : mises à jour vers `'btp, public'` quand elles référencent des tables migrées.
+## Stratégie appliquée par lot
+Pour chaque table du lot :
+1. `CREATE TABLE btp.<t> (LIKE public.<t> INCLUDING ALL)` + copie des données.
+2. Recréation FK, RLS, policies, index, triggers dans `btp`.
+3. `GRANT` explicites (`authenticated`, `service_role`, `anon` si policy publique).
+4. Bascule des services applicatifs vers `btpClient` (import `schema-clients`).
+5. Refactor des fonctions SECURITY DEFINER concernées : `SET search_path = 'btp, public'`.
+6. Ajout à `supabase_realtime` pour les tables abonnées.
+7. `public.<t>` laissée en lecture seule (REVOKE writes) jusqu'à validation UI, puis `DROP` au lot suivant.
 
-## Stratégie de migration (par table)
-Pour chaque table migrée :
-```sql
--- 1. CREATE TABLE btp.<t> (LIKE public.<t> INCLUDING ALL);
--- 2. INSERT INTO btp.<t> SELECT * FROM public.<t>;
--- 3. Recréer FKs, RLS, policies, triggers, indexes en btp
--- 4. GRANT SELECT/INSERT/UPDATE/DELETE TO authenticated + ALL TO service_role
--- 5. Laisser public.<t> intacte (lecture seule via REVOKE INSERT/UPDATE/DELETE)
--- 6. Bascule code → btpClient
--- 7. Après validation utilisateur : DROP TABLE public.<t> CASCADE
-```
-Chaque lot = 1 migration approuvée + 1 batch de bascule code, testable indépendamment.
+---
 
-## Lots de migration (ordre de dépendance)
+## Lot 2 — Projects & Workflow
+**Tables** : `projects`, `project_phases`, `project_steps`, `project_milestones`, `project_comments`, `project_alerts`, `project_resources`, `project_risks`, `project_organizations`, `organizations`, `organizational_hierarchy`, `employees`, `phase_employees`, `phase_materials`, `task_dependencies`, `risk_task_relations`, `resource_assignments`, `workflow_status`.
 
-### Lot 1 — Tenders (5 tables)
-`tenders`, `tender_submissions`, `tender_document_submissions`, `tender_submission_documents`, `tender_sharing_secrets`, `tender_sharing_access_logs`, `tender_workflow_status`, `tender_suppliers`, `tender_estimates`, `tender_estimate_items`, `submission_access_logs`, `submission_activity_logs`, `document_validation_logs`.
-Services à basculer : `TenderService`, `TenderSubmissionService`, `TenderEstimateService`, `SubmissionAccessService`.
+**Fonctions refactorées** : `get_project_hierarchy`, `get_hierarchy_chain`, `get_escalation_targets`, `search_projects_autocomplete` (déjà en `search_path='public, btp'`, à basculer sur `btp` en source).
 
-### Lot 2 — Projects & Workflow (8 tables)
-`projects`, `project_phases`, `project_steps`, `project_milestones`, `project_comments`, `project_alerts`, `project_resources`, `project_risks`, `project_organizations`, `organizations`, `organizational_hierarchy`, `employees`, `phase_employees`, `phase_materials`, `task_dependencies`, `risk_task_relations`, `resource_assignments`, `workflow_status`.
-Services : `ProjectService`, `ProjectWorkflowService`, `PhaseService`, adaptateurs monitoring.
-Refactor fonctions : `get_project_hierarchy`, `get_hierarchy_chain`, `get_escalation_targets`, `search_projects_autocomplete`.
+**Services basculés** : `ProjectService`, `ProjectWorkflowService`, `PhaseService`, `WorkflowService`, `WorkflowStepService`, adaptateurs monitoring, hooks `useProjects`, `useProjectHierarchy`, `useWorkflowSteps`.
 
-### Lot 3 — Inspections & Paiements (6 tables)
-`inspection_pvs`, `inspection_documents`, `supplier_inspections`, `supplier_payments`, `supplier_payment_requests`, `payment_blocks`, `progress_invoices`, `profit_distributions`.
-Services : `InspectionService`, `PVGeneratorService`, `PaymentService`.
-Refactor fonction : `create_progress_invoice`.
+**Point d'attention** : `projects` est référencé par de nombreuses FK sortantes du Lot 1 (tenders → projects). Les FK cross-schema doivent être recréées avec le nouveau target `btp.projects`.
 
-### Lot 4 — Référentiels & Prix (5 tables)
-`price_references`, `price_calculations`, `price_revaluation_logs`, `stock_thresholds`, `stock_alerts`, `form_templates`, `escalation_thresholds`, `import_forecasts`, `supply_requests`, `distance_matrix`, `locations`.
-Services : `PriceService`, `FormTemplateService`.
+---
 
-### Lot 5 — Communication & Notifications (5 tables)
-`notifications`, `email_logs`, `email_templates`, `contact_messages`, `scheduled_calls`, `complaints`, `danger_reports`, `prospect_subscription_requests`, `subscriptions`, `supplier_notifications`, `supplier_viewed_items`, `processing_logs`.
-Services : `NotificationService`, `EmailService`, `ContactService`.
+## Lot 3 — Inspections & Paiements
+**Tables** : `inspection_pvs`, `inspection_documents`, `supplier_inspections`, `supplier_payments`, `supplier_payment_requests`, `payment_blocks`, `progress_invoices`, `profit_distributions`.
 
-## Refonte code (par lot)
-Pattern uniforme dans chaque service :
-```ts
-// avant
-import { supabase } from '@/integrations/supabase/client';
-// après
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
-// storage / auth restent sur `rootSupabase` importé séparément
-```
-Vérifier que chaque `supabase.functions.invoke()`, `supabase.auth.*`, `supabase.storage.*` utilise `rootSupabase` (non schema-scoped).
+**Fonctions refactorées** : `create_progress_invoice`, `create_supplier_payment_request` (déjà multi-schéma, à valider).
 
-## Config d'isolation
-- `VITE_BTP_SCHEMA=btp` dans `.env` (activation globale).
-- `schema-clients.ts` déjà prêt : bascule `btpClient` en un flag.
-- Types régénérés automatiquement après chaque migration approuvée.
+**Services basculés** : `InspectionService`, `PVGeneratorService`, `PaymentService`, `SupplierPaymentRepository`.
 
-## Contrôles par lot
-1. Migration SQL approuvée → types régénérés.
-2. Diff `src/integrations/supabase/types.ts` : vérifier que `btp.<table>` apparaît.
-3. Bascule code (search-replace ciblé).
-4. `tsgo` typecheck.
-5. Smoke test UI sur le module concerné.
-6. Après validation : DROP `public.<table>` dans la migration du lot suivant.
+**Point d'attention** : `PVGeneratorAdapter` utilise déjà le client par défaut pour les PVs + `btpClient` pour lookup inspection — à unifier sur `btpClient` post-migration.
 
-## Risques identifiés
-- **Fonctions SECURITY DEFINER** hardcodées sur `public.*` : à réécrire, sinon RLS/hiérarchie cassent en silence.
-- **Types TS** : `src/integrations/supabase/types.ts` régénéré → certains `as any` peuvent devenir inutiles ou incorrects.
-- **Edge Functions** : à auditer lot par lot (elles utilisent `SUPABASE_SERVICE_ROLE_KEY` + client racine).
-- **Realtime** : `ALTER PUBLICATION supabase_realtime ADD TABLE btp.<t>` requis pour chaque table utilisée en subscription.
-- **RLS avec sous-requêtes cross-schema** : `user_roles` reste en `public`, donc `has_role(auth.uid(), 'admin')` continue de marcher — vérifié.
+---
+
+## Lot 4 — Référentiels & Prix
+**Tables** : `price_references`, `price_calculations`, `price_revaluation_logs`, `stock_thresholds`, `stock_alerts`, `form_templates`, `escalation_thresholds`, `import_forecasts`, `supply_requests`, `distance_matrix`, `locations`.
+
+**Fonctions refactorées** : `get_escalation_thresholds`, `increment_template_usage`.
+
+**Services basculés** : `PriceService`, `FormTemplateService`, `LocationService`.
+
+**Note** : `stocks` reste en `public` (module fuel hors périmètre BTP).
+
+---
+
+## Lot 5 — Communication & Notifications
+**Tables** : `notifications`, `email_logs`, `email_templates`, `contact_messages`, `scheduled_calls`, `complaints`, `danger_reports`, `prospect_subscription_requests`, `subscriptions`, `supplier_notifications`, `supplier_viewed_items`, `processing_logs`.
+
+**Services basculés** : `NotificationService`, `EmailService`, `ContactService`, `ComplaintService`, `SubscriptionService`.
+
+**Point d'attention** : Edge Functions (`send-email-notification`, `send-supplier-notification`, `send-tender-*`) utilisent `SUPABASE_SERVICE_ROLE_KEY` avec client racine → doivent explicitement cibler `schema: 'btp'` dans leurs requêtes.
+
+---
+
+## Cadence de livraison
+- **1 migration SQL = 1 lot** (approbation utilisateur entre chaque).
+- Après migration approuvée : types TS régénérés, bascule code, `tsgo` typecheck, smoke test UI.
+- Après validation UI d'un lot → `DROP TABLE public.<t> CASCADE` inclus dans la migration du lot suivant.
 
 ## Livrable ce tour
-Uniquement le **Lot 1 (Tenders)** — migration + bascule services + typecheck. Les lots suivants seront lancés à votre validation du Lot 1.
+**Lot 2 uniquement** (migration SQL + bascule des services Projects/Workflow + refactor des 4 fonctions SECURITY DEFINER). Les Lots 3-5 suivront à validation.
+
+## Risques transversaux
+- **Realtime subscriptions** : chaque table utilisée en subscription doit être ajoutée à `supabase_realtime` côté `btp`.
+- **Edge Functions Lot 5** : audit obligatoire — le client `service_role` ne cible pas `btp` par défaut.
+- **Types TS** : régénération automatique après chaque migration ; certains `as any` deviendront redondants.
+- **Fonctions cross-lot** : `create_progress_invoice` (Lot 3) référence `projects` (Lot 2) → ordre d'exécution respecté.
