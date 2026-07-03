@@ -44,11 +44,13 @@ const Documents = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
+  const [selectedTenderId, setSelectedTenderId] = useState<string>("");
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   // Get projects for tender documents using hexagonal hook
   const { projects, isLoading: projectsLoading } = useProjectsHex();
+  const { data: tenders = [] } = useTenders();
 
   const documentTypes = [
     {
