@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, ExternalLink, Calendar, DollarSign, FileSignature } from 'lucide-react';
-import { useTenderHex } from '@/hooks/hexagonal';
-// AwardedTenderPreviewDialog déclenché depuis TenderManagement (nécessite estimateId gagnant).
+import { ArrowLeft, ExternalLink, Calendar, DollarSign, FileSignature, Users, FileText, KeyRound } from 'lucide-react';
+import { useTenderHex, useTenderSharingSecrets } from '@/hooks/hexagonal';
+import { useQuery } from '@tanstack/react-query';
+import { TenderSubmissionService } from '@/application/services/TenderSubmissionService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 const Field: React.FC<{ label: string; value?: React.ReactNode }> = ({ label, value }) => (
   <div>
