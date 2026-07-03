@@ -584,11 +584,32 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                         )}
 
                         <div className="flex justify-end space-x-2">
-                          {tenderDoc.document && (
-                            <Button size="sm" variant="outline">
-                              <Eye className="h-4 w-4 mr-1" />
-                              Voir
-                            </Button>
+                          {tenderDoc.document?.file_url && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => window.open(tenderDoc.document!.file_url!, '_blank')}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                Voir
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                asChild
+                              >
+                                <a
+                                  href={tenderDoc.document.file_url}
+                                  download={tenderDoc.document.file_name || undefined}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  <Download className="h-4 w-4 mr-1" />
+                                  Télécharger
+                                </a>
+                              </Button>
+                            </>
                           )}
                         </div>
                       </CardContent>
