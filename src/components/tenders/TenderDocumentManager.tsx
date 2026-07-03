@@ -16,6 +16,7 @@ import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import TenderQuantitativeEstimate from './TenderQuantitativeEstimate';
 import TenderLotDocumentsManager, { LotOption } from './TenderLotDocumentsManager';
 import { useTenderLots } from '@/hooks/hexagonal/useTenderLotsHex';
+import { useTenderLotDocuments } from '@/hooks/hexagonal/useTenderLotDocumentsHex';
 import { parsePdf, calculateAdvancedQuantities } from '@/utils/btpCalculations';
 import { TenderDocumentWithDetails } from '@/hooks/hexagonal/useTenderDocumentsHex';
 import { TENDER_CATEGORY_LABELS, TENDER_DOCUMENT_LABELS, ADMINISTRATIVE_SUBCATEGORY_GROUPS } from '@/dtos';
