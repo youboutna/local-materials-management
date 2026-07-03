@@ -70,11 +70,13 @@ export class TenderLotDocumentService {
 
   async create(input: CreateTenderLotDocumentInput): Promise<TenderLotDocumentRecord> {
     const { data: userData } = await rootSupabase.auth.getUser();
+    const lotIds = (input.lotIds ?? (input.lotId ? [input.lotId] : [])).filter(Boolean);
     const { data, error } = await supabase
       .from('tender_lot_documents' as any)
       .insert({
         tender_id: input.tenderId,
-        lot_id: input.lotId,
+        lot_id: lotIds[0] ?? null,
+        lot_ids: lotIds,
         title: input.title,
         description: input.description ?? null,
         category: input.category ?? null,
@@ -92,7 +94,14 @@ export class TenderLotDocumentService {
 
   async update(id: string, updates: Partial<Omit<TenderLotDocumentRecord, 'id' | 'tenderId' | 'createdAt' | 'updatedAt'>>): Promise<TenderLotDocumentRecord> {
     const row: any = {};
-    if (updates.lotId !== undefined) row.lot_id = updates.lotId;
+    if (updates.lotIds !== undefined) {
+      const ids = (updates.lotIds ?? []).filter(Boolean);
+      row.lot_ids = ids;
+      row.lot_id = ids[0] ?? null;
+    } else if (updates.lotId !== undefined) {
+      row.lot_id = updates.lotId;
+      row.lot_ids = updates.lotId ? [updates.lotId] : [];
+    }
     if (updates.title !== undefined) row.title = updates.title;
     if (updates.description !== undefined) row.description = updates.description;
     if (updates.category !== undefined) row.category = updates.category;
@@ -109,6 +118,7 @@ export class TenderLotDocumentService {
     if (error) throw error;
     return fromRow(data);
   }
+
 
   async delete(id: string): Promise<void> {
     const { error } = await supabase
