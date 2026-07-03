@@ -31,8 +31,12 @@ import DocumentUpload from "@/components/documents/DocumentUpload";
 import DocumentViewer from "@/components/documents/DocumentViewer";
 import TenderDocuments from "@/components/documents/TenderDocuments";
 import TenderDocumentUploadForm from "@/components/documents/TenderDocumentUploadForm";
+import TenderDocumentManager from "@/components/tenders/TenderDocumentManager";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useProjectsHex } from "@/hooks/hexagonal";
+import { useProjectsHex, useTenders } from "@/hooks/hexagonal";
+import { Button } from "@/components/ui/button";
+import { ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
 import { AppLayout } from "@/components/layout";
 
 const Documents = () => {
