@@ -136,12 +136,60 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
     enabled: !!tenderId,
   });
 
+  const { data: lotDocsRaw = [] } = useTenderLotDocuments(tenderId);
+
   const isLoading = isTenderDocsLoading || isWorkflowDocsLoading;
 
-  // Combine all documents
+  // Normalize lot document category (may be French label or key) to canonical category
+  const normalizeCategory = (cat: string | null | undefined): TenderDocumentCategory | null => {
+    if (!cat) return null;
+    const c = cat.toLowerCase().trim();
+    if (c.startsWith('admin')) return 'administrative';
+    if (c.startsWith('tech')) return 'technical';
+    if (c.startsWith('fin')) return 'financial';
+    if (c === 'administrative' || c === 'technical' || c === 'financial') return c as TenderDocumentCategory;
+    return null;
+  };
+
+  const lotDocumentsAsTenderDocs = (lotDocsRaw as any[]).map((d) => {
+    const lotLabel = d.lotId
+      ? (() => {
+          const lot = lotOptions.find((l) => l.id === d.lotId);
+          return lot ? `Lot ${lot.number} — ${lot.title}` : 'Lot';
+        })()
+      : 'Communs à tous les lots';
+    return {
+      id: `lot-${d.id}`,
+      tender_id: d.tenderId,
+      document_id: d.id,
+      category: (normalizeCategory(d.category) ?? 'administrative') as TenderDocumentCategory,
+      subcategory: 'workflow_step' as any,
+      is_required: false,
+      reviewer_notes: null,
+      status: 'pending' as any,
+      created_at: d.createdAt,
+      updated_at: d.updatedAt,
+      document: {
+        id: d.id,
+        title: d.title,
+        description: d.description,
+        file_url: d.fileUrl,
+        file_name: d.fileName,
+        mime_type: d.mimeType,
+        file_size: d.fileSize,
+      },
+      step_info: {
+        step_title: lotLabel,
+        step_number: '',
+      },
+    } as TenderDocumentWithDetails;
+  });
+
+  // Combine all documents (tender-level + workflow steps + lot documents)
   const allDocuments = [
     ...(tenderDocuments || []),
-    ...(workflowStepDocuments || [])
+    ...(workflowStepDocuments || []),
+    ...lotDocumentsAsTenderDocs,
   ];
 
   // Updated upload document mutation to use tender_id
