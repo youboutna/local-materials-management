@@ -8,9 +8,9 @@ import { DocumentService } from '@/application/services/DocumentService';
 import { DocumentType } from '@/domain/entities/Document';
 import type { CreateDocumentDTO } from '@/dtos/entities/DocumentDTO';
 type CreateDocumentRequestDto = CreateDocumentDTO;
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/useNotifications';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PhaseWorkflowContainerProps {
   projectId: string;

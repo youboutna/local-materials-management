@@ -7,10 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { MAURITANIA_REGIONS, OperationalStatus } from '@/utils/mauritania';
 import { GeographicUnit } from '@/utils/mauritania';
 import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface WorkspaceCreateDialogProps {
   selectedRegion?: string;

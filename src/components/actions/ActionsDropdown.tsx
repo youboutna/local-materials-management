@@ -2,10 +2,10 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { Download, FileText, Mail, Phone, Send, Settings, Shield, Users } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { ActionFormData, ActionFormDialog } from './ActionFormDialog';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ActionsDropdownProps {
   entityType: 'bank_guarantee' | 'inspection' | 'insurance' | 'payment' | 'project';

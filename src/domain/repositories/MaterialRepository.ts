@@ -1,4 +1,3 @@
-import { supabase } from '@/integrations/supabase/client';
 import { MaterialDTO as MaterialEntity } from '@/dtos/entities/MaterialDTO';
 
 // Local type for project_materials table rows
@@ -10,6 +9,7 @@ interface ProjectMaterialEntity {
   [key: string]: unknown;
 }
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { supabase } from '@/integrations/supabase/client';
 
 export class MaterialRepository {
   static async getAllMaterials(): Promise<MaterialEntity[]> {

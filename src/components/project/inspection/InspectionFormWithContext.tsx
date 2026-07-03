@@ -18,7 +18,6 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 type InspectionStatusLocal = 'approved' | 'requires_changes' | 'rejected' | 'pending';
 import { InspectorSelector } from '@/components/selectors/InspectorSelector';
 import { useInspectionActionContext } from '@/hooks/useCheckpointActionContext';
@@ -29,6 +28,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { NotificationService } from '@/application/services/NotificationService';
+import { supabase } from '@/integrations/supabase/client';
 
 // Types d'inspection harmonisés avec AdvancedInspectionScheduler
 const INSPECTION_TYPES = [

@@ -9,8 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Upload, FileText, Loader2 } from 'lucide-react';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { useAuth } from '@/contexts/use-auth';
-import { supabase } from '@/integrations/supabase/client';
 import type { SupplierDTO as Supplier } from '@/dtos/entities/SupplierDTO';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SupplierDocumentUploadProps {
   supplier: Supplier;

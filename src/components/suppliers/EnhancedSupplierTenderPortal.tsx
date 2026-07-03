@@ -14,7 +14,6 @@ import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { useAuth } from '@/hooks/hexagonal';
 import { TenderService } from '@/application/services/TenderService';
 import { TenderSubmissionService, UploadedDocument } from '@/application/services/TenderSubmissionService';
-import { supabase } from '@/integrations/supabase/client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Calculator,
@@ -28,6 +27,7 @@ import {
   XCircle
 } from 'lucide-react';
 import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PublicTender {
   id: string;

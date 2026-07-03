@@ -1,5 +1,5 @@
-// Repository pattern for Tender CRUD operations
 import { supabase } from '@/integrations/supabase/client';
+// Repository pattern for Tender CRUD operations
 
 // Use raw DB types instead of camelCase DTOs for direct Supabase access
 type TenderRow = Record<string, unknown> & { id: string; created_at: string; updated_at: string };

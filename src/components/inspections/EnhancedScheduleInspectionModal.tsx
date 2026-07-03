@@ -12,7 +12,6 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, FileText, Calendar, CheckCircle2, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 
 import {
   InspectionTypeStep,

@@ -3,7 +3,6 @@ import { Plus, Shield, AlertTriangle, Eye, Edit, Trash2, Bell, CheckCircle, File
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -31,6 +30,7 @@ import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import UserSelector from '@/components/selectors/UserSelector';
 import { ActionsDropdown } from '@/components/actions/ActionsDropdown';
+import { supabase } from '@/integrations/supabase/client';
 
 const insuranceFormSchema = z.object({
   projectId: z.string().min(1, 'Project ID requis'),

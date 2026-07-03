@@ -7,8 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/hexagonal';
-import { supabase } from '@/integrations/supabase/client';
 import * as XLSX from 'xlsx';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ImportedTender {
   ordre: number;

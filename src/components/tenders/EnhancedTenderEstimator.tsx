@@ -1,6 +1,5 @@
 import React, { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -16,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import AdvancedQuantityCalculator from '@/components/project/AdvancedQuantityCalculator';
 import { calculateAdvancedQuantities } from '@/utils/btpCalculations';
+import { supabase } from '@/integrations/supabase/client';
 
 interface EnhancedTenderEstimatorProps {
   tenderId: string;

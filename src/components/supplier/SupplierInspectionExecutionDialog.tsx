@@ -12,7 +12,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { DocumentService } from '@/application/services/DocumentService';
 import { StorageFactory } from '@/application/services/StorageFactory';
 import { InspectionService } from '@/application/services/InspectionService';
@@ -21,6 +20,7 @@ import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 import { Upload, FileText, X, CheckCircle } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { SupplierPaymentService } from '@/application/services/SupplierPaymentService';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SupplierInspectionExecutionDialogProps {
   inspection: InspectionDTO | null;

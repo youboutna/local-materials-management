@@ -44,8 +44,8 @@ import EmployeeSelector from '@/components/selectors/EmployeeSelector';
 import { ProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
 import { useProjectHierarchy } from '@/hooks/useProjectHierarchy';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Phase {
   id: string;
