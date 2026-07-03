@@ -650,6 +650,48 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         </CardContent>
       </Card>
 
+      {/* Documents attachés aux lots */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-terracotta-600" />
+            Documents des lots
+            <Badge variant="outline" className="ml-2">{lotOptions.length} lot(s)</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div>
+            <h4 className="text-sm font-semibold mb-2">Communs à tous les lots</h4>
+            <TenderLotDocumentsManager
+              tenderId={tenderId}
+              lotId={null}
+              scopeLabel="Communs à tous les lots"
+              availableLots={lotOptions}
+              readOnly={readonly}
+            />
+          </div>
+          {lotOptions.map((lot) => (
+            <div key={lot.id}>
+              <h4 className="text-sm font-semibold mb-2">
+                Lot {lot.number} — {lot.title}
+              </h4>
+              <TenderLotDocumentsManager
+                tenderId={tenderId}
+                lotId={lot.id}
+                scopeLabel={`Lot ${lot.number} — ${lot.title}`}
+                availableLots={lotOptions}
+                readOnly={readonly}
+              />
+            </div>
+          ))}
+          {lotOptions.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Aucun lot défini pour cet appel d'offres. Ajoutez des lots pour attacher des documents spécifiques.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Upload Dialog */}
       <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
         <DialogContent className="max-w-md">
