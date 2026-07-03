@@ -27,7 +27,7 @@
 import { supabase } from './client';
 
 /** Schéma BTP par défaut codé en dur (utilisé si l'env n'est pas défini). */
-const DEFAULT_BTP_SCHEMA = 'public';
+const DEFAULT_BTP_SCHEMA = 'btp';
 
 /** Schémas connus de l'écosystème Supabase multi-projets. Pour documentation. */
 export const SCHEMAS = {
