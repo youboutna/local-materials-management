@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { supabase as publicClient } from '@/integrations/supabase/client';
