@@ -117,7 +117,7 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
           {/* Selection Mode Toggle */}
           <div className="space-y-3">
             <label className="text-sm font-medium">Mode de sélection</label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 className={`px-3 py-1 rounded text-sm ${selectionMode === 'single' ? 'bg-adrar-800 text-white' : 'bg-gray-100'}`}
@@ -132,54 +132,71 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
               >
                 Phase entière
               </button>
+              <button
+                type="button"
+                className={`px-3 py-1 rounded text-sm ${selectionMode === 'suggested' ? 'bg-adrar-800 text-white' : 'bg-gray-100'}`}
+                onClick={() => setSelectionMode('suggested')}
+                title="Ajouter les 5 phases standards de la commande publique"
+              >
+                Workflow standard complet
+              </button>
             </div>
+            {selectionMode === 'suggested' && (
+              <p className="text-xs text-gray-600">
+                Toutes les phases (Planification → Publicité → Réception & Analyse → Attribution → Contrôle & Régulation) seront ajoutées dans l'ordre réglementaire.
+              </p>
+            )}
           </div>
-          
+
           {/* Phases and Stages */}
           <div className="space-y-6">
-            {procurementPhaseKeys.map((phase) => {
+            {procurementPhaseKeys.map((phase, phaseIndex) => {
               const phaseStages = PROCUREMENT_STAGES[phase];
+              const isPhaseSelected = selectionMode === 'phase' && selectedPhase === phase;
               return (
                 <div key={phase} className="space-y-3">
-                  <h3 className="text-lg font-semibold text-adrar-800 border-b pb-2">
-                    {PROCUREMENT_PHASE_LABELS[phase]}
-                  </h3>
-                  
+                  <div
+                    className={`flex items-center justify-between border-b pb-2 ${selectionMode === 'phase' ? 'cursor-pointer' : ''}`}
+                    onClick={() => selectionMode === 'phase' && setSelectedPhase(phase)}
+                  >
+                    <h3 className={`text-lg font-semibold ${isPhaseSelected ? 'text-terracotta-600' : 'text-adrar-800'}`}>
+                      Phase {phaseIndex + 1} — {PROCUREMENT_PHASE_LABELS[phase]}
+                    </h3>
+                    <Badge variant="outline" className="text-xs">
+                      {phaseStages.length} étape{phaseStages.length > 1 ? 's' : ''}
+                    </Badge>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {phaseStages.map((stage) => {
+                    {phaseStages.map((stage, stageIndex) => {
                       const isAlreadyAdded = isStepAlreadyAdded(phase, stage.value);
                       const isSelected = selectedPhase === phase && selectedStage?.value === stage.value;
-                      
+                      const disabled = selectionMode === 'suggested' || isAlreadyAdded;
+
                       return (
-                        <Card 
-                          key={stage.value} 
-                          className={`cursor-pointer transition-all ${
+                        <Card
+                          key={stage.value}
+                          className={`transition-all ${
                             isSelected ? 'ring-2 ring-terracotta-500' : ''
-                          } ${isAlreadyAdded ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md'}`}
-                          onClick={() => !isAlreadyAdded && handleSelectStage(phase, stage)}
+                          } ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:shadow-md'}`}
+                          onClick={() => !disabled && selectionMode !== 'phase' && handleSelectStage(phase, stage)}
                         >
                           <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between">
-                              <CardTitle className="text-base">
+                            <div className="flex items-center justify-between gap-2">
+                              <CardTitle className="text-sm">
+                                <span className="text-muted-foreground mr-1">
+                                  {phaseIndex + 1}.{stageIndex + 1}
+                                </span>
                                 {stage.label}
                               </CardTitle>
                               {isAlreadyAdded && (
-                                <Badge variant="secondary" className="flex items-center gap-1">
+                                <Badge variant="secondary" className="flex items-center gap-1 shrink-0">
                                   <CheckCircle className="h-3 w-3" />
                                   Ajoutée
                                 </Badge>
                               )}
                             </div>
                           </CardHeader>
-                          
-                          <CardContent className="pt-0">
-                            <p className="text-sm text-gray-600">
-                              Phase: {PROCUREMENT_PHASE_LABELS[phase]}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-2">
-                              ID: {stage.value}
-                            </p>
-                          </CardContent>
                         </Card>
                       );
                     })}
