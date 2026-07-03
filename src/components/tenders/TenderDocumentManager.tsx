@@ -182,7 +182,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         step_title: lotLabel,
         step_number: '',
       },
-    } as TenderDocumentWithDetails;
+    } as unknown as TenderDocumentWithDetails;
   });
 
   // Combine all documents (tender-level + workflow steps + lot documents)
