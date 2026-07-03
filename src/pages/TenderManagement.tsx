@@ -16,7 +16,7 @@ import {
   Layers,
 } from "lucide-react";
 import TenderCrud from "@/components/tenders/TenderCrud";
-import TenderDocumentManager from "@/components/tenders/TenderDocumentManager";
+import TenderDocumentsPanel from "@/components/tenders/TenderDocumentsPanel";
 import TenderLotBuilder from "@/components/tenders/TenderLotBuilder";
 import TenderProjectPhases from "@/components/tenders/TenderProjectPhases";
 import { TenderTimelineCard } from "@/components/tenders/TenderTimelineCard";
@@ -266,7 +266,7 @@ const TenderManagement = () => {
                     </TabsContent>
 
                     <TabsContent value="documents" className="mt-0">
-                      <TenderDocumentManager tenderId={selectedTender.id} />
+                      <TenderDocumentsPanel tenderId={selectedTender.id} projectId={selectedTender.projectId ?? selectedTender.project_id ?? undefined} />
                     </TabsContent>
 
                     <TabsContent value="inbox" className="mt-0">

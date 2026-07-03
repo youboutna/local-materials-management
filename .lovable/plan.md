@@ -1,70 +1,129 @@
+
+# Refonte Module Documents — GED composable
+
+## Constat
+
+Le dossier `src/components/documents/` mélange 13 fichiers hétéroclites (list, upload, viewer, filtres, mais aussi `EmployeeManagement`, `SuppliersManagement`, `TaskAssignments`…). Chaque module (Projet, Matériaux, Tender, Fournisseurs) réimplémente sa propre logique d'affichage/upload de docs. Résultat : incohérence visuelle, duplication, régressions à chaque évolution.
+
 ## Objectif
-Terminer la migration `public → btp` pour les Lots 2 à 5 (dette technique restante), en suivant la stratégie « Copie + bascule » validée pour le Lot 1.
 
-## Stratégie appliquée par lot
-Pour chaque table du lot :
-1. `CREATE TABLE btp.<t> (LIKE public.<t> INCLUDING ALL)` + copie des données.
-2. Recréation FK, RLS, policies, index, triggers dans `btp`.
-3. `GRANT` explicites (`authenticated`, `service_role`, `anon` si policy publique).
-4. Bascule des services applicatifs vers `btpClient` (import `schema-clients`).
-5. Refactor des fonctions SECURITY DEFINER concernées : `SET search_path = 'btp, public'`.
-6. Ajout à `supabase_realtime` pour les tables abonnées.
-7. `public.<t>` laissée en lecture seule (REVOKE writes) jusqu'à validation UI, puis `DROP` au lot suivant.
+Un **module Documents générique, moderne, composable** — cœur commun `DocumentHub` — et des **adaptateurs par domaine** (Project, Material, Tender, Supplier, Inspection) qui déclarent leurs specificités.
 
----
+## Architecture
 
-## Lot 2 — Projects & Workflow
-**Tables** : `projects`, `project_phases`, `project_steps`, `project_milestones`, `project_comments`, `project_alerts`, `project_resources`, `project_risks`, `project_organizations`, `organizations`, `organizational_hierarchy`, `employees`, `phase_employees`, `phase_materials`, `task_dependencies`, `risk_task_relations`, `resource_assignments`, `workflow_status`.
+```text
+src/components/documents/
+├── hub/                          ← cœur réutilisable
+│   ├── DocumentHub.tsx           ← composant principal, orchestré par un contrat
+│   ├── DocumentHubToolbar.tsx    ← search, tri, view toggle, actions
+│   ├── DocumentHubSidebar.tsx    ← filtres dynamiques (facets)
+│   ├── DocumentHubGrid.tsx       ← vue cartes
+│   ├── DocumentHubTable.tsx      ← vue tableau
+│   ├── DocumentHubPreview.tsx    ← drawer aperçu PDF/image/office
+│   ├── DocumentHubUpload.tsx     ← dialog upload drag-drop
+│   ├── DocumentHubEmpty.tsx      ← empty state
+│   └── types.ts                  ← DocumentItem, DocumentSource, HubContract
+├── adapters/                     ← spécialisation par domaine
+│   ├── projectDocumentAdapter.ts
+│   ├── materialDocumentAdapter.ts
+│   ├── tenderDocumentAdapter.ts   ← fusionne tender + lots + workflow steps
+│   ├── supplierDocumentAdapter.ts
+│   └── inspectionDocumentAdapter.ts
+└── legacy/                       ← anciens composants isolés, remplacés progressivement
+```
 
-**Fonctions refactorées** : `get_project_hierarchy`, `get_hierarchy_chain`, `get_escalation_targets`, `search_projects_autocomplete` (déjà en `search_path='public, btp'`, à basculer sur `btp` en source).
+### Contrat unique `DocumentHubContract`
 
-**Services basculés** : `ProjectService`, `ProjectWorkflowService`, `PhaseService`, `WorkflowService`, `WorkflowStepService`, adaptateurs monitoring, hooks `useProjects`, `useProjectHierarchy`, `useWorkflowSteps`.
+Chaque domaine expose un objet qui décrit ses spécificités :
 
-**Point d'attention** : `projects` est référencé par de nombreuses FK sortantes du Lot 1 (tenders → projects). Les FK cross-schema doivent être recréées avec le nouveau target `btp.projects`.
+```ts
+export type DocumentItem = {
+  id: string;
+  title: string;
+  fileName: string | null;
+  fileUrl: string | null;
+  mimeType: string | null;
+  fileSize: number | null;
+  createdAt: string;
+  updatedAt: string;
+  category: string | null;          // clé neutre
+  status: string | null;
+  facets: Record<string, string | null>; // ex. { lot: "Lot 1", scope: "commun" }
+  raw: unknown;
+};
 
----
+export type DocumentFacetDef = {
+  key: string;                      // "category" | "lot" | "phase" | "status" | "mime"
+  label: string;
+  options: { value: string; label: string; count?: number }[];
+};
 
-## Lot 3 — Inspections & Paiements
-**Tables** : `inspection_pvs`, `inspection_documents`, `supplier_inspections`, `supplier_payments`, `supplier_payment_requests`, `payment_blocks`, `progress_invoices`, `profit_distributions`.
+export type DocumentHubContract = {
+  scopeLabel: string;               // "Documents du projet X"
+  useDocuments: () => { data: DocumentItem[]; isLoading: boolean; refetch: () => void };
+  facets: DocumentFacetDef[];       // filtres à afficher dans la sidebar
+  categoryLabels: Record<string, string>;
+  canUpload: boolean;
+  onUpload?: (input: UploadInput) => Promise<void>;
+  onDelete?: (item: DocumentItem) => Promise<void>;
+  onUpdate?: (item: DocumentItem, patch: Partial<DocumentItem>) => Promise<void>;
+  extraUploadFields?: React.ReactNode; // ex. sélecteur de lot pour Tender
+};
+```
 
-**Fonctions refactorées** : `create_progress_invoice`, `create_supplier_payment_request` (déjà multi-schéma, à valider).
+`DocumentHub` consomme uniquement ce contrat — il ne connaît ni Supabase ni les tables spécifiques.
 
-**Services basculés** : `InspectionService`, `PVGeneratorService`, `PaymentService`, `SupplierPaymentRepository`.
+### Adaptateurs
 
-**Point d'attention** : `PVGeneratorAdapter` utilise déjà le client par défaut pour les PVs + `btpClient` pour lookup inspection — à unifier sur `btpClient` post-migration.
+- **`projectDocumentAdapter(projectId)`** — lit `documents` filtré `project_id`, facets = catégorie/phase/statut/mime.
+- **`materialDocumentAdapter(materialId)`** — lit docs matériaux (fiches techniques, certificats), facets = type/statut/mime.
+- **`tenderDocumentAdapter(tenderId)`** — fusionne `tender_documents` + `tender_lot_documents` + `tender_step_documents` en une seule liste, ajoute facet **Lot** ("Communs" / "Lot 1" / "Lot 2"…) et facet **Portée** (Global / Lot / Étape). `extraUploadFields` = sélecteur Portée + Lot.
+- **`supplierDocumentAdapter(supplierId)`** — docs fournisseurs (RC, agréments, assurances).
+- **`inspectionDocumentAdapter(inspectionId)`** — PVs et pièces jointes d'inspection.
 
----
+## Fonctionnalités du Hub (toutes gratuites pour tout domaine)
 
-## Lot 4 — Référentiels & Prix
-**Tables** : `price_references`, `price_calculations`, `price_revaluation_logs`, `stock_thresholds`, `stock_alerts`, `form_templates`, `escalation_thresholds`, `import_forecasts`, `supply_requests`, `distance_matrix`, `locations`.
+- **Toolbar** : recherche (titre/nom fichier), tri (date, nom, taille), bascule Grille/Tableau, bouton "Ajouter"
+- **Sidebar de filtres** générée depuis `facets` avec compteurs live
+- **Vue Grille** : carte avec icône type MIME, titre, badges (catégorie + facets clés), taille, date, actions rapides (Voir / Télécharger / ⋯)
+- **Vue Tableau** : colonnes triables Nom, Catégorie, [Facets], Taille, Ajouté le, Actions
+- **Panneau d'aperçu (Sheet)** : PDF inline via `<iframe>`, image via `<img>`, autres → CTA téléchargement ; métadonnées + actions (télécharger, remplacer, supprimer, changer catégorie)
+- **Upload dialog** : drag-drop, aperçu fichier, catégorie + `extraUploadFields` propres au domaine
+- **Empty state** unifié
+- **Multi-sélection** (checkbox) pour actions groupées : téléchargement zip, suppression, changement de catégorie
+- **URL state** : filtres/vue persistés en `?facet=…&view=grid`
 
-**Fonctions refactorées** : `get_escalation_thresholds`, `increment_template_usage`.
+## Design
 
-**Services basculés** : `PriceService`, `FormTemplateService`, `LocationService`.
+- Design tokens sémantiques (aucun `text-white`, `bg-black`, `#hex`) — cohérent avec le reste de l'app
+- Motion léger (`framer-motion`) : fade + rise sur les cartes, slide sur le drawer
+- Icônes MIME dédiées (`FileText`, `FileImage`, `FileSpreadsheet`, `File`)
+- Layout responsive : sidebar → drawer sur mobile
+- Densité maîtrisée, respiration, hover states nets
 
-**Note** : `stocks` reste en `public` (module fuel hors périmètre BTP).
+## Migration progressive
 
----
+1. **Livraison 1** (cette PR) : `hub/` + `tenderDocumentAdapter` + branchement dans l'onglet Docs du module Tender (`TenderManagement.tsx` → `<DocumentHub contract={tenderDocumentAdapter(tenderId)} />`). Vérification : les 2 documents Lot 1 / Lot 2 (`administrative`) apparaissent dans la grille, filtrables par lot + catégorie, aperçu PDF fonctionnel.
+2. **Livraison 2** : `projectDocumentAdapter` + branchement dans `ProjectDetail` (onglet Documents) et `PhaseDocuments`.
+3. **Livraison 3** : `materialDocumentAdapter`, `supplierDocumentAdapter`, `inspectionDocumentAdapter`, refonte de la page `/documents` en Hub agrégé (multi-scope).
+4. **Livraison 4** : suppression des anciens composants (`DocumentsList`, `DocumentsListPaginated`, `DocumentUpload`, `DocumentViewer`, `TenderDocumentManager`, `TenderLotDocumentsManager`, `DocumentSection`) une fois tous les consommateurs migrés.
 
-## Lot 5 — Communication & Notifications
-**Tables** : `notifications`, `email_logs`, `email_templates`, `contact_messages`, `scheduled_calls`, `complaints`, `danger_reports`, `prospect_subscription_requests`, `subscriptions`, `supplier_notifications`, `supplier_viewed_items`, `processing_logs`.
+## Détails techniques
 
-**Services basculés** : `NotificationService`, `EmailService`, `ContactService`, `ComplaintService`, `SubscriptionService`.
+- Aperçu PDF : `<iframe src={fileUrl} className="h-full w-full" />` dans un `Sheet` shadcn (side="right", width ≈ 50%).
+- Aperçu image : `<img src={fileUrl} />`.
+- Détection MIME → catégorie de rendu via helper `getPreviewKind(mime)`.
+- Formatage taille via `formatBytes`.
+- Upload : réutilise `useDocumentStorage` existant pour le bucket `documents`.
+- Aucune migration DB nécessaire pour la livraison 1. Les adaptateurs suivants pourront exiger des GRANT/policies additionnels — traités le moment venu.
+- Tests visuels manuels : après la livraison 1, on ouvre le tender `d990d28a-…`, on vérifie que les 2 docs Lot 1/Lot 2 apparaissent, filtres et aperçu OK.
 
-**Point d'attention** : Edge Functions (`send-email-notification`, `send-supplier-notification`, `send-tender-*`) utilisent `SUPABASE_SERVICE_ROLE_KEY` avec client racine → doivent explicitement cibler `schema: 'btp'` dans leurs requêtes.
+## Impact code livraison 1
 
----
+- **Nouveau** : `src/components/documents/hub/*` (~8 fichiers) + `src/components/documents/adapters/tenderDocumentAdapter.ts`
+- **Modifié** : `src/pages/TenderManagement.tsx` — remplace `<TenderDocumentManager />` par `<DocumentHub contract={tenderDocumentAdapter(...)} />` dans l'onglet Docs
+- **Conservé** intact : tout le reste (les livraisons suivantes migreront les autres modules)
 
-## Cadence de livraison
-- **1 migration SQL = 1 lot** (approbation utilisateur entre chaque).
-- Après migration approuvée : types TS régénérés, bascule code, `tsgo` typecheck, smoke test UI.
-- Après validation UI d'un lot → `DROP TABLE public.<t> CASCADE` inclus dans la migration du lot suivant.
+## Livraison
 
-## Livrable ce tour
-**Lot 2 uniquement** (migration SQL + bascule des services Projects/Workflow + refactor des 4 fonctions SECURITY DEFINER). Les Lots 3-5 suivront à validation.
-
-## Risques transversaux
-- **Realtime subscriptions** : chaque table utilisée en subscription doit être ajoutée à `supabase_realtime` côté `btp`.
-- **Edge Functions Lot 5** : audit obligatoire — le client `service_role` ne cible pas `btp` par défaut.
-- **Types TS** : régénération automatique après chaque migration ; certains `as any` deviendront redondants.
-- **Fonctions cross-lot** : `create_progress_invoice` (Lot 3) référence `projects` (Lot 2) → ordre d'exécution respecté.
+Je livre la **Livraison 1** en une PR. Les livraisons 2-4 seront enchaînées après validation UX de la 1.
