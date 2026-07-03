@@ -23,6 +23,7 @@ import {
   SUGGESTED_DOCUMENTS
 } from './PublicProcurementWorkflow';
 import ProcurementStepSelector from './ProcurementStepSelector';
+import { TenderListView } from './TenderListView';
 import {
   useTenders,
   useProjectsForTenders,
