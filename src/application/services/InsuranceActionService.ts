@@ -154,7 +154,7 @@ const executeInsuranceTaskAssignment = async (action: InsuranceControlAction): P
         recipient_id: action.assigneeId,
         title: `Tâche assurance: ${action.title}`,
         message: action.message,
-        type: 'task_assigned',
+        type: 'task_assigned' as any,
         related_id: action.insuranceId,
         metadata: {
           actionId: action.id,
@@ -174,7 +174,7 @@ const executeInsuranceTaskAssignment = async (action: InsuranceControlAction): P
         recipient_id: recipientId,
         title: `Nouvelle tâche d'assurance assignée`,
         message: `Une tâche d'assurance a été assignée: ${action.title}`,
-        type: 'insurance_expiry',
+        type: 'insurance_expiry' as any,
         related_id: action.insuranceId,
         metadata: {
           actionId: action.id,
@@ -211,7 +211,7 @@ const executeInsuranceHierarchyNotification = async (action: InsuranceControlAct
         recipient_id: target.employee_id,
         title: escalationTitles[action.escalationLevel || 'team'],
         message: `${action.message}\n\nAssurance: ${action.insuranceId}\nProjet: ${action.projectId}\nNiveau: ${target.hierarchy_level}`,
-        type: 'insurance_expiry',
+        type: 'insurance_expiry' as any,
         related_id: action.insuranceId,
         metadata: {
           actionId: action.id,
@@ -291,7 +291,7 @@ const executeInsuranceCommunication = async (action: InsuranceControlAction): Pr
         recipient_id: employee.id,
         title: `📢 ${action.title}`,
         message: `Communication ${action.actionType}: ${action.message}`,
-        type: 'insurance_update',
+        type: 'insurance_update' as any,
         related_id: action.insuranceId,
         metadata: {
           actionId: action.id,

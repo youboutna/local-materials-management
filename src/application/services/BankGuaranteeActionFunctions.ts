@@ -155,7 +155,7 @@ const executeBankGuaranteeTaskAssignment = async (action: BankGuaranteeControlAc
         recipient_id: action.assigneeId,
         title: `Tâche garantie bancaire: ${action.title}`,
         message: action.message,
-        type: 'task_assigned',
+        type: 'task_assigned' as any,
         related_id: action.projectId,
         metadata: {
           actionId: action.id,
@@ -175,7 +175,7 @@ const executeBankGuaranteeTaskAssignment = async (action: BankGuaranteeControlAc
         recipient_id: recipientId,
         title: `Nouvelle tâche garantie bancaire assignée`,
         message: `Une tâche a été assignée pour gérer la garantie bancaire: ${action.title}`,
-        type: 'bank_guarantee_trigger',
+        type: 'bank_guarantee_trigger' as any,
         related_id: action.projectId,
         metadata: {
           actionId: action.id,
@@ -232,7 +232,7 @@ CONTEXTE PROJET:
         recipient_id: target.employee_id,
         title: escalationTitles[action.escalationLevel || 'team'],
         message: hierarchyMessage,
-        type: 'bank_guarantee_trigger',
+        type: 'bank_guarantee_trigger' as any,
         related_id: action.projectId,
         metadata: {
           actionId: action.id,
@@ -258,7 +258,7 @@ CONTEXTE PROJET:
         recipient_id: recipientId,
         title: `Escalade Garantie Bancaire - ${action.title}`,
         message: action.message,
-        type: 'bank_guarantee_trigger',
+        type: 'bank_guarantee_trigger' as any,
         related_id: action.projectId,
         metadata: {
           actionId: action.id,
@@ -403,7 +403,7 @@ PROJET: ${action.metadata?.project?.title || action.projectId}
         recipient_id: target.id,
         title: `📢 ${action.title}`,
         message: `Communication ${action.actionType}: ${action.message}`,
-        type: 'bank_guarantee_trigger',
+        type: 'bank_guarantee_trigger' as any,
         related_id: action.projectId,
         metadata: {
           actionId: action.id,
