@@ -131,7 +131,7 @@ const executeBankGuaranteeTaskAssignment = async (action: BankGuaranteeControlAc
         // Use the communication service to assign task
         await communicationService.assignTask({
           assigneeId: action.assigneeId,
-          assigneeName: assignee.full_name,
+          assigneeName: assignee.full_name ?? undefined,
           assigneeEmail: assignee.email || undefined,
           title: action.title,
           description: action.message,
@@ -155,7 +155,7 @@ const executeBankGuaranteeTaskAssignment = async (action: BankGuaranteeControlAc
         recipient_id: action.assigneeId,
         title: `Tâche garantie bancaire: ${action.title}`,
         message: action.message,
-        type: 'task_assigned',
+        type: 'task_assigned' as any,
         related_id: action.projectId,
         metadata: {
           actionId: action.id,
@@ -175,7 +175,7 @@ const executeBankGuaranteeTaskAssignment = async (action: BankGuaranteeControlAc
         recipient_id: recipientId,
         title: `Nouvelle tâche garantie bancaire assignée`,
         message: `Une tâche a été assignée pour gérer la garantie bancaire: ${action.title}`,
-        type: 'bank_guarantee_trigger',
+        type: 'bank_guarantee_trigger' as any,
         related_id: action.projectId,
         metadata: {
           actionId: action.id,
@@ -197,7 +197,7 @@ const executeBankGuaranteeHierarchyNotification = async (action: BankGuaranteeCo
         priority: action.priority,
         escalationLevel: action.escalationLevel,
         requiresApproval: true
-      }
+      } as any
     );
 
     const escalationTitles = {
@@ -208,8 +208,8 @@ const executeBankGuaranteeHierarchyNotification = async (action: BankGuaranteeCo
     };
 
     // Get project organizations for context
-    const projectOrgs = await OrganizationalHierarchyService.getProjectOrganizations(action.projectId);
-    const primaryOrg = projectOrgs.find(org => org.is_primary) || projectOrgs[0];
+    const projectOrgs = await (OrganizationalHierarchyService as any).getProjectOrganizations?.(action.projectId) ?? [];
+    const primaryOrg = projectOrgs.find((org: any) => org.is_primary) || projectOrgs[0];
 
     for (const target of escalationTargets) {
       const hierarchyMessage = `
@@ -219,7 +219,7 @@ DÉTAILS HIÉRARCHIQUES:
 - Organisation: ${primaryOrg?.organizations?.name || 'N/A'}
 - Niveau d'escalade: ${action.escalationLevel?.toUpperCase() || 'ÉQUIPE'}
 - Position destinataire: ${target.position_title}
-- Département: ${target.department}
+- Département: ${(target as any).department}
 - Niveau hiérarchique: ${target.hierarchy_level}
 
 CONTEXTE PROJET:
@@ -232,7 +232,7 @@ CONTEXTE PROJET:
         recipient_id: target.employee_id,
         title: escalationTitles[action.escalationLevel || 'team'],
         message: hierarchyMessage,
-        type: 'bank_guarantee_trigger',
+        type: 'bank_guarantee_trigger' as any,
         related_id: action.projectId,
         metadata: {
           actionId: action.id,
@@ -244,7 +244,7 @@ CONTEXTE PROJET:
           hierarchyLevel: target.hierarchy_level,
           organizationName: primaryOrg?.organizations?.name,
           targetPosition: target.position_title,
-          targetDepartment: target.department
+          targetDepartment: (target as any).department
         }
       });
     }
@@ -258,7 +258,7 @@ CONTEXTE PROJET:
         recipient_id: recipientId,
         title: `Escalade Garantie Bancaire - ${action.title}`,
         message: action.message,
-        type: 'bank_guarantee_trigger',
+        type: 'bank_guarantee_trigger' as any,
         related_id: action.projectId,
         metadata: {
           actionId: action.id,
@@ -300,7 +300,7 @@ const executeBankGuaranteeCommunication = async (action: BankGuaranteeControlAct
     
     if (action.recipientIds && action.recipientIds.length > 0) {
       // Use specified recipients
-      const employees = projectEmployees.data?.filter(emp => action.recipientIds.includes(emp.id)) || [];
+      const employees = projectEmployees.data?.filter(emp => action.recipientIds.includes(emp.id as any)) || [];
       communicationTargets = employees.map(emp => ({
         id: emp.id,
         name: emp.full_name,
@@ -403,7 +403,7 @@ PROJET: ${action.metadata?.project?.title || action.projectId}
         recipient_id: target.id,
         title: `📢 ${action.title}`,
         message: `Communication ${action.actionType}: ${action.message}`,
-        type: 'bank_guarantee_trigger',
+        type: 'bank_guarantee_trigger' as any,
         related_id: action.projectId,
         metadata: {
           actionId: action.id,

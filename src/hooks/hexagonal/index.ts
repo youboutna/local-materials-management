@@ -156,11 +156,14 @@ export {
   useProjectPhasesForTender, 
   useProjectPhasesForLots 
 } from './useTendersHex';
-export { 
-  useTenders, 
-  useProjectsForTenders, 
-  useTenderMutation, 
-  useDeleteTender 
+export {
+  useTenders,
+  useProjectsForTenders,
+  useTenderMutation,
+  useDeleteTender,
+  useTenderSharingSecrets,
+  useRevokeTenderSecret,
+  useDeleteTenderSecret,
 } from './useTenderCrudHex';
 export { 
   useTenderDocumentsList, 

@@ -7,7 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, Plus, Eye, Workflow } from 'lucide-react';
+import { Edit, Trash2, Plus, Eye, Workflow, Search, Calendar, FolderKanban } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -22,6 +23,7 @@ import {
   SUGGESTED_DOCUMENTS
 } from './PublicProcurementWorkflow';
 import ProcurementStepSelector from './ProcurementStepSelector';
+import { TenderListView } from './TenderListView';
 import {
   useTenders,
   useProjectsForTenders,
@@ -263,49 +265,14 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
         {isLoading ? (
           <div className="text-center py-8">Chargement...</div>
         ) : (
-          <div className="space-y-4">
-            {tenders.map((tender) => (
-              <div key={tender.id} className="border rounded-lg p-4 space-y-2">
-                <div className="flex justify-between items-start">
-                  <div className="space-y-1">
-                    <h3 className="font-semibold text-lg">{tender.title}</h3>
-                    <p className="text-gray-600 text-sm">{tender.description}</p>
-                    <div className="flex gap-2 flex-wrap">
-                      <Badge className={getStatusBadge(tender.status)}>
-                        {tender.status}
-                      </Badge>
-                      {tender.procurement_type && (
-                        <Badge variant="outline">{tender.procurement_type}</Badge>
-                      )}
-                      {tender.market_type && (
-                        <Badge variant="outline">{tender.market_type}</Badge>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => openEditDialog(tender as unknown as Tender)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleDelete(tender.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                
-                {tender.deadline_date && (
-                  <div className="text-sm text-gray-500">
-                    Date limite: {format(new Date(tender.deadline_date), 'dd MMMM yyyy', { locale: fr })}
-                  </div>
-                )}
-                
-                {tender.estimated_value && (
-                  <div className="text-sm font-medium">
-                    Valeur estimée: {tender.estimated_value.toLocaleString()} â‚¬
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+          <TenderListView
+            tenders={tenders as any[]}
+            projects={projects}
+            selectedTenderId={selectedTenderId}
+            onSelect={(t) => onTenderSelect?.(t as any)}
+            onEdit={(t) => openEditDialog(t as any)}
+            onDelete={(id) => handleDelete(id)}
+          />
         )}
       </CardContent>
 

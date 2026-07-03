@@ -252,7 +252,7 @@ export class EnhancedReportingService {
       }
 
       const actualCost = paymentsData.reduce((sum, p) => sum + (p.amount || 0), 0);
-      const evmMetrics = ReportCalculations.calculateEVMMetrics(project as any, actualCost, phasesData);
+      const evmMetrics = ReportCalculations.calculateEVMMetrics(project as any, actualCost, phasesData as any);
 
       const onTimePerformance = this.calculateOnTimePerformance(phasesData);
       const budgetVariance = project.budget > 0 ? ((project.budget - actualCost) / project.budget) * 100 : 0;

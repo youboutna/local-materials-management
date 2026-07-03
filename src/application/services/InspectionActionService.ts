@@ -131,7 +131,7 @@ const executeInspectionTaskAssignment = async (action: InspectionControlAction):
         // Use the communication service to assign task
         await communicationService.assignTask({
           assigneeId: action.assigneeId,
-          assigneeName: assignee.full_name,
+          assigneeName: assignee.full_name ?? undefined,
           assigneeEmail: assignee.email || undefined,
           title: action.title,
           description: action.message,
@@ -155,7 +155,7 @@ const executeInspectionTaskAssignment = async (action: InspectionControlAction):
         recipient_id: action.assigneeId,
         title: `Tâche inspection: ${action.title}`,
         message: action.message,
-        type: 'task_assigned',
+        type: 'task_assigned' as any,
         related_id: action.inspectionId,
         metadata: {
           actionId: action.id,
@@ -175,7 +175,7 @@ const executeInspectionTaskAssignment = async (action: InspectionControlAction):
         recipient_id: recipientId,
         title: `Nouvelle tâche d'inspection assignée`,
         message: `Une tâche d'inspection a été assignée: ${action.title}`,
-        type: 'inspection_required',
+        type: 'inspection_required' as any,
         related_id: action.inspectionId,
         metadata: {
           actionId: action.id,
@@ -212,7 +212,7 @@ const executeInspectionHierarchyNotification = async (action: InspectionControlA
         recipient_id: target.employee_id,
         title: escalationTitles[action.escalationLevel || 'team'],
         message: `${action.message}\n\nInspection: ${action.inspectionId}\nProjet: ${action.projectId}\nNiveau: ${target.hierarchy_level}`,
-        type: 'inspection_overdue',
+        type: 'inspection_overdue' as any,
         related_id: action.inspectionId,
         metadata: {
           actionId: action.id,
@@ -274,7 +274,7 @@ const executeInspectionCommunication = async (action: InspectionControlAction): 
         case 'call':
           if (employee.phone) {
             await communicationService.scheduleCall({
-              recipientId: employee.id,
+              recipientId: employee.id ?? "",
               recipientPhone: employee.phone,
               subject: action.title,
               message: action.message,
@@ -289,10 +289,10 @@ const executeInspectionCommunication = async (action: InspectionControlAction): 
 
       // Still send notification for tracking
       await NotificationService.createNotification({
-        recipient_id: employee.id,
+        recipient_id: employee.id ?? "",
         title: `📢 ${action.title}`,
         message: `Communication ${action.actionType}: ${action.message}`,
-        type: 'inspection_required',
+        type: 'inspection_required' as any,
         related_id: action.inspectionId,
         metadata: {
           actionId: action.id,

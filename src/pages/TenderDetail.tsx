@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, ExternalLink, Calendar, DollarSign, FileSignature } from 'lucide-react';
-import { useTenderHex } from '@/hooks/hexagonal';
-// AwardedTenderPreviewDialog déclenché depuis TenderManagement (nécessite estimateId gagnant).
+import { ArrowLeft, ExternalLink, Calendar, DollarSign, FileSignature, Users, FileText, KeyRound } from 'lucide-react';
+import { useTenderHex, useTenderSharingSecrets } from '@/hooks/hexagonal';
+import { useQuery } from '@tanstack/react-query';
+import { TenderSubmissionService } from '@/application/services/TenderSubmissionService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 const Field: React.FC<{ label: string; value?: React.ReactNode }> = ({ label, value }) => (
   <div>
@@ -21,6 +23,27 @@ const TenderDetail: React.FC = () => {
   const navigate = useNavigate();
   const { tender, loading, error } = useTenderHex(id);
   const [awardOpen, setAwardOpen] = useState(false);
+
+  const { data: submissions = [] } = useQuery({
+    queryKey: ['tender-submissions', id],
+    queryFn: async () => (id ? ((await TenderSubmissionService.getTenderSubmissions(id)) as any[]) : []),
+    enabled: !!id,
+  });
+  const { data: secrets = [] } = useTenderSharingSecrets(id);
+  const { data: docsCount = 0 } = useQuery({
+    queryKey: ['tender-docs-count', id],
+    queryFn: async () => {
+      if (!id) return 0;
+      try {
+        const repo = RepositoryFactory.getTenderDocumentRepository();
+        const docs: any[] = (await (repo as any).getDocumentsByTenderId?.(id)) ?? [];
+        return docs.length;
+      } catch {
+        return 0;
+      }
+    },
+    enabled: !!id,
+  });
 
   return (
     <AppLayout pageTitle="📄 Détail de l'appel d'offres">
@@ -101,6 +124,40 @@ const TenderDetail: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {tender && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Soumissions</p>
+                  <p className="text-2xl font-bold">{(submissions as any[]).length}</p>
+                </div>
+                <Users className="h-8 w-8 text-muted-foreground" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Documents</p>
+                  <p className="text-2xl font-bold">{docsCount}</p>
+                </div>
+                <FileText className="h-8 w-8 text-muted-foreground" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Codes secrets actifs</p>
+                  <p className="text-2xl font-bold">
+                    {(secrets as any[]).filter((s) => s.isActive).length}
+                  </p>
+                </div>
+                <KeyRound className="h-8 w-8 text-muted-foreground" />
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {/* AwardedTenderPreviewDialog est déclenché depuis TenderManagement (soumissions) car il nécessite l'estimateId gagnant. */}
