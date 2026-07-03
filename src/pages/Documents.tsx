@@ -193,52 +193,75 @@ const Documents = () => {
               <TabsContent value="tender" className="space-y-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>{t("documents.tender.title")}</CardTitle>
+                    <CardTitle>Documents d'appel d'offres</CardTitle>
                     <CardDescription>
-                      {t("documents.tender.select_project")}
+                      Sélectionnez un AO pour gérer ses documents (DPAO, techniques, financiers, admin, garanties), ou filtrez par projet.
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <Select
-                      value={selectedProjectId}
-                      onValueChange={setSelectedProjectId}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue
-                          placeholder={t(
-                            "documents.tender.select_project_placeholder"
-                          )}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {projects?.map((project) => (
-                          <SelectItem key={project.id} value={project.id}>
-                            {project.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">Appel d'offres</label>
+                        <Select value={selectedTenderId} onValueChange={setSelectedTenderId}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="— Sélectionner un AO —" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(tenders as any[]).map((t) => (
+                              <SelectItem key={t.id} value={t.id}>
+                                {t.tender_number ? `[${t.tender_number}] ` : ''}{t.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">— ou — Projet</label>
+                        <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder={t("documents.tender.select_project_placeholder")} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {projects?.map((project) => (
+                              <SelectItem key={project.id} value={project.id}>
+                                {project.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    {selectedTenderId && (
+                      <div className="flex justify-end">
+                        <Button variant="outline" size="sm" asChild>
+                          <Link to={`/tender-management?tenderId=${selectedTenderId}&tab=documents`}>
+                            Ouvrir dans l'AO <ExternalLink className="h-3 w-3 ml-1" />
+                          </Link>
+                        </Button>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
-                {selectedProjectId && (
-                  <TenderDocuments
-                    projectId={selectedProjectId}
-                    onDocumentSelect={handleDocumentSelect}
-                  />
-                )}
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{t("documents.tender.add_title")}</CardTitle>
-                    <CardDescription>
-                      {t("documents.tender.add_description")}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <TenderDocumentUploadForm projectId={selectedProjectId} />
-                  </CardContent>
-                </Card>
+                {selectedTenderId ? (
+                  <TenderDocumentManager tenderId={selectedTenderId} />
+                ) : selectedProjectId ? (
+                  <>
+                    <TenderDocuments
+                      projectId={selectedProjectId}
+                      onDocumentSelect={handleDocumentSelect}
+                    />
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>{t("documents.tender.add_title")}</CardTitle>
+                        <CardDescription>{t("documents.tender.add_description")}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <TenderDocumentUploadForm projectId={selectedProjectId} />
+                      </CardContent>
+                    </Card>
+                  </>
+                ) : null}
               </TabsContent>
 
               <TabsContent value="upload">
