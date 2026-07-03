@@ -7,7 +7,18 @@ import { TenderTransformer } from '@/dtos/transforms/TenderTransformer';
 
 export class SupabaseTenderAdapter implements ITenderRepository {
   private mapToEntity(data: any): Tender {
-    return TenderTransformer.fromSupabase(data);
+    const entity = TenderTransformer.fromSupabase(data);
+    // Enrich with columns not carried by the Tender domain class, so the
+    // UI layer (which reads camelCase) can round-trip them without loss.
+    Object.assign(entity as any, {
+      submissionDeadline: data.submission_deadline ?? data.deadline_date ?? null,
+      evaluationDeadline: data.evaluation_deadline ?? null,
+      estimatedValue: data.estimated_value ?? null,
+      currentPhase: data.current_phase ?? null,
+      currentStage: data.current_stage ?? null,
+      procurementType: data.procurement_type ?? null,
+    });
+    return entity;
   }
 
   async findById(id: string): Promise<Tender | null> {
