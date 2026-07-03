@@ -31,6 +31,7 @@ import { TenderSubmissionService } from "@/application/services/TenderSubmission
 import { AppLayout } from "@/components/layout";
 import { useTenders } from "@/hooks/hexagonal";
 import { useTenderLots } from "@/hooks/hexagonal/useTenderLotsHex";
+import { useTenderLotDocuments } from "@/hooks/hexagonal/useTenderLotDocumentsHex";
 import { TenderStatusCode } from "@/config/referentials/tender/tender-workflow.referential";
 import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
 import { useToast } from "@/hooks/use-toast";
@@ -119,19 +120,21 @@ const TenderManagement = () => {
   });
 
   const { data: lots = [] } = useTenderLots(selectedTender?.id ?? '');
+  const { data: lotDocs = [] } = useTenderLotDocuments(selectedTender?.id ?? '');
 
   const workflowContext = useMemo(() => {
     const list = submissions as any[];
+    const totalDocs = docsCount + (lotDocs as any[]).length;
     return {
       hasLots: (lots as any[]).length > 0,
-      hasDocuments: docsCount > 0,
+      hasDocuments: totalDocs > 0,
       hasDeadline: !!(selectedTender?.submissionDeadline || selectedTender?.deadlineDate),
       submissionsCount: list.length,
       hasEvaluationScores: list.some((s) => s.total_score != null || s.evaluation_score != null),
       hasWinner: list.some((s) => s.status === 'awarded' || s.is_winner),
       contractSigned: selectedTender?.status === 'contracted' || selectedTender?.status === 'closed',
     };
-  }, [submissions, docsCount, selectedTender, lots]);
+  }, [submissions, docsCount, lotDocs, selectedTender, lots]);
 
   const handleTransition = async (to: TenderStatusCode) => {
     if (!selectedTender) return;
