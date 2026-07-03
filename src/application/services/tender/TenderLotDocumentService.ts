@@ -3,7 +3,8 @@
  * (or to all lots when lot_id is null).
  * Hexagonal service (pure TS, no React).
  */
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { supabase as rootSupabase } from '@/integrations/supabase/client';
 
 export interface TenderLotDocumentRecord {
   id: string;
