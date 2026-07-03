@@ -89,7 +89,9 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
   const deleteLotMut = useDeleteTenderLot(tenderId);
 
   const [internalLots, setInternalLots] = useState<TenderLot[]>([]);
-  const lots: TenderLot[] = isPersistMode
+  const [pendingUpdates, setPendingUpdates] = useState<Record<string, Partial<TenderLot>>>({});
+
+  const baseLots: TenderLot[] = isPersistMode
     ? (persistedLots ?? []).map((l) => ({
         id: l.id,
         number: l.number,
@@ -102,6 +104,10 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
         deliverables: l.deliverables,
       }))
     : (externalLots ?? internalLots);
+
+  const lots: TenderLot[] = isPersistMode
+    ? baseLots.map((l) => (pendingUpdates[l.id] ? { ...l, ...pendingUpdates[l.id] } : l))
+    : baseLots;
 
   const handleLotsChange = (newLots: TenderLot[]) => {
     if (onChange) onChange(newLots);
