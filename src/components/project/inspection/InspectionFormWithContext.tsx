@@ -18,7 +18,6 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 type InspectionStatusLocal = 'approved' | 'requires_changes' | 'rejected' | 'pending';
 import { InspectorSelector } from '@/components/selectors/InspectorSelector';
 import { useInspectionActionContext } from '@/hooks/useCheckpointActionContext';

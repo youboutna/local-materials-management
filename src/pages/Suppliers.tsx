@@ -17,7 +17,6 @@ import { generateSupplierPasswordReset, sendSupplierNotification } from '@/appli
 import { Building2, Edit, FileText, Mail, Plus, Send, Share2, Star, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import type { Database } from '@/integrations/supabase/types';
 import { AppLayout } from '@/components/layout';
 
 type SupplierRow = Database["public"]["Tables"]["suppliers"]["Row"];

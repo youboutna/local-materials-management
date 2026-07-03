@@ -32,7 +32,6 @@ import {
   Filter,
   Bell,
 } from "lucide-react";
-import type { Database } from "@/integrations/supabase/types";
 import { useLanguage } from "@/contexts/LanguageContext";
 import UserSelector from '@/components/selectors/UserSelector';
 import { useAuth } from '@/contexts/use-auth';

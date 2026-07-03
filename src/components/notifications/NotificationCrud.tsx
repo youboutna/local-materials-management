@@ -13,7 +13,6 @@ import { useToast } from '@/hooks/use-toast';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import UserSelector from '@/components/selectors/UserSelector';
 import DocumentViewer from '@/components/documents/DocumentViewer';
-import { supabase } from '@/integrations/supabase/client';
 import { useEffect } from 'react';
 
 interface Notification {

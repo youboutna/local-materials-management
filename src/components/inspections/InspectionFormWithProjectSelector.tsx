@@ -14,7 +14,6 @@ import { cn } from '@/lib/utils';
 import EnhancedProjectSelector from '@/components/selectors/EnhancedProjectSelector';
 import { InspectorSelector } from '@/components/selectors/InspectorSelector';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 interface InspectionFormData {
   projectId: string;

@@ -14,7 +14,6 @@ import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 import ProjectPhases from '@/components/project/ProjectPhases';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import TenderProjectFields from '@/components/projects/TenderProjectFields';
-import { supabase } from '@/integrations/supabase/client';
 import { ConstructionPhase, ConstructionStage } from '@/dtos/entities/ProjectDTO';
 import { PhaseData, CustomPhase } from '@/dtos/entities/PhaseDTO';
 

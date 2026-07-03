@@ -1,4 +1,3 @@
-import { supabase } from '@/integrations/supabase/client';
 import { MaterialDTO as MaterialEntity } from '@/dtos/entities/MaterialDTO';
 
 // Local type for project_materials table rows
