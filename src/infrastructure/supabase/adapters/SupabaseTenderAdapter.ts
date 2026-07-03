@@ -40,27 +40,48 @@ export class SupabaseTenderAdapter implements ITenderRepository {
     return data ? this.mapToEntity(data) : null;
   }
 
-  async update(id: string, data: Partial<Tender>): Promise<void> {
-    // Translate the partial domain entity into a partial DB row.
+  async update(id: string, data: Partial<Tender> | Record<string, any>): Promise<void> {
+    // Accept either a Partial<Tender> (camelCase) or a raw snake_case DB row.
+    // camelCase → snake_case mapping (limited to Tender entity fields).
+    const camelToSnake: Record<string, string> = {
+      title: 'title',
+      description: 'description',
+      tenderNumber: 'tender_number',
+      status: 'status',
+      selectionMode: 'selection_mode',
+      marketType: 'market_type',
+      financingSource: 'financing_source',
+      projectId: 'project_id',
+      projectReference: 'project_reference',
+      publicationDate: 'publication_date',
+      deadlineDate: 'deadline_date',
+      launchDate: 'launch_date',
+      attributionDate: 'attribution_date',
+      budgetMin: 'budget_min',
+      budgetMax: 'budget_max',
+      evaluationCriteria: 'evaluation_criteria',
+      eligibilityRequirements: 'eligibility_requirements',
+      submissionDeadline: 'submission_deadline',
+      evaluationDeadline: 'evaluation_deadline',
+      currentPhase: 'current_phase',
+      currentStage: 'current_stage',
+      procurementType: 'procurement_type',
+      estimatedValue: 'estimated_value',
+    };
+
     const updatePayload: Record<string, any> = {};
-    if (data.title !== undefined) updatePayload.title = data.title;
-    if (data.description !== undefined) updatePayload.description = data.description;
-    if (data.tenderNumber !== undefined) updatePayload.tender_number = data.tenderNumber;
-    if (data.status !== undefined) updatePayload.status = data.status;
-    if (data.selectionMode !== undefined) updatePayload.selection_mode = data.selectionMode;
-    if (data.marketType !== undefined) updatePayload.market_type = data.marketType;
-    if (data.financingSource !== undefined) updatePayload.financing_source = data.financingSource;
-    if (data.projectReference !== undefined) updatePayload.project_reference = data.projectReference;
-    if (data.publicationDate !== undefined) updatePayload.publication_date = data.publicationDate;
-    if (data.deadlineDate !== undefined) updatePayload.deadline_date = data.deadlineDate;
-    if (data.launchDate !== undefined) updatePayload.launch_date = data.launchDate;
-    if (data.attributionDate !== undefined) updatePayload.attribution_date = data.attributionDate;
-    if (data.budgetMin !== undefined) updatePayload.budget_min = data.budgetMin;
-    if (data.budgetMax !== undefined) updatePayload.budget_max = data.budgetMax;
-    if (data.evaluationCriteria !== undefined) updatePayload.evaluation_criteria = data.evaluationCriteria;
-    if (data.eligibilityRequirements !== undefined) updatePayload.eligibility_requirements = data.eligibilityRequirements;
+    for (const [k, v] of Object.entries(data as Record<string, any>)) {
+      if (v === undefined) continue;
+      // Snake_case key → pass through directly
+      if (k.includes('_')) {
+        updatePayload[k] = v;
+      } else if (camelToSnake[k]) {
+        updatePayload[camelToSnake[k]] = v;
+      }
+    }
 
     if (Object.keys(updatePayload).length === 0) return;
+    updatePayload.updated_at = new Date().toISOString();
     const { error } = await supabase.from('tenders').update(updatePayload).eq('id', id);
     if (error) throw new Error(`Failed to update tender: ${error.message}`);
   }
