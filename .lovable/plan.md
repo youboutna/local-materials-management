@@ -1,56 +1,66 @@
-## Diagnostic
+## Objectif
+Aligner **45 fichiers** (31 composants + 2 pages + 3 contexts + 4 hooks + 5 domain/utils/scripts) sur les règles de `docs/PROMPTS.md` : **zéro import `@/integrations/supabase` dans `src/components/**`, `src/pages/**`, `src/contexts/**` (sauf `useAuth` interne), `src/hooks/hexagonal/**` (doivent passer par Services)**. Flux obligatoire : UI → Hook hexagonal → Service → Repository → Adapter → DB.
 
-Bugs/régressions confirmés dans le module Tender + Documents :
+## Périmètre exact (45 fichiers détectés par scan)
 
-1. **Liste AO tronquée** — `TenderCrud` n'affiche que titre/description/statut. Pas de `tender_number`, deadlines, projet lié, valeur, ni bouton "Voir détail".
-2. **Appel statique cassé** — `TenderManagement.tsx:80` appelle `TenderService.getTenderSubmissions(id)` en statique alors que `TenderService` est instance-based. Onglet "Réception" vide.
-3. **Persistance incomplète** — `useTenderMutation` ignore `submission_deadline`, `evaluation_deadline`, `procurement_type`, `estimated_value`, `current_phase`, `current_stage`, `procurementSteps`.
-4. **Workflow invisible** — Onglet empile 4 composants sans hiérarchie. `TENDER_WIZARD_STEPS` du référentiel non rendu comme fil conducteur.
-5. **Codes secrets dispersés** — Saisie dupliquée entre `TenderManagement` inline et `SubmissionSecretDialog`. Pas de vue centralisée.
-6. **Documents** — Onglet "Tender" de `Documents.tsx` non branché à `TenderDocumentManager`.
-7. **TenderDetail spartiate** — Aucun `useSearchParams` côté `TenderManagement` pour `?tenderId=`.
+**Composants UI (31)** — passent tous via un Service/hook hexagonal :
+- Tenders (6) : `TenderProjectStructure`, `EnhancedTenderEstimator`, `TenderExcelImporter`, `TenderEvaluationPanel`, `TenderDocumentManager`, `PublicTendersList`
+- Suppliers (5) : `EnhancedSupplierTenderPortal`, `SupplierDocumentUpload`, `TaskCompletion`, `SupplierInspectionExecutionDialog`, + `documents/TenderDocumentUploadForm`
+- Project (7) : `PhaseWorkflowContainer`, `PhaseStepTaskManager`, `TeamOverview`, `ProjectCreateByDTO`, `EnhancedWorkflowPhaseManager`, `ProjectFormWithMap`, `inspection/InspectionFormWithContext`
+- Inspections (3) : `AdvancedInspectionScheduler`, `EnhancedScheduleInspectionModal`, `InspectionFormWithProjectSelector`
+- Divers (10) : `ActionsDropdown`, `EscalationThresholdsSettings`, `TaskAssignments`, `UnifiedInsuranceManager`, `ConsultantValidationPanel`, `NotificationCrud`, `PaymentRequestModal`, `AdminEmailsSettings`, `UserManagementDialog`, `WorkspaceCreateDialog`
 
-## Livraison — 6 lots livrés en un seul batch
+**Pages (2)** : `Suppliers.tsx`, `TendersPublic.tsx`
+**Contexts (3)** : `AuthContext`, `HexagonalAuthContext`, `UnifiedAuthContext` (unifier — cf. mémoire `auth/hexagonal-unification`)
+**Hooks hexagonaux violants (4)** : `usePhaseMaterialsHex`, `useReceptionManagement`, `useUnifiedSupplierPortalHex`, `useProjectCheckpoints`
+**Domain/Utils (5)** : `MaterialRepository`, `SupplierPaymentRepository`, `TenderRepository` (interfaces qui importent le type Supabase — retirer), `notificationToTaskMapper`, `scripts/loadDataToSupabase`
 
-### Lot 1 — Fondations Service & Hooks
-- `TenderManagement.tsx` : instancier `TenderSubmissionService` / `SubmissionSecretService` correctement, retirer `@ts-nocheck`, honorer `?tenderId=` via `useSearchParams`.
-- `useTenderCrudHex.ts` : `useTenderMutation` persiste tous les champs formulaire ; `useTenders` retourne les valeurs brutes sans écrasement.
-- Ajouter `createTender` / `updateTender` à `TenderService` (couvrent tous les champs DB).
+## Stratégie d'exécution — un seul batch
 
-### Lot 2 — Liste & Détail AO
-- `TenderCrud` : cartes denses (numéro, projet lié, dates lancement/deadline/attribution, valeur, badges statut+type+mode), recherche+tri, boutons Voir/Sélectionner/Modifier/Supprimer.
-- `TenderDetail.tsx` : blocs soumissions (count par statut), documents (count), codes secrets actifs, timeline, boutons "Ouvrir dans TenderManagement" et "Retour liste".
+### Phase A — Cartographie & Services manquants (lecture parallèle)
+1. Lire les 45 fichiers pour recenser chaque appel `supabase.*` (from/storage/functions/rpc/auth).
+2. Croiser avec `src/application/services/*` pour identifier les méthodes manquantes.
+3. Créer/étendre les Services et Repository interfaces requis :
+   - `SupplierPortalService` (portail + accès sécurisé)
+   - `TenderPublicService` (liste publique AO)
+   - `WorkspaceService.create/list`
+   - `UserAdminService` (CRUD users + rôles)
+   - `NotificationService.crud` complet
+   - `PaymentService.createRequest`
+   - `InsuranceService.upsertUnified`
+   - `InspectionSchedulerService` (advanced + enhanced)
+   - `EscalationSettingsService`, `AdminEmailsService`
+   - `TaskAssignmentService`
+   - `MaterialService`, `CheckpointService` pour purger les hooks
+4. Ajouter méthodes de storage manquantes derrière un port `StorageGateway` (upload/getPublicUrl/remove) — un seul adapter dans `infrastructure/supabase/adapters/SupabaseStorageAdapter.ts`.
 
-### Lot 3 — Workflow lisible
-- Onglet "Workflow" refondu : stepper principal basé sur `TENDER_WIZARD_STEPS` (Identification → Cadre&Lots → DPAO → Planning → Publication), statut par étape calculé depuis `TenderStatusCode` + gardes de `getAllowedTransitions`.
-- Section "Transitions" : boutons Publier/Ouvrir/Évaluer/Attribuer/Contractualiser/Clôturer avec blocages affichés.
-- Fusion `PublicProcurementWorkflow` + `TenderWorkflowSteps` en une seule section "Étapes détaillées".
+### Phase B — Réécriture parallèle des 45 fichiers
+- Remplacer chaque `import { supabase }` par les hooks hexagonaux correspondants (`useXxxHex`) ou appel de service via `RepositoryFactory`.
+- Contexts auth : conserver uniquement `HexagonalAuthContext`, faire de `AuthContext`/`UnifiedAuthContext` de simples ré-exports (compat) — mémoire `auth/hexagonal-unification`.
+- Hooks hex violants : rediriger vers Service correspondant, plus aucun accès direct DB.
+- Domain repositories : retirer les imports du type Supabase (`Database['public']…`) et redéfinir les types dans `src/dtos/entities/*`.
+- Utils/scripts : `notificationToTaskMapper` → prendre DTO en entrée ; `loadDataToSupabase` → déplacer sous `src/infrastructure/scripts/` (hors périmètre UI).
 
-### Lot 4 — Réception, Évaluation, Décision, Notifications
-- Onglets restructurés : `Workflow | Réception | Évaluation | Décision | Notifications | Documents | Codes | Lots`.
-- **Réception** : `SubmissionsInbox` + compteurs référentiel + bouton "Notifier".
-- **Évaluation** : `EvaluationPanelTabs` par soumission approuvée, sans bloc code inline.
-- **Décision** (nouveau) : lauréat proposé, transitions `awarded → contracted → closed`, bouton "Signer & hydrater projet" → `AwardedTenderPreviewDialog`.
-- **Notifications** (nouveau) : liste envois (via table `email_logs`), bouton renvoi.
+### Phase C — Vérification stricte
+1. `rg "@/integrations/supabase" src/components src/pages src/contexts src/hooks/hexagonal src/domain src/utils` → doit être **vide** (sauf `contexts/HexagonalAuthContext` autorisé pour `auth`).
+2. `bunx tsgo -p tsconfig.app.json` → 0 erreur.
+3. Build Vite auto (harness) → OK.
+4. Lancer app + smoke test Playwright sur : liste AO, détail AO, création projet, portail fournisseur (code secret), inspection scheduler, notifications.
 
-### Lot 5 — Codes Secrets centralisés
-- Nouvel onglet "Codes secrets" : liste `tender_sharing_secrets` (via nouveau hook `useTenderSharingSecrets`), colonnes email/expiration/accès/actif, actions régénérer/révoquer/copier lien portail.
-- Bouton "Nouveau code" → `SecureSharingDialog` existant.
-- Suppression du bloc "Vérifier code" de l'onglet Évaluation (validation reste côté portail public).
+## Livrables & rapport final
+- Liste exhaustive **fichiers créés** (nouveaux Services, StorageGateway, DTOs).
+- Liste **fichiers modifiés** (45 cibles + adapters/factory).
+- Liste **fichiers supprimés/déplacés** (scripts legacy).
+- **Points de vérification manuels** :
+  1. Portail fournisseur via code secret (`/supplier-secure-access?code=…`).
+  2. CRUD AO complet + workflow + décision.
+  3. Création workspace + invite user.
+  4. Upload document AO (storage via gateway).
+  5. Planif inspection + PV.
+  6. Notifications CRUD + escalade admin.
 
-### Lot 6 — Page Documents
-- `Documents.tsx` onglet "Tender" branché sur `TenderDocumentManager` (sélection AO + upload catégorisé DPAO/technique/financier/admin/garanties).
-- Recherche par tag, filtre par type.
-- Bouton "Ouvrir dans l'AO" → `/tender-management?tenderId=X&tab=documents`.
-
-## Règles
-
-- Aucun `supabase.from(...)` dans les composants touchés (services uniquement).
-- TanStack Query v5 sans `onError`/`onSuccess` sur `useQuery`.
-- `tender-workflow.referential.ts` = seule source des statuts/transitions/gardes/étapes.
-- Aucun `@ts-nocheck` ajouté ; ceux touchés retirés.
-- Flow DB → Adapter → Transformer → Entity → Service → DTO → UI respecté.
-
-## Livrables
-
-Un seul batch. Édits parallélisés au maximum. Typecheck strict en fin de passe. Rapport final avec liste des fichiers créés/modifiés + points de vérification manuels (créer un AO, publier, générer code, recevoir soumission, évaluer, attribuer, hydrater projet, upload document tender).
+## Notes techniques
+- Respect strict des mémoires : pas de React dans services, DTO camelCase, entités `Interface + create()`, TanStack Query v5 sans `onError/onSuccess`, imports dynamiques du client Supabase dans les adapters.
+- StorageGateway = seul point autorisé à toucher `supabase.storage` hors UI.
+- Aucun ID généré côté UI (mémoire `project-workflow-id-policy`).
+- Grants public respectés pour toute nouvelle table (aucune prévue ici).
