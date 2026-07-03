@@ -65,7 +65,7 @@ export class TenderLotDocumentService {
   }
 
   async create(input: CreateTenderLotDocumentInput): Promise<TenderLotDocumentRecord> {
-    const { data: userData } = await supabase.auth.getUser();
+    const { data: userData } = await rootSupabase.auth.getUser();
     const { data, error } = await supabase
       .from('tender_lot_documents' as any)
       .insert({
