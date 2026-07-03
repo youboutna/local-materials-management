@@ -3218,6 +3218,57 @@ export type Database = {
         }
         Relationships: []
       }
+      tender_lots: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          deliverables: string[]
+          description: string | null
+          estimated_amount: number | null
+          id: string
+          linked_phase_ids: string[]
+          linked_step_ids: string[]
+          number: number
+          project_id: string | null
+          requirements: string[]
+          tender_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          deliverables?: string[]
+          description?: string | null
+          estimated_amount?: number | null
+          id?: string
+          linked_phase_ids?: string[]
+          linked_step_ids?: string[]
+          number?: number
+          project_id?: string | null
+          requirements?: string[]
+          tender_id: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          deliverables?: string[]
+          description?: string | null
+          estimated_amount?: number | null
+          id?: string
+          linked_phase_ids?: string[]
+          linked_step_ids?: string[]
+          number?: number
+          project_id?: string | null
+          requirements?: string[]
+          tender_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tender_sharing_access_logs: {
         Row: {
           accessed_at: string | null

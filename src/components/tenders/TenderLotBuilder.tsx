@@ -3,7 +3,7 @@
  * MIGRATED TO HEXAGONAL ARCHITECTURE
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,10 +26,17 @@ import {
   Layers,
   CheckCircle,
   AlertTriangle,
-  GripVertical
+  GripVertical,
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useProjectPhasesForLots } from '@/hooks/hexagonal';
+import {
+  useTenderLots,
+  useCreateTenderLot,
+  useUpdateTenderLot,
+  useDeleteTenderLot,
+} from '@/hooks/hexagonal/useTenderLotsHex';
 
 interface Phase {
   id: string;
@@ -72,15 +79,39 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
   onChange,
   readOnly = false
 }) => {
+  const isPersistMode = !externalLots && !onChange && !!tenderId;
+
+  const { data: persistedLots, isLoading: isLoadingLots } = useTenderLots(
+    isPersistMode ? tenderId : ''
+  );
+  const createLot = useCreateTenderLot(tenderId);
+  const updateLotMut = useUpdateTenderLot(tenderId);
+  const deleteLotMut = useDeleteTenderLot(tenderId);
+
   const [internalLots, setInternalLots] = useState<TenderLot[]>([]);
-  const lots = externalLots || internalLots;
-  
+  const [pendingUpdates, setPendingUpdates] = useState<Record<string, Partial<TenderLot>>>({});
+
+  const baseLots: TenderLot[] = isPersistMode
+    ? (persistedLots ?? []).map((l) => ({
+        id: l.id,
+        number: l.number,
+        title: l.title,
+        description: l.description ?? undefined,
+        estimatedAmount: l.estimatedAmount ?? undefined,
+        linkedPhaseIds: l.linkedPhaseIds,
+        linkedStepIds: l.linkedStepIds,
+        requirements: l.requirements,
+        deliverables: l.deliverables,
+      }))
+    : (externalLots ?? internalLots);
+
+  const lots: TenderLot[] = isPersistMode
+    ? baseLots.map((l) => (pendingUpdates[l.id] ? { ...l, ...pendingUpdates[l.id] } : l))
+    : baseLots;
+
   const handleLotsChange = (newLots: TenderLot[]) => {
-    if (onChange) {
-      onChange(newLots);
-    } else {
-      setInternalLots(newLots);
-    }
+    if (onChange) onChange(newLots);
+    else if (!isPersistMode) setInternalLots(newLots);
   };
 
   const [expandedLot, setExpandedLot] = useState<string | null>(null);
@@ -90,24 +121,89 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
   const phases: Phase[] = phasesData || [];
 
   const addLot = () => {
+    const nextNumber = lots.length + 1;
+    if (isPersistMode) {
+      createLot.mutate({
+        tenderId,
+        projectId: projectId ?? null,
+        number: nextNumber,
+        title: `Lot ${nextNumber}`,
+        description: null,
+        estimatedAmount: null,
+        linkedPhaseIds: [],
+        linkedStepIds: [],
+        requirements: [],
+        deliverables: [],
+      });
+      return;
+    }
     const newLot: TenderLot = {
       id: `lot-${Date.now()}`,
-      number: lots.length + 1,
-      title: `Lot ${lots.length + 1}`,
+      number: nextNumber,
+      title: `Lot ${nextNumber}`,
       linkedPhaseIds: [],
       linkedStepIds: [],
       requirements: [],
-      deliverables: []
+      deliverables: [],
     };
     handleLotsChange([...lots, newLot]);
     setExpandedLot(newLot.id);
   };
 
+  // Debounced persistence per lot to avoid one mutation per keystroke.
+  const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  // pendingUpdates state declared above (before lots computation).
+
+  useEffect(() => () => {
+    Object.values(saveTimers.current).forEach(clearTimeout);
+  }, []);
+
+  const schedulePersist = useCallback(
+    (lotId: string, merged: TenderLot) => {
+      if (saveTimers.current[lotId]) clearTimeout(saveTimers.current[lotId]);
+      saveTimers.current[lotId] = setTimeout(() => {
+        updateLotMut.mutate({
+          id: lotId,
+          lot: {
+            tenderId,
+            projectId: projectId ?? null,
+            number: merged.number,
+            title: merged.title,
+            description: merged.description ?? null,
+            estimatedAmount: merged.estimatedAmount ?? null,
+            linkedPhaseIds: merged.linkedPhaseIds,
+            linkedStepIds: merged.linkedStepIds,
+            requirements: merged.requirements ?? [],
+            deliverables: merged.deliverables ?? [],
+          },
+        });
+        setPendingUpdates((p) => {
+          const n = { ...p };
+          delete n[lotId];
+          return n;
+        });
+      }, 600);
+    },
+    [tenderId, projectId, updateLotMut]
+  );
+
   const updateLot = (lotId: string, updates: Partial<TenderLot>) => {
+    if (isPersistMode) {
+      const base = lots.find((l) => l.id === lotId);
+      if (!base) return;
+      const merged = { ...base, ...pendingUpdates[lotId], ...updates };
+      setPendingUpdates((p) => ({ ...p, [lotId]: { ...p[lotId], ...updates } }));
+      schedulePersist(lotId, merged);
+      return;
+    }
     handleLotsChange(lots.map(lot => lot.id === lotId ? { ...lot, ...updates } : lot));
   };
 
   const removeLot = (lotId: string) => {
+    if (isPersistMode) {
+      deleteLotMut.mutate(lotId);
+      return;
+    }
     handleLotsChange(lots.filter(lot => lot.id !== lotId));
   };
 
