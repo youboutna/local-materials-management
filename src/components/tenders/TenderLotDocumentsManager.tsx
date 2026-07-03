@@ -15,6 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -309,6 +310,9 @@ const TenderLotDocumentsManager: React.FC<Props> = ({
             <DialogTitle>
               {editing ? 'Modifier le document' : 'Ajouter un document'} — {scopeLabel}
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              Téléverser un fichier et définir les lots concernés par ce document.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">

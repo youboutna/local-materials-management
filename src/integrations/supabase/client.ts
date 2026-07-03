@@ -6,62 +6,6 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-/**
- * Custom fetch wrapper for schema profile header management.
- * Swaps Accept-Profile → Content-Profile on GET/HEAD for non-public schemas
- * to work around PostgREST PGRST106 restrictions.
- * 
- * Handles both call signatures:
- *   fetch(url: string, init: RequestInit)
- *   fetch(request: Request)
- */
-const schemaProfileFetch: typeof fetch = async (
-  input: RequestInfo | URL,
-  init?: RequestInit
-): Promise<Response> => {
-  let url: string;
-  let finalInit: RequestInit;
-
-  if (input instanceof Request) {
-    // Supabase may call fetch(Request) directly – extract all properties
-    url = input.url;
-    finalInit = {
-      method: input.method,
-      headers: new Headers(input.headers),
-      body: input.body,
-      signal: input.signal,
-      credentials: input.credentials as RequestCredentials,
-      cache: input.cache,
-      redirect: input.redirect,
-      referrer: input.referrer,
-      referrerPolicy: input.referrerPolicy,
-      mode: input.mode,
-      // Merge any explicit init overrides
-      ...init,
-    };
-    // Ensure headers from init override if provided
-    if (init?.headers) {
-      finalInit.headers = new Headers(init.headers);
-    }
-  } else {
-    url = String(input);
-    finalInit = { ...init, headers: new Headers(init?.headers) };
-  }
-
-  const headers = finalInit.headers as Headers;
-  const method = (finalInit.method || 'GET').toUpperCase();
-  const acceptProfile = headers.get('Accept-Profile');
-
-  // For non-public schema GET/HEAD requests, swap the profile header
-  if ((method === 'GET' || method === 'HEAD') && acceptProfile && acceptProfile !== 'public') {
-    headers.set('Content-Profile', acceptProfile);
-    headers.delete('Accept-Profile');
-  }
-
-  finalInit.headers = headers;
-  return fetch(url, finalInit);
-};
-
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
@@ -70,8 +14,5 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true
-  },
-  global: {
-    fetch: schemaProfileFetch
   }
 });
