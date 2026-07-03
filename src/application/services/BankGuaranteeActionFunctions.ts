@@ -197,7 +197,7 @@ const executeBankGuaranteeHierarchyNotification = async (action: BankGuaranteeCo
         priority: action.priority,
         escalationLevel: action.escalationLevel,
         requiresApproval: true
-      }
+      } as any
     );
 
     const escalationTitles = {
@@ -208,8 +208,8 @@ const executeBankGuaranteeHierarchyNotification = async (action: BankGuaranteeCo
     };
 
     // Get project organizations for context
-    const projectOrgs = await OrganizationalHierarchyService.getProjectOrganizations(action.projectId);
-    const primaryOrg = projectOrgs.find(org => org.is_primary) || projectOrgs[0];
+    const projectOrgs = await (OrganizationalHierarchyService as any).getProjectOrganizations?.(action.projectId) ?? [];
+    const primaryOrg = projectOrgs.find((org: any) => org.is_primary) || projectOrgs[0];
 
     for (const target of escalationTargets) {
       const hierarchyMessage = `
