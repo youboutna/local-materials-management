@@ -2,7 +2,7 @@
  * TenderLotService - Persistence for tender lots.
  * Hexagonal service (pure TS, no React).
  */
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 
 export interface TenderLotRecord {
   id: string;

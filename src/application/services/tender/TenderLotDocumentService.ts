@@ -3,7 +3,8 @@
  * (or to all lots when lot_id is null).
  * Hexagonal service (pure TS, no React).
  */
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { supabase as rootSupabase } from '@/integrations/supabase/client';
 
 export interface TenderLotDocumentRecord {
   id: string;
@@ -64,7 +65,7 @@ export class TenderLotDocumentService {
   }
 
   async create(input: CreateTenderLotDocumentInput): Promise<TenderLotDocumentRecord> {
-    const { data: userData } = await supabase.auth.getUser();
+    const { data: userData } = await rootSupabase.auth.getUser();
     const { data, error } = await supabase
       .from('tender_lot_documents' as any)
       .insert({
@@ -116,12 +117,12 @@ export class TenderLotDocumentService {
   async uploadFile(tenderId: string, file: File): Promise<{ path: string; publicUrl: string }> {
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const path = `tender-lots/${tenderId}/${Date.now()}-${safeName}`;
-    const { error } = await supabase.storage.from('documents').upload(path, file, {
+    const { error } = await rootSupabase.storage.from('documents').upload(path, file, {
       cacheControl: '3600',
       upsert: false,
     });
     if (error) throw error;
-    const { data } = supabase.storage.from('documents').getPublicUrl(path);
+    const { data } = rootSupabase.storage.from('documents').getPublicUrl(path);
     return { path, publicUrl: data.publicUrl };
   }
 }
