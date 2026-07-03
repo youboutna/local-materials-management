@@ -3,7 +3,7 @@
  * MIGRATED TO HEXAGONAL ARCHITECTURE
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,10 +26,17 @@ import {
   Layers,
   CheckCircle,
   AlertTriangle,
-  GripVertical
+  GripVertical,
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useProjectPhasesForLots } from '@/hooks/hexagonal';
+import {
+  useTenderLots,
+  useCreateTenderLot,
+  useUpdateTenderLot,
+  useDeleteTenderLot,
+} from '@/hooks/hexagonal/useTenderLotsHex';
 
 interface Phase {
   id: string;
