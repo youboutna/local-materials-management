@@ -24,6 +24,27 @@ const TenderDetail: React.FC = () => {
   const { tender, loading, error } = useTenderHex(id);
   const [awardOpen, setAwardOpen] = useState(false);
 
+  const { data: submissions = [] } = useQuery({
+    queryKey: ['tender-submissions', id],
+    queryFn: async () => (id ? ((await TenderSubmissionService.getTenderSubmissions(id)) as any[]) : []),
+    enabled: !!id,
+  });
+  const { data: secrets = [] } = useTenderSharingSecrets(id);
+  const { data: docsCount = 0 } = useQuery({
+    queryKey: ['tender-docs-count', id],
+    queryFn: async () => {
+      if (!id) return 0;
+      try {
+        const repo = RepositoryFactory.getTenderDocumentRepository();
+        const docs: any[] = (await (repo as any).getDocumentsByTenderId?.(id)) ?? [];
+        return docs.length;
+      } catch {
+        return 0;
+      }
+    },
+    enabled: !!id,
+  });
+
   return (
     <AppLayout pageTitle="📄 Détail de l'appel d'offres">
       <div className="space-y-4">
