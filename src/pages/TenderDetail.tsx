@@ -126,6 +126,40 @@ const TenderDetail: React.FC = () => {
           </Card>
         )}
 
+        {tender && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Soumissions</p>
+                  <p className="text-2xl font-bold">{(submissions as any[]).length}</p>
+                </div>
+                <Users className="h-8 w-8 text-muted-foreground" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Documents</p>
+                  <p className="text-2xl font-bold">{docsCount}</p>
+                </div>
+                <FileText className="h-8 w-8 text-muted-foreground" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Codes secrets actifs</p>
+                  <p className="text-2xl font-bold">
+                    {(secrets as any[]).filter((s) => s.isActive).length}
+                  </p>
+                </div>
+                <KeyRound className="h-8 w-8 text-muted-foreground" />
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* AwardedTenderPreviewDialog est déclenché depuis TenderManagement (soumissions) car il nécessite l'estimateId gagnant. */}
         {false && awardOpen && <span />}
       </div>
