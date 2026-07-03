@@ -1,3 +1,4 @@
+import { supabase } from '@/integrations/supabase/client';
 // Repository pattern for Tender CRUD operations
 
 // Use raw DB types instead of camelCase DTOs for direct Supabase access

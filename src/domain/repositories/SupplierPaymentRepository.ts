@@ -1,3 +1,4 @@
+import { supabase } from '@/integrations/supabase/client';
 // Repository for Supplier Payment Requests
 // Local type for supplier_payment_requests table rows (snake_case matching DB)
 interface SupplierPaymentRequestEntity {
