@@ -18,7 +18,7 @@ import { parsePdf, calculateAdvancedQuantities } from '@/utils/btpCalculations';
 import { TenderDocumentWithDetails } from '@/hooks/hexagonal/useTenderDocumentsHex';
 import { TENDER_CATEGORY_LABELS, TENDER_DOCUMENT_LABELS, ADMINISTRATIVE_SUBCATEGORY_GROUPS } from '@/dtos';
 import { TenderDocumentCategory, TenderDocumentSubcategory } from './PublicProcurementWorkflow';
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 
 interface TenderDocumentManagerProps {
   tenderId: string;
