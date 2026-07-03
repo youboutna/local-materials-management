@@ -3218,6 +3218,62 @@ export type Database = {
         }
         Relationships: []
       }
+      tender_lot_documents: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          file_name: string | null
+          file_size: number | null
+          file_url: string
+          id: string
+          lot_id: string | null
+          mime_type: string | null
+          tender_id: string
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url: string
+          id?: string
+          lot_id?: string | null
+          mime_type?: string | null
+          tender_id: string
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          lot_id?: string | null
+          mime_type?: string | null
+          tender_id?: string
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tender_lot_documents_lot_id_fkey"
+            columns: ["lot_id"]
+            isOneToOne: false
+            referencedRelation: "tender_lots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tender_lots: {
         Row: {
           created_at: string

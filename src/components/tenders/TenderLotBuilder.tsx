@@ -37,6 +37,7 @@ import {
   useUpdateTenderLot,
   useDeleteTenderLot,
 } from '@/hooks/hexagonal/useTenderLotsHex';
+import TenderLotDocumentsManager from './TenderLotDocumentsManager';
 
 interface Phase {
   id: string;
@@ -282,6 +283,18 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
           </div>
         </div>
 
+        {/* Documents communs à tous les lots */}
+        {isPersistMode && (
+          <div className="p-3 border rounded-lg bg-muted/10">
+            <TenderLotDocumentsManager
+              tenderId={tenderId}
+              lotId={null}
+              scopeLabel="Communs à tous les lots"
+              readOnly={readOnly}
+            />
+          </div>
+        )}
+
         {/* Lots */}
         {lots.length > 0 ? (
           <Accordion
@@ -427,6 +440,18 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
                             </div>
                           ))}
                         </div>
+                      </div>
+                    )}
+
+                    {/* Documents attachés à ce lot */}
+                    {isPersistMode && (
+                      <div className="pt-3 border-t">
+                        <TenderLotDocumentsManager
+                          tenderId={tenderId}
+                          lotId={lot.id}
+                          scopeLabel={`Lot ${lot.number}`}
+                          readOnly={readOnly}
+                        />
                       </div>
                     )}
 
