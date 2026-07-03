@@ -10,6 +10,7 @@ export interface TenderLotDocumentRecord {
   id: string;
   tenderId: string;
   lotId: string | null;
+  lotIds: string[];
   title: string;
   description: string | null;
   category: string | null;
@@ -23,10 +24,12 @@ export interface TenderLotDocumentRecord {
 }
 
 function fromRow(row: any): TenderLotDocumentRecord {
+  const lotIds: string[] = Array.isArray(row.lot_ids) ? row.lot_ids.filter(Boolean) : [];
   return {
     id: row.id,
     tenderId: row.tender_id,
-    lotId: row.lot_id ?? null,
+    lotId: row.lot_id ?? (lotIds[0] ?? null),
+    lotIds,
     title: row.title ?? '',
     description: row.description ?? null,
     category: row.category ?? null,
@@ -42,7 +45,8 @@ function fromRow(row: any): TenderLotDocumentRecord {
 
 export interface CreateTenderLotDocumentInput {
   tenderId: string;
-  lotId: string | null;
+  lotId?: string | null;
+  lotIds?: string[];
   title: string;
   description?: string | null;
   category?: string | null;
