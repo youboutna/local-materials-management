@@ -1,164 +1,156 @@
-// @ts-nocheck
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { FileText, Users, Upload, Settings, Layers } from "lucide-react";
+import {
+  FileText,
+  Users,
+  Upload,
+  Settings,
+  KeyRound,
+  Bell,
+  Gavel,
+  Inbox,
+  Layers,
+} from "lucide-react";
 import TenderCrud from "@/components/tenders/TenderCrud";
-import TenderWorkflowSteps from "@/components/tenders/TenderWorkflowSteps";
 import TenderDocumentManager from "@/components/tenders/TenderDocumentManager";
-import TenderEvaluationPanel from "@/components/tenders/TenderEvaluationPanel";
-import PublicProcurementWorkflow from "@/components/tenders/PublicProcurementWorkflow";
 import TenderLotBuilder from "@/components/tenders/TenderLotBuilder";
-import TenderWorkflowStepper from "@/components/tenders/TenderWorkflowStepper";
 import TenderProjectPhases from "@/components/tenders/TenderProjectPhases";
-import { TenderSecurityBadge } from "@/components/tenders/TenderSecurityBadge";
 import { TenderTimelineCard } from "@/components/tenders/TenderTimelineCard";
 import { EnhancedDocumentSharing } from "@/components/suppliers/EnhancedDocumentSharing";
 import { SecureSharingDialog } from "@/components/tenders/SecureSharingDialog";
-import { SubmissionSecretDialog } from "@/components/tenders/SubmissionSecretDialog";
 import { SubmissionsInbox } from "@/components/tenders/SubmissionsInbox";
 import { EvaluationPanelTabs } from "@/components/tenders/EvaluationPanelTabs";
-// AwardedTenderPreviewDialog est déclenché depuis SubmissionsInbox (bouton "Attribuer").
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { WorkflowPhase, WorkflowStage } from "@/dtos/workflows/WorkflowDTO";
+import { TenderWorkflowPanel } from "@/components/tenders/TenderWorkflowPanel";
+import { TenderSecretsPanel } from "@/components/tenders/TenderSecretsPanel";
 import { useQuery } from "@tanstack/react-query";
-import { TenderService } from "@/application/services/TenderService";
-import { SubmissionSecretService } from "@/application/services/SubmissionSecretService";
-import { useToast } from "@/hooks/use-toast";
+import { TenderSubmissionService } from "@/application/services/TenderSubmissionService";
 import { AppLayout } from "@/components/layout";
-import { TenderDTO } from "@/dtos/entities/TenderDTO";
+import { useTenders } from "@/hooks/hexagonal";
+import { TenderStatusCode } from "@/config/referentials/tender/tender-workflow.referential";
+import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
+import { useToast } from "@/hooks/use-toast";
 
-interface SelectedSupplier {
+interface Tender {
   id: string;
-  name: string;
-  email: string;
-  phase?: WorkflowPhase;
-  stage?: WorkflowStage;
-  tender_id?: string;
-  selected_documents?: string[];
+  title: string;
+  description?: string | null;
+  status: string;
+  projectId?: string | null;
+  project_id?: string | null;
+  launchDate?: string | null;
+  deadlineDate?: string | null;
+  attributionDate?: string | null;
+  submissionDeadline?: string | null;
+  currentPhase?: number | string | null;
+  tenderNumber?: string | null;
 }
 
 const TenderManagement = () => {
-  const [selectedTender, setSelectedTender] = useState<TenderDTO | null>(null);
-  const [documentSharingOpen, setDocumentSharingOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const paramTenderId = searchParams.get("tenderId") || "";
+  const paramTab = searchParams.get("tab") || "workflow";
+
+  const [selectedTender, setSelectedTender] = useState<Tender | null>(null);
+  const [activeTab, setActiveTab] = useState<string>(paramTab);
   const [secureSharingOpen, setSecureSharingOpen] = useState(false);
-  const [documentSelectorOpen, setDocumentSelectorOpen] = useState(false);
-  const [submissionSecretOpen, setSubmissionSecretOpen] = useState(false);
-  const [selectedSubmission, setSelectedSubmission] = useState<{
-    id: string;
-    supplierName: string;
-  } | null>(null);
-  const [selectedSupplier, setSelectedSupplier] =
-    useState<SelectedSupplier | null>(null);
-  const [selectedWorkflowStep, setSelectedWorkflowStep] = useState<{
-    phase: WorkflowPhase;
-    stage: WorkflowStage;
-  } | null>(null);
-  const [verifiedSubmissions, setVerifiedSubmissions] = useState<Set<string>>(
-    new Set()
-  );
-  const [secretCodes, setSecretCodes] = useState<Record<string, string>>({});
-  const [validatingSubmission, setValidatingSubmission] = useState<
-    string | null
-  >(null);
+  const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
+  const [documentSharingOpen, setDocumentSharingOpen] = useState(false);
   const { toast } = useToast();
 
-  // Fetch tender submissions for the selected tender using TenderService
-  const { data: submissions } = useQuery({
+  const { data: tenders = [] } = useTenders();
+
+  // Honor ?tenderId= from URL
+  useEffect(() => {
+    if (!paramTenderId || !tenders.length) return;
+    const found = tenders.find((t: any) => t.id === paramTenderId);
+    if (found && found.id !== selectedTender?.id) setSelectedTender(found as any);
+  }, [paramTenderId, tenders]);
+
+  // Sync tab param
+  useEffect(() => {
+    if (paramTab !== activeTab) setActiveTab(paramTab);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paramTab]);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", tab);
+    if (selectedTender?.id) next.set("tenderId", selectedTender.id);
+    setSearchParams(next, { replace: true });
+  };
+
+  const handleSelectTender = (t: any) => {
+    setSelectedTender(t);
+    const next = new URLSearchParams(searchParams);
+    next.set("tenderId", t.id);
+    setSearchParams(next, { replace: true });
+  };
+
+  // Submissions
+  const { data: submissions = [] } = useQuery({
     queryKey: ["tender-submissions", selectedTender?.id],
     queryFn: async () => {
       if (!selectedTender?.id) return [];
-      return await TenderService.getTenderSubmissions(selectedTender.id);
+      return (await TenderSubmissionService.getTenderSubmissions(selectedTender.id)) as any[];
     },
     enabled: !!selectedTender?.id,
   });
 
-  const handleShareWithSuppliers = (
-    phase: WorkflowPhase,
-    stage: WorkflowStage
-  ) => {
-    setSelectedWorkflowStep({ phase, stage });
-
-    if (!selectedTender) {
-      // If no tender is selected, use the general sharing approach
-      setSelectedSupplier({
-        id: "all-suppliers",
-        name: `Tous les fournisseurs - ${stage.label}`,
-        email: "all-suppliers@tender-portal.com",
-        phase: phase,
-        stage: stage,
-      });
-      setDocumentSharingOpen(true);
-    } else {
-      // If a tender is selected, open document selector for this tender
-      setDocumentSelectorOpen(true);
-    }
-  };
-
-  const handleDocumentSelected = (documentIds: string[]) => {
-    // Create a supplier context for the selected tender
-    setSelectedSupplier({
-      id: `tender-${selectedTender?.id}`,
-      name: `Fournisseurs - ${selectedTender?.title} - ${selectedWorkflowStep?.stage.label}`,
-      email: `tender-${selectedTender?.id}@portal.com`,
-      phase: selectedWorkflowStep?.phase,
-      stage: selectedWorkflowStep?.stage,
-      tender_id: selectedTender?.id,
-      selected_documents: documentIds,
-    });
-    setDocumentSelectorOpen(false);
-    setDocumentSharingOpen(true);
-  };
-
-  const handleVerifySecret = async (submissionId: string) => {
-    const secretCode = secretCodes[submissionId];
-    if (!secretCode || secretCode.trim().length === 0) {
-      toast({
-        title: "Code requis",
-        description: "Veuillez entrer le code secret",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setValidatingSubmission(submissionId);
-    try {
-      const result = await SubmissionSecretService.validateSecret(secretCode);
-
-      if (result.is_valid && result.submission_id === submissionId) {
-        setVerifiedSubmissions((prev) => new Set(prev).add(submissionId));
-        toast({
-          title: "Code vérifié",
-          description: "L'accès à la soumission a été autorisé",
-        });
-      } else {
-        toast({
-          title: "Code invalide",
-          description:
-            result.message ||
-            "Le code secret n'est pas valide pour cette soumission",
-          variant: "destructive",
-        });
+  // Documents count (for context indicator)
+  const { data: docsCount = 0 } = useQuery({
+    queryKey: ["tender-docs-count", selectedTender?.id],
+    queryFn: async () => {
+      if (!selectedTender?.id) return 0;
+      try {
+        const repo = RepositoryFactory.getTenderDocumentRepository();
+        const docs: any[] = await (repo as any).getDocumentsByTenderId?.(selectedTender.id) ?? [];
+        return docs.length;
+      } catch {
+        return 0;
       }
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de vérifier le code secret",
-        variant: "destructive",
-      });
-    } finally {
-      setValidatingSubmission(null);
+    },
+    enabled: !!selectedTender?.id,
+  });
+
+  const workflowContext = useMemo(() => {
+    const list = submissions as any[];
+    return {
+      hasLots: false, // will be computed by service when disponible
+      hasDocuments: docsCount > 0,
+      hasDeadline: !!(selectedTender?.submissionDeadline || selectedTender?.deadlineDate),
+      submissionsCount: list.length,
+      hasEvaluationScores: list.some((s) => s.total_score != null || s.evaluation_score != null),
+      hasWinner: list.some((s) => s.status === 'awarded' || s.is_winner),
+      contractSigned: selectedTender?.status === 'contracted' || selectedTender?.status === 'closed',
+    };
+  }, [submissions, docsCount, selectedTender]);
+
+  const handleTransition = async (to: TenderStatusCode) => {
+    if (!selectedTender) return;
+    try {
+      const repo = RepositoryFactory.getTenderRepository();
+      await repo.update(selectedTender.id, { status: to } as any);
+      toast({ title: "Statut mis à jour", description: `Nouveau statut: ${to}` });
+      setSelectedTender((s) => (s ? { ...s, status: to } : s));
+    } catch (e: any) {
+      toast({ title: "Erreur", description: e?.message ?? "Transition impossible", variant: "destructive" });
     }
   };
+
+  const verifiedSubs = useMemo(
+    () => (submissions as any[]).filter((s) => s.access_verified || s.is_verified || s.status !== 'pending'),
+    [submissions]
+  );
+
+  const winnerSub = useMemo(
+    () => (submissions as any[]).find((s) => s.is_winner || s.status === 'awarded'),
+    [submissions]
+  );
 
   return (
     <AppLayout
@@ -171,11 +163,7 @@ const TenderManagement = () => {
               <FileText className="h-3 w-3 mr-1" />
               {selectedTender.status}
             </Badge>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => setSecureSharingOpen(true)}
-            >
+            <Button variant="default" size="sm" onClick={() => setSecureSharingOpen(true)}>
               <Users className="h-4 w-4 mr-2" />
               Partage Sécurisé
             </Button>
@@ -185,43 +173,35 @@ const TenderManagement = () => {
     >
       <div className="space-y-6">
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Left Column - Tender CRUD */}
           <div className="xl:col-span-1">
             <TenderCrud
-              onTenderSelect={setSelectedTender}
+              onTenderSelect={handleSelectTender as any}
               selectedTenderId={selectedTender?.id}
             />
           </div>
 
-          {/* Right Column - Tender Details */}
           <div className="xl:col-span-2">
             {selectedTender ? (
               <Card className="h-full">
                 <CardHeader className="border-b bg-muted/30">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-xl flex items-center gap-2">
-                        <FileText className="h-5 w-5" />
-                        {selectedTender.title}
+                    <div className="min-w-0">
+                      <CardTitle className="text-xl flex items-center gap-2 truncate">
+                        <FileText className="h-5 w-5 shrink-0" />
+                        <span className="truncate">{selectedTender.title}</span>
                       </CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {selectedTender.description}
-                      </p>
+                      {selectedTender.description && (
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                          {selectedTender.description}
+                        </p>
+                      )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant={
-                          selectedTender.status === "published"
-                            ? "default"
-                            : "secondary"
-                        }
-                      >
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge variant={selectedTender.status === "published" ? "default" : "secondary"}>
                         {selectedTender.status}
                       </Badge>
                       <Button variant="outline" size="sm" asChild>
-                        <Link
-                          to={`/tender-management/${selectedTender?.id}/settings`}
-                        >
+                        <Link to={`/tenders/${selectedTender.id}`}>
                           <Settings className="h-4 w-4" />
                         </Link>
                       </Button>
@@ -229,71 +209,53 @@ const TenderManagement = () => {
                   </div>
                 </CardHeader>
 
-                <Tabs defaultValue="workflow" className="flex-1">
+                <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1">
                   <div className="border-b px-6 bg-muted/30">
-                    <TabsList className="grid w-full grid-cols-5 max-w-3xl">
+                    <TabsList className="grid w-full grid-cols-7 max-w-4xl">
                       <TabsTrigger value="workflow" className="text-xs">
-                        Workflow & Étapes
+                        <Layers className="h-3 w-3 mr-1" /> Workflow
                       </TabsTrigger>
-                      <TabsTrigger value="lots" className="text-xs">
-                        Lots & Phases
-                      </TabsTrigger>
+                      <TabsTrigger value="lots" className="text-xs">Lots</TabsTrigger>
                       <TabsTrigger value="documents" className="text-xs">
-                        Documents
+                        <FileText className="h-3 w-3 mr-1" /> Docs
+                        {docsCount > 0 && <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px]">{docsCount}</Badge>}
                       </TabsTrigger>
                       <TabsTrigger value="inbox" className="text-xs">
-                        Réception
+                        <Inbox className="h-3 w-3 mr-1" /> Réception
+                        {(submissions as any[]).length > 0 && <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px]">{(submissions as any[]).length}</Badge>}
                       </TabsTrigger>
-                      <TabsTrigger value="evaluation" className="text-xs">
-                        Évaluation
+                      <TabsTrigger value="evaluation" className="text-xs">Évaluation</TabsTrigger>
+                      <TabsTrigger value="decision" className="text-xs">
+                        <Gavel className="h-3 w-3 mr-1" /> Décision
+                      </TabsTrigger>
+                      <TabsTrigger value="secrets" className="text-xs">
+                        <KeyRound className="h-3 w-3 mr-1" /> Codes
                       </TabsTrigger>
                     </TabsList>
                   </div>
 
                   <CardContent className="p-6">
-                    <TabsContent value="inbox" className="mt-0">
-                      <SubmissionsInbox
-                        tenderId={selectedTender.id}
-                        tenderDeadline={selectedTender.deadlineDate}
-                        projectId={selectedTender.projectId}
-                      />
-                    </TabsContent>
-                    {/* Workflow & Étapes — fusion workflow + stepper + steps + timeline */}
                     <TabsContent value="workflow" className="mt-0 space-y-6">
                       <TenderTimelineCard
                         launchDate={selectedTender.launchDate}
                         deadlineDate={selectedTender.deadlineDate ?? selectedTender.attributionDate}
                       />
-                      <TenderWorkflowStepper
+                      <TenderWorkflowPanel
                         tenderId={selectedTender.id}
-                        currentStep={
-                          selectedTender.status === 'draft'
-                            ? 'creation'
-                            : selectedTender.status === 'published'
-                              ? 'publication'
-                              : 'evaluation'
-                        }
-                      />
-                      <PublicProcurementWorkflow
-                        selectedTender={selectedTender}
-                        onShareWithSuppliers={handleShareWithSuppliers}
-                      />
-                      <TenderWorkflowSteps
-                        tenderId={selectedTender.id}
-                        projectId={selectedTender.projectId}
-                        readonly={false}
+                        status={selectedTender.status}
+                        context={workflowContext}
+                        onTransition={handleTransition}
                       />
                     </TabsContent>
 
-                    {/* Lots & Phases — fusion lots + phases */}
                     <TabsContent value="lots" className="mt-0 space-y-6">
                       <TenderProjectPhases
                         tenderId={selectedTender.id}
-                        projectId={selectedTender.projectId}
+                        projectId={selectedTender.projectId ?? selectedTender.project_id ?? ''}
                       />
                       <TenderLotBuilder
                         tenderId={selectedTender.id}
-                        projectId={selectedTender.projectId}
+                        projectId={selectedTender.projectId ?? selectedTender.project_id ?? ''}
                       />
                     </TabsContent>
 
@@ -301,106 +263,69 @@ const TenderManagement = () => {
                       <TenderDocumentManager tenderId={selectedTender.id} />
                     </TabsContent>
 
-                    <TabsContent value="evaluation" className="mt-0">
-                      <div className="space-y-4">
-                        {/* Submissions List with Secret Code Management */}
-                        {submissions && submissions.length > 0 && (
-                          <Card className="bg-gradient-to-br from-primary/5 to-transparent border-primary/20">
-                            <CardHeader>
-                              <CardTitle className="text-lg flex items-center gap-2">
-                                <Users className="h-5 w-5" />
-                                Soumissions Reçues ({submissions.length})
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="space-y-2">
-                                {submissions.map((sub: any) => (
-                                  <div
-                                    key={sub.id}
-                                    className="flex items-center justify-between p-3 border rounded-lg bg-background hover:shadow-md transition-shadow"
-                                  >
-                                    <div className="flex-1">
-                                      <p className="font-medium">
-                                        {sub.supplier_name}
-                                      </p>
-                                      <p className="text-sm text-muted-foreground">
-                                        {sub.supplier_email}
-                                      </p>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      {!verifiedSubmissions.has(sub.id) ? (
-                                        <>
-                                          <Input
-                                            type="text"
-                                            placeholder="Entrer le code secret"
-                                            className="w-48"
-                                            maxLength={10}
-                                            value={secretCodes[sub.id] || ""}
-                                            onChange={(e) =>
-                                              setSecretCodes((prev) => ({
-                                                ...prev,
-                                                [sub.id]: e.target.value,
-                                              }))
-                                            }
-                                          />
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() =>
-                                              handleVerifySecret(sub.id)
-                                            }
-                                            disabled={
-                                              validatingSubmission === sub.id
-                                            }
-                                          >
-                                            <FileText className="h-4 w-4 mr-1" />
-                                            {validatingSubmission === sub.id
-                                              ? "Vérification..."
-                                              : "Vérifier"}
-                                          </Button>
-                                        </>
-                                      ) : (
-                                        <Badge
-                                          variant="default"
-                                          className="gap-1"
-                                        >
-                                          <FileText className="h-3 w-3" />
-                                          Code vérifié
-                                        </Badge>
-                                      )}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        )}
+                    <TabsContent value="inbox" className="mt-0">
+                      <SubmissionsInbox
+                        tenderId={selectedTender.id}
+                        tenderDeadline={selectedTender.submissionDeadline ?? selectedTender.deadlineDate ?? undefined}
+                        projectId={selectedTender.projectId ?? selectedTender.project_id ?? ''}
+                      />
+                    </TabsContent>
 
-                        {verifiedSubmissions.size > 0 && (
-                          <TenderEvaluationPanel
-                            tenderId={selectedTender.id}
-                            verifiedSubmissions={Array.from(
-                              verifiedSubmissions
-                            )}
+                    <TabsContent value="evaluation" className="mt-0 space-y-4">
+                      {verifiedSubs.length === 0 ? (
+                        <div className="text-sm text-muted-foreground p-6 border rounded-md">
+                          Aucune soumission vérifiée. Validez les codes secrets dans l'onglet <b>Réception</b>.
+                        </div>
+                      ) : (
+                        verifiedSubs.map((s: any) => (
+                          <EvaluationPanelTabs
+                            key={s.id}
+                            submissionId={s.id}
+                            supplierName={s.supplier_name}
                           />
-                        )}
+                        ))
+                      )}
+                    </TabsContent>
 
-                        {/* Panneau critères pondérés (Admin / Technique / Financier) */}
-                        {Array.from(verifiedSubmissions).map((subId) => {
-                          const sub = submissions?.find((s: any) => s.id === subId);
-                          return (
-                            <EvaluationPanelTabs
-                              key={subId}
-                              submissionId={subId}
-                              supplierName={sub?.supplier_name}
-                            />
-                          );
-                        })}
-                      </div>
+                    <TabsContent value="decision" className="mt-0 space-y-4">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <Gavel className="h-4 w-4" /> Décision d'attribution
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          {winnerSub ? (
+                            <div className="p-3 border rounded-md bg-emerald-50 border-emerald-200">
+                              <div className="text-sm font-medium">Lauréat proposé</div>
+                              <div className="text-lg">{winnerSub.supplier_name}</div>
+                              <div className="text-xs text-muted-foreground">
+                                Statut: {winnerSub.status} · Score: {winnerSub.total_score ?? '—'}
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">
+                              Aucun lauréat désigné. Utilisez l'onglet <b>Réception</b> puis <b>Évaluation</b> pour proposer un lauréat.
+                            </p>
+                          )}
+                          <TenderWorkflowPanel
+                            tenderId={selectedTender.id}
+                            status={selectedTender.status}
+                            context={workflowContext}
+                            onTransition={handleTransition}
+                          />
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+
+                    <TabsContent value="secrets" className="mt-0">
+                      <TenderSecretsPanel
+                        tenderId={selectedTender.id}
+                        tenderTitle={selectedTender.title}
+                      />
                     </TabsContent>
                   </CardContent>
                 </Tabs>
-
               </Card>
             ) : (
               <Card className="h-full">
@@ -408,12 +333,9 @@ const TenderManagement = () => {
                   <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
                     <FileText className="h-8 w-8 text-muted-foreground" />
                   </div>
-                  <h3 className="text-lg font-medium mb-2">
-                    Aucun appel d'offres sélectionné
-                  </h3>
+                  <h3 className="text-lg font-medium mb-2">Aucun appel d'offres sélectionné</h3>
                   <p className="text-sm text-muted-foreground max-w-md">
-                    Sélectionnez un appel d'offres à gauche pour voir ses
-                    détails et gérer son workflow de soumission.
+                    Sélectionnez un appel d'offres à gauche pour voir ses détails et gérer son workflow.
                   </p>
                   <Button variant="outline" className="mt-4" size="sm" asChild>
                     <Link to="/tender-import">
@@ -427,95 +349,23 @@ const TenderManagement = () => {
           </div>
         </div>
 
-        {/* Secure Sharing Dialog */}
         {selectedTender && (
           <SecureSharingDialog
             isOpen={secureSharingOpen}
             onOpenChange={setSecureSharingOpen}
             tenderId={selectedTender.id}
             tenderTitle={selectedTender.title}
-            workflowPhase={selectedWorkflowStep?.phase.code}
-            workflowStage={selectedWorkflowStep?.stage.code}
           />
         )}
 
-        {/* Document Sharing Dialog */}
         {selectedSupplier && (
           <EnhancedDocumentSharing
             supplier={selectedSupplier}
             isOpen={documentSharingOpen}
             onOpenChange={(open) => {
               setDocumentSharingOpen(open);
-              if (!open) {
-                setSelectedSupplier(null);
-                setSelectedWorkflowStep(null);
-              }
+              if (!open) setSelectedSupplier(null);
             }}
-          />
-        )}
-
-        {/* Document Selector Dialog */}
-        {selectedTender && documentSelectorOpen && (
-          <Dialog
-            open={documentSelectorOpen}
-            onOpenChange={setDocumentSelectorOpen}
-          >
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>
-                  Sélectionner les documents pour{" "}
-                  {selectedWorkflowStep?.stage.label}
-                </DialogTitle>
-              </DialogHeader>
-              <div className="p-4 space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Choisissez les documents à partager avec les fournisseurs pour
-                  cette étape.
-                </p>
-
-                {/* Document List */}
-                <div className="border rounded-lg p-4 bg-muted/30">
-                  <h4 className="font-medium mb-3">Documents disponibles</h4>
-                  <div className="text-sm text-muted-foreground">
-                    Seuls les documents uploadés dans les étapes du workflow
-                    sont disponibles pour le partage.
-                  </div>
-                  <div className="mt-3 space-y-2">
-                    <div className="text-center py-8 text-muted-foreground">
-                      <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">Aucun document disponible</p>
-                      <p className="text-xs mt-1">
-                        Ajoutez des documents aux étapes pour les rendre
-                        disponibles au partage
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2 pt-4 border-t">
-                  <Button
-                    variant="outline"
-                    onClick={() => setDocumentSelectorOpen(false)}
-                  >
-                    Annuler
-                  </Button>
-                  <Button onClick={() => handleDocumentSelected([])} disabled>
-                    Continuer sans documents
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
-
-        {/* Submission Secret Dialog */}
-        {selectedSubmission && (
-          <SubmissionSecretDialog
-            isOpen={submissionSecretOpen}
-            onOpenChange={setSubmissionSecretOpen}
-            submissionId={selectedSubmission.id}
-            supplierName={selectedSubmission.supplierName}
-            tenderId={selectedTender?.id || ""}
           />
         )}
       </div>
