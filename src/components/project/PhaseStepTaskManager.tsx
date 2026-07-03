@@ -38,6 +38,7 @@ interface PhaseStepTask {
   assigned_to?: string[];
 }
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PhaseStepTaskManagerProps {
   projectId: string;

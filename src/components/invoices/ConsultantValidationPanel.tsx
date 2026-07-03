@@ -15,6 +15,7 @@ import { NotificationService } from '@/application/services/NotificationService'
 import { CheckCircle, XCircle, Eye, FileText, AlertTriangle, Upload } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProgressInvoice {
   id: string;

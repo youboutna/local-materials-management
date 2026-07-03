@@ -20,6 +20,7 @@ import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 import { Upload, FileText, X, CheckCircle } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { SupplierPaymentService } from '@/application/services/SupplierPaymentService';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SupplierInspectionExecutionDialogProps {
   inspection: InspectionDTO | null;

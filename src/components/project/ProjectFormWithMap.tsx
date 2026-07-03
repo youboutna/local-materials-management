@@ -16,6 +16,7 @@ import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import TenderProjectFields from '@/components/projects/TenderProjectFields';
 import { ConstructionPhase, ConstructionStage } from '@/dtos/entities/ProjectDTO';
 import { PhaseData, CustomPhase } from '@/dtos/entities/PhaseDTO';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Employee {
   id: string;

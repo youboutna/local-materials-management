@@ -14,6 +14,7 @@ import ProjectSelector from '@/components/selectors/ProjectSelector';
 import UserSelector from '@/components/selectors/UserSelector';
 import DocumentViewer from '@/components/documents/DocumentViewer';
 import { useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Notification {
   id: string;

@@ -28,6 +28,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { NotificationService } from '@/application/services/NotificationService';
+import { supabase } from '@/integrations/supabase/client';
 
 // Types d'inspection harmonisés avec AdvancedInspectionScheduler
 const INSPECTION_TYPES = [

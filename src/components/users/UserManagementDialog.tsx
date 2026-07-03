@@ -11,6 +11,7 @@ import { useUserCreate, useUserUpdate, useUserToggleStatus } from '@/hooks/hexag
 import { useRoleManagement } from '@/hooks/useUserRoles';
 import RoleBadge, { RoleType } from '@/components/RoleBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UserProfile {
   id: string;

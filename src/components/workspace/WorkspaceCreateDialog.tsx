@@ -10,6 +10,7 @@ import { toast } from '@/hooks/use-toast';
 import { MAURITANIA_REGIONS, OperationalStatus } from '@/utils/mauritania';
 import { GeographicUnit } from '@/utils/mauritania';
 import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface WorkspaceCreateDialogProps {
   selectedRegion?: string;

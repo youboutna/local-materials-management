@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Download, FileText, Mail, Phone, Send, Settings, Shield, Users } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { ActionFormData, ActionFormDialog } from './ActionFormDialog';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ActionsDropdownProps {
   entityType: 'bank_guarantee' | 'inspection' | 'insurance' | 'payment' | 'project';

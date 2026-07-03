@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import UserSelector from '@/components/selectors/UserSelector';
 import { NotificationService } from '@/application/services/NotificationService';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Project {
   id: string;

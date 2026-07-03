@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Search, Calendar, MapPin, FileText, ExternalLink } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface PublicTendersListProps {
   onSelect?: (tenderId: string) => void;

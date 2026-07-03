@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import AdvancedQuantityCalculator from '@/components/project/AdvancedQuantityCalculator';
 import { calculateAdvancedQuantities } from '@/utils/btpCalculations';
+import { supabase } from '@/integrations/supabase/client';
 
 interface EnhancedTenderEstimatorProps {
   tenderId: string;

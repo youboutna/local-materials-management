@@ -9,6 +9,7 @@ interface ProjectMaterialEntity {
   [key: string]: unknown;
 }
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { supabase } from '@/integrations/supabase/client';
 
 export class MaterialRepository {
   static async getAllMaterials(): Promise<MaterialEntity[]> {

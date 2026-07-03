@@ -16,6 +16,7 @@ import { SupplierBidWizard, type BidWizardStepCode } from '@/components/supplier
 import EnhancedTenderEstimator from '@/components/tenders/EnhancedTenderEstimator';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function TendersPublic() {
   const [selectedId, setSelectedId] = useState<string | null>(null);

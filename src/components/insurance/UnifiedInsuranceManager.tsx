@@ -30,6 +30,7 @@ import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import UserSelector from '@/components/selectors/UserSelector';
 import { ActionsDropdown } from '@/components/actions/ActionsDropdown';
+import { supabase } from '@/integrations/supabase/client';
 
 const insuranceFormSchema = z.object({
   projectId: z.string().min(1, 'Project ID requis'),

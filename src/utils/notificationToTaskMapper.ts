@@ -1,4 +1,5 @@
 import { NotificationType, NotificationMetadata, TaskType } from '@/dtos/types/notification';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CreateTaskFromNotificationParams {
   notificationType: NotificationType;

@@ -8,6 +8,7 @@ import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Download } from 'luc
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/hexagonal';
 import * as XLSX from 'xlsx';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ImportedTender {
   ordre: number;

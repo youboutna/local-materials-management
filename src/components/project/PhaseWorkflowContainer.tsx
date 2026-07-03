@@ -10,6 +10,7 @@ import type { CreateDocumentDTO } from '@/dtos/entities/DocumentDTO';
 type CreateDocumentRequestDto = CreateDocumentDTO;
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/useNotifications';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PhaseWorkflowContainerProps {
   projectId: string;

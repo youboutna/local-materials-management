@@ -45,6 +45,7 @@ import { ProjectStakeholderService } from '@/application/services/ProjectStakeho
 import { useProjectHierarchy } from '@/hooks/useProjectHierarchy';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Phase {
   id: string;
