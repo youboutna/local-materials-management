@@ -16,7 +16,7 @@ import {
   Layers,
 } from "lucide-react";
 import TenderCrud from "@/components/tenders/TenderCrud";
-import TenderDocumentManager from "@/components/tenders/TenderDocumentManager";
+import TenderDocumentsPanel from "@/components/tenders/TenderDocumentsPanel";
 import TenderLotBuilder from "@/components/tenders/TenderLotBuilder";
 import TenderProjectPhases from "@/components/tenders/TenderProjectPhases";
 import { TenderTimelineCard } from "@/components/tenders/TenderTimelineCard";
