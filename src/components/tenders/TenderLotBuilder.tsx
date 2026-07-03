@@ -283,6 +283,18 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
           </div>
         </div>
 
+        {/* Documents communs à tous les lots */}
+        {isPersistMode && (
+          <div className="p-3 border rounded-lg bg-muted/10">
+            <TenderLotDocumentsManager
+              tenderId={tenderId}
+              lotId={null}
+              scopeLabel="Communs à tous les lots"
+              readOnly={readOnly}
+            />
+          </div>
+        )}
+
         {/* Lots */}
         {lots.length > 0 ? (
           <Accordion
