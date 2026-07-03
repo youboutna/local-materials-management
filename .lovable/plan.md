@@ -1,66 +1,77 @@
-## Objectif
-Aligner **45 fichiers** (31 composants + 2 pages + 3 contexts + 4 hooks + 5 domain/utils/scripts) sur les règles de `docs/PROMPTS.md` : **zéro import `@/integrations/supabase` dans `src/components/**`, `src/pages/**`, `src/contexts/**` (sauf `useAuth` interne), `src/hooks/hexagonal/**` (doivent passer par Services)**. Flux obligatoire : UI → Hook hexagonal → Service → Repository → Adapter → DB.
+# Migration schéma `btp` — plan par lots
 
-## Périmètre exact (45 fichiers détectés par scan)
+## Périmètre retenu
+- **Migrer vers `btp`** : toutes les tables métier de `public` (tender_*, project_*, inspection_*, phase_*, price_*, form_*, workflow_*, subscription_*, complaints, contact_messages, notifications, email_*, danger_reports, prospect_*, etc.).
+- **Reste en `public`** (transverse indispensable) : `profiles`, `user_roles`, `oauth_providers`, `auth_sessions`, `blocked_senders`, `system_settings`, `pharmaceutical_specialties`, `prescription_medications`, `insurance_companies`, `territories`, storage.objects, toutes les tables `fuel_stations.*` et `public.stocks`/`deliveries`/`stations_*`/`brand_*`/`national_depots` (hors périmètre BTP, module fuel).
+- **Fonctions SECURITY DEFINER** avec `SET search_path = 'public'` : mises à jour vers `'btp, public'` quand elles référencent des tables migrées.
 
-**Composants UI (31)** — passent tous via un Service/hook hexagonal :
-- Tenders (6) : `TenderProjectStructure`, `EnhancedTenderEstimator`, `TenderExcelImporter`, `TenderEvaluationPanel`, `TenderDocumentManager`, `PublicTendersList`
-- Suppliers (5) : `EnhancedSupplierTenderPortal`, `SupplierDocumentUpload`, `TaskCompletion`, `SupplierInspectionExecutionDialog`, + `documents/TenderDocumentUploadForm`
-- Project (7) : `PhaseWorkflowContainer`, `PhaseStepTaskManager`, `TeamOverview`, `ProjectCreateByDTO`, `EnhancedWorkflowPhaseManager`, `ProjectFormWithMap`, `inspection/InspectionFormWithContext`
-- Inspections (3) : `AdvancedInspectionScheduler`, `EnhancedScheduleInspectionModal`, `InspectionFormWithProjectSelector`
-- Divers (10) : `ActionsDropdown`, `EscalationThresholdsSettings`, `TaskAssignments`, `UnifiedInsuranceManager`, `ConsultantValidationPanel`, `NotificationCrud`, `PaymentRequestModal`, `AdminEmailsSettings`, `UserManagementDialog`, `WorkspaceCreateDialog`
+## Stratégie de migration (par table)
+Pour chaque table migrée :
+```sql
+-- 1. CREATE TABLE btp.<t> (LIKE public.<t> INCLUDING ALL);
+-- 2. INSERT INTO btp.<t> SELECT * FROM public.<t>;
+-- 3. Recréer FKs, RLS, policies, triggers, indexes en btp
+-- 4. GRANT SELECT/INSERT/UPDATE/DELETE TO authenticated + ALL TO service_role
+-- 5. Laisser public.<t> intacte (lecture seule via REVOKE INSERT/UPDATE/DELETE)
+-- 6. Bascule code → btpClient
+-- 7. Après validation utilisateur : DROP TABLE public.<t> CASCADE
+```
+Chaque lot = 1 migration approuvée + 1 batch de bascule code, testable indépendamment.
 
-**Pages (2)** : `Suppliers.tsx`, `TendersPublic.tsx`
-**Contexts (3)** : `AuthContext`, `HexagonalAuthContext`, `UnifiedAuthContext` (unifier — cf. mémoire `auth/hexagonal-unification`)
-**Hooks hexagonaux violants (4)** : `usePhaseMaterialsHex`, `useReceptionManagement`, `useUnifiedSupplierPortalHex`, `useProjectCheckpoints`
-**Domain/Utils (5)** : `MaterialRepository`, `SupplierPaymentRepository`, `TenderRepository` (interfaces qui importent le type Supabase — retirer), `notificationToTaskMapper`, `scripts/loadDataToSupabase`
+## Lots de migration (ordre de dépendance)
 
-## Stratégie d'exécution — un seul batch
+### Lot 1 — Tenders (5 tables)
+`tenders`, `tender_submissions`, `tender_document_submissions`, `tender_submission_documents`, `tender_sharing_secrets`, `tender_sharing_access_logs`, `tender_workflow_status`, `tender_suppliers`, `tender_estimates`, `tender_estimate_items`, `submission_access_logs`, `submission_activity_logs`, `document_validation_logs`.
+Services à basculer : `TenderService`, `TenderSubmissionService`, `TenderEstimateService`, `SubmissionAccessService`.
 
-### Phase A — Cartographie & Services manquants (lecture parallèle)
-1. Lire les 45 fichiers pour recenser chaque appel `supabase.*` (from/storage/functions/rpc/auth).
-2. Croiser avec `src/application/services/*` pour identifier les méthodes manquantes.
-3. Créer/étendre les Services et Repository interfaces requis :
-   - `SupplierPortalService` (portail + accès sécurisé)
-   - `TenderPublicService` (liste publique AO)
-   - `WorkspaceService.create/list`
-   - `UserAdminService` (CRUD users + rôles)
-   - `NotificationService.crud` complet
-   - `PaymentService.createRequest`
-   - `InsuranceService.upsertUnified`
-   - `InspectionSchedulerService` (advanced + enhanced)
-   - `EscalationSettingsService`, `AdminEmailsService`
-   - `TaskAssignmentService`
-   - `MaterialService`, `CheckpointService` pour purger les hooks
-4. Ajouter méthodes de storage manquantes derrière un port `StorageGateway` (upload/getPublicUrl/remove) — un seul adapter dans `infrastructure/supabase/adapters/SupabaseStorageAdapter.ts`.
+### Lot 2 — Projects & Workflow (8 tables)
+`projects`, `project_phases`, `project_steps`, `project_milestones`, `project_comments`, `project_alerts`, `project_resources`, `project_risks`, `project_organizations`, `organizations`, `organizational_hierarchy`, `employees`, `phase_employees`, `phase_materials`, `task_dependencies`, `risk_task_relations`, `resource_assignments`, `workflow_status`.
+Services : `ProjectService`, `ProjectWorkflowService`, `PhaseService`, adaptateurs monitoring.
+Refactor fonctions : `get_project_hierarchy`, `get_hierarchy_chain`, `get_escalation_targets`, `search_projects_autocomplete`.
 
-### Phase B — Réécriture parallèle des 45 fichiers
-- Remplacer chaque `import { supabase }` par les hooks hexagonaux correspondants (`useXxxHex`) ou appel de service via `RepositoryFactory`.
-- Contexts auth : conserver uniquement `HexagonalAuthContext`, faire de `AuthContext`/`UnifiedAuthContext` de simples ré-exports (compat) — mémoire `auth/hexagonal-unification`.
-- Hooks hex violants : rediriger vers Service correspondant, plus aucun accès direct DB.
-- Domain repositories : retirer les imports du type Supabase (`Database['public']…`) et redéfinir les types dans `src/dtos/entities/*`.
-- Utils/scripts : `notificationToTaskMapper` → prendre DTO en entrée ; `loadDataToSupabase` → déplacer sous `src/infrastructure/scripts/` (hors périmètre UI).
+### Lot 3 — Inspections & Paiements (6 tables)
+`inspection_pvs`, `inspection_documents`, `supplier_inspections`, `supplier_payments`, `supplier_payment_requests`, `payment_blocks`, `progress_invoices`, `profit_distributions`.
+Services : `InspectionService`, `PVGeneratorService`, `PaymentService`.
+Refactor fonction : `create_progress_invoice`.
 
-### Phase C — Vérification stricte
-1. `rg "@/integrations/supabase" src/components src/pages src/contexts src/hooks/hexagonal src/domain src/utils` → doit être **vide** (sauf `contexts/HexagonalAuthContext` autorisé pour `auth`).
-2. `bunx tsgo -p tsconfig.app.json` → 0 erreur.
-3. Build Vite auto (harness) → OK.
-4. Lancer app + smoke test Playwright sur : liste AO, détail AO, création projet, portail fournisseur (code secret), inspection scheduler, notifications.
+### Lot 4 — Référentiels & Prix (5 tables)
+`price_references`, `price_calculations`, `price_revaluation_logs`, `stock_thresholds`, `stock_alerts`, `form_templates`, `escalation_thresholds`, `import_forecasts`, `supply_requests`, `distance_matrix`, `locations`.
+Services : `PriceService`, `FormTemplateService`.
 
-## Livrables & rapport final
-- Liste exhaustive **fichiers créés** (nouveaux Services, StorageGateway, DTOs).
-- Liste **fichiers modifiés** (45 cibles + adapters/factory).
-- Liste **fichiers supprimés/déplacés** (scripts legacy).
-- **Points de vérification manuels** :
-  1. Portail fournisseur via code secret (`/supplier-secure-access?code=…`).
-  2. CRUD AO complet + workflow + décision.
-  3. Création workspace + invite user.
-  4. Upload document AO (storage via gateway).
-  5. Planif inspection + PV.
-  6. Notifications CRUD + escalade admin.
+### Lot 5 — Communication & Notifications (5 tables)
+`notifications`, `email_logs`, `email_templates`, `contact_messages`, `scheduled_calls`, `complaints`, `danger_reports`, `prospect_subscription_requests`, `subscriptions`, `supplier_notifications`, `supplier_viewed_items`, `processing_logs`.
+Services : `NotificationService`, `EmailService`, `ContactService`.
 
-## Notes techniques
-- Respect strict des mémoires : pas de React dans services, DTO camelCase, entités `Interface + create()`, TanStack Query v5 sans `onError/onSuccess`, imports dynamiques du client Supabase dans les adapters.
-- StorageGateway = seul point autorisé à toucher `supabase.storage` hors UI.
-- Aucun ID généré côté UI (mémoire `project-workflow-id-policy`).
-- Grants public respectés pour toute nouvelle table (aucune prévue ici).
+## Refonte code (par lot)
+Pattern uniforme dans chaque service :
+```ts
+// avant
+import { supabase } from '@/integrations/supabase/client';
+// après
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+// storage / auth restent sur `rootSupabase` importé séparément
+```
+Vérifier que chaque `supabase.functions.invoke()`, `supabase.auth.*`, `supabase.storage.*` utilise `rootSupabase` (non schema-scoped).
+
+## Config d'isolation
+- `VITE_BTP_SCHEMA=btp` dans `.env` (activation globale).
+- `schema-clients.ts` déjà prêt : bascule `btpClient` en un flag.
+- Types régénérés automatiquement après chaque migration approuvée.
+
+## Contrôles par lot
+1. Migration SQL approuvée → types régénérés.
+2. Diff `src/integrations/supabase/types.ts` : vérifier que `btp.<table>` apparaît.
+3. Bascule code (search-replace ciblé).
+4. `tsgo` typecheck.
+5. Smoke test UI sur le module concerné.
+6. Après validation : DROP `public.<table>` dans la migration du lot suivant.
+
+## Risques identifiés
+- **Fonctions SECURITY DEFINER** hardcodées sur `public.*` : à réécrire, sinon RLS/hiérarchie cassent en silence.
+- **Types TS** : `src/integrations/supabase/types.ts` régénéré → certains `as any` peuvent devenir inutiles ou incorrects.
+- **Edge Functions** : à auditer lot par lot (elles utilisent `SUPABASE_SERVICE_ROLE_KEY` + client racine).
+- **Realtime** : `ALTER PUBLICATION supabase_realtime ADD TABLE btp.<t>` requis pour chaque table utilisée en subscription.
+- **RLS avec sous-requêtes cross-schema** : `user_roles` reste en `public`, donc `has_role(auth.uid(), 'admin')` continue de marcher — vérifié.
+
+## Livrable ce tour
+Uniquement le **Lot 1 (Tenders)** — migration + bascule services + typecheck. Les lots suivants seront lancés à votre validation du Lot 1.
