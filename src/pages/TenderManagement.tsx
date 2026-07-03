@@ -237,8 +237,8 @@ const TenderManagement = () => {
                   <CardContent className="p-6">
                     <TabsContent value="workflow" className="mt-0 space-y-6">
                       <TenderTimelineCard
-                        launchDate={selectedTender.launchDate}
-                        deadlineDate={selectedTender.deadlineDate ?? selectedTender.attributionDate}
+                        launchDate={selectedTender.launchDate ?? undefined}
+                        deadlineDate={(selectedTender.deadlineDate ?? selectedTender.attributionDate) ?? undefined}
                       />
                       <TenderWorkflowPanel
                         tenderId={selectedTender.id}
