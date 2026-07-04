@@ -27,7 +27,7 @@ function useSuppliers() {
     queryKey: ['documents-page', 'suppliers-lite'],
     queryFn: async () => {
       const { data } = await supabase.from('suppliers' as any).select('id, name').order('name').limit(500);
-      return (data ?? []) as { id: string; name: string }[];
+      return ((data ?? []) as unknown) as { id: string; name: string }[];
     },
   });
 }
