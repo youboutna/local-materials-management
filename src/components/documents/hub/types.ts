@@ -68,6 +68,19 @@ export type DocumentHubContract = {
   }) => React.ReactNode;
   /** Categories that appear in upload dialog select. */
   uploadCategoryOptions?: DocumentFacetOption[];
+  /**
+   * Preview strategy:
+   * - 'direct' (default) : the viewer opens fileUrl directly (fast, but exposes storage URL).
+   * - 'proxy'            : the viewer fetches and streams the file through a blob: URL so the
+   *                        underlying storage path is never in the DOM. Use this for private
+   *                        disk/folder servers that must not leak.
+   */
+  previewMode?: 'direct' | 'proxy';
+  /**
+   * Optional custom resolver for `proxy` mode. Returns a blob URL (URL.createObjectURL) that
+   * the viewer will revoke automatically. If omitted in proxy mode, the viewer uses fetch().
+   */
+  resolveBlobUrl?: (item: DocumentItem) => Promise<string | null>;
 };
 
 export type PreviewKind = 'pdf' | 'image' | 'video' | 'audio' | 'text' | 'office' | 'unknown';

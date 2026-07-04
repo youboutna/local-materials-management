@@ -180,7 +180,7 @@ export function DocumentHub({ contract, heading, className }: Props) {
 
       <DocumentHubPreview
         item={preview}
-        categoryLabels={contract.categoryLabels}
+        contract={contract}
         onClose={() => setPreview(null)}
         onDelete={contract.onDelete ? handleDelete : undefined}
       />

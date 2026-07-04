@@ -103,10 +103,14 @@ export type DocumentHubContract = {
 
 ## Migration progressive
 
-1. **Livraison 1** (cette PR) : `hub/` + `tenderDocumentAdapter` + branchement dans l'onglet Docs du module Tender (`TenderManagement.tsx` → `<DocumentHub contract={tenderDocumentAdapter(tenderId)} />`). Vérification : les 2 documents Lot 1 / Lot 2 (`administrative`) apparaissent dans la grille, filtrables par lot + catégorie, aperçu PDF fonctionnel.
-2. **Livraison 2** : `projectDocumentAdapter` + branchement dans `ProjectDetail` (onglet Documents) et `PhaseDocuments`.
-3. **Livraison 3** : `materialDocumentAdapter`, `supplierDocumentAdapter`, `inspectionDocumentAdapter`, refonte de la page `/documents` en Hub agrégé (multi-scope).
-4. **Livraison 4** : suppression des anciens composants (`DocumentsList`, `DocumentsListPaginated`, `DocumentUpload`, `DocumentViewer`, `TenderDocumentManager`, `TenderLotDocumentsManager`, `DocumentSection`) une fois tous les consommateurs migrés.
+1. **Livraison 1 ✅** — `hub/` + `tenderDocumentAdapter` branché dans `TenderManagement.tsx`.
+2. **Livraison 2 ✅** — `projectDocumentAdapter` + `ProjectDocumentsPanel` (prêt pour branchement dans `ProjectDetail` / `PhaseDocuments`).
+3. **Livraison 3 ✅** — `supplierDocumentAdapter`, `inspectionDocumentAdapter`, `materialDocumentAdapter` + refonte page `/documents` en Hub multi-portée (Projet / AO / Fournisseur).
+4. **Livraison 4** (à venir) — retrait progressif des anciens composants (`DocumentsList`, `DocumentUpload`, `DocumentViewer`, `TenderDocuments`, `TenderDocumentManager`, `TenderLotDocumentsManager`, `DocumentSection`) après migration de tous les consommateurs restants (>50 fichiers).
+
+## Preview sécurisé (passerelle blob)
+
+`DocumentHubContract` expose `previewMode: 'direct' | 'proxy'` et `resolveBlobUrl?`. En mode `proxy` la visionneuse `fetch()` le fichier et le rend via `URL.createObjectURL(blob)`, révoqué à la fermeture — l'`iframe src` et le lien de téléchargement affichent `blob:` uniquement, jamais l'URL de stockage. Utilisé par défaut sur tous les nouveaux adaptateurs (project/supplier/inspection/material). Tender reste en `direct` (fichiers publics Supabase). Bascule possible par adaptateur ou via un `resolveBlobUrl` custom (edge function signée, streaming disque, etc.).
 
 ## Détails techniques
 

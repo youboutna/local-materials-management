@@ -1,4 +1,5 @@
-import { Download, ExternalLink, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Download, ExternalLink, Trash2, Loader2, ShieldCheck } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -9,27 +10,89 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { DocumentItem, formatBytes, getPreviewKind } from './types';
+import { DocumentItem, DocumentHubContract, formatBytes, getPreviewKind } from './types';
 import { MimeIcon } from './MimeIcon';
 
 interface Props {
   item: DocumentItem | null;
-  categoryLabels?: Record<string, string>;
+  contract: DocumentHubContract;
   onClose: () => void;
   onDelete?: (item: DocumentItem) => void;
 }
 
-export function DocumentHubPreview({ item, categoryLabels, onClose, onDelete }: Props) {
+/**
+ * Preview drawer.
+ *
+ * When contract.previewMode === 'proxy', the file is streamed through a blob URL so the
+ * underlying storage URL is never exposed in the DOM (iframe src / anchor href).
+ */
+export function DocumentHubPreview({ item, contract, onClose, onDelete }: Props) {
+  const [displayUrl, setDisplayUrl] = useState<string | null>(null);
+  const [loadingBlob, setLoadingBlob] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const proxy = contract.previewMode === 'proxy';
+
+  useEffect(() => {
+    let cancelled = false;
+    let createdObjectUrl: string | null = null;
+
+    async function load() {
+      setError(null);
+      if (!item?.fileUrl) {
+        setDisplayUrl(null);
+        return;
+      }
+      if (!proxy) {
+        setDisplayUrl(item.fileUrl);
+        return;
+      }
+      setLoadingBlob(true);
+      try {
+        let url: string | null = null;
+        if (contract.resolveBlobUrl) {
+          url = await contract.resolveBlobUrl(item);
+        } else {
+          const res = await fetch(item.fileUrl);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const blob = await res.blob();
+          url = URL.createObjectURL(blob);
+          createdObjectUrl = url;
+        }
+        if (!cancelled) setDisplayUrl(url);
+      } catch (err: any) {
+        if (!cancelled) setError(err?.message ?? 'Impossible de charger le document');
+      } finally {
+        if (!cancelled) setLoadingBlob(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+      if (createdObjectUrl) URL.revokeObjectURL(createdObjectUrl);
+    };
+  }, [item, proxy, contract]);
+
   if (!item) return null;
   const kind = getPreviewKind(item.mimeType);
-  const catLabel = item.category ? categoryLabels?.[item.category] ?? item.category : null;
+  const catLabel = item.category
+    ? contract.categoryLabels?.[item.category] ?? item.category
+    : null;
+
+  const triggerDownload = () => {
+    if (!displayUrl) return;
+    const a = document.createElement('a');
+    a.href = displayUrl;
+    a.download = item.fileName ?? item.title;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
 
   return (
     <Sheet open={!!item} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent
-        side="right"
-        className="w-full p-0 sm:max-w-[720px]"
-      >
+      <SheetContent side="right" className="w-full p-0 sm:max-w-[720px]">
         <div className="flex h-full flex-col">
           <SheetHeader className="border-b border-border px-6 py-4">
             <div className="flex items-start gap-3">
@@ -42,6 +105,14 @@ export function DocumentHubPreview({ item, categoryLabels, onClose, onDelete }: 
                   {item.fileName ?? 'Document'}
                 </SheetDescription>
               </div>
+              {proxy && (
+                <span
+                  title="Accès sécurisé via passerelle — l'URL de stockage n'est pas exposée"
+                  className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/50 px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
+                >
+                  <ShieldCheck className="h-3 w-3" /> Proxy
+                </span>
+              )}
             </div>
             <div className="flex flex-wrap gap-1.5">
               {catLabel && <Badge variant="secondary">{catLabel}</Badge>}
@@ -56,28 +127,32 @@ export function DocumentHubPreview({ item, categoryLabels, onClose, onDelete }: 
           </SheetHeader>
 
           <div className="flex-1 overflow-hidden bg-muted/20">
-            {item.fileUrl ? (
+            {loadingBlob ? (
+              <div className="flex h-full items-center justify-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" /> Chargement sécurisé du document…
+              </div>
+            ) : error ? (
+              <div className="flex h-full items-center justify-center p-8 text-sm text-destructive">
+                {error}
+              </div>
+            ) : displayUrl ? (
               kind === 'pdf' ? (
-                <iframe
-                  src={item.fileUrl}
-                  title={item.title}
-                  className="h-full w-full border-0"
-                />
+                <iframe src={displayUrl} title={item.title} className="h-full w-full border-0" />
               ) : kind === 'image' ? (
                 <div className="flex h-full items-center justify-center p-4">
                   <img
-                    src={item.fileUrl}
+                    src={displayUrl}
                     alt={item.title}
                     className="max-h-full max-w-full rounded-md object-contain shadow-md"
                   />
                 </div>
               ) : kind === 'video' ? (
                 <div className="flex h-full items-center justify-center p-4">
-                  <video src={item.fileUrl} controls className="max-h-full max-w-full rounded-md" />
+                  <video src={displayUrl} controls className="max-h-full max-w-full rounded-md" />
                 </div>
               ) : kind === 'audio' ? (
                 <div className="flex h-full items-center justify-center p-4">
-                  <audio src={item.fileUrl} controls />
+                  <audio src={displayUrl} controls />
                 </div>
               ) : (
                 <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
@@ -85,11 +160,9 @@ export function DocumentHubPreview({ item, categoryLabels, onClose, onDelete }: 
                   <p className="text-sm text-muted-foreground">
                     Aperçu indisponible pour ce type de fichier.
                   </p>
-                  <Button asChild>
-                    <a href={item.fileUrl} target="_blank" rel="noreferrer" download={item.fileName ?? undefined}>
-                      <Download className="mr-2 h-4 w-4" />
-                      Télécharger le fichier
-                    </a>
+                  <Button onClick={triggerDownload}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Télécharger le fichier
                   </Button>
                 </div>
               )
@@ -108,7 +181,7 @@ export function DocumentHubPreview({ item, categoryLabels, onClose, onDelete }: 
               </div>
               <div>
                 <dt className="text-muted-foreground">Type</dt>
-                <dd className="font-medium truncate">{item.mimeType ?? '—'}</dd>
+                <dd className="truncate font-medium">{item.mimeType ?? '—'}</dd>
               </div>
               <div>
                 <dt className="text-muted-foreground">Ajouté le</dt>
@@ -125,21 +198,19 @@ export function DocumentHubPreview({ item, categoryLabels, onClose, onDelete }: 
             </dl>
             <Separator className="my-3" />
             <div className="flex items-center justify-end gap-2">
-              {item.fileUrl && (
-                <>
-                  <Button variant="outline" size="sm" asChild>
-                    <a href={item.fileUrl} target="_blank" rel="noreferrer">
-                      <ExternalLink className="mr-1 h-3.5 w-3.5" />
-                      Ouvrir
-                    </a>
-                  </Button>
-                  <Button variant="outline" size="sm" asChild>
-                    <a href={item.fileUrl} download={item.fileName ?? undefined} target="_blank" rel="noreferrer">
-                      <Download className="mr-1 h-3.5 w-3.5" />
-                      Télécharger
-                    </a>
-                  </Button>
-                </>
+              {displayUrl && !proxy && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={displayUrl} target="_blank" rel="noreferrer">
+                    <ExternalLink className="mr-1 h-3.5 w-3.5" />
+                    Ouvrir
+                  </a>
+                </Button>
+              )}
+              {displayUrl && (
+                <Button variant="outline" size="sm" onClick={triggerDownload}>
+                  <Download className="mr-1 h-3.5 w-3.5" />
+                  Télécharger
+                </Button>
               )}
               {onDelete && (
                 <Button
