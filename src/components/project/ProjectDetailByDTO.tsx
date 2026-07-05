@@ -2079,50 +2079,35 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             const rawZones =
               (project as unknown as { interventionZones?: unknown[] }).interventionZones ??
               [];
-            let zoneList = Array.isArray(rawZones)
+            const zoneList = Array.isArray(rawZones)
               ? (rawZones as import('@/dtos/entities/InterventionZoneDTO').InterventionZoneDTO[])
               : [];
-
-            // Fallback : si aucune zone n'est tracée mais que le projet a des
-            // coordonnées et/ou une adresse, on synthétise une zone "point"
-            // pour afficher un marqueur au lieu d'une carte vide.
             const lat = project?.coordinates?.latitude ?? (project as any)?.latitude;
             const lng = project?.coordinates?.longitude ?? (project as any)?.longitude;
-            const address =
-              (project as any)?.location ||
-              (project as any)?.address ||
-              undefined;
+            const address = (project as any)?.location || (project as any)?.address;
+            const hasCenter = typeof lat === 'number' && typeof lng === 'number';
+            const willSynthesize = zoneList.length === 0 && hasCenter;
 
-            if (zoneList.length === 0 && typeof lat === 'number' && typeof lng === 'number') {
-              zoneList = [
-                {
-                  type: 'point',
-                  coordinates: [{ lat, lng }],
-                  label: address || project?.title || 'Localisation du projet',
-                  address,
-                },
-              ];
-            }
-
-            console.info('[ProjectDetail] rendered', zoneList.length, 'intervention zones');
-
-            const hasZones = zoneList.length > 0;
             return (
               <GeoZoneEditor
                 readOnly
                 showAddressBar={false}
                 value={zoneList}
-                title={hasZones ? "Zones d'intervention" : 'Localisation du projet'}
+                title={zoneList.length > 0 ? "Zones d'intervention" : 'Localisation du projet'}
                 hint={
-                  hasZones
+                  zoneList.length > 0
                     ? address
                       ? `Adresse : ${address}`
                       : 'Vue lecture seule — éditez via le workflow projet.'
+                    : willSynthesize
+                    ? address
+                      ? `Coordonnées uniquement — ${address}`
+                      : 'Marqueur généré depuis les coordonnées du projet.'
                     : "Aucune coordonnée ni zone tracée — définissez-en via l'édition du projet."
                 }
-                defaultCenter={
-                  typeof lat === 'number' && typeof lng === 'number' ? [lat, lng] : undefined
-                }
+                defaultCenter={hasCenter ? [lat, lng] : undefined}
+                fallbackLabel={project?.title}
+                fallbackAddress={address}
                 height={520}
               />
             );

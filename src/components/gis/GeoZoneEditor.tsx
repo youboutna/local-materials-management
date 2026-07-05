@@ -248,6 +248,14 @@ export interface GeoZoneEditorProps {
   title?: string;
   /** Sous-titre / hint. */
   hint?: string;
+  /**
+   * En mode `readOnly`, si aucune zone n'est fournie mais qu'un `defaultCenter`
+   * l'est, on synthétise automatiquement une zone "point" (marqueur unique)
+   * pour éviter une carte vide quand seules des coordonnées existent.
+   * `fallbackLabel` / `fallbackAddress` alimentent le libellé du marqueur.
+   */
+  fallbackLabel?: string;
+  fallbackAddress?: string;
 }
 
 type DraftMode = 'idle' | 'polygon' | 'rectangle' | 'circle' | 'point';
@@ -265,8 +273,30 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
   showAddressBar = true,
   title,
   hint,
+  fallbackLabel,
+  fallbackAddress,
 }) => {
-  const zones = useMemo(() => value ?? [], [value]);
+  const zones = useMemo(() => {
+    const provided = value ?? [];
+    if (provided.length > 0) return provided;
+    // Fallback readOnly : synthétise un point si on a un centre explicite.
+    const hasExplicitCenter =
+      Array.isArray(defaultCenter) &&
+      Number.isFinite(defaultCenter[0]) &&
+      Number.isFinite(defaultCenter[1]) &&
+      !(defaultCenter[0] === 18.0735 && defaultCenter[1] === -15.9582);
+    if (readOnly && hasExplicitCenter) {
+      return [
+        {
+          type: 'point' as const,
+          coordinates: [{ lat: defaultCenter[0], lng: defaultCenter[1] }],
+          label: fallbackLabel || fallbackAddress || 'Localisation',
+          address: fallbackAddress,
+        },
+      ];
+    }
+    return provided;
+  }, [value, readOnly, defaultCenter, fallbackLabel, fallbackAddress]);
   const zonesRef = useRef<InterventionZoneDTO[]>(zones);
   useEffect(() => {
     zonesRef.current = zones;
