@@ -1,0 +1,46 @@
+/**
+ * useBoqDocument — TanStack v5 hook. Reads BOQ lines by source+context and
+ * exposes create/bulkCreate/update/delete mutations.
+ */
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
+import type { BoqLineDTO, BoqLineFilter } from '@/dtos/boq/BoqLineDTO';
+
+export function useBoqDocument(filter: BoqLineFilter) {
+  const qc = useQueryClient();
+  const key = ['boq', filter.source, filter.contextId ?? filter.projectId ?? filter.estimateId, filter.phaseId ?? '', filter.resourceType ?? ''];
+
+  const query = useQuery({
+    queryKey: key,
+    queryFn: () => boqRepository.list(filter),
+    enabled: Boolean(filter.contextId || filter.projectId || filter.estimateId),
+  });
+
+  const invalidate = () => qc.invalidateQueries({ queryKey: ['boq'] });
+
+  const createMut = useMutation({
+    mutationFn: (dto: BoqLineDTO) => boqRepository.create(dto),
+  });
+  const bulkCreateMut = useMutation({
+    mutationFn: (dtos: BoqLineDTO[]) => boqRepository.bulkCreate(dtos),
+  });
+  const updateMut = useMutation({
+    mutationFn: (p: { id: string; dto: Partial<BoqLineDTO> }) => boqRepository.update(p.id, p.dto),
+  });
+  const deleteMut = useMutation({
+    mutationFn: (p: { id: string; source: BoqLineDTO['source'] }) => boqRepository.delete(p.id, p.source),
+  });
+
+  return {
+    lines: query.data ?? [],
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+    refetch: query.refetch,
+    createLine: async (dto: BoqLineDTO) => { const r = await createMut.mutateAsync(dto); invalidate(); return r; },
+    bulkCreate: async (dtos: BoqLineDTO[]) => { const r = await bulkCreateMut.mutateAsync(dtos); invalidate(); return r; },
+    updateLine: async (id: string, dto: Partial<BoqLineDTO>) => { const r = await updateMut.mutateAsync({ id, dto }); invalidate(); return r; },
+    deleteLine: async (id: string, source: BoqLineDTO['source']) => { await deleteMut.mutateAsync({ id, source }); invalidate(); },
+    isPending: createMut.isPending || bulkCreateMut.isPending || updateMut.isPending || deleteMut.isPending,
+  };
+}
