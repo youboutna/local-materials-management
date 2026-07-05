@@ -51,29 +51,30 @@ export class BoqImportOrchestrator {
     mapping: ImportMapping,
     ctx: { source: BoqSource; contextId: string; phaseId?: string },
   ): BoqLineDTO[] {
-    return rows
-      .map((row) => {
-        const get = (key?: string) => (key ? row.raw[key] : null);
-        const qty = Number(get(mapping.quantity) ?? 0);
-        const pu = mapping.unitPrice ? Number(get(mapping.unitPrice) ?? 0) : null;
-        const designation = String(get(mapping.designation) ?? '').trim();
-        if (!designation && !qty) return null;
-        const unit = String(get(mapping.unit) ?? 'unité').trim() || 'unité';
-        const phaseId = ctx.phaseId ?? (mapping.phaseId ? String(get(mapping.phaseId) ?? '') : undefined);
-        return {
-          source: ctx.source,
-          contextId: ctx.contextId,
-          designation: designation || (mapping.elementType ? String(get(mapping.elementType) ?? '') : 'Ligne'),
-          elementType: mapping.elementType ? String(get(mapping.elementType) ?? '') : null,
-          unit,
-          quantity: Number.isFinite(qty) ? qty : 0,
-          unitPrice: pu != null && Number.isFinite(pu) ? pu : null,
-          totalHt: pu != null && Number.isFinite(pu) ? qty * pu : null,
-          phaseId: phaseId || null,
-          resourceType: 'material',
-        } satisfies BoqLineDTO;
-      })
-      .filter((x): x is BoqLineDTO => x !== null);
+    const out: BoqLineDTO[] = [];
+    for (const row of rows) {
+      const get = (key?: string) => (key ? row.raw[key] : null);
+      const qty = Number(get(mapping.quantity) ?? 0);
+      const pu = mapping.unitPrice ? Number(get(mapping.unitPrice) ?? 0) : null;
+      const designation = String(get(mapping.designation) ?? '').trim();
+      if (!designation && !qty) continue;
+      const unit = String(get(mapping.unit) ?? 'unité').trim() || 'unité';
+      const phaseId = ctx.phaseId ?? (mapping.phaseId ? String(get(mapping.phaseId) ?? '') : undefined);
+      const dto: BoqLineDTO = {
+        source: ctx.source,
+        contextId: ctx.contextId,
+        designation: designation || (mapping.elementType ? String(get(mapping.elementType) ?? '') : 'Ligne'),
+        elementType: mapping.elementType ? String(get(mapping.elementType) ?? '') : null,
+        unit,
+        quantity: Number.isFinite(qty) ? qty : 0,
+        unitPrice: pu != null && Number.isFinite(pu) ? pu : null,
+        totalHt: pu != null && Number.isFinite(pu) ? qty * pu : null,
+        phaseId: phaseId || null,
+        resourceType: 'material',
+      };
+      out.push(dto);
+    }
+    return out;
   }
 }
 
