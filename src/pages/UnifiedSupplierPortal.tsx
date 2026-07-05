@@ -89,7 +89,24 @@ const UnifiedSupplierPortal = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [activeTab, setActiveTab] = useState("documents");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") ?? "documents";
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Keep tab state in sync with URL (e.g. redirect from /supplier-access after code secret validation).
+  useEffect(() => {
+    const urlTab = searchParams.get("tab");
+    if (urlTab && urlTab !== activeTab) setActiveTab(urlTab);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", value);
+    setSearchParams(next, { replace: true });
+  };
+
   const [prefillPaymentData, setPrefillPaymentData] = useState<{
     projectId?: string;
     amount?: number;
