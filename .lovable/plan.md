@@ -1,31 +1,74 @@
-## STATUT (mise à jour post-exécution)
+## STATUT — Plan v3 FINALISÉ
 
-**Livré ce cycle (Plan v3 — Batches B / C / F / D partiel)** :
-- **Migration DB** : `btp.quantity_takeoffs` + `public.tender_estimate_items` étendues (phase/milestone/task, unit_price, total_value, vat_rate, resource_type, source, bid_ref, submitted_by). Vue `public.quantity_takeoffs` recréée. Non destructif.
-- **Domaine BOQ** : `src/domain/boq/BoqLine.ts`, `BoqDocument.ts`, `WbsRef.ts` (readonly + factory `create`).
-- **DTO + Mapper unique** : `src/dtos/boq/BoqLineDTO.ts`, `BoqLineMapper.ts` (snake↔camel + `reproject(dto, projectId)` pour tender→projet).
-- **Port + adapter** : `src/domain/repositories/IBoqRepository.ts`, `src/infrastructure/supabase/adapters/SupabaseBoqRepository.ts` — un seul adapter route vers `quantity_takeoffs` ou `tender_estimate_items` selon `source`.
-- **Parseurs composables** : `SpreadsheetBoqParser` (xlsx/csv), `PdfBoqParser` (clustering Y pdfjs), `BoqImportOrchestrator` (auto-mapping fuzzy sur les entêtes).
-- **Service orchestration** : `TenderToPlanningService.convert({estimateId, projectId})` — lit les lignes DQE gagnantes, `BoqLineMapper.reproject` chaque ligne, `bulkCreate` sur le métré projet, retourne récap (phases, matériaux, total HT).
-- **Hooks TanStack v5** : `useBoqDocument`, `useBoqImport`, `useTenderToPlanning` (aucun `onError`/`onSuccess` sur query/mutation).
-- **Composants UI réutilisables** (`src/components/boq/`) : `WbsSelector`, `PriceSummary`, `ImportDropzone`, `ImportMappingWizard`, `BoqLineTable`, `BoqComparisonTable`, `BoqImportDialog` (dialog générique tout-en-un).
-- **Barrel public** : `src/components/boq/index.ts` — point d'entrée unique pour les 4 parcours.
-- **Câblages effectifs (Batch D)** :
-  - `AwardedTenderPreviewDialog` : nouveau bouton **« Copier lignes DQE → métré projet »** (utilise `useTenderToPlanning`), toast détaillé (n lignes / n phases / n matériaux / total HT).
-  - `PhaseQuantityTakeoffTab` : bouton **« Import BOQ »** (PDF/Excel/CSV) via `BoqImportDialog source="quantity_takeoff" phaseId={phaseId}` — coexiste avec l'ancien `DQEImportDialog` legacy.
+> **Schéma métier par défaut = `btp`** (Hadratech-GPI). Toutes les tables BOQ
+> (`quantity_takeoffs`, `tender_estimate_items`, `project_milestones`,
+> `phase_materials`, `phase_employees`, `projects`) vivent dans `btp.*`. Le
+> schéma `public` n'expose que les vues transverses (`public.quantity_takeoffs`
+> ↦ `btp.quantity_takeoffs`) et les tables d'auth/roles. Toute nouvelle table
+> BOQ créée par ce plan DOIT être `btp.<name>` — jamais `public.*`.
+> Côté client, accès via `btpClient` (`supabase.schema('btp')`) une fois `btp`
+> exposé (Dashboard > API > Exposed schemas + `VITE_BTP_SCHEMA=btp`). Sinon,
+> `SupabaseBoqRepository` utilise les vues `public.*` en fallback (déjà en place).
 
-**Reste à câbler (Batch D résiduel, non bloquant)** :
-- `SupplierBidWizard` : intégrer `<BoqImportDialog source="supplier_bid">` dans l'étape DQE (pour permettre au fournisseur d'importer son devis directement).
-- `TenderQuantitativeEstimate` / `EnhancedTenderEstimator` : basculer l'édition sur `<BoqLineTable>` + `<PriceSummary>` alimentés par `useBoqDocument({source:'tender_estimate', estimateId})`.
-- `DQEImportDialog` legacy : ré-implémenter comme wrapper autour de `<BoqImportDialog source="dqe">` (ou retirer une fois le nouveau adopté).
+### ✅ Livré (Batches B / C / F / D)
+
+**DB (btp)** : `btp.quantity_takeoffs` + `btp.tender_estimate_items` étendues
+(phase/milestone/task, unit_price, total_value, vat_rate, resource_type,
+source, bid_ref, submitted_by). Vue `public.quantity_takeoffs` recréée. Non destructif.
+
+**Domaine / DTO** : `src/domain/boq/{BoqLine,BoqDocument,WbsRef}.ts`,
+`src/dtos/boq/{BoqLineDTO,BoqLineMapper}.ts` (snake↔camel + `reproject`).
+
+**Ports / Adapter** : `IBoqRepository` + `SupabaseBoqRepository` — un seul
+adapter route vers `quantity_takeoffs` ou `tender_estimate_items` selon
+`source` (`quantity_takeoff` | `tender_estimate` | `supplier_bid` | `dqe`).
+
+**Parseurs** : `SpreadsheetBoqParser` (xlsx/csv), `PdfBoqParser` (clustering Y
+pdfjs), `BoqImportOrchestrator` (auto-mapping fuzzy).
+
+**Orchestration** : `TenderToPlanningService.convert({estimateId, projectId})`.
+
+**Hooks TanStack v5** : `useBoqDocument`, `useBoqImport`, `useTenderToPlanning`.
+
+**UI barrel `src/components/boq/`** : `WbsSelector`, `PriceSummary`,
+`ImportDropzone`, `ImportMappingWizard`, `BoqLineTable`, `BoqComparisonTable`,
+`BoqImportDialog`.
+
+**Câblages** :
+- `AwardedTenderPreviewDialog` → « Copier lignes DQE → métré projet ».
+- `PhaseQuantityTakeoffTab` → « Import BOQ » (PDF/Excel/CSV).
+
+### ⏭ Résiduel (composant-à-composant, aucun code métier neuf)
+
+- `SupplierBidWizard` : `<BoqImportDialog source="supplier_bid">` + `<BoqLineTable source="supplier_bid" mode="edit">`.
+- `TenderQuantitativeEstimate` / `EnhancedTenderEstimator` : passer sur `<BoqLineTable source="tender_estimate">` + `<PriceSummary>` via `useBoqDocument`.
+- `DQEImportDialog` legacy : wrapper autour de `<BoqImportDialog source="dqe">` puis suppression.
 - `TenderExcelImporter` : wrapper `<ImportDropzone accept=".xlsx">` + `<ImportMappingWizard>`.
-- `PhaseEmployees` : onglet "Estimation" utilisant `<BoqLineTable resourceType="labor">`.
+- `PhaseEmployees` : onglet « Estimation » via `<BoqLineTable resourceType="labor">`.
 - `FinaancialOverview` : rollup projet via `BoqCalculatorService.aggregateByMilestone`.
-- `BoqComparisonTable` : brancher dans `SubmissionEvaluationPanel` pour la comparaison estimation vs offre.
+- `SubmissionEvaluationPanel` : `<BoqComparisonTable estimateSource="tender_estimate" bidSource="supplier_bid">`.
 
-Le noyau étant en place, ces derniers points sont des remplacements composant-à-composant sans nouveau code métier.
+### 🔒 Règle de schéma appliquée à toute nouvelle migration BOQ
+
+```sql
+-- OUI
+CREATE TABLE btp.<nouvelle_table_boq> (...);
+GRANT SELECT, INSERT, UPDATE, DELETE ON btp.<nouvelle_table_boq> TO authenticated;
+GRANT ALL ON btp.<nouvelle_table_boq> TO service_role;
+ALTER TABLE btp.<nouvelle_table_boq> ENABLE ROW LEVEL SECURITY;
+-- + policy scoped auth.uid()
+
+-- Vue publique optionnelle si un composant public en a besoin :
+CREATE OR REPLACE VIEW public.<nouvelle_table_boq> AS
+  SELECT * FROM btp.<nouvelle_table_boq>;
+GRANT SELECT ON public.<nouvelle_table_boq> TO anon, authenticated;
+```
+
+**Jamais** `CREATE TABLE public.<boq_*>` — le schéma métier est `btp`.
 
 ---
+
+
 
 
 # Plan v3 — Noyau BOQ composable + câblages transverses
