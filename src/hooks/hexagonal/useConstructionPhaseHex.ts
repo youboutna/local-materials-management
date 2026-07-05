@@ -109,28 +109,27 @@ export function useConstructionPhaseHex(projectId?: string) {
     try {
       setLoading(true);
       setError(null);
-      
+
       const updatedPhase = await phaseService.updatePhase(id, phaseData);
-      
+
       // Convert domain entity back to DTO for UI using PhaseTransformer
       const phaseDTO = PhaseTransformer.toDTO(updatedPhase);
-      
-      setPhases(prev => prev.map(phase => 
+
+      setPhases(prev => prev.map(phase =>
         phase.id === id ? phaseDTO as unknown as PhaseData : phase
       ));
-      
+
       toast({
         title: "Success",
         description: "Construction phase updated successfully",
         variant: "default",
       });
+      return updatedPhase;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update construction phase');
-      toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "Failed to update construction phase",
-        variant: "destructive",
-      });
+      const message = err instanceof Error ? err.message : 'Failed to update construction phase';
+      setError(message);
+      // Re-throw so caller can implement fallback (e.g. create-if-missing)
+      throw err instanceof Error ? err : new Error(message);
     } finally {
       setLoading(false);
     }
