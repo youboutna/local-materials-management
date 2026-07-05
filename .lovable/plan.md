@@ -1,3 +1,32 @@
+## STATUT (mise à jour post-exécution)
+
+**Livré ce cycle (Plan v3 — Batches B / C / F / D partiel)** :
+- **Migration DB** : `btp.quantity_takeoffs` + `public.tender_estimate_items` étendues (phase/milestone/task, unit_price, total_value, vat_rate, resource_type, source, bid_ref, submitted_by). Vue `public.quantity_takeoffs` recréée. Non destructif.
+- **Domaine BOQ** : `src/domain/boq/BoqLine.ts`, `BoqDocument.ts`, `WbsRef.ts` (readonly + factory `create`).
+- **DTO + Mapper unique** : `src/dtos/boq/BoqLineDTO.ts`, `BoqLineMapper.ts` (snake↔camel + `reproject(dto, projectId)` pour tender→projet).
+- **Port + adapter** : `src/domain/repositories/IBoqRepository.ts`, `src/infrastructure/supabase/adapters/SupabaseBoqRepository.ts` — un seul adapter route vers `quantity_takeoffs` ou `tender_estimate_items` selon `source`.
+- **Parseurs composables** : `SpreadsheetBoqParser` (xlsx/csv), `PdfBoqParser` (clustering Y pdfjs), `BoqImportOrchestrator` (auto-mapping fuzzy sur les entêtes).
+- **Service orchestration** : `TenderToPlanningService.convert({estimateId, projectId})` — lit les lignes DQE gagnantes, `BoqLineMapper.reproject` chaque ligne, `bulkCreate` sur le métré projet, retourne récap (phases, matériaux, total HT).
+- **Hooks TanStack v5** : `useBoqDocument`, `useBoqImport`, `useTenderToPlanning` (aucun `onError`/`onSuccess` sur query/mutation).
+- **Composants UI réutilisables** (`src/components/boq/`) : `WbsSelector`, `PriceSummary`, `ImportDropzone`, `ImportMappingWizard`, `BoqLineTable`, `BoqComparisonTable`, `BoqImportDialog` (dialog générique tout-en-un).
+- **Barrel public** : `src/components/boq/index.ts` — point d'entrée unique pour les 4 parcours.
+- **Câblages effectifs (Batch D)** :
+  - `AwardedTenderPreviewDialog` : nouveau bouton **« Copier lignes DQE → métré projet »** (utilise `useTenderToPlanning`), toast détaillé (n lignes / n phases / n matériaux / total HT).
+  - `PhaseQuantityTakeoffTab` : bouton **« Import BOQ »** (PDF/Excel/CSV) via `BoqImportDialog source="quantity_takeoff" phaseId={phaseId}` — coexiste avec l'ancien `DQEImportDialog` legacy.
+
+**Reste à câbler (Batch D résiduel, non bloquant)** :
+- `SupplierBidWizard` : intégrer `<BoqImportDialog source="supplier_bid">` dans l'étape DQE (pour permettre au fournisseur d'importer son devis directement).
+- `TenderQuantitativeEstimate` / `EnhancedTenderEstimator` : basculer l'édition sur `<BoqLineTable>` + `<PriceSummary>` alimentés par `useBoqDocument({source:'tender_estimate', estimateId})`.
+- `DQEImportDialog` legacy : ré-implémenter comme wrapper autour de `<BoqImportDialog source="dqe">` (ou retirer une fois le nouveau adopté).
+- `TenderExcelImporter` : wrapper `<ImportDropzone accept=".xlsx">` + `<ImportMappingWizard>`.
+- `PhaseEmployees` : onglet "Estimation" utilisant `<BoqLineTable resourceType="labor">`.
+- `FinaancialOverview` : rollup projet via `BoqCalculatorService.aggregateByMilestone`.
+- `BoqComparisonTable` : brancher dans `SubmissionEvaluationPanel` pour la comparaison estimation vs offre.
+
+Le noyau étant en place, ces derniers points sont des remplacements composant-à-composant sans nouveau code métier.
+
+---
+
 
 # Plan v3 — Noyau BOQ composable + câblages transverses
 
