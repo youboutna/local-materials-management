@@ -1,7 +1,6 @@
 // @ts-nocheck
 import EnhancedDocumentSharing from '@/components/suppliers/EnhancedDocumentSharing';
-import SupplierDocumentUpload from '@/components/suppliers/SupplierDocumentUpload';
-import SupplierDocumentsList from '@/components/suppliers/SupplierDocumentsList';
+import { SupplierDocumentsPanel } from '@/components/documents/panels';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -526,31 +525,13 @@ const Suppliers = () => {
       {/* Supplier Documents Dialog */}
       {selectedSupplier && (
         <Dialog open={documentsOpen} onOpenChange={setDocumentsOpen}>
-          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Documents - {selectedSupplier.name}</DialogTitle>
+          <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden p-0">
+            <DialogHeader className="p-6 pb-2">
+              <DialogTitle>Documents — {selectedSupplier.name}</DialogTitle>
             </DialogHeader>
-            <Tabs defaultValue="list" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="list">Liste des documents</TabsTrigger>
-                <TabsTrigger value="upload">Téléverser</TabsTrigger>
-              </TabsList>
-              <TabsContent value="list" className="space-y-4">
-                <SupplierDocumentsList supplier={selectedSupplier} />
-              </TabsContent>
-              <TabsContent value="upload" className="space-y-4">
-                <SupplierDocumentUpload
-                  supplier={selectedSupplier}
-                  onSuccess={() => {
-                    // Switch to list tab after successful upload
-                    const listTab = document.querySelector(
-                      '[value="list"]'
-                    ) as HTMLElement;
-                    listTab?.click();
-                  }}
-                />
-              </TabsContent>
-            </Tabs>
+            <div className="px-6 pb-6">
+              <SupplierDocumentsPanel supplierId={selectedSupplier.id} />
+            </div>
           </DialogContent>
         </Dialog>
       )}
