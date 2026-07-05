@@ -120,7 +120,8 @@ export class QuantityTakeoffService {
     private materialRepository: IMaterialRepository = RepositoryFactory.getMaterialRepository(),
     private inspectionRepository: IInspectionRepository = RepositoryFactory.getInspectionRepository(),
     private documentRepository: IDocumentRepository = RepositoryFactory.getDocumentRepository(),
-    private paymentRepository: IPaymentRepository = RepositoryFactory.getPaymentRepository()
+    private paymentRepository: IPaymentRepository = RepositoryFactory.getPaymentRepository(),
+    private qtRepository: IQuantityTakeoffRepository = RepositoryFactory.getQuantityTakeoffRepository()
   ) {}
 
   /**
