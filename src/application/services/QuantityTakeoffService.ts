@@ -133,10 +133,8 @@ export class QuantityTakeoffService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
       }
 
-      // Get quantity takeoffs from repository
-      const takeoffs = await (this.projectRepository as unknown as { 
-        getQuantityTakeoffsByProject: (id: string) => Promise<unknown[]> 
-      }).getQuantityTakeoffsByProject(projectId);
+      // Get quantity takeoffs from repository (real hexagonal adapter)
+      const takeoffs = await this.qtRepository.findByProjectId(projectId);
 
       if (!takeoffs || takeoffs.length === 0) {
         return [];
