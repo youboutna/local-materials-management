@@ -684,10 +684,9 @@ export class QuantityTakeoffService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Update data is required');
       }
 
-      // Get existing takeoff
-      const existing = await (this.projectRepository as unknown as { 
-        getQuantityTakeoffById: (id: string) => Promise<unknown> 
-      }).getQuantityTakeoffById(id);
+      // Get existing takeoff via real adapter (findByProjectId then filter, since no findById on the port yet)
+      const all = await this.qtRepository.findByProjectId((updates as { project_id?: string }).project_id || '');
+      const existing = all.find((t) => t.id === id);
 
       if (!existing) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Quantity takeoff not found');
@@ -709,9 +708,7 @@ export class QuantityTakeoffService {
         updated_at: new Date().toISOString()
       };
 
-      await (this.projectRepository as unknown as { 
-        updateQuantityTakeoff: (id: string, data: unknown) => Promise<void> 
-      }).updateQuantityTakeoff(id, updateData);
+      await this.qtRepository.update(id, updateData);
 
       // Return updated entity
       return {
