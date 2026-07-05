@@ -17,6 +17,7 @@ import { Trash2, Layers, ListTodo, Target, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getAwardedTenderToProjectService } from '@/application/services/AwardedTenderToProjectService';
 import type { AwardedProjectHydrationPayload } from '@/dtos/transforms/AwardedTenderTransformer';
+import { useTenderToPlanning } from '@/hooks/hexagonal/useTenderToPlanning';
 
 export interface AwardedTenderPreviewDialogProps {
   open: boolean;
@@ -172,8 +173,9 @@ export function AwardedTenderPreviewDialog(props: AwardedTenderPreviewDialogProp
           </>
         )}
 
-        <DialogFooter>
+        <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
+          <CopyBoqToProjectButton estimateId={winningEstimateId} projectId={projectId} />
           <Button
             onClick={() => applyMutation.mutate()}
             disabled={!payload || payload.phases.length === 0 || applyMutation.isPending}
@@ -196,6 +198,32 @@ function SummaryCard({ icon, label, value }: { icon?: React.ReactNode; label: st
         <div className="font-semibold">{value}</div>
       </div>
     </div>
+  );
+}
+
+function CopyBoqToProjectButton({ estimateId, projectId }: { estimateId: string; projectId: string }) {
+  const { convert, isPending } = useTenderToPlanning();
+  const { toast } = useToast();
+  return (
+    <Button
+      type="button"
+      variant="secondary"
+      disabled={isPending || !estimateId || !projectId}
+      onClick={async () => {
+        try {
+          const r = await convert({ estimateId, projectId });
+          toast({
+            title: 'Lignes DQE copiées',
+            description: `${r.linesCopied} lignes • ${r.distinctPhases.length} phases • ${r.distinctMaterials.length} matériaux • Total HT ${r.totalHt.toLocaleString('fr-FR')} MRU`,
+          });
+        } catch (e) {
+          toast({ title: 'Copie BOQ échouée', description: e instanceof Error ? e.message : String(e), variant: 'destructive' });
+        }
+      }}
+    >
+      {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+      Copier lignes DQE → métré projet
+    </Button>
   );
 }
 
