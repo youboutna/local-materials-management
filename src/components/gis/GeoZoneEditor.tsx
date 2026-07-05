@@ -315,6 +315,13 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
   } | null>(null);
   const [draftLabel, setDraftLabel] = useState('');
   const [flyTarget, setFlyTarget] = useState<[number, number] | null>(null);
+  const [pendingAddress, setPendingAddress] = useState<{
+    label: string;
+    address?: string;
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const initialCenter: [number, number] = zones[0]?.coordinates[0]
