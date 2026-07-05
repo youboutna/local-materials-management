@@ -38,7 +38,20 @@ const PhaseQuantityTakeoffTab: React.FC<PhaseQuantityTakeoffTabProps> = ({
               </Badge>
             )}
           </CardTitle>
-          <DQEImportDialog projectId={projectId} phaseId={phaseId} />
+          <div className="flex items-center gap-2">
+            <BoqImportDialog
+              source="quantity_takeoff"
+              contextId={projectId}
+              phaseId={phaseId}
+              title="Importer BOQ vers cette phase (PDF / Excel / CSV)"
+              trigger={
+                <Button size="sm" variant="outline">
+                  <Upload className="h-4 w-4 mr-2" /> Import BOQ
+                </Button>
+              }
+            />
+            <DQEImportDialog projectId={projectId} phaseId={phaseId} />
+          </div>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
