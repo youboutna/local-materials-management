@@ -6,6 +6,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -186,6 +187,7 @@ const UnlockedView: React.FC<{ payload: UnlockedPayload; onReset: () => void }> 
 
 export const SupplierSecureAccessPortal: React.FC = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
   const handleValidate = async (code: string): Promise<GateValidationResult> => {
     const result = await TenderSharingService.validateSecret(code, '');
@@ -202,6 +204,30 @@ export const SupplierSecureAccessPortal: React.FC = () => {
       } catch {
         /* noop */
       }
+
+      // Persist minimal context so the supplier portal can render the tender inbox.
+      try {
+        sessionStorage.setItem(
+          'supplier-tender-secret',
+          JSON.stringify({
+            tenderId: result.tenderId,
+            secretCode: code,
+            allowedDocuments: result.allowedDocuments ?? [],
+            grantedAt: new Date().toISOString(),
+          }),
+        );
+      } catch {
+        /* sessionStorage unavailable — non-blocking */
+      }
+
+      // Redirect to /supplier-portal tenders tab (single source of truth for supplier UX).
+      const params = new URLSearchParams({
+        tab: 'tenders',
+        tenderId: result.tenderId,
+        secret: code,
+      });
+      navigate(`/supplier-portal?${params.toString()}`, { replace: true });
+
       return {
         isValid: true,
         message: result.message,
