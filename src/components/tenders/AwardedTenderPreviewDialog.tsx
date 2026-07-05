@@ -201,4 +201,30 @@ function SummaryCard({ icon, label, value }: { icon?: React.ReactNode; label: st
   );
 }
 
+function CopyBoqToProjectButton({ estimateId, projectId }: { estimateId: string; projectId: string }) {
+  const { convert, isPending } = useTenderToPlanning();
+  const { toast } = useToast();
+  return (
+    <Button
+      type="button"
+      variant="secondary"
+      disabled={isPending || !estimateId || !projectId}
+      onClick={async () => {
+        try {
+          const r = await convert({ estimateId, projectId });
+          toast({
+            title: 'Lignes DQE copiées',
+            description: `${r.linesCopied} lignes • ${r.distinctPhases.length} phases • ${r.distinctMaterials.length} matériaux • Total HT ${r.totalHt.toLocaleString('fr-FR')} MRU`,
+          });
+        } catch (e) {
+          toast({ title: 'Copie BOQ échouée', description: e instanceof Error ? e.message : String(e), variant: 'destructive' });
+        }
+      }}
+    >
+      {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+      Copier lignes DQE → métré projet
+    </Button>
+  );
+}
+
 export default AwardedTenderPreviewDialog;
