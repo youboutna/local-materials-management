@@ -2076,44 +2076,54 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
         <TabsContent value="map" className="mt-6 space-y-4">
           {(() => {
-            const zones =
+            const rawZones =
               (project as unknown as { interventionZones?: unknown[] }).interventionZones ??
               [];
-            const zoneList = Array.isArray(zones)
-              ? (zones as import('@/dtos/entities/InterventionZoneDTO').InterventionZoneDTO[])
+            let zoneList = Array.isArray(rawZones)
+              ? (rawZones as import('@/dtos/entities/InterventionZoneDTO').InterventionZoneDTO[])
               : [];
-            console.info('[ProjectDetail] rendered', zoneList.length, 'intervention zones');
-            if (zoneList.length > 0) {
-              return (
-                <GeoZoneEditor
-                  readOnly
-                  showAddressBar={false}
-                  value={zoneList}
-                  title="Zones d'intervention"
-                  hint="Vue lecture seule — éditez via le workflow projet."
-                  defaultCenter={
-                    project?.coordinates?.latitude && project?.coordinates?.longitude
-                      ? [project.coordinates.latitude, project.coordinates.longitude]
-                      : undefined
-                  }
-                  height={520}
-                />
-              );
+
+            // Fallback : si aucune zone n'est tracée mais que le projet a des
+            // coordonnées et/ou une adresse, on synthétise une zone "point"
+            // pour afficher un marqueur au lieu d'une carte vide.
+            const lat = project?.coordinates?.latitude ?? (project as any)?.latitude;
+            const lng = project?.coordinates?.longitude ?? (project as any)?.longitude;
+            const address =
+              (project as any)?.location ||
+              (project as any)?.address ||
+              undefined;
+
+            if (zoneList.length === 0 && typeof lat === 'number' && typeof lng === 'number') {
+              zoneList = [
+                {
+                  type: 'point',
+                  coordinates: [{ lat, lng }],
+                  label: address || project?.title || 'Localisation du projet',
+                  address,
+                },
+              ];
             }
-            // Fallback strict : aucune zone tracée — carte vide en lecture seule via GeoZoneEditor
+
+            console.info('[ProjectDetail] rendered', zoneList.length, 'intervention zones');
+
+            const hasZones = zoneList.length > 0;
             return (
               <GeoZoneEditor
                 readOnly
                 showAddressBar={false}
-                value={[]}
-                title="Localisation du projet"
-                hint="Aucune zone d'intervention tracée — définissez-en via l'édition du projet."
-                defaultCenter={
-                  project?.coordinates?.latitude && project?.coordinates?.longitude
-                    ? [project.coordinates.latitude, project.coordinates.longitude]
-                    : undefined
+                value={zoneList}
+                title={hasZones ? "Zones d'intervention" : 'Localisation du projet'}
+                hint={
+                  hasZones
+                    ? address
+                      ? `Adresse : ${address}`
+                      : 'Vue lecture seule — éditez via le workflow projet.'
+                    : "Aucune coordonnée ni zone tracée — définissez-en via l'édition du projet."
                 }
-                height={420}
+                defaultCenter={
+                  typeof lat === 'number' && typeof lng === 'number' ? [lat, lng] : undefined
+                }
+                height={520}
               />
             );
           })()}
