@@ -1,163 +1,212 @@
 
-# Plan v2 — Noyau composable BOQ + Correctifs Métré/PDF
+# Plan v3 — Noyau BOQ composable + câblages transverses
 
-## Constat architectural
+Prolonge Plan v2 (déjà exécuté en P0). Ajoute la carte de câblage complète des composants BOQ sur les 4 parcours métier concernés.
 
-Trois surfaces manipulent la même donnée métier (une ligne = désignation + unité + quantité + PU + WBS + source) avec du code dupliqué :
+## Rappel : noyau `boq` (statut P0 fait)
 
-- **QuantityTakeoff** (métré projet) — `QuantityTakeoffService`, `QuantityTakeoffForm`, `AdvancedQuantityCalculator`
-- **DQE Import** — `DQEImportService`, `DQEParsedRow`, `DQEImportDialog`
-- **Tender Estimator** — `TenderEstimateService`, `QuantitativeEstimateExporter`, `DqeResourcePicker`, `SupplierBidWizard`
+- ✅ `config/referentials/boq/units.referential.ts`
+- ✅ `config/referentials/wbs/wbs.referential.ts`
+- ✅ `application/services/boq/BoqCalculatorService.ts` (calc L×W×H, HT/TVA/TTC, agrégations)
+- ✅ `application/services/boq/BoqValidatorService.ts` (messages ciblés)
+- ✅ Fix `QuantityTakeoffService.createQuantityTakeoff` (bug création métré)
+- ✅ Fix `parseInvoiceFromPdf` (clustering Y pdfjs)
 
-Chacun a son parseur, son mapping, son transformer, son composant "matériau + quantité + prix". → Duplication, bugs isolés (create métré cassé, PDF cassé), incohérences PU/TVA.
-
-## Cible : un noyau `boq` (Bill Of Quantities) partagé
-
-```text
-src/
-├── domain/boq/                       # Modèle unifié
-│   ├── BoqLine.ts                    # Entity: designation, unit, qty, unitPrice, vat, wbsRef, materialRef, source
-│   ├── BoqDocument.ts                # Aggregate: lines + totals + context (projectId | tenderId | submissionId)
-│   └── WbsRef.ts                     # { phaseId, milestoneId, taskId }
-│
-├── application/services/boq/
-│   ├── BoqCalculatorService.ts       # Pur : calc qty (L*W*H), totals HT/TVA/TTC, agrégations par phase/jalon
-│   ├── BoqValidatorService.ts        # Validation unité/dimensions/PU, messages ciblés
-│   ├── BoqImportOrchestrator.ts      # PDF|Excel|CSV → BoqLine[] avec mapping assisté
-│   └── parsers/
-│       ├── IDocumentParser.ts        # Port
-│       ├── PdfBoqParser.ts           # pdfjs + reconstruction lignes par y + tableaux
-│       ├── SpreadsheetBoqParser.ts   # xlsx + csv (papaparse)
-│       └── OcrFallbackParser.ts      # Tesseract.js (rendu canvas pdfjs)
-│
-├── infrastructure/adapters/boq/
-│   ├── SupabaseBoqRepository.ts      # CRUD générique paramétré par `source` (quantity_takeoffs | tender_estimate_items | dqe_lines)
-│   └── BoqLineMapper.ts              # snake_case ↔ camelCase bidirectionnel unique
-│
-├── dtos/boq/
-│   ├── BoqLineDTO.ts                 # camelCase, forme unique
-│   └── ImportMappingDTO.ts
-│
-├── config/referentials/
-│   ├── wbs/wbs.referential.ts        # Phases → Jalons → Tâches
-│   └── boq/units.referential.ts      # m³/m²/m/unité + règles dimensions requises
-│
-└── components/boq/                   # Composants UI réutilisables
-    ├── BoqLineEditor.tsx             # Édition d'une ligne (matériau, WBS, unité, dims, PU, total)
-    ├── BoqLineTable.tsx              # Tableau editable + totaux par phase
-    ├── WbsSelector.tsx               # Cascade Phase → Jalon → Tâche
-    ├── MaterialPicker.tsx            # Sélection matériau + affichage PU
-    ├── PriceSummary.tsx              # Qté × PU = HT + TVA + TTC
-    ├── ImportDropzone.tsx            # PDF/Excel/CSV drop
-    └── ImportMappingWizard.tsx       # Assistant colonnes → champs
-```
-
-**Consommateurs (deviennent minces)** :
-- `QuantityTakeoffForm` = `<BoqLineEditor source="project">` + submit vers `SupabaseBoqRepository(source='quantity_takeoffs')`.
-- `DQEImportDialog` = `<ImportDropzone>` + `<ImportMappingWizard>` + `<BoqLineTable source="dqe">`.
-- `TenderEstimateService` + `QuantitativeEstimateExporter` = `<BoqLineTable source="tender_estimate">` + agrégations `BoqCalculatorService`.
-- `SupplierBidWizard` = même `<BoqLineTable>` en mode lecture + colonnes prix soumissionnaire.
-
-## Flux hexagonal (immutable)
-
-```text
-UI (BoqLineEditor camelCase)
-  → BoqLineMapper.toDto()
-  → BoqLineDTO (camelCase)
-  → BoqCalculatorService / BoqValidatorService (pur domaine)
-  → IBoqRepository (port)
-  → SupabaseBoqRepository (adapter, snake_case, table selon source)
-  → DB
-```
-
-Aucun `supabase.from()` en UI/hooks. Un seul mapper bidirectionnel. Référentiels centralisés.
+Reste à créer (P1) : domain `BoqLine` / `BoqDocument`, `IBoqRepository` + `SupabaseBoqRepository` paramétré par `source`, mapper unique, composants `components/boq/*` (`BoqLineEditor`, `BoqLineTable`, `WbsSelector`, `MaterialPicker`, `PriceSummary`, `ImportDropzone`, `ImportMappingWizard`), parseurs (`PdfBoqParser`, `SpreadsheetBoqParser`, `OcrFallbackParser`).
 
 ---
 
-## P0 — Correctifs bloquants (bugs actuels)
+## Carte de câblage des 4 parcours
 
-### Bug 1 : « Impossible de créer le métré »
-`QuantityTakeoffService.createQuantityTakeoff` cast `projectRepository` vers `{ createQuantityTakeoff }` inexistant → l'appel échoue silencieusement.
-- Remplacer par `IBoqRepository` (nouveau) OU dans un premier temps câbler `SupabaseQuantityTakeoffAdapter` déjà existant via `RepositoryFactory`.
-- Toast d'erreur = `error.message` réel, plus le texte générique.
-- `BoqValidatorService` : messages ciblés (unité manquante, largeur requise pour m², hauteur pour m³, matériau requis).
+### 1) Fournisseur — Parseur devis + Estimator DQE
 
-### Bug 2 : « Impossible d'analyser le PDF »
-`parseInvoiceFromPdf` (`utils/integrations.ts`) fait `split("\n")` sur du texte pdfjs sans retour ligne.
-- `PdfBoqParser` : reconstruction lignes via `item.transform[5]` (y), clustering colonnes via `x`, détection tableaux.
-- `OcrFallbackParser` : si texte < 500 char ou < 100 lettres → rendu canvas + Tesseract.js.
-- Erreur enrichie (page, cause).
+**Surfaces cibles**
+- `SupplierBidWizard.tsx` (dépôt d'offre par fournisseur)
+- `EnhancedSupplierTenderPortal.tsx` (portail fournisseur)
+- `TenderExcelImporter.tsx` (import xlsx d'un devis fournisseur)
 
-## P1 — Noyau BOQ + intégration 3 surfaces
+**Câblage**
+- Import : `<ImportDropzone accept="pdf,xlsx,csv">` → `BoqImportOrchestrator` → `<ImportMappingWizard>` → `BoqLine[]` (source=`supplier_bid`).
+- Édition : `<BoqLineTable source="supplier_bid" mode="edit">` avec colonnes `unitPrice`, `deliveryDelay`, `discountRate`.
+- Estimator : `BoqCalculatorService.aggregateByPhase(lines)` → totaux HT/TVA/TTC + comparaison auto vs `tender_estimate_items` (écart % et rang par ligne).
+- Persistance : `SupabaseBoqRepository(source='supplier_bid')` → `tender_estimate_items` (colonnes `submitted_by`, `bid_ref`).
+- `TenderExcelImporter.tsx` = wrapper mince autour de `<ImportDropzone accept="xlsx">`.
 
-1. Créer `domain/boq/`, `dtos/boq/`, `BoqLineMapper`.
-2. Créer `BoqCalculatorService` + `BoqValidatorService` (pur TS).
-3. Créer `IBoqRepository` + `SupabaseBoqRepository` (paramétré par `source`).
-4. Créer composants `components/boq/*` (BoqLineEditor, WbsSelector, MaterialPicker, PriceSummary, BoqLineTable).
-5. Créer `config/referentials/wbs/wbs.referential.ts` (Gros œuvre / Second œuvre / VRD / Finitions × jalons × tâches).
-6. Migrer `QuantityTakeoffForm` → `<BoqLineEditor source="project">`.
-7. Migrer `DQEImportDialog` → `<ImportDropzone>` + `<ImportMappingWizard>`.
-8. Migrer `TenderEstimateService` / `QuantitativeEstimateExporter` sur `BoqCalculatorService`.
+### 2) Estimator DQE (côté acheteur / bureau d'études)
 
-## P1 — Parseurs multi-formats + assistant mapping
+**Surfaces cibles**
+- `EnhancedTenderEstimator.tsx`
+- `TenderQuantitativeEstimate.tsx`
+- `DqeResourcePicker.tsx`
+- `DQEImportDialog.tsx` (dans `project/phase/`)
 
-- `SpreadsheetBoqParser` : xlsx + papaparse (déjà présents), détection colonnes par fuzzy (`designation|libellé`, `unité|unit`, `qté|quantité|qty`, `PU|prix unit`, `phase`, `matériau`).
-- `ImportMappingWizard` : preview 10 lignes + selects source→cible si confiance < 0.8 ; validation → `BoqLine[]` → persistance en lot.
-- Idempotent pour DQE, devis fournisseur, métré importé.
+**Câblage**
+- Saisie ligne à ligne : `<BoqLineEditor source="tender_estimate">` (WBS + matériau + PU) + `<PriceSummary>`.
+- Vue tableau : `<BoqLineTable source="tender_estimate">` avec édition inline, tri par phase/jalon, total pied de page.
+- Ressources : `DqeResourcePicker` alimente `materialRef` (via `MaterialPicker`) + `resource_allocation.referential.ts` pour main d'œuvre / équipement (ajout d'un champ `resourceType: 'material'|'labor'|'equipment'` sur `BoqLine`).
+- Import DQE existant : `DQEImportDialog` refactor → `<ImportDropzone>` + `<ImportMappingWizard>` + `<BoqLineTable>`.
+- Hook `useTenderQuantitativeEstimateHex` : refactor pour consommer `SupabaseBoqRepository(source='tender_estimate')` au lieu du hook custom.
 
-## P1 — Matériau → PU → coût ligne
+### 3) Projet — Estimation ressources (humaines + matérielles)
 
-- `MaterialPicker` : `useMaterialById(id)` → renvoie `unitPrice`, `vatRate`, `preferredSupplierId`.
-- `PriceSummary` sous chaque ligne : `HT = qty × unitPrice`, `TVA = HT × vatRate`, `TTC = HT + TVA`.
-- Persisté dans `unit_price` + `total_value` (colonnes existantes côté service, à câbler UI).
+**Surfaces cibles**
+- `QuantityTakeoffForm.tsx` (P0 déjà partiellement câblé)
+- `QuantityTakeoffs.tsx` / `QuantityTakeoffsList.tsx`
+- `PhaseMaterials.tsx` (matériaux par phase)
+- `PhaseEmployees.tsx` (RH par phase)
+- `ProjectMaterials.tsx`
 
-## P2 — Suivi budgétaire
+**Câblage**
+- `QuantityTakeoffForm` = `<BoqLineEditor source="quantity_takeoff">` avec `resourceType='material'` par défaut ; toggle vers `labor`/`equipment` pour estimer main d'œuvre (unité = h/j, PU = coût horaire depuis `phase_employees.hourly_rate`).
+- `QuantityTakeoffsList` = `<BoqLineTable source="quantity_takeoff" projectId=…>` (édition inline + totaux par phase).
+- `PhaseMaterials` : passe par la même vue filtrée `resourceType='material'`.
+- `PhaseEmployees` : ajout d'un onglet "Estimation" utilisant `<BoqLineTable resourceType='labor'>` (mêmes composants, source `quantity_takeoff`, filtre resourceType).
+- Rollup projet : `BoqCalculatorService.rollupByProject(projectId)` alimente `FinaancialOverview.tsx`.
 
-- `BoqCalculatorService.aggregateByMilestone(lines)` → `{ milestoneId, budgetHt, budgetTtc }`.
-- `MilestoneBudgetDashboard` : prévu (BOQ) vs réel (paiements/inspections) + écart %.
-- Réutilisable projet ET tender (comparer estimation vs meilleure offre).
+### 4) Cycle appel d'offre accepté → Planification + Import DQE
+
+**Surfaces cibles**
+- `PublicProcurementWorkflow.tsx` (workflow public)
+- `TenderWorkflowPanel.tsx` (statut attribué → conversion en projet)
+- `ProjectCreationWorkflow.tsx` / `ProjectWorkflowService`
+- `PhaseStepsManager.tsx` / `PhaseQuantityTakeoffTab.tsx`
+
+**Câblage — Acceptation appel d'offre → planification**
+- Nouveau service `application/services/tender/TenderToPlanningService.ts` :
+  - Input : `tenderId` attribué + `winningEstimateId`.
+  - Étape 1 : lit `BoqLine[]` du tender (`source='tender_estimate'` filtré par lot gagné) via `SupabaseBoqRepository`.
+  - Étape 2 : appelle `ProjectWorkflowService.createFromTender()` → crée projet + phases depuis référentiel WBS.
+  - Étape 3 : convertit `BoqLine[]` tender → `BoqLine[]` projet (change `source='quantity_takeoff'`, mappe `phaseId`) via `BoqLineMapper.reproject()` (pur, testable).
+  - Étape 4 : persist en lot via `SupabaseBoqRepository(source='quantity_takeoff').bulkCreate()`.
+  - Étape 5 : alimente `project_milestones` (jalons issus du WBS) + `phase_materials` (agrégation par matériau) via `BoqCalculatorService.aggregateByMaterial()`.
+- UI : `<AwardedTenderPreviewDialog>` déjà présent → ajouter bouton "Convertir en projet planifié" appelant `TenderToPlanningService`.
+- Toast détaillé : nb phases, nb lignes copiées, matériaux consolidés.
+
+**Câblage — Planification + import parseur devis / DQE**
+- Dans `PhaseQuantityTakeoffTab.tsx` (déjà consommateur de `DQEImportDialog`) : le dialog refactored consomme `<ImportDropzone>` + `<ImportMappingWizard>` + preview `<BoqLineTable>`.
+- Import direct dans une phase : source = `quantity_takeoff` avec `phaseId` pré-rempli.
+- Import devis fournisseur pour valider une phase : `source='supplier_bid'`, écran de comparaison `<BoqComparisonTable estimateSource='quantity_takeoff' bidSource='supplier_bid'>`.
+- Nouvelle règle métier : à l'import, si `wbsRef` absent → `ImportMappingWizard` demande phase/jalon obligatoire (`BoqValidatorService.requireWbs`).
 
 ---
+
+## Nouveaux fichiers (P1 à créer)
+
+```text
+src/domain/boq/
+  BoqLine.ts                                 # Entity readonly + factory create()
+  BoqDocument.ts
+  WbsRef.ts
+
+src/dtos/boq/
+  BoqLineDTO.ts                              # camelCase
+  ImportMappingDTO.ts
+  BoqLineMapper.ts                           # snake↔camel + reproject(tender→projet)
+
+src/domain/repositories/
+  IBoqRepository.ts                          # port (paramétré par source)
+
+src/infrastructure/supabase/adapters/
+  SupabaseBoqRepository.ts                   # écrit sur quantity_takeoffs | tender_estimate_items selon source
+
+src/application/services/boq/
+  BoqImportOrchestrator.ts
+  parsers/IDocumentParser.ts
+  parsers/PdfBoqParser.ts
+  parsers/SpreadsheetBoqParser.ts
+  parsers/OcrFallbackParser.ts
+
+src/application/services/tender/
+  TenderToPlanningService.ts                 # orchestrateur "tender attribué → projet planifié"
+
+src/components/boq/
+  BoqLineEditor.tsx
+  BoqLineTable.tsx
+  BoqComparisonTable.tsx                     # estimation vs offre / prévu vs réel
+  WbsSelector.tsx
+  MaterialPicker.tsx
+  PriceSummary.tsx
+  ImportDropzone.tsx
+  ImportMappingWizard.tsx
+
+src/hooks/hexagonal/
+  useBoqDocument.ts                          # useQuery paramétré (source, contextId)
+  useBoqImport.ts                            # useMutation import
+  useTenderToPlanning.ts                     # useMutation acceptation
+```
+
+## Fichiers refactorés (P1)
+
+- `QuantityTakeoffForm.tsx`, `QuantityTakeoffsList.tsx` → `<BoqLineEditor>` / `<BoqLineTable>`.
+- `DQEImportDialog.tsx` → composants boq.
+- `TenderExcelImporter.tsx`, `TenderQuantitativeEstimate.tsx`, `EnhancedTenderEstimator.tsx`, `DqeResourcePicker.tsx` → boq.
+- `SupplierBidWizard.tsx` → `<ImportDropzone>` + `<BoqLineTable source="supplier_bid">`.
+- `AwardedTenderPreviewDialog.tsx` → bouton conversion + `useTenderToPlanning`.
+- `PhaseQuantityTakeoffTab.tsx`, `PhaseMaterials.tsx`, `PhaseEmployees.tsx` → filtres BOQ.
+- `useTenderQuantitativeEstimateHex.ts`, `useQuantityTakeoffHex.ts` → délèguent à `useBoqDocument`.
+- `FinaancialOverview.tsx` → rollup via `BoqCalculatorService`.
 
 ## Migration DB (une seule)
 
-- `quantity_takeoffs` : ajouter `task_id text NULL`, `total_value numeric NULL` (si absent).
-- Alignement colonnes communes `tender_estimate_items` / `quantity_takeoffs` sur les champs BOQ (pas de renommage destructif ; le mapper absorbe les différences).
+```sql
+-- Extension BoqLine sur les 2 tables existantes (nullable, non destructif)
+ALTER TABLE public.quantity_takeoffs
+  ADD COLUMN IF NOT EXISTS task_id text NULL,
+  ADD COLUMN IF NOT EXISTS total_value numeric NULL,
+  ADD COLUMN IF NOT EXISTS resource_type text NULL DEFAULT 'material',
+  ADD COLUMN IF NOT EXISTS vat_rate numeric NULL DEFAULT 0;
 
----
-
-## Exécution — batchs parallèles après approbation
-
-```text
-Batch A (P0)                Batch B (Noyau)              Batch C (Parseurs)
-─ Fix QuantityTakeoffSvc    ─ domain/boq                 ─ PdfBoqParser
-─ Fix parser PDF            ─ BoqCalculator/Validator    ─ SpreadsheetBoqParser
-─ Toasts ciblés             ─ SupabaseBoqRepository      ─ OcrFallbackParser
-                            ─ BoqLineMapper              ─ ImportMappingWizard
-
-              ▼ (dépend de A + B + C)
-Batch D (Intégrations)                     Batch E (P2)
-─ QuantityTakeoffForm → BoqLineEditor      ─ MilestoneBudgetDashboard
-─ DQEImportDialog → composants boq         ─ Agrégations tender vs offres
-─ TenderEstimateService → BoqCalculator
-─ SupplierBidWizard → BoqLineTable
+ALTER TABLE public.tender_estimate_items
+  ADD COLUMN IF NOT EXISTS task_id text NULL,
+  ADD COLUMN IF NOT EXISTS resource_type text NULL DEFAULT 'material',
+  ADD COLUMN IF NOT EXISTS bid_ref text NULL,
+  ADD COLUMN IF NOT EXISTS submitted_by uuid NULL;
 ```
 
-A + B + C en parallèle, puis D en parallèle avec E.
+Grants + policies conservés (les 2 tables existent déjà). Pas de renommage — `BoqLineMapper` absorbe les différences (`unit_price` vs `pu`, etc.).
 
 ---
 
-## Bénéfices composabilité
+## Exécution — batchs parallèles
 
-- **1 mapper** (au lieu de 3), **1 calculateur** (au lieu de 3), **1 validateur**, **1 parser** stack.
-- Ajout futur (avenant, DGD, situation de travaux) = nouveau `source` + réutilisation immédiate de tous les composants UI.
-- Correction d'un bug (ex : calcul TVA) propagée à toutes les surfaces.
-- Testabilité maximale : services purs TS sans React ni Supabase.
+```text
+Batch B (Noyau)              Batch C (Parseurs)           Batch F (Migration DB)
+─ domain/boq                 ─ PdfBoqParser               ─ SQL ALTER (une passe)
+─ IBoqRepository             ─ SpreadsheetBoqParser
+─ SupabaseBoqRepository      ─ OcrFallbackParser
+─ BoqLineMapper              ─ BoqImportOrchestrator
+─ hooks useBoqDocument       ─ ImportMappingWizard
+
+              ▼ (dépend de B + C + F)
+Batch D (Intégrations UI parallèles)
+─ D1 Fournisseur : SupplierBidWizard, TenderExcelImporter, EnhancedSupplierTenderPortal
+─ D2 Estimator   : EnhancedTenderEstimator, TenderQuantitativeEstimate, DqeResourcePicker, DQEImportDialog
+─ D3 Projet      : QuantityTakeoffForm/List, PhaseMaterials, PhaseEmployees, ProjectMaterials
+─ D4 Cycle AO    : TenderToPlanningService + AwardedTenderPreviewDialog + PhaseQuantityTakeoffTab
+
+              ▼
+Batch E (P2)
+─ BoqComparisonTable
+─ MilestoneBudgetDashboard (prévu vs réel)
+─ FinaancialOverview rollup
+```
+
+B + C + F en parallèle → D1..D4 en parallèle → E.
+
+---
 
 ## Contraintes respectées
 
-- Flux hexagonal strict (mapper snake ↔ camel, DTO, ports/adapters).
+- Flux hexagonal strict (UI → transformer → DTO → service → domaine ← adapter ← DB).
 - Zéro `supabase.from()` en UI/hooks.
-- Référentiels dans `src/config/referentials/`.
-- TanStack Query v5 (pas de `onError/onSuccess` sur query/mutation).
+- Référentiels BOQ/WBS/DQE centralisés dans `src/config/referentials/`.
+- TanStack Query v5 (aucun `onError`/`onSuccess`).
 - Entities readonly + factory `create()`.
+- Adapters retournent Entities/DTO, jamais des payloads Supabase bruts.
+- Services purs TS, sans React ni Supabase direct.
+
+## Bénéfices
+
+- Un fournisseur qui dépose un devis PDF, un BE qui bâtit un DQE, un chef de projet qui saisit un métré, et l'orchestrateur qui convertit un AO gagné en planning : **tous** consomment les **mêmes** composants et **la même** stack de parseurs / calculateurs / validateurs.
+- Nouveau parcours (avenant, décompte, situation) = 1 nouvelle valeur `source` + réutilisation UI immédiate.
+- Comparaisons transverses (estimation vs offre, prévu vs réel) triviales via `BoqComparisonTable`.
