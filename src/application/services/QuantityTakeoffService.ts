@@ -10,6 +10,7 @@ import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
 import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
+import { IQuantityTakeoffRepository } from '@/domain/repositories/IQuantityTakeoffRepository';
 import { calculateQuantity } from '@/dtos/types/quantityTakeoff';
 
 // Enhanced types for comprehensive quantity takeoff operations
@@ -119,7 +120,8 @@ export class QuantityTakeoffService {
     private materialRepository: IMaterialRepository = RepositoryFactory.getMaterialRepository(),
     private inspectionRepository: IInspectionRepository = RepositoryFactory.getInspectionRepository(),
     private documentRepository: IDocumentRepository = RepositoryFactory.getDocumentRepository(),
-    private paymentRepository: IPaymentRepository = RepositoryFactory.getPaymentRepository()
+    private paymentRepository: IPaymentRepository = RepositoryFactory.getPaymentRepository(),
+    private qtRepository: IQuantityTakeoffRepository = RepositoryFactory.getQuantityTakeoffRepository()
   ) {}
 
   /**
@@ -131,10 +133,8 @@ export class QuantityTakeoffService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
       }
 
-      // Get quantity takeoffs from repository
-      const takeoffs = await (this.projectRepository as unknown as { 
-        getQuantityTakeoffsByProject: (id: string) => Promise<unknown[]> 
-      }).getQuantityTakeoffsByProject(projectId);
+      // Get quantity takeoffs from repository (real hexagonal adapter)
+      const takeoffs = await this.qtRepository.findByProjectId(projectId);
 
       if (!takeoffs || takeoffs.length === 0) {
         return [];
@@ -386,10 +386,8 @@ export class QuantityTakeoffService {
         updated_at: now
       };
 
-      // Save to repository
-      await (this.projectRepository as unknown as { 
-        createQuantityTakeoff: (data: unknown) => Promise<void> 
-      }).createQuantityTakeoff(takeoffData);
+      // Save to repository (real hexagonal adapter)
+      await this.qtRepository.create(takeoffData);
 
       // Create inspection if required
       if (this.requiresInspection(request.element_type)) {
@@ -667,9 +665,7 @@ export class QuantityTakeoffService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Quantity takeoff ID is required');
       }
 
-      await (this.projectRepository as unknown as { 
-        deleteQuantityTakeoff: (id: string) => Promise<void> 
-      }).deleteQuantityTakeoff(id);
+      await this.qtRepository.delete(id);
     } catch (error) {
       console.error('QuantityTakeoffService.deleteQuantityTakeoff failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete quantity takeoff');
@@ -688,10 +684,9 @@ export class QuantityTakeoffService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Update data is required');
       }
 
-      // Get existing takeoff
-      const existing = await (this.projectRepository as unknown as { 
-        getQuantityTakeoffById: (id: string) => Promise<unknown> 
-      }).getQuantityTakeoffById(id);
+      // Get existing takeoff via real adapter (findByProjectId then filter, since no findById on the port yet)
+      const all = await this.qtRepository.findByProjectId((updates as { project_id?: string }).project_id || '');
+      const existing = all.find((t) => t.id === id);
 
       if (!existing) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Quantity takeoff not found');
@@ -713,9 +708,7 @@ export class QuantityTakeoffService {
         updated_at: new Date().toISOString()
       };
 
-      await (this.projectRepository as unknown as { 
-        updateQuantityTakeoff: (id: string, data: unknown) => Promise<void> 
-      }).updateQuantityTakeoff(id, updateData);
+      await this.qtRepository.update(id, updateData);
 
       // Return updated entity
       return {

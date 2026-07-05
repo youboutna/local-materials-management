@@ -463,8 +463,10 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
         setCalculations(parsedLines);
         toast({ title: "Import réussi", description: `${parsedLines.length} lignes importées` });
       }
-    } catch {
-      toast({ title: "Erreur d'import", description: "Impossible d'analyser le PDF", variant: "destructive" });
+    } catch (err) {
+      const description =
+        err instanceof Error ? err.message : "Impossible d'analyser le PDF";
+      toast({ title: "Erreur d'import", description, variant: 'destructive' });
     } finally {
       setIsProcessing(false);
     }
