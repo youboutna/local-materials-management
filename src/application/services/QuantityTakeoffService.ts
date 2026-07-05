@@ -386,10 +386,8 @@ export class QuantityTakeoffService {
         updated_at: now
       };
 
-      // Save to repository
-      await (this.projectRepository as unknown as { 
-        createQuantityTakeoff: (data: unknown) => Promise<void> 
-      }).createQuantityTakeoff(takeoffData);
+      // Save to repository (real hexagonal adapter)
+      await this.qtRepository.create(takeoffData);
 
       // Create inspection if required
       if (this.requiresInspection(request.element_type)) {
