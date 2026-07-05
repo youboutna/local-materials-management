@@ -54,7 +54,8 @@ import type {
   InterventionZoneShape,
 } from '@/dtos/entities/InterventionZoneDTO';
 import { getGeocodingService } from '@/application/services/GeocodingServiceFactory';
-import LocationAutocomplete from '@/components/location/LocationAutocomplete';
+import AddressSearchBox from '@/components/gis/AddressSearchBox';
+import ZoneLocationEditor from '@/components/gis/ZoneLocationEditor';
 import { toast } from 'sonner';
 
 // -----------------------------------------------------------------------------
