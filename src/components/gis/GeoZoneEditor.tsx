@@ -910,20 +910,53 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
                   )}
                 </div>
                 {!readOnly && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => removeZone(idx)}
-                    className="h-7 w-7 p-0"
-                    aria-label="Supprimer la zone"
-                  >
-                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setEditingIndex(idx)}
+                      className="h-7 w-7 p-0"
+                      aria-label="Éditer la localisation"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => removeZone(idx)}
+                      className="h-7 w-7 p-0"
+                      aria-label="Supprimer la zone"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                    </Button>
+                  </div>
                 )}
               </li>
             ))}
           </ul>
         )}
+
+        <ZoneLocationEditor
+          open={editingIndex !== null}
+          zone={editingIndex !== null ? zones[editingIndex] ?? null : null}
+          index={editingIndex ?? -1}
+          onClose={() => setEditingIndex(null)}
+          onSave={(idx, next) => {
+            const arr = zonesRef.current.slice();
+            arr[idx] = next;
+            emit(arr);
+            // Re-enrich with reverse-geocode in background (address/region/city).
+            void enrichWithReverseGeocode(next).then((enriched) => {
+              if (enriched === next) return;
+              const cur = zonesRef.current.slice();
+              cur[idx] = { ...enriched, address: next.address ?? enriched.address };
+              emit(cur);
+            });
+            if (next.coordinates[0]) {
+              setFlyTarget([next.coordinates[0].lat, next.coordinates[0].lng]);
+            }
+          }}
+        />
       </CardContent>
     </Card>
   );
