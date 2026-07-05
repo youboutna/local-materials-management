@@ -1,71 +1,163 @@
-# Fix module Cartographie — Recherche d'adresse & Localisation en mode édition
 
-## Constat
+# Plan v2 — Noyau composable BOQ + Correctifs Métré/PDF
 
-1. Dans `GeoZoneEditor.tsx` la barre annonce **« Rechercher une adresse (base + Nominatim) »** mais délègue à `LocationAutocomplete`, qui n'appelle **que** le référentiel statique Mauritanie (`LocationDataService`). Aucun appel à `GeocodingService` (Nominatim) → auto-complétion vide dès qu'on tape une rue, un quartier, une adresse hors wilayas/villes.
-2. Aucun **mode édition libre** quand ni la base ni le provider ne renvoient de résultat.
-3. En **mode édition d'un objet géo** (zone d'intervention, polygone, rectangle, cercle, point, matériau localisé), on ne peut pas éditer la **localisation** d'une forme déjà tracée (recentrer, renommer, corriger lat/lng, ré-adresser). La seule action disponible est la suppression.
+## Constat architectural
 
-## Architecture (respect flux hexagonal)
+Trois surfaces manipulent la même donnée métier (une ligne = désignation + unité + quantité + PU + WBS + source) avec du code dupliqué :
+
+- **QuantityTakeoff** (métré projet) — `QuantityTakeoffService`, `QuantityTakeoffForm`, `AdvancedQuantityCalculator`
+- **DQE Import** — `DQEImportService`, `DQEParsedRow`, `DQEImportDialog`
+- **Tender Estimator** — `TenderEstimateService`, `QuantitativeEstimateExporter`, `DqeResourcePicker`, `SupplierBidWizard`
+
+Chacun a son parseur, son mapping, son transformer, son composant "matériau + quantité + prix". → Duplication, bugs isolés (create métré cassé, PDF cassé), incohérences PU/TVA.
+
+## Cible : un noyau `boq` (Bill Of Quantities) partagé
 
 ```text
-UI (AddressSearchBox / ZoneLocationEditor)
-   └─► Hook hexagonal useAddressSearch (debounce + cache + état)
-          └─► GeocodingService (via GeocodingServiceFactory)  ← singleton existant
-                 ├─► LocationDataService (base référentielle MR)
-                 └─► Nominatim (provider externe, déjà câblé)
+src/
+├── domain/boq/                       # Modèle unifié
+│   ├── BoqLine.ts                    # Entity: designation, unit, qty, unitPrice, vat, wbsRef, materialRef, source
+│   ├── BoqDocument.ts                # Aggregate: lines + totals + context (projectId | tenderId | submissionId)
+│   └── WbsRef.ts                     # { phaseId, milestoneId, taskId }
+│
+├── application/services/boq/
+│   ├── BoqCalculatorService.ts       # Pur : calc qty (L*W*H), totals HT/TVA/TTC, agrégations par phase/jalon
+│   ├── BoqValidatorService.ts        # Validation unité/dimensions/PU, messages ciblés
+│   ├── BoqImportOrchestrator.ts      # PDF|Excel|CSV → BoqLine[] avec mapping assisté
+│   └── parsers/
+│       ├── IDocumentParser.ts        # Port
+│       ├── PdfBoqParser.ts           # pdfjs + reconstruction lignes par y + tableaux
+│       ├── SpreadsheetBoqParser.ts   # xlsx + csv (papaparse)
+│       └── OcrFallbackParser.ts      # Tesseract.js (rendu canvas pdfjs)
+│
+├── infrastructure/adapters/boq/
+│   ├── SupabaseBoqRepository.ts      # CRUD générique paramétré par `source` (quantity_takeoffs | tender_estimate_items | dqe_lines)
+│   └── BoqLineMapper.ts              # snake_case ↔ camelCase bidirectionnel unique
+│
+├── dtos/boq/
+│   ├── BoqLineDTO.ts                 # camelCase, forme unique
+│   └── ImportMappingDTO.ts
+│
+├── config/referentials/
+│   ├── wbs/wbs.referential.ts        # Phases → Jalons → Tâches
+│   └── boq/units.referential.ts      # m³/m²/m/unité + règles dimensions requises
+│
+└── components/boq/                   # Composants UI réutilisables
+    ├── BoqLineEditor.tsx             # Édition d'une ligne (matériau, WBS, unité, dims, PU, total)
+    ├── BoqLineTable.tsx              # Tableau editable + totaux par phase
+    ├── WbsSelector.tsx               # Cascade Phase → Jalon → Tâche
+    ├── MaterialPicker.tsx            # Sélection matériau + affichage PU
+    ├── PriceSummary.tsx              # Qté × PU = HT + TVA + TTC
+    ├── ImportDropzone.tsx            # PDF/Excel/CSV drop
+    └── ImportMappingWizard.tsx       # Assistant colonnes → champs
 ```
 
-Aucun `supabase.from()` ajouté, aucun appel réseau dans l'UI. Transformers UI ↔ DTO (`InterventionZoneDTO`) inchangés — on ne fait qu'utiliser les champs existants (`label`, `address`, `coordinates`, `radiusMeters`, `regionCode`, `cityCode`, `geocodingMeta`).
+**Consommateurs (deviennent minces)** :
+- `QuantityTakeoffForm` = `<BoqLineEditor source="project">` + submit vers `SupabaseBoqRepository(source='quantity_takeoffs')`.
+- `DQEImportDialog` = `<ImportDropzone>` + `<ImportMappingWizard>` + `<BoqLineTable source="dqe">`.
+- `TenderEstimateService` + `QuantitativeEstimateExporter` = `<BoqLineTable source="tender_estimate">` + agrégations `BoqCalculatorService`.
+- `SupplierBidWizard` = même `<BoqLineTable>` en mode lecture + colonnes prix soumissionnaire.
 
-## Livrables
+## Flux hexagonal (immutable)
 
-### 1. Hook `src/hooks/hexagonal/useAddressSearch.ts` (nouveau)
-- Entrée : `query: string`, `minLength = 3`, `debounceMs = 350`.
-- Sortie : `{ results, isLoading, error, isEmpty }` où
-  `results: AddressSuggestion[] = { id, label, subtitle, source: 'base' | 'nominatim', lat, lng, raw }`.
-- Appelle `getGeocodingService().geocode(query)` (déjà fusion local + externe, provider dans `raw.provider`).
-- Cache mémoire par requête (politesse Nominatim).
+```text
+UI (BoqLineEditor camelCase)
+  → BoqLineMapper.toDto()
+  → BoqLineDTO (camelCase)
+  → BoqCalculatorService / BoqValidatorService (pur domaine)
+  → IBoqRepository (port)
+  → SupabaseBoqRepository (adapter, snake_case, table selon source)
+  → DB
+```
 
-### 2. Composant `src/components/gis/AddressSearchBox.tsx` (nouveau)
-- Remplace `LocationAutocomplete` dans la barre de recherche.
-- Input contrôlé + dropdown de suggestions (Base d'abord, badge de source, Nominatim ensuite).
-- États :
-  - `Recherche…` pendant le fetch,
-  - `Aucun résultat` + bouton **« Saisir manuellement »** quand `isEmpty` après debounce,
-  - touche Entrée sans sélection → bascule aussi en saisie manuelle.
-- **Saisie manuelle** : panneau compact `Libellé/adresse` + `Latitude` + `Longitude` (validation numérique et bornes MR souples), bouton « Utiliser cette position ».
-- Callback unique `onSelect({ label, address, lat, lng, source, meta })`.
-- Réutilisable dans GeoZoneEditor **et** dans le nouveau `ZoneLocationEditor`.
+Aucun `supabase.from()` en UI/hooks. Un seul mapper bidirectionnel. Référentiels centralisés.
 
-### 3. Composant `src/components/gis/ZoneLocationEditor.tsx` (nouveau)
-Panneau d'édition d'une **zone existante** (multi-formes), ouvert depuis la liste des zones dans `GeoZoneEditor` via un bouton crayon par ligne.
-- Champs communs à toutes les formes : `Libellé`, `Adresse` (via `AddressSearchBox`, pré-rempli avec `zone.label` / `zone.address`).
-- Actions spécifiques :
-  - **Point** : édition directe `lat`, `lng` (ou sélection d'adresse → écrase les coords).
-  - **Cercle** : édition `lat`, `lng` du centre + `Rayon (m)` ; recalcul `areaSqm`.
-  - **Rectangle** : édition des 2 coins (lat/lng) OU « Recentrer sur adresse » qui translate la bbox autour du nouveau centre en gardant la taille.
-  - **Polygone** : édition du **libellé/adresse** uniquement + action « Recentrer sur adresse » (translation des sommets autour du nouveau centroïde). Édition sommet-par-sommet via drag reste hors périmètre.
-- À la validation : recalcul `areaSqm`, appel `enrichWithReverseGeocode` (déjà présent) pour rafraîchir `regionCode`/`cityCode`/`geocodingMeta`, puis `emit(next)`.
-- Annulation : ferme sans muter.
+---
 
-### 4. Intégration dans `src/components/gis/GeoZoneEditor.tsx`
-- Barre du haut : remplacer `<LocationAutocomplete …/>` (≈ lignes 558-573) par `<AddressSearchBox onSelect={…} />`. Pré-remplit `flyTarget` **et** un `draftLabel` par défaut (repris de la suggestion) pour le bouton « Ajouter comme point ».
-- Liste des zones existantes : ajouter un bouton crayon (`Pencil`) à côté de la corbeille → ouvre `ZoneLocationEditor` en modal/inline pour la zone ciblée. Désactivé en `readOnly`.
-- Label de la barre mis à jour : « Rechercher une adresse (base Mauritanie + Nominatim) — édition libre disponible ».
-- Aucune régression sur dessin, import/export GeoJSON, reverse-geocode auto, mode `readOnly`, ni sur le fallback synthétique déjà en place (`fallbackLabel`, `fallbackAddress`).
+## P0 — Correctifs bloquants (bugs actuels)
 
-### 5. Diagnostic
-- `console.info('[AddressSearch]', { query, base, nominatim })` et `console.info('[ZoneLocationEditor] edit', { idx, before, after })` pour tracer côté preview.
+### Bug 1 : « Impossible de créer le métré »
+`QuantityTakeoffService.createQuantityTakeoff` cast `projectRepository` vers `{ createQuantityTakeoff }` inexistant → l'appel échoue silencieusement.
+- Remplacer par `IBoqRepository` (nouveau) OU dans un premier temps câbler `SupabaseQuantityTakeoffAdapter` déjà existant via `RepositoryFactory`.
+- Toast d'erreur = `error.message` réel, plus le texte générique.
+- `BoqValidatorService` : messages ciblés (unité manquante, largeur requise pour m², hauteur pour m³, matériau requis).
 
-## Non-objectifs
-- Pas de refonte de `LocationAutocomplete` (conservé pour choix strict wilaya/ville dans les formulaires projet).
-- Pas de drag interactif des sommets de polygone (édition point-par-point sur la carte) — sera un lot ultérieur.
-- Pas de changement DB, ni de nouveau service, ni de modif de `InterventionZoneDTO`.
+### Bug 2 : « Impossible d'analyser le PDF »
+`parseInvoiceFromPdf` (`utils/integrations.ts`) fait `split("\n")` sur du texte pdfjs sans retour ligne.
+- `PdfBoqParser` : reconstruction lignes via `item.transform[5]` (y), clustering colonnes via `x`, détection tableaux.
+- `OcrFallbackParser` : si texte < 500 char ou < 100 lettres → rendu canvas + Tesseract.js.
+- Erreur enrichie (page, cause).
 
-## Vérification
-- « Nouakchott » → suggestions base (wilaya + villes) avec badge « Base ».
-- « Avenue Gamal Abdel Nasser » → suggestions Nominatim avec badge « Nominatim ».
-- Chaîne inconnue → message vide + « Saisir manuellement » → lat/lng → point ajouté.
-- Sur une zone existante (point / cercle / rectangle / polygone) : crayon → édition libellé + adresse + géométrie propre à la forme → sauvegarde → la carte se recentre et `regionCode`/`cityCode` sont ré-enrichis.
-- Aucune régression en `readOnly` (crayon masqué, barre masquée).
+## P1 — Noyau BOQ + intégration 3 surfaces
+
+1. Créer `domain/boq/`, `dtos/boq/`, `BoqLineMapper`.
+2. Créer `BoqCalculatorService` + `BoqValidatorService` (pur TS).
+3. Créer `IBoqRepository` + `SupabaseBoqRepository` (paramétré par `source`).
+4. Créer composants `components/boq/*` (BoqLineEditor, WbsSelector, MaterialPicker, PriceSummary, BoqLineTable).
+5. Créer `config/referentials/wbs/wbs.referential.ts` (Gros œuvre / Second œuvre / VRD / Finitions × jalons × tâches).
+6. Migrer `QuantityTakeoffForm` → `<BoqLineEditor source="project">`.
+7. Migrer `DQEImportDialog` → `<ImportDropzone>` + `<ImportMappingWizard>`.
+8. Migrer `TenderEstimateService` / `QuantitativeEstimateExporter` sur `BoqCalculatorService`.
+
+## P1 — Parseurs multi-formats + assistant mapping
+
+- `SpreadsheetBoqParser` : xlsx + papaparse (déjà présents), détection colonnes par fuzzy (`designation|libellé`, `unité|unit`, `qté|quantité|qty`, `PU|prix unit`, `phase`, `matériau`).
+- `ImportMappingWizard` : preview 10 lignes + selects source→cible si confiance < 0.8 ; validation → `BoqLine[]` → persistance en lot.
+- Idempotent pour DQE, devis fournisseur, métré importé.
+
+## P1 — Matériau → PU → coût ligne
+
+- `MaterialPicker` : `useMaterialById(id)` → renvoie `unitPrice`, `vatRate`, `preferredSupplierId`.
+- `PriceSummary` sous chaque ligne : `HT = qty × unitPrice`, `TVA = HT × vatRate`, `TTC = HT + TVA`.
+- Persisté dans `unit_price` + `total_value` (colonnes existantes côté service, à câbler UI).
+
+## P2 — Suivi budgétaire
+
+- `BoqCalculatorService.aggregateByMilestone(lines)` → `{ milestoneId, budgetHt, budgetTtc }`.
+- `MilestoneBudgetDashboard` : prévu (BOQ) vs réel (paiements/inspections) + écart %.
+- Réutilisable projet ET tender (comparer estimation vs meilleure offre).
+
+---
+
+## Migration DB (une seule)
+
+- `quantity_takeoffs` : ajouter `task_id text NULL`, `total_value numeric NULL` (si absent).
+- Alignement colonnes communes `tender_estimate_items` / `quantity_takeoffs` sur les champs BOQ (pas de renommage destructif ; le mapper absorbe les différences).
+
+---
+
+## Exécution — batchs parallèles après approbation
+
+```text
+Batch A (P0)                Batch B (Noyau)              Batch C (Parseurs)
+─ Fix QuantityTakeoffSvc    ─ domain/boq                 ─ PdfBoqParser
+─ Fix parser PDF            ─ BoqCalculator/Validator    ─ SpreadsheetBoqParser
+─ Toasts ciblés             ─ SupabaseBoqRepository      ─ OcrFallbackParser
+                            ─ BoqLineMapper              ─ ImportMappingWizard
+
+              ▼ (dépend de A + B + C)
+Batch D (Intégrations)                     Batch E (P2)
+─ QuantityTakeoffForm → BoqLineEditor      ─ MilestoneBudgetDashboard
+─ DQEImportDialog → composants boq         ─ Agrégations tender vs offres
+─ TenderEstimateService → BoqCalculator
+─ SupplierBidWizard → BoqLineTable
+```
+
+A + B + C en parallèle, puis D en parallèle avec E.
+
+---
+
+## Bénéfices composabilité
+
+- **1 mapper** (au lieu de 3), **1 calculateur** (au lieu de 3), **1 validateur**, **1 parser** stack.
+- Ajout futur (avenant, DGD, situation de travaux) = nouveau `source` + réutilisation immédiate de tous les composants UI.
+- Correction d'un bug (ex : calcul TVA) propagée à toutes les surfaces.
+- Testabilité maximale : services purs TS sans React ni Supabase.
+
+## Contraintes respectées
+
+- Flux hexagonal strict (mapper snake ↔ camel, DTO, ports/adapters).
+- Zéro `supabase.from()` en UI/hooks.
+- Référentiels dans `src/config/referentials/`.
+- TanStack Query v5 (pas de `onError/onSuccess` sur query/mutation).
+- Entities readonly + factory `create()`.
