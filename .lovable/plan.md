@@ -1,133 +1,71 @@
-
-# Refonte Module Documents — GED composable
+# Fix module Cartographie — Recherche d'adresse & Localisation en mode édition
 
 ## Constat
 
-Le dossier `src/components/documents/` mélange 13 fichiers hétéroclites (list, upload, viewer, filtres, mais aussi `EmployeeManagement`, `SuppliersManagement`, `TaskAssignments`…). Chaque module (Projet, Matériaux, Tender, Fournisseurs) réimplémente sa propre logique d'affichage/upload de docs. Résultat : incohérence visuelle, duplication, régressions à chaque évolution.
+1. Dans `GeoZoneEditor.tsx` la barre annonce **« Rechercher une adresse (base + Nominatim) »** mais délègue à `LocationAutocomplete`, qui n'appelle **que** le référentiel statique Mauritanie (`LocationDataService`). Aucun appel à `GeocodingService` (Nominatim) → auto-complétion vide dès qu'on tape une rue, un quartier, une adresse hors wilayas/villes.
+2. Aucun **mode édition libre** quand ni la base ni le provider ne renvoient de résultat.
+3. En **mode édition d'un objet géo** (zone d'intervention, polygone, rectangle, cercle, point, matériau localisé), on ne peut pas éditer la **localisation** d'une forme déjà tracée (recentrer, renommer, corriger lat/lng, ré-adresser). La seule action disponible est la suppression.
 
-## Objectif
-
-Un **module Documents générique, moderne, composable** — cœur commun `DocumentHub` — et des **adaptateurs par domaine** (Project, Material, Tender, Supplier, Inspection) qui déclarent leurs specificités.
-
-## Architecture
+## Architecture (respect flux hexagonal)
 
 ```text
-src/components/documents/
-├── hub/                          ← cœur réutilisable
-│   ├── DocumentHub.tsx           ← composant principal, orchestré par un contrat
-│   ├── DocumentHubToolbar.tsx    ← search, tri, view toggle, actions
-│   ├── DocumentHubSidebar.tsx    ← filtres dynamiques (facets)
-│   ├── DocumentHubGrid.tsx       ← vue cartes
-│   ├── DocumentHubTable.tsx      ← vue tableau
-│   ├── DocumentHubPreview.tsx    ← drawer aperçu PDF/image/office
-│   ├── DocumentHubUpload.tsx     ← dialog upload drag-drop
-│   ├── DocumentHubEmpty.tsx      ← empty state
-│   └── types.ts                  ← DocumentItem, DocumentSource, HubContract
-├── adapters/                     ← spécialisation par domaine
-│   ├── projectDocumentAdapter.ts
-│   ├── materialDocumentAdapter.ts
-│   ├── tenderDocumentAdapter.ts   ← fusionne tender + lots + workflow steps
-│   ├── supplierDocumentAdapter.ts
-│   └── inspectionDocumentAdapter.ts
-└── legacy/                       ← anciens composants isolés, remplacés progressivement
+UI (AddressSearchBox / ZoneLocationEditor)
+   └─► Hook hexagonal useAddressSearch (debounce + cache + état)
+          └─► GeocodingService (via GeocodingServiceFactory)  ← singleton existant
+                 ├─► LocationDataService (base référentielle MR)
+                 └─► Nominatim (provider externe, déjà câblé)
 ```
 
-### Contrat unique `DocumentHubContract`
+Aucun `supabase.from()` ajouté, aucun appel réseau dans l'UI. Transformers UI ↔ DTO (`InterventionZoneDTO`) inchangés — on ne fait qu'utiliser les champs existants (`label`, `address`, `coordinates`, `radiusMeters`, `regionCode`, `cityCode`, `geocodingMeta`).
 
-Chaque domaine expose un objet qui décrit ses spécificités :
+## Livrables
 
-```ts
-export type DocumentItem = {
-  id: string;
-  title: string;
-  fileName: string | null;
-  fileUrl: string | null;
-  mimeType: string | null;
-  fileSize: number | null;
-  createdAt: string;
-  updatedAt: string;
-  category: string | null;          // clé neutre
-  status: string | null;
-  facets: Record<string, string | null>; // ex. { lot: "Lot 1", scope: "commun" }
-  raw: unknown;
-};
+### 1. Hook `src/hooks/hexagonal/useAddressSearch.ts` (nouveau)
+- Entrée : `query: string`, `minLength = 3`, `debounceMs = 350`.
+- Sortie : `{ results, isLoading, error, isEmpty }` où
+  `results: AddressSuggestion[] = { id, label, subtitle, source: 'base' | 'nominatim', lat, lng, raw }`.
+- Appelle `getGeocodingService().geocode(query)` (déjà fusion local + externe, provider dans `raw.provider`).
+- Cache mémoire par requête (politesse Nominatim).
 
-export type DocumentFacetDef = {
-  key: string;                      // "category" | "lot" | "phase" | "status" | "mime"
-  label: string;
-  options: { value: string; label: string; count?: number }[];
-};
+### 2. Composant `src/components/gis/AddressSearchBox.tsx` (nouveau)
+- Remplace `LocationAutocomplete` dans la barre de recherche.
+- Input contrôlé + dropdown de suggestions (Base d'abord, badge de source, Nominatim ensuite).
+- États :
+  - `Recherche…` pendant le fetch,
+  - `Aucun résultat` + bouton **« Saisir manuellement »** quand `isEmpty` après debounce,
+  - touche Entrée sans sélection → bascule aussi en saisie manuelle.
+- **Saisie manuelle** : panneau compact `Libellé/adresse` + `Latitude` + `Longitude` (validation numérique et bornes MR souples), bouton « Utiliser cette position ».
+- Callback unique `onSelect({ label, address, lat, lng, source, meta })`.
+- Réutilisable dans GeoZoneEditor **et** dans le nouveau `ZoneLocationEditor`.
 
-export type DocumentHubContract = {
-  scopeLabel: string;               // "Documents du projet X"
-  useDocuments: () => { data: DocumentItem[]; isLoading: boolean; refetch: () => void };
-  facets: DocumentFacetDef[];       // filtres à afficher dans la sidebar
-  categoryLabels: Record<string, string>;
-  canUpload: boolean;
-  onUpload?: (input: UploadInput) => Promise<void>;
-  onDelete?: (item: DocumentItem) => Promise<void>;
-  onUpdate?: (item: DocumentItem, patch: Partial<DocumentItem>) => Promise<void>;
-  extraUploadFields?: React.ReactNode; // ex. sélecteur de lot pour Tender
-};
-```
+### 3. Composant `src/components/gis/ZoneLocationEditor.tsx` (nouveau)
+Panneau d'édition d'une **zone existante** (multi-formes), ouvert depuis la liste des zones dans `GeoZoneEditor` via un bouton crayon par ligne.
+- Champs communs à toutes les formes : `Libellé`, `Adresse` (via `AddressSearchBox`, pré-rempli avec `zone.label` / `zone.address`).
+- Actions spécifiques :
+  - **Point** : édition directe `lat`, `lng` (ou sélection d'adresse → écrase les coords).
+  - **Cercle** : édition `lat`, `lng` du centre + `Rayon (m)` ; recalcul `areaSqm`.
+  - **Rectangle** : édition des 2 coins (lat/lng) OU « Recentrer sur adresse » qui translate la bbox autour du nouveau centre en gardant la taille.
+  - **Polygone** : édition du **libellé/adresse** uniquement + action « Recentrer sur adresse » (translation des sommets autour du nouveau centroïde). Édition sommet-par-sommet via drag reste hors périmètre.
+- À la validation : recalcul `areaSqm`, appel `enrichWithReverseGeocode` (déjà présent) pour rafraîchir `regionCode`/`cityCode`/`geocodingMeta`, puis `emit(next)`.
+- Annulation : ferme sans muter.
 
-`DocumentHub` consomme uniquement ce contrat — il ne connaît ni Supabase ni les tables spécifiques.
+### 4. Intégration dans `src/components/gis/GeoZoneEditor.tsx`
+- Barre du haut : remplacer `<LocationAutocomplete …/>` (≈ lignes 558-573) par `<AddressSearchBox onSelect={…} />`. Pré-remplit `flyTarget` **et** un `draftLabel` par défaut (repris de la suggestion) pour le bouton « Ajouter comme point ».
+- Liste des zones existantes : ajouter un bouton crayon (`Pencil`) à côté de la corbeille → ouvre `ZoneLocationEditor` en modal/inline pour la zone ciblée. Désactivé en `readOnly`.
+- Label de la barre mis à jour : « Rechercher une adresse (base Mauritanie + Nominatim) — édition libre disponible ».
+- Aucune régression sur dessin, import/export GeoJSON, reverse-geocode auto, mode `readOnly`, ni sur le fallback synthétique déjà en place (`fallbackLabel`, `fallbackAddress`).
 
-### Adaptateurs
+### 5. Diagnostic
+- `console.info('[AddressSearch]', { query, base, nominatim })` et `console.info('[ZoneLocationEditor] edit', { idx, before, after })` pour tracer côté preview.
 
-- **`projectDocumentAdapter(projectId)`** — lit `documents` filtré `project_id`, facets = catégorie/phase/statut/mime.
-- **`materialDocumentAdapter(materialId)`** — lit docs matériaux (fiches techniques, certificats), facets = type/statut/mime.
-- **`tenderDocumentAdapter(tenderId)`** — fusionne `tender_documents` + `tender_lot_documents` + `tender_step_documents` en une seule liste, ajoute facet **Lot** ("Communs" / "Lot 1" / "Lot 2"…) et facet **Portée** (Global / Lot / Étape). `extraUploadFields` = sélecteur Portée + Lot.
-- **`supplierDocumentAdapter(supplierId)`** — docs fournisseurs (RC, agréments, assurances).
-- **`inspectionDocumentAdapter(inspectionId)`** — PVs et pièces jointes d'inspection.
+## Non-objectifs
+- Pas de refonte de `LocationAutocomplete` (conservé pour choix strict wilaya/ville dans les formulaires projet).
+- Pas de drag interactif des sommets de polygone (édition point-par-point sur la carte) — sera un lot ultérieur.
+- Pas de changement DB, ni de nouveau service, ni de modif de `InterventionZoneDTO`.
 
-## Fonctionnalités du Hub (toutes gratuites pour tout domaine)
-
-- **Toolbar** : recherche (titre/nom fichier), tri (date, nom, taille), bascule Grille/Tableau, bouton "Ajouter"
-- **Sidebar de filtres** générée depuis `facets` avec compteurs live
-- **Vue Grille** : carte avec icône type MIME, titre, badges (catégorie + facets clés), taille, date, actions rapides (Voir / Télécharger / ⋯)
-- **Vue Tableau** : colonnes triables Nom, Catégorie, [Facets], Taille, Ajouté le, Actions
-- **Panneau d'aperçu (Sheet)** : PDF inline via `<iframe>`, image via `<img>`, autres → CTA téléchargement ; métadonnées + actions (télécharger, remplacer, supprimer, changer catégorie)
-- **Upload dialog** : drag-drop, aperçu fichier, catégorie + `extraUploadFields` propres au domaine
-- **Empty state** unifié
-- **Multi-sélection** (checkbox) pour actions groupées : téléchargement zip, suppression, changement de catégorie
-- **URL state** : filtres/vue persistés en `?facet=…&view=grid`
-
-## Design
-
-- Design tokens sémantiques (aucun `text-white`, `bg-black`, `#hex`) — cohérent avec le reste de l'app
-- Motion léger (`framer-motion`) : fade + rise sur les cartes, slide sur le drawer
-- Icônes MIME dédiées (`FileText`, `FileImage`, `FileSpreadsheet`, `File`)
-- Layout responsive : sidebar → drawer sur mobile
-- Densité maîtrisée, respiration, hover states nets
-
-## Migration progressive
-
-1. **Livraison 1 ✅** — `hub/` + `tenderDocumentAdapter` branché dans `TenderManagement.tsx`.
-2. **Livraison 2 ✅** — `projectDocumentAdapter` + `ProjectDocumentsPanel` (prêt pour branchement dans `ProjectDetail` / `PhaseDocuments`).
-3. **Livraison 3 ✅** — `supplierDocumentAdapter`, `inspectionDocumentAdapter`, `materialDocumentAdapter` + refonte page `/documents` en Hub multi-portée (Projet / AO / Fournisseur).
-4. **Livraison 4** (à venir) — retrait progressif des anciens composants (`DocumentsList`, `DocumentUpload`, `DocumentViewer`, `TenderDocuments`, `TenderDocumentManager`, `TenderLotDocumentsManager`, `DocumentSection`) après migration de tous les consommateurs restants (>50 fichiers).
-
-## Preview sécurisé (passerelle blob)
-
-`DocumentHubContract` expose `previewMode: 'direct' | 'proxy'` et `resolveBlobUrl?`. En mode `proxy` la visionneuse `fetch()` le fichier et le rend via `URL.createObjectURL(blob)`, révoqué à la fermeture — l'`iframe src` et le lien de téléchargement affichent `blob:` uniquement, jamais l'URL de stockage. Utilisé par défaut sur tous les nouveaux adaptateurs (project/supplier/inspection/material). Tender reste en `direct` (fichiers publics Supabase). Bascule possible par adaptateur ou via un `resolveBlobUrl` custom (edge function signée, streaming disque, etc.).
-
-## Détails techniques
-
-- Aperçu PDF : `<iframe src={fileUrl} className="h-full w-full" />` dans un `Sheet` shadcn (side="right", width ≈ 50%).
-- Aperçu image : `<img src={fileUrl} />`.
-- Détection MIME → catégorie de rendu via helper `getPreviewKind(mime)`.
-- Formatage taille via `formatBytes`.
-- Upload : réutilise `useDocumentStorage` existant pour le bucket `documents`.
-- Aucune migration DB nécessaire pour la livraison 1. Les adaptateurs suivants pourront exiger des GRANT/policies additionnels — traités le moment venu.
-- Tests visuels manuels : après la livraison 1, on ouvre le tender `d990d28a-…`, on vérifie que les 2 docs Lot 1/Lot 2 apparaissent, filtres et aperçu OK.
-
-## Impact code livraison 1
-
-- **Nouveau** : `src/components/documents/hub/*` (~8 fichiers) + `src/components/documents/adapters/tenderDocumentAdapter.ts`
-- **Modifié** : `src/pages/TenderManagement.tsx` — remplace `<TenderDocumentManager />` par `<DocumentHub contract={tenderDocumentAdapter(...)} />` dans l'onglet Docs
-- **Conservé** intact : tout le reste (les livraisons suivantes migreront les autres modules)
-
-## Livraison
-
-Je livre la **Livraison 1** en une PR. Les livraisons 2-4 seront enchaînées après validation UX de la 1.
+## Vérification
+- « Nouakchott » → suggestions base (wilaya + villes) avec badge « Base ».
+- « Avenue Gamal Abdel Nasser » → suggestions Nominatim avec badge « Nominatim ».
+- Chaîne inconnue → message vide + « Saisir manuellement » → lat/lng → point ajouté.
+- Sur une zone existante (point / cercle / rectangle / polygone) : crayon → édition libellé + adresse + géométrie propre à la forme → sauvegarde → la carte se recentre et `regionCode`/`cityCode` sont ré-enrichis.
+- Aucune régression en `readOnly` (crayon masqué, barre masquée).
