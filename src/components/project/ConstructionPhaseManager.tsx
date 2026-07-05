@@ -431,13 +431,22 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
     }
 
     try {
-      await constructionPhaseHook.updateConstructionPhase(updatedPhase.id, phaseDTO as PhaseDTO);
-      // Hook surfaces success toast itself; only close dialog on success
-      if (!constructionPhaseHook.error) {
-        setEditingPhase(null);
-        return true;
+      try {
+        await constructionPhaseHook.updateConstructionPhase(updatedPhase.id, phaseDTO as PhaseDTO);
+      } catch (updateErr) {
+        const msg = updateErr instanceof Error ? updateErr.message : String(updateErr);
+        const missing = /not\s*found|PGRST116|no rows/i.test(msg);
+        if (missing && effectiveProjectId) {
+          // Phase exists only in workflow state (client-side id) — create it in DB instead
+          const createDTO = { ...phaseDTO } as PhaseDTO;
+          delete (createDTO as any).id;
+          await constructionPhaseHook.createConstructionPhase(createDTO);
+        } else {
+          throw updateErr;
+        }
       }
-      return false;
+      setEditingPhase(null);
+      return true;
     } catch (err) {
       console.error('Phase update failed:', err);
       toast({
