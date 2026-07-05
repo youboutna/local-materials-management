@@ -665,9 +665,7 @@ export class QuantityTakeoffService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Quantity takeoff ID is required');
       }
 
-      await (this.projectRepository as unknown as { 
-        deleteQuantityTakeoff: (id: string) => Promise<void> 
-      }).deleteQuantityTakeoff(id);
+      await this.qtRepository.delete(id);
     } catch (error) {
       console.error('QuantityTakeoffService.deleteQuantityTakeoff failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete quantity takeoff');
