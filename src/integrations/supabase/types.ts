@@ -3067,6 +3067,7 @@ export type Database = {
       }
       tender_estimate_items: {
         Row: {
+          bid_ref: string | null
           category: string | null
           created_at: string
           description: string | null
@@ -3077,17 +3078,24 @@ export type Database = {
           item_code: string | null
           item_type: string | null
           material_id: string | null
+          milestone_id: string | null
+          phase_id: string | null
           quantity: number
           resource_kind: string | null
+          resource_type: string | null
+          source: string | null
           specifications: string | null
+          submitted_by: string | null
           supplier_contract_ref: string | null
           supplier_id: string | null
+          task_id: string | null
           total_price: number
           unit: string | null
           unit_price: number
           updated_at: string
         }
         Insert: {
+          bid_ref?: string | null
           category?: string | null
           created_at?: string
           description?: string | null
@@ -3098,17 +3106,24 @@ export type Database = {
           item_code?: string | null
           item_type?: string | null
           material_id?: string | null
+          milestone_id?: string | null
+          phase_id?: string | null
           quantity?: number
           resource_kind?: string | null
+          resource_type?: string | null
+          source?: string | null
           specifications?: string | null
+          submitted_by?: string | null
           supplier_contract_ref?: string | null
           supplier_id?: string | null
+          task_id?: string | null
           total_price?: number
           unit?: string | null
           unit_price?: number
           updated_at?: string
         }
         Update: {
+          bid_ref?: string | null
           category?: string | null
           created_at?: string
           description?: string | null
@@ -3119,11 +3134,17 @@ export type Database = {
           item_code?: string | null
           item_type?: string | null
           material_id?: string | null
+          milestone_id?: string | null
+          phase_id?: string | null
           quantity?: number
           resource_kind?: string | null
+          resource_type?: string | null
+          source?: string | null
           specifications?: string | null
+          submitted_by?: string | null
           supplier_contract_ref?: string | null
           supplier_id?: string | null
+          task_id?: string | null
           total_price?: number
           unit?: string | null
           unit_price?: number
@@ -6339,11 +6360,19 @@ export type Database = {
           id: string | null
           length: number | null
           material_id: string | null
+          milestone_id: string | null
           note: string | null
+          phase_id: string | null
           project_id: string | null
           quantity: number | null
+          resource_type: string | null
+          source: string | null
+          task_id: string | null
+          total_value: number | null
           unit: string | null
+          unit_price: number | null
           updated_at: string | null
+          vat_rate: number | null
           width: number | null
         }
         Insert: {
@@ -6353,11 +6382,19 @@ export type Database = {
           id?: string | null
           length?: number | null
           material_id?: string | null
+          milestone_id?: string | null
           note?: string | null
+          phase_id?: string | null
           project_id?: string | null
           quantity?: number | null
+          resource_type?: string | null
+          source?: string | null
+          task_id?: string | null
+          total_value?: number | null
           unit?: string | null
+          unit_price?: number | null
           updated_at?: string | null
+          vat_rate?: number | null
           width?: number | null
         }
         Update: {
@@ -6367,11 +6404,19 @@ export type Database = {
           id?: string | null
           length?: number | null
           material_id?: string | null
+          milestone_id?: string | null
           note?: string | null
+          phase_id?: string | null
           project_id?: string | null
           quantity?: number | null
+          resource_type?: string | null
+          source?: string | null
+          task_id?: string | null
+          total_value?: number | null
           unit?: string | null
+          unit_price?: number | null
           updated_at?: string | null
+          vat_rate?: number | null
           width?: number | null
         }
         Relationships: []
