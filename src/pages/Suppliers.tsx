@@ -1,7 +1,6 @@
 // @ts-nocheck
 import EnhancedDocumentSharing from '@/components/suppliers/EnhancedDocumentSharing';
-import SupplierDocumentUpload from '@/components/suppliers/SupplierDocumentUpload';
-import SupplierDocumentsList from '@/components/suppliers/SupplierDocumentsList';
+import { SupplierDocumentsPanel } from '@/components/documents/panels';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
