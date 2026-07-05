@@ -173,8 +173,9 @@ export function AwardedTenderPreviewDialog(props: AwardedTenderPreviewDialogProp
           </>
         )}
 
-        <DialogFooter>
+        <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
+          <CopyBoqToProjectButton estimateId={winningEstimateId} projectId={projectId} />
           <Button
             onClick={() => applyMutation.mutate()}
             disabled={!payload || payload.phases.length === 0 || applyMutation.isPending}
