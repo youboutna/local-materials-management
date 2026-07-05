@@ -553,38 +553,43 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
             <div className="flex-1 min-w-[240px]">
               <Label className="text-xs flex items-center gap-1 mb-1">
                 <Search className="h-3 w-3" />
-                Rechercher une adresse (base + Nominatim)
+                Rechercher une adresse (base Mauritanie + Nominatim) — édition libre disponible
               </Label>
               <div className="flex items-center gap-2">
                 <div className="flex-1">
-                  <LocationAutocomplete
-                    onChange={(text, locationData) => {
-                      const coords = locationData?.coordinates;
-                      if (coords) {
-                        console.info('[GeoZoneEditor] address selected', {
-                          text,
-                          type: locationData?.type,
-                          code: locationData?.code,
-                          coords,
-                        });
-                        setFlyTarget([coords.lat, coords.lng]);
-                      }
+                  <AddressSearchBox
+                    placeholder="Ville, wilaya, rue, adresse…"
+                    onSelect={(sel) => {
+                      console.info('[GeoZoneEditor] address selected', sel);
+                      setFlyTarget([sel.lat, sel.lng]);
+                      setDraftLabel((prev) => prev || sel.label);
+                      setPendingAddress({
+                        label: sel.label,
+                        address: sel.address,
+                        lat: sel.lat,
+                        lng: sel.lng,
+                      });
                     }}
-                    placeholder="Ville, wilaya, région…"
                   />
                 </div>
                 <Button
                   size="sm"
                   variant="secondary"
                   onClick={() => {
-                    if (flyTarget) {
+                    const src = pendingAddress ?? (flyTarget
+                      ? { lat: flyTarget[0], lng: flyTarget[1], label: '', address: undefined }
+                      : null);
+                    if (src) {
                       void commitZone({
                         type: 'point',
-                        coordinates: [{ lat: flyTarget[0], lng: flyTarget[1] }],
-                        label: `Point ${zones.length + 1}`,
+                        coordinates: [{ lat: src.lat, lng: src.lng }],
+                        label: draftLabel || src.label || `Point ${zones.length + 1}`,
+                        address: src.address,
                       });
+                      setPendingAddress(null);
+                      setDraftLabel('');
                     } else {
-                      toast.info('Sélectionnez d\'abord une adresse.');
+                      toast.info("Sélectionnez d'abord une adresse.");
                     }
                   }}
                 >
