@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Trash2, Layers, ListTodo, Target, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { getAwardedTenderToProjectService } from '@/application/services/AwardedTenderToProjectService';
 import type { AwardedProjectHydrationPayload } from '@/dtos/transforms/AwardedTenderTransformer';
 import { useTenderToPlanning } from '@/hooks/hexagonal/useTenderToPlanning';
 
