@@ -114,6 +114,40 @@ const REQUIRED_DOCUMENTS = {
   ]
 };
 
+/**
+ * SupplierBidBoq — chiffrage fournisseur via noyau BOQ composable.
+ * Remplace le legacy TenderQuantitativeEstimate.
+ */
+const SupplierBidBoq: React.FC<{ tenderId: string }> = ({ tenderId }) => {
+  const bid = useBoqDocument({ source: 'supplier_bid', contextId: tenderId });
+  return (
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <BoqImportDialog
+          source="supplier_bid"
+          contextId={tenderId}
+          title="Importer votre chiffrage"
+          trigger={
+            <Button variant="outline" size="sm" className="gap-2">
+              <Upload className="h-4 w-4" /> Importer chiffrage
+            </Button>
+          }
+          onImported={() => bid.refetch()}
+        />
+      </div>
+      {bid.isLoading ? (
+        <div className="text-sm text-muted-foreground">Chargement…</div>
+      ) : (
+        <BoqLineTable
+          lines={bid.lines}
+          emptyLabel="Aucune ligne de chiffrage. Importez votre offre pour démarrer."
+        />
+      )}
+    </div>
+  );
+};
+
+
 const EnhancedSupplierTenderPortal = () => {
   const [selectedTender, setSelectedTender] = useState<PublicTender | null>(null);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
