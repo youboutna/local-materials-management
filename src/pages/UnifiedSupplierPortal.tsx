@@ -278,11 +278,9 @@ const UnifiedSupplierPortal = () => {
   }, [searchParams]);
 
   if (!user && guestPayload) {
-    // Lazy import to avoid circular deps
-    const { UnlockedView } = require('@/components/tenders/SupplierSecureAccessPortal');
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 py-8">
-        <UnlockedView
+        <SecretUnlockedView
           payload={guestPayload}
           onReset={() => {
             try { sessionStorage.removeItem('supplier-tender-secret'); } catch { /* noop */ }
