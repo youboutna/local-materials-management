@@ -23,6 +23,39 @@ import { TENDER_CATEGORY_LABELS, TENDER_DOCUMENT_LABELS, ADMINISTRATIVE_SUBCATEG
 import { TenderDocumentCategory, TenderDocumentSubcategory } from './PublicProcurementWorkflow';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 
+/**
+ * TenderEstimateBoq — remplace le legacy TenderQuantitativeEstimate.
+ * Utilise le noyau BOQ composable (source = 'tender_estimate') via hooks hex.
+ */
+const TenderEstimateBoq: React.FC<{ tenderId: string }> = ({ tenderId }) => {
+  const boq = useBoqDocument({ source: 'tender_estimate', contextId: tenderId });
+  return (
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <BoqImportDialog
+          source="tender_estimate"
+          contextId={tenderId}
+          title="Importer un DQE prévisionnel"
+          trigger={
+            <Button variant="outline" size="sm" className="gap-2">
+              <Upload className="h-4 w-4" /> Importer DQE
+            </Button>
+          }
+          onImported={() => boq.refetch()}
+        />
+      </div>
+      {boq.isLoading ? (
+        <div className="text-sm text-muted-foreground">Chargement…</div>
+      ) : (
+        <BoqLineTable
+          lines={boq.lines}
+          emptyLabel="Aucune ligne d'estimation. Importez un DQE pour démarrer."
+        />
+      )}
+    </div>
+  );
+};
+
 interface TenderDocumentManagerProps {
   tenderId: string;
   projectId?: string;
