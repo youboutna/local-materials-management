@@ -709,10 +709,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                 </TabsContent>
 
                 <TabsContent value="dqe" className="space-y-4">
-                  <TenderQuantitativeEstimate 
-                    tenderId={tenderId}
-                    projectId={projectId}
-                  />
+                  <TenderEstimateBoq tenderId={tenderId} />
                 </TabsContent>
               </Tabs>
             </TabsContent>
