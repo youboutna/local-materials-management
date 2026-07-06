@@ -345,7 +345,7 @@ export {
   useAddEstimateItemHex, 
   useCreateInvoiceHex 
 } from './useTenderEstimateHex';
-export { useTenderQuantitativeEstimateHex } from './useTenderQuantitativeEstimateHex';
+
 
 // Document Sharing
 export { 
