@@ -704,10 +704,7 @@ const EnhancedSupplierTenderPortal = () => {
 
         <TabsContent value="estimate" className="space-y-6">
           {selectedTender ? (
-            <TenderQuantitativeEstimate 
-              tenderId={selectedTender.id}
-              projectId={selectedTender.project_id}
-            />
+            <SupplierBidBoq tenderId={selectedTender.id} />
           ) : (
             <Card>
               <CardContent className="p-6 text-center">
