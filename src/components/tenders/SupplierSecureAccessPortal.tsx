@@ -28,7 +28,7 @@ export interface UnlockedPayload {
   allowedDocuments?: string[];
 }
 
-const UnlockedView: React.FC<{ payload: UnlockedPayload; onReset: () => void }> = ({
+export const UnlockedView: React.FC<{ payload: UnlockedPayload; onReset: () => void }> = ({
   payload,
   onReset,
 }) => {
