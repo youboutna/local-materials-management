@@ -22,7 +22,7 @@ import {
   type GateValidationResult,
 } from '@/components/access/SecretCodeAccessGate';
 
-interface UnlockedPayload {
+export interface UnlockedPayload {
   tenderId: string;
   secretCode: string;
   allowedDocuments?: string[];
