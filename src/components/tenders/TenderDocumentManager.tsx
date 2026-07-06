@@ -13,7 +13,7 @@ import { FileText, Upload, Eye, CheckCircle, XCircle, Clock, AlertCircle, Plus, 
 import { useToast } from '@/hooks/use-toast';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
-import TenderQuantitativeEstimate from './TenderQuantitativeEstimate';
+import { BoqLineTable, BoqImportDialog, useBoqDocument } from '@/components/boq';
 import TenderLotDocumentsManager, { LotOption } from './TenderLotDocumentsManager';
 import { useTenderLots } from '@/hooks/hexagonal/useTenderLotsHex';
 import { useTenderLotDocuments } from '@/hooks/hexagonal/useTenderLotDocumentsHex';
@@ -22,6 +22,39 @@ import { TenderDocumentWithDetails } from '@/hooks/hexagonal/useTenderDocumentsH
 import { TENDER_CATEGORY_LABELS, TENDER_DOCUMENT_LABELS, ADMINISTRATIVE_SUBCATEGORY_GROUPS } from '@/dtos';
 import { TenderDocumentCategory, TenderDocumentSubcategory } from './PublicProcurementWorkflow';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+
+/**
+ * TenderEstimateBoq — remplace le legacy TenderQuantitativeEstimate.
+ * Utilise le noyau BOQ composable (source = 'tender_estimate') via hooks hex.
+ */
+const TenderEstimateBoq: React.FC<{ tenderId: string }> = ({ tenderId }) => {
+  const boq = useBoqDocument({ source: 'tender_estimate', contextId: tenderId });
+  return (
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <BoqImportDialog
+          source="tender_estimate"
+          contextId={tenderId}
+          title="Importer un DQE prévisionnel"
+          trigger={
+            <Button variant="outline" size="sm" className="gap-2">
+              <Upload className="h-4 w-4" /> Importer DQE
+            </Button>
+          }
+          onImported={() => boq.refetch()}
+        />
+      </div>
+      {boq.isLoading ? (
+        <div className="text-sm text-muted-foreground">Chargement…</div>
+      ) : (
+        <BoqLineTable
+          lines={boq.lines}
+          emptyLabel="Aucune ligne d'estimation. Importez un DQE pour démarrer."
+        />
+      )}
+    </div>
+  );
+};
 
 interface TenderDocumentManagerProps {
   tenderId: string;
@@ -709,10 +742,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                 </TabsContent>
 
                 <TabsContent value="dqe" className="space-y-4">
-                  <TenderQuantitativeEstimate 
-                    tenderId={tenderId}
-                    projectId={projectId}
-                  />
+                  <TenderEstimateBoq tenderId={tenderId} />
                 </TabsContent>
               </Tabs>
             </TabsContent>

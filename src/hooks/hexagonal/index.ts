@@ -345,7 +345,7 @@ export {
   useAddEstimateItemHex, 
   useCreateInvoiceHex 
 } from './useTenderEstimateHex';
-export { useTenderQuantitativeEstimateHex } from './useTenderQuantitativeEstimateHex';
+
 
 // Document Sharing
 export { 
@@ -497,7 +497,7 @@ export type { CreateInspectionDTO, UpdateProjectStatusDTO } from './useInspectio
 export type { ProjectImportData } from './useProjectImporterHex';
 export type { CreateUserData, UpdateUserData } from './useUserManagementDialogHex';
 export type { EstimateItem } from './useTenderEstimateHex';
-export type { EstimateItem as QuantitativeEstimateItem } from './useTenderQuantitativeEstimateHex';
+
 export type { UsePhaseDocumentsResult } from './usePhaseDocumentsHex';
 export type { ProjectDetails, Phase as ProjectPhaseDetails, Step as PhaseStep } from './useProjectStructureHex';
 export type { TenderDocumentUploadData, TenderCategory, TenderSubcategory } from './useTenderDocumentUploadHex';

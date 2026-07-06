@@ -12,6 +12,7 @@ import UnifiedGanttChart from "@/components/project/UnifiedGanttChart";
 import UnifiedPERTAnalysis from "@/components/project/UnifiedPERTAnalysis";
 import ActionableProjectMilestones from "@/components/project/monitoring/ActionableProjectMilestones";
 import { ReportManager } from "@/components/reports/ReportManager";
+import ProjectDqeTab from "@/components/project/ProjectDqeTab";
 import { GanttChart, PERTDiagram, KanbanBoard, CriticalPathView, ProjectTimeline } from "@/components/planning";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -1233,6 +1234,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             </DialogContentUI>
           </DialogUI>
         </TabsContent>
+
+        {/* DQE global — Plan v3 : composable BOQ à l'échelle projet */}
+        <TabsContent value="dqe" className="mt-6">
+          <ProjectDqeTab projectId={projectId!} />
+        </TabsContent>
+
+
 
         {/* New Planning Tab with Gantt, PERT, Kanban, Critical Path */}
         <TabsContent value="planning" className="mt-6">
