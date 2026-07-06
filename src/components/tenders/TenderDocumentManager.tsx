@@ -13,7 +13,7 @@ import { FileText, Upload, Eye, CheckCircle, XCircle, Clock, AlertCircle, Plus, 
 import { useToast } from '@/hooks/use-toast';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
-import TenderQuantitativeEstimate from './TenderQuantitativeEstimate';
+import { BoqLineTable, BoqImportDialog, useBoqDocument } from '@/components/boq';
 import TenderLotDocumentsManager, { LotOption } from './TenderLotDocumentsManager';
 import { useTenderLots } from '@/hooks/hexagonal/useTenderLotsHex';
 import { useTenderLotDocuments } from '@/hooks/hexagonal/useTenderLotDocumentsHex';
