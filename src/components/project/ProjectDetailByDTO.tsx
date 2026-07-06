@@ -1235,6 +1235,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           </DialogUI>
         </TabsContent>
 
+        {/* DQE global — Plan v3 : composable BOQ à l'échelle projet */}
+        <TabsContent value="dqe" className="mt-6">
+          <ProjectDqeTab projectId={projectId!} />
+        </TabsContent>
+
+
+
         {/* New Planning Tab with Gantt, PERT, Kanban, Critical Path */}
         <TabsContent value="planning" className="mt-6">
           <Tabs defaultValue="gantt" className="space-y-4">
