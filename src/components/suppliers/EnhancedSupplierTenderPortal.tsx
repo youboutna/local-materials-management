@@ -1,7 +1,7 @@
 import { SubmissionProgressTracker, SubmissionStep } from '@/components/suppliers/SubmissionProgressTracker';
 import { SubmissionSecretDisplay } from '@/components/suppliers/SubmissionSecretDisplay';
 import { SupplierTenderAccessGuard } from '@/components/suppliers/SupplierTenderAccessGuard';
-import TenderQuantitativeEstimate from '@/components/tenders/TenderQuantitativeEstimate';
+import { BoqLineTable, BoqImportDialog, useBoqDocument } from '@/components/boq';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
