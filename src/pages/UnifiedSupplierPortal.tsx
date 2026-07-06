@@ -252,6 +252,46 @@ const UnifiedSupplierPortal = () => {
     );
   }
 
+  // Guest access via secret code (from /supplier-access redirect).
+  // Read tenderId+secret from URL first, fallback to sessionStorage.
+  const guestPayload = React.useMemo(() => {
+    const tenderId = searchParams.get('tenderId');
+    const secret = searchParams.get('secret');
+    if (tenderId && secret) {
+      return { tenderId, secretCode: secret, allowedDocuments: [] as string[] };
+    }
+    try {
+      const raw = sessionStorage.getItem('supplier-tender-secret');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.tenderId && parsed?.secretCode) {
+          return {
+            tenderId: parsed.tenderId as string,
+            secretCode: parsed.secretCode as string,
+            allowedDocuments: (parsed.allowedDocuments ?? []) as string[],
+          };
+        }
+      }
+    } catch { /* noop */ }
+    return null;
+  }, [searchParams]);
+
+  if (!user && guestPayload) {
+    // Lazy import to avoid circular deps
+    const { UnlockedView } = require('@/components/tenders/SupplierSecureAccessPortal');
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 py-8">
+        <UnlockedView
+          payload={guestPayload}
+          onReset={() => {
+            try { sessionStorage.removeItem('supplier-tender-secret'); } catch { /* noop */ }
+            window.location.href = '/supplier-access';
+          }}
+        />
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5">
