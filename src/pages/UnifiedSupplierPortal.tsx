@@ -57,6 +57,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
 import SupplierPaymentRequest from "@/components/suppliers/SupplierPaymentRequest";
 import EnhancedSupplierTenderPortal from "@/components/suppliers/EnhancedSupplierTenderPortal";
+import { UnlockedView as SecretUnlockedView } from "@/components/tenders/SupplierSecureAccessPortal";
 import { SupplierInspectionsList } from "@/components/supplier/SupplierInspectionsList";
 import { useSupplierInspections } from "@/hooks/useSupplierInspections";
 import {
@@ -248,6 +249,44 @@ const UnifiedSupplierPortal = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Guest access via secret code (from /supplier-access redirect).
+  // Read tenderId+secret from URL first, fallback to sessionStorage.
+  const guestPayload = React.useMemo(() => {
+    const tenderId = searchParams.get('tenderId');
+    const secret = searchParams.get('secret');
+    if (tenderId && secret) {
+      return { tenderId, secretCode: secret, allowedDocuments: [] as string[] };
+    }
+    try {
+      const raw = sessionStorage.getItem('supplier-tender-secret');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.tenderId && parsed?.secretCode) {
+          return {
+            tenderId: parsed.tenderId as string,
+            secretCode: parsed.secretCode as string,
+            allowedDocuments: (parsed.allowedDocuments ?? []) as string[],
+          };
+        }
+      }
+    } catch { /* noop */ }
+    return null;
+  }, [searchParams]);
+
+  if (!user && guestPayload) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 py-8">
+        <SecretUnlockedView
+          payload={guestPayload}
+          onReset={() => {
+            try { sessionStorage.removeItem('supplier-tender-secret'); } catch { /* noop */ }
+            window.location.href = '/supplier-access';
+          }}
+        />
       </div>
     );
   }

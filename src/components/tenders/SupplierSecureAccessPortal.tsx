@@ -22,13 +22,13 @@ import {
   type GateValidationResult,
 } from '@/components/access/SecretCodeAccessGate';
 
-interface UnlockedPayload {
+export interface UnlockedPayload {
   tenderId: string;
   secretCode: string;
   allowedDocuments?: string[];
 }
 
-const UnlockedView: React.FC<{ payload: UnlockedPayload; onReset: () => void }> = ({
+export const UnlockedView: React.FC<{ payload: UnlockedPayload; onReset: () => void }> = ({
   payload,
   onReset,
 }) => {
