@@ -39,6 +39,8 @@ export { ImportMappingWizard } from '@/components/boq/ImportMappingWizard';
 export { BoqLineTable } from '@/components/boq/BoqLineTable';
 export { BoqComparisonTable } from '@/components/boq/BoqComparisonTable';
 export { BoqImportDialog } from '@/components/boq/BoqImportDialog';
+export { BoqBudgetDashboard } from '@/components/boq/BoqBudgetDashboard';
+
 
 // Referentials
 export { WBS_REFERENTIAL, getPhase, getMilestone, getTask } from '@/config/referentials/wbs/wbs.referential';
