@@ -245,16 +245,8 @@ const UnifiedSupplierPortal = () => {
     setActiveTab("payments");
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
   // Guest access via secret code (from /supplier-access redirect).
-  // Read tenderId+secret from URL first, fallback to sessionStorage.
+  // MUST run before any early return to preserve hook order (React #310).
   const guestPayload = React.useMemo(() => {
     const tenderId = searchParams.get('tenderId');
     const secret = searchParams.get('secret');
@@ -277,6 +269,14 @@ const UnifiedSupplierPortal = () => {
     return null;
   }, [searchParams]);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   if (!user && guestPayload) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 py-8">
@@ -290,6 +290,7 @@ const UnifiedSupplierPortal = () => {
       </div>
     );
   }
+
 
   if (!user) {
     return (
