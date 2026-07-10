@@ -107,7 +107,7 @@ export class PdfBoqParser implements IDocumentParser {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function runOcrFallback(doc: any): Promise<string[][]> {
   const { createWorker } = await import('tesseract.js');
-  const worker = await createWorker(['fra', 'eng']);
+  const worker = await createWorker('fra+eng');
   const rowsAcc: string[][] = [];
   try {
     const maxPages = Math.min(doc.numPages, 10); // safety cap
