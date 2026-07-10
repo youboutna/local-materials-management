@@ -27,7 +27,9 @@ import {
   XCircle
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+
 
 interface PublicTender {
   id: string;
