@@ -83,7 +83,16 @@ const ProjectDqeTab: React.FC<Props> = ({ projectId }) => {
                 />
               )}
             </TabsContent>
+
+            <TabsContent value="budget">
+              {takeoff.isLoading || dqe.isLoading ? (
+                <div className="text-sm text-muted-foreground">Chargement…</div>
+              ) : (
+                <BoqBudgetDashboard planned={takeoff.lines} actual={dqe.lines} />
+              )}
+            </TabsContent>
           </Tabs>
+
         </CardContent>
       </Card>
     </div>
