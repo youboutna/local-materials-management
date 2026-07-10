@@ -172,11 +172,25 @@ const EnhancedSupplierTenderPortal = () => {
   const { getUser } = useAuth();
   const queryClient = useQueryClient();
 
+  const [searchParams] = useSearchParams();
+
   const handleAccessGranted = (tenderId: string, supplierEmail: string) => {
     setHasAccessToTender(true);
     setAccessGrantedTenderId(tenderId);
     setSupplierEmailFromSecret(supplierEmail);
   };
+
+  // Auto-grant when arriving via /supplier-portal?tab=tenders&tenderId=...&secret=...
+  useEffect(() => {
+    const tid = searchParams.get('tenderId');
+    const secret = searchParams.get('secret');
+    if (tid && !accessGrantedTenderId) {
+      setHasAccessToTender(true);
+      setAccessGrantedTenderId(tid);
+      if (secret) setSupplierEmailFromSecret(prev => prev ?? '');
+    }
+  }, [searchParams, accessGrantedTenderId]);
+
 
   // Fetch the specific tender granted by the secret code so it can be selected
   // even if it is not listed in the public "browse" query.
