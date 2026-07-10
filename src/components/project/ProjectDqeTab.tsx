@@ -57,7 +57,9 @@ const ProjectDqeTab: React.FC<Props> = ({ projectId }) => {
               <TabsTrigger value="compare">
                 <GitCompare className="h-4 w-4 mr-1" /> Comparaison besoin ↔ DQE
               </TabsTrigger>
+              <TabsTrigger value="budget">Suivi budget</TabsTrigger>
             </TabsList>
+
 
             <TabsContent value="lines">
               {dqe.isLoading ? (
