@@ -13,8 +13,10 @@ import {
   BoqLineTable,
   BoqImportDialog,
   BoqComparisonTable,
+  BoqBudgetDashboard,
   useBoqDocument,
 } from '@/components/boq';
+
 
 interface Props {
   projectId: string;
