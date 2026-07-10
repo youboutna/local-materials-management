@@ -18,6 +18,8 @@ export { BoqLineMapper } from '@/dtos/boq/BoqLineMapper';
 export { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
 export { BoqValidatorService } from '@/application/services/boq/BoqValidatorService';
 export { boqImportOrchestrator, BoqImportOrchestrator, type ImportMapping } from '@/application/services/boq/BoqImportOrchestrator';
+export { MaterialPriceResolver } from '@/application/services/boq/MaterialPriceResolver';
+
 export { tenderToPlanningService, TenderToPlanningService } from '@/application/services/tender/TenderToPlanningService';
 
 // Infra port
