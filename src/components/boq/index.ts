@@ -18,6 +18,8 @@ export { BoqLineMapper } from '@/dtos/boq/BoqLineMapper';
 export { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
 export { BoqValidatorService } from '@/application/services/boq/BoqValidatorService';
 export { boqImportOrchestrator, BoqImportOrchestrator, type ImportMapping } from '@/application/services/boq/BoqImportOrchestrator';
+export { MaterialPriceResolver } from '@/application/services/boq/MaterialPriceResolver';
+
 export { tenderToPlanningService, TenderToPlanningService } from '@/application/services/tender/TenderToPlanningService';
 
 // Infra port
@@ -37,6 +39,8 @@ export { ImportMappingWizard } from '@/components/boq/ImportMappingWizard';
 export { BoqLineTable } from '@/components/boq/BoqLineTable';
 export { BoqComparisonTable } from '@/components/boq/BoqComparisonTable';
 export { BoqImportDialog } from '@/components/boq/BoqImportDialog';
+export { BoqBudgetDashboard } from '@/components/boq/BoqBudgetDashboard';
+
 
 // Referentials
 export { WBS_REFERENTIAL, getPhase, getMilestone, getTask } from '@/config/referentials/wbs/wbs.referential';

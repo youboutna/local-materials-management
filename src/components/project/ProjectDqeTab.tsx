@@ -13,8 +13,10 @@ import {
   BoqLineTable,
   BoqImportDialog,
   BoqComparisonTable,
+  BoqBudgetDashboard,
   useBoqDocument,
 } from '@/components/boq';
+
 
 interface Props {
   projectId: string;
@@ -55,7 +57,9 @@ const ProjectDqeTab: React.FC<Props> = ({ projectId }) => {
               <TabsTrigger value="compare">
                 <GitCompare className="h-4 w-4 mr-1" /> Comparaison besoin ↔ DQE
               </TabsTrigger>
+              <TabsTrigger value="budget">Suivi budget</TabsTrigger>
             </TabsList>
+
 
             <TabsContent value="lines">
               {dqe.isLoading ? (
@@ -79,7 +83,16 @@ const ProjectDqeTab: React.FC<Props> = ({ projectId }) => {
                 />
               )}
             </TabsContent>
+
+            <TabsContent value="budget">
+              {takeoff.isLoading || dqe.isLoading ? (
+                <div className="text-sm text-muted-foreground">Chargement…</div>
+              ) : (
+                <BoqBudgetDashboard planned={takeoff.lines} actual={dqe.lines} />
+              )}
+            </TabsContent>
           </Tabs>
+
         </CardContent>
       </Card>
     </div>

@@ -1,10 +1,17 @@
 /**
- * PdfBoqParser — extracts BOQ rows from PDF using Y-clustering of pdfjs text items.
- * Robust replacement for the legacy split("\n") approach.
+ * PdfBoqParser — extracts BOQ rows from PDF using Y-clustering of pdfjs text items
+ * with X-column detection, and falls back to OCR (tesseract.js) when no text is
+ * extractable (scanned PDFs).
+ *
+ * Emits a `ParseResult` compatible with `ImportMappingWizard` (columns are
+ * `col_1..col_N` derived from detected column bands).
  */
 import type { IDocumentParser, ParseResult, ParsedBoqRow } from './IDocumentParser';
 
-interface PdfItem { str: string; transform: number[] }
+interface PdfItem { str: string; transform: number[]; width?: number }
+
+const Y_TOLERANCE = 3;    // px — items within this Y delta share a row
+const X_GAP = 20;         // px — horizontal gap threshold that splits columns
 
 export class PdfBoqParser implements IDocumentParser {
   supports(file: File): boolean {
@@ -13,10 +20,9 @@ export class PdfBoqParser implements IDocumentParser {
 
   async parse(file: File): Promise<ParseResult> {
     const pdfjs = await import('pdfjs-dist');
-    // @ts-ignore worker
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (!(pdfjs as any).GlobalWorkerOptions.workerSrc) {
-      // Vite friendly worker resolution
-      // @ts-ignore
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (pdfjs as any).GlobalWorkerOptions.workerSrc = new URL(
         'pdfjs-dist/build/pdf.worker.min.mjs',
         import.meta.url,
@@ -24,7 +30,7 @@ export class PdfBoqParser implements IDocumentParser {
     }
     const buf = await file.arrayBuffer();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const doc = await (pdfjs as any).getDocument({ data: buf }).promise;
+    const doc = await (pdfjs as any).getDocument({ data: buf.slice(0) }).promise;
 
     const rowsAcc: string[][] = [];
     const warnings: string[] = [];
@@ -32,29 +38,97 @@ export class PdfBoqParser implements IDocumentParser {
     for (let p = 1; p <= doc.numPages; p++) {
       const page = await doc.getPage(p);
       const content = await page.getTextContent();
-      const items = (content.items as PdfItem[]).filter((i) => i && i.str);
-      const byY = new Map<number, PdfItem[]>();
-      for (const it of items) {
-        const y = Math.round(it.transform[5]);
-        if (!byY.has(y)) byY.set(y, []);
-        byY.get(y)!.push(it);
+      const items = (content.items as PdfItem[]).filter((i) => i && i.str && i.str.trim());
+      if (!items.length) continue;
+
+      // Cluster items into rows by Y within tolerance
+      const rows: PdfItem[][] = [];
+      const sortedByY = [...items].sort((a, b) => b.transform[5] - a.transform[5]);
+      let currentY: number | null = null;
+      let bucket: PdfItem[] = [];
+      for (const it of sortedByY) {
+        const y = it.transform[5];
+        if (currentY === null || Math.abs(y - currentY) <= Y_TOLERANCE) {
+          bucket.push(it);
+          currentY = currentY ?? y;
+        } else {
+          rows.push(bucket);
+          bucket = [it];
+          currentY = y;
+        }
       }
-      const ys = Array.from(byY.keys()).sort((a, b) => b - a);
-      for (const y of ys) {
-        const line = byY.get(y)!.sort((a, b) => a.transform[4] - b.transform[4]);
-        const cols = line.map((i) => i.str.trim()).filter(Boolean);
+      if (bucket.length) rows.push(bucket);
+
+      // Split each row into columns via X-gap heuristic
+      for (const row of rows) {
+        const sorted = row.sort((a, b) => a.transform[4] - b.transform[4]);
+        const cols: string[] = [];
+        let curr = '';
+        let lastEnd = -Infinity;
+        for (const it of sorted) {
+          const x = it.transform[4];
+          const w = it.width ?? 0;
+          if (x - lastEnd > X_GAP && curr) {
+            cols.push(curr.trim());
+            curr = '';
+          }
+          curr += (curr ? ' ' : '') + it.str.trim();
+          lastEnd = x + w;
+        }
+        if (curr.trim()) cols.push(curr.trim());
         if (cols.length) rowsAcc.push(cols);
       }
     }
 
-    if (!rowsAcc.length) warnings.push('Aucun texte extractible — envisager OCR.');
+    // OCR fallback for scanned PDFs
+    if (!rowsAcc.length) {
+      warnings.push('Aucun texte extractible du PDF — bascule sur OCR.');
+      try {
+        const ocrRows = await runOcrFallback(doc);
+        rowsAcc.push(...ocrRows);
+        if (!ocrRows.length) warnings.push('OCR n’a rien détecté — vérifiez la qualité du scan.');
+      } catch (e) {
+        warnings.push(`OCR indisponible: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
+
     const maxCols = rowsAcc.reduce((m, r) => Math.max(m, r.length), 0);
     const columns = Array.from({ length: maxCols }, (_, i) => `col_${i + 1}`);
-    const rows: ParsedBoqRow[] = rowsAcc.map((cells) => {
+    const parsedRows: ParsedBoqRow[] = rowsAcc.map((cells) => {
       const raw: Record<string, string | number | null> = {};
       cells.forEach((c, i) => { raw[columns[i]] = c; });
       return { raw };
     });
-    return { rows, columns, warnings };
+    return { rows: parsedRows, columns, warnings };
   }
+}
+
+/** Render each page to canvas and OCR with tesseract.js (fra+eng). */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function runOcrFallback(doc: any): Promise<string[][]> {
+  const { createWorker } = await import('tesseract.js');
+  const worker = await createWorker('fra+eng');
+  const rowsAcc: string[][] = [];
+  try {
+    const maxPages = Math.min(doc.numPages, 10); // safety cap
+    for (let p = 1; p <= maxPages; p++) {
+      const page = await doc.getPage(p);
+      const viewport = page.getViewport({ scale: 2 });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) continue;
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      const { data } = await worker.recognize(canvas);
+      const text = data.text ?? '';
+      for (const line of text.split(/\r?\n/)) {
+        const cols = line.split(/\s{2,}|\t+/).map((c) => c.trim()).filter(Boolean);
+        if (cols.length) rowsAcc.push(cols);
+      }
+    }
+  } finally {
+    await worker.terminate();
+  }
+  return rowsAcc;
 }
